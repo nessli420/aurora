@@ -1,0 +1,48 @@
+# ---- Build output / generated ----
+.gradle/
+.kotlin/
+build/
+**/build/
+captures/
+out/
+release/
+
+# Native build (NDK / CMake)
+.cxx/
+**/.cxx/
+
+# ---- Local environment (machine-specific; do NOT publish) ----
+local.properties
+
+# ---- Release signing (keep your signing key + passwords private) ----
+keystore/*.jks
+keystore/*.keystore
+keystore.properties
+
+# ---- IDE ----
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# ---- OS cruft ----
+.DS_Store
+Thumbs.db
+
+# ---- Internal dev notes / tooling (not needed to build) ----
+.claude/
+CLAUDE.md
+PHASE3_HANDOFF.md
+aurora-roadmap-phases-2-7.md
+
+# ---- Scratch: stray screenshots / logs at the repo root ----
+/*.png
+/*.log
+
+# ---- Loose font stash at repo root ----
+/fonts/
+
+# ---- Circular Std is a commercial font (Lineto) — NOT redistributable. Kept out of the repo;
+#      supply your own licensed copy in app/src/main/res/font/ to build (see README). ----
+app/src/main/res/font/*.otf
+app/src/main/res/font/*.ttf

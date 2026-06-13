@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="Theme.Aurora" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/ic_launcher_background</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">false</item>
+    </style>
+
+    <!-- Cast button (MediaRouteButton) tinted to match the player's light-on-dark icons. -->
+    <style name="AuroraMediaRouteButton" parent="Widget.MediaRouter.MediaRouteButton">
+        <item name="mediaRouteButtonTint">#FFFFFFFF</item>
+    </style>
+    <style name="Theme.Aurora.MediaRoute" parent="Theme.MediaRouter">
+        <item name="mediaRouteButtonStyle">@style/AuroraMediaRouteButton</item>
+        <!-- MediaRouter's theme helper computes colour contrast against these; they MUST be opaque
+             or the chooser dialog throws "background can not be translucent: #0". -->
+        <item name="colorPrimary">#FF15151A</item>
+        <item name="colorPrimaryDark">#FF000000</item>
+        <item name="colorAccent">#FFFF2E7E</item>
+        <item name="android:colorBackground">#FF15151A</item>
+        <item name="android:windowBackground">#FF15151A</item>
+    </style>
+</resources>

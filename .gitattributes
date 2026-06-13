@@ -1,0 +1,29 @@
+# Normalize all text files to LF in the repository; let Git pick the
+# working-copy ending per platform. This keeps diffs clean across OSes.
+* text=auto eol=lf
+
+# Windows-only scripts must stay CRLF.
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+# The Gradle wrapper is a POSIX shell script: it MUST be LF or it breaks
+# on Linux/macOS ("bad interpreter").
+gradlew text eol=lf
+*.sh    text eol=lf
+
+# Binary assets — never touch line endings or try to diff these.
+*.png   binary
+*.jpg   binary
+*.jpeg  binary
+*.webp  binary
+*.gif   binary
+*.ico   binary
+*.otf   binary
+*.ttf   binary
+*.jar   binary
+*.keystore binary
+*.jks   binary
+*.zip   binary
+*.so    binary
+*.aar   binary
+*.json  text

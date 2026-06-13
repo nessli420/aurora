@@ -1,0 +1,2 @@
+# Keep FLAC JNI classes (loaded via reflection by ExoPlayer's DefaultRenderersFactory)
+-keep class androidx.media3.decoder.flac.** { *; }
