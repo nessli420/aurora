@@ -36,7 +36,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Backup & restore (5.3): export settings + local playlists/likes + history to a JSON file, or import one. */
+/** Backup & restore: export settings + local playlists/likes + history to a JSON file, or import one. */
 @Composable
 fun BackupScreen(contentPadding: PaddingValues, onBack: () -> Unit, confirm: (String) -> Unit) {
     val container = (LocalContext.current.applicationContext as AuroraApplication).container

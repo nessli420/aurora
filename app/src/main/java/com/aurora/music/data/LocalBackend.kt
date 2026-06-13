@@ -147,7 +147,7 @@ class LocalBackend(
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean { store.addTracks(playlistId, trackIds); return true }
     suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean { store.removeTracks(playlistId, trackIds); return true }
 
-    // --- Folder browsing (4.1): the real on-disk tree, rooted at the deepest common directory ---
+    // Folder browsing: the real on-disk tree, rooted at the deepest common directory.
 
     override val supportsFolders: Boolean get() = true
 

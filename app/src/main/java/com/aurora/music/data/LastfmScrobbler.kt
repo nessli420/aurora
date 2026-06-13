@@ -8,7 +8,7 @@ import kotlinx.coroutines.launch
 /**
  * Owns the Last.fm link: drives the browser auth flow, persists the session in [SettingsStore], and
  * submits now-playing + scrobbles when connected and enabled. All network is best-effort and
- * fire-and-forget — failures never affect playback. Needs an API key + secret (see [AppContainer]);
+ * fire-and-forget; failures never affect playback. Needs an API key + secret (see [AppContainer]);
  * when unconfigured, [configured] is false and everything is a no-op.
  */
 class LastfmScrobbler(

@@ -8,9 +8,8 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 /**
- * Downmixes 16-bit stereo PCM to (dual) mono by averaging the L/R channels when [enabled].
- * Always present in the chain; passes audio through unchanged when disabled, so toggling it
- * doesn't require rebuilding the audio pipeline.
+ * Downmixes 16-bit stereo PCM to dual mono by averaging L/R when [enabled]. Always present in the
+ * chain; passes through unchanged when disabled, so toggling needs no pipeline rebuild.
  */
 @UnstableApi
 class MonoAudioProcessor : BaseAudioProcessor() {
@@ -19,7 +18,6 @@ class MonoAudioProcessor : BaseAudioProcessor() {
     var enabled: Boolean = false
 
     override fun onConfigure(inputAudioFormat: AudioFormat): AudioFormat {
-        // Only engage for 16-bit stereo; otherwise stay inactive (pass-through).
         return if (inputAudioFormat.encoding == C.ENCODING_PCM_16BIT && inputAudioFormat.channelCount == 2) {
             inputAudioFormat
         } else {

@@ -22,12 +22,12 @@ data class TagEditState(
     val matches: List<MetadataMatch> = emptyList(),
     val matchError: String? = null,
     val pickedCoverUrl: String = "",         // chosen replacement cover (CAA), embedded on save
-    val identifying: Boolean = false,        // 4.4c AcoustID fingerprint lookup in flight
+    val identifying: Boolean = false,        // AcoustID fingerprint lookup in flight
     val durationSec: Int = 0,                // true track length, sent to AcoustID for matching
     val localFile: Boolean = false,          // on-device file (JAudiotagger) vs server item (backend API)
 )
 
-/** Backs the tag-edit screen (4.4): loads current tags, runs MusicBrainz matches, edits fields. */
+/** Backs the tag-edit screen: loads current tags, runs MusicBrainz matches, edits fields. */
 class TagEditViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as AuroraApplication).container
     private val _state = MutableStateFlow(TagEditState())
@@ -73,11 +73,7 @@ class TagEditViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Identify the track by its acoustic fingerprint (4.4c): Chromaprint → AcoustID → MusicBrainz.
-     * Falls back to showing the recordings as regular matches. Implemented once the native
-     * fingerprinter is wired; until then it reports unavailability.
-     */
+    /** Identify the track by its acoustic fingerprint: Chromaprint, AcoustID, MusicBrainz. */
     fun identify() {
         val path = _state.value.path
         if (path.isBlank()) return

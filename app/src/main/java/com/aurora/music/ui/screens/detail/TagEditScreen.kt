@@ -52,7 +52,7 @@ import com.aurora.music.viewmodel.TagEditState
 import kotlinx.coroutines.launch
 
 /**
- * Tag editor (4.4): edit a local file's tags, optionally auto-filling from a MusicBrainz match (with
+ * Tag editor: edit a local file's tags, optionally auto-filling from a MusicBrainz match (with
  * Cover Art Archive art). Saving goes through the MediaStore write-consent dialog on Android 11+.
  */
 @Composable
@@ -62,7 +62,7 @@ fun TagEditScreen(
     onEdit: ((AudioTags) -> AudioTags) -> Unit,
     onMatch: () -> Unit,
     onApplyMatch: (MetadataMatch) -> Unit,
-    onIdentify: (() -> Unit)?,        // 4.4c AcoustID fingerprint identify; null when unavailable
+    onIdentify: (() -> Unit)?,        // AcoustID fingerprint identify; null when unavailable
     identifying: Boolean = false,
     onBack: () -> Unit,
     confirm: (String) -> Unit,

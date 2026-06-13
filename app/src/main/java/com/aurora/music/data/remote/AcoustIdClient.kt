@@ -36,7 +36,7 @@ interface AcoustIdApi {
 }
 
 /**
- * AcoustID acoustic-fingerprint identification (4.4c). Fingerprints a file with [Chromaprint], looks
+ * AcoustID acoustic-fingerprint identification. Fingerprints a file with [Chromaprint], looks
  * it up in the AcoustID database, and maps the returned MusicBrainz recordings to [MetadataMatch].
  * Requires a free AcoustID application API key; [configured] is false (and identify is a no-op) until
  * one is supplied, and [Chromaprint.available] must be true (the native lib must have loaded).

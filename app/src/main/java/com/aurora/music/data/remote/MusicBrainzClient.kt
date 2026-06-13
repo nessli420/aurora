@@ -48,7 +48,7 @@ interface MusicBrainzApi {
     ): MbRecordingResult
 }
 
-/** A resolved metadata candidate the tag editor can apply (4.4). */
+/** A resolved metadata candidate the tag editor can apply. */
 data class MetadataMatch(
     val title: String,
     val artist: String,
@@ -60,7 +60,7 @@ data class MetadataMatch(
 )
 
 /**
- * MusicBrainz lookup (4.4): searches recordings by existing tags and maps each to a [MetadataMatch],
+ * MusicBrainz lookup: searches recordings by existing tags and maps each to a [MetadataMatch],
  * with a Cover Art Archive front-cover URL per release. MusicBrainz requires a descriptive
  * User-Agent and rate-limits to ~1 req/s, which is fine for interactive single-track lookups.
  */

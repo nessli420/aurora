@@ -10,7 +10,7 @@ import kotlinx.coroutines.launch
 /**
  * Owns the Android AudioEffect chain attached to the ExoPlayer's audio session: a graphic
  * equalizer, bass boost, virtualizer (cross-feed/headphone widening for IEMs), and a loudness
- * enhancer. Configured live from [SettingsStore.audioPrefs]. All effect calls are guarded —
+ * enhancer. Configured live from [SettingsStore.audioPrefs]. All effect calls are guarded:
  * some devices/emulators don't implement every effect.
  */
 class AudioEffectsController(

@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap
  * Discord Rich Presence for the now-playing track. Connects the user's account to the gateway (see
  * [DiscordGateway]) and pushes a "Listening to Aurora" activity with the song title, artist, and a
  * progress bar. Album art is uploaded to Imgur ([ImgurUploader]) then proxied through Discord's
- * external-assets endpoint — requires a Discord [appId] and an Imgur client id; without them the
+ * external-assets endpoint; requires a Discord [appId] and an Imgur client id. Without them the
  * presence is text-only (still works). Everything is best-effort and never affects playback.
  */
 class DiscordRpc(

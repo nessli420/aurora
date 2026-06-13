@@ -8,7 +8,7 @@ import com.google.android.gms.cast.framework.SessionProvider
 
 /**
  * Cast SDK configuration. Uses Google's Default Media Receiver, which streams a plain audio URL the
- * receiver fetches itself — so Aurora's DSP is bypassed when casting ("convenience mode").
+ * receiver fetches itself, so Aurora's DSP is bypassed when casting.
  */
 class CastOptionsProvider : OptionsProvider {
     override fun getCastOptions(context: Context): CastOptions =

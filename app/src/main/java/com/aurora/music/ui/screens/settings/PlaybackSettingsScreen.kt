@@ -93,8 +93,8 @@ fun PlaybackSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                         prefs.bitPerfectUsb,
                     ) { v ->
                         scope.launch { store.setBitPerfectUsb(v) }
-                        // Request USB access up front (one-time) when enabling, if a DAC is plugged in —
-                        // so the driver can claim it without a manifest attach-handler prompting on every plug.
+                        // Request USB access up front when enabling (if a DAC is plugged in) so the driver
+                        // can claim it without a manifest attach-handler prompting on every plug.
                         if (v) runCatching {
                             val dev = com.decent.usbaudio.UsbAudioDevice.getInstance(context)
                             dev.findUsbAudioDevice()?.let { if (!dev.hasPermission(it)) dev.requestPermission(it) {} }

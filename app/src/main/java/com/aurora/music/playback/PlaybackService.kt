@@ -43,9 +43,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 /**
- * Media3 MediaSessionService hosting the ExoPlayer that actually streams from Navidrome.
- * Playback preferences (skip-silence, crossfade) are observed live from the SettingsStore
- * and applied to the engine.
+ * Media3 MediaSessionService hosting the ExoPlayer. Playback prefs (skip-silence, crossfade)
+ * are observed live from SettingsStore and applied to the engine.
  */
 @UnstableApi
 class PlaybackService : MediaLibraryService() {
@@ -74,8 +73,8 @@ class PlaybackService : MediaLibraryService() {
     @Volatile private var deviceSupportsBitPerfect: Boolean = false
     @Volatile private var preferHighResPref: Boolean = false
 
-    // Sleep-timer fade-out: when armed, the audio tick ramps the volume to zero over [sleepFadeMs]
-    // then pauses (the fade lives here so it cooperates with the ReplayGain volume tick).
+    // Sleep-timer fade-out: when armed, the audio tick ramps volume to zero over [sleepFadeMs]
+    // then pauses. Lives here so it cooperates with the ReplayGain volume tick.
     @Volatile private var sleepFadeActive = false
     private var sleepFadeStartMs = 0L
     private var sleepFadeMs = 0
@@ -89,12 +88,12 @@ class PlaybackService : MediaLibraryService() {
     private var xfadeStartMs = 0L
     private var xfadeExpectedId: String? = null
 
-    // Physical-shuffle bookkeeping: the queue order (by mediaId) before shuffle was turned on,
-    // so disabling can restore the real album/playlist order. Null = not currently shuffled.
+    // Physical-shuffle bookkeeping: queue order (by mediaId) before shuffle was turned on, so
+    // disabling can restore the real album/playlist order. Null = not currently shuffled.
     private var originalOrder: List<String>? = null
-    // When shuffle turns on we want playback to follow the (physical) timeline order, not a second
-    // random ExoPlayer order. Neutralising needs the items present, which may lag the command, so
-    // we flag it and apply on the next timeline change if they weren't ready yet.
+    // Playback should follow the physical timeline order, not a second random ExoPlayer order.
+    // Neutralising needs the items present, which may lag the command, so flag it and apply on the
+    // next timeline change if they weren't ready yet.
     private var pendingNeutralize = false
     // Experimental USB bit-perfect sink (decent-player), non-null only when the setting is on.
     private var usbSink: com.decent.usbaudio.media3.UsbAudioSink? = null
@@ -102,25 +101,18 @@ class PlaybackService : MediaLibraryService() {
     override fun onCreate() {
         super.onCreate()
 
-        // Float output is bit-perfect for hi-res content but BYPASSES the 16-bit Sonic
-        // processor (speed/pitch), mono downmix and silence-skip on those tracks — so it's
-        // opt-in. Default off means speed/pitch/mono/skip-silence work everywhere.
-        // Workaround so speed STILL works in hi-res mode: when float output is on we let the
-        // AudioTrack apply playback params in hardware (varispeed — speed change with matched
-        // pitch), which works regardless of bit depth. (Independent pitch isn't available there,
-        // but match-pitch is the default and the common case.)
-        // Float output is bit-perfect for hi-res content but Media3 runs the float pipeline WITHOUT
-        // any app audio processors (Sonic/speed, mono, silence-skip AND our custom DSP are all
-        // bypassed). So Custom DSP can only run in the 16-bit pipeline → it takes PRIORITY over
-        // bit-perfect: when Custom is the persisted engine we keep float OFF so the DSP engages
-        // (any EQ is non-bit-perfect anyway). Hi-res passthrough therefore means bit-perfect XOR
-        // Custom DSP. (Decided once here — the sink can't be rebuilt cheaply mid-session — so
-        // switching engines while hi-res is on takes effect on the next playback start.)
+        // Float output is bit-perfect for hi-res but Media3 runs the float pipeline WITHOUT any app
+        // audio processors: Sonic (speed/pitch), mono downmix, silence-skip AND our custom DSP are
+        // all bypassed. So Custom DSP can only run in the 16-bit pipeline and takes priority over
+        // bit-perfect: when Custom is the persisted engine we keep float OFF so the DSP engages.
+        // Hi-res passthrough therefore means bit-perfect XOR Custom DSP. Decided once here (the sink
+        // can't be rebuilt cheaply mid-session), so switching engines while hi-res is on takes
+        // effect on the next playback start. Speed still works in float mode via hardware varispeed
+        // (matched pitch); independent pitch isn't available there but match-pitch is the default.
         val highRes = runBlocking { container.settingsStore.playbackPrefs.first().preferHighRes }
         val startupDspMode = runBlocking { container.settingsStore.audioPrefs.first().dspMode }
         // Experimental: route PCM straight to a USB DAC via the decent-player driver (bit-perfect,
-        // bypasses the whole Android audio stack AND our DSP). Read once; applies on this fresh
-        // service/player. Falls back to normal speaker playback when no DAC is connected.
+        // bypasses the whole Android audio stack AND our DSP). Falls back to speaker when no DAC.
         val bitPerfectUsb = runBlocking { container.settingsStore.playbackPrefs.first().bitPerfectUsb }
         val useFloat = bitPerfectUsb || (highRes && startupDspMode != DspMode.CUSTOM)
         useFloatOut = useFloat
@@ -137,8 +129,8 @@ class PlaybackService : MediaLibraryService() {
                 enableAudioTrackPlaybackParams: Boolean,
             ): AudioSink {
                 if (bitPerfectUsb) {
-                    // Bit-perfect: a plain float DefaultAudioSink (NO DSP processors — they'd defeat
-                    // bit-perfect) wrapped by the USB driver sink. With no DAC it just plays normally.
+                    // Plain float DefaultAudioSink (no DSP processors, which would defeat bit-perfect)
+                    // wrapped by the USB driver sink. With no DAC it just plays normally.
                     val delegate = DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(true)
                         .build()
@@ -147,21 +139,20 @@ class PlaybackService : MediaLibraryService() {
                 return DefaultAudioSink.Builder(context)
                     .setAudioProcessors(arrayOf(monoProcessor, auroraDsp, convolver))
                     .setEnableFloatOutput(useFloat)
-                    // In float mode Sonic is bypassed, so fall back to hardware playback params for
-                    // speed; otherwise keep Sonic (which also gives independent pitch).
+                    // Float mode bypasses Sonic, so use hardware playback params for speed; otherwise
+                    // keep Sonic (which also gives independent pitch).
                     .setEnableAudioTrackPlaybackParams(useFloat || enableAudioTrackPlaybackParams)
                     .build()
             }
         }
-        // Bit-perfect: prefer the FFmpeg decoder so non-local/non-FLAC content decodes to float32
-        // (the wrapper converts to the DAC's exact bit depth). Local FLAC still uses the native engine.
+        // Prefer the FFmpeg decoder so non-local/non-FLAC content decodes to float32 (the wrapper
+        // converts to the DAC's exact bit depth). Local FLAC still uses the native engine.
         if (bitPerfectUsb) {
             renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
         }
 
         // Spotify songs carry sentinel `aurora-yt://<id>?q=...&dur=...` URIs; resolve them to a real
-        // YouTube audio stream just-in-time on the loader thread. Other backends' http/file URIs pass
-        // through unchanged.
+        // YouTube audio stream just-in-time on the loader thread. Other backends' URIs pass through.
         val resolver = container.youtubeResolver
         val ytResolver = androidx.media3.datasource.ResolvingDataSource.Resolver { dataSpec ->
             val uri = dataSpec.uri
@@ -184,7 +175,7 @@ class PlaybackService : MediaLibraryService() {
             .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ true)
             .setHandleAudioBecomingNoisy(true)
         if (bitPerfectUsb) {
-            // Stop ExoPlayer reading the file while the native FLAC engine handles decode+USB.
+            // Stop ExoPlayer reading the file while the native FLAC engine handles decode + USB.
             playerBuilder.setLoadControl(
                 com.decent.usbaudio.media3.UsbAudioSink.wrapLoadControl(
                     androidx.media3.exoplayer.DefaultLoadControl.Builder().build()
@@ -192,7 +183,7 @@ class PlaybackService : MediaLibraryService() {
             )
         }
         player = playerBuilder.build()
-        // Connect the USB sink to the player (track-path extraction, engine lifecycle, EOF→next).
+        // Connect the USB sink to the player (track-path extraction, engine lifecycle, EOF -> next).
         if (bitPerfectUsb) usbSink?.attachToPlayer(player)
 
         // Route audio to the shared session id so the DSP effects (EQ/bass/virtualizer/loudness)
@@ -201,14 +192,14 @@ class PlaybackService : MediaLibraryService() {
             runCatching { player.setAudioSessionId(container.audioSessionId) }
         }
 
-        // Reflect shuffle/repeat state in the notification: custom buttons that fall through to
+        // Reflect shuffle/repeat state in the notification via custom buttons that fall through to
         // our own physical-shuffle / repeat-cycle handling (see onCustomCommand).
         player.addListener(object : Player.Listener {
             override fun onEvents(p: Player, events: Player.Events) {
                 if (events.contains(Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED) ||
                     events.contains(Player.EVENT_REPEAT_MODE_CHANGED)
                 ) updateCustomLayout()
-                // Items may have only just arrived after a shuffle-play command — neutralise now.
+                // Items may have only just arrived after a shuffle-play command; neutralise now.
                 if (events.contains(Player.EVENT_TIMELINE_CHANGED)) maybeNeutralize()
                 if (events.contains(Player.EVENT_TRACKS_CHANGED) ||
                     events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
@@ -264,8 +255,8 @@ class PlaybackService : MediaLibraryService() {
 
     /**
      * Reconcile the active tone-shaping engine from the latest prefs. Runtime-switchable via
-     * volatile flags (no pipeline rebuild): Custom DSP toggles [auroraDsp]; System toggles the
-     * AudioEffect chain; mono downmix folds into the DSP as width=0 when Custom is active, else
+     * volatile flags (no pipeline rebuild): Custom DSP toggles [auroraDsp], System toggles the
+     * AudioEffect chain, mono downmix folds into the DSP as width=0 when Custom is active else
      * runs through [monoProcessor]. The two EQ engines are mutually exclusive so they never stack.
      */
     private fun applyAudioEngine() {
@@ -399,9 +390,9 @@ class PlaybackService : MediaLibraryService() {
             device.type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
             device.type == android.media.AudioDeviceInfo.TYPE_BLE_HEADSET ||
             device.type == android.media.AudioDeviceInfo.TYPE_BLE_SPEAKER)
-        // Truly bit-perfect = exclusive mixer grant (no resampling at all). Float passthrough alone
-        // skips Aurora's 16-bit stage but Android's mixer may still sample-rate-convert. Bluetooth is
-        // always re-encoded by the system codec (LDAC/aptX/AAC/SBC), so it's never bit-perfect.
+        // Truly bit-perfect means an exclusive mixer grant (no resampling at all). Float passthrough
+        // alone skips Aurora's 16-bit stage but Android's mixer may still sample-rate-convert.
+        // Bluetooth is always re-encoded by the system codec (LDAC/aptX/AAC/SBC), never bit-perfect.
         val (bitPerfect, note) = when {
             isBt -> false to "Bluetooth — re-encoded by the system codec (LDAC/aptX/AAC/SBC)"
             modifying -> false to "DSP / effects active — not bit-perfect"
@@ -456,9 +447,9 @@ class PlaybackService : MediaLibraryService() {
         val fade = crossfadeMs
         if (fade <= 0 || !player.isPlaying) return
         // In REPEAT_MODE_ONE ExoPlayer's navigation treats repeat-one as repeat-off, so
-        // hasNextMediaItem()/seekToNextMediaItem() report/do nothing — the "next" track is the
-        // current one restarted. Crossfade by looping back to position 0 of the same item so the
-        // tail fades out while the fresh start fades in. (Crossfade off → ExoPlayer loops natively.)
+        // hasNextMediaItem()/seekToNextMediaItem() do nothing; the "next" track is the current one
+        // restarted. Crossfade by looping back to position 0 of the same item so the tail fades out
+        // while the fresh start fades in. (Crossfade off: ExoPlayer loops natively.)
         val repeatOne = player.repeatMode == Player.REPEAT_MODE_ONE
         if (!repeatOne && !player.hasNextMediaItem()) return
         val duration = player.duration
@@ -520,16 +511,16 @@ class PlaybackService : MediaLibraryService() {
         return Math.pow(10.0, gainDb / 20.0).toFloat().coerceIn(0.1f, 1f)
     }
 
-    // --- Notification shuffle/repeat + physical shuffle ---------------------------------------
+    // Notification shuffle/repeat + physical shuffle
 
     private inner class MediaCallback : MediaLibrarySession.Callback {
         override fun onConnect(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
         ): MediaSession.ConnectionResult {
-            // MUST start from the SESSION-AND-LIBRARY command set: a MediaLibrarySession browser
-            // (Android Auto) needs the library browse commands (getLibraryRoot/getChildren/…).
-            // Using DEFAULT_SESSION_COMMANDS strips them, so Auto's browser connection is refused.
+            // Must start from DEFAULT_SESSION_AND_LIBRARY_COMMANDS: a MediaLibrarySession browser
+            // (Android Auto) needs the library browse commands (getLibraryRoot/getChildren/...).
+            // DEFAULT_SESSION_COMMANDS strips them, so Auto's browser connection is refused.
             val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                 .add(SessionCommand(CMD_SHUFFLE, Bundle.EMPTY))
                 .add(SessionCommand(CMD_REPEAT, Bundle.EMPTY))
@@ -549,7 +540,7 @@ class PlaybackService : MediaLibraryService() {
             when (customCommand.customAction) {
                 // target: 1 = force on, 0 = force off, -1 (default) = toggle.
                 // "order" (optional) = the real pre-shuffle order, when the caller already shuffled
-                // the queue itself (shuffle-from-start) — then we don't reorder, just remember it.
+                // the queue itself (shuffle-from-start); then we don't reorder, just remember it.
                 CMD_SHUFFLE -> setShuffle(
                     customCommand.customExtras.getInt("target", -1),
                     customCommand.customExtras.getStringArrayList("order"),
@@ -565,7 +556,7 @@ class PlaybackService : MediaLibraryService() {
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
         }
 
-        // ---- Browsable library tree (Android Auto / Wear / system surfaces) ----
+        // Browsable library tree (Android Auto / Wear / system surfaces)
 
         override fun onGetLibraryRoot(
             session: MediaLibrarySession,
@@ -608,7 +599,7 @@ class PlaybackService : MediaLibraryService() {
             }.toMutableList()
         }
 
-        // ---- Voice / text search (Android Auto "search", Assistant) ----
+        // Voice / text search (Android Auto "search", Assistant)
 
         override fun onSearch(
             session: MediaLibrarySession,
@@ -750,9 +741,9 @@ class PlaybackService : MediaLibraryService() {
     }
 
     /**
-     * Physical shuffle. Rather than relying on ExoPlayer's internal shuffle order (which leaves the
-     * visible queue untouched), we reorder the actual media items: on enable we snapshot the real
-     * order then shuffle everything after the current track; on disable we restore the snapshot.
+     * Physical shuffle: reorder the actual media items rather than using ExoPlayer's internal
+     * shuffle order (which leaves the visible queue untouched). On enable, snapshot the real order
+     * then shuffle everything after the current track; on disable, restore the snapshot.
      * [shuffleModeEnabled] is kept in sync purely as a state flag for the UI/notification, with an
      * identity ShuffleOrder so playback follows our physical order, not a second random one.
      */
@@ -762,7 +753,7 @@ class PlaybackService : MediaLibraryService() {
             0 -> false
             else -> !player.shuffleModeEnabled
         }
-        // A provided order means a fresh shuffle-play — always (re)apply it. Otherwise skip no-ops.
+        // A provided order means a fresh shuffle-play: always (re)apply it. Otherwise skip no-ops.
         if (providedOrder == null && enable == player.shuffleModeEnabled && enable == (originalOrder != null)) return
 
         if (enable && providedOrder != null) {
@@ -844,7 +835,7 @@ class PlaybackService : MediaLibraryService() {
 
     /**
      * Transfer the queue + position between the local ExoPlayer and the CastPlayer and swap which one
-     * the session drives. Casting hands the receiver a plain URL, so the DSP chain doesn't travel —
+     * the session drives. Casting hands the receiver a plain URL, so the DSP chain doesn't travel:
      * this is the "convenience mode" the UI labels.
      */
     private fun switchToPlayer(toCast: Boolean) {
@@ -968,7 +959,7 @@ class PlaybackService : MediaLibraryService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? = mediaSession
 
     override fun onTaskRemoved(rootIntent: android.content.Intent?) {
-        // User swiped the app away — stop playback and tear the service down so music doesn't keep going.
+        // User swiped the app away: stop playback and tear the service down so music doesn't keep going.
         runCatching { fadePlayer?.run { pause(); clearMediaItems() } }
         player.pause()
         player.stop()

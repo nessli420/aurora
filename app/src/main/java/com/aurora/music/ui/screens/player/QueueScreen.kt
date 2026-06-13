@@ -58,11 +58,7 @@ import com.aurora.music.ui.components.formatTime
 import com.aurora.music.util.rememberDominantColor
 import kotlin.math.roundToInt
 
-/**
- * Full-screen, cover-themed queue with drag-to-reorder. Distinct from a plain list:
- * a now-playing hero up top, an accent gradient pulled from the current cover, and
- * lift-and-drop reordering via the drag handle.
- */
+/** Full-screen queue with a now-playing hero, cover-derived accent gradient, and drag-to-reorder. */
 @Composable
 fun QueueScreen(
     queue: List<Song>,
@@ -101,7 +97,6 @@ fun QueueScreen(
             Column(
                 Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
             ) {
-                // Header
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.KeyboardArrowDown, "Close", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClose).padding(6.dp))
                     Spacer(Modifier.weight(1f))
@@ -115,7 +110,6 @@ fun QueueScreen(
                     )
                 }
 
-                // Now-playing hero
                 if (current != null) {
                     Row(
                         Modifier.fillMaxWidth().padding(vertical = 14.dp),

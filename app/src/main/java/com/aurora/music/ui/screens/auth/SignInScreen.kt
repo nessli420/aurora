@@ -343,7 +343,6 @@ private fun ServerStep(
     onContinue: () -> Unit,
 ) {
     Column(Modifier.fillMaxWidth()) {
-        // Scheme selector
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             SchemePill("http://", state.scheme == "http://", Modifier.weight(1f)) { onScheme("http://") }
             SchemePill("https://", state.scheme == "https://", Modifier.weight(1f)) { onScheme("https://") }

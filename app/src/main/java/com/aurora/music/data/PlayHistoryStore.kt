@@ -53,7 +53,7 @@ class PlayHistoryStore(context: Context) {
         scope.launch { runCatching { file.delete() } }
     }
 
-    /** Snapshot/restore for backup (5.3). */
+    /** Snapshot/restore for backup. */
     fun snapshot(): List<PlayEvent> = _history.value
     fun restore(events: List<PlayEvent>) {
         _history.value = events.take(MAX)

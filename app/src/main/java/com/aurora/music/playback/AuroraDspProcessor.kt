@@ -12,21 +12,21 @@ import kotlin.math.max
 import kotlin.math.tanh
 
 /**
- * Aurora's device-independent software DSP. A single [BaseAudioProcessor] that, when [enabled],
- * runs the whole chain — biquad EQ cascade (10 graphic + 6 parametric) → preamp + L/R balance →
- * stereo width (mid/side) → crossfeed → optional compressor → brick-wall peak limiter.
+ * Aurora's device-independent software DSP. A single [BaseAudioProcessor] that, when [enabled], runs
+ * the whole chain: biquad EQ cascade (10 graphic + 6 parametric), preamp + L/R balance, stereo width
+ * (mid/side), crossfeed, optional compressor, brick-wall peak limiter.
  *
  * Transport is 16-bit stereo PCM (the encoding ExoPlayer's processor chain operates in; higher
- * bit-depth sources are resampled to 16-bit upstream when float output is off). The MATH is done
- * in 32-bit float for headroom and precision, then written back to 16-bit. We deliberately do NOT
- * change the output encoding: ExoPlayer's built-in silence-skip/Sonic processors run after us and
- * only accept 16-bit, so emitting float here would break them. True hi-res float passthrough is a
- * separate, bit-perfect path (no DSP) gated by the hi-res preference.
+ * bit-depth sources are resampled to 16-bit upstream when float output is off). Math is done in
+ * 32-bit float for headroom, then written back to 16-bit. Don't change the output encoding:
+ * ExoPlayer's built-in silence-skip/Sonic processors run after us and only accept 16-bit, so
+ * emitting float here would break them. True hi-res float passthrough is a separate bit-perfect path
+ * (no DSP) gated by the hi-res preference.
  *
  * Realtime safety: [queueInput] allocates nothing, reads the immutable [Coeffs] snapshot once per
  * buffer, and keeps all filter/limiter state in preallocated arrays. Coefficients are rebuilt off
- * the audio thread ([update]); scalar gains are per-sample one-pole smoothed to avoid zipper noise.
- * Toggling [enabled] needs no pipeline rebuild — when off it copies input straight through.
+ * the audio thread ([update]); scalar gains are one-pole smoothed per sample to avoid zipper noise.
+ * Toggling [enabled] needs no pipeline rebuild: when off it copies input straight through.
  */
 @UnstableApi
 class AuroraDspProcessor : BaseAudioProcessor() {
@@ -41,7 +41,7 @@ class AuroraDspProcessor : BaseAudioProcessor() {
     private var params: DspParams = DspParams()
     private var configuredRate: Int = 0
 
-    // ---- Preallocated realtime state (sized once, never reallocated in queueInput) ----
+    // Preallocated realtime state, sized once and never reallocated in queueInput.
     private val n = DspCoeffBuilder.TOTAL_BIQUADS
     private val xL1 = FloatArray(n); private val xL2 = FloatArray(n)
     private val yL1 = FloatArray(n); private val yL2 = FloatArray(n)
@@ -70,7 +70,7 @@ class AuroraDspProcessor : BaseAudioProcessor() {
     private var curWidth = 1f
     private var smoothInit = false
 
-    /** Update DSP parameters from the prefs coroutine. Coefficients rebuilt off the audio thread. */
+    /** Update DSP parameters. Coefficients rebuilt off the audio thread. */
     fun update(p: DspParams) {
         params = p
         if (configuredRate > 0) coeffs = DspCoeffBuilder.build(p, configuredRate)

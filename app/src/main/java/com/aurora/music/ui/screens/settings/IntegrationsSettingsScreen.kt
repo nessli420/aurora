@@ -58,7 +58,7 @@ fun IntegrationsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
 }
 
 /**
- * AcoustID API key entry (4.4): the user pastes their own free application key, enabling the tag
+ * AcoustID API key entry: the user pastes their own free application key, enabling the tag
  * editor's "Auto-identify" (acoustic fingerprint) online lookup. The native fingerprinter works
  * without it; only the AcoustID match needs the key.
  */
@@ -167,7 +167,7 @@ private fun LastfmRow(scope: CoroutineScope) {
 }
 
 /**
- * ListenBrainz link (5.1). Token-only: paste your ListenBrainz user token, we validate it and show
+ * ListenBrainz link. Token-only: paste your ListenBrainz user token, we validate it and show
  * the resolved username; once connected, an enable toggle + Disconnect.
  */
 @Composable

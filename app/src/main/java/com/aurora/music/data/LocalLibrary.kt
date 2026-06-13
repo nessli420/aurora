@@ -21,7 +21,7 @@ import kotlinx.coroutines.withContext
  */
 class LocalLibrary(
     private val context: Context,
-    // Scanned ReplayGain (4.3) overlaid by file path, since MediaStore tags rarely carry it.
+    // Scanned ReplayGain overlaid by file path, since MediaStore tags rarely carry it.
     private val gainProvider: (String) -> Pair<Float, Float>? = { null },
 ) {
 

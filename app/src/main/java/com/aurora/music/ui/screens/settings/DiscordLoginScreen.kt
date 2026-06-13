@@ -32,10 +32,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
 /**
- * Links a Discord account for Rich Presence. Primary path: log in via the WebView, which auto-grabs
- * the token from the origin's localStorage (the fresh-iframe trick — Discord scrubs it from the top
- * window but not an iframe; same mechanism Kizzy uses). Fallback: paste a token directly, since
- * Discord's web app sometimes refuses to render inside an Android WebView. Calls [onToken] once.
+ * Links a Discord account for Rich Presence. Logs in via the WebView and grabs the token from
+ * localStorage using the fresh-iframe trick (Discord scrubs it from the top window but not an
+ * iframe; same approach Kizzy uses). Fallback: paste a token directly, since Discord's web app
+ * sometimes won't render in an Android WebView. Calls [onToken] once.
  */
 @SuppressLint("SetJavaScriptEnabled")
 @Composable

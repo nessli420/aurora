@@ -7,14 +7,14 @@ import kotlin.math.log10
 import kotlin.math.sin
 
 /**
- * Pure DSP coefficient math for [AuroraDspProcessor] — no Android types, JVM-unit-testable.
+ * Pure DSP coefficient math for [AuroraDspProcessor]: no Android types, JVM-unit-testable.
  *
- * Turns rate-independent user parameters ([DspParams]) plus a concrete sample rate into an
- * immutable [Coeffs] snapshot of flat float arrays the realtime audio callback reads with zero
- * allocation. All biquads are RBJ Audio-EQ-Cookbook peaking filters in Direct Form I; a peaking
- * filter at 0 dB gain is mathematically the identity, so we run a FIXED bank ([TOTAL_BIQUADS]) of
- * them every buffer — unused/flat bands are harmless pass-throughs. Keeping the bank size constant
- * means filter state never has to be remapped or zeroed when bands are added/removed (no clicks).
+ * Turns rate-independent parameters ([DspParams]) plus a sample rate into an immutable [Coeffs]
+ * snapshot of flat float arrays the realtime callback reads with zero allocation. Biquads are RBJ
+ * Audio-EQ-Cookbook filters in Direct Form I. A peaking filter at 0 dB gain is the identity, so a
+ * fixed bank of [TOTAL_BIQUADS] runs every buffer with unused bands as pass-throughs. Keeping the
+ * bank size constant means filter state never needs remapping or zeroing when bands change (no
+ * clicks).
  */
 object DspCoeffBuilder {
 
@@ -234,17 +234,17 @@ data class DspParams(
     val compThreshDb: Float = -18f,
     val compRatio: Float = 2f,
 ) {
-    // graphic is a FloatArray, so generated equals/hashCode would be identity-based; we never rely
-    // on DspParams equality (each prefs emission rebuilds), so suppress the lint by overriding.
+    // graphic is a FloatArray, so a generated equals/hashCode would be identity-based anyway. Nothing
+    // relies on DspParams equality (each prefs emission rebuilds), so override explicitly.
     override fun equals(other: Any?): Boolean = this === other
     override fun hashCode(): Int = System.identityHashCode(this)
 }
 
 /**
  * Immutable coefficient snapshot consumed by [AuroraDspProcessor.queueInput]. Biquad coefficients
- * are shared across the L/R channels (the EQ curve is identical per channel); only the filter
- * STATE differs and lives in the processor. All time-constant values are pre-resolved to the
- * current sample rate so the realtime callback does no math beyond the difference equations.
+ * are shared across L/R (the EQ curve is identical per channel); only the filter state differs and
+ * lives in the processor. Time-constant values are pre-resolved to the current sample rate so the
+ * realtime callback does no math beyond the difference equations.
  */
 class Coeffs(
     val b0: FloatArray, val b1: FloatArray, val b2: FloatArray, val a1: FloatArray, val a2: FloatArray,

@@ -81,7 +81,7 @@ private val SORTS = listOf(
 private fun fieldSpec(key: String?): FieldSpec = FIELDS.firstOrNull { it.key == key } ?: FIELDS.first()
 private fun opsFor(type: Int) = when (type) { TYPE_NUMBER -> NUM_OPS; TYPE_BOOL -> BOOL_OPS; else -> TEXT_OPS }
 
-/** Rule editor for one smart playlist (4.2): predicates + match mode + sort + limit. */
+/** Rule editor for one smart playlist: predicates + match mode + sort + limit. */
 @Composable
 fun SmartPlaylistEditScreen(
     contentPadding: PaddingValues,

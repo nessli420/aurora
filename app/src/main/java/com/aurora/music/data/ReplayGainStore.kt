@@ -9,10 +9,10 @@ import java.io.File
 data class RgEntry(val track: Float = 0f, val album: Float = 0f)
 
 /**
- * Persists locally-scanned ReplayGain gains (4.3), keyed by absolute file path so they survive a
+ * Persists locally-scanned ReplayGain gains, keyed by absolute file path so they survive a
  * MediaStore rescan (which can renumber `_ID`s). Aurora can't write tags into the file from the
- * scanner, so the gains live here and are overlaid onto [Song]s as they're built — the existing
- * attenuate-only playback path in PlaybackService then applies them.
+ * scanner, so the gains live here and are overlaid onto [Song]s as they're built; the attenuate-only
+ * playback path in PlaybackService then applies them.
  */
 class ReplayGainStore(context: Context) {
     private val file = File(context.filesDir, "rg_gains.json")

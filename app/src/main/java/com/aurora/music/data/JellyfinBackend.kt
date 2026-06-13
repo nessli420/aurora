@@ -219,9 +219,8 @@ class JellyfinBackend(
         }
     }.onFailure { android.util.Log.e("AuroraDetail", "jellyfin detail($kind,$id) failed", it) }.getOrNull()
 
-    // --- Folder browsing (4.1) ------------------------------------------------
-    // Root = the user's library views (music libraries first); deeper levels are non-recursive
-    // ParentId queries, so the tree mirrors how the server's library is organized.
+    // Folder browsing. Root = the user's library views (music libraries first); deeper levels are
+    // non-recursive ParentId queries, so the tree mirrors how the server's library is organized.
 
     override val supportsFolders: Boolean get() = true
 
@@ -244,7 +243,7 @@ class JellyfinBackend(
         }
     }.onFailure { android.util.Log.e("AuroraFolders", "jellyfin browseFolder($folderId) failed", it) }.getOrNull()
 
-    // --- Server-side metadata editing (4.4): Jellyfin's item-update API (what its web editor uses) ---
+    // Server-side metadata editing via Jellyfin's item-update API (what its web editor uses).
 
     override val supportsServerTagEdit: Boolean get() = true
 

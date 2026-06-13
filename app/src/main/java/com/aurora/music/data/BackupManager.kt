@@ -12,7 +12,7 @@ data class PrefsBackup(
     val stringSets: Map<String, List<String>> = emptyMap(),
 )
 
-/** The whole backup bundle (5.3): settings + on-device playlists/likes + listening history. */
+/** The whole backup bundle: settings + on-device playlists/likes + listening history. */
 data class AuroraBackup(
     val version: Int = 1,
     val createdAt: Long = 0L,
@@ -22,10 +22,10 @@ data class AuroraBackup(
 )
 
 /**
- * Backup & restore (5.3). Exports the user's settings (theme, DSP/EQ, smart playlists, pins, saved
- * logins, integrations…), their on-device playlists/likes and listening history into one JSON
- * document; import overwrites the current state with it. Downloaded audio files are intentionally
- * excluded — they're large and re-downloadable.
+ * Backup and restore. Exports settings (theme, DSP/EQ, smart playlists, pins, saved logins,
+ * integrations), on-device playlists/likes and listening history into one JSON document; import
+ * overwrites current state with it. Downloaded audio files are intentionally excluded: large and
+ * re-downloadable.
  */
 class BackupManager(
     private val settingsStore: SettingsStore,

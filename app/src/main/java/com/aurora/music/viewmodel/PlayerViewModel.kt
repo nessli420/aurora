@@ -98,13 +98,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
 
         override fun onMediaItemTransition(item: MediaItem?, reason: Int) {
-            // Reset the displayed position immediately on every track change so the mini-player
-            // progress bar doesn't show the previous track's spot during the transition gap. The
-            // ticker then reports the real position. (Matters most for the bit-perfect USB sink,
-            // whose position lags briefly across a skip.)
+            // Reset displayed position on every track change so the progress bar doesn't show the
+            // previous track's spot during the transition gap; the ticker then reports the real
+            // position. Matters most for the bit-perfect USB sink, whose position lags across a skip.
             _state.update { it.copy(positionSec = 0f) }
-            // "Stop after this track": when the current track ends and auto-advances, pause at the
-            // start of the next one.
+            // "Stop after this track": pause at the start of the next one when we auto-advance.
             if (_state.value.sleepEndOfTrack && reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
                 controller?.pause()
                 _state.update { it.copy(sleepEndOfTrack = false) }
@@ -460,10 +458,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     fun play(song: Song) = playAll(listOf(song), 0)
 
     /**
-     * Play a whole collection (album/playlist/liked) from [startIndex] using the already-loaded
-     * [loaded] tracks, then lazily page in the rest in the background so the FULL tracklist lands in
-     * the queue — without blocking playback or tripping the rate limit. [total] is the collection's
-     * real track count.
+     * Play a collection from [startIndex] using the already-loaded [loaded] tracks, then lazily page
+     * in the rest in the background so the full tracklist lands in the queue without blocking
+     * playback. [total] is the collection's real track count.
      */
     fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) {
         playAll(loaded, startIndex)
@@ -501,9 +498,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Shuffle a whole collection and play from the top — so it starts on a RANDOM track, not the
-     * first one. The unshuffled order is handed to the service so "turn shuffle off" can still
-     * restore the real album/playlist order.
+     * Shuffle a whole collection and play from a random track, not the first one. The unshuffled
+     * order is handed to the service so "turn shuffle off" can restore the real order.
      */
     fun shufflePlay(songs: List<Song>) {
         val c = controller ?: return
@@ -648,10 +644,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     /**
-     * Lazily resolve which of [ids] are liked (Spotify: one batched /me/tracks/contains call per 50)
-     * and merge them into the like set, so the heart shows on liked tracks beyond the first page
-     * that [starredIds] returns — without paging the whole liked library (which trips the rate
-     * limit). Call it when a tracklist becomes visible.
+     * Resolve which of [ids] are liked (Spotify: one batched /me/tracks/contains call per 50) and
+     * merge them into the like set, so the heart shows on liked tracks beyond the first page without
+     * paging the whole liked library. Call when a tracklist becomes visible.
      */
     fun checkLiked(ids: List<String>) {
         val toCheck = ids.filter { it.isNotEmpty() && it !in serverLikedIds && it !in likeChecked }.distinct()

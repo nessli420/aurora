@@ -228,9 +228,9 @@ class SubsonicBackend(
         }
     }.onFailure { android.util.Log.e("AuroraDetail", "subsonic detail($kind,$id) failed", it) }.getOrNull()
 
-    // --- Folder browsing (4.1) ------------------------------------------------
-    // Root = the server's music folders (skipped when there's only one), then getIndexes lists the
-    // top-level directories of a music folder ("mf:<id>" ids), and getMusicDirectory walks deeper.
+    // Folder browsing. Root = the server's music folders (skipped when there's only one), then
+    // getIndexes lists the top-level directories of a music folder ("mf:<id>" ids), and
+    // getMusicDirectory walks deeper.
 
     override val supportsFolders: Boolean get() = true
 

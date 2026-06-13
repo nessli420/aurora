@@ -8,7 +8,7 @@ import java.nio.ByteOrder
 /**
  * Decodes a local audio file to interleaved 16-bit PCM via [MediaExtractor] + [MediaCodec], streaming
  * the samples to a callback so long tracks never sit fully in memory. Used by the offline ReplayGain
- * scan (4.3) and the AcoustID fingerprinter (4.4). Synchronous; call off the main thread.
+ * scan and the AcoustID fingerprinter. Synchronous; call off the main thread.
  */
 object AudioDecoder {
 

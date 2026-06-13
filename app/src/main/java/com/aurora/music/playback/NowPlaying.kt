@@ -18,8 +18,8 @@ object NowPlayingBus {
 }
 
 /**
- * Persists the latest now-playing snapshot so the widget/tile can render something meaningful even
- * after the service process has been killed (cold read). Tiny synchronous SharedPreferences store.
+ * Persists the latest now-playing snapshot so the widget/tile can still render after the service
+ * process has been killed (cold read). Tiny synchronous SharedPreferences store.
  */
 class NowPlayingStore(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("now_playing", Context.MODE_PRIVATE)

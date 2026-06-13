@@ -3,7 +3,7 @@ package com.aurora.music.data
 import com.aurora.music.model.Song
 
 /**
- * M3U / M3U8 playlist interchange (4.6). Export writes extended M3U with the source file path when
+ * M3U / M3U8 playlist interchange. Export writes extended M3U with the source file path when
  * the backend exposes one (so other players resolve tracks); import parses #EXTINF metadata and
  * falls back to the location's file name. Matching imported entries to library tracks happens in
  * [MusicRepository.importPlaylist] — this object is pure text in/out.

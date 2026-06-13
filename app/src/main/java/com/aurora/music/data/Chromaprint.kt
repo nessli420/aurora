@@ -1,7 +1,7 @@
 package com.aurora.music.data
 
 /**
- * JNI bridge to the vendored Chromaprint library (4.4c). Decodes a file to 16-bit PCM via
+ * JNI bridge to the vendored Chromaprint library. Decodes a file to 16-bit PCM via
  * [AudioDecoder] and produces an AcoustID-compatible compressed fingerprint. Fingerprinting only the
  * first [MAX_SECONDS] (as fpcalc does) bounds the work; the *full* track duration is sent to AcoustID
  * separately for matching.

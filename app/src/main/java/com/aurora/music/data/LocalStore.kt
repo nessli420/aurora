@@ -77,7 +77,7 @@ class LocalStore(context: Context) {
         persist()
     }
 
-    // --- backup/restore (5.3) ---
+    // --- backup/restore ---
     fun exportJson(): String = gson.toJson(state)
     fun importJson(json: String) = synchronized(lock) {
         runCatching { gson.fromJson(json, object : TypeToken<LocalState>() {}.type) as? LocalState }.getOrNull()?.let {

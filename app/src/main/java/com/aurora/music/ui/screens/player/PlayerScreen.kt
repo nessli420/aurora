@@ -152,7 +152,6 @@ fun PlayerScreen(
                 .windowInsetsPadding(WindowInsets.systemBars)
                 .padding(horizontal = 20.dp),
         ) {
-            // Header with drag-to-dismiss handle
             Column(
                 Modifier
                     .fillMaxWidth()
@@ -176,15 +175,13 @@ fun PlayerScreen(
                         Icons.Filled.KeyboardArrowDown, "Collapse",
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
-                    // Spacer balances the three trailing icons (cast + speaker + overflow) so the
-                    // centered "PLAYING FROM" column is truly centered, not pushed left.
+                    // Balances the three trailing icons so the centered "PLAYING FROM" column stays centered.
                     Spacer(Modifier.width(80.dp))
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("PLAYING FROM", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                         Text(song.album.ifBlank { "Aurora" }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
                     }
-                    // Dedicated Cast button (the system route picker) — TVs/Chromecast show here, not
-                    // in the local-output sheet.
+                    // Cast button (system route picker); TVs/Chromecast show here, not in the local-output sheet.
                     PlayerCastButton(Modifier.size(40.dp))
                     Icon(
                         Icons.Filled.Speaker, "Output device",
@@ -225,7 +222,6 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Artwork OR lyrics
             Box(
                 Modifier
                     .fillMaxWidth()
@@ -266,7 +262,6 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(16.dp))
 
-            // Title row + like
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (state.isPlaying) {
                     com.aurora.music.ui.components.LottieEqualizer(
@@ -291,7 +286,6 @@ fun PlayerScreen(
                 )
             }
 
-            // Now-playing audio format badge (codec / bitrate / sample-rate / bit-depth).
             val badge = formatBadge(song)
             if (badge.isNotEmpty()) {
                 Spacer(Modifier.height(10.dp))
@@ -310,7 +304,6 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Progress — waveform scrubber or plain bar, per preference
             SeekBar(
                 progress = state.progress,
                 positionSec = state.positionSec.toInt(),
@@ -324,7 +317,6 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            // Transport controls
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -370,7 +362,6 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            // Bottom utilities (optional)
             if (ui.playerShowUtilities) {
                 Row(
                     Modifier.fillMaxWidth().padding(bottom = 12.dp),
@@ -478,7 +469,6 @@ private fun LyricsPanel(song: com.aurora.music.model.Song, positionSec: Float, d
                 Text("Tried the server & LRCLIB", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             else -> {
-                // Source chip
                 Box(
                     Modifier.align(Alignment.TopEnd).padding(12.dp).clip(RoundedCornerShape(50))
                         .background(accent.copy(alpha = 0.85f)).padding(horizontal = 10.dp, vertical = 4.dp),
@@ -499,7 +489,6 @@ private fun SyncedLyrics(lines: List<LyricLine>, positionSec: Float, durationSec
     }
     val listState = rememberLazyListState()
     LaunchedEffect(currentIndex) {
-        // Center the active line.
         listState.animateScrollToItem(currentIndex.coerceAtLeast(0), scrollOffset = -300)
     }
     LazyColumn(

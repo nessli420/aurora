@@ -71,9 +71,9 @@ class MusicRepository(
     // --- Offline (downloads-backed) -----------------------------------------
 
     /**
-     * Downloads to show. Offline → every server's downloads (you can't reach any server, so all
-     * local music is fair game). Online → only the active server's, so a Navidrome library doesn't
-     * show Jellyfin downloads and vice-versa.
+     * Downloads to show. Offline: every server's downloads (no server is reachable, so all local
+     * music is fair game). Online: only the active server's, so a Navidrome library doesn't show
+     * Jellyfin downloads and vice-versa.
      */
     private fun visibleDownloads(): List<DownloadedSong> {
         val all = downloadManager.downloads.value.values
@@ -188,7 +188,7 @@ class MusicRepository(
     suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         backend?.addToPlaylist(playlistId, trackIds) ?: false
 
-    // --- M3U import/export (4.6) ---------------------------------------------
+    // M3U import/export
 
     /** Tracks of a collection rendered as extended-M3U text, or null when it can't be resolved. */
     suspend fun exportPlaylist(kind: String, id: String): String? =
@@ -273,7 +273,7 @@ class MusicRepository(
     suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> =
         if (offline) emptyList() else backend?.detailPage(kind, id, offset).orEmpty()
 
-    // --- Folder browsing (4.1) -----------------------------------------------
+    // Folder browsing
 
     /** Whether the active backend supports folder/file-tree browsing (and we can reach it). */
     val supportsFolders: Boolean get() = !offline && backend?.supportsFolders == true

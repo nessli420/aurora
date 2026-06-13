@@ -143,7 +143,6 @@ fun LibraryScreen(
     )
 
     Column(Modifier.fillMaxWidth().padding(top = topInset)) {
-        // Header
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(36.dp).clip(CircleShape)
@@ -168,7 +167,6 @@ fun LibraryScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        // Filter chips
         LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             if (filter != LibraryFilter.ALL) {
                 item {
@@ -189,7 +187,6 @@ fun LibraryScreen(
 
         Spacer(Modifier.height(12.dp))
 
-        // Sort row
         var sortMenu by remember { mutableStateOf(false) }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box {
@@ -327,7 +324,7 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
     val pinned = pins.map { it.kind to it.id }.toSet()
     val deduped = sorted.filterNot { (it.kind to it.id) in pinned }
     val liked = LibRow("Liked Songs", "Playlist • ${state.likedSongCount} songs", state.likedCover, accentFor("liked"), "liked", "liked")
-    // Folder/file-tree entry (4.1) — virtual row, only on backends that expose a tree.
+    // Folder/file-tree entry: virtual row, only on backends that expose a tree.
     val folders = if (filter == LibraryFilter.ALL && state.supportsFolders)
         listOf(LibRow("Folders", "Browse by folder", "", accentFor("folders"), "", "folders", menu = false))
     else emptyList()

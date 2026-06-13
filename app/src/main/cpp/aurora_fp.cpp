@@ -1,4 +1,4 @@
-// JNI bridge from com.aurora.music.data.Chromaprint to the vendored Chromaprint C API (4.4c).
+// JNI bridge from com.aurora.music.data.Chromaprint to the vendored Chromaprint C API.
 // Kotlin streams decoded 16-bit PCM in; we return the AcoustID-compatible compressed fingerprint.
 #include <jni.h>
 #include <cstdint>

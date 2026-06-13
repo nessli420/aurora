@@ -137,7 +137,6 @@ fun DetailScreen(
         state = listState,
         contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
     ) {
-        // Immersive full-bleed header
         item {
             Box(Modifier.fillMaxWidth().height(420.dp)) {
                 Artwork(info.artUrl, info.accent, Modifier.matchParentSize(), corner = 0.dp)
@@ -193,7 +192,6 @@ fun DetailScreen(
             }
         }
 
-        // Action bar
         item {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),

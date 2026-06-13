@@ -73,7 +73,6 @@ fun SettingsScreen(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
-            // Account card
             item {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)

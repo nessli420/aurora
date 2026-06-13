@@ -2,7 +2,7 @@ package com.aurora.music.data
 
 import com.aurora.music.model.Song
 
-/** Songs that look like the same recording (4.3 dedup pass). */
+/** Songs that look like the same recording. */
 data class DuplicateGroup(val title: String, val artist: String, val songs: List<Song>)
 
 /**

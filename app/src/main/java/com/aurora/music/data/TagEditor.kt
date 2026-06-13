@@ -18,7 +18,7 @@ import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
 
-/** Editable tag set for one track (4.4). */
+/** Editable tag set for one track. */
 data class AudioTags(
     val title: String = "",
     val artist: String = "",
@@ -30,7 +30,7 @@ data class AudioTags(
 )
 
 /**
- * In-app tag editor (4.4) for on-device files, via JAudiotagger. Reads directly from the file; writes
+ * In-app tag editor for on-device files, via JAudiotagger. Reads directly from the file; writes
  * go through a cache copy (JAudiotagger needs a real File, which scoped storage won't hand out for a
  * MediaStore item) and are pushed back through the content resolver. On Android 11+ a write to a media
  * file the app doesn't own needs one-time user consent — [writeConsentIntent] surfaces that dialog.

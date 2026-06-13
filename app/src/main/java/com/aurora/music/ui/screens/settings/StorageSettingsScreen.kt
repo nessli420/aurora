@@ -75,7 +75,7 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
 
-            // ReplayGain scan (4.3) — only meaningful for on-device files (servers ship their own gains).
+            // ReplayGain scan only meaningful for on-device files (servers ship their own gains).
             if (isLocal) {
                 val rg by container.replayGainScanner.progress.collectAsStateWithLifecycle()
                 SettingsSectionTitle("Volume leveling")

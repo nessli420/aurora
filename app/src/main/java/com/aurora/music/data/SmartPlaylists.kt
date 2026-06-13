@@ -3,7 +3,7 @@ package com.aurora.music.data
 import com.aurora.music.model.Song
 
 /**
- * Smart (rule-based) playlists — 4.2. A [SmartPlaylist] stores predicates that are re-evaluated
+ * Smart (rule-based) playlists. A [SmartPlaylist] stores predicates that are re-evaluated
  * lazily against the active library every time it's opened, so it stays current as the library,
  * likes, downloads and play history change. Persisted as JSON in [SettingsStore]; per the Gson
  * rule, every field is nullable/defaulted.

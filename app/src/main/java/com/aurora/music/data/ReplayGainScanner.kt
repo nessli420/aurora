@@ -15,7 +15,7 @@ import kotlin.math.log10
 import kotlin.math.tan
 
 /**
- * Offline ReplayGain scan (4.3): measures integrated loudness per ITU-R BS.1770 (the EBU R128
+ * Offline ReplayGain scan: measures integrated loudness per ITU-R BS.1770 (the EBU R128
  * algorithm) over the on-device library and stores ReplayGain-2.0 gains in [ReplayGainStore].
  * Album gain is computed by gating the union of all an album's gating blocks, exactly as a real
  * R128 album scan does. Track/album gain = -18 LUFS (the RG2 reference) minus the measured loudness.

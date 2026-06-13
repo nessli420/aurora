@@ -6,7 +6,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 /**
- * ListenBrainz scrobbling (5.1), mirroring [LastfmScrobbler] but token-only (no browser auth). The
+ * ListenBrainz scrobbling, mirroring [LastfmScrobbler] but token-only (no browser auth). The
  * user pastes their ListenBrainz user token in Integrations; submissions are fire-and-forget and
  * never affect playback. A no-op until a token is set.
  */

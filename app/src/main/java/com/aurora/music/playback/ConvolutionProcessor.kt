@@ -82,10 +82,9 @@ private class FloatFifo(capacity: Int) {
 }
 
 /**
- * Convolution / impulse-response loader (Stage 1.2). Convolves 16-bit stereo PCM with a loaded WAV
- * IR (headphone correction, room correction, AutoEq convolution WAVs, speaker/room sims) using a
- * partitioned overlap-save FFT per channel. Last in the DSP chain; passes through when disabled or
- * no IR is loaded.
+ * Impulse-response convolver. Convolves 16-bit stereo PCM with a loaded WAV IR (headphone/room
+ * correction, AutoEq convolution WAVs, speaker/room sims) using a partitioned overlap-save FFT per
+ * channel. Last in the DSP chain; passes through when disabled or no IR is loaded.
  */
 @UnstableApi
 class ConvolutionProcessor : BaseAudioProcessor() {

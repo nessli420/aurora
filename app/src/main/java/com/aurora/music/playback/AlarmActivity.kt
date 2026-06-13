@@ -76,8 +76,8 @@ class AlarmActivity : ComponentActivity() {
         }
         if (disableDaily) {
             val store = (application as AuroraApplication).container.settingsStore
-            // Detached scope so the write survives finish(); flips the recurring-alarm pref off,
-            // which makes AppContainer cancel the AlarmManager schedule.
+            // Detached scope so the write survives finish(). Clearing the pref makes AppContainer
+            // cancel the AlarmManager schedule.
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 val a = store.alarmPrefs.first()
                 store.setAlarm(enabled = false, hour = a.hour, minute = a.minute)

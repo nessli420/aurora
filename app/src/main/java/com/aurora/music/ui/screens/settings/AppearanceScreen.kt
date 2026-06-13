@@ -105,7 +105,6 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
 
-            // --- Display (global) ---
             item { SettingsSectionTitle("Display") }
             item {
                 SettingsSliderRow("Font size", "${(prefs.fontScale * 100).roundToInt()}%", prefs.fontScale, 0.85f..1.3f) { v ->
@@ -118,7 +117,6 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
 
-            // --- Fullscreen player ---
             item { SettingsSectionTitle("Player") }
             item {
                 SegmentedRow("Seek bar", listOf("Waveform", "Bar"), prefs.playerSeekStyle) { i ->
@@ -148,7 +146,6 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
 
-            // --- Miniplayer ---
             item { SettingsSectionTitle("Miniplayer") }
             item {
                 SegmentedRow("Style", listOf("Standard", "Compact", "Prominent"), prefs.miniStyle) { i ->
@@ -161,7 +158,6 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
 
-            // --- Home & library ---
             item { SettingsSectionTitle("Library") }
             item {
                 SegmentedRow("Grid columns", listOf("2", "3", "4"), (prefs.libraryColumns - 2).coerceIn(0, 2)) { i ->

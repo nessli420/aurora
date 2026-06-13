@@ -54,26 +54,26 @@ class AppContainer(context: Context) {
     /** Per-account playback queue persistence (restore after swipe-away / server switch). */
     val queueStore = QueueStore(appContext)
 
-    // Offline-scanned ReplayGain (4.3): overlaid onto local songs by file path.
+    // Offline-scanned ReplayGain: overlaid onto local songs by file path.
     val replayGainStore = ReplayGainStore(appContext)
 
     // Local-files mode (no server): scanned device library + on-device playlists/likes.
     val localLibrary = LocalLibrary(appContext, gainProvider = { path -> replayGainStore.gainsFor(path) })
     private val localStore = LocalStore(appContext)
 
-    /** Offline ReplayGain scanner over the local library (4.3). */
+    /** Offline ReplayGain scanner over the local library. */
     val replayGainScanner = ReplayGainScanner(localLibrary, replayGainStore)
 
-    /** In-app tag editor for on-device files (4.4). */
+    /** In-app tag editor for on-device files. */
     val tagEditor = TagEditor(appContext)
 
-    /** Backup & restore of settings + local playlists/likes + history (5.3). */
+    /** Backup & restore of settings + local playlists/likes + history. */
     val backupManager = BackupManager(settingsStore, localStore, playHistory)
 
-    /** MusicBrainz + Cover Art Archive metadata lookup (4.4). */
+    /** MusicBrainz + Cover Art Archive metadata lookup. */
     val musicBrainz = com.aurora.music.data.remote.MusicBrainzClient()
 
-    /** AcoustID fingerprint identification (4.4c). The user supplies their own key in Integrations. */
+    /** AcoustID fingerprint identification. The user supplies their own key in Integrations. */
     @Volatile private var acoustIdKeyValue: String = ""
     val acoustId = com.aurora.music.data.remote.AcoustIdClient(apiKeyProvider = { acoustIdKeyValue })
 
@@ -177,7 +177,7 @@ class AppContainer(context: Context) {
      */
     val lastfm = LastfmScrobbler(settingsStore, scope)
 
-    /** ListenBrainz scrobbling (5.1) — token-only, set by the user in Integrations. */
+    /** ListenBrainz scrobbling, token-only, set by the user in Integrations. */
     val listenBrainz = ListenBrainzScrobbler(settingsStore, scope)
 
     /**

@@ -41,6 +41,7 @@ aurora-roadmap-phases-2-7.md
 
 # ---- Loose font stash at repo root ----
 /fonts/
+/tools/
 
 # ---- Circular Std is a commercial font (Lineto) — NOT redistributable. Kept out of the repo;
 #      supply your own licensed copy in app/src/main/res/font/ to build (see README). ----

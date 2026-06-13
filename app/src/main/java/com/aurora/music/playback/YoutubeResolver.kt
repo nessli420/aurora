@@ -14,10 +14,10 @@ import org.schabi.newpipe.extractor.downloader.Request as NpRequest
 import org.schabi.newpipe.extractor.downloader.Response as NpResponse
 
 /**
- * Resolves a Spotify track (by search query) to a playable YouTube audio stream URL using
- * NewPipeExtractor — the Spotube/NewPipe approach. Results are cached per Spotify id. Calls block
- * (network), so they must run off the main thread; the playback layer calls this on ExoPlayer's
- * loader thread via a ResolvingDataSource.
+ * Resolves a Spotify track (by search query) to a playable YouTube audio stream URL via
+ * NewPipeExtractor. Results are cached per Spotify id. Calls block on the network, so they must run
+ * off the main thread; the playback layer calls this on ExoPlayer's loader thread via a
+ * ResolvingDataSource.
  */
 class YoutubeResolver {
 

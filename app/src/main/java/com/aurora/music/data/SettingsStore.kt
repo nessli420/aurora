@@ -110,7 +110,6 @@ data class AudioPrefs(
     val dspConvIrPath: String = "",         // path to imported WAV IR ("" = none)
     val dspConvIrName: String = "",         // display name of the loaded IR
     val dspConvMakeupDb: Float = 0f,        // post-convolution makeup gain
-    // --- Depth-parity (2.3) ---
     val dspGraphicLayout: Int = 0,          // index into DspCoeffBuilder.GRAPHIC_LAYOUTS (10/15/31-band)
     val dspSaturation: Float = 0f,          // 0..1 tube/harmonic drive
     val dspDelayLeftMs: Float = 0f,         // per-channel alignment delay
@@ -267,11 +266,11 @@ class SettingsStore(private val context: Context) {
         val ALARM_ENABLED = booleanPreferencesKey("alarm_enabled")
         val ALARM_HOUR = intPreferencesKey("alarm_hour")
         val ALARM_MINUTE = intPreferencesKey("alarm_minute")
-        val PINS = stringPreferencesKey("library_pins")   // JSON; NOT cleared on logout
-        val SMART_PLAYLISTS = stringPreferencesKey("smart_playlists")  // JSON; NOT cleared on logout
+        val PINS = stringPreferencesKey("library_pins")   // JSON; not cleared on logout
+        val SMART_PLAYLISTS = stringPreferencesKey("smart_playlists")  // JSON; not cleared on logout
         val SAVED_SESSIONS = stringPreferencesKey("saved_sessions")   // JSON list; remembered logins
         val SPOTIFY_CLIENT_ID = stringPreferencesKey("spotify_client_id")  // user's own app; survives logout
-        val ACOUSTID_KEY = stringPreferencesKey("acoustid_key")           // user's AcoustID app key (4.4); survives logout
+        val ACOUSTID_KEY = stringPreferencesKey("acoustid_key")           // user's AcoustID app key; survives logout
         val EQ_BINDINGS = stringPreferencesKey("eq_bindings")              // JSON; AutoEQ per-device
         val AUTOEQ_SWITCH = booleanPreferencesKey("autoeq_autoswitch")
         val AUTOEQ_PROFILE = stringPreferencesKey("autoeq_active_profile") // display name of applied profile
@@ -468,8 +467,8 @@ class SettingsStore(private val context: Context) {
     /** The user's own AcoustID application API key (for tag-editor "Auto-identify"). */
     val acoustIdKey: Flow<String> = context.dataStore.data.map { it[Keys.ACOUSTID_KEY] ?: "" }
 
-    // distinctUntilChanged so the AutoEQ controller only reacts to real changes — not every settings
-    // write (which would otherwise re-fire it and wipe a just-applied correction / loop).
+    // distinctUntilChanged so the AutoEQ controller only reacts to real changes, not every settings
+    // write (which would otherwise re-fire it and wipe a just-applied correction).
     /** AutoEQ per-output-device bindings. */
     val eqBindings: Flow<List<EqBinding>> = context.dataStore.data.map { parseBindings(it[Keys.EQ_BINDINGS]) }.distinctUntilChanged()
     /** Auto-apply the bound AutoEQ profile when its output device connects. */
@@ -747,7 +746,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setDiscordImgur(v: String) = context.dataStore.edit { it[Keys.DISCORD_IMGUR] = v.trim() }
     suspend fun setDiscordAppId(v: String) = context.dataStore.edit { it[Keys.DISCORD_APP_ID] = v.trim() }
 
-    // --- Backup / restore (5.3): all DataStore prefs, typed so JSON round-trips losslessly ---
+    // Backup / restore: all DataStore prefs, typed so JSON round-trips losslessly.
 
     suspend fun exportPrefs(): PrefsBackup {
         val p = context.dataStore.data.first()

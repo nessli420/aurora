@@ -386,8 +386,6 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
     }
 }
 
-// ---- System (Android AudioEffect) engine -----------------------------------------------------
-
 private fun LazyListScope.systemEqSection(
     prefs: AudioPrefs,
     fx: com.aurora.music.data.AudioEffectsController,
@@ -442,8 +440,6 @@ private fun LazyListScope.systemEqSection(
         EnhancerSlider("Loudness", prefs.loudnessGain, 0..2000, unit = " mB") { v -> scope.launch { store.setLoudness(v) } }
     }
 }
-
-// ---- Custom software DSP engine --------------------------------------------------------------
 
 private fun LazyListScope.customDspSection(
     prefs: AudioPrefs,
@@ -554,8 +550,6 @@ private fun ParametricBandCard(band: ParamBand, onChange: (ParamBand) -> Unit, o
         FloatSliderRow("Q", band.q, 0.3f..8f, valueText = "%.2f".format(band.q)) { v -> onChange(band.copy(q = v)) }
     }
 }
-
-// ---- Shared controls -------------------------------------------------------------------------
 
 @Composable
 private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {

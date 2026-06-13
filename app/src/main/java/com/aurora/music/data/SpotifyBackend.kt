@@ -51,8 +51,8 @@ class SpotifyBackend(
     // Plain client for scraping the public embed page (no auth) when the Web API forbids non-owned playlists.
     private val embedHttp = OkHttpClient()
 
-    // The user's market (ISO country). REQUIRED by several endpoints (artist top-tracks, search
-    // relinking); passing the wrong/none yields empty results. Resolved once from /me and cached.
+    // The user's market (ISO country). Required by several endpoints (artist top-tracks, search
+    // relinking); passing none or the wrong one yields empty results. Resolved once from /me, cached.
     @Volatile private var marketCache: String? = null
     private suspend fun market(): String {
         marketCache?.let { return it }
@@ -66,17 +66,11 @@ class SpotifyBackend(
     private val albumMeta = HashMap<String, Pair<String, String>>() // albumId -> (artUrl, name)
 
     /**
-     * Fallback for playlists NOT owned by the user: Spotify's API 403s their tracks for new apps.
-     * The public embed page carries only track ids (no album/art), so we scrape the ordered id list
-     * and enrich it with full track objects via /v1/tracks (batched, ≤50 ids) — yielding real
-     * per-track album art + names, rate-limit-safely.
-     */
-    /**
-     * Fallback for playlists NOT owned by the user: Spotify's API 403s their tracks (and even
-     * /v1/tracks) for new apps. The public embed page carries title/artist/duration (no per-track
-     * album art), so we build tracks from it directly — art falls back to the playlist cover, and
-     * the playlist name becomes the album so the player shows "Playing from <playlist>". They still
-     * play (resolved by name+artist via YouTube).
+     * Fallback for playlists not owned by the user: Spotify's API 403s their tracks (and even
+     * /v1/tracks) for new apps. The public embed page carries title/artist/duration but no per-track
+     * album art, so we build tracks from it directly: art falls back to the playlist cover, and the
+     * playlist name becomes the album so the player shows "Playing from <playlist>". They still play
+     * (resolved by name+artist via YouTube).
      */
     private suspend fun fetchEmbedTracks(id: String): List<Song> = withContext(Dispatchers.IO) {
         runCatching {
@@ -110,9 +104,9 @@ class SpotifyBackend(
     }
 
     /**
-     * Load liked songs GENTLY — sequential with a small delay and a [LIKED_CAP] limit. Paging
-     * thousands of saved tracks in a burst trips Spotify's rate limit (429) and breaks the whole
-     * session, so we cap the in-app list; the true total still shows via [starredCount].
+     * Load liked songs sequentially with a small delay and a [LIKED_CAP] limit. Paging thousands of
+     * saved tracks in a burst trips Spotify's rate limit (429) and breaks the whole session, so we
+     * cap the in-app list; the true total still shows via [starredCount].
      */
     private suspend fun loadAllLiked(): List<Song> {
         val out = ArrayList<Song>()
@@ -404,7 +398,7 @@ class SpotifyBackend(
     override suspend fun createPlaylistWithId(name: String): String? =
         runCatching { api.createPlaylist(session.userId, CreatePlaylistBody(name)).id }.getOrNull()
 
-    /** Add/remove tracks to a playlist (Spotify URIs). Used by P3 queue/playlist editing. */
+    /** Add/remove tracks to a playlist (Spotify URIs). */
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { api.addToPlaylist(playlistId, AddTracksBody(trackIds.map { "spotify:track:$it" })).isSuccessful }.getOrDefault(false)
 

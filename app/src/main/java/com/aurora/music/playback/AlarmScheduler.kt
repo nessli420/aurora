@@ -17,10 +17,9 @@ import kotlinx.coroutines.launch
 import java.util.Calendar
 
 /**
- * Schedules the wake-to-music alarm via [AlarmManager]. Uses `setAlarmClock` so it fires exactly even
- * in Doze and shows the system alarm icon (and grants the alarm-triggered foreground-service
- * exemption needed to start playback from the background). Falls back to an inexact alarm if exact
- * scheduling isn't permitted.
+ * Schedules the wake-to-music alarm via [AlarmManager]. Uses `setAlarmClock` so it fires exactly in
+ * Doze and grants the alarm-triggered foreground-service exemption needed to start playback from the
+ * background. Falls back to an inexact alarm when exact scheduling isn't permitted.
  */
 object AlarmScheduler {
     private const val REQUEST_CODE = 0x4A1A
@@ -35,7 +34,7 @@ object AlarmScheduler {
             if (canScheduleExact(am)) {
                 am.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, null), pi)
             } else {
-                // No exact-alarm permission — best-effort inexact wake.
+                // No exact-alarm permission: best-effort inexact wake.
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
             }
         }
@@ -65,14 +64,14 @@ object AlarmScheduler {
 }
 
 /**
- * Fires the alarm (starts wake-to-music playback) and reschedules the next day; also re-arms the
+ * Fires the alarm (starts wake-to-music playback) and reschedules for the next day. Also re-arms the
  * alarm after a device reboot, since alarms don't survive reboots.
  */
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val appContext = context.applicationContext
         if (intent.action == ACTION_FIRE) {
-            // Start playback right away (within the alarm-triggered FGS exemption window).
+            // Start playback within the alarm-triggered FGS exemption window.
             runCatching {
                 val svc = Intent(appContext, PlaybackService::class.java).setAction(PlaybackService.ACTION_ALARM)
                 ContextCompat.startForegroundService(appContext, svc)

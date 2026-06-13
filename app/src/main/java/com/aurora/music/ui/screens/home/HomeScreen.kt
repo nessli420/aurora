@@ -75,7 +75,6 @@ fun HomeScreen(
         ),
         verticalArrangement = Arrangement.spacedBy(26.dp),
     ) {
-        // Header
         item {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp),
@@ -113,7 +112,6 @@ fun HomeScreen(
             return@LazyColumn
         }
 
-        // Hero carousel — newest releases
         if (data.newReleases.isNotEmpty() && HomeSection.HERO !in hidden) {
             item {
                 val heroItems = data.newReleases.take(5)
@@ -143,7 +141,6 @@ fun HomeScreen(
             }
         }
 
-        // Jump back in — recently played albums
         if (data.recentlyPlayed.isNotEmpty() && HomeSection.RECENT !in hidden) {
             item {
                 SectionHeader("Jump back in", Modifier.padding(horizontal = 16.dp))
@@ -157,7 +154,6 @@ fun HomeScreen(
             }
         }
 
-        // Made for you — playlists
         if (data.playlists.isNotEmpty() && HomeSection.PLAYLISTS !in hidden) {
             item {
                 SectionHeader("Your playlists", Modifier.padding(horizontal = 16.dp))
@@ -170,7 +166,6 @@ fun HomeScreen(
             }
         }
 
-        // Fresh waveform feature card — a starred track
         val featured = data.starred.firstOrNull()
         if (featured != null && HomeSection.FAVOURITE !in hidden) {
             item {
@@ -212,7 +207,6 @@ fun HomeScreen(
             }
         }
 
-        // Most played
         if (data.mostPlayed.isNotEmpty() && HomeSection.MOST !in hidden) {
             item {
                 SectionHeader("Most played", Modifier.padding(horizontal = 16.dp))
@@ -225,7 +219,6 @@ fun HomeScreen(
             }
         }
 
-        // Popular artists
         if (data.artists.isNotEmpty() && HomeSection.ARTISTS !in hidden) {
             item {
                 SectionHeader("Artists", Modifier.padding(horizontal = 16.dp))
@@ -238,7 +231,6 @@ fun HomeScreen(
             }
         }
 
-        // New releases
         if (data.newReleases.isNotEmpty() && HomeSection.NEW !in hidden) {
             item {
                 SectionHeader("New releases", Modifier.padding(horizontal = 16.dp))

@@ -31,7 +31,7 @@ data class DownloadedSong(
     val audioPath: String,
     val coverPath: String,
     // Nullable because Gson injects null (not the Kotlin default) when an older saved record
-    // predates these fields — see toSong()'s null-coalescing.
+    // predates these fields; null-coalesced in toSong().
     val suffix: String? = "",
     val bitrateKbps: Int = 0,
     val sampleRateHz: Int = 0,
@@ -162,7 +162,7 @@ class DownloadManager(
             // Build the audio URL at the chosen download quality (0 = lossless/original).
             val bitrate = downloadBitrateProvider()
             val provided = streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl
-            // Spotify tracks carry an `aurora-yt://` sentinel — resolve it to a real YouTube audio
+            // Spotify tracks carry an `aurora-yt://` sentinel; resolve it to a real YouTube audio
             // URL (using the song's full sentinel, which holds the search query) before fetching.
             val audioUrl = if (provided.startsWith("aurora-yt://")) {
                 val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else provided
