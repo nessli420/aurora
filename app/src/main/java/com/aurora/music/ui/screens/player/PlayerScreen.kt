@@ -33,7 +33,10 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bedtime
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Speaker
@@ -104,6 +107,9 @@ fun PlayerScreen(
     onGoToArtist: () -> Unit,
     onOpenOutput: () -> Unit,
     onOpenSleep: () -> Unit,
+    onOpenVisualizer: () -> Unit,
+    onSonicRadio: () -> Unit,
+    onAutoDj: () -> Unit,
     gestures: com.aurora.music.data.GesturePrefs = com.aurora.music.data.GesturePrefs(),
 ) {
     val song = state.current
@@ -194,6 +200,21 @@ fun PlayerScreen(
                         )
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                             DropdownMenuItem(
+                                text = { Text("Sonic radio") },
+                                onClick = { showMenu = false; onSonicRadio() },
+                                leadingIcon = { Icon(Icons.Filled.Radio, null) },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Auto-DJ") },
+                                onClick = { showMenu = false; onAutoDj() },
+                                leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
+                            )
+                            DropdownMenuItem(
+                                text = { Text("Visualizer") },
+                                onClick = { showMenu = false; onOpenVisualizer() },
+                                leadingIcon = { Icon(Icons.Filled.GraphicEq, null) },
+                            )
+                            DropdownMenuItem(
                                 text = { Text("Sleep timer") },
                                 onClick = { showMenu = false; onOpenSleep() },
                                 leadingIcon = { Icon(Icons.Filled.Bedtime, null) },
@@ -274,6 +295,14 @@ fun PlayerScreen(
                     Text(song.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(2.dp))
                     Text(song.artist, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    if (state.bpm > 0) {
+                        Spacer(Modifier.height(3.dp))
+                        Text(
+                            "${state.keyName} · ${state.camelot} · ${state.bpm} BPM",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary, maxLines = 1,
+                        )
+                    }
                 }
                 val likeTint by animateColorAsState(
                     if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, label = "like",
@@ -287,18 +316,27 @@ fun PlayerScreen(
             }
 
             val badge = formatBadge(song)
-            if (badge.isNotEmpty()) {
+            val source = sourceLabel(song)
+            if (badge.isNotEmpty() || source != null) {
                 Spacer(Modifier.height(10.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (source != null) {
+                        Box(
+                            Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)).padding(horizontal = 10.dp, vertical = 3.dp),
+                        ) { Text(source, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                        Spacer(Modifier.width(8.dp))
+                    }
                     if (isLossless(song.suffix)) {
                         Box(
                             Modifier.clip(RoundedCornerShape(50)).background(accent).padding(horizontal = 8.dp, vertical = 3.dp),
                         ) { Text("LOSSLESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = if (accent.luminance() > 0.6f) Color.Black else Color.White) }
                         Spacer(Modifier.width(8.dp))
                     }
-                    Box(
-                        Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)).padding(horizontal = 10.dp, vertical = 3.dp),
-                    ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
+                    if (badge.isNotEmpty()) {
+                        Box(
+                            Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)).padding(horizontal = 10.dp, vertical = 3.dp),
+                        ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
+                    }
                 }
             }
 
@@ -385,6 +423,14 @@ fun PlayerScreen(
     }
 }
 
+/** Where the current track is sourced from, derived from its stream URL scheme (7.1b). */
+private fun sourceLabel(song: com.aurora.music.model.Song): String? = when {
+    song.streamUrl.isBlank() -> null
+    song.streamUrl.startsWith("content://") -> "Local"
+    song.streamUrl.startsWith("file://") -> "Downloaded"
+    else -> "Streaming"
+}
+
 private fun formatBadge(song: com.aurora.music.model.Song): String {
     val parts = mutableListOf<String>()
     if (song.suffix.isNotBlank()) parts.add(song.suffix.uppercase())
@@ -412,6 +458,18 @@ private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, la
 @Composable
 private fun SeekBar(progress: Float, positionSec: Int, durationSec: Int, accent: Color, seed: Int, seekStyle: Int, waveBars: Int, onSeek: (Float) -> Unit) {
     Column {
+        if (durationSec <= 0) {
+            // Live stream (internet radio) — no fixed length, so there's nothing to scrub. Show a LIVE
+            // indicator and the elapsed listening time instead of a seek bar.
+            Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
+                Spacer(Modifier.width(8.dp))
+                Text("LIVE", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = accent)
+                Spacer(Modifier.weight(1f))
+                Text(formatTime(positionSec), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            return@Column
+        }
         if (seekStyle == SeekStyle.BAR) {
             Slider(
                 value = progress.coerceIn(0f, 1f),

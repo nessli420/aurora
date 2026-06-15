@@ -87,6 +87,9 @@ class PlaybackService : MediaLibraryService() {
     private var xfadeActive = false
     private var xfadeStartMs = 0L
     private var xfadeExpectedId: String? = null
+    private var xfadeInGain = 1f                 // incoming track's target (ReplayGain) level
+    private var xfadeOutGain = 1f                 // outgoing track's level when the fade began
+    @Volatile private var bitPerfect = false     // crossfade is disabled in bit-perfect USB mode
 
     // Physical-shuffle bookkeeping: queue order (by mediaId) before shuffle was turned on, so
     // disabling can restore the real album/playlist order. Null = not currently shuffled.
@@ -114,6 +117,7 @@ class PlaybackService : MediaLibraryService() {
         // Experimental: route PCM straight to a USB DAC via the decent-player driver (bit-perfect,
         // bypasses the whole Android audio stack AND our DSP). Falls back to speaker when no DAC.
         val bitPerfectUsb = runBlocking { container.settingsStore.playbackPrefs.first().bitPerfectUsb }
+        bitPerfect = bitPerfectUsb
         val useFloat = bitPerfectUsb || (highRes && startupDspMode != DspMode.CUSTOM)
         useFloatOut = useFloat
 
@@ -134,15 +138,31 @@ class PlaybackService : MediaLibraryService() {
                     val delegate = DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(true)
                         .build()
-                    return com.decent.usbaudio.media3.UsbAudioSink(delegate, context).also { usbSink = it }
+                    return com.decent.usbaudio.media3.UsbAudioSink(delegate, context).also {
+                        usbSink = it
+                        // Feed the visualizer for every decoded buffer (works with or without a DAC).
+                        it.pcmTap = com.decent.usbaudio.media3.UsbAudioSink.PcmTap { buf, enc, ch, sr ->
+                            container.visualizer.pushPcm(buf, enc, ch, sr)
+                        }
+                        // Pull source for the native libFLAC engine (bit-perfect local files, which
+                        // decode in C++ and never reach handleBuffer).
+                        val sink = it
+                        container.visualizer.monoSource = object : VisualizerController.MonoSource {
+                            override fun read(out: FloatArray) = sink.readNativePcm(out)
+                            override fun sampleRate() = sink.nativeEngineSampleRate
+                            override fun active() = sink.nativeEngineActive
+                        }
+                    }
                 }
-                return DefaultAudioSink.Builder(context)
+                val base = DefaultAudioSink.Builder(context)
                     .setAudioProcessors(arrayOf(monoProcessor, auroraDsp, convolver))
                     .setEnableFloatOutput(useFloat)
                     // Float mode bypasses Sonic, so use hardware playback params for speed; otherwise
                     // keep Sonic (which also gives independent pitch).
                     .setEnableAudioTrackPlaybackParams(useFloat || enableAudioTrackPlaybackParams)
                     .build()
+                // Wrap so the visualizer sees decoded PCM in both 16-bit and hi-res float modes.
+                return TappingAudioSink(base, container.visualizer)
             }
         }
         // Prefer the FFmpeg decoder so non-local/non-FLAC content decodes to float32 (the wrapper
@@ -185,6 +205,16 @@ class PlaybackService : MediaLibraryService() {
         player = playerBuilder.build()
         // Connect the USB sink to the player (track-path extraction, engine lifecycle, EOF -> next).
         if (bitPerfectUsb) usbSink?.attachToPlayer(player)
+
+        // USB host permission isn't persisted across process restarts, so re-acquire it on startup
+        // when the toggle is on and a DAC is connected. Without this the sink finds no permission in
+        // configure() and silently falls back to normal output until the user re-toggles the setting.
+        if (bitPerfectUsb) {
+            runCatching {
+                val dev = com.decent.usbaudio.UsbAudioDevice.getInstance(this)
+                dev.findUsbAudioDevice()?.let { d -> if (!dev.hasPermission(d)) dev.requestPermission(d) {} }
+            }
+        }
 
         // Route audio to the shared session id so the DSP effects (EQ/bass/virtualizer/loudness)
         // created on it actually apply to playback.
@@ -247,7 +277,9 @@ class PlaybackService : MediaLibraryService() {
         // Audio tick: drive ReplayGain volume + a real overlapping crossfade.
         scope.launch {
             while (isActive) {
-                delay(100)
+                // Ramp finely (25ms) while any fade is in flight for a smooth, step-free curve;
+                // idle ReplayGain tracking only needs a coarse 100ms tick.
+                delay(if (xfadeActive || sleepFadeActive || wakeFadeActive) 25L else 100L)
                 tickAudio()
             }
         }
@@ -445,7 +477,9 @@ class PlaybackService : MediaLibraryService() {
 
     private fun maybeBeginXfade() {
         val fade = crossfadeMs
-        if (fade <= 0 || !player.isPlaying) return
+        // Bit-perfect routes the main player to the USB DAC; the 2nd fade player would come out the
+        // phone speaker instead, so don't crossfade in that mode.
+        if (fade <= 0 || bitPerfect || !player.isPlaying) return
         // In REPEAT_MODE_ONE ExoPlayer's navigation treats repeat-one as repeat-off, so
         // hasNextMediaItem()/seekToNextMediaItem() do nothing; the "next" track is the current one
         // restarted. Crossfade by looping back to position 0 of the same item so the tail fades out
@@ -468,11 +502,13 @@ class PlaybackService : MediaLibraryService() {
             tail.setMediaItem(androidx.media3.common.MediaItem.fromUri(uri))
             tail.prepare()
             tail.seekTo(pos)
-            tail.volume = player.volume.coerceIn(0.06f, 1f)
+            tail.volume = player.volume.coerceIn(0f, 1f)
             tail.playWhenReady = true
         }
+        xfadeOutGain = player.volume.coerceIn(0f, 1f)   // outgoing track's current level
         // Repeat-one: restart the same item (next == current). Otherwise advance to the next item.
         if (repeatOne) player.seekTo(0) else player.seekToNextMediaItem()
+        xfadeInGain = replayGainMultiplier()             // incoming track's target level
         player.volume = 0f
         xfadeExpectedId = player.currentMediaItem?.mediaId
         xfadeStartMs = android.os.SystemClock.elapsedRealtime()
@@ -482,8 +518,13 @@ class PlaybackService : MediaLibraryService() {
     private fun driveXfade() {
         val fade = crossfadeMs.coerceAtLeast(1)
         val t = ((android.os.SystemClock.elapsedRealtime() - xfadeStartMs).toFloat() / fade).coerceIn(0f, 1f)
-        player.volume = (t * replayGainMultiplier()).coerceIn(0f, 1f)
-        fadePlayer?.volume = (1f - t).coerceIn(0f, 1f)
+        // Equal-power (constant-loudness) curves: in² + out² = 1, so there's no ~3dB dip mid-fade
+        // the way two linear ramps produce.
+        val half = Math.PI.toFloat() / 2f
+        val inG = kotlin.math.sin(t * half)
+        val outG = kotlin.math.cos(t * half)
+        player.volume = (inG * xfadeInGain).coerceIn(0f, 1f)
+        fadePlayer?.volume = (outG * xfadeOutGain).coerceIn(0f, 1f)
         if (t >= 1f) endXfade()
     }
 

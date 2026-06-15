@@ -122,6 +122,27 @@ class UsbAudioSink(
     private var nativeEngine: NativeAudioEngine? = null
     private val engineLock = Any()
 
+    /** Optional consumer of the decoded PCM passing through this sink (e.g. an audio visualizer).
+     *  Invoked for every buffer regardless of DAC state. The native libFLAC engine path decodes in
+     *  C++ and feeds the tap separately via [nativePcmTap]. */
+    fun interface PcmTap { fun onPcm(buffer: ByteBuffer, encoding: Int, channelCount: Int, sampleRate: Int) }
+    @Volatile var pcmTap: PcmTap? = null
+
+    /** Pull the latest mono samples from the native FLAC engine for the visualizer (bit-perfect
+     *  local files decode in C++ and never reach handleBuffer, so they're polled instead). */
+    fun readNativePcm(out: FloatArray): Int {
+        val e = nativeEngine
+        return if (e != null && e.isRunning) e.readVisualizer(out) else 0
+    }
+    val nativeEngineActive: Boolean get() = nativeEngine?.isRunning == true
+    val nativeEngineSampleRate: Int get() = currentSampleRate
+
+    // Decoded-stream format, captured in configure() regardless of DAC state so the tap works
+    // whether or not a USB device is connected.
+    private var tapEncoding: Int = C.ENCODING_PCM_16BIT
+    private var tapSampleRate: Int = 0
+    private var tapChannelCount: Int = 0
+
     private var currentEncoding: Int = C.ENCODING_PCM_16BIT
     private var currentSampleRate: Int = 0
     private var currentChannelCount: Int = 0
@@ -136,6 +157,11 @@ class UsbAudioSink(
      */
     private var usbStartMediaTimeUs: Long = 0L
     private var usbStartMediaTimeNeedsInit: Boolean = true
+    /** framesWritten value at the last startMediaTime capture. The USB stream's framesWritten is
+     *  cumulative since the stream was created (not reset per track), so the ExoPlayer-pipeline
+     *  position must measure frames *since this track started* as a delta from here — otherwise the
+     *  previous track's frames carry over and the reported position starts a chunk past 0. */
+    private var usbStartFrames: Long = 0L
     private var handledEndOfStream: Boolean = false
 
     /** ExoPlayer's window offset, captured once per track. Never reset by flush.
@@ -167,6 +193,10 @@ class UsbAudioSink(
     override fun configure(inputFormat: Format, specifiedBufferSize: Int, outputChannels: IntArray?) {
         val enc = inputFormat.pcmEncoding
         if (enc != Format.NO_VALUE) currentEncoding = enc
+        // Capture the decoded format for the visualizer tap, independent of the bit-perfect path.
+        if (enc != Format.NO_VALUE) tapEncoding = enc
+        if (inputFormat.sampleRate != Format.NO_VALUE) tapSampleRate = inputFormat.sampleRate
+        if (inputFormat.channelCount != Format.NO_VALUE) tapChannelCount = inputFormat.channelCount
 
         // If native engine is still playing the SAME track AND the rate didn't change,
         // don't touch it. This happens when ExoPlayer pre-buffers the next track ~10s
@@ -240,6 +270,10 @@ class UsbAudioSink(
         presentationTimeUs: Long,
         encodedAccessUnitCount: Int
     ): Boolean {
+        // Feed the visualizer on every decoded buffer, whether or not a DAC is attached. Absolute
+        // indexing inside the tap leaves the buffer position untouched for the real sink below.
+        pcmTap?.onPcm(buffer, tapEncoding, tapChannelCount, tapSampleRate)
+
         val stream = usbAudioStream
         if (config.bitPerfectEnabled && stream?.isAlive == true) {
             muteDelegateIfNeeded()
@@ -255,6 +289,9 @@ class UsbAudioSink(
             // Capture media timeline offset from first buffer (needed for position tracking)
             if (usbStartMediaTimeNeedsInit) {
                 usbStartMediaTimeUs = maxOf(0L, presentationTimeUs)
+                // Anchor the cumulative USB frame counter to this track/seek so the pipeline
+                // position below counts only frames played since this point.
+                usbStartFrames = usbAudioStream?.framesWritten ?: 0L
                 usbStartMediaTimeNeedsInit = false
                 // Save window offset once per track (not reset by flush/seek).
                 // windowOffset = ExoPlayer timeline position of track start (position 0).
@@ -263,7 +300,8 @@ class UsbAudioSink(
                 if (windowOffsetUs < 0) {
                     windowOffsetUs = presentationTimeUs - initialPlayerPositionUs
                 }
-                Log.i(TAG, "startMediaTimeUs=$usbStartMediaTimeUs windowOffset=$windowOffsetUs initialPos=${initialPlayerPositionUs / 1000}ms")
+                Log.i(TAG, "startMediaTimeUs=$usbStartMediaTimeUs windowOffset=$windowOffsetUs " +
+                        "initialPos=${initialPlayerPositionUs / 1000}ms startFrames=$usbStartFrames")
 
                 // After a flush (seek) or initial start, seek the native engine
                 // to the correct position and resume it.
@@ -390,10 +428,12 @@ class UsbAudioSink(
                 return windowOffsetUs + engine!!.getPositionUs()
             }
 
-            // ExoPlayer pipeline fallback: relative framesWritten + startMediaTime
+            // ExoPlayer pipeline fallback: frames played since this track started (delta from the
+            // anchor) + the track's start media time. framesWritten is cumulative across tracks, so
+            // the delta is what keeps the position from starting a previous-track's-worth past 0.
             if (streamAlive) {
                 if (usbStartMediaTimeNeedsInit) return AudioSink.CURRENT_POSITION_NOT_SET
-                val frames = usbAudioStream?.framesWritten ?: 0L
+                val frames = (usbAudioStream?.framesWritten ?: 0L) - usbStartFrames
                 return if (currentSampleRate > 0) {
                     usbStartMediaTimeUs + frames * C.MICROS_PER_SECOND / currentSampleRate
                 } else AudioSink.CURRENT_POSITION_NOT_SET
@@ -481,6 +521,15 @@ class UsbAudioSink(
 
     override fun release() {
         releaseUsbStream()
+        // App is tearing down: hand the DAC back to the system. releaseUsbStream() deliberately
+        // keeps the device open for between-track reuse, so on a real release we must also drop the
+        // streaming interface to its zero-bandwidth alt and close the connection. Otherwise the DAC
+        // is left claimed in a streaming alt setting (kernel driver detached) and stays wedged for
+        // every other app until it's physically unplugged and back in.
+        runCatching {
+            usbAudioDevice.setAltSetting(0)
+            usbAudioDevice.closeDevice()
+        }
         super.release()
     }
 
@@ -774,10 +823,15 @@ class UsbAudioSink(
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             if (mediaItem == null) return
 
-            // Capture player position BEFORE engine creation. On restore this is
-            // the saved position (e.g., 158s). On fresh start this is 0.
-            initialPlayerPositionUs = (attachedPlayer?.currentPosition ?: 0L) * 1000L
-            Log.i(TAG, "onMediaItemTransition: initialPlayerPos=${initialPlayerPositionUs / 1000}ms")
+            // The new track's start position, used to compute windowOffset. Only a genuine queue
+            // restore (PLAYLIST_CHANGED, e.g. resuming at 158s) carries a real mid-track position.
+            // Every other transition (auto-advance, skip, repeat) starts the next track at 0, and
+            // reading currentPosition mid-advance is unreliable — it can still report the finished
+            // track's end, which corrupts windowOffset and freezes the position at the end.
+            initialPlayerPositionUs = if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED) {
+                (attachedPlayer?.currentPosition ?: 0L) * 1000L
+            } else 0L
+            Log.i(TAG, "onMediaItemTransition: reason=$reason initialPlayerPos=${initialPlayerPositionUs / 1000}ms")
 
             val uri = mediaItem.localConfiguration?.uri
 

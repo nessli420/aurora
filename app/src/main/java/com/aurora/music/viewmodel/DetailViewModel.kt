@@ -5,9 +5,11 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.DetailData
+import com.aurora.music.data.remote.ArtistInfo
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -16,6 +18,8 @@ data class DetailUiState(
     val data: DetailData? = null,
     val loadingMore: Boolean = false,
     val canLoadMore: Boolean = false,
+    /** 6.5 artist enrichment (bio + image), null until/unless resolved. */
+    val artistInfo: ArtistInfo? = null,
 )
 
 class DetailViewModel(app: Application) : AndroidViewModel(app) {
@@ -39,10 +43,27 @@ class DetailViewModel(app: Application) : AndroidViewModel(app) {
     private fun fetch(kind: String, id: String) {
         curKind = kind; curId = id
         viewModelScope.launch {
-            _state.update { it.copy(loading = true, data = null, loadingMore = false, canLoadMore = false) }
+            _state.update { it.copy(loading = true, data = null, loadingMore = false, canLoadMore = false, artistInfo = null) }
             val data = container.repository.detail(kind, id)
             val canMore = data != null && data.tracks.size < data.info.songCount
             _state.update { it.copy(loading = false, data = data, canLoadMore = canMore) }
+            if (kind == "artist" && data != null) enrichArtist(data.info.title)
+        }
+    }
+
+    /** Fetch a bio + image for the artist (cached, off-thread). No-op when disabled or nothing found. */
+    private fun enrichArtist(name: String) {
+        if (name.isBlank()) return
+        viewModelScope.launch {
+            if (!container.settingsStore.artistEnrichment.first()) return@launch
+            val info = container.artistInfoStore.get(name)
+                ?: runCatching { container.artistInfoClient.lookup(name) }.getOrNull()?.also {
+                    container.artistInfoStore.put(name, it)
+                }
+            // Guard against a race: only apply if this artist is still the one on screen.
+            if (info != null && info.found && _state.value.data?.info?.title == name) {
+                _state.update { it.copy(artistInfo = info) }
+            }
         }
     }
 

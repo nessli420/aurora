@@ -20,6 +20,12 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "aurora_settings")
 
+/** Playback source tiers in default priority order (7.1b): on-device file, app download, then stream. */
+val DEFAULT_SOURCE_PRIORITY = listOf("local", "downloaded", "stream")
+
+/** Sentinel in `mergeSources` meaning "no servers" (so empty can keep meaning "all eligible"). */
+const val MERGE_NONE = "__none__"
+
 /** Which kind of media server a session talks to. */
 enum class ServerType { SUBSONIC, JELLYFIN, SPOTIFY, LOCAL }
 
@@ -51,6 +57,9 @@ data class Session(
     }
 }
 
+/** Stable per-account key (used for account-change detection and unified-library membership). */
+fun Session.accountKey(): String = "${type.name}|$server|$username|$userId"
+
 /** Playback preferences that drive the ExoPlayer engine. */
 data class PlaybackPrefs(
     val skipSilence: Boolean = false,
@@ -65,6 +74,80 @@ data class PlaybackPrefs(
     val scrobble: Boolean = true,
     val autoplayRadio: Boolean = false,
     val bitPerfectUsb: Boolean = false, // experimental: route to USB DAC via the decent-player driver
+)
+
+/** Visualizer render style. */
+object VisualizerStyle {
+    const val BARS = 0
+    const val MIRROR_BARS = 1
+    const val WAVEFORM = 2
+    const val FILLED_WAVE = 3
+    const val RADIAL_BARS = 4
+    const val RADIAL_WAVE = 5
+    const val PARTICLES = 6
+    const val FLUID = 7
+    const val COMBO = 8
+    const val SMOOTH_CURVE = 9
+    const val DOT_GRID = 10
+    const val RINGS = 11
+    const val ORB = 12
+    const val LADDER = 13
+    const val HORIZON = 14
+    const val CONSTELLATION = 15
+    const val PEAK_DOTS = 16
+    const val SPECTRUM_LINE = 17
+    const val AURORA = 18
+    const val SPECTRAL_RIVER = 19
+    const val SPECTRAL_TERRAIN = 20
+    const val CURL_FLOW = 21
+    const val STRANGE_ATTRACTOR = 22
+    const val CYMATIC = 23
+    const val SUPERFORMULA_BLOOM = 24
+    const val WORMHOLE = 25
+    const val count = 26
+    fun label(v: Int) = when (v) {
+        BARS -> "Spectrum bars"; MIRROR_BARS -> "Mirror bars"; WAVEFORM -> "Waveform"
+        FILLED_WAVE -> "Filled wave"; RADIAL_BARS -> "Radial spectrum"; RADIAL_WAVE -> "Radial wave"
+        PARTICLES -> "Particles"; FLUID -> "Fluid blob"; COMBO -> "Combo"
+        SMOOTH_CURVE -> "Spectrum curve"; DOT_GRID -> "Dot matrix"; RINGS -> "Pulse rings"
+        ORB -> "Orb"; LADDER -> "LED ladder"; HORIZON -> "Horizon"; CONSTELLATION -> "Constellation"
+        PEAK_DOTS -> "Peak dots"; SPECTRUM_LINE -> "Neon line"; AURORA -> "Aurora"
+        SPECTRAL_RIVER -> "Spectral river"; SPECTRAL_TERRAIN -> "Terrain flyover"; CURL_FLOW -> "Curl flow"
+        STRANGE_ATTRACTOR -> "Strange attractor"; CYMATIC -> "Cymatics"; SUPERFORMULA_BLOOM -> "Bloom"
+        WORMHOLE -> "Wormhole"
+        else -> "Spectrum bars"
+    }
+}
+
+/** Where the visualizer takes its colours from. */
+object VizColor { const val ACCENT = 0; const val CUSTOM = 1; const val GRADIENT = 2; const val ALBUM_ART = 3 }
+
+/** Visualizer backdrop. */
+object VizBackground { const val BLACK = 0; const val GRADIENT = 1; const val ALBUM_BLUR = 2 }
+
+/**
+ * Audio-visualizer settings. The renderer reads [style]; the analysis engine
+ * ([com.aurora.music.playback.VisualizerController]) reads the band/FFT/sensitivity fields.
+ */
+data class VisualizerPrefs(
+    val style: Int = VisualizerStyle.BARS,
+    val colorSource: Int = VizColor.ACCENT,
+    val primaryColor: Int = 0xFF7C4DFF.toInt(),
+    val secondaryColor: Int = 0xFF00E5FF.toInt(),
+    val background: Int = VizBackground.GRADIENT,
+    val barCount: Int = 64,
+    val smoothing: Float = 0.78f,   // temporal decay, 0 = snappy, ~0.95 = floaty
+    val sensitivity: Float = 1.0f,  // input gain, 0.25..4
+    val minHz: Int = 30,
+    val maxHz: Int = 16000,
+    val peakHold: Boolean = true,
+    val mirror: Boolean = false,
+    val fftSize: Int = 2048,        // 1024 / 2048 / 4096
+    val fpsCap: Int = 60,           // 30 / 60 / 90 / 120
+    val rotate: Boolean = false,    // slow spin for radial styles
+    val particleCount: Int = 140,
+    val showAlbumArt: Boolean = true,
+    val showTrackInfo: Boolean = true,
 )
 
 /** Parametric filter type: peaking, low-shelf, or high-shelf (matches AutoEq PK/LSC/HSC). */
@@ -253,6 +336,25 @@ class SettingsStore(private val context: Context) {
         val DOWNLOAD_BITRATE = intPreferencesKey("download_bitrate")
         val PREFER_HIRES = booleanPreferencesKey("prefer_hires")
         val BIT_PERFECT_USB = booleanPreferencesKey("bit_perfect_usb")
+        val VIZ_STYLE = intPreferencesKey("viz_style")
+        val VIZ_COLOR_SOURCE = intPreferencesKey("viz_color_source")
+        val VIZ_PRIMARY = intPreferencesKey("viz_primary")
+        val VIZ_SECONDARY = intPreferencesKey("viz_secondary")
+        val VIZ_BACKGROUND = intPreferencesKey("viz_background")
+        val VIZ_BAR_COUNT = intPreferencesKey("viz_bar_count")
+        val VIZ_SMOOTHING = floatPreferencesKey("viz_smoothing")
+        val VIZ_SENSITIVITY = floatPreferencesKey("viz_sensitivity")
+        val VIZ_MIN_HZ = intPreferencesKey("viz_min_hz")
+        val VIZ_MAX_HZ = intPreferencesKey("viz_max_hz")
+        val VIZ_PEAK_HOLD = booleanPreferencesKey("viz_peak_hold")
+        val VIZ_MIRROR = booleanPreferencesKey("viz_mirror")
+        val VIZ_FFT_SIZE = intPreferencesKey("viz_fft_size")
+        val VIZ_FPS = intPreferencesKey("viz_fps")
+        val VIZ_ROTATE = booleanPreferencesKey("viz_rotate")
+        val VIZ_PARTICLES = intPreferencesKey("viz_particles")
+        val VIZ_ALBUM_ART = booleanPreferencesKey("viz_album_art")
+        val VIZ_TRACK_INFO = booleanPreferencesKey("viz_track_info")
+        val SONIC_AUTO_ANALYZE = booleanPreferencesKey("sonic_auto_analyze")
         val SCROBBLE = booleanPreferencesKey("scrobble")
         val AUTOPLAY_RADIO = booleanPreferencesKey("autoplay_radio")
         val OFFLINE = booleanPreferencesKey("offline_mode")
@@ -268,6 +370,16 @@ class SettingsStore(private val context: Context) {
         val ALARM_MINUTE = intPreferencesKey("alarm_minute")
         val PINS = stringPreferencesKey("library_pins")   // JSON; not cleared on logout
         val SMART_PLAYLISTS = stringPreferencesKey("smart_playlists")  // JSON; not cleared on logout
+        val RADIO_FAVORITES = stringPreferencesKey("radio_favorites")  // JSON list; not cleared on logout
+        val PODCAST_SUBS = stringPreferencesKey("podcast_subs")        // JSON list; not cleared on logout
+        val ARTIST_ENRICHMENT = booleanPreferencesKey("artist_enrichment")
+        val PREFER_LOCAL = booleanPreferencesKey("prefer_local_sources")
+        val SOURCE_PRIORITY = stringPreferencesKey("source_priority")     // ordered tiers: local/downloaded/stream
+        val UNIFIED_LIBRARY = booleanPreferencesKey("unified_library")    // merge saved servers + local into one
+        val MERGE_SOURCES = stringSetPreferencesKey("merge_sources")      // account keys included (empty = all)
+        val RECENT_SEARCHES = stringPreferencesKey("recent_searches")  // JSON list, most-recent first
+        val SQUIG_BASE = stringPreferencesKey("squig_base_url")        // squig.link instance for live AutoEQ
+        val SQUIG_TARGET = stringPreferencesKey("squig_target")        // target curve file stem
         val SAVED_SESSIONS = stringPreferencesKey("saved_sessions")   // JSON list; remembered logins
         val SPOTIFY_CLIENT_ID = stringPreferencesKey("spotify_client_id")  // user's own app; survives logout
         val ACOUSTID_KEY = stringPreferencesKey("acoustid_key")           // user's AcoustID app key; survives logout
@@ -508,6 +620,44 @@ class SettingsStore(private val context: Context) {
         p[Keys.SMART_PLAYLISTS] = gson.toJson(parseSmart(p[Keys.SMART_PLAYLISTS]).filterNot { it.id == id })
     }
 
+    /** The user's favourited / custom-added internet-radio stations (6.3). */
+    val radioFavorites: Flow<List<RadioStation>> = context.dataStore.data.map { p -> parseRadio(p[Keys.RADIO_FAVORITES]) }
+
+    private fun parseRadio(json: String?): List<RadioStation> = runCatching {
+        if (json.isNullOrBlank()) emptyList()
+        else gson.fromJson<List<RadioStation>>(json, object : TypeToken<List<RadioStation>>() {}.type) ?: emptyList()
+    }.getOrDefault(emptyList())
+
+    /** Favourite a station (upsert by uuid). */
+    suspend fun saveRadioStation(s: RadioStation) = context.dataStore.edit { p ->
+        val cur = parseRadio(p[Keys.RADIO_FAVORITES])
+        val next = if (cur.any { it.uuid == s.uuid }) cur.map { if (it.uuid == s.uuid) s else it } else cur + s
+        p[Keys.RADIO_FAVORITES] = gson.toJson(next)
+    }
+
+    suspend fun deleteRadioStation(uuid: String) = context.dataStore.edit { p ->
+        p[Keys.RADIO_FAVORITES] = gson.toJson(parseRadio(p[Keys.RADIO_FAVORITES]).filterNot { it.uuid == uuid })
+    }
+
+    /** Podcast shows the user subscribed to (6.3). */
+    val podcastSubs: Flow<List<Podcast>> = context.dataStore.data.map { p -> parsePodcasts(p[Keys.PODCAST_SUBS]) }
+
+    private fun parsePodcasts(json: String?): List<Podcast> = runCatching {
+        if (json.isNullOrBlank()) emptyList()
+        else gson.fromJson<List<Podcast>>(json, object : TypeToken<List<Podcast>>() {}.type) ?: emptyList()
+    }.getOrDefault(emptyList())
+
+    /** Subscribe to a podcast (upsert by feed URL). */
+    suspend fun savePodcast(p: Podcast) = context.dataStore.edit { prefs ->
+        val cur = parsePodcasts(prefs[Keys.PODCAST_SUBS])
+        val next = if (cur.any { it.feedUrl == p.feedUrl }) cur.map { if (it.feedUrl == p.feedUrl) p else it } else cur + p
+        prefs[Keys.PODCAST_SUBS] = gson.toJson(next)
+    }
+
+    suspend fun deletePodcast(feedUrl: String) = context.dataStore.edit { p ->
+        p[Keys.PODCAST_SUBS] = gson.toJson(parsePodcasts(p[Keys.PODCAST_SUBS]).filterNot { it.feedUrl == feedUrl })
+    }
+
     /** Playlists the user liked. Subsonic has no playlist-star, so we persist these locally. */
     val likedPlaylists: Flow<Set<String>> = context.dataStore.data.map { it[Keys.LIKED_PLAYLISTS] ?: emptySet() }
 
@@ -541,6 +691,113 @@ class SettingsStore(private val context: Context) {
             autoplayRadio = p[Keys.AUTOPLAY_RADIO] ?: false,
             bitPerfectUsb = p[Keys.BIT_PERFECT_USB] ?: false,
         )
+    }
+
+    val visualizerPrefs: Flow<VisualizerPrefs> = context.dataStore.data.map { p ->
+        val d = VisualizerPrefs()
+        VisualizerPrefs(
+            style = p[Keys.VIZ_STYLE] ?: d.style,
+            colorSource = p[Keys.VIZ_COLOR_SOURCE] ?: d.colorSource,
+            primaryColor = p[Keys.VIZ_PRIMARY] ?: d.primaryColor,
+            secondaryColor = p[Keys.VIZ_SECONDARY] ?: d.secondaryColor,
+            background = p[Keys.VIZ_BACKGROUND] ?: d.background,
+            barCount = p[Keys.VIZ_BAR_COUNT] ?: d.barCount,
+            smoothing = p[Keys.VIZ_SMOOTHING] ?: d.smoothing,
+            sensitivity = p[Keys.VIZ_SENSITIVITY] ?: d.sensitivity,
+            minHz = p[Keys.VIZ_MIN_HZ] ?: d.minHz,
+            maxHz = p[Keys.VIZ_MAX_HZ] ?: d.maxHz,
+            peakHold = p[Keys.VIZ_PEAK_HOLD] ?: d.peakHold,
+            mirror = p[Keys.VIZ_MIRROR] ?: d.mirror,
+            fftSize = p[Keys.VIZ_FFT_SIZE] ?: d.fftSize,
+            fpsCap = p[Keys.VIZ_FPS] ?: d.fpsCap,
+            rotate = p[Keys.VIZ_ROTATE] ?: d.rotate,
+            particleCount = p[Keys.VIZ_PARTICLES] ?: d.particleCount,
+            showAlbumArt = p[Keys.VIZ_ALBUM_ART] ?: d.showAlbumArt,
+            showTrackInfo = p[Keys.VIZ_TRACK_INFO] ?: d.showTrackInfo,
+        )
+    }
+
+    /** Analyze new local/downloaded tracks for sonic similarity automatically (on app start). */
+    val sonicAutoAnalyze: Flow<Boolean> = context.dataStore.data.map { it[Keys.SONIC_AUTO_ANALYZE] ?: false }
+    suspend fun setSonicAutoAnalyze(v: Boolean) = context.dataStore.edit { it[Keys.SONIC_AUTO_ANALYZE] = v }
+
+    /** Fetch artist bios + images from MusicBrainz/Wikipedia on the artist page (6.5). On by default;
+     *  off keeps artist names from ever leaving the device. */
+    val artistEnrichment: Flow<Boolean> = context.dataStore.data.map { it[Keys.ARTIST_ENRICHMENT] ?: true }
+    suspend fun setArtistEnrichment(v: Boolean) = context.dataStore.edit { it[Keys.ARTIST_ENRICHMENT] = v }
+
+    /** Best-source playback (7.1a): play a matching on-device/downloaded file instead of streaming. */
+    val preferLocalSources: Flow<Boolean> = context.dataStore.data.map { it[Keys.PREFER_LOCAL] ?: true }
+    suspend fun setPreferLocalSources(v: Boolean) = context.dataStore.edit { it[Keys.PREFER_LOCAL] = v }
+
+    /** Ordered playback source priority (7.1b): subset/order of "local", "downloaded", "stream". */
+    val sourcePriority: Flow<List<String>> = context.dataStore.data.map { p ->
+        parseStringList(p[Keys.SOURCE_PRIORITY]).filter { it in DEFAULT_SOURCE_PRIORITY }
+            .ifEmpty { DEFAULT_SOURCE_PRIORITY }
+    }
+    suspend fun setSourcePriority(order: List<String>) = context.dataStore.edit {
+        it[Keys.SOURCE_PRIORITY] = gson.toJson(order.filter { t -> t in DEFAULT_SOURCE_PRIORITY }.distinct())
+    }
+
+    /** Unified library (7.1b): merge all included servers + local files into one browsable library. */
+    val unifiedLibrary: Flow<Boolean> = context.dataStore.data.map { it[Keys.UNIFIED_LIBRARY] ?: false }
+    suspend fun setUnifiedLibrary(v: Boolean) = context.dataStore.edit { it[Keys.UNIFIED_LIBRARY] = v }
+
+    /** Account keys included in the unified library (empty = every eligible saved source). */
+    val mergeSources: Flow<Set<String>> = context.dataStore.data.map { it[Keys.MERGE_SOURCES] ?: emptySet() }
+    suspend fun setMergeSources(keys: Set<String>) = context.dataStore.edit { it[Keys.MERGE_SOURCES] = keys }
+
+    /** Recent search queries, most-recent first, capped (7.3 search depth). */
+    val recentSearches: Flow<List<String>> = context.dataStore.data.map { parseStringList(it[Keys.RECENT_SEARCHES]) }
+
+    private fun parseStringList(json: String?): List<String> = runCatching {
+        if (json.isNullOrBlank()) emptyList()
+        else gson.fromJson<List<String>>(json, object : TypeToken<List<String>>() {}.type) ?: emptyList()
+    }.getOrDefault(emptyList())
+
+    /** Add [query] to the top of the recents (de-duped, case-insensitively), capped at 12. */
+    suspend fun addRecentSearch(query: String) {
+        val q = query.trim()
+        if (q.length < 2) return
+        context.dataStore.edit { p ->
+            val cur = parseStringList(p[Keys.RECENT_SEARCHES])
+            val next = (listOf(q) + cur.filterNot { it.equals(q, ignoreCase = true) }).take(12)
+            p[Keys.RECENT_SEARCHES] = gson.toJson(next)
+        }
+    }
+
+    suspend fun removeRecentSearch(query: String) = context.dataStore.edit { p ->
+        p[Keys.RECENT_SEARCHES] = gson.toJson(parseStringList(p[Keys.RECENT_SEARCHES]).filterNot { it.equals(query, ignoreCase = true) })
+    }
+
+    suspend fun clearRecentSearches() = context.dataStore.edit { it.remove(Keys.RECENT_SEARCHES) }
+
+    /** Live AutoEQ (7.2): the squig.link/CrinGraph instance + target curve to fetch from. */
+    val squigBaseUrl: Flow<String> = context.dataStore.data.map { it[Keys.SQUIG_BASE]?.takeIf { u -> u.isNotBlank() } ?: DEFAULT_SQUIG_BASE }
+    suspend fun setSquigBaseUrl(v: String) = context.dataStore.edit { it[Keys.SQUIG_BASE] = v.trim().trimEnd('/') }
+
+    val squigTarget: Flow<String> = context.dataStore.data.map { it[Keys.SQUIG_TARGET]?.takeIf { t -> t.isNotBlank() } ?: DEFAULT_SQUIG_TARGET }
+    suspend fun setSquigTarget(v: String) = context.dataStore.edit { it[Keys.SQUIG_TARGET] = v.trim() }
+
+    suspend fun setVisualizer(v: VisualizerPrefs) = context.dataStore.edit { p ->
+        p[Keys.VIZ_STYLE] = v.style
+        p[Keys.VIZ_COLOR_SOURCE] = v.colorSource
+        p[Keys.VIZ_PRIMARY] = v.primaryColor
+        p[Keys.VIZ_SECONDARY] = v.secondaryColor
+        p[Keys.VIZ_BACKGROUND] = v.background
+        p[Keys.VIZ_BAR_COUNT] = v.barCount
+        p[Keys.VIZ_SMOOTHING] = v.smoothing
+        p[Keys.VIZ_SENSITIVITY] = v.sensitivity
+        p[Keys.VIZ_MIN_HZ] = v.minHz
+        p[Keys.VIZ_MAX_HZ] = v.maxHz
+        p[Keys.VIZ_PEAK_HOLD] = v.peakHold
+        p[Keys.VIZ_MIRROR] = v.mirror
+        p[Keys.VIZ_FFT_SIZE] = v.fftSize
+        p[Keys.VIZ_FPS] = v.fpsCap
+        p[Keys.VIZ_ROTATE] = v.rotate
+        p[Keys.VIZ_PARTICLES] = v.particleCount
+        p[Keys.VIZ_ALBUM_ART] = v.showAlbumArt
+        p[Keys.VIZ_TRACK_INFO] = v.showTrackInfo
     }
 
     suspend fun saveSession(session: Session) {

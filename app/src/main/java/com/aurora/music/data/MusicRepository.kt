@@ -188,6 +188,13 @@ class MusicRepository(
     suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         backend?.addToPlaylist(playlistId, trackIds) ?: false
 
+    /** Create a new playlist [name] seeded with [trackIds] (e.g. "save queue as playlist"). */
+    suspend fun createPlaylistFromSongs(name: String, trackIds: List<String>): Boolean {
+        val b = backend ?: return false
+        val id = b.createPlaylistWithId(name) ?: return false
+        return if (trackIds.isNotEmpty()) b.addToPlaylist(id, trackIds) else true
+    }
+
     // M3U import/export
 
     /** Tracks of a collection rendered as extended-M3U text, or null when it can't be resolved. */

@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Headset
 import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Lyrics
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
@@ -35,6 +36,7 @@ import kotlinx.coroutines.launch
 fun IntegrationsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenDiscordLogin: () -> Unit) {
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
     val lrclib by container.settingsStore.lrclibEnabled.collectAsStateWithLifecycle(initialValue = true)
+    val artistEnrichment by container.settingsStore.artistEnrichment.collectAsStateWithLifecycle(initialValue = true)
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar("Integrations", onBack)
@@ -52,6 +54,13 @@ fun IntegrationsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
             item { SettingsGroup { ListenBrainzRow(scope) } }
             item { SettingsGroup { DiscordRow(scope, onOpenDiscordLogin) } }
             item { SettingsSectionTitle("Metadata") }
+            item {
+                SettingsGroup {
+                    SettingsSwitchRow(Icons.Filled.Person, "Artist info", "Show bios & images from MusicBrainz/Wikipedia on artist pages", artistEnrichment) { v ->
+                        scope.launch { container.settingsStore.setArtistEnrichment(v) }
+                    }
+                }
+            }
             item { SettingsGroup { AcoustIdRow(scope) } }
         }
     }

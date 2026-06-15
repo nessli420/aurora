@@ -130,6 +130,11 @@ class DownloadManager(
     fun isDownloaded(id: String): Boolean = _downloads.value.containsKey(id)
     fun get(id: String): DownloadedSong? = _downloads.value[id]
 
+    /** Find a download by its source-original id, also matching entries stored under a merged-namespaced
+     *  key (7.1b unified-library downloads are keyed by the wrapped id while localize looks up the raw id). */
+    fun getByOriginalId(originalId: String): DownloadedSong? =
+        _downloads.value[originalId] ?: _downloads.value.values.firstOrNull { stripMergeNamespace(it.id) == originalId }
+
     fun downloadSong(song: Song) {
         if (isDownloaded(song.id) || _states.value[song.id] is DownloadState.Downloading) return
         setState(song.id, DownloadState.Queued)

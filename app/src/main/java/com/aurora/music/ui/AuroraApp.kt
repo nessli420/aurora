@@ -175,6 +175,7 @@ fun AuroraApp() {
 
     var showSpeedSheet by remember { mutableStateOf(false) }
     var showQueue by remember { mutableStateOf(false) }
+    var showVisualizer by remember { mutableStateOf(false) }
     var showOutput by remember { mutableStateOf(false) }
     var showSleep by remember { mutableStateOf(false) }
 
@@ -256,6 +257,8 @@ fun AuroraApp() {
                     onHistory = { closeDrawer(); navController.navigate(Routes.HISTORY) },
                     onStats = { closeDrawer(); navController.navigate(Routes.STATS) },
                     onDuplicates = { closeDrawer(); navController.navigate(Routes.DUPLICATES) },
+                    onRadio = { closeDrawer(); navController.navigate(Routes.RADIO) },
+                    onPodcasts = { closeDrawer(); navController.navigate(Routes.PODCASTS) },
                     onClose = { closeDrawer() },
                     onLogout = { closeDrawer(); logout() },
                 )
@@ -355,6 +358,7 @@ fun AuroraApp() {
                     composable(Routes.SEARCH) {
                         val searchVM: SearchViewModel = viewModel()
                         val searchState by searchVM.state.collectAsStateWithLifecycle()
+                        val recentSearches by searchVM.recentSearches.collectAsStateWithLifecycle()
                         androidx.compose.runtime.LaunchedEffect(searchState.results.songs.size) {
                             playerVM.checkLiked(searchState.results.songs.map { it.id })
                         }
@@ -374,6 +378,11 @@ fun AuroraApp() {
                             onDownload = onDownload,
                             onRemoveDownload = onRemoveDownload,
                             canDownload = !localMode,
+                            recentSearches = recentSearches,
+                            onRecentClick = { searchVM.onQuery(it) },
+                            onRemoveRecent = { searchVM.removeRecent(it) },
+                            onClearRecents = { searchVM.clearRecents() },
+                            onCommitSearch = { searchVM.commit() },
                         )
                     }
                     composable(Routes.LIBRARY) {
@@ -451,6 +460,8 @@ fun AuroraApp() {
                                 }
                             } },
                             onOpenFolders = { navController.navigate(Routes.folders()) },
+                            onOpenRadio = { navController.navigate(Routes.RADIO) },
+                            onOpenPodcasts = { navController.navigate(Routes.PODCASTS) },
                             onPlayCollection = { id, kind -> scope.launch { container.repository.detail(kind, id)?.let { d -> if (d.tracks.isNotEmpty()) playerVM.playCollection(kind, id, d.tracks, 0, d.info.songCount) } } },
                             onShuffleCollection = { id, kind -> scope.launch { container.repository.detail(kind, id)?.let { d -> if (d.tracks.isNotEmpty()) playerVM.shuffleCollection(kind, id, d.tracks, d.info.songCount) } } },
                             onQueueCollection = { id, kind -> scope.launch {
@@ -605,6 +616,7 @@ fun AuroraApp() {
                             },
                             onEditTags = { song -> navController.navigate(Routes.tagEdit(song.id)) },
                             serverTagEditing = serverTagEditing,
+                            artistInfo = detailState.artistInfo,
                         )
                     }
                     composable(
@@ -636,10 +648,14 @@ fun AuroraApp() {
                             onBack = { navController.popBackStack() },
                             onOpenPlayback = { navController.navigate(Routes.SETTINGS_PLAYBACK) },
                             onOpenEq = { navController.navigate(Routes.SETTINGS_EQ) },
+                            onOpenVisualizer = { navController.navigate(Routes.SETTINGS_VISUALIZER) },
+                            onOpenSonic = { navController.navigate(Routes.SETTINGS_SONIC) },
+                            onOpenSources = { navController.navigate(Routes.SETTINGS_SOURCES) },
                             onOpenDownloads = { navController.navigate(Routes.SETTINGS_STORAGE) },
                             onOpenAppearance = { navController.navigate(Routes.SETTINGS_APPEARANCE) },
                             onOpenGestures = { navController.navigate(Routes.SETTINGS_GESTURES) },
                             onOpenIntegrations = { navController.navigate(Routes.SETTINGS_INTEGRATIONS) },
+                            onOpenPermissions = { navController.navigate(Routes.SETTINGS_PERMISSIONS) },
                             onOpenAbout = { navController.navigate(Routes.SETTINGS_ABOUT) },
                             onOpenProfile = { navController.navigate(Routes.PROFILE) },
                             onOpenAccounts = { navController.navigate(Routes.SETTINGS_ACCOUNTS) },
@@ -696,6 +712,18 @@ fun AuroraApp() {
                     composable(Routes.SETTINGS_EQ) {
                         com.aurora.music.ui.screens.settings.EqualizerScreen(contentPadding = inner, onBack = { navController.popBackStack() })
                     }
+                    composable(Routes.SETTINGS_VISUALIZER) {
+                        com.aurora.music.ui.screens.settings.VisualizerSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                    }
+                    composable(Routes.SETTINGS_SONIC) {
+                        com.aurora.music.ui.screens.settings.SonicSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                    }
+                    composable(Routes.SETTINGS_SOURCES) {
+                        com.aurora.music.ui.screens.settings.SourcesSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                    }
+                    composable(Routes.SETTINGS_PERMISSIONS) {
+                        com.aurora.music.ui.screens.settings.PermissionsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                    }
                     composable(Routes.SETTINGS_STORAGE) {
                         com.aurora.music.ui.screens.settings.StorageSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
                     }
@@ -720,6 +748,41 @@ fun AuroraApp() {
                     }
                     composable(Routes.STATS) {
                         com.aurora.music.ui.screens.stats.ListeningStatsScreen(contentPadding = inner, onBack = { navController.popBackStack() }, onPlay = { playById(it) }, onOpenDetail = { k, i -> openDetail(k, i) })
+                    }
+                    composable(Routes.RADIO) {
+                        com.aurora.music.ui.screens.radio.RadioScreen(
+                            contentPadding = inner,
+                            onBack = { navController.popBackStack() },
+                            onPlay = { playerVM.play(it) },
+                        )
+                    }
+                    composable(Routes.PODCASTS) {
+                        com.aurora.music.ui.screens.podcasts.PodcastsScreen(
+                            contentPadding = inner,
+                            onBack = { navController.popBackStack() },
+                            onOpenPodcast = { p ->
+                                navController.navigate(Routes.podcastDetail(p.feedUrl, p.displayTitle, p.imageUrl.orEmpty(), p.author.orEmpty()))
+                            },
+                        )
+                    }
+                    composable(
+                        Routes.PODCAST_DETAIL,
+                        arguments = listOf(
+                            androidx.navigation.navArgument("feed") { defaultValue = "" },
+                            androidx.navigation.navArgument("title") { defaultValue = "" },
+                            androidx.navigation.navArgument("image") { defaultValue = "" },
+                            androidx.navigation.navArgument("author") { defaultValue = "" },
+                        ),
+                    ) { entry ->
+                        com.aurora.music.ui.screens.podcasts.PodcastDetailScreen(
+                            contentPadding = inner,
+                            feedUrl = entry.arguments?.getString("feed").orEmpty(),
+                            title = entry.arguments?.getString("title").orEmpty(),
+                            imageUrl = entry.arguments?.getString("image").orEmpty(),
+                            author = entry.arguments?.getString("author").orEmpty(),
+                            onBack = { navController.popBackStack() },
+                            onPlay = { playerVM.play(it) },
+                        )
                     }
                 }
             }
@@ -751,6 +814,9 @@ fun AuroraApp() {
                     },
                     onOpenOutput = { showOutput = true },
                     onOpenSleep = { showSleep = true },
+                    onOpenVisualizer = { showVisualizer = true },
+                    onSonicRadio = { playerVM.startSonicRadio(onResult = { confirm(it) }) },
+                    onAutoDj = { playerVM.startAutoDj(onResult = { confirm(it) }) },
                     gestures = gesturePrefs,
                 )
             }
@@ -769,7 +835,20 @@ fun AuroraApp() {
                     onRemove = { playerVM.removeFromQueue(it) },
                     onMove = { from, to -> playerVM.moveQueueItem(from, to) },
                     onClear = { playerVM.clearQueue() },
+                    onSaveAsPlaylist = { name -> playerVM.saveQueueAsPlaylist(name) { confirm(it) } },
                     onClose = { showQueue = false },
+                )
+            }
+
+            // Full-screen audio visualizer overlay (on top of the player).
+            AnimatedVisibility(
+                visible = showVisualizer,
+                enter = fadeIn(tween(220)),
+                exit = fadeOut(tween(180)),
+            ) {
+                com.aurora.music.ui.screens.visualizer.VisualizerScreen(
+                    state = playerState,
+                    onClose = { showVisualizer = false },
                 )
             }
         }
@@ -808,6 +887,7 @@ fun AuroraApp() {
     }
 
     BackHandler(enabled = showQueue) { showQueue = false }
+    BackHandler(enabled = showVisualizer) { showVisualizer = false }
 }
 
 /** Live banner above the mini-player showing how many downloads are in flight + overall progress. */

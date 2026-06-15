@@ -11,6 +11,7 @@ import android.net.NetworkCapabilities
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.SpotifyClient
 import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.first
 import com.aurora.music.data.remote.SubsonicClient
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
@@ -81,11 +82,34 @@ class AppContainer(context: Context) {
     val autoEq = AutoEqRepository(appContext)
     val autoEqController = AutoEqController(appContext, settingsStore, scope)
 
+    /** Live per-IEM AutoEQ from squig.link (7.2): generates a correction on-device from raw FR. */
+    @Volatile private var squigBaseValue: String = DEFAULT_SQUIG_BASE
+    @Volatile private var squigTargetValue: String = DEFAULT_SQUIG_TARGET
+    val squigEq = SquigEqRepository(
+        com.aurora.music.data.remote.SquigClient(),
+        baseProvider = { squigBaseValue },
+        targetProvider = { squigTargetValue },
+    )
+
     @Volatile
     private var maxBitrate: Int = 0
 
     @Volatile
     private var downloadBitrate: Int = 0
+
+    /** 7.1a best-source playback: prefer a matching on-device/downloaded file over streaming. */
+    @Volatile
+    private var preferLocalSources: Boolean = true
+
+    /** 7.1b configurable playback source priority (tiers: local / downloaded / stream). */
+    @Volatile
+    private var sourcePriorityValue: List<String> = DEFAULT_SOURCE_PRIORITY
+
+    /** 7.1b unified library: merge included servers + local files into one browsable backend. */
+    @Volatile private var unifiedLibraryValue: Boolean = false
+    @Volatile private var mergeSourceKeys: Set<String> = emptySet()
+    @Volatile private var lastSession: Session? = null
+    private val localMergeSession = Session(server = "On this device", username = "Local Library", salt = "", token = "local", type = ServerType.LOCAL)
 
     @Volatile
     var backend: MediaBackend? = null
@@ -103,6 +127,18 @@ class AppContainer(context: Context) {
         resolveSentinel = ::resolveYtSentinel,
     )
 
+    /** On-device sonic-similarity engine (feature analysis + "sonically similar" radio). */
+    val sonicStore = SonicStore(appContext)
+    val sonicEngine = SonicEngine(localLibrary, downloadManager, sonicStore)
+
+    /** Internet radio (Radio-Browser directory) + podcasts (iTunes directory + RSS) — both keyless. */
+    val radioBrowser = com.aurora.music.data.remote.RadioBrowserClient()
+    val podcastClient = com.aurora.music.data.remote.PodcastClient()
+
+    /** Artist enrichment (bios + images from MusicBrainz/Wikipedia) + its on-disk cache. */
+    val artistInfoClient = com.aurora.music.data.remote.ArtistInfoClient()
+    val artistInfoStore = ArtistInfoStore(appContext)
+
     /** Resolve an `aurora-yt://<id>?q=...&dur=...` sentinel to a real YouTube audio URL (for downloads). */
     private fun resolveYtSentinel(sentinel: String): String? {
         val uri = runCatching { android.net.Uri.parse(sentinel) }.getOrNull() ?: return null
@@ -114,12 +150,42 @@ class AppContainer(context: Context) {
         )
     }
 
-    /** Swap in a downloaded copy's local files so a track plays offline even while signed in. */
+    /**
+     * Best-source substitution (7.1a/7.1b): play a track from the best available copy, trying the tiers
+     * in the user's configured [sourcePriorityValue] (default on-device file > download > server
+     * stream). Runs per mapped Song in every remote backend, rewriting only [Song.streamUrl]/metadata
+     * (the id stays the server's). The "stream" tier is the terminal fallback (use the original URL).
+     */
     private fun localizeSong(song: Song): Song {
-        val dl = downloadManager.get(song.id) ?: return song
-        val local = dl.toSong()
-        return song.copy(streamUrl = local.streamUrl, artworkUrl = local.artworkUrl.ifBlank { song.artworkUrl })
+        if (!preferLocalSources) return song
+        val alreadyLocal = song.streamUrl.startsWith("content://") || song.streamUrl.startsWith("file://")
+        for (tier in sourcePriorityValue) {
+            when (tier) {
+                "local" -> if (!alreadyLocal) {
+                    localLibrary.findMatch(song.artist, song.title, song.durationSec)?.let { return localizedFromFile(song, it) }
+                }
+                "downloaded" -> downloadManager.getByOriginalId(song.id)?.let { return localizedFromDownload(song, it.toSong()) }
+                "stream" -> return song
+            }
+        }
+        return song
     }
+
+    /** The on-device file actually plays — carry its ReplayGain + format so loudness/UI match the file. */
+    private fun localizedFromFile(song: Song, local: Song): Song = song.copy(
+        streamUrl = local.streamUrl,
+        artworkUrl = song.artworkUrl.ifBlank { local.artworkUrl },
+        replayGainTrack = local.replayGainTrack,
+        replayGainAlbum = local.replayGainAlbum,
+        suffix = local.suffix,
+        bitrateKbps = local.bitrateKbps,
+        sampleRateHz = local.sampleRateHz,
+        bitDepth = local.bitDepth,
+        path = local.path,
+    )
+
+    private fun localizedFromDownload(song: Song, local: Song): Song =
+        song.copy(streamUrl = local.streamUrl, artworkUrl = local.artworkUrl.ifBlank { song.artworkUrl })
 
     private fun buildBackend(session: Session): MediaBackend = when (session.type) {
         ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, ::localizeSong)
@@ -129,6 +195,34 @@ class AppContainer(context: Context) {
             { maxBitrate }, ::localizeSong,
         )
         ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
+    }
+
+    /**
+     * The backend that actually drives the app for [session]: just [buildBackend] normally, or a
+     * [MergedBackend] over Local + every included Navidrome/Jellyfin login when the unified library is
+     * on (7.1b). Spotify isn't merged yet, so a Spotify-active session stays single-source.
+     */
+    private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend {
+        if (!unified || session.type == ServerType.SPOTIFY) return buildBackend(session)
+        // mergeKeys: empty = all eligible servers; the MERGE_NONE sentinel = local files only.
+        val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else saved
+            .filter { it.type == ServerType.SUBSONIC || it.type == ServerType.JELLYFIN }
+            .filter { mergeKeys.isEmpty() || accountKey(it) in mergeKeys }
+            .distinctBy { accountKey(it) }
+        val sources = buildList {
+            add(LocalBackend(localLibrary, localStore, localMergeSession))
+            serverSessions.forEach { add(buildBackend(it)) }
+        }
+        return if (sources.size <= 1) buildBackend(session) else MergedBackend(sources, session)
+    }
+
+    /** Rebuild [backend] from the current session + unified-library settings + saved logins. */
+    private suspend fun rebuildBackend() {
+        val session = lastSession
+        backend = session?.let {
+            val saved = runCatching { settingsStore.savedSessions.first() }.getOrDefault(emptyList())
+            buildActiveBackend(it, unifiedLibraryValue, mergeSourceKeys, saved)
+        }
     }
 
     /** The user's own Spotify app Client ID (DIY setup; PKCE, no secret). Redirect = aurora://spotify. */
@@ -169,6 +263,9 @@ class AppContainer(context: Context) {
     }.getOrDefault(0)
 
     val audioEffects = AudioEffectsController(audioSessionId, settingsStore, scope)
+
+    /** Real-time audio analysis for the visualizer, fed by the playback layer's PCM taps. */
+    val visualizer = com.aurora.music.playback.VisualizerController(scope)
 
     /**
      * Last.fm integration. The user supplies their own API key + shared secret in Integrations
@@ -228,8 +325,13 @@ class AppContainer(context: Context) {
     // initial load or a token refresh. Observers (player stop, library reload) react to changes.
     private val _accountEpoch = MutableStateFlow(0)
     val accountEpoch: StateFlow<Int> = _accountEpoch.asStateFlow()
+
+    // Bumped when the unified-library settings change (rebuilds the backend) so Home/Library reload
+    // WITHOUT the playback-stopping semantics of an account change.
+    private val _libraryReload = MutableStateFlow(0)
+    val libraryReload: StateFlow<Int> = _libraryReload.asStateFlow()
     @Volatile private var lastAccountKey: String? = null
-    private fun accountKey(s: Session?): String = s?.let { "${it.type.name}|${it.server}|${it.username}|${it.userId}" } ?: ""
+    private fun accountKey(s: Session?): String = s?.accountKey() ?: ""
 
     /** The active account's stable key (for per-account queue persistence). "" when signed out. */
     fun currentAccountKey(): String = accountKey(backend?.session)
@@ -273,18 +375,40 @@ class AppContainer(context: Context) {
     }
 
     init {
+        // Auto-analyze new local/downloaded tracks for sonic similarity on startup when enabled.
+        // scan() is idempotent — it only processes tracks not already in the vector store.
+        scope.launch {
+            if (runCatching { settingsStore.sonicAutoAnalyze.first() }.getOrDefault(false)) sonicEngine.scan()
+        }
         scope.launch {
             settingsStore.session.collect { session ->
-                backend = session?.let { buildBackend(it) }
-                _sessionReady.value = session != null
+                lastSession = session
                 // Keep the active login in the saved list (so an existing session shows up for
                 // switching even though it was restored from disk, not via applySession).
                 session?.let { settingsStore.addSavedSession(it) }
+                rebuildBackend()
+                _sessionReady.value = session != null
                 // Detect a real account change (ignore the first load so startup doesn't count).
                 val key = accountKey(session)
                 if (lastAccountKey != null && lastAccountKey != key) _accountEpoch.value++
                 lastAccountKey = key
                 recomputeOffline()  // local vs server changes whether "offline" applies
+            }
+        }
+        scope.launch {
+            var first = true
+            settingsStore.unifiedLibrary.collect {
+                unifiedLibraryValue = it; rebuildBackend()
+                if (!first) _libraryReload.value++   // refresh Home/Library on a real toggle
+                first = false
+            }
+        }
+        scope.launch {
+            var first = true
+            settingsStore.mergeSources.collect {
+                mergeSourceKeys = it; rebuildBackend()
+                if (!first) _libraryReload.value++
+                first = false
             }
         }
         scope.launch {
@@ -312,6 +436,22 @@ class AppContainer(context: Context) {
         }
         scope.launch {
             settingsStore.acoustIdKey.collect { acoustIdKeyValue = it }
+        }
+        scope.launch {
+            settingsStore.preferLocalSources.collect { on ->
+                preferLocalSources = on
+                // Best-source matching needs the on-device index; load it once when enabled.
+                if (on) runCatching { localLibrary.ensureLoaded() }
+            }
+        }
+        scope.launch {
+            settingsStore.sourcePriority.collect { sourcePriorityValue = it }
+        }
+        scope.launch {
+            settingsStore.squigBaseUrl.collect { squigBaseValue = it }
+        }
+        scope.launch {
+            settingsStore.squigTarget.collect { squigTargetValue = it }
         }
         scope.launch {
             settingsStore.alarmPrefs.collect { com.aurora.music.playback.AlarmScheduler.apply(appContext, it) }
@@ -352,10 +492,11 @@ class AppContainer(context: Context) {
     }
 
     suspend fun applySession(session: Session) {
-        backend = buildBackend(session)
-        _sessionReady.value = true
+        lastSession = session
         settingsStore.saveSession(session)
         settingsStore.addSavedSession(session)   // remember it for quick switching
+        rebuildBackend()                          // honour unified-library mode if enabled
+        _sessionReady.value = true
     }
 
     /** Switch to a previously-saved login (playback stop is handled reactively via [accountEpoch]). */
@@ -363,6 +504,7 @@ class AppContainer(context: Context) {
 
     /** Sign out of the active account. Saved logins are kept so the user can switch back. */
     suspend fun signOut() {
+        lastSession = null
         backend = null
         _sessionReady.value = false
         settingsStore.clearSession()

@@ -27,6 +27,8 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { container.offline.collect { load() } }
         // Reload for the new server after an account switch.
         viewModelScope.launch { container.accountEpoch.drop(1).collect { load() } }
+        // Reload when the unified-library settings change (7.1b).
+        viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }
     }
 
     fun load() {

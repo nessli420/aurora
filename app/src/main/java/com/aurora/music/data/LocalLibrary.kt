@@ -8,7 +8,9 @@ import android.provider.MediaStore
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
+import com.aurora.music.util.TrackMatch
 import com.aurora.music.util.accentFor
+import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -33,6 +35,9 @@ class LocalLibrary(
     @Volatile var artists: List<Artist> = emptyList(); private set
     private var byId: Map<String, Song> = emptyMap()
 
+    /** Fuzzy identity index: `norm(artist)|norm(title)` → on-device tracks, for best-source matching (7.1). */
+    @Volatile private var matchIndex: Map<String, List<Song>> = emptyMap()
+
     /** songId → containing directory (full path, no trailing slash), for folder browsing. */
     @Volatile private var dirOf: Map<String, String> = emptyMap()
 
@@ -51,6 +56,20 @@ class LocalLibrary(
     }
 
     fun song(id: String): Song? = byId[id]
+
+    /**
+     * The best on-device file for a track identified by metadata (7.1 best-source resolution), or null.
+     * Prefers a candidate whose duration is within tolerance; if duration is unknown on either side,
+     * only substitutes when there's a single unambiguous local track with that artist+title — so a
+     * different version is never swapped in.
+     */
+    fun findMatch(artist: String, title: String, durationSec: Int): Song? {
+        if (title.isBlank()) return null
+        val candidates = matchIndex[TrackMatch.key(artist, title)] ?: return null
+        val byDuration = candidates.filter { durationSec > 0 && it.durationSec > 0 && abs(it.durationSec - durationSec) <= TrackMatch.DURATION_TOLERANCE_SEC }
+        if (byDuration.isNotEmpty()) return byDuration.minByOrNull { abs(it.durationSec - durationSec) }
+        return candidates.singleOrNull()
+    }
 
     /**
      * One level of the on-device folder tree: (subfolder names, songs directly in [path]).
@@ -189,6 +208,7 @@ class LocalLibrary(
         }
         songs = out
         byId = out.associateBy { it.id }
+        matchIndex = out.groupBy { TrackMatch.key(it.artist, it.title) }
         dirOf = dirs
         folderRoot = commonDir(dirs.values)
         // Albums: grouped by albumId, ordered by most-recently-added.

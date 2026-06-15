@@ -130,6 +130,30 @@ object DspCoeffBuilder {
         return maxDb.toFloat()
     }
 
+    /**
+     * Magnitude (dB) of a single RBJ biquad ([type]: 0 peaking / 1 low-shelf / 2 high-shelf) at
+     * frequency [atHz]. Used by the AutoEQ generator to fit filters to a measured response — it
+     * builds the exact coefficients the realtime DSP uses, so the fit matches what's actually applied.
+     */
+    fun bandMagnitudeDb(type: Int, f0: Float, gainDb: Float, q: Float, atHz: Double, fs: Int = 48000): Double {
+        val b0 = FloatArray(1); val b1 = FloatArray(1); val b2 = FloatArray(1)
+        val a1 = FloatArray(1); val a2 = FloatArray(1)
+        val qq = q.coerceAtLeast(0.1f)
+        when (type) {
+            1 -> lowShelf(f0, gainDb, qq, fs, b0, b1, b2, a1, a2, 0)
+            2 -> highShelf(f0, gainDb, qq, fs, b0, b1, b2, a1, a2, 0)
+            else -> peaking(f0, gainDb, qq, fs, b0, b1, b2, a1, a2, 0)
+        }
+        val w = 2.0 * PI * atHz / fs
+        val cw = cos(w); val c2w = cos(2.0 * w); val sw = sin(w); val s2w = sin(2.0 * w)
+        val numRe = b0[0] + b1[0] * cw + b2[0] * c2w
+        val numIm = -(b1[0] * sw + b2[0] * s2w)
+        val denRe = 1.0 + a1[0] * cw + a2[0] * c2w
+        val denIm = -(a1[0] * sw + a2[0] * s2w)
+        val den2 = denRe * denRe + denIm * denIm
+        return if (den2 > 1e-12) 10.0 * log10((numRe * numRe + numIm * numIm) / den2) else 0.0
+    }
+
     /** RBJ peaking-EQ biquad, normalised by a0 and written into the arrays at [i]. */
     private fun peaking(
         f0: Float, gainDb: Float, q: Float, fs: Int,

@@ -68,7 +68,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.AppContainer
 import com.aurora.music.data.AudioPrefs
+import com.aurora.music.data.DEFAULT_SQUIG_BASE
+import com.aurora.music.data.DEFAULT_SQUIG_TARGET
 import com.aurora.music.data.DspMode
+import com.aurora.music.data.SQUIG_INSTANCES
+import com.aurora.music.data.SQUIG_TARGETS
 import com.aurora.music.data.EqBinding
 import com.aurora.music.data.EqProfile
 import com.aurora.music.data.ParamBand
@@ -273,6 +277,31 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
  * AutoEQ panel: search the bundled 5000+ headphone database, apply a measured correction into the
  * custom DSP's parametric EQ, and optionally bind it to the current output device for auto-switching.
  */
+/** Compact inline segmented control (a row of equal-width pills). */
+@Composable
+private fun PillSelector(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    Row(
+        Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(50))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        options.forEachIndexed { i, opt ->
+            val active = i == selected
+            Box(
+                Modifier.weight(1f).clip(RoundedCornerShape(50))
+                    .background(if (active) MaterialTheme.colorScheme.primary else Color.Transparent)
+                    .clickable { onSelect(i) }.padding(vertical = 8.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    opt, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
+                    color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, maxLines = 1,
+                )
+            }
+        }
+    }
+}
+
 @Composable
 private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: SettingsStore, scope: CoroutineScope) {
     val active by store.activeEqProfile.collectAsStateWithLifecycle(initialValue = "")
@@ -281,15 +310,32 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<EqProfile>>(emptyList()) }
     var working by remember { mutableStateOf(false) }
+    var source by remember { mutableStateOf(0) }   // 0 = bundled AutoEq DB, 1 = live squig.link
+    val squigBase by store.squigBaseUrl.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_BASE)
+    val squigTargetName by store.squigTarget.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_TARGET)
     val outLabel = container.autoEqController.currentOutputLabel()
     val ctx = LocalContext.current
     fun toast(msg: String) = android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_SHORT).show()
 
-    LaunchedEffect(query) {
-        if (query.trim().length < 2) { results = emptyList() } else { delay(220); results = container.autoEq.search(query) }
+    LaunchedEffect(query, source, squigBase, squigTargetName) {
+        if (query.trim().length < 2) results = emptyList()
+        else { delay(220); results = if (source == 0) container.autoEq.search(query) else container.squigEq.search(query) }
     }
 
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
+        PillSelector(listOf("AutoEq DB", "squig.link"), source) { source = it }
+        if (source == 1) {
+            val instIdx = SQUIG_INSTANCES.indexOfFirst { it.second == squigBase }.coerceAtLeast(0)
+            PillSelector(SQUIG_INSTANCES.map { it.first }, instIdx) { i -> scope.launch { store.setSquigBaseUrl(SQUIG_INSTANCES[i].second) } }
+            val tgtIdx = SQUIG_TARGETS.indexOfFirst { it.second == squigTargetName }.coerceAtLeast(0)
+            PillSelector(SQUIG_TARGETS.map { it.first }, tgtIdx) { i -> scope.launch { store.setSquigTarget(SQUIG_TARGETS[i].second) } }
+            Text(
+                "Corrections are generated on-device from live squig.link measurements toward the ${SQUIG_TARGETS.getOrNull(tgtIdx)?.first ?: "Harman"} target.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 4.dp),
+            )
+        }
+        Spacer(Modifier.height(4.dp))
         if (active.isNotBlank()) {
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
                 Icon(Icons.Filled.Headset, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.width(20.dp))
@@ -306,7 +352,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             value = query,
             onValueChange = { query = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text("Find your headphones / IEM") },
+            placeholder = { Text(if (source == 0) "Find your headphones / IEM" else "Search squig.link for an IEM") },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
             trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, "Clear", modifier = Modifier.clip(RoundedCornerShape(50)).clickable { query = "" }.padding(4.dp)) },
             singleLine = true,
@@ -328,7 +374,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable {
                     scope.launch {
                         working = true
-                        val eq = container.autoEq.fetch(p)
+                        val eq = if (source == 0) container.autoEq.fetch(p) else container.squigEq.generate(p)
                         android.util.Log.d("AutoEQ", "apply ${p.name}: ${if (eq == null) "FETCH FAILED" else "preamp=${eq.preampDb} bands=${eq.bands.size}"}")
                         if (eq != null && eq.bands.isNotEmpty()) {
                             store.setDspParametric(eq.bands)

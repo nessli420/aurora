@@ -111,6 +111,14 @@ class NativeAudioEngine {
     fun getBitsPerSample(): Int =
         if (handle != 0L) nativeGetBitsPerSample(handle) else 0
 
+    /** Copy the most recent mono samples (downmixed float) into [out] for the visualizer.
+     *  Returns the number of valid samples (may be < out.size right after start).
+     *  @Synchronized with [stop]/[destroy] so it can never read a freed native engine (the analyser
+     *  polls this every frame while a track change may be destroying the engine on another thread). */
+    @Synchronized
+    fun readVisualizer(out: FloatArray): Int =
+        if (handle != 0L) nativeReadVisualizer(handle, out) else 0
+
     // ── JNI declarations ───────────────────────────────────────────
 
     private external fun nativeCreateFromFd(fd: Int, usbHandle: Long): Long
@@ -125,6 +133,7 @@ class NativeAudioEngine {
     private external fun nativeGetChannels(handle: Long): Int
     private external fun nativeGetBitsPerSample(handle: Long): Int
     private external fun nativeIsRunning(handle: Long): Boolean
+    private external fun nativeReadVisualizer(handle: Long, out: FloatArray): Int
 
     companion object {
         private const val TAG = "NativeAudioEngine"

@@ -114,6 +114,8 @@ fun LibraryScreen(
     onImportM3u: () -> Unit,
     onExportPlaylist: (String, String, String) -> Unit,
     onOpenFolders: () -> Unit,
+    onOpenRadio: () -> Unit = {},
+    onOpenPodcasts: () -> Unit = {},
     onPlayCollection: (String, String) -> Unit,
     onShuffleCollection: (String, String) -> Unit,
     onQueueCollection: (String, String) -> Unit,
@@ -270,7 +272,14 @@ fun LibraryScreen(
         }
 
         val rows = buildRows(state, filter, sort, pins)
-        val openRow: (LibRow) -> Unit = { r -> if (r.kind == "folders") onOpenFolders() else onOpenDetail(r.kind, r.id) }
+        val openRow: (LibRow) -> Unit = { r ->
+            when (r.kind) {
+                "folders" -> onOpenFolders()
+                "radio" -> onOpenRadio()
+                "podcasts" -> onOpenPodcasts()
+                else -> onOpenDetail(r.kind, r.id)
+            }
+        }
         if (layout == LibraryLayout.LIST) {
             LazyColumn(Modifier.fillMaxWidth().padding(horizontal = 8.dp), contentPadding = PaddingValues(bottom = bottom)) {
                 items(rows.size) { i -> LibListItem(rows[i], actions) { openRow(rows[i]) } }
@@ -328,7 +337,12 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
     val folders = if (filter == LibraryFilter.ALL && state.supportsFolders)
         listOf(LibRow("Folders", "Browse by folder", "", accentFor("folders"), "", "folders", menu = false))
     else emptyList()
-    return pinRows + listOf(liked) + folders + deduped
+    // Internet radio + podcasts: app-level browse entries, always available in All.
+    val streaming = if (filter == LibraryFilter.ALL) listOf(
+        LibRow("Radio", "Live internet stations", "", accentFor("radio"), "", "radio", menu = false),
+        LibRow("Podcasts", "Shows & episodes", "", accentFor("podcasts"), "", "podcasts", menu = false),
+    ) else emptyList()
+    return pinRows + listOf(liked) + folders + streaming + deduped
 }
 
 @Composable

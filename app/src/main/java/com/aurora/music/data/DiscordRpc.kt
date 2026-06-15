@@ -1,5 +1,6 @@
 package com.aurora.music.data
 
+import android.util.Log
 import com.aurora.music.data.remote.DiscordGateway
 import com.aurora.music.data.remote.ImgurUploader
 import com.aurora.music.model.Song
@@ -16,9 +17,10 @@ import java.util.concurrent.ConcurrentHashMap
 /**
  * Discord Rich Presence for the now-playing track. Connects the user's account to the gateway (see
  * [DiscordGateway]) and pushes a "Listening to Aurora" activity with the song title, artist, and a
- * progress bar. Album art is uploaded to Imgur ([ImgurUploader]) then proxied through Discord's
- * external-assets endpoint; requires a Discord [appId] and an Imgur client id. Without them the
- * presence is text-only (still works). Everything is best-effort and never affects playback.
+ * progress bar. Album art is registered via Discord's external-assets endpoint: with an Imgur client
+ * id the cover is uploaded to Imgur first (needed for private servers Discord can't reach), otherwise
+ * the original URL is handed to Discord directly (works for public art, e.g. Spotify). Requires a
+ * Discord [appId]; without it the presence is text-only. Best-effort; never affects playback.
  */
 class DiscordRpc(
     private val store: SettingsStore,
@@ -88,8 +90,13 @@ class DiscordRpc(
             val start = System.currentTimeMillis() - (positionSec * 1000).toLong()
             a.put("timestamps", JSONObject().put("start", start).put("end", start + song.durationSec * 1000L))
         }
-        if (imagesPossible && imgurId().isNotBlank() && song.artworkUrl.isNotBlank()) {
+        // Art needs a host Discord's servers can actually fetch: either Imgur (re-hosts the bytes) or
+        // a publicly reachable original URL (e.g. Spotify). A private/LAN/Tailscale server URL can't
+        // be reached by Discord, so without Imgur we skip art entirely rather than show a broken icon.
+        val canHost = imgurId().isNotBlank() || isLikelyPublic(song.artworkUrl)
+        if (imagesPossible && song.artworkUrl.isNotBlank() && canHost) {
             val mp = imageCache[song.artworkUrl]
+            Log.i(TAG, "art: appId=${appId.isNotBlank()} imgur=${imgurId().isNotBlank()} public=${isLikelyPublic(song.artworkUrl)} cached=${mp != null} url=${song.artworkUrl.take(60)}")
             val assets = JSONObject().put("large_text", song.album.ifBlank { song.title })
             if (mp != null) assets.put("large_image", mp)
             a.put("assets", assets)
@@ -103,8 +110,15 @@ class DiscordRpc(
     private fun resolveImage(artUrl: String) {
         if (imageCache.containsKey(artUrl)) return
         scope.launch {
-            val link = imgur.uploadFromUrl(artUrl, imgurId()) ?: return@launch
-            val mp = externalAsset(link) ?: return@launch
+            // With an Imgur id, host the art there (works even for private servers Discord can't
+            // reach). Without one, hand the original URL straight to Discord — works for publicly
+            // reachable art (e.g. Spotify's CDN).
+            val link = if (imgurId().isNotBlank()) imgur.uploadFromUrl(artUrl, imgurId()) else artUrl
+            if (link == null) { Log.w(TAG, "resolveImage: imgur upload failed (clientId set=${imgurId().isNotBlank()})"); return@launch }
+            Log.i(TAG, "resolveImage: via=${if (imgurId().isNotBlank()) "imgur" else "direct"} link=${link.take(80)}")
+            val mp = externalAsset(link)
+            if (mp == null) { Log.w(TAG, "resolveImage: external-assets failed (appId=$appId) for $link"); return@launch }
+            Log.i(TAG, "resolveImage: art ready -> $mp")
             imageCache[artUrl] = mp
             lastSong?.let { if (it.artworkUrl == artUrl) gateway.updateActivity(buildActivity(it, lastPlaying, lastPositionSec)) }
         }
@@ -119,9 +133,32 @@ class DiscordRpc(
             .post(body)
             .build()
         http.newCall(req).execute().use { resp ->
-            val arr = JSONArray(resp.body?.string() ?: return@use null)
+            val bodyStr = resp.body?.string()
+            if (!resp.isSuccessful) { Log.w(TAG, "external-assets HTTP ${resp.code}: ${bodyStr?.take(300)}"); return@use null }
+            val arr = JSONArray(bodyStr ?: return@use null)
             val path = arr.optJSONObject(0)?.optString("external_asset_path").orEmpty()
-            if (path.isBlank()) null else "mp:$path"
+            if (path.isBlank()) { Log.w(TAG, "external-assets no path: ${bodyStr?.take(300)}"); null } else "mp:$path"
         }
     }.getOrNull()
+
+    /** Whether Discord's servers can likely fetch this URL directly (public host), vs a private/LAN
+     *  address (RFC1918 / loopback / link-local / CGNAT-Tailscale) that only Imgur re-hosting can bridge. */
+    private fun isLikelyPublic(url: String): Boolean {
+        val host = runCatching { java.net.URI(url).host }.getOrNull()?.lowercase() ?: return false
+        if (host == "localhost") return false
+        val o = host.split(".").mapNotNull { it.toIntOrNull() }
+        if (o.size != 4) return !host.contains(":")  // hostname -> public; IPv6 -> treat as private
+        val a = o[0]; val b = o[1]
+        return when {
+            a == 10 -> false
+            a == 127 -> false
+            a == 169 && b == 254 -> false
+            a == 172 && b in 16..31 -> false
+            a == 192 && b == 168 -> false
+            a == 100 && b in 64..127 -> false   // CGNAT / Tailscale
+            else -> true
+        }
+    }
+
+    private companion object { const val TAG = "DiscordRpc" }
 }

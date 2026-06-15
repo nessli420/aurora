@@ -3,8 +3,11 @@ package com.aurora.music.ui.screens.detail
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -95,6 +98,7 @@ fun DetailScreen(
     onTogglePin: () -> Unit = {},
     onEditTags: ((Song) -> Unit)? = null,
     serverTagEditing: Boolean = false,
+    artistInfo: com.aurora.music.data.remote.ArtistInfo? = null,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var headerMenu by remember { mutableStateOf(false) }
@@ -119,7 +123,9 @@ fun DetailScreen(
 
     val info = data.info
     val tracks = data.tracks
-    val accent by com.aurora.music.util.rememberDominantColor(info.artUrl, info.accent)
+    // For artists the server often has no image; fall back to the enriched (wiki) photo.
+    val effectiveArt = info.artUrl.ifBlank { artistInfo?.imageUrl.orEmpty() }
+    val accent by com.aurora.music.util.rememberDominantColor(effectiveArt, info.accent)
 
     // Infinite scroll: load the next page when the user nears the end of the list.
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
@@ -139,7 +145,7 @@ fun DetailScreen(
     ) {
         item {
             Box(Modifier.fillMaxWidth().height(420.dp)) {
-                Artwork(info.artUrl, info.accent, Modifier.matchParentSize(), corner = 0.dp)
+                Artwork(effectiveArt, info.accent, Modifier.matchParentSize(), corner = 0.dp)
                 Box(
                     Modifier.matchParentSize().background(
                         Brush.verticalGradient(
@@ -237,6 +243,13 @@ fun DetailScreen(
                     )
                 }
             }
+        }
+
+        if (info.isArtist && artistInfo != null &&
+            (artistInfo.bio.isNotBlank() || artistInfo.tags.isNotEmpty() ||
+                artistInfo.country.isNotBlank() || artistInfo.yearsActive.isNotBlank())
+        ) {
+            item { ArtistAbout(artistInfo, accent) }
         }
 
         if (info.isArtist && data.albums.isNotEmpty()) {
@@ -342,6 +355,53 @@ fun DetailScreen(
             onSave = { name, desc -> onEditPlaylist(name, desc); showEdit = false },
             onDismiss = { showEdit = false },
         )
+    }
+}
+
+/** 6.5 artist enrichment: bio (expandable), active years/country, and genre tags from MusicBrainz/wiki. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun ArtistAbout(info: com.aurora.music.data.remote.ArtistInfo, accent: Color) {
+    var expanded by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp)) {
+        SectionHeader("About")
+        Spacer(Modifier.height(10.dp))
+        val meta = listOf(info.country, info.yearsActive).filter { it.isNotBlank() }.joinToString("  •  ")
+        if (meta.isNotBlank()) {
+            Text(meta, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = accent)
+            Spacer(Modifier.height(8.dp))
+        }
+        if (info.bio.isNotBlank()) {
+            Text(
+                info.bio,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = if (expanded) Int.MAX_VALUE else 5,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                modifier = Modifier.clickable { expanded = !expanded },
+            )
+            Text(
+                if (expanded) "Show less" else "Show more",
+                style = MaterialTheme.typography.labelLarge,
+                color = accent,
+                modifier = Modifier.clip(RoundedCornerShape(50)).clickable { expanded = !expanded }.padding(vertical = 4.dp),
+            )
+        }
+        if (info.tags.isNotEmpty()) {
+            Spacer(Modifier.height(10.dp))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                info.tags.forEach { tag ->
+                    Text(
+                        tag,
+                        style = MaterialTheme.typography.labelMedium,
+                        fontWeight = FontWeight.Medium,
+                        modifier = Modifier.clip(RoundedCornerShape(50))
+                            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                            .padding(horizontal = 12.dp, vertical = 6.dp),
+                    )
+                }
+            }
+        }
     }
 }
 

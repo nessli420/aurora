@@ -24,6 +24,8 @@ import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Podcasts
+import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.filled.Workspaces
@@ -50,6 +52,8 @@ fun SidebarContent(
     onHistory: () -> Unit,
     onStats: () -> Unit,
     onDuplicates: () -> Unit,
+    onRadio: () -> Unit = {},
+    onPodcasts: () -> Unit = {},
     onClose: () -> Unit,
     onLogout: () -> Unit,
 ) {
@@ -93,6 +97,8 @@ fun SidebarContent(
 
         DrawerItem(Icons.Filled.Person, "Profile") { onClose(); onProfile() }
         DrawerItem(Icons.AutoMirrored.Filled.QueueMusic, "Your Library") { onClose(); onLibrary() }
+        DrawerItem(Icons.Filled.Radio, "Radio") { onClose(); onRadio() }
+        DrawerItem(Icons.Filled.Podcasts, "Podcasts") { onClose(); onPodcasts() }
         DrawerItem(Icons.Filled.History, "Listening history") { onClose(); onHistory() }
         DrawerItem(Icons.Filled.Workspaces, "Listening stats") { onClose(); onStats() }
         DrawerItem(Icons.Filled.ContentCopy, "Find duplicates") { onClose(); onDuplicates() }

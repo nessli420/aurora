@@ -19,9 +19,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.MergeType
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Palette
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SwitchAccount
 import androidx.compose.material.icons.filled.TouchApp
@@ -47,10 +51,14 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onOpenPlayback: () -> Unit,
     onOpenEq: () -> Unit,
+    onOpenVisualizer: () -> Unit,
+    onOpenSonic: () -> Unit,
+    onOpenSources: () -> Unit,
     onOpenDownloads: () -> Unit,
     onOpenAppearance: () -> Unit,
     onOpenGestures: () -> Unit,
     onOpenIntegrations: () -> Unit,
+    onOpenPermissions: () -> Unit,
     onOpenAbout: () -> Unit,
     onOpenProfile: () -> Unit,
     onOpenAccounts: () -> Unit,
@@ -115,12 +123,23 @@ fun SettingsScreen(
                     SettingsNavRow(Icons.Filled.PlayCircle, "Playback & quality", "Streaming quality, hi-res, crossfade, gapless", onClick = onOpenPlayback)
                     SettingsRowDivider()
                     SettingsNavRow(Icons.Filled.Tune, "Equalizer & effects", "EQ, AutoEQ, convolution, DSP", onClick = onOpenEq)
+                    SettingsRowDivider()
+                    SettingsNavRow(Icons.Filled.GraphicEq, "Visualizer", "Spectrum, waveform, radial, particles", onClick = onOpenVisualizer)
+                }
+            }
+
+            item { SettingsSectionTitle("Discovery") }
+            item {
+                SettingsGroup {
+                    SettingsNavRow(Icons.Filled.AutoAwesome, "Sonic discovery", "On-device similarity radio & analysis", onClick = onOpenSonic)
                 }
             }
 
             item { SettingsSectionTitle("Library") }
             item {
                 SettingsGroup {
+                    SettingsNavRow(Icons.Filled.MergeType, "Library & sources", "Best-source playback order, unified multi-server library", onClick = onOpenSources)
+                    SettingsRowDivider()
                     SettingsNavRow(Icons.Filled.Download, "Downloads & storage", "${downloads.size} downloaded · quality, offline", onClick = onOpenDownloads)
                 }
             }
@@ -138,6 +157,8 @@ fun SettingsScreen(
             item {
                 SettingsGroup {
                     SettingsNavRow(Icons.Filled.Extension, "Integrations", "Last.fm, ListenBrainz, Discord, lyrics", onClick = onOpenIntegrations)
+                    SettingsRowDivider()
+                    SettingsNavRow(Icons.Filled.Lock, "Permissions", "Notifications, background, alarms, DAC", onClick = onOpenPermissions)
                     SettingsRowDivider()
                     SettingsNavRow(Icons.Filled.Info, "About Aurora", value = "v1.0", onClick = onOpenAbout)
                 }

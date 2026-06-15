@@ -15,6 +15,8 @@ import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.SavedQueue
+import com.aurora.music.data.isPodcast
+import com.aurora.music.data.isRadio
 import com.aurora.music.data.toSavedTrack
 import com.aurora.music.model.Song
 import com.aurora.music.playback.PlaybackService
@@ -48,6 +50,9 @@ data class PlayerUiState(
     val currentIndex: Int = 0,
     val sleepTimerMinutes: Int = 0,
     val sleepEndOfTrack: Boolean = false,
+    val bpm: Int = 0,            // sonic-analysis BPM of the current track (0 = unknown)
+    val camelot: String = "",    // Camelot key code, e.g. "8B" (blank = unknown)
+    val keyName: String = "",    // musical key name, e.g. "Am"
 ) {
     val durationSec: Int get() = current.durationSec
     val progress: Float get() = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
@@ -85,6 +90,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     @Volatile private var suppressPersist = false
     private var playStartMs: Long = 0L
     private var lastDiscordSig: String? = null
+    private var lastDiscordPosSec = 0f
+    private var lastDiscordWallMs = 0L
+    private var lastKeyInfoId: String? = null
+    private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
     @Volatile private var loadingRadio = false
 
     private val listener = object : Player.Listener {
@@ -115,6 +124,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val cur = _state.value.current
         if (cur.id.isEmpty() || cur.id == lastNowPlayingId) return
         lastNowPlayingId = cur.id
+        // Internet radio / podcasts aren't library tracks — never scrobble them.
+        if (cur.isRadio() || cur.isPodcast()) return
         playStartMs = System.currentTimeMillis()
         if (!privateSession) { container.lastfm.nowPlaying(cur); container.listenBrainz.nowPlaying(cur) }
     }
@@ -124,6 +135,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val cur = _state.value.current
         if (cur.id.isEmpty() || posSec < 30f || cur.id == lastRecordedId) return
         lastRecordedId = cur.id
+        // Internet radio / podcasts carry synthetic ids and aren't real library tracks — don't record
+        // them to history, the server, or external scrobblers.
+        if (cur.isRadio() || cur.isPodcast()) return
         container.playHistory.record(cur, System.currentTimeMillis())
         if (privateSession) return
         if (scrobbleEnabled) viewModelScope.launch { runCatching { container.repository.scrobble(cur.id) } }
@@ -360,6 +374,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val mediaId = c.currentMediaItem?.mediaId
         val cur = mediaId?.let { songById[it] } ?: _state.value.current
         val q = (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
+        // Sonic key/BPM of the current track (cached per id; cheap lookup, blank when not analyzed).
+        if (cur.id != lastKeyInfoId) { lastKeyInfoId = cur.id; lastKeyInfo = runCatching { container.sonicEngine.keyInfo(cur.id) }.getOrNull() }
+        val ki = lastKeyInfo
         _state.update {
             it.copy(
                 current = cur,
@@ -373,6 +390,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 positionSec = (c.currentPosition / 1000f).coerceAtLeast(0f),
                 queue = if (q.isNotEmpty()) q else it.queue,
                 currentIndex = c.currentMediaItemIndex.coerceAtLeast(0),
+                bpm = ki?.bpm ?: 0,
+                camelot = ki?.camelot ?: "",
+                keyName = ki?.name ?: "",
             )
         }
         updateDiscordPresence()
@@ -415,9 +435,19 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val s = _state.value
         if (s.current.id.isEmpty()) return
         val sig = "${s.current.id}|${s.isPlaying}"
-        if (sig == lastDiscordSig) return
+        val now = System.currentTimeMillis()
+        val pos = s.positionSec
+        // Discord renders the progress bar from start/end timestamps and animates it client-side, so
+        // we must re-push not only on track/play-state changes but whenever the real position diverges
+        // from what Discord is extrapolating — i.e. a loop restart or a seek. Otherwise the bar sticks
+        // at the end (e.g. 3:49/3:49) when a track repeats.
+        val expected = lastDiscordPosSec + if (s.isPlaying) (now - lastDiscordWallMs) / 1000f else 0f
+        val desynced = pos < expected - 2f || pos > expected + 2f
+        if (sig == lastDiscordSig && !desynced) return
         lastDiscordSig = sig
-        container.discord.update(s.current, s.isPlaying, s.positionSec)
+        lastDiscordPosSec = pos
+        lastDiscordWallMs = now
+        container.discord.update(s.current, s.isPlaying, pos)
     }
 
     private fun toMediaItem(song: Song): MediaItem = MediaItem.Builder()
@@ -494,6 +524,57 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 offset += page.size
                 delay(180) // gentle — stay clear of Spotify's rate limit
             }
+        }
+    }
+
+    /**
+     * Start an on-device "sonically similar" radio seeded by [seed] (defaults to the current track):
+     * the seed plus its nearest neighbours by audio-feature similarity. Falls back to the backend's
+     * own radio when the seed can't be analyzed (e.g. a server-only stream with no local copy) or too
+     * little of the library has been analyzed yet. [onResult] reports a short status for a toast.
+     */
+    fun startSonicRadio(seed: Song = _state.value.current, onResult: (String) -> Unit = {}) {
+        if (seed.id.isEmpty() || loadingRadio) return
+        loadingRadio = true
+        viewModelScope.launch {
+            val sonic = runCatching { container.sonicEngine.buildRadio(seed) }.getOrDefault(emptyList())
+            if (sonic.size >= 2) {
+                playAll(sonic, 0)
+                onResult("Sonic radio · ${sonic.size - 1} similar tracks")
+            } else {
+                // Fallback: the server's own similar-songs radio.
+                val more = runCatching { container.repository.radio(seed.id) }.getOrDefault(emptyList())
+                    .filter { it.id != seed.id }
+                if (more.isNotEmpty()) {
+                    playAll(listOf(seed) + more, 0)
+                    onResult("Radio started")
+                } else {
+                    onResult("Not enough analyzed tracks — run Sonic analysis in Settings")
+                }
+            }
+            loadingRadio = false
+        }
+    }
+
+    /**
+     * Start a harmonic Auto-DJ set seeded by [seed] (defaults to the current track): a sequence that
+     * flows by musical key (Camelot) + tempo + sonic similarity, so consecutive tracks mix well over
+     * the crossfade. Falls back to plain sonic radio when too little of the library is analyzed.
+     */
+    fun startAutoDj(seed: Song = _state.value.current, onResult: (String) -> Unit = {}) {
+        if (seed.id.isEmpty() || loadingRadio) return
+        loadingRadio = true
+        viewModelScope.launch {
+            val set = runCatching { container.sonicEngine.buildAutoDj(seed) }.getOrDefault(emptyList())
+            if (set.size >= 2) {
+                playAll(set, 0)
+                onResult("Auto-DJ · ${set.size} tracks, key & tempo matched")
+            } else {
+                loadingRadio = false
+                startSonicRadio(seed, onResult)
+                return@launch
+            }
+            loadingRadio = false
         }
     }
 
@@ -578,6 +659,25 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (from in 0 until count && to in 0 until count && from != to) {
             c.moveMediaItem(from, to)
             syncFromController()
+        }
+    }
+
+    /**
+     * Save the current queue as a new server/local playlist. Synthetic streams (radio/podcasts) are
+     * dropped since the backend can't resolve their ids. [onResult] reports a status for a toast.
+     */
+    fun saveQueueAsPlaylist(name: String, onResult: (String) -> Unit = {}) {
+        val title = name.trim()
+        if (title.isEmpty()) return
+        val ids = _state.value.queue
+            .filterNot { it.isRadio() || it.isPodcast() }
+            .map { it.id }
+            .filter { it.isNotEmpty() }
+            .distinct()
+        if (ids.isEmpty()) { onResult("Nothing to save"); return }
+        viewModelScope.launch {
+            val ok = runCatching { container.repository.createPlaylistFromSongs(title, ids) }.getOrDefault(false)
+            onResult(if (ok) "Saved “$title”" else "Couldn't save playlist")
         }
     }
 

@@ -32,6 +32,10 @@
 #define LOGW(...) __android_log_print(ANDROID_LOG_WARN,  TAG, __VA_ARGS__)
 #define LOGE(...) __android_log_print(ANDROID_LOG_ERROR, TAG, __VA_ARGS__)
 
+// Mono ring for the visualizer (power of two). Written by the decode thread,
+// read by the JNI getter from the app's analyser thread.
+#define VIZ_RING_SIZE 16384
+
 // ── MmapDataSource: memory-mapped file for zero-syscall reads ───────
 
 /** DataSource with dedicated I/O thread. Decode thread NEVER does disk I/O.
@@ -247,7 +251,45 @@ struct NativeAudioEngine {
     uint8_t *convertBuffer;   // bit-depth converted PCM for USB
     size_t pcmBufferSize;
     size_t convertBufferSize;
+
+    // Visualizer mono ring (decode thread writes, JNI reader copies the latest window)
+    float *vizRing;
+    std::atomic<int> vizWrite;
+    std::atomic<int64_t> vizCount;
 };
+
+// Downmix one decoded block (source bit depth) to mono float and append to the viz ring.
+static void pushVizSamples(NativeAudioEngine *e, const uint8_t *pcm, int frames) {
+    if (!e->vizRing || frames <= 0) return;
+    const int ch = e->channels;
+    const int bps = e->bitsPerSample;
+    int w = e->vizWrite.load();
+    for (int i = 0; i < frames; i++) {
+        float mono;
+        if (bps == 16) {
+            const int16_t *s = reinterpret_cast<const int16_t *>(pcm) + (size_t)i * ch;
+            int acc = 0;
+            for (int c = 0; c < ch; c++) acc += s[c];
+            mono = (float)acc / ch / 32768.0f;
+        } else if (bps == 24) {
+            const uint8_t *base = pcm + (size_t)i * ch * 3;
+            int acc = 0;
+            for (int c = 0; c < ch; c++) {
+                const uint8_t *p = base + c * 3;
+                int v = (p[0]) | (p[1] << 8) | (p[2] << 16);
+                if (v & 0x800000) v |= ~0xFFFFFF;  // sign-extend 24→32
+                acc += v;
+            }
+            mono = (float)acc / ch / 8388608.0f;
+        } else {
+            mono = 0.0f;
+        }
+        e->vizRing[w] = mono;
+        w = (w + 1) & (VIZ_RING_SIZE - 1);
+    }
+    e->vizWrite.store(w);
+    e->vizCount.fetch_add(frames);
+}
 
 static void *decodeThreadFunc(void *arg) {
     auto *engine = static_cast<NativeAudioEngine *>(arg);
@@ -314,6 +356,9 @@ static void *decodeThreadFunc(void *arg) {
         int srcBytesPerFrame = srcBytesPerSample * engine->channels;
         int framesInBuffer = (int)(bytesRead / srcBytesPerFrame);
         int totalSamples = framesInBuffer * engine->channels;
+
+        // Feed the visualizer (mono float) from the source PCM, before bit-depth conversion.
+        pushVizSamples(engine, engine->pcmBuffer, framesInBuffer);
 
         // Convert bit depth: source → DAC
         const uint8_t *usbData;
@@ -422,6 +467,9 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeCreateFromFd(
     engine->convertBufferSize = maxBlock * engine->channels * 4;  // max 32-bit output
     engine->pcmBuffer = (uint8_t *)malloc(engine->pcmBufferSize);
     engine->convertBuffer = (uint8_t *)malloc(engine->convertBufferSize);
+    engine->vizRing = (float *)calloc(VIZ_RING_SIZE, sizeof(float));
+    engine->vizWrite.store(0);
+    engine->vizCount.store(0);
 
     if (!engine->pcmBuffer || !engine->convertBuffer) {
         LOGE("nativeCreateFromFd: buffer allocation failed");
@@ -521,6 +569,7 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeDestroy(
 
     free(engine->pcmBuffer);
     free(engine->convertBuffer);
+    free(engine->vizRing);
     delete engine->parser;
     delete engine->dataSource;
     LOGI("Engine destroyed, %lld total frames",
@@ -562,6 +611,28 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeIsRunning(
         JNIEnv *, jobject, jlong handle) {
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
     return (engine && engine->running.load()) ? JNI_TRUE : JNI_FALSE;
+}
+
+// Copy the latest out.length mono samples into out. Returns the number of valid (decoded) samples.
+JNIEXPORT jint JNICALL
+Java_com_decent_usbaudio_NativeAudioEngine_nativeReadVisualizer(
+        JNIEnv *env, jobject, jlong handle, jfloatArray out) {
+    auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
+    if (!engine || !engine->vizRing) return 0;
+    jsize len = env->GetArrayLength(out);
+    if (len <= 0) return 0;
+    int n = (int)len;
+    if (n > VIZ_RING_SIZE) n = VIZ_RING_SIZE;
+    int w = engine->vizWrite.load();
+    int start = (((w - n) % VIZ_RING_SIZE) + VIZ_RING_SIZE) % VIZ_RING_SIZE;
+    int first = VIZ_RING_SIZE - start;
+    if (first > n) first = n;
+    env->SetFloatArrayRegion(out, 0, first, engine->vizRing + start);
+    if (first < n) {
+        env->SetFloatArrayRegion(out, first, n - first, engine->vizRing);
+    }
+    int64_t avail = engine->vizCount.load();
+    return (jint)((avail < n) ? avail : n);
 }
 
 } // extern "C"
