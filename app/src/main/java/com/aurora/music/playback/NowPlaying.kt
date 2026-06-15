@@ -3,7 +3,6 @@ package com.aurora.music.playback
 import android.content.Context
 import kotlinx.coroutines.flow.MutableStateFlow
 
-/** A lightweight now-playing snapshot shared with the home-screen widget + Quick Settings tile. */
 data class NowPlaying(
     val title: String = "",
     val artist: String = "",
@@ -12,15 +11,11 @@ data class NowPlaying(
     val hasTrack: Boolean = false,
 )
 
-/** In-memory now-playing state for live observers (widget/tile in the same process). */
 object NowPlayingBus {
     val state = MutableStateFlow(NowPlaying())
 }
 
-/**
- * Persists the latest now-playing snapshot so the widget/tile can still render after the service
- * process has been killed (cold read). Tiny synchronous SharedPreferences store.
- */
+// persists snapshot so widget/tile still render after the service process is killed
 class NowPlayingStore(context: Context) {
     private val prefs = context.applicationContext.getSharedPreferences("now_playing", Context.MODE_PRIVATE)
 
@@ -44,7 +39,6 @@ class NowPlayingStore(context: Context) {
     )
 
     companion object {
-        /** Cold-read the persisted snapshot without holding a store instance. */
         fun read(context: Context): NowPlaying = NowPlayingStore(context).load()
     }
 }

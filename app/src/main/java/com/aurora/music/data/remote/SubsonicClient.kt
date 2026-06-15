@@ -12,11 +12,6 @@ import java.net.URLEncoder
 import java.security.MessageDigest
 import java.util.concurrent.TimeUnit
 
-/**
- * Builds an authenticated Subsonic client for a given [Session]. Token auth params are
- * appended to every request via an interceptor; cover-art and stream URLs are built
- * directly (with the same auth) for Coil and ExoPlayer.
- */
 class SubsonicClient(val session: Session) {
 
     private val baseUrl: String = session.server.trimEnd('/')
@@ -53,17 +48,12 @@ class SubsonicClient(val session: Session) {
     private fun authQuery(): String =
         authParams.entries.joinToString("&") { "${it.key}=${enc(it.value)}" }
 
-    /** Full cover-art URL (auth included) for Coil. Returns "" when no art id. */
     fun coverArtUrl(coverArt: String?, size: Int = 600): String {
         if (coverArt.isNullOrBlank()) return ""
         return "$baseUrl/rest/getCoverArt.view?id=${enc(coverArt)}&size=$size&${authQuery()}"
     }
 
-    /**
-     * Streamable audio URL (auth included) for ExoPlayer. [maxBitrate] 0 = no transcode;
-     * when [format] is "raw" Navidrome serves the original, untouched file (true lossless
-     * for FLAC/ALAC libraries).
-     */
+    // format "raw" serves the original untouched file true lossless
     fun streamUrl(songId: String, maxBitrate: Int = 0, format: String? = null): String {
         val params = buildList {
             if (maxBitrate > 0) add("maxBitRate=$maxBitrate")
@@ -72,7 +62,6 @@ class SubsonicClient(val session: Session) {
         return "$baseUrl/rest/stream.view?id=${enc(songId)}$params&${authQuery()}"
     }
 
-    /** Resolve the bitrate/format/sample-rate of a single song for the now-playing badge. */
     suspend fun songInfo(songId: String): SongDto? = runCatching {
         api.getSong(songId).response.song
     }.getOrNull()
@@ -88,7 +77,7 @@ class SubsonicClient(val session: Session) {
             return bytes.joinToString("") { "%02x".format(it) }
         }
 
-        /** Build a token-auth session from a raw password (password is never stored). */
+        // password is never stored
         fun buildSession(server: String, username: String, password: String): Session {
             val salt = (1..16).map { "0123456789abcdef".random() }.joinToString("")
             val token = md5(password + salt)
@@ -96,7 +85,6 @@ class SubsonicClient(val session: Session) {
             return Session(normalized, username.trim(), salt, token)
         }
 
-        /** Accept "host", "host:port", or full URLs; default to http scheme. */
         fun normalizeServer(raw: String): String {
             var s = raw.trim().trimEnd('/')
             if (s.isEmpty()) return s

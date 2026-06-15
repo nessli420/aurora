@@ -51,10 +51,7 @@ import com.aurora.music.ui.screens.settings.SettingsTopBar
 import com.aurora.music.viewmodel.TagEditState
 import kotlinx.coroutines.launch
 
-/**
- * Tag editor: edit a local file's tags, optionally auto-filling from a MusicBrainz match (with
- * Cover Art Archive art). Saving goes through the MediaStore write-consent dialog on Android 11+.
- */
+// saving a local file goes through the mediastore write-consent dialog on android 11+
 @Composable
 fun TagEditScreen(
     contentPadding: PaddingValues,
@@ -62,7 +59,7 @@ fun TagEditScreen(
     onEdit: ((AudioTags) -> AudioTags) -> Unit,
     onMatch: () -> Unit,
     onApplyMatch: (MetadataMatch) -> Unit,
-    onIdentify: (() -> Unit)?,        // AcoustID fingerprint identify; null when unavailable
+    onIdentify: (() -> Unit)?,        // null when acoustid identify unavailable
     identifying: Boolean = false,
     onBack: () -> Unit,
     confirm: (String) -> Unit,
@@ -71,7 +68,6 @@ fun TagEditScreen(
     val scope = rememberCoroutineScope()
     var saving by remember { mutableStateOf(false) }
 
-    // The actual write, run after any needed MediaStore consent.
     val doWrite: () -> Unit = {
         scope.launch {
             val uri = container.tagEditor.contentUriFor(state.songId)
@@ -93,7 +89,7 @@ fun TagEditScreen(
     val onSave: () -> Unit = {
         saving = true
         if (!state.localFile) {
-            // Server item (Jellyfin): update via the backend metadata API — no file write / consent.
+            // server item updates via backend metadata api no file write or consent
             scope.launch {
                 val ok = container.repository.updateMetadata(state.songId, state.tags)
                 saving = false
@@ -129,7 +125,6 @@ fun TagEditScreen(
             }
             Spacer(Modifier.height(12.dp))
 
-            // Auto-match actions.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onMatch, enabled = !state.matching) {
                     if (state.matching) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)

@@ -10,11 +10,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
-/**
- * Authenticated Jellyfin client for a [Session]. The access token + client identity travel in the
- * `X-Emby-Authorization` header on every API request; stream and image URLs carry the token as an
- * `api_key` query param so ExoPlayer and Coil can fetch them directly.
- */
+// token in X-Emby-Authorization header on api calls but as api_key query param on stream/image urls so exoplayer and coil can fetch directly
 class JellyfinClient(val session: Session) {
 
     private val baseUrl: String = session.server.trimEnd('/')
@@ -23,13 +19,12 @@ class JellyfinClient(val session: Session) {
 
     val api: JellyfinApi = buildApi(baseUrl, token)
 
-    /** Cover-art URL for an item (album/artist/playlist/song-with-art). "" when no id. */
     fun coverArtUrl(itemId: String?, size: Int = 600): String {
         if (itemId.isNullOrBlank()) return ""
         return "$baseUrl/Items/${enc(itemId)}/Images/Primary?fillHeight=$size&fillWidth=$size&quality=90&api_key=${enc(token)}"
     }
 
-    /** Playable audio URL. [lossless] (or no bitrate cap) streams the original file untouched. */
+    // lossless or no bitrate cap streams the original file untouched
     fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean): String =
         if (lossless || maxBitrate <= 0) {
             "$baseUrl/Audio/${enc(songId)}/stream?static=true&api_key=${enc(token)}"
@@ -70,7 +65,6 @@ class JellyfinClient(val session: Session) {
                 .create(JellyfinApi::class.java)
         }
 
-        /** Accept "host", "host:port" or a full URL; default to http scheme, no trailing slash. */
         fun normalizeServer(raw: String): String {
             var s = raw.trim().trimEnd('/')
             if (s.isEmpty()) return s
@@ -78,10 +72,6 @@ class JellyfinClient(val session: Session) {
             return s.toHttpUrlOrNull()?.toString()?.trimEnd('/') ?: s
         }
 
-        /**
-         * Authenticate against a Jellyfin server and build a [Session]. Network call — run off the
-         * main thread. Returns null on bad credentials / unreachable server.
-         */
         suspend fun authenticate(server: String, username: String, password: String): Session {
             val norm = normalizeServer(server)
             val api = buildApi(norm, "")

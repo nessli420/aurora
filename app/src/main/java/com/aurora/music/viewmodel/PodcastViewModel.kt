@@ -31,11 +31,9 @@ data class EpisodesUiState(
     val failed: Boolean = false,
 )
 
-/** Drives the podcast directory/subscriptions screen and the per-show episode list. */
 class PodcastViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as AuroraApplication).container
 
-    /** Subscribed shows, persisted in settings. */
     val subscriptions: StateFlow<List<Podcast>> =
         container.settingsStore.podcastSubs.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -47,7 +45,6 @@ class PodcastViewModel(app: Application) : AndroidViewModel(app) {
 
     private var searchJob: Job? = null
 
-    /** Debounced free-text search (fires ~350ms after the user stops typing). */
     fun search(query: String) {
         val q = query.trim()
         searchJob?.cancel()
@@ -62,7 +59,6 @@ class PodcastViewModel(app: Application) : AndroidViewModel(app) {
 
     fun clearSearch() { _state.update { it.copy(query = "", results = emptyList(), failed = false) } }
 
-    /** Load episodes for a show; [fallbackImage] seeds the header art until the feed resolves. */
     fun loadEpisodes(feedUrl: String, fallbackTitle: String = "", fallbackImage: String = "") {
         _episodes.update { EpisodesUiState(loading = true, channelTitle = fallbackTitle, channelImage = fallbackImage) }
         viewModelScope.launch {

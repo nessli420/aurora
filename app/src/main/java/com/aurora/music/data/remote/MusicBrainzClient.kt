@@ -11,15 +11,15 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
-// --- DTOs (nullable per the project's Gson rule) ---------------------------------
+// nullable per gson null trap
 
 data class MbRecordingResult(val recordings: List<MbRecording>? = emptyList())
 
 data class MbRecording(
     val id: String? = "",
     val title: String? = "",
-    val length: Long? = null,                                   // ms
-    val score: Int? = 0,                                        // search relevance 0..100
+    val length: Long? = null,
+    val score: Int? = 0,
     @SerializedName("artist-credit") val artistCredit: List<MbArtistCredit>? = emptyList(),
     val releases: List<MbRelease>? = emptyList(),
 )
@@ -48,22 +48,18 @@ interface MusicBrainzApi {
     ): MbRecordingResult
 }
 
-/** A resolved metadata candidate the tag editor can apply. */
 data class MetadataMatch(
     val title: String,
     val artist: String,
     val album: String,
     val year: String,
     val trackNumber: String,
-    val coverUrl: String,        // Cover Art Archive front image, or "" if none known
+    val coverUrl: String,
     val score: Int,
 )
 
-/**
- * MusicBrainz lookup: searches recordings by existing tags and maps each to a [MetadataMatch],
- * with a Cover Art Archive front-cover URL per release. MusicBrainz requires a descriptive
- * User-Agent and rate-limits to ~1 req/s, which is fine for interactive single-track lookups.
- */
+// musicbrainz requires a descriptive user-agent and rate-limits ~1 req/s
+
 class MusicBrainzClient {
     private val http = OkHttpClient.Builder()
         .addInterceptor { chain ->
@@ -84,7 +80,6 @@ class MusicBrainzClient {
         .build()
         .create(MusicBrainzApi::class.java)
 
-    /** Lucene-escape a user value going into a quoted query term. */
     private fun esc(s: String) = s.replace("\\", "\\\\").replace("\"", "\\\"")
 
     suspend fun search(title: String, artist: String, album: String = ""): List<MetadataMatch> {
@@ -99,7 +94,6 @@ class MusicBrainzClient {
         return result.recordings.orEmpty().mapNotNull { it.toMatch() }
     }
 
-    /** Download cover-art bytes (Cover Art Archive 302-redirects to the Internet Archive). */
     suspend fun fetchImage(url: String): ByteArray? = withContext(Dispatchers.IO) {
         if (url.isBlank()) return@withContext null
         runCatching {
@@ -113,7 +107,7 @@ class MusicBrainzClient {
         val t = title?.takeIf { it.isNotBlank() } ?: return null
         val artistName = artistCredit.orEmpty().joinToString("") { (it.name ?: it.artist?.name ?: "") + (it.joinphrase ?: "") }
             .ifBlank { artistCredit.orEmpty().firstOrNull()?.artist?.name ?: "" }
-        // Prefer an official album release over singles/compilations for album + track number.
+        // prefer an official album release over singles/compilations for album + track number
         val release = releases.orEmpty().firstOrNull { it.releaseGroup?.primaryType.equals("Album", true) }
             ?: releases.orEmpty().firstOrNull()
         val trackNo = release?.media.orEmpty().firstNotNullOfOrNull { m -> m.track.orEmpty().firstOrNull()?.number }

@@ -11,13 +11,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
-/**
- * Reads headphone/IEM frequency-response data from squig.link / CrinGraph instances. The layout is
- * fixed by the CrinGraph engine: `{base}/data/phone_book.json` indexes every model, and each model's
- * measurement lives in `{base}/data/<file> L.txt` + ` R.txt` (averaged here). Target curves are
- * `{base}/data/<target>.txt`. Cloudflare-fronted instances 403 default bot agents, so every request
- * carries a browser User-Agent. CORS-open, keyless, HTTPS. Failures degrade to null/empty.
- */
+// cloudflare instances 403 default bot agents so every request carries a browser user-agent
 class SquigClient {
     private val http = OkHttpClient.Builder()
         .connectTimeout(12, TimeUnit.SECONDS)
@@ -25,13 +19,11 @@ class SquigClient {
         .build()
     private val gson = Gson()
 
-    // One parsed index per instance base URL (the catalog rarely changes within a session).
     private val indexCache = HashMap<String, List<EqProfile>>()
 
     private data class SquigBrand(val name: String? = "", val phones: List<SquigPhone>? = emptyList())
     private data class SquigPhone(val name: String? = "", val file: JsonElement? = null, val suffix: JsonElement? = null)
 
-    /** Full model catalog for [base], flattened (one entry per measurement variant). */
     suspend fun index(base: String): List<EqProfile> = withContext(Dispatchers.IO) {
         synchronized(indexCache) { indexCache[base] }?.let { return@withContext it }
         val body = fetchText("$base/data/phone_book.json") ?: return@withContext emptyList()
@@ -41,7 +33,7 @@ class SquigClient {
         val out = ArrayList<EqProfile>()
         for (brand in brands) {
             val bName = brand.name?.trim().orEmpty()
-            if (bName.isBlank() || bName.startsWith("_")) continue   // skip "_EQ" pseudo-brand
+            if (bName.isBlank() || bName.startsWith("_")) continue   // skip _EQ pseudo-brand
             for (phone in brand.phones.orEmpty()) {
                 val mName = phone.name?.trim().orEmpty()
                 val files = stringsOf(phone.file)
@@ -60,7 +52,6 @@ class SquigClient {
         out
     }
 
-    /** Search a model by name (prefix match ranked first, then shortest). */
     suspend fun search(base: String, query: String, limit: Int = 60): List<EqProfile> = withContext(Dispatchers.IO) {
         val q = query.trim().lowercase()
         if (q.length < 2) return@withContext emptyList()
@@ -71,7 +62,6 @@ class SquigClient {
             .toList()
     }
 
-    /** Averaged L+R measured response for [stem] (e.g. "64 Audio Aspire 1"), or null. */
     suspend fun measurement(base: String, stem: String): FrCurve? = withContext(Dispatchers.IO) {
         val l = fetchCurve("$base/data", "$stem L.txt")
         val r = fetchCurve("$base/data", "$stem R.txt")
@@ -83,12 +73,9 @@ class SquigClient {
         }
     }
 
-    /** A target curve named e.g. "Harman IE 2019 Target" (the ".txt" is appended), or null. */
     suspend fun target(base: String, targetName: String): FrCurve? = withContext(Dispatchers.IO) {
         fetchCurve("$base/data", "$targetName.txt")
     }
-
-    // ---- internals -------------------------------------------------------------------------------
 
     private fun fetchCurve(dirUrl: String, fileName: String): FrCurve? {
         val url = dirUrl.toHttpUrlOrNull()?.newBuilder()?.addPathSegment(fileName)?.build() ?: return null
@@ -101,7 +88,6 @@ class SquigClient {
             .execute().use { if (it.isSuccessful) it.body?.string() else null }
     }.getOrNull()
 
-    /** Tolerant FR parse: skip any line not starting with a number; take cols [0]=Hz, [1]=dB. */
     private fun parseCurve(text: String): FrCurve {
         val out = ArrayList<Pair<Float, Float>>()
         for (line in text.lineSequence()) {
@@ -114,12 +100,12 @@ class SquigClient {
             val db = parts.getOrNull(1)?.toFloatOrNull() ?: continue
             if (f > 0f) out.add(f to db)
         }
-        // The interpolator assumes ascending, de-duped frequencies; enforce it (don't trust the file).
+        // interpolator assumes ascending de-duped frequencies dont trust the file
         return out.sortedBy { it.first }.distinctBy { it.first }
     }
 
     private fun averageCurves(a: FrCurve, b: FrCurve): FrCurve {
-        if (a.size != b.size) return a   // different grids — L/R from one instance share a grid, so this is the safe fallback
+        if (a.size != b.size) return a   // l and r from one instance share a grid so size mismatch falls back
         return a.indices.map { i -> a[i].first to ((a[i].second + b[i].second) / 2f) }
     }
 

@@ -5,11 +5,6 @@ import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * ListenBrainz scrobbling, mirroring [LastfmScrobbler] but token-only (no browser auth). The
- * user pastes their ListenBrainz user token in Integrations; submissions are fire-and-forget and
- * never affect playback. A no-op until a token is set.
- */
 class ListenBrainzScrobbler(
     private val store: SettingsStore,
     private val scope: CoroutineScope,
@@ -30,7 +25,6 @@ class ListenBrainzScrobbler(
 
     val isConnected: Boolean get() = !token.isNullOrBlank()
 
-    /** Validate a token and persist it (with the resolved username) if valid. Returns success. */
     suspend fun connect(rawToken: String): Boolean {
         val t = rawToken.trim()
         if (t.isBlank()) return false

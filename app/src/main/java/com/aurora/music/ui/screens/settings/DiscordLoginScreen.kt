@@ -31,12 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 
-/**
- * Links a Discord account for Rich Presence. Logs in via the WebView and grabs the token from
- * localStorage using the fresh-iframe trick (Discord scrubs it from the top window but not an
- * iframe; same approach Kizzy uses). Fallback: paste a token directly, since Discord's web app
- * sometimes won't render in an Android WebView. Calls [onToken] once.
- */
+// grabs token from a fresh iframe localStorage discord scrubs it from the top window but not an iframe
 @SuppressLint("SetJavaScriptEnabled")
 @Composable
 fun DiscordLoginScreen(contentPadding: PaddingValues, onBack: () -> Unit, onToken: (String) -> Unit) {
@@ -67,8 +62,7 @@ fun DiscordLoginScreen(contentPadding: PaddingValues, onBack: () -> Unit, onToke
             modifier = Modifier.fillMaxWidth().weight(1f),
             factory = { ctx ->
                 WebView(ctx).apply {
-                    // Discord's SPA often renders blank in a hardware-accelerated WebView; software
-                    // layer forces it to actually paint.
+                    // discord spa renders blank in a hardware-accelerated webview software layer forces a paint
                     setLayerType(View.LAYER_TYPE_SOFTWARE, null)
                     settings.javaScriptEnabled = true
                     settings.domStorageEnabled = true

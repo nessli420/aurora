@@ -3,10 +3,7 @@ package com.aurora.music.data.remote
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-/**
- * Subsonic / OpenSubsonic REST API (Navidrome). Auth params (u, t, s, v, c, f) are
- * injected by an OkHttp interceptor, so endpoints only declare their own params.
- */
+// auth params injected by an okhttp interceptor so endpoints declare only their own
 interface SubsonicApi {
 
     @GET("rest/ping.view")

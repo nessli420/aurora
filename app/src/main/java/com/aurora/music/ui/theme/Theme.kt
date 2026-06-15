@@ -67,13 +67,10 @@ private val LightColors = lightColorScheme(
     error = Color(0xFFD11A4B),
 )
 
-/** Visual prefs available to any composable (player gradient intensity, density, etc.). */
 val LocalUiPrefs = staticCompositionLocalOf { UiPrefs() }
 
-/** Contrasting on-color for an arbitrary accent. */
 private fun onAccent(seed: Color): Color = if (seed.luminance() > 0.5f) Color(0xFF1A1016) else Color.White
 
-/** Recolor a base scheme around an accent [seed], keeping Aurora's warm surface ramp. */
 private fun ColorScheme.withAccent(seed: Color, dark: Boolean): ColorScheme {
     val on = onAccent(seed)
     return copy(
@@ -83,13 +80,11 @@ private fun ColorScheme.withAccent(seed: Color, dark: Boolean): ColorScheme {
         onPrimaryContainer = if (dark) Color.White else lerp(seed, Color.Black, 0.6f),
         secondary = seed,
         onSecondary = on,
-        // Keep gradient variety (avatars/signature bars use primary→tertiary).
         tertiary = if (dark) lerp(seed, Color.White, 0.22f) else lerp(seed, Color.Black, 0.18f),
         onTertiary = on,
     )
 }
 
-/** Pure-black surfaces for OLED screens. */
 private fun ColorScheme.toAmoled(): ColorScheme = copy(
     background = Color.Black,
     surface = Color.Black,
@@ -139,8 +134,7 @@ fun AuroraTheme(
         typography = auroraTypography(uiPrefs.fontScale),
         shapes = auroraShapes(uiPrefs.cornerStyle),
     ) {
-        // App content renders outside any M3 Surface (we paint our own ambient background), so
-        // establish a default content color — otherwise unstyled Text/Icon falls back to black.
+        // content renders outside any m3 surface so set default content color else text falls back to black
         CompositionLocalProvider(
             LocalContentColor provides colors.onBackground,
             LocalUiPrefs provides uiPrefs,

@@ -7,10 +7,7 @@ import androidx.media3.common.util.UnstableApi
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
-/**
- * Downmixes 16-bit stereo PCM to dual mono by averaging L/R when [enabled]. Always present in the
- * chain; passes through unchanged when disabled, so toggling needs no pipeline rebuild.
- */
+// always in chain passes through when disabled so toggling needs no rebuild
 @UnstableApi
 class MonoAudioProcessor : BaseAudioProcessor() {
 

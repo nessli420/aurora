@@ -9,10 +9,7 @@ import retrofit2.http.Path
 import retrofit2.http.Query
 import retrofit2.http.QueryMap
 
-/**
- * Jellyfin REST API. The `X-Emby-Authorization` header (client + device + access token) is added
- * to every request by an OkHttp interceptor, so endpoints only declare their own params.
- */
+// auth header added by interceptor so endpoints omit it
 interface JellyfinApi {
 
     @GET("System/Info/Public")
@@ -27,11 +24,11 @@ interface JellyfinApi {
     @GET("Users/{userId}/Items/{id}")
     suspend fun item(@Path("userId") userId: String, @Path("id") id: String): BaseItemDto
 
-    /** Full item as raw JSON, for the metadata editor (so a POST update preserves untouched fields). */
+    // raw json so a post update preserves untouched fields
     @GET("Users/{userId}/Items/{id}")
     suspend fun itemRaw(@Path("userId") userId: String, @Path("id") id: String): com.google.gson.JsonObject
 
-    /** Replace an item's metadata (Jellyfin requires the full item object). Needs edit permission. */
+    // jellyfin requires the full item object on update
     @POST("Items/{id}")
     suspend fun updateItem(@Path("id") id: String, @Body body: com.google.gson.JsonObject): Response<Unit>
 

@@ -6,7 +6,7 @@ import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.util.UUID
 
-/** A locally-created playlist (Gson-persisted; all fields nullable-safe for forward compat). */
+// fields nullable-safe for gson forward compat
 data class LocalPlaylist(
     val id: String = "",
     val title: String? = "",
@@ -19,10 +19,6 @@ private data class LocalState(
     val likedIds: List<String>? = emptyList(),
 )
 
-/**
- * On-device state for [LocalBackend] that MediaStore doesn't hold: user-created playlists and
- * liked-song ids. Persisted as one JSON file in the app's private storage.
- */
 class LocalStore(context: Context) {
     private val file = File(context.filesDir, "local_store.json")
     private val gson = Gson()
@@ -39,7 +35,6 @@ class LocalStore(context: Context) {
         runCatching { file.writeText(gson.toJson(state)) }
     }
 
-    // --- playlists ---
     fun playlists(): List<LocalPlaylist> = state.playlists.orEmpty()
     fun playlist(id: String): LocalPlaylist? = state.playlists.orEmpty().firstOrNull { it.id == id }
 
@@ -77,7 +72,6 @@ class LocalStore(context: Context) {
         persist()
     }
 
-    // --- backup/restore ---
     fun exportJson(): String = gson.toJson(state)
     fun importJson(json: String) = synchronized(lock) {
         runCatching { gson.fromJson(json, object : TypeToken<LocalState>() {}.type) as? LocalState }.getOrNull()?.let {
@@ -85,7 +79,6 @@ class LocalStore(context: Context) {
         }
     }
 
-    // --- likes ---
     fun likedIds(): Set<String> = state.likedIds.orEmpty().toSet()
 
     fun setLiked(id: String, liked: Boolean): Boolean = synchronized(lock) {

@@ -39,10 +39,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
-/**
- * Full-screen wake-to-music alarm screen. Shows over the lock screen and turns the screen on; a
- * prominent Dismiss stops the music, and "Turn off daily alarm" also cancels the recurring schedule.
- */
 class AlarmActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,8 +72,7 @@ class AlarmActivity : ComponentActivity() {
         }
         if (disableDaily) {
             val store = (application as AuroraApplication).container.settingsStore
-            // Detached scope so the write survives finish(). Clearing the pref makes AppContainer
-            // cancel the AlarmManager schedule.
+            // detached scope so the write survives finish
             CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
                 val a = store.alarmPrefs.first()
                 store.setAlarm(enabled = false, hour = a.hour, minute = a.minute)

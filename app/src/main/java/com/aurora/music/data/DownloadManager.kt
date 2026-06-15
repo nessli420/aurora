@@ -19,7 +19,6 @@ import okhttp3.Request
 import java.io.File
 import java.io.IOException
 
-/** A song available offline: metadata + local file paths. */
 data class DownloadedSong(
     val id: String,
     val title: String,
@@ -30,14 +29,11 @@ data class DownloadedSong(
     val durationSec: Int,
     val audioPath: String,
     val coverPath: String,
-    // Nullable because Gson injects null (not the Kotlin default) when an older saved record
-    // predates these fields; null-coalesced in toSong().
+    // nullable because gson injects null not the kotlin default for fields missing from older records
     val suffix: String? = "",
     val bitrateKbps: Int = 0,
     val sampleRateHz: Int = 0,
     val bitDepth: Int = 0,
-    // Which server this was downloaded from (its base URL). Lets the Library "Downloaded" view
-    // scope to the active server while online; offline mode shows every server's downloads.
     val serverId: String? = "",
 ) {
     fun toSong(): Song = Song(
@@ -65,29 +61,21 @@ sealed interface DownloadState {
     data object Failed : DownloadState
 }
 
-/** An album/playlist the user explicitly downloaded as a unit. */
 data class DownloadedCollection(
     val id: String,
-    val kind: String,      // "album" | "playlist"
+    val kind: String,
     val title: String,
     val subtitle: String,
     val coverPath: String,
     val trackIds: List<String>,
-    val serverId: String? = "",   // server base URL this collection came from
+    val serverId: String? = "",
 )
 
-/**
- * Downloads songs (audio + cover) to app storage for offline playback, with a persistent
- * index and live per-song progress. Albums/playlists download by passing their full track list.
- */
 class DownloadManager(
     context: Context,
-    // Resolves a server audio URL for (songId, maxBitrate, lossless) from the active backend.
     private val streamUrlProvider: (String, Int, Boolean) -> String? = { _, _, _ -> null },
     private val downloadBitrateProvider: () -> Int = { 0 },
-    // The active server's base URL, stamped onto each download so it can be scoped per-server.
     private val currentServerIdProvider: () -> String = { "" },
-    // Resolves an `aurora-yt://` sentinel (Spotify) to a real, fetchable audio URL. Null otherwise.
     private val resolveSentinel: (String) -> String? = { null },
 ) {
 
@@ -104,7 +92,6 @@ class DownloadManager(
     private val _collections = MutableStateFlow(loadCollections())
     val collections: StateFlow<List<DownloadedCollection>> = _collections.asStateFlow()
 
-    /** Record an album/playlist as a downloaded collection and download its tracks. */
     fun downloadCollection(id: String, kind: String, title: String, subtitle: String, coverUrl: String, songs: List<Song>) {
         scope.launch {
             val coverFile = File(dir, "col_$id.jpg")
@@ -130,8 +117,7 @@ class DownloadManager(
     fun isDownloaded(id: String): Boolean = _downloads.value.containsKey(id)
     fun get(id: String): DownloadedSong? = _downloads.value[id]
 
-    /** Find a download by its source-original id, also matching entries stored under a merged-namespaced
-     *  key (7.1b unified-library downloads are keyed by the wrapped id while localize looks up the raw id). */
+    // also matches merged-namespaced keys downloads keyed by wrapped id but localize looks up raw id
     fun getByOriginalId(originalId: String): DownloadedSong? =
         _downloads.value[originalId] ?: _downloads.value.values.firstOrNull { stripMergeNamespace(it.id) == originalId }
 
@@ -164,11 +150,9 @@ class DownloadManager(
         try {
             setState(song.id, DownloadState.Downloading(0f))
             val audioFile = File(dir, "${song.id}.audio")
-            // Build the audio URL at the chosen download quality (0 = lossless/original).
             val bitrate = downloadBitrateProvider()
             val provided = streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl
-            // Spotify tracks carry an `aurora-yt://` sentinel; resolve it to a real YouTube audio
-            // URL (using the song's full sentinel, which holds the search query) before fetching.
+            // resolve aurora-yt sentinel via the songs full sentinel which holds the search query
             val audioUrl = if (provided.startsWith("aurora-yt://")) {
                 val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else provided
                 resolveSentinel(sentinel) ?: throw IOException("No stream found for this track")
@@ -181,7 +165,6 @@ class DownloadManager(
                 albumId = song.albumId, artistId = song.artistId, durationSec = song.durationSec,
                 audioPath = audioFile.absolutePath,
                 coverPath = if (coverFile.exists()) coverFile.absolutePath else "",
-                // Original-quality download keeps the source codec; a transcoded one is MP3.
                 suffix = if (bitrate == 0) song.suffix else "mp3",
                 bitrateKbps = if (bitrate == 0) song.bitrateKbps else bitrate,
                 sampleRateHz = song.sampleRateHz,
@@ -224,7 +207,6 @@ class DownloadManager(
         if (!indexFile.exists()) return@runCatching emptyMap<String, DownloadedSong>()
         val type = object : TypeToken<List<DownloadedSong>>() {}.type
         val list: List<DownloadedSong> = gson.fromJson(indexFile.readText(), type) ?: emptyList()
-        // Drop entries whose audio file vanished.
         list.filter { File(it.audioPath).exists() }.associateBy { it.id }
     }.getOrDefault(emptyMap())
 

@@ -66,11 +66,6 @@ fun IntegrationsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
     }
 }
 
-/**
- * AcoustID API key entry: the user pastes their own free application key, enabling the tag
- * editor's "Auto-identify" (acoustic fingerprint) online lookup. The native fingerprinter works
- * without it; only the AcoustID match needs the key.
- */
 @Composable
 private fun AcoustIdRow(scope: CoroutineScope) {
     val ctx = LocalContext.current
@@ -98,10 +93,6 @@ private fun AcoustIdRow(scope: CoroutineScope) {
     )
 }
 
-/**
- * Last.fm connect flow (browser authorize). Three states: not connected → Connect (gets a token,
- * opens the browser); awaiting authorization → Finish linking; connected → scrobble toggle + Disconnect.
- */
 @Composable
 private fun LastfmRow(scope: CoroutineScope) {
     val ctx = LocalContext.current
@@ -137,7 +128,7 @@ private fun LastfmRow(scope: CoroutineScope) {
             }
         }
         else -> {
-            // Your own Last.fm API credentials (free: last.fm/api/account/create). Nothing is shipped.
+            // user supplies own last.fm credentials none shipped
             val keys by container.settingsStore.lastfmKeys.collectAsStateWithLifecycle(initialValue = "" to "")
             var apiKey by remember(keys.first) { mutableStateOf(keys.first) }
             var secret by remember(keys.second) { mutableStateOf(keys.second) }
@@ -175,10 +166,6 @@ private fun LastfmRow(scope: CoroutineScope) {
     }
 }
 
-/**
- * ListenBrainz link. Token-only: paste your ListenBrainz user token, we validate it and show
- * the resolved username; once connected, an enable toggle + Disconnect.
- */
 @Composable
 private fun ListenBrainzRow(scope: CoroutineScope) {
     val ctx = LocalContext.current
@@ -219,8 +206,6 @@ private fun ListenBrainzRow(scope: CoroutineScope) {
     }
 }
 
-/** Discord Rich Presence link. Connect launches the WebView login; once linked, status + toggle +
- *  optional Imgur client-ID for album art + Disconnect. */
 @Composable
 private fun DiscordRow(scope: CoroutineScope, onConnect: () -> Unit) {
     val ctx = LocalContext.current

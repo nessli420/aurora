@@ -14,14 +14,6 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
-/**
- * Discord Rich Presence for the now-playing track. Connects the user's account to the gateway (see
- * [DiscordGateway]) and pushes a "Listening to Aurora" activity with the song title, artist, and a
- * progress bar. Album art is registered via Discord's external-assets endpoint: with an Imgur client
- * id the cover is uploaded to Imgur first (needed for private servers Discord can't reach), otherwise
- * the original URL is handed to Discord directly (works for public art, e.g. Spotify). Requires a
- * Discord [appId]; without it the presence is text-only. Best-effort; never affects playback.
- */
 class DiscordRpc(
     private val store: SettingsStore,
     private val scope: CoroutineScope,
@@ -36,10 +28,10 @@ class DiscordRpc(
     @Volatile private var token = ""
     @Volatile private var enabled = true
     @Volatile private var imgurClientId = ""
-    @Volatile private var appId = ""   // user's own Discord application id (from Integrations)
+    @Volatile private var appId = ""
     @Volatile private var connectedToken: String? = null
 
-    private val imageCache = ConcurrentHashMap<String, String>()  // artUrl -> "mp:external/..."
+    private val imageCache = ConcurrentHashMap<String, String>()
     @Volatile private var lastSong: Song? = null
     @Volatile private var lastPlaying = false
     @Volatile private var lastPositionSec = 0f
@@ -71,8 +63,6 @@ class DiscordRpc(
         }
     }
 
-    /** Push the current track as the presence. Called on track change / play-pause.
-     *  Paused → clear the presence entirely (only show while actually playing). */
     fun update(song: Song, isPlaying: Boolean, positionSec: Float) {
         lastSong = song; lastPlaying = isPlaying; lastPositionSec = positionSec
         if (token.isBlank() || !enabled) return
@@ -83,16 +73,14 @@ class DiscordRpc(
         if (song.title.isBlank()) return null
         val a = JSONObject()
             .put("name", "Aurora")
-            .put("type", 2) // Listening → "Listening to Aurora"
+            .put("type", 2)
             .put("details", song.title)
             .put("state", song.artist.ifBlank { "Unknown artist" })
         if (isPlaying && song.durationSec > 0) {
             val start = System.currentTimeMillis() - (positionSec * 1000).toLong()
             a.put("timestamps", JSONObject().put("start", start).put("end", start + song.durationSec * 1000L))
         }
-        // Art needs a host Discord's servers can actually fetch: either Imgur (re-hosts the bytes) or
-        // a publicly reachable original URL (e.g. Spotify). A private/LAN/Tailscale server URL can't
-        // be reached by Discord, so without Imgur we skip art entirely rather than show a broken icon.
+        // discord must fetch the art so without imgur skip private server urls it cant reach
         val canHost = imgurId().isNotBlank() || isLikelyPublic(song.artworkUrl)
         if (imagesPossible && song.artworkUrl.isNotBlank() && canHost) {
             val mp = imageCache[song.artworkUrl]
@@ -106,13 +94,9 @@ class DiscordRpc(
         return a
     }
 
-    /** Upload art to Imgur → register as a Discord external asset → cache + re-push presence. */
     private fun resolveImage(artUrl: String) {
         if (imageCache.containsKey(artUrl)) return
         scope.launch {
-            // With an Imgur id, host the art there (works even for private servers Discord can't
-            // reach). Without one, hand the original URL straight to Discord — works for publicly
-            // reachable art (e.g. Spotify's CDN).
             val link = if (imgurId().isNotBlank()) imgur.uploadFromUrl(artUrl, imgurId()) else artUrl
             if (link == null) { Log.w(TAG, "resolveImage: imgur upload failed (clientId set=${imgurId().isNotBlank()})"); return@launch }
             Log.i(TAG, "resolveImage: via=${if (imgurId().isNotBlank()) "imgur" else "direct"} link=${link.take(80)}")
@@ -141,13 +125,11 @@ class DiscordRpc(
         }
     }.getOrNull()
 
-    /** Whether Discord's servers can likely fetch this URL directly (public host), vs a private/LAN
-     *  address (RFC1918 / loopback / link-local / CGNAT-Tailscale) that only Imgur re-hosting can bridge. */
     private fun isLikelyPublic(url: String): Boolean {
         val host = runCatching { java.net.URI(url).host }.getOrNull()?.lowercase() ?: return false
         if (host == "localhost") return false
         val o = host.split(".").mapNotNull { it.toIntOrNull() }
-        if (o.size != 4) return !host.contains(":")  // hostname -> public; IPv6 -> treat as private
+        if (o.size != 4) return !host.contains(":")
         val a = o[0]; val b = o[1]
         return when {
             a == 10 -> false
@@ -155,7 +137,7 @@ class DiscordRpc(
             a == 169 && b == 254 -> false
             a == 172 && b in 16..31 -> false
             a == 192 && b == 168 -> false
-            a == 100 && b in 64..127 -> false   // CGNAT / Tailscale
+            a == 100 && b in 64..127 -> false
             else -> true
         }
     }

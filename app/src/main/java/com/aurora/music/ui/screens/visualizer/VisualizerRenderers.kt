@@ -23,12 +23,9 @@ import kotlin.math.pow
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-/** Resolved colour pair the renderers draw with. */
 data class VizColors(val primary: Color, val secondary: Color)
 
 private fun mix(c: VizColors, t: Float): Color = lerp(c.primary, c.secondary, t.coerceIn(0f, 1f))
-
-// ── Spectrum bars ───────────────────────────────────────────────────────────
 
 fun DrawScope.drawBars(f: VisualizerController.Frame, c: VizColors, mirror: Boolean, peakHold: Boolean) {
     val bands = f.bands
@@ -64,7 +61,6 @@ fun DrawScope.drawBars(f: VisualizerController.Frame, c: VizColors, mirror: Bool
     }
 }
 
-/** Symmetric bars growing out from the horizontal centre line. */
 fun DrawScope.drawMirrorBars(f: VisualizerController.Frame, c: VizColors, peakHold: Boolean) {
     val bands = f.bands
     val n = bands.size
@@ -94,8 +90,6 @@ fun DrawScope.drawMirrorBars(f: VisualizerController.Frame, c: VizColors, peakHo
     }
 }
 
-// ── Waveform ─────────────────────────────────────────────────────────────────
-
 fun DrawScope.drawWaveform(f: VisualizerController.Frame, c: VizColors) {
     val w = f.wave
     val n = w.size
@@ -109,7 +103,6 @@ fun DrawScope.drawWaveform(f: VisualizerController.Frame, c: VizColors) {
         val y = cy - w[i] * amp
         if (i == 0) path.moveTo(x, y) else path.lineTo(x, y)
     }
-    // Glow then crisp line.
     drawPath(path, c.primary.copy(alpha = 0.25f), style = Stroke(width = 10f, cap = StrokeCap.Round))
     drawPath(path, Brush.horizontalGradient(listOf(c.primary, c.secondary)), style = Stroke(width = 3.5f, cap = StrokeCap.Round))
 }
@@ -135,8 +128,6 @@ fun DrawScope.drawFilledWave(f: VisualizerController.Frame, c: VizColors) {
     drawPath(top, brush, style = Fill)
     drawPath(bottom, brush, style = Fill)
 }
-
-// ── Radial ───────────────────────────────────────────────────────────────────
 
 fun DrawScope.drawRadialBars(f: VisualizerController.Frame, c: VizColors, rot: Float) {
     val bands = f.bands
@@ -180,8 +171,6 @@ fun DrawScope.drawRadialWave(f: VisualizerController.Frame, c: VizColors, rot: F
     drawPath(path, Brush.sweepGradient(listOf(c.primary, c.secondary, c.primary)), style = Stroke(width = 3f, cap = StrokeCap.Round))
 }
 
-// ── Fluid blob ───────────────────────────────────────────────────────────────
-
 fun DrawScope.drawFluid(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val cx = size.width / 2f
     val cy = size.height / 2f
@@ -211,8 +200,6 @@ fun DrawScope.drawFluid(f: VisualizerController.Frame, c: VizColors, time: Float
     drawPath(path, c.secondary.copy(alpha = 0.85f), style = Stroke(width = 2.5f))
 }
 
-// ── Particles ────────────────────────────────────────────────────────────────
-
 class ParticleField(private val max: Int) {
     private class P(var x: Float, var y: Float, var vx: Float, var vy: Float, var life: Float, var size: Float, var tint: Float)
     private val ps = ArrayList<P>(max)
@@ -220,7 +207,6 @@ class ParticleField(private val max: Int) {
     private fun rnd(): Float { seed = seed * 1664525 + 1013904223; return ((seed ushr 8) and 0xFFFFFF) / 16777216f }
 
     fun update(bass: Float, level: Float, w: Float, h: Float) {
-        // Spawn proportionally to energy.
         val spawn = (level * 6f + bass * 8f).toInt()
         repeat(spawn) {
             if (ps.size < max) {
@@ -247,8 +233,6 @@ class ParticleField(private val max: Int) {
     }
 }
 
-// ── Spectrum curve (smooth filled mountain) ─────────────────────────────────
-
 fun DrawScope.drawSmoothCurve(f: VisualizerController.Frame, c: VizColors) {
     val bands = f.bands
     val n = bands.size
@@ -268,8 +252,6 @@ fun DrawScope.drawSmoothCurve(f: VisualizerController.Frame, c: VizColors) {
     drawPath(fill, Brush.verticalGradient(listOf(c.secondary.copy(alpha = 0.5f), c.primary.copy(alpha = 0.04f)), startY = baseY - maxH, endY = baseY))
     drawPath(line, Brush.horizontalGradient(listOf(c.primary, c.secondary)), style = Stroke(width = 3f, cap = StrokeCap.Round))
 }
-
-// ── Dot matrix ──────────────────────────────────────────────────────────────
 
 fun DrawScope.drawDotGrid(f: VisualizerController.Frame, c: VizColors) {
     val n = f.bands.size
@@ -292,8 +274,6 @@ fun DrawScope.drawDotGrid(f: VisualizerController.Frame, c: VizColors) {
     }
 }
 
-// ── Pulse rings ─────────────────────────────────────────────────────────────
-
 fun DrawScope.drawRings(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val cx = size.width / 2f; val cy = size.height / 2f
     val maxR = min(size.width, size.height) * 0.55f
@@ -306,8 +286,6 @@ fun DrawScope.drawRings(f: VisualizerController.Frame, c: VizColors, time: Float
     }
     drawCircle(c.secondary.copy(alpha = 0.85f), radius = 6f + f.rms * 44f, center = Offset(cx, cy))
 }
-
-// ── Orb ─────────────────────────────────────────────────────────────────────
 
 fun DrawScope.drawOrb(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val cx = size.width / 2f; val cy = size.height / 2f
@@ -323,8 +301,6 @@ fun DrawScope.drawOrb(f: VisualizerController.Frame, c: VizColors, time: Float) 
         drawLine(lerp(c.primary, c.secondary, v).copy(alpha = 0.85f), Offset(cx + cos(a) * r0, cy + sin(a) * r0), Offset(cx + cos(a) * r1, cy + sin(a) * r1), strokeWidth = 3f, cap = StrokeCap.Round)
     }
 }
-
-// ── LED ladder (segmented bars) ─────────────────────────────────────────────
 
 fun DrawScope.drawLadder(f: VisualizerController.Frame, c: VizColors) {
     val bands = f.bands
@@ -348,8 +324,6 @@ fun DrawScope.drawLadder(f: VisualizerController.Frame, c: VizColors) {
         }
     }
 }
-
-// ── Synthwave horizon ───────────────────────────────────────────────────────
 
 fun DrawScope.drawHorizon(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val horizonY = size.height * 0.46f
@@ -378,8 +352,6 @@ fun DrawScope.drawHorizon(f: VisualizerController.Frame, c: VizColors, time: Flo
     drawLine(c.secondary, Offset(0f, horizonY), Offset(size.width, horizonY), strokeWidth = 2f)
 }
 
-// ── Constellation ───────────────────────────────────────────────────────────
-
 fun DrawScope.drawConstellation(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val cx = size.width / 2f; val cy = size.height / 2f
     val n = min(48, f.bands.size)
@@ -397,8 +369,6 @@ fun DrawScope.drawConstellation(f: VisualizerController.Frame, c: VizColors, tim
     for (p in pts) drawCircle(c.secondary, radius = 2.6f, center = p)
 }
 
-// ── Floating peak dots ──────────────────────────────────────────────────────
-
 fun DrawScope.drawPeakDots(f: VisualizerController.Frame, c: VizColors) {
     val src = if (f.peaks.any { it > 0f }) f.peaks else f.bands
     val n = src.size
@@ -413,8 +383,6 @@ fun DrawScope.drawPeakDots(f: VisualizerController.Frame, c: VizColors) {
         drawCircle(lerp(c.primary, c.secondary, v), radius = (slot * 0.28f).coerceIn(2f, 9f), center = Offset(x, y))
     }
 }
-
-// ── Neon mirrored line ──────────────────────────────────────────────────────
 
 fun DrawScope.drawSpectrumLine(f: VisualizerController.Frame, c: VizColors) {
     val bands = f.bands
@@ -431,8 +399,6 @@ fun DrawScope.drawSpectrumLine(f: VisualizerController.Frame, c: VizColors) {
     drawPath(dn, c.primary.copy(alpha = 0.2f), style = Stroke(8f, cap = StrokeCap.Round))
     drawPath(dn, brush, style = Stroke(2.5f, cap = StrokeCap.Round))
 }
-
-// ── Aurora ribbons ──────────────────────────────────────────────────────────
 
 fun DrawScope.drawAurora(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val bands = f.bands
@@ -466,17 +432,16 @@ fun DrawScope.drawAurora(f: VisualizerController.Frame, c: VizColors, time: Floa
     }
 }
 
-// ── Spectral River (time-scrolling spectrogram ribbons) ─────────────────────
 class SpectralRiver {
     private val COLS = 96
     private val ROWS = 40
-    private val grid = FloatArray(COLS * ROWS)   // ring buffer, flat [col*ROWS + row]
-    private val rowPeak = FloatArray(ROWS)       // recent peak per row for alpha/width
-    private var head = 0                          // index of newest column
-    private var acc = 0f                          // wall-clock accumulator (sec)
+    private val grid = FloatArray(COLS * ROWS)   // ring buffer flat [col*ROWS + row]
+    private val rowPeak = FloatArray(ROWS)
+    private var head = 0
+    private var acc = 0f
     private var lastTime = -1f
-    private val WRITE_DT = 1f / 45f               // fixed write cadence (fps-independent)
-    private val path = Path()                     // single reusable path
+    private val WRITE_DT = 1f / 45f               // fixed write cadence fps-independent
+    private val path = Path()
     private var w = 0f
     private var h = 0f
     private var bass = 0f
@@ -541,7 +506,6 @@ class SpectralRiver {
     }
 }
 
-// ── Terrain Flyover (scrolling perspective spectral terrain, true occlusion) ─
 class SpectralTerrain {
     private val ROWS = 22
     private val PTS = 56
@@ -621,7 +585,6 @@ class SpectralTerrain {
     }
 }
 
-// ── Curl Flow (divergence-free curl-noise wind advecting luminous motes) ─────
 class CurlFlowField(requested: Int) {
     private val N: Int = requested.coerceIn(1, MAX_MOTES)
     private val xs = FloatArray(N); private val ys = FloatArray(N)
@@ -687,7 +650,6 @@ class CurlFlowField(requested: Int) {
     companion object { private const val MAX_MOTES = 1800 }
 }
 
-// ── Strange Attractor (one Clifford chaotic map, audio-slewed parameters) ────
 class StrangeAttractor(n: Int) {
     private val N: Int = n.coerceIn(500, 2500)
     private val xs = FloatArray(N); private val ys = FloatArray(N)
@@ -744,7 +706,6 @@ class StrangeAttractor(n: Int) {
     }
 }
 
-// ── Cymatics (grains crystallizing onto Chladni nodal lines) ────────────────
 class Cymatic(private val N: Int) {
     private val gx = FloatArray(N); private val gy = FloatArray(N)
     private val crest = ArrayList<Offset>(N)
@@ -809,7 +770,6 @@ class Cymatic(private val N: Int) {
     }
 }
 
-// ── Bloom (Gielis superformula supershape; band-driven symmetry) ────────────
 fun DrawScope.drawSuperformulaBloom(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val cx = size.width / 2f; val cy = size.height / 2f
     val baseR = min(size.width, size.height) * 0.42f
@@ -854,7 +814,6 @@ fun DrawScope.drawSuperformulaBloom(f: VisualizerController.Frame, c: VizColors,
     drawCircle(Brush.radialGradient(listOf(c.secondary, c.primary.copy(alpha = 0f)), center = Offset(cx, cy), radius = coreR * 2f), radius = coreR * 2f, center = Offset(cx, cy))
 }
 
-// ── Wormhole (infinite iridescent tube; true perspective divide) ────────────
 fun DrawScope.drawWormhole(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val cx = size.width / 2f; val cy = size.height / 2f
     val minDim = min(size.width, size.height)

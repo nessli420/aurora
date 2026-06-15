@@ -91,7 +91,6 @@ fun SignInScreen(
     savedSessions: List<com.aurora.music.data.Session> = emptyList(),
     onUseSaved: (com.aurora.music.data.Session) -> Unit = {},
 ) {
-    // Open the Spotify OAuth page in the browser when requested.
     val ctx = LocalContext.current
     LaunchedEffect(state.pendingAuthUrl) {
         val url = state.pendingAuthUrl ?: return@LaunchedEffect
@@ -100,7 +99,7 @@ fun SignInScreen(
         }
         onAuthUrlOpened()
     }
-    // Local mode needs audio-read permission; request it, then sign in on grant.
+    // local mode needs audio-read permission before sign-in
     val audioPerm = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
     var permDenied by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
     val permLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -197,7 +196,6 @@ private fun TypeStep(
     onUseSaved: (com.aurora.music.data.Session) -> Unit = {},
 ) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(14.dp)) {
-        // One-tap return to a remembered login (token already stored — no password needed).
         if (savedSessions.isNotEmpty()) {
             Text("Saved logins", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant)
             savedSessions.forEach { s ->

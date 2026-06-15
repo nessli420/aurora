@@ -12,18 +12,11 @@ import okhttp3.Request
 import java.security.MessageDigest
 import java.security.SecureRandom
 
-/**
- * Spotify OAuth 2.0 with PKCE (no client secret — suitable for a mobile app). Flow:
- *   1. [authorizeUrl] opened in the browser; user logs in + approves.
- *   2. Spotify redirects to [REDIRECT] (`aurora://spotify?code=...`).
- *   3. [exchangeCode] swaps the code (+ PKCE verifier) for access + refresh tokens.
- *   4. [refresh] renews the access token when it expires (~1h).
- */
+// oauth pkce no client secret for mobile
 object SpotifyAuth {
     const val REDIRECT = "aurora://spotify"
     const val AUTH_HOST = "https://accounts.spotify.com"
 
-    /** Full read/write scopes (library + playlists + follows + top/recent). */
     val SCOPES = listOf(
         "user-read-private", "user-read-email",
         "user-library-read", "user-library-modify",

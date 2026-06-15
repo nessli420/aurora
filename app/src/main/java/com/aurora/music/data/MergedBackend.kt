@@ -12,26 +12,13 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeoutOrNull
 
-/**
- * Phase 7.1b — a composite [MediaBackend] that presents one merged library across several real
- * backends (on-device Local + each included Navidrome/Jellyfin login), all live at once. Each browse
- * call fans out to every source in parallel, the results are concatenated and **deduped by fuzzy
- * identity**, and a duplicate collapses to a single entity sourced from the best copy (highest audio
- * quality for tracks; the first source in priority order for albums/artists). Because it satisfies the
- * [MediaBackend] interface, the whole server-agnostic app browses the union with no other changes.
- *
- * IDs are **namespaced** per source (`"<idx><id>"`) so every id-taking call routes back to the
- * owning source. The per-source [Song.streamUrl] is already a complete, authed URL, so playback needs
- * no rewrite. A slow/unreachable source is skipped (timed-out fan-out), never blocking the rest.
- */
+// composite backend merging several live backends ids namespaced per source so calls route back
 class MergedBackend(
     private val sources: List<MediaBackend>,
     override val session: Session,
 ) : MediaBackend {
 
     private val primary: MediaBackend? = sources.firstOrNull { it.session.type != ServerType.LOCAL } ?: sources.firstOrNull()
-
-    // ---- id namespacing -------------------------------------------------------------------------
 
     private fun wrapId(idx: Int, id: String): String = if (id.isBlank()) "" else "$idx$SEP$id"
     private fun unwrap(wrapped: String): Pair<Int, String>? {
@@ -51,13 +38,10 @@ class MergedBackend(
     private fun Artist.wrap(idx: Int) = copy(id = wrapId(idx, id))
     private fun Playlist.wrap(idx: Int) = copy(id = wrapId(idx, id))
 
-    /** Run [block] on every source in parallel (timed-out, failures → empty), returning per-source lists. */
     private suspend fun <T> fanOut(block: suspend (MediaBackend) -> List<T>): List<List<T>> = coroutineScope {
         sources.map { src -> async { runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { block(src) } ?: emptyList() }.getOrDefault(emptyList()) } }
             .awaitAll()
     }
-
-    // ---- dedup ----------------------------------------------------------------------------------
 
     private fun dedupAlbums(all: List<Album>): List<Album> =
         all.distinctBy { TrackMatch.norm(it.artist) + "|" + TrackMatch.norm(it.title) }
@@ -65,8 +49,7 @@ class MergedBackend(
     private fun dedupArtists(all: List<Artist>): List<Artist> =
         all.distinctBy { TrackMatch.norm(it.name) }.filter { it.name.isNotBlank() }
 
-    /** Collapse same-recording tracks to the highest-quality copy. Clusters by a real ±tolerance
-     *  duration window (not fixed bins) so near-identical durations don't split across a boundary. */
+    // cluster by real duration window not fixed bins so near-equal durations dont split across a boundary
     private fun dedupSongs(all: List<Song>): List<Song> =
         all.groupBy { TrackMatch.key(it.artist, it.title) }
             .values
@@ -88,8 +71,6 @@ class MergedBackend(
         score += s.bitrateKbps.toLong()
         return score
     }
-
-    // ---- MediaBackend: browse (fan-out + dedup) -------------------------------------------------
 
     override suspend fun ping(): Boolean = fanOut { listOf(it.ping()) }.any { it.firstOrNull() == true }
 
@@ -155,8 +136,6 @@ class MergedBackend(
         return liked
     }
 
-    // ---- MediaBackend: folder browse (fan out root, route by namespaced id) ---------------------
-
     override val supportsFolders: Boolean get() = sources.any { it.supportsFolders }
 
     override suspend fun browseFolder(folderId: String): FolderContent? {
@@ -183,14 +162,10 @@ class MergedBackend(
         )
     }
 
-    // ---- MediaBackend: server tag editing (route by namespaced id) ------------------------------
-
     override val supportsServerTagEdit: Boolean get() = sources.any { it.supportsServerTagEdit }
     override suspend fun readMetadata(songId: String): AudioTags? = route(songId) { src, _, oid -> src.readMetadata(oid) }
     override suspend fun updateMetadata(songId: String, tags: AudioTags): Boolean =
         route(songId) { src, _, oid -> src.updateMetadata(oid, tags) } ?: false
-
-    // ---- MediaBackend: route by namespaced id ---------------------------------------------------
 
     override suspend fun songFor(id: String): Song? = route(id) { src, i, oid -> src.songFor(oid)?.wrap(i) }
     override suspend fun radio(seedId: String): List<Song> = route(seedId) { src, i, oid -> src.radio(oid).map { it.wrap(i) } } ?: emptyList()
@@ -199,8 +174,7 @@ class MergedBackend(
         route(id) { src, _, oid -> src.setStarred(oid, starred, kind) } ?: false
 
     override suspend fun detail(kind: String, id: String): DetailData? {
-        // "Liked Songs" is universal in unified mode: the union of every source's likes (already
-        // merged + deduped by starredSongs), not just the primary source's.
+        // liked songs is universal here union of every source not just primary
         if (kind == "liked") {
             val songs = starredSongs()
             return DetailData(
@@ -229,8 +203,6 @@ class MergedBackend(
         return sources.getOrNull(i)?.coverArtUrl(oid, size) ?: ""
     }
 
-    // ---- MediaBackend: writes (route to the owning / primary source) ----------------------------
-
     override suspend fun createPlaylist(name: String): Boolean = primary?.createPlaylist(name) ?: false
     override suspend fun createPlaylistWithId(name: String): String? {
         val pIdx = sources.indexOfFirst { it === primary }
@@ -242,19 +214,16 @@ class MergedBackend(
     override suspend fun deletePlaylist(id: String): Boolean =
         route(id) { src, _, oid -> src.deletePlaylist(oid) } ?: false
 
-    /** Append tracks to a playlist — only the tracks that live on the playlist's own source. */
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean {
         val (i, oPid) = unwrap(playlistId) ?: return false
         val src = sources.getOrNull(i) ?: return false
         val sameSource = trackIds.mapNotNull { unwrap(it) }.filter { it.first == i }.map { it.second }
-        // Don't report success when every track was from a different source (cross-source add dropped).
+        // dont report success when every track came from a different source
         if (trackIds.isNotEmpty() && sameSource.isEmpty()) return false
         return src.addToPlaylist(oPid, sameSource)
     }
 
     override suspend fun profileImageUrl(): String = primary?.profileImageUrl() ?: ""
-
-    // ---- helpers --------------------------------------------------------------------------------
 
     private fun <T> wrapAll(perSource: List<List<T>>, wrap: (T, Int) -> T): List<T> =
         perSource.flatMapIndexed { i, list -> list.map { wrap(it, i) } }
@@ -272,10 +241,8 @@ class MergedBackend(
     }
 }
 
-/** Source-namespace separator a [MergedBackend] prepends to ids (the same char as its private SEP). */
 const val MERGE_NAMESPACE_SEP = '\u0001'   // same control char as MergedBackend.SEP
 
-/** Strip a [MergedBackend] source-namespace prefix ("<digits>SEP") if present, else return [id]. */
 fun stripMergeNamespace(id: String): String {
     val i = id.indexOf(MERGE_NAMESPACE_SEP)
     if (i <= 0) return id

@@ -37,7 +37,6 @@ import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 
-/** Saved logins: shows every remembered server, marks the active one, lets you switch / forget / add. */
 @Composable
 fun AccountsScreen(
     contentPadding: PaddingValues,
@@ -53,8 +52,7 @@ fun AccountsScreen(
     fun key(s: Session?) = s?.let { "${it.type}|${it.server}|${it.username}|${it.userId}" } ?: ""
     val activeKey = key(active)
 
-    // The on-device library — no password, just the audio-read permission. Always offered so you can
-    // jump to Local even if you've never signed into it.
+    // always offered so you can jump to local even without a saved login
     val localSession = remember { Session(server = "On this device", username = "Local Library", salt = "", token = "local", type = ServerType.LOCAL) }
     val audioPerm = if (android.os.Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO else android.Manifest.permission.READ_EXTERNAL_STORAGE
     val permLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
@@ -65,7 +63,6 @@ fun AccountsScreen(
         else permLauncher.launch(audioPerm)
     }
 
-    // Saved logins + a synthetic Local row when it isn't already saved.
     val rows = remember(saved) { saved + (if (saved.none { it.type == ServerType.LOCAL }) listOf(localSession) else emptyList()) }
 
     Column(Modifier.fillMaxWidth()) {
@@ -80,7 +77,7 @@ fun AccountsScreen(
                         AccountRow(
                             session = s,
                             isActive = key(s) == activeKey,
-                            canForget = saved.any { key(it) == key(s) },   // only truly-saved logins can be forgotten
+                            canForget = saved.any { key(it) == key(s) },   // only saved logins can be forgotten
                             onClick = {
                                 if (key(s) == activeKey) Unit
                                 else if (isLocalRow) switchLocal()

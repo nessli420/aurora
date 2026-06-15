@@ -13,7 +13,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.io.File
 
-/** A single logged play, with the metadata needed to render history/stats offline. */
 data class PlayEvent(
     val songId: String,
     val title: String,
@@ -26,7 +25,6 @@ data class PlayEvent(
     val timestamp: Long,
 )
 
-/** Aggregated counts for the stats screen. */
 data class RankedItem(val id: String, val name: String, val subtitle: String, val artworkUrl: String, val count: Int)
 
 class PlayHistoryStore(context: Context) {
@@ -41,7 +39,7 @@ class PlayHistoryStore(context: Context) {
     fun record(song: Song, timestamp: Long) {
         if (song.id.isEmpty()) return
         val event = PlayEvent(song.id, song.title, song.artist, song.album, song.albumId, song.artistId, song.artworkUrl, song.durationSec, timestamp)
-        // Drop an immediate duplicate (e.g. transition re-fires) within 10s.
+        // drop immediate duplicate re-fire within 10s
         val last = _history.value.firstOrNull()
         if (last != null && last.songId == song.id && timestamp - last.timestamp < 10_000) return
         _history.update { (listOf(event) + it).take(MAX) }
@@ -53,7 +51,6 @@ class PlayHistoryStore(context: Context) {
         scope.launch { runCatching { file.delete() } }
     }
 
-    /** Snapshot/restore for backup. */
     fun snapshot(): List<PlayEvent> = _history.value
     fun restore(events: List<PlayEvent>) {
         _history.value = events.take(MAX)
@@ -82,7 +79,6 @@ class PlayHistoryStore(context: Context) {
             .map { (_, list) -> RankedItem(list.first().albumId, list.first().album, "${list.first().artist} · ${list.size} plays", list.first().artworkUrl, list.size) }
             .sortedByDescending { it.count }.take(limit)
 
-    /** Plays per hour-of-day (local time), 24 buckets — the "listening clock". */
     fun playsByHour(events: List<PlayEvent>): IntArray {
         val out = IntArray(24)
         val cal = java.util.Calendar.getInstance()
@@ -90,7 +86,6 @@ class PlayHistoryStore(context: Context) {
         return out
     }
 
-    /** (current, longest) consecutive-day listening streaks, over all history, in the local timezone. */
     fun streak(): Pair<Int, Int> {
         val days = _history.value.map { localDay(it.timestamp) }.toSortedSet().toList()
         if (days.isEmpty()) return 0 to 0
@@ -106,7 +101,6 @@ class PlayHistoryStore(context: Context) {
         return current to longest
     }
 
-    /** Local-timezone day index (days since epoch in the user's zone). */
     private fun localDay(ts: Long): Long {
         val offset = java.util.TimeZone.getDefault().getOffset(ts)
         return (ts + offset) / 86_400_000L

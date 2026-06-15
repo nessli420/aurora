@@ -127,8 +127,7 @@ fun PlayerScreen(
         )
     )
 
-    // The player is drawn outside the Scaffold, so LocalContentColor defaults to black —
-    // provide it explicitly so titles/icons render light against the dark gradient.
+    // player is outside the scaffold so LocalContentColor defaults to black provide it explicitly
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
     var dragAccum by remember { mutableStateOf(0f) }
     Box(
@@ -136,12 +135,11 @@ fun PlayerScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .background(bg)
-            // Consume taps so nothing leaks through to the app behind the overlay.
+            // consume taps so nothing leaks through to the app behind
             .clickable(
                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                 indication = null,
             ) {}
-            // Swipe down anywhere (that isn't a scrolling child) to dismiss.
             .then(
                 if (gestures.swipeDownDismiss) Modifier.pointerInput(Unit) {
                     detectVerticalDragGestures(
@@ -181,13 +179,13 @@ fun PlayerScreen(
                         Icons.Filled.KeyboardArrowDown, "Collapse",
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
-                    // Balances the three trailing icons so the centered "PLAYING FROM" column stays centered.
+                    // balances trailing icons so PLAYING FROM stays centered
                     Spacer(Modifier.width(80.dp))
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text("PLAYING FROM", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                         Text(song.album.ifBlank { "Aurora" }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
                     }
-                    // Cast button (system route picker); TVs/Chromecast show here, not in the local-output sheet.
+                    // cast route picker tvs/chromecast show here not in the local-output sheet
                     PlayerCastButton(Modifier.size(40.dp))
                     Icon(
                         Icons.Filled.Speaker, "Output device",
@@ -423,7 +421,6 @@ fun PlayerScreen(
     }
 }
 
-/** Where the current track is sourced from, derived from its stream URL scheme (7.1b). */
 private fun sourceLabel(song: com.aurora.music.model.Song): String? = when {
     song.streamUrl.isBlank() -> null
     song.streamUrl.startsWith("content://") -> "Local"
@@ -459,8 +456,7 @@ private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, la
 private fun SeekBar(progress: Float, positionSec: Int, durationSec: Int, accent: Color, seed: Int, seekStyle: Int, waveBars: Int, onSeek: (Float) -> Unit) {
     Column {
         if (durationSec <= 0) {
-            // Live stream (internet radio) — no fixed length, so there's nothing to scrub. Show a LIVE
-            // indicator and the elapsed listening time instead of a seek bar.
+            // live stream has no fixed length nothing to scrub
             Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
                 Spacer(Modifier.width(8.dp))

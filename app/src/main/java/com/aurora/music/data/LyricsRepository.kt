@@ -10,13 +10,8 @@ import okhttp3.Request
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
-/** Resolved lyrics: timed [lines] (timeSec = -1 when unsynced) + where they came from. */
 data class Lyrics(val lines: List<LyricLine>, val synced: Boolean, val source: String)
 
-/**
- * Lyrics provider. Tries the music server first (OpenSubsonic getLyricsBySongId — i.e. .lrc
- * files sitting next to the tracks), then falls back to the public LRCLIB database.
- */
 class LyricsRepository(
     private val backendProvider: () -> MediaBackend?,
     private val lrclibEnabledProvider: () -> Boolean,
@@ -28,21 +23,14 @@ class LyricsRepository(
         .build()
 
     suspend fun lyricsFor(song: Song): Lyrics? {
-        // Resolve a server result first (may be synced or plain).
         val server = runCatching { backendProvider()?.serverLyrics(song) }.getOrNull()
-        // Real time-synced lyrics always win, regardless of source.
+        // synced always wins regardless of source
         if (server != null && server.synced) return server
         val lrc = if (lrclibEnabledProvider()) fetchLrcLib(song) else null
         if (lrc != null && lrc.synced) return lrc
-        // No synced anywhere — fall back to plain (server's first, then LRCLIB's).
         return server ?: lrc
     }
 
-    /**
-     * Fetch the best LRCLIB result in a single pass, prioritising real synced lyrics: try the
-     * exact /get match, then /search (which surfaces alternate uploads that may be synced even
-     * when the exact record is plain-only), and only then fall back to plain text.
-     */
     private suspend fun fetchLrcLib(song: Song): Lyrics? = withContext(Dispatchers.IO) {
         val exact = runCatching { lrcGet(song) }.getOrNull()
         exact?.syncedLyrics?.takeIf { it.isNotBlank() }?.let { return@withContext Lyrics(parseLrc(it), true, "LRCLIB") }
@@ -51,7 +39,6 @@ class LyricsRepository(
         results.firstOrNull { !it.syncedLyrics.isNullOrBlank() }
             ?.let { return@withContext Lyrics(parseLrc(it.syncedLyrics!!), true, "LRCLIB") }
 
-        // No synced anywhere — plain fallback.
         exact?.plainLyrics?.takeIf { it.isNotBlank() }
             ?.let { return@withContext Lyrics(it.lines().map { l -> LyricLine(-1, l) }, false, "LRCLIB") }
         results.firstOrNull { !it.plainLyrics.isNullOrBlank() }
@@ -97,7 +84,6 @@ class LyricsRepository(
 
         private val TAG = Regex("""\[(\d+):(\d{1,2})(?:[.:](\d{1,3}))?]""")
 
-        /** Parse an LRC body into timed lines (one per timestamp tag). */
         fun parseLrc(lrc: String): List<LyricLine> {
             val out = mutableListOf<Pair<Int, String>>()
             lrc.lineSequence().forEach { raw ->

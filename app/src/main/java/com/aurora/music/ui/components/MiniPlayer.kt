@@ -55,7 +55,6 @@ fun MiniPlayer(
         label = "likeTint",
     )
 
-    // Style preset → artwork size, padding, and whether the like button shows.
     val artSize = when (ui.miniStyle) { MiniStyle.COMPACT -> 38.dp; MiniStyle.PROMINENT -> 54.dp; else -> 44.dp }
     val rowPad = when (ui.miniStyle) { MiniStyle.COMPACT -> 6.dp; MiniStyle.PROMINENT -> 12.dp; else -> 8.dp }
     val showLike = ui.miniStyle != MiniStyle.COMPACT
@@ -117,7 +116,6 @@ fun MiniPlayer(
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onNext).padding(6.dp),
             )
         }
-        // Progress indicator — line / thicker bar / hidden.
         if (ui.miniProgress != MiniProgress.NONE) {
             val barH = if (ui.miniProgress == MiniProgress.BAR) 5.dp else 2.dp
             Box(

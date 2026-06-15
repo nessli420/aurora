@@ -20,20 +20,14 @@ import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "aurora_settings")
 
-/** Playback source tiers in default priority order (7.1b): on-device file, app download, then stream. */
 val DEFAULT_SOURCE_PRIORITY = listOf("local", "downloaded", "stream")
 
-/** Sentinel in `mergeSources` meaning "no servers" (so empty can keep meaning "all eligible"). */
+// sentinel meaning no servers so empty can keep meaning all eligible
 const val MERGE_NONE = "__none__"
 
-/** Which kind of media server a session talks to. */
 enum class ServerType { SUBSONIC, JELLYFIN, SPOTIFY, LOCAL }
 
-/**
- * Stored server session. For Subsonic (Navidrome) we keep salt+token (token auth — never the raw
- * password). For Jellyfin, [token] holds the access token, [userId] the authenticated user id,
- * and [salt] is unused.
- */
+// subsonic keeps salt+token never the raw password jellyfin uses token as access token
 data class Session(
     val server: String,
     val username: String,
@@ -42,13 +36,12 @@ data class Session(
     val type: ServerType = ServerType.SUBSONIC,
     val userId: String = "",
     val imageUrl: String = "",
-    // Spotify web-player only: the client-token + app-version that /v1 requires alongside the bearer.
+    // spotify web-player only client-token + app-version that /v1 requires alongside the bearer
     val clientToken: String = "",
     val clientVersion: String = "",
 ) {
     val isValid: Boolean get() = server.isNotBlank() && username.isNotBlank() && token.isNotBlank()
 
-    /** Human-readable backend name (for the profile/settings server badge). */
     val typeLabel: String get() = when (type) {
         ServerType.SPOTIFY -> "Spotify"
         ServerType.JELLYFIN -> "Jellyfin"
@@ -57,26 +50,23 @@ data class Session(
     }
 }
 
-/** Stable per-account key (used for account-change detection and unified-library membership). */
 fun Session.accountKey(): String = "${type.name}|$server|$username|$userId"
 
-/** Playback preferences that drive the ExoPlayer engine. */
 data class PlaybackPrefs(
     val skipSilence: Boolean = false,
     val crossfadeSec: Int = 0,
     val gapless: Boolean = true,
     val defaultSpeed: Float = 1.0f,
     val monoAudio: Boolean = false,
-    val streamWifi: Int = 0,        // 0 = lossless / original (format=raw)
+    val streamWifi: Int = 0,        // 0 = lossless original
     val streamCellular: Int = 0,
-    val downloadBitrate: Int = 0,   // 0 = lossless / original
-    val preferHighRes: Boolean = false, // float output; off so speed/pitch/EQ-chain work everywhere
+    val downloadBitrate: Int = 0,   // 0 = lossless original
+    val preferHighRes: Boolean = false, // float output off so speed pitch eq chain work everywhere
     val scrobble: Boolean = true,
     val autoplayRadio: Boolean = false,
-    val bitPerfectUsb: Boolean = false, // experimental: route to USB DAC via the decent-player driver
+    val bitPerfectUsb: Boolean = false,
 )
 
-/** Visualizer render style. */
 object VisualizerStyle {
     const val BARS = 0
     const val MIRROR_BARS = 1
@@ -119,16 +109,10 @@ object VisualizerStyle {
     }
 }
 
-/** Where the visualizer takes its colours from. */
 object VizColor { const val ACCENT = 0; const val CUSTOM = 1; const val GRADIENT = 2; const val ALBUM_ART = 3 }
 
-/** Visualizer backdrop. */
 object VizBackground { const val BLACK = 0; const val GRADIENT = 1; const val ALBUM_BLUR = 2 }
 
-/**
- * Audio-visualizer settings. The renderer reads [style]; the analysis engine
- * ([com.aurora.music.playback.VisualizerController]) reads the band/FFT/sensitivity fields.
- */
 data class VisualizerPrefs(
     val style: Int = VisualizerStyle.BARS,
     val colorSource: Int = VizColor.ACCENT,
@@ -136,122 +120,94 @@ data class VisualizerPrefs(
     val secondaryColor: Int = 0xFF00E5FF.toInt(),
     val background: Int = VizBackground.GRADIENT,
     val barCount: Int = 64,
-    val smoothing: Float = 0.78f,   // temporal decay, 0 = snappy, ~0.95 = floaty
-    val sensitivity: Float = 1.0f,  // input gain, 0.25..4
+    val smoothing: Float = 0.78f,
+    val sensitivity: Float = 1.0f,
     val minHz: Int = 30,
     val maxHz: Int = 16000,
     val peakHold: Boolean = true,
     val mirror: Boolean = false,
-    val fftSize: Int = 2048,        // 1024 / 2048 / 4096
-    val fpsCap: Int = 60,           // 30 / 60 / 90 / 120
-    val rotate: Boolean = false,    // slow spin for radial styles
+    val fftSize: Int = 2048,
+    val fpsCap: Int = 60,
+    val rotate: Boolean = false,
     val particleCount: Int = 140,
     val showAlbumArt: Boolean = true,
     val showTrackInfo: Boolean = true,
 )
 
-/** Parametric filter type: peaking, low-shelf, or high-shelf (matches AutoEq PK/LSC/HSC). */
+// matches autoeq PK/LSC/HSC
 object BandType { const val PEAK = 0; const val LOW_SHELF = 1; const val HIGH_SHELF = 2 }
 
-/** One parametric EQ band for the custom software DSP. */
 data class ParamBand(val freqHz: Float, val gainDb: Float, val q: Float, val type: Int = BandType.PEAK)
 
-/** DSP engine selection: which tone-shaping path is active. */
 object DspMode { const val SYSTEM = 0; const val CUSTOM = 1; const val OFF = 2 }
 
-/**
- * Audiophile DSP chain. Two engines, selected by [dspMode]:
- *  - SYSTEM: the Android AudioEffect chain (graphic EQ/bass/virtualizer/loudness, device-dependent).
- *  - CUSTOM: Aurora's device-independent software DSP (10-band graphic + parametric EQ, preamp,
- *    balance, stereo width, crossfeed, compressor, limiter) — see [com.aurora.music.playback.AuroraDspProcessor].
- *  - OFF: no tone shaping.
- * ReplayGain ([replayGain]) is shared across engines.
- */
 data class AudioPrefs(
     val eqEnabled: Boolean = false,
     val eqPreset: Int = -1,                 // -1 = custom
-    val eqBands: List<Int> = emptyList(),   // millibel gain per band (system EQ)
-    val bassBoost: Int = 0,                 // 0..1000
-    val virtualizer: Int = 0,               // 0..1000
-    val loudnessGain: Int = 0,              // millibels, 0..2000
-    val replayGain: Int = 0,                // 0=off, 1=track, 2=album
-    // --- Custom software DSP ---
+    val eqBands: List<Int> = emptyList(),   // millibel gain per band
+    val bassBoost: Int = 0,
+    val virtualizer: Int = 0,
+    val loudnessGain: Int = 0,
+    val replayGain: Int = 0,                // 0=off 1=track 2=album
     val dspMode: Int = DspMode.SYSTEM,
-    val dspGraphicBands: List<Float> = emptyList(), // dB gain per fixed graphic band (10)
+    val dspGraphicBands: List<Float> = emptyList(),
     val dspParametric: List<ParamBand> = emptyList(),
     val dspPreampDb: Float = 0f,
-    val dspBalance: Float = 0f,             // -1 (L) .. +1 (R)
-    val dspWidth: Float = 1f,               // 0 = mono, 1 = normal, 2 = wide
-    val dspCrossfeed: Float = 0f,           // 0 = off .. 1
+    val dspBalance: Float = 0f,             // -1 L .. +1 R
+    val dspWidth: Float = 1f,               // 0 mono 1 normal 2 wide
+    val dspCrossfeed: Float = 0f,
     val dspLimiterEnabled: Boolean = true,
     val dspLimiterCeilingDb: Float = -0.3f,
     val dspCompEnabled: Boolean = false,
     val dspCompThreshDb: Float = -18f,
     val dspCompRatio: Float = 2f,
-    // --- Convolution / impulse response ---
     val dspConvEnabled: Boolean = false,
-    val dspConvIrPath: String = "",         // path to imported WAV IR ("" = none)
-    val dspConvIrName: String = "",         // display name of the loaded IR
-    val dspConvMakeupDb: Float = 0f,        // post-convolution makeup gain
-    val dspGraphicLayout: Int = 0,          // index into DspCoeffBuilder.GRAPHIC_LAYOUTS (10/15/31-band)
-    val dspSaturation: Float = 0f,          // 0..1 tube/harmonic drive
-    val dspDelayLeftMs: Float = 0f,         // per-channel alignment delay
+    val dspConvIrPath: String = "",
+    val dspConvIrName: String = "",
+    val dspConvMakeupDb: Float = 0f,
+    val dspGraphicLayout: Int = 0,          // index into DspCoeffBuilder.GRAPHIC_LAYOUTS
+    val dspSaturation: Float = 0f,
+    val dspDelayLeftMs: Float = 0f,
     val dspDelayRightMs: Float = 0f,
-    val dspTrimLeftDb: Float = 0f,          // per-channel attenuation
+    val dspTrimLeftDb: Float = 0f,
     val dspTrimRightDb: Float = 0f,
 )
 
-/** App theme mode. */
 object ThemeMode { const val SYSTEM = 0; const val LIGHT = 1; const val DARK = 2; const val AMOLED = 3 }
 
-/** Where the accent color comes from. */
 object AccentMode { const val PRESET = 0; const val CUSTOM = 1; const val MATERIAL_YOU = 2 }
 
-/** Global corner-rounding style. */
 object CornerStyle { const val SHARP = 0; const val DEFAULT = 1; const val ROUNDED = 2; const val PILL = 3 }
 
-/** Fullscreen-player seek control style. */
 object SeekStyle { const val WAVEFORM = 0; const val BAR = 1 }
 
-/** Miniplayer layout preset. */
 object MiniStyle { const val STANDARD = 0; const val COMPACT = 1; const val PROMINENT = 2 }
 
-/** Miniplayer progress indicator style. */
 object MiniProgress { const val LINE = 0; const val BAR = 1; const val NONE = 2 }
 
-/** Home section identifiers (for show/hide). */
 object HomeSection {
     const val HERO = "hero"; const val RECENT = "recent"; const val PLAYLISTS = "playlists"
     const val FAVOURITE = "favourite"; const val MOST = "most"; const val ARTISTS = "artists"; const val NEW = "new"
 }
 
-/**
- * Visual / appearance preferences. Defaults reproduce the app's original look (forced dark, rose
- * accent, current layouts) so nothing changes until the user opts in.
- */
 data class UiPrefs(
     val themeMode: Int = ThemeMode.DARK,
     val accentMode: Int = AccentMode.PRESET,
-    val accentPreset: Int = 0,              // index into AccentPresets (ui/theme/Color.kt)
-    val accentColor: Long = 0xFFFF2E7EL,    // ARGB for custom accent (default = rose)
-    // --- Global look ---
-    val fontScale: Float = 1f,              // 0.85 .. 1.3
+    val accentPreset: Int = 0,
+    val accentColor: Long = 0xFFFF2E7EL,
+    val fontScale: Float = 1f,
     val cornerStyle: Int = CornerStyle.DEFAULT,
-    // --- Fullscreen player ---
     val playerSeekStyle: Int = SeekStyle.WAVEFORM,
-    val playerWaveBars: Int = 60,           // 24 .. 96
-    val playerArtSize: Float = 0.86f,       // 0.6 .. 1.0 (fraction of width)
-    val playerGradient: Float = 1f,         // 0 .. 1.5 (accent gradient intensity)
+    val playerWaveBars: Int = 60,
+    val playerArtSize: Float = 0.86f,
+    val playerGradient: Float = 1f,
     val playerShowUtilities: Boolean = true,
-    // --- Miniplayer ---
     val miniStyle: Int = MiniStyle.STANDARD,
     val miniProgress: Int = MiniProgress.LINE,
-    // --- Library / home ---
-    val libraryColumns: Int = 2,            // 2 .. 4
+    val libraryColumns: Int = 2,
     val hiddenHomeSections: Set<String> = emptySet(),
 )
 
-/** Linked Last.fm account (empty [sessionKey] = not connected). */
 data class LastfmAccount(
     val sessionKey: String = "",
     val username: String = "",
@@ -259,27 +215,21 @@ data class LastfmAccount(
     val enabled: Boolean = true,
 )
 
-/** Linked ListenBrainz account (empty [token] = not connected). */
 data class ListenBrainzAccount(
     val token: String = "",
     val username: String = "",
     val enabled: Boolean = true,
 )
 
-/** Linked Discord account for Rich Presence (empty [token] = not connected). */
 data class DiscordAccount(
     val token: String = "",
     val username: String = "",
     val enabled: Boolean = true,
-    val imgurClientId: String = "",  // optional override for album-art uploads
-    val appId: String = "",          // user's own Discord application id (for rich presence + art)
+    val imgurClientId: String = "",
+    val appId: String = "",
 )
 
-/**
- * A library item pinned to the top of the Library "All" tab. Scoped to the connection it was pinned
- * on ([serverId] = the session's server, e.g. the Navidrome URL, Spotify's base, or "On this
- * device"), so it persists across logouts but only reappears on that same connection.
- */
+// scoped to serverId so a pin persists across logouts but only reappears on that connection
 data class Pin(
     val id: String = "",
     val kind: String = "",        // album | playlist | artist
@@ -289,7 +239,6 @@ data class Pin(
     val serverId: String = "",
 )
 
-/** An AutoEQ correction bound to a specific output device, applied automatically when it connects. */
 data class EqBinding(
     val deviceKey: String = "",
     val deviceLabel: String = "",
@@ -298,18 +247,16 @@ data class EqBinding(
     val bands: List<ParamBand> = emptyList(),
 )
 
-/** Wake-to-music alarm: at [hour]:[minute] each day, fade in the user's liked/downloaded library. */
 data class AlarmPrefs(
     val enabled: Boolean = false,
     val hour: Int = 7,
     val minute: Int = 0,
 )
 
-/** Player gesture toggles. */
 data class GesturePrefs(
-    val swipeArtwork: Boolean = true,       // swipe artwork left/right → next/prev
-    val swipeDownDismiss: Boolean = true,   // swipe down → collapse player / sheets
-    val doubleTapPause: Boolean = true,     // double-tap artwork → play/pause
+    val swipeArtwork: Boolean = true,
+    val swipeDownDismiss: Boolean = true,
+    val doubleTapPause: Boolean = true,
 )
 
 class SettingsStore(private val context: Context) {
@@ -368,24 +315,24 @@ class SettingsStore(private val context: Context) {
         val ALARM_ENABLED = booleanPreferencesKey("alarm_enabled")
         val ALARM_HOUR = intPreferencesKey("alarm_hour")
         val ALARM_MINUTE = intPreferencesKey("alarm_minute")
-        val PINS = stringPreferencesKey("library_pins")   // JSON; not cleared on logout
-        val SMART_PLAYLISTS = stringPreferencesKey("smart_playlists")  // JSON; not cleared on logout
-        val RADIO_FAVORITES = stringPreferencesKey("radio_favorites")  // JSON list; not cleared on logout
-        val PODCAST_SUBS = stringPreferencesKey("podcast_subs")        // JSON list; not cleared on logout
+        val PINS = stringPreferencesKey("library_pins")   // not cleared on logout
+        val SMART_PLAYLISTS = stringPreferencesKey("smart_playlists")  // not cleared on logout
+        val RADIO_FAVORITES = stringPreferencesKey("radio_favorites")  // not cleared on logout
+        val PODCAST_SUBS = stringPreferencesKey("podcast_subs")        // not cleared on logout
         val ARTIST_ENRICHMENT = booleanPreferencesKey("artist_enrichment")
         val PREFER_LOCAL = booleanPreferencesKey("prefer_local_sources")
-        val SOURCE_PRIORITY = stringPreferencesKey("source_priority")     // ordered tiers: local/downloaded/stream
-        val UNIFIED_LIBRARY = booleanPreferencesKey("unified_library")    // merge saved servers + local into one
-        val MERGE_SOURCES = stringSetPreferencesKey("merge_sources")      // account keys included (empty = all)
-        val RECENT_SEARCHES = stringPreferencesKey("recent_searches")  // JSON list, most-recent first
-        val SQUIG_BASE = stringPreferencesKey("squig_base_url")        // squig.link instance for live AutoEQ
-        val SQUIG_TARGET = stringPreferencesKey("squig_target")        // target curve file stem
-        val SAVED_SESSIONS = stringPreferencesKey("saved_sessions")   // JSON list; remembered logins
-        val SPOTIFY_CLIENT_ID = stringPreferencesKey("spotify_client_id")  // user's own app; survives logout
-        val ACOUSTID_KEY = stringPreferencesKey("acoustid_key")           // user's AcoustID app key; survives logout
-        val EQ_BINDINGS = stringPreferencesKey("eq_bindings")              // JSON; AutoEQ per-device
+        val SOURCE_PRIORITY = stringPreferencesKey("source_priority")
+        val UNIFIED_LIBRARY = booleanPreferencesKey("unified_library")
+        val MERGE_SOURCES = stringSetPreferencesKey("merge_sources")      // empty = all
+        val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
+        val SQUIG_BASE = stringPreferencesKey("squig_base_url")
+        val SQUIG_TARGET = stringPreferencesKey("squig_target")
+        val SAVED_SESSIONS = stringPreferencesKey("saved_sessions")
+        val SPOTIFY_CLIENT_ID = stringPreferencesKey("spotify_client_id")  // survives logout
+        val ACOUSTID_KEY = stringPreferencesKey("acoustid_key")           // survives logout
+        val EQ_BINDINGS = stringPreferencesKey("eq_bindings")
         val AUTOEQ_SWITCH = booleanPreferencesKey("autoeq_autoswitch")
-        val AUTOEQ_PROFILE = stringPreferencesKey("autoeq_active_profile") // display name of applied profile
+        val AUTOEQ_PROFILE = stringPreferencesKey("autoeq_active_profile")
         val LIKED_PLAYLISTS = stringSetPreferencesKey("liked_playlists")
         val EQ_ENABLED = booleanPreferencesKey("eq_enabled")
         val EQ_PRESET = intPreferencesKey("eq_preset")
@@ -435,8 +382,8 @@ class SettingsStore(private val context: Context) {
         val LASTFM_USER = stringPreferencesKey("lastfm_user")
         val LASTFM_IMAGE = stringPreferencesKey("lastfm_image")
         val LASTFM_ENABLED = booleanPreferencesKey("lastfm_enabled")
-        val LASTFM_API_KEY = stringPreferencesKey("lastfm_api_key")   // user's own Last.fm API key
-        val LASTFM_SECRET = stringPreferencesKey("lastfm_secret")     // user's own Last.fm shared secret
+        val LASTFM_API_KEY = stringPreferencesKey("lastfm_api_key")
+        val LASTFM_SECRET = stringPreferencesKey("lastfm_secret")
         val LISTENBRAINZ_TOKEN = stringPreferencesKey("listenbrainz_token")
         val LISTENBRAINZ_USER = stringPreferencesKey("listenbrainz_user")
         val LISTENBRAINZ_ENABLED = booleanPreferencesKey("listenbrainz_enabled")
@@ -444,7 +391,7 @@ class SettingsStore(private val context: Context) {
         val DISCORD_USER = stringPreferencesKey("discord_user")
         val DISCORD_ENABLED = booleanPreferencesKey("discord_enabled")
         val DISCORD_IMGUR = stringPreferencesKey("discord_imgur")
-        val DISCORD_APP_ID = stringPreferencesKey("discord_app_id")   // user's own Discord application id
+        val DISCORD_APP_ID = stringPreferencesKey("discord_app_id")
     }
 
     val discord: Flow<DiscordAccount> = context.dataStore.data.map { p ->
@@ -466,7 +413,6 @@ class SettingsStore(private val context: Context) {
         )
     }
 
-    /** The user's own Last.fm API key + shared secret (from last.fm/api/account/create). */
     val lastfmKeys: Flow<Pair<String, String>> = context.dataStore.data.map { p ->
         (p[Keys.LASTFM_API_KEY].orEmpty()) to (p[Keys.LASTFM_SECRET].orEmpty())
     }
@@ -548,12 +494,9 @@ class SettingsStore(private val context: Context) {
 
     val offlineMode: Flow<Boolean> = context.dataStore.data.map { it[Keys.OFFLINE] ?: false }
     val lrclibEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.LRCLIB] ?: true }
-    /** Data saver: cap cellular streaming to a low bitrate (server backends only). */
     val dataSaver: Flow<Boolean> = context.dataStore.data.map { it[Keys.DATA_SAVER] ?: false }
-    /** Private session: don't report playback to the server or scrobble to Last.fm. */
     val privateSession: Flow<Boolean> = context.dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }
 
-    /** Player gesture toggles (default on). */
     val gesturePrefs: Flow<GesturePrefs> = context.dataStore.data.map { p ->
         GesturePrefs(
             swipeArtwork = p[Keys.GESTURE_SWIPE_ART] ?: true,
@@ -561,10 +504,8 @@ class SettingsStore(private val context: Context) {
             doubleTapPause = p[Keys.GESTURE_DOUBLE_TAP] ?: true,
         )
     }
-    /** Haptic feedback on meaningful taps (default off — opt-in). */
     val haptics: Flow<Boolean> = context.dataStore.data.map { it[Keys.HAPTICS] ?: false }
 
-    /** Wake-to-music alarm settings. */
     val alarmPrefs: Flow<AlarmPrefs> = context.dataStore.data.map { p ->
         AlarmPrefs(
             enabled = p[Keys.ALARM_ENABLED] ?: false,
@@ -573,19 +514,13 @@ class SettingsStore(private val context: Context) {
         )
     }
 
-    /** The user's own Spotify app Client ID (DIY setup). Persists across logout. */
     val spotifyClientId: Flow<String> = context.dataStore.data.map { it[Keys.SPOTIFY_CLIENT_ID] ?: "" }
 
-    /** The user's own AcoustID application API key (for tag-editor "Auto-identify"). */
     val acoustIdKey: Flow<String> = context.dataStore.data.map { it[Keys.ACOUSTID_KEY] ?: "" }
 
-    // distinctUntilChanged so the AutoEQ controller only reacts to real changes, not every settings
-    // write (which would otherwise re-fire it and wipe a just-applied correction).
-    /** AutoEQ per-output-device bindings. */
+    // distinctUntilChanged so a settings write doesnt re-fire and wipe a just-applied correction
     val eqBindings: Flow<List<EqBinding>> = context.dataStore.data.map { parseBindings(it[Keys.EQ_BINDINGS]) }.distinctUntilChanged()
-    /** Auto-apply the bound AutoEQ profile when its output device connects. */
     val autoEqAutoSwitch: Flow<Boolean> = context.dataStore.data.map { it[Keys.AUTOEQ_SWITCH] ?: false }.distinctUntilChanged()
-    /** Display name of the currently-applied AutoEQ profile ("" = none). */
     val activeEqProfile: Flow<String> = context.dataStore.data.map { it[Keys.AUTOEQ_PROFILE] ?: "" }
 
     private fun parseBindings(json: String?): List<EqBinding> = runCatching {
@@ -593,7 +528,6 @@ class SettingsStore(private val context: Context) {
         else gson.fromJson<List<EqBinding>>(json, object : TypeToken<List<EqBinding>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    /** Pinned library items (persist across logout & server changes). */
     val pins: Flow<List<Pin>> = context.dataStore.data.map { p -> parsePins(p[Keys.PINS]) }
 
     private fun parsePins(json: String?): List<Pin> = runCatching {
@@ -601,7 +535,6 @@ class SettingsStore(private val context: Context) {
         else gson.fromJson<List<Pin>>(json, object : TypeToken<List<Pin>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    /** Smart (rule-based) playlists — evaluated lazily against whatever library is active. */
     val smartPlaylists: Flow<List<SmartPlaylist>> = context.dataStore.data.map { p -> parseSmart(p[Keys.SMART_PLAYLISTS]) }
 
     private fun parseSmart(json: String?): List<SmartPlaylist> = runCatching {
@@ -609,7 +542,6 @@ class SettingsStore(private val context: Context) {
         else gson.fromJson<List<SmartPlaylist>>(json, object : TypeToken<List<SmartPlaylist>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    /** Create or update a smart playlist (upsert by id). */
     suspend fun saveSmartPlaylist(sp: SmartPlaylist) = context.dataStore.edit { p ->
         val cur = parseSmart(p[Keys.SMART_PLAYLISTS])
         val next = if (cur.any { it.id == sp.id }) cur.map { if (it.id == sp.id) sp else it } else cur + sp
@@ -620,7 +552,6 @@ class SettingsStore(private val context: Context) {
         p[Keys.SMART_PLAYLISTS] = gson.toJson(parseSmart(p[Keys.SMART_PLAYLISTS]).filterNot { it.id == id })
     }
 
-    /** The user's favourited / custom-added internet-radio stations (6.3). */
     val radioFavorites: Flow<List<RadioStation>> = context.dataStore.data.map { p -> parseRadio(p[Keys.RADIO_FAVORITES]) }
 
     private fun parseRadio(json: String?): List<RadioStation> = runCatching {
@@ -628,7 +559,6 @@ class SettingsStore(private val context: Context) {
         else gson.fromJson<List<RadioStation>>(json, object : TypeToken<List<RadioStation>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    /** Favourite a station (upsert by uuid). */
     suspend fun saveRadioStation(s: RadioStation) = context.dataStore.edit { p ->
         val cur = parseRadio(p[Keys.RADIO_FAVORITES])
         val next = if (cur.any { it.uuid == s.uuid }) cur.map { if (it.uuid == s.uuid) s else it } else cur + s
@@ -639,7 +569,6 @@ class SettingsStore(private val context: Context) {
         p[Keys.RADIO_FAVORITES] = gson.toJson(parseRadio(p[Keys.RADIO_FAVORITES]).filterNot { it.uuid == uuid })
     }
 
-    /** Podcast shows the user subscribed to (6.3). */
     val podcastSubs: Flow<List<Podcast>> = context.dataStore.data.map { p -> parsePodcasts(p[Keys.PODCAST_SUBS]) }
 
     private fun parsePodcasts(json: String?): List<Podcast> = runCatching {
@@ -647,7 +576,6 @@ class SettingsStore(private val context: Context) {
         else gson.fromJson<List<Podcast>>(json, object : TypeToken<List<Podcast>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    /** Subscribe to a podcast (upsert by feed URL). */
     suspend fun savePodcast(p: Podcast) = context.dataStore.edit { prefs ->
         val cur = parsePodcasts(prefs[Keys.PODCAST_SUBS])
         val next = if (cur.any { it.feedUrl == p.feedUrl }) cur.map { if (it.feedUrl == p.feedUrl) p else it } else cur + p
@@ -658,7 +586,7 @@ class SettingsStore(private val context: Context) {
         p[Keys.PODCAST_SUBS] = gson.toJson(parsePodcasts(p[Keys.PODCAST_SUBS]).filterNot { it.feedUrl == feedUrl })
     }
 
-    /** Playlists the user liked. Subsonic has no playlist-star, so we persist these locally. */
+    // persisted locally because subsonic has no playlist-star
     val likedPlaylists: Flow<Set<String>> = context.dataStore.data.map { it[Keys.LIKED_PLAYLISTS] ?: emptySet() }
 
     val session: Flow<Session?> = context.dataStore.data.map { p ->
@@ -717,20 +645,16 @@ class SettingsStore(private val context: Context) {
         )
     }
 
-    /** Analyze new local/downloaded tracks for sonic similarity automatically (on app start). */
     val sonicAutoAnalyze: Flow<Boolean> = context.dataStore.data.map { it[Keys.SONIC_AUTO_ANALYZE] ?: false }
     suspend fun setSonicAutoAnalyze(v: Boolean) = context.dataStore.edit { it[Keys.SONIC_AUTO_ANALYZE] = v }
 
-    /** Fetch artist bios + images from MusicBrainz/Wikipedia on the artist page (6.5). On by default;
-     *  off keeps artist names from ever leaving the device. */
+    // off keeps artist names from ever leaving the device
     val artistEnrichment: Flow<Boolean> = context.dataStore.data.map { it[Keys.ARTIST_ENRICHMENT] ?: true }
     suspend fun setArtistEnrichment(v: Boolean) = context.dataStore.edit { it[Keys.ARTIST_ENRICHMENT] = v }
 
-    /** Best-source playback (7.1a): play a matching on-device/downloaded file instead of streaming. */
     val preferLocalSources: Flow<Boolean> = context.dataStore.data.map { it[Keys.PREFER_LOCAL] ?: true }
     suspend fun setPreferLocalSources(v: Boolean) = context.dataStore.edit { it[Keys.PREFER_LOCAL] = v }
 
-    /** Ordered playback source priority (7.1b): subset/order of "local", "downloaded", "stream". */
     val sourcePriority: Flow<List<String>> = context.dataStore.data.map { p ->
         parseStringList(p[Keys.SOURCE_PRIORITY]).filter { it in DEFAULT_SOURCE_PRIORITY }
             .ifEmpty { DEFAULT_SOURCE_PRIORITY }
@@ -739,15 +663,13 @@ class SettingsStore(private val context: Context) {
         it[Keys.SOURCE_PRIORITY] = gson.toJson(order.filter { t -> t in DEFAULT_SOURCE_PRIORITY }.distinct())
     }
 
-    /** Unified library (7.1b): merge all included servers + local files into one browsable library. */
     val unifiedLibrary: Flow<Boolean> = context.dataStore.data.map { it[Keys.UNIFIED_LIBRARY] ?: false }
     suspend fun setUnifiedLibrary(v: Boolean) = context.dataStore.edit { it[Keys.UNIFIED_LIBRARY] = v }
 
-    /** Account keys included in the unified library (empty = every eligible saved source). */
+    // empty = every eligible saved source
     val mergeSources: Flow<Set<String>> = context.dataStore.data.map { it[Keys.MERGE_SOURCES] ?: emptySet() }
     suspend fun setMergeSources(keys: Set<String>) = context.dataStore.edit { it[Keys.MERGE_SOURCES] = keys }
 
-    /** Recent search queries, most-recent first, capped (7.3 search depth). */
     val recentSearches: Flow<List<String>> = context.dataStore.data.map { parseStringList(it[Keys.RECENT_SEARCHES]) }
 
     private fun parseStringList(json: String?): List<String> = runCatching {
@@ -755,7 +677,6 @@ class SettingsStore(private val context: Context) {
         else gson.fromJson<List<String>>(json, object : TypeToken<List<String>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    /** Add [query] to the top of the recents (de-duped, case-insensitively), capped at 12. */
     suspend fun addRecentSearch(query: String) {
         val q = query.trim()
         if (q.length < 2) return
@@ -772,7 +693,6 @@ class SettingsStore(private val context: Context) {
 
     suspend fun clearRecentSearches() = context.dataStore.edit { it.remove(Keys.RECENT_SEARCHES) }
 
-    /** Live AutoEQ (7.2): the squig.link/CrinGraph instance + target curve to fetch from. */
     val squigBaseUrl: Flow<String> = context.dataStore.data.map { it[Keys.SQUIG_BASE]?.takeIf { u -> u.isNotBlank() } ?: DEFAULT_SQUIG_BASE }
     suspend fun setSquigBaseUrl(v: String) = context.dataStore.edit { it[Keys.SQUIG_BASE] = v.trim().trimEnd('/') }
 
@@ -814,10 +734,8 @@ class SettingsStore(private val context: Context) {
         }
     }
 
-    /** Update just the access token (used after an OAuth refresh). */
     suspend fun updateToken(token: String) = context.dataStore.edit { it[Keys.TOKEN] = token }
 
-    /** Backfill/refresh the user's avatar URL (e.g. fetched from Spotify after the fact). */
     suspend fun updateUserImage(url: String) = context.dataStore.edit { it[Keys.USER_IMAGE] = url }
 
     suspend fun clearSession() {
@@ -828,9 +746,6 @@ class SettingsStore(private val context: Context) {
         }
     }
 
-    // --- Saved logins (multi-account quick switch) ---------------------------
-
-    /** Remembered logins (with tokens), so the user can switch servers without re-entering creds. */
     val savedSessions: Flow<List<Session>> = context.dataStore.data.map { parseSessions(it[Keys.SAVED_SESSIONS]) }
 
     private fun parseSessions(json: String?): List<Session> = runCatching {
@@ -838,10 +753,8 @@ class SettingsStore(private val context: Context) {
         else gson.fromJson<List<Session>>(json, object : TypeToken<List<Session>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList()).filter { it.isValid }
 
-    /** Stable identity for a login (so re-saving the same account refreshes rather than duplicates). */
     private fun Session.accountKey() = "${type.name}|$server|$username|$userId"
 
-    /** Add or refresh a saved login (keeps the newest token for that account). */
     suspend fun addSavedSession(session: Session) = context.dataStore.edit { p ->
         if (!session.isValid) return@edit
         val cur = parseSessions(p[Keys.SAVED_SESSIONS])
@@ -883,7 +796,6 @@ class SettingsStore(private val context: Context) {
     suspend fun setAutoEqAutoSwitch(v: Boolean) = context.dataStore.edit { it[Keys.AUTOEQ_SWITCH] = v }
     suspend fun setActiveEqProfile(name: String) = context.dataStore.edit { it[Keys.AUTOEQ_PROFILE] = name }
 
-    /** Add/replace the binding for a device (keyed by deviceKey). */
     suspend fun upsertEqBinding(binding: EqBinding) = context.dataStore.edit { p ->
         val cur = parseBindings(p[Keys.EQ_BINDINGS]).filterNot { it.deviceKey == binding.deviceKey }
         p[Keys.EQ_BINDINGS] = gson.toJson(cur + binding)
@@ -893,7 +805,6 @@ class SettingsStore(private val context: Context) {
         p[Keys.EQ_BINDINGS] = gson.toJson(parseBindings(p[Keys.EQ_BINDINGS]).filterNot { it.deviceKey == deviceKey })
     }
 
-    /** Pin or unpin a library item; de-duped by (serverId, kind, id) so each connection has its own. */
     suspend fun togglePin(pin: Pin) = context.dataStore.edit { p ->
         val cur = parsePins(p[Keys.PINS])
         fun same(x: Pin) = x.id == pin.id && x.kind == pin.kind && x.serverId == pin.serverId
@@ -1003,8 +914,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setDiscordImgur(v: String) = context.dataStore.edit { it[Keys.DISCORD_IMGUR] = v.trim() }
     suspend fun setDiscordAppId(v: String) = context.dataStore.edit { it[Keys.DISCORD_APP_ID] = v.trim() }
 
-    // Backup / restore: all DataStore prefs, typed so JSON round-trips losslessly.
-
+    // typed so json round-trips losslessly
     suspend fun exportPrefs(): PrefsBackup {
         val p = context.dataStore.data.first()
         val strings = HashMap<String, String>(); val ints = HashMap<String, Int>(); val longs = HashMap<String, Long>()

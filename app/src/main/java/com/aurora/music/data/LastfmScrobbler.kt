@@ -5,18 +5,11 @@ import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * Owns the Last.fm link: drives the browser auth flow, persists the session in [SettingsStore], and
- * submits now-playing + scrobbles when connected and enabled. All network is best-effort and
- * fire-and-forget; failures never affect playback. Needs an API key + secret (see [AppContainer]);
- * when unconfigured, [configured] is false and everything is a no-op.
- */
 class LastfmScrobbler(
     private val store: SettingsStore,
     private val scope: CoroutineScope,
 ) {
-    // The API key + secret are the user's own (entered in Integrations), so the client is rebuilt
-    // whenever they change rather than baked in at construction.
+    // rebuilt whenever the user's key+secret change
     @Volatile private var client: LastfmClient? = null
 
     val configured: Boolean get() = client?.configured == true
@@ -40,11 +33,9 @@ class LastfmScrobbler(
 
     val isConnected: Boolean get() = !sessionKey.isNullOrBlank()
 
-    /** Auth step 1: get a token and the URL to open in the browser. Null if unreachable / unconfigured. */
     suspend fun beginLink(): String? = client?.getToken()
     fun authorizeUrl(token: String): String = client?.authorizeUrl(token) ?: ""
 
-    /** Auth step 2: after the user allowed access, exchange the token and persist the session. */
     suspend fun finishLink(token: String): Boolean {
         val c = client ?: return false
         val session = c.getSession(token) ?: return false

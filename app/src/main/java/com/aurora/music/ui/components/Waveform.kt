@@ -25,13 +25,7 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.random.Random
 
-/**
- * SoundCloud-style waveform scrubber. Bars are deterministically generated from [seed].
- * The played region is revealed by clipping so the boundary sweeps smoothly across bars,
- * and [progress] animates between position ticks. Tap or drag anywhere to seek — the
- * gesture is claimed on touch-down so the player's overlay handlers can't steal it, and
- * the playhead tracks the finger instantly while dragging.
- */
+// gesture claimed on touch-down so the player overlay cant steal it
 @Composable
 fun Waveform(
     progress: Float,
@@ -56,7 +50,7 @@ fun Waveform(
         animationSpec = if (animated) tween(durationMillis = 250, easing = LinearEasing) else tween(0),
         label = "waveformProgress",
     )
-    // Non-null only while actively scrubbing — lets the playhead track the finger instantly.
+    // non-null only while scrubbing so playhead tracks finger instantly
     var scrub by remember { mutableStateOf<Float?>(null) }
     val playedFraction = scrub ?: shown
 

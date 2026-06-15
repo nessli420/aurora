@@ -13,10 +13,6 @@ import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.util.accentFor
 
-/**
- * Subsonic / OpenSubsonic (Navidrome) backend. Owns the DTO→domain mapping that used to live in
- * MusicRepository. Online-only: offline sourcing is handled one level up by [MusicRepository].
- */
 class SubsonicBackend(
     private val client: SubsonicClient,
     private val maxBitrateProvider: () -> Int,
@@ -26,8 +22,6 @@ class SubsonicBackend(
     override val session: Session get() = client.session
 
     private val c: SubsonicClient get() = client
-
-    // --- Mapping -------------------------------------------------------------
 
     private fun SongDto.toModel(): Song {
         val bitrate = maxBitrateProvider()
@@ -80,8 +74,6 @@ class SubsonicBackend(
         accent = accentFor(id),
     )
 
-    // --- MediaBackend --------------------------------------------------------
-
     override suspend fun ping(): Boolean =
         runCatching { c.api.ping().response.isOk }.getOrDefault(false)
 
@@ -120,7 +112,7 @@ class SubsonicBackend(
         c.api.getRandomSongs(200).response.randomSongs?.song?.map { it.toModel() }.orEmpty()
     }.getOrDefault(emptyList())
 
-    /** Navidrome/OpenSubsonic return the whole library for an empty search3 query. */
+    // navidrome returns the whole library for an empty search3 query
     override suspend fun librarySongs(limit: Int): List<Song> = runCatching {
         c.api.search3("", artistCount = 0, albumCount = 0, songCount = limit)
             .response.searchResult3?.song?.map { it.toModel() }.orEmpty()
@@ -166,7 +158,7 @@ class SubsonicBackend(
         runCatching { c.api.createPlaylist(name).response.isOk }.getOrDefault(false)
 
     override suspend fun createPlaylistWithId(name: String): String? = runCatching {
-        // Subsonic returns the created playlist; older servers don't, so fall back to a lookup.
+        // older servers dont return the created playlist fall back to a lookup
         c.api.createPlaylist(name).response.playlist?.id
             ?: c.api.getPlaylists().response.playlists?.playlist?.lastOrNull { it.name == name }?.id
     }.getOrNull()
@@ -227,10 +219,6 @@ class SubsonicBackend(
             else -> null
         }
     }.onFailure { android.util.Log.e("AuroraDetail", "subsonic detail($kind,$id) failed", it) }.getOrNull()
-
-    // Folder browsing. Root = the server's music folders (skipped when there's only one), then
-    // getIndexes lists the top-level directories of a music folder ("mf:<id>" ids), and
-    // getMusicDirectory walks deeper.
 
     override val supportsFolders: Boolean get() = true
 

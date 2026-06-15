@@ -8,17 +8,10 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLEncoder
 
-/** A headphone/IEM correction profile from the bundled AutoEq index. */
 data class EqProfile(val name: String, val source: String, val path: String)
 
-/** A parsed AutoEq parametric correction: a preamp plus filter bands. */
 data class ParsedEq(val preampDb: Float, val bands: List<ParamBand>)
 
-/**
- * AutoEq headphone-correction database. The searchable index (5000+ models) ships as a bundled
- * asset for instant offline search; the chosen model's tiny `ParametricEQ.txt` is fetched live from
- * AutoEq's GitHub and parsed into Aurora's parametric EQ bands (PK / low-shelf / high-shelf).
- */
 class AutoEqRepository(private val context: Context) {
 
     private val http = OkHttpClient()
@@ -40,7 +33,6 @@ class AutoEqRepository(private val context: Context) {
         }
     }
 
-    /** Search the index by model name (ranked: prefix match first, then shortest). */
     suspend fun search(query: String, limit: Int = 60): List<EqProfile> {
         val q = query.trim().lowercase()
         if (q.length < 2) return emptyList()
@@ -52,7 +44,6 @@ class AutoEqRepository(private val context: Context) {
             .toList()
     }
 
-    /** Fetch + parse a profile's AutoEq ParametricEQ.txt. Null on network/parse failure. */
     suspend fun fetch(profile: EqProfile): ParsedEq? = withContext(Dispatchers.IO) {
         runCatching {
             val enc = profile.path.split('/').joinToString("/") {

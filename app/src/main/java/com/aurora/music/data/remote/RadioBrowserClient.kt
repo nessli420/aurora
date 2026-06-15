@@ -10,7 +10,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 
-/** Raw Radio-Browser station DTO. Every field nullable-with-default per the Gson rule. */
+// every field nullable-with-default per gson rule
 private data class RbStationDto(
     @SerializedName("stationuuid") val stationUuid: String? = "",
     val name: String? = "",
@@ -24,12 +24,6 @@ private data class RbStationDto(
     val homepage: String? = "",
 )
 
-/**
- * The Radio-Browser directory (https://www.radio-browser.info) — a free, keyless community index of
- * Icecast/Shoutcast stations. No account or API key is needed; it only asks for a descriptive
- * User-Agent. Mirrors occasionally go down, so requests fall through a small host list and the first
- * one that answers is cached. Failures degrade to an empty list (the codebase's no-throw convention).
- */
 class RadioBrowserClient {
     private val http = OkHttpClient.Builder()
         .connectTimeout(12, TimeUnit.SECONDS)
@@ -39,14 +33,11 @@ class RadioBrowserClient {
 
     @Volatile private var preferredHost: String? = null
 
-    // Each query returns null on transport failure (all mirrors unreachable) vs an empty list when the
-    // directory genuinely has no matches — so the UI can tell "offline" apart from "no results".
+    // null on transport failure vs empty list when directory has no matches so ui can tell offline from no results
 
-    /** Most-clicked stations worldwide — the default "popular" browse view. */
     suspend fun topStations(limit: Int = 80): List<RadioStation>? =
         get("json/stations/topclick/$limit", "hidebroken" to "true")
 
-    /** Free-text search by station name. */
     suspend fun search(query: String, limit: Int = 80): List<RadioStation>? {
         if (query.isBlank()) return emptyList()
         return get(
@@ -56,7 +47,6 @@ class RadioBrowserClient {
         )
     }
 
-    /** Stations carrying an exact genre/topic tag (e.g. "jazz", "news"). */
     suspend fun byTag(tag: String, limit: Int = 80): List<RadioStation>? {
         if (tag.isBlank()) return emptyList()
         return get(
@@ -66,10 +56,6 @@ class RadioBrowserClient {
         )
     }
 
-    /**
-     * Tell Radio-Browser a station was played (credits its click count, good directory etiquette).
-     * Best-effort and fire-and-forget — ignores the response.
-     */
     suspend fun registerClick(uuid: String) {
         if (uuid.isBlank() || uuid.startsWith("custom:")) return
         runCatching { request("json/url/$uuid") }
@@ -83,7 +69,6 @@ class RadioBrowserClient {
             }.getOrDefault(emptyList())
         }
 
-    /** Fetch [path] from the first reachable mirror; caches the winner in [preferredHost]. */
     private fun request(path: String, vararg params: Pair<String, String>): String? {
         val hosts = buildList {
             preferredHost?.let { add(it) }
@@ -97,8 +82,7 @@ class RadioBrowserClient {
                     Request.Builder().url(url).header("User-Agent", USER_AGENT).build()
                 ).execute().use { resp -> if (resp.isSuccessful) resp.body?.string() else null }
             }.getOrNull()
-            // Only accept (and cache) a mirror that returns a JSON body — a 200 maintenance/HTML page
-            // or an empty body means this mirror is effectively down; fall through to the next.
+            // only accept a mirror that returns json body a 200 maintenance html page means it is effectively down
             val trimmed = ok?.trimStart()
             if (trimmed != null && (trimmed.startsWith("[") || trimmed.startsWith("{"))) {
                 preferredHost = host
@@ -127,7 +111,6 @@ class RadioBrowserClient {
 
     private companion object {
         const val USER_AGENT = "Aurora/1.0 ( https://github.com/aurora-music/aurora )"
-        // Named mirrors; the all-round-robin host is last as a fallback.
         val MIRRORS = listOf(
             "de2.api.radio-browser.info",
             "nl1.api.radio-browser.info",

@@ -16,18 +16,17 @@ data class TagEditState(
     val loading: Boolean = true,
     val songId: String = "",
     val path: String = "",
-    val artUrl: String = "",                 // current artwork (for display)
+    val artUrl: String = "",
     val tags: AudioTags = AudioTags(),
     val matching: Boolean = false,
     val matches: List<MetadataMatch> = emptyList(),
     val matchError: String? = null,
-    val pickedCoverUrl: String = "",         // chosen replacement cover (CAA), embedded on save
-    val identifying: Boolean = false,        // AcoustID fingerprint lookup in flight
-    val durationSec: Int = 0,                // true track length, sent to AcoustID for matching
-    val localFile: Boolean = false,          // on-device file (JAudiotagger) vs server item (backend API)
+    val pickedCoverUrl: String = "",
+    val identifying: Boolean = false,
+    val durationSec: Int = 0,
+    val localFile: Boolean = false,
 )
 
-/** Backs the tag-edit screen: loads current tags, runs MusicBrainz matches, edits fields. */
 class TagEditViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as AuroraApplication).container
     private val _state = MutableStateFlow(TagEditState())
@@ -42,8 +41,7 @@ class TagEditViewModel(app: Application) : AndroidViewModel(app) {
             val song = container.repository.songFor(songId)
             val path = song?.path.orEmpty()
             val localFile = song?.streamUrl?.startsWith("content://") == true
-            // Local file → read tags off disk; server item → read the server's full current metadata
-            // (so fields the editor doesn't surface aren't wiped on save).
+            // server item reads full current metadata so unsurfaced fields aren't wiped on save
             val sourceTags = if (localFile) {
                 if (path.isNotBlank()) container.tagEditor.read(path) else null
             } else {
@@ -73,7 +71,6 @@ class TagEditViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Identify the track by its acoustic fingerprint: Chromaprint, AcoustID, MusicBrainz. */
     fun identify() {
         val path = _state.value.path
         if (path.isBlank()) return
@@ -97,7 +94,6 @@ class TagEditViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Apply a chosen MusicBrainz candidate to the editable fields (and stage its cover for save). */
     fun applyMatch(m: MetadataMatch) = _state.update {
         it.copy(
             tags = it.tags.copy(

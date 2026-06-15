@@ -9,19 +9,14 @@
     <uses-permission android:name="android.permission.WAKE_LOCK" />
     <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS" />
     <uses-permission android:name="android.permission.VIBRATE" />
-    <!-- Local library mode: read on-device audio files. -->
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
-    <!-- Tag editor (4.4): write to on-device files. API 30+ goes through MediaStore write-consent. -->
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="29" />
-    <!-- Wake-to-music alarm: exact scheduling + re-arm after reboot. -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
     <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT" />
-    <!-- Let the user exempt Aurora from battery optimization (uninterrupted background scan/playback). -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS" />
-    <!-- Experimental USB bit-perfect driver: claim the DAC before the kernel snd-usb-audio binds. -->
     <uses-feature android:name="android.hardware.usb.host" android:required="false" />
 
     <application
@@ -35,12 +30,10 @@
         android:requestLegacyExternalStorage="true"
         android:theme="@style/Theme.Aurora">
 
-        <!-- Android Auto: declare a media app so the browse tree appears in the car. -->
         <meta-data
             android:name="com.google.android.gms.car.application"
             android:resource="@xml/automotive_app_desc" />
 
-        <!-- Cast SDK options provider (Chromecast — convenience mode, DSP bypassed). -->
         <meta-data
             android:name="com.google.android.gms.cast.framework.OPTIONS_PROVIDER_CLASS_NAME"
             android:value="com.aurora.music.playback.CastOptionsProvider" />
@@ -57,17 +50,13 @@
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-            <!-- Spotify OAuth redirect: aurora://spotify -->
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="aurora" android:host="spotify" />
             </intent-filter>
-            <!-- NOTE: deliberately NO USB_DEVICE_ATTACHED intent-filter — it would make Android pop a
-                 "open Aurora to handle this USB device?" chooser on every DAC plug. The driver
-                 force-claims the interface at playback time instead, and USB permission is requested
-                 at runtime only when the experimental bit-perfect setting is on. -->
+            <!-- deliberately no USB_DEVICE_ATTACHED filter or android pops a chooser on every DAC plug -->
         </activity>
 
         <service
@@ -81,7 +70,6 @@
             </intent-filter>
         </service>
 
-        <!-- Full-screen wake-to-music alarm dismiss screen. -->
         <activity
             android:name=".playback.AlarmActivity"
             android:exported="false"
@@ -91,7 +79,6 @@
             android:turnScreenOn="true"
             android:theme="@style/Theme.Aurora" />
 
-        <!-- Wake-to-music alarm: fires playback + re-arms on boot. -->
         <receiver
             android:name=".playback.AlarmReceiver"
             android:exported="false">
@@ -100,7 +87,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- Home-screen "Now playing" widget (Glance). -->
         <receiver
             android:name=".ui.widget.AuroraWidgetReceiver"
             android:exported="false"
@@ -113,7 +99,6 @@
                 android:resource="@xml/aurora_widget_info" />
         </receiver>
 
-        <!-- Quick Settings play/pause tile. -->
         <service
             android:name=".ui.widget.AuroraTileService"
             android:exported="true"

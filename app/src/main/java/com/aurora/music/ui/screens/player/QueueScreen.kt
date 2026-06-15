@@ -66,8 +66,6 @@ import com.aurora.music.ui.components.formatTime
 import com.aurora.music.util.rememberDominantColor
 import kotlin.math.roundToInt
 
-/** Full-screen queue with a now-playing hero, cover-derived accent gradient, drag-to-reorder,
- *  a collapsible "previously played" history, and save-queue-as-playlist. */
 @Composable
 fun QueueScreen(
     queue: List<Song>,
@@ -81,10 +79,8 @@ fun QueueScreen(
     onClose: () -> Unit,
 ) {
     val current = queue.getOrNull(currentIndex)
-    // Only show what's still coming up — already-played tracks live in the collapsible history.
     val startIdx = (currentIndex + 1).coerceAtLeast(0)
     val upcoming = (startIdx until queue.size).toList()
-    // Previously played, most-recent first (the track just before "now playing" at the top).
     val played = (currentIndex - 1 downTo 0).toList()
     val accent by rememberDominantColor(current?.artworkUrl ?: "", MaterialTheme.colorScheme.primary)
     val rowHeight = 64.dp
@@ -148,7 +144,6 @@ fun QueueScreen(
                 }
 
                 LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().weight(1f)) {
-                    // ---- Previously played (collapsible) ----
                     if (played.isNotEmpty()) {
                         item {
                             Row(
@@ -182,7 +177,6 @@ fun QueueScreen(
                         }
                     }
 
-                    // ---- Up next ----
                     item {
                         Text(
                             if (upcoming.isEmpty()) "NOTHING UP NEXT" else "UP NEXT  •  ${upcoming.size} tracks",
@@ -203,8 +197,7 @@ fun QueueScreen(
                             dragOffset = if (dragging) dragOffset else 0f,
                             onClick = { onJump(i) },
                             onRemove = { onRemove(i) },
-                            // Key on i/startIdx (not just size) so the gesture block re-captures fresh
-                            // indices when the current track advances or a prior reorder shifts rows.
+                            // key on i/startIdx so gesture re-captures fresh indices when current advances or rows shift
                             dragHandle = Modifier.pointerInput(queue.size, i, startIdx) {
                                 detectDragGestures(
                                     onDragStart = { dragIndex = i; dragOffset = 0f },
@@ -232,7 +225,7 @@ fun QueueScreen(
     }
 }
 
-/** One queue row. [index] null = a history row (no number/drag). [dragHandle] null = no reorder handle. */
+// index null = history row no number/drag, dragHandle null = no reorder handle
 @Composable
 private fun QueueTrackRow(
     song: Song,

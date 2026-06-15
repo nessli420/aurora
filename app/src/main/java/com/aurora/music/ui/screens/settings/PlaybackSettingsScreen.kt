@@ -61,7 +61,7 @@ fun PlaybackSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         SettingsTopBar("Playback & quality", onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
-            // Streaming quality only applies to server backends — local files play as-is.
+            // streaming quality only applies to server backends
             if (!isLocal) {
                 item { SettingsSectionTitle("Streaming quality") }
                 item {
@@ -93,8 +93,7 @@ fun PlaybackSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                         prefs.bitPerfectUsb,
                     ) { v ->
                         scope.launch { store.setBitPerfectUsb(v) }
-                        // Request USB access up front when enabling (if a DAC is plugged in) so the driver
-                        // can claim it without a manifest attach-handler prompting on every plug.
+                        // claim usb up front so driver avoids the per-plug attach prompt
                         if (v) runCatching {
                             val dev = com.decent.usbaudio.UsbAudioDevice.getInstance(context)
                             dev.findUsbAudioDevice()?.let { if (!dev.hasPermission(it)) dev.requestPermission(it) {} }
@@ -153,14 +152,12 @@ fun PlaybackSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     }
 }
 
-/** 24h hour/minute → a 12h clock label like "7:05 AM". */
 private fun formatTime(hour: Int, minute: Int): String {
     val h12 = when { hour % 12 == 0 -> 12; else -> hour % 12 }
     val ampm = if (hour < 12) "AM" else "PM"
     return "%d:%02d %s".format(h12, minute, ampm)
 }
 
-/** Live signal-path / bit-perfect indicator — the format actually playing and where it's going. */
 @Composable
 private fun SignalPathCard() {
     val ctx = LocalContext.current

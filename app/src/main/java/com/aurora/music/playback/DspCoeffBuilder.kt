@@ -6,27 +6,16 @@ import kotlin.math.exp
 import kotlin.math.log10
 import kotlin.math.sin
 
-/**
- * Pure DSP coefficient math for [AuroraDspProcessor]: no Android types, JVM-unit-testable.
- *
- * Turns rate-independent parameters ([DspParams]) plus a sample rate into an immutable [Coeffs]
- * snapshot of flat float arrays the realtime callback reads with zero allocation. Biquads are RBJ
- * Audio-EQ-Cookbook filters in Direct Form I. A peaking filter at 0 dB gain is the identity, so a
- * fixed bank of [TOTAL_BIQUADS] runs every buffer with unused bands as pass-throughs. Keeping the
- * bank size constant means filter state never needs remapping or zeroing when bands change (no
- * clicks).
- */
+// fixed bank size means filter state never needs remapping or zeroing when bands change no clicks
 object DspCoeffBuilder {
 
-    const val GRAPHIC_BANDS = 10           // default layout band count
-    const val MAX_GRAPHIC = 31             // 1/3-octave layout uses all 31
-    const val MAX_PARAMETRIC = 12          // enough for a full AutoEq correction (~10 filters)
+    const val GRAPHIC_BANDS = 10
+    const val MAX_GRAPHIC = 31
+    const val MAX_PARAMETRIC = 12
     const val TOTAL_BIQUADS = MAX_GRAPHIC + MAX_PARAMETRIC
 
-    /** Centre frequencies of the default 10-band graphic EQ (≈1-octave spacing). */
     val GRAPHIC_FREQS = floatArrayOf(31f, 62f, 125f, 250f, 500f, 1000f, 2000f, 4000f, 8000f, 16000f)
 
-    /** Selectable graphic-EQ layouts: centre frequencies + a Q matched to the band spacing. */
     val GRAPHIC_LAYOUTS: List<GraphicLayout> = listOf(
         GraphicLayout("10-band", GRAPHIC_FREQS, 1.41f),
         GraphicLayout(
@@ -71,7 +60,6 @@ object DspCoeffBuilder {
             }
         }
 
-        // Crossfeed: short delay + one-pole low-pass on the opposite channel (Bauer-style).
         val crossfeedDelay = (0.0003f * fs).toInt().coerceIn(1, MAX_CROSSFEED_DELAY)
         val crossfeedLpfA = onePoleCoef(700f, fs)
 
@@ -102,10 +90,6 @@ object DspCoeffBuilder {
         )
     }
 
-    /**
-     * Peak gain (dB) of the combined graphic + parametric EQ curve across 20 Hz–20 kHz, for
-     * headroom / auto-preamp. Excludes preamp/trim. 0 means the curve never exceeds unity.
-     */
     fun eqPeakDb(p: DspParams, fs: Int = 48000): Float {
         val c = build(p, fs)
         val n = c.nBiquads
@@ -125,16 +109,12 @@ object DspCoeffBuilder {
                 if (den2 > 1e-12) totalDb += 10.0 * log10((numRe * numRe + numIm * numIm) / den2)
             }
             if (totalDb > maxDb) maxDb = totalDb
-            f *= 1.0293   // ~24 points / octave
+            f *= 1.0293
         }
         return maxDb.toFloat()
     }
 
-    /**
-     * Magnitude (dB) of a single RBJ biquad ([type]: 0 peaking / 1 low-shelf / 2 high-shelf) at
-     * frequency [atHz]. Used by the AutoEQ generator to fit filters to a measured response — it
-     * builds the exact coefficients the realtime DSP uses, so the fit matches what's actually applied.
-     */
+    // builds exact realtime coefficients so autoeq fit matches whats actually applied
     fun bandMagnitudeDb(type: Int, f0: Float, gainDb: Float, q: Float, atHz: Double, fs: Int = 48000): Double {
         val b0 = FloatArray(1); val b1 = FloatArray(1); val b2 = FloatArray(1)
         val a1 = FloatArray(1); val a2 = FloatArray(1)
@@ -154,16 +134,15 @@ object DspCoeffBuilder {
         return if (den2 > 1e-12) 10.0 * log10((numRe * numRe + numIm * numIm) / den2) else 0.0
     }
 
-    /** RBJ peaking-EQ biquad, normalised by a0 and written into the arrays at [i]. */
     private fun peaking(
         f0: Float, gainDb: Float, q: Float, fs: Int,
         b0: FloatArray, b1: FloatArray, b2: FloatArray, a1: FloatArray, a2: FloatArray, i: Int,
     ) {
-        // Nyquist guard — a band at/above fs/2 is undefined; pass it through.
+        // nyquist guard band at/above fs/2 is undefined pass through
         if (f0 <= 0f || f0 >= fs / 2f) {
             identity(b0, b1, b2, a1, a2, i); return
         }
-        val a = Math.pow(10.0, (gainDb / 40.0)).toFloat()              // sqrt of linear gain
+        val a = Math.pow(10.0, (gainDb / 40.0)).toFloat()
         val w0 = (2.0 * PI * f0 / fs).toFloat()
         val cosW0 = cos(w0)
         val sinW0 = sin(w0)
@@ -176,7 +155,6 @@ object DspCoeffBuilder {
         a2[i] = (1f - alpha / a) / a0
     }
 
-    /** RBJ low-shelf biquad (AutoEq LSC), normalised by a0 and written at [i]. */
     private fun lowShelf(
         f0: Float, gainDb: Float, q: Float, fs: Int,
         b0: FloatArray, b1: FloatArray, b2: FloatArray, a1: FloatArray, a2: FloatArray, i: Int,
@@ -195,7 +173,6 @@ object DspCoeffBuilder {
         a2[i] = ((a + 1f) + (a - 1f) * cosW0 - twoSqrtAAlpha) / a0
     }
 
-    /** RBJ high-shelf biquad (AutoEq HSC), normalised by a0 and written at [i]. */
     private fun highShelf(
         f0: Float, gainDb: Float, q: Float, fs: Int,
         b0: FloatArray, b1: FloatArray, b2: FloatArray, a1: FloatArray, a2: FloatArray, i: Int,
@@ -220,24 +197,20 @@ object DspCoeffBuilder {
 
     private fun dbToLin(db: Float): Float = Math.pow(10.0, (db / 20.0)).toFloat()
 
-    /** One-pole smoothing coefficient for an attack/release time constant. */
     private fun envCoef(seconds: Float, fs: Int): Float =
         if (seconds <= 0f) 0f else exp(-1.0 / (seconds.toDouble() * fs)).toFloat()
 
-    /** One-pole low-pass coefficient (state weight) for cutoff [fc]. */
     private fun onePoleCoef(fc: Float, fs: Int): Float = exp(-2.0 * PI * fc / fs).toFloat()
 
     const val MAX_CROSSFEED_DELAY = 64
-    const val MAX_CHANNEL_DELAY = 9600     // 50 ms @ 192 kHz
+    const val MAX_CHANNEL_DELAY = 9600
 }
 
-/** A selectable graphic-EQ layout: a display name, centre frequencies, and a spacing-matched Q. */
 class GraphicLayout(val name: String, val freqs: FloatArray, val q: Float)
 
-/** One parametric EQ band. [type]: 0 = peaking, 1 = low-shelf, 2 = high-shelf. */
+// type 0 peaking 1 low-shelf 2 high-shelf
 data class DspBand(val freqHz: Float, val gainDb: Float, val q: Float, val type: Int = 0)
 
-/** Rate-independent DSP parameters, mapped from persisted AudioPrefs by the playback layer. */
 data class DspParams(
     val graphic: FloatArray = FloatArray(DspCoeffBuilder.GRAPHIC_BANDS),
     val graphicFreqs: FloatArray = DspCoeffBuilder.GRAPHIC_FREQS,
@@ -258,18 +231,11 @@ data class DspParams(
     val compThreshDb: Float = -18f,
     val compRatio: Float = 2f,
 ) {
-    // graphic is a FloatArray, so a generated equals/hashCode would be identity-based anyway. Nothing
-    // relies on DspParams equality (each prefs emission rebuilds), so override explicitly.
+    // identity equality nothing relies on DspParams equality each prefs emission rebuilds
     override fun equals(other: Any?): Boolean = this === other
     override fun hashCode(): Int = System.identityHashCode(this)
 }
 
-/**
- * Immutable coefficient snapshot consumed by [AuroraDspProcessor.queueInput]. Biquad coefficients
- * are shared across L/R (the EQ curve is identical per channel); only the filter state differs and
- * lives in the processor. Time-constant values are pre-resolved to the current sample rate so the
- * realtime callback does no math beyond the difference equations.
- */
 class Coeffs(
     val b0: FloatArray, val b1: FloatArray, val b2: FloatArray, val a1: FloatArray, val a2: FloatArray,
     val preampLin: Float,

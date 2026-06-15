@@ -11,10 +11,6 @@ import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.util.accentFor
 
-/**
- * Jellyfin backend. Maps Jellyfin items onto the app's domain models so the app behaves identically
- * to the Subsonic path. Online-only; offline sourcing is handled by [MusicRepository].
- */
 class JellyfinBackend(
     private val client: JellyfinClient,
     private val maxBitrateProvider: () -> Int,
@@ -27,8 +23,6 @@ class JellyfinBackend(
     private companion object {
         const val TICKS_PER_SEC = 10_000_000L
     }
-
-    // --- Mapping -------------------------------------------------------------
 
     private fun BaseItemDto.imageId(): String? = when {
         ImageTags?.containsKey("Primary") == true -> Id
@@ -92,8 +86,6 @@ class JellyfinBackend(
 
     private fun albumParams(sortBy: String, order: String, limit: Int, extra: Map<String, String> = emptyMap()) =
         mapOf("IncludeItemTypes" to "MusicAlbum", "Recursive" to "true", "SortBy" to sortBy, "SortOrder" to order, "Limit" to "$limit") + extra
-
-    // --- MediaBackend --------------------------------------------------------
 
     override suspend fun ping(): Boolean =
         runCatching { client.api.publicInfo().isSuccessful }.getOrDefault(false)
@@ -167,7 +159,7 @@ class JellyfinBackend(
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { client.api.addToPlaylist(playlistId, trackIds.joinToString(","), uid).isSuccessful }.getOrDefault(false)
 
-    // Jellyfin has no clean playlist rename/comment endpoint — edit is a no-op there.
+    // jellyfin has no playlist rename/comment endpoint so edit is a no-op
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean = false
 
     override suspend fun deletePlaylist(id: String): Boolean =
@@ -219,14 +211,11 @@ class JellyfinBackend(
         }
     }.onFailure { android.util.Log.e("AuroraDetail", "jellyfin detail($kind,$id) failed", it) }.getOrNull()
 
-    // Folder browsing. Root = the user's library views (music libraries first); deeper levels are
-    // non-recursive ParentId queries, so the tree mirrors how the server's library is organized.
-
     override val supportsFolders: Boolean get() = true
 
     override suspend fun browseFolder(folderId: String): FolderContent? = runCatching {
         if (folderId.isBlank()) {
-            // No ParentId → the root folder's children = the user's library views.
+            // no parentid means root children are the user's library views
             val views = items(mapOf("SortBy" to "SortName"))
             val music = views.filter { it.CollectionType == "music" }
             val roots = music.ifEmpty { views.filter { it.IsFolder == true } }
@@ -242,8 +231,6 @@ class JellyfinBackend(
             )
         }
     }.onFailure { android.util.Log.e("AuroraFolders", "jellyfin browseFolder($folderId) failed", it) }.getOrNull()
-
-    // Server-side metadata editing via Jellyfin's item-update API (what its web editor uses).
 
     override val supportsServerTagEdit: Boolean get() = true
 
@@ -264,8 +251,7 @@ class JellyfinBackend(
     }.getOrNull()
 
     override suspend fun updateMetadata(songId: String, tags: AudioTags): Boolean = runCatching {
-        // Fetch the full item as raw JSON, patch the editable fields, POST it back unabridged so we
-        // don't clobber provider ids, image tags, etc.
+        // post the full item back unabridged so provider ids and image tags aren't clobbered
         val obj = client.api.itemRaw(uid, songId)
         fun strArray(values: List<String>) = com.google.gson.JsonArray().apply { values.forEach { add(it) } }
         fun split(s: String) = s.split(';', ',').map { it.trim() }.filter { it.isNotBlank() }

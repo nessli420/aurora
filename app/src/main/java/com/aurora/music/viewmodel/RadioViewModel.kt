@@ -24,7 +24,6 @@ data class RadioUiState(
     val failed: Boolean = false,
 )
 
-/** Drives the internet-radio screen: the Radio-Browser directory + the user's saved stations. */
 class RadioViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as AuroraApplication).container
 
@@ -33,7 +32,6 @@ class RadioViewModel(app: Application) : AndroidViewModel(app) {
 
     private var searchJob: Job? = null
 
-    /** Favourited + custom stations, persisted in settings. */
     val favorites: StateFlow<List<RadioStation>> =
         container.settingsStore.radioFavorites.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -47,7 +45,6 @@ class RadioViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Debounced free-text search (fires ~350ms after the user stops typing). */
     fun search(query: String) {
         val q = query.trim()
         searchJob?.cancel()
@@ -81,7 +78,6 @@ class RadioViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Add a hand-entered stream URL as a custom (always-favourited) station. */
     fun addCustom(name: String, url: String) {
         val clean = url.trim()
         if (clean.isBlank()) return
@@ -95,7 +91,6 @@ class RadioViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { container.settingsStore.saveRadioStation(station) }
     }
 
-    /** Credit the directory with a play (best-effort, ignored for custom stations). */
     fun registerPlay(station: RadioStation) {
         viewModelScope.launch { runCatching { container.radioBrowser.registerClick(station.uuid) } }
     }

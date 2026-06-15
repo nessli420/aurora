@@ -2,7 +2,6 @@ package com.aurora.music.data
 
 import com.google.gson.Gson
 
-/** Typed snapshot of all DataStore prefs (so a JSON backup round-trips without losing value types). */
 data class PrefsBackup(
     val strings: Map<String, String> = emptyMap(),
     val ints: Map<String, Int> = emptyMap(),
@@ -12,21 +11,14 @@ data class PrefsBackup(
     val stringSets: Map<String, List<String>> = emptyMap(),
 )
 
-/** The whole backup bundle: settings + on-device playlists/likes + listening history. */
 data class AuroraBackup(
     val version: Int = 1,
     val createdAt: Long = 0L,
     val prefs: PrefsBackup = PrefsBackup(),
-    val localStore: String = "",            // raw JSON of LocalStore state
+    val localStore: String = "",
     val playHistory: List<PlayEvent> = emptyList(),
 )
 
-/**
- * Backup and restore. Exports settings (theme, DSP/EQ, smart playlists, pins, saved logins,
- * integrations), on-device playlists/likes and listening history into one JSON document; import
- * overwrites current state with it. Downloaded audio files are intentionally excluded: large and
- * re-downloadable.
- */
 class BackupManager(
     private val settingsStore: SettingsStore,
     private val localStore: LocalStore,
@@ -45,7 +37,6 @@ class BackupManager(
         return gson.toJson(backup)
     }
 
-    /** Restore from a backup document. Returns false if it can't be parsed. */
     suspend fun import(json: String): Boolean {
         val backup = runCatching { gson.fromJson(json, AuroraBackup::class.java) }.getOrNull() ?: return false
         settingsStore.importPrefs(backup.prefs)

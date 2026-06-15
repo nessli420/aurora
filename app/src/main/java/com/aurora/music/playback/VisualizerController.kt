@@ -16,33 +16,21 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-/**
- * Real-time audio analysis for the visualizer. The playback layer pushes decoded PCM into a
- * lock-free mono ring buffer (cheap, runs on the audio thread); a separate coroutine windows the
- * latest samples, runs an FFT ([Fft]), and produces a [Frame] (log-spaced bands + waveform + energy)
- * at the configured frame rate. Keeping the FFT off the audio thread is essential: in bit-perfect USB
- * mode any extra work on that thread risks underruns.
- *
- * Works identically in 16-bit, hi-res float and bit-perfect modes because both taps feed the same
- * ring with downmixed mono float samples.
- */
+// fft must stay off the audio thread bit-perfect usb underruns otherwise
 class VisualizerController(private val scope: CoroutineScope) {
 
-    /** A computed analysis frame. Arrays are reused/replaced atomically; readers take the reference. */
     class Frame {
-        @Volatile var bands: FloatArray = FloatArray(64)   // 0..1, log-spaced low→high
-        @Volatile var peaks: FloatArray = FloatArray(64)   // 0..1, slow-decay peak caps
-        @Volatile var wave: FloatArray = FloatArray(256)   // -1..1 oscilloscope
-        @Volatile var rms: Float = 0f                      // 0..1 overall loudness
-        @Volatile var bass: Float = 0f                     // 0..1 low-end energy
-        @Volatile var level: Float = 0f                    // 0..1 peak band
+        @Volatile var bands: FloatArray = FloatArray(64)
+        @Volatile var peaks: FloatArray = FloatArray(64)
+        @Volatile var wave: FloatArray = FloatArray(256)
+        @Volatile var rms: Float = 0f
+        @Volatile var bass: Float = 0f
+        @Volatile var level: Float = 0f
     }
 
     val frame = Frame()
 
-    /** Optional pull source for PCM that doesn't flow through the sink taps — the native FLAC engine
-     *  in bit-perfect mode decodes in C++ and never hits handleBuffer. When [MonoSource.active] is
-     *  true, the analyser pulls the latest window from here instead of the ring. */
+    // pull source for pcm that bypasses the sink taps native flac decodes in c++
     interface MonoSource {
         fun read(out: FloatArray): Int
         fun sampleRate(): Int
@@ -50,7 +38,6 @@ class VisualizerController(private val scope: CoroutineScope) {
     }
     @Volatile var monoSource: MonoSource? = null
 
-    // ── live config (set from prefs) ────────────────────────────────────────
     @Volatile private var bandCount = 64
     @Volatile private var fftSize = 2048
     @Volatile private var smoothing = 0.78f
@@ -60,9 +47,8 @@ class VisualizerController(private val scope: CoroutineScope) {
     @Volatile private var peakHold = true
     @Volatile private var fpsCap = 60
 
-    // ── mono ring buffer (written by the audio thread, read by the analyser) ─
     private val ringBits = 14
-    private val ringSize = 1 shl ringBits          // 16384 samples
+    private val ringSize = 1 shl ringBits
     private val ringMask = ringSize - 1
     private val ring = FloatArray(ringSize)
     @Volatile private var writeIdx = 0
@@ -83,14 +69,12 @@ class VisualizerController(private val scope: CoroutineScope) {
         fpsCap = p.fpsCap.coerceIn(15, 120)
     }
 
-    /** Start the analyser loop. Idempotent. Call when the visualizer becomes visible. */
     fun start() {
         if (active) return
         active = true
         job = scope.launch(Dispatchers.Default) { analyseLoop() }
     }
 
-    /** Stop the analyser and zero the output. Call when the visualizer is hidden. */
     fun stop() {
         active = false
         job?.cancel(); job = null
@@ -100,9 +84,6 @@ class VisualizerController(private val scope: CoroutineScope) {
         frame.rms = 0f; frame.bass = 0f; frame.level = 0f
     }
 
-    // ── PCM taps (audio thread) ─────────────────────────────────────────────
-
-    /** Interleaved float PCM (bit-perfect float path). Cheap downmix + ring write. */
     fun pushFloat(samples: FloatArray, channelCount: Int, sr: Int) {
         if (!active || channelCount <= 0) return
         sampleRate = sr
@@ -121,10 +102,7 @@ class VisualizerController(private val scope: CoroutineScope) {
         writeIdx = w
     }
 
-    /**
-     * PCM from a Media3 [ByteBuffer] (normal / hi-res float path). Reads with absolute indexing so
-     * the buffer position is left untouched for the real sink. Handles 16-bit int and 32-bit float.
-     */
+    // absolute indexing leaves the buffer position untouched for the real sink
     fun pushPcm(buffer: ByteBuffer, encoding: Int, channelCount: Int, sr: Int) {
         if (!active || channelCount <= 0) return
         sampleRate = sr
@@ -162,12 +140,10 @@ class VisualizerController(private val scope: CoroutineScope) {
                     p += frameBytes
                 }
             }
-            else -> return // 24/32-bit int are rare on the normal path; skip rather than mis-scale
+            else -> return // skip rather than mis-scale
         }
         writeIdx = w
     }
-
-    // ── analyser ────────────────────────────────────────────────────────────
 
     private suspend fun analyseLoop() {
         var n = fftSize
@@ -182,7 +158,6 @@ class VisualizerController(private val scope: CoroutineScope) {
 
         while (scope.isActive && active) {
           try {
-            // Rebuild work buffers if the FFT size or band count changed live.
             if (n != fftSize) {
                 n = fftSize; fft = Fft(n); re = FloatArray(n); im = FloatArray(n); window = hann(n); samp = FloatArray(n)
             }
@@ -190,8 +165,6 @@ class VisualizerController(private val scope: CoroutineScope) {
                 bands = FloatArray(bandCount); smoothed = FloatArray(bandCount); peaks = FloatArray(bandCount)
             }
 
-            // Acquire the latest n mono samples: from the native engine when it's driving audio
-            // (bit-perfect local FLAC), otherwise from the ring fed by the sink taps.
             val src = monoSource
             if (src != null && src.active()) {
                 val got = src.read(samp)
@@ -227,7 +200,7 @@ class VisualizerController(private val scope: CoroutineScope) {
             for (b in 0 until bandCount) {
                 val f0 = logLo + (logHi - logLo) * b / bandCount
                 val f1 = logLo + (logHi - logLo) * (b + 1) / bandCount
-                // Manual clamps (not coerceIn) so an inverted range can never throw.
+                // manual clamps not coerceIn so an inverted range can never throw
                 var b0 = kotlin.math.exp(f0).toInt()
                 var b1 = kotlin.math.exp(f1).toInt()
                 if (b0 < loBin) b0 = loBin
@@ -241,16 +214,13 @@ class VisualizerController(private val scope: CoroutineScope) {
                     if (m > mag) mag = m
                     c++
                 }
-                // Normalise + perceptual (log) compression, scaled by sensitivity.
                 val norm = mag / (n * 0.5f)
                 var v = (ln(1f + norm * 320f * sensitivity) / ln(321f)).coerceIn(0f, 1f)
-                // Gentle low-end tilt so bass doesn't dwarf everything visually.
                 v *= 0.55f + 0.45f * (b.toFloat() / bandCount)
                 bands[b] = v
                 if (v > levelMax) levelMax = v
             }
 
-            // Temporal smoothing: fast attack, configurable release.
             val release = smoothing
             for (b in 0 until bandCount) {
                 val target = bands[b]
@@ -264,7 +234,6 @@ class VisualizerController(private val scope: CoroutineScope) {
                 }
             }
 
-            // Waveform (decimate the latest window into 256 points).
             val wave = FloatArray(256)
             val step = max(1, n / 256)
             for (k in 0 until 256) wave[k] = samp[k * step].coerceIn(-1f, 1f)
@@ -274,7 +243,6 @@ class VisualizerController(private val scope: CoroutineScope) {
             for (b in 0 until bassBands) bass += smoothed[b]
             bass /= bassBands
 
-            // Publish.
             frame.bands = smoothed.copyOf()
             frame.peaks = peaks.copyOf()
             frame.wave = wave
@@ -283,7 +251,7 @@ class VisualizerController(private val scope: CoroutineScope) {
             frame.level = levelMax
 
           } catch (_: Throwable) {
-              // A visualizer frame must never crash the app; skip it and try the next one.
+              // a visualizer frame must never crash the app
           }
           delay((1000L / fpsCap).coerceAtLeast(8L))
         }

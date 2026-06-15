@@ -123,11 +123,10 @@ fun DetailScreen(
 
     val info = data.info
     val tracks = data.tracks
-    // For artists the server often has no image; fall back to the enriched (wiki) photo.
+    // artists often lack a server image fall back to enriched wiki photo
     val effectiveArt = info.artUrl.ifBlank { artistInfo?.imageUrl.orEmpty() }
     val accent by com.aurora.music.util.rememberDominantColor(effectiveArt, info.accent)
 
-    // Infinite scroll: load the next page when the user nears the end of the list.
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     androidx.compose.runtime.LaunchedEffect(listState, state.canLoadMore) {
         androidx.compose.runtime.snapshotFlow {
@@ -358,7 +357,6 @@ fun DetailScreen(
     }
 }
 
-/** 6.5 artist enrichment: bio (expandable), active years/country, and genre tags from MusicBrainz/wiki. */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ArtistAbout(info: com.aurora.music.data.remote.ArtistInfo, accent: Color) {

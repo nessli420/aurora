@@ -1,9 +1,6 @@
 package com.aurora.music.data.remote
 
-/**
- * Jellyfin REST DTOs. Property names are intentionally PascalCase to match Jellyfin's JSON keys
- * directly (Gson maps by identity), avoiding a @SerializedName on every field.
- */
+// pascalcase property names match jellyfin json keys directly so gson maps by identity without @SerializedName
 
 data class AuthRequest(val Username: String, val Pw: String)
 
@@ -19,7 +16,7 @@ data class NameIdPair(val Id: String? = null, val Name: String? = null)
 data class UserDataDto(val IsFavorite: Boolean = false, val PlayCount: Int = 0)
 
 data class MediaStreamDto(
-    val Type: String? = null,      // "Audio", "Video", ...
+    val Type: String? = null,
     val Codec: String? = null,
     val SampleRate: Int? = null,
     val BitDepth: Int? = null,
@@ -36,7 +33,7 @@ data class MediaSourceDto(
 data class BaseItemDto(
     val Id: String = "",
     val Name: String? = null,
-    val Type: String? = null,            // "Audio", "MusicAlbum", "MusicArtist", "Playlist"
+    val Type: String? = null,
     val Album: String? = null,
     val AlbumId: String? = null,
     val AlbumArtist: String? = null,
@@ -53,8 +50,8 @@ data class BaseItemDto(
     val UserData: UserDataDto? = null,
     val MediaSources: List<MediaSourceDto>? = null,
     val IsFolder: Boolean? = null,
-    val CollectionType: String? = null,  // root library views: "music", "movies", ...
-    val Path: String? = null,            // server-side file path (M3U export; needs Fields=Path)
+    val CollectionType: String? = null,
+    val Path: String? = null,            // needs Fields=Path
 )
 
 data class CreatePlaylistRequest(
@@ -67,4 +64,4 @@ data class CreatePlaylistRequest(
 data class CreatePlaylistResult(val Id: String? = null)
 
 data class JellyLyricsResult(val Lyrics: List<JellyLyricLine>? = null)
-data class JellyLyricLine(val Text: String? = null, val Start: Long? = null)  // Start in ticks
+data class JellyLyricLine(val Text: String? = null, val Start: Long? = null)  // start in ticks

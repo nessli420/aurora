@@ -22,8 +22,6 @@ val Circular = FontFamily(
     Font(R.font.circular_black_italic, FontWeight.Black, FontStyle.Italic),
 )
 
-/** Typography scaled by [scale] (font-size preference). lineHeight scales with it; letter spacing
- *  stays fixed. [AuroraTypography] is the default-scale instance used as a fallback. */
 fun auroraTypography(scale: Float = 1f): Typography {
     val s = scale.coerceIn(0.8f, 1.4f)
     fun t(weight: FontWeight, size: Float, line: Float, letter: Float = 0f) = TextStyle(

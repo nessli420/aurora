@@ -67,8 +67,7 @@ fun PodcastsScreen(
     val state by vm.state.collectAsStateWithLifecycle()
     val subs by vm.subscriptions.collectAsStateWithLifecycle()
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    // Seed from the VM (which survives navigating into a show & back) so the field and the shown
-    // results stay in sync after popping back from a podcast detail page.
+    // seed from vm so field stays in sync after popping back from detail
     var searchOpen by remember { mutableStateOf(state.query.isNotBlank()) }
     var query by remember { mutableStateOf(state.query) }
 

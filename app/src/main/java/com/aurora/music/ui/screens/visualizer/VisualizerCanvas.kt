@@ -13,11 +13,6 @@ import com.aurora.music.data.VisualizerPrefs
 import com.aurora.music.data.VisualizerStyle
 import com.aurora.music.playback.VisualizerController
 
-/**
- * Shared render surface for the visualizer: owns the per-frame loop and the stateful renderers, and
- * dispatches to the per-style draw functions. Used by both the full-screen view and the settings
- * preview so the style list lives in exactly one place.
- */
 @Composable
 fun VisualizerCanvas(
     controller: VisualizerController,
@@ -31,7 +26,6 @@ fun VisualizerCanvas(
         while (true) withFrameNanos { t -> if (startNanos == 0L) startNanos = t; tick = t }
     }
 
-    // Stateful renderers (preallocated, advanced each frame).
     val particles = remember(prefs.particleCount) { ParticleField(prefs.particleCount.coerceIn(20, 600)) }
     val river = remember { SpectralRiver() }
     val terrain = remember { SpectralTerrain() }
@@ -40,7 +34,7 @@ fun VisualizerCanvas(
     val cymatic = remember { Cymatic(2200) }
 
     Canvas(modifier) {
-        tick // subscribe to per-frame updates
+        tick // read so canvas redraws each frame
         val timeSec = if (startNanos == 0L) 0f else (tick - startNanos) / 1_000_000_000f
         val rot = if (prefs.rotate) timeSec * 0.4f else 0f
         val f = controller.frame
@@ -78,7 +72,7 @@ fun VisualizerCanvas(
             else -> drawBars(f, colors, prefs.mirror, prefs.peakHold)
         }
         } catch (_: Throwable) {
-            // A renderer must never crash the UI thread; skip this frame.
+            // renderer must never crash ui thread skip frame
         }
     }
 }

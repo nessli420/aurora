@@ -18,7 +18,6 @@ data class DetailUiState(
     val data: DetailData? = null,
     val loadingMore: Boolean = false,
     val canLoadMore: Boolean = false,
-    /** 6.5 artist enrichment (bio + image), null until/unless resolved. */
     val artistInfo: ArtistInfo? = null,
 )
 
@@ -51,7 +50,6 @@ class DetailViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Fetch a bio + image for the artist (cached, off-thread). No-op when disabled or nothing found. */
     private fun enrichArtist(name: String) {
         if (name.isBlank()) return
         viewModelScope.launch {
@@ -60,14 +58,13 @@ class DetailViewModel(app: Application) : AndroidViewModel(app) {
                 ?: runCatching { container.artistInfoClient.lookup(name) }.getOrNull()?.also {
                     container.artistInfoStore.put(name, it)
                 }
-            // Guard against a race: only apply if this artist is still the one on screen.
+            // only apply if this artist is still on screen
             if (info != null && info.found && _state.value.data?.info?.title == name) {
                 _state.update { it.copy(artistInfo = info) }
             }
         }
     }
 
-    /** Lazy-load the next page of tracks (infinite scroll). */
     fun loadMore() {
         val kind = curKind ?: return
         val id = curId ?: return

@@ -5,21 +5,13 @@ import android.media.MediaExtractor
 import android.media.MediaFormat
 import java.nio.ByteOrder
 
-/**
- * Decodes a local audio file to interleaved 16-bit PCM via [MediaExtractor] + [MediaCodec], streaming
- * the samples to a callback so long tracks never sit fully in memory. Used by the offline ReplayGain
- * scan and the AcoustID fingerprinter. Synchronous; call off the main thread.
- */
+// synchronous call off the main thread
 object AudioDecoder {
 
-    /** Reported once before the first PCM callback. */
     fun interface FormatSink { fun onFormat(sampleRate: Int, channels: Int) }
-    /** Interleaved little-endian 16-bit PCM; only the first [length] shorts are valid. */
+    // interleaved little-endian 16-bit pcm only the first length shorts are valid
     fun interface PcmSink { fun onPcm(pcm: ShortArray, length: Int) }
 
-    /**
-     * @return true if the stream decoded to its end, false on no audio track / error / cancellation.
-     */
     fun decode(
         path: String,
         onFormat: FormatSink,

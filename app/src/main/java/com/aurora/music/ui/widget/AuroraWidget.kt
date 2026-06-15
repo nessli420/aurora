@@ -39,11 +39,6 @@ import com.aurora.music.playback.NowPlaying
 import com.aurora.music.playback.NowPlayingStore
 import com.aurora.music.playback.PlaybackService
 
-/**
- * Home-screen "Now playing" widget (Jetpack Glance). Reads the persisted now-playing snapshot and
- * sends play/pause/next/prev to [PlaybackService] as foreground-service intents. Refreshed by
- * [AuroraWidgetController] whenever playback state changes.
- */
 class AuroraWidget : GlanceAppWidget() {
 
     override suspend fun provideGlance(context: Context, id: GlanceId) {
@@ -81,7 +76,6 @@ private fun WidgetContent(np: NowPlaying, art: Bitmap?) {
             .padding(12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Artwork (album art if available, else the app glyph).
         Box(
             modifier = GlanceModifier.size(56.dp).cornerRadius(12.dp)
                 .background(ColorProvider(Color(0xFF26262E))),

@@ -91,7 +91,6 @@ object MockData {
         else -> n.toString()
     }
 
-    /** Resolve a tappable item id to a unified detail header. */
     fun detailFor(kind: String, id: String): DetailInfo {
         (playlists + madeForYou + recentlyPlayed).firstOrNull { it.id == id }?.let {
             return DetailInfo(it.title, it.subtitle, it.coverUrl, it.accent, false, it.songCount, "Playlist")
@@ -107,7 +106,6 @@ object MockData {
             val (name, color) = genres.getOrElse(idx) { genres.first() }
             return DetailInfo(name, "Top tracks in $name", "https://picsum.photos/seed/genre$idx/600", color, false, 50, "Genre")
         }
-        // Fallback placeholder
         return DetailInfo(
             id.replaceFirstChar { it.uppercase() },
             kind.replaceFirstChar { it.uppercase() },
@@ -119,7 +117,6 @@ object MockData {
         )
     }
 
-    /** A deterministic track listing for a detail page. */
     fun tracksFor(id: String): List<Song> {
         val start = (id.hashCode().mod(songs.size))
         return (songs.drop(start) + songs.take(start))

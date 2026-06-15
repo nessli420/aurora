@@ -2,15 +2,8 @@ package com.aurora.music.data
 
 import com.aurora.music.model.Song
 
-/**
- * M3U / M3U8 playlist interchange. Export writes extended M3U with the source file path when
- * the backend exposes one (so other players resolve tracks); import parses #EXTINF metadata and
- * falls back to the location's file name. Matching imported entries to library tracks happens in
- * [MusicRepository.importPlaylist] — this object is pure text in/out.
- */
 object M3u {
 
-    /** One imported playlist line-pair: whatever metadata the file gave us. */
     data class Entry(
         val title: String,
         val artist: String,
@@ -45,7 +38,7 @@ object M3u {
             when {
                 line.isBlank() -> {}
                 line.startsWith("#EXTINF", ignoreCase = true) -> {
-                    // "#EXTINF:123,Artist - Title" (duration may be fractional or -1).
+                    // duration may be fractional or -1
                     val meta = line.substringAfter(':', "")
                     pendingDur = meta.substringBefore(',').trim().toFloatOrNull()?.toInt()?.coerceAtLeast(0) ?: 0
                     val display = meta.substringAfter(',', "").trim()
@@ -57,7 +50,7 @@ object M3u {
                         pendingTitle = display
                     }
                 }
-                line.startsWith("#") -> {}  // other directives (#PLAYLIST, #EXTGRP, …)
+                line.startsWith("#") -> {}
                 else -> {
                     val fileTitle = line.substringAfterLast('/').substringAfterLast('\\')
                         .substringBeforeLast('.').trim()

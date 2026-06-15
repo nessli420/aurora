@@ -28,7 +28,6 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
 
     private var searchJob: Job? = null
 
-    /** Recent searches (most-recent first), shown when the query box is empty. */
     val recentSearches: StateFlow<List<String>> =
         container.settingsStore.recentSearches.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
@@ -38,7 +37,6 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Persist the current query as a recent search (called when the user acts on it). */
     fun commit() {
         viewModelScope.launch { container.settingsStore.addRecentSearch(_state.value.query) }
     }
@@ -59,7 +57,7 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
             return
         }
         searchJob = viewModelScope.launch {
-            delay(300) // debounce
+            delay(300)
             _state.update { it.copy(loading = true) }
             val r = container.repository.search(q)
             _state.update { it.copy(loading = false, results = r) }

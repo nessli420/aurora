@@ -132,11 +132,11 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     SourceRow(s.typeLabel, s.server.removePrefix("http://").removePrefix("https://"), included = included, toggleable = true) {
                         val current = when {
                             noneSelected -> emptySet()
-                            mergeKeys.isEmpty() -> servers.map { it.accountKey() }.toSet()   // empty = all → make explicit
+                            mergeKeys.isEmpty() -> servers.map { it.accountKey() }.toSet()   // empty means all make explicit
                             else -> mergeKeys
                         }
                         val next = if (key in current) current - key else current + key
-                        // Empty would be re-read as "all"; persist the none-sentinel to mean "local only".
+                        // empty re-reads as all so persist none-sentinel for local only
                         scope.launch { store.setMergeSources(if (next.isEmpty()) setOf(MERGE_NONE) else next) }
                     }
                 }

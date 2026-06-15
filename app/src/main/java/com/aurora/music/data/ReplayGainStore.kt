@@ -5,15 +5,9 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
 
-/** Scanned ReplayGain values for one file (dB, ReplayGain 2.0 / -18 LUFS reference). */
 data class RgEntry(val track: Float = 0f, val album: Float = 0f)
 
-/**
- * Persists locally-scanned ReplayGain gains, keyed by absolute file path so they survive a
- * MediaStore rescan (which can renumber `_ID`s). Aurora can't write tags into the file from the
- * scanner, so the gains live here and are overlaid onto [Song]s as they're built; the attenuate-only
- * playback path in PlaybackService then applies them.
- */
+// keyed by absolute path so gains survive a mediastore rescan that renumbers ids
 class ReplayGainStore(context: Context) {
     private val file = File(context.filesDir, "rg_gains.json")
     private val gson = Gson()
@@ -30,7 +24,6 @@ class ReplayGainStore(context: Context) {
 
     fun get(path: String): RgEntry? = map[path]
 
-    /** (trackGainDb, albumGainDb) for [path], or null if never scanned / both zero. */
     fun gainsFor(path: String): Pair<Float, Float>? =
         map[path]?.takeIf { it.track != 0f || it.album != 0f }?.let { it.track to it.album }
 

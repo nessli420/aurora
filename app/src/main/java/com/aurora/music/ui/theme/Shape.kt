@@ -6,7 +6,6 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.CornerStyle
 
-/** Corner-radius multiplier for a given [CornerStyle]. PILL is handled separately (very large). */
 fun cornerScale(style: Int): Float = when (style) {
     CornerStyle.SHARP -> 0.15f
     CornerStyle.ROUNDED -> 1.6f
@@ -14,7 +13,6 @@ fun cornerScale(style: Int): Float = when (style) {
     else -> 1f
 }
 
-/** Resolve a base corner radius through the user's corner style. */
 fun cornerDp(style: Int, base: Dp): Dp =
     if (style == CornerStyle.PILL) (base.value * 2.4f).dp else (base.value * cornerScale(style)).dp
 

@@ -33,7 +33,6 @@ import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
 
-/** Coil-backed artwork with a tasteful gradient placeholder while loading or on failure. */
 @Composable
 fun Artwork(
     url: String,
@@ -74,7 +73,6 @@ fun SectionHeader(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // Signature accent bar — the recurring brand motif across every section.
         Box(
             Modifier
                 .width(4.dp)
@@ -118,7 +116,6 @@ fun SectionHeader(
     }
 }
 
-/** Small uppercase brand eyebrow used above hero titles and feature cards. */
 @Composable
 fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
     Text(
@@ -131,11 +128,6 @@ fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
     )
 }
 
-/**
- * App-wide ambient backdrop: a warm rose halo bleeding from the top and a soft
- * violet pool at the bottom over the base surface. Gives the UI depth instead of
- * flat black — a signature of the Aurora look.
- */
 @Composable
 fun AmbientBackground(modifier: Modifier = Modifier) {
     val base = MaterialTheme.colorScheme.background

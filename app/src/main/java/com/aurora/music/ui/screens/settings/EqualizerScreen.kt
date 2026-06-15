@@ -134,7 +134,6 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     }
 }
 
-/** A collapsible, card-styled settings section with an icon, title, live summary, and chevron. */
 @Composable
 private fun CollapsibleSection(
     title: String, icon: ImageVector, summary: String?, open: Boolean, onToggle: () -> Unit,
@@ -162,7 +161,6 @@ private fun CollapsibleSection(
     }
 }
 
-/** Emit a [CollapsibleSection] as a LazyColumn item, persisting open/closed state in [expanded]. */
 private fun LazyListScope.collapsible(
     key: String, title: String, icon: ImageVector, summary: String?,
     expanded: SnapshotStateMap<String, Boolean>, defaultOpen: Boolean = false,
@@ -172,7 +170,6 @@ private fun LazyListScope.collapsible(
     CollapsibleSection(title, icon, summary, open, { expanded[key] = !open }, content)
 }
 
-/** The tone-engine selector as a card with an inline explanation. */
 @Composable
 private fun ToneEngineCard(mode: Int, onSelect: (Int) -> Unit) {
     Column(
@@ -191,10 +188,9 @@ private fun ToneEngineCard(mode: Int, onSelect: (Int) -> Unit) {
     }
 }
 
-/** Headroom / clip indicator with a one-tap auto-preamp from the live EQ curve's peak gain. */
 @Composable
 private fun HeadroomRow(peak: Float, preamp: Float, onAuto: () -> Unit) {
-    val over = peak + preamp                 // > 0 ⇒ the curve can clip
+    val over = peak + preamp                 // positive means the curve can clip
     val clip = over > 0.1f
     val color = if (clip) Color(0xFFFF6B6B) else MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -217,10 +213,6 @@ private fun HeadroomRow(peak: Float, preamp: Float, onAuto: () -> Unit) {
     }
 }
 
-/**
- * Convolution panel: import a WAV impulse response (headphone/room correction, AutoEq convolution
- * WAV, speaker sim) and apply it via the partitioned FFT convolver. Independent of the EQ engine.
- */
 @Composable
 private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: CoroutineScope) {
     val ctx = LocalContext.current
@@ -273,11 +265,6 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
     }
 }
 
-/**
- * AutoEQ panel: search the bundled 5000+ headphone database, apply a measured correction into the
- * custom DSP's parametric EQ, and optionally bind it to the current output device for auto-switching.
- */
-/** Compact inline segmented control (a row of equal-width pills). */
 @Composable
 private fun PillSelector(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     Row(
@@ -310,7 +297,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<EqProfile>>(emptyList()) }
     var working by remember { mutableStateOf(false) }
-    var source by remember { mutableStateOf(0) }   // 0 = bundled AutoEq DB, 1 = live squig.link
+    var source by remember { mutableStateOf(0) }   // 0 bundled autoeq db 1 live squig.link
     val squigBase by store.squigBaseUrl.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_BASE)
     val squigTargetName by store.squigTarget.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_TARGET)
     val outLabel = container.autoEqController.currentOutputLabel()
@@ -565,7 +552,6 @@ private fun LazyListScope.customDspSection(
     }
 }
 
-/** A small primary-colored text action used inside collapsible sections. */
 @Composable
 private fun TextLink(text: String, onClick: () -> Unit) {
     Text(
@@ -657,7 +643,6 @@ private fun BandSlider(freqHz: Int, valueMb: Int, minMb: Int, maxMb: Int, onChan
     }
 }
 
-/** Horizontal dB slider with a frequency/label on the left and a +x.x dB readout on the right. */
 @Composable
 private fun DbSliderRow(label: String, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 2.dp)) {
@@ -675,7 +660,6 @@ private fun DbSliderRow(label: String, value: Float, range: ClosedFloatingPointR
     }
 }
 
-/** Generic float slider with a title row and a custom value string. */
 @Composable
 private fun FloatSliderRow(title: String, value: Float, range: ClosedFloatingPointRange<Float>, valueText: String, onChange: (Float) -> Unit) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {

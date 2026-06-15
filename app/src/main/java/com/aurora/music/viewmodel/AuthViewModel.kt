@@ -18,19 +18,17 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Sign-in steps: pick kind → (server: address → credentials) or (Spotify: enter your Client ID). */
 enum class AuthStep { TYPE, SERVER, CREDENTIALS, SPOTIFY }
 
 data class AuthUiState(
     val step: AuthStep = AuthStep.TYPE,
     val type: ServerType = ServerType.SUBSONIC,
-    val scheme: String = "http://",   // "http://" or "https://"
-    val host: String = "",            // ip/host + port, e.g. 127.0.0.1:8096
+    val scheme: String = "http://",
+    val host: String = "",
     val username: String = "",
     val password: String = "",
     val loading: Boolean = false,
     val error: String? = null,
-    /** When set, the UI should open this Spotify OAuth URL in the browser, then call authUrlOpened(). */
     val pendingAuthUrl: String? = null,
 )
 
@@ -44,16 +42,14 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     private var spotifyVerifier: String? = null
 
     init {
-        // The aurora://spotify redirect (caught in MainActivity) delivers the OAuth code here.
+        // aurora://spotify redirect caught in MainActivity delivers the oauth code here
         viewModelScope.launch { container.spotifyRedirect.collect { code -> completeSpotify(code) } }
     }
 
     private var spotifyClientId: String? = null
 
-    /** Reset to the first step (e.g. when opening the flow again to add another account). */
     fun reset() = _state.update { AuthUiState() }
 
-    /** Re-activate a remembered login (token already stored — no credentials needed). */
     fun useSaved(session: Session, onDone: () -> Unit = {}) {
         viewModelScope.launch {
             container.applySession(session)
@@ -69,7 +65,6 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(type = type, step = AuthStep.SERVER, error = null) }
     }
 
-    /** DIY Spotify: the user pasted their own app's Client ID — save it and start OAuth. */
     fun connectSpotify(clientId: String) {
         val id = clientId.trim()
         if (id.isBlank()) { _state.update { it.copy(error = "Paste your Spotify app's Client ID first.") }; return }
@@ -80,11 +75,8 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(error = null, pendingAuthUrl = SpotifyAuth.authorizeUrl(id, verifier, "aurora")) }
     }
 
-    /** Called by the UI once it has launched the browser. */
     fun authUrlOpened() = _state.update { it.copy(pendingAuthUrl = null) }
 
-    /** Sign in to the on-device library (no credentials). The UI calls this once the audio-read
-     *  permission is granted. */
     fun signInLocal() {
         if (_state.value.loading) return
         _state.update { it.copy(type = ServerType.LOCAL, loading = true, error = null) }
@@ -120,7 +112,6 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     fun onUsername(v: String) = _state.update { it.copy(username = v, error = null) }
     fun onPassword(v: String) = _state.update { it.copy(password = v, error = null) }
 
-    /** Step back; from the first step there's nowhere to go. */
     fun back() = _state.update {
         when (it.step) {
             AuthStep.CREDENTIALS -> it.copy(step = AuthStep.SERVER, error = null)

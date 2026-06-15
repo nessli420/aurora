@@ -43,7 +43,6 @@ import androidx.compose.ui.unit.dp
 
 private data class OutputDevice(val id: Int, val label: String, val icon: ImageVector)
 
-/** Dedicated Cast button for the player top bar (sits next to the output/speaker button). */
 @Composable
 fun PlayerCastButton(modifier: Modifier = Modifier) {
     var show by remember { mutableStateOf(false) }
@@ -54,10 +53,7 @@ fun PlayerCastButton(modifier: Modifier = Modifier) {
     if (show) CastSheet(onDismiss = { show = false })
 }
 
-/**
- * Chromecast row in the "Play on" sheet. Opens the same native Cast picker. Casting hands the
- * receiver a plain URL, so Aurora's DSP/effects don't travel — labelled accordingly.
- */
+// casting hands receiver a plain url so dsp/effects dont travel
 @Composable
 private fun CastRow() {
     var show by remember { mutableStateOf(false) }
@@ -79,11 +75,6 @@ private fun CastRow() {
     if (show) CastSheet(onDismiss = { show = false })
 }
 
-/**
- * Native Compose Cast picker. Drives [androidx.mediarouter.media.MediaRouter] directly (active scan
- * for Cast routes), so it needs no AppCompat host. Selecting a route hands playback to the receiver
- * via the CastPlayer wired up in PlaybackService.
- */
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun CastSheet(onDismiss: () -> Unit) {
@@ -223,7 +214,6 @@ fun SleepTimerSheet(
                         Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
                     }
                 }
-                // "End of track" pause — independent of the minute presets.
                 Box(
                     Modifier.clip(RoundedCornerShape(50))
                         .background(if (endOfTrack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)

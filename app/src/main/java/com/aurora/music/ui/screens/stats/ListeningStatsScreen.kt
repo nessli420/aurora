@@ -50,7 +50,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
     val store = (LocalContext.current.applicationContext as AuroraApplication).container.playHistory
     val history by store.history.collectAsStateWithLifecycle()
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    var range by remember { mutableIntStateOf(0) } // 0=week,1=month,2=all
+    var range by remember { mutableIntStateOf(0) } // 0 week 1 month 2 all
 
     val now = System.currentTimeMillis()
     val since = when (range) {
@@ -136,7 +136,6 @@ private fun StreakCard(current: Int, longest: Int) {
     }
 }
 
-/** A 24-bar histogram of plays by hour-of-day. */
 @Composable
 private fun ListeningClock(byHour: IntArray) {
     val max = (byHour.maxOrNull() ?: 0).coerceAtLeast(1)

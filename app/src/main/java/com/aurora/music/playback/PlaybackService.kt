@@ -42,10 +42,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
-/**
- * Media3 MediaSessionService hosting the ExoPlayer. Playback prefs (skip-silence, crossfade)
- * are observed live from SettingsStore and applied to the engine.
- */
 @UnstableApi
 class PlaybackService : MediaLibraryService() {
 
@@ -73,12 +69,9 @@ class PlaybackService : MediaLibraryService() {
     @Volatile private var deviceSupportsBitPerfect: Boolean = false
     @Volatile private var preferHighResPref: Boolean = false
 
-    // Sleep-timer fade-out: when armed, the audio tick ramps volume to zero over [sleepFadeMs]
-    // then pauses. Lives here so it cooperates with the ReplayGain volume tick.
     @Volatile private var sleepFadeActive = false
     private var sleepFadeStartMs = 0L
     private var sleepFadeMs = 0
-    // Wake-to-music alarm fade-in: ramp volume up from zero over [wakeFadeMs] after an alarm start.
     @Volatile private var wakeFadeActive = false
     private var wakeFadeStartMs = 0L
     private var wakeFadeMs = 0
@@ -87,35 +80,22 @@ class PlaybackService : MediaLibraryService() {
     private var xfadeActive = false
     private var xfadeStartMs = 0L
     private var xfadeExpectedId: String? = null
-    private var xfadeInGain = 1f                 // incoming track's target (ReplayGain) level
-    private var xfadeOutGain = 1f                 // outgoing track's level when the fade began
-    @Volatile private var bitPerfect = false     // crossfade is disabled in bit-perfect USB mode
+    private var xfadeInGain = 1f
+    private var xfadeOutGain = 1f
+    @Volatile private var bitPerfect = false     // crossfade disabled in bit-perfect usb mode
 
-    // Physical-shuffle bookkeeping: queue order (by mediaId) before shuffle was turned on, so
-    // disabling can restore the real album/playlist order. Null = not currently shuffled.
+    // pre-shuffle queue order for restore on disable null = not shuffled
     private var originalOrder: List<String>? = null
-    // Playback should follow the physical timeline order, not a second random ExoPlayer order.
-    // Neutralising needs the items present, which may lag the command, so flag it and apply on the
-    // next timeline change if they weren't ready yet.
+    // items may lag the command so flag and apply neutralize on next timeline change
     private var pendingNeutralize = false
-    // Experimental USB bit-perfect sink (decent-player), non-null only when the setting is on.
     private var usbSink: com.decent.usbaudio.media3.UsbAudioSink? = null
 
     override fun onCreate() {
         super.onCreate()
 
-        // Float output is bit-perfect for hi-res but Media3 runs the float pipeline WITHOUT any app
-        // audio processors: Sonic (speed/pitch), mono downmix, silence-skip AND our custom DSP are
-        // all bypassed. So Custom DSP can only run in the 16-bit pipeline and takes priority over
-        // bit-perfect: when Custom is the persisted engine we keep float OFF so the DSP engages.
-        // Hi-res passthrough therefore means bit-perfect XOR Custom DSP. Decided once here (the sink
-        // can't be rebuilt cheaply mid-session), so switching engines while hi-res is on takes
-        // effect on the next playback start. Speed still works in float mode via hardware varispeed
-        // (matched pitch); independent pitch isn't available there but match-pitch is the default.
+        // float pipeline bypasses all app processors (sonic mono silence-skip custom dsp) so custom dsp needs 16-bit and keeps float off when active decided once here so engine switch takes effect next playback start
         val highRes = runBlocking { container.settingsStore.playbackPrefs.first().preferHighRes }
         val startupDspMode = runBlocking { container.settingsStore.audioPrefs.first().dspMode }
-        // Experimental: route PCM straight to a USB DAC via the decent-player driver (bit-perfect,
-        // bypasses the whole Android audio stack AND our DSP). Falls back to speaker when no DAC.
         val bitPerfectUsb = runBlocking { container.settingsStore.playbackPrefs.first().bitPerfectUsb }
         bitPerfect = bitPerfectUsb
         val useFloat = bitPerfectUsb || (highRes && startupDspMode != DspMode.CUSTOM)
@@ -133,19 +113,16 @@ class PlaybackService : MediaLibraryService() {
                 enableAudioTrackPlaybackParams: Boolean,
             ): AudioSink {
                 if (bitPerfectUsb) {
-                    // Plain float DefaultAudioSink (no DSP processors, which would defeat bit-perfect)
-                    // wrapped by the USB driver sink. With no DAC it just plays normally.
+                    // no dsp processors which would defeat bit-perfect
                     val delegate = DefaultAudioSink.Builder(context)
                         .setEnableFloatOutput(true)
                         .build()
                     return com.decent.usbaudio.media3.UsbAudioSink(delegate, context).also {
                         usbSink = it
-                        // Feed the visualizer for every decoded buffer (works with or without a DAC).
                         it.pcmTap = com.decent.usbaudio.media3.UsbAudioSink.PcmTap { buf, enc, ch, sr ->
                             container.visualizer.pushPcm(buf, enc, ch, sr)
                         }
-                        // Pull source for the native libFLAC engine (bit-perfect local files, which
-                        // decode in C++ and never reach handleBuffer).
+                        // native libflac decodes in c++ and never reaches handleBuffer
                         val sink = it
                         container.visualizer.monoSource = object : VisualizerController.MonoSource {
                             override fun read(out: FloatArray) = sink.readNativePcm(out)
@@ -157,22 +134,18 @@ class PlaybackService : MediaLibraryService() {
                 val base = DefaultAudioSink.Builder(context)
                     .setAudioProcessors(arrayOf(monoProcessor, auroraDsp, convolver))
                     .setEnableFloatOutput(useFloat)
-                    // Float mode bypasses Sonic, so use hardware playback params for speed; otherwise
-                    // keep Sonic (which also gives independent pitch).
+                    // float bypasses sonic so use hardware playback params for speed
                     .setEnableAudioTrackPlaybackParams(useFloat || enableAudioTrackPlaybackParams)
                     .build()
-                // Wrap so the visualizer sees decoded PCM in both 16-bit and hi-res float modes.
                 return TappingAudioSink(base, container.visualizer)
             }
         }
-        // Prefer the FFmpeg decoder so non-local/non-FLAC content decodes to float32 (the wrapper
-        // converts to the DAC's exact bit depth). Local FLAC still uses the native engine.
+        // prefer ffmpeg decoder so non-flac content decodes to float32
         if (bitPerfectUsb) {
             renderersFactory.setExtensionRendererMode(DefaultRenderersFactory.EXTENSION_RENDERER_MODE_PREFER)
         }
 
-        // Spotify songs carry sentinel `aurora-yt://<id>?q=...&dur=...` URIs; resolve them to a real
-        // YouTube audio stream just-in-time on the loader thread. Other backends' URIs pass through.
+        // resolve aurora-yt sentinel uris to a real youtube stream just-in-time on the loader thread
         val resolver = container.youtubeResolver
         val ytResolver = androidx.media3.datasource.ResolvingDataSource.Resolver { dataSpec ->
             val uri = dataSpec.uri
@@ -195,7 +168,7 @@ class PlaybackService : MediaLibraryService() {
             .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ true)
             .setHandleAudioBecomingNoisy(true)
         if (bitPerfectUsb) {
-            // Stop ExoPlayer reading the file while the native FLAC engine handles decode + USB.
+            // stop exoplayer reading the file while the native flac engine handles decode + usb
             playerBuilder.setLoadControl(
                 com.decent.usbaudio.media3.UsbAudioSink.wrapLoadControl(
                     androidx.media3.exoplayer.DefaultLoadControl.Builder().build()
@@ -203,12 +176,9 @@ class PlaybackService : MediaLibraryService() {
             )
         }
         player = playerBuilder.build()
-        // Connect the USB sink to the player (track-path extraction, engine lifecycle, EOF -> next).
         if (bitPerfectUsb) usbSink?.attachToPlayer(player)
 
-        // USB host permission isn't persisted across process restarts, so re-acquire it on startup
-        // when the toggle is on and a DAC is connected. Without this the sink finds no permission in
-        // configure() and silently falls back to normal output until the user re-toggles the setting.
+        // usb host permission isnt persisted across process restarts so re-acquire on startup else sink silently falls back to normal output
         if (bitPerfectUsb) {
             runCatching {
                 val dev = com.decent.usbaudio.UsbAudioDevice.getInstance(this)
@@ -216,20 +186,16 @@ class PlaybackService : MediaLibraryService() {
             }
         }
 
-        // Route audio to the shared session id so the DSP effects (EQ/bass/virtualizer/loudness)
-        // created on it actually apply to playback.
+        // share session id so the system dsp effects created on it apply to playback
         if (container.audioSessionId != 0) {
             runCatching { player.setAudioSessionId(container.audioSessionId) }
         }
 
-        // Reflect shuffle/repeat state in the notification via custom buttons that fall through to
-        // our own physical-shuffle / repeat-cycle handling (see onCustomCommand).
         player.addListener(object : Player.Listener {
             override fun onEvents(p: Player, events: Player.Events) {
                 if (events.contains(Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED) ||
                     events.contains(Player.EVENT_REPEAT_MODE_CHANGED)
                 ) updateCustomLayout()
-                // Items may have only just arrived after a shuffle-play command; neutralise now.
                 if (events.contains(Player.EVENT_TIMELINE_CHANGED)) maybeNeutralize()
                 if (events.contains(Player.EVENT_TRACKS_CHANGED) ||
                     events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
@@ -269,28 +235,20 @@ class PlaybackService : MediaLibraryService() {
                 applyAudioEngine()
             }
         }
-        // Route to the user's chosen output device (USB DAC, BT, wired, speaker).
         scope.launch {
             container.preferredAudioDeviceId.collect { id -> applyPreferredDevice(id) }
         }
 
-        // Audio tick: drive ReplayGain volume + a real overlapping crossfade.
         scope.launch {
             while (isActive) {
-                // Ramp finely (25ms) while any fade is in flight for a smooth, step-free curve;
-                // idle ReplayGain tracking only needs a coarse 100ms tick.
+                // ramp finely while a fade is in flight idle replaygain tracking needs only a coarse tick
                 delay(if (xfadeActive || sleepFadeActive || wakeFadeActive) 25L else 100L)
                 tickAudio()
             }
         }
     }
 
-    /**
-     * Reconcile the active tone-shaping engine from the latest prefs. Runtime-switchable via
-     * volatile flags (no pipeline rebuild): Custom DSP toggles [auroraDsp], System toggles the
-     * AudioEffect chain, mono downmix folds into the DSP as width=0 when Custom is active else
-     * runs through [monoProcessor]. The two EQ engines are mutually exclusive so they never stack.
-     */
+    // runtime-switchable via volatile flags no rebuild the two eq engines are mutually exclusive so they never stack
     private fun applyAudioEngine() {
         val ap = lastAudioPrefs ?: return
         val mode = ap.dspMode
@@ -320,7 +278,6 @@ class PlaybackService : MediaLibraryService() {
         auroraDsp.enabled = mode == DspMode.CUSTOM
         audioEffects?.setMasterEnabled(mode == DspMode.SYSTEM)
 
-        // Convolution / impulse response (independent of the EQ engine).
         convolver.enabled = ap.dspConvEnabled
         convolver.setMakeup(ap.dspConvMakeupDb)
         if (ap.dspConvIrPath != lastIrPath) {
@@ -331,7 +288,7 @@ class PlaybackService : MediaLibraryService() {
                 convolver.setImpulse(ir, ap.dspConvMakeupDb)
             }
         }
-        // Mono in System/Off runs in the 16-bit MonoAudioProcessor; in Custom it's width=0 above.
+        // mono in system/off runs in monoprocessor in custom its width=0 above
         monoProcessor.enabled = monoAudioPref && mode != DspMode.CUSTOM
         updateSignalPath()
     }
@@ -349,7 +306,6 @@ class PlaybackService : MediaLibraryService() {
         updateSignalPath()
     }
 
-    /** The output device currently most likely in use (prefers external: USB → BT → wired). */
     private fun currentOutputDevice(): android.media.AudioDeviceInfo? {
         val am = getSystemService(AUDIO_SERVICE) as? android.media.AudioManager ?: return null
         val outs = am.getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS)
@@ -365,7 +321,6 @@ class PlaybackService : MediaLibraryService() {
     private fun isUsb(t: Int) = t == android.media.AudioDeviceInfo.TYPE_USB_HEADSET ||
         t == android.media.AudioDeviceInfo.TYPE_USB_DEVICE || t == android.media.AudioDeviceInfo.TYPE_USB_ACCESSORY
 
-    /** On Android 14+, request exclusive bit-perfect mixer output to [device] (best-effort). */
     private fun requestBitPerfect(device: android.media.AudioDeviceInfo?, on: Boolean) {
         if (android.os.Build.VERSION.SDK_INT < 34 || device == null) { grantedBitPerfect = false; deviceSupportsBitPerfect = false; return }
         runCatching {
@@ -389,7 +344,6 @@ class PlaybackService : MediaLibraryService() {
         }.onFailure { grantedBitPerfect = false; deviceSupportsBitPerfect = false }
     }
 
-    /** Compute the current signal path + bit-perfect verdict and publish it for the UI. */
     private fun updateSignalPath() {
         val container = (application as AuroraApplication).container
         val fmt = runCatching { player.audioFormat }.getOrNull()
@@ -403,7 +357,6 @@ class PlaybackService : MediaLibraryService() {
                 else -> "Output"
             }
 
-        // Request/clear bit-perfect when float passthrough is engaged to a USB DAC.
         val wantBitPerfect = useFloatOut && device != null && isUsb(device.type)
         requestBitPerfect(device, wantBitPerfect)
 
@@ -414,7 +367,7 @@ class PlaybackService : MediaLibraryService() {
             C.ENCODING_PCM_32BIT -> 32; C.ENCODING_PCM_FLOAT -> 32
             else -> 0
         }
-        // Anything that alters samples breaks bit-perfect.
+        // anything that alters samples breaks bit-perfect
         val modifying = (ap?.dspMode == DspMode.CUSTOM) || (ap?.dspMode == DspMode.SYSTEM) ||
             monoAudioPref || (ap?.replayGain ?: 0) != 0 || (ap?.dspConvEnabled == true) ||
             kotlin.math.abs(player.playbackParameters.speed - 1f) > 0.001f
@@ -422,9 +375,7 @@ class PlaybackService : MediaLibraryService() {
             device.type == android.media.AudioDeviceInfo.TYPE_BLUETOOTH_A2DP ||
             device.type == android.media.AudioDeviceInfo.TYPE_BLE_HEADSET ||
             device.type == android.media.AudioDeviceInfo.TYPE_BLE_SPEAKER)
-        // Truly bit-perfect means an exclusive mixer grant (no resampling at all). Float passthrough
-        // alone skips Aurora's 16-bit stage but Android's mixer may still sample-rate-convert.
-        // Bluetooth is always re-encoded by the system codec (LDAC/aptX/AAC/SBC), never bit-perfect.
+        // truly bit-perfect needs an exclusive mixer grant float passthrough alone may still get sample-rate-converted by the mixer bluetooth is always re-encoded
         val (bitPerfect, note) = when {
             isBt -> false to "Bluetooth — re-encoded by the system codec (LDAC/aptX/AAC/SBC)"
             modifying -> false to "DSP / effects active — not bit-perfect"
@@ -442,16 +393,13 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun tickAudio() {
-        // Sleep fade-out owns the volume while active (ramp to silence, then pause).
         if (sleepFadeActive) { driveSleepFade(); return }
-        // Wake alarm fade-in: ramp from silence up to the normal (ReplayGain) volume.
         if (wakeFadeActive) { driveWakeFade(); return }
         if (xfadeActive) {
-            // Cancel if the user navigated away from the track we crossfaded into.
+            // cancel if user navigated away from the track we crossfaded into
             if (player.currentMediaItem?.mediaId != xfadeExpectedId) { endXfade() } else { driveXfade() }
             return
         }
-        // Base volume = ReplayGain (no fade in normal playback).
         val base = replayGainMultiplier()
         if (kotlin.math.abs(player.volume - base) > 0.01f) player.volume = base
         maybeBeginXfade()
@@ -477,13 +425,9 @@ class PlaybackService : MediaLibraryService() {
 
     private fun maybeBeginXfade() {
         val fade = crossfadeMs
-        // Bit-perfect routes the main player to the USB DAC; the 2nd fade player would come out the
-        // phone speaker instead, so don't crossfade in that mode.
+        // bit-perfect routes main player to the usb dac the 2nd fade player would come out the speaker so dont crossfade
         if (fade <= 0 || bitPerfect || !player.isPlaying) return
-        // In REPEAT_MODE_ONE ExoPlayer's navigation treats repeat-one as repeat-off, so
-        // hasNextMediaItem()/seekToNextMediaItem() do nothing; the "next" track is the current one
-        // restarted. Crossfade by looping back to position 0 of the same item so the tail fades out
-        // while the fresh start fades in. (Crossfade off: ExoPlayer loops natively.)
+        // repeat-one navigation acts like repeat-off so loop back to position 0 of the same item to crossfade
         val repeatOne = player.repeatMode == Player.REPEAT_MODE_ONE
         if (!repeatOne && !player.hasNextMediaItem()) return
         val duration = player.duration
@@ -492,7 +436,6 @@ class PlaybackService : MediaLibraryService() {
         if (remaining in 0..fade.toLong()) beginXfade(repeatOne)
     }
 
-    /** Start the next track (fading in) on the main player while the outgoing tail fades out on a 2nd player. */
     private fun beginXfade(repeatOne: Boolean) {
         val outgoing = player.currentMediaItem ?: return
         val uri = outgoing.localConfiguration?.uri ?: return
@@ -505,10 +448,9 @@ class PlaybackService : MediaLibraryService() {
             tail.volume = player.volume.coerceIn(0f, 1f)
             tail.playWhenReady = true
         }
-        xfadeOutGain = player.volume.coerceIn(0f, 1f)   // outgoing track's current level
-        // Repeat-one: restart the same item (next == current). Otherwise advance to the next item.
+        xfadeOutGain = player.volume.coerceIn(0f, 1f)
         if (repeatOne) player.seekTo(0) else player.seekToNextMediaItem()
-        xfadeInGain = replayGainMultiplier()             // incoming track's target level
+        xfadeInGain = replayGainMultiplier()
         player.volume = 0f
         xfadeExpectedId = player.currentMediaItem?.mediaId
         xfadeStartMs = android.os.SystemClock.elapsedRealtime()
@@ -518,8 +460,7 @@ class PlaybackService : MediaLibraryService() {
     private fun driveXfade() {
         val fade = crossfadeMs.coerceAtLeast(1)
         val t = ((android.os.SystemClock.elapsedRealtime() - xfadeStartMs).toFloat() / fade).coerceIn(0f, 1f)
-        // Equal-power (constant-loudness) curves: in² + out² = 1, so there's no ~3dB dip mid-fade
-        // the way two linear ramps produce.
+        // equal-power curves avoid the ~3db dip two linear ramps produce
         val half = Math.PI.toFloat() / 2f
         val inG = kotlin.math.sin(t * half)
         val outG = kotlin.math.cos(t * half)
@@ -548,20 +489,16 @@ class PlaybackService : MediaLibraryService() {
         val extras = player.currentMediaItem?.mediaMetadata?.extras ?: return 1f
         val gainDb = if (replayGainMode == 2) extras.getFloat("rgAlbum", Float.NaN) else extras.getFloat("rgTrack", Float.NaN)
         if (gainDb.isNaN() || gainDb == 0f) return 1f
-        // Attenuate-only, to avoid inter-sample clipping when boosting quiet tracks.
+        // attenuate-only to avoid inter-sample clipping when boosting quiet tracks
         return Math.pow(10.0, gainDb / 20.0).toFloat().coerceIn(0.1f, 1f)
     }
-
-    // Notification shuffle/repeat + physical shuffle
 
     private inner class MediaCallback : MediaLibrarySession.Callback {
         override fun onConnect(
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
         ): MediaSession.ConnectionResult {
-            // Must start from DEFAULT_SESSION_AND_LIBRARY_COMMANDS: a MediaLibrarySession browser
-            // (Android Auto) needs the library browse commands (getLibraryRoot/getChildren/...).
-            // DEFAULT_SESSION_COMMANDS strips them, so Auto's browser connection is refused.
+            // must keep library commands or android auto browser connection is refused
             val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                 .add(SessionCommand(CMD_SHUFFLE, Bundle.EMPTY))
                 .add(SessionCommand(CMD_REPEAT, Bundle.EMPTY))
@@ -579,15 +516,12 @@ class PlaybackService : MediaLibraryService() {
             args: Bundle,
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
-                // target: 1 = force on, 0 = force off, -1 (default) = toggle.
-                // "order" (optional) = the real pre-shuffle order, when the caller already shuffled
-                // the queue itself (shuffle-from-start); then we don't reorder, just remember it.
+                // target 1=on 0=off -1=toggle order = pre-shuffle order when caller already shuffled
                 CMD_SHUFFLE -> setShuffle(
                     customCommand.customExtras.getInt("target", -1),
                     customCommand.customExtras.getStringArrayList("order"),
                 )
                 CMD_REPEAT -> cycleRepeat()
-                // fadeMs > 0 arms a fade-out-then-pause; <= 0 cancels it and restores volume.
                 CMD_SLEEP_FADE -> {
                     val ms = customCommand.customExtras.getInt("fadeMs", 0)
                     if (ms > 0) { sleepFadeMs = ms; sleepFadeStartMs = android.os.SystemClock.elapsedRealtime(); sleepFadeActive = true }
@@ -596,8 +530,6 @@ class PlaybackService : MediaLibraryService() {
             }
             return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
         }
-
-        // Browsable library tree (Android Auto / Wear / system surfaces)
 
         override fun onGetLibraryRoot(
             session: MediaLibrarySession,
@@ -629,7 +561,6 @@ class PlaybackService : MediaLibraryService() {
             else LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
         }
 
-        /** Resolve mediaId-only items (browsed-then-played) into playable items with a real URI. */
         override fun onAddMediaItems(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
@@ -639,8 +570,6 @@ class PlaybackService : MediaLibraryService() {
                 if (item.localConfiguration != null) item else resolvePlayable(item.mediaId) ?: item
             }.toMutableList()
         }
-
-        // Voice / text search (Android Auto "search", Assistant)
 
         override fun onSearch(
             session: MediaLibrarySession,
@@ -667,18 +596,15 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    /** Resolve a search query into playable songs + browsable albums/artists for the browse surface. */
     private suspend fun searchItems(query: String): List<MediaItem> {
         if (query.isBlank()) return emptyList()
         val r = container.repository.search(query)
         val songs = r.songs.map { songItem(it) }
         val albums = r.albums.map { collectionItem("alb_${it.id}", it.title, it.artist, it.artworkUrl, MediaMetadata.MEDIA_TYPE_ALBUM) }
         val artists = r.artists.map { collectionItem("art_${it.id}", it.name, "Artist", it.imageUrl, MediaMetadata.MEDIA_TYPE_ARTIST) }
-        // Songs first (directly playable), then collections to drill into.
         return songs + albums + artists
     }
 
-    /** Run a suspend block on the service scope and surface it as a ListenableFuture. */
     private fun <T> serviceFuture(block: suspend () -> T): ListenableFuture<T> {
         val f = SettableFuture.create<T>()
         scope.launch { runCatching { f.set(block()) }.onFailure { f.setException(it) } }
@@ -716,7 +642,6 @@ class PlaybackService : MediaLibraryService() {
         return runCatching { container.repository.songFor(id)?.let { songItem(it) } }.getOrNull()
     }
 
-    // Android Auto content-style: how a node's children should be laid out (grid vs list).
     private val styleGrid get() = MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_GRID_ITEM
     private val styleList get() = MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_LIST_ITEM
     private fun styleExtras(browsable: Int, playable: Int) = Bundle().apply {
@@ -734,7 +659,6 @@ class PlaybackService : MediaLibraryService() {
         MediaItem.Builder().setMediaId(id).setMediaMetadata(
             MediaMetadata.Builder().setTitle(title).setSubtitle(subtitle).setArtist(subtitle)
                 .setIsBrowsable(true).setIsPlayable(false).setMediaType(mediaType)
-                // Collection children are tracks → show them as a list.
                 .setExtras(styleExtras(styleList, styleList))
                 .apply { if (art.isNotBlank()) setArtworkUri(android.net.Uri.parse(art)) }.build()
         ).build().also { browseCache[id] = it }
@@ -781,24 +705,18 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    /**
-     * Physical shuffle: reorder the actual media items rather than using ExoPlayer's internal
-     * shuffle order (which leaves the visible queue untouched). On enable, snapshot the real order
-     * then shuffle everything after the current track; on disable, restore the snapshot.
-     * [shuffleModeEnabled] is kept in sync purely as a state flag for the UI/notification, with an
-     * identity ShuffleOrder so playback follows our physical order, not a second random one.
-     */
+    // physical shuffle reorders the actual items shuffleModeEnabled is just a ui flag with an identity ShuffleOrder so playback follows our order not a second random one
     private fun setShuffle(target: Int, providedOrder: List<String>?) {
         val enable = when (target) {
             1 -> true
             0 -> false
             else -> !player.shuffleModeEnabled
         }
-        // A provided order means a fresh shuffle-play: always (re)apply it. Otherwise skip no-ops.
+        // a provided order is a fresh shuffle-play always reapply otherwise skip no-ops
         if (providedOrder == null && enable == player.shuffleModeEnabled && enable == (originalOrder != null)) return
 
         if (enable && providedOrder != null) {
-            // Caller already shuffled the queue itself; just remember the real order for restore.
+            // caller already shuffled just remember the real order for restore
             originalOrder = providedOrder
             player.shuffleModeEnabled = true
             pendingNeutralize = true
@@ -806,7 +724,7 @@ class PlaybackService : MediaLibraryService() {
             return
         }
         if (enable) {
-            // In-place toggle mid-playback: keep the current track, shuffle everything after it.
+            // keep the current track shuffle everything after it
             if (player.mediaItemCount <= 1) {
                 player.shuffleModeEnabled = true
                 originalOrder = currentIds()
@@ -825,7 +743,7 @@ class PlaybackService : MediaLibraryService() {
             val orig = originalOrder
             if (orig != null) {
                 val present = currentIds()
-                // Restore snapshot order for items still queued; keep any newly-added items at the end.
+                // restore snapshot order keep newly-added items at the end
                 val restored = orig.filter { it in present } + present.filter { it !in orig }
                 applyOrder(restored)
             }
@@ -834,7 +752,6 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    /** Force the play order to follow the (physical) timeline order once items are present. */
     private fun maybeNeutralize() {
         if (!pendingNeutralize) return
         val count = player.mediaItemCount
@@ -846,7 +763,7 @@ class PlaybackService : MediaLibraryService() {
     private fun currentIds(): List<String> =
         (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }
 
-    /** Reorder the queue in place (via moves, so playback isn't interrupted) to match [target] ids. */
+    // reorder in place via moves so playback isnt interrupted
     private fun applyOrder(target: List<String>) {
         for (i in target.indices) {
             if (i >= player.mediaItemCount) break
@@ -861,7 +778,6 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    /** Set up Cast: when a Cast session connects, hand playback to the receiver; restore on disconnect. */
     private fun setupCast() {
         val castContext = runCatching {
             com.google.android.gms.cast.framework.CastContext.getSharedInstance(this)
@@ -874,11 +790,7 @@ class PlaybackService : MediaLibraryService() {
         castPlayer = cp
     }
 
-    /**
-     * Transfer the queue + position between the local ExoPlayer and the CastPlayer and swap which one
-     * the session drives. Casting hands the receiver a plain URL, so the DSP chain doesn't travel:
-     * this is the "convenience mode" the UI labels.
-     */
+    // casting hands the receiver a plain url so the dsp chain doesnt travel
     private fun switchToPlayer(toCast: Boolean) {
         val cp = castPlayer ?: return
         val from = mediaSession?.player ?: return
@@ -899,7 +811,6 @@ class PlaybackService : MediaLibraryService() {
         publishNowPlaying()
     }
 
-    /** Best-effort MIME for the Cast receiver, guessed from the stream URL extension. */
     private fun guessMime(item: MediaItem): String {
         val uri = item.localConfiguration?.uri?.toString().orEmpty().lowercase()
         return when {
@@ -911,7 +822,6 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
-    /** Snapshot the current track for the home-screen widget + Quick Settings tile (and persist it). */
     private fun publishNowPlaying() {
         val active = mediaSession?.player ?: player
         val item = active.currentMediaItem
@@ -928,7 +838,6 @@ class PlaybackService : MediaLibraryService() {
         WidgetBridge.refresh(this)
     }
 
-    /** Handle widget / Quick Settings tile / alarm actions delivered as service intents. */
     override fun onStartCommand(intent: android.content.Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_PLAY_PAUSE -> { wakeFadeActive = false; if (player.isPlaying) player.pause() else player.play() }
@@ -940,14 +849,12 @@ class PlaybackService : MediaLibraryService() {
         return super.onStartCommand(intent, flags, startId)
     }
 
-    /** Stop the wake-to-music playback and clear the alarm notification. */
     private fun dismissAlarm() {
         wakeFadeActive = false
         runCatching { player.pause(); player.stop(); player.clearMediaItems() }
         runCatching { getSystemService(NotificationManager::class.java)?.cancel(ALARM_NOTIF_ID) }
     }
 
-    /** Post a full-screen alarm notification with a Dismiss action (launches [AlarmActivity]). */
     private fun postAlarmNotification() {
         val nm = getSystemService(NotificationManager::class.java) ?: return
         if (android.os.Build.VERSION.SDK_INT >= 26) {
@@ -976,7 +883,6 @@ class PlaybackService : MediaLibraryService() {
         nm.notify(ALARM_NOTIF_ID, notif)
     }
 
-    /** Wake-to-music: shuffle the user's liked (or downloaded) library and fade it in from silence. */
     private fun startAlarmPlayback() {
         scope.launch {
             val repo = container.repository
@@ -1000,7 +906,7 @@ class PlaybackService : MediaLibraryService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? = mediaSession
 
     override fun onTaskRemoved(rootIntent: android.content.Intent?) {
-        // User swiped the app away: stop playback and tear the service down so music doesn't keep going.
+        // swipe-away stops playback so music doesnt keep going
         runCatching { fadePlayer?.run { pause(); clearMediaItems() } }
         player.pause()
         player.stop()
@@ -1014,7 +920,7 @@ class PlaybackService : MediaLibraryService() {
         runCatching { castPlayer?.setSessionAvailabilityListener(null); castPlayer?.release() }
         castPlayer = null
         mediaSession?.release()
-        runCatching { player.release() } // local ExoPlayer (the session's player may have been the cast player)
+        runCatching { player.release() } // sessions player may have been the cast player
         mediaSession = null
         super.onDestroy()
     }

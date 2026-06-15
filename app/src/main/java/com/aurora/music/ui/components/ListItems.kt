@@ -185,8 +185,7 @@ fun SongRow(
                     onClick = { menuOpen = false; onGoToArtist() },
                     leadingIcon = { Icon(Icons.Filled.Person, null) },
                 )
-                // Tag editing: on-device MediaStore files (content:// → JAudiotagger), or server
-                // tracks on a backend with a metadata-write API (Jellyfin). Not Subsonic/Spotify.
+                // tag edit only on content:// files or backends with metadata write
                 if (onEditTags != null && (song.streamUrl.startsWith("content://") || serverTagEditing)) DropdownMenuItem(
                     text = { Text("Edit tags") },
                     onClick = { menuOpen = false; onEditTags() },
@@ -270,7 +269,6 @@ fun ArtistCircle(artist: Artist, onClick: () -> Unit, modifier: Modifier = Modif
     }
 }
 
-/** Rounded tile used in the Home "jump back in" grid. */
 @Composable
 fun RecentTile(playlist: Playlist, onClick: () -> Unit, modifier: Modifier = Modifier) {
     Row(

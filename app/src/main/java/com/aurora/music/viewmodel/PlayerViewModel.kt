@@ -50,9 +50,9 @@ data class PlayerUiState(
     val currentIndex: Int = 0,
     val sleepTimerMinutes: Int = 0,
     val sleepEndOfTrack: Boolean = false,
-    val bpm: Int = 0,            // sonic-analysis BPM of the current track (0 = unknown)
-    val camelot: String = "",    // Camelot key code, e.g. "8B" (blank = unknown)
-    val keyName: String = "",    // musical key name, e.g. "Am"
+    val bpm: Int = 0,
+    val camelot: String = "",
+    val keyName: String = "",
 ) {
     val durationSec: Int get() = current.durationSec
     val progress: Float get() = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
@@ -77,16 +77,16 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     @Volatile private var autoplayEnabled = false
     @Volatile private var privateSession = false
 
-    // Likes are merged from two sources: server stars (songs/albums/artists) + local playlist likes.
+    // likes merge server stars + local playlist likes
     private var serverLikedIds: Set<String> = emptySet()
     private var likedPlaylistIds: Set<String> = emptySet()
     private var lastRecordedId: String? = null
     private var lastNowPlayingId: String? = null
-    // The account the live queue belongs to, so it's persisted/restored under the right key.
+    // account the live queue belongs to so it persists/restores under the right key
     @Volatile private var playingAccountKey: String = ""
     private var openRestoreAttempted = false
     private var lastPersistMs = 0L
-    // While stopping for an account switch we clear the queue; don't let that overwrite the saved one.
+    // clearing for account switch must not overwrite the saved queue
     @Volatile private var suppressPersist = false
     private var playStartMs: Long = 0L
     private var lastDiscordSig: String? = null
@@ -101,17 +101,14 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             syncFromController()
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) && player.playbackState == Player.STATE_ENDED) {
                 maybeAutoplay()
-                // End-of-track sleep on the final track: nothing auto-transitions to, so honour it here.
+                // last track has no transition to honour the end-of-track sleep so do it here
                 if (_state.value.sleepEndOfTrack) { controller?.pause(); _state.update { it.copy(sleepEndOfTrack = false) } }
             }
         }
 
         override fun onMediaItemTransition(item: MediaItem?, reason: Int) {
-            // Reset displayed position on every track change so the progress bar doesn't show the
-            // previous track's spot during the transition gap; the ticker then reports the real
-            // position. Matters most for the bit-perfect USB sink, whose position lags across a skip.
+            // reset position so the bar doesn't show the previous track during the gap usb sink lags across a skip
             _state.update { it.copy(positionSec = 0f) }
-            // "Stop after this track": pause at the start of the next one when we auto-advance.
             if (_state.value.sleepEndOfTrack && reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
                 controller?.pause()
                 _state.update { it.copy(sleepEndOfTrack = false) }
@@ -119,24 +116,21 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Fire Last.fm "now playing" the moment a new track starts (unless this is a private session). */
     private fun maybeNowPlaying() {
         val cur = _state.value.current
         if (cur.id.isEmpty() || cur.id == lastNowPlayingId) return
         lastNowPlayingId = cur.id
-        // Internet radio / podcasts aren't library tracks — never scrobble them.
+        // radio/podcasts aren't library tracks never scrobble them
         if (cur.isRadio() || cur.isPodcast()) return
         playStartMs = System.currentTimeMillis()
         if (!privateSession) { container.lastfm.nowPlaying(cur); container.listenBrainz.nowPlaying(cur) }
     }
 
-    /** Log to local history always; report to the server + Last.fm only when not a private session. */
     private fun recordIfPlayed(posSec: Float) {
         val cur = _state.value.current
         if (cur.id.isEmpty() || posSec < 30f || cur.id == lastRecordedId) return
         lastRecordedId = cur.id
-        // Internet radio / podcasts carry synthetic ids and aren't real library tracks — don't record
-        // them to history, the server, or external scrobblers.
+        // radio/podcasts carry synthetic ids don't record to history server or scrobblers
         if (cur.isRadio() || cur.isPodcast()) return
         container.playHistory.record(cur, System.currentTimeMillis())
         if (privateSession) return
@@ -169,15 +163,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         future.addListener({
             val c = future.get().also { it.addListener(listener) }
             controller = c
-            // The service survived (e.g. app backgrounded, not killed) but this VM is fresh — rebuild
-            // the domain queue from the live MediaItems so the queue UI isn't empty.
+            // service survived but vm is fresh rebuild the domain queue so the queue ui isn't empty
             if (c.mediaItemCount > 0 && songById.isEmpty()) rehydrateFromController()
             syncFromController()
             startTicker()
         }, ContextCompat.getMainExecutor(app))
 
-        // Restore a saved queue once the session resolves — but only if the service came up empty
-        // (i.e. it was torn down by a swipe-away). If it still has a queue, keep playing that.
+        // restore a saved queue only if the service came up empty otherwise keep its queue
         viewModelScope.launch {
             container.sessionReady.collect { ready ->
                 if (ready != true || openRestoreAttempted) return@collect
@@ -190,11 +182,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             }
         }
 
-        // Load starred ids once the session/client is ready (and reload on re-login).
         viewModelScope.launch {
             container.sessionReady.collect { ready -> if (ready == true) refreshLikes() }
         }
-        // Locally-liked playlists (Subsonic can't star playlists) merge into the same set.
+        // subsonic can't star playlists so locally-liked ones merge into the same set
         viewModelScope.launch {
             container.settingsStore.likedPlaylists.collect { ids ->
                 likedPlaylistIds = ids
@@ -213,14 +204,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
-        // On a genuine account change (logout / server switch / add): save the OUTGOING account's
-        // queue first (so it's not lost), stop playback, then restore the INCOMING account's queue.
-        // The epoch only bumps on real transitions (not the initial load), so drop the current value.
+        // on account change save outgoing queue first stop then restore incoming epoch only bumps on real transitions
         viewModelScope.launch {
             container.accountEpoch.drop(1).collect {
-                persistQueue()                 // under playingAccountKey = the account we were playing
+                persistQueue()
                 container.queueStore.requestFlush()
-                suppressPersist = true         // the clearing below must not wipe what we just saved
+                suppressPersist = true         // clearing below must not wipe what we just saved
                 stopPlayback()
                 suppressPersist = false
                 val key = container.currentAccountKey()
@@ -231,7 +220,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Stop playback and clear the queue (logout / switching servers). */
     fun stopPlayback() {
         controller?.let { c ->
             runCatching { c.pause(); c.stop(); c.clearMediaItems() }
@@ -244,14 +232,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Snapshot the live queue to [QueueStore] under the account it belongs to. */
     private fun persistQueue() {
         if (suppressPersist) return
         val c = controller ?: return
         val key = playingAccountKey.ifBlank { container.currentAccountKey() }
         if (key.isBlank()) return
-        // Don't clear on an empty controller — that fires at startup (before restore) and would wipe
-        // the queue we're about to restore. A saved queue is simply overwritten when a new one plays.
+        // don't clear on an empty controller it fires at startup before restore and wipes what we're about to restore
         if (c.mediaItemCount == 0) return
         val songs = (0 until c.mediaItemCount).mapNotNull { songById[c.getMediaItemAt(it).mediaId] }
         if (songs.isEmpty()) return
@@ -264,7 +250,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         ))
     }
 
-    /** Load a saved queue (paused, at its saved position + modes). */
     private fun restoreQueue(sq: SavedQueue) {
         val c = controller ?: return
         val songs = sq.tracks.orEmpty().map { it.toSong() }.filter { it.id.isNotEmpty() && it.streamUrl.isNotEmpty() }
@@ -274,13 +259,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         c.setMediaItems(songs.map { toMediaItem(it) }, idx, sq.positionSec.toLong() * 1000)
         c.playbackParameters = currentParams()
         c.repeatMode = when (sq.repeat) { 1 -> Player.REPEAT_MODE_ALL; 2 -> Player.REPEAT_MODE_ONE; else -> Player.REPEAT_MODE_OFF }
-        c.prepare()   // buffer at the saved position, but stay paused
+        c.prepare()   // buffer at saved position but stay paused
         _state.update {
             it.copy(queue = songs, current = songs[idx], positionSec = sq.positionSec.toFloat(), isPlaying = false, currentIndex = idx, shuffle = sq.shuffle,
                 repeat = when (sq.repeat) { 1 -> RepeatMode.ALL; 2 -> RepeatMode.ONE; else -> RepeatMode.OFF })
         }
         if (sq.shuffle) {
-            // Queue is already in its saved order — tell the service shuffle is on and remember that order.
+            // queue is already in saved order tell the service shuffle is on and remember that order
             c.sendCustomCommand(
                 SessionCommand(PlaybackService.CMD_SHUFFLE, android.os.Bundle().apply {
                     putInt("target", 1)
@@ -291,7 +276,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Rebuild the domain queue from the live MediaItems (after a VM recreation with the service alive). */
     private fun rehydrateFromController() {
         val c = controller ?: return
         val songs = (0 until c.mediaItemCount).map { i ->
@@ -313,28 +297,25 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         songById = songs.associateBy { it.id }
     }
 
-    /** Schedule pausing playback after [minutes] (0 = cancel). The last few seconds fade out. */
     fun setSleepTimer(minutes: Int) {
         sleepJob?.cancel()
-        sendSleepFade(start = false) // cancel any in-progress fade + restore volume
+        sendSleepFade(start = false)
         _state.update { it.copy(sleepTimerMinutes = minutes, sleepEndOfTrack = false) }
         if (minutes <= 0) return
         sleepJob = viewModelScope.launch {
             val total = minutes * 60_000L
             delay((total - SLEEP_FADE_MS).coerceAtLeast(0L))
-            sendSleepFade(start = true) // service fades to silence then pauses
+            sendSleepFade(start = true)
             _state.update { it.copy(sleepTimerMinutes = 0) }
         }
     }
 
-    /** Pause once the current track finishes ("stop after this track"). */
     fun setSleepEndOfTrack() {
         sleepJob?.cancel()
         sendSleepFade(start = false)
         _state.update { it.copy(sleepTimerMinutes = 0, sleepEndOfTrack = true) }
     }
 
-    /** Tell the service to fade-out-then-pause (start=true) or cancel a pending fade (start=false). */
     private fun sendSleepFade(start: Boolean) {
         controller?.sendCustomCommand(
             SessionCommand(PlaybackService.CMD_SLEEP_FADE, android.os.Bundle().apply {
@@ -344,7 +325,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    /** Route output to a specific device id (0 = system default). */
     fun setPreferredDevice(deviceId: Int) {
         container.preferredAudioDeviceId.value = deviceId
     }
@@ -374,7 +354,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val mediaId = c.currentMediaItem?.mediaId
         val cur = mediaId?.let { songById[it] } ?: _state.value.current
         val q = (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
-        // Sonic key/BPM of the current track (cached per id; cheap lookup, blank when not analyzed).
         if (cur.id != lastKeyInfoId) { lastKeyInfoId = cur.id; lastKeyInfo = runCatching { container.sonicEngine.keyInfo(cur.id) }.getOrNull() }
         val ki = lastKeyInfo
         _state.update {
@@ -397,11 +376,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
         updateDiscordPresence()
         maybeEnrichLocal(_state.value.current)
-        persistQueue()   // capture structural changes (track transition, queue edits, mode toggles)
+        persistQueue()
     }
 
-    // Local files: MediaStore gives us format + bitrate, but not sample-rate/bit-depth. Pull those
-    // (and a more precise bitrate) for the *playing* track via MediaMetadataRetriever, once each.
+    // mediastore lacks sample-rate/bit-depth pull them for the playing track via retriever once each
     private val enrichedLocal = java.util.Collections.synchronizedSet(HashSet<String>())
     private fun maybeEnrichLocal(song: Song) {
         if (song.id.isEmpty() || !song.streamUrl.startsWith("content://")) return
@@ -430,17 +408,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Push Rich Presence when the track or play/pause state changes (no-op when not connected). */
     private fun updateDiscordPresence() {
         val s = _state.value
         if (s.current.id.isEmpty()) return
         val sig = "${s.current.id}|${s.isPlaying}"
         val now = System.currentTimeMillis()
         val pos = s.positionSec
-        // Discord renders the progress bar from start/end timestamps and animates it client-side, so
-        // we must re-push not only on track/play-state changes but whenever the real position diverges
-        // from what Discord is extrapolating — i.e. a loop restart or a seek. Otherwise the bar sticks
-        // at the end (e.g. 3:49/3:49) when a track repeats.
+        // discord animates the bar client-side from timestamps re-push on desync (loop/seek) else it sticks at the end
         val expected = lastDiscordPosSec + if (s.isPlaying) (now - lastDiscordWallMs) / 1000f else 0f
         val desynced = pos < expected - 2f || pos > expected + 2f
         if (sig == lastDiscordSig && !desynced) return
@@ -467,7 +441,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         )
         .build()
 
-    /** Play a list of songs starting at [startIndex] — the proper "play from here" behaviour. */
     fun playAll(songs: List<Song>, startIndex: Int = 0) {
         val c = controller ?: return
         if (songs.isEmpty()) return
@@ -480,30 +453,23 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         c.playbackParameters = currentParams()
         c.prepare()
         c.play()
-        // Starting a fresh context plays in order — make sure shuffle is off.
+        // fresh context plays in order make sure shuffle is off
         sendShuffle(0)
         _state.update { it.copy(queue = songs, current = songs[idx], positionSec = 0f, isPlaying = true) }
     }
 
     fun play(song: Song) = playAll(listOf(song), 0)
 
-    /**
-     * Play a collection from [startIndex] using the already-loaded [loaded] tracks, then lazily page
-     * in the rest in the background so the full tracklist lands in the queue without blocking
-     * playback. [total] is the collection's real track count.
-     */
     fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) {
         playAll(loaded, startIndex)
         fillQueue(kind, id, loaded, total, shuffle = false)
     }
 
-    /** Shuffle-play a whole collection, then lazily append the remaining (shuffled) pages. */
     fun shuffleCollection(kind: String, id: String, loaded: List<Song>, total: Int) {
         shufflePlay(loaded)
         fillQueue(kind, id, loaded, total, shuffle = true)
     }
 
-    /** Background: page the rest of a collection's tracks and append them to the live queue. */
     private fun fillQueue(kind: String, id: String, loaded: List<Song>, total: Int, shuffle: Boolean) {
         queueFillJob?.cancel()
         if (loaded.size >= total || total <= 0) return
@@ -522,17 +488,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                     syncFromController()
                 }
                 offset += page.size
-                delay(180) // gentle — stay clear of Spotify's rate limit
+                delay(180) // stay clear of spotify rate limit
             }
         }
     }
 
-    /**
-     * Start an on-device "sonically similar" radio seeded by [seed] (defaults to the current track):
-     * the seed plus its nearest neighbours by audio-feature similarity. Falls back to the backend's
-     * own radio when the seed can't be analyzed (e.g. a server-only stream with no local copy) or too
-     * little of the library has been analyzed yet. [onResult] reports a short status for a toast.
-     */
     fun startSonicRadio(seed: Song = _state.value.current, onResult: (String) -> Unit = {}) {
         if (seed.id.isEmpty() || loadingRadio) return
         loadingRadio = true
@@ -542,7 +502,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 playAll(sonic, 0)
                 onResult("Sonic radio · ${sonic.size - 1} similar tracks")
             } else {
-                // Fallback: the server's own similar-songs radio.
                 val more = runCatching { container.repository.radio(seed.id) }.getOrDefault(emptyList())
                     .filter { it.id != seed.id }
                 if (more.isNotEmpty()) {
@@ -556,11 +515,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Start a harmonic Auto-DJ set seeded by [seed] (defaults to the current track): a sequence that
-     * flows by musical key (Camelot) + tempo + sonic similarity, so consecutive tracks mix well over
-     * the crossfade. Falls back to plain sonic radio when too little of the library is analyzed.
-     */
     fun startAutoDj(seed: Song = _state.value.current, onResult: (String) -> Unit = {}) {
         if (seed.id.isEmpty() || loadingRadio) return
         loadingRadio = true
@@ -578,10 +532,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Shuffle a whole collection and play from a random track, not the first one. The unshuffled
-     * order is handed to the service so "turn shuffle off" can restore the real order.
-     */
     fun shufflePlay(songs: List<Song>) {
         val c = controller ?: return
         if (songs.isEmpty()) return
@@ -593,7 +543,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         c.prepare()
         c.play()
         _state.update { it.copy(queue = shuffled, current = shuffled[0], positionSec = 0f, isPlaying = true, shuffle = true) }
-        // Shuffle is ON; pass the original order (by id) so disabling restores it.
+        // pass the original order so disabling shuffle restores it
         c.sendCustomCommand(
             SessionCommand(PlaybackService.CMD_SHUFFLE, android.os.Bundle().apply {
                 putInt("target", 1)
@@ -603,7 +553,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
-    /** Append a track to the end of the queue. */
     fun addToQueue(song: Song) {
         val c = controller ?: run { play(song); return }
         if (c.mediaItemCount == 0) { play(song); return }
@@ -613,7 +562,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         syncFromController()
     }
 
-    /** Insert a track right after the current one. */
     fun playNext(song: Song) {
         val c = controller ?: run { play(song); return }
         if (c.mediaItemCount == 0) { play(song); return }
@@ -623,7 +571,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         syncFromController()
     }
 
-    /** Jump to a specific queue position. */
     fun jumpTo(index: Int) {
         val c = controller ?: return
         container.haptic()
@@ -642,7 +589,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Clear all upcoming tracks, keeping the one currently playing. */
     fun clearQueue() {
         val c = controller ?: return
         val current = c.currentMediaItemIndex
@@ -662,10 +608,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Save the current queue as a new server/local playlist. Synthetic streams (radio/podcasts) are
-     * dropped since the backend can't resolve their ids. [onResult] reports a status for a toast.
-     */
+    // radio/podcasts dropped since the backend can't resolve their ids
     fun saveQueueAsPlaylist(name: String, onResult: (String) -> Unit = {}) {
         val title = name.trim()
         if (title.isEmpty()) return
@@ -706,9 +649,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun toggleShuffle() = sendShuffle(-1)
 
-    /** Ask the service to set shuffle (target: 1 = on, 0 = off, -1 = toggle). It physically
-     *  reorders the queue and restores the original order on disable. The target travels in the
-     *  command's extras so the same action also works (as a toggle) from the notification button. */
+    // target 1 on 0 off -1 toggle service physically reorders and restores original order on disable
     private fun sendShuffle(target: Int) {
         val c = controller ?: return
         c.sendCustomCommand(
@@ -732,10 +673,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(likedIds = serverLikedIds + likedPlaylistIds) }
     }
 
-    // Track ids we've already resolved a liked/not-liked answer for, so we don't re-query them.
     private val likeChecked = java.util.Collections.synchronizedSet(HashSet<String>())
 
-    /** Re-pull starred ids from the server (call on app resume — handles other-device changes). */
     fun refreshLikes() {
         viewModelScope.launch {
             serverLikedIds = runCatching { container.repository.starredIds() }.getOrDefault(serverLikedIds)
@@ -743,11 +682,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /**
-     * Resolve which of [ids] are liked (Spotify: one batched /me/tracks/contains call per 50) and
-     * merge them into the like set, so the heart shows on liked tracks beyond the first page without
-     * paging the whole liked library. Call when a tracklist becomes visible.
-     */
     fun checkLiked(ids: List<String>) {
         val toCheck = ids.filter { it.isNotEmpty() && it !in serverLikedIds && it !in likeChecked }.distinct()
         if (toCheck.isEmpty()) return
@@ -761,7 +695,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    /** Toggle a like. [kind]: song/album/artist persist to the server; playlist persists locally. */
+    // song/album/artist persist to the server playlist persists locally
     fun toggleLike(id: String, kind: String = "song") {
         if (id.isEmpty()) return
         val nowLiked = !_state.value.likedIds.contains(id)
@@ -769,8 +703,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             likedPlaylistIds = if (nowLiked) likedPlaylistIds + id else likedPlaylistIds - id
             recomputeLikes()
             viewModelScope.launch { runCatching { container.settingsStore.setPlaylistLiked(id, nowLiked) } }
-            // Also sync to the server backend (Spotify follows/unfollows the playlist on your
-            // account). Harmless no-op for backends that can't star playlists (Subsonic).
+            // also sync to backend no-op for backends that can't star playlists
             viewModelScope.launch { runCatching { container.repository.setStarred(id, nowLiked, "playlist") } }
         } else {
             serverLikedIds = if (nowLiked) serverLikedIds + id else serverLikedIds - id
@@ -782,7 +715,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     fun setExpanded(value: Boolean) = _state.update { it.copy(expanded = value) }
 
     fun setSpeed(value: Float) {
-        // Snap to 0.05 steps.
         val snapped = (Math.round(value / 0.05f) * 0.05f).coerceIn(0.5f, 2.0f)
         _state.update { it.copy(speed = snapped) }
         controller?.playbackParameters = currentParams()
@@ -805,13 +737,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun currentParams(): PlaybackParameters {
         val s = _state.value
-        // Match pitch to speed = no time-stretch (analog-style); else preserve/shift pitch.
+        // match pitch to speed = no time-stretch else preserve/shift pitch
         val pitchRatio = if (s.matchPitch) s.speed else 2f.pow(s.pitch / 12f)
         return PlaybackParameters(s.speed, pitchRatio)
     }
 
     override fun onCleared() {
-        persistQueue()                          // capture the final state before the controller goes
+        persistQueue()
         container.queueStore.requestFlush()
         ticker?.cancel()
         queueFillJob?.cancel()
@@ -822,7 +754,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private companion object {
-        // Length of the volume fade-out applied at the end of a sleep timer, before pausing.
         const val SLEEP_FADE_MS = 6_000L
     }
 }

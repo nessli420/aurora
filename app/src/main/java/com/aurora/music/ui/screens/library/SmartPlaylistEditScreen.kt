@@ -49,7 +49,7 @@ import com.aurora.music.ui.screens.settings.SegmentedRow
 import com.aurora.music.ui.screens.settings.SettingsGroup
 import com.aurora.music.ui.screens.settings.SettingsTopBar
 
-// Field/op vocabularies — keys must match SmartPlaylistEngine.
+// keys must match SmartPlaylistEngine
 private const val TYPE_TEXT = 0
 private const val TYPE_NUMBER = 1
 private const val TYPE_BOOL = 2
@@ -81,7 +81,6 @@ private val SORTS = listOf(
 private fun fieldSpec(key: String?): FieldSpec = FIELDS.firstOrNull { it.key == key } ?: FIELDS.first()
 private fun opsFor(type: Int) = when (type) { TYPE_NUMBER -> NUM_OPS; TYPE_BOOL -> BOOL_OPS; else -> TEXT_OPS }
 
-/** Rule editor for one smart playlist: predicates + match mode + sort + limit. */
 @Composable
 fun SmartPlaylistEditScreen(
     contentPadding: PaddingValues,
@@ -189,7 +188,7 @@ private fun RuleRow(rule: SmartRule, onChange: (SmartRule) -> Unit, onRemove: ()
                 selected = FIELDS.indexOfFirst { it.key == spec.key }.coerceAtLeast(0),
                 onSelect = { i ->
                     val f = FIELDS[i]
-                    // Reset the op (and value for booleans) when the field type changes.
+                    // reset op and bool value when field type changes
                     val op = if (opsFor(f.type).any { it.first == rule.op }) rule.op else opsFor(f.type).first().first
                     onChange(rule.copy(field = f.key, op = op, value = if (f.type == TYPE_BOOL) "" else rule.value))
                 },

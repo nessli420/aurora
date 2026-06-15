@@ -36,7 +36,7 @@ object Routes {
     const val RADIO = "radio"
     const val PODCASTS = "podcasts"
 
-    // Feed/title/image ride as encoded query params (the feed URL contains slashes & a query string).
+    // feed url has slashes and a query string so ride as encoded query params
     const val PODCAST_DETAIL = "podcast?feed={feed}&title={title}&image={image}&author={author}"
     fun podcastDetail(feed: String, title: String = "", image: String = "", author: String = "") =
         "podcast?feed=${android.net.Uri.encode(feed)}&title=${android.net.Uri.encode(title)}" +
@@ -44,7 +44,7 @@ object Routes {
     const val DETAIL = "detail/{kind}/{id}"
     fun detail(kind: String, id: String) = "detail/$kind/$id"
 
-    // Folder ids can contain slashes (local file paths), so they ride as encoded query params.
+    // folder ids contain slashes so ride as encoded query params
     const val FOLDERS = "folders?fid={fid}&title={title}"
     fun folders(fid: String = "", title: String = "") =
         "folders?fid=${android.net.Uri.encode(fid)}&title=${android.net.Uri.encode(title)}"

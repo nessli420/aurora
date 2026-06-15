@@ -16,15 +16,7 @@ import okhttp3.WebSocketListener
 import org.json.JSONArray
 import org.json.JSONObject
 
-/**
- * Minimal Discord Gateway (v10) client for setting the *user's own* Rich Presence — the same
- * approach Kizzy uses, since Android has no local Discord IPC. Connects with a user token, performs
- * the HELLO → heartbeat → IDENTIFY handshake, captures the username from READY, and sends presence
- * (op 3) updates. Reconnects on drop. Best-effort; never throws into the caller.
- *
- * Note: this drives a user account over the gateway, which is a Discord ToS gray area — kept fully
- * opt-in and local. Not a bot; no privileged intents.
- */
+// user-token gateway presence since android has no local discord ipc
 class DiscordGateway(
     private val onUsername: (String) -> Unit,
     private val onConnected: (Boolean) -> Unit,

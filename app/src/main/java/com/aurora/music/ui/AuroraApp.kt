@@ -102,23 +102,19 @@ fun AuroraApp() {
     val savedSessions by container.settingsStore.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadsMap by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val downloadedIds = downloadsMap.keys
-    // Local-files mode has no server: downloads + remote-only options are hidden.
     val localMode = session?.type == com.aurora.music.data.ServerType.LOCAL
-    // Server-side tag editing is available on Jellyfin (its item-update API); recomputed on session change.
     val serverTagEditing = session?.let { container.repository.supportsServerTagEdit } ?: false
-    // Pins are scoped to the active connection (server URL / Spotify base / "On this device").
+    // pins scoped to the active connection
     val currentServer = session?.server ?: ""
     val allPins by container.settingsStore.pins.collectAsStateWithLifecycle(initialValue = emptyList())
     val pins = allPins.filter { it.serverId == currentServer }
     val gesturePrefs by container.settingsStore.gesturePrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.GesturePrefs())
     val offlineMode by container.offline.collectAsStateWithLifecycle()
 
-    // Live per-song download states (Queued/Downloading/Done/Failed) drive the progress banner.
     val downloadStates by container.downloadManager.states.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    // Confirmation toasts queue if shown in quick succession; Short keeps them out of the way.
     fun confirm(message: String) {
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
@@ -133,8 +129,7 @@ fun AuroraApp() {
     }
     val onRemoveDownload: (String) -> Unit = { container.downloadManager.removeDownload(it); confirm("Removed download") }
 
-    // Re-pull likes whenever the app comes back to the foreground, so stars made on another
-    // device (or this one offline) show up without needing a re-login.
+    // re-pull likes on foreground so stars from other devices show up
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
@@ -144,14 +139,14 @@ fun AuroraApp() {
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    // Active = still queued or in flight. (The states map also retains Done/Failed entries.)
+    // active means still queued or in flight
     val activeDownloads = downloadStates.values.count {
         it is com.aurora.music.data.DownloadState.Queued || it is com.aurora.music.data.DownloadState.Downloading
     }
     val downloadProgress = downloadStates.values
         .mapNotNull { (it as? com.aurora.music.data.DownloadState.Downloading)?.progress }
         .let { if (it.isEmpty()) 0f else it.sum() / activeDownloads.coerceAtLeast(1) }
-    // Announce when a batch finishes (active falls back to zero after having been > 0).
+    // announce when a batch finishes active falls back to zero
     var hadActiveDownloads by remember { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(activeDownloads) {
         if (activeDownloads > 0) {
@@ -182,8 +177,7 @@ fun AuroraApp() {
     fun navigateTopLevel(route: String) {
         if (currentRoute == route) return
         container.haptic()
-        // Pressing a tab always lands on that tab's root — pop any pushed detail/settings screens
-        // (don't restore the saved sub-stack, which would dump you back on the detail you left).
+        // tab press lands on the tab root pop pushed detail/settings dont restore the sub-stack
         navController.navigate(route) {
             popUpTo(navController.graph.findStartDestination().id) { saveState = false }
             launchSingleTop = true
@@ -201,12 +195,12 @@ fun AuroraApp() {
         container.repository.songFor(id)?.let { playerVM.play(it) }
     }
     fun logout() {
-        // Don't stop playback here — the account-change observer saves the queue first, THEN stops.
+        // dont stop playback here the account-change observer saves the queue first then stops
         scope.launch { container.signOut() }
         navController.navigate(Routes.SIGN_IN) { popUpTo(0) }
     }
 
-    // Wait for the persisted session check before choosing a start destination.
+    // wait for the persisted session check before choosing a start destination
     if (sessionReady == null) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
             com.aurora.music.ui.components.LottieLoader(modifier = Modifier.size(90.dp))
@@ -215,18 +209,15 @@ fun AuroraApp() {
     }
     val startDestination = if (sessionReady == true) Routes.HOME else Routes.SIGN_IN
 
-    // When a session becomes ready while we're still on the sign-in screen (e.g. the async Spotify
-    // OAuth redirect completing), advance to Home.
+    // session ready while still on sign-in eg async spotify oauth redirect advance to home
     androidx.compose.runtime.LaunchedEffect(sessionReady) {
         if (sessionReady == true && navController.currentDestination?.route == Routes.SIGN_IN) {
             navController.navigate(Routes.HOME) { popUpTo(Routes.SIGN_IN) { inclusive = true } }
         }
     }
 
-    // Adding a new account from the Accounts screen reuses the sign-in flow while already logged in
-    // (so sessionReady doesn't change). The account-change epoch advances us to Home on completion.
-    // Guard on sessionReady == true so logging out (which also bumps the epoch, to null) does NOT
-    // bounce us off the sign-in screen onto an empty Home.
+    // adding an account reuses sign-in while logged in so sessionReady doesnt change account epoch advances to home
+    // guard on sessionReady true so logout which also bumps the epoch doesnt bounce off sign-in
     val accountEpoch by container.accountEpoch.collectAsStateWithLifecycle()
     androidx.compose.runtime.LaunchedEffect(accountEpoch) {
         if (accountEpoch > 0 && sessionReady == true && navController.currentDestination?.route == Routes.SIGN_IN) {
@@ -234,7 +225,7 @@ fun AuroraApp() {
         }
     }
 
-    // Backfill the avatar for sessions created before we stored it (e.g. an existing Spotify login).
+    // backfill avatar for sessions created before we stored it
     androidx.compose.runtime.LaunchedEffect(sessionReady, session?.imageUrl) {
         if (sessionReady == true && session != null && session?.imageUrl.isNullOrBlank()) {
             val url = runCatching { container.repository.profileImageUrl() }.getOrNull()
@@ -337,7 +328,7 @@ fun AuroraApp() {
                             onLocal = authVM::signInLocal,
                             onConnectSpotify = authVM::connectSpotify,
                             savedSessions = savedSessions,
-                            onUseSaved = { s -> authVM.useSaved(s) },   // nav to Home handled by the sessionReady effect
+                            onUseSaved = { s -> authVM.useSaved(s) },   // nav to home handled by the sessionReady effect
                         )
                     }
                     composable(Routes.HOME) {
@@ -388,7 +379,7 @@ fun AuroraApp() {
                     composable(Routes.LIBRARY) {
                         val libraryVM: LibraryViewModel = viewModel()
                         val libraryState by libraryVM.state.collectAsStateWithLifecycle()
-                        // M3U export: the text is staged here, then written once the user picks a file.
+                        // m3u export staged here written once the user picks a file
                         var pendingM3u by remember { mutableStateOf<String?>(null) }
                         val exportM3uLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/x-mpegurl")) { uri ->
                             val text = pendingM3u
@@ -406,7 +397,7 @@ fun AuroraApp() {
                             if (uri != null) scope.launch {
                                 val (text, displayName) = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
                                     val t = runCatching { context.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } }.getOrNull()
-                                    // SAF uris carry opaque document ids — the human file name needs a query.
+                                    // saf uris carry opaque doc ids the human file name needs a query
                                     val n = runCatching {
                                         context.contentResolver.query(uri, null, null, null, null)?.use { c ->
                                             val idx = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
@@ -555,7 +546,7 @@ fun AuroraApp() {
                         val detailVM: DetailViewModel = viewModel()
                         androidx.compose.runtime.LaunchedEffect(kind, id) { detailVM.load(kind, id) }
                         val detailState by detailVM.state.collectAsStateWithLifecycle()
-                        // Resolve liked state for the visible tracks (so hearts show beyond page 1).
+                        // resolve liked state for visible tracks so hearts show beyond page 1
                         androidx.compose.runtime.LaunchedEffect(detailState.data?.tracks?.size) {
                             detailState.data?.tracks?.let { ts -> playerVM.checkLiked(ts.map { it.id }) }
                         }
@@ -633,7 +624,7 @@ fun AuroraApp() {
                             onEdit = tagVM::edit,
                             onMatch = tagVM::matchOnline,
                             onApplyMatch = tagVM::applyMatch,
-                            // Auto-identify fingerprints the decodable local file; not applicable to server items.
+                            // auto-identify fingerprints the decodable local file not for server items
                             onIdentify = if (container.acoustId.available && tagState.localFile) ({ tagVM.identify() }) else null,
                             identifying = tagState.identifying,
                             onBack = { navController.popBackStack() },
@@ -668,7 +659,7 @@ fun AuroraApp() {
                             contentPadding = inner,
                             onBack = { navController.popBackStack() },
                             onSwitch = { s ->
-                                scope.launch { container.switchSession(s) }   // playback stop + reload via accountEpoch
+                                scope.launch { container.switchSession(s) }   // playback stop and reload via accountEpoch
                                 confirm("Switched to ${s.typeLabel}")
                                 navController.popBackStack()
                             },
@@ -821,7 +812,6 @@ fun AuroraApp() {
                 )
             }
 
-            // Full-screen reorderable queue overlay (on top of the player).
             AnimatedVisibility(
                 visible = showQueue,
                 enter = slideInVertically(animationSpec = tween(300)) { it } + fadeIn(tween(200)),
@@ -840,7 +830,6 @@ fun AuroraApp() {
                 )
             }
 
-            // Full-screen audio visualizer overlay (on top of the player).
             AnimatedVisibility(
                 visible = showVisualizer,
                 enter = fadeIn(tween(220)),
@@ -890,7 +879,6 @@ fun AuroraApp() {
     BackHandler(enabled = showVisualizer) { showVisualizer = false }
 }
 
-/** Live banner above the mini-player showing how many downloads are in flight + overall progress. */
 @Composable
 private fun DownloadProgressBanner(count: Int, progress: Float) {
     val animated by androidx.compose.animation.core.animateFloatAsState(

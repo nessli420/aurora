@@ -11,23 +11,8 @@ import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.tanh
 
-/**
- * Aurora's device-independent software DSP. A single [BaseAudioProcessor] that, when [enabled], runs
- * the whole chain: biquad EQ cascade (10 graphic + 6 parametric), preamp + L/R balance, stereo width
- * (mid/side), crossfeed, optional compressor, brick-wall peak limiter.
- *
- * Transport is 16-bit stereo PCM (the encoding ExoPlayer's processor chain operates in; higher
- * bit-depth sources are resampled to 16-bit upstream when float output is off). Math is done in
- * 32-bit float for headroom, then written back to 16-bit. Don't change the output encoding:
- * ExoPlayer's built-in silence-skip/Sonic processors run after us and only accept 16-bit, so
- * emitting float here would break them. True hi-res float passthrough is a separate bit-perfect path
- * (no DSP) gated by the hi-res preference.
- *
- * Realtime safety: [queueInput] allocates nothing, reads the immutable [Coeffs] snapshot once per
- * buffer, and keeps all filter/limiter state in preallocated arrays. Coefficients are rebuilt off
- * the audio thread ([update]); scalar gains are one-pole smoothed per sample to avoid zipper noise.
- * Toggling [enabled] needs no pipeline rebuild: when off it copies input straight through.
- */
+// math in float for headroom transport stays 16-bit since exoplayer silence-skip/sonic run after us
+// and only accept 16-bit emitting float here would break them hi-res float is a separate no-dsp path
 @UnstableApi
 class AuroraDspProcessor : BaseAudioProcessor() {
 
@@ -41,7 +26,7 @@ class AuroraDspProcessor : BaseAudioProcessor() {
     private var params: DspParams = DspParams()
     private var configuredRate: Int = 0
 
-    // Preallocated realtime state, sized once and never reallocated in queueInput.
+    // preallocated never reallocated in queueInput for realtime safety
     private val n = DspCoeffBuilder.TOTAL_BIQUADS
     private val xL1 = FloatArray(n); private val xL2 = FloatArray(n)
     private val yL1 = FloatArray(n); private val yL2 = FloatArray(n)
@@ -54,7 +39,6 @@ class AuroraDspProcessor : BaseAudioProcessor() {
     private var cfLpfL = 0f
     private var cfLpfR = 0f
 
-    // Per-channel alignment delay (driver/speaker distance).
     private val dRingL = FloatArray(DspCoeffBuilder.MAX_CHANNEL_DELAY + 1)
     private val dRingR = FloatArray(DspCoeffBuilder.MAX_CHANNEL_DELAY + 1)
     private var dWrite = 0
@@ -62,7 +46,6 @@ class AuroraDspProcessor : BaseAudioProcessor() {
     private var limGain = 1f
     private var compGain = 1f
 
-    // Smoothed scalar params.
     private var smoothCoef = 0f
     private var curPreamp = 1f
     private var curBalL = 1f
@@ -70,14 +53,14 @@ class AuroraDspProcessor : BaseAudioProcessor() {
     private var curWidth = 1f
     private var smoothInit = false
 
-    /** Update DSP parameters. Coefficients rebuilt off the audio thread. */
+    // coefficients rebuilt off the audio thread
     fun update(p: DspParams) {
         params = p
         if (configuredRate > 0) coeffs = DspCoeffBuilder.build(p, configuredRate)
     }
 
     override fun onConfigure(inputAudioFormat: AudioFormat): AudioFormat {
-        // Stereo 16-bit only; anything else (mono, float hi-res passthrough) bypasses the DSP.
+        // stereo 16-bit only anything else bypasses the dsp
         if (inputAudioFormat.channelCount != 2 || inputAudioFormat.encoding != C.ENCODING_PCM_16BIT) {
             return AudioFormat.NOT_SET
         }
@@ -91,7 +74,7 @@ class AuroraDspProcessor : BaseAudioProcessor() {
     override fun queueInput(inputBuffer: ByteBuffer) {
         val rem = inputBuffer.remaining()
         if (rem == 0) return
-        val output = replaceOutputBuffer(rem) // 16-bit in → 16-bit out, identical size
+        val output = replaceOutputBuffer(rem)
         val c = coeffs
 
         if (!enabled || c == null) {
@@ -105,7 +88,7 @@ class AuroraDspProcessor : BaseAudioProcessor() {
         val frames = rem / 4
         var p = inputBuffer.position()
 
-        // Hoist snapshot fields into locals (no per-sample volatile reads).
+        // hoist snapshot into locals no per-sample volatile reads
         val b0 = c.b0; val b1 = c.b1; val b2 = c.b2; val a1 = c.a1; val a2 = c.a2; val nb = c.nBiquads
         val tPreamp = c.preampLin; val tBalL = c.balL; val tBalR = c.balR; val tWidth = c.width
         val satDrive = c.satDrive; val satK = 1f + 5f * satDrive
@@ -126,11 +109,9 @@ class AuroraDspProcessor : BaseAudioProcessor() {
             var r = inputBuffer.getShort(p + 2) / 32768f
             p += 4
 
-            // EQ cascade (per-channel state).
             l = cascade(l, b0, b1, b2, a1, a2, xL1, xL2, yL1, yL2, nb)
             r = cascade(r, b0, b1, b2, a1, a2, xR1, xR2, yR1, yR2, nb)
 
-            // Smooth scalar gains toward targets.
             curPreamp = tPreamp + (curPreamp - tPreamp) * sc
             curBalL = tBalL + (curBalL - tBalL) * sc
             curBalR = tBalR + (curBalR - tBalR) * sc
@@ -139,7 +120,6 @@ class AuroraDspProcessor : BaseAudioProcessor() {
             l *= curPreamp * curBalL * trimL
             r *= curPreamp * curBalR * trimR
 
-            // Harmonic / tube saturation: odd-order soft clip + a touch of even-order warmth.
             if (satDrive > 0f) {
                 val sl = tanh(satK * l) / satK
                 val sr = tanh(satK * r) / satK
@@ -147,13 +127,11 @@ class AuroraDspProcessor : BaseAudioProcessor() {
                 r = sr + satDrive * 0.2f * (sr * sr - 0.33f)
             }
 
-            // Stereo width (mid/side); 0 == mono, 1 == normal, 2 == wide.
             val mid = 0.5f * (l + r)
             val side = 0.5f * (l - r) * curWidth
             l = mid + side
             r = mid - side
 
-            // Crossfeed: blend a delayed + low-passed copy of the opposite channel.
             if (cfAmt > 0f) {
                 val readIdx = (cfWrite - cfDelay + ringSize) % ringSize
                 val dL = ringL[readIdx]; val dR = ringR[readIdx]
@@ -165,7 +143,6 @@ class AuroraDspProcessor : BaseAudioProcessor() {
                 r += cfAmt * cfLpfL
             }
 
-            // Compressor (linear-domain gain computer).
             if (compOn) {
                 val level = max(abs(l), abs(r))
                 val desired = if (level > compThr) {
@@ -176,7 +153,6 @@ class AuroraDspProcessor : BaseAudioProcessor() {
                 l *= compGain; r *= compGain
             }
 
-            // Brick-wall peak limiter.
             if (limOn) {
                 val peak = max(abs(l), abs(r))
                 val desired = if (peak > ceiling) ceiling / peak else 1f
@@ -185,7 +161,6 @@ class AuroraDspProcessor : BaseAudioProcessor() {
                 l *= limGain; r *= limGain
             }
 
-            // Per-channel alignment delay (final stage — pure time shift).
             if (delayOn) {
                 dRingL[dWrite] = l; dRingR[dWrite] = r
                 l = dRingL[(dWrite - delL + dSize) % dSize]

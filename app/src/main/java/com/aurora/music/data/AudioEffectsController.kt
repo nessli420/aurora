@@ -7,12 +7,7 @@ import android.media.audiofx.Virtualizer
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * Owns the Android AudioEffect chain attached to the ExoPlayer's audio session: a graphic
- * equalizer, bass boost, virtualizer (cross-feed/headphone widening for IEMs), and a loudness
- * enhancer. Configured live from [SettingsStore.audioPrefs]. All effect calls are guarded:
- * some devices/emulators don't implement every effect.
- */
+// effect calls guarded some devices dont implement every effect
 class AudioEffectsController(
     private val sessionId: Int,
     settingsStore: SettingsStore,
@@ -23,7 +18,6 @@ class AudioEffectsController(
     private var virtualizer: Virtualizer? = null
     private var loudness: LoudnessEnhancer? = null
 
-    // Metadata exposed to the EQ UI.
     var bandCount: Int = 5; private set
     var bandFreqsHz: List<Int> = listOf(60, 230, 910, 3600, 14000); private set
     var minBandMb: Int = -1500; private set
@@ -31,8 +25,7 @@ class AudioEffectsController(
     var presetNames: List<String> = emptyList(); private set
     var available: Boolean = false; private set
 
-    // When the custom software DSP (or OFF) is the active engine, the system effects must be fully
-    // disabled so the two never stack. Gated here rather than in prefs so the UI keeps its values.
+    // gated here not in prefs so system effects never stack with custom dsp while ui keeps values
     @Volatile private var masterEnabled: Boolean = true
     @Volatile private var lastPrefs: AudioPrefs? = null
 
@@ -41,7 +34,6 @@ class AudioEffectsController(
         scope.launch { settingsStore.audioPrefs.collect { lastPrefs = it; apply(it) } }
     }
 
-    /** Enable/disable the entire system-effect path (used to switch engines without double-EQ). */
     fun setMasterEnabled(on: Boolean) {
         if (masterEnabled == on) return
         masterEnabled = on
@@ -108,7 +100,6 @@ class AudioEffectsController(
         }
     }
 
-    /** Read the current preset's band levels (for seeding custom mode from a preset). */
     fun presetBandLevels(preset: Int): List<Int> = runCatching {
         val eq = equalizer ?: return emptyList()
         eq.usePreset(preset.toShort())

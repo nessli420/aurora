@@ -18,14 +18,7 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-/**
- * On-device sonic-similarity engine. Analyzes the decodable library (local files + downloads) into
- * [SonicFeatures] vectors via a background scan, and builds "sonically similar" radio queues by
- * z-scoring every dimension across the analyzed set and ranking by cosine similarity to a seed.
- *
- * v1 scope: only local/downloaded tracks can be analyzed (server-only streams aren't decodable
- * on-device); a sonic radio from a non-analyzable seed falls back to the backend's own radio.
- */
+// v1 only local/downloaded tracks are decodable server-only streams fall back to backend radio
 class SonicEngine(
     private val localLibrary: LocalLibrary,
     private val downloads: DownloadManager,
@@ -41,7 +34,6 @@ class SonicEngine(
 
     val analyzedCount: StateFlow<Int> get() = store.count
 
-    /** All tracks we can decode for analysis: on-device library + downloaded files. */
     private suspend fun decodable(): List<Song> {
         localLibrary.ensureLoaded()
         val local = localLibrary.songs.filter { it.path.isNotBlank() }
@@ -55,13 +47,11 @@ class SonicEngine(
         else -> downloads.get(song.id)?.audioPath
     }
 
-    /** Analyze every not-yet-analyzed decodable track in the background, in parallel across cores.
-     *  Idempotent. Persists in batches (every 40 tracks + at the end / on cancel). */
     fun scan() {
         if (job?.isActive == true) return
         job = scope.launch {
             val songs = decodable()
-            store.retainOnly(songs.map { it.id }.toSet())   // drop vectors for tracks that vanished
+            store.retainOnly(songs.map { it.id }.toSet())
             val todo = songs.filter { !store.has(it.id) }
             if (todo.isEmpty()) { _progress.value = Progress(false, 0, 0); return@launch }
             _progress.value = Progress(true, 0, todo.size)
@@ -90,7 +80,7 @@ class SonicEngine(
                     }
                 }
             } finally {
-                store.flush()  // persist whatever finished, even on cancel
+                store.flush()  // persist whatever finished even on cancel
             }
             _progress.value = Progress(false, done.get(), todo.size)
         }
@@ -98,11 +88,6 @@ class SonicEngine(
 
     fun cancel() { job?.cancel() }
 
-    /**
-     * Build a sonically-similar radio queue seeded by [seed]: the seed first, then the nearest
-     * neighbours by z-scored cosine similarity. Returns empty if the seed can't be analyzed or there
-     * aren't enough analyzed tracks to compare against (caller should fall back to backend radio).
-     */
     suspend fun buildRadio(seed: Song, count: Int = 40): List<Song> = withContext(Dispatchers.Default) {
         val pool = decodable()
         val byId = pool.associateBy { it.id }
@@ -114,7 +99,6 @@ class SonicEngine(
             store.put(seed.id, seedVec)
         }
 
-        // Only compare against vectors we can still resolve to a playable Song.
         val vectors = store.snapshot().filterKeys { it in byId }
         if (vectors.size < 2) return@withContext emptyList()
 
@@ -141,11 +125,8 @@ class SonicEngine(
         if (ranked.isEmpty()) emptyList() else listOf(seed) + ranked
     }
 
-    // ── Tempo / key (auto-DJ) ───────────────────────────────────────────────
-
     data class TrackKey(val bpm: Int, val camelot: String, val name: String)
 
-    /** BPM + musical key (Camelot + name) derived from a stored vector, or null if not analyzed. */
     fun keyInfo(songId: String): TrackKey? = store.get(songId)?.let { v ->
         val (tonic, major) = estimateKey(v)
         val cam = (if (major) MAJOR_CAM[tonic] else MINOR_CAM[tonic]).toString() + (if (major) "B" else "A")
@@ -154,7 +135,6 @@ class SonicEngine(
 
     private fun bpmOf(v: FloatArray): Int = (60f + v[SonicFeatures.DIMS - 1] * 120f).toInt().coerceIn(40, 220)
 
-    /** Krumhansl-Schmuckler: correlate the 12 chroma bins against rotated major/minor profiles. */
     private fun estimateKey(v: FloatArray): Pair<Int, Boolean> {
         val chromaStart = SonicFeatures.DIMS - 1 - 12   // 12 chroma bins precede the tempo dim
         val chroma = DoubleArray(12) { v[chromaStart + it].toDouble() }
@@ -181,7 +161,6 @@ class SonicEngine(
         return if (den > 0) num / den else 0.0
     }
 
-    /** Encode Camelot as number*10 + (1 major / 0 minor) for cheap adjacency scoring. */
     private fun camelotCode(v: FloatArray): Int {
         val (tonic, major) = estimateKey(v)
         return (if (major) MAJOR_CAM[tonic] else MINOR_CAM[tonic]) * 10 + (if (major) 1 else 0)
@@ -193,18 +172,13 @@ class SonicEngine(
         val diff = kotlin.math.abs(numA - numB)
         val adjacent = diff == 1 || diff == 11   // wheel wraps 12<->1
         return when {
-            numA == numB && letA == letB -> 1.0          // same key
-            numA == numB -> 0.85                          // relative major/minor
-            letA == letB && adjacent -> 0.75             // neighbour on the wheel
+            numA == numB && letA == letB -> 1.0
+            numA == numB -> 0.85
+            letA == letB && adjacent -> 0.75
             else -> 0.25
         }
     }
 
-    /**
-     * Build a harmonic auto-DJ set: a greedy walk from [seed] that picks each next track by blending
-     * sonic similarity (6.1 cosine), Camelot key compatibility, and tempo proximity — so the set flows
-     * in key and BPM. Returns empty if the seed isn't analyzable or too little is analyzed.
-     */
     suspend fun buildAutoDj(seed: Song, count: Int = 40): List<Song> = withContext(Dispatchers.Default) {
         val pool = decodable()
         val byId = pool.associateBy { it.id }
@@ -244,8 +218,8 @@ class SonicEngine(
             var bestId: String? = null; var bestScore = -1e9
             for ((id, z) in zmap) {
                 if (id in used) continue
-                val sim = (cosine(cz, z) + 1.0) / 2.0                                   // 0..1
-                val harm = harmonicScore(ccam, camMap[id] ?: 0)                          // 0..1
+                val sim = (cosine(cz, z) + 1.0) / 2.0
+                val harm = harmonicScore(ccam, camMap[id] ?: 0)
                 val tempo = 1.0 - (kotlin.math.abs(cbpm - (bpmMap[id] ?: cbpm)) / 16.0).coerceIn(0.0, 1.0)
                 val score = 0.45 * sim + 0.35 * harm + 0.20 * tempo
                 if (score > bestScore) { bestScore = score; bestId = id }
@@ -264,10 +238,8 @@ class SonicEngine(
     }
 
     private companion object {
-        // Krumhansl-Schmuckler key profiles (relative weights per scale degree).
         val MAJOR_PROFILE = doubleArrayOf(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
         val MINOR_PROFILE = doubleArrayOf(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
-        // Camelot wheel numbers by pitch class (0=C). Major keys = "B" side, minor = "A" side.
         val MAJOR_CAM = intArrayOf(8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6, 1)
         val MINOR_CAM = intArrayOf(5, 12, 7, 2, 9, 4, 11, 6, 1, 8, 3, 10)
         val NOTE_NAMES = arrayOf("C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B")

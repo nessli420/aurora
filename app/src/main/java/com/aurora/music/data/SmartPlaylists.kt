@@ -2,19 +2,8 @@ package com.aurora.music.data
 
 import com.aurora.music.model.Song
 
-/**
- * Smart (rule-based) playlists. A [SmartPlaylist] stores predicates that are re-evaluated
- * lazily against the active library every time it's opened, so it stays current as the library,
- * likes, downloads and play history change. Persisted as JSON in [SettingsStore]; per the Gson
- * rule, every field is nullable/defaulted.
- *
- * Field / op / sort values are plain strings (stable across renames, safe for persisted JSON):
- *  - fields: title · artist · album · format · duration · bitrate · playCount · lastPlayedDays ·
- *    liked · downloaded
- *  - text ops: contains · notContains · is · isNot · startsWith
- *  - numeric ops: gt · lt · eq   (duration in seconds, bitrate in kbps, lastPlayedDays in days)
- *  - boolean ops: isTrue · isFalse
- */
+// field/op/value are plain strings so they stay stable across renames and safe for persisted json
+// gson rule every field nullable/defaulted
 data class SmartRule(
     val field: String? = "title",
     val op: String? = "contains",
@@ -24,18 +13,13 @@ data class SmartRule(
 data class SmartPlaylist(
     val id: String? = "",
     val name: String? = "",
-    val matchAll: Boolean? = true,        // true = AND, false = OR
+    val matchAll: Boolean? = true,        // true = AND false = OR
     val rules: List<SmartRule>? = emptyList(),
-    val sortBy: String? = "title",        // title|artist|album|duration|playCount|lastPlayed|random
+    val sortBy: String? = "title",
     val descending: Boolean? = false,
     val limit: Int? = 0,                  // 0 = no limit
 )
 
-/**
- * Evaluates smart playlists over a song list. Play counts / last-played come from the local
- * [PlayHistoryStore] (Aurora has no server-side play counts), downloads from [DownloadManager],
- * liked state from the songs themselves (backends map server stars onto [Song.liked]).
- */
 class SmartPlaylistEngine(
     private val playHistory: PlayHistoryStore,
     private val downloadManager: DownloadManager,
@@ -94,7 +78,7 @@ class SmartPlaylistEngine(
                 "isNot" -> !actual.equals(v, true)
                 "startsWith" -> actual.startsWith(v, true)
                 "notContains" -> !actual.contains(v, true)
-                else -> actual.contains(v, true)   // contains
+                else -> actual.contains(v, true)
             }
         }
         "duration", "bitrate", "playCount", "lastPlayedDays" -> {
@@ -104,14 +88,14 @@ class SmartPlaylistEngine(
                     "duration" -> s.durationSec.toLong()
                     "bitrate" -> s.bitrateKbps.toLong()
                     "playCount" -> (playCounts[s.id] ?: 0).toLong()
-                    // Never played → only "more than N days ago" should match.
+                    // never played only "more than N days ago" should match
                     else -> lastPlayed[s.id]?.let { (now - it) / DAY_MS }
                 }
                 when {
                     actual == null -> r.op == "gt"
                     r.op == "gt" -> actual > target
                     r.op == "lt" -> actual < target
-                    else -> actual == target       // eq
+                    else -> actual == target
                 }
             }
         }

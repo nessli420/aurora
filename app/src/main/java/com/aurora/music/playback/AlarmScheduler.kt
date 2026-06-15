@@ -16,11 +16,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-/**
- * Schedules the wake-to-music alarm via [AlarmManager]. Uses `setAlarmClock` so it fires exactly in
- * Doze and grants the alarm-triggered foreground-service exemption needed to start playback from the
- * background. Falls back to an inexact alarm when exact scheduling isn't permitted.
- */
+// setAlarmClock fires exactly in doze and grants the fgs exemption to start playback from background
 object AlarmScheduler {
     private const val REQUEST_CODE = 0x4A1A
 
@@ -34,7 +30,6 @@ object AlarmScheduler {
             if (canScheduleExact(am)) {
                 am.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, null), pi)
             } else {
-                // No exact-alarm permission: best-effort inexact wake.
                 am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
             }
         }
@@ -46,7 +41,6 @@ object AlarmScheduler {
         return PendingIntent.getBroadcast(context, REQUEST_CODE, intent, flags)
     }
 
-    /** Next clock time at [hour]:[minute] — today if still ahead, otherwise tomorrow. */
     private fun nextTriggerMs(hour: Int, minute: Int): Long {
         val now = Calendar.getInstance()
         val next = Calendar.getInstance().apply {
@@ -63,21 +57,16 @@ object AlarmScheduler {
         Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms()
 }
 
-/**
- * Fires the alarm (starts wake-to-music playback) and reschedules for the next day. Also re-arms the
- * alarm after a device reboot, since alarms don't survive reboots.
- */
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
         val appContext = context.applicationContext
         if (intent.action == ACTION_FIRE) {
-            // Start playback within the alarm-triggered FGS exemption window.
+            // start playback within the alarm-triggered fgs exemption window
             runCatching {
                 val svc = Intent(appContext, PlaybackService::class.java).setAction(PlaybackService.ACTION_ALARM)
                 ContextCompat.startForegroundService(appContext, svc)
             }
         }
-        // Re-arm (next occurrence after a fire, or restore after a boot).
         val pending = goAsync()
         CoroutineScope(SupervisorJob() + Dispatchers.IO).launch {
             try {

@@ -9,12 +9,6 @@ import android.os.Looper
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
-/**
- * Applies AutoEQ corrections per output device. When auto-switch is on, connecting a *bound* device
- * (IEM / USB DAC / Bluetooth) auto-loads its parametric correction; switching to an unbound output
- * clears the parametric EQ so the wrong headphone's curve is never applied. The current output is
- * picked by priority (BT → USB → wired → speaker).
- */
 class AutoEqController(
     context: Context,
     private val settingsStore: SettingsStore,
@@ -42,7 +36,6 @@ class AutoEqController(
         }
     }
 
-    /** Label + key for the current output device (for the "bind to current device" UI). */
     fun currentOutputLabel(): String = currentOutput()?.let { label(it) } ?: "Speaker"
     fun currentOutputKey(): String = currentOutput()?.let { keyOf(it) } ?: "speaker"
 
@@ -73,10 +66,9 @@ class AutoEqController(
         if (!enabled) return
         val key = currentOutputKey()
         val b = bindings.firstOrNull { it.deviceKey == key }
-        // Only notify once per device change, not on every flow re-emit.
         val notify = key != lastToastKey
         lastToastKey = key
-        // Only APPLY a bound profile; never wipe a manually-set correction on an unbound device.
+        // never wipe a manually-set correction on an unbound device
         if (b == null) return
         scope.launch {
             settingsStore.setDspParametric(b.bands)

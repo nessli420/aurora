@@ -12,11 +12,7 @@ import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.util.concurrent.TimeUnit
 
-/**
- * Spotify Web API client. Injects the OAuth bearer token on every call and transparently refreshes
- * it (via [SpotifyAuth.refresh]) on a 401, persisting the new access token through [onTokenRefreshed].
- * Access token = [Session.token]; refresh token is stashed in [Session.salt].
- */
+// refresh token stashed in session salt
 class SpotifyClient(
     val session: Session,
     private val clientId: String,
@@ -25,8 +21,7 @@ class SpotifyClient(
     @Volatile private var accessToken: String = session.token
     private val refreshToken: String = session.salt
 
-    // Circuit breaker: when Spotify returns 429, stop sending requests for the Retry-After window so
-    // we don't keep hammering (which extends the throttle). Fails fast with a synthetic 429.
+    // back off for the retry-after window so we dont extend the throttle
     @Volatile private var blockedUntilMs: Long = 0L
     private val rateLimitInterceptor = Interceptor { chain ->
         if (System.currentTimeMillis() < blockedUntilMs) {
@@ -80,7 +75,6 @@ class SpotifyClient(
             .build()
             .create(SpotifyApi::class.java)
 
-        /** Bearer-only API (no refresh) for one-off calls during login. */
         private fun apiFor(token: String): SpotifyApi {
             val ok = OkHttpClient.Builder()
                 .addInterceptor { chain -> chain.proceed(chain.request().newBuilder().header("Authorization", "Bearer $token").build()) }
@@ -88,7 +82,6 @@ class SpotifyClient(
             return buildApi(ok)
         }
 
-        /** Exchange the OAuth code for tokens and fetch the profile → a [Session]. Null on failure. */
         suspend fun login(clientId: String, code: String, verifier: String): Session? {
             val tok = SpotifyAuth.exchangeCode(clientId, code, verifier)
             if (tok == null) { android.util.Log.d("SpotifyOAuth", "login: token exchange failed"); return null }

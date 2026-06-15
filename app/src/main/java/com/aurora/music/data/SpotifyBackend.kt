@@ -31,11 +31,7 @@ import okhttp3.Request
 import org.json.JSONObject
 import java.net.URLEncoder
 
-/**
- * Spotify-backed [MediaBackend]: library + metadata come from the Spotify Web API; playback URLs are
- * sentinel `aurora-yt://` URIs resolved to a real YouTube audio stream at play time (see the
- * ResolvingDataSource in PlaybackService). Writes (likes/playlists/follows) sync to Spotify.
- */
+// stream urls are sentinel aurora-yt:// uris resolved to a youtube stream at play time
 class SpotifyBackend(
     private val c: SpotifyClient,
     private val maxBitrateProvider: () -> Int,
@@ -45,14 +41,13 @@ class SpotifyBackend(
     private val api = c.api
     override val session: Session = c.session
 
-    // Liked songs are large + paginated; cache the full list (invalidated on like/unlike).
+    // invalidated on like/unlike
     @Volatile private var likedCache: List<Song>? = null
 
-    // Plain client for scraping the public embed page (no auth) when the Web API forbids non-owned playlists.
+    // no-auth client for scraping the public embed page when the web api forbids non-owned playlists
     private val embedHttp = OkHttpClient()
 
-    // The user's market (ISO country). Required by several endpoints (artist top-tracks, search
-    // relinking); passing none or the wrong one yields empty results. Resolved once from /me, cached.
+    // iso country required by several endpoints; none or wrong yields empty results
     @Volatile private var marketCache: String? = null
     private suspend fun market(): String {
         marketCache?.let { return it }
@@ -61,17 +56,10 @@ class SpotifyBackend(
         return m
     }
 
-    // Album header art/name, cached when the album detail loads, so paginated album tracks (which
-    // carry no album object) still get the right cover.
+    // paginated album tracks carry no album object so cache header art/name for the cover
     private val albumMeta = HashMap<String, Pair<String, String>>() // albumId -> (artUrl, name)
 
-    /**
-     * Fallback for playlists not owned by the user: Spotify's API 403s their tracks (and even
-     * /v1/tracks) for new apps. The public embed page carries title/artist/duration but no per-track
-     * album art, so we build tracks from it directly: art falls back to the playlist cover, and the
-     * playlist name becomes the album so the player shows "Playing from <playlist>". They still play
-     * (resolved by name+artist via YouTube).
-     */
+    // fallback for non-owned playlists whose tracks the api 403s for new apps; embed has no per-track art
     private suspend fun fetchEmbedTracks(id: String): List<Song> = withContext(Dispatchers.IO) {
         runCatching {
             val req = Request.Builder()
@@ -103,11 +91,7 @@ class SpotifyBackend(
         }.getOrDefault(emptyList())
     }
 
-    /**
-     * Load liked songs sequentially with a small delay and a [LIKED_CAP] limit. Paging thousands of
-     * saved tracks in a burst trips Spotify's rate limit (429) and breaks the whole session, so we
-     * cap the in-app list; the true total still shows via [starredCount].
-     */
+    // sequential with delay + cap; bursting thousands of saved tracks trips spotify 429 and breaks the session
     private suspend fun loadAllLiked(): List<Song> {
         val out = ArrayList<Song>()
         var offset = 0
@@ -124,8 +108,6 @@ class SpotifyBackend(
 
     private companion object { const val LIKED_CAP = 10000; const val PAGE = 50 }
 
-
-    // ---- mapping helpers ----
 
     private fun img(list: List<com.aurora.music.data.remote.SpImage>?): String = list?.firstOrNull()?.url ?: ""
 
@@ -196,8 +178,6 @@ class SpotifyBackend(
         accent = accentFor(id ?: ""),
     )
 
-    // ---- reads ----
-
     override suspend fun ping(): Boolean = runCatching { api.me(); true }.getOrDefault(false)
 
     override suspend fun home(): HomeData = coroutineScope {
@@ -235,7 +215,7 @@ class SpotifyBackend(
     override suspend fun allPlaylists(): List<Playlist> =
         runCatching { api.myPlaylists().items?.map { it.toPlaylist() } }.getOrNull().orEmpty()
 
-    // "All songs" for Spotify = a fast preview of liked tracks (the full list lives in Liked Songs).
+    // fast preview of liked tracks; full list lives in liked songs
     override suspend fun allSongs(): List<Song> = runCatching {
         val a = api.savedTracks(limit = 50, offset = 0).items.orEmpty()
         val b = runCatching { api.savedTracks(limit = 50, offset = 50).items }.getOrNull().orEmpty()
@@ -293,7 +273,7 @@ class SpotifyBackend(
         }
     }
 
-    override suspend fun scrobble(id: String) { /* Spotify playback isn't reported; Last.fm handles scrobbles. */ }
+    override suspend fun scrobble(id: String) { /* last.fm handles scrobbles */ }
 
     override suspend fun radio(seedId: String): List<Song> =
         runCatching { api.recommendations(seedTracks = seedId).tracks?.map { it.toSong() } }.getOrNull().orEmpty()
@@ -326,20 +306,17 @@ class SpotifyBackend(
                 )
             }
             "playlist" -> {
-                // Header from /playlists/{id}; first track page from /playlists/{id}/items (works
-                // for owned AND followed/public playlists, and paginates uncapped via detailPage).
                 val header = runCatching { api.playlist(id) }.getOrNull()
                 val sub = header?.owner?.displayName?.let { "by $it" } ?: ""
                 val apiPage = runCatching { api.playlistItems(id, 0, PAGE) }.getOrNull()
                 val apiTracks = apiPage?.items?.mapNotNull { (it.item ?: it.track)?.toSong() }.orEmpty()
                 if (apiTracks.isNotEmpty()) {
-                    // Owned/accessible playlist — paginate via the API (detailPage).
                     DetailData(
                         info = DetailInfo(header?.name ?: "Playlist", sub, img(header?.images), accentFor(id), false, apiPage?.total ?: apiTracks.size, "Playlist"),
                         tracks = apiTracks,
                     )
                 } else {
-                    // Not owned by us → API forbids the tracks; scrape the public embed (all at once).
+                    // non-owned: api forbids the tracks so scrape the public embed
                     val embed = fetchEmbedTracks(id)
                     Log.d("SpotifyBE", "playlist $id non-owned → embed tracks=${embed.size}")
                     DetailData(
@@ -372,15 +349,13 @@ class SpotifyBackend(
         }
     }.getOrDefault(emptyList())
 
-    // ---- writes ----
-
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean = runCatching {
         when (kind) {
             "album" -> if (starred) api.saveAlbums(id) else api.removeAlbums(id)
             "artist" -> if (starred) api.followArtists("artist", id) else api.unfollowArtists("artist", id)
             "playlist" -> if (starred) api.followPlaylist(id) else api.unfollowPlaylist(id)
             else -> {
-                likedCache = null // liked set changed → invalidate the cached list
+                likedCache = null // liked set changed
                 if (starred) api.saveTracks(id) else api.removeTracks(id)
             }
         }.isSuccessful
@@ -398,7 +373,6 @@ class SpotifyBackend(
     override suspend fun createPlaylistWithId(name: String): String? =
         runCatching { api.createPlaylist(session.userId, CreatePlaylistBody(name)).id }.getOrNull()
 
-    /** Add/remove tracks to a playlist (Spotify URIs). */
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { api.addToPlaylist(playlistId, AddTracksBody(trackIds.map { "spotify:track:$it" })).isSuccessful }.getOrDefault(false)
 

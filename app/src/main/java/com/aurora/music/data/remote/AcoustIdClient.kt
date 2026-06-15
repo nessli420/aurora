@@ -11,8 +11,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 import java.util.concurrent.TimeUnit
 
-// --- AcoustID DTOs (nullable per the project's Gson rule) -----------------------
-
+// nullable per gson rule
 data class AcoustIdResult(val status: String? = "", val results: List<AcoustIdMatch>? = emptyList())
 data class AcoustIdMatch(val id: String? = "", val score: Double? = 0.0, val recordings: List<AcoustIdRecording>? = emptyList())
 data class AcoustIdRecording(
@@ -35,20 +34,12 @@ interface AcoustIdApi {
     ): AcoustIdResult
 }
 
-/**
- * AcoustID acoustic-fingerprint identification. Fingerprints a file with [Chromaprint], looks
- * it up in the AcoustID database, and maps the returned MusicBrainz recordings to [MetadataMatch].
- * Requires a free AcoustID application API key; [configured] is false (and identify is a no-op) until
- * one is supplied, and [Chromaprint.available] must be true (the native lib must have loaded).
- */
 class AcoustIdClient(private val apiKeyProvider: () -> String) {
 
     private val apiKey: String get() = apiKeyProvider()
 
-    /** The native fingerprinter loaded — "Auto-identify" can at least compute a fingerprint. */
     val available: Boolean get() = Chromaprint.available
 
-    /** An AcoustID API key is set, so online matching can actually run. */
     val configured: Boolean get() = apiKey.isNotBlank()
 
     private val http = OkHttpClient.Builder()
@@ -63,11 +54,9 @@ class AcoustIdClient(private val apiKeyProvider: () -> String) {
         .build()
         .create(AcoustIdApi::class.java)
 
-    /** Compute the acoustic fingerprint of [path] (native, off the main thread), or null. */
     suspend fun fingerprint(path: String): String? =
         withContext(Dispatchers.Default) { Chromaprint.fingerprint(path) }
 
-    /** Look up a precomputed [fingerprint] in AcoustID and map recordings to matches. */
     suspend fun lookup(fingerprint: String, durationSec: Int): List<MetadataMatch> {
         val key = apiKey
         if (key.isBlank()) return emptyList()

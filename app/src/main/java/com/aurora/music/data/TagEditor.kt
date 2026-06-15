@@ -18,7 +18,6 @@ import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
 
-/** Editable tag set for one track. */
 data class AudioTags(
     val title: String = "",
     val artist: String = "",
@@ -29,21 +28,13 @@ data class AudioTags(
     val trackNumber: String = "",
 )
 
-/**
- * In-app tag editor for on-device files, via JAudiotagger. Reads directly from the file; writes
- * go through a cache copy (JAudiotagger needs a real File, which scoped storage won't hand out for a
- * MediaStore item) and are pushed back through the content resolver. On Android 11+ a write to a media
- * file the app doesn't own needs one-time user consent — [writeConsentIntent] surfaces that dialog.
- */
 class TagEditor(private val context: Context) {
     private val resolver get() = context.contentResolver
 
     init {
-        // JAudiotagger logs verbosely through java.util.logging; quiet it.
         runCatching { Logger.getLogger("org.jaudiotagger").level = Level.OFF }
     }
 
-    /** MediaStore content URI for a local song (its id is the MediaStore _ID). */
     fun contentUriFor(songId: String): Uri? =
         songId.toLongOrNull()?.let { ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, it) }
 
@@ -64,21 +55,13 @@ class TagEditor(private val context: Context) {
         }.getOrNull()
     }
 
-    /**
-     * The consent dialog needed to write [uri] on Android 11+, or null when we can write directly
-     * (older Android, where requestLegacyExternalStorage gives direct file access). Launch the
-     * returned IntentSender; on a positive result, call [write].
-     */
+    // android 11+ needs one-time user consent to write a media file the app doesnt own
     fun writeConsentIntent(uri: Uri): IntentSender? =
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R)
             MediaStore.createWriteRequest(resolver, listOf(uri)).intentSender
         else null
 
-    /**
-     * Write [tags] (and optional [artwork] JPEG bytes) into the file at [path], reachable via [uri].
-     * Edits a cache copy with JAudiotagger, streams it back through the resolver, then re-indexes
-     * MediaStore. Caller must already hold write access (see [writeConsentIntent]).
-     */
+    // jaudiotagger needs a real file so edit a cache copy then stream back through the resolver
     suspend fun write(uri: Uri, path: String, tags: AudioTags, artwork: ByteArray? = null): Boolean =
         withContext(Dispatchers.IO) {
             val ext = path.substringAfterLast('.', "tmp").ifBlank { "tmp" }
@@ -108,7 +91,6 @@ class TagEditor(private val context: Context) {
                 af.commit()
                 resolver.openOutputStream(uri, "wt")?.use { out -> tmp.inputStream().use { it.copyTo(out) } }
                     ?: return@withContext false
-                // Re-index so the library reflects the new tags without a manual rescan.
                 runCatching { MediaScannerConnection.scanFile(context, arrayOf(path), null, null) }
                 true
             } catch (t: Throwable) {
@@ -121,7 +103,7 @@ class TagEditor(private val context: Context) {
 
     private fun Tag.firstOrEmpty(key: FieldKey): String = runCatching { getFirst(key) ?: "" }.getOrDefault("")
 
-    /** Set a field, or delete it when blank (so clearing a field actually clears the tag). */
+    // blank value deletes the field so clearing actually clears the tag
     private fun Tag.put(key: FieldKey, value: String) {
         runCatching {
             if (value.isBlank()) deleteField(key) else setField(key, value)

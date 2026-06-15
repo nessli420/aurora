@@ -10,7 +10,6 @@ import com.aurora.music.playback.NowPlaying
 import com.aurora.music.playback.NowPlayingStore
 import com.aurora.music.playback.PlaybackService
 
-/** Quick Settings tile: toggles play/pause and mirrors the current playback state. */
 class AuroraTileService : TileService() {
 
     override fun onStartListening() = render()
@@ -21,7 +20,7 @@ class AuroraTileService : TileService() {
             val intent = Intent(this, PlaybackService::class.java).setAction(PlaybackService.ACTION_PLAY_PAUSE)
             ContextCompat.startForegroundService(this, intent)
         }
-        // Optimistic flip so the tile feels responsive; the next render reconciles with reality.
+        // optimistic flip next render reconciles
         render(playingOverride = !np.isPlaying)
     }
 

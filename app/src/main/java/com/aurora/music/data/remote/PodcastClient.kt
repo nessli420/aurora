@@ -24,10 +24,6 @@ private data class ItunesPodcast(
     @SerializedName("artworkUrl100") val artworkUrl100: String? = "",
 )
 
-/**
- * Podcasts via the keyless Apple/iTunes Search directory (search + lookup) and direct RSS-feed
- * parsing for episodes. No account or API key. Failures degrade to empty lists.
- */
 class PodcastClient {
     private val http = OkHttpClient.Builder()
         .connectTimeout(12, TimeUnit.SECONDS)
@@ -35,7 +31,7 @@ class PodcastClient {
         .build()
     private val gson = Gson()
 
-    /** Search the podcast directory by free text. Returns null on transport failure, empty on no hits. */
+    // null on transport failure empty on no hits
     suspend fun search(query: String, limit: Int = 40): List<Podcast>? = withContext(Dispatchers.IO) {
         if (query.isBlank()) return@withContext emptyList()
         val url = "https://itunes.apple.com/search".toHttpUrlOrNull()!!.newBuilder()
@@ -49,10 +45,6 @@ class PodcastClient {
         }.getOrDefault(emptyList())
     }
 
-    /**
-     * Episodes for a show, parsed from its RSS feed (newest first). Also returns the channel-level
-     * artwork/author so a subscription gets good metadata even if the directory entry was thin.
-     */
     suspend fun episodes(feedUrl: String): FeedContent = withContext(Dispatchers.IO) {
         if (feedUrl.isBlank()) return@withContext FeedContent()
         val xml = getString(feedUrl) ?: return@withContext FeedContent()
@@ -74,7 +66,6 @@ class PodcastClient {
         )
     }
 
-    /** Channel metadata + episodes from one RSS feed. */
     data class FeedContent(
         val title: String = "",
         val author: String = "",
@@ -94,10 +85,9 @@ class PodcastClient {
         val episodes = mutableListOf<PodcastEpisode>()
         var inItem = false
 
-        // Per-item accumulators.
         var title = ""; var audioUrl = ""; var guid = ""; var pubDate = ""
         var duration = ""; var image = ""; var desc = ""
-        // Distinguish channel-level <image><url> from being inside an item.
+        // distinguish channel-level <image><url> from inside an item
         var inChannelImage = false
 
         var event = parser.eventType
@@ -114,8 +104,7 @@ class PodcastClient {
                         name.equals("enclosure", true) && inItem -> {
                             val type = parser.getAttributeValue(null, "type").orEmpty()
                             val url = parser.getAttributeValue(null, "url").orEmpty()
-                            // Take the first audio (or type-less) enclosure; never latch an explicit
-                            // non-audio type (some feeds ship a video enclosure first).
+                            // take first audio or type-less enclosure some feeds ship a video enclosure first
                             if (url.isNotBlank() && (type.isBlank() || type.startsWith("audio")) && audioUrl.isBlank()) audioUrl = url
                         }
                         name.equals("itunes:image", true) -> {
@@ -165,12 +154,12 @@ class PodcastClient {
             }
             event = parser.next()
         }
-        // Backfill the show title onto episodes parsed before the channel title appeared (rare).
+        // backfill show title onto episodes parsed before channel title appeared
         val fixed = if (channelTitle.isNotBlank()) episodes.map { if (it.podcastTitle.isBlank()) it.copy(podcastTitle = channelTitle) else it } else episodes
         return FeedContent(channelTitle, channelAuthor, channelImage, channelDesc, fixed)
     }
 
-    /** itunes:duration may be raw seconds ("3600"), "MM:SS", or "HH:MM:SS". */
+    // itunes:duration may be raw seconds MM:SS or HH:MM:SS
     private fun parseDuration(raw: String): Int {
         if (raw.isBlank()) return 0
         if (!raw.contains(":")) return raw.toFloatOrNull()?.toInt() ?: 0

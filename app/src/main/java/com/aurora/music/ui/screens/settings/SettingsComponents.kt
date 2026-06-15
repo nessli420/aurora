@@ -59,7 +59,6 @@ fun SettingsSectionTitle(title: String) {
     )
 }
 
-/** A rounded card that groups related settings rows, with hairline dividers between them. */
 @Composable
 fun SettingsGroup(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     Column(
@@ -70,7 +69,6 @@ fun SettingsGroup(content: @Composable androidx.compose.foundation.layout.Column
     )
 }
 
-/** A thin inset divider for use between rows inside a [SettingsGroup]. */
 @Composable
 fun SettingsRowDivider() {
     Box(

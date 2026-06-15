@@ -101,8 +101,7 @@ fun SearchScreen(
     val results = state.results
     val keyboard = LocalSoftwareKeyboardController.current
     var filter by remember { mutableStateOf(SearchFilter.ALL) }
-    // A fresh query yields a fresh result set — reset the type filter so it can't strand the user
-    // on a now-empty section.
+    // reset filter on new query so it can't strand on an empty section
     androidx.compose.runtime.LaunchedEffect(state.query) { filter = SearchFilter.ALL }
 
     val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
@@ -116,7 +115,6 @@ fun SearchScreen(
         }
         runCatching { voiceLauncher.launch(intent) }
     }
-    // Recording a recent search is a useful-search signal — fire it on result interaction too.
     val commitAnd: (() -> Unit) -> Unit = { action -> onCommitSearch(); action() }
 
     Column(Modifier.fillMaxWidth().padding(top = topInset)) {
@@ -165,8 +163,7 @@ fun SearchScreen(
                 }
             empty -> EmptyHint("No results", "Nothing matched \"${state.query}\"")
             else -> {
-                // Fall back to ALL whenever the chosen type has no results (e.g. the result set
-                // changed on an offline flip without the query string changing).
+                // fall back to ALL when chosen type has no results
                 val effective = if (sectionNonEmpty(filter, results)) filter else SearchFilter.ALL
                 FilterChips(effective, results) { filter = it }
                 Spacer(Modifier.height(6.dp))

@@ -14,15 +14,7 @@ import kotlin.math.PI
 import kotlin.math.log10
 import kotlin.math.tan
 
-/**
- * Offline ReplayGain scan: measures integrated loudness per ITU-R BS.1770 (the EBU R128
- * algorithm) over the on-device library and stores ReplayGain-2.0 gains in [ReplayGainStore].
- * Album gain is computed by gating the union of all an album's gating blocks, exactly as a real
- * R128 album scan does. Track/album gain = -18 LUFS (the RG2 reference) minus the measured loudness.
- *
- * Aurora can't write the gains back into the files (that needs the tag editor), so they're cached
- * by path and overlaid onto [Song]s when the library is built; PlaybackService already applies them.
- */
+// gains can't be written to files so cache by path and overlay onto songs at library build
 class ReplayGainScanner(
     private val library: LocalLibrary,
     private val store: ReplayGainStore,
@@ -38,12 +30,11 @@ class ReplayGainScanner(
     private companion object {
         const val RG2_REFERENCE_LUFS = -18.0
         const val ABSOLUTE_GATE_LUFS = -70.0
-        const val OFFSET = -0.691            // BS.1770 loudness offset
+        const val OFFSET = -0.691            // bs.1770 loudness offset
     }
 
     fun cancel() { job?.cancel() }
 
-    /** Scan every local-library track that has a real file path. Idempotent; no-op if already running. */
     fun scan(onComplete: () -> Unit = {}) {
         if (job?.isActive == true) return
         job = scope.launch {
@@ -51,9 +42,8 @@ class ReplayGainScanner(
             val tracks = library.songs.filter { it.path.isNotBlank() }
             _progress.value = Progress(running = true, done = 0, total = tracks.size)
 
-            // Album gating blocks accumulate across each album's tracks for a true album scan.
             val albumBlocks = HashMap<String, MutableList<Double>>()
-            val trackGain = HashMap<String, Float>()           // path -> track gain dB
+            val trackGain = HashMap<String, Float>()
             val pathsByAlbum = HashMap<String, MutableList<String>>()
             var scanned = 0
             try {
@@ -71,8 +61,7 @@ class ReplayGainScanner(
                     _progress.value = Progress(true, scanned, tracks.size, song.title)
                 }
             } finally {
-                // Persist whatever was scanned (so a cancel keeps partial results), resolving album
-                // gains over each album's accumulated blocks. Runs even on cancellation.
+                // runs even on cancel so partial results survive
                 val entries = HashMap<String, RgEntry>()
                 for ((key, paths) in pathsByAlbum) {
                     val albumGain = albumBlocks[key]?.let { integrated(it) }?.let { (RG2_REFERENCE_LUFS - it).toFloat() } ?: 0f
@@ -81,13 +70,11 @@ class ReplayGainScanner(
                 store.putAll(entries)
                 _progress.value = Progress(running = false, done = entries.size, total = tracks.size)
             }
-            // Re-overlay onto the in-memory library (skipped if the job was cancelled).
             runCatching { library.refresh() }
             onComplete()
         }
     }
 
-    /** Decode [path] and return its 400 ms gating-block energies (channel-weighted mean square). */
     private fun measure(path: String, active: () -> Boolean): List<Double>? {
         var state: R128State? = null
         val ok = AudioDecoder.decode(
@@ -100,7 +87,6 @@ class ReplayGainScanner(
         return state?.let { it.finish(); it.blockEnergies }
     }
 
-    /** Gated integrated loudness (LUFS) from gating-block energies, or null if all-silent. */
     private fun integrated(blocks: List<Double>): Double? {
         val absGated = blocks.filter { it > 0 && OFFSET + 10 * log10(it) > ABSOLUTE_GATE_LUFS }
         if (absGated.isEmpty()) return null
@@ -111,17 +97,13 @@ class ReplayGainScanner(
     }
 }
 
-/**
- * Per-stream BS.1770 loudness accumulator: K-weighting filter per channel, then 400 ms gating
- * blocks with 100 ms hop (75 % overlap). Channel weights follow BS.1770 (L/R/C = 1, surround ≈ 1.41).
- */
 private class R128State(private val sampleRate: Int, private val channels: Int) {
     private val filters = Array(channels) { KWeighting(sampleRate) }
     private val weights = DoubleArray(channels) { if (it == 3 || it == 4) 1.41 else 1.0 }
-    private val subblockSamples = (sampleRate / 10).coerceAtLeast(1)   // 100 ms
+    private val subblockSamples = (sampleRate / 10).coerceAtLeast(1)
     private val channelSumSq = DoubleArray(channels)
     private var sampleCount = 0
-    private val recentSubblocks = ArrayDeque<DoubleArray>()            // last ≤4 subblocks' per-channel sumSq
+    private val recentSubblocks = ArrayDeque<DoubleArray>()
     val blockEnergies = ArrayList<Double>()
 
     fun add(pcm: ShortArray, length: Int) {
@@ -154,23 +136,16 @@ private class R128State(private val sampleRate: Int, private val channels: Int) 
         sampleCount = 0
     }
 
-    /** Flush any trailing partial subblock (only matters for very short clips). */
     fun finish() {
         if (sampleCount > 0 && recentSubblocks.size >= 3) finishSubblock()
     }
 }
 
-/**
- * ITU-R BS.1770 K-weighting: a high-shelf "head" filter followed by an RLB high-pass. Coefficients
- * are derived for the actual sample rate (the libebur128 bilinear-transform formulation) so the scan
- * is correct for 44.1/48/96 kHz etc., not just the spec's tabulated 48 kHz values.
- */
+// coefficients derived for the actual sample rate not just the spec 48k table
 private class KWeighting(sampleRate: Int) {
     private val fs = sampleRate.toDouble()
-    // Stage 1: high-shelf "head" filter.
     private val b1 = shelfNum()
     private val a1 = shelfDen()
-    // Stage 2: RLB high-pass.
     private val b2 = doubleArrayOf(1.0, -2.0, 1.0)
     private val a2 = highpassDen()
 

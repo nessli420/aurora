@@ -3,11 +3,7 @@ package com.aurora.music.playback
 import kotlin.math.cos
 import kotlin.math.sin
 
-/**
- * Iterative in-place radix-2 Cooley–Tukey FFT for a fixed power-of-two size. Twiddle factors and the
- * bit-reversal permutation are precomputed once; [transform] does no allocation, so it's safe to run
- * on the audio thread. Operates on separate real/imaginary float arrays of length [n].
- */
+// no allocation in transform safe on the audio thread
 class Fft(val n: Int) {
     init { require(n > 1 && (n and (n - 1)) == 0) { "FFT size must be a power of two" } }
 
@@ -30,9 +26,7 @@ class Fft(val n: Int) {
         }
     }
 
-    /** In-place FFT (or inverse, scaled by 1/n) on [re]/[im], each length [n]. */
     fun transform(re: FloatArray, im: FloatArray, inverse: Boolean) {
-        // Bit-reversal reorder.
         for (i in 0 until n) {
             val j = rev[i]
             if (j > i) {

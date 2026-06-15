@@ -1,13 +1,6 @@
 package com.aurora.music.data
 
-/**
- * JNI bridge to the vendored Chromaprint library. Decodes a file to 16-bit PCM via
- * [AudioDecoder] and produces an AcoustID-compatible compressed fingerprint. Fingerprinting only the
- * first [MAX_SECONDS] (as fpcalc does) bounds the work; the *full* track duration is sent to AcoustID
- * separately for matching.
- *
- * [available] is false when the native library isn't present, so callers degrade gracefully.
- */
+// fingerprint only first MAX_SECONDS like fpcalc full duration sent to acoustid separately
 object Chromaprint {
     @Volatile private var loaded = false
 
@@ -23,7 +16,6 @@ object Chromaprint {
     private external fun nativeFeed(ctx: Long, pcm: ShortArray, length: Int)
     private external fun nativeFinish(ctx: Long): String?
 
-    /** Compressed base64 fingerprint of [path], or null if unavailable / undecodable. */
     fun fingerprint(path: String): String? {
         if (!loaded) return null
         var ctx = 0L
@@ -42,7 +34,6 @@ object Chromaprint {
                     frames += len / channels
                 }
             },
-            // Stop once we've fed MAX_SECONDS of audio — enough for a stable fingerprint.
             isCancelled = { ctx != 0L && sampleRate > 0 && frames >= MAX_SECONDS.toLong() * sampleRate },
         )
         if (ctx == 0L) return null

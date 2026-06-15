@@ -3,15 +3,9 @@ package com.aurora.music.data
 import com.aurora.music.model.Song
 import com.aurora.music.util.TrackMatch
 
-/** Songs that look like the same recording. */
 data class DuplicateGroup(val title: String, val artist: String, val songs: List<Song>)
 
-/**
- * Fuzzy duplicate detection over a song list: tracks match when their normalized (artist, title)
- * agree and their durations sit within a few seconds of each other. Different recordings of the
- * same song (live cuts, extended mixes) usually differ in length, so duration clustering keeps
- * them apart while format/bitrate variants of one recording group together.
- */
+// duration clustering separates different recordings live/extended mixes while grouping format variants
 object DuplicateFinder {
 
     private fun norm(s: String) = TrackMatch.norm(s)

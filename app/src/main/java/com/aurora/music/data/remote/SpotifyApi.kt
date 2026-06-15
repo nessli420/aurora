@@ -10,7 +10,7 @@ import retrofit2.http.PUT
 import retrofit2.http.Path
 import retrofit2.http.Query
 
-// ---- DTOs (only the fields we use; everything nullable for Gson safety) ----
+// everything nullable for gson safety
 
 data class SpImage(val url: String? = null, val height: Int = 0, val width: Int = 0)
 data class SpFollowers(val total: Long = 0)
@@ -49,7 +49,7 @@ data class SpPlaylist(
     val owner: SpOwner? = null,
     val images: List<SpImage>? = null,
     val tracks: SpTracksRef? = null,
-    // /me/playlists returns the track-count reference under "items", not "tracks".
+    // /me/playlists returns the track-count reference under items not tracks
     val items: SpTracksRef? = null,
 )
 data class SpTracksRef(val total: Int = 0)
@@ -66,22 +66,18 @@ data class SpAlbum(
 
 data class SpPaging<T>(val items: List<T>? = null, val next: String? = null, val total: Int = 0)
 
-/**
- * Full playlist object (GET /playlists/{id}). This account's API serves the NEWER format where the
- * embedded track paging is under "items" (not "tracks") and each entry's track is under "item"
- * (not "track"). We read both to be safe. Avoids the restricted standalone /playlists/{id}/tracks.
- */
+// newer format embeds track paging under items not tracks and each entry track under item not track read both
 data class SpFullPlaylist(
     val id: String? = null,
     val name: String? = null,
     val description: String? = null,
     val owner: SpOwner? = null,
     val images: List<SpImage>? = null,
-    val items: SpEmbeddedTracks? = null,           // newer format
-    val tracks: SpEmbeddedTracks? = null,          // legacy format
+    val items: SpEmbeddedTracks? = null,
+    val tracks: SpEmbeddedTracks? = null,
 )
 data class SpEmbeddedTracks(val items: List<SpEmbeddedItem>? = null, val total: Int = 0, val next: String? = null)
-/** A playlist entry: the track is under "item" (new) or "track" (legacy). */
+// track is under item new or track legacy
 data class SpEmbeddedItem(val item: SpTrack? = null, val track: SpTrack? = null)
 
 data class SpMe(val id: String? = null, @SerializedName("display_name") val displayName: String? = null, val images: List<SpImage>? = null, val country: String? = null)
@@ -103,7 +99,6 @@ data class SpSearch(
     val playlists: SpPaging<SpPlaylist>? = null,
 )
 
-// ---- write bodies ----
 data class CreatePlaylistBody(val name: String, val description: String = "", val public: Boolean = false)
 data class ChangeDetailsBody(val name: String? = null, val description: String? = null)
 data class AddTracksBody(val uris: List<String>)
@@ -117,7 +112,6 @@ interface SpotifyApi {
     @GET("v1/me/tracks")
     suspend fun savedTracks(@Query("limit") limit: Int = 50, @Query("offset") offset: Int = 0): SpPaging<SpSavedTrack>
 
-    /** Which of the given track ids are in the user's "Liked Songs" (≤50 ids) — returns a bool per id. */
     @GET("v1/me/tracks/contains")
     suspend fun tracksContains(@Query("ids") ids: String): List<Boolean>
 
@@ -156,8 +150,6 @@ interface SpotifyApi {
     @GET("v1/albums/{id}")
     suspend fun album(@Path("id") id: String): SpAlbum
 
-    /** Paginated album tracks (the album object only embeds the first 50). Tracks here carry no
-     *  album object, so callers supply fallback art/name. */
     @GET("v1/albums/{id}/tracks")
     suspend fun albumTracks(@Path("id") id: String, @Query("offset") offset: Int = 0, @Query("limit") limit: Int = 50): SpPaging<SpTrack>
 
@@ -176,19 +168,16 @@ interface SpotifyApi {
     @GET("v1/playlists/{id}/tracks")
     suspend fun playlistTracks(@Path("id") id: String, @Query("limit") limit: Int = 100, @Query("offset") offset: Int = 0): SpPaging<SpPlaylistItem>
 
-    /** Newer playlist-items endpoint (paginated). Works for owned AND followed/public playlists,
-     *  unlike the 403-restricted /tracks. Entry track is under "item" (new) or "track" (legacy). */
+    // works for owned and followed public playlists unlike the 403-restricted /tracks
     @GET("v1/playlists/{id}/items")
     suspend fun playlistItems(@Path("id") id: String, @Query("offset") offset: Int = 0, @Query("limit") limit: Int = 50): SpEmbeddedTracks
 
     @GET("v1/tracks/{id}")
     suspend fun track(@Path("id") id: String): SpTrack
 
-    /** Batch-fetch full track objects (up to 50 ids) — used to enrich embed-scraped playlist ids. */
     @GET("v1/tracks")
     suspend fun tracks(@Query("ids") ids: String): SpTracksResponse
 
-    // ---- writes ----
     @PUT("v1/me/tracks")
     suspend fun saveTracks(@Query("ids") ids: String): retrofit2.Response<Unit>
 

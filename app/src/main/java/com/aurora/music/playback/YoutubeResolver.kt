@@ -13,12 +13,7 @@ import kotlin.math.abs
 import org.schabi.newpipe.extractor.downloader.Request as NpRequest
 import org.schabi.newpipe.extractor.downloader.Response as NpResponse
 
-/**
- * Resolves a Spotify track (by search query) to a playable YouTube audio stream URL via
- * NewPipeExtractor. Results are cached per Spotify id. Calls block on the network, so they must run
- * off the main thread; the playback layer calls this on ExoPlayer's loader thread via a
- * ResolvingDataSource.
- */
+// blocks on network must run off main thread
 class YoutubeResolver {
 
     private val http = OkHttpClient()
@@ -35,7 +30,6 @@ class YoutubeResolver {
         }
     }
 
-    /** Best-effort: returns a direct audio URL for [query] (title + artist), or null. Cached by [spotifyId]. */
     fun resolve(spotifyId: String, query: String, durationSec: Int): String? {
         cache[spotifyId]?.let { return it }
         if (query.isBlank()) return null
@@ -46,12 +40,10 @@ class YoutubeResolver {
             search.fetchPage()
             val items = search.initialPage.items.filterIsInstance<StreamInfoItem>()
             if (items.isEmpty()) return@runCatching null
-            // Prefer the result whose duration is closest to the Spotify track (when known).
             val best = if (durationSec > 0) items.minByOrNull { abs(it.duration - durationSec) } else null
             val pick = best ?: items.first()
             val info = StreamInfo.getInfo(yt, pick.url)
-            // Prefer an adaptive audio-only stream; if YouTube withholds those (po_token), fall back
-            // to a progressive (muxed) stream — it carries audio and ExoPlayer plays it audio-only.
+            // fall back to progressive muxed stream when audio-only withheld po_token
             val url = info.audioStreams
                 .filter { !it.content.isNullOrBlank() }
                 .maxByOrNull { it.averageBitrate }

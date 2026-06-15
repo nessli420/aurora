@@ -69,7 +69,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
     val song = state.current
     val accent by rememberDominantColor(song.artworkUrl, song.accent)
 
-    // Run the analyser only while this screen is visible.
+    // run analyser only while screen visible
     DisposableEffect(Unit) {
         controller.start()
         onDispose { controller.stop() }
@@ -83,7 +83,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             VizColor.CUSTOM -> VizColors(Color(prefs.primaryColor), Color(prefs.primaryColor))
             VizColor.GRADIENT -> VizColors(Color(prefs.primaryColor), Color(prefs.secondaryColor))
             VizColor.ALBUM_ART -> VizColors(accent, lerp(accent, Color.White, 0.4f))
-            else -> VizColors(accent, lerp(accent, Color.White, 0.35f)) // ACCENT
+            else -> VizColors(accent, lerp(accent, Color.White, 0.35f))
         }
     }
     var controlsVisible by remember { mutableStateOf(true) }
@@ -105,7 +105,6 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
                 indication = null,
             ) { controlsVisible = !controlsVisible },
     ) {
-        // ── Background ──
         when (prefs.background) {
             VizBackground.ALBUM_BLUR -> if (song.artworkUrl.isNotBlank()) {
                 Artwork(song.artworkUrl, accent, Modifier.fillMaxSize().blur(60.dp), corner = 0.dp)
@@ -114,10 +113,9 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
                 Box(Modifier.fillMaxSize().background(bgGradient(accent)))
             }
             VizBackground.GRADIENT -> Box(Modifier.fillMaxSize().background(bgGradient(if (prefs.colorSource == VizColor.GRADIENT) Color(prefs.primaryColor) else colors.primary)))
-            else -> {} // BLACK
+            else -> {}
         }
 
-        // ── Album art centre piece for radial styles ──
         if (isRadial && prefs.showAlbumArt && song.artworkUrl.isNotBlank()) {
             Artwork(
                 song.artworkUrl, accent,
@@ -126,13 +124,11 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             )
         }
 
-        // ── The visualization ──
         VisualizerCanvas(
             controller, prefs, colors,
             Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(16.dp),
         )
 
-        // ── Controls overlay ──
         AnimatedVisibility(controlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopStart)) {
             Row(
                 Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 12.dp, vertical = 8.dp),

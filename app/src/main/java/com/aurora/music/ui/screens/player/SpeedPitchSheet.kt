@@ -63,7 +63,7 @@ fun SpeedPitchSheet(
                     value = speed,
                     onValueChange = onSpeed,
                     valueRange = 0.5f..2.0f,
-                    steps = 29, // 0.05 increments
+                    steps = 29,
                     colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
                 )
                 QuickPicks(listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f), speed) { onSpeed(it) }
@@ -71,7 +71,6 @@ fun SpeedPitchSheet(
 
             Spacer(Modifier.height(16.dp))
 
-            // Match pitch to speed (analog/varispeed). Default on.
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Match pitch to speed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

@@ -18,10 +18,6 @@ import coil.request.SuccessResult
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
-/**
- * Extracts a vibrant accent color from an image [url] (via Coil + Palette), animating from
- * [fallback] to the resolved color. Used to theme detail pages and the player to the cover art.
- */
 @Composable
 fun rememberDominantColor(url: String, fallback: Color): State<Color> {
     val context = LocalContext.current
@@ -53,17 +49,14 @@ fun rememberDominantColor(url: String, fallback: Color): State<Color> {
         }
         if (color != null) resolved.value = color
     }
-
-    // Smoothly animate whenever the resolved color changes.
     return animateColorAsState(resolved.value, tween(450), label = "dominant")
 }
 
-/** Nudge very dark/very washed colors into a usable range for accents and gradients. */
 private fun boost(c: Color): Color {
     val lum = c.luminance()
     return when {
-        lum < 0.12f -> lerp(c, Color.White, 0.30f)   // too dark → lighten
-        lum > 0.85f -> lerp(c, Color.Black, 0.22f)    // too bright → darken slightly
+        lum < 0.12f -> lerp(c, Color.White, 0.30f)
+        lum > 0.85f -> lerp(c, Color.Black, 0.22f)
         else -> c
     }
 }

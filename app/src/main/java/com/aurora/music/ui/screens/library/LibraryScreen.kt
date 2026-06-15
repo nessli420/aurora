@@ -73,7 +73,6 @@ import com.aurora.music.viewmodel.LibraryUiState
 
 private data class LibRow(val title: String, val subtitle: String, val art: String, val accent: androidx.compose.ui.graphics.Color, val id: String, val kind: String, val circle: Boolean = false, val menu: Boolean = true)
 
-/** Context-menu actions for a library collection row (album / playlist / artist / smart). */
 private class LibActions(
     val isLiked: (String) -> Boolean,
     val onPlay: (LibRow) -> Unit,
@@ -178,7 +177,7 @@ fun LibraryScreen(
                     ) { Icon(Icons.Filled.Close, "Clear", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp)) }
                 }
             }
-            // In local mode there are no downloads — drop that filter.
+            // local mode has no downloads
             val visible = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
             items(visible.size) { i ->
                 val f = visible[i]
@@ -326,18 +325,17 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
     }
     if (filter != LibraryFilter.ALL && filter != LibraryFilter.PLAYLISTS) return sorted
 
-    // Pinned items sit above everything in All; de-dupe them out of the normal rows below.
+    // pinned sit above everything de-dupe out of normal rows below
     val pinRows = if (filter == LibraryFilter.ALL) pins.map {
         LibRow(it.title, "Pinned • ${it.kind.replaceFirstChar { c -> c.uppercase() }}", it.coverUrl, accentFor(it.id), it.id, it.kind, circle = it.kind == "artist")
     } else emptyList()
     val pinned = pins.map { it.kind to it.id }.toSet()
     val deduped = sorted.filterNot { (it.kind to it.id) in pinned }
     val liked = LibRow("Liked Songs", "Playlist • ${state.likedSongCount} songs", state.likedCover, accentFor("liked"), "liked", "liked")
-    // Folder/file-tree entry: virtual row, only on backends that expose a tree.
+    // virtual row only on backends that expose a tree
     val folders = if (filter == LibraryFilter.ALL && state.supportsFolders)
         listOf(LibRow("Folders", "Browse by folder", "", accentFor("folders"), "", "folders", menu = false))
     else emptyList()
-    // Internet radio + podcasts: app-level browse entries, always available in All.
     val streaming = if (filter == LibraryFilter.ALL) listOf(
         LibRow("Radio", "Live internet stations", "", accentFor("radio"), "", "radio", menu = false),
         LibRow("Podcasts", "Shows & episodes", "", accentFor("podcasts"), "", "podcasts", menu = false),
@@ -450,7 +448,7 @@ private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 
 @Composable
 private fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, onDismiss: () -> Unit) {
-    // The auto "Liked Songs" row is virtual — no like/delete, just playback actions.
+    // liked row is virtual no like/delete just playback
     val isVirtual = row.kind == "liked"
     val isSmart = row.kind == "smart"
     val isPlaylist = row.kind == "playlist"

@@ -7,11 +7,7 @@ import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.util.accentFor
 
-/**
- * A [MediaBackend] backed entirely by on-device files (no server). Library + metadata come from
- * [LocalLibrary] (MediaStore tags); playlists + likes from [LocalStore]. Songs play straight from
- * their `content://` URIs. Server-only operations (lyrics fetch, scrobble) are no-ops.
- */
+// mediabackend over on-device files only server-only ops are no-ops
 class LocalBackend(
     private val library: LocalLibrary,
     private val store: LocalStore,
@@ -36,7 +32,7 @@ class LocalBackend(
         library.ensureLoaded()
         val albums = library.albums
         return HomeData(
-            newReleases = albums.take(20),                                   // recently added (LocalLibrary sorts by date)
+            newReleases = albums.take(20),                                   // locallibrary already sorts by date added
             mostPlayed = albums.sortedByDescending { it.songCount }.take(20),
             playlists = store.playlists().map { it.toPlaylist() },
             artists = library.artists.take(40),
@@ -78,9 +74,8 @@ class LocalBackend(
         )
     }
 
-    override suspend fun scrobble(id: String) { /* no server to report to; Last.fm handled separately */ }
+    override suspend fun scrobble(id: String) { /* last.fm handled separately */ }
 
-    /** A simple "radio": more by the same artist, padded with a random sample of the library. */
     override suspend fun radio(seedId: String): List<Song> {
         library.ensureLoaded()
         val seed = library.song(seedId)
@@ -129,8 +124,6 @@ class LocalBackend(
         }
     }
 
-    // --- writes (local) ---
-
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean = store.setLiked(id, starred)
 
     override suspend fun createPlaylist(name: String): Boolean { store.createPlaylist(name); return true }
@@ -143,11 +136,10 @@ class LocalBackend(
 
     override suspend fun deletePlaylist(id: String): Boolean { store.deletePlaylist(id); return true }
 
-    /** Add/remove tracks to a local playlist (used by the queue/playlist editing UI). */
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean { store.addTracks(playlistId, trackIds); return true }
     suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean { store.removeTracks(playlistId, trackIds); return true }
 
-    // Folder browsing: the real on-disk tree, rooted at the deepest common directory.
+    // folder tree rooted at the deepest common directory
 
     override val supportsFolders: Boolean get() = true
 

@@ -8,18 +8,12 @@ import okhttp3.FormBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
 
-/**
- * Anonymous Imgur image host. Album art lives on a private music server that neither Discord nor
- * Imgur can fetch by URL, so we download the cover bytes in-app and upload them here to get a
- * public https link — which Discord *can* proxy for Rich Presence. Needs a free Imgur API
- * Client-ID (https://api.imgur.com/oauth2/addclient, "anonymous usage without user authorization").
- */
+// private server art is unreachable by discord so upload to imgur for a proxyable public link
 class ImgurUploader {
 
     private val http = OkHttpClient()
     private val gson = Gson()
 
-    /** Fetch [imageUrl] (reachable from the device) and upload the bytes to Imgur. Returns the link. */
     suspend fun uploadFromUrl(imageUrl: String, clientId: String): String? = withContext(Dispatchers.IO) {
         if (clientId.isBlank() || imageUrl.isBlank()) return@withContext null
         runCatching {

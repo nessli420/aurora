@@ -16,14 +16,9 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 
-/**
- * Scans on-device audio via [MediaStore] and exposes it as the app's domain models, grouped by the
- * files' own tags (album/artist). Scanned once and cached in memory; [refresh] rescans. Songs play
- * straight from their `content://` URIs (no streaming, no server).
- */
 class LocalLibrary(
     private val context: Context,
-    // Scanned ReplayGain overlaid by file path, since MediaStore tags rarely carry it.
+    // scanned replaygain overlaid by path since mediastore tags rarely carry it
     private val gainProvider: (String) -> Pair<Float, Float>? = { null },
 ) {
 
@@ -35,13 +30,10 @@ class LocalLibrary(
     @Volatile var artists: List<Artist> = emptyList(); private set
     private var byId: Map<String, Song> = emptyMap()
 
-    /** Fuzzy identity index: `norm(artist)|norm(title)` → on-device tracks, for best-source matching (7.1). */
     @Volatile private var matchIndex: Map<String, List<Song>> = emptyMap()
 
-    /** songId → containing directory (full path, no trailing slash), for folder browsing. */
     @Volatile private var dirOf: Map<String, String> = emptyMap()
 
-    /** The deepest directory common to every scanned track — the folder tree's root. */
     @Volatile var folderRoot: String = ""; private set
 
     suspend fun ensureLoaded() {
@@ -57,12 +49,7 @@ class LocalLibrary(
 
     fun song(id: String): Song? = byId[id]
 
-    /**
-     * The best on-device file for a track identified by metadata (7.1 best-source resolution), or null.
-     * Prefers a candidate whose duration is within tolerance; if duration is unknown on either side,
-     * only substitutes when there's a single unambiguous local track with that artist+title — so a
-     * different version is never swapped in.
-     */
+    // only substitute on a single unambiguous match so a different version is never swapped in
     fun findMatch(artist: String, title: String, durationSec: Int): Song? {
         if (title.isBlank()) return null
         val candidates = matchIndex[TrackMatch.key(artist, title)] ?: return null
@@ -71,10 +58,6 @@ class LocalLibrary(
         return candidates.singleOrNull()
     }
 
-    /**
-     * One level of the on-device folder tree: (subfolder names, songs directly in [path]).
-     * Blank [path] = [folderRoot]. Subfolders are the distinct next path segments below [path].
-     */
     fun browse(path: String): Pair<List<String>, List<Song>> {
         val base = path.ifBlank { folderRoot }
         if (base.isBlank()) return emptyList<String>() to emptyList()
@@ -107,7 +90,6 @@ class LocalLibrary(
     private fun albumArtUri(albumId: Long): String =
         if (albumId <= 0) "" else ContentUris.withAppendedId(ALBUM_ART_BASE, albumId).toString()
 
-    /** File extension (e.g. "flac", "mp3") from the display name, falling back to the MIME type. */
     private fun suffixFrom(displayName: String?, mime: String?): String {
         displayName?.substringAfterLast('.', "")?.takeIf { it.isNotBlank() && it.length in 2..4 }?.let { return it.lowercase() }
         val m = mime?.lowercase() ?: return ""
@@ -138,14 +120,13 @@ class LocalLibrary(
             MediaStore.Audio.Media.DATE_ADDED,
             MediaStore.Audio.Media.DISPLAY_NAME,
             MediaStore.Audio.Media.MIME_TYPE,
-            @Suppress("DEPRECATION") MediaStore.Audio.Media.DATA,  // file path, for folder browsing
+            @Suppress("DEPRECATION") MediaStore.Audio.Media.DATA,
         )
-        if (Build.VERSION.SDK_INT >= 30) cols.add(MediaStore.Audio.Media.BITRATE) // bps; column absent pre-30
+        if (Build.VERSION.SDK_INT >= 30) cols.add(MediaStore.Audio.Media.BITRATE) // column absent pre-30
         val projection = cols.toTypedArray()
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         val sort = "${MediaStore.Audio.Media.TITLE} COLLATE NOCASE ASC"
         val out = ArrayList<Song>()
-        // dateAdded + year keyed by album, for "recently added" ordering and album metadata.
         val albumDateAdded = HashMap<String, Long>()
         val albumYear = HashMap<String, Int>()
         val dirs = HashMap<String, String>()
@@ -211,7 +192,6 @@ class LocalLibrary(
         matchIndex = out.groupBy { TrackMatch.key(it.artist, it.title) }
         dirOf = dirs
         folderRoot = commonDir(dirs.values)
-        // Albums: grouped by albumId, ordered by most-recently-added.
         albums = out.groupBy { it.albumId }
             .map { (aid, tracks) ->
                 val f = tracks.first()
@@ -225,7 +205,6 @@ class LocalLibrary(
                 )
             }
             .sortedByDescending { albumDateAdded[it.id] ?: 0L }
-        // Artists: grouped by artistId.
         artists = out.groupBy { it.artistId }
             .map { (aid, tracks) ->
                 Artist(

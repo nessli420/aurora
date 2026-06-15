@@ -10,8 +10,6 @@ import retrofit2.http.Header
 import retrofit2.http.POST
 import java.util.concurrent.TimeUnit
 
-// ListenBrainz submit API
-
 data class LbTrackMeta(
     val artist_name: String,
     val track_name: String,
@@ -29,10 +27,6 @@ interface ListenBrainzApi {
     suspend fun submit(@Header("Authorization") auth: String, @Body body: LbSubmit): Response<Unit>
 }
 
-/**
- * ListenBrainz scrobble submission. Token auth only: the user's own ListenBrainz user token.
- * `playing_now` for the now-playing ping; `single` for a completed listen.
- */
 class ListenBrainzClient {
     private val http = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -48,7 +42,6 @@ class ListenBrainzClient {
 
     private fun auth(token: String) = "Token $token"
 
-    /** Returns the ListenBrainz username for a valid token, or null. */
     suspend fun validate(token: String): String? =
         runCatching { api.validate(auth(token)).takeIf { it.valid }?.user_name }.getOrNull()
 

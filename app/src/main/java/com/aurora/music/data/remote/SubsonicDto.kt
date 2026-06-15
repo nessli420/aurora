@@ -2,7 +2,6 @@ package com.aurora.music.data.remote
 
 import com.google.gson.annotations.SerializedName
 
-/** Envelope: every Subsonic response is wrapped in "subsonic-response". */
 data class SubsonicEnvelope(
     @SerializedName("subsonic-response") val response: SubsonicResponse,
 )
@@ -33,7 +32,6 @@ data class SubsonicResponse(
     val isOk: Boolean get() = status == "ok"
 }
 
-// --- Lyrics (OpenSubsonic getLyricsBySongId) ---
 data class LyricsListDto(val structuredLyrics: List<StructuredLyricsDto> = emptyList())
 data class StructuredLyricsDto(
     val lang: String? = null,
@@ -44,7 +42,6 @@ data class LyricLineDto(val start: Long? = null, val value: String = "")
 
 data class SubsonicError(val code: Int = 0, val message: String = "")
 
-// --- Albums ---
 data class AlbumListDto(val album: List<AlbumDto> = emptyList())
 
 data class AlbumDto(
@@ -62,7 +59,6 @@ data class AlbumDto(
     val song: List<SongDto> = emptyList(),
 )
 
-// --- Songs ---
 data class SongDto(
     val id: String = "",
     val parent: String? = null,
@@ -85,11 +81,10 @@ data class SongDto(
     val starred: String? = null,
     val explicitStatus: String? = null,
     val replayGain: ReplayGainDto? = null,
-    val isDir: Boolean = false,           // getMusicDirectory children: true = subfolder (primitive → Gson-safe)
-    val path: String? = null,             // server-side file path (used for M3U export)
+    val isDir: Boolean = false,           // primitive keeps it gson-safe
+    val path: String? = null,
 )
 
-// --- Folder browsing (getMusicFolders / getIndexes / getMusicDirectory) ---
 data class MusicFoldersDto(val musicFolder: List<MusicFolderDto> = emptyList())
 data class MusicFolderDto(val id: String = "", val name: String? = null)
 data class IndexesDto(val index: List<DirIndexDto> = emptyList(), val child: List<SongDto> = emptyList())
@@ -104,7 +99,6 @@ data class ReplayGainDto(
     val albumPeak: Double? = null,
 )
 
-// --- Artists ---
 data class ArtistsDto(val index: List<ArtistIndexDto> = emptyList())
 data class ArtistIndexDto(val name: String = "", val artist: List<ArtistDto> = emptyList())
 
@@ -117,7 +111,6 @@ data class ArtistDto(
     val album: List<AlbumDto> = emptyList(),
 )
 
-// --- Playlists ---
 data class PlaylistsDto(val playlist: List<PlaylistDto> = emptyList())
 data class PlaylistDto(
     val id: String = "",
@@ -130,7 +123,6 @@ data class PlaylistDto(
     val entry: List<SongDto> = emptyList(),
 )
 
-// --- Starred / search ---
 data class Starred2Dto(
     val song: List<SongDto> = emptyList(),
     val album: List<AlbumDto> = emptyList(),

@@ -8,14 +8,7 @@ import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.ForwardingAudioSink
 import java.nio.ByteBuffer
 
-/**
- * A transparent [AudioSink] wrapper that copies the decoded PCM passing through it into the
- * [VisualizerController] before forwarding to the real sink. Used in normal (16-bit) and hi-res
- * (float) playback; the bit-perfect path taps [com.decent.usbaudio.media3.UsbAudioSink] directly.
- *
- * The tap reads with absolute indexing and never mutates the buffer, so playback is unaffected, and
- * it no-ops entirely when the visualizer isn't running.
- */
+// reads with absolute indexing never mutates the buffer so playback is unaffected
 @OptIn(UnstableApi::class)
 class TappingAudioSink(
     delegate: AudioSink,

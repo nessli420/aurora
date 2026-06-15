@@ -61,7 +61,7 @@ fun PermissionsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val ctx = LocalContext.current
     var refresh by remember { mutableIntStateOf(0) }
 
-    // Re-read every permission's live state whenever we come back from a system settings screen.
+    // re-read live perm state on resume from system settings
     val owner = LocalLifecycleOwner.current
     DisposableEffect(owner) {
         val obs = LifecycleEventObserver { _, e -> if (e == Lifecycle.Event.ON_RESUME) refresh++ }
@@ -72,7 +72,7 @@ fun PermissionsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val notifLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
     val audioLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { refresh++ }
 
-    refresh // subscribe: recompute the statuses below on each bump
+    refresh // recompute statuses on each bump
     val audioPerm = if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
     val notifOk = if (Build.VERSION.SDK_INT >= 33) NotificationManagerCompat.from(ctx).areNotificationsEnabled() else true
     val audioOk = ContextCompat.checkSelfPermission(ctx, audioPerm) == PackageManager.PERMISSION_GRANTED

@@ -12,11 +12,7 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import java.io.File
 
-/**
- * A persisted queue track. A trimmed [Song] (no Compose Color — Gson can't round-trip it) carrying
- * everything needed to rebuild a playable MediaItem. Strings are nullable per the project's Gson
- * rule (missing keys come back null, not the Kotlin default).
- */
+// no compose color gson cant round-trip it strings nullable per gson rule
 data class SavedTrack(
     val id: String? = "",
     val title: String? = "",
@@ -53,21 +49,15 @@ fun Song.toSavedTrack(): SavedTrack = SavedTrack(
     replayGainTrack = replayGainTrack, replayGainAlbum = replayGainAlbum, liked = liked, explicit = explicit,
 )
 
-/** A persisted playback session: the queue, where we are in it, and the playback modes. */
 data class SavedQueue(
     val tracks: List<SavedTrack>? = emptyList(),
     val currentIndex: Int = 0,
     val positionSec: Int = 0,
     val shuffle: Boolean = false,
-    val repeat: Int = 0,           // 0 = off, 1 = all, 2 = one
+    val repeat: Int = 0,           // 0 off 1 all 2 one
 )
 
-/**
- * Persists the playback queue **per account** so it survives a swipe-away (the service is torn down
- * in onTaskRemoved) and a server switch / logout-and-back. Keyed by the same account key as
- * [AppContainer.currentAccountKey]. Writes are coalesced by a periodic flush so the hot position
- * updates don't hammer the disk.
- */
+// per-account so queue survives swipe-away and server switch writes coalesced by periodic flush
 class QueueStore(context: Context) {
     private val file = File(context.filesDir, "queue_state.json")
     private val gson = Gson()
@@ -103,7 +93,6 @@ class QueueStore(context: Context) {
         synchronized(lock) { if (map.remove(accountKey) != null) dirty = true }
     }
 
-    /** Write to disk now (e.g. just before switching accounts or on app close). */
     fun requestFlush() { scope.launch { flushNow() } }
 
     private fun flushNow() {
