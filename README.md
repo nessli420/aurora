@@ -187,6 +187,3 @@ Vendored `decent/` modules retain their MIT licensing; bundled xiph/flac and Chr
 
 Aurora isn't affiliated with or endorsed by Navidrome, Jellyfin, Green Music App, Last.fm, ListenBrainz, Discord, or any DAC manufacturer; brand and device names are used descriptively, for interoperability.
 
-## License
-
-_TODO: choose a license for the app code before publishing._ The third-party components above keep their own licenses regardless of the choice. For open source, an MIT or GPL-3.0 `LICENSE` at the repo root is the usual choice.
