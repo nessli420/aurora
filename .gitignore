@@ -34,6 +34,9 @@ Thumbs.db
 CLAUDE.md
 PHASE3_HANDOFF.md
 aurora-roadmap-phases-2-7.md
+AGENTS.md
+.agents/
+.gitignore
 
 # ---- Scratch: stray screenshots / logs at the repo root ----
 /*.png
