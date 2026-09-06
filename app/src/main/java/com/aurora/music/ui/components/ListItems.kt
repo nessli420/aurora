@@ -41,13 +41,18 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import com.aurora.music.data.ThemeStyle
+import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.auroraPanel
 
 @Composable
 fun SongRow(
@@ -72,7 +77,7 @@ fun SongRow(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(14.dp))
+            .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -206,7 +211,8 @@ fun PlaylistCard(
     Column(
         modifier = modifier
             .width(width)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium)
+            .then(if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) Modifier.auroraPanel(MaterialTheme.shapes.medium) else Modifier)
             .clickable(onClick = onClick)
             .padding(8.dp),
     ) {
@@ -235,11 +241,27 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier) 
     Column(
         modifier = modifier
             .width(156.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium)
+            .then(if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) Modifier.auroraPanel(MaterialTheme.shapes.medium) else Modifier)
             .clickable(onClick = onClick)
             .padding(8.dp),
     ) {
-        Artwork(album.artworkUrl, MaterialTheme.colorScheme.secondary, Modifier.size(140.dp), corner = 14.dp)
+        Box {
+            Artwork(album.artworkUrl, MaterialTheme.colorScheme.secondary, Modifier.size(140.dp), corner = 14.dp)
+            val label = album.typeLabel
+            if (label != "Album") {
+                Text(
+                    label.uppercase(),
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Black,
+                    color = Color.White,
+                    modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
+                        .clip(RoundedCornerShape(6.dp))
+                        .background(Color.Black.copy(alpha = 0.55f))
+                        .padding(horizontal = 6.dp, vertical = 2.dp),
+                )
+            }
+        }
         Spacer(Modifier.height(10.dp))
         Text(album.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(
@@ -257,7 +279,7 @@ fun ArtistCircle(artist: Artist, onClick: () -> Unit, modifier: Modifier = Modif
     Column(
         modifier = modifier
             .width(124.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium)
             .clickable(onClick = onClick)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -275,8 +297,11 @@ fun RecentTile(playlist: Playlist, onClick: () -> Unit, modifier: Modifier = Mod
         modifier = modifier
             .fillMaxWidth()
             .height(60.dp)
-            .clip(RoundedCornerShape(10.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .then(
+                if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
+                    Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                else Modifier.auroraPanel(MaterialTheme.shapes.small)
+            )
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {

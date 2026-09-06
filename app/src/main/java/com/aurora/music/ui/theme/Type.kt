@@ -8,6 +8,7 @@ import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.aurora.music.R
+import com.aurora.music.data.ThemeStyle
 
 val Circular = FontFamily(
     Font(R.font.circular_light, FontWeight.Light),
@@ -22,11 +23,22 @@ val Circular = FontFamily(
     Font(R.font.circular_black_italic, FontWeight.Black, FontStyle.Italic),
 )
 
-fun auroraTypography(scale: Float = 1f): Typography {
+fun auroraTypography(scale: Float = 1f, style: Int = ThemeStyle.AURORA): Typography {
     val s = scale.coerceIn(0.8f, 1.4f)
+    val family = when (style) {
+        ThemeStyle.RETRO -> FontFamily.Monospace
+        ThemeStyle.AERO -> FontFamily.SansSerif
+        else -> Circular
+    }
     fun t(weight: FontWeight, size: Float, line: Float, letter: Float = 0f) = TextStyle(
-        fontFamily = Circular, fontWeight = weight,
-        fontSize = (size * s).sp, lineHeight = (line * s).sp, letterSpacing = letter.sp,
+        fontFamily = family,
+        fontWeight = when {
+            style == ThemeStyle.GLASS && size >= 22f -> FontWeight.Light
+            style == ThemeStyle.AERO && size >= 22f -> FontWeight.Normal
+            else -> weight
+        },
+        fontSize = (size * s).sp, lineHeight = (line * s).sp,
+        letterSpacing = (if (style == ThemeStyle.RETRO) 0f else letter).sp,
     )
     return Typography(
         displayLarge = t(FontWeight.Black, 40f, 46f, -0.5f),

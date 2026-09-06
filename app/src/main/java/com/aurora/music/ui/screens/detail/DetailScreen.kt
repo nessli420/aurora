@@ -105,6 +105,7 @@ fun DetailScreen(
     var showEdit by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
     var searchOpen by remember { mutableStateOf(false) }
+    var genreFilter by remember(state.data?.info) { mutableStateOf<String?>(null) }
     val searchFocus = remember { androidx.compose.ui.focus.FocusRequester() }
     val data = state.data
 
@@ -252,15 +253,31 @@ fun DetailScreen(
         }
 
         if (info.isArtist && data.albums.isNotEmpty()) {
-            item {
-                SectionHeader("Albums", Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-                Spacer(Modifier.height(6.dp))
-                androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
-                    items(data.albums.size) { i ->
-                        com.aurora.music.ui.components.AlbumCard(data.albums[i], onClick = { onOpenDetail("album", data.albums[i].id) })
+            // eps and singles get their own shelf so they stop masquerading as albums
+            val (short, full) = data.albums.partition { it.typeLabel == "EP" || it.typeLabel == "Single" }
+            if (full.isNotEmpty()) {
+                item {
+                    SectionHeader("Albums", Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                    Spacer(Modifier.height(6.dp))
+                    androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                        items(full.size) { i ->
+                            com.aurora.music.ui.components.AlbumCard(full[i], onClick = { onOpenDetail("album", full[i].id) })
+                        }
                     }
+                    Spacer(Modifier.height(8.dp))
                 }
-                Spacer(Modifier.height(8.dp))
+            }
+            if (short.isNotEmpty()) {
+                item {
+                    SectionHeader("EPs & Singles", Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                    Spacer(Modifier.height(6.dp))
+                    androidx.compose.foundation.lazy.LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                        items(short.size) { i ->
+                            com.aurora.music.ui.components.AlbumCard(short[i], onClick = { onOpenDetail("album", short[i].id) })
+                        }
+                    }
+                    Spacer(Modifier.height(8.dp))
+                }
             }
         }
 
@@ -314,8 +331,38 @@ fun DetailScreen(
             }
         }
 
-        val shown = if (query.isBlank() || !searchOpen) tracks
-            else tracks.filter { it.title.contains(query, true) || it.artist.contains(query, true) }
+        // playlists mix genres so offer chips for the ones actually present
+        val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
+        val genres = if (isSongMix) tracks.mapNotNull { t -> t.genre.trim().takeIf { it.isNotBlank() } }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() } else emptyList()
+        if (genres.size > 1) {
+            item {
+                androidx.compose.foundation.lazy.LazyRow(
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                ) {
+                    items(genres.size + 1) { i ->
+                        val label = if (i == 0) "All" else genres[i - 1]
+                        val selected = if (i == 0) genreFilter == null else genreFilter.equals(label, true)
+                        Text(
+                            label,
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
+                            color = if (selected) accent else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .clip(RoundedCornerShape(50))
+                                .background(if (selected) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .then(if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.6f), RoundedCornerShape(50)) else Modifier)
+                                .clickable { genreFilter = if (i == 0) null else label }
+                                .padding(horizontal = 14.dp, vertical = 7.dp),
+                        )
+                    }
+                }
+            }
+        }
+
+        val genreShown = genreFilter?.let { g -> tracks.filter { it.genre.equals(g, true) } } ?: tracks
+        val shown = if (query.isBlank() || !searchOpen) genreShown
+            else genreShown.filter { it.title.contains(query, true) || it.artist.contains(query, true) }
 
         items(shown.size) { i ->
             val s = shown[i]

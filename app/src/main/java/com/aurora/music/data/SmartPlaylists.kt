@@ -65,11 +65,12 @@ class SmartPlaylistEngine(
         downloaded: Set<String>,
         now: Long,
     ): Boolean = when (r.field) {
-        "title", "artist", "album", "format" -> {
+        "title", "artist", "album", "genre", "format" -> {
             val actual = when (r.field) {
                 "title" -> s.title
                 "artist" -> s.artist
                 "album" -> s.album
+                "genre" -> s.genre
                 else -> s.suffix
             }
             val v = r.value.orEmpty()

@@ -96,6 +96,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
     @Volatile private var loadingRadio = false
 
+    // bit-perfect quirk: the native flac engine plays audio (and currentPosition advances off engine frames)
+    // while exoplayer can still report STATE_BUFFERING because the native-engine loadcontrol blocks loading, so
+    // c.isPlaying reads false on a cold connect leaving the bar frozen + a paused icon until a manual pause/play.
+    // treat "wants to play and is buffering" as playing so the ui tracks the audible reality.
+    private val Player.effectivelyPlaying: Boolean
+        get() = isPlaying || (playWhenReady && playbackState == Player.STATE_BUFFERING)
+
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             syncFromController()
@@ -256,12 +263,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (songs.isEmpty()) return
         songById = songs.associateBy { it.id }
         val idx = sq.currentIndex.coerceIn(0, songs.lastIndex)
-        c.setMediaItems(songs.map { toMediaItem(it) }, idx, sq.positionSec.toLong() * 1000)
+        val delivery = deliverQueue(songs, idx, sq.positionSec.toLong() * 1000)
         c.playbackParameters = currentParams()
         c.repeatMode = when (sq.repeat) { 1 -> Player.REPEAT_MODE_ALL; 2 -> Player.REPEAT_MODE_ONE; else -> Player.REPEAT_MODE_OFF }
         c.prepare()   // buffer at saved position but stay paused
         _state.update {
-            it.copy(queue = songs, current = songs[idx], positionSec = sq.positionSec.toFloat(), isPlaying = false, currentIndex = idx, shuffle = sq.shuffle,
+            it.copy(queue = delivery.songs, current = songs[idx], positionSec = sq.positionSec.toFloat(), isPlaying = false, currentIndex = delivery.currentIndex, shuffle = sq.shuffle,
                 repeat = when (sq.repeat) { 1 -> RepeatMode.ALL; 2 -> RepeatMode.ONE; else -> RepeatMode.OFF })
         }
         if (sq.shuffle) {
@@ -337,7 +344,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             while (true) {
                 delay(200)
                 val c = controller ?: continue
-                if (c.isPlaying) {
+                if (c.effectivelyPlaying) {
                     val posSec = (c.currentPosition / 1000f).coerceAtLeast(0f)
                     _state.update { it.copy(positionSec = posSec) }
                     maybeNowPlaying()
@@ -359,7 +366,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         _state.update {
             it.copy(
                 current = cur,
-                isPlaying = c.isPlaying,
+                isPlaying = c.effectivelyPlaying,
                 shuffle = c.shuffleModeEnabled,
                 repeat = when (c.repeatMode) {
                     Player.REPEAT_MODE_ONE -> RepeatMode.ONE
@@ -447,15 +454,14 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         container.haptic()
         playingAccountKey = container.currentAccountKey()
         songById = songs.associateBy { it.id }
-        val items = songs.map { toMediaItem(it) }
         val idx = startIndex.coerceIn(0, songs.lastIndex)
-        c.setMediaItems(items, idx, 0L)
+        val delivery = deliverQueue(songs, idx, 0L)
         c.playbackParameters = currentParams()
         c.prepare()
         c.play()
         // fresh context plays in order make sure shuffle is off
         sendShuffle(0)
-        _state.update { it.copy(queue = songs, current = songs[idx], positionSec = 0f, isPlaying = true) }
+        _state.update { it.copy(queue = delivery.songs, currentIndex = delivery.currentIndex, current = songs[idx], positionSec = 0f, isPlaying = true) }
     }
 
     fun play(song: Song) = playAll(listOf(song), 0)
@@ -468,6 +474,43 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     fun shuffleCollection(kind: String, id: String, loaded: List<Song>, total: Int) {
         shufflePlay(loaded)
         fillQueue(kind, id, loaded, total, shuffle = true)
+    }
+
+    private data class QueueDelivery(val songs: List<Song>, val currentIndex: Int)
+
+    // sets a safe initial window (containing startIndex) then backfills the rest of a large in-memory
+    // list in chunks, forward first then the songs before startIndex prepended so skip-back still works.
+    // returns whatever was actually included in the synchronous setMediaItems call, and where the
+    // "current" song landed within it — the controller resets to a local index for the windowed case.
+    private fun deliverQueue(songs: List<Song>, startIndex: Int, startPositionMs: Long): QueueDelivery {
+        val c = controller ?: return QueueDelivery(emptyList(), 0)
+        if (songs.size <= QUEUE_BATCH) {
+            c.setMediaItems(songs.map { toMediaItem(it) }, startIndex, startPositionMs)
+            return QueueDelivery(songs, startIndex)
+        }
+        val windowEnd = (startIndex + QUEUE_BATCH).coerceAtMost(songs.size)
+        val initial = songs.subList(startIndex, windowEnd)
+        c.setMediaItems(initial.map { toMediaItem(it) }, 0, startPositionMs)
+        queueFillJob?.cancel()
+        queueFillJob = viewModelScope.launch {
+            var tail = windowEnd
+            while (tail < songs.size) {
+                val chunk = songs.subList(tail, (tail + QUEUE_BATCH).coerceAtMost(songs.size))
+                c.addMediaItems(chunk.map { toMediaItem(it) })
+                syncFromController()
+                tail += chunk.size
+                delay(40)
+            }
+            var head = startIndex
+            while (head > 0) {
+                val chunkStart = (head - QUEUE_BATCH).coerceAtLeast(0)
+                c.addMediaItems(0, songs.subList(chunkStart, head).map { toMediaItem(it) })
+                syncFromController()
+                head = chunkStart
+                delay(40)
+            }
+        }
+        return QueueDelivery(initial, 0)
     }
 
     private fun fillQueue(kind: String, id: String, loaded: List<Song>, total: Int, shuffle: Boolean) {
@@ -538,11 +581,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         playingAccountKey = container.currentAccountKey()
         songById = songs.associateBy { it.id }
         val shuffled = songs.shuffled()
-        c.setMediaItems(shuffled.map { toMediaItem(it) }, 0, 0L)
+        val delivery = deliverQueue(shuffled, 0, 0L)
         c.playbackParameters = currentParams()
         c.prepare()
         c.play()
-        _state.update { it.copy(queue = shuffled, current = shuffled[0], positionSec = 0f, isPlaying = true, shuffle = true) }
+        _state.update { it.copy(queue = delivery.songs, currentIndex = delivery.currentIndex, current = shuffled[0], positionSec = 0f, isPlaying = true, shuffle = true) }
         // pass the original order so disabling shuffle restores it
         c.sendCustomCommand(
             SessionCommand(PlaybackService.CMD_SHUFFLE, android.os.Bundle().apply {
@@ -755,5 +798,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     private companion object {
         const val SLEEP_FADE_MS = 6_000L
+        // each MediaItem's parcelled metadata (artwork uri, title/artist/album, extras) is a few KB;
+        // a binder transaction caps near 1mb, so a few hundred full items can silently get truncated
+        // by the session. deliverQueue keeps the initial setMediaItems call well under that.
+        const val QUEUE_BATCH = 120
     }
 }

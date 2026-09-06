@@ -54,7 +54,6 @@ fun SidebarContent(
     onDuplicates: () -> Unit,
     onRadio: () -> Unit = {},
     onPodcasts: () -> Unit = {},
-    onClose: () -> Unit,
     onLogout: () -> Unit,
 ) {
     val initials = username.take(2).uppercase().ifBlank { "ME" }
@@ -70,7 +69,7 @@ fun SidebarContent(
         Spacer(Modifier.height(16.dp))
         // Profile header
         Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).clickable { onClose(); onProfile() }.padding(8.dp),
+            Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).clickable { onProfile() }.padding(8.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
@@ -95,18 +94,18 @@ fun SidebarContent(
         Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
         Spacer(Modifier.height(8.dp))
 
-        DrawerItem(Icons.Filled.Person, "Profile") { onClose(); onProfile() }
-        DrawerItem(Icons.AutoMirrored.Filled.QueueMusic, "Your Library") { onClose(); onLibrary() }
-        DrawerItem(Icons.Filled.Radio, "Radio") { onClose(); onRadio() }
-        DrawerItem(Icons.Filled.Podcasts, "Podcasts") { onClose(); onPodcasts() }
-        DrawerItem(Icons.Filled.History, "Listening history") { onClose(); onHistory() }
-        DrawerItem(Icons.Filled.Workspaces, "Listening stats") { onClose(); onStats() }
-        DrawerItem(Icons.Filled.ContentCopy, "Find duplicates") { onClose(); onDuplicates() }
-        DrawerItem(Icons.Filled.Settings, "Settings") { onClose(); onSettings() }
+        DrawerItem(Icons.Filled.Person, "Profile") { onProfile() }
+        DrawerItem(Icons.AutoMirrored.Filled.QueueMusic, "Your Library") { onLibrary() }
+        DrawerItem(Icons.Filled.Radio, "Radio") { onRadio() }
+        DrawerItem(Icons.Filled.Podcasts, "Podcasts") { onPodcasts() }
+        DrawerItem(Icons.Filled.History, "Listening history") { onHistory() }
+        DrawerItem(Icons.Filled.Workspaces, "Listening stats") { onStats() }
+        DrawerItem(Icons.Filled.ContentCopy, "Find duplicates") { onDuplicates() }
+        DrawerItem(Icons.Filled.Settings, "Settings") { onSettings() }
 
         Spacer(Modifier.weight(1f))
 
-        DrawerItem(Icons.AutoMirrored.Filled.Logout, "Log out", tint = MaterialTheme.colorScheme.error) { onClose(); onLogout() }
+        DrawerItem(Icons.AutoMirrored.Filled.Logout, "Log out", tint = MaterialTheme.colorScheme.error) { onLogout() }
         Spacer(Modifier.height(16.dp))
     }
 }
@@ -114,7 +113,7 @@ fun SidebarContent(
 @Composable
 private fun DrawerItem(icon: ImageVector, label: String, tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface, onClick: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 14.dp),
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, null, tint = tint, modifier = Modifier.size(24.dp))

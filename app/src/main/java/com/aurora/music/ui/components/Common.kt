@@ -32,6 +32,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.SubcomposeAsyncImage
 import coil.request.ImageRequest
+import com.aurora.music.data.ThemeStyle
+import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.auroraBackdrop
 
 @Composable
 fun Artwork(
@@ -41,11 +44,18 @@ fun Artwork(
     corner: Dp = 12.dp,
     contentScale: ContentScale = ContentScale.Crop,
 ) {
+    // Keep flush artwork and circular avatars intact; frame music covers to match the identity.
+    val artCorner = if (corner == 0.dp || corner >= 22.dp) corner else when (LocalUiPrefs.current.themeStyle) {
+        ThemeStyle.RETRO -> 2.dp
+        ThemeStyle.AERO -> 5.dp
+        ThemeStyle.GLASS -> 18.dp
+        else -> corner
+    }
     val placeholder = Brush.linearGradient(
         listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.12f))
     )
     Box(
-        modifier = modifier.clip(RoundedCornerShape(corner)).background(placeholder),
+        modifier = modifier.clip(RoundedCornerShape(artCorner)).background(placeholder),
         contentAlignment = Alignment.Center,
     ) {
         SubcomposeAsyncImage(
@@ -88,7 +98,6 @@ fun SectionHeader(
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall,
-            fontWeight = FontWeight.Bold,
             modifier = Modifier.weight(1f),
         )
         if (action != null && onAction != null) {
@@ -130,6 +139,10 @@ fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
 
 @Composable
 fun AmbientBackground(modifier: Modifier = Modifier) {
+    if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) {
+        Box(modifier.fillMaxSize().auroraBackdrop())
+        return
+    }
     val base = MaterialTheme.colorScheme.background
     val top = MaterialTheme.colorScheme.primary
     val bottom = MaterialTheme.colorScheme.tertiary

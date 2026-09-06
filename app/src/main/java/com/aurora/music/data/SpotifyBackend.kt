@@ -140,8 +140,17 @@ class SpotifyBackend(
             streamUrl = sentinel(sid, name ?: "", artistName, durSec),
             albumId = album?.id ?: fallbackAlbumId,
             artistId = artists?.firstOrNull()?.id ?: "",
+            // spotify tracks carry no personal added-at timestamp; release date is the best proxy available
+            dateAddedSec = com.aurora.music.util.parseReleaseDateEpochSec(album?.releaseDate),
         )
         return localize(song)
+    }
+
+    // spotify tags eps as "single" so track count disambiguates
+    private fun spReleaseType(albumType: String?, totalTracks: Int): String = when {
+        albumType == null -> ""
+        albumType.equals("single", true) -> if (totalTracks >= 4) "ep" else "single"
+        else -> albumType.lowercase()
     }
 
     private fun SpAlbumRef.toAlbum() = Album(
@@ -151,6 +160,7 @@ class SpotifyBackend(
         artworkUrl = img(images),
         year = releaseDate?.take(4)?.toIntOrNull() ?: 0,
         songCount = totalTracks,
+        releaseType = spReleaseType(albumType, totalTracks),
     )
 
     private fun SpAlbum.toAlbum() = Album(
@@ -160,6 +170,7 @@ class SpotifyBackend(
         artworkUrl = img(images),
         year = releaseDate?.take(4)?.toIntOrNull() ?: 0,
         songCount = totalTracks,
+        releaseType = spReleaseType(albumType, totalTracks),
     )
 
     private fun SpArtist.toArtist() = Artist(
@@ -220,6 +231,21 @@ class SpotifyBackend(
         val a = api.savedTracks(limit = 50, offset = 0).items.orEmpty()
         val b = runCatching { api.savedTracks(limit = 50, offset = 50).items }.getOrNull().orEmpty()
         (a + b).mapNotNull { it.track?.toSong() }
+    }.getOrDefault(emptyList())
+
+    // saved tracks are spotify's closest thing to a song library; api pages max 50 at a time
+    override suspend fun songsPage(offset: Int, count: Int): List<Song> = runCatching {
+        val out = ArrayList<Song>()
+        var off = offset
+        while (out.size < count) {
+            val items = api.savedTracks(limit = PAGE, offset = off).items.orEmpty()
+            if (items.isEmpty()) break
+            out += items.mapNotNull { it.track?.toSong() }
+            if (items.size < PAGE) break
+            off += PAGE
+            delay(120)
+        }
+        out
     }.getOrDefault(emptyList())
 
     override suspend fun starredSongs(): List<Song> {
@@ -287,7 +313,7 @@ class SpotifyBackend(
                 val tracks = a.tracks?.items?.map { it.toSong(art, a.name ?: "", a.id ?: "") }.orEmpty()
                 val total = a.tracks?.total?.takeIf { it > 0 } ?: a.totalTracks.takeIf { it > 0 } ?: tracks.size
                 DetailData(
-                    info = DetailInfo(a.name ?: "", a.artists?.mapNotNull { it.name }?.joinToString(", ") ?: "", art, accentFor(id), false, total, "Album"),
+                    info = DetailInfo(a.name ?: "", a.artists?.mapNotNull { it.name }?.joinToString(", ") ?: "", art, accentFor(id), false, total, a.toAlbum().typeLabel),
                     tracks = tracks,
                 )
             }

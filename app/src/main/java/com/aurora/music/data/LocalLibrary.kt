@@ -122,7 +122,10 @@ class LocalLibrary(
             MediaStore.Audio.Media.MIME_TYPE,
             @Suppress("DEPRECATION") MediaStore.Audio.Media.DATA,
         )
-        if (Build.VERSION.SDK_INT >= 30) cols.add(MediaStore.Audio.Media.BITRATE) // column absent pre-30
+        if (Build.VERSION.SDK_INT >= 30) {
+            cols.add(MediaStore.Audio.Media.BITRATE) // columns absent pre-30
+            cols.add(MediaStore.Audio.Media.GENRE)
+        }
         val projection = cols.toTypedArray()
         val selection = "${MediaStore.Audio.Media.IS_MUSIC} != 0"
         val sort = "${MediaStore.Audio.Media.TITLE} COLLATE NOCASE ASC"
@@ -144,6 +147,7 @@ class LocalLibrary(
                 val nameCol = c.getColumnIndex(MediaStore.Audio.Media.DISPLAY_NAME)
                 val mimeCol = c.getColumnIndex(MediaStore.Audio.Media.MIME_TYPE)
                 val bitrateCol = c.getColumnIndex(MediaStore.Audio.Media.BITRATE)
+                val genreCol = if (Build.VERSION.SDK_INT >= 30) c.getColumnIndex(MediaStore.Audio.Media.GENRE) else -1
                 @Suppress("DEPRECATION") val dataCol = c.getColumnIndex(MediaStore.Audio.Media.DATA)
                 while (c.moveToNext()) {
                     val id = c.getLong(idCol)
@@ -183,6 +187,8 @@ class LocalLibrary(
                         path = data,
                         replayGainTrack = rg?.first ?: 0f,
                         replayGainAlbum = rg?.second ?: 0f,
+                        genre = if (genreCol >= 0) c.getString(genreCol).orEmpty() else "",
+                        dateAddedSec = added,
                     )
                 }
             }
@@ -202,6 +208,7 @@ class LocalLibrary(
                     artworkUrl = tracks.firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl ?: "",
                     year = albumYear[aid] ?: 0,
                     songCount = tracks.size,
+                    durationSec = tracks.sumOf { it.durationSec },
                 )
             }
             .sortedByDescending { albumDateAdded[it.id] ?: 0L }

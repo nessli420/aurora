@@ -60,6 +60,7 @@ private val FIELDS = listOf(
     FieldSpec("title", "Title", TYPE_TEXT),
     FieldSpec("artist", "Artist", TYPE_TEXT),
     FieldSpec("album", "Album", TYPE_TEXT),
+    FieldSpec("genre", "Genre", TYPE_TEXT),
     FieldSpec("format", "Format (flac, mp3…)", TYPE_TEXT),
     FieldSpec("duration", "Duration (seconds)", TYPE_NUMBER),
     FieldSpec("bitrate", "Bitrate (kbps)", TYPE_NUMBER),

@@ -96,7 +96,7 @@ class MusicRepository(
         .groupBy { it.albumId }
         .map { (albumId, songs) ->
             val first = songs.first()
-            Album(id = albumId, title = first.album.ifBlank { "Album" }, artist = first.artist, artworkUrl = first.toSong().artworkUrl, year = 0, songCount = songs.size)
+            Album(id = albumId, title = first.album.ifBlank { "Album" }, artist = first.artist, artworkUrl = first.toSong().artworkUrl, year = 0, songCount = songs.size, durationSec = songs.sumOf { it.durationSec })
         }
         .sortedBy { it.title }
 
@@ -122,6 +122,25 @@ class MusicRepository(
 
     suspend fun librarySongs(limit: Int = 2000): List<Song> =
         if (offline) downloadedSongs() else backend?.librarySongs(limit).orEmpty()
+
+    suspend fun songsPage(offset: Int, count: Int = 100): List<Song> =
+        if (offline) downloadedSongs().drop(offset).take(count) else backend?.songsPage(offset, count).orEmpty()
+
+    // walks the whole library via the paging path (guaranteed to traverse every source, unlike a
+    // one-shot request which some servers cap). deduped, capped so a pathological library can't run away.
+    suspend fun allLibrarySongs(cap: Int = 10000, pageSize: Int = 200): List<Song> {
+        if (offline) return downloadedSongs()
+        val b = backend ?: return emptyList()
+        val out = LinkedHashMap<String, Song>()
+        var offset = 0
+        while (out.size < cap) {
+            val chunk = runCatching { b.songsPage(offset, pageSize) }.getOrDefault(emptyList())
+            if (chunk.isEmpty()) break
+            for (s in chunk) if (s.id.isNotEmpty()) out.putIfAbsent(s.id, s)
+            offset += pageSize
+        }
+        return out.values.toList()
+    }
 
     suspend fun starredSongs(): List<Song> = backend?.starredSongs().orEmpty()
 
@@ -222,7 +241,8 @@ class MusicRepository(
             return when (kind) {
                 "album" -> dls.filter { it.albumId == id }.takeIf { it.isNotEmpty() }?.let { tracks ->
                     val f = tracks.first()
-                    DetailData(DetailInfo(f.album.ifBlank { "Album" }, "${f.artist} • Downloaded", f.artworkUrl, accentFor(id), false, tracks.size, "Album"), tracks)
+                    val label = com.aurora.music.model.releaseTypeLabel(com.aurora.music.model.inferReleaseType(tracks.size, tracks.sumOf { it.durationSec }))
+                    DetailData(DetailInfo(f.album.ifBlank { "Album" }, "${f.artist} • Downloaded", f.artworkUrl, accentFor(id), false, tracks.size, label), tracks)
                 }
                 "artist" -> dls.filter { it.artistId == id }.takeIf { it.isNotEmpty() }?.let { tracks ->
                     DetailData(DetailInfo(tracks.first().artist, "${tracks.size} downloaded tracks", tracks.first().artworkUrl, accentFor(id), true, tracks.size, "Artist"), tracks)

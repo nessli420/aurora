@@ -35,7 +35,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.MiniProgress
 import com.aurora.music.data.MiniStyle
+import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.viewmodel.PlayerUiState
 
 @Composable
@@ -62,15 +64,15 @@ fun MiniPlayer(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(20.dp))
-            .background(
+            .then(if (ui.themeStyle != ThemeStyle.AURORA) Modifier.auroraPanel(MaterialTheme.shapes.large, emphasized = true)
+            else Modifier.clip(RoundedCornerShape(20.dp)).background(
                 Brush.horizontalGradient(
                     listOf(
                         MaterialTheme.colorScheme.surfaceContainerHigh,
                         song.accent.copy(alpha = 0.28f),
                     )
                 )
-            )
+            ))
             .clickable(onClick = onExpand),
     ) {
         Row(
@@ -131,7 +133,7 @@ fun MiniPlayer(
                         .fillMaxWidth(progress)
                         .height(barH)
                         .clip(RoundedCornerShape(barH))
-                        .background(song.accent),
+                        .background(if (ui.themeStyle == ThemeStyle.AURORA) song.accent else MaterialTheme.colorScheme.primary),
                 )
             }
         }

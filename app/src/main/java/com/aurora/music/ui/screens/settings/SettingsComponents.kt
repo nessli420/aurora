@@ -32,19 +32,25 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.ThemeStyle
+import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.auroraPanel
 
 @Composable
 fun SettingsTopBar(title: String, onBack: () -> Unit) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     Row(
-        Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp, bottom = 8.dp),
+        Modifier.fillMaxWidth()
+            .then(if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) Modifier.auroraPanel(RectangleShape) else Modifier)
+            .padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
         Spacer(Modifier.width(8.dp))
-        Text(title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+        Text(title, style = MaterialTheme.typography.headlineSmall)
     }
 }
 
@@ -63,8 +69,12 @@ fun SettingsSectionTitle(title: String) {
 fun SettingsGroup(content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
+            .then(
+                if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
+                    Modifier.clip(RoundedCornerShape(18.dp))
+                        .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
+                else Modifier.auroraPanel(MaterialTheme.shapes.medium)
+            ),
         content = content,
     )
 }
@@ -94,7 +104,11 @@ private fun RowScaffold(
     ) {
         if (icon != null) {
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                Modifier.size(38.dp).then(
+                    if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
+                        Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
+                ),
                 contentAlignment = Alignment.Center,
             ) { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
             Spacer(Modifier.width(14.dp))
@@ -149,17 +163,22 @@ fun SettingsSliderRow(title: String, valueLabel: String, value: Float, range: Cl
 
 @Composable
 fun SegmentedRow(title: String, options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(50) else MaterialTheme.shapes.small
     Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
         Spacer(Modifier.size(10.dp))
         Row(
-            Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(4.dp),
+            Modifier.fillMaxWidth().then(
+                if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
+                    Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                else Modifier.auroraPanel(shape)
+            ).padding(4.dp),
             horizontalArrangement = Arrangement.spacedBy(4.dp),
         ) {
             options.forEachIndexed { i, opt ->
                 val active = i == selected
                 Box(
-                    Modifier.weight(1f).clip(RoundedCornerShape(50))
+                    Modifier.weight(1f).clip(shape)
                         .background(if (active) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent)
                         .clickable { onSelect(i) }.padding(vertical = 8.dp),
                     contentAlignment = Alignment.Center,

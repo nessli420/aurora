@@ -1,0 +1,1085 @@
+# Spinorama measured speaker EQ; revision b38d2715441f134a63b737b2fd913d14058a2643
+# Model<TAB>Source<TAB>Path; only actual iir-autoeq.txt files, no symlinks
+A-for-Ara FS1	Spinorama	datas/eq/A-for-Ara FS1/iir-autoeq.txt
+ADS L520	Spinorama	datas/eq/ADS L520/iir-autoeq.txt
+AIA Cinema CCRM10-P	Spinorama	datas/eq/AIA Cinema CCRM10-P/iir-autoeq.txt
+AIYIMA S600	Spinorama	datas/eq/AIYIMA S600/iir-autoeq.txt
+ASR Directiva Open Source Speaker	Spinorama	datas/eq/ASR Directiva Open Source Speaker/iir-autoeq.txt
+ATC SCM19 v1	Spinorama	datas/eq/ATC SCM19 v1/iir-autoeq.txt
+AV123 X-CS Center	Spinorama	datas/eq/AV123 X-CS Center/iir-autoeq.txt
+Aalto Speakers Aalto 1 EVO	Spinorama	datas/eq/Aalto Speakers Aalto 1 EVO/iir-autoeq.txt
+Aalto Speakers Aalto 3 Passive	Spinorama	datas/eq/Aalto Speakers Aalto 3 Passive/iir-autoeq.txt
+Acoustic Energy AE100 Mk2	Spinorama	datas/eq/Acoustic Energy AE100 Mk2/iir-autoeq.txt
+Adam A4V	Spinorama	datas/eq/Adam A4V/iir-autoeq.txt
+Adam A5X	Spinorama	datas/eq/Adam A5X/iir-autoeq.txt
+Adam A7V	Spinorama	datas/eq/Adam A7V/iir-autoeq.txt
+Adam D3V	Spinorama	datas/eq/Adam D3V/iir-autoeq.txt
+Adam S2V	Spinorama	datas/eq/Adam S2V/iir-autoeq.txt
+Adam T5V	Spinorama	datas/eq/Adam T5V/iir-autoeq.txt
+Adam T7V	Spinorama	datas/eq/Adam T7V/iir-autoeq.txt
+Adam T8V	Spinorama	datas/eq/Adam T8V/iir-autoeq.txt
+Advent The New Advent Loudspeaker	Spinorama	datas/eq/Advent The New Advent Loudspeaker/iir-autoeq.txt
+Alcons Audio LR7+LRB	Spinorama	datas/eq/Alcons Audio LR7+LRB/iir-autoeq.txt
+Alcons Audio QR24	Spinorama	datas/eq/Alcons Audio QR24/iir-autoeq.txt
+Alcons Audio QRP20 120x15	Spinorama	datas/eq/Alcons Audio QRP20 120x15/iir-autoeq.txt
+Alcons Audio QRP20 90x15	Spinorama	datas/eq/Alcons Audio QRP20 90x15/iir-autoeq.txt
+Alcons Audio QRP40	Spinorama	datas/eq/Alcons Audio QRP40/iir-autoeq.txt
+Alcons Audio RR12	Spinorama	datas/eq/Alcons Audio RR12/iir-autoeq.txt
+Alcons Audio SR9	Spinorama	datas/eq/Alcons Audio SR9/iir-autoeq.txt
+Alcons Audio VR5 V1	Spinorama	datas/eq/Alcons Audio VR5 V1/iir-autoeq.txt
+Altec Lansing Soudrower Pro 650	Spinorama	datas/eq/Altec Lansing Soudrower Pro 650/iir-autoeq.txt
+Altec Lansing Soundrower Pro 650	Spinorama	datas/eq/Altec Lansing Soundrower Pro 650/iir-autoeq.txt
+Amate Audio X102FD	Spinorama	datas/eq/Amate Audio X102FD/iir-autoeq.txt
+Amate Audio X12CLA	Spinorama	datas/eq/Amate Audio X12CLA/iir-autoeq.txt
+Amate Audio X14FD	Spinorama	datas/eq/Amate Audio X14FD/iir-autoeq.txt
+Amazon Basic R60BTUS	Spinorama	datas/eq/Amazon Basic R60BTUS/iir-autoeq.txt
+Amphion Argon1	Spinorama	datas/eq/Amphion Argon1/iir-autoeq.txt
+Andersson HIS 2.1	Spinorama	datas/eq/Andersson HIS 2.1/iir-autoeq.txt
+Aoshida Audio Musician Knight I V2	Spinorama	datas/eq/Aoshida Audio Musician Knight I V2/iir-autoeq.txt
+Aperion Audio Novus N5B	Spinorama	datas/eq/Aperion Audio Novus N5B/iir-autoeq.txt
+Aperion Audio Novus N5C	Spinorama	datas/eq/Aperion Audio Novus N5C/iir-autoeq.txt
+Aperion Audio Novus N5T	Spinorama	datas/eq/Aperion Audio Novus N5T/iir-autoeq.txt
+Aperion Audio Novus N6SR	Spinorama	datas/eq/Aperion Audio Novus N6SR/iir-autoeq.txt
+Aperion Audio Verus III Concert V6C	Spinorama	datas/eq/Aperion Audio Verus III Concert V6C/iir-autoeq.txt
+Aperion Audio Verus III Concert V8B	Spinorama	datas/eq/Aperion Audio Verus III Concert V8B/iir-autoeq.txt
+Apple Homepod Mini	Spinorama	datas/eq/Apple Homepod Mini/iir-autoeq.txt
+Apple Homepod	Spinorama	datas/eq/Apple Homepod/iir-autoeq.txt
+Arendal Sound 1528 Monitor 8	Spinorama	datas/eq/Arendal Sound 1528 Monitor 8/iir-autoeq.txt
+Arendal Sound 1723 Bookshelf S THX	Spinorama	datas/eq/Arendal Sound 1723 Bookshelf S THX/iir-autoeq.txt
+Arendal Sound 1723 Monitor S THX	Spinorama	datas/eq/Arendal Sound 1723 Monitor S THX/iir-autoeq.txt
+Arendal Sound 1723 Monitor THX	Spinorama	datas/eq/Arendal Sound 1723 Monitor THX/iir-autoeq.txt
+Arendal Sound 1961 Bookshelf	Spinorama	datas/eq/Arendal Sound 1961 Bookshelf/iir-autoeq.txt
+Arendal Sound 1961 Center	Spinorama	datas/eq/Arendal Sound 1961 Center/iir-autoeq.txt
+Arendal Sound 1961 Monitor	Spinorama	datas/eq/Arendal Sound 1961 Monitor/iir-autoeq.txt
+Arendal Sound 1961 Tower	Spinorama	datas/eq/Arendal Sound 1961 Tower/iir-autoeq.txt
+Argon Audio 6340	Spinorama	datas/eq/Argon Audio 6340/iir-autoeq.txt
+Argon Audio 6350	Spinorama	datas/eq/Argon Audio 6350/iir-autoeq.txt
+Ascend Acoustics CBM-170 SE	Spinorama	datas/eq/Ascend Acoustics CBM-170 SE/iir-autoeq.txt
+Ascend Acoustics CBM-170 SE2	Spinorama	datas/eq/Ascend Acoustics CBM-170 SE2/iir-autoeq.txt
+Ascend Acoustics CMT-340 Center	Spinorama	datas/eq/Ascend Acoustics CMT-340 Center/iir-autoeq.txt
+Ascend Acoustics CMT-340 SE2	Spinorama	datas/eq/Ascend Acoustics CMT-340 SE2/iir-autoeq.txt
+Ascend Acoustics ELX Ribbon Horizon	Spinorama	datas/eq/Ascend Acoustics ELX Ribbon Horizon/iir-autoeq.txt
+Ascend Acoustics ELX Ribbon Tower	Spinorama	datas/eq/Ascend Acoustics ELX Ribbon Tower/iir-autoeq.txt
+Ascend Acoustics HTM-200SE2	Spinorama	datas/eq/Ascend Acoustics HTM-200SE2/iir-autoeq.txt
+Ascend Acoustics Horizon Center	Spinorama	datas/eq/Ascend Acoustics Horizon Center/iir-autoeq.txt
+Ascend Acoustics Luna Duo	Spinorama	datas/eq/Ascend Acoustics Luna Duo/iir-autoeq.txt
+Ascend Acoustics Luna Mini-Monitor	Spinorama	datas/eq/Ascend Acoustics Luna Mini-Monitor/iir-autoeq.txt
+Ascend Acoustics Luna V2 Mini-Monitor Ribbon	Spinorama	datas/eq/Ascend Acoustics Luna V2 Mini-Monitor Ribbon/iir-autoeq.txt
+Ascend Acoustics Luna V2 Mini-Monitor Titan	Spinorama	datas/eq/Ascend Acoustics Luna V2 Mini-Monitor Titan/iir-autoeq.txt
+Ascend Acoustics Sierra 1 V2	Spinorama	datas/eq/Ascend Acoustics Sierra 1 V2/iir-autoeq.txt
+Ascend Acoustics Sierra 2	Spinorama	datas/eq/Ascend Acoustics Sierra 2/iir-autoeq.txt
+Ascend Acoustics Sierra Duo V2 LCR Ribbon	Spinorama	datas/eq/Ascend Acoustics Sierra Duo V2 LCR Ribbon/iir-autoeq.txt
+Ascend Acoustics Sierra Duo V2 LCR Titan	Spinorama	datas/eq/Ascend Acoustics Sierra Duo V2 LCR Titan/iir-autoeq.txt
+Ascend Acoustics Sierra Titan	Spinorama	datas/eq/Ascend Acoustics Sierra Titan/iir-autoeq.txt
+Ascend Acoustics Sierra-2EX V2	Spinorama	datas/eq/Ascend Acoustics Sierra-2EX V2/iir-autoeq.txt
+Ascend Acoustics Sierra-2EX	Spinorama	datas/eq/Ascend Acoustics Sierra-2EX/iir-autoeq.txt
+Ascend Acoustics Sierra-LX	Spinorama	datas/eq/Ascend Acoustics Sierra-LX/iir-autoeq.txt
+AsciLab A6B Passive	Spinorama	datas/eq/AsciLab A6B Passive/iir-autoeq.txt
+AsciLab C5B	Spinorama	datas/eq/AsciLab C5B/iir-autoeq.txt
+AsciLab C6B	Spinorama	datas/eq/AsciLab C6B/iir-autoeq.txt
+AsciLab F6B	Spinorama	datas/eq/AsciLab F6B/iir-autoeq.txt
+AsciLab F6Bs	Spinorama	datas/eq/AsciLab F6Bs/iir-autoeq.txt
+Atlantic Technology 8600eC Center	Spinorama	datas/eq/Atlantic Technology 8600eC Center/iir-autoeq.txt
+Atlantic Technology 8600eLR Tower	Spinorama	datas/eq/Atlantic Technology 8600eLR Tower/iir-autoeq.txt
+Attack Audio VSH206	Spinorama	datas/eq/Attack Audio VSH206/iir-autoeq.txt
+Attack Audio VSL206+sub	Spinorama	datas/eq/Attack Audio VSL206+sub/iir-autoeq.txt
+Attack Audio VSL206	Spinorama	datas/eq/Attack Audio VSL206/iir-autoeq.txt
+Audio Craftsmen Victoria	Spinorama	datas/eq/Audio Craftsmen Victoria/iir-autoeq.txt
+Audio Engine A2+	Spinorama	datas/eq/Audio Engine A2+/iir-autoeq.txt
+Audio Engine A2	Spinorama	datas/eq/Audio Engine A2/iir-autoeq.txt
+Audio Engine A5+ Powered	Spinorama	datas/eq/Audio Engine A5+ Powered/iir-autoeq.txt
+Audio First Design Fidelia	Spinorama	datas/eq/Audio First Design Fidelia/iir-autoeq.txt
+Audio Pro Addon T14	Spinorama	datas/eq/Audio Pro Addon T14/iir-autoeq.txt
+Audio Smile Little British Monitor	Spinorama	datas/eq/Audio Smile Little British Monitor/iir-autoeq.txt
+Audiofocus VENU 12a	Spinorama	datas/eq/Audiofocus VENU 12a/iir-autoeq.txt
+Audiofocus VENU 15a	Spinorama	datas/eq/Audiofocus VENU 15a/iir-autoeq.txt
+Audiofocus VENU 8a	Spinorama	datas/eq/Audiofocus VENU 8a/iir-autoeq.txt
+Audiovector M1 Super	Spinorama	datas/eq/Audiovector M1 Super/iir-autoeq.txt
+Avantgarde Acoustic Solo	Spinorama	datas/eq/Avantgarde Acoustic Solo/iir-autoeq.txt
+Avantone Pro CLA-10	Spinorama	datas/eq/Avantone Pro CLA-10/iir-autoeq.txt
+Avantone Pro MixCube	Spinorama	datas/eq/Avantone Pro MixCube/iir-autoeq.txt
+Axiom ED120A	Spinorama	datas/eq/Axiom ED120A/iir-autoeq.txt
+Axiom ED150A	Spinorama	datas/eq/Axiom ED150A/iir-autoeq.txt
+Axiom ED60P	Spinorama	datas/eq/Axiom ED60P/iir-autoeq.txt
+Axiom ED80P	Spinorama	datas/eq/Axiom ED80P/iir-autoeq.txt
+BIC America FH6-LCR Center	Spinorama	datas/eq/BIC America FH6-LCR Center/iir-autoeq.txt
+BIC America Venturi DV62si	Spinorama	datas/eq/BIC America Venturi DV62si/iir-autoeq.txt
+Bang & Olufsen Beolab 20	Spinorama	datas/eq/Bang & Olufsen Beolab 20/iir-autoeq.txt
+Bang & Olufsen Beosound Balance	Spinorama	datas/eq/Bang & Olufsen Beosound Balance/iir-autoeq.txt
+Barefoot Footprint 01	Spinorama	datas/eq/Barefoot Footprint 01/iir-autoeq.txt
+Barefoot Footprint 02	Spinorama	datas/eq/Barefoot Footprint 02/iir-autoeq.txt
+Behringer B2030p	Spinorama	datas/eq/Behringer B2030p/iir-autoeq.txt
+Behringer B2031A	Spinorama	datas/eq/Behringer B2031A/iir-autoeq.txt
+Behringer Eurolive B212XL	Spinorama	datas/eq/Behringer Eurolive B212XL/iir-autoeq.txt
+Behringer Eurolive B215XL	Spinorama	datas/eq/Behringer Eurolive B215XL/iir-autoeq.txt
+BiAmp Community IC6-1062	Spinorama	datas/eq/BiAmp Community IC6-1062/iir-autoeq.txt
+BiAmp Community IC6-1082	Spinorama	datas/eq/BiAmp Community IC6-1082/iir-autoeq.txt
+BiAmp Community IC6-1122	Spinorama	datas/eq/BiAmp Community IC6-1122/iir-autoeq.txt
+BiAmp Community IC6-1152	Spinorama	datas/eq/BiAmp Community IC6-1152/iir-autoeq.txt
+BiAmp Community IC8-1153	Spinorama	datas/eq/BiAmp Community IC8-1153/iir-autoeq.txt
+BiAmp Community V2-26	Spinorama	datas/eq/BiAmp Community V2-26/iir-autoeq.txt
+BiAmp Community V2-28	Spinorama	datas/eq/BiAmp Community V2-28/iir-autoeq.txt
+BiAmp Community V2-3294	Spinorama	datas/eq/BiAmp Community V2-3294/iir-autoeq.txt
+BiAmp Community V2-3594	Spinorama	datas/eq/BiAmp Community V2-3594/iir-autoeq.txt
+BiAmp Community V2-6	Spinorama	datas/eq/BiAmp Community V2-6/iir-autoeq.txt
+BiAmp Community V2-8	Spinorama	datas/eq/BiAmp Community V2-8/iir-autoeq.txt
+Bose 141	Spinorama	datas/eq/Bose 141/iir-autoeq.txt
+Bose 301 Series IV	Spinorama	datas/eq/Bose 301 Series IV/iir-autoeq.txt
+Bose 901 Series V	Spinorama	datas/eq/Bose 901 Series V/iir-autoeq.txt
+Bose AMM108	Spinorama	datas/eq/Bose AMM108/iir-autoeq.txt
+Bose AMM112	Spinorama	datas/eq/Bose AMM112/iir-autoeq.txt
+Bose ArenaMatch AM10	Spinorama	datas/eq/Bose ArenaMatch AM10/iir-autoeq.txt
+Bose ArenaMatch AM20	Spinorama	datas/eq/Bose ArenaMatch AM20/iir-autoeq.txt
+Bose ArenaMatch AM40	Spinorama	datas/eq/Bose ArenaMatch AM40/iir-autoeq.txt
+Bose DesignMax DM5SE	Spinorama	datas/eq/Bose DesignMax DM5SE/iir-autoeq.txt
+Bose DesignMax DM6SE	Spinorama	datas/eq/Bose DesignMax DM6SE/iir-autoeq.txt
+Bose DesignMax DM8S	Spinorama	datas/eq/Bose DesignMax DM8S/iir-autoeq.txt
+Bose SoundLink Revolve+	Spinorama	datas/eq/Bose SoundLink Revolve+/iir-autoeq.txt
+Bose SoundLink Revolve	Spinorama	datas/eq/Bose SoundLink Revolve/iir-autoeq.txt
+Bose TV Speaker Soundbar	Spinorama	datas/eq/Bose TV Speaker Soundbar/iir-autoeq.txt
+Boston Acoustics A 25	Spinorama	datas/eq/Boston Acoustics A 25/iir-autoeq.txt
+Bowers & Wilkins 607 S2 Anniversary Edition	Spinorama	datas/eq/Bowers & Wilkins 607 S2 Anniversary Edition/iir-autoeq.txt
+Bowers & Wilkins 686 S2	Spinorama	datas/eq/Bowers & Wilkins 686 S2/iir-autoeq.txt
+Bowers & Wilkins 802N	Spinorama	datas/eq/Bowers & Wilkins 802N/iir-autoeq.txt
+Bowers & Wilkins 803 D3	Spinorama	datas/eq/Bowers & Wilkins 803 D3/iir-autoeq.txt
+Bowers & Wilkins 805S	Spinorama	datas/eq/Bowers & Wilkins 805S/iir-autoeq.txt
+Bowers & Wilkins CWM7.3 S2	Spinorama	datas/eq/Bowers & Wilkins CWM7.3 S2/iir-autoeq.txt
+Bowers & Wilkins CWM7.5	Spinorama	datas/eq/Bowers & Wilkins CWM7.5/iir-autoeq.txt
+Bowers & Wilkins Formation Flex	Spinorama	datas/eq/Bowers & Wilkins Formation Flex/iir-autoeq.txt
+Bowers & Wilkins HTM81 D4	Spinorama	datas/eq/Bowers & Wilkins HTM81 D4/iir-autoeq.txt
+Buchardt Audio A10	Spinorama	datas/eq/Buchardt Audio A10/iir-autoeq.txt
+Buchardt Audio A500	Spinorama	datas/eq/Buchardt Audio A500/iir-autoeq.txt
+Buchardt Audio A700	Spinorama	datas/eq/Buchardt Audio A700/iir-autoeq.txt
+Buchardt Audio E50	Spinorama	datas/eq/Buchardt Audio E50/iir-autoeq.txt
+Buchardt Audio S400 MKII	Spinorama	datas/eq/Buchardt Audio S400 MKII/iir-autoeq.txt
+Buchardt Audio S400	Spinorama	datas/eq/Buchardt Audio S400/iir-autoeq.txt
+Børresen X3	Spinorama	datas/eq/Børresen X3/iir-autoeq.txt
+CSS Criton 1TD-X DIY	Spinorama	datas/eq/CSS Criton 1TD-X DIY/iir-autoeq.txt
+CSS Criton 3TD-X DIY	Spinorama	datas/eq/CSS Criton 3TD-X DIY/iir-autoeq.txt
+Cambridge Audio Minx MIN12	Spinorama	datas/eq/Cambridge Audio Minx MIN12/iir-autoeq.txt
+Cambridge Audio Minx XL	Spinorama	datas/eq/Cambridge Audio Minx XL/iir-autoeq.txt
+Cambridge Soundworks Model Six	Spinorama	datas/eq/Cambridge Soundworks Model Six/iir-autoeq.txt
+Canon S-50	Spinorama	datas/eq/Canon S-50/iir-autoeq.txt
+Canton Plus GLX.3	Spinorama	datas/eq/Canton Plus GLX.3/iir-autoeq.txt
+Canton Vento 826.2	Spinorama	datas/eq/Canton Vento 826.2/iir-autoeq.txt
+Carmody S2000 DIY Speaker Kit	Spinorama	datas/eq/Carmody S2000 DIY Speaker Kit/iir-autoeq.txt
+Celuaris Purify SPK5 prototype	Spinorama	datas/eq/Celuaris Purify SPK5 prototype/iir-autoeq.txt
+Chane A1.5	Spinorama	datas/eq/Chane A1.5/iir-autoeq.txt
+Chesky Audio LC1	Spinorama	datas/eq/Chesky Audio LC1/iir-autoeq.txt
+Coda Audio CoRay4	Spinorama	datas/eq/Coda Audio CoRay4/iir-autoeq.txt
+Coda Audio G512	Spinorama	datas/eq/Coda Audio G512/iir-autoeq.txt
+Coda Audio G515	Spinorama	datas/eq/Coda Audio G515/iir-autoeq.txt
+Coda Audio G712	Spinorama	datas/eq/Coda Audio G712/iir-autoeq.txt
+Coda Audio G715	Spinorama	datas/eq/Coda Audio G715/iir-autoeq.txt
+Coda Audio HOPS12	Spinorama	datas/eq/Coda Audio HOPS12/iir-autoeq.txt
+Coda Audio HOPS5	Spinorama	datas/eq/Coda Audio HOPS5/iir-autoeq.txt
+Coda Audio HOPS8	Spinorama	datas/eq/Coda Audio HOPS8/iir-autoeq.txt
+Coda Audio TiRAY	Spinorama	datas/eq/Coda Audio TiRAY/iir-autoeq.txt
+CommonSense Audio 5.6	Spinorama	datas/eq/CommonSense Audio 5.6/iir-autoeq.txt
+DAS Audio ARTEC 506A	Spinorama	datas/eq/DAS Audio ARTEC 506A/iir-autoeq.txt
+DAS Audio ARTEC 508A	Spinorama	datas/eq/DAS Audio ARTEC 508A/iir-autoeq.txt
+DAS Audio ARTEC 510A	Spinorama	datas/eq/DAS Audio ARTEC 510A/iir-autoeq.txt
+DAS Audio ARTEC 526A	Spinorama	datas/eq/DAS Audio ARTEC 526A/iir-autoeq.txt
+DAS Audio Vantec 12A	Spinorama	datas/eq/DAS Audio Vantec 12A/iir-autoeq.txt
+DAS Audio Vantec 15A	Spinorama	datas/eq/DAS Audio Vantec 15A/iir-autoeq.txt
+DAS Audio Vantec 20A	Spinorama	datas/eq/DAS Audio Vantec 20A/iir-autoeq.txt
+DB Audiotechnik 10S	Spinorama	datas/eq/DB Audiotechnik 10S/iir-autoeq.txt
+DB Audiotechnik 12S	Spinorama	datas/eq/DB Audiotechnik 12S/iir-autoeq.txt
+DB Audiotechnik 24S	Spinorama	datas/eq/DB Audiotechnik 24S/iir-autoeq.txt
+DB Audiotechnik 44S	Spinorama	datas/eq/DB Audiotechnik 44S/iir-autoeq.txt
+DB Audiotechnik 8S	Spinorama	datas/eq/DB Audiotechnik 8S/iir-autoeq.txt
+DB Audiotechnik AL60	Spinorama	datas/eq/DB Audiotechnik AL60/iir-autoeq.txt
+DB Audiotechnik AL90	Spinorama	datas/eq/DB Audiotechnik AL90/iir-autoeq.txt
+DB Audiotechnik Q10	Spinorama	datas/eq/DB Audiotechnik Q10/iir-autoeq.txt
+DB Audiotechnik Q7	Spinorama	datas/eq/DB Audiotechnik Q7/iir-autoeq.txt
+DB Audiotechnik V10P	Spinorama	datas/eq/DB Audiotechnik V10P/iir-autoeq.txt
+DB Audiotechnik V7P	Spinorama	datas/eq/DB Audiotechnik V7P/iir-autoeq.txt
+DIYSG Elusive 1099	Spinorama	datas/eq/DIYSG Elusive 1099/iir-autoeq.txt
+DIYSG HT-10	Spinorama	datas/eq/DIYSG HT-10/iir-autoeq.txt
+DIYSG HT-12+	Spinorama	datas/eq/DIYSG HT-12+/iir-autoeq.txt
+DIYSG HT-12	Spinorama	datas/eq/DIYSG HT-12/iir-autoeq.txt
+DIYSG HT-8	Spinorama	datas/eq/DIYSG HT-8/iir-autoeq.txt
+DIYSG HTM-12v1	Spinorama	datas/eq/DIYSG HTM-12v1/iir-autoeq.txt
+DIYSG HTM-12v2	Spinorama	datas/eq/DIYSG HTM-12v2/iir-autoeq.txt
+DIYSG Volt-6	Spinorama	datas/eq/DIYSG Volt-6/iir-autoeq.txt
+DIYSG Volt-8 v2	Spinorama	datas/eq/DIYSG Volt-8 v2/iir-autoeq.txt
+Dali Oberon Vokal	Spinorama	datas/eq/Dali Oberon Vokal/iir-autoeq.txt
+Dali Rubikore 6	Spinorama	datas/eq/Dali Rubikore 6/iir-autoeq.txt
+Dali Spektor 1	Spinorama	datas/eq/Dali Spektor 1/iir-autoeq.txt
+Dali Zensor 1	Spinorama	datas/eq/Dali Zensor 1/iir-autoeq.txt
+Danley Cube	Spinorama	datas/eq/Danley Cube/iir-autoeq.txt
+Danley HRE1	Spinorama	datas/eq/Danley HRE1/iir-autoeq.txt
+Danley ILE3	Spinorama	datas/eq/Danley ILE3/iir-autoeq.txt
+Danley J1-94	Spinorama	datas/eq/Danley J1-94/iir-autoeq.txt
+Danley J2-96	Spinorama	datas/eq/Danley J2-96/iir-autoeq.txt
+Danley J3-64	Spinorama	datas/eq/Danley J3-64/iir-autoeq.txt
+Danley J4-31	Spinorama	datas/eq/Danley J4-31/iir-autoeq.txt
+Danley J6-42	Spinorama	datas/eq/Danley J6-42/iir-autoeq.txt
+Danley J7-95	Spinorama	datas/eq/Danley J7-95/iir-autoeq.txt
+Danley SH-50	Spinorama	datas/eq/Danley SH-50/iir-autoeq.txt
+Danley SH-60	Spinorama	datas/eq/Danley SH-60/iir-autoeq.txt
+Danley SH-62	Spinorama	datas/eq/Danley SH-62/iir-autoeq.txt
+Danley SH-96-HO	Spinorama	datas/eq/Danley SH-96-HO/iir-autoeq.txt
+Danley SH-Mini-180	Spinorama	datas/eq/Danley SH-Mini-180/iir-autoeq.txt
+Danley SH-Mini	Spinorama	datas/eq/Danley SH-Mini/iir-autoeq.txt
+Danley SM-100	Spinorama	datas/eq/Danley SM-100/iir-autoeq.txt
+Danley SM-100F	Spinorama	datas/eq/Danley SM-100F/iir-autoeq.txt
+Danley SM-60F	Spinorama	datas/eq/Danley SM-60F/iir-autoeq.txt
+Danley SM-60M	Spinorama	datas/eq/Danley SM-60M/iir-autoeq.txt
+Danley SM-80	Spinorama	datas/eq/Danley SM-80/iir-autoeq.txt
+Danley SM-80F	Spinorama	datas/eq/Danley SM-80F/iir-autoeq.txt
+Dayton Audio B452-AIR	Spinorama	datas/eq/Dayton Audio B452-AIR/iir-autoeq.txt
+Dayton Audio B652-AIR	Spinorama	datas/eq/Dayton Audio B652-AIR/iir-autoeq.txt
+Dayton Audio C452-AIR	Spinorama	datas/eq/Dayton Audio C452-AIR/iir-autoeq.txt
+Dayton Audio MK402	Spinorama	datas/eq/Dayton Audio MK402/iir-autoeq.txt
+Dayton Audio MK402X	Spinorama	datas/eq/Dayton Audio MK402X/iir-autoeq.txt
+Dayton Audio MK442	Spinorama	datas/eq/Dayton Audio MK442/iir-autoeq.txt
+Dayton Audio MK602X	Spinorama	datas/eq/Dayton Audio MK602X/iir-autoeq.txt
+Dayton Audio OPAL1	Spinorama	datas/eq/Dayton Audio OPAL1/iir-autoeq.txt
+Definitive Technology BP9020	Spinorama	datas/eq/Definitive Technology BP9020/iir-autoeq.txt
+Definitive Technology D9	Spinorama	datas/eq/Definitive Technology D9/iir-autoeq.txt
+Definitive Technology Demand D11	Spinorama	datas/eq/Definitive Technology Demand D11/iir-autoeq.txt
+Definitive Technology ProMonitor 1000	Spinorama	datas/eq/Definitive Technology ProMonitor 1000/iir-autoeq.txt
+Dennis Murphy Affordable Accuracy Monitor	Spinorama	datas/eq/Dennis Murphy Affordable Accuracy Monitor/iir-autoeq.txt
+Devialet Phantom I	Spinorama	datas/eq/Devialet Phantom I/iir-autoeq.txt
+Devialet Phantom II	Spinorama	datas/eq/Devialet Phantom II/iir-autoeq.txt
+Devialet Phantom Reactor 900	Spinorama	datas/eq/Devialet Phantom Reactor 900/iir-autoeq.txt
+Diapason Emera	Spinorama	datas/eq/Diapason Emera/iir-autoeq.txt
+Dolby CS 126	Spinorama	datas/eq/Dolby CS 126/iir-autoeq.txt
+Dolby CS 126MH	Spinorama	datas/eq/Dolby CS 126MH/iir-autoeq.txt
+Dolby CS 128	Spinorama	datas/eq/Dolby CS 128/iir-autoeq.txt
+Dolby CS 128LF	Spinorama	datas/eq/Dolby CS 128LF/iir-autoeq.txt
+Dolby CS 128MH	Spinorama	datas/eq/Dolby CS 128MH/iir-autoeq.txt
+Dolby CS 133	Spinorama	datas/eq/Dolby CS 133/iir-autoeq.txt
+Dolby CS 136LF	Spinorama	datas/eq/Dolby CS 136LF/iir-autoeq.txt
+Dolby CS 136MH	Spinorama	datas/eq/Dolby CS 136MH/iir-autoeq.txt
+Donner Dyna 3	Spinorama	datas/eq/Donner Dyna 3/iir-autoeq.txt
+Donner Dyna 4	Spinorama	datas/eq/Donner Dyna 4/iir-autoeq.txt
+Dutch Dutch 8C	Spinorama	datas/eq/Dutch Dutch 8C/iir-autoeq.txt
+Dynaudio Core 47	Spinorama	datas/eq/Dynaudio Core 47/iir-autoeq.txt
+Dynaudio Emit 20	Spinorama	datas/eq/Dynaudio Emit 20/iir-autoeq.txt
+Dynaudio Emit 30	Spinorama	datas/eq/Dynaudio Emit 30/iir-autoeq.txt
+Dynaudio Emit M10	Spinorama	datas/eq/Dynaudio Emit M10/iir-autoeq.txt
+Dynaudio Excite X14	Spinorama	datas/eq/Dynaudio Excite X14/iir-autoeq.txt
+Dynaudio Heritage Special	Spinorama	datas/eq/Dynaudio Heritage Special/iir-autoeq.txt
+Dynaudio LYD 5	Spinorama	datas/eq/Dynaudio LYD 5/iir-autoeq.txt
+Dynaudio Special Forty	Spinorama	datas/eq/Dynaudio Special Forty/iir-autoeq.txt
+Dynaudio Xeo 3	Spinorama	datas/eq/Dynaudio Xeo 3/iir-autoeq.txt
+Dynavoice Definition DC-5	Spinorama	datas/eq/Dynavoice Definition DC-5/iir-autoeq.txt
+EAW MKC120	Spinorama	datas/eq/EAW MKC120/iir-autoeq.txt
+EAW MKC50	Spinorama	datas/eq/EAW MKC50/iir-autoeq.txt
+EAW MKC60	Spinorama	datas/eq/EAW MKC60/iir-autoeq.txt
+EAW MKC80	Spinorama	datas/eq/EAW MKC80/iir-autoeq.txt
+EAW MKD1000	Spinorama	datas/eq/EAW MKD1000/iir-autoeq.txt
+EAW MKD1200	Spinorama	datas/eq/EAW MKD1200/iir-autoeq.txt
+EAW QX300	Spinorama	datas/eq/EAW QX300/iir-autoeq.txt
+EV EVC-1082	Spinorama	datas/eq/EV EVC-1082/iir-autoeq.txt
+EV EVC-1122	Spinorama	datas/eq/EV EVC-1122/iir-autoeq.txt
+EV EVC-1152	Spinorama	datas/eq/EV EVC-1152/iir-autoeq.txt
+EV EVID-S4.2	Spinorama	datas/eq/EV EVID-S4.2/iir-autoeq.txt
+EV EVID-S5.2	Spinorama	datas/eq/EV EVID-S5.2/iir-autoeq.txt
+EV EVID-S5.2X	Spinorama	datas/eq/EV EVID-S5.2X/iir-autoeq.txt
+EV EVID-S8.2	Spinorama	datas/eq/EV EVID-S8.2/iir-autoeq.txt
+EV MFX-12MC	Spinorama	datas/eq/EV MFX-12MC/iir-autoeq.txt
+EV MFX-15MC	Spinorama	datas/eq/EV MFX-15MC/iir-autoeq.txt
+EV MTS-4153	Spinorama	datas/eq/EV MTS-4153/iir-autoeq.txt
+EV MTS-6154	Spinorama	datas/eq/EV MTS-6154/iir-autoeq.txt
+Edifier Airpulse A100	Spinorama	datas/eq/Edifier Airpulse A100/iir-autoeq.txt
+Edifier M60	Spinorama	datas/eq/Edifier M60/iir-autoeq.txt
+Edifier MR3BT	Spinorama	datas/eq/Edifier MR3BT/iir-autoeq.txt
+Edifier MR4	Spinorama	datas/eq/Edifier MR4/iir-autoeq.txt
+Edifier R1280T	Spinorama	datas/eq/Edifier R1280T/iir-autoeq.txt
+Edifier S2000 Mk III	Spinorama	datas/eq/Edifier S2000 Mk III/iir-autoeq.txt
+Edifier S2000 Pro	Spinorama	datas/eq/Edifier S2000 Pro/iir-autoeq.txt
+Elac Adante AS-61	Spinorama	datas/eq/Elac Adante AS-61/iir-autoeq.txt
+Elac BS 314	Spinorama	datas/eq/Elac BS 314/iir-autoeq.txt
+Elac BS 41	Spinorama	datas/eq/Elac BS 41/iir-autoeq.txt
+Elac BS U5 Slim	Spinorama	datas/eq/Elac BS U5 Slim/iir-autoeq.txt
+Elac Carina BS243.4	Spinorama	datas/eq/Elac Carina BS243.4/iir-autoeq.txt
+Elac Debut 2.0 B5.2	Spinorama	datas/eq/Elac Debut 2.0 B5.2/iir-autoeq.txt
+Elac Debut 2.0 B6.2	Spinorama	datas/eq/Elac Debut 2.0 B6.2/iir-autoeq.txt
+Elac Debut 3.0 Floorstand DF63	Spinorama	datas/eq/Elac Debut 3.0 Floorstand DF63/iir-autoeq.txt
+Elac Debut Reference DBR-62	Spinorama	datas/eq/Elac Debut Reference DBR-62/iir-autoeq.txt
+Elac Uni-Fi 2.0 UB52	Spinorama	datas/eq/Elac Uni-Fi 2.0 UB52/iir-autoeq.txt
+Elac Uni-Fi 2.0 UC52 Center	Spinorama	datas/eq/Elac Uni-Fi 2.0 UC52 Center/iir-autoeq.txt
+Elac Uni-Fi Reference UBR62	Spinorama	datas/eq/Elac Uni-Fi Reference UBR62/iir-autoeq.txt
+Elac Uni-Fi Reference UCR52	Spinorama	datas/eq/Elac Uni-Fi Reference UCR52/iir-autoeq.txt
+Elac Vela BS 403	Spinorama	datas/eq/Elac Vela BS 403/iir-autoeq.txt
+Emotiva Airmotiv 6s	Spinorama	datas/eq/Emotiva Airmotiv 6s/iir-autoeq.txt
+Emotiva Airmotiv B1+	Spinorama	datas/eq/Emotiva Airmotiv B1+/iir-autoeq.txt
+Emotiva Airmotiv B2+	Spinorama	datas/eq/Emotiva Airmotiv B2+/iir-autoeq.txt
+Emotiva Airmotiv C1+	Spinorama	datas/eq/Emotiva Airmotiv C1+/iir-autoeq.txt
+Emotiva Airmotiv C2+	Spinorama	datas/eq/Emotiva Airmotiv C2+/iir-autoeq.txt
+Emotiva Airmotiv T2+	Spinorama	datas/eq/Emotiva Airmotiv T2+/iir-autoeq.txt
+Emotiva Airmotiv XB2	Spinorama	datas/eq/Emotiva Airmotiv XB2/iir-autoeq.txt
+Endow Audio Bravura 7	Spinorama	datas/eq/Endow Audio Bravura 7/iir-autoeq.txt
+Epos ES14N	Spinorama	datas/eq/Epos ES14N/iir-autoeq.txt
+Essence Electrostatic Model 1600	Spinorama	datas/eq/Essence Electrostatic Model 1600/iir-autoeq.txt
+Eve Audio SC305	Spinorama	datas/eq/Eve Audio SC305/iir-autoeq.txt
+Ex-Machina Pulsar MKII	Spinorama	datas/eq/Ex-Machina Pulsar MKII/iir-autoeq.txt
+FBT J12A	Spinorama	datas/eq/FBT J12A/iir-autoeq.txt
+FBT J15A	Spinorama	datas/eq/FBT J15A/iir-autoeq.txt
+FBT J5A	Spinorama	datas/eq/FBT J5A/iir-autoeq.txt
+FBT J8A	Spinorama	datas/eq/FBT J8A/iir-autoeq.txt
+FBT Mitus 112A	Spinorama	datas/eq/FBT Mitus 112A/iir-autoeq.txt
+FBT Mitus 115A	Spinorama	datas/eq/FBT Mitus 115A/iir-autoeq.txt
+FBT Mitus 152A	Spinorama	datas/eq/FBT Mitus 152A/iir-autoeq.txt
+FBT Mitus 215A	Spinorama	datas/eq/FBT Mitus 215A/iir-autoeq.txt
+FBT Promaxx 110A	Spinorama	datas/eq/FBT Promaxx 110A/iir-autoeq.txt
+FBT Promaxx 112A	Spinorama	datas/eq/FBT Promaxx 112A/iir-autoeq.txt
+FBT Promaxx 114A	Spinorama	datas/eq/FBT Promaxx 114A/iir-autoeq.txt
+FBT Vertus CS1000	Spinorama	datas/eq/FBT Vertus CS1000/iir-autoeq.txt
+Fiio SP3	Spinorama	datas/eq/Fiio SP3/iir-autoeq.txt
+Fisher STE-720	Spinorama	datas/eq/Fisher STE-720/iir-autoeq.txt
+Fluance Ai60	Spinorama	datas/eq/Fluance Ai60/iir-autoeq.txt
+Fluance HFS Signature	Spinorama	datas/eq/Fluance HFS Signature/iir-autoeq.txt
+Fluance Reference XL8S	Spinorama	datas/eq/Fluance Reference XL8S/iir-autoeq.txt
+Fluid Audio C35BT	Spinorama	datas/eq/Fluid Audio C35BT/iir-autoeq.txt
+Fluid Audio FX50	Spinorama	datas/eq/Fluid Audio FX50/iir-autoeq.txt
+Fluid Audio FX50v2	Spinorama	datas/eq/Fluid Audio FX50v2/iir-autoeq.txt
+Fluid Audio Image 2	Spinorama	datas/eq/Fluid Audio Image 2/iir-autoeq.txt
+Focal 1000 IWLCR6	Spinorama	datas/eq/Focal 1000 IWLCR6/iir-autoeq.txt
+Focal Alpha 50 Evo	Spinorama	datas/eq/Focal Alpha 50 Evo/iir-autoeq.txt
+Focal Alpha 65 Evo	Spinorama	datas/eq/Focal Alpha 65 Evo/iir-autoeq.txt
+Focal Alpha Twin Evo	Spinorama	datas/eq/Focal Alpha Twin Evo/iir-autoeq.txt
+Focal Aria 906	Spinorama	datas/eq/Focal Aria 906/iir-autoeq.txt
+Focal Aria Evo X No.2	Spinorama	datas/eq/Focal Aria Evo X No.2/iir-autoeq.txt
+Focal Chora 806	Spinorama	datas/eq/Focal Chora 806/iir-autoeq.txt
+Focal Chora 816	Spinorama	datas/eq/Focal Chora 816/iir-autoeq.txt
+Focal Chorus OD 706 V	Spinorama	datas/eq/Focal Chorus OD 706 V/iir-autoeq.txt
+Focal Dome Flax	Spinorama	datas/eq/Focal Dome Flax/iir-autoeq.txt
+Focal Solo6 Be	Spinorama	datas/eq/Focal Solo6 Be/iir-autoeq.txt
+Focal Solo6 ST6	Spinorama	datas/eq/Focal Solo6 ST6/iir-autoeq.txt
+Focal Sopra 1	Spinorama	datas/eq/Focal Sopra 1/iir-autoeq.txt
+Focal Trio6 ST6	Spinorama	datas/eq/Focal Trio6 ST6/iir-autoeq.txt
+Focal Twin6 Be	Spinorama	datas/eq/Focal Twin6 Be/iir-autoeq.txt
+Fostex PM03	Spinorama	datas/eq/Fostex PM03/iir-autoeq.txt
+Fulcrum Acoustic CCX1226	Spinorama	datas/eq/Fulcrum Acoustic CCX1226/iir-autoeq.txt
+Fulcrum Acoustic CCX1500	Spinorama	datas/eq/Fulcrum Acoustic CCX1500/iir-autoeq.txt
+Fulcrum Acoustic CCX1526	Spinorama	datas/eq/Fulcrum Acoustic CCX1526/iir-autoeq.txt
+Fulcrum Acoustic CCX1565	Spinorama	datas/eq/Fulcrum Acoustic CCX1565/iir-autoeq.txt
+Fulcrum Acoustic CCX1577	Spinorama	datas/eq/Fulcrum Acoustic CCX1577/iir-autoeq.txt
+Fulcrum Acoustic CCX1595	Spinorama	datas/eq/Fulcrum Acoustic CCX1595/iir-autoeq.txt
+Fulcrum Acoustic CCX826	Spinorama	datas/eq/Fulcrum Acoustic CCX826/iir-autoeq.txt
+Fulcrum Acoustic CX826	Spinorama	datas/eq/Fulcrum Acoustic CX826/iir-autoeq.txt
+Fulcrum Acoustic DX1226	Spinorama	datas/eq/Fulcrum Acoustic DX1226/iir-autoeq.txt
+Fulcrum Acoustic DX1526	Spinorama	datas/eq/Fulcrum Acoustic DX1526/iir-autoeq.txt
+Fulcrum Acoustic FH1565	Spinorama	datas/eq/Fulcrum Acoustic FH1565/iir-autoeq.txt
+Fulcrum Acoustic GX1200	Spinorama	datas/eq/Fulcrum Acoustic GX1200/iir-autoeq.txt
+Fulcrum Acoustic GX1526	Spinorama	datas/eq/Fulcrum Acoustic GX1526/iir-autoeq.txt
+Fulcrum Acoustic P8	Spinorama	datas/eq/Fulcrum Acoustic P8/iir-autoeq.txt
+Fulcrum Acoustic RX4	Spinorama	datas/eq/Fulcrum Acoustic RX4/iir-autoeq.txt
+Fulcrum Acoustic RX5	Spinorama	datas/eq/Fulcrum Acoustic RX5/iir-autoeq.txt
+Fulcrum Acoustic RX599	Spinorama	datas/eq/Fulcrum Acoustic RX599/iir-autoeq.txt
+Fulcrum Acoustic RX6	Spinorama	datas/eq/Fulcrum Acoustic RX6/iir-autoeq.txt
+Fulcrum Acoustic RX699	Spinorama	datas/eq/Fulcrum Acoustic RX699/iir-autoeq.txt
+Fulcrum Acoustic RX8	Spinorama	datas/eq/Fulcrum Acoustic RX8/iir-autoeq.txt
+GGNTKT M1	Spinorama	datas/eq/GGNTKT M1/iir-autoeq.txt
+GGNTKT M3	Spinorama	datas/eq/GGNTKT M3/iir-autoeq.txt
+GR Research AV123	Spinorama	datas/eq/GR Research AV123/iir-autoeq.txt
+GR Research Klipsch RP-600M Upgrade	Spinorama	datas/eq/GR Research Klipsch RP-600M Upgrade/iir-autoeq.txt
+GR Research LGK 2.0	Spinorama	datas/eq/GR Research LGK 2.0/iir-autoeq.txt
+GR Research NX-Bravo	Spinorama	datas/eq/GR Research NX-Bravo/iir-autoeq.txt
+GR Research X-LS Encore Kit	Spinorama	datas/eq/GR Research X-LS Encore Kit/iir-autoeq.txt
+Gainphile R16	Spinorama	datas/eq/Gainphile R16/iir-autoeq.txt
+Gallo Acoustics A Diva Ti	Spinorama	datas/eq/Gallo Acoustics A Diva Ti/iir-autoeq.txt
+Gallo Acoustics Nucleus Micro	Spinorama	datas/eq/Gallo Acoustics Nucleus Micro/iir-autoeq.txt
+GedLee Nathan	Spinorama	datas/eq/GedLee Nathan/iir-autoeq.txt
+Genelec 1032A	Spinorama	datas/eq/Genelec 1032A/iir-autoeq.txt
+Genelec 4010A	Spinorama	datas/eq/Genelec 4010A/iir-autoeq.txt
+Genelec 4020C	Spinorama	datas/eq/Genelec 4020C/iir-autoeq.txt
+Genelec 4030C	Spinorama	datas/eq/Genelec 4030C/iir-autoeq.txt
+Genelec 4040A	Spinorama	datas/eq/Genelec 4040A/iir-autoeq.txt
+Genelec 8010A	Spinorama	datas/eq/Genelec 8010A/iir-autoeq.txt
+Genelec 8030A	Spinorama	datas/eq/Genelec 8030A/iir-autoeq.txt
+Genelec 8030C	Spinorama	datas/eq/Genelec 8030C/iir-autoeq.txt
+Genelec 8050B	Spinorama	datas/eq/Genelec 8050B/iir-autoeq.txt
+Genelec 8320A	Spinorama	datas/eq/Genelec 8320A/iir-autoeq.txt
+Genelec 8330A	Spinorama	datas/eq/Genelec 8330A/iir-autoeq.txt
+Genelec 8331A	Spinorama	datas/eq/Genelec 8331A/iir-autoeq.txt
+Genelec 8341A	Spinorama	datas/eq/Genelec 8341A/iir-autoeq.txt
+Genelec 8351A	Spinorama	datas/eq/Genelec 8351A/iir-autoeq.txt
+Genelec 8351B	Spinorama	datas/eq/Genelec 8351B/iir-autoeq.txt
+Genelec 8361A	Spinorama	datas/eq/Genelec 8361A/iir-autoeq.txt
+Genelec G2	Spinorama	datas/eq/Genelec G2/iir-autoeq.txt
+Genelec M040	Spinorama	datas/eq/Genelec M040/iir-autoeq.txt
+Genelec S360	Spinorama	datas/eq/Genelec S360/iir-autoeq.txt
+Genius SP-HF3000A	Spinorama	datas/eq/Genius SP-HF3000A/iir-autoeq.txt
+GoldenEar BRX	Spinorama	datas/eq/GoldenEar BRX/iir-autoeq.txt
+Google Nest Audio	Spinorama	datas/eq/Google Nest Audio/iir-autoeq.txt
+Gradient Helsinki 1.5	Spinorama	datas/eq/Gradient Helsinki 1.5/iir-autoeq.txt
+Grimani Systems Alpha	Spinorama	datas/eq/Grimani Systems Alpha/iir-autoeq.txt
+Grimani Systems Rixos-L	Spinorama	datas/eq/Grimani Systems Rixos-L/iir-autoeq.txt
+Grimani Systems Tau	Spinorama	datas/eq/Grimani Systems Tau/iir-autoeq.txt
+Grimm LS1c+SB1	Spinorama	datas/eq/Grimm LS1c+SB1/iir-autoeq.txt
+HK Audio LINEAR 5 112 F	Spinorama	datas/eq/HK Audio LINEAR 5 112 F/iir-autoeq.txt
+HK Audio LINEAR 5 112 FA	Spinorama	datas/eq/HK Audio LINEAR 5 112 FA/iir-autoeq.txt
+HK Audio LINEAR 5 112 X	Spinorama	datas/eq/HK Audio LINEAR 5 112 X/iir-autoeq.txt
+HK Audio LINEAR 5 112 XA	Spinorama	datas/eq/HK Audio LINEAR 5 112 XA/iir-autoeq.txt
+HK Audio LINEAR 7 110 XA	Spinorama	datas/eq/HK Audio LINEAR 7 110 XA/iir-autoeq.txt
+HK Audio LINEAR 7 112 FA	Spinorama	datas/eq/HK Audio LINEAR 7 112 FA/iir-autoeq.txt
+HK Audio LINEAR 7 112 XA	Spinorama	datas/eq/HK Audio LINEAR 7 112 XA/iir-autoeq.txt
+HK Audio LINEAR 7 115 FA	Spinorama	datas/eq/HK Audio LINEAR 7 115 FA/iir-autoeq.txt
+HK Audio LINEAR 9 110 XA	Spinorama	datas/eq/HK Audio LINEAR 9 110 XA/iir-autoeq.txt
+HK Audio LINEAR 9 112 XA	Spinorama	datas/eq/HK Audio LINEAR 9 112 XA/iir-autoeq.txt
+HTD Level THREE	Spinorama	datas/eq/HTD Level THREE/iir-autoeq.txt
+Harbeth Monitor 30.0	Spinorama	datas/eq/Harbeth Monitor 30.0/iir-autoeq.txt
+Hedd Type 05 A-CORE	Spinorama	datas/eq/Hedd Type 05 A-CORE/iir-autoeq.txt
+Hedd Type 20 MK2	Spinorama	datas/eq/Hedd Type 20 MK2/iir-autoeq.txt
+Hivi 3.1A DIY	Spinorama	datas/eq/Hivi 3.1A DIY/iir-autoeq.txt
+Hivi Swan X3	Spinorama	datas/eq/Hivi Swan X3/iir-autoeq.txt
+Hsu Research CCB-8	Spinorama	datas/eq/Hsu Research CCB-8/iir-autoeq.txt
+Hsu Research HB-1 MK2	Spinorama	datas/eq/Hsu Research HB-1 MK2/iir-autoeq.txt
+Hsu Research MFL-6	Spinorama	datas/eq/Hsu Research MFL-6/iir-autoeq.txt
+Human Speakers 81 dk	Spinorama	datas/eq/Human Speakers 81 dk/iir-autoeq.txt
+IK Multimedia iLoud MTM MKII	Spinorama	datas/eq/IK Multimedia iLoud MTM MKII/iir-autoeq.txt
+IK Multimedia iLoud MTM	Spinorama	datas/eq/IK Multimedia iLoud MTM/iir-autoeq.txt
+IK Multimedia iLoud Micro Monitor	Spinorama	datas/eq/IK Multimedia iLoud Micro Monitor/iir-autoeq.txt
+Ikea SYMFONISK Picture Frame	Spinorama	datas/eq/Ikea SYMFONISK Picture Frame/iir-autoeq.txt
+Ikea SYMFONISK Speaker Lamp	Spinorama	datas/eq/Ikea SYMFONISK Speaker Lamp/iir-autoeq.txt
+Infinity Entra One	Spinorama	datas/eq/Infinity Entra One/iir-autoeq.txt
+Infinity IL60	Spinorama	datas/eq/Infinity IL60/iir-autoeq.txt
+Infinity Interlude IL10	Spinorama	datas/eq/Infinity Interlude IL10/iir-autoeq.txt
+Infinity Intermezzo 4.1t	Spinorama	datas/eq/Infinity Intermezzo 4.1t/iir-autoeq.txt
+Infinity Prelude MTS	Spinorama	datas/eq/Infinity Prelude MTS/iir-autoeq.txt
+Infinity Primus 150	Spinorama	datas/eq/Infinity Primus 150/iir-autoeq.txt
+Infinity Primus 360	Spinorama	datas/eq/Infinity Primus 360/iir-autoeq.txt
+Infinity R152	Spinorama	datas/eq/Infinity R152/iir-autoeq.txt
+Infinity R162	Spinorama	datas/eq/Infinity R162/iir-autoeq.txt
+Infinity R253	Spinorama	datas/eq/Infinity R253/iir-autoeq.txt
+Infinity R263	Spinorama	datas/eq/Infinity R263/iir-autoeq.txt
+Infinity RC252	Spinorama	datas/eq/Infinity RC252/iir-autoeq.txt
+Infinity RC263	Spinorama	datas/eq/Infinity RC263/iir-autoeq.txt
+Infinity RS152	Spinorama	datas/eq/Infinity RS152/iir-autoeq.txt
+JBL 104	Spinorama	datas/eq/JBL 104/iir-autoeq.txt
+JBL 305P Mark ii	Spinorama	datas/eq/JBL 305P Mark ii/iir-autoeq.txt
+JBL 306P Mark ii	Spinorama	datas/eq/JBL 306P Mark ii/iir-autoeq.txt
+JBL 308P Mark ii	Spinorama	datas/eq/JBL 308P Mark ii/iir-autoeq.txt
+JBL 3733	Spinorama	datas/eq/JBL 3733/iir-autoeq.txt
+JBL 4305P	Spinorama	datas/eq/JBL 4305P/iir-autoeq.txt
+JBL 4309	Spinorama	datas/eq/JBL 4309/iir-autoeq.txt
+JBL 4312MII	Spinorama	datas/eq/JBL 4312MII/iir-autoeq.txt
+JBL 4312SE	Spinorama	datas/eq/JBL 4312SE/iir-autoeq.txt
+JBL 4319	Spinorama	datas/eq/JBL 4319/iir-autoeq.txt
+JBL 4329P	Spinorama	datas/eq/JBL 4329P/iir-autoeq.txt
+JBL 4349	Spinorama	datas/eq/JBL 4349/iir-autoeq.txt
+JBL 4367	Spinorama	datas/eq/JBL 4367/iir-autoeq.txt
+JBL 4429	Spinorama	datas/eq/JBL 4429/iir-autoeq.txt
+JBL 705P	Spinorama	datas/eq/JBL 705P/iir-autoeq.txt
+JBL 705i	Spinorama	datas/eq/JBL 705i/iir-autoeq.txt
+JBL 708P	Spinorama	datas/eq/JBL 708P/iir-autoeq.txt
+JBL 708i active	Spinorama	datas/eq/JBL 708i active/iir-autoeq.txt
+JBL 708i passive	Spinorama	datas/eq/JBL 708i passive/iir-autoeq.txt
+JBL 9310	Spinorama	datas/eq/JBL 9310/iir-autoeq.txt
+JBL AC25	Spinorama	datas/eq/JBL AC25/iir-autoeq.txt
+JBL Arena 120	Spinorama	datas/eq/JBL Arena 120/iir-autoeq.txt
+JBL C211	Spinorama	datas/eq/JBL C211/iir-autoeq.txt
+JBL C222	Spinorama	datas/eq/JBL C222/iir-autoeq.txt
+JBL CBT 1000+1000E	Spinorama	datas/eq/JBL CBT 1000+1000E/iir-autoeq.txt
+JBL CBT 1000	Spinorama	datas/eq/JBL CBT 1000/iir-autoeq.txt
+JBL CBT 70J-1	Spinorama	datas/eq/JBL CBT 70J-1/iir-autoeq.txt
+JBL CFR2	Spinorama	datas/eq/JBL CFR2/iir-autoeq.txt
+JBL COL600	Spinorama	datas/eq/JBL COL600/iir-autoeq.txt
+JBL COL800	Spinorama	datas/eq/JBL COL800/iir-autoeq.txt
+JBL CV3015	Spinorama	datas/eq/JBL CV3015/iir-autoeq.txt
+JBL CV5012	Spinorama	datas/eq/JBL CV5012/iir-autoeq.txt
+JBL CV5015	Spinorama	datas/eq/JBL CV5015/iir-autoeq.txt
+JBL Control 1 Pro	Spinorama	datas/eq/JBL Control 1 Pro/iir-autoeq.txt
+JBL Control 24CT	Spinorama	datas/eq/JBL Control 24CT/iir-autoeq.txt
+JBL Control 25T	Spinorama	datas/eq/JBL Control 25T/iir-autoeq.txt
+JBL Control 29AV-1	Spinorama	datas/eq/JBL Control 29AV-1/iir-autoeq.txt
+JBL Control HST V2	Spinorama	datas/eq/JBL Control HST V2/iir-autoeq.txt
+JBL Control X Wireless	Spinorama	datas/eq/JBL Control X Wireless/iir-autoeq.txt
+JBL Control X	Spinorama	datas/eq/JBL Control X/iir-autoeq.txt
+JBL HDI-1600	Spinorama	datas/eq/JBL HDI-1600/iir-autoeq.txt
+JBL HDI-3600	Spinorama	datas/eq/JBL HDI-3600/iir-autoeq.txt
+JBL HDI-3800	Spinorama	datas/eq/JBL HDI-3800/iir-autoeq.txt
+JBL HDI-4500	Spinorama	datas/eq/JBL HDI-4500/iir-autoeq.txt
+JBL L100 Classic MKII	Spinorama	datas/eq/JBL L100 Classic MKII/iir-autoeq.txt
+JBL L100 Classic	Spinorama	datas/eq/JBL L100 Classic/iir-autoeq.txt
+JBL L52 Classic	Spinorama	datas/eq/JBL L52 Classic/iir-autoeq.txt
+JBL L82 Classic	Spinorama	datas/eq/JBL L82 Classic/iir-autoeq.txt
+JBL LS 80	Spinorama	datas/eq/JBL LS 80/iir-autoeq.txt
+JBL LSR305	Spinorama	datas/eq/JBL LSR305/iir-autoeq.txt
+JBL LSR6328P	Spinorama	datas/eq/JBL LSR6328P/iir-autoeq.txt
+JBL LSR6332	Spinorama	datas/eq/JBL LSR6332/iir-autoeq.txt
+JBL M2	Spinorama	datas/eq/JBL M2/iir-autoeq.txt
+JBL Northridge Series N28	Spinorama	datas/eq/JBL Northridge Series N28/iir-autoeq.txt
+JBL PRX635	Spinorama	datas/eq/JBL PRX635/iir-autoeq.txt
+JBL PRX908	Spinorama	datas/eq/JBL PRX908/iir-autoeq.txt
+JBL PRX912	Spinorama	datas/eq/JBL PRX912/iir-autoeq.txt
+JBL PRX915	Spinorama	datas/eq/JBL PRX915/iir-autoeq.txt
+JBL Performance PC600	Spinorama	datas/eq/JBL Performance PC600/iir-autoeq.txt
+JBL Performance PT800	Spinorama	datas/eq/JBL Performance PT800/iir-autoeq.txt
+JBL SCS 8	Spinorama	datas/eq/JBL SCS 8/iir-autoeq.txt
+JBL SLP12	Spinorama	datas/eq/JBL SLP12/iir-autoeq.txt
+JBL SLP14	Spinorama	datas/eq/JBL SLP14/iir-autoeq.txt
+JBL SRX835P	Spinorama	datas/eq/JBL SRX835P/iir-autoeq.txt
+JBL Stage 250B	Spinorama	datas/eq/JBL Stage 250B/iir-autoeq.txt
+JBL Stage 280F	Spinorama	datas/eq/JBL Stage 280F/iir-autoeq.txt
+JBL Stage A120	Spinorama	datas/eq/JBL Stage A120/iir-autoeq.txt
+JBL Stage A125C	Spinorama	datas/eq/JBL Stage A125C/iir-autoeq.txt
+JBL Stage A130	Spinorama	datas/eq/JBL Stage A130/iir-autoeq.txt
+JBL Stage A135C	Spinorama	datas/eq/JBL Stage A135C/iir-autoeq.txt
+JBL Stage A180	Spinorama	datas/eq/JBL Stage A180/iir-autoeq.txt
+JBL Studio 520C	Spinorama	datas/eq/JBL Studio 520C/iir-autoeq.txt
+JBL Studio 530	Spinorama	datas/eq/JBL Studio 530/iir-autoeq.txt
+JBL Studio 590	Spinorama	datas/eq/JBL Studio 590/iir-autoeq.txt
+JBL Studio 630	Spinorama	datas/eq/JBL Studio 630/iir-autoeq.txt
+JBL Studio 698	Spinorama	datas/eq/JBL Studio 698/iir-autoeq.txt
+JBL Studio Series S26	Spinorama	datas/eq/JBL Studio Series S26/iir-autoeq.txt
+JBL Synthesis 4429	Spinorama	datas/eq/JBL Synthesis 4429/iir-autoeq.txt
+JBL Synthesis Array 1400	Spinorama	datas/eq/JBL Synthesis Array 1400/iir-autoeq.txt
+JBL Synthesis Array 800	Spinorama	datas/eq/JBL Synthesis Array 800/iir-autoeq.txt
+JBL Synthesis Array 880	Spinorama	datas/eq/JBL Synthesis Array 880/iir-autoeq.txt
+JBL Synthesis K2 S5800	Spinorama	datas/eq/JBL Synthesis K2 S5800/iir-autoeq.txt
+JBL Synthesis K2 S9800	Spinorama	datas/eq/JBL Synthesis K2 S9800/iir-autoeq.txt
+JBL Synthesis K2 S9900	Spinorama	datas/eq/JBL Synthesis K2 S9900/iir-autoeq.txt
+JBL Synthesis SAM1HF + SAM2LF	Spinorama	datas/eq/JBL Synthesis SAM1HF + SAM2LF/iir-autoeq.txt
+JBL Synthesis SAM3HA	Spinorama	datas/eq/JBL Synthesis SAM3HA/iir-autoeq.txt
+JBL Synthesis SCL-1	Spinorama	datas/eq/JBL Synthesis SCL-1/iir-autoeq.txt
+JBL Synthesis SCL-3	Spinorama	datas/eq/JBL Synthesis SCL-3/iir-autoeq.txt
+JBL Synthesis SCL-4	Spinorama	datas/eq/JBL Synthesis SCL-4/iir-autoeq.txt
+JBL Synthesis SCL-5	Spinorama	datas/eq/JBL Synthesis SCL-5/iir-autoeq.txt
+JBL Synthesis SCL-6	Spinorama	datas/eq/JBL Synthesis SCL-6/iir-autoeq.txt
+JBL Synthesis SCL-7	Spinorama	datas/eq/JBL Synthesis SCL-7/iir-autoeq.txt
+JBL Synthesis SK2-1000	Spinorama	datas/eq/JBL Synthesis SK2-1000/iir-autoeq.txt
+JBL Synthesis SK2-3300	Spinorama	datas/eq/JBL Synthesis SK2-3300/iir-autoeq.txt
+JBL VTX F35	Spinorama	datas/eq/JBL VTX F35/iir-autoeq.txt
+JBL XPL90	Spinorama	datas/eq/JBL XPL90/iir-autoeq.txt
+JTR Noesis 210ht	Spinorama	datas/eq/JTR Noesis 210ht/iir-autoeq.txt
+JTR Noesis 212rt	Spinorama	datas/eq/JTR Noesis 212rt/iir-autoeq.txt
+Jamo C93 II	Spinorama	datas/eq/Jamo C93 II/iir-autoeq.txt
+Jamo Concert 8	Spinorama	datas/eq/Jamo Concert 8/iir-autoeq.txt
+Jamo S7-15B	Spinorama	datas/eq/Jamo S7-15B/iir-autoeq.txt
+Jamo S803	Spinorama	datas/eq/Jamo S803/iir-autoeq.txt
+Jamo S807	Spinorama	datas/eq/Jamo S807/iir-autoeq.txt
+JansZen Loudspeaker zA1.1	Spinorama	datas/eq/JansZen Loudspeaker zA1.1/iir-autoeq.txt
+JansZen Loudspeaker zA2.1	Spinorama	datas/eq/JansZen Loudspeaker zA2.1/iir-autoeq.txt
+Jeff Bagby Mandolin DIY	Spinorama	datas/eq/Jeff Bagby Mandolin DIY/iir-autoeq.txt
+K ARRAY Dragon KX12	Spinorama	datas/eq/K ARRAY Dragon KX12/iir-autoeq.txt
+KEF Blade 1 Meta	Spinorama	datas/eq/KEF Blade 1 Meta/iir-autoeq.txt
+KEF Blade 2 Meta	Spinorama	datas/eq/KEF Blade 2 Meta/iir-autoeq.txt
+KEF CI250RRM-THX	Spinorama	datas/eq/KEF CI250RRM-THX/iir-autoeq.txt
+KEF Ci3160RL-THX	Spinorama	datas/eq/KEF Ci3160RL-THX/iir-autoeq.txt
+KEF LS50 Meta	Spinorama	datas/eq/KEF LS50 Meta/iir-autoeq.txt
+KEF LS50 Wireless II	Spinorama	datas/eq/KEF LS50 Wireless II/iir-autoeq.txt
+KEF LS50	Spinorama	datas/eq/KEF LS50/iir-autoeq.txt
+KEF LS60 Wireless	Spinorama	datas/eq/KEF LS60 Wireless/iir-autoeq.txt
+KEF LSX II LT	Spinorama	datas/eq/KEF LSX II LT/iir-autoeq.txt
+KEF LSX	Spinorama	datas/eq/KEF LSX/iir-autoeq.txt
+KEF Muo	Spinorama	datas/eq/KEF Muo/iir-autoeq.txt
+KEF Q Concerto Meta	Spinorama	datas/eq/KEF Q Concerto Meta/iir-autoeq.txt
+KEF Q1 Meta	Spinorama	datas/eq/KEF Q1 Meta/iir-autoeq.txt
+KEF Q100	Spinorama	datas/eq/KEF Q100/iir-autoeq.txt
+KEF Q11 Meta	Spinorama	datas/eq/KEF Q11 Meta/iir-autoeq.txt
+KEF Q150	Spinorama	datas/eq/KEF Q150/iir-autoeq.txt
+KEF Q250	Spinorama	datas/eq/KEF Q250/iir-autoeq.txt
+KEF Q3 Meta	Spinorama	datas/eq/KEF Q3 Meta/iir-autoeq.txt
+KEF Q350	Spinorama	datas/eq/KEF Q350/iir-autoeq.txt
+KEF Q4 Meta	Spinorama	datas/eq/KEF Q4 Meta/iir-autoeq.txt
+KEF Q6 Meta	Spinorama	datas/eq/KEF Q6 Meta/iir-autoeq.txt
+KEF Q650C	Spinorama	datas/eq/KEF Q650C/iir-autoeq.txt
+KEF Q7 Meta	Spinorama	datas/eq/KEF Q7 Meta/iir-autoeq.txt
+KEF Q8 Meta	Spinorama	datas/eq/KEF Q8 Meta/iir-autoeq.txt
+KEF R11 Meta	Spinorama	datas/eq/KEF R11 Meta/iir-autoeq.txt
+KEF R2C Meta	Spinorama	datas/eq/KEF R2C Meta/iir-autoeq.txt
+KEF R2c	Spinorama	datas/eq/KEF R2c/iir-autoeq.txt
+KEF R3 Meta	Spinorama	datas/eq/KEF R3 Meta/iir-autoeq.txt
+KEF R3	Spinorama	datas/eq/KEF R3/iir-autoeq.txt
+KEF R5 Meta	Spinorama	datas/eq/KEF R5 Meta/iir-autoeq.txt
+KEF R5	Spinorama	datas/eq/KEF R5/iir-autoeq.txt
+KEF R6C Meta	Spinorama	datas/eq/KEF R6C Meta/iir-autoeq.txt
+KEF R7 Meta	Spinorama	datas/eq/KEF R7 Meta/iir-autoeq.txt
+KEF R8 Meta	Spinorama	datas/eq/KEF R8 Meta/iir-autoeq.txt
+KEF R8a	Spinorama	datas/eq/KEF R8a/iir-autoeq.txt
+KEF Reference 1 Meta	Spinorama	datas/eq/KEF Reference 1 Meta/iir-autoeq.txt
+KEF Reference 203	Spinorama	datas/eq/KEF Reference 203/iir-autoeq.txt
+KEF Reference 2C Meta	Spinorama	datas/eq/KEF Reference 2C Meta/iir-autoeq.txt
+KEF Reference 3 Meta	Spinorama	datas/eq/KEF Reference 3 Meta/iir-autoeq.txt
+KEF Reference 4C Meta	Spinorama	datas/eq/KEF Reference 4C Meta/iir-autoeq.txt
+KEF Reference 4C	Spinorama	datas/eq/KEF Reference 4C/iir-autoeq.txt
+KEF Reference 5 Meta	Spinorama	datas/eq/KEF Reference 5 Meta/iir-autoeq.txt
+KEF Reference 5	Spinorama	datas/eq/KEF Reference 5/iir-autoeq.txt
+KEF T101	Spinorama	datas/eq/KEF T101/iir-autoeq.txt
+KEF T301C	Spinorama	datas/eq/KEF T301C/iir-autoeq.txt
+KLH 911B	Spinorama	datas/eq/KLH 911B/iir-autoeq.txt
+KLH Model Five	Spinorama	datas/eq/KLH Model Five/iir-autoeq.txt
+KME Sound ICS4	Spinorama	datas/eq/KME Sound ICS4/iir-autoeq.txt
+KME Sound VL15XTL	Spinorama	datas/eq/KME Sound VL15XTL/iir-autoeq.txt
+KRK Systems Classic 5	Spinorama	datas/eq/KRK Systems Classic 5/iir-autoeq.txt
+KRK Systems RoKit 5 G4	Spinorama	datas/eq/KRK Systems RoKit 5 G4/iir-autoeq.txt
+KRK Systems RoKit 6 G2	Spinorama	datas/eq/KRK Systems RoKit 6 G2/iir-autoeq.txt
+KV2 Audio ES1.0	Spinorama	datas/eq/KV2 Audio ES1.0/iir-autoeq.txt
+KV2 Audio ESR212	Spinorama	datas/eq/KV2 Audio ESR212/iir-autoeq.txt
+KV2 Audio EX10	Spinorama	datas/eq/KV2 Audio EX10/iir-autoeq.txt
+KV2 Audio EX12	Spinorama	datas/eq/KV2 Audio EX12/iir-autoeq.txt
+KV2 Audio EX15	Spinorama	datas/eq/KV2 Audio EX15/iir-autoeq.txt
+Kali IN-5	Spinorama	datas/eq/Kali IN-5/iir-autoeq.txt
+Kali IN-8	Spinorama	datas/eq/Kali IN-8/iir-autoeq.txt
+Kali IN-8v2	Spinorama	datas/eq/Kali IN-8v2/iir-autoeq.txt
+Kali LP-6v2	Spinorama	datas/eq/Kali LP-6v2/iir-autoeq.txt
+Kali LP-8	Spinorama	datas/eq/Kali LP-8/iir-autoeq.txt
+Kali LP-8v2	Spinorama	datas/eq/Kali LP-8v2/iir-autoeq.txt
+Kali LP-UNF	Spinorama	datas/eq/Kali LP-UNF/iir-autoeq.txt
+Kanto YU	Spinorama	datas/eq/Kanto YU/iir-autoeq.txt
+Kanto YU4	Spinorama	datas/eq/Kanto YU4/iir-autoeq.txt
+Kanto YU6	Spinorama	datas/eq/Kanto YU6/iir-autoeq.txt
+Kii Audio Three	Spinorama	datas/eq/Kii Audio Three/iir-autoeq.txt
+King's Audio KingSound KS 3001	Spinorama	datas/eq/King's Audio KingSound KS 3001/iir-autoeq.txt
+Kling Freitag CA 106 Pro	Spinorama	datas/eq/Kling Freitag CA 106 Pro/iir-autoeq.txt
+Kling Freitag PIA M	Spinorama	datas/eq/Kling Freitag PIA M/iir-autoeq.txt
+Kling Freitag Sequenza 5B+5W	Spinorama	datas/eq/Kling Freitag Sequenza 5B+5W/iir-autoeq.txt
+Kling Freitag Spectra	Spinorama	datas/eq/Kling Freitag Spectra/iir-autoeq.txt
+Klipsch Forte IV	Spinorama	datas/eq/Klipsch Forte IV/iir-autoeq.txt
+Klipsch Heresy IV	Spinorama	datas/eq/Klipsch Heresy IV/iir-autoeq.txt
+Klipsch Icon KF-26	Spinorama	datas/eq/Klipsch Icon KF-26/iir-autoeq.txt
+Klipsch R41M	Spinorama	datas/eq/Klipsch R41M/iir-autoeq.txt
+Klipsch RP-404C II	Spinorama	datas/eq/Klipsch RP-404C II/iir-autoeq.txt
+Klipsch RP-5000F II	Spinorama	datas/eq/Klipsch RP-5000F II/iir-autoeq.txt
+Klipsch RP-500C II	Spinorama	datas/eq/Klipsch RP-500C II/iir-autoeq.txt
+Klipsch RP-500M II	Spinorama	datas/eq/Klipsch RP-500M II/iir-autoeq.txt
+Klipsch RP-500M	Spinorama	datas/eq/Klipsch RP-500M/iir-autoeq.txt
+Klipsch RP-504C II	Spinorama	datas/eq/Klipsch RP-504C II/iir-autoeq.txt
+Klipsch RP-6000F II	Spinorama	datas/eq/Klipsch RP-6000F II/iir-autoeq.txt
+Klipsch RP-600M II	Spinorama	datas/eq/Klipsch RP-600M II/iir-autoeq.txt
+Klipsch RP-600M	Spinorama	datas/eq/Klipsch RP-600M/iir-autoeq.txt
+Klipsch RP-8000F II	Spinorama	datas/eq/Klipsch RP-8000F II/iir-autoeq.txt
+Klipsch Synergy SB-3 Monitor	Spinorama	datas/eq/Klipsch Synergy SB-3 Monitor/iir-autoeq.txt
+Klipsch The Fives	Spinorama	datas/eq/Klipsch The Fives/iir-autoeq.txt
+Klipsch The Nines	Spinorama	datas/eq/Klipsch The Nines/iir-autoeq.txt
+Klipsch The Three	Spinorama	datas/eq/Klipsch The Three/iir-autoeq.txt
+L-Acoustics 108P	Spinorama	datas/eq/L-Acoustics 108P/iir-autoeq.txt
+L-Acoustics 112P	Spinorama	datas/eq/L-Acoustics 112P/iir-autoeq.txt
+L-Acoustics X12	Spinorama	datas/eq/L-Acoustics X12/iir-autoeq.txt
+L-Acoustics X15 HiQ	Spinorama	datas/eq/L-Acoustics X15 HiQ/iir-autoeq.txt
+L-Acoustics X8	Spinorama	datas/eq/L-Acoustics X8/iir-autoeq.txt
+LCM Nearfield Monitor 3-D Printed DIY	Spinorama	datas/eq/LCM Nearfield Monitor 3-D Printed DIY/iir-autoeq.txt
+LD Systems DDQ10	Spinorama	datas/eq/LD Systems DDQ10/iir-autoeq.txt
+LD Systems DDQ12+Sub	Spinorama	datas/eq/LD Systems DDQ12+Sub/iir-autoeq.txt
+LD Systems DDQ12	Spinorama	datas/eq/LD Systems DDQ12/iir-autoeq.txt
+LD Systems DDQ15	Spinorama	datas/eq/LD Systems DDQ15/iir-autoeq.txt
+LD Systems Stinger 10-A-G3	Spinorama	datas/eq/LD Systems Stinger 10-A-G3/iir-autoeq.txt
+LD Systems Stinger 12-A-G3	Spinorama	datas/eq/LD Systems Stinger 12-A-G3/iir-autoeq.txt
+LD Systems Stinger 15-A-G3	Spinorama	datas/eq/LD Systems Stinger 15-A-G3/iir-autoeq.txt
+LD Systems Stinger 28-A-G3	Spinorama	datas/eq/LD Systems Stinger 28-A-G3/iir-autoeq.txt
+LD Systems Stinger 8-A-G3	Spinorama	datas/eq/LD Systems Stinger 8-A-G3/iir-autoeq.txt
+LOGProfessional Alpha	Spinorama	datas/eq/LOGProfessional Alpha/iir-autoeq.txt
+LYX SPA8PAS	Spinorama	datas/eq/LYX SPA8PAS/iir-autoeq.txt
+Linkwitz LXMini DIY	Spinorama	datas/eq/Linkwitz LXMini DIY/iir-autoeq.txt
+M-Audio BX3 D3	Spinorama	datas/eq/M-Audio BX3 D3/iir-autoeq.txt
+M-Audio BX4 D3	Spinorama	datas/eq/M-Audio BX4 D3/iir-autoeq.txt
+M-Audio BX5 D3	Spinorama	datas/eq/M-Audio BX5 D3/iir-autoeq.txt
+M-Audio BX8 D3	Spinorama	datas/eq/M-Audio BX8 D3/iir-autoeq.txt
+MAG Theatron MC12-C	Spinorama	datas/eq/MAG Theatron MC12-C/iir-autoeq.txt
+MAG Theatron S6	Spinorama	datas/eq/MAG Theatron S6/iir-autoeq.txt
+MTG Designs AlTi DIY	Spinorama	datas/eq/MTG Designs AlTi DIY/iir-autoeq.txt
+MTG Designs VBS-10.2 DIY	Spinorama	datas/eq/MTG Designs VBS-10.2 DIY/iir-autoeq.txt
+MTG Designs VBS-6.2 DIY	Spinorama	datas/eq/MTG Designs VBS-6.2 DIY/iir-autoeq.txt
+Mackie CR3-X	Spinorama	datas/eq/Mackie CR3-X/iir-autoeq.txt
+Mackie CR4	Spinorama	datas/eq/Mackie CR4/iir-autoeq.txt
+Mackie HR824	Spinorama	datas/eq/Mackie HR824/iir-autoeq.txt
+Mackie MR524	Spinorama	datas/eq/Mackie MR524/iir-autoeq.txt
+Magico A3	Spinorama	datas/eq/Magico A3/iir-autoeq.txt
+Magico A5	Spinorama	datas/eq/Magico A5/iir-autoeq.txt
+Magico S5 2024	Spinorama	datas/eq/Magico S5 2024/iir-autoeq.txt
+Magnepan LRS	Spinorama	datas/eq/Magnepan LRS/iir-autoeq.txt
+Manger Sidekick	Spinorama	datas/eq/Manger Sidekick/iir-autoeq.txt
+March Audio Sointuva AWG	Spinorama	datas/eq/March Audio Sointuva AWG/iir-autoeq.txt
+March Audio Sointuva	Spinorama	datas/eq/March Audio Sointuva/iir-autoeq.txt
+Martin Audio CDD10	Spinorama	datas/eq/Martin Audio CDD10/iir-autoeq.txt
+Martin Audio CDD12	Spinorama	datas/eq/Martin Audio CDD12/iir-autoeq.txt
+Martin Audio CDD15	Spinorama	datas/eq/Martin Audio CDD15/iir-autoeq.txt
+Martin Audio CDD8	Spinorama	datas/eq/Martin Audio CDD8/iir-autoeq.txt
+Martin Audio XP12	Spinorama	datas/eq/Martin Audio XP12/iir-autoeq.txt
+Martin Audio XP15	Spinorama	datas/eq/Martin Audio XP15/iir-autoeq.txt
+Martin Logan 5XW	Spinorama	datas/eq/Martin Logan 5XW/iir-autoeq.txt
+MartinLogan Motion 35XTi	Spinorama	datas/eq/MartinLogan Motion 35XTi/iir-autoeq.txt
+MartinLogan Motion 4i	Spinorama	datas/eq/MartinLogan Motion 4i/iir-autoeq.txt
+MartinLogan Motion B10	Spinorama	datas/eq/MartinLogan Motion B10/iir-autoeq.txt
+MartinLogan Motion XT B100	Spinorama	datas/eq/MartinLogan Motion XT B100/iir-autoeq.txt
+MartinLogan Prodigy	Spinorama	datas/eq/MartinLogan Prodigy/iir-autoeq.txt
+MartinLogan Vista	Spinorama	datas/eq/MartinLogan Vista/iir-autoeq.txt
+Mcintosh XR50	Spinorama	datas/eq/Mcintosh XR50/iir-autoeq.txt
+Mesanovic CDM65	Spinorama	datas/eq/Mesanovic CDM65/iir-autoeq.txt
+Mesanovic RTM10	Spinorama	datas/eq/Mesanovic RTM10/iir-autoeq.txt
+Meyer Sound Acheron 100	Spinorama	datas/eq/Meyer Sound Acheron 100/iir-autoeq.txt
+Meyer Sound Acheron 80	Spinorama	datas/eq/Meyer Sound Acheron 80/iir-autoeq.txt
+Meyer Sound Acheron LF	Spinorama	datas/eq/Meyer Sound Acheron LF/iir-autoeq.txt
+Meyer Sound Amie	Spinorama	datas/eq/Meyer Sound Amie/iir-autoeq.txt
+Meyer Sound Leopard	Spinorama	datas/eq/Meyer Sound Leopard/iir-autoeq.txt
+Meyer Sound Lina	Spinorama	datas/eq/Meyer Sound Lina/iir-autoeq.txt
+Meyer Sound MM-4XP	Spinorama	datas/eq/Meyer Sound MM-4XP/iir-autoeq.txt
+Meyer Sound UPQ-D1	Spinorama	datas/eq/Meyer Sound UPQ-D1/iir-autoeq.txt
+Meyer Sound Ultra X20	Spinorama	datas/eq/Meyer Sound Ultra X20/iir-autoeq.txt
+Meyer Sound Ultra X22	Spinorama	datas/eq/Meyer Sound Ultra X22/iir-autoeq.txt
+Meyer Sound Ultra X23	Spinorama	datas/eq/Meyer Sound Ultra X23/iir-autoeq.txt
+Meyer Sound Ultra X40	Spinorama	datas/eq/Meyer Sound Ultra X40/iir-autoeq.txt
+Micca MB42X Mark III	Spinorama	datas/eq/Micca MB42X Mark III/iir-autoeq.txt
+Micca MB42X-C	Spinorama	datas/eq/Micca MB42X-C/iir-autoeq.txt
+Micca MB42X-G2	Spinorama	datas/eq/Micca MB42X-G2/iir-autoeq.txt
+Micca RB42	Spinorama	datas/eq/Micca RB42/iir-autoeq.txt
+Midiplus MI3 II	Spinorama	datas/eq/Midiplus MI3 II/iir-autoeq.txt
+Midiplus MI5 II	Spinorama	datas/eq/Midiplus MI5 II/iir-autoeq.txt
+Miller & Kreisel IW150	Spinorama	datas/eq/Miller & Kreisel IW150/iir-autoeq.txt
+Miller & Kreisel S150 THX	Spinorama	datas/eq/Miller & Kreisel S150 THX/iir-autoeq.txt
+Miller & Kreisel S150	Spinorama	datas/eq/Miller & Kreisel S150/iir-autoeq.txt
+Mission LX-3 MKII	Spinorama	datas/eq/Mission LX-3 MKII/iir-autoeq.txt
+MoFi SourcePoint 10 Master Edition	Spinorama	datas/eq/MoFi SourcePoint 10 Master Edition/iir-autoeq.txt
+MoFi SourcePoint 10	Spinorama	datas/eq/MoFi SourcePoint 10/iir-autoeq.txt
+MoFi SourcePoint 8	Spinorama	datas/eq/MoFi SourcePoint 8/iir-autoeq.txt
+MoFi SourcePoint 888	Spinorama	datas/eq/MoFi SourcePoint 888/iir-autoeq.txt
+MoFi SourcePoint V10 Master Edition	Spinorama	datas/eq/MoFi SourcePoint V10 Master Edition/iir-autoeq.txt
+Monacor Sound-4BT	Spinorama	datas/eq/Monacor Sound-4BT/iir-autoeq.txt
+Monitor Audio Apex A10	Spinorama	datas/eq/Monitor Audio Apex A10/iir-autoeq.txt
+Monitor Audio Silver 100 6g	Spinorama	datas/eq/Monitor Audio Silver 100 6g/iir-autoeq.txt
+Monitor Audio Silver 50 7g	Spinorama	datas/eq/Monitor Audio Silver 50 7g/iir-autoeq.txt
+Monitor Audio Silver RX1	Spinorama	datas/eq/Monitor Audio Silver RX1/iir-autoeq.txt
+Monoprice DT-3	Spinorama	datas/eq/Monoprice DT-3/iir-autoeq.txt
+Monoprice MM-3	Spinorama	datas/eq/Monoprice MM-3/iir-autoeq.txt
+Monoprice MP-65RT	Spinorama	datas/eq/Monoprice MP-65RT/iir-autoeq.txt
+Monoprice MP-T65RT	Spinorama	datas/eq/Monoprice MP-T65RT/iir-autoeq.txt
+Monoprice Monolith Air Motion Cinema 5	Spinorama	datas/eq/Monoprice Monolith Air Motion Cinema 5/iir-autoeq.txt
+Monoprice Monolith Encore B6	Spinorama	datas/eq/Monoprice Monolith Encore B6/iir-autoeq.txt
+Monoprice Monolith Encore C6	Spinorama	datas/eq/Monoprice Monolith Encore C6/iir-autoeq.txt
+Monoprice Monolith Encore T6	Spinorama	datas/eq/Monoprice Monolith Encore T6/iir-autoeq.txt
+Monoprice Monolith K-BAS	Spinorama	datas/eq/Monoprice Monolith K-BAS/iir-autoeq.txt
+Monoprice Monolith THX Compact Satellite	Spinorama	datas/eq/Monoprice Monolith THX Compact Satellite/iir-autoeq.txt
+Monoprice Monolith THX-365C	Spinorama	datas/eq/Monoprice Monolith THX-365C/iir-autoeq.txt
+Monoprice Monolith THX-365IW	Spinorama	datas/eq/Monoprice Monolith THX-365IW/iir-autoeq.txt
+Monoprice Monolith THX-365T	Spinorama	datas/eq/Monoprice Monolith THX-365T/iir-autoeq.txt
+Moondrop M4P	Spinorama	datas/eq/Moondrop M4P/iir-autoeq.txt
+Morel AVYRA 633	Spinorama	datas/eq/Morel AVYRA 633/iir-autoeq.txt
+NHT C3	Spinorama	datas/eq/NHT C3/iir-autoeq.txt
+NHT Pro M-00	Spinorama	datas/eq/NHT Pro M-00/iir-autoeq.txt
+NHT SB2	Spinorama	datas/eq/NHT SB2/iir-autoeq.txt
+NHT Super Zero 2.1	Spinorama	datas/eq/NHT Super Zero 2.1/iir-autoeq.txt
+Natural Sound NS17	Spinorama	datas/eq/Natural Sound NS17/iir-autoeq.txt
+Neumann KH 120 II	Spinorama	datas/eq/Neumann KH 120 II/iir-autoeq.txt
+Neumann KH 120A	Spinorama	datas/eq/Neumann KH 120A/iir-autoeq.txt
+Neumann KH 150	Spinorama	datas/eq/Neumann KH 150/iir-autoeq.txt
+Neumann KH 310A	Spinorama	datas/eq/Neumann KH 310A/iir-autoeq.txt
+Neumann KH 420G	Spinorama	datas/eq/Neumann KH 420G/iir-autoeq.txt
+Neumann KH 80	Spinorama	datas/eq/Neumann KH 80/iir-autoeq.txt
+Neumi BS5	Spinorama	datas/eq/Neumi BS5/iir-autoeq.txt
+Neumi BS5P	Spinorama	datas/eq/Neumi BS5P/iir-autoeq.txt
+Neumi Silk 4	Spinorama	datas/eq/Neumi Silk 4/iir-autoeq.txt
+Nexo PS10	Spinorama	datas/eq/Nexo PS10/iir-autoeq.txt
+Nexo PS15	Spinorama	datas/eq/Nexo PS15/iir-autoeq.txt
+Nexo PS8	Spinorama	datas/eq/Nexo PS8/iir-autoeq.txt
+Nexus Center DIY	Spinorama	datas/eq/Nexus Center DIY/iir-autoeq.txt
+Nexus MT DIY	Spinorama	datas/eq/Nexus MT DIY/iir-autoeq.txt
+Nexus MTM DIY	Spinorama	datas/eq/Nexus MTM DIY/iir-autoeq.txt
+Novacoustic KIRA 10	Spinorama	datas/eq/Novacoustic KIRA 10/iir-autoeq.txt
+Novacoustic KIRA 12	Spinorama	datas/eq/Novacoustic KIRA 12/iir-autoeq.txt
+Novacoustic KIRA 5	Spinorama	datas/eq/Novacoustic KIRA 5/iir-autoeq.txt
+Novacoustic KIRA 8	Spinorama	datas/eq/Novacoustic KIRA 8/iir-autoeq.txt
+Novacoustic Pariz P28	Spinorama	datas/eq/Novacoustic Pariz P28/iir-autoeq.txt
+Novacoustic Pariz P412	Spinorama	datas/eq/Novacoustic Pariz P412/iir-autoeq.txt
+Nubert NuVero 60	Spinorama	datas/eq/Nubert NuVero 60/iir-autoeq.txt
+OS Acoustics DBS8	Spinorama	datas/eq/OS Acoustics DBS8/iir-autoeq.txt
+OSD Audio AP650	Spinorama	datas/eq/OSD Audio AP650/iir-autoeq.txt
+Ocean Way HR5	Spinorama	datas/eq/Ocean Way HR5/iir-autoeq.txt
+Onesystems 108HTH	Spinorama	datas/eq/Onesystems 108HTH/iir-autoeq.txt
+Onesystems 208HTC	Spinorama	datas/eq/Onesystems 208HTC/iir-autoeq.txt
+Onesystems 212HC	Spinorama	datas/eq/Onesystems 212HC/iir-autoeq.txt
+Onesystems 312HC	Spinorama	datas/eq/Onesystems 312HC/iir-autoeq.txt
+Onkyo GX 30ARC	Spinorama	datas/eq/Onkyo GX 30ARC/iir-autoeq.txt
+Optimal Audio Cuboid 10	Spinorama	datas/eq/Optimal Audio Cuboid 10/iir-autoeq.txt
+Optimal Audio Cuboid 12	Spinorama	datas/eq/Optimal Audio Cuboid 12/iir-autoeq.txt
+Optimal Audio Cuboid 15	Spinorama	datas/eq/Optimal Audio Cuboid 15/iir-autoeq.txt
+Optimal Audio Cuboid 3	Spinorama	datas/eq/Optimal Audio Cuboid 3/iir-autoeq.txt
+Optimal Audio Cuboid 5	Spinorama	datas/eq/Optimal Audio Cuboid 5/iir-autoeq.txt
+Optimal Audio Cuboid 8	Spinorama	datas/eq/Optimal Audio Cuboid 8/iir-autoeq.txt
+Outlaw Audio BLSv2	Spinorama	datas/eq/Outlaw Audio BLSv2/iir-autoeq.txt
+Outlaw Audio LCRv2	Spinorama	datas/eq/Outlaw Audio LCRv2/iir-autoeq.txt
+PMC Result6	Spinorama	datas/eq/PMC Result6/iir-autoeq.txt
+PMC Twenty 21	Spinorama	datas/eq/PMC Twenty 21/iir-autoeq.txt
+PSAudio aspen FR10	Spinorama	datas/eq/PSAudio aspen FR10/iir-autoeq.txt
+PSAudio aspen FR5	Spinorama	datas/eq/PSAudio aspen FR5/iir-autoeq.txt
+PSB Alpha P3	Spinorama	datas/eq/PSB Alpha P3/iir-autoeq.txt
+PSB Alpha P5	Spinorama	datas/eq/PSB Alpha P5/iir-autoeq.txt
+PSB Imagine B50	Spinorama	datas/eq/PSB Imagine B50/iir-autoeq.txt
+PSB Imagine C3	Spinorama	datas/eq/PSB Imagine C3/iir-autoeq.txt
+PSB Imagine T65	Spinorama	datas/eq/PSB Imagine T65/iir-autoeq.txt
+PSI Audio A21-M	Spinorama	datas/eq/PSI Audio A21-M/iir-autoeq.txt
+Palmer Orbit 11	Spinorama	datas/eq/Palmer Orbit 11/iir-autoeq.txt
+Palmer Studimon 5	Spinorama	datas/eq/Palmer Studimon 5/iir-autoeq.txt
+Paradigm Cinema 100	Spinorama	datas/eq/Paradigm Cinema 100/iir-autoeq.txt
+Paradigm Founder 40B	Spinorama	datas/eq/Paradigm Founder 40B/iir-autoeq.txt
+Paradigm Founder 70LCR	Spinorama	datas/eq/Paradigm Founder 70LCR/iir-autoeq.txt
+Paradigm Founder 90C	Spinorama	datas/eq/Paradigm Founder 90C/iir-autoeq.txt
+Paradigm Millenia LP 2	Spinorama	datas/eq/Paradigm Millenia LP 2/iir-autoeq.txt
+Paradigm Monitor SE Atom	Spinorama	datas/eq/Paradigm Monitor SE Atom/iir-autoeq.txt
+Paradigm Persona 3F	Spinorama	datas/eq/Paradigm Persona 3F/iir-autoeq.txt
+Paradigm Prestige 15B	Spinorama	datas/eq/Paradigm Prestige 15B/iir-autoeq.txt
+Part Express DIY C-Note	Spinorama	datas/eq/Part Express DIY C-Note/iir-autoeq.txt
+Part Express DIY Copperhead	Spinorama	datas/eq/Part Express DIY Copperhead/iir-autoeq.txt
+Part Express DIY Overnight Sensations MT	Spinorama	datas/eq/Part Express DIY Overnight Sensations MT/iir-autoeq.txt
+Part Express DIY Samba MT	Spinorama	datas/eq/Part Express DIY Samba MT/iir-autoeq.txt
+Perlisten a3m	Spinorama	datas/eq/Perlisten a3m/iir-autoeq.txt
+Perlisten r4b	Spinorama	datas/eq/Perlisten r4b/iir-autoeq.txt
+Perlisten r4s	Spinorama	datas/eq/Perlisten r4s/iir-autoeq.txt
+Perlisten r5c	Spinorama	datas/eq/Perlisten r5c/iir-autoeq.txt
+Perlisten r5m	Spinorama	datas/eq/Perlisten r5m/iir-autoeq.txt
+Perlisten r5t	Spinorama	datas/eq/Perlisten r5t/iir-autoeq.txt
+Perlisten r7t	Spinorama	datas/eq/Perlisten r7t/iir-autoeq.txt
+Perlisten s4b	Spinorama	datas/eq/Perlisten s4b/iir-autoeq.txt
+Perlisten s4s	Spinorama	datas/eq/Perlisten s4s/iir-autoeq.txt
+Perlisten s5m	Spinorama	datas/eq/Perlisten s5m/iir-autoeq.txt
+Perlisten s7c	Spinorama	datas/eq/Perlisten s7c/iir-autoeq.txt
+Perlisten s7t	Spinorama	datas/eq/Perlisten s7t/iir-autoeq.txt
+Phase Tech PC 3.1	Spinorama	datas/eq/Phase Tech PC 3.1/iir-autoeq.txt
+Philharmonic BMR	Spinorama	datas/eq/Philharmonic BMR/iir-autoeq.txt
+Philharmonic Ceramic Mini	Spinorama	datas/eq/Philharmonic Ceramic Mini/iir-autoeq.txt
+Pioneer DJ VM-50	Spinorama	datas/eq/Pioneer DJ VM-50/iir-autoeq.txt
+Pioneer S-DF3-K	Spinorama	datas/eq/Pioneer S-DF3-K/iir-autoeq.txt
+Pioneer SP-BS22-LR	Spinorama	datas/eq/Pioneer SP-BS22-LR/iir-autoeq.txt
+Pioneer SP-C22	Spinorama	datas/eq/Pioneer SP-C22/iir-autoeq.txt
+Pioneer SP-EBS73-LR	Spinorama	datas/eq/Pioneer SP-EBS73-LR/iir-autoeq.txt
+Pioneer SP-EC73	Spinorama	datas/eq/Pioneer SP-EC73/iir-autoeq.txt
+Pitt & Giblin Flare	Spinorama	datas/eq/Pitt & Giblin Flare/iir-autoeq.txt
+Pitt & Giblin Superwax Mini	Spinorama	datas/eq/Pitt & Giblin Superwax Mini/iir-autoeq.txt
+Pitt & Giblin Superwax	Spinorama	datas/eq/Pitt & Giblin Superwax/iir-autoeq.txt
+Polk Audio 5JR	Spinorama	datas/eq/Polk Audio 5JR/iir-autoeq.txt
+Polk Audio Atrium 4	Spinorama	datas/eq/Polk Audio Atrium 4/iir-autoeq.txt
+Polk Audio Legend L200	Spinorama	datas/eq/Polk Audio Legend L200/iir-autoeq.txt
+Polk Audio Monitor 40 Series II	Spinorama	datas/eq/Polk Audio Monitor 40 Series II/iir-autoeq.txt
+Polk Audio RT15i	Spinorama	datas/eq/Polk Audio RT15i/iir-autoeq.txt
+Polk Audio Reserve R100	Spinorama	datas/eq/Polk Audio Reserve R100/iir-autoeq.txt
+Polk Audio Reserve R200	Spinorama	datas/eq/Polk Audio Reserve R200/iir-autoeq.txt
+Polk Audio Reserve R350	Spinorama	datas/eq/Polk Audio Reserve R350/iir-autoeq.txt
+Polk Audio Reserve R500	Spinorama	datas/eq/Polk Audio Reserve R500/iir-autoeq.txt
+Polk Audio Reserve R700	Spinorama	datas/eq/Polk Audio Reserve R700/iir-autoeq.txt
+Polk Audio Rti 10	Spinorama	datas/eq/Polk Audio Rti 10/iir-autoeq.txt
+Polk Audio Signature Elite ES20	Spinorama	datas/eq/Polk Audio Signature Elite ES20/iir-autoeq.txt
+Polk Audio Signature Elite ES60	Spinorama	datas/eq/Polk Audio Signature Elite ES60/iir-autoeq.txt
+Polk Audio Signature S15	Spinorama	datas/eq/Polk Audio Signature S15/iir-autoeq.txt
+Polk Audio Signature S30	Spinorama	datas/eq/Polk Audio Signature S30/iir-autoeq.txt
+Polk Audio T15	Spinorama	datas/eq/Polk Audio T15/iir-autoeq.txt
+Polk Audio T50	Spinorama	datas/eq/Polk Audio T50/iir-autoeq.txt
+Polk Audio XT15	Spinorama	datas/eq/Polk Audio XT15/iir-autoeq.txt
+Polk Audio XT20	Spinorama	datas/eq/Polk Audio XT20/iir-autoeq.txt
+Polk Audio XT30	Spinorama	datas/eq/Polk Audio XT30/iir-autoeq.txt
+Polk Audio XT35	Spinorama	datas/eq/Polk Audio XT35/iir-autoeq.txt
+Polk Audio XT60	Spinorama	datas/eq/Polk Audio XT60/iir-autoeq.txt
+Polk Audio XT70	Spinorama	datas/eq/Polk Audio XT70/iir-autoeq.txt
+Power Sound Audio MT-110-M	Spinorama	datas/eq/Power Sound Audio MT-110-M/iir-autoeq.txt
+Presonus CDL12	Spinorama	datas/eq/Presonus CDL12/iir-autoeq.txt
+Presonus Eris E3.5 2nd edition	Spinorama	datas/eq/Presonus Eris E3.5 2nd edition/iir-autoeq.txt
+Presonus Eris E3.5	Spinorama	datas/eq/Presonus Eris E3.5/iir-autoeq.txt
+Presonus Eris E5 BT	Spinorama	datas/eq/Presonus Eris E5 BT/iir-autoeq.txt
+Presonus Eris E5 XT	Spinorama	datas/eq/Presonus Eris E5 XT/iir-autoeq.txt
+Presonus Eris E8 XT	Spinorama	datas/eq/Presonus Eris E8 XT/iir-autoeq.txt
+Presonus Spectre S6	Spinorama	datas/eq/Presonus Spectre S6/iir-autoeq.txt
+Presonus ULT10	Spinorama	datas/eq/Presonus ULT10/iir-autoeq.txt
+Presonus ULT12	Spinorama	datas/eq/Presonus ULT12/iir-autoeq.txt
+Proson Twin 716	Spinorama	datas/eq/Proson Twin 716/iir-autoeq.txt
+Pylon Jasper Monitor 18	Spinorama	datas/eq/Pylon Jasper Monitor 18/iir-autoeq.txt
+Q Acoustics 3020i	Spinorama	datas/eq/Q Acoustics 3020i/iir-autoeq.txt
+Q Acoustics 3030i	Spinorama	datas/eq/Q Acoustics 3030i/iir-autoeq.txt
+Q Acoustics 5020	Spinorama	datas/eq/Q Acoustics 5020/iir-autoeq.txt
+Q Acoustics 5040	Spinorama	datas/eq/Q Acoustics 5040/iir-autoeq.txt
+QSC K10.2	Spinorama	datas/eq/QSC K10.2/iir-autoeq.txt
+QSC K12.2	Spinorama	datas/eq/QSC K12.2/iir-autoeq.txt
+QSC K8.2	Spinorama	datas/eq/QSC K8.2/iir-autoeq.txt
+Quad Electroacoustics ESL-57	Spinorama	datas/eq/Quad Electroacoustics ESL-57/iir-autoeq.txt
+Quested S8R	Spinorama	datas/eq/Quested S8R/iir-autoeq.txt
+RBH Sound PM-8	Spinorama	datas/eq/RBH Sound PM-8/iir-autoeq.txt
+RBH Sound R-5	Spinorama	datas/eq/RBH Sound R-5/iir-autoeq.txt
+RBH Sound R-515	Spinorama	datas/eq/RBH Sound R-515/iir-autoeq.txt
+RBH Sound SV-61R	Spinorama	datas/eq/RBH Sound SV-61R/iir-autoeq.txt
+RCF ART 708-A MK4	Spinorama	datas/eq/RCF ART 708-A MK4/iir-autoeq.txt
+RCF ART 712-A MK4	Spinorama	datas/eq/RCF ART 712-A MK4/iir-autoeq.txt
+RCF ART 715-A MK4	Spinorama	datas/eq/RCF ART 715-A MK4/iir-autoeq.txt
+RCF ART 725-A MK4	Spinorama	datas/eq/RCF ART 725-A MK4/iir-autoeq.txt
+RCF ART 732-A MK4	Spinorama	datas/eq/RCF ART 732-A MK4/iir-autoeq.txt
+RCF ART 735-A MK4	Spinorama	datas/eq/RCF ART 735-A MK4/iir-autoeq.txt
+RCF ART 745-A MK4	Spinorama	datas/eq/RCF ART 745-A MK4/iir-autoeq.txt
+RCF ART 910-A	Spinorama	datas/eq/RCF ART 910-A/iir-autoeq.txt
+RCF ART 912-A	Spinorama	datas/eq/RCF ART 912-A/iir-autoeq.txt
+RCF ART 932-A	Spinorama	datas/eq/RCF ART 932-A/iir-autoeq.txt
+RCF ART 935-A	Spinorama	datas/eq/RCF ART 935-A/iir-autoeq.txt
+RCF ART 945-A	Spinorama	datas/eq/RCF ART 945-A/iir-autoeq.txt
+RCF Ayra Pro5	Spinorama	datas/eq/RCF Ayra Pro5/iir-autoeq.txt
+RCF H1315 WP	Spinorama	datas/eq/RCF H1315 WP/iir-autoeq.txt
+RCF HD 10-A MK5	Spinorama	datas/eq/RCF HD 10-A MK5/iir-autoeq.txt
+RCF HD 12-A MK5	Spinorama	datas/eq/RCF HD 12-A MK5/iir-autoeq.txt
+RCF KX 08-A	Spinorama	datas/eq/RCF KX 08-A/iir-autoeq.txt
+RCF KX 10-A	Spinorama	datas/eq/RCF KX 10-A/iir-autoeq.txt
+RCF KX 32-A	Spinorama	datas/eq/RCF KX 32-A/iir-autoeq.txt
+RCF KX 45-A	Spinorama	datas/eq/RCF KX 45-A/iir-autoeq.txt
+RCF KXW 4-A	Spinorama	datas/eq/RCF KXW 4-A/iir-autoeq.txt
+RCF NX 910-A	Spinorama	datas/eq/RCF NX 910-A/iir-autoeq.txt
+RCF NX 912-A	Spinorama	datas/eq/RCF NX 912-A/iir-autoeq.txt
+RCF NX 915-A	Spinorama	datas/eq/RCF NX 915-A/iir-autoeq.txt
+RCF NX 985-A	Spinorama	datas/eq/RCF NX 985-A/iir-autoeq.txt
+RCF NXL 14-A	Spinorama	datas/eq/RCF NXL 14-A/iir-autoeq.txt
+RSL CG25 Center	Spinorama	datas/eq/RSL CG25 Center/iir-autoeq.txt
+RSL CG5	Spinorama	datas/eq/RSL CG5/iir-autoeq.txt
+RSL Outsider II	Spinorama	datas/eq/RSL Outsider II/iir-autoeq.txt
+Radiant Acoustics Clarity 6.2	Spinorama	datas/eq/Radiant Acoustics Clarity 6.2/iir-autoeq.txt
+Radiant Acoustics Clarity 66	Spinorama	datas/eq/Radiant Acoustics Clarity 66/iir-autoeq.txt
+Rauna Freja	Spinorama	datas/eq/Rauna Freja/iir-autoeq.txt
+Realistic MC-1000	Spinorama	datas/eq/Realistic MC-1000/iir-autoeq.txt
+Realistic Tandy Minimus 7	Spinorama	datas/eq/Realistic Tandy Minimus 7/iir-autoeq.txt
+Reflector Audio Square Two	Spinorama	datas/eq/Reflector Audio Square Two/iir-autoeq.txt
+Revel C10	Spinorama	datas/eq/Revel C10/iir-autoeq.txt
+Revel C205	Spinorama	datas/eq/Revel C205/iir-autoeq.txt
+Revel C208	Spinorama	datas/eq/Revel C208/iir-autoeq.txt
+Revel C25	Spinorama	datas/eq/Revel C25/iir-autoeq.txt
+Revel C426Be	Spinorama	datas/eq/Revel C426Be/iir-autoeq.txt
+Revel C52	Spinorama	datas/eq/Revel C52/iir-autoeq.txt
+Revel F206	Spinorama	datas/eq/Revel F206/iir-autoeq.txt
+Revel F208	Spinorama	datas/eq/Revel F208/iir-autoeq.txt
+Revel F226be	Spinorama	datas/eq/Revel F226be/iir-autoeq.txt
+Revel F228Be	Spinorama	datas/eq/Revel F228Be/iir-autoeq.txt
+Revel F328be	Spinorama	datas/eq/Revel F328be/iir-autoeq.txt
+Revel F35	Spinorama	datas/eq/Revel F35/iir-autoeq.txt
+Revel F36	Spinorama	datas/eq/Revel F36/iir-autoeq.txt
+Revel M105	Spinorama	datas/eq/Revel M105/iir-autoeq.txt
+Revel M106	Spinorama	datas/eq/Revel M106/iir-autoeq.txt
+Revel M126Be	Spinorama	datas/eq/Revel M126Be/iir-autoeq.txt
+Revel M16	Spinorama	datas/eq/Revel M16/iir-autoeq.txt
+Revel M22	Spinorama	datas/eq/Revel M22/iir-autoeq.txt
+Revel M55XC	Spinorama	datas/eq/Revel M55XC/iir-autoeq.txt
+Revel M80XC	Spinorama	datas/eq/Revel M80XC/iir-autoeq.txt
+Revel Ultima Salon	Spinorama	datas/eq/Revel Ultima Salon/iir-autoeq.txt
+Revel Ultima Studio	Spinorama	datas/eq/Revel Ultima Studio/iir-autoeq.txt
+Revel Ultima2 Gem2	Spinorama	datas/eq/Revel Ultima2 Gem2/iir-autoeq.txt
+Revel Ultima2 Salon2	Spinorama	datas/eq/Revel Ultima2 Salon2/iir-autoeq.txt
+Revel Ultima2 Studio2	Spinorama	datas/eq/Revel Ultima2 Studio2/iir-autoeq.txt
+Revel Ultima2 Voice2	Spinorama	datas/eq/Revel Ultima2 Voice2/iir-autoeq.txt
+Revel W553L	Spinorama	datas/eq/Revel W553L/iir-autoeq.txt
+Revel W893	Spinorama	datas/eq/Revel W893/iir-autoeq.txt
+Revel W990	Spinorama	datas/eq/Revel W990/iir-autoeq.txt
+Revival Audio Atalante 5	Spinorama	datas/eq/Revival Audio Atalante 5/iir-autoeq.txt
+Rockville RockTower 68B	Spinorama	datas/eq/Rockville RockTower 68B/iir-autoeq.txt
+Rockville SPG88	Spinorama	datas/eq/Rockville SPG88/iir-autoeq.txt
+Rogers LS3_5A	Spinorama	datas/eq/Rogers LS3_5A/iir-autoeq.txt
+Role Audio Skiff	Spinorama	datas/eq/Role Audio Skiff/iir-autoeq.txt
+SONBS SD-10E	Spinorama	datas/eq/SONBS SD-10E/iir-autoeq.txt
+SVS Prime Bookshelf	Spinorama	datas/eq/SVS Prime Bookshelf/iir-autoeq.txt
+SVS Prime Center	Spinorama	datas/eq/SVS Prime Center/iir-autoeq.txt
+SVS Ultra Bookshelf	Spinorama	datas/eq/SVS Ultra Bookshelf/iir-autoeq.txt
+SVS Ultra Evolution Pinnacle Tower	Spinorama	datas/eq/SVS Ultra Evolution Pinnacle Tower/iir-autoeq.txt
+Salk WoW1	Spinorama	datas/eq/Salk WoW1/iir-autoeq.txt
+Sanders Sound Systems Model 11	Spinorama	datas/eq/Sanders Sound Systems Model 11/iir-autoeq.txt
+Seeburg K20	Spinorama	datas/eq/Seeburg K20/iir-autoeq.txt
+Seeburg X1	Spinorama	datas/eq/Seeburg X1/iir-autoeq.txt
+Seeburg X2	Spinorama	datas/eq/Seeburg X2/iir-autoeq.txt
+Seeburg X4	Spinorama	datas/eq/Seeburg X4/iir-autoeq.txt
+Seeburg X6	Spinorama	datas/eq/Seeburg X6/iir-autoeq.txt
+Seeburg X8	Spinorama	datas/eq/Seeburg X8/iir-autoeq.txt
+Sehlin Helium DIY	Spinorama	datas/eq/Sehlin Helium DIY/iir-autoeq.txt
+Selah Audio Integrity DIY	Spinorama	datas/eq/Selah Audio Integrity DIY/iir-autoeq.txt
+Selah Audio Purezza	Spinorama	datas/eq/Selah Audio Purezza/iir-autoeq.txt
+Selah Audio RC3R	Spinorama	datas/eq/Selah Audio RC3R/iir-autoeq.txt
+Shivaudyo Point Zero	Spinorama	datas/eq/Shivaudyo Point Zero/iir-autoeq.txt
+Sigberg Audio Manta	Spinorama	datas/eq/Sigberg Audio Manta/iir-autoeq.txt
+Sigberg Audio SBS G2	Spinorama	datas/eq/Sigberg Audio SBS G2/iir-autoeq.txt
+Sigberg Audio SBS.1	Spinorama	datas/eq/Sigberg Audio SBS.1/iir-autoeq.txt
+Sonos Five	Spinorama	datas/eq/Sonos Five/iir-autoeq.txt
+Sonos Move	Spinorama	datas/eq/Sonos Move/iir-autoeq.txt
+Sonos Roam	Spinorama	datas/eq/Sonos Roam/iir-autoeq.txt
+Sonus Faber Lumina II	Spinorama	datas/eq/Sonus Faber Lumina II/iir-autoeq.txt
+Sonus Faber Picolo	Spinorama	datas/eq/Sonus Faber Picolo/iir-autoeq.txt
+Sonus Faber Sonetto II G2	Spinorama	datas/eq/Sonus Faber Sonetto II G2/iir-autoeq.txt
+Sonus Faber Sonetto II	Spinorama	datas/eq/Sonus Faber Sonetto II/iir-autoeq.txt
+Sony SS-CS3	Spinorama	datas/eq/Sony SS-CS3/iir-autoeq.txt
+Sony SS-CS5	Spinorama	datas/eq/Sony SS-CS5/iir-autoeq.txt
+SoundArtist LS3_5A	Spinorama	datas/eq/SoundArtist LS3_5A/iir-autoeq.txt
+Soundkraft Enigma BT	Spinorama	datas/eq/Soundkraft Enigma BT/iir-autoeq.txt
+Speakercraft AIM8 One	Spinorama	datas/eq/Speakercraft AIM8 One/iir-autoeq.txt
+Spendor Audio Systems SA1	Spinorama	datas/eq/Spendor Audio Systems SA1/iir-autoeq.txt
+System One S-15B	Spinorama	datas/eq/System One S-15B/iir-autoeq.txt
+TAD COMPACT REFERENCE ONE CR1TX	Spinorama	datas/eq/TAD COMPACT REFERENCE ONE CR1TX/iir-autoeq.txt
+TAD Evolution 2	Spinorama	datas/eq/TAD Evolution 2/iir-autoeq.txt
+Tannoy Definition DC6i	Spinorama	datas/eq/Tannoy Definition DC6i/iir-autoeq.txt
+Tannoy Reveal 501a	Spinorama	datas/eq/Tannoy Reveal 501a/iir-autoeq.txt
+Tannoy Revolution XT6	Spinorama	datas/eq/Tannoy Revolution XT6/iir-autoeq.txt
+Tannoy System 600	Spinorama	datas/eq/Tannoy System 600/iir-autoeq.txt
+Tannoy VQ100	Spinorama	datas/eq/Tannoy VQ100/iir-autoeq.txt
+Tannoy VX12	Spinorama	datas/eq/Tannoy VX12/iir-autoeq.txt
+Teac S-300HR	Spinorama	datas/eq/Teac S-300HR/iir-autoeq.txt
+Technics SB-C700	Spinorama	datas/eq/Technics SB-C700/iir-autoeq.txt
+Technics SB-F1	Spinorama	datas/eq/Technics SB-F1/iir-autoeq.txt
+Tekton M-Lore	Spinorama	datas/eq/Tekton M-Lore/iir-autoeq.txt
+Tekton Troubadour	Spinorama	datas/eq/Tekton Troubadour/iir-autoeq.txt
+Theory Audio SB25	Spinorama	datas/eq/Theory Audio SB25/iir-autoeq.txt
+Thomann Swissonic A305	Spinorama	datas/eq/Thomann Swissonic A305/iir-autoeq.txt
+Thomann Swissonic A306	Spinorama	datas/eq/Thomann Swissonic A306/iir-autoeq.txt
+Topping MA4	Spinorama	datas/eq/Topping MA4/iir-autoeq.txt
+Totem Acoustics Rainmaker	Spinorama	datas/eq/Totem Acoustics Rainmaker/iir-autoeq.txt
+Triad In-Room Gold LCR	Spinorama	datas/eq/Triad In-Room Gold LCR/iir-autoeq.txt
+Triangle Borea BR03	Spinorama	datas/eq/Triangle Borea BR03/iir-autoeq.txt
+Triangle Esprit Antal Ez	Spinorama	datas/eq/Triangle Esprit Antal Ez/iir-autoeq.txt
+Triangle Esprit Titus EZ	Spinorama	datas/eq/Triangle Esprit Titus EZ/iir-autoeq.txt
+Turbosound NuQ102	Spinorama	datas/eq/Turbosound NuQ102/iir-autoeq.txt
+Turbosound NuQ122	Spinorama	datas/eq/Turbosound NuQ122/iir-autoeq.txt
+Turbosound NuQ152	Spinorama	datas/eq/Turbosound NuQ152/iir-autoeq.txt
+Turbosound NuQ62	Spinorama	datas/eq/Turbosound NuQ62/iir-autoeq.txt
+Turbosound NuQ82	Spinorama	datas/eq/Turbosound NuQ82/iir-autoeq.txt
+Turbosound TBV123	Spinorama	datas/eq/Turbosound TBV123/iir-autoeq.txt
+Turbosound TCS122	Spinorama	datas/eq/Turbosound TCS122/iir-autoeq.txt
+Turbosound TCS152	Spinorama	datas/eq/Turbosound TCS152/iir-autoeq.txt
+Turbosound TCS62 V	Spinorama	datas/eq/Turbosound TCS62 V/iir-autoeq.txt
+Vanatoo Transparent One Encore Plus	Spinorama	datas/eq/Vanatoo Transparent One Encore Plus/iir-autoeq.txt
+Vanatoo Transparent One Encore	Spinorama	datas/eq/Vanatoo Transparent One Encore/iir-autoeq.txt
+Vanatoo Transparent Zero	Spinorama	datas/eq/Vanatoo Transparent Zero/iir-autoeq.txt
+Vandersteen 2c	Spinorama	datas/eq/Vandersteen 2c/iir-autoeq.txt
+Vandersteen Treo CT	Spinorama	datas/eq/Vandersteen Treo CT/iir-autoeq.txt
+Vandersteen VCC-5	Spinorama	datas/eq/Vandersteen VCC-5/iir-autoeq.txt
+Vandersteen VLR	Spinorama	datas/eq/Vandersteen VLR/iir-autoeq.txt
+Verdant Audio Bambusa AL 1	Spinorama	datas/eq/Verdant Audio Bambusa AL 1/iir-autoeq.txt
+Verdant Audio Bambusa MG 1	Spinorama	datas/eq/Verdant Audio Bambusa MG 1/iir-autoeq.txt
+Vue Audiotechnik A-10	Spinorama	datas/eq/Vue Audiotechnik A-10/iir-autoeq.txt
+Vue Audiotechnik A-12	Spinorama	datas/eq/Vue Audiotechnik A-12/iir-autoeq.txt
+Vue Audiotechnik A-15	Spinorama	datas/eq/Vue Audiotechnik A-15/iir-autoeq.txt
+Vue Audiotechnik A-8	Spinorama	datas/eq/Vue Audiotechnik A-8/iir-autoeq.txt
+Vue Audiotechnik H-12	Spinorama	datas/eq/Vue Audiotechnik H-12/iir-autoeq.txt
+Vue Audiotechnik H-15	Spinorama	datas/eq/Vue Audiotechnik H-15/iir-autoeq.txt
+Vue Audiotechnik H-5	Spinorama	datas/eq/Vue Audiotechnik H-5/iir-autoeq.txt
+Vue Audiotechnik H-8	Spinorama	datas/eq/Vue Audiotechnik H-8/iir-autoeq.txt
+Wharfedale Aura 2	Spinorama	datas/eq/Wharfedale Aura 2/iir-autoeq.txt
+Wharfedale Denton 80th Anniversary	Spinorama	datas/eq/Wharfedale Denton 80th Anniversary/iir-autoeq.txt
+Wharfedale Diamond 12.1	Spinorama	datas/eq/Wharfedale Diamond 12.1/iir-autoeq.txt
+Wharfedale Diamond 220	Spinorama	datas/eq/Wharfedale Diamond 220/iir-autoeq.txt
+Wharfedale EVO 4.1	Spinorama	datas/eq/Wharfedale EVO 4.1/iir-autoeq.txt
+Wharfedale Linton 85th Anniversary	Spinorama	datas/eq/Wharfedale Linton 85th Anniversary/iir-autoeq.txt
+Wharfedale Pro Delta X10	Spinorama	datas/eq/Wharfedale Pro Delta X10/iir-autoeq.txt
+Wharfedale Super Linton	Spinorama	datas/eq/Wharfedale Super Linton/iir-autoeq.txt
+Wilson Audio TuneTot	Spinorama	datas/eq/Wilson Audio TuneTot/iir-autoeq.txt
+XMechanik Mechano23 DIY	Spinorama	datas/eq/XMechanik Mechano23 DIY/iir-autoeq.txt
+XSA Labs Vanguard	Spinorama	datas/eq/XSA Labs Vanguard/iir-autoeq.txt
+XTZ Spirit 4	Spinorama	datas/eq/XTZ Spirit 4/iir-autoeq.txt
+Yamaha DBR10	Spinorama	datas/eq/Yamaha DBR10/iir-autoeq.txt
+Yamaha DBR12	Spinorama	datas/eq/Yamaha DBR12/iir-autoeq.txt
+Yamaha DBR15	Spinorama	datas/eq/Yamaha DBR15/iir-autoeq.txt
+Yamaha DXR10mkII	Spinorama	datas/eq/Yamaha DXR10mkII/iir-autoeq.txt
+Yamaha DXR10mkIII	Spinorama	datas/eq/Yamaha DXR10mkIII/iir-autoeq.txt
+Yamaha DXR12mkII	Spinorama	datas/eq/Yamaha DXR12mkII/iir-autoeq.txt
+Yamaha DXR12mkIII	Spinorama	datas/eq/Yamaha DXR12mkIII/iir-autoeq.txt
+Yamaha DXR15mkII	Spinorama	datas/eq/Yamaha DXR15mkII/iir-autoeq.txt
+Yamaha DXR15mkIII	Spinorama	datas/eq/Yamaha DXR15mkIII/iir-autoeq.txt
+Yamaha DXR8mkII	Spinorama	datas/eq/Yamaha DXR8mkII/iir-autoeq.txt
+Yamaha DZR10	Spinorama	datas/eq/Yamaha DZR10/iir-autoeq.txt
+Yamaha DZR12	Spinorama	datas/eq/Yamaha DZR12/iir-autoeq.txt
+Yamaha DZR15	Spinorama	datas/eq/Yamaha DZR15/iir-autoeq.txt
+Yamaha DZR315	Spinorama	datas/eq/Yamaha DZR315/iir-autoeq.txt
+Yamaha HS5	Spinorama	datas/eq/Yamaha HS5/iir-autoeq.txt
+Yamaha HS7	Spinorama	datas/eq/Yamaha HS7/iir-autoeq.txt
+Yamaha HS8	Spinorama	datas/eq/Yamaha HS8/iir-autoeq.txt
+Yamaha NS-18	Spinorama	datas/eq/Yamaha NS-18/iir-autoeq.txt
+Yamaha NS-6490	Spinorama	datas/eq/Yamaha NS-6490/iir-autoeq.txt
+Yamaha NS-800A	Spinorama	datas/eq/Yamaha NS-800A/iir-autoeq.txt
+Yamaha NS-A638	Spinorama	datas/eq/Yamaha NS-A638/iir-autoeq.txt
+Yamaha VXL1-24	Spinorama	datas/eq/Yamaha VXL1-24/iir-autoeq.txt
+Yamaha VXL1-8	Spinorama	datas/eq/Yamaha VXL1-8/iir-autoeq.txt
+Yamaha VXS3F	Spinorama	datas/eq/Yamaha VXS3F/iir-autoeq.txt
+Yamaha VXS5	Spinorama	datas/eq/Yamaha VXS5/iir-autoeq.txt
+Zaph Audio ZA5.2	Spinorama	datas/eq/Zaph Audio ZA5.2/iir-autoeq.txt
+Zu Audio Method	Spinorama	datas/eq/Zu Audio Method/iir-autoeq.txt
+dBTechnologies Opera Reevo 210	Spinorama	datas/eq/dBTechnologies Opera Reevo 210/iir-autoeq.txt
+iKey-Audio M-808V2	Spinorama	datas/eq/iKey-Audio M-808V2/iir-autoeq.txt
+理性派HiFi X5	Spinorama	datas/eq/理性派HiFi X5/iir-autoeq.txt

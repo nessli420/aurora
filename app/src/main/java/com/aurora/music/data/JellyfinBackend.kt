@@ -9,6 +9,8 @@ import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.LyricLine
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import com.aurora.music.model.inferReleaseType
+import com.aurora.music.model.releaseTypeLabel
 import com.aurora.music.util.accentFor
 
 class JellyfinBackend(
@@ -52,6 +54,9 @@ class JellyfinBackend(
             sampleRateHz = audioStream?.SampleRate ?: 0,
             bitDepth = audioStream?.BitDepth ?: 0,
             path = Path ?: "",
+            genre = Genres?.firstOrNull().orEmpty(),
+            playCount = UserData?.PlayCount ?: 0,
+            dateAddedSec = com.aurora.music.util.parseIsoEpochSec(DateCreated),
         )
         return localize(base)
     }
@@ -63,6 +68,8 @@ class JellyfinBackend(
         artworkUrl = client.coverArtUrl(Id),
         year = ProductionYear ?: 0,
         songCount = ChildCount ?: 0,
+        durationSec = ((RunTimeTicks ?: 0L) / TICKS_PER_SEC).toInt(),
+        playCount = UserData?.PlayCount ?: 0,
     )
 
     private fun BaseItemDto.toArtist(): Artist = Artist(
@@ -114,13 +121,16 @@ class JellyfinBackend(
         items(mapOf("IncludeItemTypes" to "Playlist", "Recursive" to "true", "SortBy" to "SortName")).map { it.toPlaylist() }
 
     override suspend fun allSongs(): List<Song> =
-        items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "SortBy" to "Random", "Limit" to "200")).map { it.toSong() }
+        items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "SortBy" to "Random", "Limit" to "200", "Fields" to "MediaSources,Genres,DateCreated")).map { it.toSong() }
 
     override suspend fun librarySongs(limit: Int): List<Song> =
-        items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "SortBy" to "SortName", "Limit" to "$limit", "Fields" to "MediaSources,Path")).map { it.toSong() }
+        items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "SortBy" to "SortName", "Limit" to "$limit", "Fields" to "MediaSources,Path,Genres,DateCreated")).map { it.toSong() }
+
+    override suspend fun songsPage(offset: Int, count: Int): List<Song> =
+        items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "SortBy" to "SortName", "StartIndex" to "$offset", "Limit" to "$count", "Fields" to "MediaSources,Path,Genres,DateCreated")).map { it.toSong() }
 
     override suspend fun starredSongs(): List<Song> =
-        items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "Filters" to "IsFavorite", "Fields" to "MediaSources")).map { it.toSong() }
+        items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "Filters" to "IsFavorite", "Fields" to "MediaSources,Genres,DateCreated")).map { it.toSong() }
 
     override suspend fun starredCount(): Int = runCatching { starredSongs().size }.getOrDefault(0)
 
@@ -174,16 +184,17 @@ class JellyfinBackend(
         when (kind) {
             "album" -> {
                 val a = client.api.item(uid, id)
-                val tracks = items(mapOf("ParentId" to id, "IncludeItemTypes" to "Audio", "SortBy" to "ParentIndexNumber,IndexNumber,SortName", "Fields" to "MediaSources")).map { it.toSong() }
+                val tracks = items(mapOf("ParentId" to id, "IncludeItemTypes" to "Audio", "SortBy" to "ParentIndexNumber,IndexNumber,SortName", "Fields" to "MediaSources,Genres,DateCreated")).map { it.toSong() }
+                val typeLabel = releaseTypeLabel(inferReleaseType(tracks.size, tracks.sumOf { it.durationSec }))
                 DetailData(
-                    DetailInfo(a.Name ?: "Album", "${a.AlbumArtist ?: a.Artists?.firstOrNull() ?: ""} • ${a.ProductionYear ?: ""}", client.coverArtUrl(a.Id), accentFor(a.Id), false, tracks.size, "Album"),
+                    DetailInfo(a.Name ?: "Album", "${a.AlbumArtist ?: a.Artists?.firstOrNull() ?: ""} • ${a.ProductionYear ?: ""}", client.coverArtUrl(a.Id), accentFor(a.Id), false, tracks.size, typeLabel),
                     tracks,
                 )
             }
             "artist" -> {
                 val ar = client.api.item(uid, id)
                 val albums = items(mapOf("IncludeItemTypes" to "MusicAlbum", "ArtistIds" to id, "Recursive" to "true", "SortBy" to "ProductionYear,SortName", "SortOrder" to "Descending")).map { it.toAlbum() }
-                val tracks = items(mapOf("IncludeItemTypes" to "Audio", "ArtistIds" to id, "Recursive" to "true", "Limit" to "60", "Fields" to "MediaSources")).map { it.toSong() }
+                val tracks = items(mapOf("IncludeItemTypes" to "Audio", "ArtistIds" to id, "Recursive" to "true", "Limit" to "60", "Fields" to "MediaSources,DateCreated")).map { it.toSong() }
                 DetailData(
                     DetailInfo(ar.Name ?: "Artist", "${albums.size} albums · ${tracks.size} tracks", client.coverArtUrl(ar.Id), accentFor(ar.Id), true, tracks.size, "Artist"),
                     tracks,
@@ -193,7 +204,7 @@ class JellyfinBackend(
             "playlist" -> {
                 val p = client.api.item(uid, id)
                 val tracks = runCatching {
-                    client.api.playlistItems(id, mapOf("userId" to uid, "Fields" to "MediaSources")).Items
+                    client.api.playlistItems(id, mapOf("userId" to uid, "Fields" to "MediaSources,Genres,DateCreated")).Items
                 }.getOrDefault(emptyList()).map { it.toSong() }
                 DetailData(
                     DetailInfo(p.Name ?: "Playlist", "${tracks.size} songs", client.coverArtUrl(p.Id), accentFor(p.Id), false, tracks.size, "Playlist"),

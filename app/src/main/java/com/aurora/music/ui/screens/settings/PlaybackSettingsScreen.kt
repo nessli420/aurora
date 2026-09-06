@@ -17,6 +17,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.DataSaverOn
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.Usb
@@ -99,6 +100,13 @@ fun PlaybackSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                             dev.findUsbAudioDevice()?.let { if (!dev.hasPermission(it)) dev.requestPermission(it) {} }
                         }
                     }
+                    SettingsRowDivider()
+                    SettingsSwitchRow(
+                        Icons.Filled.Devices,
+                        "Independent output",
+                        "Don't take audio focus — other apps keep playing through the speaker · won't pause for calls",
+                        prefs.independentOutput,
+                    ) { v -> scope.launch { store.setIndependentOutput(v) } }
                 }
             }
             item { SignalPathCard() }

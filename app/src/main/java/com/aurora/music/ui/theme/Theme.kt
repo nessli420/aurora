@@ -22,6 +22,7 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 import com.aurora.music.data.AccentMode
 import com.aurora.music.data.ThemeMode
+import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
 
 private val DarkColors = darkColorScheme(
@@ -110,6 +111,7 @@ fun AuroraTheme(
 
     val materialYou = uiPrefs.accentMode == AccentMode.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
     var colors = when {
+        uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
         materialYou -> if (useDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
         else -> {
             val seed = when (uiPrefs.accentMode) {
@@ -131,8 +133,8 @@ fun AuroraTheme(
     }
     MaterialTheme(
         colorScheme = colors,
-        typography = auroraTypography(uiPrefs.fontScale),
-        shapes = auroraShapes(uiPrefs.cornerStyle),
+        typography = auroraTypography(uiPrefs.fontScale, uiPrefs.themeStyle),
+        shapes = auroraShapes(uiPrefs.cornerStyle, uiPrefs.themeStyle),
     ) {
         // content renders outside any m3 surface so set default content color else text falls back to black
         CompositionLocalProvider(

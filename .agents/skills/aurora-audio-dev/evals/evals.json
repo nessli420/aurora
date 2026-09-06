@@ -1,0 +1,26 @@
+{
+  "skill_name": "aurora-audio-dev",
+  "evals": [
+    {
+      "id": 0,
+      "name": "server-agnostic-feature",
+      "prompt": "In the Aurora codebase, I want an artist detail page to show a 'Top Tracks' section (the artist's most-played / most popular tracks from the server). Wire this up end-to-end so it works on whatever server the user is signed into. Show me the code and where each piece goes.",
+      "expected_output": "Adds a method to the MediaBackend interface, implements it in ALL backends (Subsonic, Jellyfin, Spotify, Local), surfaces it through MusicRepository, and consumes it from the artist ViewModel/screen. Does NOT branch on ServerType in UI/VM code.",
+      "files": []
+    },
+    {
+      "id": 1,
+      "name": "dsp-highpass-and-float",
+      "prompt": "Add a subsonic 'rumble filter' to Aurora's custom DSP: a high-pass filter with a user-adjustable cutoff (20-120 Hz), persisted in settings and controllable from the equalizer screen. Walk me through the implementation. Also: will this filter actually apply during hi-res / bit-perfect playback?",
+      "expected_output": "Adds a high-pass biquad to DspCoeffBuilder, a field to DspParams + AudioPrefs, a SettingsStore key/flow/setter, applies it in AuroraDspProcessor/applyAudioEngine, and an EqualizerScreen control. Crucially: explains that float output bypasses all app AudioProcessors, so the filter does NOT apply during bit-perfect/hi-res float playback (Custom DSP and float are mutually exclusive).",
+      "files": []
+    },
+    {
+      "id": 2,
+      "name": "persisted-list-gson-trap",
+      "prompt": "Add a 'recent searches' feature to Aurora: persist the user's last 10 search queries (with the query text and a timestamp) in DataStore, and expose them on the search screen as tappable chips. Give me the storage layer and the model.",
+      "expected_output": "Follows the SettingsStore pattern (data class + Flow + Keys entry + suspend setter, JSON via Gson for the list). Critically: any persisted data-class fields are declared NULLABLE with defaults and null-coalesced (the Gson-injects-null-into-non-null-Kotlin-field trap), since this is serialized JSON.",
+      "files": []
+    }
+  ]
+}

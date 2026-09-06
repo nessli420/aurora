@@ -15,12 +15,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -30,8 +32,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -42,8 +48,17 @@ import com.aurora.music.data.MiniProgress
 import com.aurora.music.data.MiniStyle
 import com.aurora.music.data.SeekStyle
 import com.aurora.music.data.ThemeMode
+import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.theme.AccentPresets
+import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.ThemeIdentities
+import com.aurora.music.ui.theme.ThemeIdentity
+import com.aurora.music.ui.theme.auroraBackdrop
+import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.auroraShapes
+import com.aurora.music.ui.theme.auroraTypography
+import com.aurora.music.ui.theme.styleColorScheme
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -60,6 +75,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
             item { SettingsSectionTitle("Theme") }
+            item { ThemeStylePicker(prefs) { style -> scope.launch { store.setThemeStyle(style) } } }
             item {
                 SegmentedRow("Mode", listOf("System", "Light", "Dark", "AMOLED"), prefs.themeMode) { i ->
                     scope.launch { store.setThemeMode(i) }
@@ -78,6 +94,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 )
             }
 
+            if (prefs.themeStyle == ThemeStyle.AURORA) {
             item { SettingsSectionTitle("Accent") }
             item {
                 SegmentedRow("Source", listOf("Presets", "Custom", "Material You"), prefs.accentMode) { i ->
@@ -104,6 +121,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     )
                 }
             }
+            }
 
             item { SettingsSectionTitle("Display") }
             item {
@@ -111,7 +129,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     scope.launch { store.setFontScale(v) }
                 }
             }
-            item {
+            if (prefs.themeStyle == ThemeStyle.AURORA) item {
                 SegmentedRow("Corners", listOf("Sharp", "Default", "Rounded", "Pill"), prefs.cornerStyle) { i ->
                     scope.launch { store.setCornerStyle(i) }
                 }
@@ -135,7 +153,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     scope.launch { store.setPlayerArtSize(v) }
                 }
             }
-            item {
+            if (prefs.themeStyle == ThemeStyle.AURORA) item {
                 SettingsSliderRow("Gradient intensity", "${(prefs.playerGradient * 100).roundToInt()}%", prefs.playerGradient, 0f..1.5f) { v ->
                     scope.launch { store.setPlayerGradient(v) }
                 }
@@ -179,6 +197,69 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 val (id, label) = homeSections[idx]
                 SettingsSwitchRow(title = label, checked = id !in prefs.hiddenHomeSections) { v ->
                     scope.launch { store.setHomeSectionHidden(id, !v) }
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ThemeStylePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.3f
+    Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        ThemeIdentities.chunked(2).forEach { row ->
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                row.forEach { identity ->
+                    val selected = identity.id == prefs.themeStyle
+                    Column(
+                        Modifier.weight(1f)
+                            .clip(MaterialTheme.shapes.medium)
+                            .background(MaterialTheme.colorScheme.surface)
+                            .border(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                            .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(identity.id) })
+                            .padding(4.dp),
+                    ) {
+                        ThemePreview(identity, prefs, dark)
+                        Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 6.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(identity.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                            if (selected) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
+        }
+        val current = ThemeIdentities.firstOrNull { it.id == prefs.themeStyle } ?: ThemeIdentities.first()
+        Text(current.description, style = MaterialTheme.typography.titleSmall)
+        Text(current.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (prefs.themeStyle != ThemeStyle.AURORA) {
+            Text("This style includes its own colors and corners. Your Aurora customizations are saved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun ThemePreview(identity: ThemeIdentity, prefs: UiPrefs, dark: Boolean) {
+    CompositionLocalProvider(LocalUiPrefs provides prefs.copy(themeStyle = identity.id)) {
+        MaterialTheme(
+            colorScheme = styleColorScheme(identity.id, dark),
+            typography = auroraTypography(0.85f, identity.id),
+            shapes = auroraShapes(CornerStyle.DEFAULT, identity.id),
+        ) {
+            Column(Modifier.fillMaxWidth().height(122.dp).clip(MaterialTheme.shapes.small).auroraBackdrop().padding(10.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {
+                Text("AURORA", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(38.dp).clip(MaterialTheme.shapes.extraSmall).background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))), contentAlignment = Alignment.Center) {
+                        Box(Modifier.size(22.dp).border(4.dp, MaterialTheme.colorScheme.background.copy(alpha = 0.55f), CircleShape))
+                    }
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Box(Modifier.fillMaxWidth(0.95f).height(4.dp).background(MaterialTheme.colorScheme.onBackground))
+                        Box(Modifier.fillMaxWidth(0.65f).height(3.dp).background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)))
+                    }
+                }
+                Row(Modifier.fillMaxWidth().height(26.dp).auroraPanel(MaterialTheme.shapes.small, emphasized = true).padding(horizontal = 9.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    listOf(0.25f, 0.55f, 0.85f, 0.5f, 0.7f, 0.35f, 0.6f, 0.4f).forEach { level ->
+                        Box(Modifier.weight(1f).height((level * 18).dp).background(MaterialTheme.colorScheme.primary))
+                    }
                 }
             }
         }

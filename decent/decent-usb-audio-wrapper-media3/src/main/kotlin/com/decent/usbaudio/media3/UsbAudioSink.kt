@@ -128,6 +128,60 @@ class UsbAudioSink(
     fun interface PcmTap { fun onPcm(buffer: ByteBuffer, encoding: Int, channelCount: Int, sampleRate: Int) }
     @Volatile var pcmTap: PcmTap? = null
 
+    /** Varispeed ratio (1.0 = untouched bit-perfect). Applied to the native FLAC engine; remembered so a
+     *  freshly-created engine for the next track inherits it. The non-FLAC streaming path is unaffected
+     *  (those rare bit-perfect streams keep playing at 1.0). */
+    @Volatile private var timeStretch: Double = 1.0
+    fun setTimeStretch(speed: Float) {
+        timeStretch = speed.toDouble()
+        nativeEngine?.setSpeed(timeStretch)
+    }
+
+    // ── Crossfade ────────────────────────────────────────────────────
+    // Set BEFORE advancing the queue. The outgoing file + position is captured here and applied to the
+    // freshly-created INCOMING engine, which decodes it as a fade-out secondary. Tagged with the expected
+    // incoming track so a manual skip / non-FLAC transition in the meantime can't bleed the tail into an
+    // unrelated track; always one-shot (cleared on the first engine-creation attempt that sees it).
+    @Volatile private var pendingTailUri: Uri? = null
+    @Volatile private var pendingTailExpectedIncoming: Uri? = null
+    private var pendingTailStartUs: Long = 0L
+    private var pendingTailFadeMs: Long = 0L
+
+    fun setPendingTail(outgoingUri: Uri?, incomingUri: Uri?, startUs: Long, fadeMs: Long) {
+        pendingTailUri = outgoingUri
+        pendingTailExpectedIncoming = incomingUri
+        pendingTailStartUs = startUs
+        pendingTailFadeMs = fadeMs
+    }
+
+    fun clearPendingTail() {
+        pendingTailUri = null
+        pendingTailExpectedIncoming = null
+    }
+
+    private fun applyPendingTail(engine: NativeAudioEngine, incomingPath: String) {
+        val uri = pendingTailUri ?: return
+        // one-shot: clear unconditionally so a stale tail can never carry across to a later track
+        pendingTailUri = null
+        val expected = pendingTailExpectedIncoming
+        pendingTailExpectedIncoming = null
+        // only mix if THIS engine really is the intended incoming track (guards skip/seek races)
+        if (expected != null && resolveTrackPath(expected) != incomingPath) {
+            Log.i(TAG, "Crossfade tail discarded — incoming track changed")
+            return
+        }
+        val path = resolveTrackPath(uri) ?: return
+        if (!path.lowercase().endsWith(".flac")) return   // only local FLAC has a native engine to mix
+        try {
+            val pfd = android.os.ParcelFileDescriptor.open(File(path), android.os.ParcelFileDescriptor.MODE_READ_ONLY)
+            engine.startTailFade(pfd.fd, pendingTailStartUs, pendingTailFadeMs * 1000L)
+            pfd.close()   // native dup'd the fd
+            Log.i(TAG, "Crossfade tail queued: ${File(path).name} from ${pendingTailStartUs / 1000}ms over ${pendingTailFadeMs}ms")
+        } catch (e: Exception) {
+            Log.w(TAG, "applyPendingTail failed: ${e.message}")
+        }
+    }
+
     /** Pull the latest mono samples from the native FLAC engine for the visualizer (bit-perfect
      *  local files decode in C++ and never reach handleBuffer, so they're polled instead). */
     fun readNativePcm(out: FloatArray): Int {
@@ -688,12 +742,14 @@ class UsbAudioSink(
                         // Start paused — will resume in handleBuffer after capturing
                         // the correct seek position from ExoPlayer's presentationTimeUs.
                         engine.pause()
+                        engine.setSpeed(timeStretch)   // carry the active varispeed onto the new track
                         nativeEngine = engine
                         isNativeEngineActive = true
                         engineNeedsInitialSeek = true
                         engineEndNotified = false
                         activeEnginePath = path
                         trackBitDepth = engine.getBitsPerSample()
+                        applyPendingTail(engine, path)   // crossfade: mix the outgoing track's tail into this one
                         Log.i(TAG, "Native FLAC engine started (paused, awaiting seek) for: ${File(path).name} ${trackBitDepth}-bit")
                         return
                     }
@@ -842,6 +898,10 @@ class UsbAudioSink(
             val resolvedPath = resolveTrackPath(uri)
             currentTrackPath = resolvedPath
             Log.i(TAG, "onMediaItemTransition: uri=$uri path=$resolvedPath")
+
+            // A non-FLAC incoming track will never create a native engine to consume a pending crossfade
+            // tail, so drop it now rather than letting it linger and attach to some later FLAC track.
+            if (resolvedPath == null || !resolvedPath.lowercase().endsWith(".flac")) clearPendingTail()
 
             // 3. Create engine if local FLAC
             if (resolvedPath != null) {

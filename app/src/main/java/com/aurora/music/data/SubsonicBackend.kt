@@ -45,6 +45,9 @@ class SubsonicBackend(
             replayGainTrack = replayGain?.trackGain?.toFloat() ?: 0f,
             replayGainAlbum = replayGain?.albumGain?.toFloat() ?: 0f,
             path = path ?: "",
+            genre = genre ?: "",
+            playCount = playCount,
+            dateAddedSec = com.aurora.music.util.parseIsoEpochSec(created),
         )
         return localize(base)
     }
@@ -56,6 +59,9 @@ class SubsonicBackend(
         artworkUrl = c.coverArtUrl(coverArt ?: id),
         year = year,
         songCount = songCount,
+        durationSec = duration,
+        releaseType = releaseTypes?.firstOrNull { it.isNotBlank() } ?: "",
+        playCount = playCount,
     )
 
     private fun ArtistDto.toModel(): Artist = Artist(
@@ -117,6 +123,11 @@ class SubsonicBackend(
         c.api.search3("", artistCount = 0, albumCount = 0, songCount = limit)
             .response.searchResult3?.song?.map { it.toModel() }.orEmpty()
     }.getOrDefault(emptyList()).ifEmpty { allSongs() }
+
+    override suspend fun songsPage(offset: Int, count: Int): List<Song> = runCatching {
+        c.api.search3("", artistCount = 0, albumCount = 0, songCount = count, songOffset = offset)
+            .response.searchResult3?.song?.map { it.toModel() }.orEmpty()
+    }.getOrDefault(emptyList()).ifEmpty { if (offset == 0) allSongs() else emptyList() }
 
     override suspend fun starredSongs(): List<Song> = runCatching {
         c.api.getStarred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
@@ -186,7 +197,7 @@ class SubsonicBackend(
             "album" -> {
                 val a = c.api.getAlbum(id).response.album ?: return null
                 DetailData(
-                    DetailInfo(a.name, "${a.displayArtist ?: a.artist ?: ""} • ${a.year}", c.coverArtUrl(a.coverArt ?: a.id), accentFor(a.id), false, a.songCount, "Album"),
+                    DetailInfo(a.name, "${a.displayArtist ?: a.artist ?: ""} • ${a.year}", c.coverArtUrl(a.coverArt ?: a.id), accentFor(a.id), false, a.songCount, a.toModel().typeLabel),
                     a.song.map { it.toModel() },
                 )
             }

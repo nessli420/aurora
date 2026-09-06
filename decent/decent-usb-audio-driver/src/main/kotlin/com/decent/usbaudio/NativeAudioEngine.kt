@@ -68,6 +68,21 @@ class NativeAudioEngine {
         if (handle != 0L) nativeResume(handle)
     }
 
+    /** Set the varispeed ratio (1.0 = untouched bit-perfect). Values outside [0.5, 2.0] are clamped
+     *  natively. When != 1.0 the decode thread linearly resamples each block before USB output, so the
+     *  stream is no longer strictly bit-perfect (tempo + pitch shift together). */
+    fun setSpeed(speed: Double) {
+        if (handle != 0L) nativeSetSpeed(handle, speed)
+    }
+
+    /** Begin a crossfade: this engine (already playing the INCOMING track) decodes the OUTGOING FLAC
+     *  at [fd] from [startUs] as a fade-out secondary, equal-power mixed over [fadeUs]. The fd is dup'd
+     *  natively, so the caller may close its descriptor immediately. The outgoing file must match this
+     *  engine's rate/channels/bit-depth or the crossfade is silently skipped (plain playback). */
+    fun startTailFade(fd: Int, startUs: Long, fadeUs: Long) {
+        if (handle != 0L) nativeStartTailFade(handle, fd, startUs, fadeUs)
+    }
+
     /**
      * Seek to a position in the FLAC stream.
      * Uses the FLAC seek table for sample-accurate seeking.
@@ -125,6 +140,8 @@ class NativeAudioEngine {
     private external fun nativeStart(handle: Long): Boolean
     private external fun nativePause(handle: Long)
     private external fun nativeResume(handle: Long)
+    private external fun nativeSetSpeed(handle: Long, speed: Double)
+    private external fun nativeStartTailFade(handle: Long, fd: Int, startUs: Long, fadeUs: Long)
     private external fun nativeSeek(handle: Long, positionUs: Long): Boolean
     private external fun nativeStop(handle: Long)
     private external fun nativeDestroy(handle: Long)

@@ -75,6 +75,7 @@ interface SubsonicApi {
         @Query("artistCount") artistCount: Int = 10,
         @Query("albumCount") albumCount: Int = 10,
         @Query("songCount") songCount: Int = 30,
+        @Query("songOffset") songOffset: Int = 0,
     ): SubsonicEnvelope
 
     @GET("rest/star.view")

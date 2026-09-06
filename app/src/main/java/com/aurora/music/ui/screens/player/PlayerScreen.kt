@@ -59,12 +59,24 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.graphics.BlendMode
+import androidx.compose.ui.graphics.CompositingStrategy
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -83,10 +95,13 @@ import com.aurora.music.model.LyricLine
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import com.aurora.music.data.SeekStyle
+import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.Waveform
 import com.aurora.music.ui.components.formatTime
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.auroraBackdrop
+import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.viewmodel.PlayerUiState
 import com.aurora.music.viewmodel.RepeatMode
 
@@ -114,9 +129,14 @@ fun PlayerScreen(
 ) {
     val song = state.current
     val ui = LocalUiPrefs.current
+    val classic = ui.themeStyle == ThemeStyle.AURORA
     var showLyrics by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     val accent by com.aurora.music.util.rememberDominantColor(song.artworkUrl, song.accent)
+    val playerAccent = if (classic) accent else MaterialTheme.colorScheme.primary
+    val onPlayerAccent = if (classic) {
+        if (accent.luminance() > 0.6f) Color.Black else Color.White
+    } else MaterialTheme.colorScheme.onPrimary
     val g = ui.playerGradient
     val bg = Brush.verticalGradient(
         listOf(
@@ -133,8 +153,10 @@ fun PlayerScreen(
     Box(
         Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
-            .background(bg)
+            .then(
+                if (classic) Modifier.background(MaterialTheme.colorScheme.background).background(bg)
+                else Modifier.auroraBackdrop()
+            )
             // consume taps so nothing leaks through to the app behind
             .clickable(
                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
@@ -268,13 +290,16 @@ fun PlayerScreen(
                     label = "artVsLyrics",
                 ) { lyrics ->
                     if (lyrics) {
-                        LyricsPanel(song = song, positionSec = state.positionSec, accent = accent, onSeek = onSeek, durationSec = state.durationSec)
+                        LyricsPanel(song = song, positionSec = state.positionSec, accent = playerAccent, onSeek = onSeek, durationSec = state.durationSec)
                     } else {
-                        Artwork(
-                            song.artworkUrl, song.accent,
-                            Modifier.fillMaxWidth(ui.playerArtSize.coerceIn(0.5f, 1f)).aspectRatio(1f),
-                            corner = 20.dp,
-                        )
+                        val artModifier = Modifier.fillMaxWidth(ui.playerArtSize.coerceIn(0.5f, 1f)).aspectRatio(1f)
+                        if (classic) {
+                            Artwork(song.artworkUrl, song.accent, artModifier, corner = 20.dp)
+                        } else {
+                            Box(artModifier.auroraPanel(MaterialTheme.shapes.large, emphasized = true).padding(6.dp)) {
+                                Artwork(song.artworkUrl, song.accent, Modifier.fillMaxSize(), corner = 20.dp)
+                            }
+                        }
                     }
                 }
             }
@@ -290,7 +315,7 @@ fun PlayerScreen(
                     Spacer(Modifier.width(10.dp))
                 }
                 Column(Modifier.weight(1f)) {
-                    Text(song.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(song.title, style = MaterialTheme.typography.headlineMedium, fontWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight, color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(2.dp))
                     Text(song.artist, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (state.bpm > 0) {
@@ -320,19 +345,25 @@ fun PlayerScreen(
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (source != null) {
                         Box(
-                            Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)).padding(horizontal = 10.dp, vertical = 3.dp),
+                            Modifier.then(
+                                if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                                else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
+                            ).padding(horizontal = 10.dp, vertical = 3.dp),
                         ) { Text(source, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                         Spacer(Modifier.width(8.dp))
                     }
                     if (isLossless(song.suffix)) {
                         Box(
-                            Modifier.clip(RoundedCornerShape(50)).background(accent).padding(horizontal = 8.dp, vertical = 3.dp),
-                        ) { Text("LOSSLESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = if (accent.luminance() > 0.6f) Color.Black else Color.White) }
+                            Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(playerAccent).padding(horizontal = 8.dp, vertical = 3.dp),
+                        ) { Text("LOSSLESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onPlayerAccent) }
                         Spacer(Modifier.width(8.dp))
                     }
                     if (badge.isNotEmpty()) {
                         Box(
-                            Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f)).padding(horizontal = 10.dp, vertical = 3.dp),
+                            Modifier.then(
+                                if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                                else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
+                            ).padding(horizontal = 10.dp, vertical = 3.dp),
                         ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
                     }
                 }
@@ -344,7 +375,7 @@ fun PlayerScreen(
                 progress = state.progress,
                 positionSec = state.positionSec.toInt(),
                 durationSec = state.durationSec,
-                accent = accent,
+                accent = playerAccent,
                 seed = song.id.hashCode(),
                 seekStyle = ui.playerSeekStyle,
                 waveBars = ui.playerWaveBars,
@@ -354,7 +385,9 @@ fun PlayerScreen(
             Spacer(Modifier.height(8.dp))
 
             Row(
-                Modifier.fillMaxWidth(),
+                Modifier.fillMaxWidth().then(
+                    if (classic) Modifier else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true)
+                ),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -371,15 +404,15 @@ fun PlayerScreen(
                 Box(
                     Modifier
                         .size(72.dp)
-                        .clip(CircleShape)
-                        .background(accent)
+                        .clip(if (classic) CircleShape else MaterialTheme.shapes.large)
+                        .background(playerAccent)
                         .clickable(onClick = onTogglePlay),
                     contentAlignment = Alignment.Center,
                 ) {
                     Icon(
                         if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                         contentDescription = "Play/pause",
-                        tint = if (accent.luminance() > 0.6f) Color.Black else Color.White,
+                        tint = onPlayerAccent,
                         modifier = Modifier.size(36.dp),
                     )
                 }
@@ -443,7 +476,10 @@ private fun isLossless(suffix: String): Boolean =
 @Composable
 private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit, active: Boolean = false) {
     Row(
-        Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp),
+        Modifier.then(
+            if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) Modifier.clip(RoundedCornerShape(50))
+            else Modifier.auroraPanel(MaterialTheme.shapes.small)
+        ).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, label, tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
@@ -506,9 +542,10 @@ private fun LyricsPanel(song: com.aurora.music.model.Song, positionSec: Float, d
     Box(
         Modifier
             .fillMaxSize()
-            .clip(RoundedCornerShape(24.dp))
-            .background(
-                Brush.verticalGradient(listOf(accent.copy(alpha = 0.30f), accent.copy(alpha = 0.10f), MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)))
+            .then(
+                if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) Modifier.clip(RoundedCornerShape(24.dp)).background(
+                    Brush.verticalGradient(listOf(accent.copy(alpha = 0.30f), accent.copy(alpha = 0.10f), MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)))
+                ) else Modifier.auroraPanel(MaterialTheme.shapes.large)
             ),
     ) {
         val l = lyrics
@@ -536,36 +573,140 @@ private fun LyricsPanel(song: com.aurora.music.model.Song, positionSec: Float, d
     }
 }
 
+// fades the scroll edges without caring what's behind the panel
+private fun Modifier.lyricsEdgeFade(): Modifier = this
+    .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+    .drawWithContent {
+        drawContent()
+        drawRect(
+            brush = Brush.verticalGradient(
+                0f to Color.Transparent,
+                0.09f to Color.Black,
+                0.88f to Color.Black,
+                1f to Color.Transparent,
+            ),
+            blendMode = BlendMode.DstIn,
+        )
+    }
+
 @Composable
 private fun SyncedLyrics(lines: List<LyricLine>, positionSec: Float, durationSec: Int, accent: Color, onSeek: (Float) -> Unit) {
     val currentIndex = remember(positionSec, lines) {
         lines.indexOfLast { it.timeSec in 0..positionSec.toInt() }.coerceAtLeast(0)
     }
     val listState = rememberLazyListState()
-    LaunchedEffect(currentIndex) {
-        listState.animateScrollToItem(currentIndex.coerceAtLeast(0), scrollOffset = -300)
+    val scope = rememberCoroutineScope()
+
+    // manual scrolling pauses the follow-cam so reading ahead doesn't fight the ticker
+    var browsing by remember { mutableStateOf(false) }
+    LaunchedEffect(listState) {
+        var settle: Job? = null
+        listState.interactionSource.interactions.collect { i ->
+            when (i) {
+                is DragInteraction.Start -> { settle?.cancel(); browsing = true }
+                is DragInteraction.Stop, is DragInteraction.Cancel -> {
+                    settle?.cancel()
+                    settle = launch { delay(3500); browsing = false }
+                }
+            }
+        }
     }
-    LazyColumn(
-        state = listState,
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 120.dp),
-        verticalArrangement = Arrangement.spacedBy(18.dp),
-    ) {
-        items(lines.size) { i ->
-            val active = i == currentIndex
-            val scale by androidx.compose.animation.core.animateFloatAsState(if (active) 1f else 0.94f, label = "lyricScale")
+    LaunchedEffect(currentIndex, browsing) {
+        if (!browsing) {
+            val viewport = listState.layoutInfo.viewportSize.height
+            val offset = if (viewport > 0) -(viewport / 3) else -300
+            listState.animateScrollToItem(currentIndex.coerceAtLeast(0), scrollOffset = offset)
+        }
+    }
+
+    Box(Modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize().lyricsEdgeFade().padding(horizontal = 24.dp),
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 140.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            items(lines.size) { i ->
+                val active = i == currentIndex
+                val blank = lines[i].text.isBlank()
+                val scale by animateFloatAsState(if (active) 1f else 0.92f, label = "lyricScale")
+                // played lines fade back harder than the ones still coming
+                val targetAlpha = when {
+                    active -> 1f
+                    i < currentIndex -> 0.26f
+                    i == currentIndex + 1 -> 0.55f
+                    else -> 0.38f
+                }
+                val lineAlpha by animateFloatAsState(targetAlpha, label = "lyricAlpha")
+                Box(
+                    Modifier.fillMaxWidth()
+                        .graphicsLayer {
+                            scaleX = scale; scaleY = scale
+                            transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f)
+                        }
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable { if (durationSec > 0 && lines[i].timeSec >= 0) onSeek(lines[i].timeSec.toFloat() / durationSec) }
+                        .padding(vertical = 4.dp),
+                ) {
+                    if (blank && active) {
+                        PulsingDots(accent)
+                    } else {
+                        Text(
+                            lines[i].text.ifBlank { "♪" },
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = if (active) FontWeight.Black else FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = lineAlpha),
+                            textAlign = TextAlign.Start,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+                }
+            }
+        }
+        androidx.compose.animation.AnimatedVisibility(
+            visible = browsing,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 18.dp),
+        ) {
+            val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
             Text(
-                lines[i].text.ifBlank { "♪" },
-                style = MaterialTheme.typography.headlineSmall,
-                fontWeight = if (active) FontWeight.Black else FontWeight.Bold,
-                color = if (active) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.35f),
-                textAlign = TextAlign.Start,
-                modifier = Modifier.fillMaxWidth()
-                    .graphicsLayer { scaleX = scale; scaleY = scale; transformOrigin = androidx.compose.ui.graphics.TransformOrigin(0f, 0.5f) }
-                    .clip(RoundedCornerShape(10.dp))
-                    .clickable { if (durationSec > 0 && lines[i].timeSec >= 0) onSeek(lines[i].timeSec.toFloat() / durationSec) }
-                    .padding(vertical = 2.dp),
+                "Back to current line",
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.Black,
+                color = onAccent,
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50))
+                    .background(accent.copy(alpha = 0.92f))
+                    .clickable {
+                        browsing = false
+                        scope.launch {
+                            val viewport = listState.layoutInfo.viewportSize.height
+                            listState.animateScrollToItem(currentIndex.coerceAtLeast(0), scrollOffset = if (viewport > 0) -(viewport / 3) else -300)
+                        }
+                    }
+                    .padding(horizontal = 16.dp, vertical = 9.dp),
             )
+        }
+    }
+}
+
+@Composable
+private fun PulsingDots(accent: Color) {
+    val t = rememberInfiniteTransition(label = "lyricDots")
+    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 6.dp)) {
+        repeat(3) { i ->
+            val a by t.animateFloat(
+                initialValue = 0.25f,
+                targetValue = 1f,
+                animationSpec = infiniteRepeatable(
+                    animation = tween(550, delayMillis = i * 180),
+                    repeatMode = androidx.compose.animation.core.RepeatMode.Reverse,
+                ),
+                label = "dot$i",
+            )
+            Box(Modifier.size(9.dp).clip(CircleShape).background(accent.copy(alpha = a)))
+            if (i < 2) Spacer(Modifier.width(7.dp))
         }
     }
 }
@@ -573,17 +714,23 @@ private fun SyncedLyrics(lines: List<LyricLine>, positionSec: Float, durationSec
 @Composable
 private fun PlainLyrics(lines: List<LyricLine>) {
     LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = 24.dp),
-        contentPadding = androidx.compose.foundation.layout.PaddingValues(vertical = 40.dp),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier.fillMaxSize().lyricsEdgeFade().padding(horizontal = 24.dp),
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(top = 52.dp, bottom = 80.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         items(lines.size) { i ->
-            Text(
-                lines[i].text.ifBlank { " " },
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.85f),
-            )
+            val text = lines[i].text
+            if (text.isBlank()) {
+                Spacer(Modifier.height(10.dp))
+            } else {
+                Text(
+                    text,
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.SemiBold,
+                    lineHeight = MaterialTheme.typography.titleMedium.lineHeight * 1.25f,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.88f),
+                )
+            }
         }
     }
 }

@@ -23,6 +23,7 @@ data class SpAlbumRef(
     val images: List<SpImage>? = null,
     @SerializedName("release_date") val releaseDate: String? = null,
     @SerializedName("total_tracks") val totalTracks: Int = 0,
+    @SerializedName("album_type") val albumType: String? = null,
     val artists: List<SpArtistRef>? = null,
 )
 
@@ -61,6 +62,7 @@ data class SpAlbum(
     val images: List<SpImage>? = null,
     @SerializedName("release_date") val releaseDate: String? = null,
     @SerializedName("total_tracks") val totalTracks: Int = 0,
+    @SerializedName("album_type") val albumType: String? = null,
     val tracks: SpPaging<SpTrack>? = null,
 )
 

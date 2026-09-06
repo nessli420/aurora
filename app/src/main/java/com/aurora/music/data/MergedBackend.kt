@@ -106,6 +106,9 @@ class MergedBackend(
     override suspend fun allPlaylists(): List<Playlist> = wrapAll(fanOut { it.allPlaylists() }) { p, i -> p.wrap(i) }
     override suspend fun allSongs(): List<Song> = dedupSongs(wrapAll(fanOut { it.allSongs() }) { s, i -> s.wrap(i) })
     override suspend fun librarySongs(limit: Int): List<Song> = dedupSongs(wrapAll(fanOut { it.librarySongs(limit) }) { s, i -> s.wrap(i) })
+    // each source pages independently so a page is only locally deduped; cross-page dupes are rare and harmless
+    override suspend fun songsPage(offset: Int, count: Int): List<Song> =
+        dedupSongs(wrapAll(fanOut { it.songsPage(offset, count) }) { s, i -> s.wrap(i) }).sortedBy { it.title.lowercase() }
     override suspend fun starredSongs(): List<Song> = dedupSongs(wrapAll(fanOut { it.starredSongs() }) { s, i -> s.wrap(i) })
     override suspend fun starredCount(): Int = starredIds().size
     override suspend fun starredIds(): Set<String> =

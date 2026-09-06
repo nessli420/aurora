@@ -65,6 +65,7 @@ data class PlaybackPrefs(
     val scrobble: Boolean = true,
     val autoplayRadio: Boolean = false,
     val bitPerfectUsb: Boolean = false,
+    val independentOutput: Boolean = false, // dont grab audio focus other apps keep playing through the speaker
 )
 
 object VisualizerStyle {
@@ -94,7 +95,13 @@ object VisualizerStyle {
     const val CYMATIC = 23
     const val SUPERFORMULA_BLOOM = 24
     const val WORMHOLE = 25
-    const val count = 26
+    // ambient/textural set tuned for shoegaze cloud rap etc not just energetic music
+    const val PLASMA = 26
+    const val SILK_VEIL = 27
+    const val NEBULA = 28
+    const val HARMONOGRAPH = 29
+    const val INK_BLOOM = 30
+    const val count = 31
     fun label(v: Int) = when (v) {
         BARS -> "Spectrum bars"; MIRROR_BARS -> "Mirror bars"; WAVEFORM -> "Waveform"
         FILLED_WAVE -> "Filled wave"; RADIAL_BARS -> "Radial spectrum"; RADIAL_WAVE -> "Radial wave"
@@ -105,6 +112,8 @@ object VisualizerStyle {
         SPECTRAL_RIVER -> "Spectral river"; SPECTRAL_TERRAIN -> "Terrain flyover"; CURL_FLOW -> "Curl flow"
         STRANGE_ATTRACTOR -> "Strange attractor"; CYMATIC -> "Cymatics"; SUPERFORMULA_BLOOM -> "Bloom"
         WORMHOLE -> "Wormhole"
+        PLASMA -> "Liquid chrome"; SILK_VEIL -> "Silk veil"; NEBULA -> "Nebula drift"
+        HARMONOGRAPH -> "Harmonograph"; INK_BLOOM -> "Ink bloom"
         else -> "Spectrum bars"
     }
 }
@@ -175,6 +184,13 @@ data class AudioPrefs(
 
 object ThemeMode { const val SYSTEM = 0; const val LIGHT = 1; const val DARK = 2; const val AMOLED = 3 }
 
+object ThemeStyle {
+    const val AURORA = 0
+    const val RETRO = 1
+    const val AERO = 2
+    const val GLASS = 3
+}
+
 object AccentMode { const val PRESET = 0; const val CUSTOM = 1; const val MATERIAL_YOU = 2 }
 
 object CornerStyle { const val SHARP = 0; const val DEFAULT = 1; const val ROUNDED = 2; const val PILL = 3 }
@@ -192,6 +208,8 @@ object HomeSection {
 
 data class UiPrefs(
     val themeMode: Int = ThemeMode.DARK,
+    // Individual DataStore preference, not a Gson-serialized field.
+    val themeStyle: Int = ThemeStyle.AURORA,
     val accentMode: Int = AccentMode.PRESET,
     val accentPreset: Int = 0,
     val accentColor: Long = 0xFFFF2E7EL,
@@ -283,6 +301,7 @@ class SettingsStore(private val context: Context) {
         val DOWNLOAD_BITRATE = intPreferencesKey("download_bitrate")
         val PREFER_HIRES = booleanPreferencesKey("prefer_hires")
         val BIT_PERFECT_USB = booleanPreferencesKey("bit_perfect_usb")
+        val INDEPENDENT_OUTPUT = booleanPreferencesKey("independent_output")
         val VIZ_STYLE = intPreferencesKey("viz_style")
         val VIZ_COLOR_SOURCE = intPreferencesKey("viz_color_source")
         val VIZ_PRIMARY = intPreferencesKey("viz_primary")
@@ -364,6 +383,7 @@ class SettingsStore(private val context: Context) {
         val DSP_TRIM_L = floatPreferencesKey("dsp_trim_l")
         val DSP_TRIM_R = floatPreferencesKey("dsp_trim_r")
         val UI_THEME_MODE = intPreferencesKey("ui_theme_mode")
+        val UI_THEME_STYLE = intPreferencesKey("ui_theme_style")
         val UI_ACCENT_MODE = intPreferencesKey("ui_accent_mode")
         val UI_ACCENT_PRESET = intPreferencesKey("ui_accent_preset")
         val UI_ACCENT_COLOR = longPreferencesKey("ui_accent_color")
@@ -428,6 +448,7 @@ class SettingsStore(private val context: Context) {
     val uiPrefs: Flow<UiPrefs> = context.dataStore.data.map { p ->
         UiPrefs(
             themeMode = p[Keys.UI_THEME_MODE] ?: ThemeMode.DARK,
+            themeStyle = (p[Keys.UI_THEME_STYLE] ?: ThemeStyle.AURORA).coerceIn(ThemeStyle.AURORA, ThemeStyle.GLASS),
             accentMode = p[Keys.UI_ACCENT_MODE] ?: AccentMode.PRESET,
             accentPreset = p[Keys.UI_ACCENT_PRESET] ?: 0,
             accentColor = p[Keys.UI_ACCENT_COLOR] ?: 0xFFFF2E7EL,
@@ -618,6 +639,7 @@ class SettingsStore(private val context: Context) {
             scrobble = p[Keys.SCROBBLE] ?: true,
             autoplayRadio = p[Keys.AUTOPLAY_RADIO] ?: false,
             bitPerfectUsb = p[Keys.BIT_PERFECT_USB] ?: false,
+            independentOutput = p[Keys.INDEPENDENT_OUTPUT] ?: false,
         )
     }
 
@@ -777,6 +799,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setDownloadBitrate(v: Int) = context.dataStore.edit { it[Keys.DOWNLOAD_BITRATE] = v }
     suspend fun setPreferHighRes(v: Boolean) = context.dataStore.edit { it[Keys.PREFER_HIRES] = v }
     suspend fun setBitPerfectUsb(v: Boolean) = context.dataStore.edit { it[Keys.BIT_PERFECT_USB] = v }
+    suspend fun setIndependentOutput(v: Boolean) = context.dataStore.edit { it[Keys.INDEPENDENT_OUTPUT] = v }
     suspend fun setScrobble(v: Boolean) = context.dataStore.edit { it[Keys.SCROBBLE] = v }
     suspend fun setAutoplayRadio(v: Boolean) = context.dataStore.edit { it[Keys.AUTOPLAY_RADIO] = v }
     suspend fun setOfflineMode(v: Boolean) = context.dataStore.edit { it[Keys.OFFLINE] = v }
@@ -853,6 +876,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setDspTrimRight(v: Float) = context.dataStore.edit { it[Keys.DSP_TRIM_R] = v }
 
     suspend fun setThemeMode(v: Int) = context.dataStore.edit { it[Keys.UI_THEME_MODE] = v }
+    suspend fun setThemeStyle(v: Int) = context.dataStore.edit { it[Keys.UI_THEME_STYLE] = v.coerceIn(ThemeStyle.AURORA, ThemeStyle.GLASS) }
     suspend fun setAccentMode(v: Int) = context.dataStore.edit { it[Keys.UI_ACCENT_MODE] = v }
     suspend fun setAccentPreset(v: Int) = context.dataStore.edit { it[Keys.UI_ACCENT_PRESET] = v }
     suspend fun setAccentColor(v: Long) = context.dataStore.edit { it[Keys.UI_ACCENT_COLOR] = v }

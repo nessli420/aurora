@@ -22,6 +22,9 @@ data class Song(
     val replayGainTrack: Float = 0f,
     val replayGainAlbum: Float = 0f,
     val path: String = "",   // source file path when the backend exposes one (M3U export)
+    val genre: String = "",
+    val playCount: Int = 0,       // server-reported (subsonic child/jellyfin userdata); 0 if unsupported
+    val dateAddedSec: Long = 0,   // epoch seconds the server added this file; 0 if unknown
 )
 
 data class Album(
@@ -31,7 +34,29 @@ data class Album(
     val artworkUrl: String,
     val year: Int,
     val songCount: Int,
-)
+    val durationSec: Int = 0,
+    val releaseType: String = "",   // server-provided (opensubsonic/spotify) or "" = infer from size
+    val playCount: Int = 0,
+) {
+    val typeLabel: String get() = releaseTypeLabel(releaseType.ifBlank { inferReleaseType(songCount, durationSec) })
+}
+
+// MusicBrainz-ish sizing for servers that don't tag release types
+fun inferReleaseType(songCount: Int, durationSec: Int = 0): String = when {
+    songCount <= 0 -> "album"
+    songCount <= 2 && (durationSec == 0 || durationSec < 15 * 60) -> "single"
+    songCount <= 6 && (durationSec == 0 || durationSec < 35 * 60) -> "ep"
+    else -> "album"
+}
+
+fun releaseTypeLabel(type: String): String = when (type.trim().lowercase()) {
+    "ep" -> "EP"
+    "single" -> "Single"
+    "compilation" -> "Compilation"
+    "soundtrack" -> "Soundtrack"
+    "live" -> "Live"
+    else -> "Album"
+}
 
 data class Artist(
     val id: String,

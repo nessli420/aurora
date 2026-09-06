@@ -56,6 +56,7 @@ data class AlbumDto(
     val genre: String? = null,
     val displayArtist: String? = null,
     val playCount: Int = 0,
+    val releaseTypes: List<String>? = null,   // opensubsonic extension (navidrome)
     val song: List<SongDto> = emptyList(),
 )
 
@@ -83,6 +84,8 @@ data class SongDto(
     val replayGain: ReplayGainDto? = null,
     val isDir: Boolean = false,           // primitive keeps it gson-safe
     val path: String? = null,
+    val created: String? = null,
+    val playCount: Int = 0,
 )
 
 data class MusicFoldersDto(val musicFolder: List<MusicFolderDto> = emptyList())

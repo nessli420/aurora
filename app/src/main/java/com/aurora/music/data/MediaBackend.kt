@@ -18,6 +18,11 @@ interface MediaBackend {
     suspend fun allSongs(): List<Song>
 
     suspend fun librarySongs(limit: Int = 2000): List<Song> = allSongs()
+
+    // paged library songs in server sort order; backends without paging only serve page zero
+    suspend fun songsPage(offset: Int, count: Int): List<Song> =
+        if (offset == 0) librarySongs(count) else emptyList()
+
     suspend fun starredSongs(): List<Song>
     suspend fun starredCount(): Int
     suspend fun starredIds(): Set<String>

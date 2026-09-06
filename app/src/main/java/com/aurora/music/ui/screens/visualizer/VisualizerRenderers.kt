@@ -814,6 +814,223 @@ fun DrawScope.drawSuperformulaBloom(f: VisualizerController.Frame, c: VizColors,
     drawCircle(Brush.radialGradient(listOf(c.secondary, c.primary.copy(alpha = 0f)), center = Offset(cx, cy), radius = coreR * 2f), radius = coreR * 2f, center = Offset(cx, cy))
 }
 
+// ── ambient / textural modes ────────────────────────────────────────
+// these read sustained energy (rms), spectral colour (centroid) and slow time evolution rather than
+// transient beats so shoegaze / cloud rap / ambient still look alive where beat-driven modes go flat.
+
+private fun VisualizerController.Frame.centroid(): Float {
+    val b = bands; val n = b.size
+    if (n < 2) return 0f
+    var num = 0f; var den = 1e-4f
+    for (i in 0 until n) { num += i * b[i]; den += b[i] }
+    return (num / den) / (n - 1)
+}
+
+private fun VisualizerController.Frame.bandEnergy(lo: Float, hi: Float): Float {
+    val b = bands; val n = b.size
+    if (n == 0) return 0f
+    val a0 = (lo * n).toInt().coerceIn(0, n - 1)
+    val a1 = (hi * n).toInt().coerceIn(a0 + 1, n)
+    var s = 0f; for (i in a0 until a1) s += b[i]; return s / (a1 - a0)
+}
+
+// slow demoscene plasma soft colour field that breathes with rms warps with bass
+fun DrawScope.drawPlasma(f: VisualizerController.Frame, c: VizColors, time: Float) {
+    val cols = 24
+    val rows = (cols * size.height / size.width).toInt().coerceIn(12, 40)
+    val cw = size.width / cols
+    val ch = size.height / rows
+    val t = time * 0.5f
+    val energy = 0.4f + 0.6f * f.rms
+    val warp = 0.6f + 1.6f * f.bass
+    for (gy in 0 until rows) {
+        val ny = gy.toFloat() / rows
+        for (gx in 0 until cols) {
+            val nx = gx.toFloat() / cols
+            val dx = nx - 0.5f; val dy = ny - 0.5f
+            val dist = sqrt(dx * dx + dy * dy)
+            val v = sin(nx * 6f + t) +
+                sin((ny * 6f + nx * 2f) - t * 0.8f) +
+                sin((nx + ny) * 5f * warp + t * 0.5f) +
+                sin(dist * 16f - t * 1.2f)
+            val tt = (v * 0.125f + 0.5f).coerceIn(0f, 1f)
+            val a = (0.08f + 0.55f * tt * energy).coerceIn(0f, 0.85f)
+            drawRect(mix(c, tt).copy(alpha = a), topLeft = Offset(gx * cw, gy * ch), size = Size(cw + 1f, ch + 1f))
+        }
+    }
+}
+
+// swaying translucent curtains like aurora seen edge-on each tied to a frequency band
+fun DrawScope.drawSilkVeil(f: VisualizerController.Frame, c: VizColors, time: Float) {
+    val curtains = 5
+    val steps = 36
+    for (l in 0 until curtains) {
+        val e = f.bandEnergy(l / curtains.toFloat(), (l + 1) / curtains.toFloat())
+        val phase = time * (0.25f + 0.14f * l) + l * 1.7f
+        val cx = size.width * (0.5f + 0.5f * ((l + 0.5f) / curtains - 0.5f) * 1.4f)
+        val sway = size.width * (0.05f + 0.16f * e)
+        val halfW = size.width * (0.03f + 0.09f * (0.4f + e))
+        val path = Path()
+        for (s in 0..steps) {
+            val ty = s.toFloat() / steps
+            val y = ty * size.height
+            val off = sin(ty * 3.4f + phase) * sway + sin(ty * 7f - phase * 0.6f) * sway * 0.35f
+            val x = cx + off - halfW
+            if (s == 0) path.moveTo(x, y) else path.lineTo(x, y)
+        }
+        for (s in steps downTo 0) {
+            val ty = s.toFloat() / steps
+            val y = ty * size.height
+            val off = sin(ty * 3.4f + phase) * sway + sin(ty * 7f - phase * 0.6f) * sway * 0.35f
+            path.lineTo(cx + off + halfW, y)
+        }
+        path.close()
+        val col = lerp(c.primary, c.secondary, l / (curtains - 1f))
+        drawPath(
+            path,
+            Brush.verticalGradient(
+                listOf(Color.Transparent, col.copy(alpha = 0.10f + 0.34f * e), Color.Transparent),
+                startY = 0f, endY = size.height,
+            ),
+            style = Fill,
+        )
+    }
+}
+
+// drifting soft blobs additive clouds calm enough for ambient radius breathes with rms + own band
+class DriftField(requested: Int) {
+    private val N = requested.coerceIn(10, 60)
+    private class B(var x: Float, var y: Float, var bx: Float, var by: Float, var r: Float, var tint: Float, var ph: Float)
+    private val bs = ArrayList<B>(N)
+    private var seed = 0x51ED2701
+    private fun rnd(): Float { seed = seed * 1664525 + 1013904223; return ((seed ushr 8) and 0xFFFFFF) / 16777216f }
+    private var inited = false
+    private var w = 0f; private var h = 0f; private var time = 0f
+    private var rms = 0f; private var level = 0f
+
+    fun update(f: VisualizerController.Frame, t: Float, width: Float, height: Float) {
+        w = width; h = height; time = t; rms = f.rms; level = f.level
+        if (!inited) {
+            for (i in 0 until N) bs.add(B(rnd() * w, rnd() * h, rnd(), rnd(), 0.1f + rnd() * 0.18f, rnd(), rnd() * 6.28f))
+            inited = true
+        }
+        // louder passages drift a touch faster, keeping calm tracks gentle
+        val drift = 0.85f + 0.6f * level
+        for ((i, b) in bs.withIndex()) {
+            // slow lissajous drift keeps motion organic and non-repetitive
+            b.x = w * (0.5f + 0.42f * sin(time * 0.07f * drift * (0.6f + b.bx) + b.ph))
+            b.y = h * (0.5f + 0.42f * sin(time * 0.06f * drift * (0.6f + b.by) + b.ph * 1.7f + i))
+        }
+    }
+
+    fun draw(d: DrawScope, c: VizColors) {
+        if (!inited) return
+        val baseR = min(w, h) * (0.22f + 0.12f * rms)
+        for (b in bs) {
+            val pulse = 0.7f + 0.3f * sin(time * 0.8f + b.ph)
+            val r = baseR * b.r * pulse * (0.6f + 0.8f * rms + 0.2f * level)
+            if (r < 1f) continue
+            val col = lerp(c.primary, c.secondary, b.tint)
+            d.drawCircle(
+                Brush.radialGradient(
+                    listOf(col.copy(alpha = 0.16f + 0.12f * rms), Color.Transparent),
+                    center = Offset(b.x, b.y), radius = r,
+                ),
+                radius = r, center = Offset(b.x, b.y),
+            )
+        }
+    }
+}
+
+// continuous lissajous / harmonograph line art elegant even on quiet passages
+class Harmonograph {
+    private var a = 3f; private var b = 2f
+    private val pts = ArrayList<Offset>(260)
+    private var w = 0f; private var h = 0f; private var time = 0f; private var rms = 0f; private var amp = 0.5f
+
+    fun update(f: VisualizerController.Frame, t: Float, width: Float, height: Float) {
+        w = width; h = height; time = t; rms = f.rms
+        val cen = f.centroid()
+        val hi = f.bandEnergy(0.6f, 1f)
+        // spectral colour picks the frequency ratio so different material draws differently
+        val ta = 2f + (3f * cen).toInt()
+        val tb = 2f + (3f * (1f - cen) + 2f * hi).toInt()
+        a += (ta - a) * 0.03f; b += (tb - b) * 0.03f
+        amp += ((0.45f + 0.5f * rms) - amp) * 0.05f
+    }
+
+    fun draw(d: DrawScope, c: VizColors) {
+        if (w <= 0f) return
+        val cx = w / 2f; val cy = h / 2f
+        val rad = min(w, h) * 0.42f * amp
+        val px = time * 0.6f; val py = time * 0.37f
+        val steps = 240
+        pts.clear()
+        for (i in 0..steps) {
+            val th = i.toFloat() / steps * 2f * PI.toFloat()
+            val x = cx + sin(a * th + px) * rad
+            val y = cy + sin(b * th + py) * rad * (h / w).coerceIn(0.5f, 1.4f)
+            pts.add(Offset(x, y))
+        }
+        val glow = Path(); val line = Path()
+        for ((i, p) in pts.withIndex()) { if (i == 0) { glow.moveTo(p.x, p.y); line.moveTo(p.x, p.y) } else { glow.lineTo(p.x, p.y); line.lineTo(p.x, p.y) } }
+        d.drawPath(glow, c.primary.copy(alpha = 0.16f), style = Stroke(width = 9f, cap = StrokeCap.Round))
+        d.drawPath(line, Brush.sweepGradient(listOf(c.primary, c.secondary, c.primary), center = Offset(cx, cy)), style = Stroke(width = 2.2f, cap = StrokeCap.Round))
+    }
+}
+
+// ink-in-water blooms spawned on a slow cadence each an organic wobbly expanding ring
+class InkBloom {
+    private class Ring(var age: Float, var rot: Float, var tint: Float, val wob: FloatArray)
+    private val rings = ArrayList<Ring>()
+    private var acc = 0f; private var lastTime = -1f
+    private var seed = 0x1B873593
+    private fun rnd(): Float { seed = seed * 1664525 + 1013904223; return ((seed ushr 8) and 0xFFFFFF) / 16777216f }
+    private var w = 0f; private var h = 0f; private var rms = 0f; private var mid = 0f
+
+    fun update(f: VisualizerController.Frame, t: Float, width: Float, height: Float) {
+        w = width; h = height; rms = f.rms; mid = f.bandEnergy(0.25f, 0.6f)
+        if (lastTime < 0f) lastTime = t
+        var dt = t - lastTime; lastTime = t
+        if (dt < 0f) dt = 0f; if (dt > 0.1f) dt = 0.1f
+        acc += dt
+        // slow cadence quicker when the track is louder but never beat-twitchy
+        val cadence = 1.1f - 0.6f * rms
+        if (acc >= cadence && rings.size < 14) {
+            acc = 0f
+            val wob = FloatArray(6) { 0.04f + rnd() * (0.05f + 0.12f * mid) }
+            rings.add(Ring(0f, rnd() * 6.28f, rnd(), wob))
+        }
+        val it = rings.iterator()
+        while (it.hasNext()) { val r = it.next(); r.age += dt * (0.18f + 0.10f * rms); if (r.age >= 1f) it.remove() }
+    }
+
+    fun draw(d: DrawScope, c: VizColors) {
+        if (w <= 0f) return
+        val cx = w / 2f; val cy = h / 2f
+        val maxR = min(w, h) * 0.5f
+        val steps = 80
+        for (rg in rings) {
+            val rr = rg.age * maxR
+            val alpha = ((1f - rg.age) * 0.5f).coerceIn(0f, 0.5f)
+            if (alpha < 0.01f) continue
+            val path = Path()
+            for (s in 0..steps) {
+                val th = s.toFloat() / steps * 2f * PI.toFloat()
+                var wob = 0f
+                for (k in rg.wob.indices) wob += rg.wob[k] * sin((k + 2) * th + rg.rot)
+                val r = rr * (1f + wob)
+                val x = cx + cos(th) * r; val y = cy + sin(th) * r
+                if (s == 0) path.moveTo(x, y) else path.lineTo(x, y)
+            }
+            path.close()
+            val col = lerp(c.primary, c.secondary, rg.tint)
+            d.drawPath(path, col.copy(alpha = alpha * 0.35f), style = Fill)
+            d.drawPath(path, col.copy(alpha = alpha), style = Stroke(width = 1.6f + 2f * (1f - rg.age)))
+        }
+    }
+}
+
 fun DrawScope.drawWormhole(f: VisualizerController.Frame, c: VizColors, time: Float) {
     val cx = size.width / 2f; val cy = size.height / 2f
     val minDim = min(size.width, size.height)

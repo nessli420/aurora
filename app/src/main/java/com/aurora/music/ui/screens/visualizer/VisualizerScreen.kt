@@ -21,6 +21,8 @@ import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,6 +34,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
@@ -43,7 +46,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -87,8 +93,28 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
         }
     }
     var controlsVisible by remember { mutableStateOf(true) }
-    LaunchedEffect(controlsVisible) {
-        if (controlsVisible) { delay(4500); controlsVisible = false }
+    // Keep the picker position when AnimatedVisibility removes its content.
+    val selectedStyle = prefs.style.coerceIn(0, VisualizerStyle.count - 1)
+    val modeListState = rememberLazyListState(initialFirstVisibleItemIndex = selectedStyle)
+    var pointerDown by remember { mutableStateOf(false) }
+    var controlsInteraction by remember { mutableIntStateOf(0) }
+    LaunchedEffect(controlsVisible, pointerDown, modeListState.isScrollInProgress, controlsInteraction) {
+        // A full idle interval starts after the finger lifts AND any fling settles.
+        if (controlsVisible && !pointerDown && !modeListState.isScrollInProgress) {
+            delay(4500)
+            controlsVisible = false
+        }
+    }
+    LaunchedEffect(controlsVisible, selectedStyle) {
+        if (controlsVisible) {
+            val layout = modeListState.layoutInfo
+            val selectedItem = layout.visibleItemsInfo.firstOrNull { it.index == selectedStyle }
+            if (selectedItem == null || selectedItem.offset < layout.viewportStartOffset ||
+                selectedItem.offset + selectedItem.size > layout.viewportEndOffset
+            ) {
+                modeListState.scrollToItem(selectedStyle)
+            }
+        }
     }
 
     val isRadial = prefs.style == VisualizerStyle.RADIAL_BARS || prefs.style == VisualizerStyle.RADIAL_WAVE ||
@@ -100,6 +126,18 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
         Modifier
             .fillMaxSize()
             .background(Color.Black)
+            .pointerInput(Unit) {
+                // Observe even events consumed by the mode row, without stealing its gestures.
+                try {
+                    awaitPointerEventScope {
+                        while (true) {
+                            pointerDown = awaitPointerEvent(PointerEventPass.Initial).changes.any { it.pressed }
+                        }
+                    }
+                } finally {
+                    pointerDown = false
+                }
+            }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
@@ -116,18 +154,22 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             else -> {}
         }
 
-        if (isRadial && prefs.showAlbumArt && song.artworkUrl.isNotBlank()) {
-            Artwork(
-                song.artworkUrl, accent,
-                Modifier.align(Alignment.Center).size(120.dp).clip(CircleShape),
-                corner = 60.dp,
+        // Artwork and the renderer must use the same inset viewport: system bars can
+        // have different heights, so centering the artwork in the full window drifts.
+        Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(16.dp)) {
+            if (isRadial && prefs.showAlbumArt && song.artworkUrl.isNotBlank()) {
+                Artwork(
+                    song.artworkUrl, accent,
+                    Modifier.align(Alignment.Center).size(120.dp).clip(CircleShape),
+                    corner = 60.dp,
+                )
+            }
+
+            VisualizerCanvas(
+                controller, prefs, colors,
+                Modifier.fillMaxSize(),
             )
         }
-
-        VisualizerCanvas(
-            controller, prefs, colors,
-            Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(16.dp),
-        )
 
         AnimatedVisibility(controlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopStart)) {
             Row(
@@ -149,16 +191,20 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
         AnimatedVisibility(controlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.BottomCenter)) {
             LazyRow(
                 Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.systemBars).padding(vertical = 16.dp),
+                state = modeListState,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 contentPadding = PaddingValues(horizontal = 16.dp),
             ) {
-                items((0 until VisualizerStyle.count).toList()) { s ->
+                items((0 until VisualizerStyle.count).toList(), key = { it }) { s ->
                     val selected = s == prefs.style
                     Box(
                         Modifier
                             .clip(RoundedCornerShape(50))
                             .background(if (selected) colors.primary else Color.White.copy(alpha = 0.14f))
-                            .clickable { scope.launch { container.settingsStore.setVisualizer(prefs.copy(style = s)) } }
+                            .selectable(selected = selected, role = Role.RadioButton) {
+                                controlsInteraction++
+                                scope.launch { container.settingsStore.setVisualizer(prefs.copy(style = s)) }
+                            }
                             .padding(horizontal = 14.dp, vertical = 9.dp),
                     ) {
                         Text(

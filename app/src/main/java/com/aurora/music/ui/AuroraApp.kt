@@ -4,6 +4,8 @@ import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -76,6 +78,7 @@ import com.aurora.music.ui.screens.player.PlayerScreen
 import com.aurora.music.ui.screens.player.SpeedPitchSheet
 import com.aurora.music.ui.screens.profile.ProfileScreen
 import com.aurora.music.ui.screens.search.SearchScreen
+import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.ui.screens.settings.PlaybackSettingsScreen
 import com.aurora.music.ui.screens.settings.SettingsScreen
 import com.aurora.music.viewmodel.AuthViewModel
@@ -162,6 +165,7 @@ fun AuroraApp() {
     }
 
     val drawerState = rememberDrawerState(DrawerValue.Closed)
+    var drawerNavigationPending by remember { mutableStateOf(false) }
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
@@ -185,8 +189,25 @@ fun AuroraApp() {
         }
     }
 
-    fun openDrawer() = scope.launch { drawerState.open() }
-    fun closeDrawer() = scope.launch { drawerState.close() }
+    fun openDrawer() {
+        if (!drawerNavigationPending && !drawerState.isAnimationRunning) {
+            scope.launch { drawerState.open() }
+        }
+    }
+    fun closeDrawerThen(action: () -> Unit) {
+        if (drawerNavigationPending) return
+        drawerNavigationPending = true
+        scope.launch {
+            try {
+                // Finish dismissing before changing routes. Otherwise the scrim can
+                // outlive its screen and intercept taps over a blank destination.
+                drawerState.close()
+                action()
+            } finally {
+                drawerNavigationPending = false
+            }
+        }
+    }
     fun openDetail(kind: String, id: String) = navController.navigate(Routes.detail(kind, id))
     fun playAlbum(id: String) = scope.launch {
         container.repository.detail("album", id)?.let { if (it.tracks.isNotEmpty()) playerVM.playCollection("album", id, it.tracks, 0, it.info.songCount) }
@@ -235,23 +256,22 @@ fun AuroraApp() {
 
     ModalNavigationDrawer(
         drawerState = drawerState,
-        gesturesEnabled = showChrome && onTopLevel,
+        gesturesEnabled = drawerState.isOpen || drawerState.targetValue == DrawerValue.Open || (showChrome && onTopLevel),
         drawerContent = {
-            ModalDrawerSheet(drawerContainerColor = MaterialTheme.colorScheme.surface) {
+            ModalDrawerSheet(drawerState = drawerState, drawerContainerColor = MaterialTheme.colorScheme.surface) {
                 SidebarContent(
                     username = session?.username ?: "",
                     server = session?.server ?: "",
                     avatarUrl = session?.imageUrl ?: "",
-                    onProfile = { navController.navigate(Routes.PROFILE) },
-                    onSettings = { navController.navigate(Routes.SETTINGS) },
-                    onLibrary = { closeDrawer(); navigateTopLevel(Routes.LIBRARY) },
-                    onHistory = { closeDrawer(); navController.navigate(Routes.HISTORY) },
-                    onStats = { closeDrawer(); navController.navigate(Routes.STATS) },
-                    onDuplicates = { closeDrawer(); navController.navigate(Routes.DUPLICATES) },
-                    onRadio = { closeDrawer(); navController.navigate(Routes.RADIO) },
-                    onPodcasts = { closeDrawer(); navController.navigate(Routes.PODCASTS) },
-                    onClose = { closeDrawer() },
-                    onLogout = { closeDrawer(); logout() },
+                    onProfile = { closeDrawerThen { navController.navigate(Routes.PROFILE) } },
+                    onSettings = { closeDrawerThen { navController.navigate(Routes.SETTINGS) } },
+                    onLibrary = { closeDrawerThen { navigateTopLevel(Routes.LIBRARY) } },
+                    onHistory = { closeDrawerThen { navController.navigate(Routes.HISTORY) } },
+                    onStats = { closeDrawerThen { navController.navigate(Routes.STATS) } },
+                    onDuplicates = { closeDrawerThen { navController.navigate(Routes.DUPLICATES) } },
+                    onRadio = { closeDrawerThen { navController.navigate(Routes.RADIO) } },
+                    onPodcasts = { closeDrawerThen { navController.navigate(Routes.PODCASTS) } },
+                    onLogout = { closeDrawerThen { logout() } },
                 )
             }
         },
@@ -304,6 +324,13 @@ fun AuroraApp() {
                     navController = navController,
                     startDestination = startDestination,
                     modifier = Modifier.fillMaxSize(),
+                    // A drawer action followed quickly by Back interrupts Navigation
+                    // 2.8's default 700 ms fade and can leave the returned page invisible.
+                    // The drawer and player animate independently; route content stays visible.
+                    enterTransition = { EnterTransition.None },
+                    exitTransition = { ExitTransition.None },
+                    popEnterTransition = { EnterTransition.None },
+                    popExitTransition = { ExitTransition.None },
                 ) {
                     composable(Routes.SIGN_IN) {
                         SignInScreen(
@@ -466,6 +493,22 @@ fun AuroraApp() {
                             pins = pins,
                             onEditTags = { song -> navController.navigate(Routes.tagEdit(song.id)) },
                             serverTagEditing = serverTagEditing,
+                            onLoadMoreSongs = libraryVM::loadMoreSongs,
+                            onPlayAllSongs = { shuffle ->
+                                scope.launch {
+                                    val all = libraryVM.fullSortedSongs()
+                                    if (all.isEmpty()) return@launch
+                                    if (shuffle) playerVM.shufflePlay(all) else playerVM.playAll(all, 0)
+                                }
+                            },
+                            onPlaySong = { song ->
+                                scope.launch {
+                                    val all = libraryVM.fullSortedSongs()
+                                    val idx = all.indexOfFirst { it.id == song.id }
+                                    // fall back to the single track if the full list somehow lacks it (never play the wrong index)
+                                    if (idx >= 0) playerVM.playAll(all, idx) else playerVM.playAll(listOf(song), 0)
+                                }
+                            },
                         )
                     }
                     composable(
@@ -881,6 +924,7 @@ fun AuroraApp() {
 
 @Composable
 private fun DownloadProgressBanner(count: Int, progress: Float) {
+    val classic = com.aurora.music.ui.theme.LocalUiPrefs.current.themeStyle == com.aurora.music.data.ThemeStyle.AURORA
     val animated by androidx.compose.animation.core.animateFloatAsState(
         targetValue = progress.coerceIn(0f, 1f),
         animationSpec = tween(300),
@@ -889,9 +933,10 @@ private fun DownloadProgressBanner(count: Int, progress: Float) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
-            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
+            .then(if (classic) Modifier.clip(RoundedCornerShape(18.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
+                else Modifier.auroraPanel(MaterialTheme.shapes.large))
             .padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -924,12 +969,14 @@ private fun DownloadProgressBanner(count: Int, progress: Float) {
 
 @Composable
 private fun FloatingNav(currentRoute: String?, onNavigate: (String) -> Unit) {
+    val classic = com.aurora.music.ui.theme.LocalUiPrefs.current.themeStyle == com.aurora.music.data.ThemeStyle.AURORA
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(26.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
-            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(26.dp))
+            .then(if (classic) Modifier.clip(RoundedCornerShape(26.dp))
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(26.dp))
+                else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true))
             .padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -944,7 +991,7 @@ private fun FloatingNav(currentRoute: String?, onNavigate: (String) -> Unit) {
             Row(
                 modifier = Modifier
                     .weight(if (selected) 1.4f else 1f)
-                    .clip(RoundedCornerShape(50))
+                    .clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.small)
                     .background(bg)
                     .clickable { onNavigate(dest.route) }
                     .padding(vertical = 12.dp),

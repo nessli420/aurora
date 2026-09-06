@@ -1,6 +1,7 @@
 package com.aurora.music.data.remote
 
 import com.aurora.music.data.EqProfile
+import com.aurora.music.data.EqProvider
 import com.aurora.music.data.FrCurve
 import com.google.gson.Gson
 import com.google.gson.JsonElement
@@ -44,7 +45,7 @@ class SquigClient {
                     val suff = suffixes.getOrNull(idx)?.trim().orEmpty()
                     val base2 = listOf(bName, mName).filter { it.isNotBlank() }.joinToString(" ")
                     val display = (if (suff.isNotBlank()) "$base2 $suff" else base2).ifBlank { s }
-                    out.add(EqProfile(name = display, source = host, path = s))
+                    out.add(EqProfile(name = display, source = host, path = s, provider = EqProvider.SQUIG))
                 }
             }
         }

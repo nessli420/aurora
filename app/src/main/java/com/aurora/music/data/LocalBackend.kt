@@ -45,6 +45,11 @@ class LocalBackend(
     override suspend fun allPlaylists(): List<Playlist> = store.playlists().map { it.toPlaylist() }
     override suspend fun allSongs(): List<Song> { library.ensureLoaded(); return library.songs }
 
+    override suspend fun songsPage(offset: Int, count: Int): List<Song> {
+        library.ensureLoaded()
+        return library.songs.drop(offset).take(count)
+    }
+
     override suspend fun starredSongs(): List<Song> {
         library.ensureLoaded()
         val liked = store.likedIds()
@@ -91,7 +96,7 @@ class LocalBackend(
                 val tracks = library.songsByAlbumId(id)
                 val album = library.albums.firstOrNull { it.id == id } ?: return null
                 DetailData(
-                    info = DetailInfo(album.title, album.artist, album.artworkUrl, accentFor(id), false, tracks.size, "Album"),
+                    info = DetailInfo(album.title, album.artist, album.artworkUrl, accentFor(id), false, tracks.size, album.typeLabel),
                     tracks = tracks,
                 )
             }

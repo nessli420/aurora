@@ -32,6 +32,9 @@ fun VisualizerCanvas(
     val curlFlow = remember(prefs.particleCount) { CurlFlowField(prefs.particleCount.coerceIn(200, 1800)) }
     val attractor = remember { StrangeAttractor(4000) }
     val cymatic = remember { Cymatic(2200) }
+    val drift = remember(prefs.particleCount) { DriftField(prefs.particleCount.coerceIn(10, 60)) }
+    val harmonograph = remember { Harmonograph() }
+    val inkBloom = remember { InkBloom() }
 
     Canvas(modifier) {
         tick // read so canvas redraws each frame
@@ -69,6 +72,11 @@ fun VisualizerCanvas(
             VisualizerStyle.CYMATIC -> { cymatic.update(f, timeSec, size.width, size.height); cymatic.draw(this, colors) }
             VisualizerStyle.SUPERFORMULA_BLOOM -> drawSuperformulaBloom(f, colors, timeSec)
             VisualizerStyle.WORMHOLE -> drawWormhole(f, colors, timeSec)
+            VisualizerStyle.PLASMA -> drawPlasma(f, colors, timeSec)
+            VisualizerStyle.SILK_VEIL -> drawSilkVeil(f, colors, timeSec)
+            VisualizerStyle.NEBULA -> { drift.update(f, timeSec, size.width, size.height); drift.draw(this, colors) }
+            VisualizerStyle.HARMONOGRAPH -> { harmonograph.update(f, timeSec, size.width, size.height); harmonograph.draw(this, colors) }
+            VisualizerStyle.INK_BLOOM -> { inkBloom.update(f, timeSec, size.width, size.height); inkBloom.draw(this, colors) }
             else -> drawBars(f, colors, prefs.mirror, prefs.peakHold)
         }
         } catch (_: Throwable) {

@@ -57,6 +57,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -75,6 +76,8 @@ import com.aurora.music.data.SQUIG_INSTANCES
 import com.aurora.music.data.SQUIG_TARGETS
 import com.aurora.music.data.EqBinding
 import com.aurora.music.data.EqProfile
+import com.aurora.music.data.EqDeviceKind
+import com.aurora.music.data.EqProvider
 import com.aurora.music.data.ParamBand
 import com.aurora.music.data.SettingsStore
 import com.aurora.music.playback.DspBand
@@ -107,7 +110,7 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             item { ToneEngineCard(prefs.dspMode) { i -> scope.launch { store.setDspMode(i) } } }
 
             item { SettingsSectionTitle("Correction") }
-            collapsible("autoeq", "Headphone correction", Icons.Filled.Headset, activeEq.ifBlank { "AutoEQ — off" }, expanded) {
+            collapsible("autoeq", "Device presets", Icons.Filled.Headset, activeEq.ifBlank { "Headphones, earbuds & speakers" }, expanded) {
                 AutoEqPanel(container, prefs, store, scope)
             }
             collapsible("conv", "Convolution (IR)", Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else "Off", expanded) {
@@ -294,23 +297,57 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
     val active by store.activeEqProfile.collectAsStateWithLifecycle(initialValue = "")
     val autoSwitch by store.autoEqAutoSwitch.collectAsStateWithLifecycle(initialValue = false)
     val bindings by store.eqBindings.collectAsStateWithLifecycle(initialValue = emptyList())
-    var query by remember { mutableStateOf("") }
+    var query by rememberSaveable { mutableStateOf("") }
     var results by remember { mutableStateOf<List<EqProfile>>(emptyList()) }
     var working by remember { mutableStateOf(false) }
-    var source by remember { mutableStateOf(0) }   // 0 bundled autoeq db 1 live squig.link
+    var searching by remember { mutableStateOf(false) }
+    var searchFailed by remember { mutableStateOf(false) }
+    var visibleCount by remember { mutableStateOf(20) }
+    var source by rememberSaveable { mutableStateOf(0) }   // 0 measured device library, 1 live squig.link
+    var categoryName by rememberSaveable { mutableStateOf(EqDeviceKind.ALL.name) }
+    val category = EqDeviceKind.entries.firstOrNull { it.name == categoryName } ?: EqDeviceKind.ALL
     val squigBase by store.squigBaseUrl.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_BASE)
     val squigTargetName by store.squigTarget.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_TARGET)
     val outLabel = container.autoEqController.currentOutputLabel()
     val ctx = LocalContext.current
     fun toast(msg: String) = android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_SHORT).show()
 
-    LaunchedEffect(query, source, squigBase, squigTargetName) {
-        if (query.trim().length < 2) results = emptyList()
-        else { delay(220); results = if (source == 0) container.autoEq.search(query) else container.squigEq.search(query) }
+    LaunchedEffect(query, source, category, squigBase, squigTargetName) {
+        results = emptyList()
+        visibleCount = 20
+        searchFailed = false
+        searching = true
+        try {
+            if (query.isNotBlank()) delay(220)
+            results = if (source == 0) container.autoEq.search(query, category)
+                else if (query.trim().length >= 2) container.squigEq.search(query) else emptyList()
+        } catch (e: kotlinx.coroutines.CancellationException) {
+            throw e
+        } catch (_: Exception) {
+            searchFailed = true
+        } finally {
+            searching = false
+        }
     }
 
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        PillSelector(listOf("AutoEq DB", "squig.link"), source) { source = it }
+        PillSelector(listOf("Device library", "Live squig.link"), source) { source = it }
+        if (source == 0) {
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(vertical = 6.dp)) {
+                items(EqDeviceKind.entries.size) { i ->
+                    val kind = EqDeviceKind.entries[i]
+                    PresetChip(kind.label, selected = kind == category) { categoryName = kind.name }
+                }
+            }
+            Text(category.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 6.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(bottom = 8.dp)) {
+                items(category.examples.size) { i ->
+                    val example = category.examples[i]
+                    PresetChip(example, selected = query == example) { query = example }
+                }
+            }
+        }
         if (source == 1) {
             val instIdx = SQUIG_INSTANCES.indexOfFirst { it.second == squigBase }.coerceAtLeast(0)
             PillSelector(SQUIG_INSTANCES.map { it.first }, instIdx) { i -> scope.launch { store.setSquigBaseUrl(SQUIG_INSTANCES[i].second) } }
@@ -339,7 +376,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             value = query,
             onValueChange = { query = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(if (source == 0) "Find your headphones / IEM" else "Search squig.link for an IEM") },
+            placeholder = { Text(if (source == 0) "Search brand or model" else "Search live IEM measurements") },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
             trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, "Clear", modifier = Modifier.clip(RoundedCornerShape(50)).clickable { query = "" }.padding(4.dp)) },
             singleLine = true,
@@ -351,17 +388,29 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                 cursorColor = MaterialTheme.colorScheme.primary,
             ),
         )
-        if (working) {
+        if (working || searching) {
             Box(Modifier.fillMaxWidth().padding(8.dp), contentAlignment = Alignment.Center) {
                 com.aurora.music.ui.components.LottieLoader(modifier = Modifier.width(36.dp).height(36.dp))
             }
         }
-        results.take(20).forEach { p ->
+        if (!searching) {
+            Text(
+                when {
+                    searchFailed -> "Could not load presets. Try another search."
+                    source == 1 && query.trim().length < 2 -> "Enter at least two characters to search squig.link."
+                    results.isEmpty() -> "No measured presets found. Try another model name or device category."
+                    else -> "${results.size} presets · showing ${minOf(visibleCount, results.size)}"
+                },
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(vertical = 8.dp),
+            )
+        }
+        results.take(visibleCount).forEach { p ->
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable {
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable(enabled = !working) {
                     scope.launch {
                         working = true
-                        val eq = if (source == 0) container.autoEq.fetch(p) else container.squigEq.generate(p)
+                        val eq = if (p.provider == EqProvider.SQUIG) container.squigEq.generate(p) else container.autoEq.fetch(p)
                         android.util.Log.d("AutoEQ", "apply ${p.name}: ${if (eq == null) "FETCH FAILED" else "preamp=${eq.preampDb} bands=${eq.bands.size}"}")
                         if (eq != null && eq.bands.isNotEmpty()) {
                             store.setDspParametric(eq.bands)
@@ -371,7 +420,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                             query = ""
                             toast("Applied ${p.name} · ${eq.bands.size} bands, ${"%.1f".format(eq.preampDb)} dB preamp")
                         } else {
-                            toast(if (eq == null) "Couldn't fetch correction — check connection" else "No filters found for ${p.name}")
+                            toast("Couldn't load a supported correction — check your connection or try another measurement")
                         }
                         working = false
                     }
@@ -379,11 +428,14 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(p.name, style = MaterialTheme.typography.bodyMedium, maxLines = 1)
-                    Text(p.source, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    Text(p.name, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
+                    Text("${p.source} · ${p.kind.label}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
                 }
                 Icon(Icons.Filled.Add, "Apply", tint = MaterialTheme.colorScheme.primary)
             }
+        }
+        if (results.size > visibleCount) {
+            TextLink("Show 20 more") { visibleCount += 20 }
         }
 
         Spacer(Modifier.height(6.dp))

@@ -68,6 +68,7 @@ class PlaybackService : MediaLibraryService() {
     @Volatile private var grantedBitPerfect: Boolean = false
     @Volatile private var deviceSupportsBitPerfect: Boolean = false
     @Volatile private var preferHighResPref: Boolean = false
+    @Volatile private var independentOutput: Boolean = false
 
     @Volatile private var sleepFadeActive = false
     private var sleepFadeStartMs = 0L
@@ -78,6 +79,7 @@ class PlaybackService : MediaLibraryService() {
     private val nowPlaying by lazy { NowPlayingStore(this) }
 
     private var xfadeActive = false
+    @Volatile private var xfadeBpPending = false   // bit-perfect crossfade fired, awaiting the transition
     private var xfadeStartMs = 0L
     private var xfadeExpectedId: String? = null
     private var xfadeInGain = 1f
@@ -202,6 +204,16 @@ class PlaybackService : MediaLibraryService() {
                     events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) ||
                     events.contains(Player.EVENT_PLAYBACK_PARAMETERS_CHANGED)
                 ) updateSignalPath()
+                // bit-perfect: speed/pitch can't flow through exoplayer's bypassed processors so drive the
+                // native usb engine's varispeed directly (reverts to true bit-perfect at 1.0x)
+                if (events.contains(Player.EVENT_PLAYBACK_PARAMETERS_CHANGED) ||
+                    events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)
+                ) usbSink?.setTimeStretch(p.playbackParameters.speed)
+                // the bit-perfect crossfade transition landed — re-arm for the next boundary. also re-arm on
+                // any timeline change so the latch can never get stuck if the advance didn't yield a transition.
+                if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
+                    events.contains(Player.EVENT_TIMELINE_CHANGED)
+                ) xfadeBpPending = false
                 if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
                     events.contains(Player.EVENT_MEDIA_METADATA_CHANGED) ||
                     events.contains(Player.EVENT_IS_PLAYING_CHANGED) ||
@@ -225,6 +237,12 @@ class PlaybackService : MediaLibraryService() {
                 monoAudioPref = prefs.monoAudio
                 crossfadeMs = prefs.crossfadeSec * 1000
                 preferHighResPref = prefs.preferHighRes
+                // independent output: drop audio focus so other apps keep playing through the speaker while
+                // aurora streams to its own device. handleAudioFocus is runtime-switchable via setAudioAttributes.
+                if (prefs.independentOutput != independentOutput) {
+                    independentOutput = prefs.independentOutput
+                    runCatching { player.setAudioAttributes(audioAttributes, !independentOutput) }
+                }
                 applyAudioEngine()
             }
         }
@@ -425,15 +443,39 @@ class PlaybackService : MediaLibraryService() {
 
     private fun maybeBeginXfade() {
         val fade = crossfadeMs
-        // bit-perfect routes main player to the usb dac the 2nd fade player would come out the speaker so dont crossfade
-        if (fade <= 0 || bitPerfect || !player.isPlaying) return
-        // repeat-one navigation acts like repeat-off so loop back to position 0 of the same item to crossfade
+        if (fade <= 0 || !player.isPlaying) return
         val repeatOne = player.repeatMode == Player.REPEAT_MODE_ONE
+        if (bitPerfect) {
+            // bit-perfect: the 2nd fadePlayer would come out the speaker, so instead the native USB engine
+            // mixes the outgoing track's tail into the incoming one. Only real transitions are supported.
+            if (xfadeBpPending || repeatOne || !player.hasNextMediaItem()) return
+            val duration = player.duration
+            if (duration == C.TIME_UNSET) return
+            val remaining = duration - player.currentPosition
+            if (remaining in 0..fade.toLong()) beginXfadeBitPerfect()
+            return
+        }
+        // repeat-one navigation acts like repeat-off so loop back to position 0 of the same item to crossfade
         if (!repeatOne && !player.hasNextMediaItem()) return
         val duration = player.duration
         if (duration == C.TIME_UNSET) return
         val remaining = duration - player.currentPosition
         if (remaining in 0..fade.toLong()) beginXfade(repeatOne)
+    }
+
+    // bit-perfect crossfade: capture the outgoing track, advance to the incoming one normally (so its
+    // position tracking stays sane), and hand the outgoing file to the native engine to fade out + mix.
+    private fun beginXfadeBitPerfect() {
+        val outgoing = player.currentMediaItem ?: return
+        val uri = outgoing.localConfiguration?.uri ?: return
+        val posUs = player.currentPosition * 1000L
+        // capture the incoming uri up front (before advancing) so the sink can verify the tail still
+        // belongs to the right track, and so the pending tail is set before the incoming engine is built
+        val nextIdx = player.nextMediaItemIndex
+        val incomingUri = if (nextIdx != C.INDEX_UNSET) player.getMediaItemAt(nextIdx).localConfiguration?.uri else null
+        usbSink?.setPendingTail(uri, incomingUri, posUs, crossfadeMs.toLong())
+        player.seekToNextMediaItem()
+        xfadeBpPending = true   // suppress re-fire until the transition lands (cleared in the listener)
     }
 
     private fun beginXfade(repeatOne: Boolean) {
