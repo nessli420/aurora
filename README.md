@@ -23,7 +23,7 @@ One app treats a Navidrome server, a Jellyfin server, a Green Music App account,
 
 ## Screenshots
 
-These **81 screenshots** were captured on **6 September 2026** from the release app on a physical **Nothing A059P phone**, using the phone's accounts and library at capture time. The gallery covers the main pages, player views, settings panels, and theme examples. Select a thumbnail to open its **1080 × 2392** full-resolution screenshot.
+These **81 screenshots** were captured on **6 September 2026** from the release app on a physical **Nothing 3A Pro phone.**
 
 <table>
   <tr>
