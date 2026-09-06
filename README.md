@@ -8,6 +8,7 @@ One app treats a Navidrome server, a Jellyfin server, a Green Music App account,
 
 ## Table of contents
 
+- [Screenshots](#screenshots)
 - [What it does](#what-it-does)
 - [Bit-perfect USB output (experimental)](#bit-perfect-usb-output-experimental)
 - [Building it yourself](#building-it-yourself)
@@ -17,6 +18,236 @@ One app treats a Navidrome server, a Jellyfin server, a Green Music App account,
 - [Troubleshooting](#troubleshooting)
 - [Third-party code & credits](#third-party-code--credits)
 - [License](#license)
+
+<!-- SCREENSHOT_GALLERY_START -->
+
+## Screenshots
+
+These **81 screenshots** were captured on **6 September 2026** from the release app on a physical **Nothing A059P phone**, using the phone's accounts and library at capture time. The gallery covers the main pages, player views, settings panels, and theme examples. Select a thumbnail to open its **1080 × 2392** full-resolution screenshot.
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/home.webp"><img src="docs/screenshots/thumbnails/home.webp" alt="Home and new releases" width="240"></a><br><sub>Home and new releases</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/player.webp"><img src="docs/screenshots/thumbnails/player.webp" alt="Now playing" width="240"></a><br><sub>Now playing</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/equalizer.webp"><img src="docs/screenshots/thumbnails/equalizer.webp" alt="Equalizer and effects" width="240"></a><br><sub>Equalizer and effects</sub></td>
+  </tr>
+</table>
+
+<details>
+
+<summary><strong>Library and discovery</strong> (9 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/library.webp"><img src="docs/screenshots/thumbnails/library.webp" alt="Library overview" width="240"></a><br><sub>Library overview</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/search.webp"><img src="docs/screenshots/thumbnails/search.webp" alt="Search" width="240"></a><br><sub>Search</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/search-results.webp"><img src="docs/screenshots/thumbnails/search-results.webp" alt="Search results" width="240"></a><br><sub>Search results</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/library-albums.webp"><img src="docs/screenshots/thumbnails/library-albums.webp" alt="Albums" width="240"></a><br><sub>Albums</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/library-albums-grid.webp"><img src="docs/screenshots/thumbnails/library-albums-grid.webp" alt="Album grid" width="240"></a><br><sub>Album grid</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/library-artists.webp"><img src="docs/screenshots/thumbnails/library-artists.webp" alt="Artists" width="240"></a><br><sub>Artists</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/library-playlists.webp"><img src="docs/screenshots/thumbnails/library-playlists.webp" alt="Playlists" width="240"></a><br><sub>Playlists</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/library-songs.webp"><img src="docs/screenshots/thumbnails/library-songs.webp" alt="Song library" width="240"></a><br><sub>Song library</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/downloaded-music.webp"><img src="docs/screenshots/thumbnails/downloaded-music.webp" alt="Downloaded music" width="240"></a><br><sub>Downloaded music</sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+
+<summary><strong>Albums, artists and playlists</strong> (10 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/album.webp"><img src="docs/screenshots/thumbnails/album.webp" alt="Album details" width="240"></a><br><sub>Album details</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/track-actions.webp"><img src="docs/screenshots/thumbnails/track-actions.webp" alt="Track actions" width="240"></a><br><sub>Track actions</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/artist.webp"><img src="docs/screenshots/thumbnails/artist.webp" alt="Artist details" width="240"></a><br><sub>Artist details</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/liked-songs.webp"><img src="docs/screenshots/thumbnails/liked-songs.webp" alt="Liked songs" width="240"></a><br><sub>Liked songs</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/folders.webp"><img src="docs/screenshots/thumbnails/folders.webp" alt="Music folders" width="240"></a><br><sub>Music folders</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/create-playlist.webp"><img src="docs/screenshots/thumbnails/create-playlist.webp" alt="Create or import a playlist" width="240"></a><br><sub>Create or import a playlist</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/smart-playlist.webp"><img src="docs/screenshots/thumbnails/smart-playlist.webp" alt="Smart playlist rules" width="240"></a><br><sub>Smart playlist rules</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/duplicates.webp"><img src="docs/screenshots/thumbnails/duplicates.webp" alt="Duplicate finder" width="240"></a><br><sub>Duplicate finder</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/playlist.webp"><img src="docs/screenshots/thumbnails/playlist.webp" alt="Playlist details" width="240"></a><br><sub>Playlist details</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/folder-browse.webp"><img src="docs/screenshots/thumbnails/folder-browse.webp" alt="Folder browsing" width="240"></a><br><sub>Folder browsing</sub></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+
+<summary><strong>Player and audio controls</strong> (7 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/speed-pitch.webp"><img src="docs/screenshots/thumbnails/speed-pitch.webp" alt="Speed and pitch" width="240"></a><br><sub>Speed and pitch</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/queue.webp"><img src="docs/screenshots/thumbnails/queue.webp" alt="Playback queue" width="240"></a><br><sub>Playback queue</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/lyrics.webp"><img src="docs/screenshots/thumbnails/lyrics.webp" alt="Lyrics" width="240"></a><br><sub>Lyrics</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/audio-output.webp"><img src="docs/screenshots/thumbnails/audio-output.webp" alt="Audio output" width="240"></a><br><sub>Audio output</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/player-menu.webp"><img src="docs/screenshots/thumbnails/player-menu.webp" alt="Player actions" width="240"></a><br><sub>Player actions</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/sleep-timer.webp"><img src="docs/screenshots/thumbnails/sleep-timer.webp" alt="Sleep timer" width="240"></a><br><sub>Sleep timer</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/visualizer.webp"><img src="docs/screenshots/thumbnails/visualizer.webp" alt="Radial visualizer and mode picker" width="240"></a><br><sub>Radial visualizer and mode picker</sub></td>
+    <td></td>
+    <td></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+
+<summary><strong>Radio, podcasts and listening activity</strong> (9 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/navigation-drawer.webp"><img src="docs/screenshots/thumbnails/navigation-drawer.webp" alt="Navigation drawer" width="240"></a><br><sub>Navigation drawer</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/profile.webp"><img src="docs/screenshots/thumbnails/profile.webp" alt="Profile" width="240"></a><br><sub>Profile</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/listening-history.webp"><img src="docs/screenshots/thumbnails/listening-history.webp" alt="Listening history" width="240"></a><br><sub>Listening history</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/listening-stats.webp"><img src="docs/screenshots/thumbnails/listening-stats.webp" alt="Listening statistics" width="240"></a><br><sub>Listening statistics</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/radio.webp"><img src="docs/screenshots/thumbnails/radio.webp" alt="Internet radio" width="240"></a><br><sub>Internet radio</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/radio-custom-stream.webp"><img src="docs/screenshots/thumbnails/radio-custom-stream.webp" alt="Add a radio stream" width="240"></a><br><sub>Add a radio stream</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/podcasts.webp"><img src="docs/screenshots/thumbnails/podcasts.webp" alt="Podcasts" width="240"></a><br><sub>Podcasts</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/podcast-search.webp"><img src="docs/screenshots/thumbnails/podcast-search.webp" alt="Discover podcasts" width="240"></a><br><sub>Discover podcasts</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/podcast-details.webp"><img src="docs/screenshots/thumbnails/podcast-details.webp" alt="Podcast episodes" width="240"></a><br><sub>Podcast episodes</sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+
+<summary><strong>Appearance and visualizers</strong> (15 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/appearance.webp"><img src="docs/screenshots/thumbnails/appearance.webp" alt="Appearance and interface styles" width="240"></a><br><sub>Appearance and interface styles</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-retro-home.webp"><img src="docs/screenshots/thumbnails/theme-retro-home.webp" alt="Retro hi-fi home" width="240"></a><br><sub>Retro hi-fi home</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-retro-player.webp"><img src="docs/screenshots/thumbnails/theme-retro-player.webp" alt="Retro hi-fi player" width="240"></a><br><sub>Retro hi-fi player</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-aero-home.webp"><img src="docs/screenshots/thumbnails/theme-aero-home.webp" alt="Aero home" width="240"></a><br><sub>Aero home</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-aero-player.webp"><img src="docs/screenshots/thumbnails/theme-aero-player.webp" alt="Aero player" width="240"></a><br><sub>Aero player</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-glass-home.webp"><img src="docs/screenshots/thumbnails/theme-glass-home.webp" alt="Liquid glass home" width="240"></a><br><sub>Liquid glass home</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-glass-player.webp"><img src="docs/screenshots/thumbnails/theme-glass-player.webp" alt="Liquid glass player" width="240"></a><br><sub>Liquid glass player</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/appearance-display.webp"><img src="docs/screenshots/thumbnails/appearance-display.webp" alt="Accent and display controls" width="240"></a><br><sub>Accent and display controls</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/appearance-player.webp"><img src="docs/screenshots/thumbnails/appearance-player.webp" alt="Player appearance" width="240"></a><br><sub>Player appearance</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/appearance-library.webp"><img src="docs/screenshots/thumbnails/appearance-library.webp" alt="Mini player and library layout" width="240"></a><br><sub>Mini player and library layout</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/appearance-home.webp"><img src="docs/screenshots/thumbnails/appearance-home.webp" alt="Home section visibility" width="240"></a><br><sub>Home section visibility</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/visualizer-settings.webp"><img src="docs/screenshots/thumbnails/visualizer-settings.webp" alt="Visualizer style and colour" width="240"></a><br><sub>Visualizer style and colour</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/visualizer-spectrum.webp"><img src="docs/screenshots/thumbnails/visualizer-spectrum.webp" alt="Spectrum response" width="240"></a><br><sub>Spectrum response</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/visualizer-motion.webp"><img src="docs/screenshots/thumbnails/visualizer-motion.webp" alt="Visualizer motion and overlay" width="240"></a><br><sub>Visualizer motion and overlay</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/visualizer-overlay.webp"><img src="docs/screenshots/thumbnails/visualizer-overlay.webp" alt="Artwork and visualizer overlay" width="240"></a><br><sub>Artwork and visualizer overlay</sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+
+<summary><strong>Equalizer and DSP</strong> (11 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/device-presets.webp"><img src="docs/screenshots/thumbnails/device-presets.webp" alt="Headphone and speaker presets" width="240"></a><br><sub>Headphone and speaker presets</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/squig-presets.webp"><img src="docs/screenshots/thumbnails/squig-presets.webp" alt="Live squig.link presets" width="240"></a><br><sub>Live squig.link presets</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/convolution.webp"><img src="docs/screenshots/thumbnails/convolution.webp" alt="Convolution impulse responses" width="240"></a><br><sub>Convolution impulse responses</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/graphic-equalizer.webp"><img src="docs/screenshots/thumbnails/graphic-equalizer.webp" alt="Graphic equalizer" width="240"></a><br><sub>Graphic equalizer</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/parametric-equalizer.webp"><img src="docs/screenshots/thumbnails/parametric-equalizer.webp" alt="Parametric equalizer" width="240"></a><br><sub>Parametric equalizer</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/gain-headroom.webp"><img src="docs/screenshots/thumbnails/gain-headroom.webp" alt="Gain and headroom" width="240"></a><br><sub>Gain and headroom</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/spatial-audio.webp"><img src="docs/screenshots/thumbnails/spatial-audio.webp" alt="Spatial audio" width="240"></a><br><sub>Spatial audio</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/harmonics.webp"><img src="docs/screenshots/thumbnails/harmonics.webp" alt="Harmonics" width="240"></a><br><sub>Harmonics</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/channel-alignment.webp"><img src="docs/screenshots/thumbnails/channel-alignment.webp" alt="Channel alignment" width="240"></a><br><sub>Channel alignment</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/dynamics.webp"><img src="docs/screenshots/thumbnails/dynamics.webp" alt="Compressor and limiter" width="240"></a><br><sub>Compressor and limiter</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/volume-leveling.webp"><img src="docs/screenshots/thumbnails/volume-leveling.webp" alt="ReplayGain and volume leveling" width="240"></a><br><sub>ReplayGain and volume leveling</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+
+<summary><strong>Playback, library and storage settings</strong> (6 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/playback-quality.webp"><img src="docs/screenshots/thumbnails/playback-quality.webp" alt="Playback and quality" width="240"></a><br><sub>Playback and quality</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/playback-transitions.webp"><img src="docs/screenshots/thumbnails/playback-transitions.webp" alt="Playback transitions" width="240"></a><br><sub>Playback transitions</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/playback-alarm.webp"><img src="docs/screenshots/thumbnails/playback-alarm.webp" alt="Speed and wake-up alarm" width="240"></a><br><sub>Speed and wake-up alarm</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/sonic-discovery.webp"><img src="docs/screenshots/thumbnails/sonic-discovery.webp" alt="Sonic discovery" width="240"></a><br><sub>Sonic discovery</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/library-sources.webp"><img src="docs/screenshots/thumbnails/library-sources.webp" alt="Library and source priority" width="240"></a><br><sub>Library and source priority</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/download-settings.webp"><img src="docs/screenshots/thumbnails/download-settings.webp" alt="Downloads and storage" width="240"></a><br><sub>Downloads and storage</sub></td>
+  </tr>
+</table>
+
+</details>
+
+<details>
+
+<summary><strong>Accounts, integrations and app settings</strong> (11 screenshots)</summary>
+
+<table>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/settings.webp"><img src="docs/screenshots/thumbnails/settings.webp" alt="Settings overview" width="240"></a><br><sub>Settings overview</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/accounts.webp"><img src="docs/screenshots/thumbnails/accounts.webp" alt="Saved accounts" width="240"></a><br><sub>Saved accounts</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/add-account.webp"><img src="docs/screenshots/thumbnails/add-account.webp" alt="Choose a music source" width="240"></a><br><sub>Choose a music source</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/server-setup.webp"><img src="docs/screenshots/thumbnails/server-setup.webp" alt="Server setup" width="240"></a><br><sub>Server setup</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/gestures.webp"><img src="docs/screenshots/thumbnails/gestures.webp" alt="Gestures and behaviour" width="240"></a><br><sub>Gestures and behaviour</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/behaviour.webp"><img src="docs/screenshots/thumbnails/behaviour.webp" alt="Playback behaviour and private sessions" width="240"></a><br><sub>Playback behaviour and private sessions</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/integrations.webp"><img src="docs/screenshots/thumbnails/integrations.webp" alt="Lyrics, scrobbling and Discord" width="240"></a><br><sub>Lyrics, scrobbling and Discord</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/settings-more.webp"><img src="docs/screenshots/thumbnails/settings-more.webp" alt="Interface, connections and data settings" width="240"></a><br><sub>Interface, connections and data settings</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/permissions.webp"><img src="docs/screenshots/thumbnails/permissions.webp" alt="Android permissions" width="240"></a><br><sub>Android permissions</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="33%"><a href="docs/screenshots/about.webp"><img src="docs/screenshots/thumbnails/about.webp" alt="About Aurora" width="240"></a><br><sub>About Aurora</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/backup-restore.webp"><img src="docs/screenshots/thumbnails/backup-restore.webp" alt="Backup and restore" width="240"></a><br><sub>Backup and restore</sub></td>
+    <td></td>
+  </tr>
+</table>
+
+</details>
+
+Screens exposing saved authentication secrets were excluded. Active Android Auto, USB DAC, and Chromecast sessions are not pictured.
+
+<!-- SCREENSHOT_GALLERY_END -->
 
 ## What it does
 
