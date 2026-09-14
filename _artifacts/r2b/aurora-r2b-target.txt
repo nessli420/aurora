@@ -1,3 +1,0 @@
-# Relative flat target
-20 0
-20000 0
