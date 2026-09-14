@@ -1,0 +1,70 @@
+Applications Memory Usage (in Kilobytes):
+Uptime: 826949227 Realtime: 1094690993
+
+** MEMINFO in pid 10743 [com.aurora.music] **
+                   Pss  Private  Private  SwapPss      Rss     Heap     Heap     Heap
+                 Total    Dirty    Clean    Dirty    Total     Size    Alloc     Free
+                ------   ------   ------   ------   ------   ------   ------   ------
+  Native Heap    30685    30636       12       32    34568    70244    34821    31346
+  Dalvik Heap    23122    23084        4       36    26768    81699    20425    61274
+ Dalvik Other     6430     5852        0        0     7784                           
+        Stack     2416     2416        0        0     2420                           
+       Ashmem      168      128        0        0      820                           
+      Gfx dev     3920     3920        0        0     3924                           
+    Other dev       24        0       24        0      400                           
+     .so mmap    10512      592     3392        2    61800                           
+    .jar mmap     1039        0      184        0    43700                           
+    .apk mmap     1481        0      284        0     8916                           
+    .ttf mmap      127        0        4        0      608                           
+    .dex mmap    35949        0    35944        0    36684                           
+    .oat mmap      175        0        0        0    13240                           
+    .art mmap      703      500        4        3    23436                           
+   Other mmap      220       16      116        0     1516                           
+   EGL mtrack    53008    53008        0        0    53008                           
+    GL mtrack     1540     1540        0        0     1540                           
+      Unknown     1147      908      228        1     2056                           
+        TOTAL   172740   122600    40196       74   323188   151943    55246    92620
+ 
+ App Summary
+                       Pss(KB)                        Rss(KB)
+                        ------                         ------
+           Java Heap:    23588                          50204
+         Native Heap:    30636                          34568
+                Code:    40404                         166104
+               Stack:     2416                           2420
+            Graphics:    58468                          58472
+       Private Other:     7284
+              System:     9944
+             Unknown:                                   11420
+ 
+           TOTAL PSS:   172740            TOTAL RSS:   323188       TOTAL SWAP PSS:       74
+ 
+ Objects
+               Views:        9         ViewRootImpl:        1
+         AppContexts:       14           Activities:        1
+              Assets:       61        AssetManagers:        0
+       Local Binders:       52        Proxy Binders:      103
+       Parcel memory:       19         Parcel count:       72
+    Death Recipients:        6             WebViews:        0
+ 
+ Native Allocations
+                         Count                       Total(kB)
+                        ------                         ------
+    Other (malloced):     1578                            149
+ Other (nonmalloced):      190                            128
+   Bitmap (malloced):       37                           1252
+Bitmap (nonmalloced):       14                          14031
+ 
+ SQL
+         MEMORY_USED:      358
+  PAGECACHE_OVERFLOW:      130          MALLOC_SIZE:       46
+ 
+ DATABASES
+      pgsz     dbsz   Lookaside(b) cache hits cache misses cache size  Dbname
+PER CONNECTION STATS
+         4       96             72    96   106    25  /data/user/0/com.aurora.music/no_backup/androidx.work.workdb
+         4        8                    0     0     0    (attached) temp
+         4       96             52     4    17     5  /data/user/0/com.aurora.music/no_backup/androidx.work.workdb (2)
+POOL STATS
+     cache hits  cache misses    cache size  Dbname
+            102           144           246  /data/user/0/com.aurora.music/no_backup/androidx.work.workdb

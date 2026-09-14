@@ -1,0 +1,104 @@
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.PrecisionPlaybackDeviceTest:
+INSTRUMENTATION_STATUS: test=crossfadeHandoffRetainsCustomAndConvolutionProcessingAndQueue
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=crossfadeHandoffRetainsCustomAndConvolutionProcessingAndQueue
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=bothMixDecksProcessCustomEffectsAndConvolutionThroughSeekAndResume
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=bothMixDecksProcessCustomEffectsAndConvolutionThroughSeekAndResume
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=precisionOutputKeepsSpeedAndFallsBackWhenSilenceSkippingIsEnabled
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=precisionOutputKeepsSpeedAndFallsBackWhenSilenceSkippingIsEnabled
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PrecisionPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: expected:<float PCM> but was:<null>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.assertProcessingEvidence(PrecisionPlaybackDeviceTest.kt:361)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain$lambda$16(PrecisionPlaybackDeviceTest.kt:99)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.$r8$lambda$F8a0f9p449fTmKVRyCth7cdaCOo(Unknown Source:0)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest$$ExternalSyntheticLambda29.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.withProcessingFixture(PrecisionPlaybackDeviceTest.kt:305)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain(PrecisionPlaybackDeviceTest.kt:87)
+
+INSTRUMENTATION_STATUS: stream=
+Error in liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain(com.aurora.music.playback.PrecisionPlaybackDeviceTest):
+java.lang.AssertionError: expected:<float PCM> but was:<null>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.assertProcessingEvidence(PrecisionPlaybackDeviceTest.kt:361)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain$lambda$16(PrecisionPlaybackDeviceTest.kt:99)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.$r8$lambda$F8a0f9p449fTmKVRyCth7cdaCOo(Unknown Source:0)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest$$ExternalSyntheticLambda29.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.withProcessingFixture(PrecisionPlaybackDeviceTest.kt:305)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain(PrecisionPlaybackDeviceTest.kt:87)
+
+INSTRUMENTATION_STATUS: test=liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 21.471
+There was 1 failure:
+1) liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain(com.aurora.music.playback.PrecisionPlaybackDeviceTest)
+java.lang.AssertionError: expected:<float PCM> but was:<null>
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.failNotEquals(Assert.java:835)
+	at org.junit.Assert.assertEquals(Assert.java:120)
+	at org.junit.Assert.assertEquals(Assert.java:146)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.assertProcessingEvidence(PrecisionPlaybackDeviceTest.kt:361)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain$lambda$16(PrecisionPlaybackDeviceTest.kt:99)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.$r8$lambda$F8a0f9p449fTmKVRyCth7cdaCOo(Unknown Source:0)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest$$ExternalSyntheticLambda29.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.withProcessingFixture(PrecisionPlaybackDeviceTest.kt:305)
+	at com.aurora.music.playback.PrecisionPlaybackDeviceTest.liveConvolutionReplacementFormatChangeAndSeekKeepMeasuredStereoGain(PrecisionPlaybackDeviceTest.kt:87)
+
+FAILURES!!!
+Tests run: 4,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

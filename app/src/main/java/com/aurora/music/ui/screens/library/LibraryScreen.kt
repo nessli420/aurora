@@ -140,6 +140,7 @@ fun LibraryScreen(
     onDownload: (Song) -> Unit,
     onRemoveDownload: (String) -> Unit,
     onOpenSearch: () -> Unit,
+    onOpenMix: () -> Unit = {},
     onCreatePlaylist: (String) -> Unit,
     onCreateSmart: () -> Unit,
     onEditSmart: (String) -> Unit,
@@ -218,6 +219,11 @@ fun LibraryScreen(
         Spacer(Modifier.height(10.dp))
 
         // ---- tab rail: icon + label with accent underline, not pills ----
+        TextButton(onClick = onOpenMix, modifier = Modifier.padding(horizontal = 12.dp)) {
+            Icon(Icons.Filled.Apps, null, Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text("Mix studio")
+        }
         val visibleTabs = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             items(visibleTabs.size) { i ->

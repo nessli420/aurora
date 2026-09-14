@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.playback.AlarmScheduleTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-08T20:26:07" hostname="DESKTOP-A95H910" time="0.015">
+  <properties/>
+  <testcase name="statusRefreshNeverCreatesCancelsOrReschedulesAlarms" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.014"/>
+  <testcase name="exactPermissionRaceFallsBackAndSubsequentFailuresAreVisible" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <testcase name="sameDayAndPassedTimeChooseTheNextOccurrence" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <testcase name="changingTimezoneOrClockReevaluatesTheLocalTime" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <testcase name="exactAndFallbackModesReportOnlySuccessfullySubmittedTriggers" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <testcase name="revokedExactAccessInvalidatesStatusWithoutClaimingAFallbackWasScheduled" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.001"/>
+  <testcase name="disablingCancelsTheOneAlarmAndClearsItsTrigger" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <testcase name="midnightRollsAcrossYearBoundary" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <testcase name="fallOverlapRingsOnceAtTheFirstOccurrence" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <testcase name="springGapMovesOnlyTheMissingOccurrence" classname="com.aurora.music.playback.AlarmScheduleTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.data.tuning.TuningFitterTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-09-10T21:55:53" hostname="DESKTOP-A95H910" time="0.932">
+  <properties/>
+  <testcase name="knownPeaksImproveAtAllReferenceRatesAndReportedResponseMatchesPlayback" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.434"/>
+  <testcase name="sharedNormalizationKeepsChannelLevelDifferenceAndTargetGetsItsOwnOffset" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.061"/>
+  <testcase name="invalidPublicFitInputsUseTheSameLimitsAsProjectPersistence" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.077"/>
+  <testcase name="independentChannelsRetainTheirDifferentCorrectionsAndSplitOneTotalBudget" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.061"/>
+  <testcase name="combinedBoundsAndConservativePreampComeFromActualFinalResponse" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.032"/>
+  <testcase name="linkedAverageIsExplicitAndDoesNotReplaceEitherRawChannel" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.024"/>
+  <testcase name="cancellationStopsAnInProgressBoundedFitWithoutProducingAResult" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.01"/>
+  <testcase name="exactDecimalQBoundsRemainSavableAfterFloatQuantization" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.075"/>
+  <testcase name="coverageUsesMeasurementTargetAndNyquistIntersectionWithoutExtrapolation" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.028"/>
+  <testcase name="forgedArraysMetricsBandsPreampOrInputsCannotPassPureVerification" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.049"/>
+  <testcase name="incompatibleConstraintsRetainZeroCorrectionInsteadOfWorseningError" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.007"/>
+  <testcase name="alreadyMatchingFlatResponseUsesNoFiltersAndNoPreamp" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.007"/>
+  <testcase name="budgetsAboveTwelveCanProduceMoreThanTwelveIndependentPeakFilters" classname="com.aurora.music.data.tuning.TuningFitterTest" time="0.066"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

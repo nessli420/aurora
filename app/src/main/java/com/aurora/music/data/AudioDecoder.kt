@@ -17,10 +17,15 @@ object AudioDecoder {
         onFormat: FormatSink,
         onPcm: PcmSink,
         isCancelled: () -> Boolean = { false },
+        context: android.content.Context? = null,
     ): Boolean {
         val extractor = MediaExtractor()
         return try {
-            extractor.setDataSource(path)
+            if (path.startsWith("content://") && context != null) {
+                extractor.setDataSource(context, android.net.Uri.parse(path), null)
+            } else if (path.startsWith("http://") || path.startsWith("https://")) {
+                extractor.setDataSource(path, emptyMap())
+            } else extractor.setDataSource(if (path.startsWith("file:")) android.net.Uri.parse(path).path ?: path else path)
             var trackIndex = -1
             var inFormat: MediaFormat? = null
             for (i in 0 until extractor.trackCount) {
@@ -33,7 +38,7 @@ object AudioDecoder {
             extractor.selectTrack(trackIndex)
             decodeTrack(extractor, inFormat, onFormat, onPcm, isCancelled)
         } catch (t: Throwable) {
-            android.util.Log.w("AudioDecoder", "decode($path) failed: ${t.message}")
+            android.util.Log.w("AudioDecoder", "Decode failed: ${t.javaClass.simpleName}")
             false
         } finally {
             runCatching { extractor.release() }
@@ -51,8 +56,10 @@ object AudioDecoder {
         val codec = MediaCodec.createDecoderByType(mime)
         var sampleRate = inFormat.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         var channels = inFormat.getInteger(MediaFormat.KEY_CHANNEL_COUNT)
+        var encoding = android.media.AudioFormat.ENCODING_PCM_16BIT
         var formatReported = false
         return try {
+            inFormat.setInteger(MediaFormat.KEY_PCM_ENCODING, android.media.AudioFormat.ENCODING_PCM_16BIT)
             codec.configure(inFormat, null, null, 0)
             codec.start()
             val info = MediaCodec.BufferInfo()
@@ -81,10 +88,15 @@ object AudioDecoder {
                         if (outBuf != null && info.size > 0) {
                             outBuf.position(info.offset)
                             outBuf.limit(info.offset + info.size)
-                            val sb = outBuf.order(ByteOrder.LITTLE_ENDIAN).asShortBuffer()
-                            val n = sb.remaining()
-                            val shorts = ShortArray(n)
-                            sb.get(shorts)
+                            outBuf.order(ByteOrder.LITTLE_ENDIAN)
+                            val shorts = if (encoding == android.media.AudioFormat.ENCODING_PCM_FLOAT) {
+                                val floats = outBuf.asFloatBuffer()
+                                ShortArray(floats.remaining()) { (floats.get().coerceIn(-1f, 1f) * 32767).toInt().toShort() }
+                            } else {
+                                val sb = outBuf.asShortBuffer()
+                                ShortArray(sb.remaining()).also { sb.get(it) }
+                            }
+                            val n = shorts.size
                             if (!formatReported) { onFormat.onFormat(sampleRate, channels); formatReported = true }
                             onPcm.onPcm(shorts, n)
                         }
@@ -94,6 +106,7 @@ object AudioDecoder {
                         val nf = codec.outputFormat
                         runCatching { sampleRate = nf.getInteger(MediaFormat.KEY_SAMPLE_RATE) }
                         runCatching { channels = nf.getInteger(MediaFormat.KEY_CHANNEL_COUNT) }
+                        runCatching { encoding = nf.getInteger(MediaFormat.KEY_PCM_ENCODING) }
                     }
                 }
             }

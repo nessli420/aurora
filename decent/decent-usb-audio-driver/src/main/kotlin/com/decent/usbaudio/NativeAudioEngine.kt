@@ -53,9 +53,9 @@ class NativeAudioEngine {
     }
 
     /** Start the decode thread. Audio flows immediately to USB. */
-    fun start(): Boolean {
+    fun start(paused: Boolean = false): Boolean {
         if (handle == 0L) return false
-        return nativeStart(handle)
+        return nativeStart(handle, paused)
     }
 
     /** Pause the decode loop (thread stays alive, USB pipeline drains). */
@@ -79,8 +79,8 @@ class NativeAudioEngine {
      *  at [fd] from [startUs] as a fade-out secondary, equal-power mixed over [fadeUs]. The fd is dup'd
      *  natively, so the caller may close its descriptor immediately. The outgoing file must match this
      *  engine's rate/channels/bit-depth or the crossfade is silently skipped (plain playback). */
-    fun startTailFade(fd: Int, startUs: Long, fadeUs: Long) {
-        if (handle != 0L) nativeStartTailFade(handle, fd, startUs, fadeUs)
+    fun startTailFade(fd: Int, startUs: Long, fadeUs: Long, curve: Int = 0, protect: Boolean = true) {
+        if (handle != 0L) nativeStartTailFade(handle, fd, startUs, fadeUs, curve, protect)
     }
 
     /**
@@ -137,11 +137,11 @@ class NativeAudioEngine {
     // ── JNI declarations ───────────────────────────────────────────
 
     private external fun nativeCreateFromFd(fd: Int, usbHandle: Long): Long
-    private external fun nativeStart(handle: Long): Boolean
+    private external fun nativeStart(handle: Long, paused: Boolean): Boolean
     private external fun nativePause(handle: Long)
     private external fun nativeResume(handle: Long)
     private external fun nativeSetSpeed(handle: Long, speed: Double)
-    private external fun nativeStartTailFade(handle: Long, fd: Int, startUs: Long, fadeUs: Long)
+    private external fun nativeStartTailFade(handle: Long, fd: Int, startUs: Long, fadeUs: Long, curve: Int, protect: Boolean)
     private external fun nativeSeek(handle: Long, positionUs: Long): Boolean
     private external fun nativeStop(handle: Long)
     private external fun nativeDestroy(handle: Long)

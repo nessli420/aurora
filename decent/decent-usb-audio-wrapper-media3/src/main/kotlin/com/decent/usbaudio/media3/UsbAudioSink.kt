@@ -128,6 +128,43 @@ class UsbAudioSink(
     fun interface PcmTap { fun onPcm(buffer: ByteBuffer, encoding: Int, channelCount: Int, sampleRate: Int) }
     @Volatile var pcmTap: PcmTap? = null
 
+    /** Read-only transport evidence. No paths, USB names, IDs or authenticated URLs escape here. */
+    data class PlaybackTelemetry(
+        val usbActive: Boolean = false,
+        val nativeFlac: Boolean = false,
+        val transportRate: Int = 0,
+        val transportChannels: Int = 0,
+        val transportDepth: Int = 0,
+        val clockRequestAccepted: Boolean = false,
+        val sourceRate: Int = 0,
+        val sourceChannels: Int = 0,
+        val sourceDepth: Int = 0,
+        val decodedFormat: Format? = null,
+        val nativeSpeed: Double = 1.0,
+        val tailSubmitted: Boolean = false,
+    )
+    @Volatile private var transportTelemetry = PlaybackTelemetry()
+    @Volatile private var observedDecodedFormat: Format? = null
+    @Volatile private var nativeSourceRate = 0
+    @Volatile private var nativeSourceChannels = 0
+    @Volatile private var nativeSourceDepth = 0
+    @Volatile private var appliedNativeSpeed = 1.0
+    @Volatile private var tailTelemetryEngine: NativeAudioEngine? = null
+    val playbackTelemetry: PlaybackTelemetry get() {
+        val live = usbAudioStream?.isAlive == true
+        val native = live && nativeEngineActive
+        return transportTelemetry.copy(
+            usbActive = live, nativeFlac = native,
+            sourceRate = if (native) nativeSourceRate else 0,
+            sourceChannels = if (native) nativeSourceChannels else 0,
+            sourceDepth = if (native) nativeSourceDepth else 0,
+            decodedFormat = observedDecodedFormat,
+            nativeSpeed = if (native) appliedNativeSpeed else 1.0,
+            // The driver exposes no crossfade-complete event. Keep this unknown for this engine.
+            tailSubmitted = native && tailTelemetryEngine === nativeEngine,
+        )
+    }
+
     /** Varispeed ratio (1.0 = untouched bit-perfect). Applied to the native FLAC engine; remembered so a
      *  freshly-created engine for the next track inherits it. The non-FLAC streaming path is unaffected
      *  (those rare bit-perfect streams keep playing at 1.0). */
@@ -135,6 +172,7 @@ class UsbAudioSink(
     fun setTimeStretch(speed: Float) {
         timeStretch = speed.toDouble()
         nativeEngine?.setSpeed(timeStretch)
+        appliedNativeSpeed = timeStretch.coerceIn(0.5, 2.0)
     }
 
     // ── Crossfade ────────────────────────────────────────────────────
@@ -146,12 +184,31 @@ class UsbAudioSink(
     @Volatile private var pendingTailExpectedIncoming: Uri? = null
     private var pendingTailStartUs: Long = 0L
     private var pendingTailFadeMs: Long = 0L
+    private var pendingTailCurve: Int = 0
+    private var pendingTailProtect: Boolean = true
 
-    fun setPendingTail(outgoingUri: Uri?, incomingUri: Uri?, startUs: Long, fadeMs: Long) {
+    fun setPendingTail(outgoingUri: Uri?, incomingUri: Uri?, startUs: Long, fadeMs: Long, curve: Int = 0, protect: Boolean = true) {
         pendingTailUri = outgoingUri
         pendingTailExpectedIncoming = incomingUri
         pendingTailStartUs = startUs
         pendingTailFadeMs = fadeMs
+        pendingTailCurve = curve
+        pendingTailProtect = protect
+    }
+
+    // Read only the FLAC STREAMINFO headers off the main thread before advancing a native queue.
+    fun canCrossfadeNative(outgoing: Uri?, incoming: Uri?): Boolean {
+        fun header(uri: Uri?): List<Int>? = runCatching {
+            val path = resolveTrackPath(uri) ?: return@runCatching null
+            val bytes = ByteArray(42).also { bytes -> java.io.DataInputStream(File(path).inputStream()).use { it.readFully(bytes) } }
+            if (bytes.size < 42 || String(bytes, 0, 4) != "fLaC" || (bytes[4].toInt() and 127) != 0) return@runCatching null
+            fun u(i: Int) = bytes[i].toInt() and 255
+            listOf((u(18) shl 12) or (u(19) shl 4) or (u(20) shr 4), ((u(20) shr 1) and 7) + 1,
+                (((u(20) and 1) shl 4) or (u(21) shr 4)) + 1, (u(10) shl 8) or u(11))
+        }.getOrNull()
+        val a = header(outgoing) ?: return false
+        val b = header(incoming) ?: return false
+        return a.take(3) == b.take(3) && a[3] <= b[3]
     }
 
     fun clearPendingTail() {
@@ -174,7 +231,8 @@ class UsbAudioSink(
         if (!path.lowercase().endsWith(".flac")) return   // only local FLAC has a native engine to mix
         try {
             val pfd = android.os.ParcelFileDescriptor.open(File(path), android.os.ParcelFileDescriptor.MODE_READ_ONLY)
-            engine.startTailFade(pfd.fd, pendingTailStartUs, pendingTailFadeMs * 1000L)
+            engine.startTailFade(pfd.fd, pendingTailStartUs, pendingTailFadeMs * 1000L, pendingTailCurve, pendingTailProtect)
+            tailTelemetryEngine = engine
             pfd.close()   // native dup'd the fd
             Log.i(TAG, "Crossfade tail queued: ${File(path).name} from ${pendingTailStartUs / 1000}ms over ${pendingTailFadeMs}ms")
         } catch (e: Exception) {
@@ -245,6 +303,7 @@ class UsbAudioSink(
 
 
     override fun configure(inputFormat: Format, specifiedBufferSize: Int, outputChannels: IntArray?) {
+        observedDecodedFormat = inputFormat
         val enc = inputFormat.pcmEncoding
         if (enc != Format.NO_VALUE) currentEncoding = enc
         // Capture the decoded format for the visualizer tap, independent of the bit-perfect path.
@@ -674,7 +733,7 @@ class UsbAudioSink(
         Log.i(TAG, "Step 1: setAlt(0) — old ISO ring freed")
 
         // Step 2: SET_CUR — write new sample rate
-        usbAudioDevice.setSampleRate(sampleRate)
+        val rateAccepted = usbAudioDevice.setSampleRate(sampleRate)
 
         // Step 3: GET_CUR(CLOCK_VALID_CONTROL) — verify clock is locked
         val clockValid = usbAudioDevice.readClockValid()
@@ -700,6 +759,10 @@ class UsbAudioSink(
         usbAudioStream = stream
         currentSampleRate = sampleRate
         currentChannelCount = channelCount
+        transportTelemetry = PlaybackTelemetry(
+            transportRate = sampleRate, transportChannels = channelCount, transportDepth = bitDepth,
+            clockRequestAccepted = rateAccepted && clockValid && altResult,
+        )
         muteDelegateIfNeeded()
 
         // Try to create engine now (works for first track where onMediaItemTransition
@@ -729,7 +792,7 @@ class UsbAudioSink(
                 )
                 val created = engine.createFromFd(fd.fd, stream.nativeHandle)
                 fd.close()
-                if (created && engine.start()) {
+                if (created && engine.start(paused = true)) {
                     // Verify FLAC sample rate matches USB stream — prevents distortion
                     // when ExoPlayer's queue and onMediaItemTransition disagree about
                     // which track is playing (e.g., cross-album Recently Played lists).
@@ -749,6 +812,10 @@ class UsbAudioSink(
                         engineEndNotified = false
                         activeEnginePath = path
                         trackBitDepth = engine.getBitsPerSample()
+                        nativeSourceRate = engine.getSampleRate()
+                        nativeSourceChannels = engine.getChannels()
+                        nativeSourceDepth = trackBitDepth
+                        appliedNativeSpeed = timeStretch.coerceIn(0.5, 2.0)
                         applyPendingTail(engine, path)   // crossfade: mix the outgoing track's tail into this one
                         Log.i(TAG, "Native FLAC engine started (paused, awaiting seek) for: ${File(path).name} ${trackBitDepth}-bit")
                         return
@@ -770,6 +837,8 @@ class UsbAudioSink(
     private fun releaseUsbStream() {
         val stream = usbAudioStream ?: return
         usbAudioStream = null
+        transportTelemetry = PlaybackTelemetry()
+        tailTelemetryEngine = null
 
         // Stop USB stream FIRST — sets ctx->running=false, which unblocks
         // submitPcmToUrbs inside the native engine's decode thread.

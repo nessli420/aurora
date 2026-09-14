@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "device": "A059P",
+  "sdk": 36,
+  "abi": "arm64-v8a",
+  "framesPerCallback": 256,
+  "channels": 2,
+  "biquads": 64,
+  "warmupCallbacks": 256,
+  "measuredCallbacks": 1000,
+  "limitation": "Instrumentation worker timing, not the Android audio thread; no convolution, graph replacement, sink or physical output included. Native uses block JNI copies; production rack remains Kotlin-only and is not active in playback.",
+  "results": [
+    {
+      "implementation": "kotlin_reference_kernel",
+      "sampleRate": 48000,
+      "deadlineUs": 5333.333333333333,
+      "p50Us": 102.031,
+      "p95Us": 106.198,
+      "maxUs": 199.74,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "native_block_jni_kernel",
+      "sampleRate": 48000,
+      "deadlineUs": 5333.333333333333,
+      "p50Us": 93.75,
+      "p95Us": 94.063,
+      "maxUs": 127.448,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "kotlin_pcm24_to_float32_full_rack_with_taps",
+      "sampleRate": 48000,
+      "deadlineUs": 5333.333333333333,
+      "p50Us": 122.292,
+      "p95Us": 125,
+      "maxUs": 149.375,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "kotlin_reference_kernel",
+      "sampleRate": 96000,
+      "deadlineUs": 2666.6666666666665,
+      "p50Us": 101.979,
+      "p95Us": 102.084,
+      "maxUs": 124.687,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "native_block_jni_kernel",
+      "sampleRate": 96000,
+      "deadlineUs": 2666.6666666666665,
+      "p50Us": 93.802,
+      "p95Us": 94.063,
+      "maxUs": 115.625,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "kotlin_pcm24_to_float32_full_rack_with_taps",
+      "sampleRate": 96000,
+      "deadlineUs": 2666.6666666666665,
+      "p50Us": 122.136,
+      "p95Us": 123.073,
+      "maxUs": 146.875,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "kotlin_reference_kernel",
+      "sampleRate": 192000,
+      "deadlineUs": 1333.3333333333333,
+      "p50Us": 101.979,
+      "p95Us": 102.552,
+      "maxUs": 128.594,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "native_block_jni_kernel",
+      "sampleRate": 192000,
+      "deadlineUs": 1333.3333333333333,
+      "p50Us": 93.958,
+      "p95Us": 94.114,
+      "maxUs": 118.593,
+      "deadlineMisses": 0
+    },
+    {
+      "implementation": "kotlin_pcm24_to_float32_full_rack_with_taps",
+      "sampleRate": 192000,
+      "deadlineUs": 1333.3333333333333,
+      "p50Us": 122.292,
+      "p95Us": 122.969,
+      "maxUs": 181.146,
+      "deadlineMisses": 0
+    }
+  ]
+}

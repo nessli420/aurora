@@ -290,6 +290,10 @@ struct NativeAudioEngine {
     std::atomic<bool> tailActive;
     int64_t tailFadeSamples;   // fade length in frames
     int64_t tailElapsed;       // frames mixed since fade start
+    int tailCurve = 0;
+    bool tailProtect = true;
+    int tailPendingCurve = 0;
+    bool tailPendingProtect = true;
     float *mixBuf;             // primary+secondary mixed interleaved float
 
     // Pending slot: the outgoing file is opened + metadata-parsed + seeked on the JNI/caller thread
@@ -453,6 +457,8 @@ static void adoptTailIfReady(NativeAudioEngine *e) {
         e->tailFifoHead = 0;
         e->tailFifoCount = 0;
         e->tailElapsed = 0;
+        e->tailCurve = e->tailPendingCurve;
+        e->tailProtect = e->tailPendingProtect;
         e->tailActive.store(true);
         LOGI("Crossfade tail adopted: fadeSamples=%lld", (long long)e->tailFadeSamples);
     }
@@ -470,19 +476,23 @@ static void mixTailBlock(NativeAudioEngine *e, const uint8_t *primaryPcm, int fr
         memset(e->mixBuf, 0, (size_t)nSamp * sizeof(float));
         return;
     }
-    double t = (double)e->tailElapsed / (double)(e->tailFadeSamples > 0 ? e->tailFadeSamples : 1);
-    if (t > 1.0) t = 1.0;
-    float inGain = sinf((float)(t * 1.5707963f));
-    float outGain = cosf((float)(t * 1.5707963f));
     refillTailFifo(e, nSamp);
-    for (int i = 0; i < nSamp; i++) {
-        float sec = 0.f;
-        if (e->tailFifoCount > 0) {
-            sec = e->tailFifo[e->tailFifoHead];
-            e->tailFifoHead = (e->tailFifoHead + 1) % e->tailFifoCap;
-            e->tailFifoCount--;
+    for (int frame = 0; frame < frames; ++frame) {
+        const float t = fminf(1.f, (float)(e->tailElapsed + frame) / (float)(e->tailFadeSamples > 0 ? e->tailFadeSamples : 1));
+        float inGain = e->tailCurve == 1 ? t : e->tailCurve == 2 ? sinf(t * 1.57079632679f) : t * t * (3.f - 2.f * t);
+        float outGain = e->tailCurve == 2 ? cosf(t * 1.57079632679f) : 1.f - inGain;
+        const float headroom = e->tailProtect ? fmaxf(1.f, inGain + outGain) : 1.f;
+        inGain /= headroom; outGain /= headroom;
+        for (int channel = 0; channel < ch; ++channel) {
+            const int i = frame * ch + channel;
+            float sec = 0.f;
+            if (e->tailFifoCount > 0) {
+                sec = e->tailFifo[e->tailFifoHead];
+                e->tailFifoHead = (e->tailFifoHead + 1) % e->tailFifoCap;
+                e->tailFifoCount--;
+            }
+            e->mixBuf[i] = inGain * e->rsIn[i] + outGain * sec;
         }
-        e->mixBuf[i] = inGain * e->rsIn[i] + outGain * sec;
     }
     e->tailElapsed += frames;
     if (e->tailElapsed >= e->tailFadeSamples) closeTail(e);   // incoming now at full -> bit-perfect resumes
@@ -534,8 +544,6 @@ static void *decodeThreadFunc(void *arg) {
             continue;
         }
 
-        // Adopt a crossfade tail that the JNI thread already opened (never blocks this RT thread on I/O)
-        adoptTailIfReady(engine);
 
         // Handle seek
         if (engine->seekPending.load()) {
@@ -573,6 +581,9 @@ static void *decodeThreadFunc(void *arg) {
             if (engine->tailActive.load() || engine->tailParser) closeTail(engine);
             engine->seekPending.store(false);
         }
+
+        // Initial seek must complete before adopting the tail, otherwise the seek discards it.
+        adoptTailIfReady(engine);
 
         // Decode one FLAC frame
         size_t bytesRead = engine->parser->readBuffer(
@@ -792,12 +803,12 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeCreateFromFd(
 
 JNIEXPORT jboolean JNICALL
 Java_com_decent_usbaudio_NativeAudioEngine_nativeStart(
-        JNIEnv *, jobject, jlong handle) {
+        JNIEnv *, jobject, jlong handle, jboolean startPaused) {
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
     if (!engine || engine->running.load()) return JNI_FALSE;
 
     engine->running.store(true);
-    engine->paused.store(false);
+    engine->paused.store(startPaused == JNI_TRUE);
 
     int ret = pthread_create(&engine->thread, nullptr, decodeThreadFunc, engine);
     if (ret != 0) {
@@ -841,7 +852,7 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeSetSpeed(
 
 JNIEXPORT void JNICALL
 Java_com_decent_usbaudio_NativeAudioEngine_nativeStartTailFade(
-        JNIEnv *, jobject, jlong handle, jint fd, jlong startUs, jlong fadeUs) {
+        JNIEnv *, jobject, jlong handle, jint fd, jlong startUs, jlong fadeUs, jint curve, jboolean protect) {
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
     if (!engine) return;
     // Open + metadata-parse + seek the outgoing file HERE (caller's thread, e.g. the player thread),
@@ -879,6 +890,8 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeStartTailFade(
     engine->tailPendingParser = parser;
     engine->tailPendingDs = ds;
     engine->tailPendingFadeSamples = fadeSamples;
+    engine->tailPendingCurve = curve;
+    engine->tailPendingProtect = protect == JNI_TRUE;
     engine->tailPendingReady.store(true);
     pthread_mutex_unlock(&engine->tailMu);
     LOGI("Crossfade tail opened: fadeSamples=%lld startUs=%lld", (long long)fadeSamples, (long long)startUs);

@@ -4,7 +4,12 @@ import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
+import java.io.FileOutputStream
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 // fields nullable-safe for gson forward compat
 data class LocalPlaylist(
@@ -79,6 +84,16 @@ class LocalStore(context: Context) {
         }
     }
 
+    /** Backup input has already passed BackupArchive validation. Publish only after the write succeeds. */
+    internal suspend fun restoreBackupJson(json: String) = withContext(Dispatchers.IO) {
+        val restored = requireNotNull(gson.fromJson(json, LocalState::class.java)) { "Local library is missing." }
+        val bytes = gson.toJson(restored).toByteArray(Charsets.UTF_8)
+        synchronized(lock) {
+            persistBackupFileAtomically(file, bytes)
+            state = restored
+        }
+    }
+
     fun likedIds(): Set<String> = state.likedIds.orEmpty().toSet()
 
     fun setLiked(id: String, liked: Boolean): Boolean = synchronized(lock) {
@@ -87,5 +102,21 @@ class LocalStore(context: Context) {
         state = state.copy(likedIds = next)
         persist()
         true
+    }
+}
+
+/** Same-directory atomic replacement keeps a failed backup write from damaging the previous file. */
+internal fun persistBackupFileAtomically(file: File, bytes: ByteArray) {
+    val temporary = File(file.parentFile, ".${file.name}-${UUID.randomUUID()}.tmp")
+    try {
+        FileOutputStream(temporary).use { output ->
+            output.write(bytes)
+            output.fd.sync()
+        }
+        // Internal app storage supports atomic renames. A filesystem that does not support this
+        // fails explicitly; silently falling back to a destructive replacement would break rollback.
+        Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.ATOMIC_MOVE, StandardCopyOption.REPLACE_EXISTING)
+    } finally {
+        temporary.delete()
     }
 }

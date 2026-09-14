@@ -1,0 +1,112 @@
+> Task :decent-usb-audio-wrapper-media3:preBuild UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:preDebugBuild UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :decent-usb-audio-driver:preBuild UP-TO-DATE
+> Task :decent-usb-audio-driver:preDebugBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :decent-usb-audio-driver:writeDebugAarMetadata UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:writeDebugAarMetadata UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateDebugResValues UP-TO-DATE
+> Task :decent-usb-audio-driver:generateDebugResValues UP-TO-DATE
+> Task :decent-usb-audio-driver:generateDebugResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateDebugResources UP-TO-DATE
+> Task :decent-usb-audio-driver:packageDebugResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:packageDebugResources UP-TO-DATE
+> Task :decent-usb-audio-driver:extractDeepLinksDebug UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:extractDeepLinksDebug UP-TO-DATE
+> Task :decent-usb-audio-driver:processDebugManifest UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:processDebugManifest UP-TO-DATE
+> Task :decent-usb-audio-driver:compileDebugLibraryResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileDebugLibraryResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:parseDebugLocalResources UP-TO-DATE
+> Task :decent-usb-audio-driver:parseDebugLocalResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateDebugRFile UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :decent-usb-audio-wrapper-media3:javaPreCompileDebug UP-TO-DATE
+> Task :decent-usb-audio-driver:generateDebugRFile UP-TO-DATE
+> Task :decent-usb-audio-driver:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :decent-usb-audio-wrapper-media3:mergeDebugShaders UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileDebugShaders NO-SOURCE
+> Task :decent-usb-audio-wrapper-media3:generateDebugAssets UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:packageDebugAssets UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:mergeDebugJniLibFolders UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:mergeDebugNativeLibs NO-SOURCE
+> Task :decent-usb-audio-wrapper-media3:copyDebugJniLibsProjectOnly UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:checkDebugAarMetadata
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :decent-usb-audio-driver:javaPreCompileDebug UP-TO-DATE
+> Task :decent-usb-audio-driver:mergeDebugShaders UP-TO-DATE
+> Task :decent-usb-audio-driver:compileDebugShaders NO-SOURCE
+> Task :decent-usb-audio-driver:generateDebugAssets UP-TO-DATE
+> Task :decent-usb-audio-driver:packageDebugAssets UP-TO-DATE
+> Task :decent-usb-audio-driver:compileDebugKotlin
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :decent-usb-audio-driver:configureCMakeDebug[arm64-v8a]
+> Task :decent-usb-audio-driver:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :decent-usb-audio-driver:processDebugJavaRes UP-TO-DATE
+> Task :decent-usb-audio-driver:bundleLibRuntimeToJarDebug
+> Task :decent-usb-audio-driver:bundleLibCompileToJarDebug
+> Task :decent-usb-audio-driver:bundleLibRuntimeToDirDebug
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:javaPreCompileDebug UP-TO-DATE
+> Task :app:mergeDebugShaders UP-TO-DATE
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets UP-TO-DATE
+> Task :app:compressDebugAssets UP-TO-DATE
+> Task :app:desugarDebugFileDependencies UP-TO-DATE
+> Task :app:configureCMakeDebug[arm64-v8a]
+> Task :app:checkDebugDuplicateClasses
+> Task :app:buildCMakeDebug[arm64-v8a]
+> Task :app:configureCMakeDebug[x86_64]
+> Task :app:buildCMakeDebug[x86_64]
+> Task :app:mergeDebugJniLibFolders UP-TO-DATE
+> Task :app:validateSigningDebug UP-TO-DATE
+> Task :app:writeDebugAppMetadata UP-TO-DATE
+> Task :app:writeDebugSigningConfigVersions UP-TO-DATE
+> Task :decent-usb-audio-driver:buildCMakeDebug[arm64-v8a]
+> Task :decent-usb-audio-driver:configureCMakeDebug[x86_64]
+> Task :decent-usb-audio-wrapper-media3:compileDebugKotlin
+> Task :decent-usb-audio-wrapper-media3:compileDebugJavaWithJavac NO-SOURCE
+> Task :decent-usb-audio-wrapper-media3:bundleLibCompileToJarDebug
+> Task :decent-usb-audio-wrapper-media3:processDebugJavaRes UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:bundleLibRuntimeToJarDebug
+> Task :decent-usb-audio-wrapper-media3:bundleLibRuntimeToDirDebug
+> Task :app:processDebugResources
+> Task :decent-usb-audio-driver:buildCMakeDebug[x86_64]
+> Task :decent-usb-audio-driver:mergeDebugJniLibFolders UP-TO-DATE
+> Task :decent-usb-audio-driver:mergeDebugNativeLibs
+> Task :decent-usb-audio-driver:copyDebugJniLibsProjectOnly
+> Task :app:mergeLibDexDebug
+> Task :app:mergeDebugNativeLibs
+> Task :app:stripDebugDebugSymbols
+> Task :app:mergeExtDexDebug
+
+> Task :app:compileDebugKotlin
+w: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/screens/player/MixScreen.kt:69:76 'val Icons.Filled.ArrowBack: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.ArrowBack.
+w: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/screens/player/MixScreen.kt:81:102 'val Icons.Filled.Undo: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Undo.
+w: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/screens/player/MixScreen.kt:82:102 'val Icons.Filled.Redo: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.Redo.
+w: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/screens/player/QueueScreen.kt:116:38 'val Icons.Filled.PlaylistAdd: ImageVector' is deprecated. Use the AutoMirrored version at Icons.AutoMirrored.Filled.PlaylistAdd.
+
+> Task :app:compileDebugJavaWithJavac NO-SOURCE
+> Task :app:dexBuilderDebug
+> Task :app:mergeDebugGlobalSynthetics UP-TO-DATE
+> Task :app:processDebugJavaRes
+> Task :app:mergeProjectDexDebug
+> Task :app:mergeDebugJavaResource
+> Task :app:packageDebug
+> Task :app:createDebugApkListingFileRedirect UP-TO-DATE
+> Task :app:assembleDebug
+
+BUILD SUCCESSFUL in 34s
+82 actionable tasks: 32 executed, 50 up-to-date

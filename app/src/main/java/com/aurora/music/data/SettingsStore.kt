@@ -2,20 +2,33 @@ package com.aurora.music.data
 
 import android.content.Context
 import androidx.datastore.core.DataStore
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
+import androidx.datastore.preferences.core.mutablePreferencesOf
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.google.gson.Gson
+import com.aurora.music.data.tuning.TuningProject
+import com.aurora.music.data.tuning.TuningProjectCodec
+import com.aurora.music.data.tuning.TuningRackPlan
 import com.google.gson.reflect.TypeToken
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
+import java.security.MessageDigest
+import java.util.UUID
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "aurora_settings")
@@ -55,13 +68,15 @@ fun Session.accountKey(): String = "${type.name}|$server|$username|$userId"
 data class PlaybackPrefs(
     val skipSilence: Boolean = false,
     val crossfadeSec: Int = 0,
+    val crossfadeCurve: String = "SMOOTH",
+    val crossfadeHeadroom: Boolean = true,
     val gapless: Boolean = true,
     val defaultSpeed: Float = 1.0f,
     val monoAudio: Boolean = false,
     val streamWifi: Int = 0,        // 0 = lossless original
     val streamCellular: Int = 0,
     val downloadBitrate: Int = 0,   // 0 = lossless original
-    val preferHighRes: Boolean = false, // float output off so speed pitch eq chain work everywhere
+    val preferHighRes: Boolean = false, // opt-in decoder-side precision processing; compatibility stays the default
     val scrobble: Boolean = true,
     val autoplayRadio: Boolean = false,
     val bitPerfectUsb: Boolean = false,
@@ -282,6 +297,9 @@ class SettingsStore(private val context: Context) {
     private val gson = Gson()
 
     private object Keys {
+        val PROCESSING_PRESETS = stringPreferencesKey("processing_presets_v1")
+        val PROCESSING_RACK = stringPreferencesKey(ProcessingRackCodec.PREFERENCE_KEY)
+        val TUNING_PROJECTS = stringPreferencesKey(TuningProjectCodec.PREFERENCE_KEY)
         val SERVER = stringPreferencesKey("server")
         val USERNAME = stringPreferencesKey("username")
         val SALT = stringPreferencesKey("salt")
@@ -293,6 +311,8 @@ class SettingsStore(private val context: Context) {
         val CLIENT_VERSION = stringPreferencesKey("sp_client_version")
         val SKIP_SILENCE = booleanPreferencesKey("skip_silence")
         val CROSSFADE = intPreferencesKey("crossfade_sec")
+        val CROSSFADE_CURVE = stringPreferencesKey("crossfade_curve")
+        val CROSSFADE_HEADROOM = booleanPreferencesKey("crossfade_headroom")
         val GAPLESS = booleanPreferencesKey("gapless")
         val DEFAULT_SPEED = floatPreferencesKey("default_speed")
         val MONO = booleanPreferencesKey("mono_audio")
@@ -466,7 +486,9 @@ class SettingsStore(private val context: Context) {
         )
     }
 
-    val audioPrefs: Flow<AudioPrefs> = context.dataStore.data.map { p ->
+    val audioPrefs: Flow<AudioPrefs> = context.dataStore.data.map(::readAudioPrefs).distinctUntilChanged()
+
+    private fun readAudioPrefs(p: Preferences): AudioPrefs =
         AudioPrefs(
             eqEnabled = p[Keys.EQ_ENABLED] ?: false,
             eqPreset = p[Keys.EQ_PRESET] ?: -1,
@@ -498,6 +520,329 @@ class SettingsStore(private val context: Context) {
             dspTrimLeftDb = p[Keys.DSP_TRIM_L] ?: 0f,
             dspTrimRightDb = p[Keys.DSP_TRIM_R] ?: 0f,
         )
+
+    val processingSettings: Flow<ProcessingSettings> = context.dataStore.data.map { p ->
+        val audio = readAudioPrefs(p)
+        val playback = readPlaybackPrefs(p)
+        ProcessingSettings(audio, playback, readProcessingRack(p, audio, playback.monoAudio))
+    }.distinctUntilChanged().flowOn(Dispatchers.Default)
+
+    val processingSnapshot: Flow<ProcessingSnapshot> = context.dataStore.data.map { p ->
+        val audio = readAudioPrefs(p)
+        val playback = readPlaybackPrefs(p)
+        ProcessingSnapshot(audio, ProcessingPlaybackPrefs.from(playback),
+            p[Keys.AUTOEQ_PROFILE].orEmpty(), readProcessingRack(p, audio, playback.monoAudio))
+    }.distinctUntilChanged().flowOn(Dispatchers.Default)
+
+    val processingRack: Flow<ProcessingRack> = processingSettings.map { it.rack }.distinctUntilChanged()
+
+    private fun readProcessingRack(p: Preferences, audio: AudioPrefs, mono: Boolean): ProcessingRack =
+        p[Keys.PROCESSING_RACK]?.let { ProcessingRackCodec.decode(it).getOrNull() } ?: ProcessingRack.legacy(audio, mono)
+
+    suspend fun setProcessingRack(rack: ProcessingRack): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val validated = ProcessingRackCodec.validate(rack)
+            val encoded = ProcessingRackCodec.encode(validated)
+            context.dataStore.edit { p ->
+                p[Keys.PROCESSING_RACK] = encoded
+                if (validated.enabled) p[Keys.DSP_MODE] = DspMode.CUSTOM
+            }
+            Unit
+        }
+    }
+
+    /** Rebuild a disabled graph from current effective legacy settings in one transaction. */
+    suspend fun migrateProcessingRack(): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            context.dataStore.edit { p ->
+                p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(
+                    ProcessingRack.legacy(readAudioPrefs(p), readPlaybackPrefs(p).monoAudio))
+            }
+            Unit
+        }
+    }
+
+    suspend fun resetProcessingRack(): Result<Unit> = migrateProcessingRack()
+
+    val tuningProjects: Flow<List<TuningProject>> = context.dataStore.data
+        .map { it[Keys.TUNING_PROJECTS] }.distinctUntilChanged()
+        .map { TuningProjectCodec.decodeLibrary(it).getOrThrow() }.flowOn(Dispatchers.Default)
+
+    suspend fun saveTuningProject(project: TuningProject): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val validated = TuningProjectCodec.validate(project)
+            context.dataStore.edit { p ->
+                p[Keys.TUNING_PROJECTS] = TuningProjectCodec.encodeLibrary(TuningProjectCodec.upsert(
+                    TuningProjectCodec.decodeLibrary(p[Keys.TUNING_PROJECTS]).getOrThrow(), validated).getOrThrow())
+            }
+            Unit
+        }
+    }
+
+    suspend fun deleteTuningProject(id: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            context.dataStore.edit { p ->
+                p[Keys.TUNING_PROJECTS] = TuningProjectCodec.encodeLibrary(TuningProjectCodec.delete(
+                    TuningProjectCodec.decodeLibrary(p[Keys.TUNING_PROJECTS]).getOrThrow(), id).getOrThrow())
+            }
+            Unit
+        }
+    }
+
+    /** Validate against the latest rack, save the project and add its correction atomically. */
+    suspend fun appendTuningProjectToRack(project: TuningProject): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val validated = TuningProjectCodec.validate(project)
+            context.dataStore.edit { p ->
+                val rack = readProcessingRack(p, readAudioPrefs(p), readPlaybackPrefs(p).monoAudio)
+                val updatedRack = TuningRackPlan.append(rack, validated)
+                val library = TuningProjectCodec.upsert(TuningProjectCodec.decodeLibrary(p[Keys.TUNING_PROJECTS]).getOrThrow(), validated).getOrThrow()
+                p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(updatedRack)
+                p[Keys.TUNING_PROJECTS] = TuningProjectCodec.encodeLibrary(library)
+            }
+            Unit
+        }
+    }
+
+    val processingPresetLibrary: Flow<ProcessingPresetLibrary> = context.dataStore.data
+        .map { it[Keys.PROCESSING_PRESETS] }
+        .distinctUntilChanged()
+        .map(ProcessingPresetCodec::decode)
+        .flowOn(Dispatchers.Default)
+
+    private fun presetList(p: Preferences): List<ProcessingPreset> {
+        val library = ProcessingPresetCodec.decode(p[Keys.PROCESSING_PRESETS])
+        require(library.error == null) { library.error.orEmpty() }
+        return library.presets
+    }
+
+    suspend fun saveProcessingPreset(name: String): Result<ProcessingPreset> = withContext(Dispatchers.IO) {
+        runCatching {
+            val title = ProcessingPresetCodec.name(name)
+            var saved: ProcessingPreset? = null
+            context.dataStore.edit { p ->
+                val previous = presetList(p)
+                require(previous.size < ProcessingPresetCodec.MAX_PRESETS) { "You can save up to 100 presets." }
+                var audio = readAudioPrefs(p)
+                val playback = readPlaybackPrefs(p)
+                val rack = readProcessingRack(p, audio, playback.monoAudio)
+                val needsImpulse = if (rack.enabled) rack.requiresImpulseResponse() else audio.dspConvEnabled
+                var hash = ""
+                if (audio.dspConvIrPath.isNotBlank()) {
+                    val source = File(audio.dspConvIrPath)
+                    if (source.isFile && source.canRead()) {
+                        require(source.length() in 1..MAX_PRESET_IR_BYTES) { "Impulse response must be between 1 byte and 64 MB." }
+                        val directory = File(context.filesDir, "processing-presets")
+                        check(directory.isDirectory || directory.mkdirs()) { "Cannot create preset storage." }
+                        val destination = File(directory, "${UUID.randomUUID()}.wav")
+                        // Keep this asset even if the edit subsequently fails or is cancelled:
+                        // DataStore may have committed before the caller observes cancellation.
+                        // Cleanup must eventually check durable and active references first.
+                        source.inputStream().use { input -> destination.outputStream().use { output ->
+                            val buffer = ByteArray(8192)
+                            var total = 0L
+                            while (true) {
+                                val count = input.read(buffer)
+                                if (count < 0) break
+                                total += count
+                                require(total <= MAX_PRESET_IR_BYTES) { "Impulse response exceeds 64 MB." }
+                                output.write(buffer, 0, count)
+                            }
+                        } }
+                        hash = irHash(destination)
+                        audio = audio.copy(dspConvIrPath = destination.absolutePath)
+                    } else require(!needsImpulse) { "The selected impulse response is missing. Select it again before saving." }
+                } else require(!needsImpulse) { "Select an impulse response before saving enabled convolution." }
+                val preset = ProcessingPreset(UUID.randomUUID().toString(), title,
+                    createdAtMs = System.currentTimeMillis(), audio = audio,
+                    playback = ProcessingPlaybackPrefs.from(playback),
+                    activeEqProfile = p[Keys.AUTOEQ_PROFILE].orEmpty(), irSha256 = hash, rack = rack)
+                p[Keys.PROCESSING_PRESETS] = ProcessingPresetCodec.encode(previous + preset)
+                saved = preset
+            }
+            requireNotNull(saved)
+        }
+    }
+
+    suspend fun applyProcessingPreset(id: String): Result<ProcessingPresetApplyResult> = withContext(Dispatchers.IO) {
+        runCatching {
+            var result: ProcessingPresetApplyResult? = null
+            context.dataStore.edit { p ->
+                val preset = presetList(p).firstOrNull { it.id == id }
+                    ?: error("This preset no longer exists.")
+                if (preset.requiresImpulseResponse()) {
+                    require(preset.audio.dspConvIrPath.isNotBlank() && preset.irSha256.isNotBlank()) {
+                        "This preset has no saved impulse response. Select it again and save a new preset."
+                    }
+                    val file = File(preset.audio.dspConvIrPath)
+                    require(file.isFile && file.canRead()) { "This preset's impulse response is missing. No settings were changed." }
+                    require(irHash(file) == preset.irSha256) { "This preset's impulse response has changed. No settings were changed." }
+                }
+                val old = readPlaybackPrefs(p)
+                val restart = old.preferHighRes != preset.playback.preferHighRes ||
+                    old.bitPerfectUsb != preset.playback.bitPerfectUsb
+                writeProcessingAudio(p, if (preset.rack.enabled) preset.audio.copy(dspMode = DspMode.CUSTOM) else preset.audio)
+                writeProcessingPlayback(p, preset.playback)
+                p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(preset.rack)
+                p[Keys.AUTOEQ_PROFILE] = preset.activeEqProfile
+                result = ProcessingPresetApplyResult(preset.name, restart)
+            }
+            requireNotNull(result)
+        }
+    }
+
+    suspend fun duplicateProcessingPreset(id: String, name: String): Result<ProcessingPreset> = withContext(Dispatchers.IO) {
+        runCatching {
+            val title = ProcessingPresetCodec.name(name)
+            var duplicate: ProcessingPreset? = null
+            context.dataStore.edit { p ->
+                val previous = presetList(p)
+                val original = previous.firstOrNull { it.id == id } ?: error("This preset no longer exists.")
+                val copy = original.copy(id = UUID.randomUUID().toString(), name = title, createdAtMs = System.currentTimeMillis())
+                p[Keys.PROCESSING_PRESETS] = ProcessingPresetCodec.encode(previous + copy)
+                duplicate = copy
+            }
+            requireNotNull(duplicate)
+        }
+    }
+
+    suspend fun renameProcessingPreset(id: String, name: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val title = ProcessingPresetCodec.name(name)
+            context.dataStore.edit { p ->
+                val previous = presetList(p)
+                require(previous.any { it.id == id }) { "This preset no longer exists." }
+                p[Keys.PROCESSING_PRESETS] = ProcessingPresetCodec.encode(previous.map { if (it.id == id) it.copy(name = title) else it })
+            }
+            Unit
+        }
+    }
+
+    suspend fun deleteProcessingPreset(id: String): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            context.dataStore.edit { p ->
+                val previous = presetList(p)
+                require(previous.any { it.id == id }) { "This preset no longer exists." }
+                p[Keys.PROCESSING_PRESETS] = ProcessingPresetCodec.encode(previous.filterNot { it.id == id })
+            }
+            // Retain immutable IRs: another preset, duplicate, or current processing can reference them.
+            Unit
+        }
+    }
+
+    /** Export one immutable snapshot. The caller owns and closes the destination stream. */
+    suspend fun exportProcessingPreset(id: String, output: OutputStream): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val preset = presetList(context.dataStore.data.first()).firstOrNull { it.id == id }
+                ?: error("This preset no longer exists.")
+            val asset = preset.audio.dspConvIrPath.takeIf { preset.irSha256.isNotBlank() }?.let(::File)
+            ProcessingPresetBundle.write(preset, asset, output)
+        }
+    }
+
+    /** Validate every dependency before changing the library. Import never applies audio settings. */
+    suspend fun importProcessingPreset(input: InputStream): Result<ProcessingPreset> = withContext(Dispatchers.IO) {
+        runCatching {
+            ProcessingPresetBundle.read(input, context.cacheDir).use { bundle ->
+                var imported: ProcessingPreset? = null
+                context.dataStore.edit { p ->
+                    val previous = presetList(p)
+                    require(previous.size < ProcessingPresetCodec.MAX_PRESETS) { "You can save up to 100 presets." }
+                    var audio = bundle.preset.audio
+                    bundle.impulseResponse?.let { source ->
+                        val directory = File(context.filesDir, "processing-presets")
+                        check(directory.isDirectory || directory.mkdirs()) { "Cannot create preset storage." }
+                        val destination = File(directory, "${UUID.randomUUID()}.wav")
+                        source.copyTo(destination, overwrite = false)
+                        // As with save, retain a durable asset if commit/cancellation status is
+                        // uncertain. Live processing can still be loading an older reference.
+                        audio = audio.copy(dspConvIrPath = destination.absolutePath)
+                    }
+                    val preset = bundle.preset.copy(id = UUID.randomUUID().toString(),
+                        createdAtMs = System.currentTimeMillis(), audio = audio)
+                    p[Keys.PROCESSING_PRESETS] = ProcessingPresetCodec.encode(previous + preset)
+                    imported = preset
+                }
+                requireNotNull(imported)
+            }
+        }
+    }
+
+    suspend fun applyEqBindingIfEnabled(binding: EqBinding): Boolean {
+        var applied = false
+        context.dataStore.edit { p ->
+            if (p[Keys.AUTOEQ_SWITCH] != true || binding !in parseBindings(p[Keys.EQ_BINDINGS])) return@edit
+            p[Keys.DSP_PARAMETRIC] = binding.bands.joinToString(";") { "${it.freqHz}:${it.gainDb}:${it.q}:${it.type}" }
+            p[Keys.DSP_PREAMP] = binding.preampDb
+            p[Keys.DSP_MODE] = DspMode.CUSTOM
+            p[Keys.AUTOEQ_PROFILE] = binding.profileName
+            applied = true
+        }
+        return applied
+    }
+
+    private fun irHash(file: File): String {
+        require(file.length() in 1..MAX_PRESET_IR_BYTES) { "Impulse response must be between 1 byte and 64 MB." }
+        val digest = MessageDigest.getInstance("SHA-256")
+        file.inputStream().use { input ->
+            val buffer = ByteArray(8192)
+            var total = 0L
+            while (true) {
+                val count = input.read(buffer)
+                if (count < 0) break
+                total += count
+                require(total <= MAX_PRESET_IR_BYTES) { "Impulse response exceeds 64 MB." }
+                digest.update(buffer, 0, count)
+            }
+        }
+        return digest.digest().joinToString("") { "%02x".format(it) }
+    }
+
+    private companion object { const val MAX_PRESET_IR_BYTES = 64L * 1024L * 1024L }
+
+    private fun writeProcessingAudio(p: MutablePreferences, a: AudioPrefs) {
+        p[Keys.EQ_ENABLED] = a.eqEnabled
+        p[Keys.EQ_PRESET] = a.eqPreset
+        p[Keys.EQ_BANDS] = a.eqBands.joinToString(",")
+        p[Keys.BASS_BOOST] = a.bassBoost
+        p[Keys.VIRTUALIZER] = a.virtualizer
+        p[Keys.LOUDNESS] = a.loudnessGain
+        p[Keys.REPLAY_GAIN] = a.replayGain
+        p[Keys.DSP_MODE] = a.dspMode
+        p[Keys.DSP_GRAPHIC] = a.dspGraphicBands.joinToString(",")
+        p[Keys.DSP_PREAMP] = a.dspPreampDb
+        p[Keys.DSP_BALANCE] = a.dspBalance
+        p[Keys.DSP_WIDTH] = a.dspWidth
+        p[Keys.DSP_CROSSFEED] = a.dspCrossfeed
+        p[Keys.DSP_LIMITER] = a.dspLimiterEnabled
+        p[Keys.DSP_CEILING] = a.dspLimiterCeilingDb
+        p[Keys.DSP_COMP] = a.dspCompEnabled
+        p[Keys.DSP_COMP_THRESH] = a.dspCompThreshDb
+        p[Keys.DSP_COMP_RATIO] = a.dspCompRatio
+        p[Keys.DSP_CONV] = a.dspConvEnabled
+        p[Keys.DSP_CONV_PATH] = a.dspConvIrPath
+        p[Keys.DSP_CONV_NAME] = a.dspConvIrName
+        p[Keys.DSP_CONV_MAKEUP] = a.dspConvMakeupDb
+        p[Keys.DSP_GRAPHIC_LAYOUT] = a.dspGraphicLayout
+        p[Keys.DSP_SATURATION] = a.dspSaturation
+        p[Keys.DSP_DELAY_L] = a.dspDelayLeftMs
+        p[Keys.DSP_DELAY_R] = a.dspDelayRightMs
+        p[Keys.DSP_TRIM_L] = a.dspTrimLeftDb
+        p[Keys.DSP_TRIM_R] = a.dspTrimRightDb
+        p[Keys.DSP_PARAMETRIC] = a.dspParametric.joinToString(";") { "${it.freqHz}:${it.gainDb}:${it.q}:${it.type}" }
+    }
+
+    private fun writeProcessingPlayback(p: MutablePreferences, a: ProcessingPlaybackPrefs) {
+        p[Keys.SKIP_SILENCE] = a.skipSilence
+        p[Keys.CROSSFADE] = a.crossfadeSec
+        p[Keys.CROSSFADE_CURVE] = a.crossfadeCurve
+        p[Keys.CROSSFADE_HEADROOM] = a.crossfadeHeadroom
+        p[Keys.GAPLESS] = a.gapless
+        p[Keys.DEFAULT_SPEED] = a.defaultSpeed
+        p[Keys.MONO] = a.monoAudio
+        p[Keys.PREFER_HIRES] = a.preferHighRes
+        p[Keys.BIT_PERFECT_USB] = a.bitPerfectUsb
+        p[Keys.INDEPENDENT_OUTPUT] = a.independentOutput
     }
 
     private fun parseParametric(s: String?): List<ParamBand> {
@@ -625,10 +970,14 @@ class SettingsStore(private val context: Context) {
         if (s.isValid) s else null
     }
 
-    val playbackPrefs: Flow<PlaybackPrefs> = context.dataStore.data.map { p ->
+    val playbackPrefs: Flow<PlaybackPrefs> = context.dataStore.data.map(::readPlaybackPrefs).distinctUntilChanged()
+
+    private fun readPlaybackPrefs(p: Preferences): PlaybackPrefs =
         PlaybackPrefs(
             skipSilence = p[Keys.SKIP_SILENCE] ?: false,
             crossfadeSec = p[Keys.CROSSFADE] ?: 0,
+            crossfadeCurve = p[Keys.CROSSFADE_CURVE] ?: "SMOOTH",
+            crossfadeHeadroom = p[Keys.CROSSFADE_HEADROOM] ?: true,
             gapless = p[Keys.GAPLESS] ?: true,
             defaultSpeed = p[Keys.DEFAULT_SPEED] ?: 1.0f,
             monoAudio = p[Keys.MONO] ?: false,
@@ -641,7 +990,6 @@ class SettingsStore(private val context: Context) {
             bitPerfectUsb = p[Keys.BIT_PERFECT_USB] ?: false,
             independentOutput = p[Keys.INDEPENDENT_OUTPUT] ?: false,
         )
-    }
 
     val visualizerPrefs: Flow<VisualizerPrefs> = context.dataStore.data.map { p ->
         val d = VisualizerPrefs()
@@ -790,7 +1138,9 @@ class SettingsStore(private val context: Context) {
     }
 
     suspend fun setSkipSilence(v: Boolean) = context.dataStore.edit { it[Keys.SKIP_SILENCE] = v }
-    suspend fun setCrossfade(sec: Int) = context.dataStore.edit { it[Keys.CROSSFADE] = sec }
+    suspend fun setCrossfade(sec: Int) = context.dataStore.edit { it[Keys.CROSSFADE] = sec.coerceIn(0, 30) }
+    suspend fun setCrossfadeCurve(curve: String) = context.dataStore.edit { it[Keys.CROSSFADE_CURVE] = curve }
+    suspend fun setCrossfadeHeadroom(on: Boolean) = context.dataStore.edit { it[Keys.CROSSFADE_HEADROOM] = on }
     suspend fun setGapless(v: Boolean) = context.dataStore.edit { it[Keys.GAPLESS] = v }
     suspend fun setDefaultSpeed(v: Float) = context.dataStore.edit { it[Keys.DEFAULT_SPEED] = v }
     suspend fun setMono(v: Boolean) = context.dataStore.edit { it[Keys.MONO] = v }
@@ -849,7 +1199,13 @@ class SettingsStore(private val context: Context) {
     suspend fun setLoudness(v: Int) = context.dataStore.edit { it[Keys.LOUDNESS] = v }
     suspend fun setReplayGain(v: Int) = context.dataStore.edit { it[Keys.REPLAY_GAIN] = v }
 
-    suspend fun setDspMode(v: Int) = context.dataStore.edit { it[Keys.DSP_MODE] = v }
+    suspend fun setDspMode(v: Int) = context.dataStore.edit { p ->
+        p[Keys.DSP_MODE] = v
+        if (v != DspMode.CUSTOM) {
+            val rack = p[Keys.PROCESSING_RACK]?.let { ProcessingRackCodec.decode(it).getOrNull() }
+            if (rack?.enabled == true) p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(rack.copy(enabled = false))
+        }
+    }
     suspend fun setDspGraphicBands(v: List<Float>) = context.dataStore.edit { it[Keys.DSP_GRAPHIC] = v.joinToString(",") }
     suspend fun setDspParametric(v: List<ParamBand>) = context.dataStore.edit {
         it[Keys.DSP_PARAMETRIC] = v.joinToString(";") { b -> "${b.freqHz}:${b.gainDb}:${b.q}:${b.type}" }
@@ -961,5 +1317,57 @@ class SettingsStore(private val context: Context) {
         b.booleans.forEach { (k, v) -> p[booleanPreferencesKey(k)] = v }
         b.floats.forEach { (k, v) -> p[floatPreferencesKey(k)] = v }
         b.stringSets.forEach { (k, v) -> p[stringSetPreferencesKey(k)] = v.toSet() }
+    }
+
+    /** Replace one validated backup atomically after its caller has restored/remapped all assets. */
+    suspend fun restoreBackupPrefs(b: PrefsBackup): Result<Unit> = withContext(Dispatchers.IO) {
+        runCatching {
+            val names = listOf(b.strings.keys, b.ints.keys, b.longs.keys, b.booleans.keys, b.floats.keys, b.stringSets.keys)
+                .flatMap { it }
+            require(names.distinct().size == names.size) { "Backup contains preference keys with conflicting types." }
+            require(b.floats.values.all { it.isFinite() }) { "Backup contains invalid numeric preferences." }
+            val replacement = mutablePreferencesOf()
+            b.strings.forEach { (k, v) -> replacement[stringPreferencesKey(k)] = v }
+            b.ints.forEach { (k, v) -> replacement[intPreferencesKey(k)] = v }
+            b.longs.forEach { (k, v) -> replacement[longPreferencesKey(k)] = v }
+            b.booleans.forEach { (k, v) -> replacement[booleanPreferencesKey(k)] = v }
+            b.floats.forEach { (k, v) -> replacement[floatPreferencesKey(k)] = v }
+            b.stringSets.forEach { (k, v) -> replacement[stringSetPreferencesKey(k)] = v.toSet() }
+            validateBackupAudioText(replacement)
+            val audio = ProcessingPresetCodec.validateAudio(readAudioPrefs(replacement))
+            val playback = readPlaybackPrefs(replacement)
+            ProcessingPresetCodec.validatePlayback(ProcessingPlaybackPrefs.from(playback))
+            val library = ProcessingPresetCodec.decode(replacement[Keys.PROCESSING_PRESETS])
+            require(library.error == null) { library.error.orEmpty() }
+            val rack = replacement[Keys.PROCESSING_RACK]?.let { ProcessingRackCodec.decode(it).getOrThrow() }
+                ?: ProcessingRack.legacy(audio, playback.monoAudio)
+            TuningProjectCodec.decodeLibrary(replacement[Keys.TUNING_PROJECTS]).getOrThrow()
+            if (rack.enabled) replacement[Keys.DSP_MODE] = DspMode.CUSTOM
+            // Asset ownership, hashes and remapping belong to the bundle reader before this call.
+            // Keeping this transaction about preferences also permits restoring an exact snapshot
+            // whose disabled historical entries already reference unavailable source files.
+            context.dataStore.edit { p ->
+                p.clear()
+                replacement.asMap().forEach { (key, value) ->
+                    @Suppress("UNCHECKED_CAST")
+                    p[key as Preferences.Key<Any>] = value
+                }
+            }
+            Unit
+        }
+    }
+
+    private fun validateBackupAudioText(p: Preferences) {
+        p[Keys.EQ_BANDS]?.takeIf { it.isNotBlank() }?.split(",")?.forEach {
+            require(it.toIntOrNull() != null) { "Backup contains an invalid system EQ band." }
+        }
+        p[Keys.DSP_GRAPHIC]?.takeIf { it.isNotBlank() }?.split(",")?.forEach {
+            require(it.toFloatOrNull()?.isFinite() == true) { "Backup contains an invalid graphic EQ band." }
+        }
+        p[Keys.DSP_PARAMETRIC]?.takeIf { it.isNotBlank() }?.split(";")?.forEach { entry ->
+            val parts = entry.split(":")
+            require(parts.size in 3..4 && parts.take(3).all { it.toFloatOrNull()?.isFinite() == true } &&
+                (parts.size == 3 || parts[3].toIntOrNull() != null)) { "Backup contains an invalid parametric EQ band." }
+        }
     }
 }

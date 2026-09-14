@@ -1,0 +1,9 @@
+{
+  "phase": "R1a: local processing presets",
+  "date": "2026-09-08",
+  "apkSha256": "AA3BF23F6778F3BF3F80E70AA2D9D693C4266A5A39A5184C35EAC0DF59A7717A",
+  "jvmTests": 45,
+  "emulatorTests": 8,
+  "phoneTests": 3,
+  "fullR1Complete": false
+}

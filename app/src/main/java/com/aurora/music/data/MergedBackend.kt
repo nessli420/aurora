@@ -192,6 +192,11 @@ class MergedBackend(
     override suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> =
         route(id) { src, i, oid -> src.detailPage(kind, oid, offset).map { it.wrap(i) } } ?: emptyList()
 
+    override suspend fun collectionTracks(kind: String, id: String): List<Song> =
+        if (kind == "liked") starredSongs()
+        else route(id) { src, i, oid -> src.collectionTracks(kind, oid).map { it.wrap(i) } }
+            ?: error("This collection's source is unavailable.")
+
     override suspend fun serverLyrics(song: Song): Lyrics? {
         val (i, oid) = unwrap(song.id) ?: return primary?.serverLyrics(song)
         return sources.getOrNull(i)?.serverLyrics(song.copy(id = oid))

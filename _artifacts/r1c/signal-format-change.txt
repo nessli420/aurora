@@ -1,0 +1,42 @@
+Aurora Signal Path · diagnostic v1
+State: Active
+Sample preservation: Modified
+- Custom Aurora DSP (binary64 coefficients, arithmetic and state; PCM16 input/output) processes the current samples
+- Convolution (binary64 FFT and state; PCM16 input/output) processes the current samples
+- Android mixer, active hardware format and downstream processing are not observed
+
+Source: Local playable copy · RAW · 1536000 bit/s
+Format: 48000 Hz · 16-bit · 2 channels · integer PCM
+Evidence: Selected playable copy and current decoder metadata; upstream original format and transcoding history may be unknown
+
+Decoder: Decoder implementation unknown
+Format: 48000 Hz · 16-bit · 2 channels · integer PCM
+Evidence: Media3 decoder event and sink input configuration
+
+Processing: Android PCM processor path (PCM16 transport). Active: Custom Aurora DSP (binary64 coefficients, arithmetic and state; PCM16 input/output) → Convolution (binary64 FFT and state; PCM16 input/output)
+Evidence: Current sink configuration and runtime processing state
+
+Resampling: 48000 Hz input → 48000 Hz transport; downstream conversion unknown
+Evidence: Configured transport boundary, not a hardware measurement
+
+Output: Android AudioTrack configuration; downstream hardware format unknown
+Format: 48000 Hz · 16-bit · 2 channels · integer PCM
+Evidence: Media3 AudioTrack initialization event
+
+Device: Active route unknown
+Evidence: Preferred-device selection is not proof of the routed device
+
+Latency: Processor, sink and downstream latency are not measured
+Evidence: Not observed
+
+Digital sample levels: independent 100 ms windows, not aligned to audible output
+Before app processing: 48000 Hz, 2 channels, 4800 frames
+Peak L/R (linear full scale): 0.25 / 0.125
+RMS L/R (linear full scale): 0.17676084374889867 / 0.08837652839883102
+Full-scale / invalid samples since reset: 0 / 0
+After app processing, before player/system gain: 48000 Hz, 2 channels, 4800 frames
+Peak L/R (linear full scale): 0.03131103515625 / 0.03131103515625
+RMS L/R (linear full scale): 0.022143352595945385 / 0.022137244466975785
+Full-scale / invalid samples since reset: 0 / 0
+
+Hardware behavior beyond the reported output boundary is not verified.

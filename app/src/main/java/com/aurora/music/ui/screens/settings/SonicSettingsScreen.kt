@@ -43,7 +43,7 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Sonic discovery", onBack)
+        SettingsTopBar(SettingsDestinations.analysis.label, onBack)
         Column(Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
             Row(
@@ -55,7 +55,7 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text("$analyzed tracks analyzed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("Powers “Sonic radio” from the player menu", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("Powers Sonic radio, Auto DJ and mix transitions", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
 
@@ -82,7 +82,7 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                         when {
                             progress.running -> "${progress.done} / ${progress.total} • ${progress.current}"
                             analyzed > 0 -> "$analyzed analyzed — tap to scan new tracks"
-                            else -> "Extract audio features from on-device & downloaded tracks"
+                            else -> "Analyze the whole library, including streamed tracks"
                         },
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -96,18 +96,22 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
 
+            if (progress.failed > 0 || progress.error != null) Text(
+                progress.error ?: "${progress.failed} tracks unavailable. Tap Analyze library to retry.",
+                modifier = Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.error)
             SettingsSectionTitle("Automation")
             SettingsGroup {
                 SettingsSwitchRow(
                     Icons.Filled.AutoAwesome, "Auto-analyze on launch",
-                    "Quietly analyze new local & downloaded tracks when the app starts", auto,
+                    "Analyze new tracks across your library, including streams", auto,
                 ) { v -> scope.launch { app.settingsStore.setSonicAutoAnalyze(v) } }
             }
 
             Text(
                 "Sonic radio compares the actual sound of your tracks (timbre, harmony, energy, tempo) " +
-                    "fully on-device — no account or internet needed. Only local-library and downloaded " +
-                    "tracks can be analyzed; streaming-only tracks fall back to your server’s own radio.",
+                    "on your device. Streams are read from your server without adding downloads. " +
+                    "Analysis uses network data and takes time on large libraries. Completed tracks are saved; " +
+                    "you can cancel and resume. Unavailable tracks are retried on the next scan.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
             )

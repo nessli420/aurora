@@ -89,6 +89,9 @@ class LocalBackend(
         return (sameArtist.shuffled() + rest).take(40)
     }
 
+    override suspend fun collectionTracks(kind: String, id: String): List<Song> =
+        detail(kind, id)?.tracks ?: error("This collection is unavailable.")
+
     override suspend fun detail(kind: String, id: String): DetailData? {
         library.ensureLoaded()
         return when (kind) {

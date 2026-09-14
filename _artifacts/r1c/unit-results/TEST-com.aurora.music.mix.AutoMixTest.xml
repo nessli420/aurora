@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.mix.AutoMixTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-09T19:21:06" hostname="DESKTOP-A95H910" time="1.233">
+  <properties/>
+  <testcase name="arbitraryFftRoundTripsModelSizeWithoutChangingPhase" classname="com.aurora.music.mix.AutoMixTest" time="0.014"/>
+  <testcase name="matchingIsRestrainedAndCanBeDisabled" classname="com.aurora.music.mix.AutoMixTest" time="0.045"/>
+  <testcase name="spectrogramPreservesStereoAndTiming" classname="com.aurora.music.mix.AutoMixTest" time="1.149"/>
+  <testcase name="unknownTempoDoesNotInventBeatSynchronizationAndLoudnessNeverBoosts" classname="com.aurora.music.mix.AutoMixTest" time="0.001"/>
+  <testcase name="completeCollectionKeepsOrderAndRepeatedTracksWithOnlyTwoActiveLayers" classname="com.aurora.music.mix.AutoMixTest" time="0.024"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

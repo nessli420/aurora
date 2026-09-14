@@ -162,7 +162,7 @@ interface SpotifyApi {
     suspend fun artistTopTracks(@Path("id") id: String, @Query("market") market: String = "from_token"): SpArtistTop
 
     @GET("v1/artists/{id}/albums")
-    suspend fun artistAlbums(@Path("id") id: String, @Query("limit") limit: Int = 30, @Query("include_groups") groups: String = "album,single"): SpPaging<SpAlbumRef>
+    suspend fun artistAlbums(@Path("id") id: String, @Query("limit") limit: Int = 30, @Query("include_groups") groups: String = "album,single", @Query("offset") offset: Int = 0): SpPaging<SpAlbumRef>
 
     @GET("v1/playlists/{id}")
     suspend fun playlist(@Path("id") id: String): SpFullPlaylist

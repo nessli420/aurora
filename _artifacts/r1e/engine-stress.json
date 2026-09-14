@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 1,
+  "device": "sdk_gphone64_x86_64",
+  "sdk": 35,
+  "abi": "x86_64",
+  "framesPerInput": 256,
+  "channels": 2,
+  "parametricBands": 64,
+  "impulseFramesPerChannel": 4096,
+  "warmupInputs": 128,
+  "results": [
+    {
+      "sampleRate": 48000,
+      "graph": "GAIN -> EQ -> SATURATION -> STEREO -> CROSSFEED -> COMPRESSOR -> DELAY -> CONVOLUTION -> LIMITER",
+      "measuredInputs": 15152,
+      "measuredWallMs": 4000.1902,
+      "summedProcessingMs": 3419.6889,
+      "p50Us": 141.8,
+      "p95Us": 373.1,
+      "maxUs": 36342.6,
+      "equivalent256FrameBudgetUs": 5333.333333333333,
+      "callsExceedingEquivalentBudget": 43,
+      "acceptedFramesIncludingWarmupAndEos": 3911777,
+      "outputFrames": 3911777,
+      "outputPeak": 0.03202735001558904,
+      "outputChecksum": -23386.289880933444,
+      "seekClearedHistory": true,
+      "resetClearedHistory": true,
+      "memoryBeforePreparation": {
+        "javaUsedBytes": 6367776,
+        "javaCommittedBytes": 201326592,
+        "nativeAllocatedBytes": 6304704,
+        "processPssKb": 40924
+      },
+      "memoryAfterWarmup": {
+        "javaUsedBytes": 9050752,
+        "javaCommittedBytes": 201326592,
+        "nativeAllocatedBytes": 6334384,
+        "processPssKb": 43333
+      },
+      "memoryAfterMeasuredRun": {
+        "javaUsedBytes": 23021184,
+        "javaCommittedBytes": 50331648,
+        "nativeAllocatedBytes": 52905456,
+        "processPssKb": 126875
+      }
+    },
+    {
+      "sampleRate": 96000,
+      "graph": "GAIN -> EQ -> SATURATION -> STEREO -> CROSSFEED -> COMPRESSOR -> DELAY -> CONVOLUTION -> LIMITER",
+      "measuredInputs": 18580,
+      "measuredWallMs": 4000.0903,
+      "summedProcessingMs": 3426.3947,
+      "p50Us": 142.1,
+      "p95Us": 339.6,
+      "maxUs": 40762.2,
+      "equivalent256FrameBudgetUs": 2666.6666666666665,
+      "callsExceedingEquivalentBudget": 1,
+      "acceptedFramesIncludingWarmupAndEos": 4789345,
+      "outputFrames": 4789345,
+      "outputPeak": 0.03191749021274587,
+      "outputChecksum": -19874.522377204143,
+      "seekClearedHistory": true,
+      "resetClearedHistory": true,
+      "memoryBeforePreparation": {
+        "javaUsedBytes": 29800064,
+        "javaCommittedBytes": 50331648,
+        "nativeAllocatedBytes": 52950576,
+        "processPssKb": 130875
+      },
+      "memoryAfterWarmup": {
+        "javaUsedBytes": 32482944,
+        "javaCommittedBytes": 50331648,
+        "nativeAllocatedBytes": 52969600,
+        "processPssKb": 133147
+      },
+      "memoryAfterMeasuredRun": {
+        "javaUsedBytes": 33249056,
+        "javaCommittedBytes": 50331648,
+        "nativeAllocatedBytes": 53050944,
+        "processPssKb": 155663
+      }
+    }
+  ],
+  "limitation": "Synthetic instrumentation worker, not an audio callback or physical output. Timing sums queueInput\/getOutput CPU wall time per accepted 256-frame input; waveform generation, output validation, preparation and JSON writing are excluded. Scheduler pauses remain included. Heap and PSS are process-wide snapshots without forced GC, not allocation or leak measurements. No hardware latency, underrun, battery or thermal claim."
+}

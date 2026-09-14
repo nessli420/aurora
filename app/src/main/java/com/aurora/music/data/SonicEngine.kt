@@ -8,6 +8,7 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.isActive
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,74 +19,44 @@ import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sqrt
 
-// v1 only local/downloaded tracks are decodable server-only streams fall back to backend radio
+/** Stream and local analysis share fingerprints, waveforms and transition timing. */
 class SonicEngine(
-    private val localLibrary: LocalLibrary,
-    private val downloads: DownloadManager,
     private val store: SonicStore,
+    private val library: suspend () -> List<Song>,
+    private val account: suspend () -> String,
+    private val analyzer: com.aurora.music.mix.MixAnalyzer,
 ) {
-    data class Progress(val running: Boolean = false, val done: Int = 0, val total: Int = 0, val current: String = "")
-
+    data class Progress(val running: Boolean = false, val done: Int = 0, val total: Int = 0,
+        val current: String = "", val failed: Int = 0, val error: String? = null)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     @Volatile private var job: Job? = null
-
     private val _progress = MutableStateFlow(Progress())
     val progress: StateFlow<Progress> = _progress.asStateFlow()
-
     val analyzedCount: StateFlow<Int> get() = store.count
-
-    private suspend fun decodable(): List<Song> {
-        localLibrary.ensureLoaded()
-        val local = localLibrary.songs.filter { it.path.isNotBlank() }
-        val dl = downloads.downloads.value.values.map { it.toSong() }
-        return (local + dl).distinctBy { it.id }
-    }
-
-    private fun decodePath(song: Song): String? = when {
-        song.path.isNotBlank() -> song.path
-        song.streamUrl.startsWith("file://") -> Uri.parse(song.streamUrl).path
-        else -> downloads.get(song.id)?.audioPath
-    }
-
+    private suspend fun decodable() = library().filter { it.streamUrl.isNotBlank() }.distinctBy { it.id }
     fun scan() {
         if (job?.isActive == true) return
+        val previous = job
         job = scope.launch {
-            val songs = decodable()
-            store.retainOnly(songs.map { it.id }.toSet())
-            val todo = songs.filter { !store.has(it.id) }
-            if (todo.isEmpty()) { _progress.value = Progress(false, 0, 0); return@launch }
-            _progress.value = Progress(true, 0, todo.size)
-
-            val next = AtomicInteger(0)
-            val done = AtomicInteger(0)
-            val workers = min(4, max(1, Runtime.getRuntime().availableProcessors() - 1))
+            previous?.join()
+            _progress.value = Progress(running = true, current = "Reading library")
             try {
-                coroutineScope {
-                    repeat(workers) {
-                        launch(Dispatchers.Default) {
-                            while (isActive) {
-                                val i = next.getAndIncrement()
-                                if (i >= todo.size) break
-                                val s = todo[i]
-                                val path = decodePath(s)
-                                if (path != null) {
-                                    val vec = runCatching { SonicFeatures.analyze(path) { !isActive } }.getOrNull()
-                                    if (vec != null) store.putDeferred(s.id, vec)
-                                }
-                                val d = done.incrementAndGet()
-                                _progress.value = Progress(true, d, todo.size, s.title)
-                                if (d % 40 == 0) store.flush()
-                            }
-                        }
-                    }
+                val owner = account()
+                val todo = decodable().filter { !store.has(it.id, owner) }
+                _progress.value = Progress(true, total = todo.size)
+                for ((i, song) in todo.withIndex()) {
+                    kotlinx.coroutines.currentCoroutineContext().ensureActive()
+                    _progress.value = _progress.value.copy(current = song.title)
+                    try { analyzer.analyze(owner, song) { } }
+                    catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                    catch (_: Exception) { _progress.value = _progress.value.copy(failed = _progress.value.failed + 1) }
+                    _progress.value = _progress.value.copy(done = i + 1)
                 }
-            } finally {
-                store.flush()  // persist whatever finished even on cancel
-            }
-            _progress.value = Progress(false, done.get(), todo.size)
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { _progress.value = _progress.value.copy(error = "Could not read the library. Reconnect and retry.") }
+            finally { _progress.value = _progress.value.copy(running = false) }
         }
     }
-
     fun cancel() { job?.cancel() }
 
     suspend fun buildRadio(seed: Song, count: Int = 40): List<Song> = withContext(Dispatchers.Default) {
@@ -94,9 +65,7 @@ class SonicEngine(
 
         var seedVec = store.get(seed.id)
         if (seedVec == null) {
-            val p = decodePath(seed) ?: return@withContext emptyList()
-            seedVec = runCatching { SonicFeatures.analyze(p) }.getOrNull() ?: return@withContext emptyList()
-            store.put(seed.id, seedVec)
+            seedVec = analyzer.analyze(account(), seed) { }.sonic.toFloatArray()
         }
 
         val vectors = store.snapshot().filterKeys { it in byId }
@@ -184,9 +153,7 @@ class SonicEngine(
         val byId = pool.associateBy { it.id }
         var seedVec = store.get(seed.id)
         if (seedVec == null) {
-            val p = decodePath(seed) ?: return@withContext emptyList()
-            seedVec = runCatching { SonicFeatures.analyze(p) }.getOrNull() ?: return@withContext emptyList()
-            store.put(seed.id, seedVec)
+            seedVec = analyzer.analyze(account(), seed) { }.sonic.toFloatArray()
         }
         val vectors = store.snapshot().filterKeys { it in byId }
         if (vectors.size < 2) return@withContext emptyList()

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.playback.ImpulseResponseWavTest" tests="7" skipped="0" failures="0" errors="0" timestamp="2026-09-09T20:12:59" hostname="DESKTOP-A95H910" time="0.014">
+  <properties/>
+  <testcase name="decodedFrameLimitFailsBeforeLargeSampleAllocation" classname="com.aurora.music.playback.ImpulseResponseWavTest" time="0.005"/>
+  <testcase name="floatArrayConstructorDefensivelyOwnsOriginalSamples" classname="com.aurora.music.playback.ImpulseResponseWavTest" time="0.001"/>
+  <testcase name="extensiblePcm32RetainsQuietBitsAndValidatesItsSubformatGuid" classname="com.aurora.music.playback.ImpulseResponseWavTest" time="0.001"/>
+  <testcase name="pcm32WavKeepsBitsBelowFloat32Resolution" classname="com.aurora.music.playback.ImpulseResponseWavTest" time="0.001"/>
+  <testcase name="pcm24StereoAndMonoPcm8UseTheirActualSourcePrecision" classname="com.aurora.music.playback.ImpulseResponseWavTest" time="0.002"/>
+  <testcase name="malformedChunkLengthsAlignmentAndCodecFailClosed" classname="com.aurora.music.playback.ImpulseResponseWavTest" time="0.002"/>
+  <testcase name="floatWavRejectsNonFiniteSamplesAndPreservesFiniteValues" classname="com.aurora.music.playback.ImpulseResponseWavTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

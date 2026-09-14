@@ -136,7 +136,9 @@ class MusicRepository(
         while (out.size < cap) {
             val chunk = runCatching { b.songsPage(offset, pageSize) }.getOrDefault(emptyList())
             if (chunk.isEmpty()) break
+            val before = out.size
             for (s in chunk) if (s.id.isNotEmpty()) out.putIfAbsent(s.id, s)
+            if (out.size == before) break // malformed servers that ignore paging must not loop forever
             offset += pageSize
         }
         return out.values.toList()
@@ -260,6 +262,10 @@ class MusicRepository(
 
     suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> =
         if (offline) emptyList() else backend?.detailPage(kind, id, offset).orEmpty()
+
+    suspend fun collectionTracks(kind: String, id: String): List<Song> =
+        if (offline || kind == "smart") detail(kind, id)?.tracks.orEmpty()
+        else backend?.collectionTracks(kind, id).orEmpty()
 
     val supportsFolders: Boolean get() = !offline && backend?.supportsFolders == true
 

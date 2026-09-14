@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 // no compose color gson cant round-trip it strings nullable per gson rule
@@ -60,7 +61,8 @@ data class SavedQueue(
 )
 
 // per-account so queue survives swipe-away and server switch writes coalesced by periodic flush
-class QueueStore(context: Context) {
+class QueueStore internal constructor(context: Context, private val persist: (File, ByteArray) -> Unit) {
+    constructor(context: Context) : this(context, ::persistBackupFileAtomically)
     private val file = File(context.filesDir, "queue_state.json")
     private val gson = Gson()
     private val lock = Any()
@@ -97,8 +99,24 @@ class QueueStore(context: Context) {
 
     fun requestFlush() { scope.launch { flushNow() } }
 
-    private fun flushNow() {
-        val snapshot = synchronized(lock) { dirty = false; HashMap(map) }
-        runCatching { file.writeText(gson.toJson(snapshot)) }
+    /** Await an atomic account restore/removal without letting an older queued flush overwrite it. */
+    internal suspend fun restoreAccount(accountKey: String, queue: SavedQueue?) = withContext(Dispatchers.IO) {
+        require(accountKey.isNotBlank())
+        synchronized(lock) {
+            val restored = HashMap(map)
+            if (queue == null) restored.remove(accountKey) else restored[accountKey] = queue
+            persist(file, gson.toJson(restored).toByteArray(Charsets.UTF_8))
+            // Publish only after the durable replacement succeeds, preserving every other account.
+            map.clear(); map.putAll(restored); dirty = false
+        }
+    }
+
+    private fun flushNow() = synchronized(lock) {
+        if (!dirty) return@synchronized
+        // Serialize the write as well as the snapshot. A failed ordinary write stays dirty.
+        runCatching {
+            persist(file, gson.toJson(map).toByteArray(Charsets.UTF_8))
+            dirty = false
+        }
     }
 }

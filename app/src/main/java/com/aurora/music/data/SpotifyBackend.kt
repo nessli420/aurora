@@ -363,6 +363,21 @@ class SpotifyBackend(
         }
     }.getOrNull()
 
+    override suspend fun collectionTracks(kind: String, id: String): List<Song> {
+        if (kind != "artist") return super.collectionTracks(kind, id)
+        val albums = linkedSetOf<String>()
+        var offset = 0
+        while (true) {
+            val page = api.artistAlbums(id, limit = 50, offset = offset)
+            val items = page.items.orEmpty()
+            val before = albums.size
+            items.mapNotNull { it.id }.forEach { albums.add(it) }
+            offset += items.size
+            if (items.isEmpty() || offset >= page.total || albums.size == before) break
+        }
+        return (albums.flatMap { super.collectionTracks("album", it) } + detail("artist", id)?.tracks.orEmpty()).distinctBy { it.id }
+    }
+
     override suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> = runCatching {
         when (kind) {
             "liked" -> api.savedTracks(limit = PAGE, offset = offset).items?.mapNotNull { it.track?.toSong() }.orEmpty()

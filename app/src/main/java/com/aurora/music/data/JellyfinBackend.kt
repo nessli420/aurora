@@ -222,6 +222,28 @@ class JellyfinBackend(
         }
     }.onFailure { android.util.Log.e("AuroraDetail", "jellyfin detail($kind,$id) failed", it) }.getOrNull()
 
+    override suspend fun collectionTracks(kind: String, id: String): List<Song> {
+        if (kind !in listOf("artist", "album", "playlist")) return super.collectionTracks(kind, id)
+        val result = mutableListOf<Song>()
+        while (true) {
+            val params = mutableMapOf("Fields" to "MediaSources,Genres,DateCreated,ArtistItems", "StartIndex" to "${result.size}", "Limit" to "200")
+            val page = if (kind == "playlist") client.api.playlistItems(id, params + ("userId" to uid)) else {
+                params["IncludeItemTypes"] = "Audio"
+                params["SortBy"] = "Album,ParentIndexNumber,IndexNumber,SortName"
+                if (kind == "artist") { params["ArtistIds"] = id; params["Recursive"] = "true" }
+                else params["ParentId"] = id
+                client.api.items(uid, params)
+            }
+            if (page.Items.isEmpty()) {
+                check(result.size >= page.TotalRecordCount) { "The server returned an incomplete tracklist." }
+                break
+            }
+            result.addAll(page.Items.map { it.toSong() })
+            if (result.size >= page.TotalRecordCount) break
+        }
+        return result
+    }
+
     override val supportsFolders: Boolean get() = true
 
     override suspend fun browseFolder(folderId: String): FolderContent? = runCatching {

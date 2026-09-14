@@ -16,8 +16,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.Alarm
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Route
+import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MergeType
 import androidx.compose.material.icons.filled.Extension
@@ -50,7 +55,13 @@ fun SettingsScreen(
     server: String,
     onBack: () -> Unit,
     onOpenPlayback: () -> Unit,
+    onOpenOutput: () -> Unit,
+    onOpenLoudness: () -> Unit,
+    onOpenAlarm: () -> Unit,
+    onOpenSignalPath: () -> Unit,
     onOpenEq: () -> Unit,
+    onOpenProcessingRack: () -> Unit,
+    onOpenTuning: () -> Unit,
     onOpenVisualizer: () -> Unit,
     onOpenSonic: () -> Unit,
     onOpenSources: () -> Unit,
@@ -68,6 +79,14 @@ fun SettingsScreen(
     val container = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication).container
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
+    val signalPath by container.signalPath.collectAsStateWithLifecycle()
+    val processingRack by container.settingsStore.processingRack.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.ProcessingRack())
+    val alarmSummary = alarmSettingsSummary()
+    val signalSummary = if (!signalPath.active) "Nothing playing" else buildList {
+        add(signalPath.output.ifBlank { "Output unknown" })
+        if (signalPath.codec.isNotBlank()) add(signalPath.codec)
+        if (signalPath.sampleRateHz > 0) add("%.1f kHz source".format(signalPath.sampleRateHz / 1000f))
+    }.joinToString(" · ")
     val serverBadge = when (session?.type) {
         com.aurora.music.data.ServerType.SPOTIFY -> "SPOTIFY"
         com.aurora.music.data.ServerType.JELLYFIN -> "JELLYFIN"
@@ -110,64 +129,73 @@ fun SettingsScreen(
                 }
             }
 
-            item { SettingsSectionTitle("Account") }
+            item { SettingsSectionTitle("Library & accounts") }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.SwitchAccount, "Servers & accounts", "Switch between saved logins", onClick = onOpenAccounts)
+                    SettingsDestinationRow(Icons.Filled.SwitchAccount, SettingsDestinations.accounts, onClick = onOpenAccounts)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.MergeType, SettingsDestinations.sources, onClick = onOpenSources)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Download, SettingsDestinations.storage, "${downloads.size} downloaded · quality and offline files", onClick = onOpenDownloads)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.AutoAwesome, SettingsDestinations.analysis, onClick = onOpenSonic)
                 }
             }
 
             item { SettingsSectionTitle("Audio") }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.PlayCircle, "Playback & quality", "Streaming quality, hi-res, crossfade, gapless", onClick = onOpenPlayback)
+                    SettingsDestinationRow(Icons.Filled.PlayCircle, SettingsDestinations.playback, onClick = onOpenPlayback)
                     SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.Tune, "Equalizer & effects", "EQ, AutoEQ, convolution, DSP", onClick = onOpenEq)
+                    SettingsDestinationRow(Icons.Filled.Devices, SettingsDestinations.output, onClick = onOpenOutput)
                     SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.GraphicEq, "Visualizer", "Spectrum, waveform, radial, particles", onClick = onOpenVisualizer)
+                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
+                        if (processingRack.enabled) "${processingRack.name} · ${processingRack.nodes.size} stages"
+                        else "Standard processing · arrange a custom chain", onClick = onOpenProcessingRack)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.ShowChart, SettingsDestinations.tuning, onClick = onOpenTuning)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
                 }
             }
 
-            item { SettingsSectionTitle("Discovery") }
+            item { SettingsSectionTitle("Timers") }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.AutoAwesome, "Sonic discovery", "On-device similarity radio & analysis", onClick = onOpenSonic)
+                    SettingsDestinationRow(Icons.Filled.Alarm, SettingsDestinations.alarm, alarmSummary, onClick = onOpenAlarm)
                 }
             }
 
-            item { SettingsSectionTitle("Library") }
+            item { SettingsSectionTitle("Appearance & controls") }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.MergeType, "Library & sources", "Best-source playback order, unified multi-server library", onClick = onOpenSources)
+                    SettingsDestinationRow(Icons.Filled.Palette, SettingsDestinations.appearance, onClick = onOpenAppearance)
                     SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.Download, "Downloads & storage", "${downloads.size} downloaded · quality, offline", onClick = onOpenDownloads)
-                }
-            }
-
-            item { SettingsSectionTitle("Interface") }
-            item {
-                SettingsGroup {
-                    SettingsNavRow(Icons.Filled.Palette, "Appearance", "Theme, accent, layout", onClick = onOpenAppearance)
+                    SettingsDestinationRow(Icons.Filled.GraphicEq, SettingsDestinations.visualizer, onClick = onOpenVisualizer)
                     SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.TouchApp, "Gestures & behaviour", "Swipe, haptics, private session", onClick = onOpenGestures)
+                    SettingsDestinationRow(Icons.Filled.TouchApp, SettingsDestinations.gestures, onClick = onOpenGestures)
                 }
             }
 
             item { SettingsSectionTitle("Connections") }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.Extension, "Integrations", "Last.fm, ListenBrainz, Discord, lyrics", onClick = onOpenIntegrations)
-                    SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.Lock, "Permissions", "Notifications, background, alarms, DAC", onClick = onOpenPermissions)
-                    SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.Info, "About Aurora", value = "v1.0", onClick = onOpenAbout)
+                    SettingsDestinationRow(Icons.Filled.Extension, SettingsDestinations.integrations, onClick = onOpenIntegrations)
                 }
             }
 
-            item { SettingsSectionTitle("Data") }
+            item { SettingsSectionTitle("App & data") }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.Backup, "Backup & restore", "Export or import your settings & playlists", onClick = onOpenBackup)
+                    SettingsDestinationRow(Icons.Filled.Lock, SettingsDestinations.permissions, onClick = onOpenPermissions)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Backup, SettingsDestinations.backup, onClick = onOpenBackup)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Info, SettingsDestinations.about, onClick = onOpenAbout)
                 }
             }
 

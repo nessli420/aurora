@@ -21,9 +21,9 @@ import kotlinx.coroutines.withContext
 @Composable
 fun rememberDominantColor(url: String, fallback: Color): State<Color> {
     val context = LocalContext.current
-    val resolved = remember(url) { mutableStateOf(fallback) }
+    val resolved = remember(url, fallback) { mutableStateOf(fallback) }
 
-    LaunchedEffect(url) {
+    LaunchedEffect(url, fallback) {
         if (url.isBlank()) {
             resolved.value = fallback
             return@LaunchedEffect

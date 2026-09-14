@@ -1,0 +1,12 @@
+{
+  "serial": "emulator-5554",
+  "tests": 7,
+  "failures": 0,
+  "durationSeconds": 30.624,
+  "focusDiagnosis": "Android 15 denied background audio focus during instrumentation (procState:4). Starting MainActivity 1.2s after instrumentation began resolved all 3 prior playback timeouts.",
+  "emulatorRestarted": false,
+  "reinstalled": false,
+  "dataWiped": false,
+  "log": "emulator-foreground-tests.log",
+  "logCaveat": "One Source error referred to a previously deleted mix-qa WAV cache fixture while restoring prior test queue state; no new meter/renderer exception and all seven requested checks passed."
+}

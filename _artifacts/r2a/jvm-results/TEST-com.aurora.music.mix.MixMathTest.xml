@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.mix.MixMathTest" tests="5" skipped="0" failures="0" errors="0" timestamp="2026-09-09T20:35:27" hostname="DESKTOP-A95H910" time="0.487">
+  <properties/>
+  <testcase name="eightOverlappingTracksRespectHeadroomAndMuteSolo" classname="com.aurora.music.mix.MixMathTest" time="0.16"/>
+  <testcase name="protectedCrossfadesNeverExceedFullScaleForCorrelatedAudio" classname="com.aurora.music.mix.MixMathTest" time="0.313"/>
+  <testcase name="malformedSettingsAreFiniteAndBounded" classname="com.aurora.music.mix.MixMathTest" time="0.004"/>
+  <testcase name="cuesAndTempoHaveOneConsistentTimeline" classname="com.aurora.music.mix.MixMathTest" time="0.0"/>
+  <testcase name="unprotectedPowerCurvePreservesPower" classname="com.aurora.music.mix.MixMathTest" time="0.008"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

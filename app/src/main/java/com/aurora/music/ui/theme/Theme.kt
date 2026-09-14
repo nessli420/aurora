@@ -13,6 +13,7 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
@@ -24,6 +25,7 @@ import com.aurora.music.data.AccentMode
 import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
+import com.aurora.music.util.rememberDominantColor
 
 private val DarkColors = darkColorScheme(
     primary = AuroraRose,
@@ -94,6 +96,34 @@ private fun ColorScheme.toAmoled(): ColorScheme = copy(
     surfaceContainerHigh = Color(0xFF151515),
     surfaceContainerHighest = Color(0xFF1E1E1E),
 )
+
+/** One artwork palette shared by the fullscreen player, queue and player-owned sheets. */
+@Composable
+fun rememberPlayerColorScheme(artworkUrl: String, fallback: Color): ColorScheme {
+    val prefs = LocalUiPrefs.current
+    val appColors = MaterialTheme.colorScheme
+    // The alternate styles own their complete palette, including the player.
+    if (prefs.themeStyle != ThemeStyle.AURORA) return appColors
+
+    val accent by rememberDominantColor(artworkUrl, fallback)
+    val dark = appColors.background.luminance() < 0.5f
+    val base = (if (dark) DarkColors else LightColors).withAccent(accent, dark)
+    // Choose the higher-contrast foreground for artwork colors of any brightness.
+    fun foreground(color: Color) = if (color.luminance() > 0.179f) Color.Black else Color.White
+    val colors = base.copy(
+        onPrimary = foreground(base.primary),
+        onPrimaryContainer = foreground(base.primaryContainer),
+        onSecondary = foreground(base.secondary),
+        secondaryContainer = base.primaryContainer,
+        onSecondaryContainer = foreground(base.primaryContainer),
+        onTertiary = foreground(base.tertiary),
+        tertiaryContainer = base.primaryContainer,
+        onTertiaryContainer = foreground(base.primaryContainer),
+        surfaceTint = accent,
+        inversePrimary = accent,
+    )
+    return if (prefs.themeMode == ThemeMode.AMOLED) colors.toAmoled() else colors
+}
 
 @Composable
 fun AuroraTheme(

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.playback.PrecisionBlockProcessorTest" tests="9" skipped="0" failures="0" errors="0" timestamp="2026-09-09T20:35:28" hostname="DESKTOP-A95H910" time="0.431">
+  <properties/>
+  <testcase name="disablingConvolutionPreservesPreviouslyAcceptedPartialAudio" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.163"/>
+  <testcase name="effectsAndConvolutionKeepQuietSamplesWithoutIntermediateQuantization" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.078"/>
+  <testcase name="oddInputSizesCrossConvolverBoundariesWithoutLossOrMetadataDrift" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.034"/>
+  <testcase name="bypassPreservesBinary64SamplesAndOutputIsTakenOnce" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.014"/>
+  <testcase name="latestImpulseRequestWinsAndAFormatChangeRepreparesItsRate" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.018"/>
+  <testcase name="replacingImpulseDrainsTheOldPartialBlockBeforeAcceptingNewInput" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.027"/>
+  <testcase name="aRejectedInputDoesNotAdvanceEffectsOrChangeCallerSamples" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.007"/>
+  <testcase name="seekClearsEffectsAndConvolutionHistoryWhileRetainingPreparedControls" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.041"/>
+  <testcase name="failedPreparationFallsBackToDryAudioAndExplainsTheFailure" classname="com.aurora.music.playback.PrecisionBlockProcessorTest" time="0.049"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,17 @@
+warning: in the working copy of 'app/src/main/java/com/aurora/music/data/AppContainer.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/data/MusicRepository.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/data/SettingsStore.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/data/SonicEngine.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/data/SonicStore.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/playback/AuroraDspProcessor.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/playback/ConvolutionProcessor.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/playback/PlaybackService.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/ui/AuroraApp.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/ui/screens/library/LibraryScreen.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/ui/screens/player/PlayerScreen.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/ui/screens/player/QueueScreen.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/ui/screens/settings/PlaybackSettingsScreen.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'app/src/main/java/com/aurora/music/viewmodel/PlayerViewModel.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'decent/decent-usb-audio-driver/src/main/jni/native-audio-engine.cpp', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'decent/decent-usb-audio-driver/src/main/kotlin/com/decent/usbaudio/NativeAudioEngine.kt', CRLF will be replaced by LF the next time Git touches it
+warning: in the working copy of 'decent/decent-usb-audio-wrapper-media3/src/main/kotlin/com/decent/usbaudio/media3/UsbAudioSink.kt', CRLF will be replaced by LF the next time Git touches it

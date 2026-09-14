@@ -36,28 +36,37 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** Backup & restore: export settings + local playlists/likes + history to a JSON file, or import one. */
+/** Portable backups include current/saved processing assets; legacy JSON import remains available. */
 @Composable
 fun BackupScreen(contentPadding: PaddingValues, onBack: () -> Unit, confirm: (String) -> Unit) {
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
     val ctx = LocalContext.current
     val scope = rememberCoroutineScope()
-    var pending by remember { mutableStateOf<String?>(null) }
+    var busy by remember { mutableStateOf(false) }
 
-    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/json")) { uri ->
-        val text = pending; pending = null
-        if (uri != null && text != null) scope.launch(Dispatchers.IO) {
-            val ok = runCatching { ctx.contentResolver.openOutputStream(uri)?.use { it.write(text.toByteArray()) } != null }.getOrDefault(false)
-            confirm(if (ok) "Backup exported" else "Export failed")
+    val exportLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("application/zip")) { uri ->
+        if (uri != null) scope.launch {
+            busy = true
+            try {
+                val result = withContext(Dispatchers.IO) { runCatching {
+                    requireNotNull(ctx.contentResolver.openOutputStream(uri)).use {
+                        container.backupManager.exportArchive(System.currentTimeMillis(), it).getOrThrow()
+                    }
+                } }
+                confirm(result.fold({ "Backup exported with processing presets and impulse responses" },
+                    { it.message ?: "Export failed" }))
+            } finally { busy = false }
         }
     }
     val importLauncher = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
         if (uri != null) scope.launch {
-            val json = withContext(Dispatchers.IO) {
-                runCatching { ctx.contentResolver.openInputStream(uri)?.bufferedReader()?.use { it.readText() } }.getOrNull()
-            }
-            val ok = json != null && container.backupManager.import(json)
-            confirm(if (ok) "Backup restored" else "Couldn't read that backup")
+            busy = true
+            try {
+                val result = withContext(Dispatchers.IO) { runCatching {
+                    requireNotNull(ctx.contentResolver.openInputStream(uri)).use { container.backupManager.importArchive(it).getOrThrow() }
+                } }
+                confirm(result.getOrElse { it.message ?: "Couldn't read that backup" })
+            } finally { busy = false }
         }
     }
 
@@ -65,19 +74,16 @@ fun BackupScreen(contentPadding: PaddingValues, onBack: () -> Unit, confirm: (St
         SettingsTopBar("Backup & restore", onBack)
         Column(Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             SettingsGroup {
-                ActionRow(Icons.Filled.Backup, "Export backup", "Settings, playlists, likes & listening history") {
-                    scope.launch {
-                        pending = container.backupManager.export(System.currentTimeMillis())
-                        exportLauncher.launch("aurora-backup.json")
-                    }
+                ActionRow(Icons.Filled.Backup, "Export backup", "Settings, racks, presets, impulse responses, playlists and history") {
+                    if (!busy) exportLauncher.launch("aurora-backup.zip")
                 }
                 SettingsRowDivider()
                 ActionRow(Icons.Filled.Restore, "Restore backup", "Overwrites current settings & playlists") {
-                    importLauncher.launch(arrayOf("application/json", "*/*"))
+                    if (!busy) importLauncher.launch(arrayOf("application/zip", "application/json", "application/octet-stream"))
                 }
             }
             Text(
-                "Downloaded audio files aren't included (they can be re-downloaded). Restoring replaces your current settings, on-device playlists, likes and history.",
+                if (busy) "Preparing and validating backup…" else "Backups include saved measurement-tuning projects and impulse responses used by current processing and saved presets. Downloaded music is not included. Restore replaces settings, on-device playlists, likes and history. Older JSON backups are accepted, but their impulse responses must be selected again.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
             )

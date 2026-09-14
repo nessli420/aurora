@@ -1,0 +1,161 @@
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PcmMeasurementDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.PcmMeasurementDeviceTest:
+INSTRUMENTATION_STATUS: test=sinkRetriesCountOnlyConsumedFramesAndLeavePcmUntouched
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PcmMeasurementDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=sinkRetriesCountOnlyConsumedFramesAndLeavePcmUntouched
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PcmMeasurementDeviceTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=liveSignalPathMeasuresCustomPreampAttenuation
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.PcmMeasurementDeviceTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Timed out: flat before/after PCM measurements
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.PcmMeasurementDeviceTest.await(PcmMeasurementDeviceTest.kt:213)
+	at com.aurora.music.playback.PcmMeasurementDeviceTest.liveSignalPathMeasuresCustomPreampAttenuation(PcmMeasurementDeviceTest.kt:147)
+
+INSTRUMENTATION_STATUS: stream=
+Error in liveSignalPathMeasuresCustomPreampAttenuation(com.aurora.music.playback.PcmMeasurementDeviceTest):
+java.lang.AssertionError: Timed out: flat before/after PCM measurements
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.PcmMeasurementDeviceTest.await(PcmMeasurementDeviceTest.kt:213)
+	at com.aurora.music.playback.PcmMeasurementDeviceTest.liveSignalPathMeasuresCustomPreampAttenuation(PcmMeasurementDeviceTest.kt:147)
+
+INSTRUMENTATION_STATUS: test=liveSignalPathMeasuresCustomPreampAttenuation
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.MeterFormatTransitionDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.MeterFormatTransitionDeviceTest:
+INSTRUMENTATION_STATUS: test=pendingFormatDoesNotChangeTheMeterUntilFlushActivatesIt
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.MeterFormatTransitionDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=pendingFormatDoesNotChangeTheMeterUntilFlushActivatesIt
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.data.ProcessingPresetDeviceTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.data.ProcessingPresetDeviceTest:
+INSTRUMENTATION_STATUS: test=convolutionSnapshotsSurviveReplacementAndRejectMissingAssetsWithoutWrites
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.data.ProcessingPresetDeviceTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=convolutionSnapshotsSurviveReplacementAndRejectMissingAssetsWithoutWrites
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.data.ProcessingPresetDeviceTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=presetsRoundTripCompleteAudioAndPreserveOtherPreferences
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.data.ProcessingPresetDeviceTest
+INSTRUMENTATION_STATUS: current=5
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=presetsRoundTripCompleteAudioAndPreserveOtherPreferences
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest:
+INSTRUMENTATION_STATUS: test=applyingSavedProcessingReachesThePlayingAndPausedService
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=6
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Timed out: fixture playing
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest.await(ProcessingPresetPlaybackDeviceTest.kt:41)
+	at com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest.applyingSavedProcessingReachesThePlayingAndPausedService(ProcessingPresetPlaybackDeviceTest.kt:85)
+
+INSTRUMENTATION_STATUS: stream=
+Error in applyingSavedProcessingReachesThePlayingAndPausedService(com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest):
+java.lang.AssertionError: Timed out: fixture playing
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest.await(ProcessingPresetPlaybackDeviceTest.kt:41)
+	at com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest.applyingSavedProcessingReachesThePlayingAndPausedService(ProcessingPresetPlaybackDeviceTest.kt:85)
+
+INSTRUMENTATION_STATUS: test=applyingSavedProcessingReachesThePlayingAndPausedService
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.R0PlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.R0PlaybackDeviceTest:
+INSTRUMENTATION_STATUS: test=serviceBrowseTransportAndSignalPathFollowActualPlayback
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.R0PlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=7
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=7
+INSTRUMENTATION_STATUS: stack=java.lang.AssertionError: Timed out: PCM source and processor path observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.R0PlaybackDeviceTest.await(R0PlaybackDeviceTest.kt:46)
+	at com.aurora.music.playback.R0PlaybackDeviceTest.serviceBrowseTransportAndSignalPathFollowActualPlayback(R0PlaybackDeviceTest.kt:87)
+
+INSTRUMENTATION_STATUS: stream=
+Error in serviceBrowseTransportAndSignalPathFollowActualPlayback(com.aurora.music.playback.R0PlaybackDeviceTest):
+java.lang.AssertionError: Timed out: PCM source and processor path observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.R0PlaybackDeviceTest.await(R0PlaybackDeviceTest.kt:46)
+	at com.aurora.music.playback.R0PlaybackDeviceTest.serviceBrowseTransportAndSignalPathFollowActualPlayback(R0PlaybackDeviceTest.kt:87)
+
+INSTRUMENTATION_STATUS: test=serviceBrowseTransportAndSignalPathFollowActualPlayback
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 36.399
+There were 3 failures:
+1) liveSignalPathMeasuresCustomPreampAttenuation(com.aurora.music.playback.PcmMeasurementDeviceTest)
+java.lang.AssertionError: Timed out: flat before/after PCM measurements
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.PcmMeasurementDeviceTest.await(PcmMeasurementDeviceTest.kt:213)
+	at com.aurora.music.playback.PcmMeasurementDeviceTest.liveSignalPathMeasuresCustomPreampAttenuation(PcmMeasurementDeviceTest.kt:147)
+2) applyingSavedProcessingReachesThePlayingAndPausedService(com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest)
+java.lang.AssertionError: Timed out: fixture playing
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest.await(ProcessingPresetPlaybackDeviceTest.kt:41)
+	at com.aurora.music.playback.ProcessingPresetPlaybackDeviceTest.applyingSavedProcessingReachesThePlayingAndPausedService(ProcessingPresetPlaybackDeviceTest.kt:85)
+3) serviceBrowseTransportAndSignalPathFollowActualPlayback(com.aurora.music.playback.R0PlaybackDeviceTest)
+java.lang.AssertionError: Timed out: PCM source and processor path observed
+	at org.junit.Assert.fail(Assert.java:89)
+	at com.aurora.music.playback.R0PlaybackDeviceTest.await(R0PlaybackDeviceTest.kt:46)
+	at com.aurora.music.playback.R0PlaybackDeviceTest.serviceBrowseTransportAndSignalPathFollowActualPlayback(R0PlaybackDeviceTest.kt:87)
+
+FAILURES!!!
+Tests run: 7,  Failures: 3
+
+
+INSTRUMENTATION_CODE: -1

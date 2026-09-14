@@ -25,6 +25,14 @@ class AudioEffectsController(
     var presetNames: List<String> = emptyList(); private set
     var available: Boolean = false; private set
 
+    /** Query enabled effects, rather than inferring success from their saved preferences. */
+    fun activeEffectNames(): List<String> = buildList {
+        if (runCatching { equalizer?.enabled == true }.getOrDefault(false)) add("System EQ")
+        if (runCatching { bassBoost?.enabled == true }.getOrDefault(false)) add("System bass boost")
+        if (runCatching { virtualizer?.enabled == true }.getOrDefault(false)) add("System virtualizer")
+        if (runCatching { loudness?.enabled == true }.getOrDefault(false)) add("System loudness gain")
+    }
+
     // gated here not in prefs so system effects never stack with custom dsp while ui keeps values
     @Volatile private var masterEnabled: Boolean = true
     @Volatile private var lastPrefs: AudioPrefs? = null

@@ -14,12 +14,15 @@ import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -37,6 +40,7 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Speaker
@@ -86,6 +90,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -105,6 +110,7 @@ import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.viewmodel.PlayerUiState
 import com.aurora.music.viewmodel.RepeatMode
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PlayerScreen(
     state: PlayerUiState,
@@ -123,8 +129,10 @@ fun PlayerScreen(
     onOpenOutput: () -> Unit,
     onOpenSleep: () -> Unit,
     onOpenVisualizer: () -> Unit,
+    onOpenSignalPath: () -> Unit,
     onSonicRadio: () -> Unit,
     onAutoDj: () -> Unit,
+    onOpenMix: () -> Unit = {},
     gestures: com.aurora.music.data.GesturePrefs = com.aurora.music.data.GesturePrefs(),
 ) {
     val song = state.current
@@ -132,16 +140,13 @@ fun PlayerScreen(
     val classic = ui.themeStyle == ThemeStyle.AURORA
     var showLyrics by remember { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
-    val accent by com.aurora.music.util.rememberDominantColor(song.artworkUrl, song.accent)
-    val playerAccent = if (classic) accent else MaterialTheme.colorScheme.primary
-    val onPlayerAccent = if (classic) {
-        if (accent.luminance() > 0.6f) Color.Black else Color.White
-    } else MaterialTheme.colorScheme.onPrimary
+    val playerAccent = MaterialTheme.colorScheme.primary
+    val onPlayerAccent = MaterialTheme.colorScheme.onPrimary
     val g = ui.playerGradient
     val bg = Brush.verticalGradient(
         listOf(
-            accent.copy(alpha = (0.65f * g).coerceIn(0f, 1f)),
-            accent.copy(alpha = (0.22f * g).coerceIn(0f, 1f)),
+            playerAccent.copy(alpha = (0.65f * g).coerceIn(0f, 1f)),
+            playerAccent.copy(alpha = (0.22f * g).coerceIn(0f, 1f)),
             MaterialTheme.colorScheme.background,
             MaterialTheme.colorScheme.background,
         )
@@ -219,6 +224,7 @@ fun PlayerScreen(
                             modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showMenu = true }.padding(8.dp),
                         )
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                            DropdownMenuItem(text = { Text("Mix studio") }, onClick = { showMenu = false; onOpenMix() }, leadingIcon = { Icon(Icons.Filled.GraphicEq, null) })
                             DropdownMenuItem(
                                 text = { Text("Sonic radio") },
                                 onClick = { showMenu = false; onSonicRadio() },
@@ -309,7 +315,12 @@ fun PlayerScreen(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (state.isPlaying) {
                     com.aurora.music.ui.components.LottieEqualizer(
-                        modifier = Modifier.size(28.dp),
+                        modifier = Modifier.size(28.dp)
+                            .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
+                            .drawWithContent {
+                                drawContent()
+                                drawRect(playerAccent, blendMode = BlendMode.SrcIn)
+                            },
                         isPlaying = true,
                     )
                     Spacer(Modifier.width(10.dp))
@@ -340,32 +351,40 @@ fun PlayerScreen(
 
             val badge = formatBadge(song)
             val source = sourceLabel(song)
-            if (badge.isNotEmpty() || source != null) {
-                Spacer(Modifier.height(10.dp))
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (source != null) {
-                        Box(
-                            Modifier.then(
-                                if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                                else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
-                            ).padding(horizontal = 10.dp, vertical = 3.dp),
-                        ) { Text(source, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    if (isLossless(song.suffix)) {
-                        Box(
-                            Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(playerAccent).padding(horizontal = 8.dp, vertical = 3.dp),
-                        ) { Text("LOSSLESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onPlayerAccent) }
-                        Spacer(Modifier.width(8.dp))
-                    }
-                    if (badge.isNotEmpty()) {
-                        Box(
-                            Modifier.then(
-                                if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                                else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
-                            ).padding(horizontal = 10.dp, vertical = 3.dp),
-                        ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
-                    }
+            Spacer(Modifier.height(10.dp))
+            FlowRow(
+                modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
+                    .clip(RoundedCornerShape(12.dp))
+                    .clickable(role = Role.Button, onClickLabel = "Open Signal Path", onClick = onOpenSignalPath)
+                    .padding(vertical = 6.dp),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalArrangement = Arrangement.spacedBy(6.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
+                    Icon(Icons.Filled.Route, null, modifier = Modifier.size(16.dp), tint = playerAccent)
+                    Spacer(Modifier.width(4.dp))
+                    Text("Signal Path", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = playerAccent)
+                }
+                if (source != null) {
+                    Box(
+                        Modifier.then(
+                            if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                            else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
+                        ).padding(horizontal = 10.dp, vertical = 3.dp),
+                    ) { Text(source, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                }
+                if (isLossless(song.suffix)) {
+                    Box(
+                        Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(playerAccent).padding(horizontal = 8.dp, vertical = 3.dp),
+                    ) { Text("LOSSLESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onPlayerAccent) }
+                }
+                if (badge.isNotEmpty()) {
+                    Box(
+                        Modifier.then(
+                            if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                            else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
+                        ).padding(horizontal = 10.dp, vertical = 3.dp),
+                    ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
                 }
             }
 
@@ -392,9 +411,10 @@ fun PlayerScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    Icons.Filled.Shuffle, "Shuffle",
-                    tint = if (state.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onToggleShuffle).padding(8.dp),
+                    if (state.isMix) Icons.Filled.GraphicEq else Icons.Filled.Shuffle,
+                    if (state.isMix) "Edit mix transitions" else "Shuffle",
+                    tint = if (state.shuffle || state.isMix) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = if (state.isMix) onOpenMix else onToggleShuffle).padding(8.dp),
                 )
                 Icon(
                     Icons.Filled.SkipPrevious, "Previous",
@@ -437,7 +457,11 @@ fun PlayerScreen(
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    BottomUtil(Icons.Filled.Speed, "Speed ${"%.1f".format(state.speed)}x", onOpenSpeedPitch)
+                    BottomUtil(
+                        Icons.Filled.Speed, "Speed ${"%.1f".format(state.speed)}x", onOpenSpeedPitch,
+                        active = kotlin.math.abs(state.speed - 1f) > 0.001f ||
+                            (!state.matchPitch && kotlin.math.abs(state.pitch) > 0.001f),
+                    )
                     BottomUtil(
                         Icons.Filled.Lyrics,
                         "Lyrics",

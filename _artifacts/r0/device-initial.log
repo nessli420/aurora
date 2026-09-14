@@ -1,0 +1,172 @@
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.R0PlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.R0PlaybackDeviceTest:
+INSTRUMENTATION_STATUS: test=serviceBrowseTransportAndSignalPathFollowActualPlayback
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.R0PlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=1
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=serviceBrowseTransportAndSignalPathFollowActualPlayback
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.AlarmSchedulingDeviceTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.AlarmSchedulingDeviceTest:
+INSTRUMENTATION_STATUS: test=observingAndUnrelatedPreferenceWritesDoNotRearmAlarm
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.AlarmSchedulingDeviceTest
+INSTRUMENTATION_STATUS: current=2
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=observingAndUnrelatedPreferenceWritesDoNotRearmAlarm
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.AlarmPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+com.aurora.music.playback.AlarmPlaybackDeviceTest:
+INSTRUMENTATION_STATUS: test=alarmActionStartsLocalMusicAndDismissKeepsItStopped
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.AlarmPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=3
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=.
+INSTRUMENTATION_STATUS: test=alarmActionStartsLocalMusicAndDismissKeepsItStopped
+INSTRUMENTATION_STATUS_CODE: 0
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.AlarmPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stream=
+INSTRUMENTATION_STATUS: test=dismissDuringLibraryLookupCannotRestartMusicLater
+INSTRUMENTATION_STATUS_CODE: 1
+INSTRUMENTATION_STATUS: class=com.aurora.music.playback.AlarmPlaybackDeviceTest
+INSTRUMENTATION_STATUS: current=4
+INSTRUMENTATION_STATUS: id=AndroidJUnitRunner
+INSTRUMENTATION_STATUS: numtests=4
+INSTRUMENTATION_STATUS: stack=java.util.concurrent.ExecutionException: java.lang.AssertionError: Dismissed alarm restarted playback
+	at java.util.concurrent.FutureTask.report(FutureTask.java:122)
+	at java.util.concurrent.FutureTask.get(FutureTask.java:191)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.main(AlarmPlaybackDeviceTest.kt:44)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.assertStoppedFor(AlarmPlaybackDeviceTest.kt:92)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.dismissDuringLibraryLookupCannotRestartMusicLater$lambda$9(AlarmPlaybackDeviceTest.kt:86)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$AGmLYlfZnSXDjxWf4OnLRofuc9g(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.withFixture(AlarmPlaybackDeviceTest.kt:134)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.dismissDuringLibraryLookupCannotRestartMusicLater(AlarmPlaybackDeviceTest.kt:78)
+	... 31 trimmed
+Caused by: java.lang.AssertionError: Dismissed alarm restarted playback
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertFalse(Assert.java:65)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.assertStoppedFor$lambda$10(AlarmPlaybackDeviceTest.kt:93)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$IvCL95bA7lscp-1CRsTSJpxgQIQ(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.main$lambda$0(AlarmPlaybackDeviceTest.kt:42)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$f_Imkk2yns9yx5kwGPJb9koTQNw(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda0.call(D8$$SyntheticClass:0)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:487)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2612)
+	at android.os.Handler.handleCallback(Handler.java:959)
+	at android.os.Handler.dispatchMessage(Handler.java:100)
+	at android.os.Looper.loopOnce(Looper.java:232)
+	at android.os.Looper.loop(Looper.java:317)
+	at android.app.ActivityThread.main(ActivityThread.java:8705)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+
+INSTRUMENTATION_STATUS: stream=
+Error in dismissDuringLibraryLookupCannotRestartMusicLater(com.aurora.music.playback.AlarmPlaybackDeviceTest):
+java.util.concurrent.ExecutionException: java.lang.AssertionError: Dismissed alarm restarted playback
+	at java.util.concurrent.FutureTask.report(FutureTask.java:122)
+	at java.util.concurrent.FutureTask.get(FutureTask.java:191)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.main(AlarmPlaybackDeviceTest.kt:44)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.assertStoppedFor(AlarmPlaybackDeviceTest.kt:92)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.dismissDuringLibraryLookupCannotRestartMusicLater$lambda$9(AlarmPlaybackDeviceTest.kt:86)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$AGmLYlfZnSXDjxWf4OnLRofuc9g(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.withFixture(AlarmPlaybackDeviceTest.kt:134)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.dismissDuringLibraryLookupCannotRestartMusicLater(AlarmPlaybackDeviceTest.kt:78)
+	... 31 trimmed
+Caused by: java.lang.AssertionError: Dismissed alarm restarted playback
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertFalse(Assert.java:65)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.assertStoppedFor$lambda$10(AlarmPlaybackDeviceTest.kt:93)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$IvCL95bA7lscp-1CRsTSJpxgQIQ(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.main$lambda$0(AlarmPlaybackDeviceTest.kt:42)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$f_Imkk2yns9yx5kwGPJb9koTQNw(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda0.call(D8$$SyntheticClass:0)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:487)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2612)
+	at android.os.Handler.handleCallback(Handler.java:959)
+	at android.os.Handler.dispatchMessage(Handler.java:100)
+	at android.os.Looper.loopOnce(Looper.java:232)
+	at android.os.Looper.loop(Looper.java:317)
+	at android.app.ActivityThread.main(ActivityThread.java:8705)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+
+INSTRUMENTATION_STATUS: test=dismissDuringLibraryLookupCannotRestartMusicLater
+INSTRUMENTATION_STATUS_CODE: -2
+INSTRUMENTATION_RESULT: stream=
+
+Time: 4.389
+There was 1 failure:
+1) dismissDuringLibraryLookupCannotRestartMusicLater(com.aurora.music.playback.AlarmPlaybackDeviceTest)
+java.util.concurrent.ExecutionException: java.lang.AssertionError: Dismissed alarm restarted playback
+	at java.util.concurrent.FutureTask.report(FutureTask.java:122)
+	at java.util.concurrent.FutureTask.get(FutureTask.java:191)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.main(AlarmPlaybackDeviceTest.kt:44)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.assertStoppedFor(AlarmPlaybackDeviceTest.kt:92)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.dismissDuringLibraryLookupCannotRestartMusicLater$lambda$9(AlarmPlaybackDeviceTest.kt:86)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$AGmLYlfZnSXDjxWf4OnLRofuc9g(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda2.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.withFixture(AlarmPlaybackDeviceTest.kt:134)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.dismissDuringLibraryLookupCannotRestartMusicLater(AlarmPlaybackDeviceTest.kt:78)
+	... 31 trimmed
+Caused by: java.lang.AssertionError: Dismissed alarm restarted playback
+	at org.junit.Assert.fail(Assert.java:89)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertFalse(Assert.java:65)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.assertStoppedFor$lambda$10(AlarmPlaybackDeviceTest.kt:93)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$IvCL95bA7lscp-1CRsTSJpxgQIQ(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda4.invoke(D8$$SyntheticClass:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.main$lambda$0(AlarmPlaybackDeviceTest.kt:42)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest.$r8$lambda$f_Imkk2yns9yx5kwGPJb9koTQNw(Unknown Source:0)
+	at com.aurora.music.playback.AlarmPlaybackDeviceTest$$ExternalSyntheticLambda0.call(D8$$SyntheticClass:0)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:487)
+	at java.util.concurrent.FutureTask.run(FutureTask.java:264)
+	at android.app.Instrumentation$SyncRunnable.run(Instrumentation.java:2612)
+	at android.os.Handler.handleCallback(Handler.java:959)
+	at android.os.Handler.dispatchMessage(Handler.java:100)
+	at android.os.Looper.loopOnce(Looper.java:232)
+	at android.os.Looper.loop(Looper.java:317)
+	at android.app.ActivityThread.main(ActivityThread.java:8705)
+	at java.lang.reflect.Method.invoke(Native Method)
+	at com.android.internal.os.RuntimeInit$MethodAndArgsCaller.run(RuntimeInit.java:580)
+	at com.android.internal.os.ZygoteInit.main(ZygoteInit.java:886)
+
+FAILURES!!!
+Tests run: 4,  Failures: 1
+
+
+INSTRUMENTATION_CODE: -1

@@ -12,6 +12,7 @@ import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.SpotifyClient
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.distinctUntilChanged
 import com.aurora.music.data.remote.SubsonicClient
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
@@ -21,18 +22,6 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-
-// bitPerfect true only when samples reach output untouched float passthrough no dsp/mixing
-data class SignalPath(
-    val active: Boolean = false,
-    val codec: String = "",
-    val sampleRateHz: Int = 0,
-    val bitDepth: Int = 0,
-    val channels: Int = 0,
-    val output: String = "",
-    val bitPerfect: Boolean = false,
-    val note: String = "",
-)
 
 class AppContainer(context: Context) {
 
@@ -53,7 +42,7 @@ class AppContainer(context: Context) {
 
     val tagEditor = TagEditor(appContext)
 
-    val backupManager = BackupManager(settingsStore, localStore, playHistory)
+    val backupManager = BackupManager(settingsStore, localStore, playHistory, appContext)
 
     val musicBrainz = com.aurora.music.data.remote.MusicBrainzClient()
 
@@ -104,7 +93,14 @@ class AppContainer(context: Context) {
     )
 
     val sonicStore = SonicStore(appContext)
-    val sonicEngine = SonicEngine(localLibrary, downloadManager, sonicStore)
+    val mixStore = com.aurora.music.mix.MixStore(appContext)
+    val mixController = com.aurora.music.mix.MixController()
+    val stemSeparator = com.aurora.music.mix.StemSeparator(appContext, ::resolveYtSentinel)
+    val mixAnalyzer = com.aurora.music.mix.MixAnalyzer(appContext, ::resolveYtSentinel) { account, id, vector ->
+        sonicStore.put(id, vector, account)
+    }
+    val sonicEngine by lazy { SonicEngine(sonicStore, { repository.allLibrarySongs(cap = Int.MAX_VALUE) },
+        { settingsStore.session.first()?.accountKey().orEmpty() }, mixAnalyzer) }
 
     val radioBrowser = com.aurora.music.data.remote.RadioBrowserClient()
     val podcastClient = com.aurora.music.data.remote.PodcastClient()
@@ -311,12 +307,8 @@ class AppContainer(context: Context) {
     }
 
     init {
-        // scan() is idempotent only processes tracks not already in the vector store
         scope.launch {
-            if (runCatching { settingsStore.sonicAutoAnalyze.first() }.getOrDefault(false)) sonicEngine.scan()
-        }
-        scope.launch {
-            settingsStore.session.collect { session ->
+            settingsStore.session.distinctUntilChanged().collect { session ->
                 lastSession = session
                 // keep a disk-restored session in the saved list so it shows up for switching
                 session?.let { settingsStore.addSavedSession(it) }
@@ -327,6 +319,9 @@ class AppContainer(context: Context) {
                 if (lastAccountKey != null && lastAccountKey != key) _accountEpoch.value++
                 lastAccountKey = key
                 recomputeOffline()
+                sonicEngine.cancel()
+                kotlinx.coroutines.withContext(Dispatchers.IO) { sonicStore.selectAccount(session?.accountKey().orEmpty()) }
+                if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
             }
         }
         scope.launch {
@@ -388,7 +383,7 @@ class AppContainer(context: Context) {
             settingsStore.squigTarget.collect { squigTargetValue = it }
         }
         scope.launch {
-            settingsStore.alarmPrefs.collect { com.aurora.music.playback.AlarmScheduler.apply(appContext, it) }
+            settingsStore.alarmPrefs.distinctUntilChanged().collect { com.aurora.music.playback.AlarmScheduler.apply(appContext, it) }
         }
         scope.launch {
             settingsStore.spotifyClientId.collect { id ->

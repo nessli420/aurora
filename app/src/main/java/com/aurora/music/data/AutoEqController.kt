@@ -71,11 +71,10 @@ class AutoEqController(
         // never wipe a manually-set correction on an unbound device
         if (b == null) return
         scope.launch {
-            settingsStore.setDspParametric(b.bands)
-            settingsStore.setDspPreamp(b.preampDb)
-            settingsStore.setDspMode(DspMode.CUSTOM)
-            settingsStore.setActiveEqProfile(b.profileName)
-            if (notify) toast("AutoEQ: ${b.profileName} → ${b.deviceLabel}")
+            // One settings transaction prevents a device correction interleaving its
+            // bands/preamp/mode with a manually applied processing preset.
+            val applied = settingsStore.applyEqBindingIfEnabled(b)
+            if (applied && notify) toast("AutoEQ: ${b.profileName} → ${b.deviceLabel}")
         }
     }
 }

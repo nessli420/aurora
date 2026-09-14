@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.io.File
 
 data class PlayEvent(
@@ -32,6 +33,7 @@ class PlayHistoryStore(context: Context) {
     private val file = File(context.filesDir, "play_history.json")
     private val gson = Gson()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val lock = Any()
 
     private val _history = MutableStateFlow(load())
     val history: StateFlow<List<PlayEvent>> = _history.asStateFlow()
@@ -39,22 +41,35 @@ class PlayHistoryStore(context: Context) {
     fun record(song: Song, timestamp: Long) {
         if (song.id.isEmpty()) return
         val event = PlayEvent(song.id, song.title, song.artist, song.album, song.albumId, song.artistId, song.artworkUrl, song.durationSec, timestamp)
-        // drop immediate duplicate re-fire within 10s
-        val last = _history.value.firstOrNull()
-        if (last != null && last.songId == song.id && timestamp - last.timestamp < 10_000) return
-        _history.update { (listOf(event) + it).take(MAX) }
+        synchronized(lock) {
+            // drop immediate duplicate re-fire within 10s
+            val last = _history.value.firstOrNull()
+            if (last != null && last.songId == song.id && timestamp - last.timestamp < 10_000) return
+            _history.value = (listOf(event) + _history.value).take(MAX)
+        }
         scope.launch { save() }
     }
 
     fun clear() {
-        _history.value = emptyList()
-        scope.launch { runCatching { file.delete() } }
+        synchronized(lock) { _history.value = emptyList() }
+        // Persist the current state when this work runs: a queued delete must never erase a later restore.
+        scope.launch { save() }
     }
 
     fun snapshot(): List<PlayEvent> = _history.value
     fun restore(events: List<PlayEvent>) {
-        _history.value = events.take(MAX)
+        synchronized(lock) { _history.value = events.take(MAX) }
         scope.launch { save() }
+    }
+
+    /** Await durable backup replacement, then publish it, serialized against queued ordinary saves. */
+    internal suspend fun restoreBackup(events: List<PlayEvent>) = withContext(Dispatchers.IO) {
+        val restored = events.take(MAX)
+        val bytes = gson.toJson(restored).toByteArray(Charsets.UTF_8)
+        synchronized(lock) {
+            persistBackupFileAtomically(file, bytes)
+            _history.value = restored
+        }
     }
 
     fun totalPlays(): Int = _history.value.size
@@ -106,15 +121,16 @@ class PlayHistoryStore(context: Context) {
         return (ts + offset) / 86_400_000L
     }
 
-    private fun MutableStateFlow<List<PlayEvent>>.update(block: (List<PlayEvent>) -> List<PlayEvent>) { value = block(value) }
-
     private fun load(): List<PlayEvent> = runCatching {
         if (!file.exists()) return@runCatching emptyList<PlayEvent>()
         val type = object : TypeToken<List<PlayEvent>>() {}.type
         gson.fromJson<List<PlayEvent>>(file.readText(), type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    private fun save() = runCatching { file.writeText(gson.toJson(_history.value)) }
+    private fun save() = synchronized(lock) {
+        // An ordinary save queued before import may run afterward; retain atomic replacement there too.
+        runCatching { persistBackupFileAtomically(file, gson.toJson(_history.value).toByteArray(Charsets.UTF_8)) }
+    }
 
     companion object { const val MAX = 3000 }
 }

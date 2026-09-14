@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.data.ProcessingPresetTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-09T20:12:58" hostname="DESKTOP-A95H910" time="0.084">
+  <properties/>
+  <testcase name="roundTripPreservesEveryCurrentProcessingField" classname="com.aurora.music.data.ProcessingPresetTest" time="0.002"/>
+  <testcase name="duplicateIdsAndUnsupportedStorageAreNotSilentlyDiscarded" classname="com.aurora.music.data.ProcessingPresetTest" time="0.004"/>
+  <testcase name="missingEnvelopeFieldsNeverCreateGsonZeroDefaults" classname="com.aurora.music.data.ProcessingPresetTest" time="0.007"/>
+  <testcase name="namesAreTrimmedAndBounded" classname="com.aurora.music.data.ProcessingPresetTest" time="0.001"/>
+  <testcase name="malformedListsAndBandObjectsFailAsAWhole" classname="com.aurora.music.data.ProcessingPresetTest" time="0.002"/>
+  <testcase name="noLibraryAndDefaultLibraryRoundTripWithoutChangingDefaults" classname="com.aurora.music.data.ProcessingPresetTest" time="0.0"/>
+  <testcase name="invalidNumbersAndWrongJsonTypesAreRejected" classname="com.aurora.music.data.ProcessingPresetTest" time="0.008"/>
+  <testcase name="playbackProjectionExcludesAccountLibraryAndNetworkChoices" classname="com.aurora.music.data.ProcessingPresetTest" time="0.002"/>
+  <testcase name="missingOrNullAudioFieldsAreRejectedInsteadOfPartiallyApplied" classname="com.aurora.music.data.ProcessingPresetTest" time="0.056"/>
+  <testcase name="futureVersionsAndFractionalVersionsAreRejected" classname="com.aurora.music.data.ProcessingPresetTest" time="0.002"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

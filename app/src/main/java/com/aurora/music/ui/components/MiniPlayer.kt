@@ -30,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -50,6 +51,7 @@ fun MiniPlayer(
     modifier: Modifier = Modifier,
 ) {
     val song = state.current
+    val isMix = song.id.startsWith("aurora-mix:")
     val ui = LocalUiPrefs.current
     val progress by animateFloatAsState(state.progress, label = "miniProgress")
     val likeTint by animateColorAsState(
@@ -59,7 +61,7 @@ fun MiniPlayer(
 
     val artSize = when (ui.miniStyle) { MiniStyle.COMPACT -> 38.dp; MiniStyle.PROMINENT -> 54.dp; else -> 44.dp }
     val rowPad = when (ui.miniStyle) { MiniStyle.COMPACT -> 6.dp; MiniStyle.PROMINENT -> 12.dp; else -> 8.dp }
-    val showLike = ui.miniStyle != MiniStyle.COMPACT
+    val showLike = ui.miniStyle != MiniStyle.COMPACT && !isMix
 
     Column(
         modifier = modifier
@@ -69,7 +71,7 @@ fun MiniPlayer(
                 Brush.horizontalGradient(
                     listOf(
                         MaterialTheme.colorScheme.surfaceContainerHigh,
-                        song.accent.copy(alpha = 0.28f),
+                        lerp(MaterialTheme.colorScheme.surfaceContainerHigh, MaterialTheme.colorScheme.primary, 0.18f),
                     )
                 )
             ))
@@ -86,6 +88,7 @@ fun MiniPlayer(
                     song.title,
                     style = if (ui.miniStyle == MiniStyle.PROMINENT) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
@@ -111,7 +114,7 @@ fun MiniPlayer(
                 tint = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onTogglePlay).padding(6.dp),
             )
-            Icon(
+            if (!isMix) Icon(
                 imageVector = Icons.Filled.SkipNext,
                 contentDescription = "Next",
                 tint = MaterialTheme.colorScheme.onSurface,
@@ -133,7 +136,7 @@ fun MiniPlayer(
                         .fillMaxWidth(progress)
                         .height(barH)
                         .clip(RoundedCornerShape(barH))
-                        .background(if (ui.themeStyle == ThemeStyle.AURORA) song.accent else MaterialTheme.colorScheme.primary),
+                        .background(MaterialTheme.colorScheme.primary),
                 )
             }
         }

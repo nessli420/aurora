@@ -47,6 +47,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -69,6 +70,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.AppContainer
 import com.aurora.music.data.AudioPrefs
+import com.aurora.music.data.PlaybackPrefs
+import com.aurora.music.data.ProcessingRack
 import com.aurora.music.data.DEFAULT_SQUIG_BASE
 import com.aurora.music.data.DEFAULT_SQUIG_TARGET
 import com.aurora.music.data.DspMode
@@ -91,47 +94,88 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
-    val container = (LocalContext.current.applicationContext as AuroraApplication).container
+fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLoudness: () -> Unit,
+    onOpenProcessingPresets: () -> Unit, onOpenProcessingRack: () -> Unit) {
+    val context = LocalContext.current
+    val container = (context.applicationContext as AuroraApplication).container
     val store = container.settingsStore
     val fx = container.audioEffects
     val prefs by store.audioPrefs.collectAsStateWithLifecycle(initialValue = AudioPrefs())
+    val playbackPrefs by store.playbackPrefs.collectAsStateWithLifecycle(initialValue = PlaybackPrefs())
+    val rack by store.processingRack.collectAsStateWithLifecycle(initialValue = ProcessingRack())
     val scope = rememberCoroutineScope()
 
     val expanded = remember { mutableStateMapOf<String, Boolean>() }
     val activeEq by store.activeEqProfile.collectAsStateWithLifecycle(initialValue = "")
-    val rgLabels = listOf("Off", "Track", "Album")
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar("Equalizer & effects", onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
             item { SettingsSectionTitle("Tone engine") }
-            item { ToneEngineCard(prefs.dspMode) { i -> scope.launch { store.setDspMode(i) } } }
-
-            item { SettingsSectionTitle("Correction") }
-            collapsible("autoeq", "Device presets", Icons.Filled.Headset, activeEq.ifBlank { "Headphones, earbuds & speakers" }, expanded) {
-                AutoEqPanel(container, prefs, store, scope)
-            }
-            collapsible("conv", "Convolution (IR)", Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else "Off", expanded) {
-                ConvolutionPanel(prefs, store, scope)
-            }
-
-            when (prefs.dspMode) {
-                DspMode.SYSTEM -> { item { SettingsSectionTitle("System equalizer") }; systemEqSection(prefs, fx, store, scope, expanded) }
-                DspMode.CUSTOM -> { item { SettingsSectionTitle("Custom DSP") }; customDspSection(prefs, store, scope, expanded) }
-                else -> item {
-                    Text(
-                        "Tone shaping is bypassed. Choose System or Custom above to enable the EQ.",
+            item {
+                if (rack.enabled) SettingsGroup {
+                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
+                        "Active · ${rack.name}", onClick = onOpenProcessingRack)
+                    Text("The rack uses its own EQ, effects and channel settings. Edit its stages to change the sound.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    )
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                    TextButton(onClick = { scope.launch {
+                        store.setProcessingRack(rack.copy(enabled = false)).onFailure {
+                            android.widget.Toast.makeText(context, "Could not switch processing mode", android.widget.Toast.LENGTH_SHORT).show()
+                        }
+                    } },
+                        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)) { Text("Use standard settings") }
+                } else ToneEngineCard(prefs.dspMode) { i -> scope.launch { store.setDspMode(i) } }
+            }
+            item {
+                SettingsGroup {
+                    if (!rack.enabled) {
+                        SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
+                            "Arrange effects and edit up to 64 parametric bands", onClick = onOpenProcessingRack)
+                        SettingsRowDivider()
+                    }
+                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingPresets,
+                        "Your complete processing settings, ready to recall", onClick = onOpenProcessingPresets)
                 }
             }
 
-            item { SettingsSectionTitle("Output") }
-            collapsible("rg", "Volume leveling", Icons.Filled.VolumeUp, "ReplayGain — ${rgLabels[prefs.replayGain.coerceIn(0, 2)]}", expanded) {
-                SegmentedRow("Mode", rgLabels, prefs.replayGain) { i -> scope.launch { store.setReplayGain(i) } }
+            if (!rack.enabled) {
+                item { SettingsSectionTitle("Correction") }
+                collapsible("autoeq", "Device presets", Icons.Filled.Headset, activeEq.ifBlank { "Headphones, earbuds & speakers" }, expanded) {
+                    AutoEqPanel(container, prefs, store, scope)
+                }
+                collapsible("conv", "Convolution (IR)", Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else "Off", expanded) {
+                    ConvolutionPanel(prefs, store, scope)
+                }
+
+                when (prefs.dspMode) {
+                    DspMode.SYSTEM -> { item { SettingsSectionTitle("System equalizer") }; systemEqSection(prefs, fx, store, scope, expanded) }
+                    DspMode.CUSTOM -> { item { SettingsSectionTitle("Custom DSP") }; customDspSection(prefs, store, scope, expanded) }
+                    else -> item {
+                        Text(
+                            "Tone shaping is bypassed. Choose System or Custom above to enable the EQ.",
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        )
+                    }
+                }
+
+                item { SettingsSectionTitle("Channels") }
+                item {
+                    SettingsGroup {
+                        SettingsSwitchRow(Icons.Filled.Headset, "Mono audio", "Combine left and right channels where the active path supports processing", playbackPrefs.monoAudio) { value ->
+                            scope.launch { store.setMono(value) }
+                        }
+                    }
+                }
+            }
+            item { SettingsSectionTitle("Related settings") }
+            item {
+                SettingsGroup {
+                    val mode = listOf("Off", "Track", "Album")[prefs.replayGain.coerceIn(0, 2)]
+                    SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, "ReplayGain · $mode", onClick = onOpenLoudness)
+                }
             }
         }
     }
@@ -592,7 +636,7 @@ private fun LazyListScope.customDspSection(
 
     val dyn = buildList { if (prefs.dspLimiterEnabled) add("Limiter"); if (prefs.dspCompEnabled) add("Compressor") }.joinToString(" · ").ifBlank { "Off" }
     collapsible("c_dyn", "Dynamics", Icons.Filled.Compress, dyn, expanded) {
-        SettingsSwitchRow(Icons.Filled.GraphicEq, "Limiter", "Brick-wall clip protection (recommended)", prefs.dspLimiterEnabled) { v -> scope.launch { store.setDspLimiterEnabled(v) } }
+        SettingsSwitchRow(Icons.Filled.GraphicEq, "Limiter", "Sample peak control with attack and release", prefs.dspLimiterEnabled) { v -> scope.launch { store.setDspLimiterEnabled(v) } }
         if (prefs.dspLimiterEnabled) {
             FloatSliderRow("Ceiling", prefs.dspLimiterCeilingDb, -6f..0f, valueText = "%.1f dB".format(prefs.dspLimiterCeilingDb)) { v -> scope.launch { store.setDspCeiling(v) } }
         }

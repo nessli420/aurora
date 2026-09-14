@@ -79,6 +79,7 @@ import com.aurora.music.ui.screens.player.SpeedPitchSheet
 import com.aurora.music.ui.screens.profile.ProfileScreen
 import com.aurora.music.ui.screens.search.SearchScreen
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.rememberPlayerColorScheme
 import com.aurora.music.ui.screens.settings.PlaybackSettingsScreen
 import com.aurora.music.ui.screens.settings.SettingsScreen
 import com.aurora.music.viewmodel.AuthViewModel
@@ -174,9 +175,32 @@ fun AuroraApp() {
 
     var showSpeedSheet by remember { mutableStateOf(false) }
     var showQueue by remember { mutableStateOf(false) }
+    var showMix by remember { mutableStateOf(false) }
+    var mixRequest by remember { mutableStateOf<com.aurora.music.mix.MixCollectionRequest?>(null) }
+    var mixQueue by remember { mutableStateOf<List<com.aurora.music.model.Song>>(emptyList()) }
     var showVisualizer by remember { mutableStateOf(false) }
     var showOutput by remember { mutableStateOf(false) }
     var showSleep by remember { mutableStateOf(false) }
+
+    val mixVM: com.aurora.music.viewmodel.MixViewModel = viewModel(key = "mix-${session?.server}-${session?.username}")
+    val mixUi by mixVM.state.collectAsStateWithLifecycle()
+    val mixPlayback by mixVM.playback.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(mixRequest?.token) {
+        mixRequest?.let { request ->
+            mixVM.mixCollection(request.kind, request.id, request.name, playInPlayer = true) {
+                playerVM.setExpanded(true)
+            }
+            mixRequest = null
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(mixUi.message, showMix) {
+        if (!showMix) mixUi.message?.let { confirm(it); mixVM.dismissMessage() }
+    }
+    androidx.compose.runtime.LaunchedEffect(mixPlayback.error) {
+        if (!showMix) mixPlayback.error?.let { confirm(it) }
+    }
+
+    val playerColors = rememberPlayerColorScheme(playerState.current.artworkUrl, playerState.current.accent)
 
     fun navigateTopLevel(route: String) {
         if (currentRoute == route) return
@@ -306,9 +330,10 @@ fun AuroraApp() {
                                 Spacer(Modifier.height(8.dp))
                             }
                             if (playerState.hasTrack) {
+                                // The mini player belongs to the app chrome, so it uses the app palette.
                                 MiniPlayer(
                                     state = playerState,
-                                    onExpand = { playerVM.setExpanded(true) },
+                                    onExpand = { if (playerState.current.id.startsWith("aurora-mix:")) showMix = true else playerVM.setExpanded(true) },
                                     onTogglePlay = { playerVM.togglePlay() },
                                     onToggleLike = { playerVM.toggleLikeCurrent() },
                                     onNext = { playerVM.next() },
@@ -465,6 +490,7 @@ fun AuroraApp() {
                             onDownload = onDownload,
                             onRemoveDownload = onRemoveDownload,
                             onOpenSearch = { navigateTopLevel(Routes.SEARCH) },
+                            onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showMix = true },
                             onCreatePlaylist = { name -> scope.launch { container.repository.createPlaylist(name); libraryVM.load() } },
                             onCreateSmart = { navController.navigate(Routes.smartEdit()) },
                             onEditSmart = { id -> navController.navigate(Routes.smartEdit(id)) },
@@ -602,6 +628,12 @@ fun AuroraApp() {
                             onBack = { navController.popBackStack() },
                             onPlayAll = { songs, index -> playerVM.playCollection(kind, id, songs, index, detailState.data?.info?.songCount ?: songs.size) },
                             onShufflePlay = { songs -> playerVM.shuffleCollection(kind, id, songs, detailState.data?.info?.songCount ?: songs.size) },
+                            onMix = {
+                                playerVM.setExpanded(false)
+                                mixRequest = com.aurora.music.mix.MixCollectionRequest(kind, id, detailState.data?.info?.title ?: "Collection")
+                                showMix = false
+                                confirm("Preparing mix")
+                            },
                             onAddToQueue = { playerVM.addToQueue(it); confirm("Added to queue") },
                             onPlayNext = { playerVM.playNext(it); confirm("Playing next") },
                             onToggleLike = { playerVM.toggleLike(it) },
@@ -681,7 +713,13 @@ fun AuroraApp() {
                             server = session?.server ?: "",
                             onBack = { navController.popBackStack() },
                             onOpenPlayback = { navController.navigate(Routes.SETTINGS_PLAYBACK) },
+                            onOpenOutput = { navController.navigate(Routes.SETTINGS_OUTPUT) },
+                            onOpenLoudness = { navController.navigate(Routes.SETTINGS_LOUDNESS) },
+                            onOpenAlarm = { navController.navigate(Routes.SETTINGS_ALARM) },
+                            onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
                             onOpenEq = { navController.navigate(Routes.SETTINGS_EQ) },
+                            onOpenProcessingRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
+                            onOpenTuning = { navController.navigate(Routes.SETTINGS_TUNING) },
                             onOpenVisualizer = { navController.navigate(Routes.SETTINGS_VISUALIZER) },
                             onOpenSonic = { navController.navigate(Routes.SETTINGS_SONIC) },
                             onOpenSources = { navController.navigate(Routes.SETTINGS_SOURCES) },
@@ -711,7 +749,37 @@ fun AuroraApp() {
                         )
                     }
                     composable(Routes.SETTINGS_PLAYBACK) {
-                        PlaybackSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                        PlaybackSettingsScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenOutput = { navController.navigate(Routes.SETTINGS_OUTPUT) },
+                            onOpenLoudness = { navController.navigate(Routes.SETTINGS_LOUDNESS) },
+                            onOpenEq = { navController.navigate(Routes.SETTINGS_EQ) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_ALARM) {
+                        com.aurora.music.ui.screens.settings.AlarmSettingsScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenPermissions = { navController.navigate(Routes.SETTINGS_PERMISSIONS) },
+                        )
+                    }
+                    composable(Routes.SIGNAL_PATH) {
+                        com.aurora.music.ui.screens.settings.SignalPathScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenOutput = { navController.navigate(Routes.SETTINGS_OUTPUT) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_OUTPUT) {
+                        com.aurora.music.ui.screens.settings.AudioOutputSettingsScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_LOUDNESS) {
+                        com.aurora.music.ui.screens.settings.LoudnessSettingsScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenEq = { navController.navigate(Routes.SETTINGS_EQ) },
+                            onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
+                        )
                     }
                     composable(Routes.SETTINGS_BACKUP) {
                         com.aurora.music.ui.screens.settings.BackupScreen(
@@ -744,7 +812,32 @@ fun AuroraApp() {
                         )
                     }
                     composable(Routes.SETTINGS_EQ) {
-                        com.aurora.music.ui.screens.settings.EqualizerScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                        com.aurora.music.ui.screens.settings.EqualizerScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenLoudness = { navController.navigate(Routes.SETTINGS_LOUDNESS) },
+                            onOpenProcessingPresets = { navController.navigate(Routes.SETTINGS_PROCESSING_PRESETS) },
+                            onOpenProcessingRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_PROCESSING_PRESETS) {
+                        com.aurora.music.ui.screens.settings.ProcessingPresetsScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_PROCESSING_RACK) {
+                        com.aurora.music.ui.screens.settings.ProcessingRackScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenPresets = { navController.navigate(Routes.SETTINGS_PROCESSING_PRESETS) },
+                            onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
+                            onOpenTuning = { navController.navigate(Routes.SETTINGS_TUNING) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_TUNING) {
+                        com.aurora.music.ui.screens.settings.TuningProjectsScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
+                        )
                     }
                     composable(Routes.SETTINGS_VISUALIZER) {
                         com.aurora.music.ui.screens.settings.VisualizerSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
@@ -821,6 +914,7 @@ fun AuroraApp() {
                 }
             }
 
+            MaterialTheme(colorScheme = playerColors) {
             AnimatedVisibility(
                 visible = playerState.expanded,
                 enter = slideInVertically(animationSpec = tween(320)) { it } + fadeIn(tween(220)),
@@ -849,8 +943,17 @@ fun AuroraApp() {
                     onOpenOutput = { showOutput = true },
                     onOpenSleep = { showSleep = true },
                     onOpenVisualizer = { showVisualizer = true },
+                    onOpenSignalPath = {
+                        playerVM.setExpanded(false)
+                        showQueue = false
+                        showSpeedSheet = false
+                        showOutput = false
+                        showSleep = false
+                        navController.navigate(Routes.SIGNAL_PATH) { launchSingleTop = true }
+                    },
                     onSonicRadio = { playerVM.startSonicRadio(onResult = { confirm(it) }) },
                     onAutoDj = { playerVM.startAutoDj(onResult = { confirm(it) }) },
+                    onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showMix = true },
                     gestures = gesturePrefs,
                 )
             }
@@ -863,6 +966,7 @@ fun AuroraApp() {
                 com.aurora.music.ui.screens.player.QueueScreen(
                     queue = playerState.queue,
                     currentIndex = playerState.currentIndex,
+                    editable = !playerState.isMix,
                     isPlaying = playerState.isPlaying,
                     onJump = { playerVM.jumpTo(it) },
                     onRemove = { playerVM.removeFromQueue(it) },
@@ -870,7 +974,9 @@ fun AuroraApp() {
                     onClear = { playerVM.clearQueue() },
                     onSaveAsPlaylist = { name -> playerVM.saveQueueAsPlaylist(name) { confirm(it) } },
                     onClose = { showQueue = false },
+                    onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showQueue = false; showMix = true },
                 )
+            }
             }
 
             AnimatedVisibility(
@@ -886,8 +992,9 @@ fun AuroraApp() {
         }
     }
 
-    BackHandler(enabled = playerState.expanded) { playerVM.setExpanded(false) }
+    BackHandler(enabled = playerState.expanded && !showMix) { playerVM.setExpanded(false) }
 
+    MaterialTheme(colorScheme = playerColors) {
     if (showSpeedSheet) {
         SpeedPitchSheet(
             speed = playerState.speed,
@@ -917,9 +1024,13 @@ fun AuroraApp() {
             onDismiss = { showSleep = false },
         )
     }
+    }
 
     BackHandler(enabled = showQueue) { showQueue = false }
-    BackHandler(enabled = showVisualizer) { showVisualizer = false }
+    BackHandler(enabled = showVisualizer && !showMix) { showVisualizer = false }
+    if (showMix) {
+        com.aurora.music.ui.screens.player.MixScreen(mixVM, mixQueue, onClose = { showMix = false })
+    }
 }
 
 @Composable

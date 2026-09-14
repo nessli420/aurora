@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.PushPin
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.DropdownMenu
@@ -93,6 +94,7 @@ fun DetailScreen(
     onEditPlaylist: (String, String) -> Unit,
     onDeletePlaylist: () -> Unit,
     onLoadMore: () -> Unit = {},
+    onMix: () -> Unit = {},
     canDownload: Boolean = true,
     isPinned: Boolean = false,
     onTogglePin: () -> Unit = {},
@@ -222,6 +224,10 @@ fun DetailScreen(
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(46.dp).clip(CircleShape).clickable(enabled = tracks.isNotEmpty()) { onShufflePlay(tracks) }.padding(11.dp),
                 )
+                androidx.compose.material3.TextButton(onClick = onMix, enabled = tracks.isNotEmpty()) {
+                    Icon(Icons.Filled.GraphicEq, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp)); Text("Mix")
+                }
                 Spacer(Modifier.weight(1f))
                 if (itemKind == "album" || itemKind == "playlist" || itemKind == "artist") {
                     Icon(

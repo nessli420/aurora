@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.data.ProcessingRackTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-09-10T21:55:53" hostname="DESKTOP-A95H910" time="0.057">
+  <properties/>
+  <testcase name="recommendedGraphHasOneSharedConvolverAndAnActiveFinalLimiter" classname="com.aurora.music.data.ProcessingRackTest" time="0.0"/>
+  <testcase name="invalidNumbersAndNodeLocalAssetPathsAreRejected" classname="com.aurora.music.data.ProcessingRackTest" time="0.003"/>
+  <testcase name="graphRoundTripPreservesOrderIdsNamesBypassWetAndFullPayloads" classname="com.aurora.music.data.ProcessingRackTest" time="0.002"/>
+  <testcase name="legacyMigrationPreservesEffectiveModeMonoAndConvolutionOrder" classname="com.aurora.music.data.ProcessingRackTest" time="0.001"/>
+  <testcase name="duplicateFieldsIdentifiersAndUnknownSchemaOrKindsAreRejected" classname="com.aurora.music.data.ProcessingRackTest" time="0.005"/>
+  <testcase name="versionOnePresetMigratesToDisabledLegacyGraphWithoutChangingGlobalFields" classname="com.aurora.music.data.ProcessingRackTest" time="0.001"/>
+  <testcase name="versionOneUpgradesWithoutChangingPlaybackAndVersionTwoPreservesChannels" classname="com.aurora.music.data.ProcessingRackTest" time="0.007"/>
+  <testcase name="presetGraphIsStrictAndUnknownEnvelopeFieldsDoNotSilentlyDisappear" classname="com.aurora.music.data.ProcessingRackTest" time="0.003"/>
+  <testcase name="nullableEnvelopeNeverDefaultsMissingOrNullFields" classname="com.aurora.music.data.ProcessingRackTest" time="0.034"/>
+  <testcase name="validatingAControlSnapshotDetachesMutableCallerLists" classname="com.aurora.music.data.ProcessingRackTest" time="0.001"/>
+  <testcase name="nodeCountConvolutionCountAndParametricBudgetsAreEnforcedBeforePlayback" classname="com.aurora.music.data.ProcessingRackTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

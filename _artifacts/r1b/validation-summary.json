@@ -1,0 +1,10 @@
+{
+  "phase": "R1b: portable presets, sample measurements, precision foundation",
+  "date": "2026-09-08",
+  "apkSha256": "12B7D52F17452DB5B9F57C70D50BEF76DE84FF7DA8D1770794CF907F7EE70E04",
+  "jvmTests": 83,
+  "phoneDistinctPassed": 13,
+  "emulatorDistinctPassed": 17,
+  "precisionEngineInProduction": false,
+  "fullR1Complete": false
+}

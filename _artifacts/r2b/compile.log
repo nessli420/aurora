@@ -1,0 +1,144 @@
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :decent-usb-audio-driver:preBuild UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:preBuild UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:preDebugBuild UP-TO-DATE
+> Task :app:preBuild UP-TO-DATE
+> Task :decent-usb-audio-driver:preDebugBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:generateDebugResValues UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:writeDebugAarMetadata UP-TO-DATE
+> Task :decent-usb-audio-driver:writeDebugAarMetadata UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateDebugResValues UP-TO-DATE
+> Task :decent-usb-audio-driver:generateDebugResValues UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateDebugResources UP-TO-DATE
+> Task :decent-usb-audio-driver:generateDebugResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:packageDebugResources UP-TO-DATE
+> Task :decent-usb-audio-driver:packageDebugResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:extractDeepLinksDebug UP-TO-DATE
+> Task :decent-usb-audio-driver:extractDeepLinksDebug UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:processDebugManifest UP-TO-DATE
+> Task :decent-usb-audio-driver:processDebugManifest UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileDebugLibraryResources UP-TO-DATE
+> Task :decent-usb-audio-driver:compileDebugLibraryResources UP-TO-DATE
+> Task :decent-usb-audio-driver:parseDebugLocalResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:parseDebugLocalResources UP-TO-DATE
+> Task :decent-usb-audio-driver:generateDebugRFile UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateDebugRFile UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :decent-usb-audio-driver:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :decent-usb-audio-wrapper-media3:javaPreCompileDebug UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:preReleaseBuild UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:writeReleaseAarMetadata UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateReleaseResValues UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateReleaseResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:packageReleaseResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:extractDeepLinksRelease UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:processReleaseManifest UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileReleaseLibraryResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:parseReleaseLocalResources UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:generateReleaseRFile UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:javaPreCompileRelease UP-TO-DATE
+> Task :decent-usb-audio-driver:compileDebugKotlin UP-TO-DATE
+> Task :decent-usb-audio-driver:javaPreCompileDebug UP-TO-DATE
+> Task :decent-usb-audio-driver:compileDebugJavaWithJavac NO-SOURCE
+> Task :decent-usb-audio-driver:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :decent-usb-audio-driver:preReleaseBuild UP-TO-DATE
+> Task :decent-usb-audio-driver:writeReleaseAarMetadata UP-TO-DATE
+> Task :decent-usb-audio-driver:generateReleaseResValues UP-TO-DATE
+> Task :decent-usb-audio-driver:generateReleaseResources UP-TO-DATE
+> Task :decent-usb-audio-driver:packageReleaseResources UP-TO-DATE
+> Task :decent-usb-audio-driver:extractDeepLinksRelease UP-TO-DATE
+> Task :decent-usb-audio-driver:processReleaseManifest UP-TO-DATE
+> Task :decent-usb-audio-driver:compileReleaseLibraryResources UP-TO-DATE
+> Task :decent-usb-audio-driver:parseReleaseLocalResources UP-TO-DATE
+> Task :decent-usb-audio-driver:generateReleaseRFile UP-TO-DATE
+> Task :decent-usb-audio-driver:compileReleaseKotlin UP-TO-DATE
+> Task :decent-usb-audio-driver:javaPreCompileRelease UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileDebugKotlin UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileDebugJavaWithJavac NO-SOURCE
+> Task :decent-usb-audio-driver:compileReleaseJavaWithJavac NO-SOURCE
+> Task :decent-usb-audio-driver:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:bundleLibCompileToJarDebug UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileReleaseKotlin UP-TO-DATE
+> Task :decent-usb-audio-wrapper-media3:compileReleaseJavaWithJavac NO-SOURCE
+> Task :decent-usb-audio-wrapper-media3:bundleLibCompileToJarRelease UP-TO-DATE
+> Task :app:checkDebugAarMetadata UP-TO-DATE
+> Task :app:mapDebugSourceSetPaths UP-TO-DATE
+> Task :app:generateDebugResources UP-TO-DATE
+> Task :app:mergeDebugResources UP-TO-DATE
+> Task :app:packageDebugResources UP-TO-DATE
+> Task :app:parseDebugLocalResources UP-TO-DATE
+> Task :app:createDebugCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksDebug UP-TO-DATE
+> Task :app:processDebugMainManifest UP-TO-DATE
+> Task :app:processDebugManifest UP-TO-DATE
+> Task :app:processDebugManifestForPackage UP-TO-DATE
+> Task :app:processDebugResources UP-TO-DATE
+> Task :app:buildKotlinToolingMetadata UP-TO-DATE
+> Task :app:preReleaseBuild UP-TO-DATE
+> Task :app:checkReleaseAarMetadata UP-TO-DATE
+> Task :app:generateReleaseResValues UP-TO-DATE
+> Task :app:mapReleaseSourceSetPaths UP-TO-DATE
+> Task :app:generateReleaseResources UP-TO-DATE
+> Task :app:mergeReleaseResources UP-TO-DATE
+> Task :app:packageReleaseResources UP-TO-DATE
+> Task :app:parseReleaseLocalResources UP-TO-DATE
+> Task :app:createReleaseCompatibleScreenManifests UP-TO-DATE
+> Task :app:extractDeepLinksRelease UP-TO-DATE
+> Task :app:processReleaseMainManifest UP-TO-DATE
+> Task :app:processReleaseManifest UP-TO-DATE
+> Task :app:processReleaseManifestForPackage UP-TO-DATE
+> Task :app:processReleaseResources UP-TO-DATE
+> Task :app:javaPreCompileRelease UP-TO-DATE
+> Task :app:preReleaseAndroidTestBuild SKIPPED
+> Task :app:checkReleaseAndroidTestAarMetadata UP-TO-DATE
+> Task :app:generateReleaseAndroidTestResValues UP-TO-DATE
+> Task :app:mapReleaseAndroidTestSourceSetPaths UP-TO-DATE
+> Task :app:generateReleaseAndroidTestResources UP-TO-DATE
+> Task :app:mergeReleaseAndroidTestResources UP-TO-DATE
+> Task :app:processReleaseAndroidTestManifest UP-TO-DATE
+> Task :app:processReleaseAndroidTestResources UP-TO-DATE
+
+> Task :app:compileDebugKotlin
+e: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/AuroraApp.kt:837:62 Unresolved reference 'TuningProjectsScreen'.
+e: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/screens/settings/SettingsScreen.kt:157:57 Unresolved reference 'ShowChart'.
+
+> Task :app:compileReleaseKotlin FAILED
+e: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/AuroraApp.kt:837:62 Unresolved reference 'TuningProjectsScreen'.
+e: file:///C:/Users/mw/Documents/projects/apps/projects/android_ui/app/src/main/java/com/aurora/music/ui/screens/settings/SettingsScreen.kt:157:57 Unresolved reference 'ShowChart'.
+
+> Task :app:compileDebugKotlin FAILED
+
+FAILURE: Build completed with 2 failures.
+
+1: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+2: Task failed with an exception.
+-----------
+* What went wrong:
+Execution failed for task ':app:compileReleaseKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+==============================================================================
+
+BUILD FAILED in 24s
+85 actionable tasks: 2 executed, 83 up-to-date

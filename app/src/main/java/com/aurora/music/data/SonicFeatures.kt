@@ -49,6 +49,11 @@ object SonicFeatures {
         )
 
         val samples = mono ?: return null
+        return analyzeSamples(samples, n, sr, isCancelled)
+    }
+
+    /** Shared by streaming analysis: compute Sonic's fingerprint without decoding a second time. */
+    fun analyzeSamples(samples: FloatArray, n: Int, sr: Int, isCancelled: () -> Boolean = { false }): FloatArray? {
         if (sr <= 0 || n < FFT_SIZE * 4) return null   // too short to characterize
 
         val bins = FFT_SIZE / 2 + 1

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.playback.engine.PrecisionConvolverTest" tests="10" skipped="0" failures="0" errors="0" timestamp="2026-09-09T20:35:29" hostname="DESKTOP-A95H910" time="0.197">
+  <properties/>
+  <testcase name="fftRoundTripRemainsBinary64AndRejectsAliasedBuffers" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.042"/>
+  <testcase name="stereoAsymmetricImpulseMatchesDirectConvolutionAcrossArbitrarySplits" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.023"/>
+  <testcase name="truncatedPartialEosReturnsExactlyInputFramesWithoutPaddedSilence" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.0"/>
+  <testcase name="resetClearsEveryPartitionHistoryAndAnIncompleteBlock" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.0"/>
+  <testcase name="outputBackpressureLeavesUnconsumedInputForTheCaller" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.0"/>
+  <testcase name="compiledImpulseOwnsItsCoefficientsAndRejectsInvalidLimits" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.014"/>
+  <testcase name="binary64RetainsQuietSamplesAndSubFloat32CoefficientDetail" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.001"/>
+  <testcase name="veryLargeInputCannotOverwritePendingFrames" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.109"/>
+  <testcase name="fullTailDrainsWhenInputEndedOnAnExactBlockBoundary" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.006"/>
+  <testcase name="emptyStreamHasNoTailAndNonFiniteInputBecomesSilence" classname="com.aurora.music.playback.engine.PrecisionConvolverTest" time="0.001"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

@@ -1,0 +1,47 @@
+[
+  {
+    "Text": "Data saver | Cap streaming to ~96 kbps on mobile data",
+    "Checked": "false",
+    "Bounds": "[858,830][995,956]"
+  },
+  {
+    "Text": "Hi-res / bit-perfect output | 32-bit float for DACs · disables speed/pitch on hi-res · restart to apply",
+    "Checked": "true",
+    "Bounds": "[858,1135][995,1261]"
+  },
+  {
+    "Text": "USB DAC bit-perfect (experimental) | Drive a USB DAC directly, bypassing Android audio & DSP · plug DAC, restart to apply",
+    "Checked": "false",
+    "Bounds": "[858,1337][995,1463]"
+  },
+  {
+    "Text": "Independent output | Don't take audio focus — other apps keep playing through the speaker · won't pause for calls",
+    "Checked": "true",
+    "Bounds": "[858,1552][995,1678]"
+  },
+  {
+    "Text": "Overlap headroom | Balance loud tracks during overlap to prevent volume peaks",
+    "Checked": "true",
+    "Bounds": "[890,279][1027,405]"
+  },
+  {
+    "Text": "Gapless playback | Play tracks back-to-back with no gap",
+    "Checked": "true",
+    "Bounds": "[858,594][995,720]"
+  },
+  {
+    "Text": "Skip silences | Cut silent sections within tracks",
+    "Checked": "false",
+    "Bounds": "[858,796][995,922]"
+  },
+  {
+    "Text": "Mono audio | Combine left & right into a single channel",
+    "Checked": "false",
+    "Bounds": "[858,998][995,1124]"
+  },
+  {
+    "Text": "Wake-to-music alarm | Fade in your liked music daily at 12:45 AM",
+    "Checked": "false",
+    "Bounds": "[858,1613][995,1739]"
+  }
+]

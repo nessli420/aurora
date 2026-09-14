@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.playback.engine.ProductionSerialRackTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-09-09T20:13:00" hostname="DESKTOP-A95H910" time="0.08">
+  <properties/>
+  <testcase name="orderChangesNonlinearProcessingAndWetBypassDuplicateHaveIndependentMeaning" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.005"/>
+  <testcase name="convolutionInTheMiddleMixesCorrespondingDryFramesAndKeepsExactDuration" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.004"/>
+  <testcase name="finalLimiterActsAfterConvolutionWhenOrderedLast" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.022"/>
+  <testcase name="preparedGraphGainChangeCrossfadesRatherThanJumping" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.006"/>
+  <testcase name="precisionBlockProcessorReturnsToLegacyWhenRackIsDisabled" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.007"/>
+  <testcase name="missingImpulseIsReportedWithoutDisablingOtherRackNodes" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.003"/>
+  <testcase name="stableNodeHistorySurvivesAnEditAndSeekRemovesIt" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.0"/>
+  <testcase name="sixtyFourthPeakingBandIsAudibleAndTheSixtyFifthIsRejected" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.018"/>
+  <testcase name="firstLiveRackEnableDrainsLegacyPartialConvolutionWithoutCallingTrackEos" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.003"/>
+  <testcase name="irregularInputDoesNotDelayPreparedGraphEditsUntilACommonMultipleOfBlockSizes" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.003"/>
+  <testcase name="convolutionGraphSwapAlignsIrregularInputAndEosFrames" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

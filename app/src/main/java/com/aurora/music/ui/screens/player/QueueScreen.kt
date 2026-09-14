@@ -63,7 +63,6 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.Eyebrow
 import com.aurora.music.ui.components.formatTime
-import com.aurora.music.util.rememberDominantColor
 import kotlin.math.roundToInt
 
 @Composable
@@ -77,12 +76,14 @@ fun QueueScreen(
     onClear: () -> Unit,
     onSaveAsPlaylist: (String) -> Unit,
     onClose: () -> Unit,
+    onOpenMix: () -> Unit = {},
+    editable: Boolean = true,
 ) {
     val current = queue.getOrNull(currentIndex)
     val startIdx = (currentIndex + 1).coerceAtLeast(0)
     val upcoming = (startIdx until queue.size).toList()
     val played = (currentIndex - 1 downTo 0).toList()
-    val accent by rememberDominantColor(current?.artworkUrl ?: "", MaterialTheme.colorScheme.primary)
+    val accent = MaterialTheme.colorScheme.primary
     val rowHeight = 64.dp
     val rowPx = with(LocalDensity.current) { rowHeight.toPx() }
 
@@ -120,12 +121,17 @@ fun QueueScreen(
                     )
                     Icon(
                         Icons.Filled.DeleteSweep, "Clear queue",
-                        tint = if (upcoming.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
+                        tint = if (upcoming.isEmpty() || !editable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(40.dp).clip(CircleShape)
-                            .clickable(enabled = upcoming.isNotEmpty(), onClick = onClear).padding(8.dp),
+                            .clickable(enabled = upcoming.isNotEmpty() && editable, onClick = onClear).padding(8.dp),
                     )
                 }
 
+                TextButton(onClick = onOpenMix, modifier = Modifier.fillMaxWidth()) {
+                    Icon(Icons.Filled.GraphicEq, null, Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(if (editable) "Open mix studio" else "Edit mix in Studio")
+                }
                 if (current != null) {
                     Row(
                         Modifier.fillMaxWidth().padding(vertical = 14.dp),
@@ -196,9 +202,9 @@ fun QueueScreen(
                             dragging = dragging,
                             dragOffset = if (dragging) dragOffset else 0f,
                             onClick = { onJump(i) },
-                            onRemove = { onRemove(i) },
+                            onRemove = if (editable) ({ onRemove(i) }) else null,
                             // key on i/startIdx so gesture re-captures fresh indices when current advances or rows shift
-                            dragHandle = Modifier.pointerInput(queue.size, i, startIdx) {
+                            dragHandle = if (!editable) null else Modifier.pointerInput(queue.size, i, startIdx) {
                                 detectDragGestures(
                                     onDragStart = { dragIndex = i; dragOffset = 0f },
                                     onDragEnd = {

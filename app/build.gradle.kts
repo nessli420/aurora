@@ -16,6 +16,7 @@ android {
         versionCode = 1
         versionName = "1.0"
         vectorDrawables { useSupportLibrary = true }
+        testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Native AcoustID/Chromaprint fingerprinter (4.4c). arm64 for the phone, x86_64 for emulators.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
@@ -46,6 +47,7 @@ android {
             )
         }
     }
+    testBuildType = "release"
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
@@ -64,6 +66,9 @@ android {
 }
 
 dependencies {
+    testImplementation("junit:junit:4.13.2")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("junit:junit:4.13.2")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -85,6 +90,7 @@ dependencies {
     implementation(libs.retrofit)
     implementation(libs.retrofit.gson)
     implementation(libs.okhttp)
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.24.3")
     implementation(libs.okhttp.logging)
     implementation(libs.androidx.datastore.preferences)
     implementation(libs.androidx.palette)
@@ -102,3 +108,32 @@ dependencies {
     implementation("org.jellyfin.media3:media3-ffmpeg-decoder:1.5.0+1")
     debugImplementation(libs.androidx.ui.tooling)
 }
+
+// A tiny block-JNI comparison belongs to instrumentation, not the shipped audio engine.
+val precisionBenchmarkJni = layout.buildDirectory.dir("generated/precisionBenchmarkJniLibs")
+android.sourceSets.getByName("androidTest").jniLibs.srcDir(precisionBenchmarkJni)
+val compilePrecisionBenchmarkJni by tasks.registering {
+    val source = layout.projectDirectory.file("src/androidTest/cpp/precision_benchmark.cpp")
+    inputs.file(source)
+    outputs.dir(precisionBenchmarkJni)
+    doLast {
+        val host = when {
+            System.getProperty("os.name").startsWith("Windows") -> "windows-x86_64"
+            System.getProperty("os.name").startsWith("Mac") -> "darwin-x86_64"
+            else -> "linux-x86_64"
+        }
+        val llvm = android.sdkDirectory.resolve("ndk/${android.ndkVersion}/toolchains/llvm/prebuilt/$host")
+        val compiler = llvm.resolve("bin/clang++" + if (host.startsWith("windows")) ".exe" else "")
+        mapOf("arm64-v8a" to "aarch64-linux-android26", "x86_64" to "x86_64-linux-android26").forEach { (abi, target) ->
+            val output = precisionBenchmarkJni.get().dir(abi).asFile.apply { mkdirs() }
+                .resolve("libaurora_precision_benchmark.so")
+            exec {
+                commandLine(compiler.absolutePath, "--target=$target", "--sysroot=${llvm.resolve("sysroot")}",
+                    "-shared", "-fPIC", "-O3", "-fno-fast-math", "-ffp-contract=off", "-static-libstdc++",
+                    source.asFile.absolutePath, "-o", output.absolutePath)
+            }
+        }
+    }
+}
+tasks.matching { it.name.startsWith("merge") && it.name.endsWith("AndroidTestJniLibFolders") }
+    .configureEach { dependsOn(compilePrecisionBenchmarkJni) }

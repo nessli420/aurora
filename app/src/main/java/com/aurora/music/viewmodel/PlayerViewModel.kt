@@ -53,6 +53,7 @@ data class PlayerUiState(
     val bpm: Int = 0,
     val camelot: String = "",
     val keyName: String = "",
+    val isMix: Boolean = false,
 ) {
     val durationSec: Int get() = current.durationSec
     val progress: Float get() = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
@@ -128,7 +129,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (cur.id.isEmpty() || cur.id == lastNowPlayingId) return
         lastNowPlayingId = cur.id
         // radio/podcasts aren't library tracks never scrobble them
-        if (cur.isRadio() || cur.isPodcast()) return
+        if (cur.isRadio() || cur.isPodcast() || cur.id.startsWith("aurora-mix:")) return
         playStartMs = System.currentTimeMillis()
         if (!privateSession) { container.lastfm.nowPlaying(cur); container.listenBrainz.nowPlaying(cur) }
     }
@@ -138,7 +139,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (cur.id.isEmpty() || posSec < 30f || cur.id == lastRecordedId) return
         lastRecordedId = cur.id
         // radio/podcasts carry synthetic ids don't record to history server or scrobblers
-        if (cur.isRadio() || cur.isPodcast()) return
+        if (cur.isRadio() || cur.isPodcast() || cur.id.startsWith("aurora-mix:")) return
         container.playHistory.record(cur, System.currentTimeMillis())
         if (privateSession) return
         if (scrobbleEnabled) viewModelScope.launch { runCatching { container.repository.scrobble(cur.id) } }
@@ -150,6 +151,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (!autoplayEnabled || loadingRadio) return
         val c = controller ?: return
         val seed = _state.value.current.id.ifEmpty { return }
+        if (seed.startsWith("aurora-mix:")) return
         loadingRadio = true
         viewModelScope.launch {
             val more = runCatching { container.repository.radio(seed) }.getOrDefault(emptyList())
@@ -228,6 +230,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun stopPlayback() {
+        container.mixController.commands.tryEmit(com.aurora.music.mix.MixCommand.Stop)
         controller?.let { c ->
             runCatching { c.pause(); c.stop(); c.clearMediaItems() }
         }
@@ -240,16 +243,18 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun persistQueue() {
+        // The editable mix is persisted by MixStore; do not restore it as an ordinary queue.
+        if (container.mixController.activeProject != null) return
         if (suppressPersist) return
         val c = controller ?: return
         val key = playingAccountKey.ifBlank { container.currentAccountKey() }
         if (key.isBlank()) return
         // don't clear on an empty controller it fires at startup before restore and wipes what we're about to restore
-        if (c.mediaItemCount == 0) return
+        if (c.mediaItemCount == 0 || c.currentMediaItem?.mediaId.orEmpty().startsWith("aurora-mix:")) return
         val songs = (0 until c.mediaItemCount).mapNotNull { songById[c.getMediaItemAt(it).mediaId] }
         if (songs.isEmpty()) return
         container.queueStore.save(key, SavedQueue(
-            tracks = songs.map { it.toSavedTrack() },
+            tracks = songs.filterNot { it.id.startsWith("aurora-mix:") }.map { it.toSavedTrack() },
             currentIndex = c.currentMediaItemIndex.coerceAtLeast(0),
             positionSec = (c.currentPosition / 1000).toInt().coerceAtLeast(0),
             shuffle = c.shuffleModeEnabled,
@@ -358,14 +363,22 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun syncFromController() {
         val c = controller ?: return
+        container.mixController.activeProject?.clips?.let { clips ->
+            songById = songById + clips.associate { it.song.id to it.song }
+        }
         val mediaId = c.currentMediaItem?.mediaId
-        val cur = mediaId?.let { songById[it] } ?: _state.value.current
+        val cur = if (mediaId.orEmpty().startsWith("aurora-mix:")) {
+            val metadata = c.currentMediaItem!!.mediaMetadata
+            Song(mediaId!!, metadata.title?.toString().orEmpty(), metadata.artist?.toString().orEmpty(), "",
+                metadata.artworkUri?.toString().orEmpty(), (c.duration.coerceAtLeast(0) / 1000).toInt())
+        } else mediaId?.let { songById[it] } ?: _state.value.current
         val q = (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
         if (cur.id != lastKeyInfoId) { lastKeyInfoId = cur.id; lastKeyInfo = runCatching { container.sonicEngine.keyInfo(cur.id) }.getOrNull() }
         val ki = lastKeyInfo
         _state.update {
             it.copy(
                 current = cur,
+                isMix = container.mixController.activeProject != null,
                 isPlaying = c.effectivelyPlaying,
                 shuffle = c.shuffleModeEnabled,
                 repeat = when (c.repeatMode) {
@@ -448,7 +461,23 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         )
         .build()
 
+    private fun leaveMixThen(action: () -> Unit): Boolean {
+        val c = controller ?: return false
+        if (container.mixController.state.value.projectId.isBlank() && !c.currentMediaItem?.mediaId.orEmpty().startsWith("aurora-mix:")) return false
+        val future = c.sendCustomCommand(SessionCommand(PlaybackService.CMD_EXIT_MIX, android.os.Bundle.EMPTY), android.os.Bundle.EMPTY)
+        future.addListener({
+            viewModelScope.launch {
+                repeat(100) {
+                    if (c.isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) { action(); return@launch }
+                    delay(20)
+                }
+            }
+        }, ContextCompat.getMainExecutor(getApplication()))
+        return true
+    }
+
     fun playAll(songs: List<Song>, startIndex: Int = 0) {
+        if (leaveMixThen { playAll(songs, startIndex) }) return
         val c = controller ?: return
         if (songs.isEmpty()) return
         container.haptic()
@@ -467,11 +496,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     fun play(song: Song) = playAll(listOf(song), 0)
 
     fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) {
+        if (leaveMixThen { playCollection(kind, id, loaded, startIndex, total) }) return
         playAll(loaded, startIndex)
         fillQueue(kind, id, loaded, total, shuffle = false)
     }
 
     fun shuffleCollection(kind: String, id: String, loaded: List<Song>, total: Int) {
+        if (leaveMixThen { shuffleCollection(kind, id, loaded, total) }) return
         shufflePlay(loaded)
         fillQueue(kind, id, loaded, total, shuffle = true)
     }
@@ -576,6 +607,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun shufflePlay(songs: List<Song>) {
+        if (leaveMixThen { shufflePlay(songs) }) return
         val c = controller ?: return
         if (songs.isEmpty()) return
         playingAccountKey = container.currentAccountKey()
@@ -597,6 +629,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun addToQueue(song: Song) {
+        if (leaveMixThen { addToQueue(song) }) return
         val c = controller ?: run { play(song); return }
         if (c.mediaItemCount == 0) { play(song); return }
         songById = songById + (song.id to song)
@@ -606,6 +639,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun playNext(song: Song) {
+        if (leaveMixThen { playNext(song) }) return
         val c = controller ?: run { play(song); return }
         if (c.mediaItemCount == 0) { play(song); return }
         songById = songById + (song.id to song)
@@ -740,6 +774,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     // song/album/artist persist to the server playlist persists locally
     fun toggleLike(id: String, kind: String = "song") {
+        if (id.startsWith("aurora-mix:")) return
         if (id.isEmpty()) return
         val nowLiked = !_state.value.likedIds.contains(id)
         if (kind == "playlist") {

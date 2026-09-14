@@ -1,0 +1,1 @@
+    topResumedActivity=ActivityRecord{7c0e56 u0 com.aurora.music/.MainActivity t147}

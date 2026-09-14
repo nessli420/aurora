@@ -103,12 +103,13 @@ class VisualizerController(private val scope: CoroutineScope) {
     }
 
     // absolute indexing leaves the buffer position untouched for the real sink
-    fun pushPcm(buffer: ByteBuffer, encoding: Int, channelCount: Int, sr: Int) {
+    fun pushPcm(buffer: ByteBuffer, encoding: Int, channelCount: Int, sr: Int,
+                start: Int = buffer.position(), end: Int = buffer.limit()) {
         if (!active || channelCount <= 0) return
         sampleRate = sr
         val order = buffer.order()
-        val pos = buffer.position()
-        val lim = buffer.limit()
+        val pos = start
+        val lim = end
         var w = writeIdx
         val ch = channelCount
         when (encoding) {

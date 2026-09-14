@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.data.tuning.TuningProjectCodecTest" tests="11" skipped="0" failures="0" errors="0" timestamp="2026-09-10T21:55:54" hostname="DESKTOP-A95H910" time="0.813">
+  <properties/>
+  <testcase name="duplicateJsonFieldsNonfiniteTokensAndTrailingDocumentsAreRejected" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.002"/>
+  <testcase name="configLimitsAreExplicitAndNeverClamped" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.0"/>
+  <testcase name="libraryUpsertDeleteAndDuplicateIdsAreAtomicPureOperations" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.004"/>
+  <testcase name="preservedSourceAndStoredPointsCannotDisagreeOrLosePhase" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.004"/>
+  <testcase name="completeProjectRoundTripRetainsSourcePhaseProvenanceControlsAndNulls" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.001"/>
+  <testcase name="projectCountAndEncodedByteBudgetsAreEnforcedBeforeSaving" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.779"/>
+  <testcase name="fingerprintsTrackNumericInputsAndControlsButNotNamesNotesOrIds" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.003"/>
+  <testcase name="datesUseExactIntegersRatherThanLossyDoubleConversion" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.001"/>
+  <testcase name="validationDetachesCallerOwnedPointAndProjectLists" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.001"/>
+  <testcase name="nestedMissingNullUnknownAndWrongTypesFailBeforeDomainConstruction" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.004"/>
+  <testcase name="everyRequiredFieldMustExistAndNullableFieldsMustBeExplicit" classname="com.aurora.music.data.tuning.TuningProjectCodecTest" time="0.007"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

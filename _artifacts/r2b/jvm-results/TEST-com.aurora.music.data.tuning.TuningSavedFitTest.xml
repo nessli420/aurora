@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.data.tuning.TuningSavedFitTest" tests="4" skipped="0" failures="0" errors="0" timestamp="2026-09-10T21:55:55" hostname="DESKTOP-A95H910" time="0.11">
+  <properties/>
+  <testcase name="changedInputsAndControlsRequireRegenerationWhileNotesMayChange" classname="com.aurora.music.data.tuning.TuningSavedFitTest" time="0.015"/>
+  <testcase name="genuineGeneratedFitsReopenOfflineWithAllPlotAndNormalizationMetadata" classname="com.aurora.music.data.tuning.TuningSavedFitTest" time="0.062"/>
+  <testcase name="importedBandEditsMustStillMatchPlotsAndConfiguredBounds" classname="com.aurora.music.data.tuning.TuningSavedFitTest" time="0.013"/>
+  <testcase name="matchingFingerprintDoesNotAuthorizeForgedPredictionErrorsOrPreamp" classname="com.aurora.music.data.tuning.TuningSavedFitTest" time="0.02"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

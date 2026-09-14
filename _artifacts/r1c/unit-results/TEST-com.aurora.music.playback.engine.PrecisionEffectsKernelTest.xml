@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" tests="16" skipped="0" failures="0" errors="0" timestamp="2026-09-09T19:21:08" hostname="DESKTOP-A95H910" time="0.204">
+  <properties/>
+  <testcase name="liveGainUpdatesSmoothAcrossBlockBoundariesAndResetStartsAtTheNewTarget" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.005"/>
+  <testcase name="nonEqEffectsRemainWithinTheStrictLegacyFloatComparisonBound" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.112"/>
+  <testcase name="gainBalanceTrimAndWidthPreserveTheirExistingOrder" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.0"/>
+  <testcase name="channelDelaysAreIndependentAndUseLegacyIntegerFrameRounding" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.001"/>
+  <testcase name="crossfeedIsDelayedFilteredAndCrossesToOnlyTheOppositeChannel" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.001"/>
+  <testcase name="compressorLinksStereoAndUsesTheExistingAttackEnvelope" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.001"/>
+  <testcase name="lowFrequencyBankAgreesWithIndependentTransposedDoubleRecurrence" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.03"/>
+  <testcase name="limiterRetainsItsAttackAndReleaseRatherThanClaimingABrickWall" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.001"/>
+  <testcase name="peakingAndShelvesHaveTheirAnalyticFrequencyResponsesInDouble" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.0"/>
+  <testcase name="preparedBankMatchesLegacySlotOrderAndRemainsIndependentOfMutablePreferences" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.001"/>
+  <testcase name="quietSamplesAndHeadroomAreNotQuantizedOrClippedInsideTheEffectsKernel" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.001"/>
+  <testcase name="resetClearsAllFilterCrossfeedAndDelayHistories" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.001"/>
+  <testcase name="saturationPreservesTheExistingAsymmetryAndDcComponent" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.002"/>
+  <testcase name="fullEffectsStateIsExactlyInvariantToCallbackPartitioning" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.029"/>
+  <testcase name="fullEffectsPortHasBoundedDifferenceFromLegacyFloat" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.019"/>
+  <testcase name="returningAGraphicBandToZeroKeepsItsExistingRecursiveHistory" classname="com.aurora.music.playback.engine.PrecisionEffectsKernelTest" time="0.0"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

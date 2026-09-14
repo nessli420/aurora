@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuite name="com.aurora.music.playback.engine.ProductionSerialRackTest" tests="13" skipped="0" failures="0" errors="0" timestamp="2026-09-10T21:55:57" hostname="DESKTOP-A95H910" time="0.178">
+  <properties/>
+  <testcase name="channelEqChangesOnlySelectedChannelIncludingPartialWetAndGraphicEq" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.053"/>
+  <testcase name="orderChangesNonlinearProcessingAndWetBypassDuplicateHaveIndependentMeaning" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.003"/>
+  <testcase name="convolutionInTheMiddleMixesCorrespondingDryFramesAndKeepsExactDuration" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.004"/>
+  <testcase name="finalLimiterActsAfterConvolutionWhenOrderedLast" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.037"/>
+  <testcase name="preparedGraphGainChangeCrossfadesRatherThanJumping" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.025"/>
+  <testcase name="precisionBlockProcessorReturnsToLegacyWhenRackIsDisabled" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.001"/>
+  <testcase name="missingImpulseIsReportedWithoutDisablingOtherRackNodes" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.0"/>
+  <testcase name="stableNodeHistorySurvivesAnEditAndSeekRemovesIt" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.0"/>
+  <testcase name="sixtyFourthPeakingBandIsAudibleAndTheSixtyFifthIsRejected" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.016"/>
+  <testcase name="firstLiveRackEnableDrainsLegacyPartialConvolutionWithoutCallingTrackEos" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.001"/>
+  <testcase name="independentChannelNodesDoNotStackAndRoutingChangeDoesNotMigrateOldHistory" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.019"/>
+  <testcase name="irregularInputDoesNotDelayPreparedGraphEditsUntilACommonMultipleOfBlockSizes" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.004"/>
+  <testcase name="convolutionGraphSwapAlignsIrregularInputAndEosFrames" classname="com.aurora.music.playback.engine.ProductionSerialRackTest" time="0.015"/>
+  <system-out><![CDATA[]]></system-out>
+  <system-err><![CDATA[]]></system-err>
+</testsuite>

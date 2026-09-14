@@ -14,24 +14,34 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
-import java.util.Calendar
+import java.time.ZoneId
 
 // setAlarmClock fires exactly in doze and grants the fgs exemption to start playback from background
 object AlarmScheduler {
     private const val REQUEST_CODE = 0x4A1A
+    private val controller = AlarmScheduleController()
+    val state = controller.state
 
     fun apply(context: Context, prefs: AlarmPrefs) {
-        val am = context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager ?: return
-        val pi = firePendingIntent(context)
-        am.cancel(pi)
-        if (!prefs.enabled) return
-        val triggerAt = nextTriggerMs(prefs.hour, prefs.minute)
-        runCatching {
-            if (canScheduleExact(am)) {
-                am.setAlarmClock(AlarmManager.AlarmClockInfo(triggerAt, null), pi)
-            } else {
-                am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAt, pi)
-            }
+        controller.apply(prefs, backend(context), System.currentTimeMillis(), ZoneId.systemDefault())
+    }
+
+    /** Safe to call when entering a settings screen or returning from Android permissions. */
+    fun refreshStatus(context: Context) {
+        controller.refreshStatus(backend(context))
+    }
+
+    private fun backend(context: Context) = object : AlarmScheduleBackend {
+        private fun manager(): AlarmManager =
+            requireNotNull(context.getSystemService(Context.ALARM_SERVICE) as? AlarmManager)
+
+        override fun canScheduleExact() = AlarmScheduler.canScheduleExact(manager())
+        override fun cancel() = manager().cancel(firePendingIntent(context))
+        override fun scheduleExact(triggerAtMs: Long) {
+            manager().setAlarmClock(AlarmManager.AlarmClockInfo(triggerAtMs, null), firePendingIntent(context))
+        }
+        override fun scheduleInexact(triggerAtMs: Long) {
+            manager().setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, triggerAtMs, firePendingIntent(context))
         }
     }
 
@@ -41,24 +51,13 @@ object AlarmScheduler {
         return PendingIntent.getBroadcast(context, REQUEST_CODE, intent, flags)
     }
 
-    private fun nextTriggerMs(hour: Int, minute: Int): Long {
-        val now = Calendar.getInstance()
-        val next = Calendar.getInstance().apply {
-            set(Calendar.HOUR_OF_DAY, hour)
-            set(Calendar.MINUTE, minute)
-            set(Calendar.SECOND, 0)
-            set(Calendar.MILLISECOND, 0)
-        }
-        if (next.timeInMillis <= now.timeInMillis) next.add(Calendar.DAY_OF_YEAR, 1)
-        return next.timeInMillis
-    }
-
     fun canScheduleExact(am: AlarmManager): Boolean =
         Build.VERSION.SDK_INT < 31 || am.canScheduleExactAlarms()
 }
 
 class AlarmReceiver : BroadcastReceiver() {
     override fun onReceive(context: Context, intent: Intent) {
+        if (intent.action !in RESCHEDULE_ACTIONS) return
         val appContext = context.applicationContext
         if (intent.action == ACTION_FIRE) {
             // start playback within the alarm-triggered fgs exemption window
@@ -80,5 +79,13 @@ class AlarmReceiver : BroadcastReceiver() {
 
     companion object {
         const val ACTION_FIRE = "com.aurora.music.action.ALARM_FIRE"
+        private val RESCHEDULE_ACTIONS = setOf(
+            ACTION_FIRE,
+            Intent.ACTION_BOOT_COMPLETED,
+            Intent.ACTION_MY_PACKAGE_REPLACED,
+            Intent.ACTION_TIME_CHANGED,
+            Intent.ACTION_TIMEZONE_CHANGED,
+            AlarmManager.ACTION_SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED,
+        )
     }
 }

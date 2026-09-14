@@ -42,6 +42,22 @@ interface MediaBackend {
 
     suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> = emptyList()
 
+    /** Complete, ordered collection. Playlist occurrences are intentionally preserved. */
+    suspend fun collectionTracks(kind: String, id: String): List<Song> {
+        val data = detail(kind, id) ?: error("Could not load this collection. Reconnect and retry.")
+        if (kind == "artist") {
+            val tracks = data.albums.flatMap { collectionTracks("album", it.id) }
+            return (tracks + data.tracks).distinctBy { it.id }
+        }
+        val tracks = data.tracks.toMutableList()
+        while (tracks.size < data.info.songCount) {
+            val page = detailPage(kind, id, tracks.size)
+            check(page.isNotEmpty()) { "The server returned an incomplete tracklist. Please retry." }
+            tracks.addAll(page)
+        }
+        return tracks
+    }
+
     suspend fun likedSongIds(ids: List<String>): Set<String> = emptySet()
 
     suspend fun profileImageUrl(): String = ""

@@ -1,0 +1,89 @@
+{
+  "device": "A059P",
+  "sdk": 36,
+  "bands": 64,
+  "irFrames": 4096,
+  "secondsPerRate": 60,
+  "results": [
+    {
+      "sampleRate": 48000,
+      "elapsedMs": 60067,
+      "initialUnderruns": 0,
+      "newUnderruns": 0,
+      "maxObservedClockStallMs": 0,
+      "maxMeterAgeMs": 593,
+      "transientSeekMeterGaps": 0,
+      "output": "48000 Hz · 32-bit · 2 channels · float PCM",
+      "thermalStatusSamples": [
+        {
+          "elapsedMs": 10129,
+          "status": 0
+        },
+        {
+          "elapsedMs": 20222,
+          "status": 0
+        },
+        {
+          "elapsedMs": 30040,
+          "status": 0
+        },
+        {
+          "elapsedMs": 40195,
+          "status": 0
+        },
+        {
+          "elapsedMs": 50182,
+          "status": 0
+        },
+        {
+          "elapsedMs": 60065,
+          "status": 0
+        }
+      ],
+      "backgroundAndResume": true,
+      "liveWetEdit": true,
+      "seek": true
+    },
+    {
+      "sampleRate": 96000,
+      "elapsedMs": 60039,
+      "initialUnderruns": 0,
+      "newUnderruns": 0,
+      "maxObservedClockStallMs": 0,
+      "maxMeterAgeMs": 597,
+      "transientSeekMeterGaps": 1,
+      "output": "96000 Hz · 32-bit · 2 channels · float PCM",
+      "thermalStatusSamples": [
+        {
+          "elapsedMs": 10227,
+          "status": 0
+        },
+        {
+          "elapsedMs": 20075,
+          "status": 0
+        },
+        {
+          "elapsedMs": 30150,
+          "status": 0
+        },
+        {
+          "elapsedMs": 40004,
+          "status": 0
+        },
+        {
+          "elapsedMs": 50158,
+          "status": 0
+        },
+        {
+          "elapsedMs": 60038,
+          "status": 0
+        }
+      ],
+      "backgroundAndResume": true,
+      "liveWetEdit": true,
+      "seek": true
+    }
+  ],
+  "limits": "Actual primary-player AudioTrack underrun notifications and app PCM taps. No DAC\/Bluetooth, acoustic, battery-drain or long-term thermal guarantee.",
+  "passed": true
+}

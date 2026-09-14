@@ -1,0 +1,36 @@
+09-08 11:08:37.969 11084 11104 I TestRunner: started: testCollectionMixUsesNormalPlayerTracksAndControls(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:08:40.880 11084 11104 I TestRunner: finished: testCollectionMixUsesNormalPlayerTracksAndControls(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:08:40.882 11084 11104 I TestRunner: started: testMixSessionTransportReturnsToNormalPlayback(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:08:41.679 11084 11104 I TestRunner: finished: testMixSessionTransportReturnsToNormalPlayback(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:01.013 12066 12080 I TestRunner: started: testWholeCollectionUsesBoundedDecksAndSeeksToTheLastTrack(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:01.097   573  1546 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@d5a503com.aurora.music.mix.MixPlayer$$ExternalSyntheticLambda0@6905c80 req:1 procState:4
+09-08 11:40:01.097   573  1546 W AS.AudioService: Audio focus request blocked by hardening
+09-08 11:40:11.149 12066 12080 E TestRunner: failed: testWholeCollectionUsesBoundedDecksAndSeeksToTheLastTrack(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:11.153 12066 12080 I TestRunner: finished: testWholeCollectionUsesBoundedDecksAndSeeksToTheLastTrack(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:11.154 12066 12080 I TestRunner: started: testSavedMixRoundTripAndAccountIsolation(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:11.194 12066 12080 I TestRunner: finished: testSavedMixRoundTripAndAccountIsolation(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:11.197 12066 12080 I TestRunner: started: testCollectionMixUsesNormalPlayerTracksAndControls(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:13.284 12066 12080 I TestRunner: finished: testCollectionMixUsesNormalPlayerTracksAndControls(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:13.290 12066 12080 I TestRunner: started: testMixSessionTransportReturnsToNormalPlayback(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:14.038 12066 12080 I TestRunner: finished: testMixSessionTransportReturnsToNormalPlayback(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:14.043 12066 12080 I TestRunner: started: testServiceCrossfadePausesAndKeepsQueue(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:27.647 12066 12080 I TestRunner: finished: testServiceCrossfadePausesAndKeepsQueue(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:27.650 12066 12080 I TestRunner: started: testBadSourceStopsAllDecksWithAnError(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:27.713   573   651 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@d5a503com.aurora.music.mix.MixPlayer$$ExternalSyntheticLambda0@8de8bf8 req:1 procState:4
+09-08 11:40:27.713   573   651 W AS.AudioService: Audio focus request blocked by hardening
+09-08 11:40:27.777 12066 12080 I TestRunner: finished: testBadSourceStopsAllDecksWithAnError(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:27.779 12066 12080 I TestRunner: started: testEightSimultaneousDecksStayBounded(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:27.908   573  1039 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@d5a503com.aurora.music.mix.MixPlayer$$ExternalSyntheticLambda0@cb3a845 req:1 procState:4
+09-08 11:40:27.908   573  1039 W AS.AudioService: Audio focus request blocked by hardening
+09-08 11:40:44.830 12066 12080 E TestRunner: failed: testEightSimultaneousDecksStayBounded(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:44.980 12066 12080 I TestRunner: finished: testEightSimultaneousDecksStayBounded(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:45.002 12066 12080 I TestRunner: started: testThreeDeckPlaybackPauseSeekAndLiveControls(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:45.798   573  1781 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@d5a503com.aurora.music.mix.MixPlayer$$ExternalSyntheticLambda0@8330cbd req:1 procState:4
+09-08 11:40:45.805   573  1781 W AS.AudioService: Audio focus request blocked by hardening
+09-08 11:40:55.882 12066 12080 E TestRunner: failed: testThreeDeckPlaybackPauseSeekAndLiveControls(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:55.882 12066 12080 I TestRunner: finished: testThreeDeckPlaybackPauseSeekAndLiveControls(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:55.884 12066 12080 I TestRunner: started: testRemoteBufferingFreezesAllTracksAndAnalysisNeedsNoDownload(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:40:55.925   573   651 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@d5a503com.aurora.music.mix.MixPlayer$$ExternalSyntheticLambda0@4965f1f req:1 procState:4
+09-08 11:40:55.925   573   651 W AS.AudioService: Audio focus request blocked by hardening
+09-08 11:41:11.689 12066 12080 E TestRunner: failed: testRemoteBufferingFreezesAllTracksAndAnalysisNeedsNoDownload(com.aurora.music.mix.MixPlaybackDeviceTest)
+09-08 11:41:11.695 12066 12080 I TestRunner: finished: testRemoteBufferingFreezesAllTracksAndAnalysisNeedsNoDownload(com.aurora.music.mix.MixPlaybackDeviceTest)
