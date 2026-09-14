@@ -1,4 +1,4 @@
-# Aurora
+# Aurora Music Player
 
 A native Android music client for self-hosted libraries (**Navidrome/Subsonic** and **Jellyfin**) that also connects to **Green Music App** and plays **local files** on the device. Built with Jetpack Compose on Media3/ExoPlayer. Includes a switchable software DSP engine, ReplayGain, and an experimental USB DAC driver for bit-perfect output.
 
