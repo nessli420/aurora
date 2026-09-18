@@ -27,6 +27,7 @@ class ProcessingRackTest {
         val original = fixture()
         val old = JsonParser.parseString(ProcessingRackCodec.encode(original)).asJsonObject.apply {
             addProperty("schemaVersion", 1)
+            remove("autoHeadroom")
             getAsJsonArray("nodes").forEach { it.asJsonObject.remove("eqChannel") }
         }
         assertEquals(original, ProcessingRackCodec.decode(old.toString()).getOrThrow())
@@ -41,7 +42,7 @@ class ProcessingRackTest {
     }
 
     @Test fun nullableEnvelopeNeverDefaultsMissingOrNullFields() {
-        listOf("schemaVersion", "enabled", "name", "nodes").forEach { key ->
+        listOf("schemaVersion", "enabled", "name", "nodes", "autoHeadroom").forEach { key ->
             assertTrue(key, ProcessingRackCodec.decode(changed { it.remove(key) }).isFailure)
             assertTrue(key, ProcessingRackCodec.decode(changed { it.add(key, null) }).isFailure)
         }
@@ -60,7 +61,7 @@ class ProcessingRackTest {
         val encoded = ProcessingRackCodec.encode(graph)
         assertTrue(ProcessingRackCodec.decode(encoded.replace("\"enabled\":true", "\"enabled\":false,\"enabled\":true")).isFailure)
         assertTrue(ProcessingRackCodec.decode(changed { it.addProperty("extra", true) }).isFailure)
-        assertTrue(ProcessingRackCodec.decode(changed { it.addProperty("schemaVersion", 3) }).isFailure)
+        assertTrue(ProcessingRackCodec.decode(changed { it.addProperty("schemaVersion", 4) }).isFailure)
         assertTrue(ProcessingRackCodec.decode(changed { it.addProperty("schemaVersion", 1.5) }).isFailure)
         assertTrue(ProcessingRackCodec.decode(changed { it.getAsJsonArray("nodes")[0].asJsonObject.addProperty("kind", "UNKNOWN") }).isFailure)
         assertTrue(runCatching { ProcessingRackCodec.validate(graph.copy(nodes = listOf(graph.nodes[0], graph.nodes[0]))) }.isFailure)
@@ -72,9 +73,9 @@ class ProcessingRackTest {
         assertTrue(runCatching { ProcessingRackCodec.validate(ProcessingRack(nodes = List(17) { node() })) }.isFailure)
         assertTrue(runCatching { ProcessingRackCodec.validate(ProcessingRack(nodes = List(2) { node(RackNodeKind.CONVOLUTION) })) }.isFailure)
         val band = ParamBand(1_000f, 1f, 1f)
-        val eq = node(RackNodeKind.EQ, AudioPrefs(dspParametric = List(32) { band }))
-        val graph = ProcessingRack(nodes = listOf(eq, eq.copy(id = UUID.randomUUID().toString())))
-        assertEquals(2, ProcessingRackCodec.validate(graph).nodes.size)
+        val eq = node(RackNodeKind.EQ, AudioPrefs(dspParametric = List(64) { band }))
+        val graph = ProcessingRack(nodes = List(4) { eq.copy(id = UUID.randomUUID().toString()) })
+        assertEquals(4, ProcessingRackCodec.validate(graph).nodes.size)
         assertTrue(runCatching { ProcessingRackCodec.validate(graph.copy(nodes = graph.nodes +
             node(RackNodeKind.EQ, AudioPrefs(dspParametric = listOf(band))))) }.isFailure)
         assertTrue(runCatching { ProcessingRackCodec.validate(ProcessingRack(nodes = listOf(
@@ -144,7 +145,7 @@ class ProcessingRackTest {
         val array = JsonParser.parseString(ProcessingPresetCodec.encode(listOf(original))).asJsonArray
         array[0].asJsonObject.apply { addProperty("schemaVersion", 1); remove("rack") }
         val migrated = ProcessingPresetCodec.decode(array.toString()).presets.single()
-        assertEquals(2, migrated.schemaVersion)
+        assertEquals(3, migrated.schemaVersion)
         assertEquals(original.audio, migrated.audio)
         assertEquals(original.playback, migrated.playback)
         assertEquals(ProcessingRack.legacy(original.audio, true), migrated.rack)

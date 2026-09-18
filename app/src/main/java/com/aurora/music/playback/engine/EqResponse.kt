@@ -4,6 +4,7 @@ import com.aurora.music.data.AudioPrefs
 import com.aurora.music.data.ProcessingRackNode
 import com.aurora.music.data.RackEqChannel
 import com.aurora.music.data.RackNodeKind
+import com.aurora.music.playback.DspBand
 import com.aurora.music.playback.DspCoeffBuilder
 import kotlin.math.PI
 import kotlin.math.atan2
@@ -46,10 +47,8 @@ internal object ProductionEqCoefficients {
             PrecisionDspCoeffBuilder.band(0, layout.freqs.getOrElse(index) { 0f }.toDouble(),
                 gain.toDouble(), layout.q.toDouble(), sampleRate)
         }
-        return (graphic + audio.dspParametric.map {
-            // Preserve the production node's existing Q floor and out-of-band bypass semantics.
-            PrecisionDspCoeffBuilder.band(it.type, it.freqHz.toDouble(), it.gainDb.toDouble(),
-                it.q.toDouble().coerceAtLeast(.1), sampleRate)
+        return (graphic + audio.dspParametric.flatMap {
+            PrecisionDspCoeffBuilder.cascade(DspBand.from(it), sampleRate)
         }).toTypedArray()
     }
 }

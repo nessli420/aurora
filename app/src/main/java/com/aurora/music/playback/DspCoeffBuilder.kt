@@ -1,5 +1,7 @@
 package com.aurora.music.playback
 
+import com.aurora.music.data.ParamBand
+import com.aurora.music.playback.engine.PrecisionDspCoeffBuilder
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.exp
@@ -12,7 +14,8 @@ object DspCoeffBuilder {
     const val GRAPHIC_BANDS = 10
     const val MAX_GRAPHIC = 31
     const val MAX_PARAMETRIC = 12
-    const val TOTAL_BIQUADS = MAX_GRAPHIC + MAX_PARAMETRIC
+    const val MAX_SECTIONS_PER_BAND = 4
+    const val TOTAL_BIQUADS = MAX_GRAPHIC + MAX_PARAMETRIC * MAX_SECTIONS_PER_BAND
 
     val GRAPHIC_FREQS = floatArrayOf(31f, 62f, 125f, 250f, 500f, 1000f, 2000f, 4000f, 8000f, 16000f)
 
@@ -46,17 +49,16 @@ object DspCoeffBuilder {
             else identity(b0, b1, b2, a1, a2, i)
         }
         for (i in 0 until MAX_PARAMETRIC) {
-            val slot = MAX_GRAPHIC + i
+            val firstSlot = MAX_GRAPHIC + i * MAX_SECTIONS_PER_BAND
             val band = p.parametric.getOrNull(i)
-            if (band != null && band.gainDb != 0f) {
-                val q = band.q.coerceAtLeast(0.1f)
-                when (band.type) {
-                    1 -> lowShelf(band.freqHz, band.gainDb, q, fs, b0, b1, b2, a1, a2, slot)
-                    2 -> highShelf(band.freqHz, band.gainDb, q, fs, b0, b1, b2, a1, a2, slot)
-                    else -> peaking(band.freqHz, band.gainDb, q, fs, b0, b1, b2, a1, a2, slot)
+            val sections = band?.let { PrecisionDspCoeffBuilder.cascade(it, fs) }.orEmpty()
+            for (section in 0 until MAX_SECTIONS_PER_BAND) {
+                val slot = firstSlot + section
+                val c = sections.getOrNull(section)
+                if (c == null) identity(b0, b1, b2, a1, a2, slot) else {
+                    b0[slot] = c.b0.toFloat(); b1[slot] = c.b1.toFloat(); b2[slot] = c.b2.toFloat()
+                    a1[slot] = c.a1.toFloat(); a2[slot] = c.a2.toFloat()
                 }
-            } else {
-                identity(b0, b1, b2, a1, a2, slot)
             }
         }
 
@@ -115,23 +117,18 @@ object DspCoeffBuilder {
     }
 
     // builds exact realtime coefficients so autoeq fit matches whats actually applied
-    fun bandMagnitudeDb(type: Int, f0: Float, gainDb: Float, q: Float, atHz: Double, fs: Int = 48000): Double {
-        val b0 = FloatArray(1); val b1 = FloatArray(1); val b2 = FloatArray(1)
-        val a1 = FloatArray(1); val a2 = FloatArray(1)
-        val qq = q.coerceAtLeast(0.1f)
-        when (type) {
-            1 -> lowShelf(f0, gainDb, qq, fs, b0, b1, b2, a1, a2, 0)
-            2 -> highShelf(f0, gainDb, qq, fs, b0, b1, b2, a1, a2, 0)
-            else -> peaking(f0, gainDb, qq, fs, b0, b1, b2, a1, a2, 0)
-        }
+    fun bandMagnitudeDb(type: Int, f0: Float, gainDb: Float, q: Float, atHz: Double, fs: Int = 48000, order: Int = 2): Double {
+        val sections = PrecisionDspCoeffBuilder.cascade(DspBand(f0, gainDb, q, type, order = order), fs)
         val w = 2.0 * PI * atHz / fs
         val cw = cos(w); val c2w = cos(2.0 * w); val sw = sin(w); val s2w = sin(2.0 * w)
-        val numRe = b0[0] + b1[0] * cw + b2[0] * c2w
-        val numIm = -(b1[0] * sw + b2[0] * s2w)
-        val denRe = 1.0 + a1[0] * cw + a2[0] * c2w
-        val denIm = -(a1[0] * sw + a2[0] * s2w)
-        val den2 = denRe * denRe + denIm * denIm
-        return if (den2 > 1e-12) 10.0 * log10((numRe * numRe + numIm * numIm) / den2) else 0.0
+        return sections.sumOf { c ->
+            val numRe = c.b0 + c.b1 * cw + c.b2 * c2w
+            val numIm = -(c.b1 * sw + c.b2 * s2w)
+            val denRe = 1.0 + c.a1 * cw + c.a2 * c2w
+            val denIm = -(c.a1 * sw + c.a2 * s2w)
+            val den2 = denRe * denRe + denIm * denIm
+            if (den2 > 0.0) 10.0 * log10((numRe * numRe + numIm * numIm) / den2) else 0.0
+        }
     }
 
     private fun peaking(
@@ -209,7 +206,13 @@ object DspCoeffBuilder {
 class GraphicLayout(val name: String, val freqs: FloatArray, val q: Float)
 
 // type 0 peaking 1 low-shelf 2 high-shelf
-data class DspBand(val freqHz: Float, val gainDb: Float, val q: Float, val type: Int = 0)
+data class DspBand(val freqHz: Float, val gainDb: Float, val q: Float, val type: Int = 0,
+    val enabled: Boolean = true, val order: Int = 2, val coefficients: List<Double>? = null) {
+    companion object {
+        fun from(band: ParamBand): DspBand = DspBand(band.freqHz, band.gainDb, band.q,
+            band.filterType.code, band.isEnabled, band.filterOrder, band.coefficients?.toList())
+    }
+}
 
 data class DspParams(
     val graphic: FloatArray = FloatArray(DspCoeffBuilder.GRAPHIC_BANDS),

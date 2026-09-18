@@ -8,18 +8,25 @@ import com.aurora.music.data.RackEqChannel
 import com.aurora.music.data.RackNodeKind
 import java.util.UUID
 
-/** Pure, all-or-nothing plan; storage validates it against the latest rack inside its transaction. */
+// storage applies this plan atomically against the current rack.
 object TuningRackPlan {
     fun append(rack: ProcessingRack, project: TuningProject): ProcessingRack {
         val validated = TuningProjectCodec.validate(project)
         val fit = requireNotNull(validated.generatedFit) { "Generate a correction before applying this project." }
         require(fit.inputFingerprint == TuningProjectCodec.inputFingerprint(validated)) { "Inputs changed. Generate a new correction first." }
         val corrections = fit.channels.filter { it.bands.isNotEmpty() }
-        require(corrections.isNotEmpty()) { "This fit has no correction filters to apply." }
+        require(corrections.isNotEmpty() || validated.config.hasChannelAlignment) { "This fit has no correction filters to apply." }
+        val config = validated.config
         val nodes = buildList {
             if (fit.preampDb < 0f) add(ProcessingRackNode(UUID.randomUUID().toString(),
                 "${validated.name.take(60)} · Headroom", RackNodeKind.GAIN,
                 audio = AudioPrefs(dspPreampDb = fit.preampDb, dspLimiterEnabled = false)))
+            if (config.leftTrimDb != 0.0 || config.rightTrimDb != 0.0) add(ProcessingRackNode(UUID.randomUUID().toString(),
+                "${validated.name.take(60)} - Trim", RackNodeKind.STEREO,
+                audio = AudioPrefs(dspTrimLeftDb = config.leftTrimDb.toFloat(), dspTrimRightDb = config.rightTrimDb.toFloat(), dspLimiterEnabled = false)))
+            if (config.leftDelayMs != 0.0 || config.rightDelayMs != 0.0) add(ProcessingRackNode(UUID.randomUUID().toString(),
+                "${validated.name.take(60)} - Delay", RackNodeKind.DELAY,
+                audio = AudioPrefs(dspDelayLeftMs = config.leftDelayMs.toFloat(), dspDelayRightMs = config.rightDelayMs.toFloat(), dspLimiterEnabled = false)))
             corrections.forEach { channel ->
                 val routing = when (channel.channel) {
                     TuningFitChannel.LEFT -> RackEqChannel.LEFT
@@ -30,7 +37,7 @@ object TuningRackPlan {
                     RackNodeKind.EQ, audio = AudioPrefs(dspParametric = channel.bands, dspLimiterEnabled = false), eqChannel = routing))
             }
         }
-        val remainingBands = ProcessingRackCodec.MAX_PARAMETRIC_BANDS - rack.nodes
+        val remainingBands = ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS - rack.nodes
             .filter { it.kind == RackNodeKind.EQ || it.kind == RackNodeKind.LEGACY_DSP }.sumOf { it.audio.dspParametric.size }
         val neededBands = corrections.sumOf { it.bands.size }
         require(neededBands <= remainingBands) { "Correction needs $neededBands bands; the rack has $remainingBands remaining. Reduce the fit budget or remove existing EQ bands." }

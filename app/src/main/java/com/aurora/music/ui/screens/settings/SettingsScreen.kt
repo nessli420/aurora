@@ -62,6 +62,7 @@ fun SettingsScreen(
     onOpenEq: () -> Unit,
     onOpenProcessingRack: () -> Unit,
     onOpenTuning: () -> Unit,
+    onOpenImpulses: () -> Unit,
     onOpenVisualizer: () -> Unit,
     onOpenSonic: () -> Unit,
     onOpenSources: () -> Unit,
@@ -156,6 +157,8 @@ fun SettingsScreen(
                         else "Standard processing · arrange a custom chain", onClick = onOpenProcessingRack)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.ShowChart, SettingsDestinations.tuning, onClick = onOpenTuning)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.GraphicEq, SettingsDestinations.impulses, onClick = onOpenImpulses)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
                     SettingsRowDivider()

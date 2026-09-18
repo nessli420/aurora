@@ -26,6 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.FilterType
 import com.aurora.music.data.ParsedEq
 import com.aurora.music.data.ProcessingRack
 import com.aurora.music.data.ProcessingRackNode
@@ -99,10 +100,10 @@ internal fun RackEqImportDialog(rack: ProcessingRack, onDismiss: () -> Unit,
     AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Import parametric EQ") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (preview == null) {
-            Text("Open or paste Equalizer APO / AutoEq text with Preamp and PK, LSC or HSC filters. Each filter needs frequency, gain and Q.",
+            Text("Open Equalizer APO text, AutoEq PEQ JSON or Aurora EQ JSON.",
                 style = MaterialTheme.typography.bodySmall)
             OutlinedButton(onClick = {
-                runCatching { picker.launch(arrayOf("text/*", "application/octet-stream")) }
+                runCatching { picker.launch(arrayOf("text/*", "application/json", "application/octet-stream")) }
                     .onFailure { error = "No file picker is available." }
             }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Open EQ text file") }
             OutlinedTextField(text, { candidate ->
@@ -158,8 +159,9 @@ internal fun RackEqExportDialog(node: ProcessingRackNode, onDismiss: () -> Unit,
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(node.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Text("Exports ${node.audio.dspParametric.size} parametric filters with Preamp: 0 dB.", style = MaterialTheme.typography.bodyMedium)
-            Text("Graphic EQ, channel routing, wet/dry, bypass, gain and other stages are not included. Use a processing preset to save the complete sound settings.",
+            Text("Parametric bands only. Use a processing preset for routing and the full rack.",
                 style = MaterialTheme.typography.bodySmall)
+            if (node.audio.dspParametric.any { it.type >= FilterType.TILT.code }) Text("Exports Aurora EQ JSON for these filter types.", style = MaterialTheme.typography.bodySmall)
             if (node.audio.dspGraphicBands.any { it != 0f }) Text("This stage has nonzero graphic EQ settings that the text file will omit.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.tertiary)
             encoded.exceptionOrNull()?.let { Text(it.message ?: "These filters cannot be represented in the EQ text format.",
@@ -173,4 +175,4 @@ internal fun RackEqExportDialog(node: ProcessingRackNode, onDismiss: () -> Unit,
 internal fun eqNumber(value: Double): String = String.format(Locale.getDefault(), "%.2f", value)
 internal fun eqDb(value: Double): String = String.format(Locale.getDefault(), "%+.2f dB", value)
 internal fun eqFrequency(value: Double): String = if (value >= 1_000) "${eqNumber(value / 1_000)} kHz" else "${eqNumber(value)} Hz"
-private fun eqFilterName(type: Int): String = when (type) { 1 -> "Low shelf"; 2 -> "High shelf"; else -> "Peak" }
+private fun eqFilterName(type: Int): String = FilterType.fromLegacy(type).label

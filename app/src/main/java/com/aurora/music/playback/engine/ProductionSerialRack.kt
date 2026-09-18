@@ -2,6 +2,7 @@ package com.aurora.music.playback.engine
 
 import com.aurora.music.data.AudioPrefs
 import com.aurora.music.data.ProcessingRack
+import com.aurora.music.data.ProcessingRackCodec
 import com.aurora.music.data.ProcessingRackNode
 import com.aurora.music.data.RackNodeKind
 import com.aurora.music.data.RackEqChannel
@@ -29,6 +30,7 @@ class ProductionSerialRack private constructor(
     private val convolutionWet: Double,
     private val convolutionMakeup: Double,
     val convolutionUnavailableReason: String? = null,
+    val headroom: RackHeadroom? = null,
 ) {
     private val stage = AudioBlock(format, INPUT_FRAMES)
     private val output = AudioBlock(format, OUTPUT_FRAMES)
@@ -53,6 +55,8 @@ class ProductionSerialRack private constructor(
         if (ended || outputReady || stagePosition < stageCount || (convolution?.availableOutputFrames ?: 0) > 0) return false
         stage.begin(input.frameCount, input.presentationTimeUs, input.firstFramePosition)
         System.arraycopy(input.samples, 0, stage.samples, 0, input.sampleCount)
+        val attenuation = headroom?.gain ?: 1.0
+        if (attenuation != 1.0) for (i in 0 until stage.sampleCount) stage.samples[i] *= attenuation
         processNodes(stage, 0, if (convolution == null) nodes.size else convolutionIndex)
         stagePosition = 0; stageCount = input.frameCount
         feedStage()
@@ -208,7 +212,7 @@ class ProductionSerialRack private constructor(
         }
         override fun reset() { x1.fill(0.0); x2.fill(0.0); y1.fill(0.0); y2.fill(0.0) }
         override fun copyState(previous: Node) {
-            if (previous is EqNode && previous.channel == channel) {
+            if (previous is EqNode && previous.channel == channel && previous.bands.contentEquals(bands)) {
                 val count = minOf(x1.size, previous.x1.size)
                 previous.x1.copyInto(x1, endIndex = count); previous.x2.copyInto(x2, endIndex = count)
                 previous.y1.copyInto(y1, endIndex = count); previous.y2.copyInto(y2, endIndex = count)
@@ -230,7 +234,9 @@ class ProductionSerialRack private constructor(
             require(rack.nodes.size <= 16 && rack.nodes.map { it.id }.distinct().size == rack.nodes.size)
             require(rack.nodes.count { it.kind == RackNodeKind.CONVOLUTION } <= 1)
             require(rack.nodes.filter { it.kind == RackNodeKind.EQ || it.kind == RackNodeKind.LEGACY_DSP }
-                .sumOf { it.audio.dspParametric.size } <= 64)
+                .sumOf { it.audio.dspParametric.size } <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS)
+            require(rack.nodes.sumOf(ProcessingRackCodec::sectionCount) <= ProcessingRackCodec.MAX_BIQUAD_SECTIONS)
+            require(rack.nodes.all { it.audio.dspParametric.size <= ProcessingRackCodec.MAX_PARAMETRIC_BANDS })
             require(rack.nodes.all { it.wet.isFinite() && it.wet in 0f..1f && it.audio.dspGraphicBands.size <= 31 })
             require(rack.nodes.none { it.kind == RackNodeKind.LEGACY_DSP && it.audio.dspParametric.size > 12 })
             require(rack.nodes.all { it.kind == RackNodeKind.EQ || it.eqChannel == RackEqChannel.BOTH })
@@ -243,7 +249,8 @@ class ProductionSerialRack private constructor(
             val index = rack.nodes.indexOfFirst { it.kind == RackNodeKind.CONVOLUTION && !it.bypass && it.wet > 0f }
             val spec = rack.nodes.getOrNull(index)
             val convolver = if (spec != null && impulse != null) convolver(impulse, sampleRate) else null
-            return ProductionSerialRack(format, rack.nodes.joinToString(" → ") {
+            val headroom = if (rack.autoHeadroom) RackHeadroomAnalyzer.analyze(rack, sampleRate, if (spec != null) impulse else null) else null
+            return ProductionSerialRack(format, (headroom?.description()?.plus(" → ") ?: "") + rack.nodes.joinToString(" → ") {
                 it.kind.name.replace('_', ' ') + (if (it.eqChannel == RackEqChannel.BOTH) "" else " [${it.eqChannel.name.lowercase().replaceFirstChar { c -> c.uppercase() }}]") + when {
                     it.bypass || it.wet == 0f -> " (bypassed)"
                     it.kind == RackNodeKind.CONVOLUTION && impulse == null -> " (unavailable: no impulse response)"
@@ -252,7 +259,7 @@ class ProductionSerialRack private constructor(
                 }
             }, true, nodes, index, convolver, spec?.wet?.toDouble() ?: 1.0,
                 10.0.pow((spec?.audio?.dspConvMakeupDb ?: 0f).toDouble() / 20.0),
-                if (spec != null && impulse == null) "The convolution node has no impulse response; its input passes through unchanged" else null)
+                if (spec != null && impulse == null) "No impulse response; convolution bypassed" else null, headroom)
         }
 
         fun compileLegacy(sampleRate: Int, params: DspParams, enabled: Boolean,
@@ -264,13 +271,13 @@ class ProductionSerialRack private constructor(
                 1.0, 10.0.pow(makeupDb.toDouble() / 20.0))
         }
 
-        private fun params(kind: RackNodeKind, a: AudioPrefs): DspParams {
+        internal fun params(kind: RackNodeKind, a: AudioPrefs): DspParams {
             val neutral = DspParams(limiterEnabled = false)
             return when (kind) {
                 RackNodeKind.LEGACY_DSP -> {
                     val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(a.dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS.first() }
                     DspParams(graphic = a.dspGraphicBands.toFloatArray(), graphicFreqs = layout.freqs, graphicQ = layout.q,
-                        parametric = a.dspParametric.map { DspBand(it.freqHz, it.gainDb, it.q, it.type) },
+                        parametric = a.dspParametric.map { DspBand.from(it) },
                         preampDb = a.dspPreampDb, balance = a.dspBalance, width = a.dspWidth,
                         crossfeed = a.dspCrossfeed, saturation = a.dspSaturation,
                         delayLeftMs = a.dspDelayLeftMs, delayRightMs = a.dspDelayRightMs,
@@ -292,7 +299,7 @@ class ProductionSerialRack private constructor(
         private fun convolver(impulse: ImpulseResponse, rate: Int): PrecisionConvolver = PrecisionConvolver(
             resample(impulse.preciseLeft, impulse.sampleRate, rate), resample(impulse.preciseRight, impulse.sampleRate, rate), OUTPUT_FRAMES)
 
-        private fun resample(source: DoubleArray, sourceRate: Int, targetRate: Int): DoubleArray {
+        internal fun resample(source: DoubleArray, sourceRate: Int, targetRate: Int): DoubleArray {
             require(sourceRate in 8_000..768_000 && source.isNotEmpty() && source.all { it.isFinite() })
             val ratio = targetRate.toDouble() / sourceRate
             val length = (source.size * ratio).toLong().coerceAtLeast(1)

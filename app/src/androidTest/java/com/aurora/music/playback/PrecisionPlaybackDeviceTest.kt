@@ -62,9 +62,14 @@ class PrecisionPlaybackDeviceTest {
     private var originalQueueAccount: String? = null
     private var originalSavedQueue: com.aurora.music.data.SavedQueue? = null
     private var originalActivityHistory: List<com.aurora.music.data.PlayEvent>? = null
+    private var originalRouteRules: String? = null
+    private var routeRulesCaptured = false
 
     @Before fun keepTargetForegroundForAudioFocus() {
         runBlocking {
+            originalRouteRules = container.settingsStore.exportPrefs().strings[com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY]
+            routeRulesCaptured = true
+            container.settingsStore.setRouteRulesEnabled(false).getOrThrow()
             originalPrivateSession = container.settingsStore.privateSession.first()
             container.settingsStore.setPrivateSession(true)
             container.sessionReady.first { it != null }
@@ -107,6 +112,14 @@ class PrecisionPlaybackDeviceTest {
                     originalHighRes?.let { runBlocking { container.settingsStore.setPreferHighRes(it) } }
                     originalHighRes = null
                 } finally {
+                    if (routeRulesCaptured) runBlocking {
+                        val store = container.settingsStore
+                        val current = store.exportPrefs()
+                        val key = com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY
+                        val strings = originalRouteRules?.let { current.strings + (key to it) } ?: (current.strings - key)
+                        store.restoreBackupPrefs(current.copy(strings = strings)).getOrThrow()
+                        routeRulesCaptured = false
+                    }
                     // Keep reporting suppressed until fixture playback has been replaced and its
                     // activity/ViewModel callbacks have finished; local history rollback cannot
                     // undo a remote scrobble or now-playing submission.

@@ -46,12 +46,22 @@ class TuningRackPlanTest {
         val source = tuningTestProject(stereo = true)
         val project = source.copy(generatedFit = TuningFitter.fit(source))
         val fullNodes = ProcessingRack(nodes = List(15) { node() })
-        val fullBands = ProcessingRack(nodes = listOf(node(RackNodeKind.EQ, List(64) { ParamBand(1000f, 1f, 1f) })))
+        val fullBands = ProcessingRack(nodes = List(4) { node(RackNodeKind.EQ, List(64) { ParamBand(1000f, 1f, 1f) }) })
         for (rack in listOf(fullNodes, fullBands)) {
             val before = ProcessingRackCodec.encode(rack)
             assertTrue(runCatching { TuningRackPlan.append(rack, project) }.isFailure)
             assertEquals(before, ProcessingRackCodec.encode(rack))
         }
+    }
+
+    @Test fun appendUsesTheSharedRackBudgetBeyondOneFullEqualizer() = runBlocking {
+        val source = tuningTestProject(stereo = true)
+        val project = source.copy(generatedFit = TuningFitter.fit(source))
+        val existing = node(RackNodeKind.EQ, List(64) { ParamBand(1000f, 0f, 1f) })
+        val result = TuningRackPlan.append(ProcessingRack(nodes = listOf(existing)), project)
+        assertEquals(existing, result.nodes.first())
+        assertTrue(result.nodes.filter { it.kind == RackNodeKind.EQ }.sumOf { it.audio.dspParametric.size } > 64)
+        assertTrue(result.nodes.filter { it.kind == RackNodeKind.EQ }.all { it.audio.dspParametric.size <= 64 })
     }
 
     @Test fun staleOrMissingFitsAreRefusedBeforeRackMutation() = runBlocking {

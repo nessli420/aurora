@@ -110,7 +110,7 @@ class BackupArchiveDeviceTest {
             booleans = it.booleans + ("dsp_conv_enabled" to true)) }
         val json = Gson().toJson(AuroraBackup(prefs = prefs))
         val result = manager.importArchive(ByteArrayInputStream(json.toByteArray())).getOrThrow()
-        assertTrue(result.contains("Select impulse responses again"))
+        assertTrue(result.contains("without impulse responses"))
         assertEquals("", store.audioPrefs.first().dspConvIrPath)
         assertFalse(store.audioPrefs.first().dspConvEnabled)
         assertTrue(store.processingRack.first().nodes.single().bypass)

@@ -1,8 +1,0 @@
-09-08 22:25:05.673   596  1670 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@72f34dbandroidx.media3.exoplayer.AudioFocusManager$AudioFocusListener@49a8251 req:1 procState:4
-09-08 22:25:18.093   596   960 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@72f34dbandroidx.media3.exoplayer.AudioFocusManager$AudioFocusListener@9cc3e07 req:1 procState:4
-09-08 22:25:28.240   596  1455 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@72f34dbandroidx.media3.exoplayer.AudioFocusManager$AudioFocusListener@ce920ad req:1 procState:4
-09-08 22:26:53.445   596  1629 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@72f34dbandroidx.media3.exoplayer.AudioFocusManager$AudioFocusListener@d966b78 req:1 procState:4
-09-08 22:27:05.875   596  1629 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@72f34dbandroidx.media3.exoplayer.AudioFocusManager$AudioFocusListener@b2edc0f req:1 procState:4
-09-08 22:27:16.021   596  1676 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@72f34dbandroidx.media3.exoplayer.AudioFocusManager$AudioFocusListener@49c8f73 req:1 procState:4
-09-08 22:27:16.321   596   618 I AS.HardeningEnforcer: Focus request DENIED for uid:10211 clientId:android.media.AudioManager@72f34dbandroidx.media3.exoplayer.AudioFocusManager$AudioFocusListener@49c8f73 req:1 procState:4
-09-08 22:28:29.659  4945  4987 E ExoPlayerImplInternal:   androidx.media3.exoplayer.ExoPlaybackException: Source error

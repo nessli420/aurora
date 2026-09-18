@@ -120,4 +120,19 @@ class SignalPathTest {
         assertFalse(report.contains("http://"))
         assertFalse(report.contains("https://"))
     }
+
+    @Test fun confirmedRouteShowsOnlyCategoryWithoutClaimingHardwareFormat() {
+        val category = com.aurora.music.data.routes.OutputDeviceCategory.BLUETOOTH
+        val path = buildSignalPath(local.copy(confirmedDevice = category, requestedDevice = "speaker",
+            mixerGrant = true, mixerGrantMatchesFormat = true))
+        assertTrue(path.device.detail.startsWith("Bluetooth output"))
+        assertTrue(path.device.evidence.contains("routed-device"))
+        assertFalse(path.device.detail.contains("speaker"))
+        assertFalse(path.reasons.any { it.contains("actual route") })
+        assertEquals(Preservation.UNKNOWN, path.preservation)
+        assertFalse(path.bitPerfect)
+        assertTrue(buildSignalPath(local).device.detail.contains("unknown"))
+        assertTrue(buildSignalPath(local.copy(kind = PlaybackPathKind.MIX, confirmedDevice = category))
+            .device.detail.startsWith("Bluetooth output"))
+    }
 }

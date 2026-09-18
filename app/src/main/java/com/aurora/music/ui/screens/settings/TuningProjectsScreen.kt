@@ -22,6 +22,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ProcessingRack
+import com.aurora.music.data.ProcessingRackCodec
 import com.aurora.music.data.RackNodeKind
 import com.aurora.music.data.tuning.*
 import kotlinx.coroutines.CancellationException
@@ -55,6 +56,10 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
     var busy by remember { mutableStateOf(false) }
     var workingText by remember { mutableStateOf("") }
     var fitJob by remember { mutableStateOf<Job?>(null) }
+    var history by remember { mutableStateOf<List<TuningProject>>(emptyList()) }
+    var appliedUndo by remember { mutableStateOf<Pair<ProcessingRack, ProcessingRack>?>(null) }
+    var targetLibrary by remember { mutableStateOf(false) }
+    var correctionImport by remember { mutableStateOf(false) }
     var create by remember { mutableStateOf(false) }
     var rename by remember { mutableStateOf<TuningProject?>(null) }
     var delete by remember { mutableStateOf<TuningProject?>(null) }
@@ -78,6 +83,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
         if (busy || fitJob != null || loadError != null) return
         val original = draft ?: return
         val changed = transform(original)
+        if (changed != original) history = (history + original).takeLast(10)
         val previousFit = original.generatedFit
         if (previousFit == null) { draft = changed.copy(generatedFit = null); return }
         busy = true; workingText = "Updating project…"
@@ -92,7 +98,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
             } finally { busy = false }
         }
     }
-    fun open(project: TuningProject) { selectedId = project.id; baseline = project; draft = project }
+    fun open(project: TuningProject) { selectedId = project.id; baseline = project; draft = project; history = emptyList() }
     fun closeProject() { selectedId = null; draft = null; baseline = null }
     fun safelyLeave(action: () -> Unit) {
         if (busy) return
@@ -130,7 +136,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
                 val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Could not open the selected destination.")
                 output.use { it.write(json.toByteArray(Charsets.UTF_8)) }
             }
-            notify("Project exported with measurements, target, provenance and fitting settings.")
+            notify("Project exported.")
         }
     }
     fun export(project: TuningProject) {
@@ -158,9 +164,11 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
                 val result = TuningFitter.fit(valid, valid.config)
                 val afterFit = draft
                 val currentFingerprint = withContext(Dispatchers.Default) { afterFit?.let { TuningProjectCodec.inputFingerprint(it) } }
-                if (draft == afterFit && currentFingerprint == result.inputFingerprint)
+                if (draft == afterFit && currentFingerprint == result.inputFingerprint) {
+                    afterFit?.let { history = (history + it).takeLast(10) }
                     draft = draft?.copy(generatedFit = result)
-                notify("Correction generated. Review the prediction before adding it to the rack.")
+                }
+                notify("Correction generated.")
             } catch (cancelled: CancellationException) { notify("Fitting cancelled."); throw cancelled }
             catch (failure: Exception) { notify(failure.message ?: "Could not generate a correction for these inputs.") }
             finally { fitJob = null }
@@ -182,7 +190,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
                     Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                         Text("Saved projects could not be loaded", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.error)
                         Text(message, style = MaterialTheme.typography.bodySmall)
-                        Text("The stored library has been preserved. Project writes are disabled. Use Backup & restore in Settings to recover a known-good copy.", style = MaterialTheme.typography.bodySmall)
+                        Text("Changes are disabled. Restore a backup to recover the saved library.", style = MaterialTheme.typography.bodySmall)
                         TextButton(onClick = onOpenRack) { Text("Open processing rack") }
                     }
                 }
@@ -190,7 +198,6 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
             if (selectedId == null) {
                 LazyColumn(Modifier.fillMaxWidth().weight(1f), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    item { TuningDescription("Keep measurement files, rig notes, targets and generated correction together. Fitting predicts relative magnitude changes from imported data.") }
                     item {
                         Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             Button(onClick = { create = true }, enabled = !busy && loadError == null, modifier = Modifier.fillMaxWidth()) { Icon(Icons.Filled.Add, null); Text("New tuning project", Modifier.padding(start = 8.dp)) }
@@ -201,13 +208,17 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
                     when {
                         loadError != null -> Unit
                         projects == null -> item { TuningDescription("Loading saved projects…") }
-                        projects!!.isEmpty() -> item { TuningDescription("Create a project to import left/right measurements or a custom target.") }
+                        projects!!.isEmpty() -> item { TuningDescription("No saved projects.") }
                         else -> items(projects!!, key = { it.id }) { project ->
                             TuningProjectCard(project, enabled = !busy, onOpen = { open(project) }, onRename = { rename = project },
                                 onDelete = { delete = project }, onExport = { export(project) })
                         }
                     }
-                    item { SettingsGroup { SettingsNavRow(Icons.Filled.Tune, "Processing rack", "Inspect the stages currently configured for playback", onClick = onOpenRack) } }
+                    item { SettingsGroup {
+                        SettingsNavRow(Icons.Filled.ShowChart, "Import Wavelet correction", onClick = { correctionImport = true })
+                        SettingsNavRow(Icons.Filled.LibraryBooks, "Target library", onClick = { targetLibrary = true })
+                    } }
+                    item { SettingsGroup { SettingsNavRow(Icons.Filled.Tune, "Processing rack", onClick = onOpenRack) } }
                 }
             } else if (current != null) {
                 TuningProjectEditor(current, current != baseline, enabled = !busy && fitJob == null && loadError == null, fitting = fitJob != null,
@@ -216,12 +227,27 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
                     onProvenance = { provenanceSlot = it }, onClear = { slot -> update { it.withCurve(slot, null) } },
                     onSettings = { settings = true }, onGenerate = { generate(current) }, onCancelFit = { fitJob?.cancel() },
                     onReview = { review = current; reviewError = null }, onExport = { export(current) },
-                    onOpenRack = { safelyLeave(onOpenRack) })
+                    onOpenRack = { safelyLeave(onOpenRack) }, onTargets = { targetLibrary = true },
+                    onSaveTarget = { curve -> perform("Saving target...") { store.saveTuningTarget(withContext(Dispatchers.Default) { TuningTargetCatalog.fromCurve(curve) }).getOrThrow(); notify("Target saved.") } },
+                    canUndo = history.isNotEmpty(), onUndo = { history.lastOrNull()?.let { draft = it; history = history.dropLast(1) } },
+                    canRevert = appliedUndo != null, onRevert = { appliedUndo?.let { (before, after) -> perform("Reverting correction...") {
+                        store.revertTuningAppend(after, before).getOrThrow(); appliedUndo = null; notify("Rack restored.")
+                    } } })
             } else TuningDescription("Loading project…")
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = contentPadding.calculateBottomPadding() + 8.dp))
     }
 
+    if (targetLibrary) TuningTargetLibraryDialog(current, onDismiss = { targetLibrary = false }, onUse = { curve ->
+        update { it.copy(target = curve) }; targetLibrary = false
+    })
+    if (correctionImport) TuningMeasurementImportDialog(TuningMeasurementSlot.TARGET, null, onDismiss = { correctionImport = false }, correctionImport = true) { curve ->
+        correctionImport = false
+        perform("Importing correction...") {
+            val project = withContext(Dispatchers.Default) { TuningCurveAdapters.correctionProject(curve, System.currentTimeMillis()) }
+            store.saveTuningProject(project).getOrThrow(); open(project)
+        }
+    }
     if (create) TuningNameDialog("New tuning project", "", "Create", onDismiss = { create = false }) { name ->
         val project = TuningProjectCodec.create(name, System.currentTimeMillis())
         create = false
@@ -233,7 +259,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
         else perform("Renaming project…") { store.saveTuningProject(project.copy(name = name, updatedAtMs = System.currentTimeMillis())).getOrThrow() }
     } }
     delete?.let { project -> AlertDialog(onDismissRequest = { if (!busy) delete = null }, title = { Text("Delete ${project.name}?") },
-        text = { Text("This deletes the saved project and its imported measurements. Stages already added to the processing rack remain there.") },
+        text = { Text("Deletes the project and measurements. Existing rack stages stay unchanged.") },
         confirmButton = { TextButton(enabled = !busy, onClick = { perform("Deleting project…") { store.deleteTuningProject(project.id).getOrThrow(); delete = null } }) { Text("Delete") } },
         dismissButton = { TextButton(enabled = !busy, onClick = { delete = null }) { Text("Cancel") } }) }
     importSlot?.let { slot -> if (current != null) TuningMeasurementImportDialog(slot, current.curve(slot), onDismiss = { importSlot = null }) { curve ->
@@ -245,7 +271,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
     if (settings && current != null) TuningFitSettingsDialog(current, onDismiss = { settings = false }) { config -> update { it.copy(config = config) }; settings = false }
     if (notes && current != null) TuningNotesDialog(current.notes, onDismiss = { notes = false }) { text -> update { it.copy(notes = text) }; notes = false }
     leaveAfterSave?.let { action -> AlertDialog(onDismissRequest = { if (!busy) leaveAfterSave = null }, title = { Text("Save project changes?") },
-        text = { Column { Text("Save measurements, notes, fitting settings and any generated result before leaving.")
+        text = { Column {
             TextButton(enabled = !busy, onClick = { leaveAfterSave = null; action() }) { Text("Leave without saving") } } },
         confirmButton = { TextButton(enabled = !busy, onClick = { current?.let { perform("Saving project…") { saveCurrent(it); leaveAfterSave = null; action() } } }) { Text("Save & leave") } },
         dismissButton = { TextButton(enabled = !busy, onClick = { leaveAfterSave = null }) { Text("Keep editing") } }) }
@@ -253,18 +279,19 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
         text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(project.name, style = MaterialTheme.typography.titleMedium)
             Text(project.inputSummary(), style = MaterialTheme.typography.bodyMedium)
-            Text("Creates a new saved project. Measurement samples, rig notes, target and fitting settings are retained. Generate correction again before applying imported work.", style = MaterialTheme.typography.bodySmall)
+            Text("Creates a new project. Regenerate correction before applying it.", style = MaterialTheme.typography.bodySmall)
         } }, confirmButton = { TextButton(enabled = !busy, onClick = { perform("Importing project…") { store.saveTuningProject(project).getOrThrow(); importedProject = null; open(project) } }) { Text("Import as new project") } },
         dismissButton = { TextButton(enabled = !busy, onClick = { importedProject = null }) { Text("Cancel") } }) }
     review?.let { project -> TuningApplyDialog(project, rack, busy, reviewError, onDismiss = { if (!busy) review = null }, onApply = {
         perform("Appending correction…") {
             val saved = withContext(Dispatchers.Default) { TuningProjectCodec.validate(project.copy(updatedAtMs = System.currentTimeMillis())) }
-            val result = store.appendTuningProjectToRack(saved)
-            result.onSuccess {
+            val result = store.appendTuningProjectWithUndo(saved)
+            result.onSuccess { snapshots ->
+                appliedUndo = snapshots
                 baseline = saved
                 if (draft == project) draft = saved
                 review = null
-                notify("Correction appended. The rack's processing mode is unchanged.")
+                notify("Correction added to the rack.")
             }.onFailure { reviewError = it.message ?: "Could not append this correction. The rack was not changed." }
         }
     }) }
@@ -298,7 +325,8 @@ private fun TuningProjectEditor(project: TuningProject, dirty: Boolean, enabled:
     onSave: () -> Unit, onRename: () -> Unit, onNotes: () -> Unit, onImport: (TuningMeasurementSlot) -> Unit,
     onProvenance: (TuningMeasurementSlot) -> Unit, onClear: (TuningMeasurementSlot) -> Unit,
     onSettings: () -> Unit, onGenerate: () -> Unit, onCancelFit: () -> Unit, onReview: () -> Unit,
-    onExport: () -> Unit, onOpenRack: () -> Unit) {
+    onExport: () -> Unit, onOpenRack: () -> Unit, onTargets: () -> Unit, onSaveTarget: (MeasurementCurve) -> Unit,
+    canUndo: Boolean, onUndo: () -> Unit, canRevert: Boolean, onRevert: () -> Unit) {
     LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 24.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         item {
@@ -310,6 +338,7 @@ private fun TuningProjectEditor(project: TuningProject, dirty: Boolean, enabled:
                 Row(Modifier.padding(horizontal = 12.dp)) {
                     TextButton(onClick = onRename, enabled = enabled) { Text("Rename") }
                     TextButton(onClick = onNotes, enabled = enabled) { Text("Project notes") }
+                    TextButton(onClick = onUndo, enabled = enabled && canUndo) { Text("Undo") }
                 }
                 if (project.notes.isNotBlank()) TuningDescription(project.notes)
             }
@@ -324,10 +353,12 @@ private fun TuningProjectEditor(project: TuningProject, dirty: Boolean, enabled:
                         ?: if (slot == TuningMeasurementSlot.TARGET) "Flat relative target · 0 dB" else "No measurement imported", style = MaterialTheme.typography.bodySmall)
                     if (curve?.provenance?.rig?.isNotBlank() == true) Text("Rig: ${curve.provenance.rig}", style = MaterialTheme.typography.bodySmall)
                     OutlinedButton(onClick = { onImport(slot) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(if (curve == null) "Import file or paste" else "Replace measurement") }
+                    if (slot == TuningMeasurementSlot.TARGET) OutlinedButton(onClick = onTargets, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Choose saved or published target") }
                     if (curve != null) Row {
                         TextButton(onClick = { onProvenance(slot) }, enabled = enabled) { Text("Details & rig notes") }
                         TextButton(onClick = { onClear(slot) }, enabled = enabled) { Text(if (slot == TuningMeasurementSlot.TARGET) "Use flat" else "Remove") }
                     }
+                    if (curve != null && curve.format != TuningCurveFormat.WAVELET) TextButton(onClick = { onSaveTarget(curve) }, enabled = enabled) { Text("Save as reusable target") }
                 }
             }
         }
@@ -338,13 +369,18 @@ private fun TuningProjectEditor(project: TuningProject, dirty: Boolean, enabled:
                     Text(project.config.channelMode.label(), style = MaterialTheme.typography.titleMedium)
                     Text("${project.config.bandBudget} total bands · ${eqFrequency(project.config.sampleRate.toDouble())}\n${eqFrequency(project.config.minFrequencyHz)}–${eqFrequency(project.config.maxFrequencyHz)} · boost ≤ ${eqNumber(project.config.maxBoostDb)} dB · cut ≤ ${eqNumber(project.config.maxCutDb)} dB",
                         style = MaterialTheme.typography.bodySmall)
+                    if (project.config.leftLimits != null || project.config.rightLimits != null) {
+                        val left = project.config.forChannel(TuningFitChannel.LEFT)
+                        val right = project.config.forChannel(TuningFitChannel.RIGHT)
+                        Text("Channel overrides: L +${eqNumber(left.maxBoostDb)}/−${eqNumber(left.maxCutDb)} dB · R +${eqNumber(right.maxBoostDb)}/−${eqNumber(right.maxCutDb)} dB", style = MaterialTheme.typography.bodySmall)
+                    }
                     Text(if (project.config.normalization == TuningNormalization.NONE) "Normalization off" else "Match mean levels over 200–2000 Hz", style = MaterialTheme.typography.bodySmall)
                     OutlinedButton(onClick = onSettings, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Fitting settings") }
                     val missing = project.fitInputProblem()
                     if (missing != null) Text(missing, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (fitting) {
                         LinearProgressIndicator(Modifier.fillMaxWidth())
-                        Text("Generating bounded parametric correction…", style = MaterialTheme.typography.bodySmall)
+                        Text("Generating correction…", style = MaterialTheme.typography.bodySmall)
                         OutlinedButton(onClick = onCancelFit, modifier = Modifier.fillMaxWidth()) { Text("Cancel fitting") }
                     } else Button(onClick = onGenerate, enabled = enabled && missing == null, modifier = Modifier.fillMaxWidth()) {
                         Text(if (project.generatedFit == null) "Generate correction" else "Generate again")
@@ -356,9 +392,9 @@ private fun TuningProjectEditor(project: TuningProject, dirty: Boolean, enabled:
             item { SettingsSectionTitle("Generated result") }
             item { TuningFitResultCard(fit) }
             item {
-                Button(onClick = onReview, enabled = enabled && (fit.preampDb < 0f || fit.channels.any { it.bands.isNotEmpty() }),
+                Button(onClick = onReview, enabled = enabled && (fit.preampDb < 0f || fit.channels.any { it.bands.isNotEmpty() } || fit.config.hasChannelAlignment),
                     modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) { Text("Review & append to rack") }
-                if (fit.preampDb >= 0f && fit.channels.all { it.bands.isEmpty() }) TuningDescription("The fit did not need correction stages within these limits.")
+                if (fit.preampDb >= 0f && fit.channels.all { it.bands.isEmpty() } && !fit.config.hasChannelAlignment) TuningDescription("No correction needed within these limits.")
             }
         }
         item {
@@ -367,7 +403,7 @@ private fun TuningProjectEditor(project: TuningProject, dirty: Boolean, enabled:
                 Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedButton(onClick = onExport, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Save & export project JSON") }
                     OutlinedButton(onClick = onOpenRack, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Open processing rack") }
-                    Text("Project files include the imported samples and provenance. Predicted curves are mathematical estimates, not acoustic verification of a device or room.", style = MaterialTheme.typography.bodySmall)
+                    if (canRevert) OutlinedButton(onClick = onRevert, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Undo last rack append") }
                 }
             }
         }
@@ -390,9 +426,9 @@ private fun TuningFitResultCard(fit: TuningFitResult) {
             Text("${channel.bands.size} peaking filters · coverage ${eqFrequency(fit.minFrequencyHz)}–${eqFrequency(fit.maxFrequencyHz)}",
                 style = MaterialTheme.typography.bodySmall)
             Text("Proposed preamp: ${eqDb(fit.preampDb.toDouble())}", style = MaterialTheme.typography.titleSmall)
-            Text("Fit-only headroom estimate; existing rack stages can add gain. Predicted shape excludes the proposed preamp.", style = MaterialTheme.typography.bodySmall)
+            Text("Preamp covers this fit only. Other stages may add gain.", style = MaterialTheme.typography.bodySmall)
         }
-        TuningCurveChart(frequencies, curves, "Prepared relative magnitude within shared fitting coverage. Fitted EQ is calculated from the generated filters; prediction excludes preamp and is not a new acoustic measurement.")
+        TuningCurveChart(frequencies, curves, "EQ response only. Preamp, trim and delay are separate.")
         Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             TextButton(onClick = { details = !details }) { Text(if (details) "Hide fit details" else "Fit details & generated filters") }
             if (details) {
@@ -412,20 +448,22 @@ private fun TuningFitResultCard(fit: TuningFitResult) {
 private fun TuningApplyDialog(project: TuningProject, rack: ProcessingRack?, busy: Boolean, error: String?, onDismiss: () -> Unit, onApply: () -> Unit) {
     val fit = project.generatedFit ?: return
     val addedChannels = fit.channels.filter { it.bands.isNotEmpty() }
-    val addedNodes = addedChannels.size + if (fit.preampDb < 0f) 1 else 0
+    val addedNodes = addedChannels.size + (if (fit.preampDb < 0f) 1 else 0) + fit.config.alignmentNodeCount
     val bands = fit.channels.sumOf { it.bands.size }
     val oldBands = rack?.nodes?.filter { it.kind == RackNodeKind.EQ || it.kind == RackNodeKind.LEGACY_DSP }?.sumOf { it.audio.dspParametric.size } ?: 0
-    val capacityOkay = rack != null && rack.nodes.size + addedNodes <= 16 && oldBands + bands <= 64
+    val capacityOkay = rack != null && rack.nodes.size + addedNodes <= 16 && oldBands + bands <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS
     AlertDialog(onDismissRequest = onDismiss, title = { Text("Append this correction?") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(project.name, style = MaterialTheme.typography.titleMedium)
             if (fit.preampDb < 0f) Text("Gain · ${eqDb(fit.preampDb.toDouble())}", style = MaterialTheme.typography.bodyMedium)
+            if (fit.config.leftTrimDb != 0.0 || fit.config.rightTrimDb != 0.0) Text("Trim: L ${eqDb(fit.config.leftTrimDb)}, R ${eqDb(fit.config.rightTrimDb)}", style = MaterialTheme.typography.bodyMedium)
+            if (fit.config.leftDelayMs != 0.0 || fit.config.rightDelayMs != 0.0) Text("Delay: L ${eqNumber(fit.config.leftDelayMs)} ms, R ${eqNumber(fit.config.rightDelayMs)} ms", style = MaterialTheme.typography.bodyMedium)
             addedChannels.forEach { Text("EQ · ${it.channel.name.channelLabel()} · ${it.bands.size} bands", style = MaterialTheme.typography.bodyMedium) }
             Text(if (rack?.nodes?.lastOrNull()?.kind == RackNodeKind.LIMITER) "Insert before the rack's final Limiter stage." else "Append at the end of the rack.", style = MaterialTheme.typography.bodySmall)
-            Text("Existing stages keep their order and settings. Any earlier correction stages remain active according to their bypass settings.", style = MaterialTheme.typography.bodySmall)
+            Text("Existing stages stay unchanged.", style = MaterialTheme.typography.bodySmall)
             Text(if (rack?.enabled == true) "Rack mode stays active; this changes playback." else "Standard mode stays active. Select Rack mode later to use the added correction.", style = MaterialTheme.typography.bodySmall)
-            Text("Fit-only headroom estimate; other rack stages can add gain. The project is saved with the append.", style = MaterialTheme.typography.bodySmall)
-            if (rack != null) Text("After append: ${rack.nodes.size + addedNodes}/16 stages · ${oldBands + bands}/64 parametric bands", style = MaterialTheme.typography.bodySmall)
+            Text("Other rack stages may need extra headroom.", style = MaterialTheme.typography.bodySmall)
+            if (rack != null) Text("After append: ${rack.nodes.size + addedNodes}/16 stages · ${oldBands + bands}/${ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS} parametric bands", style = MaterialTheme.typography.bodySmall)
             if (!capacityOkay) Text(if (rack == null) "Loading the current rack…" else "The rack does not have enough space. Reduce the fit's band budget or remove rack stages first.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }

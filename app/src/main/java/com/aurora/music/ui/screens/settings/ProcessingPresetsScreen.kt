@@ -82,6 +82,12 @@ fun ProcessingPresetsScreen(
     var deleteTarget by remember { mutableStateOf<ProcessingPreset?>(null) }
     var lastAction by remember { mutableStateOf<String?>(null) }
     var actionFailed by remember { mutableStateOf(false) }
+    var showOutputBindings by rememberSaveable { mutableStateOf(false) }
+
+    if (showOutputBindings) {
+        OutputPresetBindingsScreen(contentPadding) { showOutputBindings = false }
+        return
+    }
 
     fun perform(progressMessage: String = "Updating preset…", operation: suspend () -> String) {
         if (busy) return
@@ -149,8 +155,12 @@ fun ProcessingPresetsScreen(
                 verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 item {
+                    OutlinedButton(onClick = { showOutputBindings = true }, enabled = !busy,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) { Text("Output presets") }
+                }
+                item {
                     Text(
-                        "Save your current EQ, effects, loudness, playback processing and output preferences together. Later adjustments do not change a saved preset.",
+                        "Save EQ, effects, loudness and output settings.",
                         Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -181,7 +191,7 @@ fun ProcessingPresetsScreen(
                         Icon(Icons.Filled.FileDownload, contentDescription = null)
                         Text("Import preset", Modifier.padding(start = 8.dp))
                     }
-                    Text("Import an Aurora preset file to add it to your collection. Your sound changes only when you tap Apply.",
+                    Text("Imported presets stay inactive until applied.",
                         Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -194,7 +204,7 @@ fun ProcessingPresetsScreen(
                 }
                 if (autoEqAutoSwitch) {
                     item {
-                        Text("Automatic device correction is on. Changing output devices can replace the EQ from an applied preset.",
+                        Text("Manual presets pause automatic switching.",
                             Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
@@ -209,7 +219,7 @@ fun ProcessingPresetsScreen(
                         }
                     }
                 }
-                lastAction?.let { message ->
+                lastAction?.takeIf { actionFailed }?.let { message ->
                     item {
                         Text(message, Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                             style = MaterialTheme.typography.bodyMedium,
@@ -221,11 +231,8 @@ fun ProcessingPresetsScreen(
                 } else if (library?.error == null && library?.presets.isNullOrEmpty()) {
                     item {
                         SettingsGroup {
-                            Text("No saved presets yet", Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp),
+                            Text("No saved presets yet", Modifier.padding(20.dp),
                                 style = MaterialTheme.typography.titleMedium)
-                            Text("Adjust your sound in settings, then save it here with a name you will recognize.",
-                                Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 }
@@ -238,7 +245,7 @@ fun ProcessingPresetsScreen(
                                 val applied = store.applyProcessingPreset(preset.id).getOrThrow()
                                 "Applied ${applied.presetName}." + if (applied.restartRequired)
                                     " Restart Aurora to activate the changed output or engine settings."
-                                else " Check Signal Path for the active processing."
+                                else ""
                             }
                         },
                         onRename = { nameDialog = PresetNameDialog(PresetNameMode.RENAME, preset) },
@@ -253,14 +260,6 @@ fun ProcessingPresetsScreen(
                             }
                         },
                         onDelete = { deleteTarget = preset },
-                    )
-                }
-                item {
-                    Text(
-                        "Use a preset’s Export action to save its settings and impulse response in one file for another Aurora installation. Output and engine changes can require restarting Aurora; Signal Path shows what is actually running.",
-                        Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 item {

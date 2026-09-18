@@ -1,5 +1,7 @@
 package com.aurora.music.data
 
+import com.aurora.music.data.ir.ImpulseLibraryCodec
+import com.aurora.music.data.ir.ImpulseLibraryFiles
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -15,12 +17,12 @@ import java.util.zip.CRC32
 import java.util.zip.ZipFile
 import java.util.zip.ZipOutputStream
 
-/** Portable app backup. Only the exact manifest and content-addressed WAV entries are accepted. */
 object BackupArchive {
     const val MAX_METADATA_BYTES = 16L * 1024 * 1024
     const val MAX_ASSET_BYTES = 64L * 1024 * 1024
     const val MAX_ARCHIVE_BYTES = 512L * 1024 * 1024
-    // DEFLATE can expand incompressible input, and ZIP headers/central records also take space.
+    private const val MAX_ASSETS = 165
+    // reserve space for compression overhead and zip records.
     private const val ZIP_OVERHEAD_BYTES = 1024L * 1024
     const val PRESETS_KEY = "processing_presets_v1"
     const val IR_PATH_KEY = "dsp_conv_path"
@@ -38,6 +40,7 @@ object BackupArchive {
     }
 
     fun write(backup: AuroraBackup, output: OutputStream) {
+        validateLibraryAssets(backup)
         val assets = linkedMapOf<String, File>()
         val portable = remap(backup.copy(version = 2)) { path, expected ->
             val file = File(path)
@@ -48,7 +51,7 @@ object BackupArchive {
             assets[hash] = file
             "$PREFIX$hash" to hash
         }
-        require(assets.size <= 101 && assets.values.sumOf { it.length() } <= MAX_ARCHIVE_BYTES - MAX_METADATA_BYTES - ZIP_OVERHEAD_BYTES) {
+        require(assets.size <= MAX_ASSETS && assets.values.sumOf { it.length() } <= MAX_ARCHIVE_BYTES - MAX_METADATA_BYTES - ZIP_OVERHEAD_BYTES) {
             "Impulse responses exceed the 495 MiB backup asset limit."
         }
         val bytes = gson.toJson(portable).toByteArray(Charsets.UTF_8)
@@ -91,7 +94,7 @@ object BackupArchive {
                 while (iterator.hasMoreElements()) {
                     val entry = iterator.nextElement()
                     val validName = entry.name == "backup.json" || entry.name.matches(Regex("assets/[0-9a-f]{64}\\.wav"))
-                    require(validName && !entry.isDirectory && entries.size < 102 && entries.put(entry.name, entry) == null) {
+                    require(validName && !entry.isDirectory && entries.size < MAX_ASSETS + 1 && entries.put(entry.name, entry) == null) {
                         "Backup contains duplicate or unsupported files or paths."
                     }
                     val cap = if (entry.name == "backup.json") MAX_METADATA_BYTES else MAX_ASSET_BYTES
@@ -123,8 +126,14 @@ object BackupArchive {
                     val digest = MessageDigest.getInstance("SHA-256")
                     file.outputStream().use { readEntry(zip, entries.getValue("assets/$hash.wav"), it, MAX_ASSET_BYTES, digest) }
                     require(hex(digest.digest()) == hash) { "Backup impulse-response checksum does not match." }
-                    ProcessingPresetBundle.validateImpulseResponse(file)
                 }
+                val staged = remap(parsed) { reference, hash ->
+                    val key = assetHash(reference)
+                    require(hash.isEmpty() || hash == key) { "Invalid impulse-response checksum." }
+                    assets.getValue(key).absolutePath to key
+                }
+                validateLibraryAssets(staged)
+                assets.values.forEach(ProcessingPresetBundle::validateImpulseResponse)
                 parsed
             }
             return Imported(backup, assets, directory)
@@ -134,7 +143,6 @@ object BackupArchive {
         }
     }
 
-    /** Full validation precedes Gson construction; missing legacy fields receive explicit defaults. */
     fun decodeJson(json: String): AuroraBackup {
         require(json.toByteArray(Charsets.UTF_8).size <= MAX_METADATA_BYTES) { "Backup metadata exceeds 16 MiB." }
         val root = parseStrictJson(json)
@@ -189,6 +197,11 @@ object BackupArchive {
         result.prefs.strings[ProcessingRackCodec.PREFERENCE_KEY]?.let { ProcessingRackCodec.decode(it).getOrThrow() }
         com.aurora.music.data.tuning.TuningProjectCodec.decodeLibrary(
             result.prefs.strings[com.aurora.music.data.tuning.TuningProjectCodec.PREFERENCE_KEY]).getOrThrow()
+        com.aurora.music.data.tuning.TuningTargetCatalog.decodeLibrary(
+            result.prefs.strings[com.aurora.music.data.tuning.TuningTargetCatalog.PREFERENCE_KEY]).getOrThrow()
+        ImpulseLibraryCodec.decodeLibrary(result.prefs.strings[ImpulseLibraryCodec.PREFERENCE_KEY]).getOrThrow()
+        com.aurora.music.data.routes.ProcessingRouteCodec.decode(
+            result.prefs.strings[com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY]).getOrThrow()
         return result
     }
 
@@ -215,7 +228,24 @@ object BackupArchive {
                 preset.copy(audio = preset.audio.copy(dspConvIrPath = path), irSha256 = hash)
             }
         })
+        strings[ImpulseLibraryCodec.PREFERENCE_KEY]?.let { json ->
+            val impulses = ImpulseLibraryCodec.decodeLibrary(json).getOrThrow().map { entry ->
+                val (path, hash) = asset(entry.sourcePath, entry.sourceSha256)
+                entry.copy(sourcePath = path, sourceSha256 = hash, prepared = entry.prepared?.let { prepared ->
+                    val (preparedPath, preparedHash) = asset(prepared.path, prepared.sha256)
+                    prepared.copy(path = preparedPath, sha256 = preparedHash)
+                })
+            }
+            strings[ImpulseLibraryCodec.PREFERENCE_KEY] = ImpulseLibraryCodec.encodeLibrary(impulses)
+        }
         return backup.copy(prefs = backup.prefs.copy(strings = strings))
+    }
+
+    private fun validateLibraryAssets(backup: AuroraBackup) {
+        ImpulseLibraryCodec.decodeLibrary(backup.prefs.strings[ImpulseLibraryCodec.PREFERENCE_KEY]).getOrThrow().forEach { entry ->
+            ImpulseLibraryFiles.validateAsset(entry, prepared = false).getOrThrow()
+            if (entry.prepared != null) ImpulseLibraryFiles.validateAsset(entry, prepared = true).getOrThrow()
+        }
     }
 
     fun assetHash(reference: String): String = reference.removePrefix(PREFIX).also {

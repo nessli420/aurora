@@ -92,7 +92,7 @@ class ProcessingPresetBundleTest {
         manifest.getAsJsonObject("preset").apply { addProperty("schemaVersion", 1); remove("rack") }
         entries["manifest.json"] = manifest.toString().toByteArray()
         ProcessingPresetBundle.read(ByteArrayInputStream(archive(entries)), temporary.root).use { read ->
-            assertEquals(2, read.preset.schemaVersion)
+            assertEquals(3, read.preset.schemaVersion)
             assertEquals(old.audio.copy(dspConvIrPath = ""), read.preset.audio)
             assertEquals(ProcessingRack.legacy(old.audio, old.playback.monoAudio), read.preset.rack)
             assertFalse(read.preset.rack.enabled)
@@ -169,11 +169,11 @@ class ProcessingPresetBundleTest {
     }
 
     @Test fun unsupportedVersionsIncompleteSettingsAndExtraFieldsAreRejected() {
-        rejects(changedManifest { it.addProperty("version", 3) })
+        rejects(changedManifest { it.addProperty("version", 4) })
         rejects(changedManifest { it.addProperty("version", 1.5) })
         rejects(changedManifest { it.addProperty("format", "something-else") })
         rejects(changedManifest { it.addProperty("extra", "unsupported") })
-        rejects(changedManifest { it.getAsJsonObject("preset").addProperty("schemaVersion", 3) })
+        rejects(changedManifest { it.getAsJsonObject("preset").addProperty("schemaVersion", 4) })
         rejects(changedManifest { it.getAsJsonObject("preset").getAsJsonObject("audio").remove("dspMode") })
         rejects(changedManifest { it.getAsJsonObject("preset").addProperty("id", UUID.randomUUID().toString()) })
     }
@@ -185,7 +185,8 @@ class ProcessingPresetBundleTest {
 
     @Test fun ambiguousAndDeepJsonAreRejectedBeforeSettingsConstruction() {
         val valid = entries(export(fixture())).getValue("manifest.json").toString(Charsets.UTF_8)
-        rejects(archive(mapOf("manifest.json" to valid.replace("\"version\":2", "\"version\":2,\"version\":2").toByteArray())))
+        val version = "\"version\":${ProcessingPresetBundle.VERSION}"
+        rejects(archive(mapOf("manifest.json" to valid.replace(version, "$version,$version").toByteArray())))
         rejects(archive(mapOf("manifest.json" to ("[".repeat(1000) + "0" + "]".repeat(1000)).toByteArray())))
         rejects(archive(mapOf("manifest.json" to (valid + "{}").toByteArray())))
         rejects(archive(mapOf("manifest.json" to ("/* comment */" + valid).toByteArray())))

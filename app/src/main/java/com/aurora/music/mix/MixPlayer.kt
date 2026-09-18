@@ -36,7 +36,8 @@ class MixPlayer(
     private val tracklist: Boolean = false,
 ) : SimpleBasePlayer(Looper.getMainLooper()) {
     private data class Deck(val player: ExoPlayer, val dsp: AuroraDspProcessor, var clip: MixClip,
-        val globalProcessor: PrecisionRackAudioProcessor, var started: Boolean = false, var bassCut: Float = 0f)
+        val globalProcessor: PrecisionRackAudioProcessor, val routedOutput: ConfirmedAudioRoute,
+        var started: Boolean = false, var bassCut: Float = 0f)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private var project = initial.normalized()
     private val decks = mutableListOf<Deck>()
@@ -84,9 +85,11 @@ class MixPlayer(
     private fun createDeck(clip: MixClip) {
             val dsp = AuroraDspProcessor().apply { enabled = true }
             val globalProcessor = PrecisionRackAudioProcessor()
+            val routedOutput = ConfirmedAudioRoute(context)
             val factory = object : DefaultRenderersFactory(context) {
                 override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): AudioSink =
                     DefaultAudioSink.Builder(context).setEnableFloatOutput(false)
+                        .setAudioTrackProvider(routedOutput.provider)
                         .setAudioProcessors(arrayOf(MixStereoProcessor(), dsp, globalProcessor)).build()
             }
             val p = ExoPlayer.Builder(context, factory).setMediaSourceFactory(sources)
@@ -98,7 +101,7 @@ class MixPlayer(
             p.setPreferredAudioDevice(device())
             p.setMediaItem(MediaItem.Builder().setMediaId(clip.id).setUri(if (clip.stem == StemMode.FULL) clip.song.streamUrl else clip.stemUri).build())
             p.seekTo((clip.cueInSec * 1000).toLong())
-            val deck = Deck(p, dsp, clip, globalProcessor)
+            val deck = Deck(p, dsp, clip, globalProcessor, routedOutput)
             decks.add(deck)
             configure(deck)
             configureGlobal(deck, globalConfig, true)
@@ -119,7 +122,7 @@ class MixPlayer(
             .sortedBy { it.startSec }.take(MixProject.MAX_LAYERS)
         val ids = near.map { it.id }.toSet()
         val obsolete = decks.filter { it.clip.id !in ids }
-        obsolete.forEach { it.player.volume = 0f; it.player.release() }
+        obsolete.forEach { it.player.volume = 0f; it.player.release(); it.routedOutput.close() }
         decks.removeAll(obsolete.toSet())
         for (clip in near) if (decks.none { it.clip.id == clip.id }) {
             createDeck(clip)
@@ -161,6 +164,17 @@ class MixPlayer(
         val racks = active.map { it.globalProcessor.engine }.filter { it.rackActive }
         return if (racks.isNotEmpty()) "Per-clip DSP → PCM16 boundary → binary64 serial rack (${racks.first().rackDescription}) → PCM16 output → timeline gains. ${racks.size} playing deck(s) report rack processing."
         else "Per-clip DSP → PCM16 boundary → binary64 global effects/convolution → PCM16 output → timeline gains. Per-deck output levels and the summed output are not measured."
+    }
+
+    val confirmedOutput: com.aurora.music.data.routes.ProcessingRoute get() {
+        val routes = decks.filter { it.player.isPlaying }.map { it.routedOutput.snapshot() }
+        if (routes.isNotEmpty() && routes.all { it.key != null } && routes.map { it.key }.distinct().size == 1) {
+            return routes.first().copy(detail = "Confirmed by active deck AudioTracks.")
+        }
+        return com.aurora.music.data.routes.ProcessingRoute(com.aurora.music.data.routes.ProcessingRouteKind.MIX,
+            label = "Mix output unconfirmed", detail = "Output rules wait for all active deck routes to agree.",
+            category = routes.mapNotNull { it.category }.distinct().singleOrNull()
+                ?.takeIf { routes.isNotEmpty() && routes.all { route -> route.category != null } })
     }
 
     fun updateProject(updated: MixProject) {
@@ -352,7 +366,7 @@ class MixPlayer(
         return Futures.immediateVoidFuture()
     }
     override fun handleRelease(): ListenableFuture<*> {
-        scope.cancel(); decks.forEach { it.player.release() }; decks.clear()
+        scope.cancel(); decks.forEach { it.player.release(); it.routedOutput.close() }; decks.clear()
         manager.abandonAudioFocusRequest(focus)
         runCatching { context.unregisterReceiver(noisy) }
         bus.state.value = MixPlaybackState()

@@ -1,5 +1,8 @@
 package com.aurora.music.playback.engine
 
+import com.aurora.music.data.FilterType
+import com.aurora.music.data.ParamBandCodec
+import com.aurora.music.playback.DspBand
 import com.aurora.music.playback.DspCoeffBuilder
 import com.aurora.music.playback.DspParams
 import kotlin.math.PI
@@ -36,16 +39,14 @@ object PrecisionDspCoeffBuilder {
         require(sampleRate in 8_000..768_000)
         val frequencies = if (p.graphicFreqs.isNotEmpty()) p.graphicFreqs else DspCoeffBuilder.GRAPHIC_FREQS
         val graphicQ = if (p.graphicQ > 0f) p.graphicQ.toDouble() else 1.41f.toDouble()
-        val bank = Array(DspCoeffBuilder.TOTAL_BIQUADS) { i ->
-            if (i < DspCoeffBuilder.MAX_GRAPHIC) {
-                if (i < frequencies.size) band(0, frequencies[i].toDouble(),
-                    p.graphic.getOrElse(i) { 0f }.toDouble(), graphicQ, sampleRate)
-                else BiquadCoefficients.IDENTITY
-            } else {
-                val b = p.parametric.getOrNull(i - DspCoeffBuilder.MAX_GRAPHIC)
-                if (b == null || b.gainDb == 0f) BiquadCoefficients.IDENTITY
-                else band(b.type, b.freqHz.toDouble(), b.gainDb.toDouble(),
-                    b.q.toDouble().coerceAtLeast(0.1f.toDouble()), sampleRate)
+        val bank = Array(DspCoeffBuilder.TOTAL_BIQUADS) { BiquadCoefficients.IDENTITY }
+        for (i in 0 until DspCoeffBuilder.MAX_GRAPHIC) {
+            if (i < frequencies.size) bank[i] = band(0, frequencies[i].toDouble(),
+                p.graphic.getOrElse(i) { 0f }.toDouble(), graphicQ, sampleRate)
+        }
+        p.parametric.take(DspCoeffBuilder.MAX_PARAMETRIC).forEachIndexed { index, b ->
+            cascade(b, sampleRate).forEachIndexed { section, coefficient ->
+                bank[DspCoeffBuilder.MAX_GRAPHIC + index * DspCoeffBuilder.MAX_SECTIONS_PER_BAND + section] = coefficient
             }
         }
         return PrecisionDspCoefficients(
@@ -101,12 +102,62 @@ object PrecisionDspCoeffBuilder {
                     ((a + 1.0) - (a - 1.0) * cosine - beta) / a0,
                 )
             }
-            else -> {
+            3, 4, 5, 6, 7 -> {
+                val a0 = 1.0 + alpha
+                val numerator = when (type) {
+                    3 -> doubleArrayOf((1.0 - cosine) / 2.0, 1.0 - cosine, (1.0 - cosine) / 2.0)
+                    4 -> doubleArrayOf((1.0 + cosine) / 2.0, -(1.0 + cosine), (1.0 + cosine) / 2.0)
+                    5 -> doubleArrayOf(alpha, 0.0, -alpha)
+                    6 -> doubleArrayOf(1.0, -2.0 * cosine, 1.0)
+                    else -> doubleArrayOf(1.0 - alpha, -2.0 * cosine, 1.0 + alpha)
+                }
+                BiquadCoefficients(numerator[0] / a0, numerator[1] / a0, numerator[2] / a0,
+                    -2.0 * cosine / a0, (1.0 - alpha) / a0)
+            }
+            0 -> {
                 val a0 = 1.0 + alpha / a
                 BiquadCoefficients((1.0 + alpha * a) / a0, -2.0 * cosine / a0,
                     (1.0 - alpha * a) / a0, -2.0 * cosine / a0, (1.0 - alpha / a) / a0)
             }
+            else -> error("This filter requires a cascade.")
         }
+    }
+
+    fun cascade(b: DspBand, sampleRate: Int): List<BiquadCoefficients> {
+        require(sampleRate in 8_000..768_000)
+        val type = FilterType.fromLegacy(b.type)
+        require(b.order in type.orders && b.freqHz.isFinite() && b.gainDb.isFinite() && b.q.isFinite())
+        require(type.hasGain || b.gainDb == 0f)
+        if (type == FilterType.CUSTOM_BIQUAD) {
+            val c = ParamBandCodec.validateCoefficients(requireNotNull(b.coefficients))
+            return listOf(if (b.enabled) BiquadCoefficients(c[0], c[1], c[2], c[3], c[4]) else BiquadCoefficients.IDENTITY)
+        }
+        require(b.coefficients == null) { "Only custom biquads accept coefficients." }
+        if (!b.enabled || b.freqHz <= 0f || b.freqHz >= sampleRate / 2.0) return listOf(BiquadCoefficients.IDENTITY)
+        val frequency = b.freqHz.toDouble()
+        val q = b.q.toDouble().coerceAtLeast(.1)
+        val sections = when (type) {
+            FilterType.TILT -> listOf(band(1, frequency, -b.gainDb.toDouble() / 2, q, sampleRate),
+                band(2, frequency, b.gainDb.toDouble() / 2, q, sampleRate))
+            FilterType.BUTTERWORTH_LOW_PASS, FilterType.BUTTERWORTH_HIGH_PASS,
+            FilterType.LINKWITZ_RILEY_LOW_PASS, FilterType.LINKWITZ_RILEY_HIGH_PASS -> {
+                val linkwitz = type == FilterType.LINKWITZ_RILEY_LOW_PASS || type == FilterType.LINKWITZ_RILEY_HIGH_PASS
+                val order = if (linkwitz) b.order / 2 else b.order
+                val highPass = type == FilterType.BUTTERWORTH_HIGH_PASS || type == FilterType.LINKWITZ_RILEY_HIGH_PASS
+                val prototype = List(order / 2) { i ->
+                    val sectionQ = 1.0 / (2.0 * cos(PI * (2 * i + 1) / (2 * order)))
+                    band(if (highPass) 4 else 3, frequency, 0.0, sectionQ, sampleRate)
+                }
+                if (linkwitz) prototype + prototype else prototype
+            }
+            else -> listOf(if (type.hasGain && b.gainDb == 0f) BiquadCoefficients.IDENTITY
+                else band(type.code, frequency, b.gainDb.toDouble(), q, sampleRate))
+        }
+        require(sections.all { c ->
+            listOf(c.b0, c.b1, c.b2, c.a1, c.a2).all { it.isFinite() } &&
+                kotlin.math.abs(c.a2) < 1.0 && 1.0 + c.a1 + c.a2 > 0.0 && 1.0 - c.a1 + c.a2 > 0.0
+        }) { "Filter coefficients are unstable at this sample rate." }
+        return sections
     }
 
     private fun dbToLin(db: Double): Double = 10.0.pow(db / 20.0)

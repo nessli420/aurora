@@ -17,8 +17,19 @@ import com.google.gson.Gson
 import com.aurora.music.data.tuning.TuningProject
 import com.aurora.music.data.tuning.TuningProjectCodec
 import com.aurora.music.data.tuning.TuningRackPlan
+import com.aurora.music.data.tuning.TuningTarget
+import com.aurora.music.data.tuning.TuningTargetCatalog
+import com.aurora.music.data.ir.ImpulseLibraryCodec
+import com.aurora.music.data.ir.ImpulseLibraryEntry
+import com.aurora.music.data.ir.ImpulseLibraryFiles
+import com.aurora.music.data.ir.ImpulsePreparation
+import com.aurora.music.data.routes.*
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.InputStream
@@ -159,9 +170,7 @@ data class VisualizerPrefs(
 )
 
 // matches autoeq PK/LSC/HSC
-object BandType { const val PEAK = 0; const val LOW_SHELF = 1; const val HIGH_SHELF = 2 }
 
-data class ParamBand(val freqHz: Float, val gainDb: Float, val q: Float, val type: Int = BandType.PEAK)
 
 object DspMode { const val SYSTEM = 0; const val CUSTOM = 1; const val OFF = 2 }
 
@@ -293,6 +302,7 @@ data class GesturePrefs(
 )
 
 class SettingsStore(private val context: Context) {
+    val processingRoutes = ProcessingRouteMonitor()
 
     private val gson = Gson()
 
@@ -300,6 +310,9 @@ class SettingsStore(private val context: Context) {
         val PROCESSING_PRESETS = stringPreferencesKey("processing_presets_v1")
         val PROCESSING_RACK = stringPreferencesKey(ProcessingRackCodec.PREFERENCE_KEY)
         val TUNING_PROJECTS = stringPreferencesKey(TuningProjectCodec.PREFERENCE_KEY)
+        val TUNING_TARGETS = stringPreferencesKey(TuningTargetCatalog.PREFERENCE_KEY)
+        val IMPULSE_LIBRARY = stringPreferencesKey(ImpulseLibraryCodec.PREFERENCE_KEY)
+        val PROCESSING_ROUTES = stringPreferencesKey(ProcessingRouteCodec.PREFERENCE_KEY)
         val SERVER = stringPreferencesKey("server")
         val USERNAME = stringPreferencesKey("username")
         val SALT = stringPreferencesKey("salt")
@@ -546,6 +559,7 @@ class SettingsStore(private val context: Context) {
             context.dataStore.edit { p ->
                 p[Keys.PROCESSING_RACK] = encoded
                 if (validated.enabled) p[Keys.DSP_MODE] = DspMode.CUSTOM
+                holdManualRoute(p)
             }
             Unit
         }
@@ -557,12 +571,199 @@ class SettingsStore(private val context: Context) {
             context.dataStore.edit { p ->
                 p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(
                     ProcessingRack.legacy(readAudioPrefs(p), readPlaybackPrefs(p).monoAudio))
+                holdManualRoute(p)
             }
             Unit
         }
     }
 
     suspend fun resetProcessingRack(): Result<Unit> = migrateProcessingRack()
+
+    val impulseLibrary: Flow<List<ImpulseLibraryEntry>> = context.dataStore.data
+        .map { it[Keys.IMPULSE_LIBRARY] }.distinctUntilChanged()
+        .map { ImpulseLibraryCodec.decodeLibrary(it).getOrThrow() }.flowOn(Dispatchers.IO)
+
+    suspend fun importImpulse(input: InputStream, name: String): Result<ImpulseLibraryEntry> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val file = newImpulseFile()
+            var published = false
+            try {
+                file.outputStream().buffered().use { output ->
+                    val buffer = ByteArray(64 * 1024)
+                    var bytes = 0L
+                    while (true) {
+                        currentCoroutineContext().ensureActive()
+                        val count = input.read(buffer)
+                        if (count < 0) break
+                        if (count == 0) continue
+                        bytes += count
+                        require(bytes <= 64L * 1024 * 1024) { "WAV exceeds 64 MiB." }
+                        output.write(buffer, 0, count)
+                    }
+                }
+                val entry = ImpulseLibraryFiles.importOriginal(file, name.substringBeforeLast('.').take(80).ifBlank { "Impulse response" },
+                    name, System.currentTimeMillis()).getOrThrow()
+                currentCoroutineContext().ensureActive()
+                withContext(NonCancellable) {
+                    context.dataStore.edit { p ->
+                        val library = ImpulseLibraryCodec.decodeLibrary(p[Keys.IMPULSE_LIBRARY]).getOrThrow()
+                        require(library.size < ImpulseLibraryCodec.MAX_ENTRIES) { "The library holds up to 32 impulse responses." }
+                        p[Keys.IMPULSE_LIBRARY] = ImpulseLibraryCodec.encodeLibrary(library + entry)
+                    }
+                    published = true
+                }
+                entry
+            } finally { if (!published) file.delete() }
+        }
+    }
+
+    suspend fun importCurrentImpulse(): Result<ImpulseLibraryEntry> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val audio = audioPrefs.first()
+            require(audio.dspConvIrPath.isNotBlank()) { "No impulse response is selected." }
+            File(audio.dspConvIrPath).inputStream().use {
+                importImpulse(it, audio.dspConvIrName.ifBlank { "Impulse response.wav" }).getOrThrow()
+            }
+        }
+    }
+
+    suspend fun renameImpulse(id: String, name: String): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val library = ImpulseLibraryCodec.decodeLibrary(p[Keys.IMPULSE_LIBRARY]).getOrThrow()
+                val current = library.firstOrNull { it.id == id } ?: error("Impulse response no longer exists.")
+                val renamed = ImpulseLibraryCodec.validate(current.copy(name = name))
+                p[Keys.IMPULSE_LIBRARY] = ImpulseLibraryCodec.encodeLibrary(library.map {
+                    if (it.id == id) renamed else it
+                })
+                val selectedPath = p[Keys.DSP_CONV_PATH]
+                when {
+                    selectedPath == current.sourcePath -> p[Keys.DSP_CONV_NAME] = renamed.name
+                    current.prepared != null && selectedPath == current.prepared.path -> {
+                        p[Keys.DSP_CONV_NAME] = "${renamed.name} · Variant"
+                    }
+                }
+            }
+            Unit
+        }
+    }
+
+    suspend fun deleteImpulse(id: String): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val library = ImpulseLibraryCodec.decodeLibrary(p[Keys.IMPULSE_LIBRARY]).getOrThrow()
+                require(library.any { it.id == id }) { "Impulse response no longer exists." }
+                // active playback and presets may still reference these files
+                p[Keys.IMPULSE_LIBRARY] = ImpulseLibraryCodec.encodeLibrary(library.filterNot { it.id == id })
+            }
+            Unit
+        }
+    }
+
+    suspend fun prepareImpulse(id: String, options: ImpulsePreparation): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val entry = impulseLibrary.first().firstOrNull { it.id == id } ?: error("Impulse response no longer exists.")
+            val file = newImpulseFile()
+            var published = false
+            try {
+                val prepared = ImpulseLibraryFiles.prepare(entry, file, options).getOrThrow()
+                currentCoroutineContext().ensureActive()
+                withContext(NonCancellable) {
+                    context.dataStore.edit { p ->
+                        val library = ImpulseLibraryCodec.decodeLibrary(p[Keys.IMPULSE_LIBRARY]).getOrThrow()
+                        val current = library.firstOrNull { it.id == id } ?: error("Impulse response no longer exists.")
+                        require(current.sourcePath == entry.sourcePath && current.sourceSha256 == entry.sourceSha256) {
+                            "The source changed. Open it again."
+                        }
+                        p[Keys.IMPULSE_LIBRARY] = ImpulseLibraryCodec.encodeLibrary(library.map {
+                            if (it.id == id) it.copy(prepared = prepared.prepared) else it
+                        })
+                    }
+                    published = true
+                }
+                Unit
+            } finally { if (!published) file.delete() }
+        }
+    }
+
+    suspend fun selectImpulse(id: String, prepared: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val entry = impulseLibrary.first().firstOrNull { it.id == id } ?: error("Impulse response no longer exists.")
+            val file = ImpulseLibraryFiles.validateAsset(entry, prepared).getOrThrow()
+            val metadata = if (prepared) requireNotNull(entry.prepared).metadata else entry.sourceMetadata
+            require(ImpulseLibraryFiles.estimate(metadata, metadata.sampleRate).supported) { "Trim this response before selecting it." }
+            context.dataStore.edit { p ->
+                val current = ImpulseLibraryCodec.decodeLibrary(p[Keys.IMPULSE_LIBRARY]).getOrThrow().firstOrNull { it.id == id }
+                    ?: error("Impulse response no longer exists.")
+                require(if (prepared) current.prepared == entry.prepared else
+                    current.sourcePath == entry.sourcePath && current.sourceSha256 == entry.sourceSha256) { "The response changed. Select it again." }
+                p[Keys.DSP_CONV_PATH] = file.absolutePath
+                p[Keys.DSP_CONV_NAME] = current.name + if (prepared) " · Variant" else ""
+                holdManualRoute(p)
+            }
+            Unit
+        }
+    }
+
+    suspend fun exportImpulse(id: String, prepared: Boolean, output: OutputStream): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val entry = impulseLibrary.first().firstOrNull { it.id == id } ?: error("Impulse response no longer exists.")
+            val file = ImpulseLibraryFiles.validateAsset(entry, prepared).getOrThrow()
+            file.inputStream().use { it.copyTo(output) }
+            Unit
+        }
+    }
+
+    private fun newImpulseFile(): File {
+        val directory = File(context.filesDir, "impulse-library")
+        check(directory.isDirectory || directory.mkdirs()) { "Cannot create impulse-response storage." }
+        return File(directory, "${UUID.randomUUID()}.wav")
+    }
+
+    private suspend fun <T> impulseResult(block: suspend () -> T): Result<T> = try {
+        Result.success(block())
+    } catch (cancelled: CancellationException) {
+        throw cancelled
+    } catch (failure: Exception) {
+        Result.failure(failure)
+    }
+
+    val tuningTargets: Flow<List<TuningTarget>> = context.dataStore.data
+        .map { it[Keys.TUNING_TARGETS] }.distinctUntilChanged()
+        .map { TuningTargetCatalog.decodeLibrary(it).getOrThrow() }.flowOn(Dispatchers.Default)
+
+    suspend fun saveTuningTarget(target: TuningTarget): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val library = TuningTargetCatalog.decodeLibrary(p[Keys.TUNING_TARGETS]).getOrThrow()
+                p[Keys.TUNING_TARGETS] = TuningTargetCatalog.encodeLibrary(TuningTargetCatalog.upsert(library, target).getOrThrow())
+            }
+            Unit
+        }
+    }
+
+    suspend fun deleteTuningTarget(id: String): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val library = TuningTargetCatalog.decodeLibrary(p[Keys.TUNING_TARGETS]).getOrThrow()
+                p[Keys.TUNING_TARGETS] = TuningTargetCatalog.encodeLibrary(TuningTargetCatalog.delete(library, id).getOrThrow())
+            }
+            Unit
+        }
+    }
+
+    suspend fun revertTuningAppend(expectedRack: ProcessingRack, previousRack: ProcessingRack): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val encoded = ProcessingRackCodec.encode(previousRack)
+            context.dataStore.edit { p ->
+                val current = readProcessingRack(p, readAudioPrefs(p), readPlaybackPrefs(p).monoAudio)
+                require(current == expectedRack) { "The rack changed. Remove the correction stages manually." }
+                p[Keys.PROCESSING_RACK] = encoded
+                holdManualRoute(p)
+            }
+            Unit
+        }
+    }
 
     val tuningProjects: Flow<List<TuningProject>> = context.dataStore.data
         .map { it[Keys.TUNING_PROJECTS] }.distinctUntilChanged()
@@ -589,18 +790,23 @@ class SettingsStore(private val context: Context) {
         }
     }
 
-    /** Validate against the latest rack, save the project and add its correction atomically. */
-    suspend fun appendTuningProjectToRack(project: TuningProject): Result<Unit> = withContext(Dispatchers.IO) {
+    suspend fun appendTuningProjectToRack(project: TuningProject): Result<Unit> =
+        appendTuningProjectWithUndo(project).map { Unit }
+
+    suspend fun appendTuningProjectWithUndo(project: TuningProject): Result<Pair<ProcessingRack, ProcessingRack>> = withContext(Dispatchers.IO) {
         runCatching {
             val validated = TuningProjectCodec.validate(project)
+            var snapshots: Pair<ProcessingRack, ProcessingRack>? = null
             context.dataStore.edit { p ->
                 val rack = readProcessingRack(p, readAudioPrefs(p), readPlaybackPrefs(p).monoAudio)
                 val updatedRack = TuningRackPlan.append(rack, validated)
+                snapshots = rack to updatedRack
                 val library = TuningProjectCodec.upsert(TuningProjectCodec.decodeLibrary(p[Keys.TUNING_PROJECTS]).getOrThrow(), validated).getOrThrow()
                 p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(updatedRack)
                 p[Keys.TUNING_PROJECTS] = TuningProjectCodec.encodeLibrary(library)
+                holdManualRoute(p)
             }
-            Unit
+            requireNotNull(snapshots)
         }
     }
 
@@ -664,33 +870,117 @@ class SettingsStore(private val context: Context) {
         }
     }
 
+    val processingRouteRules: Flow<ProcessingRouteRules> = context.dataStore.data
+        .map { ProcessingRouteCodec.decode(it[Keys.PROCESSING_ROUTES]).getOrThrow() }.distinctUntilChanged()
+
+    suspend fun setRouteRulesEnabled(enabled: Boolean): Result<Unit> = editRouteRules { it.copy(enabled = enabled) }
+
+    suspend fun holdCurrentRoute(hold: Boolean): Result<Unit> {
+        val key = processingRoutes.current.route.key ?: return Result.failure(IllegalStateException("Output identity is unavailable."))
+        return editRouteRules { it.copy(manual = if (hold) it.manual + key else it.manual - key) }
+    }
+
+    suspend fun chooseRouteHeadphones(key: String, headphones: String): Result<Unit> = editRouteRules { rules ->
+        require(ProcessingRouteCodec.validKey(key)) { "Invalid output identity." }
+        require(headphones.isEmpty() || rules.bindings.any { it.routeKey == key && it.headphones == headphones }) { "Headphones are not bound to this output." }
+        rules.copy(headphones = rules.headphones + (key to headphones), manual = rules.manual - key)
+    }
+
+    suspend fun bindCurrentRoute(presetId: String, headphones: String,
+        expected: RouteObservation = processingRoutes.current): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val route = expected.route
+            val key = route.key ?: error("Output identity is unavailable.")
+            require(route.kind == ProcessingRouteKind.ANDROID) { "This output bypasses local processing." }
+            context.dataStore.edit { p ->
+                require(processingRoutes.current == expected) { "The output changed. Try again." }
+                require(presetList(p).any { it.id == presetId }) { "This preset no longer exists." }
+                val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
+                val name = headphones.trim()
+                val binding = RoutePresetBinding(key, route.label, name, presetId)
+                p[Keys.PROCESSING_ROUTES] = ProcessingRouteCodec.encode(rules.copy(enabled = true,
+                    bindings = rules.bindings.filterNot { it.routeKey == key && it.headphones == name } + binding,
+                    headphones = rules.headphones + (key to name), manual = rules.manual - key))
+            }
+            Unit
+        }
+    }
+
+    suspend fun removeRouteBinding(binding: RoutePresetBinding): Result<Unit> = editRouteRules { rules ->
+        rules.copy(bindings = rules.bindings.filterNot { it == binding }, manual = rules.manual + binding.routeKey)
+    }
+
+    private suspend fun editRouteRules(change: (ProcessingRouteRules) -> ProcessingRouteRules): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
+                p[Keys.PROCESSING_ROUTES] = ProcessingRouteCodec.encode(change(rules))
+            }
+            Unit
+        }
+    }
+
     suspend fun applyProcessingPreset(id: String): Result<ProcessingPresetApplyResult> = withContext(Dispatchers.IO) {
-        runCatching {
+        impulseResult {
             var result: ProcessingPresetApplyResult? = null
             context.dataStore.edit { p ->
-                val preset = presetList(p).firstOrNull { it.id == id }
-                    ?: error("This preset no longer exists.")
-                if (preset.requiresImpulseResponse()) {
-                    require(preset.audio.dspConvIrPath.isNotBlank() && preset.irSha256.isNotBlank()) {
-                        "This preset has no saved impulse response. Select it again and save a new preset."
-                    }
-                    val file = File(preset.audio.dspConvIrPath)
-                    require(file.isFile && file.canRead()) { "This preset's impulse response is missing. No settings were changed." }
-                    require(irHash(file) == preset.irSha256) { "This preset's impulse response has changed. No settings were changed." }
-                }
-                val old = readPlaybackPrefs(p)
-                val restart = old.preferHighRes != preset.playback.preferHighRes ||
-                    old.bitPerfectUsb != preset.playback.bitPerfectUsb
-                writeProcessingAudio(p, if (preset.rack.enabled) preset.audio.copy(dspMode = DspMode.CUSTOM) else preset.audio)
-                writeProcessingPlayback(p, preset.playback)
-                p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(preset.rack)
-                p[Keys.AUTOEQ_PROFILE] = preset.activeEqProfile
-                result = ProcessingPresetApplyResult(preset.name, restart)
+                val preset = presetList(p).firstOrNull { it.id == id } ?: error("This preset no longer exists.")
+                result = applyPresetSnapshot(p, preset)
+                holdManualRoute(p)
             }
             requireNotNull(result)
         }
     }
 
+    suspend fun applyRoutePreset(expected: RouteObservation, presetId: String): Result<ProcessingPresetApplyResult?> = withContext(Dispatchers.IO) {
+        impulseResult {
+            var result: ProcessingPresetApplyResult? = null
+            context.dataStore.edit { p ->
+                val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
+                if (!RouteRuleDecision.mayApply(expected, processingRoutes.current, rules, presetId)) return@edit
+                val preset = presetList(p).firstOrNull { it.id == presetId } ?: error("The bound preset was deleted.")
+                validatePresetImpulse(preset)
+                if (!RouteRuleDecision.mayApply(expected, processingRoutes.current, rules, presetId)) return@edit
+                result = applyPresetSnapshot(p, preset, validateImpulse = false)
+            }
+            result
+        }
+    }
+
+    private fun validatePresetImpulse(preset: ProcessingPreset) {
+        if (!preset.requiresImpulseResponse()) return
+        require(preset.audio.dspConvIrPath.isNotBlank() && preset.irSha256.isNotBlank()) { "This preset needs its saved impulse response." }
+        val file = File(preset.audio.dspConvIrPath)
+        require(file.isFile && file.canRead() && irHash(file) == preset.irSha256) { "The preset impulse response is missing or changed." }
+    }
+
+    private fun applyPresetSnapshot(p: MutablePreferences, preset: ProcessingPreset, validateImpulse: Boolean = true): ProcessingPresetApplyResult {
+        if (validateImpulse) validatePresetImpulse(preset)
+        val old = readPlaybackPrefs(p)
+        val restart = old.preferHighRes != preset.playback.preferHighRes || old.bitPerfectUsb != preset.playback.bitPerfectUsb
+        writeProcessingAudio(p, if (preset.rack.enabled) preset.audio.copy(dspMode = DspMode.CUSTOM) else preset.audio)
+        writeProcessingPlayback(p, preset.playback)
+        p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(preset.rack)
+        p[Keys.AUTOEQ_PROFILE] = preset.activeEqProfile
+        return ProcessingPresetApplyResult(preset.name, restart)
+    }
+
+    private fun holdManualRoute(p: MutablePreferences) {
+        val route = processingRoutes.current.route
+        val key = route.key ?: return
+        if (route.kind != ProcessingRouteKind.ANDROID) return
+        val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
+        val fullBinding = rules.enabled && rules.bindings.any { it.routeKey == key }
+        val legacyBinding = p[Keys.AUTOEQ_SWITCH] == true && parseBindings(p[Keys.EQ_BINDINGS]).any {
+            it.deviceKey == key || it.deviceKey == route.legacyKey
+        }
+        if (fullBinding || legacyBinding) p[Keys.PROCESSING_ROUTES] = ProcessingRouteCodec.encode(rules.copy(manual = rules.manual + key))
+    }
+
+    private suspend fun editManualProcessing(change: (MutablePreferences) -> Unit) = context.dataStore.edit { p ->
+        change(p)
+        holdManualRoute(p)
+    }
     suspend fun duplicateProcessingPreset(id: String, name: String): Result<ProcessingPreset> = withContext(Dispatchers.IO) {
         runCatching {
             val title = ProcessingPresetCodec.name(name)
@@ -768,11 +1058,16 @@ class SettingsStore(private val context: Context) {
         }
     }
 
-    suspend fun applyEqBindingIfEnabled(binding: EqBinding): Boolean {
+    suspend fun applyEqBindingIfEnabled(binding: EqBinding, expectedRoute: RouteObservation? = null): Boolean {
         var applied = false
         context.dataStore.edit { p ->
             if (p[Keys.AUTOEQ_SWITCH] != true || binding !in parseBindings(p[Keys.EQ_BINDINGS])) return@edit
-            p[Keys.DSP_PARAMETRIC] = binding.bands.joinToString(";") { "${it.freqHz}:${it.gainDb}:${it.q}:${it.type}" }
+            val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
+            val observed = processingRoutes.current
+            val key = observed.route.key
+            if (expectedRoute != null && (expectedRoute != observed || key == null || observed.route.kind != ProcessingRouteKind.ANDROID)) return@edit
+            if (key != null && (key in rules.manual || rules.enabled && rules.bindings.any { it.routeKey == key })) return@edit
+            p[Keys.DSP_PARAMETRIC] = ParamBandCodec.encodePreference(binding.bands)
             p[Keys.DSP_PREAMP] = binding.preampDb
             p[Keys.DSP_MODE] = DspMode.CUSTOM
             p[Keys.AUTOEQ_PROFILE] = binding.profileName
@@ -829,7 +1124,7 @@ class SettingsStore(private val context: Context) {
         p[Keys.DSP_DELAY_R] = a.dspDelayRightMs
         p[Keys.DSP_TRIM_L] = a.dspTrimLeftDb
         p[Keys.DSP_TRIM_R] = a.dspTrimRightDb
-        p[Keys.DSP_PARAMETRIC] = a.dspParametric.joinToString(";") { "${it.freqHz}:${it.gainDb}:${it.q}:${it.type}" }
+        p[Keys.DSP_PARAMETRIC] = ParamBandCodec.encodePreference(a.dspParametric)
     }
 
     private fun writeProcessingPlayback(p: MutablePreferences, a: ProcessingPlaybackPrefs) {
@@ -845,18 +1140,7 @@ class SettingsStore(private val context: Context) {
         p[Keys.INDEPENDENT_OUTPUT] = a.independentOutput
     }
 
-    private fun parseParametric(s: String?): List<ParamBand> {
-        if (s.isNullOrBlank()) return emptyList()
-        return s.split(";").mapNotNull { entry ->
-            val parts = entry.split(":")
-            if (parts.size < 3) return@mapNotNull null
-            val f = parts[0].toFloatOrNull() ?: return@mapNotNull null
-            val g = parts[1].toFloatOrNull() ?: return@mapNotNull null
-            val q = parts[2].toFloatOrNull() ?: return@mapNotNull null
-            val t = parts.getOrNull(3)?.toIntOrNull() ?: BandType.PEAK
-            ParamBand(f, g, q, t)
-        }
-    }
+    private fun parseParametric(s: String?): List<ParamBand> = ParamBandCodec.decodePreference(s)
 
     val offlineMode: Flow<Boolean> = context.dataStore.data.map { it[Keys.OFFLINE] ?: false }
     val lrclibEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.LRCLIB] ?: true }
@@ -1137,19 +1421,19 @@ class SettingsStore(private val context: Context) {
         p[Keys.SAVED_SESSIONS] = gson.toJson(cur.filterNot { it.accountKey() == session.accountKey() })
     }
 
-    suspend fun setSkipSilence(v: Boolean) = context.dataStore.edit { it[Keys.SKIP_SILENCE] = v }
-    suspend fun setCrossfade(sec: Int) = context.dataStore.edit { it[Keys.CROSSFADE] = sec.coerceIn(0, 30) }
-    suspend fun setCrossfadeCurve(curve: String) = context.dataStore.edit { it[Keys.CROSSFADE_CURVE] = curve }
-    suspend fun setCrossfadeHeadroom(on: Boolean) = context.dataStore.edit { it[Keys.CROSSFADE_HEADROOM] = on }
-    suspend fun setGapless(v: Boolean) = context.dataStore.edit { it[Keys.GAPLESS] = v }
-    suspend fun setDefaultSpeed(v: Float) = context.dataStore.edit { it[Keys.DEFAULT_SPEED] = v }
-    suspend fun setMono(v: Boolean) = context.dataStore.edit { it[Keys.MONO] = v }
+    suspend fun setSkipSilence(v: Boolean) = editManualProcessing { it[Keys.SKIP_SILENCE] = v }
+    suspend fun setCrossfade(sec: Int) = editManualProcessing { it[Keys.CROSSFADE] = sec.coerceIn(0, 30) }
+    suspend fun setCrossfadeCurve(curve: String) = editManualProcessing { it[Keys.CROSSFADE_CURVE] = curve }
+    suspend fun setCrossfadeHeadroom(on: Boolean) = editManualProcessing { it[Keys.CROSSFADE_HEADROOM] = on }
+    suspend fun setGapless(v: Boolean) = editManualProcessing { it[Keys.GAPLESS] = v }
+    suspend fun setDefaultSpeed(v: Float) = editManualProcessing { it[Keys.DEFAULT_SPEED] = v }
+    suspend fun setMono(v: Boolean) = editManualProcessing { it[Keys.MONO] = v }
     suspend fun setStreamWifi(v: Int) = context.dataStore.edit { it[Keys.STREAM_WIFI] = v }
     suspend fun setStreamCellular(v: Int) = context.dataStore.edit { it[Keys.STREAM_CELLULAR] = v }
     suspend fun setDownloadBitrate(v: Int) = context.dataStore.edit { it[Keys.DOWNLOAD_BITRATE] = v }
-    suspend fun setPreferHighRes(v: Boolean) = context.dataStore.edit { it[Keys.PREFER_HIRES] = v }
-    suspend fun setBitPerfectUsb(v: Boolean) = context.dataStore.edit { it[Keys.BIT_PERFECT_USB] = v }
-    suspend fun setIndependentOutput(v: Boolean) = context.dataStore.edit { it[Keys.INDEPENDENT_OUTPUT] = v }
+    suspend fun setPreferHighRes(v: Boolean) = editManualProcessing { it[Keys.PREFER_HIRES] = v }
+    suspend fun setBitPerfectUsb(v: Boolean) = editManualProcessing { it[Keys.BIT_PERFECT_USB] = v }
+    suspend fun setIndependentOutput(v: Boolean) = editManualProcessing { it[Keys.INDEPENDENT_OUTPUT] = v }
     suspend fun setScrobble(v: Boolean) = context.dataStore.edit { it[Keys.SCROBBLE] = v }
     suspend fun setAutoplayRadio(v: Boolean) = context.dataStore.edit { it[Keys.AUTOPLAY_RADIO] = v }
     suspend fun setOfflineMode(v: Boolean) = context.dataStore.edit { it[Keys.OFFLINE] = v }
@@ -1167,11 +1451,28 @@ class SettingsStore(private val context: Context) {
 
     suspend fun setAcoustIdKey(v: String) = context.dataStore.edit { it[Keys.ACOUSTID_KEY] = v.trim() }
     suspend fun setAutoEqAutoSwitch(v: Boolean) = context.dataStore.edit { it[Keys.AUTOEQ_SWITCH] = v }
-    suspend fun setActiveEqProfile(name: String) = context.dataStore.edit { it[Keys.AUTOEQ_PROFILE] = name }
+    suspend fun setActiveEqProfile(name: String) = editManualProcessing { it[Keys.AUTOEQ_PROFILE] = name }
 
     suspend fun upsertEqBinding(binding: EqBinding) = context.dataStore.edit { p ->
         val cur = parseBindings(p[Keys.EQ_BINDINGS]).filterNot { it.deviceKey == binding.deviceKey }
         p[Keys.EQ_BINDINGS] = gson.toJson(cur + binding)
+    }
+
+    suspend fun bindEqToCurrentOutput(profile: String, preampDb: Float, bands: List<ParamBand>): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            val expected = processingRoutes.current
+            val key = expected.route.key ?: error("Output identity is unavailable.")
+            require(expected.route.kind == ProcessingRouteKind.ANDROID) { "This output bypasses local processing." }
+            context.dataStore.edit { p ->
+                require(processingRoutes.current == expected) { "The output changed. Try again." }
+                val binding = EqBinding(key, expected.route.label, profile, preampDb, bands)
+                p[Keys.EQ_BINDINGS] = gson.toJson(parseBindings(p[Keys.EQ_BINDINGS]).filterNot { it.deviceKey == key } + binding)
+                p[Keys.AUTOEQ_SWITCH] = true
+                val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
+                p[Keys.PROCESSING_ROUTES] = ProcessingRouteCodec.encode(rules.copy(manual = rules.manual - key))
+            }
+            Unit
+        }
     }
 
     suspend fun removeEqBinding(deviceKey: String) = context.dataStore.edit { p ->
@@ -1191,45 +1492,45 @@ class SettingsStore(private val context: Context) {
         p[Keys.LIKED_PLAYLISTS] = set
     }
 
-    suspend fun setEqEnabled(v: Boolean) = context.dataStore.edit { it[Keys.EQ_ENABLED] = v }
-    suspend fun setEqPreset(v: Int) = context.dataStore.edit { it[Keys.EQ_PRESET] = v }
-    suspend fun setEqBands(v: List<Int>) = context.dataStore.edit { it[Keys.EQ_BANDS] = v.joinToString(",") }
-    suspend fun setBassBoost(v: Int) = context.dataStore.edit { it[Keys.BASS_BOOST] = v }
-    suspend fun setVirtualizer(v: Int) = context.dataStore.edit { it[Keys.VIRTUALIZER] = v }
-    suspend fun setLoudness(v: Int) = context.dataStore.edit { it[Keys.LOUDNESS] = v }
-    suspend fun setReplayGain(v: Int) = context.dataStore.edit { it[Keys.REPLAY_GAIN] = v }
+    suspend fun setEqEnabled(v: Boolean) = editManualProcessing { it[Keys.EQ_ENABLED] = v }
+    suspend fun setEqPreset(v: Int) = editManualProcessing { it[Keys.EQ_PRESET] = v }
+    suspend fun setEqBands(v: List<Int>) = editManualProcessing { it[Keys.EQ_BANDS] = v.joinToString(",") }
+    suspend fun setBassBoost(v: Int) = editManualProcessing { it[Keys.BASS_BOOST] = v }
+    suspend fun setVirtualizer(v: Int) = editManualProcessing { it[Keys.VIRTUALIZER] = v }
+    suspend fun setLoudness(v: Int) = editManualProcessing { it[Keys.LOUDNESS] = v }
+    suspend fun setReplayGain(v: Int) = editManualProcessing { it[Keys.REPLAY_GAIN] = v }
 
-    suspend fun setDspMode(v: Int) = context.dataStore.edit { p ->
+    suspend fun setDspMode(v: Int) = editManualProcessing { p ->
         p[Keys.DSP_MODE] = v
         if (v != DspMode.CUSTOM) {
             val rack = p[Keys.PROCESSING_RACK]?.let { ProcessingRackCodec.decode(it).getOrNull() }
             if (rack?.enabled == true) p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(rack.copy(enabled = false))
         }
     }
-    suspend fun setDspGraphicBands(v: List<Float>) = context.dataStore.edit { it[Keys.DSP_GRAPHIC] = v.joinToString(",") }
-    suspend fun setDspParametric(v: List<ParamBand>) = context.dataStore.edit {
-        it[Keys.DSP_PARAMETRIC] = v.joinToString(";") { b -> "${b.freqHz}:${b.gainDb}:${b.q}:${b.type}" }
+    suspend fun setDspGraphicBands(v: List<Float>) = editManualProcessing { it[Keys.DSP_GRAPHIC] = v.joinToString(",") }
+    suspend fun setDspParametric(v: List<ParamBand>) = editManualProcessing {
+        it[Keys.DSP_PARAMETRIC] = ParamBandCodec.encodePreference(v)
     }
-    suspend fun setDspPreamp(v: Float) = context.dataStore.edit { it[Keys.DSP_PREAMP] = v }
-    suspend fun setDspBalance(v: Float) = context.dataStore.edit { it[Keys.DSP_BALANCE] = v }
-    suspend fun setDspWidth(v: Float) = context.dataStore.edit { it[Keys.DSP_WIDTH] = v }
-    suspend fun setDspCrossfeed(v: Float) = context.dataStore.edit { it[Keys.DSP_CROSSFEED] = v }
-    suspend fun setDspLimiterEnabled(v: Boolean) = context.dataStore.edit { it[Keys.DSP_LIMITER] = v }
-    suspend fun setDspCeiling(v: Float) = context.dataStore.edit { it[Keys.DSP_CEILING] = v }
-    suspend fun setDspCompEnabled(v: Boolean) = context.dataStore.edit { it[Keys.DSP_COMP] = v }
-    suspend fun setDspCompThresh(v: Float) = context.dataStore.edit { it[Keys.DSP_COMP_THRESH] = v }
-    suspend fun setDspCompRatio(v: Float) = context.dataStore.edit { it[Keys.DSP_COMP_RATIO] = v }
-    suspend fun setDspConvEnabled(v: Boolean) = context.dataStore.edit { it[Keys.DSP_CONV] = v }
-    suspend fun setDspConvMakeup(v: Float) = context.dataStore.edit { it[Keys.DSP_CONV_MAKEUP] = v }
-    suspend fun setDspConvIr(path: String, name: String) = context.dataStore.edit {
+    suspend fun setDspPreamp(v: Float) = editManualProcessing { it[Keys.DSP_PREAMP] = v }
+    suspend fun setDspBalance(v: Float) = editManualProcessing { it[Keys.DSP_BALANCE] = v }
+    suspend fun setDspWidth(v: Float) = editManualProcessing { it[Keys.DSP_WIDTH] = v }
+    suspend fun setDspCrossfeed(v: Float) = editManualProcessing { it[Keys.DSP_CROSSFEED] = v }
+    suspend fun setDspLimiterEnabled(v: Boolean) = editManualProcessing { it[Keys.DSP_LIMITER] = v }
+    suspend fun setDspCeiling(v: Float) = editManualProcessing { it[Keys.DSP_CEILING] = v }
+    suspend fun setDspCompEnabled(v: Boolean) = editManualProcessing { it[Keys.DSP_COMP] = v }
+    suspend fun setDspCompThresh(v: Float) = editManualProcessing { it[Keys.DSP_COMP_THRESH] = v }
+    suspend fun setDspCompRatio(v: Float) = editManualProcessing { it[Keys.DSP_COMP_RATIO] = v }
+    suspend fun setDspConvEnabled(v: Boolean) = editManualProcessing { it[Keys.DSP_CONV] = v }
+    suspend fun setDspConvMakeup(v: Float) = editManualProcessing { it[Keys.DSP_CONV_MAKEUP] = v }
+    suspend fun setDspConvIr(path: String, name: String) = editManualProcessing {
         it[Keys.DSP_CONV_PATH] = path; it[Keys.DSP_CONV_NAME] = name
     }
-    suspend fun setDspGraphicLayout(v: Int) = context.dataStore.edit { it[Keys.DSP_GRAPHIC_LAYOUT] = v }
-    suspend fun setDspSaturation(v: Float) = context.dataStore.edit { it[Keys.DSP_SATURATION] = v }
-    suspend fun setDspDelayLeft(v: Float) = context.dataStore.edit { it[Keys.DSP_DELAY_L] = v }
-    suspend fun setDspDelayRight(v: Float) = context.dataStore.edit { it[Keys.DSP_DELAY_R] = v }
-    suspend fun setDspTrimLeft(v: Float) = context.dataStore.edit { it[Keys.DSP_TRIM_L] = v }
-    suspend fun setDspTrimRight(v: Float) = context.dataStore.edit { it[Keys.DSP_TRIM_R] = v }
+    suspend fun setDspGraphicLayout(v: Int) = editManualProcessing { it[Keys.DSP_GRAPHIC_LAYOUT] = v }
+    suspend fun setDspSaturation(v: Float) = editManualProcessing { it[Keys.DSP_SATURATION] = v }
+    suspend fun setDspDelayLeft(v: Float) = editManualProcessing { it[Keys.DSP_DELAY_L] = v }
+    suspend fun setDspDelayRight(v: Float) = editManualProcessing { it[Keys.DSP_DELAY_R] = v }
+    suspend fun setDspTrimLeft(v: Float) = editManualProcessing { it[Keys.DSP_TRIM_L] = v }
+    suspend fun setDspTrimRight(v: Float) = editManualProcessing { it[Keys.DSP_TRIM_R] = v }
 
     suspend fun setThemeMode(v: Int) = context.dataStore.edit { it[Keys.UI_THEME_MODE] = v }
     suspend fun setThemeStyle(v: Int) = context.dataStore.edit { it[Keys.UI_THEME_STYLE] = v.coerceIn(ThemeStyle.AURORA, ThemeStyle.GLASS) }
@@ -1342,6 +1643,9 @@ class SettingsStore(private val context: Context) {
             val rack = replacement[Keys.PROCESSING_RACK]?.let { ProcessingRackCodec.decode(it).getOrThrow() }
                 ?: ProcessingRack.legacy(audio, playback.monoAudio)
             TuningProjectCodec.decodeLibrary(replacement[Keys.TUNING_PROJECTS]).getOrThrow()
+            TuningTargetCatalog.decodeLibrary(replacement[Keys.TUNING_TARGETS]).getOrThrow()
+            ImpulseLibraryCodec.decodeLibrary(replacement[Keys.IMPULSE_LIBRARY]).getOrThrow()
+            ProcessingRouteCodec.decode(replacement[Keys.PROCESSING_ROUTES]).getOrThrow()
             if (rack.enabled) replacement[Keys.DSP_MODE] = DspMode.CUSTOM
             // Asset ownership, hashes and remapping belong to the bundle reader before this call.
             // Keeping this transaction about preferences also permits restoring an exact snapshot
@@ -1365,9 +1669,7 @@ class SettingsStore(private val context: Context) {
             require(it.toFloatOrNull()?.isFinite() == true) { "Backup contains an invalid graphic EQ band." }
         }
         p[Keys.DSP_PARAMETRIC]?.takeIf { it.isNotBlank() }?.split(";")?.forEach { entry ->
-            val parts = entry.split(":")
-            require(parts.size in 3..4 && parts.take(3).all { it.toFloatOrNull()?.isFinite() == true } &&
-                (parts.size == 3 || parts[3].toIntOrNull() != null)) { "Backup contains an invalid parametric EQ band." }
+            require(ParamBandCodec.decodePreference(entry).size == 1) { "Backup contains an invalid parametric EQ band." }
         }
     }
 }

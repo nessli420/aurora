@@ -18,7 +18,8 @@ class ImpulseResponse private constructor(
     internal val preciseRight: DoubleArray,
     val sampleRate: Int,
     val sourcePrecision: SamplePrecision,
-    val sourceValidBits: Int
+    val sourceValidBits: Int,
+    val sourceChannels: Int = 2
 ) {
     constructor(left: FloatArray, right: FloatArray, sampleRate: Int) : this(
         DoubleArray(left.size) { left[it].toDouble() },
@@ -30,8 +31,8 @@ class ImpulseResponse private constructor(
     val frameCount: Int get() = maxOf(preciseLeft.size, preciseRight.size)
 
     companion object {
-        internal fun decoded(left: DoubleArray, right: DoubleArray, rate: Int, precision: SamplePrecision, validBits: Int) =
-            ImpulseResponse(left, right, rate, precision, validBits)
+        internal fun decoded(left: DoubleArray, right: DoubleArray, rate: Int, precision: SamplePrecision, validBits: Int, channels: Int = 2) =
+            ImpulseResponse(left, right, rate, precision, validBits, channels)
     }
 }
 
@@ -344,7 +345,7 @@ class ConvolutionProcessor : AudioProcessor {
                     bits == 8 -> SamplePrecision.PCM_SIGNED_8
                     else -> SamplePrecision.PCM_SIGNED_16
                 }
-                ImpulseResponse.decoded(left, right, rate, precision, if (code == 3) 24 else validBits)
+                ImpulseResponse.decoded(left, right, rate, precision, if (code == 3) 24 else validBits, channels)
             }
         }
     }

@@ -7,8 +7,9 @@ import kotlin.math.abs
 import kotlin.math.max
 import kotlin.math.sqrt
 
-/** Single audio-thread writer, bounded lock-free reader. No callback allocation or retained audio. */
+// one audio writer; bounded analysis buffers and lock-free snapshots
 class PcmLevelMeter {
+    internal val spectrum = PcmSpectrumTap()
     private var encoding = 0
     private var channels = 0
     private var rate = 0
@@ -51,6 +52,7 @@ class PcmLevelMeter {
     }
 
     fun reset() {
+        spectrum.reset()
         count = 0; frames = 0; fullScale = 0; invalid = 0
         peakL = 0.0; peakR = 0.0; sumL = 0.0; sumR = 0.0
         revision++
@@ -77,6 +79,8 @@ class PcmLevelMeter {
             if (!left.isFinite()) { invalid++; left = 0.0 }
             if (channels == 2 && !right.isFinite()) { invalid++; right = 0.0 }
             if (channels == 1) right = left
+            spectrum.observe(left, right, rate, if (presentationTimeUs == C.TIME_UNSET) C.TIME_UNSET
+                else presentationTimeUs + offsetFrames * 1_000_000L / rate)
             if (left >= positiveMax || left <= -1.0) fullScale++
             if (channels == 2 && (right >= positiveMax || right <= -1.0)) fullScale++
             peakL = max(peakL, abs(left)); peakR = max(peakR, abs(right))

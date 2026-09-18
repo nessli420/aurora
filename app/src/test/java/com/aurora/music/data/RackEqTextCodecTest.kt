@@ -81,11 +81,14 @@ class RackEqTextCodecTest {
         }
     }
 
-    @Test fun offRowsAreExplicitlyRejectedInsteadOfLosingDisabledMetadata() {
-        for (off in listOf("Filter 2: OFF", filter(2).replace("ON", "OFF"), "Filter: off HP Fc 10 Hz")) {
-            assertTrue(error("${filter()}\n$off", 2).contains("OFF filters"))
-        }
-        assertEquals(1, RackEqTextCodec.parse("${filter()}\n# Filter: OFF").getOrThrow().bands.size)
+    @Test fun disabledFiltersRoundTripAndMalformedOffRowsFail() {
+        val off = filter(2).replace("ON", "OFF")
+        val profile = RackEqTextCodec.parse("${filter()}\n$off").getOrThrow()
+        assertTrue(profile.bands[0].isEnabled)
+        assertFalse(profile.bands[1].isEnabled)
+        assertEquals(profile, RackEqTextCodec.parse(RackEqTextCodec.encode(profile)).getOrThrow())
+        error("Filter: OFF", 1)
+        error("Filter: OFF UNKNOWN Fc 100 Hz Q 1", 1)
     }
 
     @Test fun unsupportedFilterMathAndMalformedTailsAreNeverPartiallyImported() {
@@ -157,10 +160,11 @@ class RackEqTextCodecTest {
 
     @Test fun totalBandCapacityIncludesBypassedEqAndLegacyNodes() {
         val existing = ProcessingRack(nodes = listOf(node(RackNodeKind.LEGACY_DSP, List(12) { band }),
-            node(RackNodeKind.EQ, List(51) { band }).copy(bypass = true)))
+            node(RackNodeKind.EQ, List(64) { band }).copy(bypass = true),
+            node(RackNodeKind.EQ, List(64) { band }), node(RackNodeKind.EQ, List(64) { band }), node(RackNodeKind.EQ, List(51) { band })))
         assertTrue(RackEqTextCodec.appendToRack(existing, ParsedEq(0f, listOf(band)), "Fits").isSuccess)
         assertTrue(RackEqTextCodec.appendToRack(existing, ParsedEq(0f, listOf(band, band)), "Too many").isFailure)
-        assertEquals(63, existing.nodes.sumOf { it.audio.dspParametric.size })
+        assertEquals(255, existing.nodes.sumOf { it.audio.dspParametric.size })
     }
 
     @Test fun encodingAndAppendingRejectInvalidDirectProfilesWithoutClamping() {

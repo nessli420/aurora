@@ -53,7 +53,7 @@ class ProcessingPresetTest {
     }
 
     @Test fun futureVersionsAndFractionalVersionsAreRejected() {
-        assertNotNull(ProcessingPresetCodec.decode(changedJson { it.addProperty("schemaVersion", 3) }).error)
+        assertNotNull(ProcessingPresetCodec.decode(changedJson { it.addProperty("schemaVersion", 4) }).error)
         assertNotNull(ProcessingPresetCodec.decode(changedJson { it.addProperty("schemaVersion", 1.5) }).error)
     }
 

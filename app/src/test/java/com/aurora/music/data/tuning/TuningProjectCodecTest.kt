@@ -73,7 +73,7 @@ class TuningProjectCodecTest {
 
     @Test fun configLimitsAreExplicitAndNeverClamped() {
         val c = TuningFitConfig()
-        for (invalid in listOf(c.copy(bandBudget = 65), c.copy(bandBudget = 0), c.copy(sampleRate = 1),
+        for (invalid in listOf(c.copy(bandBudget = 129), c.copy(bandBudget = 0), c.copy(sampleRate = 1),
             c.copy(minFrequencyHz = c.maxFrequencyHz), c.copy(maxBoostDb = -1.0), c.copy(maxCutDb = 31.0),
             c.copy(minQ = .01), c.copy(minQ = 9.0, maxQ = 8.0), c.copy(smoothingOctaves = 1.1), c.copy(maxQ = Double.NaN))) {
             assertTrue(runCatching { TuningProjectCodec.validateConfig(invalid) }.isFailure)

@@ -1,5 +1,6 @@
 package com.aurora.music.data
 
+import com.aurora.music.data.ir.ImpulseLibraryCodec
 import com.google.gson.Gson
 import android.content.Context
 import java.io.File
@@ -65,7 +66,6 @@ class BackupManager(
         }
     }
 
-    /** All metadata and dependencies are validated before the first preference changes. */
     suspend fun importArchive(input: InputStream): Result<String> = withContext(Dispatchers.IO) {
         backupResult {
             val source = PushbackInputStream(input, 2)
@@ -86,8 +86,7 @@ class BackupManager(
                     val installed = imported.assets.mapValues { (_, file) ->
                         val destination = File(directory, "backup-${UUID.randomUUID()}.wav")
                         file.copyTo(destination, overwrite = false)
-                        // Immutable files stay available if DataStore commits before a cancelled
-                        // caller observes success. Existing/active asset references are never deleted.
+                        // retain assets if cancellation follows the preference commit.
                         destination
                     }
                     val resolved = BackupArchive.remap(imported.backup) { reference, hash ->
@@ -96,24 +95,21 @@ class BackupManager(
                         requireNotNull(installed[key]).absolutePath to key
                     }
                     restoreValidated(resolved)
-                    "Backup restored, including ${installed.size} impulse response(s). Restart Aurora to apply output settings."
+                    "Backup restored with ${installed.size} impulse responses. Restart Aurora."
                 }
             } else {
                 val backup = BackupArchive.readJsonStream(source)
                 val hadIr = backup.prefs.strings[BackupArchive.IR_PATH_KEY].orEmpty().isNotEmpty() ||
-                    ProcessingPresetCodec.decode(backup.prefs.strings[BackupArchive.PRESETS_KEY]).presets.any { it.audio.dspConvIrPath.isNotEmpty() }
+                    ProcessingPresetCodec.decode(backup.prefs.strings[BackupArchive.PRESETS_KEY]).presets.any { it.audio.dspConvIrPath.isNotEmpty() } ||
+                    ImpulseLibraryCodec.decodeLibrary(backup.prefs.strings[ImpulseLibraryCodec.PREFERENCE_KEY]).getOrThrow().isNotEmpty()
                 restoreValidated(withoutExternalIr(backup))
-                if (hadIr) "Legacy backup restored. Select impulse responses again; JSON backups do not include them. Restart Aurora to apply output settings."
-                else "Backup restored. Restart Aurora to apply output settings."
+                if (hadIr) "Legacy backup restored without impulse responses. Import them again and restart Aurora."
+                else "Backup restored. Restart Aurora."
             }
         }
     }
 
-    /**
-     * Await all three stores and roll back recoverable failures. Once writes begin, cancellation waits
-     * for commit or rollback; it cannot strand a half-restored session. This is not a crash-atomic
-     * cross-store transaction: process/device loss between the individual commits still needs a journal.
-     */
+    // cancellation waits for commit or rollback; process loss is not covered.
     private suspend fun restoreValidated(backup: AuroraBackup) = restoreMutex.withLock {
         val oldPrefs = settingsStore.exportPrefs()
         val oldLocal = localStore.exportJson()
@@ -130,7 +126,7 @@ class BackupManager(
                 }
                 playHistory.restoreBackup(backup.playHistory)
                 historyChanged = true
-                // Commit preferences last: an unavailable local/history destination cannot change them.
+                // commit preferences after the other stores succeed.
                 prefsAttempted = true
                 settingsStore.restoreBackupPrefs(backup.prefs).getOrThrow()
             } catch (failure: Exception) {
@@ -164,6 +160,7 @@ class BackupManager(
 
     private fun withoutExternalIr(backup: AuroraBackup): AuroraBackup {
         val strings = backup.prefs.strings.toMutableMap()
+        strings.remove(ImpulseLibraryCodec.PREFERENCE_KEY)
         strings[BackupArchive.IR_PATH_KEY] = ""
         strings["dsp_conv_name"] = ""
         fun dry(rack: ProcessingRack) = rack.copy(nodes = rack.nodes.map {

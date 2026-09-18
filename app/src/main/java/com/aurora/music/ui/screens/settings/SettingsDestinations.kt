@@ -18,6 +18,7 @@ object SettingsDestinations {
     val processingPresets = SettingsDestination(Routes.SETTINGS_PROCESSING_PRESETS, "Saved processing presets", "Save and restore your audio settings")
     val processingRack = SettingsDestination(Routes.SETTINGS_PROCESSING_RACK, "Processing rack", "Arrange and tune your audio processing stages")
     val tuning = SettingsDestination(Routes.SETTINGS_TUNING, "Measurement tuning", "Measurements, targets and saved correction projects")
+    val impulses = SettingsDestination(Routes.SETTINGS_IMPULSES, "Impulse responses", "Saved WAVs, trimming and normalization")
     val loudness = SettingsDestination(Routes.SETTINGS_LOUDNESS, "Volume & loudness", "ReplayGain and volume leveling")
     val signalPath = SettingsDestination(Routes.SIGNAL_PATH, "Signal Path", "Inspect the current playback path")
     val alarm = SettingsDestination(Routes.SETTINGS_ALARM, "Alarm", "Wake to your liked music")
@@ -29,7 +30,7 @@ object SettingsDestinations {
     val backup = SettingsDestination(Routes.SETTINGS_BACKUP, "Backup & restore", "Export or import settings and playlists")
     val about = SettingsDestination(Routes.SETTINGS_ABOUT, "About Aurora", "Version and app information")
 
-    val all = listOf(accounts, sources, storage, analysis, playback, output, equalizer, processingRack, tuning, processingPresets, loudness,
+    val all = listOf(accounts, sources, storage, analysis, playback, output, equalizer, processingRack, tuning, impulses, processingPresets, loudness,
         signalPath, alarm, appearance, visualizer, gestures, integrations, permissions, backup, about)
 }
 

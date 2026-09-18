@@ -50,8 +50,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -88,14 +86,13 @@ import com.aurora.music.playback.DspCoeffBuilder
 import com.aurora.music.playback.DspParams
 import androidx.compose.ui.graphics.Color
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
 fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLoudness: () -> Unit,
-    onOpenProcessingPresets: () -> Unit, onOpenProcessingRack: () -> Unit) {
+    onOpenProcessingPresets: () -> Unit, onOpenProcessingRack: () -> Unit, onOpenImpulses: () -> Unit) {
     val context = LocalContext.current
     val container = (context.applicationContext as AuroraApplication).container
     val store = container.settingsStore
@@ -117,7 +114,7 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLou
                 if (rack.enabled) SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
                         "Active · ${rack.name}", onClick = onOpenProcessingRack)
-                    Text("The rack uses its own EQ, effects and channel settings. Edit its stages to change the sound.",
+                    Text("Edit the active rack to change your sound.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
                     TextButton(onClick = { scope.launch {
@@ -132,7 +129,7 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLou
                 SettingsGroup {
                     if (!rack.enabled) {
                         SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
-                            "Arrange effects and edit up to 64 parametric bands", onClick = onOpenProcessingRack)
+                            "Arrange effects with 64 bands per Equalizer", onClick = onOpenProcessingRack)
                         SettingsRowDivider()
                     }
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingPresets,
@@ -146,7 +143,7 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLou
                     AutoEqPanel(container, prefs, store, scope)
                 }
                 collapsible("conv", "Convolution (IR)", Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else "Off", expanded) {
-                    ConvolutionPanel(prefs, store, scope)
+                    ConvolutionPanel(prefs, store, scope, onOpenImpulses)
                 }
 
                 when (prefs.dspMode) {
@@ -261,34 +258,13 @@ private fun HeadroomRow(peak: Float, preamp: Float, onAuto: () -> Unit) {
 }
 
 @Composable
-private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: CoroutineScope) {
-    val ctx = LocalContext.current
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) scope.launch(Dispatchers.IO) {
-            runCatching {
-                var name = uri.lastPathSegment?.substringAfterLast('/') ?: "impulse.wav"
-                runCatching {
-                    ctx.contentResolver.query(uri, null, null, null, null)?.use { c ->
-                        val i = c.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
-                        if (i >= 0 && c.moveToFirst()) name = c.getString(i)
-                    }
-                }
-                val dest = java.io.File(ctx.filesDir, "ir_active.wav")
-                ctx.contentResolver.openInputStream(uri)?.use { input -> dest.outputStream().use { input.copyTo(it) } }
-                store.setDspConvIr(dest.absolutePath, name)
-                store.setDspConvEnabled(true)
-                scope.launch(Dispatchers.Main) { android.widget.Toast.makeText(ctx, "Loaded IR: $name", android.widget.Toast.LENGTH_SHORT).show() }
-            }.onFailure {
-                scope.launch(Dispatchers.Main) { android.widget.Toast.makeText(ctx, "Couldn't load that file", android.widget.Toast.LENGTH_SHORT).show() }
-            }
-        }
-    }
+private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: CoroutineScope, onOpenImpulses: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Enable convolution", style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    if (prefs.dspConvIrName.isNotBlank()) "IR: ${prefs.dspConvIrName}" else "Linear-phase EQ / room / headphone correction from a WAV",
+                    prefs.dspConvIrName.ifBlank { "No impulse response selected" },
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -297,9 +273,9 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(
                 Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .clickable { runCatching { picker.launch(arrayOf("*/*")) } }.padding(vertical = 12.dp),
+                    .clickable(onClick = onOpenImpulses).padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text(if (prefs.dspConvIrName.isBlank()) "Load IR (.wav)" else "Replace IR", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
+            ) { Text("Impulse library", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
             if (prefs.dspConvIrName.isNotBlank()) {
                 Box(
                     Modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -352,7 +328,8 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
     val category = EqDeviceKind.entries.firstOrNull { it.name == categoryName } ?: EqDeviceKind.ALL
     val squigBase by store.squigBaseUrl.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_BASE)
     val squigTargetName by store.squigTarget.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_TARGET)
-    val outLabel = container.autoEqController.currentOutputLabel()
+    val observedOutput by store.processingRoutes.observations.collectAsStateWithLifecycle()
+    val outLabel = observedOutput.route.label
     val ctx = LocalContext.current
     fun toast(msg: String) = android.widget.Toast.makeText(ctx, msg, android.widget.Toast.LENGTH_SHORT).show()
 
@@ -486,17 +463,17 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
         Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
                 Text("Auto-switch per output", style = MaterialTheme.typography.bodyLarge)
-                Text("Apply each device's bound profile when it connects", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Apply profiles to confirmed playback outputs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Switch(checked = autoSwitch, onCheckedChange = { v -> scope.launch { store.setAutoEqAutoSwitch(v) } })
         }
-        if (active.isNotBlank()) {
+        if (active.isNotBlank() && observedOutput.route.key != null) {
             Box(
                 Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable {
                         scope.launch {
-                            store.upsertEqBinding(EqBinding(container.autoEqController.currentOutputKey(), outLabel, active, prefs.dspPreampDb, prefs.dspParametric))
-                            store.setAutoEqAutoSwitch(true)
+                            store.bindEqToCurrentOutput(active, prefs.dspPreampDb, prefs.dspParametric)
+                                .onFailure { toast(it.message ?: "Could not bind this output.") }
                         }
                     }.padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
@@ -610,7 +587,7 @@ private fun LazyListScope.customDspSection(
     collapsible("c_gain", "Gain & headroom", Icons.Filled.VolumeUp, "Pre-amp ${"%+.0f".format(prefs.dspPreampDb)} dB", expanded) {
         DbSliderRow("Pre-amp", prefs.dspPreampDb, -12f..12f) { v -> scope.launch { store.setDspPreamp(v) } }
         val peak = androidx.compose.runtime.remember(prefs.dspGraphicBands, prefs.dspParametric, prefs.dspGraphicLayout) {
-            DspCoeffBuilder.eqPeakDb(DspParams(graphic = graphic.toFloatArray(), graphicFreqs = layout.freqs, graphicQ = layout.q, parametric = prefs.dspParametric.map { DspBand(it.freqHz, it.gainDb, it.q, it.type) }))
+            DspCoeffBuilder.eqPeakDb(DspParams(graphic = graphic.toFloatArray(), graphicFreqs = layout.freqs, graphicQ = layout.q, parametric = prefs.dspParametric.map { DspBand.from(it) }))
         }
         HeadroomRow(peak = peak, preamp = prefs.dspPreampDb) { scope.launch { store.setDspPreamp((-peak).coerceIn(-12f, 0f)) } }
         FloatSliderRow("Balance", prefs.dspBalance, -1f..1f, valueText = balanceLabel(prefs.dspBalance)) { v -> scope.launch { store.setDspBalance(v) } }
@@ -658,6 +635,8 @@ private fun TextLink(text: String, onClick: () -> Unit) {
 
 @Composable
 private fun ParametricBandCard(band: ParamBand, onChange: (ParamBand) -> Unit, onRemove: () -> Unit) {
+    var edit by remember { mutableStateOf(false) }
+    if (edit) RackBandDialog(band, "Edit filter", { edit = false }) { onChange(it); edit = false }
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
@@ -673,9 +652,10 @@ private fun ParametricBandCard(band: ParamBand, onChange: (ParamBand) -> Unit, o
                 modifier = Modifier.width(28.dp).clip(RoundedCornerShape(50)).clickable(onClick = onRemove).padding(start = 8.dp),
             )
         }
+        TextButton(onClick = { edit = true }) { Text(band.filterType.label + if (band.isEnabled) "" else " (bypassed)") }
         FloatSliderRow("Freq", band.freqHz, 20f..20000f, valueText = freqLabel(band.freqHz.toInt())) { v -> onChange(band.copy(freqHz = v)) }
-        DbSliderRow("Gain", band.gainDb, -15f..15f) { v -> onChange(band.copy(gainDb = v)) }
-        FloatSliderRow("Q", band.q, 0.3f..8f, valueText = "%.2f".format(band.q)) { v -> onChange(band.copy(q = v)) }
+        if (band.filterType.hasGain) DbSliderRow("Gain", band.gainDb, -15f..15f) { v -> onChange(band.copy(gainDb = v)) }
+        if (band.filterType.hasQ) FloatSliderRow("Q", band.q, 0.3f..8f, valueText = "%.2f".format(band.q)) { v -> onChange(band.copy(q = v)) }
     }
 }
 

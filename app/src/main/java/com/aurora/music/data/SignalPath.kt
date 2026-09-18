@@ -116,6 +116,7 @@ data class SignalPathFacts(
     val mixerGrantMatchesFormat: Boolean = false,
     val mixerRequestDetail: String? = null,
     val requestedDevice: String? = null,
+    val confirmedDevice: com.aurora.music.data.routes.OutputDeviceCategory? = null,
     val exclusiveRequested: Boolean = false,
     val restartRequired: Boolean = false,
 )
@@ -141,7 +142,9 @@ fun buildSignalPath(f: SignalPathFacts): SignalPath {
         processing = SignalStage("Processing", "Per-deck stereo conversion → clip DSP → global processing → timeline gains",
             "Mix processing schedule; Custom DSP and convolution use binary64 arithmetic/state, with PCM16 between processors. Per-deck activation and timeline gain are not measured here"),
         outputStage = SignalStage("Output", "Android audio; per-deck AudioTrack and hardware formats unknown", "Active Mix player"),
-        device = SignalStage("Device", "Active Android route unknown", "A preferred device is a request, not a confirmed route"),
+        device = SignalStage("Device", f.confirmedDevice?.let { "${it.label}; downstream hardware format unknown" }
+            ?: "Active Android route unknown", if (f.confirmedDevice != null) "Active deck AudioTrack routed-device observations"
+            else "Deck routes are not confirmed to agree"),
     )
     val usb = f.kind == PlaybackPathKind.NATIVE_USB || f.kind == PlaybackPathKind.DECODED_USB
     val modified = f.modifications.toMutableList()
@@ -164,7 +167,8 @@ fun buildSignalPath(f: SignalPathFacts): SignalPath {
     } else {
         if (f.mixerGrant && !f.mixerGrantMatchesFormat) unknown += "Mixer grant does not match the current AudioTrack format"
         unknown += if (f.mixerGrant && f.mixerGrantMatchesFormat)
-            "Matching mixer preference accepted; actual route and HAL behavior are not observed"
+            if (f.confirmedDevice != null) "Matching mixer preference accepted; HAL behavior is not observed"
+            else "Matching mixer preference accepted; actual route and HAL behavior are not observed"
         else "Android mixer, active hardware format and downstream processing are not observed"
     }
     val reasons = (modified + unknown).distinct()
@@ -197,7 +201,10 @@ fun buildSignalPath(f: SignalPathFacts): SignalPath {
             else f.mixerRequestDetail ?: if (f.mixerGrant) "AudioTrack event; mixer preference accepted (route unverified)"
                 else "Media3 AudioTrack initialization event", transport),
         device = SignalStage("Device", if (usb) "USB audio device claimed by the native driver; hardware gain unknown"
-            else "Active route unknown" + (f.requestedDevice?.let { "; requested $it" } ?: ""),
-            if (usb) "Live native USB stream; identifying device details omitted" else "Preferred-device selection is not proof of the routed device"),
+            else f.confirmedDevice?.let { "${it.label}; hardware format and downstream processing unknown" }
+                ?: ("Active route unknown" + (f.requestedDevice?.let { "; requested $it" } ?: "")),
+            if (usb) "Live native USB stream; identifying device details omitted"
+            else if (f.confirmedDevice != null) "AudioTrack routed-device observation"
+            else "Preferred-device selection is not proof of the routed device"),
     )
 }

@@ -69,13 +69,12 @@ private data class ProcessingPresetDto(
 )
 
 object ProcessingPresetCodec {
-    const val SCHEMA_VERSION = 2
+    const val SCHEMA_VERSION = 3
     const val MAX_PRESETS = 100
     private const val MAX_JSON_CHARS = 2_000_000
     private val gson = Gson()
     private val audioShape = gson.toJsonTree(AudioPrefs()).asJsonObject
     private val playbackShape = gson.toJsonTree(ProcessingPlaybackPrefs()).asJsonObject
-    private val bandShape = gson.toJsonTree(ParamBand(1000f, 0f, 1f)).asJsonObject
 
     fun name(value: String): String = value.trim().also {
         require(it.isNotBlank() && it.length <= 80 && it.none(Char::isISOControl)) {
@@ -110,7 +109,7 @@ object ProcessingPresetCodec {
         require(element.isJsonObject) { "A saved preset is not an object." }
         val o = element.asJsonObject
         val version = number(o, "schemaVersion")
-        require(version == 1.0 || version == SCHEMA_VERSION.toDouble()) { "Unsupported preset schema version." }
+        require(version in setOf(1.0, 2.0, SCHEMA_VERSION.toDouble())) { "Unsupported preset schema version." }
         val keys = setOf("id", "name", "schemaVersion", "createdAtMs", "audio", "playback", "activeEqProfile", "irSha256")
         require(o.keySet() == if (version == 1.0) keys else keys + "rack") { "Preset fields are incomplete or unsupported." }
         string(o, "id"); string(o, "name"); number(o, "createdAtMs")
@@ -146,7 +145,7 @@ object ProcessingPresetCodec {
                     v.asJsonArray.forEach { band ->
                         if (key == "dspParametric") {
                             require(band.isJsonObject) { "Invalid parametric band." }
-                            validateShape(band.asJsonObject, bandShape)
+                            ParamBandCodec.read(band.asJsonObject)
                         } else {
                             require(band.isJsonPrimitive && band.asJsonPrimitive.isNumber && band.asDouble.isFinite()) { "Invalid $key gain." }
                             if (key == "eqBands") require(band.asDouble == band.asInt.toDouble()) { "Invalid system EQ gain." }
@@ -177,7 +176,8 @@ object ProcessingPresetCodec {
 
     internal fun readAudio(audio: JsonObject): AudioPrefs {
         validateShape(audio, audioShape)
-        return validateAudio(gson.fromJson(audio, AudioPrefs::class.java))
+        return validateAudio(gson.fromJson(audio, AudioPrefs::class.java).copy(
+            dspParametric = audio.getAsJsonArray("dspParametric").map { ParamBandCodec.read(it.asJsonObject) }))
     }
 
     fun validateAudio(a: AudioPrefs): AudioPrefs {
@@ -187,16 +187,14 @@ object ProcessingPresetCodec {
         require(a.dspMode in 0..2 && a.replayGain in 0..2 && a.dspGraphicLayout in 0..2) { "Unsupported processing mode." }
         require(a.eqPreset >= -1 && a.eqBands.all { it in -2400..2400 } && a.bassBoost in 0..1000 &&
             a.virtualizer in 0..1000 && a.loudnessGain in 0..3000) { "Invalid system effect value." }
-        require(a.dspGraphicBands.all { range(it, -24f, 24f) } && a.dspParametric.all {
-            range(it.freqHz, 10f, 24000f) && range(it.gainDb, -30f, 30f) && range(it.q, 0.01f, 100f) && it.type in 0..2
-        }) { "Invalid equalizer band." }
+        require(a.dspGraphicBands.all { range(it, -24f, 24f) }) { "Invalid equalizer band." }
         require(range(a.dspPreampDb, -60f, 24f) && range(a.dspBalance, -1f, 1f) &&
             range(a.dspWidth, 0f, 2f) && range(a.dspCrossfeed, 0f, 1f) && range(a.dspSaturation, 0f, 1f)) { "Invalid processing gain." }
         require(range(a.dspLimiterCeilingDb, -60f, 0f) && range(a.dspCompThreshDb, -100f, 0f) &&
             range(a.dspCompRatio, 1f, 100f) && range(a.dspConvMakeupDb, -60f, 24f)) { "Invalid dynamics value." }
         require(range(a.dspDelayLeftMs, 0f, 100f) && range(a.dspDelayRightMs, 0f, 100f) &&
             range(a.dspTrimLeftDb, -60f, 24f) && range(a.dspTrimRightDb, -60f, 24f)) { "Invalid channel adjustment." }
-        return a
+        return a.copy(dspParametric = a.dspParametric.map(ParamBandCodec::validate))
     }
 
     fun validatePlayback(p: ProcessingPlaybackPrefs): ProcessingPlaybackPrefs {

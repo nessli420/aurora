@@ -13,6 +13,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
@@ -25,9 +27,15 @@ import androidx.compose.material.icons.filled.Verified
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -40,8 +48,10 @@ import com.aurora.music.data.SignalFormat
 import com.aurora.music.data.SignalStage
 import com.aurora.music.data.AudioMeasurements
 import com.aurora.music.data.PcmLevels
+import com.aurora.music.data.AlignedSpectrum
 import java.util.Locale
 import kotlin.math.log10
+import kotlin.math.ln
 
 /** One inspector for both Settings and the Now Playing quality shortcut. */
 @Composable
@@ -101,7 +111,7 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("AudioTrack underruns: $count", style = MaterialTheme.typography.titleSmall)
-                            Text("Reported for the primary player since it was created. This does not measure the crossfade sum or downstream hardware.",
+                            Text("Primary player, since creation.",
                                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -137,6 +147,7 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
 
 @Composable
 private fun MeasurementCard(measurements: AudioMeasurements) {
+    var details by remember { mutableStateOf(false) }
     SettingsGroup {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Digital sample levels", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
@@ -145,13 +156,52 @@ private fun MeasurementCard(measurements: AudioMeasurements) {
             MeterReading("Before app processing", measurements.before)
             if (measurements.afterAvailable) MeterReading("After app processing", measurements.after)
             else Text("After-processing measurement unavailable on this path or channel layout.", style = MaterialTheme.typography.bodySmall)
-            Text("Peak and RMS use dBFS. Full-scale samples count digital endpoints since the last seek or format reset; they do not prove audible clipping. These are sample peaks, not true peak or loudness.",
+            measurements.spectrum?.let { SpectrumChart(it) }
+                ?: Text("Aligned spectrum unavailable.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick = { details = !details }) { Text(if (details) "Hide measurement details" else "Measurement details") }
+            if (details) Text("Sample peak and RMS, before output volume and Android effects. Level windows are independent; spectra match PCM timestamps. Full-scale counts reset on seek or format change. These are not true-peak, loudness or acoustic measurements.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("After-processing levels include Aurora DSP and convolution, before speed, silence skipping, ReplayGain, player volume and Android effects. Windows are not time-aligned and may be decoded ahead of what you hear.",
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (measurements.overlappingPlayers) Text("Crossfade: readings show the primary player only, not the combined output.",
+            if (measurements.overlappingPlayers) Text("Crossfade: primary player only.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
+    }
+}
+
+@Composable
+private fun SpectrumChart(spectrum: AlignedSpectrum) {
+    val before = MaterialTheme.colorScheme.tertiary
+    val after = MaterialTheme.colorScheme.primary
+    val grid = MaterialTheme.colorScheme.outlineVariant
+    Text("Aligned spectrum · Stereo power", style = MaterialTheme.typography.titleSmall)
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Text("Before", color = before, style = MaterialTheme.typography.labelMedium)
+        Text("After", color = after, style = MaterialTheme.typography.labelMedium)
+        Text("−100 to +6 dBFS", style = MaterialTheme.typography.labelSmall)
+    }
+    Canvas(Modifier.fillMaxWidth().height(140.dp)) {
+        val maximum = minOf(20_000.0, spectrum.sampleRate / 2.0)
+        val span = ln(maximum / 20)
+        for (db in listOf(-80f, -60f, -40f, -20f, 0f)) {
+            val y = (6 - db) / 106 * size.height
+            drawLine(grid, Offset(0f, y), Offset(size.width, y), 1f)
+        }
+        fun draw(values: List<Float>, color: androidx.compose.ui.graphics.Color) {
+            val path = Path()
+            var first = true
+            for (bin in 1 until values.size) {
+                val hz = bin * spectrum.sampleRate.toDouble() / ((values.size - 1) * 2)
+                if (hz < 20 || hz > maximum) continue
+                val x = (ln(hz / 20) / span * size.width).toFloat()
+                val y = (6 - values[bin].coerceIn(-100f, 6f)) / 106 * size.height
+                if (first) { path.moveTo(x, y); first = false } else path.lineTo(x, y)
+            }
+            drawPath(path, color, style = Stroke(1.5.dp.toPx()))
+        }
+        draw(spectrum.beforeDb, before); draw(spectrum.afterDb, after)
+    }
+    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+        Text("20 Hz", style = MaterialTheme.typography.labelSmall)
+        Text("${minOf(20_000, spectrum.sampleRate / 2) / 1000} kHz", style = MaterialTheme.typography.labelSmall)
     }
 }
 

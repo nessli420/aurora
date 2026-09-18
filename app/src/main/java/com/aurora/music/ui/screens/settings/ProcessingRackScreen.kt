@@ -1,6 +1,5 @@
 package com.aurora.music.ui.screens.settings
 
-import android.provider.OpenableColumns
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -25,17 +24,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.*
-import com.aurora.music.playback.ConvolutionProcessor
 import com.aurora.music.playback.DspCoeffBuilder
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import java.io.File
 import java.util.UUID
 import kotlin.math.roundToInt
 
@@ -45,7 +41,7 @@ private enum class RackTemplate { LEGACY, RECOMMENDED }
 
 @Composable
 fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
-    onOpenPresets: () -> Unit, onOpenSignalPath: () -> Unit, onOpenTuning: () -> Unit) {
+    onOpenPresets: () -> Unit, onOpenSignalPath: () -> Unit, onOpenTuning: () -> Unit, onOpenImpulses: () -> Unit) {
     val context = LocalContext.current
     val container = (context.applicationContext as AuroraApplication).container
     val store = container.settingsStore
@@ -63,7 +59,6 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
     var nameTarget by remember { mutableStateOf<RackNameTarget?>(null) }
     var removeTarget by remember { mutableStateOf<ProcessingRackNode?>(null) }
     var template by remember { mutableStateOf<RackTemplate?>(null) }
-    var importingIr by remember { mutableStateOf(false) }
     var addMenu by remember { mutableStateOf(false) }
     var leaving by remember { mutableStateOf(false) }
     var importEq by remember { mutableStateOf(false) }
@@ -126,49 +121,6 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
             action()
         }
     }
-    val pickImpulse = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null && !importingIr) {
-            importingIr = true
-            scope.launch {
-                try {
-                    val name = withContext(Dispatchers.IO) {
-                        val displayName = context.contentResolver.query(uri,
-                            arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)?.use { cursor ->
-                            if (cursor.moveToFirst()) cursor.getString(0) else null
-                        }?.takeIf { it.isNotBlank() } ?: "Impulse response.wav"
-                        val directory = File(context.filesDir, "impulses").apply { mkdirs() }
-                        val file = File(directory, "rack-${UUID.randomUUID()}.wav")
-                        try {
-                            val input = context.contentResolver.openInputStream(uri) ?: error("Could not open this file.")
-                            input.use { source -> file.outputStream().buffered().use { output ->
-                                val buffer = ByteArray(64 * 1024)
-                                var total = 0L
-                                while (true) {
-                                    val count = source.read(buffer)
-                                    if (count < 0) break
-                                    total += count
-                                    require(total <= 64L * 1024 * 1024) { "Choose an impulse response smaller than 64 MiB." }
-                                    output.write(buffer, 0, count)
-                                }
-                            } }
-                            ConvolutionProcessor.loadWavResult(file).getOrThrow()
-                        } catch (error: Exception) { file.delete(); throw error }
-                        // Once published, this immutable asset may be referenced by a saved preset.
-                        // Do not delete it if the picker screen is removed during the store update.
-                        withContext(NonCancellable) { store.setDspConvIr(file.absolutePath, displayName) }
-                        displayName
-                    }
-                    snackbar.showSnackbar("Loaded $name")
-                } catch (cancelled: CancellationException) { throw cancelled }
-                catch (error: Exception) { snackbar.showSnackbar(error.message ?: "Could not load this impulse response.") }
-                finally { importingIr = false }
-            }
-        }
-    }
-    fun openImpulsePicker() {
-        runCatching { pickImpulse.launch(arrayOf("audio/*", "application/octet-stream", "application/x-wav")) }
-            .onFailure { scope.launch { snackbar.showSnackbar("No file picker is available.") } }
-    }
     val exportEqLauncher = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri ->
         val text = pendingEqExport
         pendingEqExport = null
@@ -191,10 +143,10 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
         if (edited != null && current != null) {
             key(edited.id) {
                 RackNodeEditor(edited, current.parametricBandCount(), current.enabled, audio,
-                    contentPadding, importingIr, onBack = { editingId = null },
+                    contentPadding, onBack = { editingId = null },
                     onEdit = { transform -> changeNode(edited.id, transform) },
                     onRename = { nameTarget = RackNameTarget(edited.id, edited.name) },
-                    onPickImpulse = ::openImpulsePicker,
+                    onPickImpulse = { leave(onOpenImpulses) },
                     decoderRate = signalPath.decoder.format?.rateHz?.takeIf { signalPath.active && it in 8_000..768_000 },
                     onExportEq = { exportEq = edited })
             }
@@ -211,16 +163,18 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                 SegmentedRow("Processing mode", listOf("Standard", "Rack"), if (current.enabled) 1 else 0) { choice ->
                                     change { it.copy(enabled = choice == 1) }
                                 }
+                                SettingsSwitchRow(title = "Automatic headroom", subtitle = "Reduce input gain when the rack boosts the signal.",
+                                    checked = current.autoHeadroom, onCheckedChange = { enabled -> change { it.copy(autoHeadroom = enabled) } })
                                 RackDescription(if (current.enabled)
-                                    "Stages run from top to bottom. Changes apply to playback; the rack owns its EQ and channel settings."
-                                else "Standard settings are active. Arrange and tune this rack, then choose Rack to use it.")
+                                    "Stages run from top to bottom."
+                                else "Select Rack to use these stages.")
                             }
                         }
                         item {
                             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(current.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                                    Text("${current.nodes.size}/16 stages · ${current.parametricBandCount()}/64 parametric bands",
+                                    Text("${current.nodes.size}/16 stages · ${current.parametricBandCount()}/256 parametric bands",
                                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
                                 IconButton(onClick = { nameTarget = RackNameTarget(null, current.name) }) {
@@ -235,7 +189,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                 onRename = { nameTarget = RackNameTarget(node.id, node.name) },
                                 canDuplicate = current.nodes.size < 16 && node.kind != RackNodeKind.CONVOLUTION &&
                                     (node.kind !in listOf(RackNodeKind.EQ, RackNodeKind.LEGACY_DSP) ||
-                                        current.parametricBandCount() + node.audio.dspParametric.size <= 64),
+                                        current.parametricBandCount() + node.audio.dspParametric.size <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS),
                                 onDuplicate = { change { it.copy(nodes = it.nodes + node.copy(
                                     id = UUID.randomUUID().toString(), name = "${node.name.take(70)} copy")) } },
                                 onRemove = { removeTarget = node })
@@ -267,7 +221,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                             SettingsGroup {
                                 SettingsDestinationRow(Icons.Filled.ShowChart, SettingsDestinations.tuning, onClick = { leave(onOpenTuning) })
                                 SettingsRowDivider()
-                                SettingsNavRow(Icons.Filled.FileDownload, "Import EQ text", "Preview a file or pasted filters, then append them with their preamp") {
+                                SettingsNavRow(Icons.Filled.FileDownload, "Import EQ text", "Load filters and preamp") {
                                     importEq = true
                                 }
                                 SettingsRowDivider()
@@ -302,7 +256,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
             pendingEqExport = text
             val filename = target.name.filter { it.isLetterOrDigit() || it == '-' || it == '_' || it == ' ' }
                 .trim().take(60).ifBlank { "Aurora EQ" }
-            runCatching { exportEqLauncher.launch("$filename.txt") }.onSuccess { exportEq = null }.onFailure {
+            runCatching { exportEqLauncher.launch("$filename.${if (text.trimStart().startsWith("{")) "json" else "txt"}") }.onSuccess { exportEq = null }.onFailure {
                 pendingEqExport = null
                 scope.launch { snackbar.showSnackbar("No document picker is available.") }
             }
@@ -373,7 +327,7 @@ private fun RackNodeCard(node: ProcessingRackNode, index: Int, count: Int, onEdi
 
 @Composable
 private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnabled: Boolean, globalAudio: AudioPrefs,
-    padding: PaddingValues, importingIr: Boolean, onBack: () -> Unit,
+    padding: PaddingValues, onBack: () -> Unit,
     onEdit: ((ProcessingRackNode) -> ProcessingRackNode) -> Unit, onRename: () -> Unit, onPickImpulse: () -> Unit,
     decoderRate: Int?, onExportEq: () -> Unit) {
     val audio = node.audio
@@ -450,11 +404,11 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                 }
                 item {
                     SettingsSectionTitle("Parametric EQ · ${audio.dspParametric.size} ${if (audio.dspParametric.size == 1) "band" else "bands"}")
-                    RackDescription("$totalBands of 64 parametric bands used across the rack.${if (legacy) " This legacy stage supports 12; add an Equalizer stage for more." else " Tap a band to edit frequency, gain, Q and filter type."}")
+                    RackDescription("${audio.dspParametric.size}/${if (legacy) 12 else 64} bands · $totalBands/256 across rack")
                 }
                 itemsIndexed(audio.dspParametric) { index, band ->
-                    RackBandRow(index, band, audio.dspParametric.size, canDuplicate = totalBands < 64 && (!legacy || audio.dspParametric.size < 12),
-                        onEdit = { bandEdit = index }, onMove = { step -> changeAudio { old ->
+                    RackBandRow(index, band, audio.dspParametric.size, canDuplicate = totalBands < ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS && audio.dspParametric.size < (if (legacy) 12 else 64),
+                        onEdit = { bandEdit = index }, onToggle = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.mapIndexed { i, b -> if (i == index) b.copy(enabled = !b.isEnabled) else b }) } }, onMove = { step -> changeAudio { old ->
                             val list = old.dspParametric.toMutableList()
                             if (index in list.indices && index + step in list.indices) list.add(index + step, list.removeAt(index))
                             old.copy(dspParametric = list)
@@ -462,7 +416,7 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                         onRemove = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.filterIndexed { i, _ -> i != index }) } })
                 }
                 item {
-                    OutlinedButton(onClick = { bandEdit = -1 }, enabled = totalBands < 64 && (!legacy || audio.dspParametric.size < 12),
+                    OutlinedButton(onClick = { bandEdit = -1 }, enabled = totalBands < ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS && audio.dspParametric.size < (if (legacy) 12 else 64),
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
                         Icon(Icons.Filled.Add, null); Text("Add parametric band", Modifier.padding(start = 8.dp))
                     }
@@ -500,7 +454,7 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                     if (legacy) SettingsSwitchRow(title = "Limiter", checked = audio.dspLimiterEnabled,
                         onCheckedChange = { value -> changeAudio { it.copy(dspLimiterEnabled = value) } })
                     RackDbSlider("Limiter ceiling", audio.dspLimiterCeilingDb, -6f..0f) { value -> changeAudio { it.copy(dspLimiterCeilingDb = value) } }
-                    RackDescription("Controls sample peaks with attack and release. Place a separate Limiter stage last to limit the signal after convolution.")
+                    RackDescription("Place a Limiter last to protect the final output.")
                 }
             }
             if (shows(RackNodeKind.DELAY, "Delay")) item {
@@ -511,9 +465,8 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
             }
             if (node.kind == RackNodeKind.CONVOLUTION) item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.FolderOpen, "Shared impulse response", globalAudio.dspConvIrName.ifBlank { "Choose a WAV impulse response" }) { if (!importingIr) onPickImpulse() }
-                    if (importingIr) LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 20.dp))
-                    RackDescription("The rack supports one convolution stage. Its selected WAV is shared with standard convolution and is included in processing preset exports.")
+                    SettingsNavRow(Icons.Filled.FolderOpen, "Impulse library", globalAudio.dspConvIrName.ifBlank { "Select a WAV" }, onClick = onPickImpulse)
+                    RackDescription("The selected WAV is shared with standard convolution.")
                     RackDbSlider("Makeup gain", audio.dspConvMakeupDb, -12f..12f) { value -> changeAudio { it.copy(dspConvMakeupDb = value) } }
                 }
             }
@@ -532,19 +485,28 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
 
 @Composable
 private fun RackBandRow(index: Int, band: ParamBand, count: Int, canDuplicate: Boolean,
-    onEdit: () -> Unit, onMove: (Int) -> Unit, onDuplicate: () -> Unit, onRemove: () -> Unit) {
+    onEdit: () -> Unit, onToggle: () -> Unit, onMove: (Int) -> Unit, onDuplicate: () -> Unit, onRemove: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     SettingsGroup {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).clickable(onClick = onEdit).padding(vertical = 14.dp)) {
-                Text("${index + 1}. ${rackFrequency(band.freqHz)}", style = MaterialTheme.typography.titleSmall)
-                Text("${rackFilterLabel(band.type)} · ${rackDb(band.gainDb)} · Q %.2f".format(band.q),
+                val type = band.filterType
+                Text("${index + 1}. ${if (type == FilterType.CUSTOM_BIQUAD) type.label else rackFrequency(band.freqHz)}",
+                    style = MaterialTheme.typography.titleSmall)
+                Text(buildList {
+                    add(if (type == FilterType.CUSTOM_BIQUAD) "Normalized coefficients" else type.label)
+                    if (type.hasGain) add(rackDb(band.gainDb))
+                    if (type.hasQ) add("Q %.2f".format(band.q))
+                    if (type.orders.size > 1) add("${band.filterOrder * 6} dB/oct")
+                    if (!band.isEnabled) add("Bypassed")
+                }.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             IconButton(onClick = onEdit) { Icon(Icons.Filled.Edit, "Edit band ${index + 1}") }
             Box {
                 IconButton(onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Actions for band ${index + 1}") }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
+                    DropdownMenuItem(text = { Text(if (band.isEnabled) "Bypass" else "Enable") }, onClick = { menu = false; onToggle() })
                     DropdownMenuItem(text = { Text("Move up") }, enabled = index > 0, onClick = { menu = false; onMove(-1) })
                     DropdownMenuItem(text = { Text("Move down") }, enabled = index + 1 < count, onClick = { menu = false; onMove(1) })
                     DropdownMenuItem(text = { Text("Duplicate") }, enabled = canDuplicate, onClick = { menu = false; onDuplicate() })
@@ -556,18 +518,27 @@ private fun RackBandRow(index: Int, band: ParamBand, count: Int, canDuplicate: B
 }
 
 @Composable
-private fun RackBandDialog(band: ParamBand, title: String, onDismiss: () -> Unit, onSave: (ParamBand) -> Unit) {
+internal fun RackBandDialog(band: ParamBand, title: String, onDismiss: () -> Unit, onSave: (ParamBand) -> Unit) {
     var frequency by remember { mutableStateOf(band.freqHz.toString()) }
     var gain by remember { mutableStateOf(band.gainDb.toString()) }
     var q by remember { mutableStateOf(band.q.toString()) }
     var type by remember { mutableIntStateOf(band.type) }
     var typeMenu by remember { mutableStateOf(false) }
+    var order by remember { mutableIntStateOf(band.filterOrder) }
+    var enabled by remember { mutableStateOf(band.isEnabled) }
+    val filterType = FilterType.fromLegacy(type)
+    val custom = filterType == FilterType.CUSTOM_BIQUAD
+    var coefficientText by remember { mutableStateOf((band.coefficients ?: listOf(1.0, 0.0, 0.0, 0.0, 0.0)).map(Double::toString)) }
+    val coefficients = coefficientText.map { it.toDoubleOrNull() }
+    val coefficientError = if (custom) runCatching {
+        ParamBandCodec.validateCoefficients(coefficients.map { requireNotNull(it) { "Enter five valid numbers." } })
+    }.exceptionOrNull()?.message else null
     fun parsed(value: String) = value.replace(',', '.').toFloatOrNull()?.takeIf { it.isFinite() }
     fun valid(value: Float?, original: Float, range: ClosedFloatingPointRange<Float>) = value != null && (value == original || value in range)
     val f = parsed(frequency); val g = parsed(gain); val quality = parsed(q)
-    val frequencyValid = valid(f, band.freqHz, 20f..20_000f)
-    val gainValid = valid(g, band.gainDb, -15f..15f)
-    val qValid = valid(quality, band.q, 0.3f..8f)
+    val frequencyValid = valid(f, band.freqHz, 10f..24_000f)
+    val gainValid = !filterType.hasGain || valid(g, band.gainDb, -30f..30f)
+    val qValid = !filterType.hasQ || valid(quality, band.q, 0.1f..100f)
     AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Box {
@@ -576,23 +547,41 @@ private fun RackBandDialog(band: ParamBand, title: String, onDismiss: () -> Unit
                     Icon(Icons.Filled.ArrowDropDown, "Choose filter type")
                 }
                 DropdownMenu(expanded = typeMenu, onDismissRequest = { typeMenu = false }) {
-                    listOf("Peak", "Low shelf", "High shelf").forEachIndexed { value, label ->
-                        DropdownMenuItem(text = { Text(label) }, onClick = { type = value; typeMenu = false })
+                    FilterType.entries.forEach { value ->
+                        DropdownMenuItem(text = { Text(value.label) }, onClick = { type = value.code; order = value.orders.first(); typeMenu = false })
                     }
                 }
             }
-            OutlinedTextField(frequency, { frequency = it }, label = { Text("Frequency · Hz") }, singleLine = true,
-                modifier = Modifier.fillMaxWidth(), isError = !frequencyValid, supportingText = { Text("20–20,000 Hz") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
-            OutlinedTextField(gain, { gain = it }, label = { Text("Gain · dB") }, singleLine = true,
-                modifier = Modifier.fillMaxWidth(), isError = !gainValid, supportingText = { Text("−15 to +15 dB") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+            if (!custom) OutlinedTextField(frequency, { frequency = it }, label = { Text("Frequency · Hz") }, singleLine = true,
+                modifier = Modifier.fillMaxWidth(), isError = !frequencyValid, supportingText = { Text("10-24,000 Hz") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+            if (filterType.hasGain) OutlinedTextField(gain, { gain = it }, label = { Text(if (filterType == FilterType.TILT) "High-to-low tilt · dB" else "Gain · dB") }, singleLine = true,
+                modifier = Modifier.fillMaxWidth(), isError = !gainValid, supportingText = { Text("-30 to +30 dB") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                 trailingIcon = { IconButton(onClick = { gain = if (gain.startsWith("-")) gain.drop(1) else "-$gain" }) {
                     Icon(Icons.Filled.Exposure, "Switch gain between boost and cut")
                 } })
-            OutlinedTextField(q, { q = it }, label = { Text("Q") }, singleLine = true,
-                modifier = Modifier.fillMaxWidth(), isError = !qValid, supportingText = { Text("0.3–8") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+            if (filterType.hasQ) OutlinedTextField(q, { q = it }, label = { Text("Q") }, singleLine = true,
+                modifier = Modifier.fillMaxWidth(), isError = !qValid, supportingText = { Text("0.1-100") }, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal))
+            if (filterType.orders.size > 1) {
+                SegmentedRow("Slope", filterType.orders.map { "${it * 6} dB/oct" }, filterType.orders.indexOf(order)) { index -> order = filterType.orders[index] }
+            }
+            if (custom) {
+                Text("Normalized coefficients; a0 = 1. Values stay fixed when the sample rate changes.", style = MaterialTheme.typography.bodySmall)
+                listOf("b0", "b1", "b2", "a1", "a2").forEachIndexed { index, label ->
+                    OutlinedTextField(coefficientText[index], { value -> coefficientText = coefficientText.mapIndexed { i, old -> if (i == index) value else old } },
+                        label = { Text(label) }, singleLine = true, modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
+                        trailingIcon = { IconButton(onClick = { coefficientText = coefficientText.mapIndexed { i, value ->
+                            if (i != index) value else if (value.startsWith("-")) value.drop(1) else "-$value"
+                        } }) { Icon(Icons.Filled.Exposure, "Change coefficient sign") } })
+                }
+                coefficientError?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+            }
+            SettingsSwitchRow(title = "Enabled", checked = enabled, onCheckedChange = { enabled = it })
         }
-    }, confirmButton = { TextButton(onClick = { onSave(ParamBand(requireNotNull(f), requireNotNull(g), requireNotNull(quality), type)) },
-        enabled = frequencyValid && gainValid && qValid) { Text("Save") } },
+    }, confirmButton = { TextButton(onClick = { onSave(ParamBand(requireNotNull(f), if (filterType.hasGain) requireNotNull(g) else 0f,
+        if (filterType.hasQ) requireNotNull(quality) else .70710677f, type, filterType.id, enabled, order,
+        if (custom) coefficients.map { requireNotNull(it) } else null)) },
+        enabled = frequencyValid && gainValid && qValid && coefficientError == null) { Text("Save") } },
         dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
 }
 
@@ -616,7 +605,14 @@ private fun RackDbSlider(label: String, value: Float, range: ClosedFloatingPoint
 private fun ProcessingRack.parametricBandCount(): Int = nodes.filter { it.kind == RackNodeKind.EQ || it.kind == RackNodeKind.LEGACY_DSP }.sumOf { it.audio.dspParametric.size }
 private fun rackDb(value: Float) = "%+.1f dB".format(value)
 private fun rackFrequency(value: Float) = if (value >= 1_000f) "%.2f kHz".format(value / 1_000) else "%.0f Hz".format(value)
-private fun rackFilterLabel(type: Int) = when (type) { 1 -> "Low shelf"; 2 -> "High shelf"; else -> "Peak" }
+private fun rackFilterLabel(type: Int) = FilterType.fromLegacy(type).label
+private fun bandSummary(band: ParamBand): String = buildString {
+    append(band.filterType.label)
+    if (!band.isEnabled) append(" · Bypassed")
+    if (band.filterType.hasGain) append(" · ${rackDb(band.gainDb)}")
+    if (band.filterType.hasQ) append(" · Q %.2f".format(band.q))
+    else if (band.filterType.orders.size > 1) append(" · ${band.filterOrder * 6} dB/oct")
+}
 private fun RackNodeKind.label(): String = when (this) {
     RackNodeKind.LEGACY_DSP -> "Legacy DSP block"; RackNodeKind.GAIN -> "Gain"; RackNodeKind.EQ -> "Equalizer"
     RackNodeKind.SATURATION -> "Saturation"; RackNodeKind.STEREO -> "Stereo & trim"; RackNodeKind.CROSSFEED -> "Crossfeed"

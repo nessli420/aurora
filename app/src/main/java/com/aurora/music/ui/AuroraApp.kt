@@ -720,6 +720,7 @@ fun AuroraApp() {
                             onOpenEq = { navController.navigate(Routes.SETTINGS_EQ) },
                             onOpenProcessingRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
                             onOpenTuning = { navController.navigate(Routes.SETTINGS_TUNING) },
+                            onOpenImpulses = { navController.navigate(Routes.SETTINGS_IMPULSES) },
                             onOpenVisualizer = { navController.navigate(Routes.SETTINGS_VISUALIZER) },
                             onOpenSonic = { navController.navigate(Routes.SETTINGS_SONIC) },
                             onOpenSources = { navController.navigate(Routes.SETTINGS_SOURCES) },
@@ -817,6 +818,7 @@ fun AuroraApp() {
                             onOpenLoudness = { navController.navigate(Routes.SETTINGS_LOUDNESS) },
                             onOpenProcessingPresets = { navController.navigate(Routes.SETTINGS_PROCESSING_PRESETS) },
                             onOpenProcessingRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
+                            onOpenImpulses = { navController.navigate(Routes.SETTINGS_IMPULSES) },
                         )
                     }
                     composable(Routes.SETTINGS_PROCESSING_PRESETS) {
@@ -831,12 +833,18 @@ fun AuroraApp() {
                             onOpenPresets = { navController.navigate(Routes.SETTINGS_PROCESSING_PRESETS) },
                             onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
                             onOpenTuning = { navController.navigate(Routes.SETTINGS_TUNING) },
+                            onOpenImpulses = { navController.navigate(Routes.SETTINGS_IMPULSES) },
                         )
                     }
                     composable(Routes.SETTINGS_TUNING) {
                         com.aurora.music.ui.screens.settings.TuningProjectsScreen(
                             contentPadding = inner, onBack = { navController.popBackStack() },
                             onOpenRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_IMPULSES) {
+                        com.aurora.music.ui.screens.settings.ConvolutionLibraryScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
                         )
                     }
                     composable(Routes.SETTINGS_VISUALIZER) {

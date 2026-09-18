@@ -26,6 +26,7 @@ object Routes {
     const val SETTINGS_PROCESSING_PRESETS = "settings_processing_presets"
     const val SETTINGS_PROCESSING_RACK = "settings_processing_rack"
     const val SETTINGS_TUNING = "settings_tuning"
+    const val SETTINGS_IMPULSES = "settings_impulses"
     const val SETTINGS_STORAGE = "settings_storage"
     const val SETTINGS_GESTURES = "settings_gestures"
     const val SETTINGS_INTEGRATIONS = "settings_integrations"

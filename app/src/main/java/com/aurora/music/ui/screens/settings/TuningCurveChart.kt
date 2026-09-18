@@ -21,7 +21,6 @@ import kotlin.math.*
 
 internal data class TuningPlotCurve(val label: String, val magnitudeDb: DoubleArray)
 
-/** Magnitude-only display. Labels and scope come from the measurement/fit that owns the curves. */
 @Composable
 internal fun TuningCurveChart(frequencies: DoubleArray, curves: List<TuningPlotCurve>, scope: String) {
     if (frequencies.size < 2 || curves.isEmpty() || curves.any { it.magnitudeDb.size != frequencies.size }) return
@@ -102,8 +101,6 @@ internal fun TuningCurveChart(frequencies: DoubleArray, curves: List<TuningPlotC
         }
         Slider(value = point.toFloat(), onValueChange = { selected = it.roundToInt() }, valueRange = 0f..frequencies.lastIndex.toFloat(),
             modifier = Modifier.semantics { contentDescription = "Selected measurement frequency: ${eqFrequency(frequencies[point])}" })
-        Text("Tap the logarithmic frequency graph or use the slider to read each curve at a point.",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(scope, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (scope.isNotBlank()) Text(scope, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

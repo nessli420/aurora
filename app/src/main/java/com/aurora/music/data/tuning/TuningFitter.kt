@@ -14,10 +14,11 @@ import kotlin.math.ln
 import kotlin.math.log10
 import kotlin.math.sin
 import kotlin.math.sqrt
+import kotlin.math.pow
 
 enum class TuningFitChannel { LEFT, RIGHT, LINKED_AVERAGE }
 
-/** All plotted values use the result's common logarithmic frequency axis, in relative dB. */
+// plotted values share a logarithmic frequency axis.
 data class TuningChannelFit(
     val channel: TuningFitChannel,
     val bands: List<ParamBand>,
@@ -48,12 +49,7 @@ data class TuningFitResult(
     val notes: List<String> = emptyList(),
 )
 
-/**
- * Bounded, cancellable magnitude-only fitting. No settings, files or playback objects are changed.
- * Fits peaking filters using the same binary64 coefficients and Q floor as the production EQ node.
- * The objective is unweighted RMS dB error on 512 evenly log-spaced points in the common measured
- * coverage. Raw input points, L/R separation and optional measured phase remain untouched.
- */
+// fit peak filters with production coefficients.
 object TuningFitter {
     const val FIT_POINTS = 512
     private const val RESPONSE_POINTS = 4096
@@ -73,9 +69,10 @@ object TuningFitter {
         val channels = prepared.measured.mapIndexed { index, (channel, measuredValues) ->
             currentCoroutineContext().ensureActive()
             val budget = config.bandBudget / prepared.measured.size + if (index < config.bandBudget % prepared.measured.size) 1 else 0
+            val channelConfig = config.forChannel(channel)
             val desired = DoubleArray(FIT_POINTS) { target[it] - measuredValues[it] }
-            val fittedBands = optimize(desired, grid, budget, config) { count -> onProgress?.invoke(completedBudget + count, config.bandBudget) }
-            val checked = enforceFinalBounds(fittedBands, desired, grid, config)
+            val fittedBands = optimize(desired, grid, budget, channelConfig) { count -> onProgress?.invoke(completedBudget + count, config.bandBudget) }
+            val checked = enforceFinalBounds(fittedBands, desired, grid, channelConfig)
             val actual = grid.response(checked.first)
             val before = rms(desired)
             val after = rms(DoubleArray(FIT_POINTS) { desired[it] - actual[it] })
@@ -89,7 +86,7 @@ object TuningFitter {
                 DoubleArray(FIT_POINTS) { measuredValues[it] + actual[it] }.toList(), before, after)
         }
         val preamp = preampFor(maximumBoost)
-        notes += "Proposed preamp uses the largest fitted L/R response plus $RESPONSE_MARGIN_DB dB margin; it is a frequency-response estimate, not a transient or hardware clipping guarantee."
+        notes += "Preamp adds $RESPONSE_MARGIN_DB dB margin to the largest fitted boost."
         currentCoroutineContext().ensureActive()
         TuningFitResult(inputFingerprint = TuningProjectCodec.inputFingerprint(project.copy(config = config)), config = config,
             frequenciesHz = frequencies.toList(), channels = channels, minFrequencyHz = frequencies.first(), maxFrequencyHz = frequencies.last(),
@@ -99,16 +96,12 @@ object TuningFitter {
             errorAfterDb = sqrt(channels.sumOf { it.errorAfterDb * it.errorAfterDb } / channels.size), notes = notes)
     }
 
-    /**
-     * Validates imported/saved results against the inputs and actual production filter response.
-     * A fingerprint proves which inputs were selected, not that supplied curves or preamp are true.
-     * This bounded pure check performs no fitting and never calls project validation recursively.
-     */
+    // verify cached curves against inputs and filter response.
     fun verifyGeneratedFit(project: TuningProject, fit: TuningFitResult) {
         require(fit.algorithmVersion == 1 && fit.config == project.config &&
             fit.inputFingerprint == TuningProjectCodec.inputFingerprint(project)) { "The saved fit is stale; generate it again." }
         val prepared = prepare(project, fit.config)
-        val c = fit.config
+        val common = fit.config
         fun number(actual: Double, expected: Double, label: String) {
             require(actual.isFinite() && expected.isFinite() && abs(actual - expected) <= 1e-6 * maxOf(1.0, abs(expected))) {
                 "Saved $label does not match the measured inputs and generated filters; generate the fit again." }
@@ -123,18 +116,19 @@ object TuningFitter {
         number(fit.measuredNormalizationDb, prepared.normalization.first, "measurement normalization")
         number(fit.targetNormalizationDb, prepared.normalization.second, "target normalization")
         require(fit.channels.map { it.channel } == prepared.measured.map { it.first }) { "Saved channels do not match the selected fitting mode." }
-        val grid = ResponseGrid(prepared.frequencies, c.sampleRate)
+        val grid = ResponseGrid(prepared.frequencies, common.sampleRate)
         var maximumBoost = 0.0; var maximumCut = 0.0
         var totalBefore = 0.0; var totalAfter = 0.0
         fit.channels.forEachIndexed { index, channel ->
+            val c = common.forChannel(channel.channel)
             val budget = c.bandBudget / fit.channels.size + if (index < c.bandBudget % fit.channels.size) 1 else 0
             require(channel.bands.size <= budget) { "Saved fit exceeds the per-channel band budget." }
             channel.bands.forEach { band ->
-                require(band.type == 0 && band.freqHz.isFinite() && band.gainDb.isFinite() && band.q.isFinite()) { "Invalid generated peak filter." }
+                require(band.type == 0 && band.isEnabled && band.filterOrder == 2 && band.freqHz.isFinite() && band.gainDb.isFinite() && band.q.isFinite()) { "Invalid generated peak filter." }
                 require(band.freqHz >= prepared.frequencies.first() * (1 - 1e-6) &&
                     band.freqHz <= prepared.frequencies.last() * (1 + 1e-6) && band.freqHz < c.sampleRate * .5) { "Saved filter exceeds measured fitting coverage." }
                 require(band.gainDb >= -c.maxCutDb - 1e-5 && band.gainDb <= c.maxBoostDb + 1e-5 &&
-                    band.q >= c.minQ - 1e-5 && band.q <= c.maxQ + 1e-5) { "Saved filter exceeds its gain or Q bounds." }
+                    band.q >= c.minQ - 1e-5 && band.q <= qLimit(c, band.freqHz.toDouble()) + 1e-5) { "Saved filter exceeds its gain or Q bounds." }
             }
             val measured = prepared.measured[index].second
             val desired = DoubleArray(FIT_POINTS) { prepared.target[it] - measured[it] }
@@ -151,7 +145,10 @@ object TuningFitter {
             number(channel.errorBeforeDb, before, "channel error before")
             number(channel.errorAfterDb, after, "channel error after")
             totalBefore += before * before; totalAfter += after * after
-            val dense = verificationGrid(channel.bands, c.sampleRate).response(channel.bands)
+            val denseGrid = verificationGrid(channel.bands, c.sampleRate)
+            val dense = denseGrid.response(channel.bands)
+            require(dense.indices.all { dense[it] <= boostLimit(c, denseGrid.frequencies[it]) + BOUND_EPSILON_DB &&
+                dense[it] >= -cutLimit(c, denseGrid.frequencies[it]) - BOUND_EPSILON_DB }) { "Saved filters exceed treble limits." }
             val boost = maxOf(0.0, dense.maxOrNull() ?: 0.0)
             val cut = maxOf(0.0, -(dense.minOrNull() ?: 0.0))
             require(boost <= c.maxBoostDb + BOUND_EPSILON_DB && cut <= c.maxCutDb + BOUND_EPSILON_DB) { "Generated filters exceed combined boost or cut bounds." }
@@ -179,21 +176,22 @@ object TuningFitter {
         require(maximum > minimum * 1.01) { "The selected measurements, target and fitting range need overlapping frequency coverage below Nyquist." }
         val frequencies = logarithmicGrid(minimum, maximum, FIT_POINTS)
         val notes = mutableListOf(
-            "Calculated magnitude fit over measured coverage; imported phase is retained but is not corrected.",
-            "Fit error uses $FIT_POINTS equally log-spaced points. Predicted curves exclude the proposed common preamp.",
+            "Magnitude fit. Phase is retained without correction.",
+            "RMS error uses $FIT_POINTS log-spaced points.",
         )
         val normalization = normalization(inputs.map { it.second }, project.target, config, notes)
         val target = smooth(project.target?.let { interpolate(it, frequencies) } ?: DoubleArray(FIT_POINTS), frequencies, config.smoothingOctaves)
-        target.indices.forEach { target[it] -= normalization.second }
+        target.indices.forEach { target[it] = target[it] - normalization.second + targetShapeDb(frequencies[it], config) }
         val measured = inputs.map { (channel, curve) -> channel to smooth(interpolate(curve, frequencies), frequencies, config.smoothingOctaves).also { values ->
             values.indices.forEach { values[it] -= normalization.first }
         } }
         val selected = if (config.channelMode == TuningChannelMode.LINKED_AVERAGE) {
-            notes += "Linked mode fits the arithmetic mean of L/R magnitudes in dB; individual channel errors can differ. Both raw channels remain stored."
+            notes += "Linked mode fits the L/R mean in dB."
             listOf(TuningFitChannel.LINKED_AVERAGE to DoubleArray(FIT_POINTS) { i -> measured.sumOf { it.second[i] } / measured.size })
         } else measured
-        if (config.smoothingOctaves > 0) notes += "Measured and target curves use ${config.smoothingOctaves}-octave centered smoothing; stored source values are unchanged."
-        if (selected.size > 1) notes += "The total ${config.bandBudget}-band budget is split across independently fitted channels; normalization uses one shared measurement offset."
+        if (config.smoothingOctaves > 0) notes += "Smoothing: ${config.smoothingOctaves} octave."
+        if (selected.size > 1) notes += "The ${config.bandBudget}-band budget is shared between channels."
+        require(config.bandBudget <= selected.size * 64) { "Use at most 64 bands per fitted channel." }
         return Prepared(frequencies, selected, target, normalization, notes)
     }
 
@@ -278,7 +276,7 @@ object TuningFitter {
             total.indices.forEach { total[it] += best.response[it] }
             error = best.error
         }
-        // Two bounded coordinate passes refine earlier choices against the final residual.
+        // refine earlier bands against the final residual.
         repeat(2) {
             for (index in bands.indices) {
                 currentCoroutineContext().ensureActive()
@@ -307,7 +305,7 @@ object TuningFitter {
         var best: Candidate? = null
         var evaluations = 0
         for (index in centers.distinct()) {
-            val gain = residual[index].coerceIn(-c.maxCutDb, c.maxBoostDb)
+            val gain = residual[index].coerceIn(-cutLimit(c, grid.frequencies[index]), boostLimit(c, grid.frequencies[index]))
             if (abs(gain) < .01) continue
             val qs = listOf(estimateQ(residual, grid.frequencies, index), c.minQ, sqrt(c.minQ * c.maxQ), c.maxQ, .707, 1.4, 2.8)
                 .map { it.coerceIn(c.minQ, c.maxQ) }.distinct()
@@ -346,13 +344,12 @@ object TuningFitter {
 
     private fun makeBand(frequency: Double, gain: Double, q: Double, c: TuningFitConfig, grid: ResponseGrid) = ParamBand(
         boundedFloat(frequency, grid.frequencies.first(), grid.frequencies.last()),
-        boundedFloat(gain, -c.maxCutDb, c.maxBoostDb), boundedFloat(q, c.minQ, c.maxQ), 0)
+        boundedFloat(gain, -cutLimit(c, frequency), boostLimit(c, frequency)), boundedFloat(q, c.minQ, qLimit(c, frequency)), 0)
 
     private fun boundedFloat(value: Double, low: Double, high: Double): Float {
         val minimum = low.toFloat().let { if (it.toDouble() < low) Math.nextUp(it) else it }
         val maximum = high.toFloat().let { if (it.toDouble() > high) Math.nextDown(it) else it }
-        // ParamBand persists Float values. An exact/narrow decimal range may contain no Float;
-        // use its nearest representable value, with the same ULP tolerance as saved-fit validation.
+        // retain the nearest float when the range is narrower than one ulp.
         return if (minimum <= maximum) value.toFloat().coerceIn(minimum, maximum) else value.coerceIn(low, high).toFloat()
     }
 
@@ -362,7 +359,7 @@ object TuningFitter {
         var error = 0.0
         for (i in scratch.indices) {
             val combined = total[i] + scratch[i]
-            if (!combined.isFinite() || combined > c.maxBoostDb + BOUND_EPSILON_DB || combined < -c.maxCutDb - BOUND_EPSILON_DB) return Double.POSITIVE_INFINITY
+            if (!combined.isFinite() || combined > boostLimit(c, grid.frequencies[i]) + BOUND_EPSILON_DB || combined < -cutLimit(c, grid.frequencies[i]) - BOUND_EPSILON_DB) return Double.POSITIVE_INFINITY
             val difference = residual[i] - scratch[i]
             error += difference * difference
         }
@@ -381,12 +378,17 @@ object TuningFitter {
             val cut = maxOf(0.0, -(response.minOrNull() ?: 0.0))
             val final = grid.response(selected)
             val finalError = sumSquares(DoubleArray(desired.size) { desired[it] - final[it] })
-            if (boost <= config.maxBoostDb + BOUND_EPSILON_DB && cut <= config.maxCutDb + BOUND_EPSILON_DB && finalError <= baseline + 1e-10) {
+            val withinLimits = response.indices.all { response[it] <= boostLimit(config, dense.frequencies[it]) + BOUND_EPSILON_DB &&
+                response[it] >= -cutLimit(config, dense.frequencies[it]) - BOUND_EPSILON_DB }
+            if (withinLimits && finalError <= baseline + 1e-10) {
                 return selected to (boost to cut)
             }
             if (finalError > baseline + 1e-10 || selected.isEmpty()) return emptyList<ParamBand>() to (0.0 to 0.0)
-            val scale = minOf(if (boost > 0) config.maxBoostDb / boost else 1.0,
-                if (cut > 0) config.maxCutDb / cut else 1.0, .999).coerceIn(0.0, 1.0) * .999
+            val scale = response.indices.minOf { i ->
+                when { response[i] > 0 -> boostLimit(config, dense.frequencies[i]) / response[i]
+                    response[i] < 0 -> -cutLimit(config, dense.frequencies[i]) / response[i]
+                    else -> 1.0 }
+            }.coerceIn(0.0, .999) * .999
             selected = selected.map { it.copy(gainDb = (it.gainDb * scale).toFloat()) }.filter { abs(it.gainDb) >= .001f }
         }
         return emptyList<ParamBand>() to (0.0 to 0.0)
@@ -400,6 +402,22 @@ object TuningFitter {
         return ResponseGrid(frequencies.distinct().sorted().toDoubleArray(), rate)
     }
 
+    internal fun targetShapeDb(frequency: Double, c: TuningFitConfig): Double {
+        val bass = c.bassDb / (1.0 + (frequency / c.bassFrequencyHz).pow(4.0))
+        val tilt = c.tiltDbPerOctave * ln(frequency / 1000.0) / ln(2.0)
+        val earOctaves = ln(frequency / c.earGainFrequencyHz) / ln(2.0)
+        return bass + tilt + c.earGainDb * exp(-.5 * (earOctaves / .6).pow(2.0))
+    }
+
+    private fun trebleLimit(global: Double, treble: Double?, frequency: Double, start: Double): Double {
+        if (treble == null || frequency <= start) return global
+        val mix = (ln(frequency / start) / ln(2.0)).coerceIn(0.0, 1.0)
+        return global + (minOf(global, treble) - global) * mix
+    }
+    internal fun boostLimit(c: TuningFitConfig, f: Double) = trebleLimit(c.maxBoostDb, c.trebleMaxBoostDb, f, c.trebleStartHz)
+    internal fun cutLimit(c: TuningFitConfig, f: Double) = trebleLimit(c.maxCutDb, c.trebleMaxCutDb, f, c.trebleStartHz)
+    private fun qLimit(c: TuningFitConfig, f: Double) = maxOf(c.minQ, trebleLimit(c.maxQ, c.trebleMaxQ, f, c.trebleStartHz))
+
     private fun estimateQ(residual: DoubleArray, frequencies: DoubleArray, center: Int): Double {
         val sign = if (residual[center] < 0) -1 else 1
         val half = abs(residual[center]) * .5
@@ -410,7 +428,7 @@ object TuningFitter {
         return sqrt(ratio) / (ratio - 1)
     }
 
-    /** Precomputed unit-circle values; all candidate coefficients come from production math. */
+    // reuse unit-circle terms across candidate filters.
     private class ResponseGrid(val frequencies: DoubleArray, private val rate: Int) {
         private val cosine = DoubleArray(frequencies.size) { cos(2 * PI * frequencies[it] / rate) }
         private val sine = DoubleArray(frequencies.size) { sin(2 * PI * frequencies[it] / rate) }

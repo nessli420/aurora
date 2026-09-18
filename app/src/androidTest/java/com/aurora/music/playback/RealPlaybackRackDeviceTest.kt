@@ -31,10 +31,14 @@ class RealPlaybackRackDeviceTest {
     @Before fun foreground() = helper.keepTargetForegroundForAudioFocus()
     @After fun cleanup() = helper.removeFixturesAndFinishActivity()
 
-    @Test fun denseRackKeepsPlayingThroughBackgroundEditsAndSeekAt48And96k() {
+    @Test fun denseRackKeepsPlayingThroughBackgroundEditsAndSeekAt48And96k() = runDensePlayback(false)
+
+    @Test fun maximumRackKeepsPlayingThroughBackgroundEditsAndSeekAt48And96k() = runDensePlayback(true)
+
+    private fun runDensePlayback(maximum: Boolean) {
         val results = JSONArray()
         val report = JSONObject().put("device", Build.MODEL).put("sdk", Build.VERSION.SDK_INT)
-            .put("bands", 64).put("irFrames", 4096).put("secondsPerRate", 60).put("results", results)
+            .put("bands", if (maximum) 256 else 64).put("eqSections", if (maximum) 512 else 74).put("irFrames", 4096).put("secondsPerRate", 60).put("results", results)
             .put("limits", "Actual primary-player AudioTrack underrun notifications and app PCM taps. No DAC/Bluetooth, acoustic, battery-drain or long-term thermal guarantee.")
         try {
             for (rate in intArrayOf(48_000, 96_000)) helper.withProcessingFixture(0) { controller, _ ->
@@ -45,7 +49,8 @@ class RealPlaybackRackDeviceTest {
                 val tone = helper.wav("sustained-tone-$rate", rate, rate * 85) { frame, channel ->
                     (sin(2 * PI * (if (channel == 0) 997 else 3001) * frame / rate) * 6000).toInt()
                 }
-                val rack = denseRack()
+                val rack = if (maximum) maximumRack() else denseRack()
+                val graphDescription = rack.nodes.joinToString(" \u2192 ") { it.kind.name }
                 runBlocking {
                     container.settingsStore.setDspConvIr(impulse.absolutePath, "Dense rack fixture")
                     container.settingsStore.setProcessingRack(rack).getOrThrow()
@@ -58,10 +63,16 @@ class RealPlaybackRackDeviceTest {
                     val path = container.signalPath.value
                     helper.main { controller.isPlaying && controller.currentPosition > 2_000 } &&
                         path.processing.detail.contains("Serial rack") && path.measurements?.after?.sampleRate == rate &&
-                        path.processing.detail.contains("GAIN → EQ → SATURATION → STEREO → CROSSFEED → COMPRESSOR → DELAY → CONVOLUTION → LIMITER") &&
+                        path.processing.detail.contains(graphDescription) &&
                         !path.processing.detail.contains("unavailable", ignoreCase = true) &&
                         path.measurements?.after?.let { it.leftRms > 0.00001 &&
                             (System.nanoTime() - it.measuredAtNanos) < 1_500_000_000L } == true && path.audioTrackUnderruns != null
+                }
+                if (maximum) helper.await("automatic headroom and aligned spectrum", controller) {
+                    val path = container.signalPath.value
+                    path.processing.detail.contains("Auto headroom") && path.measurements?.spectrum?.let { spectrum ->
+                        spectrum.sampleRate == rate && spectrum.beforeDb.all { it.isFinite() } && spectrum.afterDb.all { it.isFinite() }
+                    } == true
                 }
                 val initialUnderruns = requireNotNull(container.signalPath.value.audioTrackUnderruns)
                 val power = context.getSystemService(PowerManager::class.java)
@@ -132,7 +143,7 @@ class RealPlaybackRackDeviceTest {
                     .put("output", finalPath.outputStage.format?.describe()).put("thermalStatusSamples", thermal)
                     .put("backgroundAndResume", backgrounded && foregrounded).put("liveWetEdit", editObserved).put("seek", sought)
                 results.put(result)
-                File(context.getExternalFilesDir(null), "r2a-phone-path-$rate.txt").writeText(finalPath.toDiagnosticReport())
+                File(context.getExternalFilesDir(null), "${if (maximum) "r2d-max" else "r2a"}-phone-path-$rate.txt").writeText(finalPath.toDiagnosticReport())
                 assertEquals("No new reported AudioTrack underruns after warmup", 0L, underruns)
                 assertTrue("Live wet edit reaches the active graph", editObserved)
                 helper.main { controller.pause() }
@@ -142,8 +153,20 @@ class RealPlaybackRackDeviceTest {
             report.put("passed", false).put("failure", failure.javaClass.simpleName + ": " + failure.message)
             throw failure
         } finally {
-            File(context.getExternalFilesDir(null), "r2a-real-playback.json").writeText(report.toString(2))
+            File(context.getExternalFilesDir(null), "${if (maximum) "r2d-max" else "r2a"}-real-playback.json").writeText(report.toString(2))
         }
+    }
+
+    private fun maximumRack(): ProcessingRack {
+        val base = denseRack()
+        val eq = base.nodes.first { it.kind == RackNodeKind.EQ }
+        val stages = List(4) { stage -> eq.copy(id = UUID.randomUUID().toString(), name = "EQ ${stage + 1}",
+            audio = AudioPrefs(dspGraphicBands = emptyList(), dspParametric = List(64) { i ->
+                ParamBand((30 * (18_000.0 / 30).pow(i / 63.0)).toFloat(),
+                    if ((i + stage) % 2 == 0) .05f else -.05f, .70710677f, FilterType.TILT.code)
+            })) }
+        return ProcessingRackCodec.validate(base.copy(name = "512-section fixture", autoHeadroom = true,
+            nodes = base.nodes.flatMap { if (it.kind == RackNodeKind.EQ) stages else listOf(it) }))
     }
 
     private fun denseRack(): ProcessingRack {

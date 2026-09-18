@@ -1,80 +1,86 @@
 package com.aurora.music.data
 
 import android.content.Context
-import android.media.AudioDeviceCallback
-import android.media.AudioDeviceInfo
-import android.media.AudioManager
-import android.os.Handler
-import android.os.Looper
+import com.aurora.music.data.routes.*
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class AutoEqController(
     context: Context,
     private val settingsStore: SettingsStore,
-    private val scope: CoroutineScope,
+    scope: CoroutineScope,
 ) {
-    private val appContext = context.applicationContext
-    private val am = context.getSystemService(Context.AUDIO_SERVICE) as? AudioManager
-    private val mainHandler = Handler(Looper.getMainLooper())
-    private fun toast(msg: String) = mainHandler.post {
-        android.widget.Toast.makeText(appContext, msg, android.widget.Toast.LENGTH_SHORT).show()
-    }
-    @Volatile private var lastToastKey: String = ""
-
-    @Volatile private var enabled = false
-    @Volatile private var bindings: List<EqBinding> = emptyList()
+    private val mutableStatus = MutableStateFlow(RouteApplicationStatus())
+    val status = mutableStatus.asStateFlow()
+    private data class Request(val observation: RouteObservation, val rules: Result<ProcessingRouteRules>,
+        val legacyEnabled: Boolean, val legacy: List<EqBinding>, val presets: ProcessingPresetLibrary)
+    private data class Applied(val generation: Long, val headphones: String, val presetId: String? = null, val legacy: EqBinding? = null)
+    private var applied: Applied? = null
 
     init {
-        scope.launch { settingsStore.autoEqAutoSwitch.collect { enabled = it; applyForCurrent() } }
-        scope.launch { settingsStore.eqBindings.collect { bindings = it; applyForCurrent() } }
-        runCatching {
-            am?.registerAudioDeviceCallback(object : AudioDeviceCallback() {
-                override fun onAudioDevicesAdded(added: Array<out AudioDeviceInfo>?) = applyForCurrent()
-                override fun onAudioDevicesRemoved(removed: Array<out AudioDeviceInfo>?) = applyForCurrent()
-            }, Handler(Looper.getMainLooper()))
+        scope.launch {
+            combine(settingsStore.processingRoutes.observations,
+                settingsStore.processingRouteRules.map { Result.success(it) }.catch { emit(Result.failure(it)) },
+                settingsStore.autoEqAutoSwitch, settingsStore.eqBindings, settingsStore.processingPresetLibrary,
+                ::Request).collectLatest { request ->
+                try { apply(request) }
+                catch (cancelled: CancellationException) { throw cancelled }
+                catch (failure: Exception) { applied = null; mutableStatus.value = RouteApplicationStatus(failure.message ?: "Output rule failed.") }
+            }
         }
     }
 
-    fun currentOutputLabel(): String = currentOutput()?.let { label(it) } ?: "Speaker"
-    fun currentOutputKey(): String = currentOutput()?.let { keyOf(it) } ?: "speaker"
+    fun currentOutputLabel(): String = settingsStore.processingRoutes.current.route.label
+    fun currentOutputKey(): String = settingsStore.processingRoutes.current.route.key.orEmpty()
 
-    private fun currentOutput(): AudioDeviceInfo? =
-        am?.getDevices(AudioManager.GET_DEVICES_OUTPUTS)?.minByOrNull { priority(it.type) }
-
-    private fun priority(type: Int): Int = when (type) {
-        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP -> 0
-        AudioDeviceInfo.TYPE_BLE_HEADSET, AudioDeviceInfo.TYPE_BLE_SPEAKER -> 1
-        AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_ACCESSORY -> 2
-        AudioDeviceInfo.TYPE_WIRED_HEADSET, AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> 3
-        else -> 9
-    }
-
-    private fun keyOf(d: AudioDeviceInfo): String = "${d.type}:${d.productName}"
-
-    private fun label(d: AudioDeviceInfo): String =
-        d.productName?.toString()?.trim()?.ifBlank { null } ?: typeName(d.type)
-
-    private fun typeName(type: Int) = when (type) {
-        AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLE_HEADSET, AudioDeviceInfo.TYPE_BLE_SPEAKER -> "Bluetooth"
-        AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_ACCESSORY -> "USB DAC"
-        AudioDeviceInfo.TYPE_WIRED_HEADSET, AudioDeviceInfo.TYPE_WIRED_HEADPHONES -> "Wired headphones"
-        else -> "Speaker"
-    }
-
-    private fun applyForCurrent() {
-        if (!enabled) return
-        val key = currentOutputKey()
-        val b = bindings.firstOrNull { it.deviceKey == key }
-        val notify = key != lastToastKey
-        lastToastKey = key
-        // never wipe a manually-set correction on an unbound device
-        if (b == null) return
-        scope.launch {
-            // One settings transaction prevents a device correction interleaving its
-            // bands/preamp/mode with a manually applied processing preset.
-            val applied = settingsStore.applyEqBindingIfEnabled(b)
-            if (applied && notify) toast("AutoEQ: ${b.profileName} → ${b.deviceLabel}")
+    private suspend fun apply(request: Request) {
+        val observation = request.observation
+        val route = observation.route
+        val rules = request.rules.getOrThrow()
+        val key = route.key
+        if (route.kind != ProcessingRouteKind.ANDROID || key == null) {
+            applied = null
+            mutableStatus.value = RouteApplicationStatus(route.detail)
+            return
+        }
+        if (key in rules.manual) {
+            applied = null
+            mutableStatus.value = RouteApplicationStatus("Manual sound retained for this output.")
+            return
+        }
+        val presetId = RouteRuleDecision.preset(observation, rules)
+        if (presetId != null) {
+            require(request.presets.error == null) { request.presets.error.orEmpty() }
+            require(request.presets.presets.any { it.id == presetId }) { "The bound preset was deleted." }
+            val target = Applied(observation.generation, rules.headphones[key].orEmpty(), presetId)
+            if (applied == target) return
+            val result = settingsStore.applyRoutePreset(observation, presetId).getOrThrow() ?: return
+            applied = target
+            mutableStatus.value = RouteApplicationStatus("Applied ${result.presetName}.${if (result.restartRequired) " Restart Aurora for output changes." else ""}", presetId)
+            return
+        }
+        if (rules.enabled && rules.bindings.any { it.routeKey == key }) {
+            applied = null
+            mutableStatus.value = RouteApplicationStatus("No preset for these headphones. Current sound retained.")
+            return
+        }
+        val binding = if (request.legacyEnabled) request.legacy.firstOrNull { it.deviceKey == key }
+            ?: request.legacy.firstOrNull { it.deviceKey == route.legacyKey } else null
+        val target = Applied(observation.generation, rules.headphones[key].orEmpty(), legacy = binding)
+        if (binding != null && applied == target) return
+        if (binding != null && settingsStore.applyEqBindingIfEnabled(binding, observation)) {
+            applied = target
+            mutableStatus.value = RouteApplicationStatus("Applied ${binding.profileName}.")
+        } else {
+            applied = null
+            mutableStatus.value = RouteApplicationStatus("No output binding. Current sound retained.")
         }
     }
 }

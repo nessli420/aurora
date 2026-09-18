@@ -32,8 +32,6 @@ larger than Aurora's 12-band capacity fail as a whole instead of silently applyi
 a partial correction. Speaker presets correct the measured device response;
 placement, volume, onboard DSP modes and the listening room can change the result.
 
-To refresh the speaker index, run
-`python scripts/update_speaker_presets.py <full Spinorama commit SHA>` and set
-`SPEAKER_RAW_BASE` in `AutoEqRepository.kt` to that same revision. This keeps all
-download URLs consistent with the bundled index. Inspect upstream changes and
-verify representative Bluetooth and studio speaker files before shipping.
+The bundled speaker index and `SPEAKER_RAW_BASE` in `AutoEqRepository.kt` use the
+same pinned Spinorama revision. Updates must keep those revisions consistent and
+verify representative Bluetooth and studio speaker profiles.

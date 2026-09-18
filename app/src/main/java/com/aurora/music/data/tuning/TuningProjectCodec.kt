@@ -1,6 +1,7 @@
 package com.aurora.music.data.tuning
 
 import com.aurora.music.data.ParamBand
+import com.aurora.music.data.ParamBandCodec
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
@@ -14,7 +15,7 @@ import java.math.BigDecimal
 import java.security.MessageDigest
 import java.util.UUID
 
-/** Pure persistence operations; SettingsStore owns the one atomic write of the returned library. */
+// settings storage owns the atomic write.
 object TuningProjectCodec {
     const val PREFERENCE_KEY = "tuning_projects_v1"
     const val MAX_PROJECTS = 32
@@ -23,6 +24,7 @@ object TuningProjectCodec {
     private val gson = GsonBuilder().serializeNulls().disableHtmlEscaping().create()
     private val projectKeys = setOf("id", "name", "measurementLeft", "measurementRight", "target", "notes", "config", "generatedFit", "schemaVersion", "createdAtMs", "updatedAtMs")
     private val configKeys = setOf("sampleRate", "bandBudget", "minFrequencyHz", "maxFrequencyHz", "maxBoostDb", "maxCutDb", "minQ", "maxQ", "channelMode", "normalization", "smoothingOctaves")
+    private val extendedConfigKeys = setOf("bassDb", "bassFrequencyHz", "tiltDbPerOctave", "earGainDb", "earGainFrequencyHz", "trebleStartHz", "trebleMaxBoostDb", "trebleMaxCutDb", "trebleMaxQ", "leftLimits", "rightLimits", "leftTrimDb", "rightTrimDb", "leftDelayMs", "rightDelayMs")
     private val curveKeys = setOf("id", "name", "points", "sourceText", "importedAtMs", "provenance")
     private val fitKeys = setOf("algorithmVersion", "inputFingerprint", "config", "frequenciesHz", "channels", "minFrequencyHz", "maxFrequencyHz", "measuredNormalizationDb", "targetNormalizationDb", "preampDb", "peakBoostDb", "peakCutDb", "errorBeforeDb", "errorAfterDb", "notes")
     private val channelKeys = setOf("channel", "bands", "measuredDb", "targetDb", "correctionDb", "fittedDb", "predictedDb", "errorBeforeDb", "errorAfterDb")
@@ -45,7 +47,7 @@ object TuningProjectCodec {
 
     fun validateConfig(config: TuningFitConfig): TuningFitConfig {
         require(config.sampleRate in 8_000..768_000) { "Sample rate must be between 8,000 and 768,000 Hz." }
-        require(config.bandBudget in 1..64) { "Band budget must be between 1 and 64 in total." }
+        require(config.bandBudget in 1..128) { "Band budget must be between 1 and 128 in total." }
         range(config.minFrequencyHz, 10.0, 24_000.0, "Minimum frequency")
         range(config.maxFrequencyHz, 10.0, 24_000.0, "Maximum frequency")
         require(config.minFrequencyHz < config.maxFrequencyHz) { "Minimum frequency must be below maximum frequency." }
@@ -54,6 +56,27 @@ object TuningProjectCodec {
         range(config.minQ, .1, 100.0, "Minimum Q"); range(config.maxQ, .1, 100.0, "Maximum Q")
         require(config.minQ <= config.maxQ) { "Minimum Q must not exceed maximum Q." }
         range(config.smoothingOctaves, 0.0, 1.0, "Smoothing")
+        range(config.bassDb, -12.0, 12.0, "Bass")
+        range(config.bassFrequencyHz, 20.0, 500.0, "Bass frequency")
+        range(config.tiltDbPerOctave, -3.0, 3.0, "Tilt")
+        range(config.earGainDb, -12.0, 12.0, "Ear gain")
+        range(config.earGainFrequencyHz, 1000.0, 5000.0, "Ear gain frequency")
+        range(config.trebleStartHz, 2000.0, 16000.0, "Treble start")
+        config.trebleMaxBoostDb?.let { range(it, 0.0, 24.0, "Treble boost") }
+        config.trebleMaxCutDb?.let { range(it, 0.0, 30.0, "Treble cut") }
+        config.trebleMaxQ?.let { range(it, .1, 100.0, "Treble Q") }
+        listOfNotNull(config.leftLimits, config.rightLimits).forEach {
+            range(it.maxBoostDb, 0.0, 24.0, "Channel boost")
+            range(it.maxCutDb, 0.0, 30.0, "Channel cut")
+            range(it.minQ, .1, 100.0, "Channel minimum Q")
+            range(it.maxQ, it.minQ, 100.0, "Channel maximum Q")
+        }
+        val minimumQ = maxOf(config.minQ, config.leftLimits?.minQ ?: config.minQ, config.rightLimits?.minQ ?: config.minQ)
+        require(config.trebleMaxQ == null || config.trebleMaxQ >= minimumQ) { "Treble Q must not be below minimum Q." }
+        range(config.leftTrimDb, -12.0, 0.0, "Left trim")
+        range(config.rightTrimDb, -12.0, 0.0, "Right trim")
+        range(config.leftDelayMs, 0.0, 20.0, "Left delay")
+        range(config.rightDelayMs, 0.0, 20.0, "Right delay")
         return config
     }
 
@@ -73,7 +96,7 @@ object TuningProjectCodec {
             point.phaseDegrees?.let { range(it, -1e9, 1e9, "Measurement phase") }
             require(index == 0 || point.frequencyHz > points[index - 1].frequencyHz) { "Measurement frequencies must increase strictly." }
         }
-        if (checkSource) require(MeasurementTextImporter.parsePoints(curve.sourceText, phase) == points) {
+        if (checkSource) require(TuningCurveAdapters.parsePoints(curve.sourceText, curve.format, phase) == points) {
             "Measurement points do not match their preserved source text."
         }
         return curve.copy(name = name(curve.name), points = points)
@@ -99,7 +122,7 @@ object TuningProjectCodec {
         val existing = validateLibrary(projects)
         val next = validate(project)
         val result = if (existing.any { it.id == next.id }) existing.map { if (it.id == next.id) next else it } else existing + next
-        encodeLibrary(result) // Full size/capacity validation happens before its caller writes anything.
+        encodeLibrary(result) // validate before writing.
         result
     }
 
@@ -108,9 +131,12 @@ object TuningProjectCodec {
         validateLibrary(projects).filterNot { it.id == id }.also { encodeLibrary(it) }
     }
 
-    /** Identity, source spelling, dates and human notes do not invalidate a numerically identical fit. */
+    // metadata changes do not invalidate a fit.
     fun inputFingerprint(project: TuningProject): String {
-        val input = listOf(project.measurementLeft?.points, project.measurementRight?.points, project.target?.points, project.config)
+        val config = gson.toJsonTree(project.config).asJsonObject
+        val defaults = gson.toJsonTree(TuningFitConfig()).asJsonObject
+        extendedConfigKeys.forEach { if (config[it] == defaults[it]) config.remove(it) }
+        val input = listOf(project.measurementLeft?.points, project.measurementRight?.points, project.target?.points, config)
         return MessageDigest.getInstance("SHA-256").digest(gson.toJson(input).toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
     }
@@ -140,29 +166,30 @@ object TuningProjectCodec {
         range(fit.targetNormalizationDb, -2000.0, 2000.0, "Target normalization")
         range(fit.preampDb.toDouble(), -60.0, 0.0, "Fitted preamp")
         range(fit.peakBoostDb, 0.0, 1000.0, "Peak boost"); range(fit.peakCutDb, 0.0, 1000.0, "Peak cut")
-        require(fit.peakBoostDb <= project.config.maxBoostDb + .001 && fit.peakCutDb <= project.config.maxCutDb + .001) { "Fit exceeds its boost/cut constraints." }
+        require(fit.peakBoostDb <= maxOf(project.config.maxBoostDb, project.config.leftLimits?.maxBoostDb ?: 0.0, project.config.rightLimits?.maxBoostDb ?: 0.0) + .001 && fit.peakCutDb <= maxOf(project.config.maxCutDb, project.config.leftLimits?.maxCutDb ?: 0.0, project.config.rightLimits?.maxCutDb ?: 0.0) + .001) { "Fit exceeds its boost/cut constraints." }
         range(fit.errorBeforeDb, 0.0, 10_000.0, "Error before"); range(fit.errorAfterDb, 0.0, 10_000.0, "Error after")
         require(fit.notes.size <= 32); fit.notes.forEach { note(it, 4096, "Fit note") }
         require(fit.channels.sumOf { it.bands.size } <= project.config.bandBudget) { "Fit exceeds its total band budget." }
         val channels = fit.channels.map { channel ->
+            val config = project.config.forChannel(channel.channel)
             range(channel.errorBeforeDb, 0.0, 10_000.0, "Channel error before"); range(channel.errorAfterDb, 0.0, 10_000.0, "Channel error after")
             channel.bands.forEach { b ->
-                require(b.type == 0) { "This fit version supports peak filters only." }
+                ParamBandCodec.validate(b)
+                require(b.type == 0 && b.isEnabled && b.filterOrder == 2) { "This fit version supports peak filters only." }
                 range(b.freqHz.toDouble(), 10.0, 24_000.0, "Fit band frequency")
                 range(b.gainDb.toDouble(), -30.0, 24.0, "Fit band gain"); range(b.q.toDouble(), .1f.toDouble(), 100.0, "Fit band Q")
-                require(b.q >= project.config.minQ - 1e-5 && b.q <= project.config.maxQ + 1e-5) { "Fit band exceeds its Q constraints." }
+                require(b.q >= config.minQ - 1e-5 && b.q <= config.maxQ + 1e-5) { "Fit band exceeds its Q constraints." }
             }
             fun curve(values: List<Double>): List<Double> {
                 require(values.size == frequencies.size && values.all { it.isFinite() && it in -10_000.0..10_000.0 }) { "Invalid fitted response array." }
                 return values.toList()
             }
-            require(channel.fittedDb.all { it >= -project.config.maxCutDb - .001 && it <= project.config.maxBoostDb + .001 }) { "Fitted curve exceeds its boost/cut constraints." }
+            require(channel.fittedDb.all { it >= -config.maxCutDb - .001 && it <= config.maxBoostDb + .001 }) { "Fitted curve exceeds its boost/cut constraints." }
             channel.copy(bands = channel.bands.toList(), measuredDb = curve(channel.measuredDb), targetDb = curve(channel.targetDb),
                 correctionDb = curve(channel.correctionDb), fittedDb = curve(channel.fittedDb), predictedDb = curve(channel.predictedDb))
         }
         return fit.copy(frequenciesHz = frequencies, channels = channels, notes = fit.notes.toList()).also {
-            // Imported files/backups may fabricate cached metrics despite having the right input
-            // fingerprint. Verify the actual filters and prepared curves without fitting again.
+            // verify cached metrics against the filters.
             TuningFitter.verifyGeneratedFit(project, it)
         }
     }
@@ -175,22 +202,37 @@ object TuningProjectCodec {
             integer(o, "createdAtMs"), integer(o, "updatedAtMs"))
     }
 
-    private fun readCurve(element: JsonElement): MeasurementCurve {
-        val o = objectWith(element, curveKeys, "Measurement")
+    internal fun readCurve(element: JsonElement): MeasurementCurve {
+        require(element.isJsonObject) { "Invalid measurement." }
+        val o = element.asJsonObject
+        require(o.keySet() == curveKeys || o.keySet() == curveKeys + "format") { "Measurement fields are incomplete or unsupported." }
         val p = objectWith(o["provenance"], setOf("rig", "source", "notes"), "Measurement provenance")
         val points = array(o, "points", MeasurementTextImporter.MAX_POINTS).map { value ->
             val point = objectWith(value, setOf("frequencyHz", "magnitudeDb", "phaseDegrees"), "Measurement point")
             FrequencyResponsePoint(number(point, "frequencyHz"), number(point, "magnitudeDb"), nullable(point, "phaseDegrees")?.let(::number))
         }
         return MeasurementCurve(string(o, "id"), string(o, "name"), points, string(o, "sourceText"), integer(o, "importedAtMs"),
-            MeasurementProvenance(string(p, "rig"), string(p, "source"), string(p, "notes")))
+            MeasurementProvenance(string(p, "rig"), string(p, "source"), string(p, "notes")),
+            if (o.has("format")) enumValueOf<TuningCurveFormat>(string(o, "format")) else TuningCurveFormat.TEXT)
     }
 
     private fun readConfig(element: JsonElement): TuningFitConfig {
-        val o = objectWith(element, configKeys, "Fitting controls")
+        require(element.isJsonObject) { "Invalid fitting controls." }
+        val o = element.asJsonObject
+        require(o.keySet().containsAll(configKeys) && (o.keySet() - configKeys - extendedConfigKeys).isEmpty()) { "Fitting fields are incomplete or unsupported." }
+        fun optional(key: String, default: Double): Double = if (o.has(key)) number(o, key) else default
+        fun optionalNull(key: String): Double? = o[key]?.takeUnless { it.isJsonNull }?.let(::number)
+        fun limits(key: String): TuningChannelLimits? = o[key]?.takeUnless { it.isJsonNull }?.let {
+            val v = objectWith(it, setOf("maxBoostDb", "maxCutDb", "minQ", "maxQ"), "Channel limits")
+            TuningChannelLimits(number(v, "maxBoostDb"), number(v, "maxCutDb"), number(v, "minQ"), number(v, "maxQ"))
+        }
         return validateConfig(TuningFitConfig(int(o, "sampleRate"), int(o, "bandBudget"), number(o, "minFrequencyHz"), number(o, "maxFrequencyHz"),
             number(o, "maxBoostDb"), number(o, "maxCutDb"), number(o, "minQ"), number(o, "maxQ"),
-            enumValueOf<TuningChannelMode>(string(o, "channelMode")), enumValueOf<TuningNormalization>(string(o, "normalization")), number(o, "smoothingOctaves")))
+            enumValueOf<TuningChannelMode>(string(o, "channelMode")), enumValueOf<TuningNormalization>(string(o, "normalization")), number(o, "smoothingOctaves"),
+            optional("bassDb", 0.0), optional("bassFrequencyHz", 105.0), optional("tiltDbPerOctave", 0.0),
+            optional("earGainDb", 0.0), optional("earGainFrequencyHz", 2800.0), optional("trebleStartHz", 6000.0),
+            optionalNull("trebleMaxBoostDb"), optionalNull("trebleMaxCutDb"), optionalNull("trebleMaxQ"), limits("leftLimits"), limits("rightLimits"),
+            optional("leftTrimDb", 0.0), optional("rightTrimDb", 0.0), optional("leftDelayMs", 0.0), optional("rightDelayMs", 0.0)))
     }
 
     private fun readFit(element: JsonElement): TuningFitResult {
@@ -200,8 +242,8 @@ object TuningProjectCodec {
             val c = objectWith(value, channelKeys, "Fitted channel")
             fun curve(key: String) = array(c, key, 4096).map(::number)
             val bands = array(c, "bands", 64).map { b ->
-                val band = objectWith(b, setOf("freqHz", "gainDb", "q", "type"), "Fit band")
-                ParamBand(number(band, "freqHz").toFloat(), number(band, "gainDb").toFloat(), number(band, "q").toFloat(), int(band, "type"))
+                require(b.isJsonObject) { "Invalid fitted band." }
+                ParamBandCodec.read(b.asJsonObject)
             }
             TuningChannelFit(enumValueOf<TuningFitChannel>(string(c, "channel")), bands, curve("measuredDb"), curve("targetDb"),
                 curve("correctionDb"), curve("fittedDb"), curve("predictedDb"), number(c, "errorBeforeDb"), number(c, "errorAfterDb"))
@@ -212,7 +254,7 @@ object TuningProjectCodec {
             number(o, "preampDb").toFloat(), number(o, "peakBoostDb"), number(o, "peakCutDb"), number(o, "errorBeforeDb"), number(o, "errorAfterDb"), notes)
     }
 
-    private fun strictJson(json: String, limit: Int): JsonElement {
+    internal fun strictJson(json: String, limit: Int): JsonElement {
         bounded(json, limit, "Tuning JSON")
         return JsonReader(StringReader(json)).use { reader ->
             reader.isLenient = false

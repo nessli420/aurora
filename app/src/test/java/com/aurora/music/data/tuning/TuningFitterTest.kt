@@ -115,7 +115,6 @@ class TuningFitterTest {
         assertEquals(0.0, fit.errorBeforeDb, 1e-10)
         assertEquals(left, input.measurementLeft)
         assertEquals(right, input.measurementRight)
-        assertTrue(fit.notes.any { it.contains("individual channel errors can differ") })
         TuningFitter.verifyGeneratedFit(input, fit)
         assertThrows(IllegalArgumentException::class.java) { runBlocking { TuningFitter.fit(input.copy(measurementRight = null)) } }
     }
@@ -234,7 +233,7 @@ class TuningFitterTest {
 
     @Test fun invalidPublicFitInputsUseTheSameLimitsAsProjectPersistence() {
         val input = project()
-        val invalid = listOf(config().copy(bandBudget = 0), config().copy(bandBudget = 65),
+        val invalid = listOf(config().copy(bandBudget = 0), config().copy(bandBudget = 129),
             config().copy(maxBoostDb = 25.0), config().copy(smoothingOctaves = 1.5),
             config().copy(minQ = .01), config().copy(maxQ = Double.NaN), config().copy(sampleRate = 7999))
         invalid.forEach { settings ->

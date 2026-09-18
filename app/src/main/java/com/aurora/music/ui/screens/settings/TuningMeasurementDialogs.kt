@@ -28,11 +28,15 @@ internal enum class TuningMeasurementSlot(val label: String) {
 
 @Composable
 internal fun TuningMeasurementImportDialog(slot: TuningMeasurementSlot, previous: MeasurementCurve?,
-    onDismiss: () -> Unit, onAccept: (MeasurementCurve) -> Unit) {
+    onDismiss: () -> Unit, correctionImport: Boolean = false, onAccept: (MeasurementCurve) -> Unit) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     var source by remember { mutableStateOf("") }
     var name by remember { mutableStateOf(slot.label) }
+    val formats = if (correctionImport) listOf(TuningCurveFormat.WAVELET) else if (slot == TuningMeasurementSlot.TARGET)
+        listOf(TuningCurveFormat.TEXT, TuningCurveFormat.SQUIG, TuningCurveFormat.AUTOEQ_TARGET, TuningCurveFormat.AUTOEQ_CSV, TuningCurveFormat.AUTOEQ_RAW)
+        else listOf(TuningCurveFormat.TEXT, TuningCurveFormat.SQUIG, TuningCurveFormat.AUTOEQ_RAW)
+    var format by remember { mutableStateOf(formats.first()) }
     var phaseColumn by remember { mutableStateOf(false) }
     var parsed by remember { mutableStateOf<MeasurementCurve?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
@@ -40,7 +44,7 @@ internal fun TuningMeasurementImportDialog(slot: TuningMeasurementSlot, previous
     suspend fun preparePreview() {
         val textSnapshot = source; val nameSnapshot = name; val phaseSnapshot = phaseColumn
         withContext(Dispatchers.Default) {
-            MeasurementTextImporter.parse(textSnapshot, nameSnapshot, phaseSnapshot, previous?.provenance ?: MeasurementProvenance(), System.currentTimeMillis())
+            TuningCurveAdapters.parse(textSnapshot, nameSnapshot, format, phaseSnapshot, previous?.provenance ?: MeasurementProvenance(), System.currentTimeMillis())
         }.onSuccess { parsed = it; error = null }
             .onFailure { parsed = null; error = it.message ?: "Could not parse this measurement." }
     }
@@ -68,13 +72,13 @@ internal fun TuningMeasurementImportDialog(slot: TuningMeasurementSlot, previous
             }
         }
     }
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Import ${slot.label.lowercase()}") }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(if (correctionImport) "Import correction curve" else "Import ${slot.label.lowercase()}") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             val preview = parsed
             if (preview == null) {
-                Text("One measurement per import: frequency in Hz, magnitude in dB, and optional phase in degrees. Ascending frequencies; decimal points; whitespace, comma or semicolon columns.",
-                    style = MaterialTheme.typography.bodySmall)
-                OutlinedButton(onClick = { runCatching { picker.launch(arrayOf("text/*", "application/octet-stream")) }
+                TuningChoiceRow("Format", formats.map { it.label }, formats.indexOf(format)) { format = formats[it]; error = null }
+                if (correctionImport) Text("Creates a parametric fit project. The curve is not a measurement.", style = MaterialTheme.typography.bodySmall)
+                OutlinedButton(onClick = { runCatching { picker.launch(arrayOf("text/*", "application/json", "application/octet-stream")) }
                     .onFailure { error = "No file picker is available." } }, enabled = !busy, modifier = Modifier.fillMaxWidth()) { Text("Open measurement file") }
                 OutlinedTextField(source, { text ->
                     if (text.length <= MeasurementTextImporter.MAX_TEXT_BYTES && text.toByteArray(Charsets.UTF_8).size <= MeasurementTextImporter.MAX_TEXT_BYTES) {
@@ -83,18 +87,17 @@ internal fun TuningMeasurementImportDialog(slot: TuningMeasurementSlot, previous
                 }, label = { Text("Paste measurement text") }, minLines = 4, maxLines = 6, enabled = !busy, modifier = Modifier.fillMaxWidth())
                 OutlinedTextField(name, { name = it.take(80) }, label = { Text("Measurement name") }, singleLine = true,
                     enabled = !busy, modifier = Modifier.fillMaxWidth())
-                SettingsSwitchRow(title = "Third column is phase", subtitle = "Confirm degrees for an unlabeled third column; it is not another channel",
+                if (format == TuningCurveFormat.TEXT || format == TuningCurveFormat.SQUIG) SettingsSwitchRow(title = "Third column is phase", subtitle = "Unlabeled phase values must be in degrees.",
                     checked = phaseColumn, onCheckedChange = { if (!busy) { phaseColumn = it; error = null } })
             } else {
                 TextButton(onClick = { parsed = null }, enabled = !busy) { Text("Edit source text") }
                 Text(preview.name, style = MaterialTheme.typography.titleMedium)
                 Text("${preview.points.size} points · ${eqFrequency(preview.points.first().frequencyHz)}–${eqFrequency(preview.points.last().frequencyHz)}",
                     style = MaterialTheme.typography.bodyMedium)
-                Text("Destination: ${slot.label}. Magnitude values stay in dB exactly as imported. No channels are combined here.", style = MaterialTheme.typography.bodySmall)
-                if (preview.points.any { it.phaseDegrees != null }) Text("Phase is retained with the source. Fitting uses magnitude response only.", style = MaterialTheme.typography.bodySmall)
-                if (previous != null) Text("This replaces the project's current ${slot.label.lowercase()} and clears its generated correction.", style = MaterialTheme.typography.bodySmall)
+                if (preview.points.any { it.phaseDegrees != null }) Text("Phase is saved but not fitted.", style = MaterialTheme.typography.bodySmall)
+                if (previous != null) Text("Replaces ${slot.label.lowercase()} and clears the generated correction.", style = MaterialTheme.typography.bodySmall)
                 TuningCurveChart(preview.points.map { it.frequencyHz }.toDoubleArray(), listOf(TuningPlotCurve("Imported magnitude",
-                    preview.points.map { it.magnitudeDb }.toDoubleArray())), "Imported measurement magnitude; this preview does not verify the measuring rig.")
+                    preview.points.map { it.magnitudeDb }.toDoubleArray())), "")
             }
             if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
