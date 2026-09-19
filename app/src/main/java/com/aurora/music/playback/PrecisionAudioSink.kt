@@ -13,6 +13,9 @@ import com.aurora.music.playback.engine.AudioStreamFormat
 import com.aurora.music.playback.engine.ChannelLayout
 import com.aurora.music.playback.engine.PcmBoundary
 import com.aurora.music.playback.engine.PcmEncoding
+import com.aurora.music.playback.engine.BandlimitedResampler
+import com.aurora.music.playback.engine.OutputRatePolicy
+import com.aurora.music.playback.engine.OutputRateNegotiator
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
@@ -28,6 +31,8 @@ class PrecisionAudioSink(
     delegate: AudioSink,
     private val processor: PrecisionBlockProcessor,
     private val afterMeter: PcmLevelMeter,
+    private val outputRatePolicy: () -> OutputRatePolicy = { OutputRatePolicy() },
+    private val supportedOutputRates: () -> IntArray = { intArrayOf() },
 ) : ForwardingAudioSink(delegate) {
     @Volatile var precisionActive: Boolean = false
         private set
@@ -35,6 +40,11 @@ class PrecisionAudioSink(
         private set
     @Volatile var configuredOutputEncoding: Int = Format.NO_VALUE
         private set
+    @Volatile var configuredOutputSampleRate: Int = Format.NO_VALUE
+        private set
+    @Volatile var rateFallbackReason: String? = null
+        private set
+    val resamplingLatencyFrames: Int get() = rateConverter?.lookaheadFrames ?: 0
 
     private data class Configuration(
         val format: Format,
@@ -63,6 +73,11 @@ class PrecisionAudioSink(
         .order(ByteOrder.LITTLE_ENDIAN).apply { limit(0) }
     private var outputTimeUs = C.TIME_UNSET
     private var meteredOutputBytes = 0
+    private var rateConverter: BandlimitedResampler? = null
+    private var resampledBlock: AudioBlock? = null
+    private var resampleTimeUs = C.TIME_UNSET
+    private var resampleFrames = 0L
+    private var resampleInputFrames = 0L
 
     override fun supportsFormat(format: Format): Boolean =
         getFormatSupport(format) != AudioSink.SINK_FORMAT_UNSUPPORTED
@@ -117,15 +132,25 @@ class PrecisionAudioSink(
         val why = reason(next)
         val precision = why == null
         val encoding = if (precision) C.ENCODING_PCM_FLOAT else C.ENCODING_PCM_16BIT
+        val rate = if (precision) OutputRateNegotiator.choose(next.format.sampleRate, outputRatePolicy(), supportedOutputRates())
+            else com.aurora.music.playback.engine.OutputRateDecision(next.format.sampleRate,
+                if (outputRatePolicy().mode != com.aurora.music.playback.engine.OutputRateMode.FOLLOW_SOURCE) "Rate conversion requires precision output." else null)
         val delegateFormat = next.format.buildUpon().setPcmEncoding(encoding).apply {
+            setSampleRate(rate.sampleRate)
             // A live transition can only leave an untrimmed precision stream. It must not
             // introduce another encoder trim point in the middle of that same stream.
             if (precision || next.sameStream) { setEncoderDelay(0); setEncoderPadding(0) }
         }.build()
         super.configure(delegateFormat, next.bufferSize, if (precision) null else next.channelMap)
+        configuredOutputSampleRate = rate.sampleRate
+        rateFallbackReason = rate.fallbackReason
+        rateConverter = if (precision && rate.sampleRate != next.format.sampleRate)
+            BandlimitedResampler(next.format.sampleRate, rate.sampleRate) else null
+        resampledBlock = rateConverter?.let { AudioBlock(AudioStreamFormat(rate.sampleRate, ChannelLayout.STEREO), OUTPUT_FRAMES) }
+        resampleFrames = 0; resampleInputFrames = 0; resampleTimeUs = C.TIME_UNSET
         if (precision) {
             processor.configure(next.format.sampleRate)
-            afterMeter.configure(C.ENCODING_PCM_FLOAT, 2, next.format.sampleRate)
+            afterMeter.configure(C.ENCODING_PCM_FLOAT, 2, rate.sampleRate)
         } else {
             processor.flush()
             afterMeter.reset()
@@ -144,6 +169,7 @@ class PrecisionAudioSink(
         if (!next.sameStream) {
             sourceBuffer = null
             sourceFrames = 0
+            resetResampler()
         }
     }
 
@@ -210,12 +236,47 @@ class PrecisionAudioSink(
             sourceBuffer = null
             sourceFrames = 0
             discontinuityPending = false
+            resetResampler()
         }
         return true
     }
 
     private fun takeProcessorOutput(): Boolean {
-        val block = processor.getOutput() ?: return false
+        val converter = rateConverter
+        if (converter != null) {
+            val converted = checkNotNull(resampledBlock)
+            var attempts = 0
+            while (attempts++ < MAX_BLOCKS_PER_CALL) {
+                val frames = converter.readOutput(converted.samples, 0, OUTPUT_FRAMES)
+                if (frames > 0) {
+                    converted.begin(frames, toBlockTime(addFrames(resampleTimeUs, resampleFrames, configuredOutputSampleRate)), resampleFrames)
+                    resampleFrames += frames
+                    return encodeOutput(converted)
+                }
+                val block = processor.getOutput()
+                if (block == null) {
+                    if (processorEos && processor.isEnded && !converter.isEnded) {
+                        converter.queueEndOfInput()
+                        val tail = converter.readOutput(converted.samples, 0, OUTPUT_FRAMES)
+                        if (tail > 0) {
+                            converted.begin(tail, toBlockTime(addFrames(resampleTimeUs, resampleFrames, configuredOutputSampleRate)), resampleFrames)
+                            resampleFrames += tail
+                            return encodeOutput(converted)
+                        }
+                    }
+                    return false
+                }
+                if (resampleTimeUs == C.TIME_UNSET && block.presentationTimeUs != AUDIO_TIME_UNSET)
+                    resampleTimeUs = block.presentationTimeUs - resampleInputFrames * 1_000_000L / block.format.sampleRate
+                check(converter.queueInput(block.samples, 0, block.frameCount) == block.frameCount)
+                resampleInputFrames += block.frameCount
+            }
+            return false
+        }
+        return processor.getOutput()?.let(::encodeOutput) ?: false
+    }
+
+    private fun encodeOutput(block: AudioBlock): Boolean {
         check(block.frameCount <= OUTPUT_FRAMES && block.format.channelCount == 2)
         output.clear()
         PcmBoundary.encode(block, PcmEncoding.FLOAT_32_LE, output)
@@ -233,7 +294,7 @@ class PrecisionAudioSink(
             val completeBytes = output.position() / 8 * 8
             if (completeBytes > meteredOutputBytes) {
                 afterMeter.observe(output, meteredOutputBytes, completeBytes,
-                    addFrames(outputTimeUs, meteredOutputBytes.toLong() / 8, checkNotNull(active).format.sampleRate))
+                    addFrames(outputTimeUs, meteredOutputBytes.toLong() / 8, configuredOutputSampleRate))
                 meteredOutputBytes = completeBytes
             }
         }
@@ -248,10 +309,10 @@ class PrecisionAudioSink(
     private fun drainProcessor(): Boolean {
         if (!writeOutput()) return false
         if (!activePrecision) return true
-        if (!processorEos) { processor.queueEndOfStream(); processorEos = true }
+        if (!processorEos) { processor.queueEndOfStream(drainTail = pending?.sameStream != true); processorEos = true }
         var iterations = 0
         while (iterations++ < MAX_BLOCKS_PER_CALL) {
-            if (!takeProcessorOutput()) return processor.isEnded
+            if (!takeProcessorOutput()) return processor.isEnded && (rateConverter?.isEnded != false)
             if (!writeOutput()) return false
         }
         return false
@@ -264,10 +325,10 @@ class PrecisionAudioSink(
     }
 
     override fun isEnded(): Boolean = streamEnded && !output.hasRemaining() &&
-        (!activePrecision || processor.isEnded) && super.isEnded()
+        (!activePrecision || processor.isEnded && rateConverter?.isEnded != false) && super.isEnded()
 
     override fun hasPendingData(): Boolean = output.hasRemaining() ||
-        (activePrecision && processor.hasPendingData) || super.hasPendingData()
+        (activePrecision && (processor.hasPendingData || (rateConverter?.bufferedFrames ?: 0) > 0)) || super.hasPendingData()
 
     override fun handleDiscontinuity() { discontinuityPending = true }
 
@@ -295,8 +356,11 @@ class PrecisionAudioSink(
         discontinuityPending = false
         precisionActive = false
         processor.flush()
+        resetResampler()
         afterMeter.reset()
     }
+
+    private fun resetResampler() { rateConverter?.reset(); resampleFrames = 0; resampleInputFrames = 0; resampleTimeUs = C.TIME_UNSET }
 
     override fun flush() { super.flush(); clearBufferedState() }
 
@@ -310,6 +374,9 @@ class PrecisionAudioSink(
         stickyCompatibility = requestedSkipSilence
         compatibilityAfterTrim = false
         configuredOutputEncoding = Format.NO_VALUE
+        configuredOutputSampleRate = Format.NO_VALUE
+        rateFallbackReason = null
+        rateConverter = null; resampledBlock = null
         fallbackReason = null
     }
 

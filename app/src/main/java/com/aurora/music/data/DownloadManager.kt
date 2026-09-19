@@ -35,6 +35,8 @@ data class DownloadedSong(
     val sampleRateHz: Int = 0,
     val bitDepth: Int = 0,
     val serverId: String? = "",
+    val playbackSource: PlaybackSourceIdentity? = null,
+    val genre: String? = null,
 ) {
     fun toSong(): Song = Song(
         id = id,
@@ -51,6 +53,8 @@ data class DownloadedSong(
         bitrateKbps = bitrateKbps,
         sampleRateHz = sampleRateHz,
         bitDepth = bitDepth,
+        genre = genre.orEmpty(),
+        playbackSource = (playbackSource ?: PlaybackSourceIdentity()).copy(source = com.aurora.music.data.rules.RuleSource.DOWNLOAD),
     )
 }
 
@@ -69,6 +73,7 @@ data class DownloadedCollection(
     val coverPath: String,
     val trackIds: List<String>,
     val serverId: String? = "",
+    val playbackCollection: PlaybackCollectionIdentity? = null,
 )
 
 class DownloadManager(
@@ -77,6 +82,8 @@ class DownloadManager(
     private val downloadBitrateProvider: () -> Int = { 0 },
     private val currentServerIdProvider: () -> String = { "" },
     private val resolveSentinel: (String) -> String? = { null },
+    private val playbackSourceProvider: (Song) -> PlaybackSourceIdentity? = { it.playbackSource },
+    private val playbackCollectionProvider: (String, String, String) -> PlaybackCollectionIdentity? = { _, _, _ -> null },
 ) {
 
     private val dir = File(context.filesDir, "downloads").apply { mkdirs() }
@@ -93,10 +100,11 @@ class DownloadManager(
     val collections: StateFlow<List<DownloadedCollection>> = _collections.asStateFlow()
 
     fun downloadCollection(id: String, kind: String, title: String, subtitle: String, coverUrl: String, songs: List<Song>) {
+        val identity = playbackCollectionProvider(kind, id, title)
         scope.launch {
             val coverFile = File(dir, "col_$id.jpg")
             runCatching { if (coverUrl.isNotBlank()) downloadTo(coverUrl, coverFile) {} }
-            val collection = DownloadedCollection(id, kind, title, subtitle, if (coverFile.exists()) coverFile.absolutePath else "", songs.map { it.id }, currentServerIdProvider())
+            val collection = DownloadedCollection(id, kind, title, subtitle, if (coverFile.exists()) coverFile.absolutePath else "", songs.map { it.id }, currentServerIdProvider(), identity)
             _collections.update { (it.filterNot { c -> c.id == id }) + collection }
             saveCollections()
         }
@@ -124,7 +132,8 @@ class DownloadManager(
     fun downloadSong(song: Song) {
         if (isDownloaded(song.id) || _states.value[song.id] is DownloadState.Downloading) return
         setState(song.id, DownloadState.Queued)
-        scope.launch { doDownload(song) }
+        val identity = song.playbackSource ?: playbackSourceProvider(song)
+        scope.launch { doDownload(song.copy(playbackSource = identity)) }
     }
 
     fun downloadAll(songs: List<Song>) = songs.forEach { downloadSong(it) }
@@ -170,6 +179,8 @@ class DownloadManager(
                 sampleRateHz = song.sampleRateHz,
                 bitDepth = song.bitDepth,
                 serverId = currentServerIdProvider(),
+                playbackSource = song.playbackSource,
+                genre = song.genre,
             )
             _downloads.update { it + (song.id to entry) }
             saveIndex()

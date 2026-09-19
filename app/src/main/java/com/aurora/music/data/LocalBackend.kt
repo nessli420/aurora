@@ -104,7 +104,7 @@ class LocalBackend(
                 )
             }
             "artist" -> {
-                val artist = library.artists.firstOrNull { it.id == id } ?: return null
+                val artist = library.artist(id) ?: return null
                 val tracks = library.songsByArtistId(id)
                 val albums = library.albumsByArtistId(id)
                 DetailData(

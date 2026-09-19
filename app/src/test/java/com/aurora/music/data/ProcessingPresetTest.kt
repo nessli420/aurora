@@ -53,7 +53,7 @@ class ProcessingPresetTest {
     }
 
     @Test fun futureVersionsAndFractionalVersionsAreRejected() {
-        assertNotNull(ProcessingPresetCodec.decode(changedJson { it.addProperty("schemaVersion", 4) }).error)
+        assertNotNull(ProcessingPresetCodec.decode(changedJson { it.addProperty("schemaVersion", ProcessingPresetCodec.SCHEMA_VERSION + 1) }).error)
         assertNotNull(ProcessingPresetCodec.decode(changedJson { it.addProperty("schemaVersion", 1.5) }).error)
     }
 
@@ -95,5 +95,56 @@ class ProcessingPresetTest {
         assertEquals(ProcessingPresetLibrary(), ProcessingPresetCodec.decode(null))
         val p = fixture().copy(audio = AudioPrefs(), playback = ProcessingPlaybackPrefs(), activeEqProfile = "", irSha256 = "")
         assertEquals(listOf(p), ProcessingPresetCodec.decode(ProcessingPresetCodec.encode(listOf(p))).presets)
+    }
+
+    @Test fun versionsOneTwoAndThreeMigrateOutputPolicyAndAssetList() {
+        for (version in 1..3) {
+            val json = changedJson {
+                it.addProperty("schemaVersion", version)
+                it.remove("rackImpulseAssets")
+                it.getAsJsonObject("playback").remove("outputRatePolicy")
+                it.getAsJsonObject("playback").remove("usbOutputMode")
+                it.getAsJsonObject("playback").remove("usbFallbackPolicy")
+                if (version == 1) it.remove("rack")
+            }
+            val decoded = ProcessingPresetCodec.decode(json)
+            assertNull(decoded.error)
+            assertEquals(com.aurora.music.playback.engine.OutputRatePolicy(), decoded.presets.single().playback.outputRatePolicy)
+            assertTrue(decoded.presets.single().rackImpulseAssets.isEmpty())
+        }
+    }
+
+    @Test fun outputPolicyIsStrictAndCapturedInPreset() {
+        val policy = com.aurora.music.playback.engine.OutputRatePolicy(com.aurora.music.playback.engine.OutputRateMode.FIXED, 96_000, tpdfDither = true)
+        val preset = fixture().copy(playback = fixture().playback.copy(outputRatePolicy = policy))
+        assertEquals(policy, ProcessingPresetCodec.decode(ProcessingPresetCodec.encode(listOf(preset))).presets.single().playback.outputRatePolicy)
+        assertNotNull(ProcessingPresetCodec.decode(changedJson {
+            it.getAsJsonObject("playback").getAsJsonObject("outputRatePolicy").addProperty("mode", "unknown")
+        }).error)
+    }
+
+    @Test fun versionFourPresetsMigrateUsbPolicyWithoutChangingSound() {
+        val original = fixture()
+        val json = JsonParser.parseString(ProcessingPresetCodec.encode(listOf(original))).asJsonArray
+        json[0].asJsonObject.apply {
+            addProperty("schemaVersion", 4)
+            getAsJsonObject("playback").remove("usbOutputMode")
+            getAsJsonObject("playback").remove("usbFallbackPolicy")
+        }
+        val decoded = ProcessingPresetCodec.decode(json.toString())
+        assertNull(decoded.error)
+        assertEquals(original, decoded.presets.single())
+        assertEquals(decoded, ProcessingPresetCodec.decode(ProcessingPresetCodec.encode(decoded.presets)))
+    }
+
+    @Test fun usbPresetModesRoundTripAndMalformedModesFailBeforeGson() {
+        val preset = fixture().copy(playback = fixture().playback.copy(
+            usbOutputMode = UsbOutputMode.PROCESSED, usbFallbackPolicy = UsbFallbackPolicy.ANDROID))
+        assertEquals(preset, ProcessingPresetCodec.decode(ProcessingPresetCodec.encode(listOf(preset))).presets.single())
+        for (field in listOf("usbOutputMode", "usbFallbackPolicy")) {
+            assertNotNull(ProcessingPresetCodec.decode(changedJson { it.getAsJsonObject("playback").remove(field) }).error)
+            assertNotNull(ProcessingPresetCodec.decode(changedJson { it.getAsJsonObject("playback").add(field, null) }).error)
+            assertNotNull(ProcessingPresetCodec.decode(changedJson { it.getAsJsonObject("playback").addProperty(field, "unknown") }).error)
+        }
     }
 }

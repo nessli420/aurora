@@ -15,6 +15,7 @@ import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ProcessingPreset
 import com.aurora.music.data.ProcessingPresetLibrary
 import com.aurora.music.data.routes.*
+import com.aurora.music.data.rules.PresetRuleSet
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
@@ -27,6 +28,8 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
     var loadError by remember { mutableStateOf<String?>(null) }
     val rulesFlow = remember(store) { store.processingRouteRules.catch { loadError = it.message ?: "Output rules unavailable." } }
     val rules by rulesFlow.collectAsStateWithLifecycle<ProcessingRouteRules?>(initialValue = null)
+    val orderedFlow = remember(store) { store.presetRules.catch { loadError = it.message ?: "Preset rules unavailable." } }
+    val ordered by orderedFlow.collectAsStateWithLifecycle(initialValue = PresetRuleSet())
     val library by store.processingPresetLibrary.collectAsStateWithLifecycle<ProcessingPresetLibrary?>(initialValue = null)
     val status by container.autoEqController.status.collectAsStateWithLifecycle()
     val scope = rememberCoroutineScope()
@@ -68,7 +71,10 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                             onCheckedChange = { enabled -> perform { store.setRouteRulesEnabled(enabled) } })
                         if (key != null) {
                             SettingsSwitchRow(title = "Keep current sound", subtitle = "Keep manual settings after reconnecting.",
-                                checked = key in rules!!.manual, onCheckedChange = { hold -> perform { store.holdCurrentRoute(hold) } })
+                                checked = ordered.manualHold || key in rules!!.manual, onCheckedChange = { hold -> perform {
+                                    store.holdCurrentRoute(hold).getOrThrow()
+                                    if (!hold) store.setPresetRuleManualHold(false) else Result.success(Unit)
+                                } })
                         }
                     }
                 }

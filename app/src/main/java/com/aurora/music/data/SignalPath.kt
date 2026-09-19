@@ -22,6 +22,8 @@ data class SignalStage(
     val format: SignalFormat? = null,
 )
 
+data class UsbDiagnostics(val completedFrames: Long, val pendingFrames: Long, val packetErrors: Long, val timeouts: Long)
+
 data class SignalPath(
     val active: Boolean = false,
     // These compatibility fields describe the selected source, never the hardware output.
@@ -44,6 +46,8 @@ data class SignalPath(
     val measurements: AudioMeasurements? = null,
     /** Media3 AudioTrack underrun notifications for the primary player's lifetime; null elsewhere. */
     val audioTrackUnderruns: Long? = null,
+    val usbDiagnostics: UsbDiagnostics? = null,
+    val nodeMeters: List<com.aurora.music.playback.engine.RackNodeMeter> = emptyList(),
 ) {
     val stages: List<SignalStage> get() = listOf(source, decoder, processing, resampling, outputStage, device, latency)
 
@@ -54,6 +58,10 @@ data class SignalPath(
         appendLine("Sample preservation: ${preservation.name.lowercase().replaceFirstChar { it.uppercase() }}")
         reasons.forEach { appendLine("- $it") }
         audioTrackUnderruns?.let { appendLine("Primary player AudioTrack underruns since creation: $it") }
+        usbDiagnostics?.let {
+            appendLine("USB completed/pending frames: ${it.completedFrames} / ${it.pendingFrames}")
+            appendLine("USB packet errors/timeouts: ${it.packetErrors} / ${it.timeouts}")
+        }
         stages.forEach {
             appendLine()
             appendLine("${it.title}: ${it.detail}")
@@ -71,7 +79,7 @@ data class SignalPath(
                 appendLine("Full-scale / invalid samples since reset: ${level.fullScaleSamples} / ${level.invalidSamples}")
             }
             appendLevels("Before app processing", m.before)
-            appendLevels("After app processing, before player/system gain", m.after)
+            appendLevels(if (usbDiagnostics != null) "After app processing and USB software gain" else "After app processing, before player/system gain", m.after)
             if (m.overlappingPlayers) appendLine("Primary player only; crossfade sum unmeasured")
         }
         appendLine()
@@ -79,7 +87,7 @@ data class SignalPath(
     }
 }
 
-enum class PlaybackPathKind { IDLE, ANDROID, NATIVE_USB, DECODED_USB, CAST, MIX }
+enum class PlaybackPathKind { IDLE, ANDROID, NATIVE_USB, DECODED_USB, PROCESSED_USB, CAST, MIX }
 
 /** Media3's float option only selects its bypass chain for high-resolution decoded PCM. */
 fun usesFloatPcmPath(floatEnabled: Boolean, decoded: SignalFormat?): Boolean =
@@ -112,6 +120,8 @@ data class SignalPathFacts(
     val nativeTransportFormat: SignalFormat? = null,
     val nativeClockAccepted: Boolean = false,
     val nativeTailSubmitted: Boolean = false,
+    val nativeContainerBits: Int? = null,
+    val nativeClockRate: Int? = null,
     val mixerGrant: Boolean = false,
     val mixerGrantMatchesFormat: Boolean = false,
     val mixerRequestDetail: String? = null,
@@ -146,7 +156,7 @@ fun buildSignalPath(f: SignalPathFacts): SignalPath {
             ?: "Active Android route unknown", if (f.confirmedDevice != null) "Active deck AudioTrack routed-device observations"
             else "Deck routes are not confirmed to agree"),
     )
-    val usb = f.kind == PlaybackPathKind.NATIVE_USB || f.kind == PlaybackPathKind.DECODED_USB
+    val usb = f.kind in setOf(PlaybackPathKind.NATIVE_USB, PlaybackPathKind.DECODED_USB, PlaybackPathKind.PROCESSED_USB)
     val modified = f.modifications.toMutableList()
     val unknown = f.unknowns.toMutableList()
     val input = f.decodedFormat
@@ -180,7 +190,7 @@ fun buildSignalPath(f: SignalPathFacts): SignalPath {
         if (f.bypassedNodes.isNotEmpty()) add("Bypassed / unapplied: " + f.bypassedNodes.joinToString(", "))
         if (f.restartRequired) add("Output mode preference changed; stop the playback service or restart the app to rebuild its sink")
     }.joinToString(". ")
-    val outputName = if (usb) "Direct USB transport" else "Android audio"
+    val outputName = if (f.kind == PlaybackPathKind.PROCESSED_USB) "Processed USB transport" else if (usb) "Direct USB transport" else "Android audio"
     return SignalPath(
         active = true, codec = f.codec, sampleRateHz = f.sourceFormat?.rateHz ?: 0,
         bitDepth = f.sourceFormat?.bitDepth ?: 0, channels = f.sourceFormat?.channels ?: 0,
@@ -194,7 +204,8 @@ fun buildSignalPath(f: SignalPathFacts): SignalPath {
         resampling = SignalStage("Resampling", if (input?.rateHz != null && transport?.rateHz != null)
             "${input.rateHz} Hz input → ${transport.rateHz} Hz transport; downstream conversion unknown"
             else "Input/output rate comparison unavailable; downstream conversion unknown", "Configured transport boundary, not a hardware measurement"),
-        outputStage = SignalStage("Output", if (usb) "Direct USB transport configuration; hardware format readback unavailable"
+        outputStage = SignalStage("Output", if (usb) listOfNotNull(f.nativeContainerBits?.let { "$it-bit USB container" },
+                f.nativeClockRate?.let { "$it Hz clock readback" }, "Downstream DAC processing unknown").joinToString(" · ")
             else "Android AudioTrack configuration; downstream hardware format unknown" +
                 if (f.exclusiveRequested) "; exclusive USB requested but native transport is unavailable" else "",
             if (usb) "Native USB stream started; clock request ${if (f.nativeClockAccepted) "accepted" else "not confirmed"}"

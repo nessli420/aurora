@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.drawable.BitmapDrawable
+import androidx.annotation.OptIn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -34,6 +35,7 @@ import androidx.glance.text.FontWeight
 import androidx.glance.text.Text
 import androidx.glance.text.TextStyle
 import androidx.glance.unit.ColorProvider
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.R
 import com.aurora.music.playback.NowPlaying
 import com.aurora.music.playback.NowPlayingStore
@@ -59,6 +61,7 @@ class AuroraWidget : GlanceAppWidget() {
 }
 
 @Composable
+@OptIn(UnstableApi::class)
 private fun WidgetContent(np: NowPlaying, art: Bitmap?) {
     val context = LocalContext.current
     val white = ColorProvider(Color.White)

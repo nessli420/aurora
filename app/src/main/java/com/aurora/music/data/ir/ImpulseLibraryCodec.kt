@@ -45,7 +45,7 @@ object ImpulseLibraryCodec {
             validatePreparation(prepared.preparation, entry.sourceMetadata)
             require(prepared.metadata.sampleRate == entry.sourceMetadata.sampleRate &&
                 prepared.metadata.channels == entry.sourceMetadata.channels &&
-                prepared.metadata.frames == prepared.preparation.endFrameExclusive - prepared.preparation.startFrame &&
+                prepared.metadata.frames == prepared.preparation.endFrameExclusive - prepared.preparation.startFrame + prepared.preparation.delayFrames &&
                 prepared.metadata.precision == SamplePrecision.FLOAT_32 && prepared.metadata.validBits == 24) {
                 "Prepared metadata does not match its trim."
             }
@@ -60,7 +60,7 @@ object ImpulseLibraryCodec {
 
     fun validateMetadata(metadata: ImpulseMetadata): ImpulseMetadata {
         require(metadata.sampleRate in 8_000..384_000) { "Invalid sample rate." }
-        require(metadata.channels in 1..2) { "Use a mono or stereo impulse response." }
+        require(metadata.channels in listOf(1, 2, 4)) { "Use a mono, stereo or LL/LR/RL/RR impulse response." }
         require(metadata.frames in 1..MAX_SOURCE_FRAMES) { "Invalid impulse length." }
         require(metadata.precision != SamplePrecision.FLOAT_64 && metadata.validBits in 1..metadata.precision.significandBits &&
             (metadata.precision != SamplePrecision.FLOAT_32 || metadata.validBits == 24)) { "Invalid sample precision." }
@@ -73,7 +73,8 @@ object ImpulseLibraryCodec {
         validateMetadata(source)
         require(preparation.startFrame >= 0 && preparation.endFrameExclusive <= source.frames &&
             preparation.startFrame < preparation.endFrameExclusive) { "Choose a nonempty trim within the source." }
-        require(preparation.endFrameExclusive - preparation.startFrame <= MAX_PREPARED_FRAMES) {
+        require(preparation.delayFrames in 0..source.sampleRate) { "Delay must be between 0 and 1,000 ms." }
+        require(preparation.endFrameExclusive - preparation.startFrame + preparation.delayFrames <= MAX_PREPARED_FRAMES) {
             "Trim the copy to 262,144 frames or fewer."
         }
         return preparation
@@ -82,7 +83,7 @@ object ImpulseLibraryCodec {
     fun encodeLibrary(entries: List<ImpulseLibraryEntry>): String {
         val validated = validateLibrary(entries)
         val root = JsonObject().apply {
-            addProperty("schemaVersion", 1)
+            addProperty("schemaVersion", 2)
             add("entries", gson.toJsonTree(validated))
         }
         return bounded(gson.toJson(root))
@@ -91,7 +92,7 @@ object ImpulseLibraryCodec {
     fun decodeLibrary(json: String?): Result<List<ImpulseLibraryEntry>> = runCatching {
         if (json == null) return@runCatching emptyList()
         val root = objectWith(strictJson(json), setOf("schemaVersion", "entries"))
-        require(integer(root, "schemaVersion") == 1L) { "Unsupported impulse library version." }
+        require(integer(root, "schemaVersion") in 1L..2L) { "Unsupported impulse library version." }
         val entries = root["entries"]
         require(entries.isJsonArray && entries.asJsonArray.size() <= MAX_ENTRIES) { "Invalid impulse library size." }
         validateLibrary(entries.asJsonArray.map(::readEntry))
@@ -131,10 +132,18 @@ object ImpulseLibraryCodec {
 
     private fun readPrepared(value: JsonElement): ImpulsePreparedAsset {
         val o = objectWith(value, setOf("path", "sha256", "metadata", "preparation"))
-        val p = objectWith(o["preparation"], setOf("startFrame", "endFrameExclusive", "normalization"))
+        val p = o["preparation"].asJsonObject
+        require(p.keySet().containsAll(setOf("startFrame", "endFrameExclusive", "normalization")) &&
+            p.keySet().all { it in setOf("startFrame", "endFrameExclusive", "normalization", "minimumPhase", "delayFrames") }) {
+            "Unsupported preparation fields."
+        }
+        val minimum = p["minimumPhase"]?.let {
+            require(it.isJsonPrimitive && it.asJsonPrimitive.isBoolean) { "Invalid phase option." }; it.asBoolean
+        } ?: false
         return ImpulsePreparedAsset(string(o, "path"), string(o, "sha256"), readMetadata(o["metadata"]),
             ImpulsePreparation(int(p, "startFrame"), int(p, "endFrameExclusive"),
-                enumValueOf<ImpulseNormalization>(string(p, "normalization"))))
+                enumValueOf<ImpulseNormalization>(string(p, "normalization")), minimum,
+                if (p.has("delayFrames")) int(p, "delayFrames") else 0))
     }
 
     private fun strictJson(json: String): JsonElement {
@@ -162,6 +171,7 @@ object ImpulseLibraryCodec {
                     JsonToken.STRING -> JsonPrimitive(reader.nextString().also { require(it.length <= 4096) { "Impulse field is too long." } })
                     JsonToken.NUMBER -> JsonPrimitive(BigDecimal(reader.nextString().also { require(it.length <= 100) { "Invalid impulse number." } }))
                     JsonToken.NULL -> { reader.nextNull(); JsonNull.INSTANCE }
+                    JsonToken.BOOLEAN -> JsonPrimitive(reader.nextBoolean())
                     else -> error("Invalid impulse JSON.")
                 }
             }

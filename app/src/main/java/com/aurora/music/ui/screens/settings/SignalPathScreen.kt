@@ -59,6 +59,7 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
     val context = LocalContext.current
     val container = remember { (context.applicationContext as AuroraApplication).container }
     val path by container.signalPath.collectAsStateWithLifecycle()
+    val rack by container.settingsStore.processingRack.collectAsStateWithLifecycle(com.aurora.music.data.ProcessingRack())
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar("Signal Path", onBack)
@@ -90,8 +91,7 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                if (!path.active) "Play a track to inspect its source, processing and output."
-                                else path.note,
+                                path.note,
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -107,12 +107,37 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                 path.measurements?.let { measurements ->
                     item { MeasurementCard(measurements) }
                 }
+                if (path.nodeMeters.isNotEmpty()) item {
+                    var expanded by remember { mutableStateOf(false) }
+                    SettingsGroup {
+                        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Hide stage meters" else "Stage meters") }
+                            if (expanded) path.nodeMeters.forEach { meter ->
+                                Text(rack.nodes.firstOrNull { it.id == meter.id }?.name ?: "Stage", style = MaterialTheme.typography.titleSmall)
+                                Text(String.format(Locale.ROOT, "Peak %.1f dBFS · Change %.1f dB",
+                                    20 * log10(meter.peak.coerceAtLeast(1e-10)), meter.changeDb), style = MaterialTheme.typography.bodySmall)
+                                if (meter.bandChangesDb.isNotEmpty()) Text(meter.bandChangesDb.joinToString(" · ") {
+                                    String.format(Locale.ROOT, "%.1f dB", it)
+                                }, style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    }
+                }
                 path.audioTrackUnderruns?.let { count -> item {
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text("AudioTrack underruns: $count", style = MaterialTheme.typography.titleSmall)
                             Text("Primary player, since creation.",
                                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                    }
+                } }
+                path.usbDiagnostics?.let { usb -> item {
+                    SettingsGroup {
+                        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            Text("USB transport", style = MaterialTheme.typography.titleSmall)
+                            Text("Completed: ${usb.completedFrames} · Pending: ${usb.pendingFrames}", style = MaterialTheme.typography.bodySmall)
+                            Text("Packet errors: ${usb.packetErrors} · Timeouts: ${usb.timeouts}", style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 } }

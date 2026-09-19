@@ -27,12 +27,10 @@ interface ListenBrainzApi {
     suspend fun submit(@Header("Authorization") auth: String, @Body body: LbSubmit): Response<Unit>
 }
 
-class ListenBrainzClient {
-    private val http = OkHttpClient.Builder()
+class ListenBrainzClient(http: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
-        .build()
-
+        .build()) {
     private val api: ListenBrainzApi = Retrofit.Builder()
         .baseUrl("https://api.listenbrainz.org/")
         .client(http)

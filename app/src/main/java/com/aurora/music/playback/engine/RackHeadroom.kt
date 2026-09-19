@@ -3,6 +3,7 @@ package com.aurora.music.playback.engine
 import com.aurora.music.data.ProcessingRack
 import com.aurora.music.data.RackEqChannel
 import com.aurora.music.data.RackNodeKind
+import com.aurora.music.data.*
 import com.aurora.music.playback.ImpulseResponse
 import kotlin.math.*
 
@@ -15,8 +16,11 @@ data class RackHeadroom(val sampleRate: Int, val estimatedBoostDb: Double, val a
 }
 
 object RackHeadroomAnalyzer {
-    fun analyze(rack: ProcessingRack, rate: Int, impulse: ImpulseResponse?): RackHeadroom {
+    fun analyze(rack: ProcessingRack, rate: Int, impulse: ImpulseResponse?, impulseMap: Map<String, ImpulseResponse> = emptyMap()): RackHeadroom {
         require(rate in 8_000..768_000)
+        if (rack.usesGraph() || rack.nodes.any { it.kind in listOf(RackNodeKind.UTILITY, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND, RackNodeKind.LOUDNESS) || it.impulseId != null }) {
+            return graphBound(rack, rate, impulse, impulseMap)
+        }
         val active = rack.nodes.filter { !it.bypass && it.wet > 0f }
         val prepared = active.map { node ->
             val eq = when (node.kind) {
@@ -41,8 +45,8 @@ object RackHeadroomAnalyzer {
                 }
             }
         } }
-        val firL = impulse?.let { ProductionSerialRack.resample(it.preciseLeft, it.sampleRate, rate).sumOf(::abs) } ?: 1.0
-        val firR = impulse?.let { ProductionSerialRack.resample(it.preciseRight, it.sampleRate, rate).sumOf(::abs) } ?: 1.0
+        val firL = impulse?.let { ProductionSerialRack.resample(it.preciseLeft, it.sampleRate, rate).sumOf(::abs) + (it.preciseRightToLeft?.let { cross -> ProductionSerialRack.resample(cross, it.sampleRate, rate).sumOf(::abs) } ?: 0.0) } ?: 1.0
+        val firR = impulse?.let { ProductionSerialRack.resample(it.preciseRight, it.sampleRate, rate).sumOf(::abs) + (it.preciseLeftToRight?.let { cross -> ProductionSerialRack.resample(cross, it.sampleRate, rate).sumOf(::abs) } ?: 0.0) } ?: 1.0
         var maximumLog = Double.NEGATIVE_INFINITY
         for (frequency in frequencies) {
             val w = 2 * PI * frequency / rate
@@ -98,6 +102,43 @@ object RackHeadroomAnalyzer {
             it.kind == RackNodeKind.LEGACY_DSP && it.audio.dspSaturation > 0 }
         return RackHeadroom(rate, boost, if (boost > .001) -boost - 1.0 else 0.0,
             nonlinear, impulse != null && active.any { it.kind == RackNodeKind.CONVOLUTION })
+    }
+
+    private fun graphBound(rack: ProcessingRack, rate: Int, shared: ImpulseResponse?, impulses: Map<String, ImpulseResponse>): RackHeadroom {
+        val gains = mutableMapOf(RackInput.INPUT to 0.0)
+        fun sum(inputs: List<RackInput>): Double {
+            val logs = inputs.map { checkNotNull(gains[it.source]) + it.gainDb * ln(10.0) / 20 + if (it.channel == RackChannel.DECODE_MS) ln(2.0) else 0.0 }
+            val maximum = logs.max()
+            return maximum + ln(logs.sumOf { exp(it - maximum) })
+        }
+        rack.nodes.forEachIndexed { index, node ->
+            val inputs = node.inputs ?: listOf(RackInput(rack.nodes.getOrNull(index - 1)?.id ?: RackInput.INPUT))
+            val contribution = if (node.bypass || node.wet == 0f) 0.0 else {
+                val boost = when (node.kind) {
+                    RackNodeKind.ALIGNMENT_DELAY -> 0.0
+                    RackNodeKind.DYNAMIC_EQ -> (node.dynamic ?: RackDynamicEq()).let { it.dynamics.makeupDb + if (it.upward) it.dynamics.rangeDb else 0.0 }
+                    RackNodeKind.MULTIBAND -> 20 * log10((node.multiband ?: RackMultiband()).bands.sumOf { if (it.mute) 0.0 else 10.0.pow(it.makeupDb / 20) }.coerceAtLeast(1e-15))
+                    RackNodeKind.LOUDNESS -> (node.loudness ?: RackLoudness()).let { it.bassCapDb + it.trebleCapDb }
+                    RackNodeKind.UTILITY -> (node.utility ?: RackUtility()).let {
+                        20 * log10(max(abs(it.ll) + abs(it.lr), abs(it.rl) + abs(it.rr)).coerceAtLeast(1e-15)) + if (it.monoBassHz > 0) 6.021 else 0.0
+                    }
+                    else -> {
+                        val ir = impulses[node.impulseId] ?: if (node.impulseId == null) shared else null
+                        analyze(ProcessingRack(nodes = listOf(node.copy(inputs = null, impulseId = null, wet = 1f, oversampling = null)), autoHeadroom = false), rate, ir).estimatedBoostDb
+                    }
+                }
+                val logWet = boost * ln(10.0) / 20 + ln(node.wet.toDouble())
+                if (node.wet == 1f) logWet else {
+                    val logDry = ln(1 - node.wet.toDouble()); val peak = max(logWet, logDry)
+                    peak + ln(exp(logWet - peak) + exp(logDry - peak))
+                }
+            }
+            gains[node.id] = sum(inputs) + contribution
+        }
+        val boost = 20 * sum(rack.output ?: listOf(RackInput(rack.nodes.lastOrNull()?.id ?: RackInput.INPUT))) / ln(10.0)
+        return RackHeadroom(rate, boost, if (boost > .001) -boost - 1 else 0.0,
+            rack.nodes.any { it.kind in listOf(RackNodeKind.SATURATION, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND) },
+            rack.nodes.any { it.kind == RackNodeKind.CONVOLUTION })
     }
 
     private fun response(bank: Array<BiquadCoefficients>, w: Double, wet: Double): Double {

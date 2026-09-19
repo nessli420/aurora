@@ -12,13 +12,14 @@ import java.io.StringReader
 import java.math.BigDecimal
 import java.util.UUID
 
-/** Versioned serial graph. Disabled graphs preserve the existing global processing behavior. */
+// disabled racks preserve standard processing.
 data class ProcessingRack(
-    val schemaVersion: Int = 3,
+    val schemaVersion: Int = 4,
     val enabled: Boolean = false,
     val name: String = "Legacy chain",
     val nodes: List<ProcessingRackNode> = emptyList(),
     val autoHeadroom: Boolean = false,
+    val output: List<RackInput>? = null,
 ) {
     companion object {
         /** Match the old engine's effective selection, including its twelve-parametric-band limit. */
@@ -63,7 +64,7 @@ data class ProcessingRack(
     }
 }
 
-enum class RackNodeKind { LEGACY_DSP, GAIN, EQ, SATURATION, STEREO, CROSSFEED, COMPRESSOR, LIMITER, DELAY, CONVOLUTION }
+enum class RackNodeKind { LEGACY_DSP, GAIN, EQ, SATURATION, STEREO, CROSSFEED, COMPRESSOR, LIMITER, DELAY, CONVOLUTION, UTILITY, DYNAMIC_EQ, MULTIBAND, LOUDNESS, ALIGNMENT_DELAY }
 
 enum class RackEqChannel { BOTH, LEFT, RIGHT }
 
@@ -75,6 +76,13 @@ data class ProcessingRackNode(
     val wet: Float = 1f,
     val audio: AudioPrefs = AudioPrefs(),
     val eqChannel: RackEqChannel = RackEqChannel.BOTH,
+    val inputs: List<RackInput>? = null,
+    val utility: RackUtility? = null,
+    val dynamic: RackDynamicEq? = null,
+    val multiband: RackMultiband? = null,
+    val loudness: RackLoudness? = null,
+    val impulseId: String? = null,
+    val oversampling: Int? = null,
 )
 
 private data class ProcessingRackDto(
@@ -101,11 +109,12 @@ object ProcessingRackCodec {
     private val nodeKeys = legacyNodeKeys + "eqChannel"
 
     fun validate(rack: ProcessingRack): ProcessingRack {
-        require(rack.schemaVersion == 3) { "Unsupported processing rack version." }
+        require(rack.schemaVersion == 4) { "Unsupported processing rack version." }
         val title = ProcessingPresetCodec.name(rack.name)
         require(rack.nodes.size <= MAX_NODES) { "A rack supports up to $MAX_NODES nodes." }
         require(rack.nodes.map { it.id }.distinct().size == rack.nodes.size) { "Duplicate rack node identifiers." }
-        require(rack.nodes.count { it.kind == RackNodeKind.CONVOLUTION } <= 1) { "A rack supports one convolution node." }
+        require(rack.nodes.count { it.kind == RackNodeKind.CONVOLUTION } <= 4) { "A rack supports up to four convolution stages." }
+        RackAdvancedCodec.validate(rack)
         var bands = 0
         var sections = 0
         val nodes = rack.nodes.map { node ->
@@ -123,14 +132,16 @@ object ProcessingRackCodec {
                 }
                 require(audio.dspParametric.size <= MAX_PARAMETRIC_BANDS) { "An Equalizer supports up to $MAX_PARAMETRIC_BANDS parametric bands." }
                 bands += audio.dspParametric.size
-                sections += sectionCount(node.copy(audio = audio))
+
             }
-            node.copy(name = ProcessingPresetCodec.name(node.name), audio = audio.copy(eqBands = audio.eqBands.toList(),
+            sections += sectionCount(node.copy(audio = audio))
+            node.copy(inputs = node.inputs?.toList(), multiband = node.multiband?.let { it.copy(bands = it.bands.toList()) },
+                name = ProcessingPresetCodec.name(node.name), audio = audio.copy(eqBands = audio.eqBands.toList(),
                 dspGraphicBands = audio.dspGraphicBands.toList(), dspParametric = audio.dspParametric.toList()))
         }
         require(bands <= MAX_TOTAL_PARAMETRIC_BANDS) { "A rack supports up to $MAX_TOTAL_PARAMETRIC_BANDS parametric bands in total." }
         require(sections <= MAX_BIQUAD_SECTIONS) { "This rack exceeds the $MAX_BIQUAD_SECTIONS-section processing budget." }
-        return rack.copy(name = title, nodes = nodes)
+        return rack.copy(name = title, nodes = nodes, output = rack.output?.toList())
     }
 
     fun encode(rack: ProcessingRack): String = gson.toJson(validate(rack))
@@ -139,6 +150,10 @@ object ProcessingRackCodec {
     fun sectionCount(node: ProcessingRackNode): Int = when (node.kind) {
         RackNodeKind.LEGACY_DSP -> 79
         RackNodeKind.EQ -> node.audio.dspGraphicBands.size + node.audio.dspParametric.sumOf { it.filterType.sectionCount(it.filterOrder) }
+        RackNodeKind.DYNAMIC_EQ -> 2
+        RackNodeKind.MULTIBAND -> 10
+        RackNodeKind.LOUDNESS -> 2
+        RackNodeKind.UTILITY -> 4
         else -> 0
     }
 
@@ -146,8 +161,8 @@ object ProcessingRackCodec {
         require(element.isJsonObject) { "Processing rack must be an object." }
         val root = element.asJsonObject
         val version = number(root, "schemaVersion")
-        require(root.keySet() == if (version < 3.0) legacyRackKeys else rackKeys) { "Processing rack fields are incomplete or unsupported." }
-        require(version in setOf(1.0, 2.0, 3.0)) { "Unsupported processing rack version." }
+        require(root.keySet() == (if (version < 3.0) legacyRackKeys else rackKeys) + (if (version >= 4.0 && root.has("output")) setOf("output") else emptySet())) { "Processing rack fields are incomplete or unsupported." }
+        require(version in setOf(1.0, 2.0, 3.0, 4.0)) { "Unsupported processing rack version." }
         boolean(root, "enabled"); string(root, "name")
         if (version >= 3.0) boolean(root, "autoHeadroom")
         require(root.get("nodes").isJsonArray && root.getAsJsonArray("nodes").size() <= MAX_NODES) { "Invalid rack nodes." }
@@ -155,9 +170,10 @@ object ProcessingRackCodec {
         val nodes = requireNotNull(dto.nodes).map { elementNode ->
             require(elementNode.isJsonObject) { "Rack node must be an object." }
             val o = elementNode.asJsonObject
-            require(o.keySet() == if (version == 1.0) legacyNodeKeys else nodeKeys) { "Rack node fields are incomplete or unsupported." }
+            require(o.keySet() == (if (version == 1.0) legacyNodeKeys else nodeKeys) + (if (version >= 4.0) o.keySet().intersect(RackAdvancedCodec.nodeKeys) else emptySet())) { "Rack node fields are incomplete or unsupported." }
             string(o, "id"); string(o, "name"); val kindName = string(o, "kind")
             val kind = RackNodeKind.entries.firstOrNull { it.name == kindName } ?: error("Unsupported rack node kind.")
+            require(version >= 4.0 || kind.ordinal < 10) { "This stage requires rack version 4." }
             val channel = if (version == 1.0) RackEqChannel.BOTH else {
                 val channelName = string(o, "eqChannel")
                 RackEqChannel.entries.firstOrNull { it.name == channelName } ?: error("Unsupported EQ channel.")
@@ -166,9 +182,10 @@ object ProcessingRackCodec {
             require(wet in 0.0..1.0) { "Invalid node wet mix." }
             val n = gson.fromJson(o, ProcessingRackNodeDto::class.java)
             ProcessingRackNode(requireNotNull(n.id), requireNotNull(n.name), kind, requireNotNull(n.bypass),
-                requireNotNull(n.wet), ProcessingPresetCodec.readAudio(requireNotNull(n.audio)), channel)
+                requireNotNull(n.wet), ProcessingPresetCodec.readAudio(requireNotNull(n.audio)), channel).let { if (version >= 4.0) RackAdvancedCodec.readNode(it, o) else it }
         }
-        return validate(ProcessingRack(3, requireNotNull(dto.enabled), requireNotNull(dto.name), nodes, dto.autoHeadroom ?: false))
+        return validate(ProcessingRack(4, requireNotNull(dto.enabled), requireNotNull(dto.name), nodes, dto.autoHeadroom ?: false,
+            if (version >= 4.0 && root.has("output")) RackAdvancedCodec.readInputs(root.get("output")) else null))
     }
 
     /** Used by preset and backup decoders too: duplicate fields must not silently overwrite data. */
@@ -223,5 +240,5 @@ object ProcessingRackCodec {
 
 /** Only a live, nonzero convolution node requires the rack's shared asset. */
 fun ProcessingRack.requiresImpulseResponse(): Boolean = enabled && nodes.any {
-    it.kind == RackNodeKind.CONVOLUTION && !it.bypass && it.wet > 0f
+    it.kind == RackNodeKind.CONVOLUTION && it.impulseId == null && !it.bypass && it.wet > 0f
 }

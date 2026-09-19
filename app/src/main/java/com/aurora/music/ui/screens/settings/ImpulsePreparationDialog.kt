@@ -31,6 +31,9 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
     var start by remember { mutableStateOf(initial.startFrame.toString()) }
     var end by remember { mutableStateOf(initial.endFrameExclusive.toString()) }
     var normalize by remember { mutableStateOf(initial.normalization == ImpulseNormalization.PEAK_MINUS_1_DB) }
+    var minimumPhase by remember { mutableStateOf(initial.minimumPhase) }
+    var delay by remember { mutableStateOf(String.format(java.util.Locale.ROOT, "%.6f",
+        initial.delayFrames * 1000.0 / entry.sourceMetadata.sampleRate).trimEnd('0').trimEnd('.')) }
     var busy by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var preview by remember { mutableStateOf<ImpulsePreview?>(null) }
@@ -39,8 +42,10 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
     val frames = entry.sourceMetadata.frames
     val startFrame = start.toIntOrNull()
     val endFrame = end.toIntOrNull()
-    val options = if (startFrame != null && endFrame != null && startFrame in 0 until frames && endFrame in startFrame + 1..frames) {
-        ImpulsePreparation(startFrame, endFrame, if (normalize) ImpulseNormalization.PEAK_MINUS_1_DB else ImpulseNormalization.NONE)
+    val delayMs = delay.toDoubleOrNull()?.takeIf { it.isFinite() && it in 0.0..1000.0 }
+    val options = if (startFrame != null && endFrame != null && delayMs != null && startFrame in 0 until frames && endFrame in startFrame + 1..frames) {
+        ImpulsePreparation(startFrame, endFrame, if (normalize) ImpulseNormalization.PEAK_MINUS_1_DB else ImpulseNormalization.NONE,
+            minimumPhase, (delayMs * entry.sourceMetadata.sampleRate / 1000.0).roundToInt())
     } else null
     fun changed() { preview = null; reviewed = null; error = null }
     fun loadPreview(submitted: ImpulsePreparation) {
@@ -56,7 +61,7 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
         }
     }
     LaunchedEffect(entry.id) { loadPreview(initial) }
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Trim & normalize") }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Prepare impulse") }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text("Original: $frames frames · ${entry.sourceMetadata.summary()}", style = MaterialTheme.typography.bodySmall)
             Text("Creates a 32-bit float copy.", style = MaterialTheme.typography.bodySmall)
@@ -79,11 +84,18 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
                     Text("Normalize peak to −1 dB", style = MaterialTheme.typography.titleSmall)
-                    if (entry.sourceMetadata.channels == 2) Text("One gain for both channels.", style = MaterialTheme.typography.bodySmall)
+                    if (entry.sourceMetadata.channels > 1) Text("One gain for all paths.", style = MaterialTheme.typography.bodySmall)
                 }
                 Switch(normalize, onCheckedChange = { normalize = it; changed() }, enabled = !busy)
             }
-            if (options != null) Text("${options.endFrameExclusive - options.startFrame} frames · ${impulseNumber((options.endFrameExclusive - options.startFrame) * 1000.0 / entry.sourceMetadata.sampleRate)} ms",
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text("Minimum phase", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                Switch(minimumPhase, onCheckedChange = { minimumPhase = it; changed() }, enabled = !busy)
+            }
+            if (entry.sourceMetadata.channels == 4 && minimumPhase) Text("Converts each matrix path independently.", style = MaterialTheme.typography.bodySmall)
+            OutlinedTextField(delay, { delay = it; changed() }, label = { Text("Delay (ms)") }, singleLine = true,
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, modifier = Modifier.fillMaxWidth())
+            if (options != null) Text("${options.endFrameExclusive - options.startFrame + options.delayFrames} frames · ${impulseNumber((options.endFrameExclusive - options.startFrame + options.delayFrames) * 1000.0 / entry.sourceMetadata.sampleRate)} ms",
                 style = MaterialTheme.typography.bodySmall)
             OutlinedButton(enabled = !busy && options != null, onClick = { options?.let(::loadPreview) }, modifier = Modifier.fillMaxWidth()) { Text("Preview") }
             if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -110,13 +122,18 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
 internal fun ImpulseWaveform(preview: ImpulsePreview) {
     val colors = listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
     val axisColor = MaterialTheme.colorScheme.outlineVariant
-    val channels = if (preview.metadata.channels == 2) listOf(preview.left, preview.right) else listOf(preview.left)
+    val channels = when (preview.metadata.channels) {
+        4 -> listOf(preview.left, preview.leftToRight, preview.rightToLeft, preview.right)
+        2 -> listOf(preview.left, preview.right)
+        else -> listOf(preview.left)
+    }
+    val labels = when (channels.size) { 4 -> listOf("LL", "LR", "RL", "RR"); 2 -> listOf("Left", "Right"); else -> listOf("Mono") }
     val peak = remember(preview) { channels.flatten().maxOfOrNull { max(abs(it.min), abs(it.max)) }?.coerceAtLeast(0.000001) ?: 1.0 }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         channels.forEachIndexed { index, bins ->
-            Text(if (channels.size == 1) "Mono" else if (index == 0) "Left" else "Right", style = MaterialTheme.typography.labelSmall)
+            Text(labels[index], style = MaterialTheme.typography.labelSmall)
             Canvas(Modifier.fillMaxWidth().height(72.dp).semantics {
-                contentDescription = "${if (channels.size == 1) "Mono" else if (index == 0) "Left" else "Right"} impulse waveform, ${preview.metadata.frames} frames"
+                contentDescription = "${labels[index]} impulse waveform, ${preview.metadata.frames} frames"
             }) {
                 val center = size.height / 2f
                 drawLine(axisColor, Offset(0f, center), Offset(size.width, center), 1.dp.toPx())
@@ -126,8 +143,8 @@ internal fun ImpulseWaveform(preview: ImpulsePreview) {
                     val bottom = center - (bin.min / peak * center * 0.9).toFloat()
                     val width = (size.width / bins.size).coerceAtLeast(1f)
                     if (bin.min == bin.max && bin.min != 0.0) {
-                        drawCircle(colors[index], radius = (width / 2f).coerceIn(1.dp.toPx(), 3.dp.toPx()), center = Offset(x, top))
-                    } else drawLine(colors[index], Offset(x, top), Offset(x, bottom), width)
+                        drawCircle(colors[index % colors.size], radius = (width / 2f).coerceIn(1.dp.toPx(), 3.dp.toPx()), center = Offset(x, top))
+                    } else drawLine(colors[index % colors.size], Offset(x, top), Offset(x, bottom), width)
                 }
             }
         }

@@ -22,6 +22,34 @@ class BackupArchiveTest {
     private val directory = Files.createTempDirectory("aurora-backup-test-").toFile()
     @After fun clean() { directory.deleteRecursively() }
 
+    @Test fun activeAndRuleRecoveryImpulseAssetsSurvivePortableBackup() {
+        val file = impulse()
+        val entry = com.aurora.music.data.ir.ImpulseLibraryFiles.importOriginal(file, "Matrix", "matrix.wav", 1).getOrThrow()
+        val rack = ProcessingRack(enabled = true, nodes = listOf(
+            ProcessingRackNode(UUID.randomUUID().toString(), "FIR", RackNodeKind.CONVOLUTION, impulseId = entry.id)))
+        val preset = ProcessingPreset(UUID.randomUUID().toString(), "Frozen", createdAtMs = 1,
+            audio = AudioPrefs(), playback = ProcessingPlaybackPrefs(), rack = rack, rackImpulseAssets = listOf(entry))
+        val session = com.aurora.music.data.rules.PresetRuleSession(preset, preset,
+            UUID.randomUUID().toString(), preset.id)
+        val backup = AuroraBackup(prefs = PrefsBackup(strings = mapOf(
+            ProcessingRackCodec.PREFERENCE_KEY to ProcessingRackCodec.encode(rack),
+            BackupArchive.ACTIVE_RACK_IR_KEY to com.aurora.music.data.ir.ImpulseLibraryCodec.encodeLibrary(listOf(entry)),
+            com.aurora.music.data.rules.PresetRuleSessionCodec.PREFERENCE_KEY to com.aurora.music.data.rules.PresetRuleSessionCodec.encode(session))))
+        val bytes = export(backup)
+        assertEquals(2, unzip(bytes).size)
+        assertFalse(unzip(bytes).getValue("backup.json").toString(Charsets.UTF_8).contains(file.absolutePath))
+        BackupArchive.read(ByteArrayInputStream(bytes), directory).use { imported ->
+            val restored = BackupArchive.remap(imported.backup) { reference, expected ->
+                imported.assets.getValue(BackupArchive.assetHash(reference)).absolutePath to expected
+            }
+            val recovery = com.aurora.music.data.rules.PresetRuleSessionCodec.decode(
+                restored.prefs.strings[com.aurora.music.data.rules.PresetRuleSessionCodec.PREFERENCE_KEY]).getOrThrow()!!
+            ProcessingPresetAssets.validateFiles(recovery.baseline.rackImpulseAssets)
+            ProcessingPresetAssets.validateFiles(recovery.applied.rackImpulseAssets)
+            assertEquals(1, imported.assets.size)
+        }
+    }
+
     @Test fun archiveKeepsMeasurementProjectsAndValidatesThemBeforeRestore() {
         val measurement = MeasurementTextImporter.parse("# Frequency (Hz), SPL (dB), Phase (degrees)\n20, 1, 30\n20000, -2, -400", "Raw phase").getOrThrow()
         val project = TuningProjectCodec.create("Portable measurements").copy(measurementLeft = measurement)

@@ -21,9 +21,9 @@ class ImpulseLibraryCodecTest {
     @Test fun rejectsUnknownMissingDuplicateWronglyTypedAndTrailingFields() {
         val json = ImpulseLibraryCodec.encodeLibrary(listOf(entry()))
         for (bad in listOf(
-            json.replace("\"schemaVersion\":1", "\"schemaVersion\":1,\"schemaVersion\":1"),
-            json.replace("\"schemaVersion\":1", "\"schemaVersion\":2"),
-            json.replace("\"schemaVersion\":1", "\"schemaVersion\":\"1\""),
+            json.replace("\"schemaVersion\":2", "\"schemaVersion\":2,\"schemaVersion\":2"),
+            json.replace("\"schemaVersion\":2", "\"schemaVersion\":3"),
+            json.replace("\"schemaVersion\":2", "\"schemaVersion\":\"2\""),
             json.replace("\"prepared\":null", "\"unused\":null"),
             json.replace("\"channels\":2", "\"channels\":null"),
             json.replace("\"frames\":128", "\"frames\":1.5"),

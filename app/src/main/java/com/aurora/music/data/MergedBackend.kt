@@ -33,10 +33,23 @@ class MergedBackend(
         id = wrapId(idx, id),
         albumId = wrapId(idx, albumId),
         artistId = wrapId(idx, artistId),
+        playbackSource = playbackSource ?: sources[idx].playbackSourceIdentity(this),
     )
     private fun Album.wrap(idx: Int) = copy(id = wrapId(idx, id))
     private fun Artist.wrap(idx: Int) = copy(id = wrapId(idx, id))
     private fun Playlist.wrap(idx: Int) = copy(id = wrapId(idx, id))
+
+    override fun playbackSourceIdentity(song: Song): PlaybackSourceIdentity? {
+        song.playbackSource?.let { return it }
+        val (index, id) = unwrap(song.id) ?: return null
+        val album = unwrap(song.albumId)?.takeIf { it.first == index }?.second.orEmpty()
+        return sources[index].playbackSourceIdentity(song.copy(id = id, albumId = album))
+    }
+
+    override fun playbackCollectionIdentity(kind: String, id: String, name: String?): PlaybackCollectionIdentity? {
+        val (index, original) = unwrap(id) ?: return null
+        return sources[index].playbackCollectionIdentity(kind, original, name)
+    }
 
     private suspend fun <T> fanOut(block: suspend (MediaBackend) -> List<T>): List<List<T>> = coroutineScope {
         sources.map { src -> async { runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { block(src) } ?: emptyList() }.getOrDefault(emptyList()) } }

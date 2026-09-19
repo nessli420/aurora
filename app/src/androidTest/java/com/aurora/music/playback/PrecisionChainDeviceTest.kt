@@ -12,6 +12,7 @@ import org.junit.Test
 import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /** Exercise Media3's actual processor pump, including backpressure and multi-processor EOS. */
@@ -53,10 +54,11 @@ class PrecisionChainDeviceTest {
     }
 
     @Test fun pendingFormatDrainsOldAudioAndSeekClearsTheCombinedHistories() {
+        val params = DspParams(delayLeftMs = 20f, delayRightMs = 13f, limiterEnabled = false,
+            parametric = listOf(DspBand(1000f, 4f, 1f)))
         val dsp = AuroraDspProcessor().apply {
             enabled = true
-            update(DspParams(delayLeftMs = 20f, delayRightMs = 13f, limiterEnabled = false,
-                parametric = listOf(DspBand(1000f, 4f, 1f))))
+            update(params)
         }
         val ir = FloatArray(1500).apply { this[0] = .5f; this[1400] = .25f }
         val convolution = ConvolutionProcessor().apply {
@@ -70,6 +72,17 @@ class PrecisionChainDeviceTest {
             val signal = ByteBuffer.allocateDirect(1234 * 4).order(ByteOrder.nativeOrder())
             repeat(1234) { signal.putShort(8192); signal.putShort(-4096) }
             signal.flip()
+            val referenceDsp = AuroraDspProcessor().apply { enabled = true; update(params) }
+            val referencePipeline = AudioProcessingPipeline(ImmutableList.of<AudioProcessor>(referenceDsp))
+            val reference = try {
+                referencePipeline.configure(AudioFormat(48_000, 2, C.ENCODING_PCM_16BIT))
+                referencePipeline.flush()
+                val bytes = processToEnd(referencePipeline, signal.duplicate())
+                assertEquals(1234 * 4, bytes.size)
+                ByteBuffer.wrap(bytes).order(ByteOrder.nativeOrder()).asShortBuffer().let { buffer ->
+                    ShortArray(buffer.remaining()).also(buffer::get)
+                }
+            } finally { referencePipeline.reset() }
             val oldOutput = ByteArrayOutputStream()
             val deadline = SystemClock.elapsedRealtime() + 10_000
             while (signal.hasRemaining()) {
@@ -85,12 +98,22 @@ class PrecisionChainDeviceTest {
                 drain(pipeline, oldOutput)
                 if (!pipeline.isEnded) SystemClock.sleep(1)
             }
-            assertEquals(1234 * 4, oldOutput.size())
+            assertEquals((1234 + ir.size - 1) * 4, oldOutput.size())
+            val convolved = ByteBuffer.wrap(oldOutput.toByteArray()).order(ByteOrder.nativeOrder())
+            repeat(1234 + ir.size - 1) { frame -> repeat(2) { channel ->
+                val direct = if (frame < 1234) reference[frame * 2 + channel] / 32768.0 * .5 else 0.0
+                val delayed = if (frame in 1400 until 2634) reference[(frame - 1400) * 2 + channel] / 32768.0 * .25 else 0.0
+                val expected = legacy(direct + delayed).toInt()
+                val actual = convolved.short.toInt()
+                assertTrue("frame $frame channel $channel: $expected != $actual", abs(expected - actual) <= 1)
+            } }
             pipeline.flush()
             val silence = ByteBuffer.allocateDirect(4099 * 4).order(ByteOrder.nativeOrder())
             silence.limit(silence.capacity())
             val afterSeek = processToEnd(pipeline, silence)
-            assertEquals(4099 * 4, afterSeek.size)
+            // rational sinc padding adds 160 source frames per side.
+            val resampledIrFrames = ((ir.size + 320) * 44_100.0 / 48_000).roundToInt()
+            assertEquals((4099 + resampledIrFrames - 1) * 4, afterSeek.size)
             assertTrue("No old EQ, delay or convolution tail after flush", afterSeek.all { it == 0.toByte() })
         } finally { pipeline.reset() }
     }

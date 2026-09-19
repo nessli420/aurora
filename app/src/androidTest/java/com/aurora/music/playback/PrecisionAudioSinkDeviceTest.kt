@@ -19,6 +19,114 @@ import kotlin.math.pow
 /** Decoder-facing sink contract using the real precision processor and a controllable output sink. */
 @UnstableApi
 class PrecisionAudioSinkDeviceTest {
+    @Test fun sameStreamCompatibilitySwitchDoesNotInsertLongConvolutionTail() {
+        val fake = RecordingSink().apply { writePattern = intArrayOf(0) }
+        val ir = FloatArray(4096).apply { this[0] = .5f; this[lastIndex] = .25f }
+        val processor = PrecisionBlockProcessor().apply {
+            convolutionEnabled = true
+            setImpulse(ImpulseResponse(ir, ir, 48_000), 0f)
+        }
+        val sink = PrecisionAudioSink(fake.delegate, processor, PcmLevelMeter())
+        try {
+            sink.configure(format(C.ENCODING_PCM_24BIT), 0, null)
+            val frames = 5003
+            val source = pcm24(IntArray(frames * 2) { 500_000 })
+            val deadline = SystemClock.elapsedRealtime() + 10_000
+            while (fake.retained == null) {
+                assertFalse(sink.handleBuffer(source, 1_000_000, 1))
+                assertTrue(SystemClock.elapsedRealtime() < deadline)
+                SystemClock.sleep(1)
+            }
+            val acceptedFrames = source.position() / 6
+            assertTrue(acceptedFrames in 1 until frames)
+            sink.setSkipSilenceEnabled(true)
+            fake.writePattern = intArrayOf(Int.MAX_VALUE)
+            send(sink, source, 1_000_000)
+            end(sink)
+            assertEquals(2, fake.epochs.size)
+            assertEquals(acceptedFrames * 8, fake.epochs[0].bytes.size())
+            assertEquals((frames - acceptedFrames) * 4, fake.epochs[1].bytes.size())
+        } finally { sink.reset() }
+    }
+
+    @Test fun realEndOfStreamPreservesCompleteLongImpulseTail() {
+        val fake = RecordingSink().apply { writePattern = intArrayOf(0, 41, 1024) }
+        val ir = FloatArray(4096).apply { this[0] = .5f; this[lastIndex] = .25f }
+        val processor = PrecisionBlockProcessor().apply {
+            convolutionEnabled = true
+            setImpulse(ImpulseResponse(ir, ir, 48_000), 0f)
+        }
+        val sink = PrecisionAudioSink(fake.delegate, processor, PcmLevelMeter())
+        try {
+            sink.configure(format(C.ENCODING_PCM_24BIT), 0, null)
+            val frames = 257
+            val source = IntArray(frames * 2).apply { this[lastIndex - 1] = 2_097_152; this[lastIndex] = -2_097_152 }
+            send(sink, pcm24(source), 2_000_000)
+            end(sink)
+            val bytes = fake.epochs.single().bytes.toByteArray()
+            assertEquals((frames + ir.size - 1) * 8, bytes.size)
+            val last = ByteBuffer.wrap(bytes, bytes.size - 8, 8).order(ByteOrder.LITTLE_ENDIAN)
+            assertEquals(.0625f, last.float, 1e-6f)
+            assertEquals(-.0625f, last.float, 1e-6f)
+        } finally { sink.reset() }
+    }
+
+    @Test fun rateConversionKeepsDurationTimestampAndBackpressureAcrossSeek() {
+        val fake = RecordingSink().apply { writePattern = intArrayOf(0, 19, 7, 1024) }
+        val policy = com.aurora.music.playback.engine.OutputRatePolicy(
+            mode = com.aurora.music.playback.engine.OutputRateMode.FIXED, fixedRate = 96_000)
+        val sink = PrecisionAudioSink(fake.delegate, PrecisionBlockProcessor(), PcmLevelMeter(), { policy }, { intArrayOf(48_000, 96_000) })
+        try {
+            sink.configure(format(C.ENCODING_PCM_24BIT), 0, null)
+            val frames = 5003
+            repeat(2) { run ->
+                if (run > 0) { sink.flush(); fake.clearCapturedOutput() }
+                val start = 1_000_000L + run * 4_000_000L
+                send(sink, pcm24(IntArray(frames * 2) { if (it % 2 == 0) 100_000 else -200_000 }), start)
+                end(sink)
+                val epoch = fake.epochs.single()
+                assertEquals(96_000, epoch.format.sampleRate)
+                assertEquals(frames * 2 * 8, epoch.bytes.size())
+                epoch.starts.forEach { assertEquals(start + it.offsetBytes / 8 * 1_000_000L / 96_000, it.timeUs) }
+                assertTrue(fake.zeroWrites > 0)
+                assertNull(sink.rateFallbackReason)
+            }
+        } finally { sink.reset() }
+    }
+
+    @Test fun unsupportedRatePolicyFallsBackToSourceWithReason() {
+        val fake = RecordingSink()
+        val policy = com.aurora.music.playback.engine.OutputRatePolicy(
+            mode = com.aurora.music.playback.engine.OutputRateMode.FIXED, fixedRate = 192_000)
+        val sink = PrecisionAudioSink(fake.delegate, PrecisionBlockProcessor(), PcmLevelMeter(), { policy }, { intArrayOf(48_000) })
+        try {
+            sink.configure(format(C.ENCODING_PCM_24BIT), 0, null)
+            send(sink, pcm24(IntArray(514) { 100 }), 0)
+            end(sink)
+            assertEquals(48_000, fake.epochs.single().format.sampleRate)
+            assertNotNull(sink.rateFallbackReason)
+        } finally { sink.reset() }
+    }
+
+    @Test fun rateConversionCanRecoverAnInitiallyUnknownTimestamp() {
+        val fake = RecordingSink()
+        val policy = com.aurora.music.playback.engine.OutputRatePolicy(
+            mode = com.aurora.music.playback.engine.OutputRateMode.FIXED, fixedRate = 96_000)
+        val sink = PrecisionAudioSink(fake.delegate, PrecisionBlockProcessor(), PcmLevelMeter(), { policy }, { intArrayOf(96_000) })
+        try {
+            sink.configure(format(C.ENCODING_PCM_24BIT), 0, null)
+            send(sink, pcm24(IntArray(256) { 1000 }), C.TIME_UNSET)
+            send(sink, pcm24(IntArray(1792) { 1000 }), 900_000L + 128 * 1_000_000L / 48_000)
+            end(sink)
+            val starts = fake.epochs.single().starts
+            assertTrue(starts.any { it.timeUs == C.TIME_UNSET })
+            assertTrue(starts.any { it.timeUs != C.TIME_UNSET })
+            starts.filter { it.timeUs != C.TIME_UNSET }.forEach {
+                assertEquals(900_000L + it.offsetBytes / 8 * 1_000_000L / 96_000, it.timeUs)
+            }
+        } finally { sink.reset() }
+    }
+
     @Test fun quietPcm24SurvivesEffectsAndConvolutionWithoutIntermediateQuantization() {
         val fake = RecordingSink()
         val processor = PrecisionBlockProcessor().apply {
@@ -130,7 +238,7 @@ class PrecisionAudioSinkDeviceTest {
             send(sink, pcm24(IntArray(2_105 * 2)), 5_000_000)
             end(sink)
             val bytes = fake.epochs.flatMap { it.bytes.toByteArray().asIterable() }.toByteArray()
-            assertEquals(2_105 * 8, bytes.size)
+            assertEquals((2_105 + 1_499) * 8, bytes.size)
             val silence = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
             while (silence.hasRemaining()) assertEquals("No pre-seek filter, delay or IR history", 0f, silence.float, 0f)
             assertEquals(5_000_000L, fake.epochs.last().starts.first().timeUs)

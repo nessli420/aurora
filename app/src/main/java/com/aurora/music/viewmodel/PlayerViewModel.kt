@@ -3,6 +3,8 @@ package com.aurora.music.viewmodel
 import android.app.Application
 import android.content.ComponentName
 import android.net.Uri
+import android.os.Bundle
+import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -10,6 +12,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
@@ -20,15 +23,25 @@ import com.aurora.music.data.isRadio
 import com.aurora.music.data.toSavedTrack
 import com.aurora.music.model.Song
 import com.aurora.music.playback.PlaybackService
+import com.aurora.music.playback.PresetContextPublisher
+import com.aurora.music.playback.MediaSearchRequest
+import com.aurora.music.data.PlaybackCollectionIdentity
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withTimeout
+import kotlin.coroutines.resume
 import kotlin.math.pow
 
 enum class RepeatMode { OFF, ALL, ONE }
@@ -61,6 +74,7 @@ data class PlayerUiState(
     val hasTrack: Boolean get() = current.id.isNotEmpty()
 }
 
+@OptIn(UnstableApi::class)
 class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     private val container = (app as AuroraApplication).container
@@ -72,6 +86,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var ticker: Job? = null
     private var sleepJob: Job? = null
     private var queueFillJob: Job? = null
+    private var mediaSearchJob: Job? = null
+    private var playbackRequestGeneration = 0L
+    private val initialQueueReady = CompletableDeferred<Unit>()
+    private var queueToken: String? = null
     private var songById: Map<String, Song> = emptyMap()
 
     @Volatile private var scrobbleEnabled = true
@@ -188,6 +206,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 playingAccountKey = container.currentAccountKey()
                 val saved = playingAccountKey.takeIf { it.isNotBlank() }?.let { container.queueStore.get(it) }
                 if (c.mediaItemCount == 0 && saved != null) restoreQueue(saved)
+                initialQueueReady.complete(Unit)
             }
         }
 
@@ -230,6 +249,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun stopPlayback() {
+        cancelMediaSearch()
+        cancelQueueFill()
         container.mixController.commands.tryEmit(com.aurora.music.mix.MixCommand.Stop)
         controller?.let { c ->
             runCatching { c.pause(); c.stop(); c.clearMediaItems() }
@@ -453,10 +474,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 .setArtist(song.artist)
                 .setAlbumTitle(song.album)
                 .apply { if (song.artworkUrl.isNotBlank()) setArtworkUri(Uri.parse(song.artworkUrl)) }
-                .setExtras(android.os.Bundle().apply {
-                    putFloat("rgTrack", song.replayGainTrack)
-                    putFloat("rgAlbum", song.replayGainAlbum)
-                })
+                .setExtras(PresetContextPublisher.extras(song, container.repository.playbackSourceIdentity(song)))
                 .build()
         )
         .build()
@@ -464,10 +482,15 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private fun leaveMixThen(action: () -> Unit): Boolean {
         val c = controller ?: return false
         if (container.mixController.state.value.projectId.isBlank() && !c.currentMediaItem?.mediaId.orEmpty().startsWith("aurora-mix:")) return false
+        val generation = playbackRequestGeneration
+        val account = container.currentAccountKey()
+        val epoch = container.accountEpoch.value
         val future = c.sendCustomCommand(SessionCommand(PlaybackService.CMD_EXIT_MIX, android.os.Bundle.EMPTY), android.os.Bundle.EMPTY)
         future.addListener({
             viewModelScope.launch {
                 repeat(100) {
+                    if (generation != playbackRequestGeneration || epoch != container.accountEpoch.value ||
+                        account != container.currentAccountKey() || container.sessionReady.value != true) return@launch
                     if (c.isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) { action(); return@launch }
                     delay(20)
                 }
@@ -476,58 +499,148 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         return true
     }
 
-    fun playAll(songs: List<Song>, startIndex: Int = 0) {
-        if (leaveMixThen { playAll(songs, startIndex) }) return
+    fun playAll(songs: List<Song>, startIndex: Int = 0, collection: PlaybackCollectionIdentity? = null) {
+        cancelMediaSearch()
+        if (leaveMixThen { playAll(songs, startIndex, collection) }) return
         val c = controller ?: return
         if (songs.isEmpty()) return
         container.haptic()
         playingAccountKey = container.currentAccountKey()
-        songById = songs.associateBy { it.id }
+        val contextual = songs.map { it.copy(playbackCollection = collection) }
+        songById = contextual.associateBy { it.id }
         val idx = startIndex.coerceIn(0, songs.lastIndex)
-        val delivery = deliverQueue(songs, idx, 0L)
+        val delivery = deliverQueue(contextual, idx, 0L)
         c.playbackParameters = currentParams()
         c.prepare()
         c.play()
         // fresh context plays in order make sure shuffle is off
         sendShuffle(0)
-        _state.update { it.copy(queue = delivery.songs, currentIndex = delivery.currentIndex, current = songs[idx], positionSec = 0f, isPlaying = true) }
+        _state.update { it.copy(queue = delivery.songs, currentIndex = delivery.currentIndex, current = contextual[idx], positionSec = 0f, isPlaying = true) }
     }
 
     fun play(song: Song) = playAll(listOf(song), 0)
 
+    fun playFromSearch(request: MediaSearchRequest) {
+        cancelMediaSearch()
+        mediaSearchJob = viewModelScope.launch {
+            try {
+                withTimeout(15_000) {
+                    container.sessionReady.first { it == true }
+                    initialQueueReady.await()
+                    val epoch = container.accountEpoch.value
+                    val account = container.currentAccountKey()
+                    if (request.kind == MediaSearchRequest.Kind.RESUME) {
+                        controller?.takeIf { it.mediaItemCount > 0 }?.let {
+                            if (it.playbackState == Player.STATE_ENDED) it.seekToDefaultPosition()
+                            if (it.playbackState == Player.STATE_IDLE) it.prepare()
+                            it.play()
+                        }
+                    } else {
+                        val songs = request.resolve(container.repository::search, container.repository::collectionTracks,
+                            container.repository::allPlaylists)
+                        ensureActive()
+                        if (container.accountEpoch.value == epoch && container.currentAccountKey() == account &&
+                            container.sessionReady.value == true && songs.isNotEmpty()) {
+                            mediaSearchJob = null
+                            playAll(songs)
+                        }
+                    }
+                }
+            } catch (cancelled: CancellationException) {
+                throw cancelled
+            } catch (_: Exception) {
+                android.widget.Toast.makeText(getApplication(), "Couldn't play this search.", android.widget.Toast.LENGTH_SHORT).show()
+            }
+        }
+    }
+
+    private fun cancelMediaSearch() {
+        playbackRequestGeneration++
+        mediaSearchJob?.cancel()
+        mediaSearchJob = null
+    }
+
     fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) {
+        cancelMediaSearch()
         if (leaveMixThen { playCollection(kind, id, loaded, startIndex, total) }) return
-        playAll(loaded, startIndex)
-        fillQueue(kind, id, loaded, total, shuffle = false)
+        val collection = container.repository.playbackCollectionIdentity(kind, id)
+        playAll(loaded, startIndex, collection)
+        fillQueue(kind, id, loaded, total, shuffle = false, collection = collection)
     }
 
     fun shuffleCollection(kind: String, id: String, loaded: List<Song>, total: Int) {
+        cancelMediaSearch()
         if (leaveMixThen { shuffleCollection(kind, id, loaded, total) }) return
-        shufflePlay(loaded)
-        fillQueue(kind, id, loaded, total, shuffle = true)
+        val collection = container.repository.playbackCollectionIdentity(kind, id)
+        shufflePlay(loaded, collection)
+        fillQueue(kind, id, loaded, total, shuffle = true, collection = collection)
     }
 
     private data class QueueDelivery(val songs: List<Song>, val currentIndex: Int)
+
+    private fun cancelQueueFill() {
+        queueFillJob?.cancel()
+        queueFillJob = null
+    }
+
+    private fun queueItem(song: Song, token: String): MediaItem {
+        val item = toMediaItem(song)
+        val extras = Bundle(item.mediaMetadata.extras ?: Bundle.EMPTY).apply {
+            putString(PlaybackService.QUEUE_TOKEN, token)
+        }
+        return item.buildUpon().setMediaMetadata(item.mediaMetadata.buildUpon().setExtras(extras).build()).build()
+    }
+
+    private suspend fun appendQueue(c: MediaController, token: String, expectedCount: Int,
+        songs: List<Song>, prepend: Boolean = false, waitForInitialQueue: Boolean = false): Boolean {
+        if (controller !== c) return false
+        val args = Bundle().apply {
+            putString("token", token)
+            putInt("count", expectedCount)
+            putBoolean("prepend", prepend)
+            putParcelableArrayList("items", ArrayList(songs.map { queueItem(it, token).toBundleIncludeLocalConfiguration() }))
+        }
+        val deadline = android.os.SystemClock.elapsedRealtime() + if (waitForInitialQueue) 2_000 else 0
+        while (true) {
+            val future = c.sendCustomCommand(SessionCommand(PlaybackService.CMD_QUEUE_APPEND, Bundle.EMPTY), args)
+            val result = suspendCancellableCoroutine<androidx.media3.session.SessionResult?> { continuation ->
+                future.addListener({
+                    if (continuation.isActive) continuation.resume(runCatching { future.get() }.getOrNull())
+                }, ContextCompat.getMainExecutor(getApplication()))
+                continuation.invokeOnCancellation { future.cancel(false) }
+            }
+            if (result?.resultCode == androidx.media3.session.SessionResult.RESULT_SUCCESS) return true
+            val reason = result?.extras?.getString("reason") ?: "session unavailable"
+            if (reason != "queue changed" || android.os.SystemClock.elapsedRealtime() >= deadline) {
+                android.util.Log.w("AuroraQueue", "Backfill stopped: $reason; expected=$expectedCount; actual=${result?.extras?.getInt("count", -1)}")
+                return false
+            }
+            delay(25)
+        }
+    }
 
     // sets a safe initial window (containing startIndex) then backfills the rest of a large in-memory
     // list in chunks, forward first then the songs before startIndex prepended so skip-back still works.
     // returns whatever was actually included in the synchronous setMediaItems call, and where the
     // "current" song landed within it — the controller resets to a local index for the windowed case.
     private fun deliverQueue(songs: List<Song>, startIndex: Int, startPositionMs: Long): QueueDelivery {
+        cancelQueueFill()
         val c = controller ?: return QueueDelivery(emptyList(), 0)
+        val token = java.util.UUID.randomUUID().toString().also { queueToken = it }
         if (songs.size <= QUEUE_BATCH) {
-            c.setMediaItems(songs.map { toMediaItem(it) }, startIndex, startPositionMs)
+            c.setMediaItems(songs.map { queueItem(it, token) }, startIndex, startPositionMs)
             return QueueDelivery(songs, startIndex)
         }
         val windowEnd = (startIndex + QUEUE_BATCH).coerceAtMost(songs.size)
         val initial = songs.subList(startIndex, windowEnd)
-        c.setMediaItems(initial.map { toMediaItem(it) }, 0, startPositionMs)
-        queueFillJob?.cancel()
+        c.setMediaItems(initial.map { queueItem(it, token) }, 0, startPositionMs)
         queueFillJob = viewModelScope.launch {
+            var delivered = initial.size
             var tail = windowEnd
             while (tail < songs.size) {
                 val chunk = songs.subList(tail, (tail + QUEUE_BATCH).coerceAtMost(songs.size))
-                c.addMediaItems(chunk.map { toMediaItem(it) })
+                if (!appendQueue(c, token, delivered, chunk, waitForInitialQueue = delivered == initial.size)) return@launch
+                delivered += chunk.size
                 syncFromController()
                 tail += chunk.size
                 delay(40)
@@ -535,7 +648,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             var head = startIndex
             while (head > 0) {
                 val chunkStart = (head - QUEUE_BATCH).coerceAtLeast(0)
-                c.addMediaItems(0, songs.subList(chunkStart, head).map { toMediaItem(it) })
+                val chunk = songs.subList(chunkStart, head)
+                if (!appendQueue(c, token, delivered, chunk, prepend = true, waitForInitialQueue = delivered == initial.size)) return@launch
+                delivered += chunk.size
                 syncFromController()
                 head = chunkStart
                 delay(40)
@@ -544,22 +659,29 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         return QueueDelivery(initial, 0)
     }
 
-    private fun fillQueue(kind: String, id: String, loaded: List<Song>, total: Int, shuffle: Boolean) {
-        queueFillJob?.cancel()
+    private fun fillQueue(kind: String, id: String, loaded: List<Song>, total: Int, shuffle: Boolean, collection: PlaybackCollectionIdentity?) {
+        cancelQueueFill()
         if (loaded.size >= total || total <= 0) return
         queueFillJob = viewModelScope.launch {
             val c = controller ?: return@launch
+            val token = queueToken ?: return@launch
+            var delivered = c.mediaItemCount
+            val initialCount = delivered
             val have = loaded.mapTo(HashSet()) { it.id }
             var offset = loaded.size
             while (offset < total) {
                 val page = runCatching { container.repository.detailPage(kind, id, offset) }.getOrDefault(emptyList())
+                ensureActive()
                 if (page.isEmpty()) break
                 val fresh = page.filter { it.id.isNotEmpty() && have.add(it.id) }
                 if (fresh.isNotEmpty()) {
-                    val toAdd = if (shuffle) fresh.shuffled() else fresh
-                    songById = songById + toAdd.associateBy { it.id }
-                    c.addMediaItems(toAdd.map { toMediaItem(it) })
-                    syncFromController()
+                    val toAdd = (if (shuffle) fresh.shuffled() else fresh).map { it.copy(playbackCollection = collection) }
+                    for (chunk in toAdd.chunked(QUEUE_BATCH)) {
+                        if (!appendQueue(c, token, delivered, chunk, waitForInitialQueue = delivered == initialCount)) return@launch
+                        delivered += chunk.size
+                        songById = songById + chunk.associateBy { it.id }
+                        syncFromController()
+                    }
                 }
                 offset += page.size
                 delay(180) // stay clear of spotify rate limit
@@ -568,6 +690,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun startSonicRadio(seed: Song = _state.value.current, onResult: (String) -> Unit = {}) {
+        cancelMediaSearch()
         if (seed.id.isEmpty() || loadingRadio) return
         loadingRadio = true
         viewModelScope.launch {
@@ -590,6 +713,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun startAutoDj(seed: Song = _state.value.current, onResult: (String) -> Unit = {}) {
+        cancelMediaSearch()
         if (seed.id.isEmpty() || loadingRadio) return
         loadingRadio = true
         viewModelScope.launch {
@@ -606,13 +730,15 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun shufflePlay(songs: List<Song>) {
-        if (leaveMixThen { shufflePlay(songs) }) return
+    fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity? = null) {
+        cancelMediaSearch()
+        if (leaveMixThen { shufflePlay(songs, collection) }) return
         val c = controller ?: return
         if (songs.isEmpty()) return
         playingAccountKey = container.currentAccountKey()
-        songById = songs.associateBy { it.id }
-        val shuffled = songs.shuffled()
+        val contextual = songs.map { it.copy(playbackCollection = collection) }
+        songById = contextual.associateBy { it.id }
+        val shuffled = contextual.shuffled()
         val delivery = deliverQueue(shuffled, 0, 0L)
         c.playbackParameters = currentParams()
         c.prepare()
@@ -649,6 +775,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun jumpTo(index: Int) {
+        cancelMediaSearch()
         val c = controller ?: return
         container.haptic()
         if (index in 0 until c.mediaItemCount) {
@@ -702,23 +829,27 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun togglePlay() {
+        cancelMediaSearch()
         val c = controller ?: return
         container.haptic()
         if (c.isPlaying) c.pause() else c.play()
     }
 
     fun seekTo(fraction: Float) {
+        cancelMediaSearch()
         val c = controller ?: return
         val dur = _state.value.durationSec
         if (dur > 0) c.seekTo((fraction.coerceIn(0f, 1f) * dur * 1000).toLong())
     }
 
     fun next() {
+        cancelMediaSearch()
         container.haptic()
         controller?.seekToNextMediaItem()
     }
 
     fun previous() {
+        cancelMediaSearch()
         val c = controller ?: return
         container.haptic()
         if (c.currentPosition > 4000) c.seekTo(0) else c.seekToPreviousMediaItem()

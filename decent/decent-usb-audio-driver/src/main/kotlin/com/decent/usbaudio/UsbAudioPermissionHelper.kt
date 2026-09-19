@@ -39,7 +39,7 @@ object UsbAudioPermissionHelper {
         Log.i(TAG, "USB_DEVICE_ATTACHED: ${device.productName}")
 
         val usbAudioDevice = UsbAudioDevice.getInstance(context)
-        val audioDevice = usbAudioDevice.findUsbAudioDevice() ?: return null
+        val audioDevice = device.takeIf { usbAudioDevice.isAudioOutput(it) && usbAudioDevice.isAttached(it) } ?: return null
 
         if (usbAudioDevice.hasPermission(audioDevice)) {
             val info = usbAudioDevice.openDevice(audioDevice)

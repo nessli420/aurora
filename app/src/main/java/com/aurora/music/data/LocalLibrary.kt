@@ -20,6 +20,7 @@ class LocalLibrary(
     private val context: Context,
     // scanned replaygain overlaid by path since mediastore tags rarely carry it
     private val gainProvider: (String) -> Pair<Float, Float>? = { null },
+    private val separatorsProvider: suspend () -> ArtistSeparators = { ArtistSeparators() },
 ) {
 
     @Volatile private var loaded = false
@@ -29,6 +30,9 @@ class LocalLibrary(
     @Volatile var albums: List<Album> = emptyList(); private set
     @Volatile var artists: List<Artist> = emptyList(); private set
     private var byId: Map<String, Song> = emptyMap()
+    private var rawSongs: List<Song> = emptyList()
+    @Volatile private var artistIndex = LocalArtistIndex(emptyList(), ArtistSeparators())
+    @Volatile private var appliedSeparators: ArtistSeparators? = null
 
     @Volatile private var matchIndex: Map<String, List<Song>> = emptyMap()
 
@@ -37,14 +41,17 @@ class LocalLibrary(
     @Volatile var folderRoot: String = ""; private set
 
     suspend fun ensureLoaded() {
-        if (loaded) return
+        val separators = separatorsProvider()
+        if (loaded && separators == appliedSeparators) return
         mutex.withLock {
-            if (!loaded) { scan(); loaded = true }
+            val current = separatorsProvider()
+            if (!loaded) { scan(current); loaded = true }
+            else if (current != appliedSeparators) withContext(Dispatchers.IO) { indexArtists(current) }
         }
     }
 
     suspend fun refresh() {
-        mutex.withLock { scan(); loaded = true }
+        mutex.withLock { scan(separatorsProvider()); loaded = true }
     }
 
     fun song(id: String): Song? = byId[id]
@@ -82,9 +89,10 @@ class LocalLibrary(
     }
     fun songsIn(album: Album): List<Song> = songs.filter { it.albumId == album.id }
     fun songsByAlbumId(albumId: String): List<Song> = songs.filter { it.albumId == albumId }
-    fun songsByArtistId(artistId: String): List<Song> = songs.filter { it.artistId == artistId }
+    fun artist(id: String): Artist? = artistIndex.artist(id)
+    fun songsByArtistId(artistId: String): List<Song> = artistIndex.songsBy(artistId)
     fun albumsByArtistId(artistId: String): List<Album> =
-        songs.filter { it.artistId == artistId }.map { it.albumId }.distinct()
+        songsByArtistId(artistId).map { it.albumId }.distinct()
             .mapNotNull { aid -> albums.firstOrNull { it.id == aid } }
 
     private fun albumArtUri(albumId: Long): String =
@@ -105,7 +113,7 @@ class LocalLibrary(
         }
     }
 
-    private suspend fun scan() = withContext(Dispatchers.IO) {
+    private suspend fun scan(separators: ArtistSeparators) = withContext(Dispatchers.IO) {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val cols = arrayListOf(
             MediaStore.Audio.Media._ID,
@@ -193,8 +201,8 @@ class LocalLibrary(
                 }
             }
         }
-        songs = out
-        byId = out.associateBy { it.id }
+        rawSongs = out
+        indexArtists(separators)
         matchIndex = out.groupBy { TrackMatch.key(it.artist, it.title) }
         dirOf = dirs
         folderRoot = commonDir(dirs.values)
@@ -212,16 +220,15 @@ class LocalLibrary(
                 )
             }
             .sortedByDescending { albumDateAdded[it.id] ?: 0L }
-        artists = out.groupBy { it.artistId }
-            .map { (aid, tracks) ->
-                Artist(
-                    id = aid,
-                    name = tracks.first().artist,
-                    imageUrl = tracks.firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl ?: "",
-                    monthlyListeners = 0,
-                )
-            }
-            .sortedBy { it.name.lowercase() }
+    }
+
+    private fun indexArtists(separators: ArtistSeparators) {
+        val index = LocalArtistIndex(rawSongs, separators)
+        artistIndex = index
+        songs = index.songs
+        artists = index.artists
+        byId = index.songs.associateBy { it.id }
+        appliedSeparators = separators
     }
 
     private companion object {

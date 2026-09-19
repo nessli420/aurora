@@ -2,6 +2,11 @@ package com.decent.usbaudio
 
 import android.util.Log
 
+data class NativeEngineStatus(val running: Boolean = false, val paused: Boolean = false, val completed: Boolean = false,
+    val errorCode: Int = 0, val speed: Double = 1.0, val crossfadeActive: Boolean = false) {
+    val error: String? get() = if (errorCode == 0) null else if (errorCode == 84) "Native FLAC decoding failed." else "Native USB playback failed (error $errorCode)."
+}
+
 /**
  * Native FLAC decode → USB audio engine.
  *
@@ -26,10 +31,17 @@ class NativeAudioEngine {
     private var handle: Long = 0L
 
     /** True when the engine has been created and not yet destroyed. */
-    val isCreated: Boolean get() = handle != 0L
+    val isCreated: Boolean @Synchronized get() = handle != 0L
 
     /** True when the decode thread is actively running. */
-    val isRunning: Boolean get() = handle != 0L && nativeIsRunning(handle)
+    val isRunning: Boolean @Synchronized get() = handle != 0L && nativeIsRunning(handle)
+    val status: NativeEngineStatus @Synchronized get() {
+        if (handle == 0L) return NativeEngineStatus()
+        val values = nativeGetStatus(handle) ?: return NativeEngineStatus()
+        return NativeEngineStatus(values[0] != 0L, values[1] != 0L, values[2] != 0L, values[3].toInt(), values[4] / 1_000_000.0, values[5] != 0L)
+    }
+    val completed: Boolean get() = status.completed
+    val error: String? get() = status.error
 
     /**
      * Create the engine from a file descriptor pointing to a FLAC file.
@@ -38,6 +50,7 @@ class NativeAudioEngine {
      * @param usbHandle   Native handle from [UsbAudioStream] (the USB output context).
      * @return true if creation succeeded (FLAC metadata parsed, buffers allocated).
      */
+    @Synchronized
     fun createFromFd(flacFd: Int, usbHandle: Long): Boolean {
         if (handle != 0L) {
             Log.w(TAG, "Engine already created, destroying first")
@@ -53,17 +66,20 @@ class NativeAudioEngine {
     }
 
     /** Start the decode thread. Audio flows immediately to USB. */
+    @Synchronized
     fun start(paused: Boolean = false): Boolean {
         if (handle == 0L) return false
         return nativeStart(handle, paused)
     }
 
     /** Pause the decode loop (thread stays alive, USB pipeline drains). */
+    @Synchronized
     fun pause() {
         if (handle != 0L) nativePause(handle)
     }
 
     /** Resume the decode loop after pause. */
+    @Synchronized
     fun resume() {
         if (handle != 0L) nativeResume(handle)
     }
@@ -71,6 +87,7 @@ class NativeAudioEngine {
     /** Set the varispeed ratio (1.0 = untouched bit-perfect). Values outside [0.5, 2.0] are clamped
      *  natively. When != 1.0 the decode thread linearly resamples each block before USB output, so the
      *  stream is no longer strictly bit-perfect (tempo + pitch shift together). */
+    @Synchronized
     fun setSpeed(speed: Double) {
         if (handle != 0L) nativeSetSpeed(handle, speed)
     }
@@ -79,6 +96,7 @@ class NativeAudioEngine {
      *  at [fd] from [startUs] as a fade-out secondary, equal-power mixed over [fadeUs]. The fd is dup'd
      *  natively, so the caller may close its descriptor immediately. The outgoing file must match this
      *  engine's rate/channels/bit-depth or the crossfade is silently skipped (plain playback). */
+    @Synchronized
     fun startTailFade(fd: Int, startUs: Long, fadeUs: Long, curve: Int = 0, protect: Boolean = true) {
         if (handle != 0L) nativeStartTailFade(handle, fd, startUs, fadeUs, curve, protect)
     }
@@ -90,6 +108,7 @@ class NativeAudioEngine {
      * @param positionUs Target position in microseconds.
      * @return true if seek was accepted (async — actual seek happens in decode thread).
      */
+    @Synchronized
     fun seek(positionUs: Long): Boolean {
         if (handle == 0L) return false
         return nativeSeek(handle, positionUs)
@@ -111,18 +130,22 @@ class NativeAudioEngine {
     }
 
     /** Current playback position in microseconds (from decoded frames). */
+    @Synchronized
     fun getPositionUs(): Long =
         if (handle != 0L) nativeGetPositionUs(handle) else 0L
 
     /** FLAC file sample rate (e.g., 96000). */
+    @Synchronized
     fun getSampleRate(): Int =
         if (handle != 0L) nativeGetSampleRate(handle) else 0
 
     /** FLAC file channel count (e.g., 2). */
+    @Synchronized
     fun getChannels(): Int =
         if (handle != 0L) nativeGetChannels(handle) else 0
 
     /** FLAC file bits per sample (e.g., 24). */
+    @Synchronized
     fun getBitsPerSample(): Int =
         if (handle != 0L) nativeGetBitsPerSample(handle) else 0
 
@@ -151,6 +174,7 @@ class NativeAudioEngine {
     private external fun nativeGetBitsPerSample(handle: Long): Int
     private external fun nativeIsRunning(handle: Long): Boolean
     private external fun nativeReadVisualizer(handle: Long, out: FloatArray): Int
+    private external fun nativeGetStatus(handle: Long): LongArray?
 
     companion object {
         private const val TAG = "NativeAudioEngine"

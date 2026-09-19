@@ -2,6 +2,8 @@ package com.aurora.music.data
 
 import com.aurora.music.data.ir.ImpulseLibraryCodec
 import com.aurora.music.data.ir.ImpulseLibraryFiles
+import com.aurora.music.data.rules.PresetRuleCodec
+import com.aurora.music.data.rules.PresetRuleSessionCodec
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
@@ -21,11 +23,12 @@ object BackupArchive {
     const val MAX_METADATA_BYTES = 16L * 1024 * 1024
     const val MAX_ASSET_BYTES = 64L * 1024 * 1024
     const val MAX_ARCHIVE_BYTES = 512L * 1024 * 1024
-    private const val MAX_ASSETS = 165
+    private const val MAX_ASSETS = 1024
     // reserve space for compression overhead and zip records.
     private const val ZIP_OVERHEAD_BYTES = 1024L * 1024
     const val PRESETS_KEY = "processing_presets_v1"
     const val IR_PATH_KEY = "dsp_conv_path"
+    const val ACTIVE_RACK_IR_KEY = "processing_active_rack_impulses_v1"
     private const val PREFIX = "aurora-ir:"
     private val gson = Gson()
     private val hashPattern = Regex("[0-9a-f]{64}")
@@ -192,6 +195,14 @@ object BackupArchive {
         }
         o.addProperty("createdAt", created.toLong()); o.addProperty("localStore", local)
         val result = gson.fromJson(o, AuroraBackup::class.java)
+        require(listOf(UsbOutputPolicy.MODE_KEY, UsbOutputPolicy.FALLBACK_KEY, LocalProfileCodec.KEY,
+            ArtistSeparatorsCodec.KEY).all { it !in allKeys || it in result.prefs.strings }) {
+            "Backup contains an invalid setting type."
+        }
+        UsbOutputPolicy.decodeMode(result.prefs.strings[UsbOutputPolicy.MODE_KEY]).getOrThrow()
+        UsbOutputPolicy.decodeFallback(result.prefs.strings[UsbOutputPolicy.FALLBACK_KEY]).getOrThrow()
+        LocalProfileCodec.decode(result.prefs.strings[LocalProfileCodec.KEY])
+        ArtistSeparatorsCodec.decode(result.prefs.strings[ArtistSeparatorsCodec.KEY])
         val library = ProcessingPresetCodec.decode(result.prefs.strings[PRESETS_KEY])
         require(library.error == null) { library.error.orEmpty() }
         result.prefs.strings[ProcessingRackCodec.PREFERENCE_KEY]?.let { ProcessingRackCodec.decode(it).getOrThrow() }
@@ -200,15 +211,22 @@ object BackupArchive {
         com.aurora.music.data.tuning.TuningTargetCatalog.decodeLibrary(
             result.prefs.strings[com.aurora.music.data.tuning.TuningTargetCatalog.PREFERENCE_KEY]).getOrThrow()
         ImpulseLibraryCodec.decodeLibrary(result.prefs.strings[ImpulseLibraryCodec.PREFERENCE_KEY]).getOrThrow()
+        ImpulseLibraryCodec.decodeLibrary(result.prefs.strings[ACTIVE_RACK_IR_KEY]).getOrThrow()
         com.aurora.music.data.routes.ProcessingRouteCodec.decode(
             result.prefs.strings[com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY]).getOrThrow()
+        OutputRatePolicyCodec.decode(result.prefs.strings[OutputRatePolicyCodec.PREFERENCE_KEY]).getOrThrow()
+        RackSubchainCodec.decode(result.prefs.strings[RackSubchainCodec.PREFERENCE_KEY]).getOrThrow()
+        PresetRuleCodec.decode(result.prefs.strings[PresetRuleCodec.PREFERENCE_KEY]).getOrThrow()
+        PresetRuleSessionCodec.decode(result.prefs.strings[PresetRuleSessionCodec.PREFERENCE_KEY]).getOrThrow()
         return result
     }
 
     fun remap(backup: AuroraBackup, asset: (String, String) -> Pair<String, String>): AuroraBackup {
         val strings = backup.prefs.strings.toMutableMap()
         val rack = strings[ProcessingRackCodec.PREFERENCE_KEY]?.let { ProcessingRackCodec.decode(it).getOrThrow() }
-        val needsGlobalImpulse = if (rack?.enabled == true) rack.requiresImpulseResponse()
+        val needsGlobalImpulse = if (rack?.enabled == true) rack.nodes.any {
+            it.kind == RackNodeKind.CONVOLUTION && !it.bypass && it.wet > 0 && it.impulseId == null
+        }
             else backup.prefs.booleans["dsp_conv_enabled"] == true
         require(!needsGlobalImpulse || strings[IR_PATH_KEY].orEmpty().isNotBlank()) {
             "Enabled convolution has no shared impulse-response reference."
@@ -216,36 +234,53 @@ object BackupArchive {
         strings[IR_PATH_KEY]?.takeIf { it.isNotEmpty() }?.let { strings[IR_PATH_KEY] = asset(it, "").first }
         val library = ProcessingPresetCodec.decode(strings[PRESETS_KEY])
         require(library.error == null) { library.error.orEmpty() }
-        if (strings.containsKey(PRESETS_KEY)) strings[PRESETS_KEY] = ProcessingPresetCodec.encode(library.presets.map { preset ->
+        fun remapPreset(preset: ProcessingPreset): ProcessingPreset {
             require(!(preset.requiresImpulseResponse() || preset.irSha256.isNotEmpty()) || preset.audio.dspConvIrPath.isNotBlank()) {
                 "A saved preset has an incomplete impulse-response reference."
             }
             require(!preset.requiresImpulseResponse() || preset.irSha256.isNotEmpty()) {
                 "A saved preset's required impulse response has no checksum."
             }
-            if (preset.audio.dspConvIrPath.isEmpty()) preset else {
+            val mapped = preset.copy(rackImpulseAssets = ProcessingPresetAssets.remapEntries(preset.rackImpulseAssets, asset))
+            return if (preset.audio.dspConvIrPath.isEmpty()) mapped else {
                 val (path, hash) = asset(preset.audio.dspConvIrPath, preset.irSha256)
-                preset.copy(audio = preset.audio.copy(dspConvIrPath = path), irSha256 = hash)
+                mapped.copy(audio = preset.audio.copy(dspConvIrPath = path), irSha256 = hash)
             }
-        })
-        strings[ImpulseLibraryCodec.PREFERENCE_KEY]?.let { json ->
-            val impulses = ImpulseLibraryCodec.decodeLibrary(json).getOrThrow().map { entry ->
-                val (path, hash) = asset(entry.sourcePath, entry.sourceSha256)
-                entry.copy(sourcePath = path, sourceSha256 = hash, prepared = entry.prepared?.let { prepared ->
-                    val (preparedPath, preparedHash) = asset(prepared.path, prepared.sha256)
-                    prepared.copy(path = preparedPath, sha256 = preparedHash)
-                })
-            }
-            strings[ImpulseLibraryCodec.PREFERENCE_KEY] = ImpulseLibraryCodec.encodeLibrary(impulses)
+        }
+        if (strings.containsKey(PRESETS_KEY)) strings[PRESETS_KEY] = ProcessingPresetCodec.encode(library.presets.map(::remapPreset))
+        PresetRuleSessionCodec.decode(strings[PresetRuleSessionCodec.PREFERENCE_KEY]).getOrThrow()?.let { session ->
+            strings[PresetRuleSessionCodec.PREFERENCE_KEY] = PresetRuleSessionCodec.encode(session.copy(
+                baseline = remapPreset(session.baseline), applied = remapPreset(session.applied)))
+        }
+        strings[RackSubchainCodec.PREFERENCE_KEY]?.let { json ->
+            strings[RackSubchainCodec.PREFERENCE_KEY] = RackSubchainCodec.encode(RackSubchainCodec.decode(json).getOrThrow().map {
+                it.copy(impulseAssets = ProcessingPresetAssets.remapEntries(it.impulseAssets, asset))
+            })
+        }
+        for (key in listOf(ImpulseLibraryCodec.PREFERENCE_KEY, ACTIVE_RACK_IR_KEY)) strings[key]?.let { json ->
+            val impulses = ProcessingPresetAssets.remapEntries(ImpulseLibraryCodec.decodeLibrary(json).getOrThrow(), asset)
+            strings[key] = ImpulseLibraryCodec.encodeLibrary(impulses)
         }
         return backup.copy(prefs = backup.prefs.copy(strings = strings))
     }
 
     private fun validateLibraryAssets(backup: AuroraBackup) {
-        ImpulseLibraryCodec.decodeLibrary(backup.prefs.strings[ImpulseLibraryCodec.PREFERENCE_KEY]).getOrThrow().forEach { entry ->
-            ImpulseLibraryFiles.validateAsset(entry, prepared = false).getOrThrow()
-            if (entry.prepared != null) ImpulseLibraryFiles.validateAsset(entry, prepared = true).getOrThrow()
+        val impulses = ImpulseLibraryCodec.decodeLibrary(backup.prefs.strings[ImpulseLibraryCodec.PREFERENCE_KEY]).getOrThrow() +
+            ImpulseLibraryCodec.decodeLibrary(backup.prefs.strings[ACTIVE_RACK_IR_KEY]).getOrThrow()
+        ProcessingPresetAssets.validateFiles(impulses)
+        val presets = ProcessingPresetCodec.decode(backup.prefs.strings[PRESETS_KEY])
+        require(presets.error == null) { presets.error.orEmpty() }
+        presets.presets.forEach { ProcessingPresetAssets.validateFiles(it.rackImpulseAssets) }
+        PresetRuleSessionCodec.decode(backup.prefs.strings[PresetRuleSessionCodec.PREFERENCE_KEY]).getOrThrow()?.let {
+            ProcessingPresetAssets.validateFiles(it.baseline.rackImpulseAssets)
+            ProcessingPresetAssets.validateFiles(it.applied.rackImpulseAssets)
         }
+        RackSubchainCodec.decode(backup.prefs.strings[RackSubchainCodec.PREFERENCE_KEY]).getOrThrow().forEach {
+            ProcessingPresetAssets.validateFiles(it.impulseAssets)
+        }
+        val ids = impulses.map { it.id }.toSet()
+        val racks = listOfNotNull(backup.prefs.strings[ProcessingRackCodec.PREFERENCE_KEY]?.let { ProcessingRackCodec.decode(it).getOrThrow() })
+        require(racks.flatMap { it.nodes }.mapNotNull { it.impulseId }.all { it in ids }) { "A rack impulse is missing from the library." }
     }
 
     fun assetHash(reference: String): String = reference.removePrefix(PREFIX).also {

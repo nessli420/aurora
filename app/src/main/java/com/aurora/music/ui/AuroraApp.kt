@@ -107,6 +107,8 @@ fun AuroraApp() {
     val downloadsMap by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val downloadedIds = downloadsMap.keys
     val localMode = session?.type == com.aurora.music.data.ServerType.LOCAL
+    val localAppearance by container.localProfileAppearance.collectAsStateWithLifecycle()
+    val profileAppearance = com.aurora.music.data.profileAppearance(session, localAppearance)
     val serverTagEditing = session?.let { container.repository.supportsServerTagEdit } ?: false
     // pins scoped to the active connection
     val currentServer = session?.server ?: ""
@@ -284,9 +286,9 @@ fun AuroraApp() {
         drawerContent = {
             ModalDrawerSheet(drawerState = drawerState, drawerContainerColor = MaterialTheme.colorScheme.surface) {
                 SidebarContent(
-                    username = session?.username ?: "",
+                    username = profileAppearance.name,
                     server = session?.server ?: "",
-                    avatarUrl = session?.imageUrl ?: "",
+                    avatarUrl = profileAppearance.avatarUrl,
                     onProfile = { closeDrawerThen { navController.navigate(Routes.PROFILE) } },
                     onSettings = { closeDrawerThen { navController.navigate(Routes.SETTINGS) } },
                     onLibrary = { closeDrawerThen { navigateTopLevel(Routes.LIBRARY) } },
@@ -389,8 +391,8 @@ fun AuroraApp() {
                         HomeScreen(
                             contentPadding = inner,
                             state = homeState,
-                            username = session?.username ?: "",
-                            avatarUrl = session?.imageUrl ?: "",
+                            username = profileAppearance.name,
+                            avatarUrl = profileAppearance.avatarUrl,
                             onOpenDrawer = { openDrawer() },
                             onOpenSettings = { navController.navigate(Routes.SETTINGS) },
                             onOpenDetail = { kind, id -> openDetail(kind, id) },
@@ -473,7 +475,7 @@ fun AuroraApp() {
                         LibraryScreen(
                             contentPadding = inner,
                             state = libraryState,
-                            username = session?.username ?: "",
+                            username = profileAppearance.name,
                             likedIds = playerState.likedIds,
                             currentSongId = playerState.current.id,
                             isPlaying = playerState.isPlaying,
@@ -594,14 +596,18 @@ fun AuroraApp() {
                         )
                     }
                     composable(Routes.PROFILE) {
+                        var editing by remember { mutableStateOf(false) }
+                        if (editing && localMode) com.aurora.music.ui.screens.profile.LocalProfileDialog(onDismiss = { editing = false })
                         val homeVM: HomeViewModel = viewModel()
                         val homeState by homeVM.state.collectAsStateWithLifecycle()
                         ProfileScreen(
                             contentPadding = inner,
-                            username = session?.username ?: "",
+                            username = profileAppearance.name,
                             server = session?.server ?: "",
                             serverLabel = session?.typeLabel ?: "",
-                            avatarUrl = session?.imageUrl ?: "",
+                            bannerUrl = profileAppearance.bannerUrl,
+                            onEditProfile = if (localMode) ({ editing = true }) else null,
+                            avatarUrl = profileAppearance.avatarUrl,
                             playlists = homeState.data.playlists,
                             artists = homeState.data.artists,
                             onBack = { navController.popBackStack() },
@@ -708,8 +714,9 @@ fun AuroraApp() {
                     }
                     composable(Routes.SETTINGS) {
                         SettingsScreen(
+                            avatarUrl = profileAppearance.avatarUrl,
                             contentPadding = inner,
-                            username = session?.username ?: "",
+                            username = profileAppearance.name,
                             server = session?.server ?: "",
                             onBack = { navController.popBackStack() },
                             onOpenPlayback = { navController.navigate(Routes.SETTINGS_PLAYBACK) },
@@ -721,6 +728,8 @@ fun AuroraApp() {
                             onOpenProcessingRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
                             onOpenTuning = { navController.navigate(Routes.SETTINGS_TUNING) },
                             onOpenImpulses = { navController.navigate(Routes.SETTINGS_IMPULSES) },
+                            onOpenComparison = { navController.navigate(Routes.SETTINGS_COMPARISON) },
+                            onOpenPresetRules = { navController.navigate(Routes.SETTINGS_PRESET_RULES) },
                             onOpenVisualizer = { navController.navigate(Routes.SETTINGS_VISUALIZER) },
                             onOpenSonic = { navController.navigate(Routes.SETTINGS_SONIC) },
                             onOpenSources = { navController.navigate(Routes.SETTINGS_SOURCES) },
@@ -847,6 +856,16 @@ fun AuroraApp() {
                             contentPadding = inner, onBack = { navController.popBackStack() },
                         )
                     }
+                    composable(Routes.SETTINGS_COMPARISON) {
+                        com.aurora.music.ui.screens.settings.ComparisonScreen(
+                            contentPadding = inner, onBack = { navController.popBackStack() },
+                            onOpenPresets = { navController.navigate(Routes.SETTINGS_PROCESSING_PRESETS) },
+                            currentSource = playerState.current.streamUrl, currentTitle = playerState.current.title,
+                        )
+                    }
+                    composable(Routes.SETTINGS_PRESET_RULES) {
+                        com.aurora.music.ui.screens.settings.PresetRulesScreen(inner) { navController.popBackStack() }
+                    }
                     composable(Routes.SETTINGS_VISUALIZER) {
                         com.aurora.music.ui.screens.settings.VisualizerSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
                     }
@@ -854,7 +873,11 @@ fun AuroraApp() {
                         com.aurora.music.ui.screens.settings.SonicSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
                     }
                     composable(Routes.SETTINGS_SOURCES) {
-                        com.aurora.music.ui.screens.settings.SourcesSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                        com.aurora.music.ui.screens.settings.SourcesSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() },
+                            onArtistSeparators = { navController.navigate(Routes.SETTINGS_ARTIST_SEPARATORS) })
+                    }
+                    composable(Routes.SETTINGS_ARTIST_SEPARATORS) {
+                        com.aurora.music.ui.screens.settings.ArtistSeparatorsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
                     }
                     composable(Routes.SETTINGS_PERMISSIONS) {
                         com.aurora.music.ui.screens.settings.PermissionsScreen(contentPadding = inner, onBack = { navController.popBackStack() })

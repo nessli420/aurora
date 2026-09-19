@@ -6,7 +6,9 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.os.Build
+import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.AlarmPrefs
 import kotlinx.coroutines.CoroutineScope
@@ -56,6 +58,7 @@ object AlarmScheduler {
 }
 
 class AlarmReceiver : BroadcastReceiver() {
+    @OptIn(UnstableApi::class)
     override fun onReceive(context: Context, intent: Intent) {
         if (intent.action !in RESCHEDULE_ACTIONS) return
         val appContext = context.applicationContext

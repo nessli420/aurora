@@ -53,6 +53,7 @@ fun SettingsScreen(
     contentPadding: PaddingValues,
     username: String,
     server: String,
+    avatarUrl: String = "",
     onBack: () -> Unit,
     onOpenPlayback: () -> Unit,
     onOpenOutput: () -> Unit,
@@ -63,6 +64,8 @@ fun SettingsScreen(
     onOpenProcessingRack: () -> Unit,
     onOpenTuning: () -> Unit,
     onOpenImpulses: () -> Unit,
+    onOpenComparison: () -> Unit,
+    onOpenPresetRules: () -> Unit,
     onOpenVisualizer: () -> Unit,
     onOpenSonic: () -> Unit,
     onOpenSources: () -> Unit,
@@ -113,8 +116,8 @@ fun SettingsScreen(
                             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (!session?.imageUrl.isNullOrBlank()) {
-                            com.aurora.music.ui.components.Artwork(session!!.imageUrl, MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), corner = 28.dp)
+                        if (avatarUrl.isNotBlank()) {
+                            com.aurora.music.ui.components.Artwork(avatarUrl, MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), corner = 28.dp)
                         } else {
                             Text(username.take(2).uppercase().ifBlank { "ME" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
                         }
@@ -159,6 +162,10 @@ fun SettingsScreen(
                     SettingsDestinationRow(Icons.Filled.ShowChart, SettingsDestinations.tuning, onClick = onOpenTuning)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.GraphicEq, SettingsDestinations.impulses, onClick = onOpenImpulses)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.comparison, onClick = onOpenComparison)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.presetRules, onClick = onOpenPresetRules)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
                     SettingsRowDivider()

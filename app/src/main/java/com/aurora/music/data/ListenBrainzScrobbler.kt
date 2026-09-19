@@ -3,14 +3,14 @@ package com.aurora.music.data
 import com.aurora.music.data.remote.ListenBrainzClient
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class ListenBrainzScrobbler(
     private val store: SettingsStore,
     private val scope: CoroutineScope,
+    private val client: ListenBrainzClient = ListenBrainzClient(),
 ) {
-    private val client = ListenBrainzClient()
-
     @Volatile private var token: String? = null
     @Volatile private var enabled: Boolean = true
 
@@ -38,12 +38,18 @@ class ListenBrainzScrobbler(
     fun nowPlaying(song: Song) {
         val t = token ?: return
         if (!enabled || song.title.isBlank() || song.artist.isBlank()) return
-        scope.launch { client.playingNow(t, song.artist, song.title, song.album.ifBlank { null }) }
+        scope.launch {
+            val artist = store.artistSeparators.first().split(song.artist).first()
+            client.playingNow(t, artist, song.title, song.album.ifBlank { null })
+        }
     }
 
     fun scrobble(song: Song, startedAtMs: Long) {
         val t = token ?: return
         if (!enabled || song.title.isBlank() || song.artist.isBlank()) return
-        scope.launch { client.listen(t, song.artist, song.title, song.album.ifBlank { null }, startedAtMs / 1000) }
+        scope.launch {
+            val artist = store.artistSeparators.first().split(song.artist).first()
+            client.listen(t, artist, song.title, song.album.ifBlank { null }, startedAtMs / 1000)
+        }
     }
 }

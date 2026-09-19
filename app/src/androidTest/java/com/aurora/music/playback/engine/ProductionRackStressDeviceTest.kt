@@ -26,7 +26,7 @@ import kotlin.math.sin
 
 /** Synthetic instrumentation-worker timing; never opens AudioTrack or changes user settings. */
 class ProductionRackStressDeviceTest {
-    @Test fun recordsDenseProductionRackTimingAndChecksExactDurationAndReset() {
+    @Test fun recordsDenseProductionRackTimingAndChecksFullTailAndReset() {
         val results = JSONArray()
         for (rate in intArrayOf(48_000, 96_000)) results.put(exercise(rate))
         val report = JSONObject().put("schemaVersion", 1)
@@ -76,12 +76,13 @@ class ProductionRackStressDeviceTest {
             submitted += FRAMES
         } while (measurements < timings.size && System.nanoTime() - measuredStart < MEASURED_NS)
         val measuredWallNs = System.nanoTime() - measuredStart
-        // A non-partition-sized final input verifies EOS without counting a padded FFT tail.
+        // irregular input drains the exact convolution tail.
         block.begin(97, submitted * 1_000_000L / rate, submitted)
         waveform.copyInto(block.samples, endIndex = block.sampleCount)
         submit(engine, block, observed); submitted += 97
         finish(engine, observed)
-        assertEquals("Every accepted source frame has one output frame", submitted, observed.frames)
+        val expectedTailFrames = engine.rackTailFrames
+        assertEquals("Accepted input plus the exact convolution tail", submitted + expectedTailFrames, observed.frames)
         assertTrue(engine.rackActive)
         assertTrue(engine.convolutionProcessingActive)
         assertTrue(observed.peak > 1e-6)
@@ -90,16 +91,16 @@ class ProductionRackStressDeviceTest {
         // Saturation intentionally generates DC on zero input. Compare with a fresh graph,
         // rather than assuming silence maps to zero, to detect stale delay/filter/IR history.
         engine.flush()
-        val afterSeek = Observed(97)
+        val afterSeek = Observed(97 + expectedTailFrames)
         block.begin(97, 0, 0); block.samples.fill(0.0)
         submit(engine, block, afterSeek); finish(engine, afterSeek)
-        assertEquals(97L, afterSeek.frames)
+        assertEquals(97L + expectedTailFrames, afterSeek.frames)
         assertArrayEquals(freshSilence(graph, impulse, rate, 97), afterSeek.captured, 0.0)
         engine.reset(); engine.configure(rate); awaitReady(engine)
-        val afterReset = Observed(17)
+        val afterReset = Observed(17 + expectedTailFrames)
         block.begin(17, 0, 0); block.samples.fill(0.0)
         submit(engine, block, afterReset); finish(engine, afterReset)
-        assertEquals(17L, afterReset.frames)
+        assertEquals(17L + expectedTailFrames, afterReset.frames)
         assertArrayEquals(freshSilence(graph, impulse, rate, 17), afterReset.captured, 0.0)
         engine.reset()
 
@@ -174,13 +175,13 @@ class ProductionRackStressDeviceTest {
         silence.begin(frames, 0, 0)
         assertTrue(fresh.queueInput(silence))
         fresh.queueEndOfStream()
-        val expected = Observed(frames)
+        val expected = Observed(frames + fresh.tailFrames)
         var attempts = 0
         while (!fresh.isEnded) {
             fresh.getOutput()?.let { expected.take(it) }
             check(++attempts <= 32) { "Fresh reference did not finish EOS" }
         }
-        assertEquals(frames.toLong(), expected.frames)
+        assertEquals(frames.toLong() + fresh.tailFrames, expected.frames)
         return checkNotNull(expected.captured)
     }
 

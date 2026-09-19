@@ -34,6 +34,9 @@ class PlayHistoryStore(context: Context) {
     private val gson = Gson()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Any()
+    private var revision = 0L
+
+    internal class BackupRollback internal constructor(internal val previous: List<PlayEvent>, internal val revision: Long)
 
     private val _history = MutableStateFlow(load())
     val history: StateFlow<List<PlayEvent>> = _history.asStateFlow()
@@ -45,30 +48,51 @@ class PlayHistoryStore(context: Context) {
             // drop immediate duplicate re-fire within 10s
             val last = _history.value.firstOrNull()
             if (last != null && last.songId == song.id && timestamp - last.timestamp < 10_000) return
+            revision++
             _history.value = (listOf(event) + _history.value).take(MAX)
         }
         scope.launch { save() }
     }
 
     fun clear() {
-        synchronized(lock) { _history.value = emptyList() }
+        synchronized(lock) { revision++; _history.value = emptyList() }
         // Persist the current state when this work runs: a queued delete must never erase a later restore.
         scope.launch { save() }
     }
 
     fun snapshot(): List<PlayEvent> = _history.value
     fun restore(events: List<PlayEvent>) {
-        synchronized(lock) { _history.value = events.take(MAX) }
+        synchronized(lock) { revision++; _history.value = events.take(MAX) }
         scope.launch { save() }
     }
 
-    /** Await durable backup replacement, then publish it, serialized against queued ordinary saves. */
-    internal suspend fun restoreBackup(events: List<PlayEvent>) = withContext(Dispatchers.IO) {
+    internal suspend fun restoreBackup(events: List<PlayEvent>) {
+        replaceBackup(events)
+    }
+
+    internal suspend fun replaceBackup(events: List<PlayEvent>): BackupRollback = withContext(Dispatchers.IO) {
         val restored = events.take(MAX)
         val bytes = gson.toJson(restored).toByteArray(Charsets.UTF_8)
         synchronized(lock) {
+            val previous = _history.value
             persistBackupFileAtomically(file, bytes)
+            val committed = ++revision
             _history.value = restored
+            BackupRollback(previous, committed)
+        }
+    }
+
+    internal suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
+        synchronized(lock) {
+            if (revision != token.revision) {
+                persistBackupFileAtomically(file, gson.toJson(_history.value).toByteArray(Charsets.UTF_8))
+                false
+            } else {
+                persistBackupFileAtomically(file, gson.toJson(token.previous).toByteArray(Charsets.UTF_8))
+                revision++
+                _history.value = token.previous
+                true
+            }
         }
     }
 

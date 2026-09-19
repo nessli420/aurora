@@ -28,6 +28,9 @@ class LocalStore(context: Context) {
     private val file = File(context.filesDir, "local_store.json")
     private val gson = Gson()
     private val lock = Any()
+    private var revision = 0L
+
+    internal class BackupRollback internal constructor(internal val previous: String, internal val revision: Long)
 
     @Volatile private var state: LocalState = load()
 
@@ -37,6 +40,7 @@ class LocalStore(context: Context) {
     }.getOrDefault(LocalState())
 
     private fun persist() {
+        revision++
         runCatching { file.writeText(gson.toJson(state)) }
     }
 
@@ -84,13 +88,33 @@ class LocalStore(context: Context) {
         }
     }
 
-    /** Backup input has already passed BackupArchive validation. Publish only after the write succeeds. */
-    internal suspend fun restoreBackupJson(json: String) = withContext(Dispatchers.IO) {
+    internal suspend fun restoreBackupJson(json: String) {
+        replaceBackupJson(json)
+    }
+
+    internal suspend fun replaceBackupJson(json: String): BackupRollback = withContext(Dispatchers.IO) {
         val restored = requireNotNull(gson.fromJson(json, LocalState::class.java)) { "Local library is missing." }
         val bytes = gson.toJson(restored).toByteArray(Charsets.UTF_8)
         synchronized(lock) {
+            val previous = gson.toJson(state)
             persistBackupFileAtomically(file, bytes)
             state = restored
+            BackupRollback(previous, ++revision)
+        }
+    }
+
+    internal suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
+        val previous = requireNotNull(gson.fromJson(token.previous, LocalState::class.java))
+        synchronized(lock) {
+            if (revision != token.revision) {
+                persistBackupFileAtomically(file, gson.toJson(state).toByteArray(Charsets.UTF_8))
+                false
+            } else {
+                persistBackupFileAtomically(file, token.previous.toByteArray(Charsets.UTF_8))
+                state = previous
+                revision++
+                true
+            }
         }
     }
 

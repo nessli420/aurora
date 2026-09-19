@@ -39,19 +39,22 @@ class ConfirmedAudioRoute(private val context: Context, private val changed: () 
             ?: return ProcessingRoute(ProcessingRouteKind.UNKNOWN, label = "Output unconfirmed", detail = "Waiting for AudioTrack routing.")
         val manager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
         val outputs = runCatching { manager.getDevices(AudioManager.GET_DEVICES_OUTPUTS).toList() }.getOrDefault(emptyList())
-        val address = device.address.orEmpty()
+        val address = if (android.os.Build.VERSION.SDK_INT >= 28) device.address.orEmpty() else ""
         val label = device.productName?.toString()?.trim()?.take(120)?.ifBlank { null } ?: "Android output"
         val builtIn = device.type in setOf(AudioDeviceInfo.TYPE_BUILTIN_SPEAKER, AudioDeviceInfo.TYPE_BUILTIN_EARPIECE,
             AudioDeviceInfo.TYPE_BUILTIN_SPEAKER_SAFE)
-        val unique = outputs.count { it.type == device.type && it.address.orEmpty() == address } == 1
+        val unique = outputs.count { it.type == device.type &&
+            (if (android.os.Build.VERSION.SDK_INT >= 28) it.address.orEmpty() else "") == address } == 1
         val serial = if (device.type in USB_TYPES) usbIdentity() else null
         val key = RouteIdentity.key(device.type, address, builtIn, unique, serial)
         val legacy = "${device.type}:${device.productName}"
             .takeIf { outputs.count { it.type == device.type && it.productName.toString() == device.productName.toString() } == 1 }
         return ProcessingRoute(ProcessingRouteKind.ANDROID, key, label,
             if (key == null) "Output identity is unavailable. Select presets manually." else "Confirmed by AudioTrack.", legacy,
-            category(device.type))
+            category(device.type), device.id)
     }
+
+    fun supportedSampleRates(): IntArray = runCatching { track?.routedDevice?.sampleRates ?: intArrayOf() }.getOrDefault(intArrayOf())
 
     private fun usbIdentity(): String? = runCatching {
         val manager = context.getSystemService(Context.USB_SERVICE) as UsbManager

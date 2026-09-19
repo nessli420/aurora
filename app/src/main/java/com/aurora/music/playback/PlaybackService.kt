@@ -30,6 +30,13 @@ import com.aurora.music.AuroraApplication
 import com.aurora.music.data.AudioEffectsController
 import com.aurora.music.data.AudioPrefs
 import com.aurora.music.data.DspMode
+import com.aurora.music.data.UsbOutputMode
+import com.aurora.music.data.UsbFallbackPolicy
+import com.aurora.music.playback.usb.ProcessedUsbAudioSink
+import com.aurora.music.playback.usb.UsbGraphProcessor
+import com.aurora.music.playback.usb.NativeUsbPcmTransport
+import com.aurora.music.playback.dsd.DsdExtractorsFactory
+import com.aurora.music.playback.dsd.DsdSourceInfo
 import com.aurora.music.data.SignalPath
 import com.aurora.music.data.SignalFormat
 import com.aurora.music.data.SignalPathFacts
@@ -48,6 +55,8 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -77,6 +86,9 @@ class PlaybackService : MediaLibraryService() {
     private val precisionChains = mutableListOf<PrecisionBlockProcessor>()
     private val compatibilityChains = mutableListOf<PrecisionBlockProcessor>()
     private var lastRack: com.aurora.music.data.ProcessingRack? = null
+    @Volatile private var outputRatePolicy = com.aurora.music.playback.engine.OutputRatePolicy()
+    private var rackImpulses: Map<String, ImpulseResponse> = emptyMap()
+    private val androidAutoControllers = mutableSetOf<MediaSession.ControllerInfo>()
     @Volatile private var grantedBitPerfect: Boolean = false
     @Volatile private var deviceSupportsBitPerfect: Boolean = false
     @Volatile private var preferHighResPref: Boolean = false
@@ -149,21 +161,32 @@ class PlaybackService : MediaLibraryService() {
     // items may lag the command so flag and apply neutralize on next timeline change
     private var pendingNeutralize = false
     private var usbSink: com.decent.usbaudio.media3.UsbAudioSink? = null
+    private var processedUsbSink: ProcessedUsbAudioSink? = null
+    private var usbMode = UsbOutputMode.DIRECT
+    private var usbFallback = UsbFallbackPolicy.PAUSE
+    private var usbModePref = UsbOutputMode.DIRECT
+    private var usbFallbackPref = UsbFallbackPolicy.PAUSE
+    @Volatile private var usbFailure: String? = null
 
     override fun onCreate() {
         super.onCreate()
 
-        // The opt-in decoder-side processor retains precision before Media3's PCM16 conversion.
-        // Sink selection stays fixed until the service restarts; effect settings remain live.
-        val highRes = runBlocking { container.settingsStore.playbackPrefs.first().preferHighRes }
-        val bitPerfectUsb = runBlocking { container.settingsStore.playbackPrefs.first().bitPerfectUsb }
+        val initialPrefs = runBlocking { container.settingsStore.playbackPrefs.first() }
+        val highRes = initialPrefs.preferHighRes
+        outputRatePolicy = runBlocking { container.settingsStore.outputRatePolicy.first() }
+        val bitPerfectUsb = initialPrefs.bitPerfectUsb
+        usbMode = initialPrefs.usbOutputMode
+        usbFallback = initialPrefs.usbFallbackPolicy
         bitPerfect = bitPerfectUsb
         val useFloat = bitPerfectUsb || highRes
-        usePrecisionProcessing = highRes && !bitPerfectUsb
+        usePrecisionProcessing = highRes || bitPerfectUsb
         useFloatOut = useFloat
         val initialEvidence = SinkEvidence()
+        initialEvidence.compatibilityProcessor.tpdfDither = outputRatePolicy.tpdfDither
         compatibilityChains += initialEvidence.compatibilityProcessor.engine
         if (usePrecisionProcessing) initialEvidence.precisionProcessor = PrecisionBlockProcessor().also { precisionChains += it }
+        val usbProcessor = if (bitPerfectUsb && usbMode == UsbOutputMode.PROCESSED)
+            PrecisionBlockProcessor().also { precisionChains += it } else null
 
         val audioAttributes = AudioAttributes.Builder()
             .setContentType(C.AUDIO_CONTENT_TYPE_MUSIC)
@@ -179,26 +202,6 @@ class PlaybackService : MediaLibraryService() {
                 val routedOutput = ConfirmedAudioRoute(context) { updateSignalPath() }
                 initialEvidence.routedOutput?.close()
                 initialEvidence.routedOutput = routedOutput
-                if (bitPerfectUsb) {
-                    // no dsp processors which would defeat bit-perfect
-                    val delegate = DefaultAudioSink.Builder(context)
-                        .setAudioTrackProvider(routedOutput.provider)
-                        .setEnableFloatOutput(true)
-                        .build()
-                    return com.decent.usbaudio.media3.UsbAudioSink(delegate, context).also {
-                        usbSink = it
-                        it.pcmTap = com.decent.usbaudio.media3.UsbAudioSink.PcmTap { buf, enc, ch, sr ->
-                            container.visualizer.pushPcm(buf, enc, ch, sr)
-                        }
-                        // native libflac decodes in c++ and never reaches handleBuffer
-                        val sink = it
-                        container.visualizer.monoSource = object : VisualizerController.MonoSource {
-                            override fun read(out: FloatArray) = sink.readNativePcm(out)
-                            override fun sampleRate() = sink.nativeEngineSampleRate
-                            override fun active() = sink.nativeEngineActive
-                        }
-                    }
-                }
                 val base = DefaultAudioSink.Builder(context)
                     .setAudioTrackProvider(routedOutput.provider)
                     .setAudioProcessors(arrayOf(initialEvidence.compatibilityProcessor, initialEvidence.afterMeterProcessor))
@@ -206,9 +209,31 @@ class PlaybackService : MediaLibraryService() {
                     // float bypasses sonic so use hardware playback params for speed
                     .setEnableAudioTrackPlaybackParams(useFloat || enableAudioTrackPlaybackParams)
                     .build()
-                val sink = initialEvidence.precisionProcessor?.let {
-                    PrecisionAudioSink(base, it, initialEvidence.precisionAfterMeter).also { wrapped -> initialEvidence.precisionSink = wrapped }
+                val fallback = initialEvidence.precisionProcessor?.let {
+                    PrecisionAudioSink(base, it, initialEvidence.precisionAfterMeter,
+                        { outputRatePolicy }, { routedOutput.supportedSampleRates() }).also { wrapped -> initialEvidence.precisionSink = wrapped }
                 } ?: base
+                val sink = when {
+                    usbProcessor != null -> ProcessedUsbAudioSink(fallback,
+                        UsbGraphProcessor(usbProcessor, { outputRatePolicy }, after = initialEvidence.precisionAfterMeter),
+                        { NativeUsbPcmTransport(context) }, usbFallback == UsbFallbackPolicy.ANDROID,
+                        { softwareUsbVolume() }, { android.os.Handler(mainLooper).post { updateSignalPath() } })
+                        .also { processedUsbSink = it }
+                    bitPerfectUsb -> com.decent.usbaudio.media3.UsbAudioSink(fallback, context,
+                        com.decent.usbaudio.media3.UsbAudioSinkConfig(
+                            allowAndroidFallback = usbFallback == UsbFallbackPolicy.ANDROID,
+                            onUsbFailure = { reason -> usbFailure = reason; android.os.Handler(mainLooper).post { updateSignalPath() } },
+                        )).also {
+                            usbSink = it
+                            val nativeSink = it
+                            container.visualizer.monoSource = object : VisualizerController.MonoSource {
+                                override fun read(out: FloatArray) = nativeSink.readNativePcm(out)
+                                override fun sampleRate() = nativeSink.nativeEngineSampleRate
+                                override fun active() = nativeSink.nativeEngineActive
+                            }
+                        }
+                    else -> fallback
+                }
                 return TappingAudioSink(sink, container.visualizer, initialEvidence.beforeMeter) { initialEvidence.decoded = it }
             }
         }
@@ -233,7 +258,7 @@ class PlaybackService : MediaLibraryService() {
         val dataSourceFactory = androidx.media3.datasource.ResolvingDataSource.Factory(
             androidx.media3.datasource.DefaultDataSource.Factory(this), ytResolver,
         )
-        val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory)
+        val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory())
 
         musicSourceFactory = mediaSourceFactory
         val playerBuilder = ExoPlayer.Builder(this, renderersFactory)
@@ -319,6 +344,19 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun serviceListener(owner: ExoPlayer) = object : Player.Listener {
+            override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
+                if (owner === player && bitPerfect && playWhenReady && player.playerError != null) player.prepare()
+            }
+            override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                if (owner !== player || !bitPerfect) return
+                val resume = player.playWhenReady
+                if (processedUsbSink?.useAndroidAfterFailure() == true) {
+                    val position = player.currentPosition
+                    player.seekTo(position)
+                    player.prepare()
+                    player.playWhenReady = resume
+                } else if (usbFallback == UsbFallbackPolicy.PAUSE) player.pause()
+            }
             override fun onEvents(p: Player, events: Player.Events) {
                 if (p !== player) return
                 if (xfadeActive && (events.contains(Player.EVENT_IS_PLAYING_CHANGED) || events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED))) {
@@ -361,6 +399,26 @@ class PlaybackService : MediaLibraryService() {
     private fun startAudioObservers(audioAttributes: AudioAttributes) {
         val store = container.settingsStore
         audioEffects = container.audioEffects
+        scope.launch {
+            store.outputRatePolicy.collect { policy ->
+                outputRatePolicy = policy
+                sinkEvidence.values.forEach { it.compatibilityProcessor.tpdfDither = policy.tpdfDither }
+                mixPlayer?.applyAudioConfig(mixAudioConfig())
+            }
+        }
+        scope.launch {
+            store.processingRackAssets.collectLatest { entries ->
+                val loaded = kotlinx.coroutines.withContext(Dispatchers.IO) {
+                    entries.mapNotNull { entry ->
+                        val file = com.aurora.music.data.ir.ImpulseLibraryFiles.validateAsset(entry, entry.prepared != null).getOrNull()
+                        file?.let { ConvolutionProcessor.loadWavResult(it).getOrNull() }?.let { entry.id to it }
+                    }.toMap()
+                }
+                rackImpulses = loaded
+                (precisionChains + compatibilityChains).forEach { it.setRackImpulses(loaded) }
+                mixPlayer?.applyAudioConfig(mixAudioConfig())
+            }
+        }
 
         scope.launch {
             container.mixController.commands.collect { command ->
@@ -389,6 +447,8 @@ class PlaybackService : MediaLibraryService() {
                 crossfadeHeadroom = prefs.crossfadeHeadroom
                 preferHighResPref = prefs.preferHighRes
                 exclusiveUsbPref = prefs.bitPerfectUsb
+                usbModePref = prefs.usbOutputMode
+                usbFallbackPref = prefs.usbFallbackPolicy
                 // independent output: drop audio focus so other apps keep playing through the speaker while
                 // aurora streams to its own device. handleAudioFocus is runtime-switchable via setAudioAttributes.
                 if (prefs.independentOutput != independentOutput) {
@@ -560,9 +620,24 @@ class PlaybackService : MediaLibraryService() {
         }
     }
 
+    private fun publishPresetRuleContext(active: Player) {
+        val item = active.currentMediaItem
+        val context = PresetContextPublisher.build(item,
+            active = item != null && active.playbackState != Player.STATE_IDLE && active.playbackState != Player.STATE_ENDED,
+            observedSourceFormat = if (active === player) sinkEvidence[player]?.sources?.get(item?.mediaId) else null,
+            androidAuto = androidAutoControllers.isNotEmpty(), cast = castPlayer != null && active === castPlayer)
+        container.settingsStore.presetRuleContext.publish(context)
+    }
+
     private fun updateSignalPath() {
         if (!::player.isInitialized) return
         val active = mediaSession?.player ?: player
+        publishPresetRuleContext(active)
+        val audioManager = getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
+        val volume = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC).toDouble() /
+            audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+        (precisionChains + compatibilityChains).forEach { it.relativeVolume = volume }
+        mixPlayer?.applyAudioConfig(mixAudioConfig(volume))
         if (mixPlayer != null && active === mixPlayer) {
             val route = mixPlayer!!.confirmedOutput
             container.settingsStore.processingRoutes.publish(route)
@@ -587,43 +662,59 @@ class PlaybackService : MediaLibraryService() {
         if (item == null || player.playbackState == Player.STATE_IDLE || player.playbackState == Player.STATE_ENDED) {
             container.settingsStore.processingRoutes.publish(com.aurora.music.data.routes.ProcessingRoute())
             requestBitPerfect(null, null, false)
-            container.signalPath.value = SignalPath()
+            val failure = processedUsbSink?.telemetry?.fallbackReason ?: usbSink?.playbackTelemetry?.failure ?: usbFailure
+            container.signalPath.value = if (bitPerfect && failure != null) SignalPath(note = failure,
+                reasons = listOf(failure), output = "USB unavailable") else SignalPath()
             return
         }
         val state = sinkEvidence[player]
         val native = usbSink?.playbackTelemetry
-        val usb = native?.usbActive == true
+        val processed = processedUsbSink?.telemetry
+        if (native?.usbActive == true || processed?.active == true) usbFailure = null
+        val outputFailure = processed?.fallbackReason ?: native?.failure ?: usbFailure
+        if (bitPerfect && usbFallback == UsbFallbackPolicy.PAUSE && outputFailure != null) {
+            container.settingsStore.processingRoutes.publish(com.aurora.music.data.routes.ProcessingRoute())
+            requestBitPerfect(null, null, false)
+            container.signalPath.value = SignalPath(output = "USB unavailable", note = outputFailure, reasons = listOf(outputFailure))
+            return
+        }
+        val processedUsb = processed?.active == true
+        val usb = native?.usbActive == true || processedUsb
         val confirmedOutput = state?.routedOutput?.snapshot()
-        container.settingsStore.processingRoutes.publish(if (usb || bitPerfect)
+        container.settingsStore.processingRoutes.publish(if (usb)
             com.aurora.music.data.routes.ProcessingRoute(com.aurora.music.data.routes.ProcessingRouteKind.NATIVE_USB,
-                label = if (usb) "Native USB output" else "Exclusive output fallback",
-                detail = "This path bypasses local processing. Output rules are paused.")
+                label = if (processedUsb) "Processed USB output" else "Direct USB output",
+                detail = "Automatic output rules are paused for native USB.")
             else confirmedOutput ?: com.aurora.music.data.routes.ProcessingRoute(
                 com.aurora.music.data.routes.ProcessingRouteKind.UNKNOWN, label = "Output unconfirmed",
                 detail = "Waiting for AudioTrack routing."))
         val nativeFlac = native?.nativeFlac == true
-        val raw = if (bitPerfect) native?.decodedFormat else state?.decoded
+        val raw = state?.decoded ?: native?.decodedFormat
         val decoded = if (nativeFlac) SignalFormat(native!!.sourceRate.takeIf { it > 0 },
             native.sourceDepth.takeIf { it > 0 }, native.sourceChannels.takeIf { it > 0 }, "integer PCM")
             else raw?.let { pcmFormat(it.sampleRate, it.pcmEncoding, it.channelCount) }
         val source = state?.sources?.get(item.mediaId)
-        val sourceFormat = if (nativeFlac) decoded else source?.let { pcmFormat(it.sampleRate, it.pcmEncoding, it.channelCount) }
-        val codec = if (nativeFlac) "FLAC" else source?.sampleMimeType?.substringAfter('/')?.uppercase()
+        val dsd = DsdSourceInfo.from(source) ?: DsdSourceInfo.from(raw)
+        val sourceFormat = if (dsd != null) SignalFormat(dsd.bitRate, 1, dsd.channels, "DSD")
+            else if (nativeFlac) decoded else source?.let { pcmFormat(it.sampleRate, it.pcmEncoding, it.channelCount) }
+        val codec = if (dsd != null) "${dsd.container} / DSD" else if (nativeFlac) "FLAC" else source?.sampleMimeType?.substringAfter('/')?.uppercase()
             ?.takeIf { it.matches(Regex("[A-Z0-9.+_-]{1,60}")) }.orEmpty()
         val track = state?.track
         val trackFormat = track?.let { pcmFormat(it.sampleRate, it.encoding, Integer.bitCount(it.channelConfig)) }
         // Media3 uses float only for high-resolution decoded PCM. A PCM16 source still runs processors
         // even when float is enabled in the builder. This setting is fixed for this service lifetime.
-        val precise = state?.precisionSink?.precisionActive == true
-        val precisionChain = state?.precisionProcessor
+        val precise = processedUsb || (!usb && state?.precisionSink?.precisionActive == true)
+        val precisionChain = if (processedUsb) processedUsbSink?.processor?.engine else state?.precisionProcessor
         val floatPath = if (state?.precisionSink != null) precise else usesFloatPcmPath(useFloatOut, decoded)
-        val processors = !usb && !bitPerfect && !floatPath && raw != null
+        val processors = !usb && !floatPath && raw != null
         val engine = if (precise) precisionChain else if (processors) state?.compatibilityProcessor?.engine else null
         val rackActive = engine?.rackActive == true
         val nodes = mutableListOf<String>()
         val bypassed = mutableListOf<String>()
         val modifications = mutableListOf<String>()
         val unknown = mutableListOf<String>()
+        if (dsd != null) modifications += "DSD converted to 176400 Hz float PCM with a low-pass decimator"
+        outputFailure?.let { unknown += "USB: $it" }
         fun node(requested: Boolean, applied: Boolean, name: String) {
             if (applied) { nodes += name; modifications += "$name processes the current samples" }
             else if (requested) bypassed += name
@@ -641,12 +732,13 @@ class PlaybackService : MediaLibraryService() {
             if (precise) "Convolution (binary64 FFT and state; no intermediate PCM16 conversion)"
             else "Convolution (binary64 FFT and state; PCM16 input/output)")
         if (rackActive) {
-            nodes += "Serial rack (binary64): ${engine?.rackDescription.orEmpty()}"
-            modifications += "The active serial rack processes the current samples"
+            val description = engine?.rackDescription.orEmpty()
+            nodes += "${if (description.contains("Routed graph")) "Processing graph" else "Serial rack"} (binary64): $description"
+            modifications += "The active processing rack processes the current samples"
             engine?.convolutionUnavailableReason?.let { unknown += it }
             if (monoAudioPref) unknown += "The rack owns channel routing; the standard mono setting does not override its nodes"
         } else if (lastRack?.enabled == true && ap?.dspMode == DspMode.CUSTOM) {
-            unknown += "Serial rack requested; waiting for a supported stereo stream and prepared schedule"
+            unknown += "Processing rack requested; waiting for a supported stereo stream and prepared schedule"
         }
         if ((processors || precise) && (ap?.dspConvEnabled == true || rackActive)) {
             when (engine?.preparationState) {
@@ -658,8 +750,15 @@ class PlaybackService : MediaLibraryService() {
                 else -> Unit
             }
         }
-        state?.precisionSink?.fallbackReason?.let { unknown += "High-resolution processing uses compatibility output: $it" }
-        if (precise) {
+        if (!usb) state?.precisionSink?.fallbackReason?.let { unknown += "High-resolution processing uses compatibility output: $it" }
+        if (processedUsb) {
+            nodes += "Single ${processed?.validBits}-bit integer conversion after Aurora processing"
+            if (outputRatePolicy.tpdfDither && (raw?.pcmEncoding == C.ENCODING_PCM_FLOAT ||
+                    (decoded?.bitDepth ?: 0) > (processed?.validBits ?: 32) || engine?.processingChangesSamples == true ||
+                    processed?.source?.sampleRate != processed?.output?.sampleRate || processed?.softwareGain != 1.0))
+                nodes += "TPDF dither at the final integer conversion"
+            if (crossfadeMs > 0) bypassed += "Crossfade (processed USB)"
+        } else if (precise) {
             nodes += "Single float32 output conversion after Aurora processing"
             unknown += "Android owns the output clock and may resample or mix the float32 AudioTrack"
             if (decoded?.encoding != "float PCM" && (decoded?.bitDepth ?: 0) > 24)
@@ -667,6 +766,8 @@ class PlaybackService : MediaLibraryService() {
         }
         if (processors && engine?.processingActive == true)
             nodes += "Single PCM16 output conversion after binary64 global processing"
+        if (processors && outputRatePolicy.tpdfDither && engine?.processingChangesSamples == true)
+            nodes += "TPDF dither at the final PCM16 conversion"
         if (processors && player.skipSilenceEnabled) {
             nodes += "Silence skipping enabled"
             unknown += "Silence skipping is enabled; removed-sample counts are not instrumented"
@@ -680,7 +781,7 @@ class PlaybackService : MediaLibraryService() {
             unknown += "System effects report enabled (${systemEffects.joinToString()}); attachment and processing on the current AudioTrack are not independently measured"
         }
         val rg = replayGainMultiplier()
-        if (usb) {
+        if (usb && !processedUsb) {
             if (rg != 1f) bypassed += "ReplayGain (native output ignores player volume)"
             if (player.volume != 1f) bypassed += "Player volume / fades (native output ignores player volume)"
             if (nativeFlac && kotlin.math.abs(native!!.nativeSpeed - 1.0) > 0.00001) {
@@ -694,7 +795,12 @@ class PlaybackService : MediaLibraryService() {
             if (sleepFadeActive || wakeFadeActive) { nodes += "Sleep / alarm fade"; modifications += "A playback fade is active" }
             if (xfadeActive) { nodes += "Crossfade"; modifications += "Two player outputs overlap with fade gains" }
             if (player.playbackParameters.speed != 1f || player.playbackParameters.pitch != 1f) {
-                nodes += "Speed / pitch adjustment"; modifications += "Playback speed or pitch differs from unity"
+                if (processedUsb) bypassed += "Speed / pitch (processed USB)"
+                else { nodes += "Speed / pitch adjustment"; modifications += "Playback speed or pitch differs from unity" }
+            }
+            if (processedUsb && processed?.softwareGain != 1.0) {
+                nodes += "USB software gain (${processed?.softwareGain}×)"
+                modifications += "Software volume attenuates samples before USB output"
             }
             if (sourceFormat?.bitDepth != null && decoded?.bitDepth != null && sourceFormat.bitDepth > decoded.bitDepth)
                 modifications += "Decoder reduces the source sample depth"
@@ -730,15 +836,15 @@ class PlaybackService : MediaLibraryService() {
         val desiredFloat = exclusiveUsbPref || preferHighResPref
         val measuredAfter = precise || (processors && state?.afterMeterProcessor?.isActive == true)
         container.signalPath.value = buildSignalPath(SignalPathFacts(
-            kind = when { nativeFlac -> PlaybackPathKind.NATIVE_USB; usb -> PlaybackPathKind.DECODED_USB; else -> PlaybackPathKind.ANDROID },
+            kind = when { processedUsb -> PlaybackPathKind.PROCESSED_USB; nativeFlac -> PlaybackPathKind.NATIVE_USB; usb -> PlaybackPathKind.DECODED_USB; else -> PlaybackPathKind.ANDROID },
             sourceCopy = sourceCopy, codec = codec, sourceFormat = sourceFormat,
             sourceBitrate = source?.averageBitrate?.takeIf { it > 0 },
-            decoderName = if (nativeFlac) "Native libFLAC" else state?.decoder,
+            decoderName = if (dsd != null) "Aurora DSD decimator" else if (nativeFlac) "Native libFLAC" else state?.decoder,
             decodedFormat = decoded,
             processorPath = when {
+                processedUsb -> "Decoded PCM → binary64 Aurora processing → integer USB output"
                 nativeFlac -> "Native FLAC → USB transport; Android/app processor chain bypassed"
                 usb -> "Media3 decoded PCM → USB transport; Android/app processor chain bypassed"
-                bitPerfect -> "Android fallback for exclusive USB; this sink has no Aurora processors"
                 raw == null -> "Waiting for decoded sink format"
                 precise -> "Decoded PCM → binary64 Aurora processing → float32 Android output"
                 state?.precisionSink != null -> "Compatibility PCM16 path; gapless trimming and silence skipping remain available"
@@ -746,24 +852,51 @@ class PlaybackService : MediaLibraryService() {
                 else -> "Android PCM processor path (PCM16 transport)"
             }, activeNodes = nodes, bypassedNodes = bypassed, modifications = modifications, unknowns = unknown,
             androidTrackFormat = if (usb) null else trackFormat,
-            nativeTransportFormat = if (usb) SignalFormat(native!!.transportRate.takeIf { it > 0 },
-                native.transportDepth.takeIf { it > 0 }, native.transportChannels.takeIf { it > 0 }, "integer PCM") else null,
-            nativeClockAccepted = native?.clockRequestAccepted == true, nativeTailSubmitted = native?.tailSubmitted == true,
+            nativeTransportFormat = if (processedUsb) processed?.output?.let { SignalFormat(it.sampleRate, processed.validBits, it.channelCount, "integer PCM") }
+                else if (usb) SignalFormat(native!!.transportRate.takeIf { it > 0 },
+                    native.transportValidBits.takeIf { it > 0 }, native.transportChannels.takeIf { it > 0 }, "integer PCM") else null,
+            nativeClockAccepted = if (processedUsb) processed?.status?.clockRate == processed?.output?.sampleRate else native?.clockRequestAccepted == true,
+            nativeTailSubmitted = native?.tailSubmitted == true,
+            nativeContainerBits = if (processedUsb) processed?.containerBits else native?.transportContainerBits?.takeIf { it > 0 },
+            nativeClockRate = if (processedUsb) processed?.status?.clockRate else native?.observedClockRate,
             mixerGrant = grantedBitPerfect, mixerGrantMatchesFormat = grantedMixerFormat != null && grantedMixerFormat == trackFormat,
             mixerRequestDetail = if (automaticMixerCandidate != null)
                 "Automatic-output USB candidate (route unverified). ${mixerRequestDetail ?: "Request result unknown"}"
                 else mixerRequestDetail,
             requestedDevice = device?.let { routeCategory(it) }, exclusiveRequested = bitPerfect,
             confirmedDevice = if (usb) null else confirmedOutput?.category,
-            restartRequired = exclusiveUsbPref != bitPerfect || desiredFloat != useFloatOut,
-        )).copy(audioTrackUnderruns = if (!usb && !bitPerfect && raw != null) state?.underruns else null,
-            measurements = if (!usb && !bitPerfect && raw != null && state != null)
+            restartRequired = exclusiveUsbPref != bitPerfect || desiredFloat != useFloatOut ||
+                bitPerfect && (usbModePref != usbMode || usbFallbackPref != usbFallback),
+        )).copy(audioTrackUnderruns = if (!usb && raw != null) state?.underruns else null,
+            usbDiagnostics = if (processedUsb) processed?.status?.let { com.aurora.music.data.UsbDiagnostics(it.completedFrames, it.pendingFrames, it.packetErrors, it.timeouts) }
+                else if (usb && native != null) com.aurora.music.data.UsbDiagnostics(native.completedFrames, native.pendingFrames, native.packetErrors, native.timeouts) else null,
+            measurements = if ((!usb || processedUsb) && raw != null && state != null)
             com.aurora.music.data.AudioMeasurements(state.beforeMeter.snapshot(),
                 if (precise) state.precisionAfterMeter.snapshot() else if (measuredAfter) state.afterMeter.snapshot() else null,
                 player.isPlaying, measuredAfter, xfadeActive,
                 state.spectrum?.takeIf { precise && System.nanoTime() - it.measuredAtNanos < 2_000_000_000L })
-            else null)
+            else null,
+            nodeMeters = engine?.rackMeters().orEmpty(),
+            latency = com.aurora.music.data.SignalStage("Latency",
+                if (engine == null) "Processor delay unavailable on this output"
+                else "Rack: ${engine.rackLatencyFrames} frames · SRC: ${if (processedUsb) processedUsbSink?.processor?.resamplingLatencyFrames ?: 0 else state?.precisionSink?.resamplingLatencyFrames ?: 0} frames · Tail: ${engine.rackTailFrames} frames",
+                "Compiled processor delay; sink and hardware latency are unknown"),
+            resampling = com.aurora.music.data.SignalStage("Resampling",
+                if (processedUsb) processedUsbSink?.processor?.let { sink ->
+                    sink.rateFallbackReason ?: if (sink.outputFormat.sampleRate == raw?.sampleRate) "Following source rate"
+                    else "${raw?.sampleRate} → ${sink.outputFormat.sampleRate} Hz · Bandlimited SRC"
+                } ?: "Waiting for USB configuration" else if (precise) state?.precisionSink?.let { sink ->
+                    sink.rateFallbackReason ?: if (sink.configuredOutputSampleRate == raw?.sampleRate) "Following source rate"
+                    else "${raw?.sampleRate} → ${sink.configuredOutputSampleRate} Hz · Bandlimited SRC"
+                } ?: "Waiting for output configuration" else "No Aurora sample-rate conversion observed",
+                "Active sink configuration; downstream conversion is unknown"))
     }
+    private fun softwareUsbVolume(): Double {
+        val audio = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        return audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC).toDouble() /
+            audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+    }
+
     private fun tickAudio() {
         if (mediaSession?.player !== player) return
         val now = android.os.SystemClock.elapsedRealtime()
@@ -907,6 +1040,9 @@ class PlaybackService : MediaLibraryService() {
         applyAudioEngine()
         fadeEvidence.precisionProcessor?.setImpulse(currentImpulse, lastAudioPrefs?.dspConvMakeupDb ?: 0f)
         fadeEvidence.compatibilityProcessor.engine.setImpulse(currentImpulse, lastAudioPrefs?.dspConvMakeupDb ?: 0f)
+        fadeEvidence.precisionProcessor?.setRackImpulses(rackImpulses)
+        fadeEvidence.compatibilityProcessor.engine.setRackImpulses(rackImpulses)
+        fadeEvidence.compatibilityProcessor.tpdfDither = outputRatePolicy.tpdfDither
         val factory = object : DefaultRenderersFactory(this) {
             override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): AudioSink {
                 val routedOutput = ConfirmedAudioRoute(context) { updateSignalPath() }
@@ -919,7 +1055,8 @@ class PlaybackService : MediaLibraryService() {
                     .setEnableAudioTrackPlaybackParams(useFloatOut)
                     .build()
                 val sink = fadeEvidence.precisionProcessor?.let {
-                    PrecisionAudioSink(base, it, fadeEvidence.precisionAfterMeter).also { wrapped -> fadeEvidence.precisionSink = wrapped }
+                    PrecisionAudioSink(base, it, fadeEvidence.precisionAfterMeter,
+                        { outputRatePolicy }, { routedOutput.supportedSampleRates() }).also { wrapped -> fadeEvidence.precisionSink = wrapped }
                 } ?: base
                 return TappingAudioSink(sink, container.visualizer, fadeEvidence.beforeMeter) { fadeEvidence.decoded = it }
             }
@@ -950,16 +1087,23 @@ class PlaybackService : MediaLibraryService() {
             session: MediaSession,
             controller: MediaSession.ControllerInfo,
         ): MediaSession.ConnectionResult {
+            if (controller.packageName == "com.google.android.projection.gearhead") androidAutoControllers += controller
             // must keep library commands or android auto browser connection is refused
             val sessionCommands = MediaSession.ConnectionResult.DEFAULT_SESSION_AND_LIBRARY_COMMANDS.buildUpon()
                 .add(SessionCommand(CMD_SHUFFLE, Bundle.EMPTY))
                 .add(SessionCommand(CMD_REPEAT, Bundle.EMPTY))
                 .add(SessionCommand(CMD_SLEEP_FADE, Bundle.EMPTY))
                 .add(SessionCommand(CMD_EXIT_MIX, Bundle.EMPTY))
+                .add(SessionCommand(CMD_QUEUE_APPEND, Bundle.EMPTY))
                 .build()
             return MediaSession.ConnectionResult.AcceptedResultBuilder(session)
                 .setAvailableSessionCommands(sessionCommands)
                 .build()
+        }
+
+        override fun onDisconnected(session: MediaSession, controller: MediaSession.ControllerInfo) {
+            androidAutoControllers -= controller
+            updateSignalPath()
         }
 
         override fun onCustomCommand(
@@ -969,10 +1113,32 @@ class PlaybackService : MediaLibraryService() {
             args: Bundle,
         ): ListenableFuture<SessionResult> {
             when (customCommand.customAction) {
+                CMD_QUEUE_APPEND -> {
+                    val active = session.player
+                    val token = args.getString("token")
+                    val count = args.getInt("count", -1)
+                    val bundles = args.getParcelableArrayList<Bundle>("items")
+                    val items = runCatching { bundles?.map(MediaItem::fromBundle) }.getOrNull()
+                    val reason = when {
+                        mixPlayer != null -> "mix is active"
+                        token.isNullOrBlank() || count <= 0 -> "invalid queue identity"
+                        items.isNullOrEmpty() || items.size > 120 -> "invalid batch size"
+                        items.any { it.localConfiguration == null } -> "missing playback URI"
+                        items.any { it.mediaMetadata.extras?.getString(QUEUE_TOKEN) != token } -> "invalid batch identity"
+                        active.mediaItemCount != count || (0 until count).any {
+                            active.getMediaItemAt(it).mediaMetadata.extras?.getString(QUEUE_TOKEN) != token
+                        } -> "queue changed"
+                        else -> null
+                    }
+                    if (reason != null) return Futures.immediateFuture(SessionResult(androidx.media3.session.SessionError.ERROR_BAD_VALUE,
+                        Bundle().apply { putString("reason", reason); putInt("count", active.mediaItemCount) }))
+                    active.addMediaItems(if (args.getBoolean("prepend")) 0 else count, requireNotNull(items))
+                    return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS))
+                }
                 CMD_EXIT_MIX -> stopMix()
                 // target 1=on 0=off -1=toggle order = pre-shuffle order when caller already shuffled
                 CMD_SHUFFLE -> if (mixPlayer != null) {
-                    return Futures.immediateFuture(SessionResult(SessionResult.RESULT_ERROR_NOT_SUPPORTED))
+                    return Futures.immediateFuture(SessionResult(androidx.media3.session.SessionError.ERROR_NOT_SUPPORTED))
                 } else setShuffle(
                     customCommand.customExtras.getInt("target", -1),
                     customCommand.customExtras.getStringArrayList("order"),
@@ -1021,17 +1187,20 @@ class PlaybackService : MediaLibraryService() {
         ): ListenableFuture<LibraryResult<MediaItem>> = serviceFuture {
             val item = browseCache[mediaId] ?: resolvePlayable(mediaId)
             if (item != null) LibraryResult.ofItem(item, null)
-            else LibraryResult.ofError(LibraryResult.RESULT_ERROR_BAD_VALUE)
+            else LibraryResult.ofError(androidx.media3.session.SessionError.ERROR_BAD_VALUE)
         }
 
         override fun onAddMediaItems(
             mediaSession: MediaSession,
             controller: MediaSession.ControllerInfo,
             mediaItems: MutableList<MediaItem>,
-        ): ListenableFuture<MutableList<MediaItem>> = serviceFuture {
-            mediaItems.map { item ->
-                if (item.localConfiguration != null) item else resolvePlayable(item.mediaId) ?: item
-            }.toMutableList()
+        ): ListenableFuture<MutableList<MediaItem>> {
+            if (mediaItems.all { it.localConfiguration != null }) return Futures.immediateFuture(mediaItems)
+            return serviceFuture {
+                mediaItems.map { item ->
+                    if (item.localConfiguration != null) item else resolvePlayable(item.mediaId) ?: item
+                }.toMutableList()
+            }
         }
 
         override fun onSearch(
@@ -1130,6 +1299,7 @@ class PlaybackService : MediaLibraryService() {
         val id = "song_${song.id}"
         val item = MediaItem.Builder().setMediaId(id).setUri(song.streamUrl).setMediaMetadata(
             MediaMetadata.Builder().setTitle(song.title).setArtist(song.artist).setAlbumTitle(song.album)
+                .setExtras(PresetContextPublisher.extras(song, container.repository.playbackSourceIdentity(song)))
                 .setIsBrowsable(false).setIsPlayable(true).setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
                 .apply { if (song.artworkUrl.isNotBlank()) setArtworkUri(android.net.Uri.parse(song.artworkUrl)) }.build()
         ).build()
@@ -1361,11 +1531,12 @@ class PlaybackService : MediaLibraryService() {
         publishNowPlaying()
     }
 
-    private fun mixAudioConfig() = com.aurora.music.mix.MixAudioConfig(
+    private fun mixAudioConfig(volume: Double = 1.0) = com.aurora.music.mix.MixAudioConfig(
         params = currentDspParams, mode = lastAudioPrefs?.dspMode ?: DspMode.OFF,
         mono = monoAudioPref, impulse = currentImpulse, convolution = lastAudioPrefs?.dspConvEnabled == true,
         convolutionGain = lastAudioPrefs?.dspConvMakeupDb ?: 0f, audioSessionId = container.audioSessionId,
-        replayGain = replayGainMode, rack = lastRack?.takeIf { it.enabled && lastAudioPrefs?.dspMode == DspMode.CUSTOM })
+        replayGain = replayGainMode, rack = lastRack?.takeIf { it.enabled && lastAudioPrefs?.dspMode == DspMode.CUSTOM },
+        rackImpulses = rackImpulses, tpdfDither = outputRatePolicy.tpdfDither, relativeVolume = volume)
 
     private var alarmLoadJob: kotlinx.coroutines.Job? = null
 
@@ -1459,6 +1630,8 @@ class PlaybackService : MediaLibraryService() {
         sinkEvidence.values.forEach { it.routedOutput?.close() }
         sinkEvidence.clear()
         container.settingsStore.processingRoutes.publish(com.aurora.music.data.routes.ProcessingRoute())
+        container.settingsStore.presetRuleContext.publish(com.aurora.music.data.rules.PresetPlaybackContext())
+        androidAutoControllers.clear()
         container.signalPath.value = SignalPath()
         super.onDestroy()
     }
@@ -1466,6 +1639,8 @@ class PlaybackService : MediaLibraryService() {
     companion object {
         const val ACTION_MIX = "com.aurora.music.action.MIX"
         const val CMD_EXIT_MIX = "com.aurora.music.EXIT_MIX"
+        const val CMD_QUEUE_APPEND = "com.aurora.music.QUEUE_APPEND"
+        const val QUEUE_TOKEN = "aurora_queue_token"
         const val CMD_SHUFFLE = "com.aurora.music.SHUFFLE"
         const val CMD_REPEAT = "com.aurora.music.REPEAT"
         const val CMD_SLEEP_FADE = "com.aurora.music.SLEEP_FADE"

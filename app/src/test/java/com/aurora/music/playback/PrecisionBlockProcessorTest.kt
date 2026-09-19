@@ -36,11 +36,12 @@ class PrecisionBlockProcessorTest {
         }
         val input = DoubleArray(1_907 * 2) { ((it % 17) - 8) * 2.0.pow(-30) }
         val gain = 10.0.pow(-6.0 / 20.0) * 10.0.pow(3.0 / 20.0)
-        val output = stream(processor, input, 227)
-        assertEquals(input.size, output.size)
-        input.indices.forEach { i ->
-            val expected = if (i % 2 == 0) input[i] + (if (i >= 2) input[i - 2] * 0.5 else 0.0)
-                else input[i] * 0.5 - (if (i >= 2) input[i - 2] * 0.25 else 0.0)
+        val output = stream(processor, input, 227, tailFrames = 1)
+        output.indices.forEach { i ->
+            val current = input.getOrElse(i) { 0.0 }
+            val previous = input.getOrElse(i - 2) { 0.0 }
+            val expected = if (i % 2 == 0) current + previous * 0.5
+                else current * 0.5 - previous * 0.25
             assertEquals(expected * gain, output[i], 2e-21)
         }
         assertTrue(output.any { it != 0.0 })
@@ -134,7 +135,7 @@ class PrecisionBlockProcessorTest {
         assertFalse(processor.hasPendingData)
         assertFalse(processor.processingActive)
         assertEquals(ConvolutionPreparationState.READY, processor.preparationState)
-        val output = stream(processor, DoubleArray(2_046), 255)
+        val output = stream(processor, DoubleArray(2_046), 255, tailFrames = 2)
         assertTrue(output.all { it == 0.0 })
         processor.reset()
     }
@@ -171,7 +172,7 @@ class PrecisionBlockProcessorTest {
         samples.copyInto(this.samples)
     }
 
-    private fun stream(processor: PrecisionBlockProcessor, input: DoubleArray, chunk: Int): DoubleArray {
+    private fun stream(processor: PrecisionBlockProcessor, input: DoubleArray, chunk: Int, tailFrames: Int = 0): DoubleArray {
         val result = ArrayList<Double>()
         var position = 0
         var iterations = 0
@@ -196,7 +197,7 @@ class PrecisionBlockProcessorTest {
         processor.queueEndOfStream()
         while (!processor.isEnded) { check(iterations++ < 10_000) { "EOS stalled" }; drain() }
         drain()
-        assertEquals(input.size, result.size)
+        assertEquals(input.size + tailFrames * 2, result.size)
         return result.toDoubleArray()
     }
 }

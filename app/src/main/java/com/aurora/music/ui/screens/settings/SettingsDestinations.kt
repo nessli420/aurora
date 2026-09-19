@@ -13,12 +13,14 @@ object SettingsDestinations {
     val storage = SettingsDestination(Routes.SETTINGS_STORAGE, "Downloads & storage", "Download quality and offline files")
     val analysis = SettingsDestination(Routes.SETTINGS_SONIC, "Library analysis & discovery", "Library scans, Sonic radio and Auto DJ")
     val playback = SettingsDestination(Routes.SETTINGS_PLAYBACK, "Playback & quality", "Streaming quality, crossfade, gapless and speed")
-    val output = SettingsDestination(Routes.SETTINGS_OUTPUT, "Audio output", "Output device, hi-res and direct USB")
+    val output = SettingsDestination(Routes.SETTINGS_OUTPUT, "Audio output", "Output device, hi-res and USB modes")
     val equalizer = SettingsDestination(Routes.SETTINGS_EQ, "Equalizer & effects", "EQ, device presets, convolution and channels")
     val processingPresets = SettingsDestination(Routes.SETTINGS_PROCESSING_PRESETS, "Saved processing presets", "Save and restore your audio settings")
     val processingRack = SettingsDestination(Routes.SETTINGS_PROCESSING_RACK, "Processing rack", "Arrange and tune your audio processing stages")
     val tuning = SettingsDestination(Routes.SETTINGS_TUNING, "Measurement tuning", "Measurements, targets and saved correction projects")
     val impulses = SettingsDestination(Routes.SETTINGS_IMPULSES, "Impulse responses", "Saved WAVs, trimming and normalization")
+    val comparison = SettingsDestination(Routes.SETTINGS_COMPARISON, "Compare presets", "Level-matched A/B and blind ABX")
+    val presetRules = SettingsDestination(Routes.SETTINGS_PRESET_RULES, "Preset rules", "Switch presets by track and output")
     val loudness = SettingsDestination(Routes.SETTINGS_LOUDNESS, "Volume & loudness", "ReplayGain and volume leveling")
     val signalPath = SettingsDestination(Routes.SIGNAL_PATH, "Signal Path", "Inspect the current playback path")
     val alarm = SettingsDestination(Routes.SETTINGS_ALARM, "Alarm", "Wake to your liked music")
@@ -30,7 +32,7 @@ object SettingsDestinations {
     val backup = SettingsDestination(Routes.SETTINGS_BACKUP, "Backup & restore", "Export or import settings and playlists")
     val about = SettingsDestination(Routes.SETTINGS_ABOUT, "About Aurora", "Version and app information")
 
-    val all = listOf(accounts, sources, storage, analysis, playback, output, equalizer, processingRack, tuning, impulses, processingPresets, loudness,
+    val all = listOf(accounts, sources, storage, analysis, playback, output, equalizer, processingRack, tuning, impulses, comparison, presetRules, processingPresets, loudness,
         signalPath, alarm, appearance, visualizer, gestures, integrations, permissions, backup, about)
 }
 

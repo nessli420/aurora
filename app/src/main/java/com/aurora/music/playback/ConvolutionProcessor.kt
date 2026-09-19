@@ -6,6 +6,8 @@ import androidx.media3.common.audio.AudioProcessor.AudioFormat
 import androidx.media3.common.util.UnstableApi
 import com.aurora.music.playback.engine.PrecisionConvolver
 import com.aurora.music.playback.engine.SamplePrecision
+import com.aurora.music.playback.engine.BandlimitedResampler
+import com.aurora.music.playback.engine.ConvolutionTailMode
 import java.io.File
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -19,7 +21,10 @@ class ImpulseResponse private constructor(
     val sampleRate: Int,
     val sourcePrecision: SamplePrecision,
     val sourceValidBits: Int,
-    val sourceChannels: Int = 2
+    val sourceChannels: Int = 2,
+    internal val preciseLeftToRight: DoubleArray? = null,
+    internal val preciseRightToLeft: DoubleArray? = null,
+    val alignmentFrames: Int = 0,
 ) {
     constructor(left: FloatArray, right: FloatArray, sampleRate: Int) : this(
         DoubleArray(left.size) { left[it].toDouble() },
@@ -28,24 +33,43 @@ class ImpulseResponse private constructor(
     // Compatibility views; processing always uses the owned binary64 samples above.
     val left: FloatArray get() = FloatArray(preciseLeft.size) { preciseLeft[it].toFloat() }
     val right: FloatArray get() = FloatArray(preciseRight.size) { preciseRight[it].toFloat() }
-    val frameCount: Int get() = maxOf(preciseLeft.size, preciseRight.size)
+    val frameCount: Int get() = maxOf(preciseLeft.size, preciseRight.size,
+        preciseLeftToRight?.size ?: 0, preciseRightToLeft?.size ?: 0)
+    val trueStereo: Boolean get() = sourceChannels == 4
+    fun alignmentFramesAt(rate: Int): Int = (alignmentFrames * rate.toDouble() / sampleRate).toInt() +
+        BandlimitedResampler.impulseDelayFrames(sampleRate, rate)
+    internal fun matrixChannels(): List<DoubleArray> = if (trueStereo)
+        listOf(preciseLeft, checkNotNull(preciseLeftToRight), checkNotNull(preciseRightToLeft), preciseRight)
+    else if (sourceChannels == 1) listOf(preciseLeft) else listOf(preciseLeft, preciseRight)
+
+    private val preparedRates = LinkedHashMap<Int, List<DoubleArray>>()
+
+    fun createConvolver(rate: Int, blockSize: Int = 1024): PrecisionConvolver {
+        val channels = synchronized(preparedRates) {
+            preparedRates[rate] ?: matrixChannels().map {
+                BandlimitedResampler.resampleImpulse(it, sampleRate, rate)
+            }.also { prepared ->
+                preparedRates[rate] = prepared
+                while (preparedRates.size > 1 && (preparedRates.size > 3 ||
+                        preparedRates.values.sumOf { paths -> paths.sumOf { it.size.toLong() * 8 } } > 8L * 1024 * 1024)) {
+                    preparedRates.remove(preparedRates.keys.first())
+                }
+            }
+        }
+        return PrecisionConvolver(channels.first(), channels.last(), blockSize,
+            if (trueStereo) channels[1] else null, if (trueStereo) channels[2] else null)
+    }
 
     companion object {
-        internal fun decoded(left: DoubleArray, right: DoubleArray, rate: Int, precision: SamplePrecision, validBits: Int, channels: Int = 2) =
-            ImpulseResponse(left, right, rate, precision, validBits, channels)
+        internal fun decoded(left: DoubleArray, right: DoubleArray, rate: Int, precision: SamplePrecision, validBits: Int,
+            channels: Int = 2, leftToRight: DoubleArray? = null, rightToLeft: DoubleArray? = null, alignmentFrames: Int = 0) =
+            ImpulseResponse(left, right, rate, precision, validBits, channels, leftToRight, rightToLeft, alignmentFrames)
     }
 }
 
 enum class ConvolutionPreparationState { IDLE, PREPARING, READY, FAILED }
 
-/**
- * PCM16 Media3 adapter around the binary64 kernel. Output retains exactly the input duration;
- * reverb beyond EOS is deliberately truncated for existing gapless/queue timing. A pending IR
- * applies only between blocks, after any valid old partial block is emitted. Preparation uses
- * a shared worker, with one replaceable request per instance; the playback callback never waits
- * on that worker, takes a lock, allocates buffers or performs file I/O. It applies backpressure
- * until the requested IR is ready. Preparation failure is visible and falls back to dry audio.
- */
+/** pcm16 adapter with worker preparation, bounded backpressure and complete eos tails. */
 @UnstableApi
 class ConvolutionProcessor : AudioProcessor {
     @Volatile var enabled: Boolean = false
@@ -161,7 +185,7 @@ class ConvolutionProcessor : AudioProcessor {
 
     override fun queueEndOfStream() {
         endOfStream = true
-        active?.engine?.queueEndOfInput()
+        active?.engine?.queueEndOfInput(ConvolutionTailMode.FULL)
         if (!pcm.hasRemaining()) active?.engine?.let { emit(it) }
     }
     override fun getOutput(): ByteBuffer {
@@ -210,9 +234,7 @@ class ConvolutionProcessor : AudioProcessor {
             val result = try {
                 val ir = request.impulse
                 require(ir.sampleRate in 8_000..768_000 && request.rate in 8_000..768_000) { "Unsupported impulse-response sample rate" }
-                val left = resample(ir.preciseLeft, ir.sampleRate, request.rate)
-                val right = resample(ir.preciseRight, ir.sampleRate, request.rate)
-                Completion(request, PrecisionConvolver(left, right, BLOCK_FRAMES), null)
+                Completion(request, ir.createConvolver(request.rate, BLOCK_FRAMES), null)
             } catch (failure: Exception) {
                 Completion(request, null, failure.message ?: "Impulse response could not be prepared")
             }
@@ -231,30 +253,11 @@ class ConvolutionProcessor : AudioProcessor {
         private val PREPARATION = Executors.newSingleThreadExecutor { runnable ->
             Thread(runnable, "Aurora-IR-prepare").apply { isDaemon = true }
         }
-        private fun resample(source: DoubleArray, sourceRate: Int, targetRate: Int): DoubleArray {
-            require(source.isNotEmpty()) { "Impulse response is empty" }
-            val ratio = targetRate.toDouble() / sourceRate
-            val length = (source.size * ratio).toLong().coerceAtLeast(1)
-            require(length <= PrecisionConvolver.MAX_IR_FRAMES) {
-                "Impulse response exceeds ${PrecisionConvolver.MAX_IR_FRAMES} frames per channel at $targetRate Hz"
-            }
-            require(source.all { it.isFinite() }) { "Impulse response contains non-finite samples" }
-            if (sourceRate == targetRate) return source
-            return DoubleArray(length.toInt()) { index ->
-                val position = index / ratio
-                val first = position.toInt()
-                val fraction = position - first
-                val a = source.getOrElse(first) { 0.0 }
-                val b = source.getOrElse(first + 1) { a }
-                a + (b - a) * fraction
-            }
-        }
-
         const val MAX_DECODED_IR_FRAMES = 1_048_576
 
         fun loadWav(file: File): ImpulseResponse? = loadWavResult(file).getOrNull()
 
-        /** Bounded streaming import: at most 16 MiB decoded stereo samples plus a 64 KiB buffer. */
+        /** bounded import: at most 32 mib of matrix samples and a 64 kib input buffer. */
         fun loadWavResult(file: File): Result<ImpulseResponse> = runCatching {
             require(file.length() in 44..64L * 1024 * 1024) { "Impulse-response WAV must be between 44 bytes and 64 MiB" }
             java.io.RandomAccessFile(file, "r").use { input ->
@@ -265,6 +268,7 @@ class ConvolutionProcessor : AudioProcessor {
                 require(riffEnd == input.length() && intLe() == 0x45564157) { "Invalid WAV container length" }
                 var code = 0; var channels = 0; var rate = 0; var bits = 0; var validBits = 0; var alignment = 0
                 var dataOffset = -1L; var dataLength = 0L; var hasFormat = false
+                var alignmentFrames = 0; var hasAlignment = false
                 while (input.filePointer + 8 <= riffEnd) {
                     val chunk = intLe()
                     val length = intLe().toLong() and 0xffffffffL
@@ -283,24 +287,30 @@ class ConvolutionProcessor : AudioProcessor {
                                 val extensionBytes = shortLe()
                                 require(extensionBytes >= 22 && extensionBytes.toLong() <= length - 18) { "Invalid extensible WAV format size" }
                                 validBits = shortLe()
-                                intLe() // Channel mask: the mono/stereo channel count owns routing.
+                                intLe() // matrix order is independent of the speaker mask
                                 val subFormat = intLe()
                                 require(intLe() == 0x00100000 && intLe() == 0xaa000080.toInt() && intLe() == 0x719b3800 && subFormat in intArrayOf(1, 3)) {
                                     "Unsupported extensible WAV subformat"
                                 }
                                 code = subFormat
                             }
-                            require(channels in 1..2 && rate in 8_000..768_000 &&
+                            require(channels in listOf(1, 2, 4) && rate in 8_000..768_000 &&
                                 (code == 1 && bits in listOf(8, 16, 24, 32) || code == 3 && bits == 32) &&
                                 validBits in 1..bits && (code != 3 || validBits == 32) &&
                                 alignment == channels * (bits / 8) && byteRate == rate.toLong() * alignment) {
-                                "Unsupported WAV format; use mono/stereo integer PCM or float32"
+                                "Use mono, stereo or LL/LR/RL/RR PCM or float32 WAV."
                             }
                             hasFormat = true
                         }
                         0x61746164 -> {
                             require(dataOffset < 0) { "Duplicate WAV data chunk" }
                             dataOffset = start; dataLength = length
+                        }
+                        0x4c447561 -> {
+                            require(!hasAlignment && length == 4L) { "Invalid impulse alignment metadata." }
+                            alignmentFrames = intLe()
+                            require(alignmentFrames >= 0) { "Invalid impulse alignment delay." }
+                            hasAlignment = true
                         }
                     }
                     val next = end + (length and 1)
@@ -310,8 +320,11 @@ class ConvolutionProcessor : AudioProcessor {
                 require(input.filePointer == riffEnd) { "Incomplete trailing WAV chunk" }
                 require(hasFormat && dataOffset >= 0 && dataLength > 0 && dataLength % alignment == 0L) { "Missing or misaligned WAV samples" }
                 val frames = dataLength / alignment
+                require(alignmentFrames < frames) { "Impulse alignment exceeds its length." }
                 require(frames <= MAX_DECODED_IR_FRAMES) { "Impulse response exceeds $MAX_DECODED_IR_FRAMES source frames per channel" }
                 val left = DoubleArray(frames.toInt()); val right = DoubleArray(frames.toInt())
+                val leftToRight = if (channels == 4) DoubleArray(frames.toInt()) else null
+                val rightToLeft = if (channels == 4) DoubleArray(frames.toInt()) else null
                 val bytes = ByteArray(64 * 1024)
                 val data = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
                 fun sample(): Double = when {
@@ -332,7 +345,13 @@ class ConvolutionProcessor : AudioProcessor {
                     input.readFully(bytes, 0, count * alignment)
                     data.clear().limit(count * alignment)
                     repeat(count) {
-                        val l = sample(); val r = if (channels == 2) sample() else l
+                        val l = sample()
+                        if (channels == 4) {
+                            val lr = sample(); val rl = sample()
+                            require(lr.isFinite() && rl.isFinite()) { "Impulse response contains non-finite samples" }
+                            leftToRight!![offset] = lr; rightToLeft!![offset] = rl
+                        }
+                        val r = if (channels > 1) sample() else l
                         require(l.isFinite() && r.isFinite()) { "Impulse response contains non-finite samples" }
                         left[offset] = l; right[offset] = r
                         offset++
@@ -345,7 +364,7 @@ class ConvolutionProcessor : AudioProcessor {
                     bits == 8 -> SamplePrecision.PCM_SIGNED_8
                     else -> SamplePrecision.PCM_SIGNED_16
                 }
-                ImpulseResponse.decoded(left, right, rate, precision, if (code == 3) 24 else validBits, channels)
+                ImpulseResponse.decoded(left, right, rate, precision, if (code == 3) 24 else validBits, channels, leftToRight, rightToLeft, alignmentFrames)
             }
         }
     }

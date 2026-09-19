@@ -5,6 +5,7 @@ import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.OptIn
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -30,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.theme.AuroraTheme
@@ -66,6 +68,7 @@ class AlarmActivity : ComponentActivity() {
         }
     }
 
+    @OptIn(UnstableApi::class)
     private fun dismiss(disableDaily: Boolean) {
         runCatching {
             startService(Intent(this, PlaybackService::class.java).setAction(PlaybackService.ACTION_ALARM_DISMISS))

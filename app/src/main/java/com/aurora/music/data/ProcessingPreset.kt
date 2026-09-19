@@ -5,6 +5,9 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.util.UUID
+import com.aurora.music.data.ir.ImpulseLibraryCodec
+import com.aurora.music.data.ir.ImpulseLibraryEntry
+import com.aurora.music.playback.engine.OutputRatePolicy
 
 /** Playback choices captured together with audio settings and the ordered processing graph. */
 data class ProcessingPlaybackPrefs(
@@ -18,11 +21,14 @@ data class ProcessingPlaybackPrefs(
     val preferHighRes: Boolean = false,
     val bitPerfectUsb: Boolean = false,
     val independentOutput: Boolean = false,
+    val outputRatePolicy: OutputRatePolicy = OutputRatePolicy(),
+    val usbOutputMode: UsbOutputMode = UsbOutputMode.DIRECT,
+    val usbFallbackPolicy: UsbFallbackPolicy = UsbFallbackPolicy.PAUSE,
 ) {
     companion object {
         fun from(p: PlaybackPrefs) = ProcessingPlaybackPrefs(p.skipSilence, p.crossfadeSec,
             p.crossfadeCurve, p.crossfadeHeadroom, p.gapless, p.defaultSpeed, p.monoAudio,
-            p.preferHighRes, p.bitPerfectUsb, p.independentOutput)
+            p.preferHighRes, p.bitPerfectUsb, p.independentOutput, p.outputRatePolicy, p.usbOutputMode, p.usbFallbackPolicy)
     }
 }
 
@@ -46,13 +52,15 @@ data class ProcessingPreset(
     val activeEqProfile: String = "",
     val irSha256: String = "",
     val rack: ProcessingRack = ProcessingRack.legacy(audio, playback.monoAudio),
+    val rackImpulseAssets: List<ImpulseLibraryEntry> = emptyList(),
 )
 
 data class ProcessingPresetLibrary(val presets: List<ProcessingPreset> = emptyList(), val error: String? = null)
 data class ProcessingPresetApplyResult(val presetName: String, val restartRequired: Boolean)
 
 fun ProcessingPreset.requiresImpulseResponse(): Boolean =
-    if (rack.enabled) rack.requiresImpulseResponse() else audio.dspConvEnabled
+    if (rack.enabled) rack.nodes.any { it.kind == RackNodeKind.CONVOLUTION && !it.bypass && it.wet > 0 && it.impulseId == null }
+    else audio.dspConvEnabled
 
 // Only this nullable envelope is deserialized from storage. Nested objects are type-checked in full
 // before Gson may construct their non-null Kotlin domain classes; missing values never become zeroes.
@@ -69,7 +77,7 @@ private data class ProcessingPresetDto(
 )
 
 object ProcessingPresetCodec {
-    const val SCHEMA_VERSION = 3
+    const val SCHEMA_VERSION = 5
     const val MAX_PRESETS = 100
     private const val MAX_JSON_CHARS = 2_000_000
     private val gson = Gson()
@@ -99,7 +107,12 @@ object ProcessingPresetCodec {
 
     fun encode(presets: List<ProcessingPreset>): String {
         require(presets.size <= MAX_PRESETS) { "You can save up to $MAX_PRESETS presets." }
-        val json = gson.toJson(presets.map { it.copy(schemaVersion = SCHEMA_VERSION) })
+        val json = com.google.gson.JsonArray().apply { presets.forEach { preset ->
+            val objectValue = gson.toJsonTree(preset.copy(schemaVersion = SCHEMA_VERSION)).asJsonObject
+            objectValue.add("rackImpulseAssets", JsonParser.parseString(ImpulseLibraryCodec.encodeLibrary(preset.rackImpulseAssets))
+                .asJsonObject.get("entries"))
+            add(objectValue)
+        } }.toString()
         val decoded = decode(json)
         require(decoded.error == null) { decoded.error.orEmpty() }
         return json
@@ -109,9 +122,9 @@ object ProcessingPresetCodec {
         require(element.isJsonObject) { "A saved preset is not an object." }
         val o = element.asJsonObject
         val version = number(o, "schemaVersion")
-        require(version in setOf(1.0, 2.0, SCHEMA_VERSION.toDouble())) { "Unsupported preset schema version." }
+        require(version in setOf(1.0, 2.0, 3.0, 4.0, SCHEMA_VERSION.toDouble())) { "Unsupported preset schema version." }
         val keys = setOf("id", "name", "schemaVersion", "createdAtMs", "audio", "playback", "activeEqProfile", "irSha256")
-        require(o.keySet() == if (version == 1.0) keys else keys + "rack") { "Preset fields are incomplete or unsupported." }
+        require(o.keySet() == when { version == 1.0 -> keys; version >= 4.0 -> keys + setOf("rack", "rackImpulseAssets"); else -> keys + "rack" }) { "Preset fields are incomplete or unsupported." }
         string(o, "id"); string(o, "name"); number(o, "createdAtMs")
         string(o, "activeEqProfile"); string(o, "irSha256")
         val dto = gson.fromJson(o, ProcessingPresetDto::class.java)
@@ -122,17 +135,34 @@ object ProcessingPresetCodec {
         require(created >= 0 && number(o, "createdAtMs") == created.toDouble()) { "Invalid preset creation time." }
         val audio = requireNotNull(dto.audio) { "Missing audio settings." }
         val playback = requireNotNull(dto.playback) { "Missing playback settings." }
+        if (version < 4.0) {
+            require(!playback.has("outputRatePolicy")) { "Output policy requires preset version 4." }
+            playback.add("outputRatePolicy", gson.toJsonTree(OutputRatePolicy()))
+        }
+        if (version < 5.0) {
+            require(!playback.has("usbOutputMode") && !playback.has("usbFallbackPolicy")) { "USB policy requires preset version 5." }
+            playback.addProperty("usbOutputMode", UsbOutputMode.DIRECT.name)
+            playback.addProperty("usbFallbackPolicy", UsbFallbackPolicy.PAUSE.name)
+        }
         validateShape(playback, playbackShape)
         val a = readAudio(audio)
-        val p = gson.fromJson(playback, ProcessingPlaybackPrefs::class.java)
+        val outputJson = playback.getAsJsonObject("outputRatePolicy").deepCopy().apply { addProperty("schemaVersion", 1) }
+        val outputPolicy = OutputRatePolicyCodec.decode(outputJson.toString()).getOrThrow()
+        val mode = UsbOutputPolicy.decodeMode(string(playback, "usbOutputMode")).getOrThrow()
+        val fallback = UsbOutputPolicy.decodeFallback(string(playback, "usbFallbackPolicy")).getOrThrow()
+        val p = gson.fromJson(playback, ProcessingPlaybackPrefs::class.java).copy(
+            outputRatePolicy = outputPolicy, usbOutputMode = mode, usbFallbackPolicy = fallback)
         validatePlayback(p)
         val rack = if (version == 1.0) ProcessingRack.legacy(a, p.monoAudio)
             else ProcessingRackCodec.read(requireNotNull(dto.rack) { "Missing processing rack." })
         val hash = requireNotNull(dto.irSha256)
         require(hash.isEmpty() || hash.matches(Regex("[0-9a-f]{64}"))) { "Invalid impulse response checksum." }
         require(dto.activeEqProfile.orEmpty().length <= 500) { "Profile label is too long." }
+        val assets = if (version < 4.0) emptyList() else ImpulseLibraryCodec.decodeLibrary(
+            "{\"schemaVersion\":2,\"entries\":${o["rackImpulseAssets"]}}").getOrThrow()
+        require(assets.map { it.id }.toSet() == rack.nodes.mapNotNull { it.impulseId }.toSet()) { "Preset impulse assets are incomplete or unreferenced." }
         return ProcessingPreset(id, title, SCHEMA_VERSION, created, a, p,
-            dto.activeEqProfile.orEmpty(), hash, rack)
+            dto.activeEqProfile.orEmpty(), hash, rack, assets)
     }
 
     private fun validateShape(actual: JsonObject, expected: JsonObject) {
@@ -140,6 +170,10 @@ object ProcessingPresetCodec {
         expected.entrySet().forEach { (key, template) ->
             val v = actual.get(key)
             when {
+                template.isJsonObject -> {
+                    require(v.isJsonObject) { "Invalid $key settings." }
+                    validateShape(v.asJsonObject, template.asJsonObject)
+                }
                 template.isJsonArray -> {
                     require(v.isJsonArray && v.asJsonArray.size() <= 128) { "Invalid $key bands." }
                     v.asJsonArray.forEach { band ->
@@ -201,6 +235,7 @@ object ProcessingPresetCodec {
         fun range(v: Float, low: Float, high: Float) = v.isFinite() && v in low..high
         require(p.crossfadeSec in 0..30 && p.crossfadeCurve in setOf("LINEAR", "SMOOTH", "POWER") &&
             range(p.defaultSpeed, 0.25f, 4f)) { "Invalid playback processing value." }
+        OutputRatePolicyCodec.validate(p.outputRatePolicy)
         return p
     }
 }

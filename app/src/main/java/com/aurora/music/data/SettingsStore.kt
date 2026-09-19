@@ -24,6 +24,7 @@ import com.aurora.music.data.ir.ImpulseLibraryEntry
 import com.aurora.music.data.ir.ImpulseLibraryFiles
 import com.aurora.music.data.ir.ImpulsePreparation
 import com.aurora.music.data.routes.*
+import com.aurora.music.data.rules.*
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
@@ -92,6 +93,9 @@ data class PlaybackPrefs(
     val autoplayRadio: Boolean = false,
     val bitPerfectUsb: Boolean = false,
     val independentOutput: Boolean = false, // dont grab audio focus other apps keep playing through the speaker
+    val outputRatePolicy: com.aurora.music.playback.engine.OutputRatePolicy = com.aurora.music.playback.engine.OutputRatePolicy(),
+    val usbOutputMode: UsbOutputMode = UsbOutputMode.DIRECT,
+    val usbFallbackPolicy: UsbFallbackPolicy = UsbFallbackPolicy.PAUSE,
 )
 
 object VisualizerStyle {
@@ -303,6 +307,7 @@ data class GesturePrefs(
 
 class SettingsStore(private val context: Context) {
     val processingRoutes = ProcessingRouteMonitor()
+    val presetRuleContext = PresetRuleContextMonitor()
 
     private val gson = Gson()
 
@@ -313,8 +318,15 @@ class SettingsStore(private val context: Context) {
         val TUNING_TARGETS = stringPreferencesKey(TuningTargetCatalog.PREFERENCE_KEY)
         val IMPULSE_LIBRARY = stringPreferencesKey(ImpulseLibraryCodec.PREFERENCE_KEY)
         val PROCESSING_ROUTES = stringPreferencesKey(ProcessingRouteCodec.PREFERENCE_KEY)
+        val PRESET_RULES = stringPreferencesKey(PresetRuleCodec.PREFERENCE_KEY)
+        val PRESET_RULE_SESSION = stringPreferencesKey("processing_rule_session_v1")
+        val OUTPUT_RATE_POLICY = stringPreferencesKey(OutputRatePolicyCodec.PREFERENCE_KEY)
+        val RACK_SUBCHAINS = stringPreferencesKey("processing_subchains_v1")
+        val ACTIVE_RACK_IMPULSES = stringPreferencesKey("processing_active_rack_impulses_v1")
         val SERVER = stringPreferencesKey("server")
         val USERNAME = stringPreferencesKey("username")
+        val LOCAL_PROFILE = stringPreferencesKey(LocalProfileCodec.KEY)
+        val ARTIST_SEPARATORS = stringPreferencesKey(ArtistSeparatorsCodec.KEY)
         val SALT = stringPreferencesKey("salt")
         val TOKEN = stringPreferencesKey("token")
         val SERVER_TYPE = stringPreferencesKey("server_type")
@@ -334,6 +346,8 @@ class SettingsStore(private val context: Context) {
         val DOWNLOAD_BITRATE = intPreferencesKey("download_bitrate")
         val PREFER_HIRES = booleanPreferencesKey("prefer_hires")
         val BIT_PERFECT_USB = booleanPreferencesKey("bit_perfect_usb")
+        val USB_OUTPUT_MODE = stringPreferencesKey(UsbOutputPolicy.MODE_KEY)
+        val USB_FALLBACK_POLICY = stringPreferencesKey(UsbOutputPolicy.FALLBACK_KEY)
         val INDEPENDENT_OUTPUT = booleanPreferencesKey("independent_output")
         val VIZ_STYLE = intPreferencesKey("viz_style")
         val VIZ_COLOR_SOURCE = intPreferencesKey("viz_color_source")
@@ -557,6 +571,7 @@ class SettingsStore(private val context: Context) {
             val validated = ProcessingRackCodec.validate(rack)
             val encoded = ProcessingRackCodec.encode(validated)
             context.dataStore.edit { p ->
+                p[Keys.ACTIVE_RACK_IMPULSES] = ImpulseLibraryCodec.encodeLibrary(resolveRackAssets(p, validated))
                 p[Keys.PROCESSING_RACK] = encoded
                 if (validated.enabled) p[Keys.DSP_MODE] = DspMode.CUSTOM
                 holdManualRoute(p)
@@ -859,10 +874,11 @@ class SettingsStore(private val context: Context) {
                         audio = audio.copy(dspConvIrPath = destination.absolutePath)
                     } else require(!needsImpulse) { "The selected impulse response is missing. Select it again before saving." }
                 } else require(!needsImpulse) { "Select an impulse response before saving enabled convolution." }
+                val (savedRack, assets) = copyRackAssets(rack, resolveRackAssets(p, rack))
                 val preset = ProcessingPreset(UUID.randomUUID().toString(), title,
                     createdAtMs = System.currentTimeMillis(), audio = audio,
                     playback = ProcessingPlaybackPrefs.from(playback),
-                    activeEqProfile = p[Keys.AUTOEQ_PROFILE].orEmpty(), irSha256 = hash, rack = rack)
+                    activeEqProfile = p[Keys.AUTOEQ_PROFILE].orEmpty(), irSha256 = hash, rack = savedRack, rackImpulseAssets = assets)
                 p[Keys.PROCESSING_PRESETS] = ProcessingPresetCodec.encode(previous + preset)
                 saved = preset
             }
@@ -872,6 +888,226 @@ class SettingsStore(private val context: Context) {
 
     val processingRouteRules: Flow<ProcessingRouteRules> = context.dataStore.data
         .map { ProcessingRouteCodec.decode(it[Keys.PROCESSING_ROUTES]).getOrThrow() }.distinctUntilChanged()
+
+    val outputRatePolicy = context.dataStore.data.map {
+        OutputRatePolicyCodec.decode(it[Keys.OUTPUT_RATE_POLICY]).getOrThrow()
+    }.distinctUntilChanged()
+
+    suspend fun setOutputRatePolicy(value: com.aurora.music.playback.engine.OutputRatePolicy): Result<Unit> = impulseResult {
+        val encoded = OutputRatePolicyCodec.encode(value)
+        editManualProcessing { it[Keys.OUTPUT_RATE_POLICY] = encoded }
+    }
+
+    val rackSubchains: Flow<List<RackSubchain>> = context.dataStore.data.map {
+        RackSubchainCodec.decode(it[Keys.RACK_SUBCHAINS]).getOrThrow()
+    }.distinctUntilChanged()
+
+    suspend fun saveRackSubchain(chain: RackSubchain): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val saved = RackSubchainCodec.decode(p[Keys.RACK_SUBCHAINS]).getOrThrow()
+                var sourceRack = chain.rack
+                val entries = resolveRackAssets(p, sourceRack).toMutableList()
+                if (sourceRack.nodes.any { it.kind == RackNodeKind.CONVOLUTION && it.impulseId == null }) {
+                    val file = File(readAudioPrefs(p).dspConvIrPath)
+                    val shared = ImpulseLibraryFiles.importOriginal(file, "Saved impulse", file.name, System.currentTimeMillis()).getOrThrow()
+                    entries += shared
+                    sourceRack = sourceRack.copy(nodes = sourceRack.nodes.map {
+                        if (it.kind == RackNodeKind.CONVOLUTION && it.impulseId == null) it.copy(impulseId = shared.id) else it
+                    })
+                }
+                val (rack, assets) = copyRackAssets(sourceRack, entries)
+                p[Keys.RACK_SUBCHAINS] = RackSubchainCodec.encode(saved.filterNot { it.id == chain.id } + chain.copy(rack = rack, impulseAssets = assets))
+            }
+            Unit
+        }
+    }
+
+    suspend fun deleteRackSubchain(id: String): Result<Unit> = impulseResult {
+        context.dataStore.edit { p ->
+            p[Keys.RACK_SUBCHAINS] = RackSubchainCodec.encode(RackSubchainCodec.decode(p[Keys.RACK_SUBCHAINS]).getOrThrow().filterNot { it.id == id })
+        }
+        Unit
+    }
+
+    suspend fun appendRackSubchain(chain: RackSubchain): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val saved = RackSubchainCodec.decode(p[Keys.RACK_SUBCHAINS]).getOrThrow().firstOrNull { it.id == chain.id }
+                    ?: error("The saved stages no longer exist.")
+                ProcessingPresetAssets.validateFiles(saved.impulseAssets)
+                val audio = readAudioPrefs(p)
+                val rack = readProcessingRack(p, audio, readPlaybackPrefs(p).monoAudio)
+                val updated = RackSubchainCodec.append(rack, saved)
+                p[Keys.ACTIVE_RACK_IMPULSES] = ImpulseLibraryCodec.encodeLibrary(resolveRackAssets(p, updated))
+                p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(updated)
+                holdManualRoute(p)
+            }
+            Unit
+        }
+    }
+
+    val processingRackAssets: Flow<List<ImpulseLibraryEntry>> = context.dataStore.data.map { p ->
+        val audio = readAudioPrefs(p)
+        resolveRackAssets(p, readProcessingRack(p, audio, readPlaybackPrefs(p).monoAudio), strict = false)
+    }.distinctUntilChanged()
+
+    private fun resolveRackAssets(p: Preferences, rack: ProcessingRack, strict: Boolean = true): List<ImpulseLibraryEntry> {
+        val ids = rack.nodes.mapNotNull { it.impulseId }.distinct()
+        if (ids.isEmpty()) return emptyList()
+        val available = (ImpulseLibraryCodec.decodeLibrary(p[Keys.ACTIVE_RACK_IMPULSES]).getOrThrow() +
+            RackSubchainCodec.decode(p[Keys.RACK_SUBCHAINS]).getOrThrow().flatMap { it.impulseAssets } +
+            ImpulseLibraryCodec.decodeLibrary(p[Keys.IMPULSE_LIBRARY]).getOrThrow()).associateBy { it.id }
+        return ids.mapNotNull { id -> available[id].also { require(it != null || !strict) { "An impulse response is missing." } } }
+    }
+
+    private fun copyRackAssets(rack: ProcessingRack, entries: List<ImpulseLibraryEntry>): Pair<ProcessingRack, List<ImpulseLibraryEntry>> {
+        ProcessingPresetAssets.validateFiles(entries)
+        val ids = entries.associate { it.id to UUID.randomUUID().toString() }
+        val copied = ProcessingPresetAssets.remapEntries(entries) { path, hash ->
+            val destination = copyPresetAsset(File(path))
+            require(irHash(destination) == hash) { "An impulse response changed while saving." }
+            destination.path to hash
+        }.map { it.copy(id = ids.getValue(it.id)) }
+        return rack.copy(nodes = rack.nodes.map { it.copy(impulseId = it.impulseId?.let(ids::getValue)) }) to copied
+    }
+
+    private fun copyPresetAsset(source: File): File {
+        require(source.isFile && source.length() in 1..MAX_PRESET_IR_BYTES) { "Impulse response is missing or too large." }
+        val directory = File(context.filesDir, "processing-presets")
+        check(directory.isDirectory || directory.mkdirs()) { "Cannot create preset storage." }
+        val destination = File(directory, "${UUID.randomUUID()}.wav")
+        source.inputStream().use { input -> destination.outputStream().use { output ->
+            val buffer = ByteArray(8192)
+            var count = 0L
+            while (true) {
+                val read = input.read(buffer)
+                if (read < 0) break
+                count += read
+                require(count <= MAX_PRESET_IR_BYTES) { "Impulse response is too large." }
+                output.write(buffer, 0, read)
+            }
+        } }
+        return destination
+    }
+
+    val presetRules: Flow<PresetRuleSet> = context.dataStore.data
+        .map { PresetRuleCodec.decode(it[Keys.PRESET_RULES]).getOrThrow() }.distinctUntilChanged()
+
+    suspend fun savePresetRule(rule: PresetRule): Result<Unit> = editPresetRules(rule.presetId) { rules ->
+        val existing = rules.rules.indexOfFirst { it.id == rule.id }
+        rules.copy(rules = rules.rules.toMutableList().apply {
+            if (existing < 0) add(rule) else set(existing, rule)
+        })
+    }
+
+    suspend fun removePresetRule(id: String): Result<Unit> = editPresetRules { rules ->
+        rules.copy(rules = rules.rules.filterNot { it.id == id })
+    }
+
+    suspend fun movePresetRule(id: String, delta: Int): Result<Unit> = editPresetRules { rules ->
+        require(delta == -1 || delta == 1)
+        val list = rules.rules.toMutableList()
+        val index = list.indexOfFirst { it.id == id }
+        require(index >= 0) { "The rule no longer exists." }
+        val target = (index + delta).coerceIn(0, list.lastIndex)
+        list.add(target, list.removeAt(index))
+        rules.copy(rules = list)
+    }
+
+    suspend fun setPresetRulesEnabled(enabled: Boolean): Result<Unit> = editPresetRules { it.copy(enabled = enabled) }
+
+    suspend fun setPresetRuleManualHold(hold: Boolean): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val rules = PresetRuleCodec.decode(p[Keys.PRESET_RULES]).getOrThrow()
+                p[Keys.PRESET_RULES] = PresetRuleCodec.encode(rules.copy(manualHold = hold))
+                if (hold) p.remove(Keys.PRESET_RULE_SESSION)
+                else processingRoutes.current.route.key?.let { key ->
+                    val outputs = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
+                    p[Keys.PROCESSING_ROUTES] = ProcessingRouteCodec.encode(outputs.copy(manual = outputs.manual - key))
+                }
+            }
+            Unit
+        }
+    }
+
+    private suspend fun editPresetRules(requiredPresetId: String? = null, change: (PresetRuleSet) -> PresetRuleSet): Result<Unit> = withContext(Dispatchers.IO) {
+        impulseResult {
+            context.dataStore.edit { p ->
+                val next = change(PresetRuleCodec.decode(p[Keys.PRESET_RULES]).getOrThrow())
+                if (requiredPresetId != null) require(presetList(p).any { it.id == requiredPresetId }) { "The preset no longer exists." }
+                p[Keys.PRESET_RULES] = PresetRuleCodec.encode(next)
+            }
+            Unit
+        }
+    }
+
+    suspend fun transitionPresetRule(expected: PresetRuleInput): Result<PresetRuleTransition?> = withContext(Dispatchers.IO) {
+        impulseResult {
+            var result: PresetRuleTransition? = null
+            context.dataStore.edit { p ->
+                fun current() = PresetRuleInput(presetRuleContext.current, processingRoutes.current,
+                    PresetRuleCodec.decode(p[Keys.PRESET_RULES]).getOrThrow(),
+                    ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow())
+                if (!PresetRuleEngine.mayCommit(expected, current())) return@edit
+                if (expected.route.route.kind == ProcessingRouteKind.UNKNOWN && expected.rules.enabled) return@edit
+                val saved = PresetRuleSessionCodec.decode(p[Keys.PRESET_RULE_SESSION]).getOrThrow()
+                if (expected.rules.manualHold || expected.route.route.key in expected.outputRules.manual) {
+                    p.remove(Keys.PRESET_RULE_SESSION)
+                    return@edit
+                }
+                val winner = PresetRuleEngine.winner(expected)
+                if (winner == null && saved == null) return@edit
+                val now = captureProcessingState(p)
+                if (!PresetRuleEngine.mayCommit(expected, current())) return@edit
+                if (saved != null && !sameProcessing(now, saved.applied)) {
+                    p.remove(Keys.PRESET_RULE_SESSION)
+                    p[Keys.PRESET_RULES] = PresetRuleCodec.encode(expected.rules.copy(manualHold = true))
+                    result = PresetRuleTransition(RuleTransitionAction.RETAINED)
+                    return@edit
+                }
+                if (winner == null) {
+                    if (saved == null) return@edit
+                    validatePresetImpulse(saved.baseline)
+                    if (!PresetRuleEngine.mayCommit(expected, current())) return@edit
+                    val applied = applyPresetSnapshot(p, saved.baseline, validateImpulse = false)
+                    p.remove(Keys.PRESET_RULE_SESSION)
+                    result = PresetRuleTransition(RuleTransitionAction.RESTORED, restartRequired = applied.restartRequired)
+                } else {
+                    val preset = presetList(p).firstOrNull { it.id == winner.presetId }
+                        ?: error("The rule's preset was deleted.")
+                    val effective = preset.copy(audio = if (preset.rack.enabled) preset.audio.copy(dspMode = DspMode.CUSTOM) else preset.audio)
+                    if (saved?.ruleId == winner.id && saved.presetId == preset.id && sameProcessing(now, effective)) {
+                        result = PresetRuleTransition(RuleTransitionAction.RETAINED, winner.id, preset.id, preset.name)
+                        return@edit
+                    }
+                    validatePresetImpulse(preset)
+                    val recovery = PresetRuleSessionCodec.encode(PresetRuleSession(
+                        saved?.baseline ?: now, effective, winner.id, preset.id))
+                    if (!PresetRuleEngine.mayCommit(expected, current())) return@edit
+                    val applied = applyPresetSnapshot(p, preset, validateImpulse = false)
+                    p[Keys.PRESET_RULE_SESSION] = recovery
+                    result = PresetRuleTransition(RuleTransitionAction.APPLIED, winner.id, preset.id, preset.name, applied.restartRequired)
+                }
+            }
+            result
+        }
+    }
+
+    private fun captureProcessingState(p: Preferences): ProcessingPreset {
+        val audio = readAudioPrefs(p)
+        val playback = readPlaybackPrefs(p)
+        val path = audio.dspConvIrPath
+        val hash = if (path.isNotBlank() && File(path).isFile) irHash(File(path)) else ""
+        return ProcessingPreset("00000000-0000-0000-0000-000000000001", "Before preset rule", createdAtMs = 0,
+            audio = audio, playback = ProcessingPlaybackPrefs.from(playback), activeEqProfile = p[Keys.AUTOEQ_PROFILE].orEmpty(),
+            irSha256 = hash, rack = readProcessingRack(p, audio, playback.monoAudio),
+            rackImpulseAssets = resolveRackAssets(p, readProcessingRack(p, audio, playback.monoAudio)))
+    }
+
+    private fun sameProcessing(a: ProcessingPreset, b: ProcessingPreset): Boolean =
+        a.audio == b.audio && a.playback == b.playback && a.rack == b.rack && a.activeEqProfile == b.activeEqProfile
 
     suspend fun setRouteRulesEnabled(enabled: Boolean): Result<Unit> = editRouteRules { it.copy(enabled = enabled) }
 
@@ -936,10 +1172,12 @@ class SettingsStore(private val context: Context) {
         impulseResult {
             var result: ProcessingPresetApplyResult? = null
             context.dataStore.edit { p ->
+                if (orderedRulesBlockFallback(p)) return@edit
                 val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
                 if (!RouteRuleDecision.mayApply(expected, processingRoutes.current, rules, presetId)) return@edit
                 val preset = presetList(p).firstOrNull { it.id == presetId } ?: error("The bound preset was deleted.")
                 validatePresetImpulse(preset)
+                if (orderedRulesBlockFallback(p)) return@edit
                 if (!RouteRuleDecision.mayApply(expected, processingRoutes.current, rules, presetId)) return@edit
                 result = applyPresetSnapshot(p, preset, validateImpulse = false)
             }
@@ -948,6 +1186,7 @@ class SettingsStore(private val context: Context) {
     }
 
     private fun validatePresetImpulse(preset: ProcessingPreset) {
+        ProcessingPresetAssets.validateFiles(preset.rackImpulseAssets)
         if (!preset.requiresImpulseResponse()) return
         require(preset.audio.dspConvIrPath.isNotBlank() && preset.irSha256.isNotBlank()) { "This preset needs its saved impulse response." }
         val file = File(preset.audio.dspConvIrPath)
@@ -957,15 +1196,23 @@ class SettingsStore(private val context: Context) {
     private fun applyPresetSnapshot(p: MutablePreferences, preset: ProcessingPreset, validateImpulse: Boolean = true): ProcessingPresetApplyResult {
         if (validateImpulse) validatePresetImpulse(preset)
         val old = readPlaybackPrefs(p)
-        val restart = old.preferHighRes != preset.playback.preferHighRes || old.bitPerfectUsb != preset.playback.bitPerfectUsb
+        val restart = old.preferHighRes != preset.playback.preferHighRes || old.bitPerfectUsb != preset.playback.bitPerfectUsb ||
+            old.usbOutputMode != preset.playback.usbOutputMode || old.usbFallbackPolicy != preset.playback.usbFallbackPolicy
         writeProcessingAudio(p, if (preset.rack.enabled) preset.audio.copy(dspMode = DspMode.CUSTOM) else preset.audio)
         writeProcessingPlayback(p, preset.playback)
         p[Keys.PROCESSING_RACK] = ProcessingRackCodec.encode(preset.rack)
+        p[Keys.ACTIVE_RACK_IMPULSES] = ImpulseLibraryCodec.encodeLibrary(preset.rackImpulseAssets)
         p[Keys.AUTOEQ_PROFILE] = preset.activeEqProfile
         return ProcessingPresetApplyResult(preset.name, restart)
     }
 
     private fun holdManualRoute(p: MutablePreferences) {
+        val ordered = PresetRuleCodec.decode(p[Keys.PRESET_RULES]).getOrThrow()
+        val hadRecovery = p[Keys.PRESET_RULE_SESSION] != null
+        p.remove(Keys.PRESET_RULE_SESSION)
+        if (hadRecovery || ordered.enabled && ordered.rules.isNotEmpty()) {
+            p[Keys.PRESET_RULES] = PresetRuleCodec.encode(ordered.copy(manualHold = true))
+        }
         val route = processingRoutes.current.route
         val key = route.key ?: return
         if (route.kind != ProcessingRouteKind.ANDROID) return
@@ -1048,8 +1295,17 @@ class SettingsStore(private val context: Context) {
                         // uncertain. Live processing can still be loading an older reference.
                         audio = audio.copy(dspConvIrPath = destination.absolutePath)
                     }
+                    val entries = ProcessingPresetAssets.remapEntries(bundle.preset.rackImpulseAssets) { _, hash ->
+                        val source = bundle.assets[hash] ?: error("A preset impulse response is missing.")
+                        val destination = copyPresetAsset(source)
+                        require(irHash(destination) == hash) { "Preset impulse response checksum failed." }
+                        destination.path to hash
+                    }
+                    val ids = entries.associate { it.id to UUID.randomUUID().toString() }
                     val preset = bundle.preset.copy(id = UUID.randomUUID().toString(),
-                        createdAtMs = System.currentTimeMillis(), audio = audio)
+                        createdAtMs = System.currentTimeMillis(), audio = audio,
+                        rack = bundle.preset.rack.copy(nodes = bundle.preset.rack.nodes.map { it.copy(impulseId = it.impulseId?.let(ids::getValue)) }),
+                        rackImpulseAssets = entries.map { it.copy(id = ids.getValue(it.id)) })
                     p[Keys.PROCESSING_PRESETS] = ProcessingPresetCodec.encode(previous + preset)
                     imported = preset
                 }
@@ -1061,6 +1317,7 @@ class SettingsStore(private val context: Context) {
     suspend fun applyEqBindingIfEnabled(binding: EqBinding, expectedRoute: RouteObservation? = null): Boolean {
         var applied = false
         context.dataStore.edit { p ->
+            if (orderedRulesBlockFallback(p)) return@edit
             if (p[Keys.AUTOEQ_SWITCH] != true || binding !in parseBindings(p[Keys.EQ_BINDINGS])) return@edit
             val rules = ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow()
             val observed = processingRoutes.current
@@ -1074,6 +1331,13 @@ class SettingsStore(private val context: Context) {
             applied = true
         }
         return applied
+    }
+
+    private fun orderedRulesBlockFallback(p: Preferences): Boolean {
+        val context = presetRuleContext.current
+        val rules = PresetRuleCodec.decode(p[Keys.PRESET_RULES]).getOrThrow()
+        return context.frozen || rules.manualHold || PresetRuleEngine.winner(PresetRuleInput(context,
+            processingRoutes.current, rules, ProcessingRouteCodec.decode(p[Keys.PROCESSING_ROUTES]).getOrThrow())) != null
     }
 
     private fun irHash(file: File): String {
@@ -1128,6 +1392,7 @@ class SettingsStore(private val context: Context) {
     }
 
     private fun writeProcessingPlayback(p: MutablePreferences, a: ProcessingPlaybackPrefs) {
+        p[Keys.OUTPUT_RATE_POLICY] = OutputRatePolicyCodec.encode(a.outputRatePolicy)
         p[Keys.SKIP_SILENCE] = a.skipSilence
         p[Keys.CROSSFADE] = a.crossfadeSec
         p[Keys.CROSSFADE_CURVE] = a.crossfadeCurve
@@ -1137,6 +1402,8 @@ class SettingsStore(private val context: Context) {
         p[Keys.MONO] = a.monoAudio
         p[Keys.PREFER_HIRES] = a.preferHighRes
         p[Keys.BIT_PERFECT_USB] = a.bitPerfectUsb
+        p[Keys.USB_OUTPUT_MODE] = a.usbOutputMode.name
+        p[Keys.USB_FALLBACK_POLICY] = a.usbFallbackPolicy.name
         p[Keys.INDEPENDENT_OUTPUT] = a.independentOutput
     }
 
@@ -1272,7 +1539,10 @@ class SettingsStore(private val context: Context) {
             scrobble = p[Keys.SCROBBLE] ?: true,
             autoplayRadio = p[Keys.AUTOPLAY_RADIO] ?: false,
             bitPerfectUsb = p[Keys.BIT_PERFECT_USB] ?: false,
+            usbOutputMode = UsbOutputPolicy.decodeMode(p[Keys.USB_OUTPUT_MODE]).getOrThrow(),
+            usbFallbackPolicy = UsbOutputPolicy.decodeFallback(p[Keys.USB_FALLBACK_POLICY]).getOrThrow(),
             independentOutput = p[Keys.INDEPENDENT_OUTPUT] ?: false,
+            outputRatePolicy = OutputRatePolicyCodec.decode(p[Keys.OUTPUT_RATE_POLICY]).getOrThrow(),
         )
 
     val visualizerPrefs: Flow<VisualizerPrefs> = context.dataStore.data.map { p ->
@@ -1433,6 +1703,8 @@ class SettingsStore(private val context: Context) {
     suspend fun setDownloadBitrate(v: Int) = context.dataStore.edit { it[Keys.DOWNLOAD_BITRATE] = v }
     suspend fun setPreferHighRes(v: Boolean) = editManualProcessing { it[Keys.PREFER_HIRES] = v }
     suspend fun setBitPerfectUsb(v: Boolean) = editManualProcessing { it[Keys.BIT_PERFECT_USB] = v }
+    suspend fun setUsbOutputMode(v: UsbOutputMode) = editManualProcessing { it[Keys.USB_OUTPUT_MODE] = v.name }
+    suspend fun setUsbFallbackPolicy(v: UsbFallbackPolicy) = editManualProcessing { it[Keys.USB_FALLBACK_POLICY] = v.name }
     suspend fun setIndependentOutput(v: Boolean) = editManualProcessing { it[Keys.INDEPENDENT_OUTPUT] = v }
     suspend fun setScrobble(v: Boolean) = context.dataStore.edit { it[Keys.SCROBBLE] = v }
     suspend fun setAutoplayRadio(v: Boolean) = context.dataStore.edit { it[Keys.AUTOPLAY_RADIO] = v }
@@ -1595,6 +1867,24 @@ class SettingsStore(private val context: Context) {
     suspend fun setDiscordImgur(v: String) = context.dataStore.edit { it[Keys.DISCORD_IMGUR] = v.trim() }
     suspend fun setDiscordAppId(v: String) = context.dataStore.edit { it[Keys.DISCORD_APP_ID] = v.trim() }
 
+    val localProfile: Flow<LocalProfile> = context.dataStore.data.map {
+        runCatching { LocalProfileCodec.decode(it[Keys.LOCAL_PROFILE]) }.getOrDefault(LocalProfile())
+    }.distinctUntilChanged()
+
+    suspend fun setLocalProfile(profile: LocalProfile) {
+        val encoded = LocalProfileCodec.encode(profile)
+        context.dataStore.edit { it[Keys.LOCAL_PROFILE] = encoded }
+    }
+
+    val artistSeparators: Flow<ArtistSeparators> = context.dataStore.data.map {
+        runCatching { ArtistSeparatorsCodec.decode(it[Keys.ARTIST_SEPARATORS]) }.getOrDefault(ArtistSeparators())
+    }.distinctUntilChanged()
+
+    suspend fun setArtistSeparators(separators: ArtistSeparators) {
+        val encoded = ArtistSeparatorsCodec.encode(separators)
+        context.dataStore.edit { it[Keys.ARTIST_SEPARATORS] = encoded }
+    }
+
     // typed so json round-trips losslessly
     suspend fun exportPrefs(): PrefsBackup {
         val p = context.dataStore.data.first()
@@ -1635,6 +1925,8 @@ class SettingsStore(private val context: Context) {
             b.floats.forEach { (k, v) -> replacement[floatPreferencesKey(k)] = v }
             b.stringSets.forEach { (k, v) -> replacement[stringSetPreferencesKey(k)] = v.toSet() }
             validateBackupAudioText(replacement)
+            LocalProfileCodec.decode(replacement[Keys.LOCAL_PROFILE])
+            ArtistSeparatorsCodec.decode(replacement[Keys.ARTIST_SEPARATORS])
             val audio = ProcessingPresetCodec.validateAudio(readAudioPrefs(replacement))
             val playback = readPlaybackPrefs(replacement)
             ProcessingPresetCodec.validatePlayback(ProcessingPlaybackPrefs.from(playback))
@@ -1645,7 +1937,12 @@ class SettingsStore(private val context: Context) {
             TuningProjectCodec.decodeLibrary(replacement[Keys.TUNING_PROJECTS]).getOrThrow()
             TuningTargetCatalog.decodeLibrary(replacement[Keys.TUNING_TARGETS]).getOrThrow()
             ImpulseLibraryCodec.decodeLibrary(replacement[Keys.IMPULSE_LIBRARY]).getOrThrow()
+            ImpulseLibraryCodec.decodeLibrary(replacement[Keys.ACTIVE_RACK_IMPULSES]).getOrThrow()
             ProcessingRouteCodec.decode(replacement[Keys.PROCESSING_ROUTES]).getOrThrow()
+            PresetRuleCodec.decode(replacement[Keys.PRESET_RULES]).getOrThrow()
+            PresetRuleSessionCodec.decode(replacement[Keys.PRESET_RULE_SESSION]).getOrThrow()
+            OutputRatePolicyCodec.decode(replacement[Keys.OUTPUT_RATE_POLICY]).getOrThrow()
+            RackSubchainCodec.decode(replacement[Keys.RACK_SUBCHAINS]).getOrThrow()
             if (rack.enabled) replacement[Keys.DSP_MODE] = DspMode.CUSTOM
             // Asset ownership, hashes and remapping belong to the bundle reader before this call.
             // Keeping this transaction about preferences also permits restoring an exact snapshot

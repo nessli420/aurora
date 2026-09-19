@@ -15,6 +15,8 @@ import java.nio.ByteOrder
 /** PCM16 compatibility boundary around the same binary64 global engine used by float output. */
 @UnstableApi
 class PrecisionRackAudioProcessor(val engine: PrecisionBlockProcessor = PrecisionBlockProcessor()) : AudioProcessor {
+    @Volatile var tpdfDither: Boolean = false
+    private val dither = com.aurora.music.playback.engine.TpdfDither()
     private var pendingFormat = AudioFormat.NOT_SET
     private var activeFormat = AudioFormat.NOT_SET
     private var block: AudioBlock? = null
@@ -48,7 +50,8 @@ class PrecisionRackAudioProcessor(val engine: PrecisionBlockProcessor = Precisio
         if (pcm.hasRemaining()) return false
         val ready = engine.getOutput() ?: return false
         pcm.clear()
-        PcmBoundary.encode(ready, PcmEncoding.SIGNED_16_LE, pcm)
+        PcmBoundary.encode(ready, PcmEncoding.SIGNED_16_LE, pcm,
+            if (tpdfDither && engine.processingChangesSamples) dither else null)
         pcm.flip()
         output = pcm
         return true

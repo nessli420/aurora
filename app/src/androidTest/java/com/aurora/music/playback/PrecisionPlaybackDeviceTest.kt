@@ -63,12 +63,18 @@ class PrecisionPlaybackDeviceTest {
     private var originalSavedQueue: com.aurora.music.data.SavedQueue? = null
     private var originalActivityHistory: List<com.aurora.music.data.PlayEvent>? = null
     private var originalRouteRules: String? = null
+    private var originalPresetRules: String? = null
+    private var originalRuleSession: String? = null
     private var routeRulesCaptured = false
 
     @Before fun keepTargetForegroundForAudioFocus() {
         runBlocking {
-            originalRouteRules = container.settingsStore.exportPrefs().strings[com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY]
+            val originalPrefs = container.settingsStore.exportPrefs()
+            originalRouteRules = originalPrefs.strings[com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY]
+            originalPresetRules = originalPrefs.strings[com.aurora.music.data.rules.PresetRuleCodec.PREFERENCE_KEY]
+            originalRuleSession = originalPrefs.strings[com.aurora.music.data.rules.PresetRuleSessionCodec.PREFERENCE_KEY]
             routeRulesCaptured = true
+            container.settingsStore.setPresetRuleManualHold(true).getOrThrow()
             container.settingsStore.setRouteRulesEnabled(false).getOrThrow()
             originalPrivateSession = container.settingsStore.privateSession.first()
             container.settingsStore.setPrivateSession(true)
@@ -115,8 +121,12 @@ class PrecisionPlaybackDeviceTest {
                     if (routeRulesCaptured) runBlocking {
                         val store = container.settingsStore
                         val current = store.exportPrefs()
-                        val key = com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY
-                        val strings = originalRouteRules?.let { current.strings + (key to it) } ?: (current.strings - key)
+                        val entries = mapOf(com.aurora.music.data.routes.ProcessingRouteCodec.PREFERENCE_KEY to originalRouteRules,
+                            com.aurora.music.data.rules.PresetRuleCodec.PREFERENCE_KEY to originalPresetRules,
+                            com.aurora.music.data.rules.PresetRuleSessionCodec.PREFERENCE_KEY to originalRuleSession)
+                        val strings = current.strings.toMutableMap().apply {
+                            entries.forEach { (key, value) -> if (value == null) remove(key) else put(key, value) }
+                        }
                         store.restoreBackupPrefs(current.copy(strings = strings)).getOrThrow()
                         routeRulesCaptured = false
                     }
@@ -425,6 +435,11 @@ class PrecisionPlaybackDeviceTest {
                 // then restore both the physical shuffled queue and that original order in finally.
                 setFixtureShuffle(controller, false)
                 unshuffledIds = main { (0 until controller.mediaItemCount).map { controller.getMediaItemAt(it).mediaId } }
+            }
+            // reset the previous stream before configuring fixture playback
+            main { controller.stop(); controller.clearMediaItems() }
+            await("fixture starts with a stopped empty player", controller) {
+                main { controller.playbackState == Player.STATE_IDLE && controller.mediaItemCount == 0 }
             }
             val ir = impulse(left = 0.5, right = 0.25)
             runBlocking {

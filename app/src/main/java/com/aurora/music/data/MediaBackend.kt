@@ -9,6 +9,20 @@ import com.aurora.music.model.Song
 interface MediaBackend {
     val session: Session
 
+    fun playbackSourceIdentity(song: Song): PlaybackSourceIdentity? = song.playbackSource ?: when {
+        song.isRadio() -> PlaybackSourceIdentity(source = com.aurora.music.data.rules.RuleSource.RADIO)
+        song.isPodcast() -> PlaybackSourceIdentity(source = com.aurora.music.data.rules.RuleSource.PODCAST)
+        session.type != ServerType.LOCAL && (song.streamUrl.startsWith("file:") || song.streamUrl.startsWith("content:")) ->
+            PlaybackSourceIdentity(source = com.aurora.music.data.rules.RuleSource.LOCAL_FILE)
+        else -> PlaybackSourceIdentity.fromSession(session, song.albumId)
+    }
+
+    fun playbackCollectionIdentity(kind: String, id: String, name: String? = null): PlaybackCollectionIdentity? {
+        if (kind != "playlist") return null
+        val provider = PlaybackSourceIdentity.fromSession(session, "").providerId ?: return null
+        return PlaybackCollectionIdentity(PlaybackSourceIdentity.scoped(provider, "playlist", id), name)
+    }
+
     suspend fun ping(): Boolean
 
     suspend fun home(): HomeData

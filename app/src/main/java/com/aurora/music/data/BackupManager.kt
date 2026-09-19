@@ -1,6 +1,7 @@
 package com.aurora.music.data
 
 import com.aurora.music.data.ir.ImpulseLibraryCodec
+import com.aurora.music.data.rules.PresetRuleSessionCodec
 import com.google.gson.Gson
 import android.content.Context
 import java.io.File
@@ -100,7 +101,8 @@ class BackupManager(
             } else {
                 val backup = BackupArchive.readJsonStream(source)
                 val hadIr = backup.prefs.strings[BackupArchive.IR_PATH_KEY].orEmpty().isNotEmpty() ||
-                    ProcessingPresetCodec.decode(backup.prefs.strings[BackupArchive.PRESETS_KEY]).presets.any { it.audio.dspConvIrPath.isNotEmpty() } ||
+                    ProcessingPresetCodec.decode(backup.prefs.strings[BackupArchive.PRESETS_KEY]).presets.any { it.audio.dspConvIrPath.isNotEmpty() || it.rackImpulseAssets.isNotEmpty() } ||
+                    ImpulseLibraryCodec.decodeLibrary(backup.prefs.strings[BackupArchive.ACTIVE_RACK_IR_KEY]).getOrThrow().isNotEmpty() ||
                     ImpulseLibraryCodec.decodeLibrary(backup.prefs.strings[ImpulseLibraryCodec.PREFERENCE_KEY]).getOrThrow().isNotEmpty()
                 restoreValidated(withoutExternalIr(backup))
                 if (hadIr) "Legacy backup restored without impulse responses. Import them again and restart Aurora."
@@ -111,39 +113,37 @@ class BackupManager(
 
     // cancellation waits for commit or rollback; process loss is not covered.
     private suspend fun restoreValidated(backup: AuroraBackup) = restoreMutex.withLock {
-        val oldPrefs = settingsStore.exportPrefs()
-        val oldLocal = localStore.exportJson()
-        val oldHistory = playHistory.snapshot()
         currentCoroutineContext().ensureActive()
         withContext(NonCancellable + Dispatchers.IO) {
-            var localChanged = false
-            var historyChanged = false
-            var prefsAttempted = false
+            var localRollback: LocalStore.BackupRollback? = null
+            var historyRollback: PlayHistoryStore.BackupRollback? = null
             try {
                 if (backup.localStore.isNotBlank()) {
-                    localStore.restoreBackupJson(backup.localStore)
-                    localChanged = true
+                    localRollback = localStore.replaceBackupJson(backup.localStore)
                 }
-                playHistory.restoreBackup(backup.playHistory)
-                historyChanged = true
-                // commit preferences after the other stores succeed.
-                prefsAttempted = true
+                historyRollback = playHistory.replaceBackup(backup.playHistory)
+                // atomic preference replacement is last and cannot be cancelled
                 settingsStore.restoreBackupPrefs(backup.prefs).getOrThrow()
             } catch (failure: Exception) {
                 val rollbackFailures = mutableListOf<Exception>()
-                if (prefsAttempted) try { settingsStore.restoreBackupPrefs(oldPrefs).getOrThrow() }
+                var retainedNewerChanges = false
+                historyRollback?.let { token ->
+                    try { if (!playHistory.rollbackBackup(token)) retainedNewerChanges = true }
                     catch (rollback: Exception) { rollbackFailures += rollback }
-                if (historyChanged) try { playHistory.restoreBackup(oldHistory) }
+                }
+                localRollback?.let { token ->
+                    try { if (!localStore.rollbackBackup(token)) retainedNewerChanges = true }
                     catch (rollback: Exception) { rollbackFailures += rollback }
-                if (localChanged) try { localStore.restoreBackupJson(oldLocal) }
-                    catch (rollback: Exception) { rollbackFailures += rollback }
+                }
                 if (failure is CancellationException) {
                     rollbackFailures.forEach(failure::addSuppressed)
                     throw failure
                 }
-                val message = if (rollbackFailures.isEmpty())
-                    "Backup restore failed. Previous settings, playlists and history were preserved."
-                else "Backup restore failed, and some previous data could not be restored."
+                val message = when {
+                    rollbackFailures.isNotEmpty() -> "Backup restore failed. Some previous data could not be restored."
+                    retainedNewerChanges -> "Backup restore failed. Newer changes were kept; previous data was not fully restored."
+                    else -> "Backup restore failed. Previous settings, playlists and history were preserved."
+                }
                 throw IOException(message, failure).also { problem -> rollbackFailures.forEach(problem::addSuppressed) }
             }
         }
@@ -161,21 +161,29 @@ class BackupManager(
     private fun withoutExternalIr(backup: AuroraBackup): AuroraBackup {
         val strings = backup.prefs.strings.toMutableMap()
         strings.remove(ImpulseLibraryCodec.PREFERENCE_KEY)
+        strings.remove(BackupArchive.ACTIVE_RACK_IR_KEY)
         strings[BackupArchive.IR_PATH_KEY] = ""
         strings["dsp_conv_name"] = ""
         fun dry(rack: ProcessingRack) = rack.copy(nodes = rack.nodes.map {
-            if (it.kind == RackNodeKind.CONVOLUTION) it.copy(bypass = true) else it
+            if (it.kind == RackNodeKind.CONVOLUTION) it.copy(bypass = true, impulseId = null) else it
         })
+        fun dryPreset(preset: ProcessingPreset) = preset.copy(
+            audio = preset.audio.copy(dspConvEnabled = false, dspConvIrPath = "", dspConvIrName = ""),
+            irSha256 = "", rack = dry(preset.rack), rackImpulseAssets = emptyList())
+        PresetRuleSessionCodec.decode(strings[PresetRuleSessionCodec.PREFERENCE_KEY]).getOrThrow()?.let { session ->
+            strings[PresetRuleSessionCodec.PREFERENCE_KEY] = PresetRuleSessionCodec.encode(session.copy(
+                baseline = dryPreset(session.baseline), applied = dryPreset(session.applied)))
+        }
         strings[ProcessingRackCodec.PREFERENCE_KEY]?.let {
             strings[ProcessingRackCodec.PREFERENCE_KEY] = ProcessingRackCodec.encode(dry(ProcessingRackCodec.decode(it).getOrThrow()))
         }
         strings[BackupArchive.PRESETS_KEY]?.let {
             val library = ProcessingPresetCodec.decode(it)
             require(library.error == null) { library.error.orEmpty() }
-            strings[BackupArchive.PRESETS_KEY] = ProcessingPresetCodec.encode(library.presets.map { p ->
-                p.copy(audio = p.audio.copy(dspConvEnabled = false, dspConvIrPath = "", dspConvIrName = ""),
-                    irSha256 = "", rack = dry(p.rack))
-            })
+            strings[BackupArchive.PRESETS_KEY] = ProcessingPresetCodec.encode(library.presets.map(::dryPreset))
+        }
+        strings[RackSubchainCodec.PREFERENCE_KEY]?.let { json ->
+            strings[RackSubchainCodec.PREFERENCE_KEY] = RackSubchainCodec.encode(RackSubchainCodec.decode(json).getOrThrow().map { it.copy(rack = dry(it.rack), impulseAssets = emptyList()) })
         }
         return backup.copy(prefs = backup.prefs.copy(strings = strings,
             booleans = backup.prefs.booleans + ("dsp_conv_enabled" to false)))

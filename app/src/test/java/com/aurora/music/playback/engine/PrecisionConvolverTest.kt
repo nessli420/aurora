@@ -6,6 +6,25 @@ import kotlin.math.abs
 import kotlin.random.Random
 
 class PrecisionConvolverTest {
+    @Test fun trueStereoRoutesAllFourPathsAndDrainsCrossChannelTail() {
+        val left = doubleArrayOf(.8, .2)
+        val right = doubleArrayOf(.4, -.1)
+        val lr = doubleArrayOf(0.0, .3, -.2, .1)
+        val rl = doubleArrayOf(.15, 0.0, .25)
+        val input = DoubleArray(71 * 2) { sinForTest(it) }
+        val actual = stream(PrecisionConvolver(left, right, 16, lr, rl), input, 7, ConvolutionTailMode.FULL)
+        val expected = DoubleArray((71 + 3) * 2)
+        for (frame in 0 until 71) {
+            for (tap in left.indices) expected[(frame + tap) * 2] += input[frame * 2] * left[tap]
+            for (tap in right.indices) expected[(frame + tap) * 2 + 1] += input[frame * 2 + 1] * right[tap]
+            for (tap in lr.indices) expected[(frame + tap) * 2 + 1] += input[frame * 2] * lr[tap]
+            for (tap in rl.indices) expected[(frame + tap) * 2] += input[frame * 2 + 1] * rl[tap]
+        }
+        assertArrayEquals(expected, actual, 1e-14)
+    }
+
+    private fun sinForTest(i: Int) = kotlin.math.sin(i * .123) * .3
+
     @Test fun stereoAsymmetricImpulseMatchesDirectConvolutionAcrossArbitrarySplits() {
         val random = Random(490)
         val input = DoubleArray(239 * 2) { random.nextDouble(-0.5, 0.5) }
@@ -67,6 +86,50 @@ class PrecisionConvolverTest {
         kernel.reset()
         val silence = stream(kernel, DoubleArray(173 * 2), 11, ConvolutionTailMode.FULL)
         assertTrue(silence.all { it == 0.0 })
+    }
+
+    @Test fun stateMigrationPreservesEveryMatrixHistoryAndTheCompleteTail() {
+        val left = DoubleArray(87) { kotlin.math.sin(it * .17) * .03 }
+        val right = DoubleArray(123) { kotlin.math.cos(it * .21) * .04 }
+        val lr = DoubleArray(137) { kotlin.math.sin(it * .29) * -.02 }
+        val rl = DoubleArray(101) { kotlin.math.cos(it * .13) * .01 }
+        fun kernel() = PrecisionConvolver(left, right, 16, lr, rl)
+        fun warm(kernel: PrecisionConvolver, frames: Int) {
+            val input = DoubleArray(frames * 2) { sinForTest(it) }
+            val output = DoubleArray(32)
+            for (offset in 0 until frames step 16) {
+                assertEquals(16, kernel.queueInput(input, offset, 16))
+                assertEquals(16, kernel.readOutput(output, 0, 16))
+            }
+        }
+        val previous = kernel()
+        warm(previous, 160); previous.reset(); previous.reset(); warm(previous, 80)
+        val replacement = kernel()
+        warm(replacement, 192); replacement.reset()
+        assertTrue(replacement.copyStateFrom(previous))
+        val suffix = DoubleArray(67 * 2) { kotlin.math.cos(it * .073) * .4 }
+        val expected = stream(previous, suffix, 7, ConvolutionTailMode.FULL)
+        val actual = stream(replacement, suffix, 11, ConvolutionTailMode.FULL)
+        assertEquals((67 + 136) * 2, actual.size)
+        assertArrayEquals(expected, actual, 0.0)
+    }
+
+    @Test fun stateMigrationRejectsPendingFramesEosAndDifferentCoefficients() {
+        val previous = PrecisionConvolver(doubleArrayOf(1.0, .25), doubleArrayOf(.5), 16)
+        val replacement = PrecisionConvolver(doubleArrayOf(1.0, .25), doubleArrayOf(.5), 16)
+        previous.queueInput(DoubleArray(32) { .25 }, 0, 16)
+        assertFalse(replacement.copyStateFrom(previous))
+        previous.readOutput(DoubleArray(32), 0, 16)
+        assertFalse(PrecisionConvolver(doubleArrayOf(1.0, .5), doubleArrayOf(.5), 16).copyStateFrom(previous))
+        assertFalse(PrecisionConvolver(doubleArrayOf(1.0, .25), doubleArrayOf(.5), 32).copyStateFrom(previous))
+        assertTrue(replacement.copyStateFrom(previous))
+        replacement.queueInput(DoubleArray(2), 0, 1)
+        assertFalse(replacement.copyStateFrom(previous))
+        replacement.reset()
+        previous.queueInput(DoubleArray(2), 0, 1)
+        assertFalse(replacement.copyStateFrom(previous))
+        previous.queueEndOfInput(ConvolutionTailMode.FULL)
+        assertFalse(replacement.copyStateFrom(previous))
     }
 
     @Test fun binary64RetainsQuietSamplesAndSubFloat32CoefficientDetail() {

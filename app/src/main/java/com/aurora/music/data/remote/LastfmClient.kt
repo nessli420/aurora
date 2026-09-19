@@ -15,9 +15,7 @@ data class LastfmSession(val name: String, val key: String)
 data class LastfmUser(val name: String, val imageUrl: String, val playcount: Long)
 
 // authenticated calls signed: api_sig = md5(params sorted by name as key+value + secret) excluding format
-class LastfmClient(private val apiKey: String, private val secret: String) {
-
-    private val http = OkHttpClient()
+class LastfmClient(private val apiKey: String, private val secret: String, private val http: OkHttpClient = OkHttpClient()) {
     private val gson = Gson()
 
     val configured: Boolean get() = apiKey.isNotBlank() && !apiKey.startsWith("YOUR_")

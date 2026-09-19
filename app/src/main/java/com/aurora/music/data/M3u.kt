@@ -34,7 +34,7 @@ object M3u {
         var pendingArtist = ""
         var pendingDur = 0
         for (raw in text.lineSequence()) {
-            val line = raw.trim().removePrefix("﻿")
+            val line = raw.trim().removePrefix("\uFEFF")
             when {
                 line.isBlank() -> {}
                 line.startsWith("#EXTINF", ignoreCase = true) -> {

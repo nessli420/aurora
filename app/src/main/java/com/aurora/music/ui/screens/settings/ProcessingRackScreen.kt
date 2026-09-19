@@ -63,6 +63,11 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
     var leaving by remember { mutableStateOf(false) }
     var importEq by remember { mutableStateOf(false) }
     var exportEq by remember { mutableStateOf<ProcessingRackNode?>(null) }
+    var routingTarget by remember { mutableStateOf<String?>(null) }
+    var subchainsOpen by remember { mutableStateOf(false) }
+    val subchains by store.rackSubchains.collectAsStateWithLifecycle(initialValue = emptyList())
+    val impulseLibrary by store.impulseLibrary.collectAsStateWithLifecycle(initialValue = emptyList())
+    val rackAssets by store.processingRackAssets.collectAsStateWithLifecycle(initialValue = emptyList())
     var pendingEqExport by rememberSaveable { mutableStateOf<String?>(null) }
 
     LaunchedEffect(persisted) {
@@ -148,7 +153,9 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                     onRename = { nameTarget = RackNameTarget(edited.id, edited.name) },
                     onPickImpulse = { leave(onOpenImpulses) },
                     decoderRate = signalPath.decoder.format?.rateHz?.takeIf { signalPath.active && it in 8_000..768_000 },
-                    onExportEq = { exportEq = edited })
+                    onExportEq = { exportEq = edited },
+                    onRouting = { routingTarget = edited.id }, impulseLibrary = (impulseLibrary + rackAssets).distinctBy { it.id },
+                    nodeMeter = signalPath.nodeMeters.firstOrNull { it.id == edited.id })
             }
         } else {
             Column(Modifier.fillMaxSize()) {
@@ -165,6 +172,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                 }
                                 SettingsSwitchRow(title = "Automatic headroom", subtitle = "Reduce input gain when the rack boosts the signal.",
                                     checked = current.autoHeadroom, onCheckedChange = { enabled -> change { it.copy(autoHeadroom = enabled) } })
+                                SettingsNavRow(Icons.Filled.AccountTree, "Output mix", if (current.output == null) "Last stage" else "${current.output.size} inputs") { routingTarget = "output" }
                                 RackDescription(if (current.enabled)
                                     "Stages run from top to bottom."
                                 else "Select Rack to use these stages.")
@@ -187,7 +195,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                 onBypass = { bypass -> changeNode(node.id) { it.copy(bypass = bypass) } },
                                 onMove = { moveNode(node.id, it) },
                                 onRename = { nameTarget = RackNameTarget(node.id, node.name) },
-                                canDuplicate = current.nodes.size < 16 && node.kind != RackNodeKind.CONVOLUTION &&
+                                canDuplicate = current.nodes.size < 16 && (node.kind != RackNodeKind.CONVOLUTION || current.nodes.count { it.kind == RackNodeKind.CONVOLUTION } < 4) &&
                                     (node.kind !in listOf(RackNodeKind.EQ, RackNodeKind.LEGACY_DSP) ||
                                         current.parametricBandCount() + node.audio.dspParametric.size <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS),
                                 onDuplicate = { change { it.copy(nodes = it.nodes + node.copy(
@@ -203,7 +211,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                 DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false }) {
                                     RackNodeKind.entries.forEach { kind ->
                                         DropdownMenuItem(text = { Text(kind.label()) },
-                                            enabled = kind != RackNodeKind.CONVOLUTION || current.nodes.none { it.kind == kind },
+                                            enabled = kind != RackNodeKind.CONVOLUTION || current.nodes.count { it.kind == kind } < 4,
                                             onClick = {
                                                 addMenu = false
                                                 val node = ProcessingRackNode(UUID.randomUUID().toString(), kind.label(), kind,
@@ -237,12 +245,14 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                         item {
                             SettingsSectionTitle("Save & inspect")
                             SettingsGroup {
+                                SettingsNavRow(Icons.Filled.Layers, "Saved subchains", "Save or append stages") { subchainsOpen = true }
+                                SettingsRowDivider()
                                 SettingsDestinationRow(Icons.Filled.Bookmark, SettingsDestinations.processingPresets, onClick = { leave(onOpenPresets) })
                                 SettingsRowDivider()
                                 SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, onClick = { leave(onOpenSignalPath) })
                             }
                             RackDescription(if (requestedVersion != savedVersion) "Saving changes…" else
-                                "Your rack is saved automatically. Saved processing presets can store the rack and its selected impulse response together.")
+                                "Changes save automatically.")
                         }
                     }
                 }
@@ -262,6 +272,26 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
             }
         }, onOpenPresets = { exportEq = null; leave(onOpenPresets) })
     }
+    routingTarget?.let { target -> current?.let { value ->
+        val index = value.nodes.indexOfFirst { it.id == target }
+        val output = target == "output"
+        if (output || index >= 0) RackRoutingDialog(if (output) "Output mix" else "Stage inputs",
+            if (output) value.nodes else value.nodes.take(index),
+            if (output) value.output else value.nodes[index].inputs,
+            onDismiss = { routingTarget = null }, onSave = { inputs ->
+                change { rack -> if (output) rack.copy(output = inputs) else rack.copy(nodes = rack.nodes.map { if (it.id == target) it.copy(inputs = inputs) else it }) }
+                routingTarget = null
+            })
+    } }
+    if (subchainsOpen && current != null) RackSubchainsDialog(current, subchains,
+        onDismiss = { subchainsOpen = false },
+        onSave = { chain -> scope.launch { store.saveRackSubchain(chain).onFailure { snackbar.showSnackbar(it.message ?: "Could not save subchain.") } } },
+        onDelete = { id -> scope.launch { store.deleteRackSubchain(id) } },
+        onAppend = { chain -> scope.launch {
+            snapshotFlow { requestedVersion == savedVersion }.first { it }
+            store.appendRackSubchain(chain).onSuccess { subchainsOpen = false }
+                .onFailure { snackbar.showSnackbar(it.message ?: "Could not append subchain.") }
+        } })
     nameTarget?.let { target ->
         RackNameDialog(target.name, if (target.nodeId == null) "Rename rack" else "Rename stage", onDismiss = { nameTarget = null }) { name ->
             if (target.nodeId == null) change { it.copy(name = name) }
@@ -329,7 +359,8 @@ private fun RackNodeCard(node: ProcessingRackNode, index: Int, count: Int, onEdi
 private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnabled: Boolean, globalAudio: AudioPrefs,
     padding: PaddingValues, onBack: () -> Unit,
     onEdit: ((ProcessingRackNode) -> ProcessingRackNode) -> Unit, onRename: () -> Unit, onPickImpulse: () -> Unit,
-    decoderRate: Int?, onExportEq: () -> Unit) {
+    decoderRate: Int?, onExportEq: () -> Unit, onRouting: () -> Unit,
+    impulseLibrary: List<com.aurora.music.data.ir.ImpulseLibraryEntry>, nodeMeter: com.aurora.music.playback.engine.RackNodeMeter?) {
     val audio = node.audio
     val legacy = node.kind == RackNodeKind.LEGACY_DSP
     var legacySection by rememberSaveable(node.id) { mutableStateOf("Equalizer") }
@@ -351,9 +382,11 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                         subtitle = if (rackEnabled) "Keep the settings while passing this stage unchanged" else "This rack is currently inactive",
                         onCheckedChange = { bypass -> onEdit { it.copy(bypass = bypass) } })
                     SettingsSliderRow("Wet / dry", "${(node.wet * 100).roundToInt()}% wet", node.wet, 0f..1f) { wet -> onEdit { it.copy(wet = wet) } }
+                    SettingsNavRow(Icons.Filled.AccountTree, "Stage inputs", if (node.inputs == null) "Previous stage" else "${node.inputs.size} inputs", onClick = onRouting)
                     TextButton(onClick = onRename, modifier = Modifier.padding(start = 12.dp)) { Text("Rename stage") }
                 }
             }
+            item { RackAdvancedControls(node, onEdit, nodeMeter, decoderRate) }
             if (legacy) item {
                 SettingsGroup {
                     Box {
@@ -466,7 +499,7 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
             if (node.kind == RackNodeKind.CONVOLUTION) item {
                 SettingsGroup {
                     SettingsNavRow(Icons.Filled.FolderOpen, "Impulse library", globalAudio.dspConvIrName.ifBlank { "Select a WAV" }, onClick = onPickImpulse)
-                    RackDescription("The selected WAV is shared with standard convolution.")
+                    RackImpulsePicker(node, impulseLibrary, onEdit)
                     RackDbSlider("Makeup gain", audio.dspConvMakeupDb, -12f..12f) { value -> changeAudio { it.copy(dspConvMakeupDb = value) } }
                 }
             }
@@ -618,6 +651,11 @@ private fun RackNodeKind.label(): String = when (this) {
     RackNodeKind.SATURATION -> "Saturation"; RackNodeKind.STEREO -> "Stereo & trim"; RackNodeKind.CROSSFEED -> "Crossfeed"
     RackNodeKind.COMPRESSOR -> "Compressor"; RackNodeKind.LIMITER -> "Limiter"; RackNodeKind.DELAY -> "Channel delay"
     RackNodeKind.CONVOLUTION -> "Convolution"
+    RackNodeKind.UTILITY -> "Channel utility"
+    RackNodeKind.DYNAMIC_EQ -> "Dynamic equalizer"
+    RackNodeKind.MULTIBAND -> "Multiband compressor"
+    RackNodeKind.LOUDNESS -> "Adaptive loudness"
+    RackNodeKind.ALIGNMENT_DELAY -> "Alignment delay"
 }
 private fun ProcessingRackNode.summary(): String = when (kind) {
     RackNodeKind.LEGACY_DSP -> "Original effect order"
@@ -630,4 +668,9 @@ private fun ProcessingRackNode.summary(): String = when (kind) {
     RackNodeKind.LIMITER -> "Ceiling ${rackDb(audio.dspLimiterCeilingDb)}"
     RackNodeKind.DELAY -> "L %.1f · R %.1f ms".format(audio.dspDelayLeftMs, audio.dspDelayRightMs)
     RackNodeKind.CONVOLUTION -> "Makeup ${rackDb(audio.dspConvMakeupDb)}"
+    RackNodeKind.UTILITY -> "Matrix, polarity and mono bass"
+    RackNodeKind.DYNAMIC_EQ -> "%.0f Hz · %.1f dB range".format((dynamic ?: RackDynamicEq()).frequencyHz, (dynamic ?: RackDynamicEq()).dynamics.rangeDb)
+    RackNodeKind.MULTIBAND -> "Three linked stereo bands"
+    RackNodeKind.LOUDNESS -> "Relative volume compensation"
+    RackNodeKind.ALIGNMENT_DELAY -> "%.1f ms".format((utility ?: RackUtility()).delayMs)
 }

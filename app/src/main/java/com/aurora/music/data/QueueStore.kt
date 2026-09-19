@@ -34,6 +34,8 @@ data class SavedTrack(
     val liked: Boolean = false,
     val explicit: Boolean = false,
     val genre: String? = "",
+    val playbackSource: PlaybackSourceIdentity? = null,
+    val playbackCollection: PlaybackCollectionIdentity? = null,
 ) {
     fun toSong(): Song = Song(
         id = id ?: "", title = title ?: "", artist = artist ?: "", album = album ?: "",
@@ -41,6 +43,7 @@ data class SavedTrack(
         accent = accentFor(id ?: ""), streamUrl = streamUrl ?: "", albumId = albumId ?: "", artistId = artistId ?: "",
         suffix = suffix ?: "", bitrateKbps = bitrateKbps, sampleRateHz = sampleRateHz, bitDepth = bitDepth,
         replayGainTrack = replayGainTrack, replayGainAlbum = replayGainAlbum, path = path ?: "", genre = genre ?: "",
+        playbackSource = playbackSource, playbackCollection = playbackCollection,
     )
 }
 
@@ -50,6 +53,7 @@ fun Song.toSavedTrack(): SavedTrack = SavedTrack(
     bitrateKbps = bitrateKbps, sampleRateHz = sampleRateHz, bitDepth = bitDepth,
     replayGainTrack = replayGainTrack, replayGainAlbum = replayGainAlbum, liked = liked, explicit = explicit,
     genre = genre,
+    playbackSource = playbackSource, playbackCollection = playbackCollection,
 )
 
 data class SavedQueue(

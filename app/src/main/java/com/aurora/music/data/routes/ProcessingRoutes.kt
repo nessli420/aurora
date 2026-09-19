@@ -17,6 +17,7 @@ data class ProcessingRoute(
     val detail: String = "Start playback to detect the output.",
     val legacyKey: String? = null,
     val category: OutputDeviceCategory? = null,
+    val androidDeviceId: Int? = null,
 )
 
 data class RouteObservation(val generation: Long = 0, val route: ProcessingRoute = ProcessingRoute())

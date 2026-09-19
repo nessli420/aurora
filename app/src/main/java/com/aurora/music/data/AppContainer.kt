@@ -8,11 +8,17 @@ import android.os.VibratorManager
 import android.net.ConnectivityManager
 import android.net.Network
 import android.net.NetworkCapabilities
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.SpotifyClient
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.flow.SharingStarted
 import com.aurora.music.data.remote.SubsonicClient
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
@@ -29,13 +35,17 @@ class AppContainer(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val settingsStore = SettingsStore(appContext)
+    val profileImages = ProfileImages(appContext)
+    val localProfileAppearance = settingsStore.localProfile.map(profileImages::appearance)
+        .flowOn(Dispatchers.IO).stateIn(scope, SharingStarted.Eagerly, ProfileAppearance())
     val playHistory = PlayHistoryStore(appContext)
 
     val queueStore = QueueStore(appContext)
 
     val replayGainStore = ReplayGainStore(appContext)
 
-    val localLibrary = LocalLibrary(appContext, gainProvider = { path -> replayGainStore.gainsFor(path) })
+    val localLibrary = LocalLibrary(appContext, gainProvider = { path -> replayGainStore.gainsFor(path) },
+        separatorsProvider = { settingsStore.artistSeparators.first() })
     private val localStore = LocalStore(appContext)
 
     val replayGainScanner = ReplayGainScanner(localLibrary, replayGainStore)
@@ -84,17 +94,20 @@ class AppContainer(context: Context) {
     // server base url stamped on downloads so they can be scoped per-server
     private fun currentServerId(): String = backend?.session?.server ?: ""
 
-    val downloadManager = DownloadManager(
+    val downloadManager: DownloadManager = DownloadManager(
         appContext,
         streamUrlProvider = { id, bitrate, lossless -> backend?.streamUrl(id, bitrate, lossless) },
         downloadBitrateProvider = { downloadBitrate },
         currentServerIdProvider = { currentServerId() },
         resolveSentinel = ::resolveYtSentinel,
+        playbackSourceProvider = { song -> backend?.playbackSourceIdentity(song) },
+        playbackCollectionProvider = { kind, id, name -> repository.playbackCollectionIdentity(kind, id)?.copy(name = name) },
     )
 
     val sonicStore = SonicStore(appContext)
     val mixStore = com.aurora.music.mix.MixStore(appContext)
     val mixController = com.aurora.music.mix.MixController()
+    @OptIn(UnstableApi::class)
     val stemSeparator = com.aurora.music.mix.StemSeparator(appContext, ::resolveYtSentinel)
     val mixAnalyzer = com.aurora.music.mix.MixAnalyzer(appContext, ::resolveYtSentinel) { account, id, vector ->
         sonicStore.put(id, vector, account)
@@ -145,10 +158,15 @@ class AppContainer(context: Context) {
         sampleRateHz = local.sampleRateHz,
         bitDepth = local.bitDepth,
         path = local.path,
+        playbackSource = PlaybackSourceIdentity.fromSession(localMergeSession, local.albumId,
+            com.aurora.music.data.rules.RuleSource.LOCAL_FILE),
     )
 
     private fun localizedFromDownload(song: Song, local: Song): Song =
-        song.copy(streamUrl = local.streamUrl, artworkUrl = local.artworkUrl.ifBlank { song.artworkUrl })
+        song.copy(streamUrl = local.streamUrl, artworkUrl = local.artworkUrl.ifBlank { song.artworkUrl },
+            suffix = local.suffix, bitrateKbps = local.bitrateKbps, sampleRateHz = local.sampleRateHz,
+            bitDepth = local.bitDepth,
+            playbackSource = local.playbackSource)
 
     private fun buildBackend(session: Session): MediaBackend = when (session.type) {
         ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, ::localizeSong)
@@ -281,7 +299,7 @@ class AppContainer(context: Context) {
     @Volatile private var smartPlaylistsValue: List<SmartPlaylist> = emptyList()
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 
-    val repository = MusicRepository(
+    val repository: MusicRepository = MusicRepository(
         backendProvider = { backend },
         downloadManager = downloadManager,
         offlineProvider = { offlineFlag },
@@ -307,6 +325,15 @@ class AppContainer(context: Context) {
     }
 
     init {
+        scope.launch {
+            var first = true
+            settingsStore.artistSeparators.collect {
+                if (!first) {
+                    _libraryReload.value++
+                }
+                first = false
+            }
+        }
         scope.launch {
             settingsStore.session.distinctUntilChanged().collect { session ->
                 lastSession = session

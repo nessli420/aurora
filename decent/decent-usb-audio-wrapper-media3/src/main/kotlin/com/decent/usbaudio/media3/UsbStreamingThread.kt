@@ -2,113 +2,146 @@ package com.decent.usbaudio.media3
 
 import android.util.Log
 import com.decent.usbaudio.UsbAudioStream
-import java.util.concurrent.ArrayBlockingQueue
-import java.util.concurrent.TimeUnit
+import java.util.ArrayDeque
 
-/**
- * Dedicated thread for USB audio streaming, decoupled from ExoPlayer's
- * render thread.
- *
- * Supports two buffer types:
- * - [FloatBuffer]: float PCM from FFmpeg (MP3, AAC, FLAC via float path)
- * - [RawBuffer]: raw integer PCM from libFLAC (zero float, true bit-perfect)
- *
- * @param usbStream The native USB audio stream to write to.
- *                  Must only be accessed from the USB thread.
- */
-class UsbStreamingThread(private val usbStream: UsbAudioStream) {
-
-    companion object {
-        private const val TAG = "UsbStreamingThread"
-        private const val QUEUE_CAPACITY = 128
-        private const val POLL_TIMEOUT_MS = 100L
+class UsbStreamingThread(
+    private val output: Output,
+    private val onFailure: (String) -> Unit = {},
+    private val capacity: Int = 16,
+) {
+    interface Output {
+        fun write(data: FloatArray): Boolean
+        fun writeRaw(data: ByteArray, encoding: Int): Boolean
+        fun finish(): Boolean
+        fun flush()
+        fun stop()
+        fun hasPendingData(): Boolean = false
+        fun failureReason(): String? = null
     }
 
-    /** Sealed class for type-safe audio buffer queueing. */
-    private sealed class AudioBuffer {
-        class FloatBuffer(val data: FloatArray) : AudioBuffer()
-        class RawBuffer(val data: ByteArray, val encoding: Int) : AudioBuffer()
+    constructor(stream: UsbAudioStream, onFailure: (String) -> Unit = {}) : this(object : Output {
+        override fun write(data: FloatArray): Boolean { stream.write(data); return stream.isAlive }
+        override fun writeRaw(data: ByteArray, encoding: Int): Boolean { stream.writeRaw(data, encoding); return stream.isAlive }
+        override fun finish(): Boolean = stream.finish()
+        override fun flush() {
+            val before = stream.telemetry
+            val wasAlive = stream.isAlive
+            stream.flush()
+            Log.i("UsbStreamingThread", "USB flush: running=$wasAlive->${stream.isAlive}; before=$before; after=${stream.telemetry}")
+        }
+        override fun stop() = stream.stop()
+        override fun hasPendingData(): Boolean = stream.hasPendingData
+        override fun failureReason(): String? {
+            val status = stream.telemetry
+            Log.e("UsbStreamingThread", "USB worker failure: running=${stream.isAlive}; $status")
+            return status.lastError
+        }
+    }, onFailure)
+
+    private sealed class Buffer {
+        class Floats(val data: FloatArray) : Buffer()
+        class Raw(val data: ByteArray, val encoding: Int) : Buffer()
     }
 
-    private val audioQueue = ArrayBlockingQueue<AudioBuffer>(QUEUE_CAPACITY)
-
-    @Volatile
+    private val lock = Object()
+    private val ioLock = Any()
+    private val queue = ArrayDeque<Buffer>()
+    private var generation = 0L
     private var running = false
-    @Volatile
-    private var paused = false
+    private var paused = true
+    private var writing = false
+    private var ending = false
+    private var drained = false
+    private var flushing = false
     private var thread: Thread? = null
-    private var dropCount = 0
+    @Volatile var failure: String? = null
+        private set
 
-    fun start() {
+    init { require(capacity > 0) }
+
+    fun start() = synchronized(lock) {
+        check(thread == null)
         running = true
-        thread = Thread({
-            Log.i(TAG, "USB streaming thread started")
-            while (running) {
-                if (paused) {
-                    Thread.sleep(50)
-                    continue
-                }
-                val qBefore = audioQueue.size
-                when (val buf = audioQueue.poll(POLL_TIMEOUT_MS, TimeUnit.MILLISECONDS)) {
-                    is AudioBuffer.FloatBuffer -> {
-                        usbStream.write(buf.data)
-                        if (qBefore <= 1) Log.w(TAG, "Queue nearly empty: $qBefore before write")
+        thread = Thread(::run, "UsbStreamingThread").apply { priority = Thread.MAX_PRIORITY; start() }
+    }
+
+    private fun run() {
+        while (true) {
+            val item: Buffer?
+            val token: Long
+            synchronized(lock) {
+                while (running && (paused || flushing || queue.isEmpty() && (!ending || drained))) lock.wait()
+                if (!running) return
+                token = generation
+                item = queue.pollFirst()
+                writing = true
+            }
+            var success = true
+            try {
+                synchronized(ioLock) {
+                    if (synchronized(lock) { running && token == generation }) success = when (item) {
+                        is Buffer.Floats -> output.write(item.data)
+                        is Buffer.Raw -> output.writeRaw(item.data, item.encoding)
+                        null -> output.finish()
                     }
-                    is AudioBuffer.RawBuffer -> {
-                        usbStream.writeRaw(buf.data, buf.encoding)
-                        if (qBefore <= 1) Log.w(TAG, "Queue nearly empty: $qBefore before writeRaw")
-                    }
-                    null -> Log.w(TAG, "Queue EMPTY — poll timeout")
+                }
+            } catch (_: Exception) { success = false }
+            val failed = synchronized(lock) {
+                writing = false
+                if (token != generation || !running) false else if (!success) {
+                    failure = output.failureReason() ?:
+                        if (item == null) "USB output could not drain." else "USB audio transfer failed."
+                    running = false
+                    queue.clear()
+                    true
+                } else {
+                    if (item == null) drained = true
+                    false
                 }
             }
-            Log.i(TAG, "USB streaming thread exited")
-        }, "UsbStreamingThread").apply {
-            priority = Thread.MAX_PRIORITY
-            start()
+            if (failed) { onFailure(failure!!); return }
         }
     }
 
-    /** Enqueue float PCM (FFmpeg path). Non-blocking, drop-oldest on full. */
-    fun enqueue(floatBuf: FloatArray) {
-        val buf = AudioBuffer.FloatBuffer(floatBuf)
-        if (!audioQueue.offer(buf)) {
-            audioQueue.poll()
-            audioQueue.offer(buf)
-            dropCount++
-            if (dropCount <= 3 || dropCount % 100 == 0) {
-                Log.w(TAG, "Queue full, dropped buffer #$dropCount")
-            }
-        }
+    fun enqueue(data: FloatArray): Boolean = synchronized(lock) { offer(Buffer.Floats(data)) }
+    fun enqueueRaw(data: ByteArray, encoding: Int): Boolean = synchronized(lock) { offer(Buffer.Raw(data, encoding)) }
+
+    private fun offer(buffer: Buffer): Boolean {
+        if (!running || ending || queue.size >= capacity) return false
+        queue.addLast(buffer)
+        lock.notifyAll()
+        return true
     }
 
-    /** Enqueue raw integer PCM (libFLAC path). Non-blocking, drop-oldest on full. */
-    fun enqueueRaw(rawBytes: ByteArray, encoding: Int) {
-        val buf = AudioBuffer.RawBuffer(rawBytes, encoding)
-        if (!audioQueue.offer(buf)) {
-            audioQueue.poll()
-            audioQueue.offer(buf)
-            dropCount++
-            if (dropCount <= 3 || dropCount % 100 == 0) {
-                Log.w(TAG, "Queue full, dropped raw buffer #$dropCount")
-            }
-        }
-    }
-
-    fun pauseStreaming() { paused = true }
-    fun resumeStreaming() { paused = false }
-
-    fun hasPendingData(): Boolean = !audioQueue.isEmpty()
-
-    fun queueSize(): Int = audioQueue.size
+    fun pauseStreaming() = synchronized(lock) { paused = true }
+    fun resumeStreaming() = synchronized(lock) { paused = false; lock.notifyAll() }
+    fun queueSize(): Int = synchronized(lock) { queue.size }
+    fun hasPendingData(): Boolean = synchronized(lock) { running && (queue.isNotEmpty() || writing || ending && !drained) } ||
+        failure == null && output.hasPendingData()
+    fun isDrained(): Boolean = synchronized(lock) { ending && drained && failure == null }
+    fun endOfStream() = synchronized(lock) { ending = true; lock.notifyAll() }
 
     fun flush() {
-        audioQueue.clear()
+        synchronized(lock) {
+            generation++
+            flushing = true
+            queue.clear()
+            ending = false
+            drained = false
+        }
+        try { synchronized(ioLock) { output.flush() } }
+        finally { synchronized(lock) { flushing = false; lock.notifyAll() } }
     }
 
-    fun stop() {
-        running = false
-        audioQueue.clear()
-        thread?.join(2000)
-        thread = null
+    fun stop(timeoutMs: Long = 2000): Boolean {
+        val worker = synchronized(lock) { running = false; queue.clear(); lock.notifyAll(); thread }
+        output.stop()
+        if (worker !== Thread.currentThread()) worker?.join(timeoutMs.coerceAtLeast(1))
+        return (worker?.isAlive != true).also { if (it) synchronized(lock) { thread = null } }
+    }
+
+    fun awaitStopped() {
+        val worker = synchronized(lock) { thread }
+        if (worker !== Thread.currentThread()) worker?.join()
     }
 }

@@ -2,8 +2,10 @@ package com.aurora.music.viewmodel
 
 import android.app.Application
 import android.content.Intent
+import androidx.annotation.OptIn
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.accountKey
 import com.aurora.music.mix.*
@@ -25,6 +27,7 @@ data class MixUiState(
     val modelReady: Boolean = false,
 )
 
+@OptIn(UnstableApi::class)
 class MixViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as AuroraApplication).container
     private val _state = MutableStateFlow(MixUiState())

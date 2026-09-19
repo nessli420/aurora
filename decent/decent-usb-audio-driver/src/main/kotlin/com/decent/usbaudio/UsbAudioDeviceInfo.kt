@@ -19,5 +19,8 @@ data class UsbAudioDeviceInfo(
     val bestBitDepth: Int,
     // The AudioControl interface number — goes in the low byte of wIndex for clock control transfers.
     // NOT always 0 (e.g. FiiO KA13 uses interface 1), so it must be carried, not hardcoded.
-    val controlInterfaceId: Int = 0
+    val controlInterfaceId: Int = 0,
+    val formats: List<UsbAudioFormat> = emptyList(),
+    val usbSpeed: Int = 0,
+    val unsupportedReason: String? = null,
 )

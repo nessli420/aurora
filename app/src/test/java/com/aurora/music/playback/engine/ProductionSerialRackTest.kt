@@ -89,7 +89,7 @@ class ProductionSerialRackTest {
         }
     }
 
-    @Test fun convolutionInTheMiddleMixesCorrespondingDryFramesAndKeepsExactDuration() {
+    @Test fun convolutionInTheMiddleMixesCorrespondingDryFramesAndPreservesFullTail() {
         val gain = node("gain", RackNodeKind.GAIN, AudioPrefs(dspPreampDb = -6f))
         val convolution = node("ir", RackNodeKind.CONVOLUTION, AudioPrefs(), wet = .25f)
         val restore = node("restore", RackNodeKind.GAIN, AudioPrefs(dspPreampDb = 6f))
@@ -97,7 +97,9 @@ class ProductionSerialRackTest {
         val graph = ProductionSerialRack.compile(rack(gain, convolution, restore), 48_000, impulse)
         val source = DoubleArray(1_907 * 2) { ((it % 29) - 14) * 2.0.pow(-35) }
         val actual = stream(graph, source, 253)
-        assertEquals(source.size, actual.size)
+        assertEquals(source.size + 2, actual.size)
+        assertEquals(source[source.lastIndex - 1] * .5 * .25, actual[actual.lastIndex - 1], 2e-20)
+        assertEquals(source[source.lastIndex] * .25 * .25, actual[actual.lastIndex], 2e-20)
         source.indices.forEach { i ->
             val previous = if (i >= 2) source[i - 2] else 0.0
             val filtered = if (i % 2 == 0) previous * .5 else source[i] * .5 + previous * .25
@@ -136,15 +138,32 @@ class ProductionSerialRackTest {
     @Test fun stableNodeHistorySurvivesAnEditAndSeekRemovesIt() {
         val delay = node("delay", RackNodeKind.DELAY, AudioPrefs(dspDelayLeftMs = 1f))
         val original = ProductionSerialRack.compile(rack(delay), 48_000, null)
-        val first = block(DoubleArray(24 * 2).apply { this[0] = 1.0 }, 0)
-        assertTrue(original.queueInput(first)); original.getOutput()
+        repeat(4) { index ->
+            val samples = DoubleArray(256 * 2)
+            if (index == 3) samples[232 * 2] = 1.0
+            assertTrue(original.queueInput(block(samples, index * 256L)))
+            val output = original.getOutput()
+            if (index < 3) assertNull(output)
+            else {
+                val emitted = requireNotNull(output)
+                assertArrayEquals(DoubleArray(1024 * 2), emitted.samples.copyOf(emitted.sampleCount), 0.0)
+            }
+        }
+        assertFalse(original.hasPendingData)
         val changed = ProductionSerialRack.compile(rack(delay.copy(wet = .5f)), 48_000, null)
         changed.copyNodeHistoriesFrom(original)
-        assertTrue(changed.queueInput(block(DoubleArray(32 * 2), 24)))
+        assertTrue(changed.queueInput(block(DoubleArray(64 * 2), 1024)))
+        assertNull(changed.getOutput())
+        changed.queueEndOfStream()
         val output = requireNotNull(changed.getOutput())
-        assertEquals(.5, output.samples[24 * 2], 1e-12)
+        assertEquals(48, changed.tailFrames)
+        assertEquals(64 + changed.tailFrames, output.frameCount)
+        assertEquals(1024L, output.firstFramePosition)
+        val expected = DoubleArray(output.sampleCount).apply { this[24 * 2] = .5 }
+        assertArrayEquals(expected, output.samples.copyOf(output.sampleCount), 1e-12)
+        assertNull(changed.getOutput()); assertTrue(changed.isEnded)
         changed.reset()
-        assertArrayEquals(DoubleArray(128), stream(changed, DoubleArray(128)), 0.0)
+        assertArrayEquals(DoubleArray((64 + changed.tailFrames) * 2), stream(changed, DoubleArray(64 * 2)), 0.0)
     }
 
     @Test fun preparedGraphGainChangeCrossfadesRatherThanJumping() {

@@ -6,7 +6,7 @@ import kotlin.math.sin
 
 /** Binary64 radix-2 FFT. Tables and work buffers are created before processing begins. */
 class PrecisionFft(val size: Int) {
-    init { require(size in 2..16_384 && size and (size - 1) == 0) }
+    init { require(size in 2..1_048_576 && size and (size - 1) == 0) }
     private val realTwiddle = DoubleArray(size / 2) { cos(-2.0 * PI * it / size) }
     private val imaginaryTwiddle = DoubleArray(size / 2) { sin(-2.0 * PI * it / size) }
     private val reversed = IntArray(size) { Integer.reverse(it) ushr (32 - Integer.numberOfTrailingZeros(size)) }
@@ -65,17 +65,26 @@ enum class ConvolutionTailMode { TRUNCATE_AT_INPUT, FULL }
 class PrecisionConvolver(
     impulseLeft: DoubleArray,
     impulseRight: DoubleArray,
-    val blockSize: Int = 1024
+    val blockSize: Int = 1024,
+    impulseLeftToRight: DoubleArray? = null,
+    impulseRightToLeft: DoubleArray? = null,
 ) {
     init {
         require(blockSize in 16..4096 && blockSize and (blockSize - 1) == 0)
         require(impulseLeft.isNotEmpty() && impulseRight.isNotEmpty())
         require(impulseLeft.size <= MAX_IR_FRAMES && impulseRight.size <= MAX_IR_FRAMES)
         require(impulseLeft.all { it.isFinite() } && impulseRight.all { it.isFinite() })
+        for (cross in listOfNotNull(impulseLeftToRight, impulseRightToLeft)) {
+            require(cross.isNotEmpty() && cross.size <= MAX_IR_FRAMES && cross.all(Double::isFinite))
+        }
     }
-    val tailFrames: Int = maxOf(impulseLeft.size, impulseRight.size) - 1
+    val tailFrames: Int = maxOf(impulseLeft.size, impulseRight.size,
+        impulseLeftToRight?.size ?: 0, impulseRightToLeft?.size ?: 0) - 1
     private val left = Channel(impulseLeft, blockSize)
     private val right = Channel(impulseRight, blockSize)
+    private val leftToRight = impulseLeftToRight?.let { Channel(it, blockSize) }
+    private val rightToLeft = impulseRightToLeft?.let { Channel(it, blockSize) }
+    private val crossOutput = DoubleArray(blockSize)
     private val inputLeft = DoubleArray(blockSize)
     private val inputRight = DoubleArray(blockSize)
     private val outputLeft = DoubleArray(blockSize)
@@ -133,15 +142,38 @@ class PrecisionConvolver(
     }
 
     fun reset() {
-        left.reset(); right.reset()
+        left.reset(); right.reset(); leftToRight?.reset(); rightToLeft?.reset()
         inputLeft.fill(0.0); inputRight.fill(0.0)
         outputLeft.fill(0.0); outputRight.fill(0.0)
         inputCount = 0; outputCount = 0; outputPosition = 0
         inputFrames = 0; producedFrames = 0; endTarget = -1
     }
 
+    fun copyStateFrom(previous: PrecisionConvolver): Boolean {
+        if (blockSize != previous.blockSize || tailFrames != previous.tailFrames ||
+            inputCount != 0 || previous.inputCount != 0 || availableOutputFrames != 0 || previous.availableOutputFrames != 0 ||
+            endTarget >= 0 || previous.endTarget >= 0 || !left.matches(previous.left) || !right.matches(previous.right) ||
+            (leftToRight == null) != (previous.leftToRight == null) || (rightToLeft == null) != (previous.rightToLeft == null)) return false
+        if (leftToRight != null && !leftToRight.matches(previous.leftToRight!!)) return false
+        if (rightToLeft != null && !rightToLeft.matches(previous.rightToLeft!!)) return false
+        left.copyStateFrom(previous.left); right.copyStateFrom(previous.right)
+        leftToRight?.copyStateFrom(previous.leftToRight!!)
+        rightToLeft?.copyStateFrom(previous.rightToLeft!!)
+        inputFrames = previous.inputFrames; producedFrames = previous.producedFrames
+        outputCount = 0; outputPosition = 0
+        return true
+    }
+
     private fun produce(validFrames: Int) {
         left.process(inputLeft, outputLeft); right.process(inputRight, outputRight)
+        leftToRight?.let { channel ->
+            channel.process(inputLeft, crossOutput)
+            for (i in 0 until blockSize) outputRight[i] += crossOutput[i]
+        }
+        rightToLeft?.let { channel ->
+            channel.process(inputRight, crossOutput)
+            for (i in 0 until blockSize) outputLeft[i] += crossOutput[i]
+        }
         inputCount = 0; outputPosition = 0; outputCount = validFrames
         producedFrames += validFrames
     }
@@ -202,6 +234,23 @@ class PrecisionConvolver(
             if (epoch == Int.MAX_VALUE) { historyEpoch.fill(0); epoch = 1 } else epoch++
             previous.fill(0.0); xr.fill(0.0); xi.fill(0.0); yr.fill(0.0); yi.fill(0.0)
             position = 0
+        }
+
+        fun matches(other: Channel): Boolean {
+            if (block != other.block || partitions != other.partitions) return false
+            for (i in 0 until partitions) if (!hr[i].contentEquals(other.hr[i]) || !hi[i].contentEquals(other.hi[i])) return false
+            return true
+        }
+
+        fun copyStateFrom(other: Channel) {
+            for (i in 0 until partitions) if (other.historyEpoch[i] == other.epoch) {
+                other.historyReal[i].copyInto(historyReal[i])
+                other.historyImaginary[i].copyInto(historyImaginary[i])
+            }
+            other.historyEpoch.copyInto(historyEpoch)
+            other.previous.copyInto(previous)
+            epoch = other.epoch
+            position = other.position
         }
     }
 

@@ -1,5 +1,8 @@
 package com.aurora.music.data
 
+import androidx.annotation.OptIn
+import androidx.media3.common.util.UnstableApi
+import com.aurora.music.playback.ConvolutionProcessor
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonArray
@@ -30,21 +33,23 @@ class ImportedProcessingPresetBundle internal constructor(
     val preset: ProcessingPreset,
     val impulseResponse: File?,
     private val directory: File,
+    val assets: Map<String, File> = emptyMap(),
 ) : AutoCloseable {
     override fun close() {
         // Only files created by this reader, under its own fresh directory, are removed.
         impulseResponse?.delete()
+        assets.values.forEach { it.delete() }
         File(directory, "bundle.zip").delete()
         directory.delete()
     }
 }
 
-/** A deliberately small portable format: a manifest and at most one immutable IR. */
+/** portable snapshots with content-addressed impulse assets. */
 object ProcessingPresetBundle {
-    const val VERSION = 3
+    const val VERSION = 5
     const val MAX_IR_BYTES = 64L * 1024 * 1024
     private const val MAX_MANIFEST_BYTES = 512L * 1024
-    private const val MAX_ARCHIVE_BYTES = MAX_IR_BYTES + 1024 * 1024
+    private const val MAX_ARCHIVE_BYTES = 512L * 1024 * 1024
     private const val FORMAT = "aurora-processing-preset"
     private const val MANIFEST = "manifest.json"
     private const val IR = "ir.wav"
@@ -53,7 +58,18 @@ object ProcessingPresetBundle {
 
     /** The caller owns [output]. A failed export must not be treated as a finished document. */
     fun write(preset: ProcessingPreset, impulseResponse: File?, output: OutputStream) {
-        val portable = preset.copy(audio = preset.audio.copy(dspConvIrPath = ""))
+        ProcessingPresetAssets.validateFiles(preset.rackImpulseAssets)
+        val assets = linkedMapOf<String, File>()
+        val portable = preset.copy(audio = preset.audio.copy(dspConvIrPath = ""),
+            rackImpulseAssets = ProcessingPresetAssets.remapEntries(preset.rackImpulseAssets) { path, expected ->
+                val file = File(path)
+                require(file.isFile && file.canRead()) { "A rack impulse response is missing." }
+                validateImpulseResponse(file)
+                val hash = sha256(file)
+                require(expected == hash) { "A rack impulse response has changed." }
+                assets[hash] = file
+                "aurora-ir:$hash" to hash
+            })
         val encoded = JsonParser.parseString(ProcessingPresetCodec.encode(listOf(portable)))
             .asJsonArray[0].asJsonObject
         encoded.remove("id")
@@ -68,6 +84,9 @@ object ProcessingPresetBundle {
             require(impulseResponse.isFile && impulseResponse.canRead()) { "This preset's impulse response is missing." }
             validateImpulseResponse(impulseResponse)
             require(sha256(impulseResponse) == portable.irSha256) { "This preset's impulse response has changed." }
+        }
+        require(assets.size <= 8 && assets.values.sumOf { it.length() } + (impulseResponse?.length() ?: 0) <= MAX_ARCHIVE_BYTES - 1024 * 1024) {
+            "Preset impulse responses exceed 511 MiB."
         }
         val manifest = JsonObject().apply {
             addProperty("format", FORMAT)
@@ -90,6 +109,13 @@ object ProcessingPresetBundle {
                 require(hex(digest.digest()) == portable.irSha256) { "The impulse response changed during export. Try again." }
                 zip.closeEntry()
             }
+            assets.filterKeys { it != portable.irSha256 }.forEach { (hash, file) ->
+                zip.putNextEntry(ZipEntry("assets/$hash.wav"))
+                val digest = MessageDigest.getInstance("SHA-256")
+                file.inputStream().use { copyBounded(it, zip, MAX_IR_BYTES, digest = digest) }
+                require(hex(digest.digest()) == hash) { "A rack impulse response changed during export." }
+                zip.closeEntry()
+            }
         }
     }
 
@@ -100,16 +126,18 @@ object ProcessingPresetBundle {
         check(directory.mkdir()) { "Cannot create temporary preset storage." }
         val archive = File(directory, "bundle.zip")
         val ir = File(directory, IR)
+        val assets = linkedMapOf<String, File>()
         try {
             archive.outputStream().use { copyBounded(input, it, MAX_ARCHIVE_BYTES) }
             var preset: ProcessingPreset
             var hasIr = false
             ZipFile(archive).use { zip ->
                 val entries = mutableMapOf<String, ZipEntry>()
+                var expandedBytes = 0L
                 val iterator = zip.entries()
                 while (iterator.hasMoreElements()) {
                     val entry = iterator.nextElement()
-                    require(entries.size < 2 && entry.name in setOf(MANIFEST, IR) && !entry.isDirectory) {
+                    require(entries.size < 10 && (entry.name in setOf(MANIFEST, IR) || entry.name.matches(Regex("assets/[0-9a-f]{64}\\.wav"))) && !entry.isDirectory) {
                         "The preset archive contains unsupported files or paths."
                     }
                     require(entries.put(entry.name, entry) == null) { "The preset archive contains duplicate files." }
@@ -118,6 +146,8 @@ object ProcessingPresetBundle {
                     require(entry.size in 1..limit && entry.compressedSize in 1..MAX_ARCHIVE_BYTES) {
                         "A preset archive entry exceeds the supported size."
                     }
+                    expandedBytes += entry.size
+                    require(expandedBytes <= MAX_ARCHIVE_BYTES) { "Expanded preset exceeds 512 MiB." }
                 }
                 val metadata = entries[MANIFEST] ?: error("The archive has no preset manifest.")
                 val bytes = java.io.ByteArrayOutputStream()
@@ -128,17 +158,41 @@ object ProcessingPresetBundle {
                 hasIr = entries.containsKey(IR)
                 require(hasIr == preset.irSha256.isNotEmpty()) { "The preset's impulse response dependency is incomplete." }
                 require(!preset.requiresImpulseResponse() || hasIr) { "Enabled convolution requires an included impulse response." }
+                val required = linkedSetOf<String>()
+                ProcessingPresetAssets.remapEntries(preset.rackImpulseAssets) { path, hash ->
+                    require(path == "aurora-ir:$hash") { "Invalid portable rack impulse reference." }
+                    required += hash
+                    path to hash
+                }
+                val assetNames = required.filterNot { hasIr && it == preset.irSha256 }.map { "assets/$it.wav" }
+                require(entries.keys == setOf(MANIFEST) + (if (hasIr) setOf(IR) else emptySet()) + assetNames) {
+                    "Preset impulse assets are missing or unreferenced."
+                }
                 if (hasIr) {
                     val digest = MessageDigest.getInstance("SHA-256")
                     ir.outputStream().use { readEntry(zip, entries.getValue(IR), it, MAX_IR_BYTES, digest) }
                     require(hex(digest.digest()) == preset.irSha256) { "The preset's impulse response checksum does not match." }
                     validateImpulseResponse(ir)
                 }
+                required.forEach { hash ->
+                    if (hasIr && hash == preset.irSha256) assets[hash] = ir else {
+                        val file = File(directory, "$hash.wav")
+                        assets[hash] = file
+                        val digest = MessageDigest.getInstance("SHA-256")
+                        file.outputStream().use { readEntry(zip, entries.getValue("assets/$hash.wav"), it, MAX_IR_BYTES, digest) }
+                        require(hex(digest.digest()) == hash) { "Rack impulse checksum does not match." }
+                        validateImpulseResponse(file)
+                    }
+                }
+                ProcessingPresetAssets.validateFiles(ProcessingPresetAssets.remapEntries(preset.rackImpulseAssets) { _, hash ->
+                    assets.getValue(hash).absolutePath to hash
+                })
             }
             archive.delete()
-            return ImportedProcessingPresetBundle(preset, ir.takeIf { hasIr }, directory)
+            return ImportedProcessingPresetBundle(preset, ir.takeIf { hasIr }, directory, assets)
         } catch (failure: Throwable) {
             ir.delete()
+            assets.values.forEach { it.delete() }
             archive.delete()
             directory.delete()
             throw failure
@@ -160,12 +214,12 @@ object ProcessingPresetBundle {
             "This is not an Aurora processing preset."
         }
         val version = root.get("version")
-        require(version.isJsonPrimitive && version.asJsonPrimitive.isNumber && version.asDouble in listOf(1.0, 2.0, VERSION.toDouble())) {
+        require(version.isJsonPrimitive && version.asJsonPrimitive.isNumber && version.asDouble in listOf(1.0, 2.0, 3.0, 4.0, VERSION.toDouble())) {
             "Unsupported preset bundle version."
         }
         require(root.get("preset").isJsonObject) { "Missing preset settings." }
         val p = root.getAsJsonObject("preset")
-        require(p.keySet() == if (version.asDouble == 1.0) presetKeys else presetKeys + "rack") { "Incomplete or unsupported preset settings." }
+        require(p.keySet() == when { version.asDouble == 1.0 -> presetKeys; version.asDouble >= 4.0 -> presetKeys + setOf("rack", "rackImpulseAssets"); else -> presetKeys + "rack" }) { "Incomplete or unsupported preset settings." }
         require(p.get("schemaVersion").isJsonPrimitive && p.get("schemaVersion").asJsonPrimitive.isNumber &&
             p.get("schemaVersion").asDouble == version.asDouble) { "Preset bundle and snapshot versions do not match." }
         p.addProperty("id", UUID.randomUUID().toString())
@@ -214,6 +268,7 @@ object ProcessingPresetBundle {
     }
 
     /** Header/chunk validation only: malformed frame counts never reach the allocating IR decoder. */
+    @OptIn(UnstableApi::class)
     internal fun validateImpulseResponse(file: File) {
         require(file.length() in 44..MAX_IR_BYTES) { "The impulse response is not a supported WAV file." }
         RandomAccessFile(file, "r").use { wav ->
@@ -228,6 +283,10 @@ object ProcessingPresetBundle {
             var byteRate = 0L
             var blockAlign = 0
             var bits = 0
+            var validBits = 0
+            var hasFormat = false
+            var hasAlignment = false
+            var alignmentFrames = 0L
             var dataOffset = 0L
             var dataBytes = 0L
             var chunks = 0
@@ -240,31 +299,53 @@ object ProcessingPresetBundle {
                 require(paddedEnd <= riffEnd) { "The impulse response contains a truncated WAV chunk." }
                 when (kind) {
                     0x666d7420 -> {
-                        require(format == 0 && length >= 16 && length % 2 == 0L) { "The impulse response has an invalid format chunk." }
+                        require(!hasFormat && length >= 16) { "The impulse response has an invalid format chunk." }
                         format = ushort()
                         channels = ushort()
                         sampleRate = uint()
                         byteRate = uint()
                         blockAlign = ushort()
                         bits = ushort()
+                        validBits = bits
+                        if (format == 0xfffe) {
+                            require(length >= 40) { "The extensible WAV format is incomplete." }
+                            val extensionBytes = ushort()
+                            require(extensionBytes >= 22 && extensionBytes.toLong() <= length - 18) { "Invalid extensible WAV format size." }
+                            validBits = ushort()
+                            uint()
+                            val subFormat = uint()
+                            require(uint() == 0x00100000L && uint() == 0xaa000080L && uint() == 0x719b3800L && subFormat in setOf(1L, 3L)) {
+                                "Unsupported extensible WAV subformat."
+                            }
+                            format = subFormat.toInt()
+                        }
+                        hasFormat = true
                     }
                     0x64617461 -> {
                         require(dataOffset == 0L && length > 0) { "The impulse response has invalid audio data." }
                         dataOffset = start
                         dataBytes = length
                     }
+                    0x6175444c -> {
+                        require(!hasAlignment && length == 4L) { "Invalid impulse alignment metadata." }
+                        alignmentFrames = uint()
+                        require(alignmentFrames <= Int.MAX_VALUE) { "Invalid impulse alignment delay." }
+                        hasAlignment = true
+                    }
                 }
                 wav.seek(paddedEnd)
             }
-            require(channels in 1..2 && sampleRate in 8_000..384_000 &&
-                ((format == 1 && bits in setOf(8, 16, 24, 32)) || (format == 3 && bits == 32))) {
-                "Use a mono or stereo PCM WAV (8/16/24/32-bit), or 32-bit float WAV, at 8–384 kHz."
+            require(hasFormat && channels in listOf(1, 2, 4) && sampleRate in 8_000..768_000 &&
+                ((format == 1 && bits in setOf(8, 16, 24, 32)) || (format == 3 && bits == 32)) &&
+                validBits in 1..bits && (format != 3 || validBits == 32)) {
+                "Use mono, stereo or LL/LR/RL/RR PCM or float32 WAV at 8–768 kHz."
             }
             val frameSize = channels * (bits / 8)
             require(blockAlign == frameSize && byteRate == sampleRate * frameSize && dataOffset > 0 &&
-                dataBytes % frameSize == 0L && dataBytes / frameSize <= 8_000_000) {
-                "The impulse response has invalid frame sizes or exceeds 8 million frames."
+                dataBytes % frameSize == 0L && dataBytes / frameSize <= ConvolutionProcessor.MAX_DECODED_IR_FRAMES) {
+                "The impulse response has invalid frame sizes or exceeds ${ConvolutionProcessor.MAX_DECODED_IR_FRAMES} frames."
             }
+            require(alignmentFrames < dataBytes / frameSize) { "Impulse alignment exceeds its length." }
             // Floating point IRs must not inject NaN/Infinity into live convolution.
             if (format == 3) {
                 wav.seek(dataOffset)

@@ -1,6 +1,8 @@
 package com.aurora.music.playback
 
+import androidx.annotation.OptIn
 import androidx.media3.common.C
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.data.PcmLevels
 import java.nio.ByteBuffer
 import kotlin.math.abs
@@ -37,6 +39,7 @@ class PcmLevelMeter {
     @Volatile private var publishedTimeUs = C.TIME_UNSET
     @Volatile private var publishedAt = 0L
 
+    @OptIn(UnstableApi::class)
     fun configure(encoding: Int, channels: Int, sampleRate: Int) {
         this.encoding = encoding
         this.channels = channels
@@ -61,6 +64,7 @@ class PcmLevelMeter {
     }
 
     /** Observe only complete frames in the consumed range. Absolute reads leave the buffer intact. */
+    @OptIn(UnstableApi::class)
     fun observe(buffer: ByteBuffer, start: Int, end: Int, presentationTimeUs: Long = C.TIME_UNSET) {
         if (bytes == 0 || channels !in 1..2 || rate <= 0 || start < 0 || end > buffer.limit()) return
         val stride = bytes * channels
@@ -104,6 +108,7 @@ class PcmLevelMeter {
     }
 
     // Android's decoded little-endian PCM, independent of ByteBuffer.order().
+    @OptIn(UnstableApi::class)
     private fun sample(buffer: ByteBuffer, p: Int): Double {
         val lo = buffer.get(p).toInt() and 255
         val hi = buffer.get(p + 1).toInt()

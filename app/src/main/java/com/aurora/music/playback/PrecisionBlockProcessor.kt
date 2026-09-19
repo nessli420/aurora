@@ -15,18 +15,7 @@ import java.util.concurrent.Executors
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.math.pow
 
-/**
- * Stereo production block pipeline: effects -> convolution -> makeup, entirely binary64.
- * Single playback-thread owner for configure/queue/output/EOS/flush/reset. Controls may update
- * concurrently. Input is copied only when queueInput returns true and is never modified. A false
- * result means the caller must drain getOutput and retry the same input (or wait for IR preparation).
- * Output is take-once and owned here: copy it before the next mutating method call.
- *
- * At most 256 accepted input frames plus 1024 output frames are staged. Convolution's own bounded
- * partition buffers collect up to 1024 frames. Live IR changes finish previously accepted input
- * and emit its valid partial block before switching. EOS truncates the IR tail at input duration.
- * queueInput/getOutput allocate nothing, take no locks and do no file I/O.
- */
+/** binary64 pipeline; accepted input is copied, output is take-once, eos drains the fir tail. */
 class PrecisionBlockProcessor {
     @Volatile var enabled: Boolean = false
         set(value) { field = value; notifyRack() }
@@ -42,7 +31,20 @@ class PrecisionBlockProcessor {
     @Volatile private var rackEverRequested = false
     @Volatile private var rackManaged = false
     private val rackProcessor = ProductionRackProcessor()
+    @Volatile private var rackImpulses: Map<String, ImpulseResponse> = emptyMap()
+    var relativeVolume: Double
+        get() = rackProcessor.relativeVolume
+        set(value) { rackProcessor.relativeVolume = value.coerceIn(0.0, 1.0) }
+    val rackLatencyFrames: Int get() = rackProcessor.latencyFrames
+    val rackTailFrames: Int get() = rackProcessor.tailFrames
+    fun rackMeters() = rackProcessor.meterSnapshot()
+    fun setRackImpulses(impulses: Map<String, ImpulseResponse>) {
+        rackImpulses = impulses.toMap()
+        notifyRack()
+    }
     val rackActive: Boolean get() = rackManaged && processingActive && rackProcessor.rackActive
+    val processingChangesSamples: Boolean get() = if (rackManaged) rackProcessor.processingChangesSamples
+        else processingActive || convolutionProcessingActive
     val rackDescription: String get() = if (rackManaged) rackProcessor.description else "Legacy processing"
     val convolutionUnavailableReason: String? get() = if (rackManaged) rackProcessor.convolutionUnavailableReason else null
 
@@ -60,6 +62,7 @@ class PrecisionBlockProcessor {
     private var stageEngine: PrecisionConvolver? = null
     private var outputReady = false
     private var endOfStream = false
+    private var drainTail = true
     private var convolutionTimeUs = AUDIO_TIME_UNSET
     private var convolutionFramePosition = AUDIO_TIME_UNSET
 
@@ -87,7 +90,8 @@ class PrecisionBlockProcessor {
         return if (result?.request === request) result?.failure else null
     }
     private val legacyHasPendingData: Boolean get() = outputReady || stageCount > stagePosition ||
-        (active?.engine?.bufferedInputFrames ?: 0) > 0 || (active?.engine?.availableOutputFrames ?: 0) > 0
+        (active?.engine?.bufferedInputFrames ?: 0) > 0 || (active?.engine?.availableOutputFrames ?: 0) > 0 ||
+        (endOfStream && active?.engine?.isEnded == false)
     val hasPendingData: Boolean get() = if (rackManaged) rackProcessor.hasPendingData else legacyHasPendingData
     val isEnded: Boolean get() = if (rackManaged) rackProcessor.isEnded else endOfStream && !legacyHasPendingData
 
@@ -100,7 +104,7 @@ class PrecisionBlockProcessor {
 
     private fun notifyRack() {
         if (!rackEverRequested) return
-        rackProcessor.update(rackRequested, effectsControl.get().params, enabled, convolutionEnabled, makeupDb, rawImpulse)
+        rackProcessor.update(rackRequested, effectsControl.get().params, enabled, convolutionEnabled, makeupDb, rawImpulse, rackImpulses)
         val rate = activeRate
         if (rate > 0) rackProcessor.prepareRate(rate)
     }
@@ -220,7 +224,8 @@ class PrecisionBlockProcessor {
             if (!outputReady && stageCount == stagePosition) {
                 val current = active
                 if (current != null && (endOfStream || !convolutionEnabled || current.request !== requested)) {
-                    current.engine!!.queueEndOfInput()
+                    current.engine!!.queueEndOfInput(if (endOfStream && drainTail && !rackEverRequested)
+                        com.aurora.music.playback.engine.ConvolutionTailMode.FULL else com.aurora.music.playback.engine.ConvolutionTailMode.TRUNCATE_AT_INPUT)
                     emit(current.engine)
                     if (current.engine.isEnded) {
                         active = null
@@ -267,13 +272,14 @@ class PrecisionBlockProcessor {
         var i = 0
         while (i < count * 2) { target.samples[i] *= makeup; i++ }
         outputReady = true
-        convolutionTimeUs = AUDIO_TIME_UNSET
-        convolutionFramePosition = AUDIO_TIME_UNSET
+        convolutionTimeUs = timeAt(convolutionTimeUs, count)
+        convolutionFramePosition = frameAt(convolutionFramePosition, count)
     }
 
-    fun queueEndOfStream() {
+    fun queueEndOfStream(drainTail: Boolean = true) {
         endOfStream = true
-        if (rackManaged) rackProcessor.queueEndOfStream()
+        this.drainTail = drainTail
+        if (rackManaged) rackProcessor.queueEndOfStream(drainTail)
     }
 
     /** Seek drops pending samples and histories but keeps the prepared format and controls. */
@@ -283,6 +289,7 @@ class PrecisionBlockProcessor {
         active = null
         stagePosition = 0; stageCount = 0; stageEngine = null
         outputReady = false; endOfStream = false
+        drainTail = true
         processingActive = false; convolutionProcessingActive = false
         convolutionTimeUs = AUDIO_TIME_UNSET; convolutionFramePosition = AUDIO_TIME_UNSET
         rackProcessor.flush()
@@ -323,10 +330,9 @@ class PrecisionBlockProcessor {
             }
             val result = try {
                 val impulse = request.impulse
+                require(impulse.frameCount > 0) { "Impulse response is empty" }
                 require(impulse.sampleRate in 8_000..768_000) { "Unsupported impulse-response sample rate" }
-                val left = resample(impulse.preciseLeft, impulse.sampleRate, request.rate)
-                val right = resample(impulse.preciseRight, impulse.sampleRate, request.rate)
-                Completion(request, PrecisionConvolver(left, right, OUTPUT_FRAMES), null)
+                Completion(request, impulse.createConvolver(request.rate, OUTPUT_FRAMES), null)
             } catch (failure: Exception) {
                 Completion(request, null, failure.message ?: "Impulse response could not be prepared")
             }
@@ -341,24 +347,6 @@ class PrecisionBlockProcessor {
         const val OUTPUT_FRAMES = 1024
         private val PREPARATION = Executors.newSingleThreadExecutor { runnable ->
             Thread(runnable, "Aurora-precision-IR").apply { isDaemon = true }
-        }
-        private fun resample(source: DoubleArray, sourceRate: Int, targetRate: Int): DoubleArray {
-            require(source.isNotEmpty()) { "Impulse response is empty" }
-            val ratio = targetRate.toDouble() / sourceRate
-            val length = (source.size * ratio).toLong().coerceAtLeast(1)
-            require(length <= PrecisionConvolver.MAX_IR_FRAMES) {
-                "Impulse response exceeds ${PrecisionConvolver.MAX_IR_FRAMES} frames per channel at $targetRate Hz"
-            }
-            require(source.all { it.isFinite() }) { "Impulse response contains non-finite samples" }
-            if (sourceRate == targetRate) return source
-            return DoubleArray(length.toInt()) { index ->
-                val position = index / ratio
-                val first = position.toInt()
-                val fraction = position - first
-                val a = source.getOrElse(first) { 0.0 }
-                val b = source.getOrElse(first + 1) { a }
-                a + (b - a) * fraction
-            }
         }
     }
 }

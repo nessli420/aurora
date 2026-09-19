@@ -23,6 +23,28 @@ import kotlin.math.pow
 /** Real Media3 AudioProcessor boundary, without a player, shared settings or an AudioTrack. */
 @UnstableApi
 class PrecisionRackAudioProcessorDeviceTest {
+    @Test fun optionalDitherPreservesBypassedSamplesAndOnlyQuantizesProcessedOutput() {
+        val bypassed = rack(node("Bypassed gain", RackNodeKind.GAIN, AudioPrefs(dspPreampDb = -6f)).copy(bypass = true))
+        val values = IntArray(32768) { (it * 31 % 60001) - 30000 }
+        val adapter = configured(bypassed).apply { tpdfDither = true }
+        try {
+            val input = pcm16(values)
+            val expected = remainingBytes(input)
+            val result = ByteArrayOutputStream()
+            feed(adapter, input, result); finish(adapter, result)
+            assertArrayEquals(expected, result.toByteArray())
+        } finally { adapter.reset() }
+        val processed = configured(rack(node("Gain", RackNodeKind.GAIN, AudioPrefs(dspPreampDb = -6f)))).apply { tpdfDither = true }
+        try {
+            val result = ByteArrayOutputStream()
+            feed(processed, pcm16(IntArray(65536) { 0 }), result); finish(processed, result)
+            val noise = shorts(result.toByteArray())
+            assertTrue(noise.any { it != 0 })
+            assertTrue(noise.all { abs(it) <= 1 })
+            assertTrue(abs(noise.average()) < .02)
+        } finally { processed.reset() }
+    }
+
     @Test fun dryPcm16IsBitIdenticalIncludingFullScaleAndOneLsbSamples() {
         val adapter = configured()
         try {
@@ -97,14 +119,15 @@ class PrecisionRackAudioProcessorDeviceTest {
             assertTrue(adapter.engine.rackActive)
             assertTrue(adapter.engine.convolutionProcessingActive)
             finish(adapter, result, outputFramesPerRead = 31)
-            assertEquals("IR tail is truncated at the exact source duration", frames * 4, result.size())
+            assertEquals("The exact FIR tail follows the source", (frames + 1) * 4, result.size())
             val actual = shorts(result.toByteArray())
             val gain = 10.0.pow(2.0 / 20.0)
             val makeup = 10.0.pow(1.0 / 20.0)
-            values.indices.forEach { sample ->
-                val previous = if (sample >= 2) values[sample - 2].toDouble() else 0.0
-                val filtered = if (sample % 2 == 0) previous * .5 else values[sample] * .25 + previous * .125
-                val expected = quantized((values[sample] * (1.0 - wet.toDouble()) + filtered * makeup * wet.toDouble()) * gain)
+            actual.indices.forEach { sample ->
+                val source = values.getOrElse(sample) { 0 }.toDouble()
+                val previous = if (sample >= 2) values.getOrElse(sample - 2) { 0 }.toDouble() else 0.0
+                val filtered = if (sample % 2 == 0) previous * .5 else source * .25 + previous * .125
+                val expected = quantized((source * (1.0 - wet.toDouble()) + filtered * makeup * wet.toDouble()) * gain)
                 assertTrue("One final boundary, sample $sample: expected $expected, got ${actual[sample]}", abs(expected - actual[sample]) <= 1)
             }
         } finally { adapter.reset() }
@@ -214,8 +237,8 @@ class PrecisionRackAudioProcessorDeviceTest {
             val afterSeek = ByteArrayOutputStream()
             feed(adapter, pcm16(IntArray(2_105 * 2)), afterSeek)
             finish(adapter, afterSeek)
-            assertEquals(2_105 * 4, afterSeek.size())
-            assertArrayEquals("A seek cannot leak previous IR, EQ or channel-delay history", ByteArray(2_105 * 4), afterSeek.toByteArray())
+            assertEquals((2_105 + adapter.engine.rackTailFrames) * 4, afterSeek.size())
+            assertArrayEquals("A seek cannot leak previous IR, EQ or channel-delay history", ByteArray((2_105 + adapter.engine.rackTailFrames) * 4), afterSeek.toByteArray())
         } finally { adapter.reset() }
     }
 

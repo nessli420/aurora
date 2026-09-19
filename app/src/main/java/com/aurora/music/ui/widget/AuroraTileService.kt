@@ -5,7 +5,9 @@ import android.graphics.drawable.Icon
 import android.os.Build
 import android.service.quicksettings.Tile
 import android.service.quicksettings.TileService
+import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.playback.NowPlaying
 import com.aurora.music.playback.NowPlayingStore
 import com.aurora.music.playback.PlaybackService
@@ -14,6 +16,7 @@ class AuroraTileService : TileService() {
 
     override fun onStartListening() = render()
 
+    @OptIn(UnstableApi::class)
     override fun onClick() {
         val np = NowPlayingStore.read(this)
         runCatching {

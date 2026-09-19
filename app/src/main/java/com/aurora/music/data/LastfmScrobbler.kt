@@ -3,11 +3,13 @@ package com.aurora.music.data
 import com.aurora.music.data.remote.LastfmClient
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class LastfmScrobbler(
     private val store: SettingsStore,
     private val scope: CoroutineScope,
+    private val clientFactory: (String, String) -> LastfmClient = { key, secret -> LastfmClient(key, secret) },
 ) {
     // rebuilt whenever the user's key+secret change
     @Volatile private var client: LastfmClient? = null
@@ -26,7 +28,7 @@ class LastfmScrobbler(
         }
         scope.launch {
             store.lastfmKeys.collect { (key, secret) ->
-                client = if (key.isNotBlank() && secret.isNotBlank()) LastfmClient(key, secret) else null
+                client = if (key.isNotBlank() && secret.isNotBlank()) clientFactory(key, secret) else null
             }
         }
     }
@@ -50,13 +52,19 @@ class LastfmScrobbler(
         val c = client ?: return
         val sk = sessionKey ?: return
         if (!enabled || song.title.isBlank() || song.artist.isBlank()) return
-        scope.launch { c.updateNowPlaying(sk, song.artist, song.title, song.album.ifBlank { null }) }
+        scope.launch {
+            val artist = store.artistSeparators.first().split(song.artist).first()
+            c.updateNowPlaying(sk, artist, song.title, song.album.ifBlank { null })
+        }
     }
 
     fun scrobble(song: Song, startedAtMs: Long) {
         val c = client ?: return
         val sk = sessionKey ?: return
         if (!enabled || song.title.isBlank() || song.artist.isBlank()) return
-        scope.launch { c.scrobble(sk, song.artist, song.title, song.album.ifBlank { null }, startedAtMs / 1000) }
+        scope.launch {
+            val artist = store.artistSeparators.first().split(song.artist).first()
+            c.scrobble(sk, artist, song.title, song.album.ifBlank { null }, startedAtMs / 1000)
+        }
     }
 }

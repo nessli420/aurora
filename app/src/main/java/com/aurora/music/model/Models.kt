@@ -25,6 +25,8 @@ data class Song(
     val genre: String = "",
     val playCount: Int = 0,       // server-reported (subsonic child/jellyfin userdata); 0 if unsupported
     val dateAddedSec: Long = 0,   // epoch seconds the server added this file; 0 if unknown
+    val playbackSource: com.aurora.music.data.PlaybackSourceIdentity? = null,
+    val playbackCollection: com.aurora.music.data.PlaybackCollectionIdentity? = null,
 )
 
 data class Album(

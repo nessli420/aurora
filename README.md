@@ -1,420 +1,194 @@
 # Aurora Music Player
 
-A native Android music client for self-hosted libraries (**Navidrome/Subsonic** and **Jellyfin**) that also connects to **Green Music App** and plays **local files** on the device. Built with Jetpack Compose on Media3/ExoPlayer. Includes a switchable software DSP engine, ReplayGain, and an experimental USB DAC driver for bit-perfect output.
+An Android music player for your local files, home music server, and Green Music App library. Keep your music together, listen offline, and adjust the sound to suit your headphones or speakers.
 
-One app treats a Navidrome server, a Jellyfin server, a Green Music App account, and on-device files as a single library, with no forced resampling on the path to a USB DAC.
+**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues)
 
-> **Status:** actively developed and used daily. Not on the Play Store, no test suite, and some pieces (notably the USB bit-perfect driver) are experimental. Caveats are noted where they apply.
-
-## Table of contents
-
-- [Screenshots](#screenshots)
-- [What it does](#what-it-does)
-- [Bit-perfect USB output (experimental)](#bit-perfect-usb-output-experimental)
-- [Building it yourself](#building-it-yourself)
-- [Configuration: bring your own keys](#configuration-bring-your-own-keys)
-- [How it's put together](#how-its-put-together)
-- [Project layout](#project-layout)
-- [Troubleshooting](#troubleshooting)
-- [Third-party code & credits](#third-party-code--credits)
-- [License](#license)
-
-<!-- SCREENSHOT_GALLERY_START -->
+Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively developed; the source may include changes that are not in the latest release yet.
 
 ## Screenshots
 
-These **81 screenshots** were captured on **6 September 2026** from the release app on a physical **Nothing 3A Pro.**
-
 <table>
   <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/home.webp"><img src="docs/screenshots/thumbnails/home.webp" alt="Home and new releases" width="240"></a><br><sub>Home and new releases</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/player.webp"><img src="docs/screenshots/thumbnails/player.webp" alt="Now playing" width="240"></a><br><sub>Now playing</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/equalizer.webp"><img src="docs/screenshots/thumbnails/equalizer.webp" alt="Equalizer and effects" width="240"></a><br><sub>Equalizer and effects</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/home.webp"><img src="docs/screenshots/thumbnails/home.webp" alt="Aurora home screen" width="240"></a><br><sub>Home</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/player.webp"><img src="docs/screenshots/thumbnails/player.webp" alt="Aurora music player" width="240"></a><br><sub>Player</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/equalizer.webp"><img src="docs/screenshots/thumbnails/equalizer.webp" alt="Equalizer and sound controls" width="240"></a><br><sub>Equalizer</sub></td>
   </tr>
 </table>
 
 <details>
-
-<summary><strong>Library and discovery</strong> (9 screenshots)</summary>
-
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/library.webp"><img src="docs/screenshots/thumbnails/library.webp" alt="Library overview" width="240"></a><br><sub>Library overview</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/search.webp"><img src="docs/screenshots/thumbnails/search.webp" alt="Search" width="240"></a><br><sub>Search</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/search-results.webp"><img src="docs/screenshots/thumbnails/search-results.webp" alt="Search results" width="240"></a><br><sub>Search results</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/library-albums.webp"><img src="docs/screenshots/thumbnails/library-albums.webp" alt="Albums" width="240"></a><br><sub>Albums</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/library-albums-grid.webp"><img src="docs/screenshots/thumbnails/library-albums-grid.webp" alt="Album grid" width="240"></a><br><sub>Album grid</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/library-artists.webp"><img src="docs/screenshots/thumbnails/library-artists.webp" alt="Artists" width="240"></a><br><sub>Artists</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/library-playlists.webp"><img src="docs/screenshots/thumbnails/library-playlists.webp" alt="Playlists" width="240"></a><br><sub>Playlists</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/library-songs.webp"><img src="docs/screenshots/thumbnails/library-songs.webp" alt="Song library" width="240"></a><br><sub>Song library</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/downloaded-music.webp"><img src="docs/screenshots/thumbnails/downloaded-music.webp" alt="Downloaded music" width="240"></a><br><sub>Downloaded music</sub></td>
-  </tr>
-</table>
-
-</details>
-
-<details>
-
-<summary><strong>Albums, artists and playlists</strong> (10 screenshots)</summary>
+<summary>More screenshots</summary>
 
 <table>
   <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/album.webp"><img src="docs/screenshots/thumbnails/album.webp" alt="Album details" width="240"></a><br><sub>Album details</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/track-actions.webp"><img src="docs/screenshots/thumbnails/track-actions.webp" alt="Track actions" width="240"></a><br><sub>Track actions</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/artist.webp"><img src="docs/screenshots/thumbnails/artist.webp" alt="Artist details" width="240"></a><br><sub>Artist details</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/library.webp"><img src="docs/screenshots/thumbnails/library.webp" alt="Music library" width="240"></a><br><sub>Library</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/lyrics.webp"><img src="docs/screenshots/thumbnails/lyrics.webp" alt="Song lyrics" width="240"></a><br><sub>Lyrics</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/visualizer.webp"><img src="docs/screenshots/thumbnails/visualizer.webp" alt="Music visualizer" width="240"></a><br><sub>Visualizer</sub></td>
   </tr>
   <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/liked-songs.webp"><img src="docs/screenshots/thumbnails/liked-songs.webp" alt="Liked songs" width="240"></a><br><sub>Liked songs</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/folders.webp"><img src="docs/screenshots/thumbnails/folders.webp" alt="Music folders" width="240"></a><br><sub>Music folders</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/create-playlist.webp"><img src="docs/screenshots/thumbnails/create-playlist.webp" alt="Create or import a playlist" width="240"></a><br><sub>Create or import a playlist</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/smart-playlist.webp"><img src="docs/screenshots/thumbnails/smart-playlist.webp" alt="Smart playlist rules" width="240"></a><br><sub>Smart playlist rules</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/duplicates.webp"><img src="docs/screenshots/thumbnails/duplicates.webp" alt="Duplicate finder" width="240"></a><br><sub>Duplicate finder</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/playlist.webp"><img src="docs/screenshots/thumbnails/playlist.webp" alt="Playlist details" width="240"></a><br><sub>Playlist details</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/folder-browse.webp"><img src="docs/screenshots/thumbnails/folder-browse.webp" alt="Folder browsing" width="240"></a><br><sub>Folder browsing</sub></td>
-    <td></td>
-    <td></td>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-retro-player.webp"><img src="docs/screenshots/thumbnails/theme-retro-player.webp" alt="Retro player theme" width="240"></a><br><sub>Retro</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-aero-player.webp"><img src="docs/screenshots/thumbnails/theme-aero-player.webp" alt="Aero player theme" width="240"></a><br><sub>Aero</sub></td>
+    <td align="center" width="33%"><a href="docs/screenshots/theme-glass-player.webp"><img src="docs/screenshots/thumbnails/theme-glass-player.webp" alt="Glass player theme" width="240"></a><br><sub>Glass</sub></td>
   </tr>
 </table>
 
-</details>
-
-<details>
-
-<summary><strong>Player and audio controls</strong> (7 screenshots)</summary>
-
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/speed-pitch.webp"><img src="docs/screenshots/thumbnails/speed-pitch.webp" alt="Speed and pitch" width="240"></a><br><sub>Speed and pitch</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/queue.webp"><img src="docs/screenshots/thumbnails/queue.webp" alt="Playback queue" width="240"></a><br><sub>Playback queue</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/lyrics.webp"><img src="docs/screenshots/thumbnails/lyrics.webp" alt="Lyrics" width="240"></a><br><sub>Lyrics</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/audio-output.webp"><img src="docs/screenshots/thumbnails/audio-output.webp" alt="Audio output" width="240"></a><br><sub>Audio output</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/player-menu.webp"><img src="docs/screenshots/thumbnails/player-menu.webp" alt="Player actions" width="240"></a><br><sub>Player actions</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/sleep-timer.webp"><img src="docs/screenshots/thumbnails/sleep-timer.webp" alt="Sleep timer" width="240"></a><br><sub>Sleep timer</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/visualizer.webp"><img src="docs/screenshots/thumbnails/visualizer.webp" alt="Radial visualizer and mode picker" width="240"></a><br><sub>Radial visualizer and mode picker</sub></td>
-    <td></td>
-    <td></td>
-  </tr>
-</table>
+[Browse all screenshots](docs/screenshots). Screenshots are from September 2026; newer builds may look different.
 
 </details>
 
-<details>
+## Get started
 
-<summary><strong>Radio, podcasts and listening activity</strong> (9 screenshots)</summary>
+1. Download `Aurora.apk` from the [latest release](https://github.com/nessli420/aurora/releases/latest).
+2. Open it on your phone. Allow installation from your browser or file manager if Android asks.
+3. Choose a music source and follow the sign-in screen.
 
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/navigation-drawer.webp"><img src="docs/screenshots/thumbnails/navigation-drawer.webp" alt="Navigation drawer" width="240"></a><br><sub>Navigation drawer</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/profile.webp"><img src="docs/screenshots/thumbnails/profile.webp" alt="Profile" width="240"></a><br><sub>Profile</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/listening-history.webp"><img src="docs/screenshots/thumbnails/listening-history.webp" alt="Listening history" width="240"></a><br><sub>Listening history</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/listening-stats.webp"><img src="docs/screenshots/thumbnails/listening-stats.webp" alt="Listening statistics" width="240"></a><br><sub>Listening statistics</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/radio.webp"><img src="docs/screenshots/thumbnails/radio.webp" alt="Internet radio" width="240"></a><br><sub>Internet radio</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/radio-custom-stream.webp"><img src="docs/screenshots/thumbnails/radio-custom-stream.webp" alt="Add a radio stream" width="240"></a><br><sub>Add a radio stream</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/podcasts.webp"><img src="docs/screenshots/thumbnails/podcasts.webp" alt="Podcasts" width="240"></a><br><sub>Podcasts</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/podcast-search.webp"><img src="docs/screenshots/thumbnails/podcast-search.webp" alt="Discover podcasts" width="240"></a><br><sub>Discover podcasts</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/podcast-details.webp"><img src="docs/screenshots/thumbnails/podcast-details.webp" alt="Podcast episodes" width="240"></a><br><sub>Podcast episodes</sub></td>
-  </tr>
-</table>
+| Source | What you need |
+| --- | --- |
+| **Local files** | Music on your phone and permission to access it. No account needed. |
+| **Navidrome / Subsonic / OpenSubsonic** | Your server address, username, and password. |
+| **Jellyfin** | Your server address, username, and password. |
+| **Green Music App** | Your own app client ID. Aurora reads your library and plays matching audio from YouTube. |
 
-</details>
+Save several accounts and switch between them in **Settings → Servers & accounts**. To show multiple sources together, open **Settings → Library & sources** and enable **Merge all sources**.
 
-<details>
+## Features
 
-<summary><strong>Appearance and visualizers</strong> (15 screenshots)</summary>
+### Your music
 
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/appearance.webp"><img src="docs/screenshots/thumbnails/appearance.webp" alt="Appearance and interface styles" width="240"></a><br><sub>Appearance and interface styles</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/theme-retro-home.webp"><img src="docs/screenshots/thumbnails/theme-retro-home.webp" alt="Retro hi-fi home" width="240"></a><br><sub>Retro hi-fi home</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/theme-retro-player.webp"><img src="docs/screenshots/thumbnails/theme-retro-player.webp" alt="Retro hi-fi player" width="240"></a><br><sub>Retro hi-fi player</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/theme-aero-home.webp"><img src="docs/screenshots/thumbnails/theme-aero-home.webp" alt="Aero home" width="240"></a><br><sub>Aero home</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/theme-aero-player.webp"><img src="docs/screenshots/thumbnails/theme-aero-player.webp" alt="Aero player" width="240"></a><br><sub>Aero player</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/theme-glass-home.webp"><img src="docs/screenshots/thumbnails/theme-glass-home.webp" alt="Liquid glass home" width="240"></a><br><sub>Liquid glass home</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/theme-glass-player.webp"><img src="docs/screenshots/thumbnails/theme-glass-player.webp" alt="Liquid glass player" width="240"></a><br><sub>Liquid glass player</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/appearance-display.webp"><img src="docs/screenshots/thumbnails/appearance-display.webp" alt="Accent and display controls" width="240"></a><br><sub>Accent and display controls</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/appearance-player.webp"><img src="docs/screenshots/thumbnails/appearance-player.webp" alt="Player appearance" width="240"></a><br><sub>Player appearance</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/appearance-library.webp"><img src="docs/screenshots/thumbnails/appearance-library.webp" alt="Mini player and library layout" width="240"></a><br><sub>Mini player and library layout</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/appearance-home.webp"><img src="docs/screenshots/thumbnails/appearance-home.webp" alt="Home section visibility" width="240"></a><br><sub>Home section visibility</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/visualizer-settings.webp"><img src="docs/screenshots/thumbnails/visualizer-settings.webp" alt="Visualizer style and colour" width="240"></a><br><sub>Visualizer style and colour</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/visualizer-spectrum.webp"><img src="docs/screenshots/thumbnails/visualizer-spectrum.webp" alt="Spectrum response" width="240"></a><br><sub>Spectrum response</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/visualizer-motion.webp"><img src="docs/screenshots/thumbnails/visualizer-motion.webp" alt="Visualizer motion and overlay" width="240"></a><br><sub>Visualizer motion and overlay</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/visualizer-overlay.webp"><img src="docs/screenshots/thumbnails/visualizer-overlay.webp" alt="Artwork and visualizer overlay" width="240"></a><br><sub>Artwork and visualizer overlay</sub></td>
-  </tr>
-</table>
-
-</details>
-
-<details>
-
-<summary><strong>Equalizer and DSP</strong> (11 screenshots)</summary>
-
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/device-presets.webp"><img src="docs/screenshots/thumbnails/device-presets.webp" alt="Headphone and speaker presets" width="240"></a><br><sub>Headphone and speaker presets</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/squig-presets.webp"><img src="docs/screenshots/thumbnails/squig-presets.webp" alt="Live squig.link presets" width="240"></a><br><sub>Live squig.link presets</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/convolution.webp"><img src="docs/screenshots/thumbnails/convolution.webp" alt="Convolution impulse responses" width="240"></a><br><sub>Convolution impulse responses</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/graphic-equalizer.webp"><img src="docs/screenshots/thumbnails/graphic-equalizer.webp" alt="Graphic equalizer" width="240"></a><br><sub>Graphic equalizer</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/parametric-equalizer.webp"><img src="docs/screenshots/thumbnails/parametric-equalizer.webp" alt="Parametric equalizer" width="240"></a><br><sub>Parametric equalizer</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/gain-headroom.webp"><img src="docs/screenshots/thumbnails/gain-headroom.webp" alt="Gain and headroom" width="240"></a><br><sub>Gain and headroom</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/spatial-audio.webp"><img src="docs/screenshots/thumbnails/spatial-audio.webp" alt="Spatial audio" width="240"></a><br><sub>Spatial audio</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/harmonics.webp"><img src="docs/screenshots/thumbnails/harmonics.webp" alt="Harmonics" width="240"></a><br><sub>Harmonics</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/channel-alignment.webp"><img src="docs/screenshots/thumbnails/channel-alignment.webp" alt="Channel alignment" width="240"></a><br><sub>Channel alignment</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/dynamics.webp"><img src="docs/screenshots/thumbnails/dynamics.webp" alt="Compressor and limiter" width="240"></a><br><sub>Compressor and limiter</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/volume-leveling.webp"><img src="docs/screenshots/thumbnails/volume-leveling.webp" alt="ReplayGain and volume leveling" width="240"></a><br><sub>ReplayGain and volume leveling</sub></td>
-    <td></td>
-  </tr>
-</table>
-
-</details>
-
-<details>
-
-<summary><strong>Playback, library and storage settings</strong> (6 screenshots)</summary>
-
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/playback-quality.webp"><img src="docs/screenshots/thumbnails/playback-quality.webp" alt="Playback and quality" width="240"></a><br><sub>Playback and quality</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/playback-transitions.webp"><img src="docs/screenshots/thumbnails/playback-transitions.webp" alt="Playback transitions" width="240"></a><br><sub>Playback transitions</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/playback-alarm.webp"><img src="docs/screenshots/thumbnails/playback-alarm.webp" alt="Speed and wake-up alarm" width="240"></a><br><sub>Speed and wake-up alarm</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/sonic-discovery.webp"><img src="docs/screenshots/thumbnails/sonic-discovery.webp" alt="Sonic discovery" width="240"></a><br><sub>Sonic discovery</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/library-sources.webp"><img src="docs/screenshots/thumbnails/library-sources.webp" alt="Library and source priority" width="240"></a><br><sub>Library and source priority</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/download-settings.webp"><img src="docs/screenshots/thumbnails/download-settings.webp" alt="Downloads and storage" width="240"></a><br><sub>Downloads and storage</sub></td>
-  </tr>
-</table>
-
-</details>
-
-<details>
-
-<summary><strong>Accounts, integrations and app settings</strong> (11 screenshots)</summary>
-
-<table>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/settings.webp"><img src="docs/screenshots/thumbnails/settings.webp" alt="Settings overview" width="240"></a><br><sub>Settings overview</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/accounts.webp"><img src="docs/screenshots/thumbnails/accounts.webp" alt="Saved accounts" width="240"></a><br><sub>Saved accounts</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/add-account.webp"><img src="docs/screenshots/thumbnails/add-account.webp" alt="Choose a music source" width="240"></a><br><sub>Choose a music source</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/server-setup.webp"><img src="docs/screenshots/thumbnails/server-setup.webp" alt="Server setup" width="240"></a><br><sub>Server setup</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/gestures.webp"><img src="docs/screenshots/thumbnails/gestures.webp" alt="Gestures and behaviour" width="240"></a><br><sub>Gestures and behaviour</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/behaviour.webp"><img src="docs/screenshots/thumbnails/behaviour.webp" alt="Playback behaviour and private sessions" width="240"></a><br><sub>Playback behaviour and private sessions</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/integrations.webp"><img src="docs/screenshots/thumbnails/integrations.webp" alt="Lyrics, scrobbling and Discord" width="240"></a><br><sub>Lyrics, scrobbling and Discord</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/settings-more.webp"><img src="docs/screenshots/thumbnails/settings-more.webp" alt="Interface, connections and data settings" width="240"></a><br><sub>Interface, connections and data settings</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/permissions.webp"><img src="docs/screenshots/thumbnails/permissions.webp" alt="Android permissions" width="240"></a><br><sub>Android permissions</sub></td>
-  </tr>
-  <tr>
-    <td align="center" width="33%"><a href="docs/screenshots/about.webp"><img src="docs/screenshots/thumbnails/about.webp" alt="About Aurora" width="240"></a><br><sub>About Aurora</sub></td>
-    <td align="center" width="33%"><a href="docs/screenshots/backup-restore.webp"><img src="docs/screenshots/thumbnails/backup-restore.webp" alt="Backup and restore" width="240"></a><br><sub>Backup and restore</sub></td>
-    <td></td>
-  </tr>
-</table>
-
-</details>
-
-Screens exposing saved authentication secrets were excluded. Active Android Auto, USB DAC, and Chromecast sessions are not pictured.
-
-<!-- SCREENSHOT_GALLERY_END -->
-
-## What it does
-
-### Connect to anything
-The app sits behind one `MediaBackend` interface, so every screen behaves identically regardless of where the music lives:
-
-- **Navidrome / Subsonic / OpenSubsonic**: token auth (salt + md5; the password is never stored).
-- **Jellyfin**: `AuthenticateByName`, with support for editing track metadata back on the server.
-- **Green Music App**: your own app via OAuth 2.0 PKCE (supply the client ID, no secret needed). Tracks resolve to playable audio through NewPipeExtractor.
-- **Local**: scans on-device audio through MediaStore, no sign-in.
-
-Multiple logins can be saved and switched between, including a jump to the local library, from one place in Settings. The same quick-pick appears on the sign-in screen. Switching servers stops the previous one's playback and restores that account's own queue.
+- Browse albums, artists, playlists, songs, and folders. Search across your active library.
+- Download music for offline listening and prefer local copies when available.
+- Create playlists, import or export M3U playlists, and build playlists that update from your rules.
+- Find duplicate tracks, edit supported file tags, and look up missing track details and artwork.
+- List collaborations under each artist. Choose which characters or words separate names.
+- Listen to internet radio and podcasts, or add your own radio stream.
 
 ### Playback
-- Runs in a Media3 `MediaLibraryService`, exposing a browsable tree to Android Auto, the lock screen, and similar surfaces.
-- Gapless, crossfade (a second overlapping player), skip-silence, mono downmix, and varispeed.
-- ReplayGain (off / track / album), plus an **offline EBU R128 loudness scanner** (pure-Kotlin, via MediaCodec) to populate gains for files whose tags lack them.
-- A switchable **software DSP engine**: 10/15/31-band graphic EQ, parametric bands, preamp, balance, stereo width, crossfeed, compressor, brick-wall limiter, harmonic saturation, per-channel delay/trim, and partitioned overlap-save **convolution** for impulse responses.
-- **AutoEQ** headphone correction: a bundled profile database plus live fetch, with per-output-device auto-switching.
-- **Per-account queue persistence**: swipe the app away or switch servers and it returns to the same state (current track, position, shuffle/repeat mode, and the full queue).
 
-### Library & metadata
-- Folder / file-tree browsing across local and server backends.
-- **Smart playlists**: a rule engine over the library (title, artist, album, format, duration, bitrate, play count, last-played, liked, downloaded) with AND/OR matching, sort, and limit; re-evaluated lazily on open.
-- **Duplicate finder**: fuzzy match on normalized artist/title with duration clustering, so live/extended cuts aren't lumped together.
-- **M3U / M3U8 import & export** across all backends.
-- **In-app tag editor**: local files via JAudiotagger (with the Android 11+ MediaStore write-consent flow), and Jellyfin items via the server's metadata API. Auto-fills from a **MusicBrainz** match (with **Cover Art Archive** art) or identifies a track by acoustic fingerprint via **AcoustID** (Chromaprint, native).
+- Gapless playback, crossfade, repeat, shuffle, and an editable queue saved for each account.
+- Lyrics, speed and pitch controls, silence skipping, and volume leveling between tracks.
+- A sleep timer and a music alarm with its own settings page.
+- Automatic transitions between tracks with **Mix**, plus **Mix Studio** for editing them.
+- Optional vocal or backing-track separation in Mix Studio. Processing runs on your phone after a one-time model download.
+- Android Auto, Chromecast, lock-screen controls, a home-screen widget, and a Quick Settings button.
 
-### Scrobbling, stats & backup
-- **Last.fm** and **ListenBrainz** scrobbling (now-playing + scrobble).
-- A local, "Wrapped"-style **listening dashboard** computed across every backend at once: top artists/tracks/albums, a 24-hour listening clock, and daily streaks.
-- **Discord Rich Presence**.
-- **Backup & restore** of settings, on-device playlists, likes, and listening history to a single JSON file (downloads are excluded, since they're re-downloadable).
+### Sound controls
 
-### Platform integration
-- Home-screen **widget** (Glance) and a **Quick Settings tile**, plus a monochrome themed launcher icon.
-- **Chromecast**: convenience mode only. Cast hands the stream URL to the receiver, so the DSP / bit-perfect path doesn't travel. The UI notes this.
-- **Sleep timer** (with end-of-track and fade-out) and a **wake-to-music alarm**.
-- Runtime theming: light/dark/AMOLED/system, accent presets / custom / Material You, and per-surface tweaks.
+Start with a preset for your headphones, earbuds, or speakers, then adjust as much as you want. You can make a small bass change or build and save a complete sound setup.
 
-## Bit-perfect USB output (experimental)
+- **Detailed equalizers.** Each equalizer in the processing rack supports up to 64 adjustable bands. Choose the frequency, how much to boost or cut, and how wide each adjustment should be. Make broad tone changes or target a narrow problem area, with a graph showing the combined result.
+- **Tuning from measurements.** Import measurements from tools such as REW or Squig, choose the sound you want to aim for, and let Aurora generate the equalizer settings. Set limits on boosts, cuts, and the number of bands. Adjust bass preference and the balance between darker and brighter sound, then compare the original and predicted response.
+- **Separate left and right controls.** Use different corrections for each ear or speaker, or keep them linked. Adjust each channel's volume and timing separately, along with balance and stereo width.
+- **Build your own effects chain.** Arrange up to 16 stages in the processing rack, including several equalizers with up to 256 bands in total. Reorder, duplicate, disable, or blend each effect with the original sound. You can also split the audio into separate paths, apply different effects, and mix them back together. Save groups of effects to reuse later.
+- **Sound that responds to the music.** Use equalizer adjustments that react to louder passages, control volume changes separately in the bass, mids, and treble, or add distortion for a warmer or rougher sound. Loudness compensation adjusts the tone as you change listening volume.
+- **Import your own correction files.** Load impulse responses—files that describe a sound adjustment—then trim them, adjust their level, and use several in one chain. Keep the originals and save edited versions separately.
+- **Save, switch, and share.** Save the whole setup, including its correction files, and export it for another device. Assign presets to headphones or outputs, or create rules that select them by track or source. Manual overrides let you keep the sound you have chosen.
+- **Check what changed.** Compare a short section of the same song through two presets at matched volume, or use a blind listening test. **Signal Path** shows active effects, before-and-after levels and frequency graphs, and the output format in use.
 
-Android resamples USB audio to 48 kHz before it reaches the DAC. Aurora has an experimental path that bypasses the entire Android audio stack (AudioFlinger, AudioTrack, AAudio, ALSA, and the kernel `snd-usb-audio` driver) and writes PCM straight to the DAC over Linux `usbdevfs` isochronous transfers. No root, Android 10+.
+The main audio engine uses 64-bit calculations to keep extra precision as effects are combined. There are also controls for output sample rates and audio conversion. Available controls depend on the playback mode; [USB audio](#usb-audio) has its own options and limits.
 
-It's built on **[decent-player](https://github.com/Ma145/decent-player)** by Marcelo Silva (MIT). Its USB Audio Class 2.0 driver and Media3 `AudioSink` wrapper are vendored under `decent/`. Two decoding paths feed it:
+### Make it yours
 
-- **Local FLAC**: a native libFLAC engine decodes to integer PCM and sign-extends to the DAC's bit depth, with no float math in the chain.
-- **Everything else** (streamed FLAC, lossy, non-FLAC): decoded to float32 by FFmpeg and converted to the DAC's bit depth with an exact `x·2^N` round-trip (lossless for 16/24-bit).
+- Light, dark, and pure black modes, multiple interface styles, custom colors, and visualizers.
+- A local profile with your own display name, avatar, and banner.
+- Listening history and statistics for your tracks, albums, and artists.
+- Send listening history to Last.fm or ListenBrainz using the first artist from your separator rules. Share your now-playing status on Discord.
+- Back up settings, local playlists, likes, history, your local profile, and saved sound setups in one file. Music files and downloads are not included.
 
-Either way the DSP chain is bypassed (bit-perfect and EQ are mutually exclusive by definition), the Android mixer is muted, and nothing touches the samples on the way out.
+## USB audio
 
-**Using it:** Settings → Playback & quality → "USB DAC bit-perfect (experimental)", plug in a DAC, restart playback. With no DAC connected it falls back to normal output, so it's safe to leave on.
+Connect a USB DAC and open **Settings → Audio output → USB DAC output**. A DAC is an external audio adapter, such as a USB headphone dongle.
 
-**Tested:** verified bit-perfect on a **FiiO KA13** at 44.1 kHz streamed and 96 kHz/24-bit local, clock locked to the source rate with no resampling. Other DACs are unverified. Playback that's too fast or distorted usually points to the driver's clock or format auto-detection for that hardware. The KA13 already needed a fix to the UAC2 clock control-interface addressing (the driver hardcoded interface 0; the KA13 uses 1); that fix lives in `decent/decent-usb-audio-driver`. Reports for other DACs are welcome.
+- **Direct:** bypasses Aurora's effects and software volume. Use the DAC's volume controls.
+- **Processed:** keeps Aurora's sound settings and software volume active. Crossfade, speed/pitch changes, and silence skipping are unavailable in this mode.
+- **If USB is unavailable:** choose to pause or continue through Android's normal output. Pause is the default.
 
-## Building it yourself
+Restart Aurora after changing USB settings. **Signal Path** shows the output in use and any fallback.
 
-The toolchain is slightly non-standard, so a few specifics matter.
+USB support is still experimental and varies by phone and DAC. Direct and processed playback have been tested with a **FiiO KA13**. DSF/DFF files are supported through audio conversion; unchanged DSD output is not supported.
 
-**Requirements**
-- **JDK 21** (the default `java` on PATH may be older; point Gradle at 21 explicitly).
-- **Android SDK** with `compileSdk`/`targetSdk` 35, `minSdk` 26.
-- **NDK 27** and **CMake 3.22+** for the native code (AcoustID/Chromaprint fingerprinting and the bit-perfect FLAC/USB driver):
-  ```bash
-  sdkmanager "ndk;27.0.12077973" "cmake;3.22.1"
-  ```
+Chromecast plays audio on the receiving device, so Aurora's sound effects do not carry over.
 
-**Setup**
-1. Create `local.properties` pointing at the SDK:
+## Optional accounts
+
+Local files and server playback do not need any of these. Connect only the services you use.
+
+| Service | Setup |
+| --- | --- |
+| **Green Music App** | Create an app in the [developer dashboard](https://developer.spotify.com/dashboard), set its redirect to `aurora://spotify`, and enter its client ID on Aurora's sign-in screen. |
+| **Last.fm** | Enter your [API key and shared secret](https://www.last.fm/api/account/create) in **Settings → Integrations**, then link your account. |
+| **ListenBrainz** | Copy your [user token](https://listenbrainz.org/profile) into **Settings → Integrations**. |
+| **AcoustID** | Add an [application API key](https://acoustid.org/new-application) in **Settings → Integrations** to identify tracks from their audio. |
+| **Discord** | Connect in **Settings → Integrations**. A [Discord application ID](https://discord.com/developers/applications) and an Imgur client ID are optional for artwork. |
+
+## Help
+
+- **Local music is missing:** allow music and audio access in Android's app permissions.
+- **A server will not connect:** check its address and port, and whether your phone can reach it. A server on your home network may need a VPN when you are away.
+- **Artist names are split incorrectly:** adjust **Settings → Library & sources → Artist separators**. File tags stay unchanged.
+- **USB playback stops:** check the DAC connection and USB permission, then restart Aurora. The default behavior is to pause when USB output is unavailable.
+- **An update will not install:** debug and release builds use different signing keys. Back up your data before uninstalling to switch between them.
+
+For a bug report, include your app version, phone, Android version, music source, and the steps that trigger it. For USB issues, include the DAC model. [Open an issue](https://github.com/nessli420/aurora/issues).
+
+## Build from source
+
+<details>
+<summary>Requirements and build steps</summary>
+
+Use **JDK 21**, **Android SDK 35**, **NDK 27.0.12077973**, and **CMake 3.22.1**. Build with the included Gradle wrapper.
+
+1. Clone this repository and open it in Android Studio. The native libraries are included; no submodule setup is needed.
+2. Set the SDK location in `local.properties` if Android Studio has not created it:
+
    ```properties
    sdk.dir=/absolute/path/to/Android/sdk
    ```
-2. **Display font (required to compile).** Aurora's UI uses Circular Std, a commercial font that can't be redistributed, so it's not in the repo. Add your own licensed `.otf` files to `app/src/main/res/font/` with these exact names:
+
+3. Set up the font. Circular Std is not included in the repository. For a system font, replace the `val Circular = FontFamily(...)` declaration in [Type.kt](app/src/main/java/com/aurora/music/ui/theme/Type.kt) with:
+
+   ```kotlin
+   val Circular = FontFamily.SansSerif
    ```
+
+   To use your licensed Circular Std files instead, place them in `app/src/main/res/font/` with these names:
+
+   ```text
    circular_light.otf        circular_light_italic.otf
    circular_book.otf         circular_book_italic.otf
    circular_medium.otf       circular_medium_italic.otf
    circular_bold.otf         circular_bold_italic.otf
    circular_black.otf        circular_black_italic.otf
    ```
-   Without a license, change `ui/theme/Type.kt` to an OSS face (Inter, Manrope, etc.) or the system default. The `FontFamily` there is the only place the font is referenced.
-3. For a release build, provide a signing keystore and wire it into `app/build.gradle.kts`. The keystore and its passwords are gitignored; debug builds need nothing extra.
 
-**Build**
+4. Point `JAVA_HOME` to JDK 21 and build:
+
+   ```bash
+   ./gradlew :app:assembleDebug
+   ```
+
+   On Windows, use `gradlew.bat` in place of `./gradlew`. The APK is saved to `app/build/outputs/apk/debug/app-debug.apk`.
+
+For a signed release, configure your own keystore in [app/build.gradle.kts](app/build.gradle.kts), then run `:app:assembleRelease`.
+
+Run the unit tests and code checks with:
+
 ```bash
-# always use the wrapper, not a system 'gradle'
-JAVA_HOME="/path/to/jdk-21" ./gradlew :app:assembleDebug      # debug APK
-JAVA_HOME="/path/to/jdk-21" ./gradlew :app:assembleRelease    # signed release
-```
-A fresh clone builds without a submodule step. The vendored native sources (libFLAC, Chromaprint + KissFFT, and the decent-player driver) are included.
-
-## Configuration: bring your own keys
-
-Nothing requiring a personal API credential is shipped hardcoded. Enter everything under **Settings → Integrations** (or the sign-in screen for Green Music App). It's stored locally on the device.
-
-| Integration | What you need | Where to get it |
-|---|---|---|
-| **Green Music App** | App **client ID** (PKCE, no secret) | [developer.spotify.com](https://developer.spotify.com/dashboard), set redirect `aurora://spotify` |
-| **Last.fm** | **API key + shared secret** | [last.fm/api/account/create](https://www.last.fm/api/account/create) |
-| **ListenBrainz** | **User token** | [listenbrainz.org/profile](https://listenbrainz.org/profile) |
-| **AcoustID** (tag identify) | **Application API key** | [acoustid.org/new-application](https://acoustid.org/new-application) |
-| **Discord** presence | **Application ID** (plus optional Imgur client ID for album art) | [discord.com/developers](https://discord.com/developers/applications) |
-
-Skip any of them and that integration is disabled; the rest of the app is unaffected.
-
-## How it's put together
-
-MVVM + Compose + Navigation + Media3, with **manual dependency injection** (no Hilt/Dagger).
-
-- **`AppContainer`** is the composition root, constructed once by `AuroraApplication` and reachable via `(app as AuroraApplication).container`. It owns the settings store, the active backend, the download manager, the DSP/effects controllers, the play-history and queue stores, and the integration clients. ViewModels read it through `AndroidViewModel`.
-- **`MediaBackend`** is the server abstraction. It returns the app's own domain models, and each implementation (one per server type, plus the streaming-service and local-file backends) owns its DTO mapping, auth, and URL building. A server-touching feature is added to the interface and every backend, then exposed through the repository; UI/playback code never branches on server type.
-- **`MusicRepository`** is the server-agnostic facade every ViewModel calls. Online it delegates to the active backend; offline it serves from downloads.
-- **Playback** lives entirely in **`PlaybackService`** (a Media3 `MediaLibraryService` hosting ExoPlayer). The UI drives it through a `MediaController`; the service is the single owner of the player. Shuffle is a physical queue reorder owned by the service (custom session commands), not ExoPlayer's native shuffle.
-- **Settings** are typed `data class`es backed by DataStore, each with a `Flow` and a setter; complex values serialize to JSON via Gson.
-
-Two recurring gotchas the code works around:
-- **Float output bypasses every app `AudioProcessor`** in Media3, so 32-bit float hi-res and the custom DSP are mutually exclusive. The service decides once at startup which one wins.
-- **Gson injects `null` into non-null Kotlin fields** when a JSON key is missing (it bypasses default values), so every field added to a persisted data class is declared nullable and null-coalesced at use.
-
-## Project layout
-
-```
-.
-├── app/                         The Android app
-│   └── src/main/
-│       ├── java/com/aurora/music/
-│       │   ├── data/            backends, MusicRepository, stores, DSP, download manager
-│       │   ├── data/remote/     Retrofit clients + DTOs (Subsonic, Jellyfin, Green Music App,
-│       │   │                    MusicBrainz, AcoustID, ListenBrainz, Last.fm)
-│       │   ├── playback/        PlaybackService, DSP processors, convolution/FFT, alarm, cast
-│       │   ├── viewmodel/        AndroidViewModels
-│       │   ├── ui/screens/       Compose screens (home, search, library, detail, player,
-│       │   │                    settings, stats, auth)
-│       │   └── ui/widget/        Glance widget + Quick Settings tile
-│       ├── cpp/chromaprint/     vendored Chromaprint + KissFFT (AcoustID fingerprinting)
-│       └── res/                 resources
-├── decent/                      vendored decent-player modules (USB bit-perfect driver)
-│   ├── decent-usb-audio-driver/         native UAC2 driver + JNI (+ libFLAC under jni/)
-│   ├── decent-usb-audio-wrapper-media3/ Media3 AudioSink wrapper
-│   └── decent-media3-decoder-flac/      native FLAC decoder + parser
-├── gradle/                      version catalog + wrapper
-└── settings.gradle.kts          includes :app + the two decent modules
+./gradlew :app:testDebugUnitTest :app:lintDebug
 ```
 
-## Troubleshooting
+Device tests are in `app/src/androidTest/`. They use the release build by default and need release signing configured. The app code is in `app/src/main/java/com/aurora/music/`; USB audio code is in `decent/`.
 
-- **`gradle` fails but `./gradlew` works:** use the wrapper. A system/scoop Gradle under JDK 21 can choke on the Kotlin DSL settings evaluation.
-- **NDK / CMake errors:** confirm NDK `27.0.12077973` and CMake `3.22.1` are installed (`sdkmanager`), and that you're on JDK 21.
-- **`sdk.dir` not found:** create `local.properties` (it's gitignored, so it won't be in a fresh clone).
-- **Bit-perfect plays too fast / distorted on a DAC:** the driver's auto-detection likely picked the wrong format for that hardware; see the bit-perfect section above. Logs are tagged `UsbAudioDevice` / `UsbAudioOutput` / `NativeAudioEngine`.
-- **Debugging with a USB DAC plugged in:** a single USB-C port means the DAC knocks out USB ADB, so use wireless ADB (`adb tcpip 5555 && adb connect <phone-ip>:5555`) and logcat survives over Wi-Fi.
+</details>
 
-## Third-party code & credits
+## Credits and license
 
-Aurora uses a number of other projects. The notable ones:
+Aurora is licensed under [Apache 2.0](LICENSE). Third-party code and assets keep their own licenses.
 
-- **[decent-player](https://github.com/Ma145/decent-player)** (MIT): the USB Audio Class 2.0 bit-perfect driver and its Media3 wrapper. Vendored under `decent/`, realigned to this app's toolchain, with a control-interface fix for DACs that don't put AudioControl on interface 0. See [`decent/NOTICE.md`](decent/NOTICE.md).
-- **[xiph/flac](https://github.com/xiph/flac)** (BSD): libFLAC, used by both the bit-perfect native engine and the AcoustID parser.
-- **[Chromaprint](https://github.com/acoustid/chromaprint)** (with bundled KissFFT): acoustic fingerprinting for AcoustID, vendored under `app/src/main/cpp/`.
-- **[jellyfin media3-ffmpeg-decoder](https://github.com/jellyfin/jellyfin-androidx-media)**: FFmpeg float decoder for the bit-perfect streaming path.
-- **[JAudiotagger (Adonai fork)](https://github.com/Adonai/jaudiotagger)**: reading/writing audio file tags on Android.
-- **[NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor)**: resolving Green Music App tracks to playable audio.
-- **[JSch (mwiede fork)](https://github.com/mwiede/jsch)**: SFTP streaming (via the decent-player wrapper).
-- AndroidX **Media3/ExoPlayer**, **Jetpack Compose**, **Glance**, **DataStore**, **Palette**; **Retrofit** / **OkHttp** / **Gson**; **Coil**; **Lottie**; and the Google **Cast SDK**.
-- Metadata from **[MusicBrainz](https://musicbrainz.org)**; cover art from the **[Cover Art Archive](https://coverartarchive.org)**.
+- [decent-player](https://github.com/Ma145/decent-player) provides the USB audio libraries. See [third-party notices](decent/NOTICE.md).
+- [libFLAC](https://github.com/xiph/flac), [Chromaprint](https://github.com/acoustid/chromaprint) with KissFFT, [Jellyfin's FFmpeg decoder](https://github.com/jellyfin/jellyfin-androidx-media), and [JAudiotagger](https://github.com/Adonai/jaudiotagger) provide audio decoding, identification, and tag support.
+- [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) resolves YouTube audio. [JSch](https://github.com/mwiede/jsch) provides SFTP support in the bundled USB libraries.
+- [MusicBrainz](https://musicbrainz.org) and the [Cover Art Archive](https://coverartarchive.org) provide music information and artwork.
+- Vocal separation uses Ultimate Vocal Remover's model and ONNX Runtime. See [model credits and attribution](docs/vocal-separation-attribution.md).
+- Built with Jetpack Compose and Media3, alongside Glance, DataStore, Palette, Retrofit, OkHttp, Gson, Coil, Lottie, and the Google Cast SDK.
 
-Vendored `decent/` modules retain their MIT licensing; bundled xiph/flac and Chromaprint sources keep their original licenses (see the file headers). decent-player's AGPL proof-of-concept harness is not included, only its MIT libraries.
-
-Aurora isn't affiliated with or endorsed by Navidrome, Jellyfin, Green Music App, Last.fm, ListenBrainz, Discord, or any DAC manufacturer; brand and device names are used descriptively, for interoperability.
-
+Aurora is an independent project and is not affiliated with the services or device makers listed here.

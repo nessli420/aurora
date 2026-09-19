@@ -48,6 +48,8 @@ fun ProfileScreen(
     server: String,
     serverLabel: String,
     avatarUrl: String,
+    bannerUrl: String = "",
+    onEditProfile: (() -> Unit)? = null,
     playlists: List<Playlist>,
     artists: List<Artist>,
     onBack: () -> Unit,
@@ -67,13 +69,19 @@ fun ProfileScreen(
                     Modifier.fillMaxWidth().height(220.dp)
                         .background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.background))),
                 )
+                if (bannerUrl.isNotBlank()) {
+                    Artwork(bannerUrl, MaterialTheme.colorScheme.secondary, Modifier.fillMaxWidth().height(220.dp), corner = 0.dp)
+                    Box(Modifier.fillMaxWidth().height(220.dp).background(Brush.verticalGradient(listOf(
+                        androidx.compose.ui.graphics.Color.Black.copy(alpha = .3f),
+                        MaterialTheme.colorScheme.background.copy(alpha = .15f), MaterialTheme.colorScheme.background))))
+                }
                 Row(
                     Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
                     Spacer(Modifier.weight(1f))
-                    Icon(Icons.Filled.MoreVert, "More", modifier = Modifier.size(40.dp).clip(CircleShape).padding(8.dp))
+                    Icon(Icons.Filled.MoreVert, "Settings", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSettings).padding(8.dp))
                 }
                 Column(
                     Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -91,7 +99,8 @@ fun ProfileScreen(
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    Text(username.ifBlank { "Listener" }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    Text(username.ifBlank { "Listener" }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black,
+                        maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 16.dp))
                     Text(serverLabel.ifBlank { server.removePrefix("http://").removePrefix("https://") }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -111,13 +120,13 @@ fun ProfileScreen(
         item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
                 Box(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).clickable(onClick = onOpenSettings).padding(vertical = 12.dp),
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).clickable(onClick = onEditProfile ?: onOpenSettings).padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Edit, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text("Settings", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                        Text(if (onEditProfile != null) "Edit profile" else "Settings", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             }

@@ -16,7 +16,9 @@ enum class ImpulseNormalization { NONE, PEAK_MINUS_1_DB }
 data class ImpulsePreparation(
     val startFrame: Int,
     val endFrameExclusive: Int,
-    val normalization: ImpulseNormalization = ImpulseNormalization.NONE
+    val normalization: ImpulseNormalization = ImpulseNormalization.NONE,
+    val minimumPhase: Boolean = false,
+    val delayFrames: Int = 0,
 )
 
 data class ImpulsePreparedAsset(
@@ -42,7 +44,9 @@ data class ImpulseWaveformBin(val min: Double, val max: Double)
 data class ImpulsePreview(
     val metadata: ImpulseMetadata,
     val left: List<ImpulseWaveformBin>,
-    val right: List<ImpulseWaveformBin>
+    val right: List<ImpulseWaveformBin>,
+    val leftToRight: List<ImpulseWaveformBin> = emptyList(),
+    val rightToLeft: List<ImpulseWaveformBin> = emptyList(),
 )
 
 data class ImpulseResourceEstimate(
@@ -51,5 +55,6 @@ data class ImpulseResourceEstimate(
     val supported: Boolean,
     val decodedBytes: Long,
     val partitionCount: Int,
-    val partitionBytes: Long
+    val partitionBytes: Long,
+    val resamplingDelayFrames: Int = 0,
 )

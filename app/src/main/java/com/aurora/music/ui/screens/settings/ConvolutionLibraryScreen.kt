@@ -269,7 +269,12 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
             Text("Source: ${entry.sourceName}", style = MaterialTheme.typography.bodySmall)
             if (showingPrepared) {
                 val options = entry.prepared!!.preparation
-                Text("Frames ${options.startFrame}–${options.endFrameExclusive} · ${if (options.normalization == ImpulseNormalization.NONE) "No normalization" else "Peak normalized to −1 dB"}",
+                Text(buildList {
+                    add("Frames ${options.startFrame}–${options.endFrameExclusive}")
+                    if (options.normalization != ImpulseNormalization.NONE) add("Peak −1 dB")
+                    if (options.minimumPhase) add("Minimum phase")
+                    if (options.delayFrames > 0) add("${impulseNumber(options.delayFrames * 1000.0 / metadata.sampleRate)} ms delay")
+                }.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall)
             }
             when {
@@ -283,11 +288,13 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
             Button(onClick = { onSelect(showingPrepared) }, enabled = enabled && selectedPath != assetPath && preview != null && sourceSupported && estimate.supported,
                 modifier = Modifier.fillMaxWidth()) { Text(if (selectedPath == assetPath) "Selected" else "Select ${if (showingPrepared) "variant" else "original"}") }
             OutlinedButton(onClick = { onExport(showingPrepared) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Export WAV") }
-            OutlinedButton(onClick = onPrepare, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Trim & normalize") }
+            OutlinedButton(onClick = onPrepare, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Prepare impulse") }
             TextButton(onClick = { showSize = !showSize }) { Text(if (showSize) "Hide playback size" else "Playback size") }
             if (showSize) {
                 Text("${impulseNumber(targetRate / 1000.0)} kHz · ${if (playbackRate == null) "Source rate" else "Current playback"}", style = MaterialTheme.typography.bodySmall)
                 Text("${estimate.targetFrames} taps · Estimated memory ${impulseNumber((estimate.decodedBytes + estimate.partitionBytes) / 1048576.0)} MiB",
+                    style = MaterialTheme.typography.bodySmall)
+                if (estimate.resamplingDelayFrames > 0) Text("SRC delay: ${impulseNumber(estimate.resamplingDelayFrames * 1000.0 / targetRate)} ms",
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -309,6 +316,6 @@ private fun ImpulseStatusText(text: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-internal fun ImpulseMetadata.summary(): String = "${if (channels == 1) "Mono" else "Stereo"} · ${impulseNumber(sampleRate / 1000.0)} kHz"
+internal fun ImpulseMetadata.summary(): String = "${when (channels) { 1 -> "Mono"; 4 -> "True stereo · LL/LR/RL/RR"; else -> "Stereo" }} · ${impulseNumber(sampleRate / 1000.0)} kHz"
 internal fun impulseNumber(value: Double): String = String.format(Locale.ROOT, "%.2f", value).trimEnd('0').trimEnd('.')
 internal fun Double.peakLabel(): String = if (this == 0.0) "−∞ dBFS" else "${impulseNumber(20.0 * log10(this))} dBFS"

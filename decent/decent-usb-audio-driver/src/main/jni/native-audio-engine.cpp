@@ -25,6 +25,9 @@
 #include <cstring>
 #include <cstdlib>
 #include <cmath>
+#include <new>
+#include <algorithm>
+#include <thread>
 #include <sys/stat.h>
 #include <sys/mman.h>
 
@@ -64,6 +67,13 @@ class AsyncBufferedDataSource : public DataSource {
     static void *ioLoop(void *arg) {
         auto *ds = static_cast<AsyncBufferedDataSource *>(arg);
         uint8_t *tempBuf = (uint8_t *)malloc(READ_CHUNK);
+        if (!tempBuf) {
+            pthread_mutex_lock(&ds->mu_);
+            ds->alive_ = false;
+            pthread_cond_broadcast(&ds->cond_);
+            pthread_mutex_unlock(&ds->mu_);
+            return nullptr;
+        }
 
         while (true) {
             pthread_mutex_lock(&ds->mu_);
@@ -103,6 +113,12 @@ class AsyncBufferedDataSource : public DataSource {
                     pthread_cond_signal(&ds->cond_);
                 }
                 pthread_mutex_unlock(&ds->mu_);
+            } else if ((n < 0 && errno != EINTR) || (n == 0 && readPos < ds->fileLength_)) {
+                pthread_mutex_lock(&ds->mu_);
+                ds->alive_ = false;
+                pthread_cond_broadcast(&ds->cond_);
+                pthread_mutex_unlock(&ds->mu_);
+                break;
             } else {
                 usleep(5000);
             }
@@ -112,22 +128,26 @@ class AsyncBufferedDataSource : public DataSource {
     }
 
     pthread_t ioThread_;
+    bool ioStarted_ = false;
 public:
     AsyncBufferedDataSource(int fd, bool ownsFd) : fd_(fd), ownsFd_(ownsFd),
             fileLength_(0), buf_(nullptr), bufStart_(0), bufFilled_(0),
             ioPos_(0), seekPending_(false), seekTarget_(0), alive_(true) {
         struct stat st;
-        if (fstat(fd, &st) == 0) fileLength_ = st.st_size;
+        const bool validFile = fstat(fd, &st) == 0 && S_ISREG(st.st_mode);
+        if (validFile) fileLength_ = st.st_size;
         buf_ = (uint8_t *)malloc(BUF_CAP);
         pthread_mutex_init(&mu_, nullptr);
         pthread_cond_init(&cond_, nullptr);
+        if (!validFile || !buf_) { alive_ = false; return; }
         posix_fadvise(fd, 0, fileLength_, POSIX_FADV_SEQUENTIAL);
         // Only readahead first 2MB — enough for FLAC metadata + initial frames.
         // Reading the entire file monopolizes the FUSE daemon on SD cards,
         // blocking our pread64 calls (measured: >5s timeout for 128KB).
         off64_t raSize = fileLength_ < 2*1024*1024 ? fileLength_ : 2*1024*1024;
         readahead(fd, 0, raSize);
-        pthread_create(&ioThread_, nullptr, ioLoop, this);
+        ioStarted_ = pthread_create(&ioThread_, nullptr, ioLoop, this) == 0;
+        if (!ioStarted_) alive_ = false;
         LOGI("AsyncBufferedDataSource: fd=%d size=%lld (8MB buf, readahead issued)",
              fd, (long long)fileLength_);
     }
@@ -135,8 +155,9 @@ public:
     ~AsyncBufferedDataSource() override {
         pthread_mutex_lock(&mu_);
         alive_ = false;
+        pthread_cond_broadcast(&cond_);
         pthread_mutex_unlock(&mu_);
-        pthread_join(ioThread_, nullptr);
+        if (ioStarted_) pthread_join(ioThread_, nullptr);
         pthread_mutex_destroy(&mu_);
         pthread_cond_destroy(&cond_);
         free(buf_);
@@ -144,9 +165,10 @@ public:
     }
 
     ssize_t readAt(off64_t offset, void *const data, size_t size) override {
-        if (offset >= fileLength_) return 0;
-
         pthread_mutex_lock(&mu_);
+        if (!alive_ || offset < 0) { pthread_mutex_unlock(&mu_); return -1; }
+        if (size == 0 || offset >= fileLength_) { pthread_mutex_unlock(&mu_); return 0; }
+        size = std::min<size_t>(size, size_t(fileLength_ - offset));
 
         // Fast path: data is already in buffer
         if (offset >= bufStart_ && (size_t)(offset - bufStart_) + size <= bufFilled_) {
@@ -177,8 +199,9 @@ public:
         // seek+fill, especially on SD card through FUSE.
         if (size <= 64 * 1024) {
             pthread_mutex_unlock(&mu_);
-            ssize_t n = pread64(fd_, data, size, offset);
-            return n > 0 ? n : 0;
+            ssize_t n;
+            do { n = pread64(fd_, data, size, offset); } while (n < 0 && errno == EINTR);
+            return n > 0 ? n : -1;
         }
 
         // Large miss: redirect I/O thread and wait
@@ -190,6 +213,7 @@ public:
         deadline.tv_sec += 15;
 
         while (!(offset >= bufStart_ && (size_t)(offset - bufStart_) + size <= bufFilled_)) {
+            if (!alive_) { pthread_mutex_unlock(&mu_); return -1; }
             if (offset >= bufStart_ && offset < bufStart_ + (off64_t)bufFilled_) {
                 size_t avail = (size_t)(bufStart_ + bufFilled_ - offset);
                 memcpy(data, buf_ + (offset - bufStart_), avail);
@@ -200,7 +224,7 @@ public:
             if (rc != 0) {
                 LOGW("readAt: timeout waiting for data @ %lld", (long long)offset);
                 pthread_mutex_unlock(&mu_);
-                return 0;
+                return -1;
             }
         }
 
@@ -236,15 +260,20 @@ struct NativeAudioEngine {
     int channels;
     int bitsPerSample;
     int dacBitDepth;  // from UsbAudioContext
+    int64_t totalSamples = 0;
 
     // Decode thread
     pthread_t thread;
     std::atomic<bool> running;
     std::atomic<bool> paused;
+    bool threadStarted = false;
+    std::atomic<bool> completed{false};
+    std::atomic<int> errorCode{0};
 
     // Position tracking
     std::atomic<int64_t> framesDecoded;
-    int64_t seekTargetSampleIndex;  // -1 = no seek pending
+    std::atomic<int64_t> reportedPosition{0};
+    std::atomic<int64_t> seekTargetSampleIndex{-1};
     std::atomic<bool> seekPending;
 
     // Buffers
@@ -254,7 +283,7 @@ struct NativeAudioEngine {
     size_t convertBufferSize;
 
     // Visualizer mono ring (decode thread writes, JNI reader copies the latest window)
-    float *vizRing;
+    std::atomic<float> *vizRing;
     std::atomic<int> vizWrite;
     std::atomic<int64_t> vizCount;
 
@@ -306,6 +335,20 @@ struct NativeAudioEngine {
     std::atomic<bool> tailPendingReady;
 };
 
+static int64_t seekFrameTarget(const NativeAudioEngine *engine, int64_t positionUs) {
+    int64_t target = (positionUs / 1000000LL) * engine->sampleRate +
+        (positionUs % 1000000LL) * engine->sampleRate / 1000000LL;
+    return engine->totalSamples > 0 ? std::min(target, engine->totalSamples - 1) : target;
+}
+
+static void publishSeek(NativeAudioEngine *engine, int64_t target) {
+    // publish the target after its clock state.
+    engine->framesDecoded.store(target);
+    engine->reportedPosition.store(target);
+    engine->seekPending.store(true);
+    engine->seekTargetSampleIndex.store(target);
+}
+
 // ── Shared float helpers (varispeed + crossfade) ────────────────────
 
 // Decode-block (source bit depth) -> interleaved float in `out`. Returns sample count, or -1.
@@ -331,33 +374,10 @@ static int srcToFloat(int sbits, const uint8_t *pcm, int nSamp, float *out) {
 
 // Interleaved float -> DAC bit depth into e->rsBytes. Returns output bytes, or -1.
 static int convertFloatToDac(NativeAudioEngine *e, const float *in, int outSamp) {
-    const int dac = e->dacBitDepth;
-    if (dac == 32) {
-        int32_t *d = reinterpret_cast<int32_t *>(e->rsBytes);
-        for (int i = 0; i < outSamp; i++) {
-            float f = in[i]; if (f > 1.f) f = 1.f; else if (f < -1.f) f = -1.f;
-            d[i] = (int32_t)lrintf(f * 2147483392.0f);   // 2^31 - 256, headroom against overflow
-        }
-        return outSamp * 4;
-    } else if (dac == 24) {
-        uint8_t *d = e->rsBytes;
-        for (int i = 0; i < outSamp; i++) {
-            float f = in[i]; if (f > 1.f) f = 1.f; else if (f < -1.f) f = -1.f;
-            int32_t v = (int32_t)lrintf(f * 8388607.0f);
-            d[i * 3] = v & 0xFF; d[i * 3 + 1] = (v >> 8) & 0xFF; d[i * 3 + 2] = (v >> 16) & 0xFF;
-        }
-        return outSamp * 3;
-    } else if (dac == 16) {
-        int16_t *d = reinterpret_cast<int16_t *>(e->rsBytes);
-        for (int i = 0; i < outSamp; i++) {
-            float f = in[i]; if (f > 1.f) f = 1.f; else if (f < -1.f) f = -1.f;
-            d[i] = (int16_t)lrintf(f * 32767.0f);
-        }
-        return outSamp * 2;
-    }
-    return -1;
+    if (outSamp < 0 || size_t(outSamp) * (e->dacBitDepth / 8) > e->rsBytesCap) return -1;
+    convertFloatPcm(in, e->rsBytes, outSamp, e->usbCtx->validBits, e->dacBitDepth);
+    return outSamp * (e->dacBitDepth / 8);
 }
-
 // Linear-resample `in` (frames, interleaved) by `ratio` into e->rsOut with carried phase.
 // Returns output frame count.
 static int resampleFloat(NativeAudioEngine *e, const float *in, int frames, double ratio) {
@@ -524,7 +544,7 @@ static void pushVizSamples(NativeAudioEngine *e, const uint8_t *pcm, int frames)
         } else {
             mono = 0.0f;
         }
-        e->vizRing[w] = mono;
+        e->vizRing[w].store(mono, std::memory_order_relaxed);
         w = (w + 1) & (VIZ_RING_SIZE - 1);
     }
     e->vizWrite.store(w);
@@ -546,8 +566,9 @@ static void *decodeThreadFunc(void *arg) {
 
 
         // Handle seek
-        if (engine->seekPending.load()) {
-            int64_t targetSample = engine->seekTargetSampleIndex;
+        int64_t targetSample = engine->seekTargetSampleIndex.exchange(-1);
+        if (targetSample >= 0) {
+            flushUsbStream(engine->usbCtx);
             FLAC__uint64 totalSamples = engine->parser->getTotalSamples();
             LOGI("Seek: target=%lld total=%llu state=%s",
                  (long long)targetSample, (unsigned long long)totalSamples,
@@ -567,12 +588,11 @@ static void *decodeThreadFunc(void *arg) {
                      (double)targetSample / engine->sampleRate,
                      engine->parser->getDecoderStateString());
             } else {
-                LOGE("Seek FAILED: target=%lld total=%llu state=%s — resetting",
+                LOGE("Seek failed: target=%lld total=%llu state=%s",
                      (long long)targetSample, (unsigned long long)totalSamples,
                      engine->parser->getDecoderStateString());
-                engine->parser->reset(0);
-                engine->parser->decodeMetadata();
-                engine->framesDecoded.store(0);
+                engine->errorCode.store(EIO);
+                break;
             }
             // drop resampler carryover so it doesn't smear across the seek discontinuity
             engine->rsHasPrev = false;
@@ -593,9 +613,12 @@ static void *decodeThreadFunc(void *arg) {
             if (engine->parser->isDecoderAtEndOfStream()) {
                 LOGI("End of FLAC stream, %lld frames decoded",
                      (long long)engine->framesDecoded.load());
+                if (finishUsbStream(engine->usbCtx)) engine->completed.store(true);
+                else { const int error = engine->usbCtx->lastError.load(); engine->errorCode.store(error ? error : EIO); }
             } else {
                 LOGE("Decode error: %s",
                      engine->parser->getDecoderStateString());
+                engine->errorCode.store(EILSEQ);
             }
             // primary ended mid-crossfade (incoming shorter than the fade) — drop the dangling tail
             if (engine->tailActive.load() || engine->tailParser) closeTail(engine);
@@ -620,7 +643,7 @@ static void *decodeThreadFunc(void *arg) {
             // Crossfade: equal-power mix of incoming (this engine) + outgoing tail, then varispeed if any.
             mixTailBlock(engine, engine->pcmBuffer, framesInBuffer);
             int rb = floatToUsb(engine, engine->mixBuf, framesInBuffer, sp);
-            if (rb < 0) { LOGE("Crossfade mix/convert failed"); break; }
+            if (rb < 0) { engine->errorCode.store(EINVAL); break; }
             usbData = engine->rsBytes;
             usbBytes = rb;
         } else if (fabs(sp - 1.0) > 1e-4) {
@@ -628,6 +651,7 @@ static void *decodeThreadFunc(void *arg) {
             int rb = resampleBlock(engine, engine->pcmBuffer, framesInBuffer, sp);
             if (rb < 0) {
                 LOGE("Resample/convert failed (dac=%d src=%d)", engine->dacBitDepth, engine->bitsPerSample);
+                engine->errorCode.store(EINVAL);
                 break;
             }
             usbData = engine->rsBytes;
@@ -649,9 +673,16 @@ static void *decodeThreadFunc(void *arg) {
                 padInt24ToInt32(engine->pcmBuffer, engine->convertBuffer, totalSamples);
                 usbData = engine->convertBuffer;
                 usbBytes = totalSamples * 4;
+            } else if (engine->bitsPerSample == 16 && engine->dacBitDepth == 24) {
+                for (int i = 0; i < totalSamples; ++i) {
+                    engine->convertBuffer[i * 3] = 0;
+                    memcpy(engine->convertBuffer + i * 3 + 1, engine->pcmBuffer + i * 2, 2);
+                }
+                usbData = engine->convertBuffer; usbBytes = totalSamples * 3;
             } else {
                 LOGE("Unsupported bit-depth conversion: %d → %d",
                      engine->bitsPerSample, engine->dacBitDepth);
+                engine->errorCode.store(EINVAL);
                 break;
             }
         }
@@ -661,6 +692,10 @@ static void *decodeThreadFunc(void *arg) {
 
         // Submit to USB (blocks naturally on URB pipeline = perfect backpressure)
         submitPcmToUrbs(engine->usbCtx, usbData, usbBytes);
+        if (!engine->usbCtx->running.load()) {
+            const int error = engine->usbCtx->lastError.load(); engine->errorCode.store(error ? error : EIO);
+            break;
+        }
 
         int64_t newTotal = engine->framesDecoded.fetch_add(framesInBuffer) + framesInBuffer;
         // Log every ~1 second of audio
@@ -720,6 +755,12 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeCreateFromFd(
         return 0;
     }
 
+    const int sourceBits = parser->getBitsPerSample();
+    if (parser->getSampleRate() != unsigned(usbCtx->sampleRate) || parser->getChannels() != unsigned(usbCtx->channelCount) ||
+        (sourceBits != 16 && sourceBits != 24 && sourceBits != 32) || sourceBits > usbCtx->validBits ||
+        parser->getMaxBlockSize() == 0 || parser->getMaxBlockSize() > 65535) {
+        delete parser; delete ds; return 0;
+    }
     auto *engine = new NativeAudioEngine();
     engine->dataSource = ds;
     engine->parser = parser;
@@ -728,6 +769,7 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeCreateFromFd(
     engine->channels = (int)parser->getChannels();
     engine->bitsPerSample = (int)parser->getBitsPerSample();
     engine->dacBitDepth = usbCtx->bitDepth;
+    engine->totalSamples = parser->getTotalSamples();
     engine->running.store(false);
     engine->paused.store(false);
     engine->framesDecoded.store(0);
@@ -740,7 +782,8 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeCreateFromFd(
     engine->convertBufferSize = maxBlock * engine->channels * 4;  // max 32-bit output
     engine->pcmBuffer = (uint8_t *)malloc(engine->pcmBufferSize);
     engine->convertBuffer = (uint8_t *)malloc(engine->convertBufferSize);
-    engine->vizRing = (float *)calloc(VIZ_RING_SIZE, sizeof(float));
+    engine->vizRing = new(std::nothrow) std::atomic<float>[VIZ_RING_SIZE]{};
+    if (engine->vizRing) for (int i = 0; i < VIZ_RING_SIZE; ++i) engine->vizRing[i].store(0);
     engine->vizWrite.store(0);
     engine->vizCount.store(0);
 
@@ -780,7 +823,7 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeCreateFromFd(
         LOGE("nativeCreateFromFd: buffer allocation failed");
         free(engine->pcmBuffer);
         free(engine->convertBuffer);
-        free(engine->vizRing);
+        delete[] engine->vizRing;
         free(engine->rsIn);
         free(engine->rsOut);
         free(engine->rsBytes);
@@ -805,7 +848,7 @@ JNIEXPORT jboolean JNICALL
 Java_com_decent_usbaudio_NativeAudioEngine_nativeStart(
         JNIEnv *, jobject, jlong handle, jboolean startPaused) {
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
-    if (!engine || engine->running.load()) return JNI_FALSE;
+    if (!engine || engine->running.load() || engine->threadStarted || !engine->usbCtx->running.load()) return JNI_FALSE;
 
     engine->running.store(true);
     engine->paused.store(startPaused == JNI_TRUE);
@@ -814,8 +857,10 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeStart(
     if (ret != 0) {
         LOGE("nativeStart: pthread_create failed ret=%d", ret);
         engine->running.store(false);
+        engine->errorCode.store(ret);
         return JNI_FALSE;
     }
+    engine->threadStarted = true;
 
     // Set high priority for the decode thread
     struct sched_param param;
@@ -845,7 +890,7 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeSetSpeed(
         JNIEnv *, jobject, jlong handle, jdouble speed) {
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
     if (!engine) return;
-    double s = speed;
+    double s = std::isfinite(speed) ? speed : 1.0;
     if (s < 0.5) s = 0.5; else if (s > 2.0) s = 2.0;   // matches the app's speed slider range
     engine->speed.store(s);
 }
@@ -901,16 +946,12 @@ JNIEXPORT jboolean JNICALL
 Java_com_decent_usbaudio_NativeAudioEngine_nativeSeek(
         JNIEnv *, jobject, jlong handle, jlong positionUs) {
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
-    if (!engine) return JNI_FALSE;
+    if (!engine || positionUs < 0) return JNI_FALSE;
 
-    engine->seekTargetSampleIndex = positionUs * engine->sampleRate / 1000000LL;
-    // Update framesDecoded immediately so getCurrentPositionUs returns the
-    // seek target right away, before the decode thread processes the seek.
-    // Prevents ExoPlayer from seeing a stale backwards position jump.
-    engine->framesDecoded.store(engine->seekTargetSampleIndex);
-    engine->seekPending.store(true);
+    const int64_t target = seekFrameTarget(engine, positionUs);
+    publishSeek(engine, target);
     LOGI("Seek requested: %lld us → sample %lld",
-         (long long)positionUs, (long long)engine->seekTargetSampleIndex);
+         (long long)positionUs, (long long)target);
     return JNI_TRUE;
 }
 
@@ -922,7 +963,7 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeStop(
 
     engine->running.store(false);
     engine->paused.store(false);
-    pthread_join(engine->thread, nullptr);
+    if (engine->threadStarted) { pthread_join(engine->thread, nullptr); engine->threadStarted = false; }
     // decode thread has exited; drop both the active tail and any never-adopted pending one so stop()
     // is self-contained (not just leak-free because callers happen to destroy() right after).
     closeTail(engine);
@@ -940,9 +981,10 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeDestroy(
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
     if (!engine) return;
 
-    if (engine->running.load()) {
+    if (engine->threadStarted) {
         engine->running.store(false);
         pthread_join(engine->thread, nullptr);
+        engine->threadStarted = false;
     }
 
     // tear down any in-flight crossfade tail + a never-adopted pending tail
@@ -952,7 +994,7 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeDestroy(
 
     free(engine->pcmBuffer);
     free(engine->convertBuffer);
-    free(engine->vizRing);
+    delete[] engine->vizRing;
     free(engine->rsIn);
     free(engine->rsOut);
     free(engine->rsBytes);
@@ -971,7 +1013,15 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeGetPositionUs(
         JNIEnv *, jobject, jlong handle) {
     auto *engine = reinterpret_cast<NativeAudioEngine *>(handle);
     if (!engine || engine->sampleRate <= 0) return 0;
-    return engine->framesDecoded.load() * 1000000LL / engine->sampleRate;
+    const int64_t pendingSeek = engine->seekTargetSampleIndex.load();
+    if (pendingSeek >= 0) return (pendingSeek / engine->sampleRate) * 1000000LL +
+        (pendingSeek % engine->sampleRate) * 1000000LL / engine->sampleRate;
+    const int64_t pendingFrames = std::max<int64_t>(0, engine->usbCtx->framesWritten.load() - engine->usbCtx->completedFrames.load());
+    const int64_t position = std::max<int64_t>(0, engine->framesDecoded.load() - int64_t(std::ceil(pendingFrames * engine->speed.load())));
+    int64_t previous = engine->reportedPosition.load();
+    while (position > previous && !engine->reportedPosition.compare_exchange_weak(previous, position)) {}
+    const int64_t reported = engine->reportedPosition.load();
+    return (reported / engine->sampleRate) * 1000000LL + (reported % engine->sampleRate) * 1000000LL / engine->sampleRate;
 }
 
 JNIEXPORT jint JNICALL
@@ -1014,14 +1064,49 @@ Java_com_decent_usbaudio_NativeAudioEngine_nativeReadVisualizer(
     if (n > VIZ_RING_SIZE) n = VIZ_RING_SIZE;
     int w = engine->vizWrite.load();
     int start = (((w - n) % VIZ_RING_SIZE) + VIZ_RING_SIZE) % VIZ_RING_SIZE;
-    int first = VIZ_RING_SIZE - start;
-    if (first > n) first = n;
-    env->SetFloatArrayRegion(out, 0, first, engine->vizRing + start);
-    if (first < n) {
-        env->SetFloatArrayRegion(out, first, n - first, engine->vizRing);
+    float values[256];
+    for (int offset = 0; offset < n; offset += 256) {
+        const int count = std::min(256, n - offset);
+        for (int i = 0; i < count; ++i) values[i] = engine->vizRing[(start + offset + i) & (VIZ_RING_SIZE - 1)].load(std::memory_order_relaxed);
+        env->SetFloatArrayRegion(out, offset, count, values);
     }
     int64_t avail = engine->vizCount.load();
     return (jint)((avail < n) ? avail : n);
+}
+
+JNIEXPORT jlongArray JNICALL Java_com_decent_usbaudio_NativeAudioEngine_nativeGetStatus(JNIEnv *env, jobject, jlong handle) {
+    auto *engine = reinterpret_cast<NativeAudioEngine *>(handle); if (!engine) return nullptr;
+    const jlong values[] = {engine->running.load(), engine->paused.load(), engine->completed.load(), engine->errorCode.load(),
+        jlong(engine->speed.load() * 1000000), engine->tailActive.load()};
+    auto result = env->NewLongArray(6); if (result) env->SetLongArrayRegion(result, 0, 6, values); return result;
+}
+
+JNIEXPORT jboolean JNICALL Java_com_aurora_music_playback_UsbDriverTestSupport_seekPublication(JNIEnv *, jobject) {
+    NativeAudioEngine engine{}; engine.sampleRate = 48000; engine.totalSamples = 96000;
+    if (seekFrameTarget(&engine, 1000000) != 48000 || seekFrameTarget(&engine, INT64_MAX) != 95999) return false;
+    std::atomic<int64_t> consumed{0}; std::atomic<bool> valid{true};
+    std::thread consumer([&] {
+        for (int64_t expected = 1; expected <= 10000; ++expected) {
+            int64_t target;
+            do { target = engine.seekTargetSampleIndex.exchange(-1); if (target < 0) std::this_thread::yield(); } while (target < 0);
+            if (target != expected || engine.framesDecoded.load() != expected || engine.reportedPosition.load() != expected) valid.store(false);
+            consumed.store(expected);
+        }
+    });
+    for (int64_t target = 1; target <= 10000; ++target) {
+        publishSeek(&engine, target);
+        while (consumed.load() != target) std::this_thread::yield();
+    }
+    consumer.join();
+    return valid.load();
+}
+
+JNIEXPORT jint JNICALL Java_com_aurora_music_playback_UsbDriverTestSupport_readSource(
+        JNIEnv *, jobject, jint fd, jlong offset, jint size) {
+    if (size < 0 || size > 1024) return -1;
+    AsyncBufferedDataSource source(dup(fd), true);
+    uint8_t bytes[1024];
+    return source.readAt(offset, bytes, size);
 }
 
 } // extern "C"

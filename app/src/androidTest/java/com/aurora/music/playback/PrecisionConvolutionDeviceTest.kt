@@ -44,9 +44,11 @@ class PrecisionConvolutionDeviceTest {
             processor.enabled = true
             consume(processor, pcm(400) { _, _ -> 4096 }, output)
             finish(processor, output)
-            assertEquals(1100 * 2, output.size)
-            assertClose(legacyBoundary(4096.0), output[1400])
-            assertClose(legacyBoundary(8192.0), output[1402])
+            assertEquals(1101 * 2, output.size)
+            for (frame in 700..1100) repeat(2) { channel ->
+                val expected = if (frame == 700 || frame == 1100) 4096.0 else 8192.0
+                assertClose(legacyBoundary(expected), output[frame * 2 + channel])
+            }
         } finally { processor.reset() }
     }
 
@@ -60,14 +62,19 @@ class PrecisionConvolutionDeviceTest {
             assertEquals(ConvolutionPreparationState.READY, processor.preparationState)
             consume(processor, pcm(20) { _, _ -> 0 }, output)
             finish(processor, output)
-            assertEquals(2068 * 2, output.size)
-            assertClose(legacyBoundary(4096.0), output[1100 * 2])
+            assertEquals((2068 + impulse.size - 1) * 2, output.size)
+            output.forEachIndexed { sample, value ->
+                val expected = when (sample / 2) { 0 -> 8192.0; 1100 -> 4096.0; else -> 0.0 }
+                assertClose(legacyBoundary(expected), value)
+            }
             processor.flush()
             awaitPrepared(processor)
             val silence = ArrayList<Int>()
             consume(processor, pcm(2400) { _, _ -> 0 }, silence)
             finish(processor, silence)
-            assertEquals(2400 * 2, silence.size)
+            // sinc support adds 35 source frames per side.
+            val resampledIrFrames = (impulse.size + 70) * 2
+            assertEquals((2400 + resampledIrFrames - 1) * 2, silence.size)
             assertTrue(silence.all { it == 0 })
         } finally { processor.reset() }
     }
@@ -130,9 +137,15 @@ class PrecisionConvolutionDeviceTest {
             processor.setMakeup(-6.0206f)
             consume(processor, pcm(1) { _, _ -> 4096 }, output)
             finish(processor, output)
-            assertEquals(1025 * 2, output.size)
-            // Both the previous and current sample contribute after a gain-only update.
-            assertClose(legacyBoundary(4096.0), output[2048])
+            assertEquals(1026 * 2, output.size)
+            output.forEachIndexed { sample, value ->
+                val expected = when (sample / 2) {
+                    0, 1024 -> 4096.0
+                    1025 -> 2048.0
+                    else -> 8192.0
+                }
+                assertClose(legacyBoundary(expected), value)
+            }
         } finally { processor.reset() }
     }
 

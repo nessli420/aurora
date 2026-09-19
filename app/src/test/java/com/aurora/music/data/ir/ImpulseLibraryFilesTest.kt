@@ -1,6 +1,8 @@
 package com.aurora.music.data.ir
 
 import com.aurora.music.playback.ConvolutionProcessor
+import com.aurora.music.playback.engine.ConvolutionTailMode
+import com.aurora.music.playback.engine.BandlimitedResampler
 import com.aurora.music.playback.engine.SamplePrecision
 import org.junit.Assert.*
 import org.junit.Rule
@@ -13,6 +15,84 @@ import java.nio.ByteOrder
 
 class ImpulseLibraryFilesTest {
     @get:Rule val folder = TemporaryFolder()
+
+    @Test fun trueStereoImportPreparationAndExportKeepAllMatrixPaths() {
+        val source = floats(floatArrayOf(.8f, .2f, -.3f, .4f, .1f, -.1f, .05f, -.2f), 4)
+        val original = source.readBytes()
+        val entry = imported(source)
+        assertEquals(4, entry.sourceMetadata.channels)
+        val preview = ImpulseLibraryFiles.preview(entry).getOrThrow()
+        assertEquals(2, preview.leftToRight.size)
+        assertEquals(2, preview.rightToLeft.size)
+        val destination = File(folder.root, "matrix-prepared.wav")
+        val prepared = ImpulseLibraryFiles.prepare(entry, destination, ImpulsePreparation(0, 2, delayFrames = 3)).getOrThrow()
+        val decoded = ConvolutionProcessor.loadWavResult(destination).getOrThrow()
+        assertTrue(decoded.trueStereo)
+        assertEquals(5, decoded.frameCount)
+        assertEquals(3, decoded.alignmentFrames)
+        assertEquals(.2f.toDouble(), decoded.preciseLeftToRight!![3], 0.0)
+        assertEquals(-.3f.toDouble(), decoded.preciseRightToLeft!![3], 0.0)
+        assertEquals(.4f.toDouble(), decoded.preciseRight[3], 0.0)
+        assertEquals(prepared.prepared!!.metadata, ImpulseLibraryFiles.preview(prepared, true).getOrThrow().metadata)
+        assertArrayEquals(original, source.readBytes())
+    }
+
+    @Test fun minimumPhaseMatrixKeepsNegativeCrossPathsAndMonoCancellation() {
+        val source = floats(FloatArray(16 * 4).apply {
+            this[7 * 4] = .5f; this[7 * 4 + 1] = -.5f
+            this[7 * 4 + 2] = -.5f; this[7 * 4 + 3] = .5f
+        }, 4)
+        val output = File(folder.root, "minimum-matrix.wav")
+        val prepared = ImpulseLibraryFiles.prepare(imported(source), output,
+            ImpulsePreparation(0, 16, minimumPhase = true, delayFrames = 3)).getOrThrow()
+        assertTrue(ImpulseLibraryFiles.validateAsset(prepared, true).isSuccess)
+        val impulse = ConvolutionProcessor.loadWavResult(output).getOrThrow()
+        assertEquals(3, impulse.alignmentFrames)
+        assertEquals(.5, impulse.preciseLeft[3], 1e-12)
+        assertEquals(-.5, impulse.preciseLeftToRight!![3], 1e-12)
+        assertEquals(-.5, impulse.preciseRightToLeft!![3], 1e-12)
+        assertEquals(.5, impulse.preciseRight[3], 1e-12)
+        val convolver = impulse.createConvolver(48_000, 16)
+        val mono = DoubleArray(7 * 2) { (it / 2 - 3) / 8.0 }
+        assertEquals(7, convolver.queueInput(mono, 0, 7))
+        convolver.queueEndOfInput(ConvolutionTailMode.FULL)
+        val block = DoubleArray(32)
+        var frames = 0
+        while (!convolver.isEnded) {
+            val count = convolver.readOutput(block, 0, 16)
+            assertTrue(count > 0)
+            repeat(count * 2) { assertEquals("matrix cancellation sample ${frames * 2 + it}", 0.0, block[it], 1e-14) }
+            frames += count
+        }
+        assertEquals(7 + impulse.frameCount - 1, frames)
+    }
+
+    @Test fun preparationPreservesTrimmedInheritedAlignmentUntilMinimumPhaseRemovesIt() {
+        val source = imported(floats(FloatArray(16).apply { this[3] = .5f }, 1))
+        val delayedFile = File(folder.root, "delayed-original.wav")
+        ImpulseLibraryFiles.prepare(source, delayedFile, ImpulsePreparation(0, 16, delayFrames = 8)).getOrThrow()
+        val delayed = imported(delayedFile)
+        fun prepare(name: String, options: ImpulsePreparation): com.aurora.music.playback.ImpulseResponse {
+            val output = File(folder.root, name)
+            val prepared = ImpulseLibraryFiles.prepare(delayed, output, options).getOrThrow()
+            assertTrue(ImpulseLibraryFiles.validateAsset(prepared, true).isSuccess)
+            return ConvolutionProcessor.loadWavResult(output).getOrThrow()
+        }
+        val preserved = prepare("preserved.wav", ImpulsePreparation(2, 20, delayFrames = 4))
+        assertEquals(10, preserved.alignmentFrames)
+        assertEquals(22, preserved.frameCount)
+        assertEquals(.5, preserved.preciseLeft[13], 0.0)
+        val minimum = prepare("minimum.wav", ImpulsePreparation(2, 20, minimumPhase = true, delayFrames = 4))
+        assertEquals(4, minimum.alignmentFrames)
+        assertEquals(.5, minimum.preciseLeft[4], 1e-12)
+        assertTrue(minimum.preciseLeft.filterIndexed { i, _ -> i != 4 }.all { kotlin.math.abs(it) < 1e-12 })
+        val trimmed = prepare("past-delay.wav", ImpulsePreparation(10, 20, delayFrames = 2))
+        assertEquals(2, trimmed.alignmentFrames)
+        assertEquals(.5, trimmed.preciseLeft[3], 0.0)
+        val beforeArrival = prepare("before-delay.wav", ImpulsePreparation(0, 5, delayFrames = 2))
+        assertEquals(2, beforeArrival.alignmentFrames)
+        assertTrue(beforeArrival.preciseLeft.all { it == 0.0 })
+    }
 
     @Test fun importKeepsExactPcm32SourceBytesAndPrecision() {
         val bytes = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
@@ -134,14 +214,23 @@ class ImpulseLibraryFilesTest {
     @Test fun resourceEstimateFollowsRuntimeResamplingAndStereoPartitionCosts() {
         val metadata = ImpulseMetadata(48_000, 1, 131_072, SamplePrecision.FLOAT_32, 24, .5)
         val exact = ImpulseLibraryFiles.estimate(metadata, 96_000)
-        assertEquals(262_144L, exact.targetFrames)
-        assertTrue(exact.supported)
-        assertEquals(4_194_304L, exact.decodedBytes)
-        assertEquals(256, exact.partitionCount)
-        assertEquals(33_554_432L, exact.partitionBytes)
+        assertEquals(262_284L, exact.targetFrames)
+        assertFalse(exact.supported)
+        assertEquals(70, exact.resamplingDelayFrames)
+        assertEquals(exact.targetFrames * 16, exact.decodedBytes)
+        assertEquals(257, exact.partitionCount)
+        assertEquals(33_685_504L, exact.partitionBytes)
         assertFalse(ImpulseLibraryFiles.estimate(metadata, 192_000).supported)
-        assertEquals(1L, ImpulseLibraryFiles.estimate(metadata.copy(frames = 1), 8_000).targetFrames)
-        assertEquals(441L, ImpulseLibraryFiles.estimate(metadata.copy(frames = 480), 44_100).targetFrames)
+        assertEquals(70L, ImpulseLibraryFiles.estimate(metadata.copy(frames = 1), 8_000).targetFrames)
+        assertEquals(735L, ImpulseLibraryFiles.estimate(metadata.copy(frames = 480), 44_100).targetFrames)
+    }
+
+    @Test fun resourceEstimateRoundsHalfFramesLikeTheRuntimeResampler() {
+        val metadata = ImpulseMetadata(48_000, 1, 240, SamplePrecision.FLOAT_32, 24, .5)
+        val estimate = ImpulseLibraryFiles.estimate(metadata, 44_100)
+        val converted = BandlimitedResampler.resampleImpulse(DoubleArray(240).apply { this[0] = .5 }, 48_000, 44_100)
+        assertEquals(515L, estimate.targetFrames)
+        assertEquals(converted.size.toLong(), estimate.targetFrames)
     }
 
     @Test fun rejectsInvalidTrimsNonfiniteSamplesUnsupportedRatesAndMissingVariants() {

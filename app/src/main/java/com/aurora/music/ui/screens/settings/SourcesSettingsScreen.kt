@@ -56,7 +56,7 @@ private fun tierSub(t: String) = when (t) {
 }
 
 @Composable
-fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
+fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onArtistSeparators: () -> Unit) {
     val ctx = LocalContext.current
     val container = remember { (ctx.applicationContext as AuroraApplication).container }
     val store = container.settingsStore
@@ -75,6 +75,14 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar("Library & sources", onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
+            item { SettingsSectionTitle("Local library") }
+            item {
+                SettingsGroup {
+                    Row(Modifier.fillMaxWidth().clickable(onClick = onArtistSeparators).padding(20.dp)) {
+                        Text("Artist separators", style = MaterialTheme.typography.titleSmall)
+                    }
+                }
+            }
 
             item { SettingsSectionTitle("Best-source playback") }
             item {

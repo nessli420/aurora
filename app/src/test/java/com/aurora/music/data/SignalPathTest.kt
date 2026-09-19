@@ -59,6 +59,32 @@ class SignalPathTest {
         assertEquals(Preservation.UNKNOWN, absent.preservation)
     }
 
+    @Test fun processedUsbReportsValidBitsSeparatelyFromContainerAndClock() {
+        val path = buildSignalPath(local.copy(kind = PlaybackPathKind.PROCESSED_USB,
+            decodedFormat = pcm24, nativeTransportFormat = pcm24, nativeContainerBits = 32,
+            nativeClockRate = 96000, nativeClockAccepted = true, modifications = listOf("Software volume")))
+            .copy(usbDiagnostics = UsbDiagnostics(96000, 512, 2, 1))
+        assertEquals("Processed USB transport", path.output)
+        assertEquals(24, path.outputStage.format?.bitDepth)
+        assertTrue(path.outputStage.detail.contains("32-bit USB container"))
+        assertTrue(path.outputStage.detail.contains("96000 Hz clock readback"))
+        assertEquals(Preservation.MODIFIED, path.preservation)
+        assertFalse(path.bitPerfect)
+        assertTrue(path.toDiagnosticReport().contains("USB packet errors/timeouts: 2 / 1"))
+        assertFalse(path.reasons.any { it.contains("Android mixer") })
+    }
+
+    @Test fun dsdConversionCannotClaimPreservedSamplesOnVerifiedUsbClock() {
+        val path = buildSignalPath(local.copy(kind = PlaybackPathKind.DECODED_USB,
+            sourceFormat = SignalFormat(2822400, 1, 2, "DSD"), decodedFormat = pcm24,
+            nativeTransportFormat = pcm24, nativeClockAccepted = true,
+            modifications = listOf("DSD converted to PCM")))
+        assertEquals(Preservation.MODIFIED, path.preservation)
+        assertEquals(2822400, path.source.format?.rateHz)
+        assertEquals(96000, path.decoder.format?.rateHz)
+        assertFalse(path.bitPerfect)
+    }
+
     @Test fun decodedUsbAndNativeTailRemainQualified() {
         val path = buildSignalPath(local.copy(kind = PlaybackPathKind.DECODED_USB,
             nativeTransportFormat = pcm24, nativeClockAccepted = false, nativeTailSubmitted = true))
