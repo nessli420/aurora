@@ -37,6 +37,8 @@ class RawDsdHardwarePlaybackDeviceTest {
         assumeTrue(args.getString("dsdHardware") == "true")
         val mode = UsbDsdMode.valueOf(args.getString("dsdMode") ?: "DOP")
         require(mode != UsbDsdMode.PCM)
+        val highRate = args.getString("dsdHighRate")?.toInt() ?: 5644800
+        require(highRate == 5644800 || mode == UsbDsdMode.NATIVE && highRate == 11289600)
         val store = container.settingsStore
         val original = runBlocking { store.exportPrefs() }
         val files = mutableListOf<File>()
@@ -83,9 +85,9 @@ class RawDsdHardwarePlaybackDeviceTest {
                     }
                 }
                 val tracks = listOf(hardware.quietWav(44100, 16).also { files += it },
-                    dsd("dsf", 2822400), dsd("dff", 5644800),
+                    dsd("dsf", 2822400), dsd("dff", highRate),
                     hardware.quietWav(96000, 24).also { files += it }, dsd("dsf", 2822400))
-                val rates = listOf(44100, 2822400, 5644800, 96000, 2822400)
+                val rates = listOf(44100, 2822400, highRate, 96000, 2822400)
                 val items = tracks.mapIndexed { i, file -> MediaItem.Builder()
                     .setMediaId("aurora-mix:raw-hardware-$i").setUri(file.toURI().toString()).build() }
                 helper.main {

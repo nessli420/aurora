@@ -312,6 +312,9 @@ class UsbHardwarePlaybackDeviceTest {
                 controller.pause(); controller.stop(); controller.clearMediaItems()
             }
             shuffle(controller, false)
+            await("fixture playback stopped", controller) { main {
+                controller.playbackState == Player.STATE_IDLE && controller.mediaItemCount == 0 && !controller.playWhenReady
+            } }
             main {
                 controller.repeatMode = repeat
                 controller.playbackParameters = parameters
@@ -322,6 +325,8 @@ class UsbHardwarePlaybackDeviceTest {
             assertEquals("Original physical queue restored", queue.map { it.mediaId }, main {
                 (0 until controller.mediaItemCount).map { controller.getMediaItemAt(it).mediaId }
             })
+            await("restored library queue remains paused", controller) { main { !controller.playWhenReady } }
+            SystemClock.sleep(300)
             assertFalse("Restored library queue remains paused", main { controller.playWhenReady })
         }
     }
