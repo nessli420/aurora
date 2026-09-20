@@ -17,7 +17,8 @@ import org.schabi.newpipe.extractor.downloader.Response as NpResponse
 class YoutubeResolver {
 
     private val http = OkHttpClient()
-    private val cache = ConcurrentHashMap<String, String>()
+    private data class CachedStream(val url: String, val expiresAt: Long)
+    private val cache = ConcurrentHashMap<String, CachedStream>()
     @Volatile private var initialized = false
 
     private fun ensureInit() {
@@ -31,7 +32,7 @@ class YoutubeResolver {
     }
 
     fun resolve(spotifyId: String, query: String, durationSec: Int): String? {
-        cache[spotifyId]?.let { return it }
+        cached("spotify:$spotifyId")?.let { return it }
         if (query.isBlank()) return null
         return runCatching {
             ensureInit()
@@ -53,13 +54,45 @@ class YoutubeResolver {
                     .minByOrNull { it.resolution?.removeSuffix("p")?.toIntOrNull() ?: 9999 }
                     ?.content
             if (!url.isNullOrBlank()) {
-                cache[spotifyId] = url
+                remember("spotify:$spotifyId", url)
                 Log.d(TAG, "resolved '$query' -> ${pick.name} (${pick.duration}s)")
             } else {
                 Log.d(TAG, "no audio stream for '$query'")
             }
             url
         }.getOrElse { Log.d(TAG, "resolve failed '$query': ${it.message}"); null }
+    }
+
+    fun resolveVideo(videoId: String): String? {
+        if (!videoId.matches(Regex("[A-Za-z0-9_-]{11}"))) return null
+        cached("video:$videoId")?.let { return it }
+        return runCatching {
+            ensureInit()
+            val info = StreamInfo.getInfo(ServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
+            val url = info.audioStreams.filter { !it.content.isNullOrBlank() }.maxByOrNull { it.averageBitrate }?.content
+                ?: info.videoStreams.filter { !it.content.isNullOrBlank() }
+                    .minByOrNull { it.resolution?.removeSuffix("p")?.toIntOrNull() ?: 9999 }?.content
+            url?.takeIf { it.isNotBlank() }?.also { remember("video:$videoId", it) }
+        }.getOrNull()
+    }
+
+    fun resolveSentinel(uri: android.net.Uri): String? {
+        if (uri.scheme != "aurora-yt") return null
+        return if (uri.host == "video") resolveVideo(uri.lastPathSegment.orEmpty())
+        else resolve(uri.host.orEmpty(), uri.getQueryParameter("q").orEmpty(), uri.getQueryParameter("dur")?.toIntOrNull() ?: 0)
+    }
+
+    private fun cached(key: String): String? = cache[key]?.let {
+        if (it.expiresAt > System.currentTimeMillis()) it.url else { cache.remove(key, it); null }
+    }
+
+    private fun remember(key: String, url: String) {
+        val now = System.currentTimeMillis()
+        val expires = runCatching { java.net.URI(url).rawQuery.orEmpty().split('&')
+            .firstOrNull { it.startsWith("expire=") }?.substringAfter('=')?.toLongOrNull()?.times(1000) }.getOrNull()
+        cache.entries.removeAll { it.value.expiresAt <= now }
+        if (cache.size >= 256) cache.clear()
+        cache[key] = CachedStream(url, minOf(expires?.minus(60_000) ?: Long.MAX_VALUE, now + 10 * 60_000))
     }
 
     private class OkHttpDownloader(private val client: OkHttpClient) : Downloader() {

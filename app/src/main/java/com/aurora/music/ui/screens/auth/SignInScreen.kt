@@ -82,6 +82,7 @@ fun SignInScreen(
     onAuthUrlOpened: () -> Unit = {},
     onLocal: () -> Unit = {},
     onConnectSpotify: (String) -> Unit = {},
+    onConnectYouTubeMusic: (String) -> Unit = {},
     savedSessions: List<com.aurora.music.data.Session> = emptyList(),
     onUseSaved: (com.aurora.music.data.Session) -> Unit = {},
 ) {
@@ -134,6 +135,7 @@ fun SignInScreen(
                     AuthStep.SERVER -> "Enter the server address"
                     AuthStep.CREDENTIALS -> "Sign in to ${if (state.type == ServerType.JELLYFIN) "Jellyfin" else "Navidrome"}"
                     AuthStep.SPOTIFY -> "Connect your own Spotify app"
+                    AuthStep.YOUTUBE_MUSIC -> "Connect YouTube Music"
                 },
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -147,6 +149,7 @@ fun SignInScreen(
                 AuthStep.SERVER -> ServerStep(state, onScheme, onHost, onBack, canContinueServer, onContinueServer)
                 AuthStep.CREDENTIALS -> CredentialsStep(state, onUsername, onPassword, onBack, canSubmit, onSignIn)
                 AuthStep.SPOTIFY -> SpotifyStep(state, onBack, onConnectSpotify)
+                AuthStep.YOUTUBE_MUSIC -> YouTubeMusicStep(state, onBack, onConnectYouTubeMusic)
             }
 
             if (state.loading && state.type == ServerType.SPOTIFY) {
@@ -215,6 +218,12 @@ private fun TypeStep(
             title = "Spotify",
             subtitle = "Your library · streamed via YouTube",
             onClick = { onSelectType(ServerType.SPOTIFY) },
+        )
+        ServerTypeCard(
+            icon = Icons.Outlined.MusicNote,
+            title = "YouTube Music",
+            subtitle = "Google account · standalone library",
+            onClick = { onSelectType(ServerType.YOUTUBE_MUSIC) },
         )
         if (permDenied) {
             Text(

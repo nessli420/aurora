@@ -192,6 +192,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 HomeSection.MOST to "Most played",
                 HomeSection.ARTISTS to "Artists",
                 HomeSection.NEW to "New releases",
+                HomeSection.RECOMMENDED to "Recommended albums",
             )
             items(homeSections.size) { idx ->
                 val (id, label) = homeSections[idx]

@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
+import com.aurora.music.data.accountKey
 
 @Composable
 fun AccountsScreen(
@@ -49,7 +50,7 @@ fun AccountsScreen(
     val container = (ctx.applicationContext as AuroraApplication).container
     val saved by container.settingsStore.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
     val active by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
-    fun key(s: Session?) = s?.let { "${it.type}|${it.server}|${it.username}|${it.userId}" } ?: ""
+    fun key(s: Session?) = s?.accountKey().orEmpty()
     val activeKey = key(active)
 
     // always offered so you can jump to local even without a saved login
@@ -116,6 +117,7 @@ fun AccountsScreen(
 private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, onClick: () -> Unit, onForget: () -> Unit) {
     val badge = when (session.type) {
         ServerType.SPOTIFY -> "S"
+        ServerType.YOUTUBE_MUSIC -> "Y"
         ServerType.JELLYFIN -> "J"
         ServerType.LOCAL -> "L"
         ServerType.SUBSONIC -> "N"

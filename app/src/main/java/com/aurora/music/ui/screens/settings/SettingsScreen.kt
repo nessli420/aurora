@@ -88,6 +88,7 @@ fun SettingsScreen(
     }.joinToString(" · ")
     val serverBadge = when (session?.type) {
         com.aurora.music.data.ServerType.SPOTIFY -> "SPOTIFY"
+        com.aurora.music.data.ServerType.YOUTUBE_MUSIC -> "YOUTUBE MUSIC"
         com.aurora.music.data.ServerType.JELLYFIN -> "JELLYFIN"
         com.aurora.music.data.ServerType.LOCAL -> "LOCAL"
         com.aurora.music.data.ServerType.EXTENSION -> "EXTENSION"

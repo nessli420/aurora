@@ -50,7 +50,11 @@ val DEFAULT_SOURCE_PRIORITY = listOf("local", "downloaded", "stream")
 // sentinel meaning no servers so empty can keep meaning all eligible
 const val MERGE_NONE = "__none__"
 
-enum class ServerType { SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION }
+enum class ServerType {
+    SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION, YOUTUBE_MUSIC;
+
+    val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == LOCAL
+}
 
 // subsonic keeps salt+token never the raw password jellyfin uses token as access token
 data class Session(
@@ -69,6 +73,7 @@ data class Session(
 
     val typeLabel: String get() = when (type) {
         ServerType.SPOTIFY -> "Spotify"
+        ServerType.YOUTUBE_MUSIC -> "YouTube Music"
         ServerType.JELLYFIN -> "Jellyfin"
         ServerType.SUBSONIC -> "Navidrome"
         ServerType.LOCAL -> "On this device"
@@ -76,7 +81,8 @@ data class Session(
     }
 }
 
-fun Session.accountKey(): String = "${type.name}|$server|$username|$userId"
+fun Session.accountKey(): String = if (type == ServerType.YOUTUBE_MUSIC) "${type.name}|$server|$userId"
+    else "${type.name}|$server|$username|$userId"
 
 data class PlaybackPrefs(
     val skipSilence: Boolean = false,
@@ -235,6 +241,7 @@ object MiniProgress { const val LINE = 0; const val BAR = 1; const val NONE = 2 
 object HomeSection {
     const val HERO = "hero"; const val RECENT = "recent"; const val PLAYLISTS = "playlists"
     const val FAVOURITE = "favourite"; const val MOST = "most"; const val ARTISTS = "artists"; const val NEW = "new"
+    const val RECOMMENDED = "recommended"
 }
 
 data class UiPrefs(
@@ -1692,8 +1699,6 @@ class SettingsStore(private val context: Context) {
         if (json.isNullOrBlank()) emptyList()
         else gson.fromJson<List<Session>>(json, object : TypeToken<List<Session>>() {}.type) ?: emptyList()
     }.getOrDefault(emptyList()).filter { it.isValid }
-
-    private fun Session.accountKey() = "${type.name}|$server|$username|$userId"
 
     suspend fun addSavedSession(session: Session) = context.dataStore.edit { p ->
         if (!session.isValid) return@edit

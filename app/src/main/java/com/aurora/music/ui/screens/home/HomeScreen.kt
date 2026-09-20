@@ -219,6 +219,18 @@ fun HomeScreen(
             }
         }
 
+        if (data.random.isNotEmpty() && HomeSection.RECOMMENDED !in hidden) {
+            item {
+                SectionHeader("Recommended albums", Modifier.padding(horizontal = 16.dp))
+                Spacer(Modifier.height(10.dp))
+                LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    items(data.random.size) { i ->
+                        AlbumCard(data.random[i], onClick = { onOpenDetail("album", data.random[i].id) })
+                    }
+                }
+            }
+        }
+
         if (data.artists.isNotEmpty() && HomeSection.ARTISTS !in hidden) {
             item {
                 SectionHeader("Artists", Modifier.padding(horizontal = 16.dp))

@@ -209,7 +209,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 }
                 item {
                     Text(
-                        "Duplicates are shown once and played from the highest-quality source. Spotify isn't merged yet.",
+                        "Duplicates are shown once and played from the highest-quality source. Spotify and YouTube Music run as standalone sources.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                     )

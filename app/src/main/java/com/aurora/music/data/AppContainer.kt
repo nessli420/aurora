@@ -33,6 +33,8 @@ class AppContainer(context: Context) {
 
     private val appContext = context.applicationContext
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val _sourceErrors = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 1)
+    val sourceErrors = _sourceErrors.asSharedFlow()
 
     val settingsStore = SettingsStore(appContext)
     val extensions = com.aurora.music.extensions.ExtensionManager(appContext, settingsStore, scope)
@@ -128,12 +130,7 @@ class AppContainer(context: Context) {
 
     private fun resolveYtSentinel(sentinel: String): String? {
         val uri = runCatching { android.net.Uri.parse(sentinel) }.getOrNull() ?: return null
-        if (uri.scheme != "aurora-yt") return null
-        return youtubeResolver.resolve(
-            uri.host.orEmpty(),
-            uri.getQueryParameter("q").orEmpty(),
-            uri.getQueryParameter("dur")?.toIntOrNull() ?: 0,
-        )
+        return youtubeResolver.resolveSentinel(uri)
     }
 
     // rewrites only streamUrl/metadata id stays the server's so server features keep working
@@ -181,6 +178,11 @@ class AppContainer(context: Context) {
             { maxBitrate }, ::localizeSong,
         )
         ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
+        ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
+            com.aurora.music.data.remote.YouTubeMusicClient(
+                session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }))) { message ->
+            if (lastSession?.accountKey() == session.accountKey()) _sourceErrors.tryEmit(message)
+        }
         ServerType.EXTENSION -> extensions.backend(session) { song ->
             val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
             val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
@@ -190,7 +192,7 @@ class AppContainer(context: Context) {
     }
 
     private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend {
-        if (!unified || session.type == ServerType.SPOTIFY || session.type == ServerType.EXTENSION) return buildBackend(session)
+        if (!unified || !session.type.supportsMergedLibrary) return buildBackend(session)
         // empty = all eligible servers MERGE_NONE sentinel = local files only
         val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else saved
             .filter { it.type == ServerType.SUBSONIC || it.type == ServerType.JELLYFIN }
@@ -253,6 +255,7 @@ class AppContainer(context: Context) {
     val discord = DiscordRpc(settingsStore, scope)
 
     val youtubeResolver = com.aurora.music.playback.YoutubeResolver()
+    val youtubeMusicCredentials = YouTubeMusicCredentials(appContext)
 
     @Volatile
     private var lrclibEnabled: Boolean = true
@@ -476,6 +479,7 @@ class AppContainer(context: Context) {
 
     suspend fun forgetSavedSession(session: Session) {
         settingsStore.removeSavedSession(session)
+        if (session.type == ServerType.YOUTUBE_MUSIC) youtubeMusicCredentials.remove(session.token)
         if (backend?.session?.let { accountKey(it) } == accountKey(session)) signOut()
     }
 

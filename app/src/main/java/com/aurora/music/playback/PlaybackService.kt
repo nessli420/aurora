@@ -303,11 +303,8 @@ class PlaybackService : MediaLibraryService() {
         val ytResolver = androidx.media3.datasource.ResolvingDataSource.Resolver { dataSpec ->
             val uri = dataSpec.uri
             if (uri.scheme == "aurora-yt") {
-                val real = resolver.resolve(
-                    uri.host.orEmpty(),
-                    uri.getQueryParameter("q").orEmpty(),
-                    uri.getQueryParameter("dur")?.toIntOrNull() ?: 0,
-                ) ?: throw java.io.IOException("No stream found for this track")
+                val real = resolver.resolveSentinel(uri)
+                    ?: throw java.io.IOException("This YouTube track is unavailable for playback. Try another track or reconnect your account.")
                 dataSpec.withUri(android.net.Uri.parse(real))
             } else if (uri.scheme == "aurora-extension") dataSpec.withUri(container.extensions.resolve(uri))
             else dataSpec

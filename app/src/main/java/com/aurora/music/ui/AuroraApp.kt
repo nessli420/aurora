@@ -120,6 +120,11 @@ fun AuroraApp() {
     val downloadStates by container.downloadManager.states.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
+    androidx.compose.runtime.LaunchedEffect(container) {
+        container.sourceErrors.collect { message ->
+            if (snackbarHostState.currentSnackbarData == null) snackbarHostState.showSnackbar(message)
+        }
+    }
     val scope = rememberCoroutineScope()
     fun confirm(message: String) {
         scope.launch {
@@ -381,6 +386,7 @@ fun AuroraApp() {
                             onAuthUrlOpened = authVM::authUrlOpened,
                             onLocal = authVM::signInLocal,
                             onConnectSpotify = authVM::connectSpotify,
+                            onConnectYouTubeMusic = authVM::connectYouTubeMusic,
                             savedSessions = savedSessions,
                             onUseSaved = { s -> authVM.useSaved(s) },   // nav to home handled by the sessionReady effect
                         )

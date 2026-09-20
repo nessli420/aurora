@@ -15,10 +15,11 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class AuthStep { TYPE, SERVER, CREDENTIALS, SPOTIFY }
+enum class AuthStep { TYPE, SERVER, CREDENTIALS, SPOTIFY, YOUTUBE_MUSIC }
 
 data class AuthUiState(
     val step: AuthStep = AuthStep.TYPE,
@@ -58,6 +59,10 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun selectType(type: ServerType) {
+        if (type == ServerType.YOUTUBE_MUSIC) {
+            _state.update { it.copy(type = type, step = AuthStep.YOUTUBE_MUSIC, error = null) }
+            return
+        }
         if (type == ServerType.SPOTIFY) {
             _state.update { it.copy(type = ServerType.SPOTIFY, step = AuthStep.SPOTIFY, error = null) }
             return
@@ -76,6 +81,31 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun authUrlOpened() = _state.update { it.copy(pendingAuthUrl = null) }
+
+    fun connectYouTubeMusic(webSession: String) {
+        if (_state.value.loading) return
+        _state.update { it.copy(loading = true, error = null) }
+        viewModelScope.launch {
+            var reference: String? = null
+            try {
+                val auth = com.aurora.music.data.remote.YouTubeMusicWebSession.decode(webSession)
+                val client = com.aurora.music.data.remote.YouTubeMusicClient(session = { auth })
+                val (name, handle, photo) = com.aurora.music.data.YouTubeMusicBackend.account(client, auth.dataSyncId)
+                reference = withContext(Dispatchers.IO) { container.youtubeMusicCredentials.save(auth.encode()) }
+                val session = Session(com.aurora.music.data.remote.YouTubeMusicClient.ORIGIN, name, "", reference,
+                    ServerType.YOUTUBE_MUSIC, userId = handle, imageUrl = photo)
+                val previous = container.settingsStore.savedSessions.first().filter { it.type == ServerType.YOUTUBE_MUSIC && it.userId == handle }
+                container.applySession(session)
+                previous.filter { it.token != reference }.forEach { container.youtubeMusicCredentials.remove(it.token) }
+                _state.update { it.copy(loading = false, error = null) }
+            } catch (e: kotlinx.coroutines.CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                reference?.let { container.youtubeMusicCredentials.remove(it) }
+                _state.update { it.copy(loading = false, error = if (e is java.io.IOException) friendlyError(e) else "Could not connect YouTube Music. Please try again.") }
+            }
+        }
+    }
 
     fun signInLocal() {
         if (_state.value.loading) return
@@ -117,6 +147,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             AuthStep.CREDENTIALS -> it.copy(step = AuthStep.SERVER, error = null)
             AuthStep.SERVER -> it.copy(step = AuthStep.TYPE, error = null)
             AuthStep.SPOTIFY -> it.copy(step = AuthStep.TYPE, error = null, pendingAuthUrl = null)
+            AuthStep.YOUTUBE_MUSIC -> it.copy(step = AuthStep.TYPE, error = null)
             AuthStep.TYPE -> it
         }
     }
@@ -146,6 +177,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                         }
                         ServerType.JELLYFIN -> JellyfinClient.authenticate(server, s.username, s.password)
                         ServerType.SPOTIFY -> throw IllegalStateException("Spotify uses the connect button, not this form")
+                        ServerType.YOUTUBE_MUSIC -> throw IllegalStateException("YouTube Music uses Google sign-in.")
                         ServerType.LOCAL -> throw IllegalStateException("Local mode doesn't use this form")
                         ServerType.EXTENSION -> throw IllegalStateException("Enable this source in Advanced audio → Extensions.")
                     }
