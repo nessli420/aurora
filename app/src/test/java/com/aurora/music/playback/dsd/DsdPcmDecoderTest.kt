@@ -7,7 +7,7 @@ import kotlin.random.Random
 
 class DsdPcmDecoderTest {
     @Test fun byteLookupMatchesDirectBitConvolutionIncludingPartialByteAndBothEdges() {
-        for (rate in listOf(2_822_400, 5_644_800)) {
+        for (rate in DsdFormat.supportedBitRates) {
             val f = DsdFormat(DsdContainer.DSF, rate, 2, 12_347, 92, 8192)
             val channels = Array(2) { Random(it + 7).nextBytes(f.bytesPerChannel.toInt()) }
             val decoder = DsdPcmDecoder(f)
@@ -26,8 +26,8 @@ class DsdPcmDecoderTest {
         }
     }
 
-    @Test fun passbandAndUltrasonicRejectionAreBoundedAtBothRates() {
-        for (rate in listOf(2_822_400, 5_644_800)) {
+    @Test fun passbandAndUltrasonicRejectionAreBoundedAtEveryRate() {
+        for (rate in DsdFormat.supportedBitRates) {
             val coefficients = DsdPcmDecoder(DsdFormat(DsdContainer.DFF, rate, 1, 8192, 0, 1024)).coefficients
             fun response(frequency: Double): Double {
                 var real = 0.0; var imaginary = 0.0
@@ -37,13 +37,16 @@ class DsdPcmDecoderTest {
                 }
                 return hypot(real, imaginary)
             }
-            for (frequency in listOf(0.0, 1000.0, 10_000.0, 20_000.0, 30_000.0)) assertEquals(1.0, response(frequency), .0002)
-            for (frequency in listOf(88_200.0, 100_000.0, 200_000.0, 1_000_000.0)) assertTrue("$rate $frequency", response(frequency) < .00006)
+            for (step in 0..300) assertEquals("$rate passband at ${step * 100} Hz", 1.0, response(step * 100.0), .0002)
+            for (step in 0..1024) {
+                val frequency = 88_200.0 + (rate / 2.0 - 88_200.0) * step / 1024
+                assertTrue("$rate rejection at $frequency Hz", response(frequency) < .00006)
+            }
         }
     }
 
     @Test fun generatedDsdToneRetainsAmplitudePitchAndCompensatedTiming() {
-        for (rate in listOf(2_822_400, 5_644_800)) {
+        for (rate in DsdFormat.supportedBitRates) {
             val bits = rate / 20
             val f = DsdFormat(DsdContainer.DFF, rate, 1, bits.toLong(), 0, (bits + 7L) / 8)
             val channel = ByteArray(f.bytesPerChannel.toInt())
@@ -66,7 +69,7 @@ class DsdPcmDecoderTest {
     }
 
     @Test fun seekingWithPrerollMatchesContinuousDecodeExactlyAndResetDropsOldHistory() {
-        for (container in DsdContainer.entries) for (rate in listOf(2_822_400, 5_644_800)) {
+        for (container in DsdContainer.entries) for (rate in DsdFormat.supportedBitRates) {
             val f = DsdFormat(container, rate, 2, 300_000, 92, 81_920)
             val channels = Array(2) { Random(37 + it).nextBytes(f.bytesPerChannel.toInt()) }
             val decoder = DsdPcmDecoder(f)

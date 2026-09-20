@@ -56,6 +56,7 @@ data class MetadataMatch(
     val trackNumber: String,
     val coverUrl: String,
     val score: Int,
+    val source: String = "MusicBrainz",
 )
 
 // musicbrainz requires a descriptive user-agent and rate-limits ~1 req/s

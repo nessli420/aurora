@@ -94,6 +94,7 @@ class PlaybackService : MediaLibraryService() {
     @Volatile private var replayGainMode: Int = 0
     @Volatile private var monoAudioPref: Boolean = false
     @Volatile private var lastAudioPrefs: AudioPrefs? = null
+    private var listeningHistoryAllowed = false
     @Volatile private var useFloatOut: Boolean = false
     private var usePrecisionProcessing = false
     private val precisionChains = mutableListOf<PrecisionBlockProcessor>()
@@ -121,6 +122,7 @@ class PlaybackService : MediaLibraryService() {
         var precisionProcessor: PrecisionBlockProcessor? = null
         @Volatile var precisionSink: PrecisionAudioSink? = null
         @Volatile var decoded: Format? = null
+        @Volatile var downstreamGain: Float? = null
         val tracks = OutputTrackEvidence<AudioSink.AudioTrackConfig> { a, b ->
             a.sampleRate == b.sampleRate && a.encoding == b.encoding && a.channelConfig == b.channelConfig &&
                 a.tunneling == b.tunneling && a.offload == b.offload && a.bufferSize == b.bufferSize
@@ -251,7 +253,8 @@ class PlaybackService : MediaLibraryService() {
                         }
                     else -> fallback
                 }
-                return TappingAudioSink(sink, container.visualizer, initialEvidence.beforeMeter) { initialEvidence.decoded = it }
+                return TappingAudioSink(sink, container.visualizer, initialEvidence.beforeMeter,
+                    onVolume = { initialEvidence.downstreamGain = it }) { initialEvidence.decoded = it }
             }
         }
         // prefer ffmpeg decoder so non-flac content decodes to float32
@@ -270,7 +273,8 @@ class PlaybackService : MediaLibraryService() {
                     uri.getQueryParameter("dur")?.toIntOrNull() ?: 0,
                 ) ?: throw java.io.IOException("No stream found for this track")
                 dataSpec.withUri(android.net.Uri.parse(real))
-            } else dataSpec
+            } else if (uri.scheme == "aurora-extension") dataSpec.withUri(container.extensions.resolve(uri))
+            else dataSpec
         }
         val dataSourceFactory = androidx.media3.datasource.ResolvingDataSource.Factory(
             androidx.media3.datasource.DefaultDataSource.Factory(this), ytResolver,
@@ -481,6 +485,9 @@ class PlaybackService : MediaLibraryService() {
         scope.launch {
             container.preferredAudioDeviceId.collect { id -> applyPreferredDevice(id) }
         }
+        scope.launch {
+            container.settingsStore.privateSession.collect { privateSession -> listeningHistoryAllowed = !privateSession }
+        }
 
         scope.launch {
             while (isActive) {
@@ -651,6 +658,32 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun updateSignalPath() {
+        try { updateSignalPathSnapshot() }
+        finally { updateListeningLevels() }
+    }
+
+    private fun updateListeningLevels() {
+        val active = if (::player.isInitialized) mediaSession?.player ?: player else null
+        val normal = ::player.isInitialized && active === player
+        val path = container.signalPath.value
+        val measurements = path.measurements
+        val audio = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        val volumeStep = runCatching { audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) }.getOrNull()
+        val maximum = runCatching { audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC) }.getOrNull()
+        val muted = runCatching { audio.isStreamMute(android.media.AudioManager.STREAM_MUSIC) }.getOrDefault(true)
+        val prefs = lastAudioPrefs
+        val supported = normal && path.active && measurements?.afterAvailable == true &&
+            !measurements.overlappingPlayers && prefs != null && prefs.dspMode != DspMode.SYSTEM &&
+            audioEffects?.activeEffectNames().orEmpty().isEmpty() &&
+            player.playbackParameters.speed == 1f && player.playbackParameters.pitch == 1f
+        container.listeningLevels.observe(com.aurora.music.data.listening.ListeningObservation(
+            route = container.settingsStore.processingRoutes.current, playing = active?.isPlaying == true,
+            postDsp = measurements?.after, downstreamGain = if (normal) sinkEvidence[player]?.downstreamGain?.toDouble() else null,
+            volumeIndex = volumeStep, volumeMuted = muted, pathSupported = supported,
+            allowHistory = listeningHistoryAllowed, volumeMaximum = maximum))
+    }
+
+    private fun updateSignalPathSnapshot() {
         if (!::player.isInitialized) return
         val active = mediaSession?.player ?: player
         publishPresetRuleContext(active)
@@ -1112,7 +1145,8 @@ class PlaybackService : MediaLibraryService() {
                     PrecisionAudioSink(base, it, fadeEvidence.precisionAfterMeter,
                         { outputRatePolicy }, { routedOutput.supportedSampleRates() }).also { wrapped -> fadeEvidence.precisionSink = wrapped }
                 } ?: base
-                return TappingAudioSink(sink, container.visualizer, fadeEvidence.beforeMeter) { fadeEvidence.decoded = it }
+                return TappingAudioSink(sink, container.visualizer, fadeEvidence.beforeMeter,
+                    onVolume = { fadeEvidence.downstreamGain = it }) { fadeEvidence.decoded = it }
             }
         }
         return ExoPlayer.Builder(this, factory)
@@ -1877,6 +1911,10 @@ class PlaybackService : MediaLibraryService() {
         container.settingsStore.presetRuleContext.publish(com.aurora.music.data.rules.PresetPlaybackContext())
         androidAutoControllers.clear()
         container.signalPath.value = SignalPath()
+        container.listeningLevels.observe(com.aurora.music.data.listening.ListeningObservation(
+            route = container.settingsStore.processingRoutes.current, playing = false, postDsp = null,
+            downstreamGain = null, volumeIndex = null, volumeMuted = true, pathSupported = false,
+            allowHistory = false))
         super.onDestroy()
     }
 

@@ -17,8 +17,35 @@ class DsdHeadersTest {
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(), 92, 16383) }
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(block = 8192), 92, 8192) }
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(bits = 2), 92, 8192) }
-        assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(rate = 11_289_600), 92, 8192) }
+        assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(rate = 45_158_400), 92, 8192) }
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(samples = Long.MAX_VALUE), 92, 8192) }
+    }
+
+    @Test fun everySupportedRateHasBoundedDecimationAndExactEndSeeking() {
+        for (rate in DsdFormat.supportedBitRates) {
+            val f = DsdHeaders.dsf(dsf(rate = rate), 92, 16384)
+            assertEquals(176400, f.pcmRate)
+            assertEquals(rate / 176400, f.decimation)
+            assertTrue(f.filterTaps in 512..4096)
+            assertEquals(0L, f.seekFrame(-1))
+            assertEquals(0L, f.seekFrame(0))
+            assertEquals(f.pcmFrames, f.seekFrame(f.durationUs))
+            assertEquals(f.pcmFrames, f.seekFrame(Long.MAX_VALUE))
+            assertTrue(f.position(f.prerollByte(f.pcmFrames)) <= f.dataOffset + f.dataBytes)
+        }
+        for (rate in listOf(0, 2_822_401, 6_144_000, 45_158_400, Int.MAX_VALUE)) {
+            assertThrows(IllegalArgumentException::class.java) { DsdFormat(DsdContainer.DFF, rate, 2, 8192, 0, 2048) }
+        }
+    }
+
+    @Test fun dffAcceptsEverySupportedRateAndRejectsUnsupportedRates() {
+        for (rate in DsdFormat.supportedBitRates + listOf(45_158_400, 6_144_000)) {
+            val properties = "SND ".toByteArray() + chunk("FS  ", ByteBuffer.allocate(4).putInt(rate).array()) +
+                chunk("CHNL", ByteBuffer.allocate(10).putShort(2).put("SLFTSRGT".toByteArray()).array()) +
+                chunk("CMPR", "DSD ".toByteArray() + byteArrayOf(0))
+            if (DsdFormat.supportsBitRate(rate)) assertEquals(rate to 2, DsdHeaders.dffProperties(properties))
+            else assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dffProperties(properties) }
+        }
     }
 
     @Test fun dffPropertiesValidateRateChannelsCompressionAndUnknownChunkPadding() {

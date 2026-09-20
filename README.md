@@ -82,9 +82,12 @@ Start with a preset for your headphones, earbuds, or speakers, then adjust as mu
 - **Separate left and right controls.** Use different corrections for each ear or speaker, or keep them linked. Adjust each channel's volume and timing separately, along with balance and stereo width.
 - **Build your own effects chain.** Arrange up to 16 stages in the processing rack, including several equalizers with up to 256 bands in total. Reorder, duplicate, disable, or blend each effect with the original sound. You can also split the audio into separate paths, apply different effects, and mix them back together. Save groups of effects to reuse later.
 - **Sound that responds to the music.** Use equalizer adjustments that react to louder passages, control volume changes separately in the bass, mids, and treble, or add distortion for a warmer or rougher sound. Loudness compensation adjusts the tone as you change listening volume.
+- **Soften or color the sound.** A de-esser reduces sharp “s” sounds, while a gate quiets low-level noise. Add tape or tube character, extra brightness, or fuller bass.
+- **Echo, space, and movement.** Add delay, echoes that alternate between speakers, or reverb. Chorus, flanger, and phaser add movement; tremolo pulses the volume, while vibrato varies the pitch.
 - **Import your own correction files.** Load impulse responses—files that describe a sound adjustment—then trim them, adjust their level, and use several in one chain. Keep the originals and save edited versions separately.
 - **Save, switch, and share.** Save the whole setup, including its correction files, and export it for another device. Assign presets to headphones or outputs, or create rules that select them by track or source. Manual overrides let you keep the sound you have chosen.
 - **Check what changed.** Compare a short section of the same song through two presets at matched volume, or use a blind listening test. **Signal Path** shows active effects, before-and-after levels and frequency graphs, and the output format in use.
+- **Estimated listening levels.** Enter your headphone sensitivity and measured DAC and volume data to estimate sound level, with uncertainty shown. Uncalibrated outputs stay unavailable. Optional level samples stay on your device.
 
 The main audio engine uses 64-bit calculations to keep extra precision as effects are combined. There are also controls for output sample rates and audio conversion. Available controls depend on the playback mode; [USB audio](#usb-audio) has its own options and limits.
 
@@ -106,13 +109,19 @@ Connect a USB DAC and open **Settings → Audio output → USB DAC output**. A D
 
 Restart Aurora after changing USB settings. **Signal Path** shows the output in use and any fallback.
 
-USB support is still experimental and varies by phone and DAC. Direct and processed playback have been tested with a **FiiO KA13**. DSF/DFF files are supported through audio conversion; unchanged DSD output is not supported.
+USB support is still experimental and varies by phone and DAC. Direct and processed playback have been tested with a **FiiO KA13**. [DSF/DFF files](docs/audio-formats.md) are supported through audio conversion; unchanged DSD output is not supported.
 
 ## Network audio
 
 Play through Chromecast, a compatible DLNA receiver, or another Aurora device. Direct Cast keeps the original audio file and bypasses Aurora's effects. Processed output applies your effects before sending the track. Tracks are prepared first, so playback can take a moment to start. Crossfade, gapless transitions, speed changes, and silence skipping are unavailable when sending audio.
 
 To use another Aurora device as a player, enable **Settings → Network audio → Allow remote control** on it. Copy its pairing address and code to the controlling device. Aurora copies the queue before playback, up to 100 tracks and 512 MB, so the receiver can keep playing if the controlling device goes offline. The receiving device uses its own audio settings and output, including a connected USB DAC. Paired access can be revoked at any time.
+
+## Extensions
+
+Install a compatible extension app, then enable it in **Settings → Extensions**. Extensions can add sound presets, read-only music libraries, or tag suggestions. You choose when to load a preset, switch libraries, or apply suggested tags.
+
+Want to build one? The [extension SDK guide](docs/extensions.md) covers API 1, access controls, supported features and the included example app.
 
 ## Optional accounts
 

@@ -1,0 +1,11 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <application android:label="Aurora extension example" android:allowBackup="false">
+        <service android:name=".ExampleExtension" android:exported="true">
+            <intent-filter><action android:name="com.aurora.extension.SERVICE" /></intent-filter>
+            <meta-data android:name="aurora.extension.api" android:value="1" />
+            <meta-data android:name="aurora.extension.capabilities" android:value="audio,media,metadata" />
+            <meta-data android:name="aurora.extension.license" android:value="Apache-2.0" />
+        </service>
+        <provider android:name=".ExampleAudioProvider" android:authorities="com.aurora.extension.example.audio" android:exported="true" />
+    </application>
+</manifest>

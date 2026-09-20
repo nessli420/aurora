@@ -5,16 +5,21 @@ import android.content.Context
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
+import androidx.media3.common.util.UnstableApi
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
+import com.aurora.music.playback.dsd.DsdMetadataReader
 import com.aurora.music.util.TrackMatch
 import com.aurora.music.util.accentFor
 import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import java.util.UUID
 
 class LocalLibrary(
     private val context: Context,
@@ -109,10 +114,13 @@ class LocalLibrary(
             m.contains("ogg") || m.contains("vorbis") -> "ogg"
             m.contains("wav") -> "wav"
             m.contains("aiff") || m.contains("aif") -> "aiff"
+            m.contains("dsf") -> "dsf"
+            m.contains("dff") || m.contains("dsdiff") -> "dff"
             else -> ""
         }
     }
 
+    @androidx.annotation.OptIn(UnstableApi::class)
     private suspend fun scan(separators: ArtistSeparators) = withContext(Dispatchers.IO) {
         val collection = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
         val cols = arrayListOf(
@@ -201,6 +209,32 @@ class LocalLibrary(
                 }
             }
         }
+        out += visibleDsdFiles(out.mapTo(hashSetOf()) { it.id }, dirs)
+        for (index in out.indices) {
+            currentCoroutineContext().ensureActive()
+            val song = out[index]
+            if (song.suffix != "dsf" && song.suffix != "dff") continue
+            val file = DsdMetadataReader.read(context, Uri.parse(song.streamUrl)) ?: continue
+            val tags = file.metadata
+            val artist = tags.artist?.toString()?.takeIf(String::isNotBlank) ?: song.artist
+            val album = tags.albumTitle?.toString()?.takeIf(String::isNotBlank) ?: song.album
+            val albumId = if (!tags.albumTitle.isNullOrBlank()) {
+                "local-dsd-album-" + UUID.nameUUIDFromBytes("${tags.albumArtist ?: artist}\u0000$album".toByteArray(Charsets.UTF_8))
+            } else song.albumId
+            out[index] = song.copy(
+                title = tags.title?.toString()?.takeIf(String::isNotBlank) ?: song.title,
+                artist = artist,
+                album = album,
+                albumId = albumId,
+                durationSec = (file.durationUs / 1_000_000).toInt(),
+                sampleRateHz = file.source.bitRate,
+                bitDepth = 1,
+                bitrateKbps = file.source.bitRate * file.source.channels / 1000,
+                genre = tags.genre?.toString()?.takeIf(String::isNotBlank) ?: song.genre,
+            )
+            albumDateAdded[albumId] = maxOf(albumDateAdded[albumId] ?: 0, song.dateAddedSec)
+            (tags.releaseYear ?: tags.recordingYear)?.takeIf { it > 0 }?.let { albumYear[albumId] = it }
+        }
         rawSongs = out
         indexArtists(separators)
         matchIndex = out.groupBy { TrackMatch.key(it.artist, it.title) }
@@ -220,6 +254,45 @@ class LocalLibrary(
                 )
             }
             .sortedByDescending { albumDateAdded[it.id] ?: 0L }
+    }
+
+    private fun visibleDsdFiles(indexed: Set<String>, dirs: MutableMap<String, String>): List<Song> {
+        val collection = MediaStore.Files.getContentUri("external")
+        val columns = arrayOf(MediaStore.MediaColumns._ID, MediaStore.MediaColumns.DISPLAY_NAME,
+            MediaStore.MediaColumns.MIME_TYPE, MediaStore.MediaColumns.DATE_ADDED,
+            @Suppress("DEPRECATION") MediaStore.MediaColumns.DATA)
+        val selection = "${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ? OR ${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?"
+        val files = ArrayList<Song>()
+        runCatching {
+            context.contentResolver.query(collection, columns, selection, arrayOf("%.dsf", "%.dff"), null)?.use { cursor ->
+                val idColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns._ID)
+                val nameColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DISPLAY_NAME)
+                val mimeColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.MIME_TYPE)
+                val addedColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATE_ADDED)
+                @Suppress("DEPRECATION") val pathColumn = cursor.getColumnIndexOrThrow(MediaStore.MediaColumns.DATA)
+                while (cursor.moveToNext()) {
+                    val mediaId = cursor.getLong(idColumn)
+                    if (mediaId.toString() in indexed) continue
+                    val name = cursor.getString(nameColumn).orEmpty()
+                    val suffix = suffixFrom(name, cursor.getString(mimeColumn))
+                    if (suffix != "dsf" && suffix != "dff") continue
+                    val id = "local-dsd-$mediaId"
+                    val path = cursor.getString(pathColumn).orEmpty()
+                    val folder = path.substringBeforeLast('/', "")
+                    if (folder.isNotBlank()) dirs[id] = folder
+                    val gain = path.takeIf(String::isNotBlank)?.let(gainProvider)
+                    files += Song(
+                        id = id, title = name.substringBeforeLast('.'), artist = "Unknown artist", album = "Unknown album",
+                        artworkUrl = "", durationSec = 0, accent = accentFor(id),
+                        streamUrl = ContentUris.withAppendedId(collection, mediaId).toString(),
+                        albumId = "local-dsd-folder-" + UUID.nameUUIDFromBytes(folder.ifBlank { id }.toByteArray(Charsets.UTF_8)),
+                        suffix = suffix, path = path, replayGainTrack = gain?.first ?: 0f, replayGainAlbum = gain?.second ?: 0f,
+                        dateAddedSec = cursor.getLong(addedColumn),
+                    )
+                }
+            }
+        }
+        return files
     }
 
     private fun indexArtists(separators: ArtistSeparators) {

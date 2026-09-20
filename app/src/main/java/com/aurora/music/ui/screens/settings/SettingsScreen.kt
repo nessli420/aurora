@@ -59,6 +59,8 @@ fun SettingsScreen(
     onOpenOutput: () -> Unit,
     onOpenNetwork: () -> Unit,
     onOpenLoudness: () -> Unit,
+    onOpenListening: () -> Unit,
+    onOpenExtensions: () -> Unit,
     onOpenAlarm: () -> Unit,
     onOpenSignalPath: () -> Unit,
     onOpenEq: () -> Unit,
@@ -96,6 +98,7 @@ fun SettingsScreen(
         com.aurora.music.data.ServerType.SPOTIFY -> "SPOTIFY"
         com.aurora.music.data.ServerType.JELLYFIN -> "JELLYFIN"
         com.aurora.music.data.ServerType.LOCAL -> "LOCAL"
+        com.aurora.music.data.ServerType.EXTENSION -> "EXTENSION"
         else -> "NAVIDROME"
     }
 
@@ -172,6 +175,8 @@ fun SettingsScreen(
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
                     SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.listening, onClick = onOpenListening)
+                    SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
                 }
             }
@@ -198,6 +203,8 @@ fun SettingsScreen(
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Extension, SettingsDestinations.integrations, onClick = onOpenIntegrations)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Extension, SettingsDestinations.extensions, onClick = onOpenExtensions)
                 }
             }
 

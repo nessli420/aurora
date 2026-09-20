@@ -253,13 +253,19 @@ class ProductionSerialRack private constructor(
     }
 
     private class AdvancedNode(spec: ProcessingRackNode, rate: Int) : Node(spec.id, spec.kind, spec.bypass, spec.wet.toDouble()) {
-        override val supportsInputTailHandover = spec.kind == RackNodeKind.UTILITY
+        override val supportsInputTailHandover = spec.kind in listOf(RackNodeKind.UTILITY, RackNodeKind.SPACE)
         private val kernel: AdvancedRackKernel = when (spec.kind) {
             RackNodeKind.DYNAMIC_EQ -> DynamicEqKernel(spec.dynamic ?: RackDynamicEq(), rate)
             RackNodeKind.MULTIBAND -> MultibandKernel(spec.multiband ?: RackMultiband(), rate)
             RackNodeKind.LOUDNESS -> RelativeLoudnessKernel(spec.loudness ?: RackLoudness(), rate)
+            RackNodeKind.DYNAMICS -> DynamicsEffectKernel(spec.dynamics ?: RackDynamicsEffect(), rate)
+            RackNodeKind.TONE -> ToneKernel(spec.tone ?: RackTone(), rate)
+            RackNodeKind.SPACE -> SpaceKernel(spec.space ?: RackSpace(), rate)
+            RackNodeKind.MODULATION -> ModulationKernel(spec.modulation ?: RackModulation(), rate)
             else -> UtilityKernel(spec.utility ?: RackUtility(), rate)
         }
+        override val latencyFrames = if (bypass || wet == 0.0) 0 else kernel.latencyFrames
+        override val tailFrames = if (bypass || wet == 0.0) 0 else kernel.tailFrames
         @Volatile private var reduction = 0.0
         private val bandChanges = DoubleArray(3)
         override fun process(block: AudioBlock) {
@@ -375,7 +381,7 @@ class ProductionSerialRack private constructor(
             val outputSpec = rack.output ?: listOf(RackInput(nodes.lastOrNull()?.id ?: RackInput.INPUT))
             latencyFrames = outputSpec.maxOf { sourceIndex(it.source).let { source -> if (source < 0) 0 else latencies[source] } }
             tailFrames = outputSpec.maxOf { sourceIndex(it.source).let { source -> if (source < 0) latencyFrames else tails[source] + latencyFrames - latencies[source] } }
-            require(tailFrames <= PrecisionConvolver.MAX_IR_FRAMES * 4) { "The graph tail exceeds its processing budget." }
+            require(tailFrames <= minOf(format.sampleRate * 32, PrecisionConvolver.MAX_IR_FRAMES * 16)) { "The graph tail exceeds its processing budget." }
             outputs = edges(outputSpec, latencyFrames)
             val reachable = BooleanArray(nodes.size)
             fun visit(source: Int) {
@@ -498,8 +504,16 @@ class ProductionSerialRack private constructor(
             impulseMap: Map<String, ImpulseResponse> = emptyMap(), relativeVolume: Double = 1.0): ProductionSerialRack {
             ProcessingRackCodec.validate(rack)
             val oversamplingLoad = rack.nodes.filter { it.kind == RackNodeKind.SATURATION && !it.bypass && it.wet > 0f && (it.oversampling ?: 1) > 1 }
-                .sumOf { (it.oversampling ?: 1).toLong() * sampleRate }
-            require(oversamplingLoad <= 16L * 96000) { "Saturation oversampling exceeds the processing budget at this sample rate." }
+                .sumOf { (it.oversampling ?: 1).toLong() * sampleRate } +
+                rack.nodes.count { it.kind == RackNodeKind.TONE && !it.bypass && it.wet > 0 &&
+                    (it.tone ?: RackTone()).let { tone -> tone.mode != RackToneMode.BASS && tone.amount > 0 && tone.driveDb > 0 } } * 2L * sampleRate
+            require(oversamplingLoad <= 16L * 96000) { "Oversampling exceeds the processing budget at this sample rate." }
+            val delayStorage = rack.nodes.sumOf { node -> when (node.kind) {
+                RackNodeKind.SPACE -> ((node.space ?: RackSpace()).timeMs / 1000 * sampleRate * 2 + sampleRate * .35).toLong()
+                RackNodeKind.MODULATION -> (sampleRate * .12).toLong()
+                else -> 0L
+            } }
+            require(delayStorage <= 4_000_000) { "Delay stages exceed the rack memory budget at this sample rate." }
             rack.nodes.filter { !it.bypass && it.wet > 0f }.forEach { node ->
                 if (node.kind == RackNodeKind.DYNAMIC_EQ) (node.dynamic ?: RackDynamicEq()).let {
                     require(it.frequencyHz < sampleRate * .5 && it.detectorHz < sampleRate * .5) { "Dynamic EQ frequencies must be below Nyquist at this sample rate." }
@@ -536,7 +550,7 @@ class ProductionSerialRack private constructor(
                     val ir = impulseMap[spec.impulseId] ?: if (spec.impulseId == null) impulse else null
                     if (routed && ir != null && !spec.bypass && spec.wet > 0f) SyncConvolutionNode(spec, ir, sampleRate) else ConvolutionNode(spec)
                 }
-                RackNodeKind.UTILITY, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND, RackNodeKind.LOUDNESS -> AdvancedNode(spec, sampleRate)
+                RackNodeKind.UTILITY, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND, RackNodeKind.LOUDNESS, RackNodeKind.DYNAMICS, RackNodeKind.TONE, RackNodeKind.SPACE, RackNodeKind.MODULATION -> AdvancedNode(spec, sampleRate)
                 RackNodeKind.ALIGNMENT_DELAY -> AlignmentNode(spec, sampleRate)
                 RackNodeKind.SATURATION -> if ((spec.oversampling ?: 1) > 1) OversampledNode(spec) else EffectsNode(spec.id, spec.kind, spec.bypass, spec.wet.toDouble(), format, params(spec.kind, spec.audio))
                 else -> EffectsNode(spec.id, spec.kind, spec.bypass, spec.wet.toDouble(), format, params(spec.kind, spec.audio))

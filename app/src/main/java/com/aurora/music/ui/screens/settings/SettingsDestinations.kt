@@ -23,6 +23,8 @@ object SettingsDestinations {
     val comparison = SettingsDestination(Routes.SETTINGS_COMPARISON, "Compare presets", "Level-matched A/B and blind ABX")
     val presetRules = SettingsDestination(Routes.SETTINGS_PRESET_RULES, "Preset rules", "Switch presets by track and output")
     val loudness = SettingsDestination(Routes.SETTINGS_LOUDNESS, "Volume & loudness", "ReplayGain and volume leveling")
+    val listening = SettingsDestination(Routes.SETTINGS_LISTENING, "Listening levels", "Headphone calibration and local level history")
+    val extensions = SettingsDestination(Routes.SETTINGS_EXTENSIONS, "Extensions", "Audio presets, library sources and metadata")
     val signalPath = SettingsDestination(Routes.SIGNAL_PATH, "Signal Path", "Inspect the current playback path")
     val alarm = SettingsDestination(Routes.SETTINGS_ALARM, "Alarm", "Wake to your liked music")
     val appearance = SettingsDestination(Routes.SETTINGS_APPEARANCE, "Appearance", "Theme, accent and layout")
@@ -34,7 +36,7 @@ object SettingsDestinations {
     val about = SettingsDestination(Routes.SETTINGS_ABOUT, "About Aurora", "Version and app information")
 
     val all = listOf(accounts, sources, storage, analysis, playback, output, network, equalizer, processingRack, tuning, impulses, comparison, presetRules, processingPresets, loudness,
-        signalPath, alarm, appearance, visualizer, gestures, integrations, permissions, backup, about)
+        listening, extensions, signalPath, alarm, appearance, visualizer, gestures, integrations, permissions, backup, about)
 }
 
 @Composable

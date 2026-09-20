@@ -82,6 +82,57 @@ internal fun RackAdvancedControls(node: ProcessingRackNode, onEdit: ((Processing
                 Text("Relative to media volume. This is not an SPL estimate.", Modifier.padding(20.dp), style = MaterialTheme.typography.bodySmall)
             }
         }
+        RackNodeKind.DYNAMICS -> {
+            val d = node.dynamics ?: RackDynamicsEffect()
+            fun edit(value: RackDynamicsEffect) = onEdit { it.copy(dynamics = value) }
+            SettingsGroup {
+                RackModePicker("Effect", listOf("Expander", "Gate", "De-esser"), d.mode.ordinal) { edit(d.copy(mode = RackDynamicsMode.entries[it])) }
+                DynamicGainMeter(meter?.changeDb, "Gain reduction")
+                if (d.mode == RackDynamicsMode.DEESSER) AdvancedSlider("Sibilance cutoff", d.frequencyHz, 1000.0..16000.0, "Hz") { edit(d.copy(frequencyHz = it)) }
+                if (d.mode == RackDynamicsMode.GATE) AdvancedSlider("Hold", d.holdMs, 0.0..500.0, "ms") { edit(d.copy(holdMs = it)) }
+                DynamicsControls(d.dynamics, true, gate = d.mode == RackDynamicsMode.GATE) { edit(d.copy(dynamics = it)) }
+            }
+        }
+        RackNodeKind.TONE -> {
+            val t = node.tone ?: RackTone()
+            fun edit(value: RackTone) = onEdit { it.copy(tone = value) }
+            SettingsGroup {
+                RackModePicker("Color", listOf("Exciter", "Tape", "Tube", "Bass"), t.mode.ordinal) { index ->
+                    val mode = RackToneMode.entries[index]
+                    edit(t.copy(mode = mode, frequencyHz = if (mode == RackToneMode.BASS) 100.0 else 3000.0))
+                }
+                if (t.mode == RackToneMode.BASS) AdvancedSlider("Bass boost", t.driveDb * .5, 0.0..12.0, "dB") { edit(t.copy(driveDb = it * 2)) }
+                else AdvancedSlider("Drive", t.driveDb, 0.0..24.0, "dB") { edit(t.copy(driveDb = it)) }
+                AdvancedSlider("Amount", t.amount * 100, 0.0..100.0, "%") { edit(t.copy(amount = it / 100)) }
+                if (t.mode in listOf(RackToneMode.BASS, RackToneMode.EXCITER)) AdvancedSlider("Cutoff", t.frequencyHz,
+                    if (t.mode == RackToneMode.BASS) 30.0..300.0 else 1000.0..16000.0, "Hz") { edit(t.copy(frequencyHz = it)) }
+                if (t.mode != RackToneMode.BASS) Text("2\u00d7 oversampling. Tape and tube are tone effects.", Modifier.padding(20.dp), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        RackNodeKind.SPACE -> {
+            val s = node.space ?: RackSpace()
+            fun edit(value: RackSpace) = onEdit { it.copy(space = value) }
+            SettingsGroup {
+                RackModePicker("Effect", listOf("Stereo delay", "Ping-pong delay", "Reverb"), s.mode.ordinal) { edit(s.copy(mode = RackSpaceMode.entries[it])) }
+                AdvancedSlider(if (s.mode == RackSpaceMode.REVERB) "Pre-delay" else "Delay", s.timeMs, 1.0..750.0, "ms") { edit(s.copy(timeMs = it)) }
+                if (s.mode == RackSpaceMode.REVERB) AdvancedSlider("Decay", s.decaySeconds, .1..4.0, "s") { edit(s.copy(decaySeconds = it)) }
+                else AdvancedSlider("Feedback", s.feedback * 100, 0.0..65.0, "%") { edit(s.copy(feedback = it / 100)) }
+                AdvancedSlider("Damping cutoff", s.dampingHz, 200.0..16000.0, "Hz") { edit(s.copy(dampingHz = it)) }
+                Text("Use the stage mix to blend with the original audio.", Modifier.padding(20.dp), style = MaterialTheme.typography.bodySmall)
+            }
+        }
+        RackNodeKind.MODULATION -> {
+            val m = node.modulation ?: RackModulation()
+            fun edit(value: RackModulation) = onEdit { it.copy(modulation = value) }
+            SettingsGroup {
+                RackModePicker("Effect", listOf("Chorus", "Flanger", "Phaser", "Tremolo", "Vibrato"), m.mode.ordinal) { edit(m.copy(mode = RackModulationMode.entries[it])) }
+                AdvancedSlider("Rate", m.rateHz, .05..10.0, "Hz") { edit(m.copy(rateHz = it)) }
+                AdvancedSlider("Depth", m.depth * 100, 0.0..100.0, "%") { edit(m.copy(depth = it / 100)) }
+                AdvancedSlider("Stereo phase", m.stereoPhase, 0.0..180.0, "\u00b0") { edit(m.copy(stereoPhase = it)) }
+                if (m.mode in listOf(RackModulationMode.CHORUS, RackModulationMode.FLANGER, RackModulationMode.PHASER))
+                    AdvancedSlider("Feedback", m.feedback * 100, -65.0..65.0, "%") { edit(m.copy(feedback = it / 100)) }
+            }
+        }
         RackNodeKind.SATURATION -> SettingsGroup {
             SegmentedRow("Oversampling", listOf("Off", "2×", "4×", "8×"), listOf(1, 2, 4, 8).indexOf(node.oversampling ?: 1)) { value ->
                 onEdit { it.copy(oversampling = listOf(1, 2, 4, 8)[value]) }
@@ -125,18 +176,29 @@ private fun DynamicResponse(node: ProcessingRackNode, gain: Double, rate: Int) {
 }
 
 @Composable
-private fun DynamicsControls(d: RackDynamics, detectorSolo: Boolean, onChange: (RackDynamics) -> Unit) {
+private fun DynamicsControls(d: RackDynamics, detectorSolo: Boolean, gate: Boolean = false, onChange: (RackDynamics) -> Unit) {
     SegmentedRow("Detector", listOf("Peak", "RMS"), d.detector.ordinal) { onChange(d.copy(detector = RackDetector.entries[it])) }
     AdvancedSlider("Threshold", d.thresholdDb, -80.0..0.0, "dBFS") { onChange(d.copy(thresholdDb = it)) }
-    AdvancedSlider("Ratio", d.ratio, 1.0..20.0, ":1") { onChange(d.copy(ratio = it)) }
+    if (!gate) AdvancedSlider("Ratio", d.ratio, 1.0..20.0, ":1") { onChange(d.copy(ratio = it)) }
     AdvancedSlider("Attack", d.attackMs, .1..200.0, "ms") { onChange(d.copy(attackMs = it)) }
     AdvancedSlider("Release", d.releaseMs, 5.0..3000.0, "ms") { onChange(d.copy(releaseMs = it)) }
-    AdvancedSlider("Knee", d.kneeDb, 0.0..24.0, "dB") { onChange(d.copy(kneeDb = it)) }
-    AdvancedSlider("Maximum change", d.rangeDb, 0.0..24.0, "dB") { onChange(d.copy(rangeDb = it)) }
+    if (!gate) AdvancedSlider("Knee", d.kneeDb, 0.0..24.0, "dB") { onChange(d.copy(kneeDb = it)) }
+    if (!gate) AdvancedSlider("Maximum change", d.rangeDb, 0.0..24.0, "dB") { onChange(d.copy(rangeDb = it)) }
     AdvancedSlider("Makeup", d.makeupDb, -24.0..12.0, "dB") { onChange(d.copy(makeupDb = it)) }
     SettingsSwitchRow(title = if (detectorSolo) "Listen to detector" else "Solo band", checked = d.solo, onCheckedChange = { onChange(d.copy(solo = it)) })
     SettingsSwitchRow(title = "Mute", checked = d.mute, onCheckedChange = { onChange(d.copy(mute = it)) })
     Text("Stereo linked.", Modifier.padding(horizontal = 20.dp, vertical = 8.dp), style = MaterialTheme.typography.labelSmall)
+}
+
+@Composable
+private fun RackModePicker(title: String, labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    Box(Modifier.padding(horizontal = 12.dp)) {
+        TextButton(onClick = { expanded = true }) { Text("$title: ${labels[selected]}") }
+        DropdownMenu(expanded, { expanded = false }) {
+            labels.forEachIndexed { index, label -> DropdownMenuItem(text = { Text(label) }, onClick = { expanded = false; onSelect(index) }) }
+        }
+    }
 }
 
 @Composable

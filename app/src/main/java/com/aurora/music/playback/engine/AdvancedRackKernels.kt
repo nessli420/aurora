@@ -7,6 +7,8 @@ internal interface AdvancedRackKernel {
     fun process(block: AudioBlock, volume: Double = 1.0)
     fun reset()
     fun copyStateFrom(previous: AdvancedRackKernel) = Unit
+    val latencyFrames: Int get() = 0
+    val tailFrames: Int get() = 0
     val reductionDb: Double get() = 0.0
     fun bandReductionDb(index: Int): Double = reductionDb
 }

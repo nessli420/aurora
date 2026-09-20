@@ -66,6 +66,7 @@ android {
 }
 
 dependencies {
+    implementation(project(":extension-sdk"))
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test:runner:1.6.2")
     androidTestImplementation("junit:junit:4.13.2")

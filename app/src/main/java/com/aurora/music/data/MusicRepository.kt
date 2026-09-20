@@ -57,7 +57,7 @@ class MusicRepository(
     private val smartEngine: SmartPlaylistEngine? = null,
 ) {
     private val backend: MediaBackend? get() = backendProvider()
-    private val offline: Boolean get() = offlineProvider()
+    private val offline: Boolean get() = offlineProvider() && backend?.supportsOfflineBrowsing != true
     private data class CollectionKey(val source: MediaBackend, val kind: String, val id: String)
     private val collectionIdentities = LinkedHashMap<CollectionKey, PlaybackCollectionIdentity>()
     private var identityDownloads: Map<String, DownloadedSong>? = null

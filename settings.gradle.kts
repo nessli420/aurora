@@ -22,6 +22,8 @@ dependencyResolutionManagement {
 
 rootProject.name = "Aurora"
 include(":app")
+include(":extension-sdk", ":extension-example")
+project(":extension-example").projectDir = file("examples/extension")
 
 // Vendored decent-player USB bit-perfect driver + Media3 wrapper (MIT). Experimental.
 include(":decent-usb-audio-driver")

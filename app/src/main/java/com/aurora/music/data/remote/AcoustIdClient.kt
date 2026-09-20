@@ -79,6 +79,7 @@ class AcoustIdClient(private val apiKeyProvider: () -> String) {
             trackNumber = "",
             coverUrl = cover,
             score = (matchScore * 100).toInt(),
+            source = "AcoustID",
         )
     }
 }

@@ -21,7 +21,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 @UnstableApi
-class DsdExtractor : Extractor {
+class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
     private enum class State { HEADER, DFF_CHUNKS, DSF_METADATA, AUDIO }
     private var state = State.HEADER
     private lateinit var output: ExtractorOutput
@@ -183,7 +183,7 @@ class DsdExtractor : Extractor {
             require(++count <= 1024 && b.remaining() >= 12) { "Invalid DFF metadata." }
             val id = DsdHeaders.id(b)
             val size = b.long
-            require(size >= 0 && size + (size and 1) <= b.remaining()) { "Truncated DFF metadata." }
+            require(size >= 0 && size <= b.remaining() && size + (size and 1) <= b.remaining()) { "Truncated DFF metadata." }
             val end = b.position() + size.toInt()
             if ((id == "DIAR" || id == "DITI") && size >= 4) {
                 val length = b.int
@@ -199,7 +199,7 @@ class DsdExtractor : Extractor {
 
     private fun startAudio() {
         val f = checkNotNull(format)
-        decoder = DsdPcmDecoder(f)
+        decoder = if (decodeAudio) DsdPcmDecoder(f) else null
         sourceByte = 0; cacheStart = -1; cacheFrames = 0
         metadata.add(DsdSourceInfo(f.container.name, f.bitRate, f.channels, f.sampleCount))
         track = output.track(0, C.TRACK_TYPE_AUDIO).also { track ->
@@ -222,6 +222,7 @@ class DsdExtractor : Extractor {
     }
 
     private fun readAudio(input: ExtractorInput, seek: PositionHolder): Int {
+        if (!decodeAudio) return Extractor.RESULT_END_OF_INPUT
         val f = checkNotNull(format)
         val d = checkNotNull(decoder)
         if (d.isEnded) return Extractor.RESULT_END_OF_INPUT

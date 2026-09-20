@@ -84,6 +84,7 @@ class DownloadManager(
     private val resolveSentinel: (String) -> String? = { null },
     private val playbackSourceProvider: (Song) -> PlaybackSourceIdentity? = { it.playbackSource },
     private val playbackCollectionProvider: (String, String, String) -> PlaybackCollectionIdentity? = { _, _, _ -> null },
+    private val copyExtension: ((String, File, (Float) -> Unit) -> Unit)? = null,
 ) {
 
     private val dir = File(context.filesDir, "downloads").apply { mkdirs() }
@@ -159,14 +160,16 @@ class DownloadManager(
         try {
             setState(song.id, DownloadState.Downloading(0f))
             val audioFile = File(dir, "${song.id}.audio")
-            val bitrate = downloadBitrateProvider()
-            val provided = streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl
+            val extension = song.streamUrl.startsWith("aurora-extension:")
+            val bitrate = if (extension) 0 else downloadBitrateProvider()
+            val provided = if (extension) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl
             // resolve aurora-yt sentinel via the songs full sentinel which holds the search query
             val audioUrl = if (provided.startsWith("aurora-yt://")) {
                 val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else provided
                 resolveSentinel(sentinel) ?: throw IOException("No stream found for this track")
             } else provided
-            downloadTo(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
+            if (extension) requireNotNull(copyExtension) { "Extension downloads are unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
+            else downloadTo(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
             val coverFile = File(dir, "${song.id}.jpg")
             runCatching { if (song.artworkUrl.isNotBlank()) downloadTo(song.artworkUrl, coverFile) {} }
             val entry = DownloadedSong(
@@ -178,7 +181,7 @@ class DownloadManager(
                 bitrateKbps = if (bitrate == 0) song.bitrateKbps else bitrate,
                 sampleRateHz = song.sampleRateHz,
                 bitDepth = song.bitDepth,
-                serverId = currentServerIdProvider(),
+                serverId = if (extension) "extension://${android.net.Uri.parse(song.streamUrl).host}" else currentServerIdProvider(),
                 playbackSource = song.playbackSource,
                 genre = song.genre,
             )

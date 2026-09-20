@@ -50,7 +50,7 @@ val DEFAULT_SOURCE_PRIORITY = listOf("local", "downloaded", "stream")
 // sentinel meaning no servers so empty can keep meaning all eligible
 const val MERGE_NONE = "__none__"
 
-enum class ServerType { SUBSONIC, JELLYFIN, SPOTIFY, LOCAL }
+enum class ServerType { SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION }
 
 // subsonic keeps salt+token never the raw password jellyfin uses token as access token
 data class Session(
@@ -72,6 +72,7 @@ data class Session(
         ServerType.JELLYFIN -> "Jellyfin"
         ServerType.SUBSONIC -> "Navidrome"
         ServerType.LOCAL -> "On this device"
+        ServerType.EXTENSION -> "Extension"
     }
 }
 
@@ -1658,6 +1659,15 @@ class SettingsStore(private val context: Context) {
         }
     }
 
+    val extensionGrants: Flow<String?> = context.dataStore.data.map {
+        it[stringPreferencesKey(com.aurora.music.extensions.ExtensionCodec.PREFERENCE_KEY)]
+    }.distinctUntilChanged()
+
+    suspend fun setExtensionGrants(json: String) {
+        com.aurora.music.extensions.ExtensionCodec.decode(json)
+        context.dataStore.edit { it[stringPreferencesKey(com.aurora.music.extensions.ExtensionCodec.PREFERENCE_KEY)] = json }
+    }
+
     suspend fun updateToken(token: String) = context.dataStore.edit { it[Keys.TOKEN] = token }
 
     suspend fun updateUserImage(url: String) = context.dataStore.edit { it[Keys.USER_IMAGE] = url }
@@ -1943,6 +1953,11 @@ class SettingsStore(private val context: Context) {
             PresetRuleSessionCodec.decode(replacement[Keys.PRESET_RULE_SESSION]).getOrThrow()
             OutputRatePolicyCodec.decode(replacement[Keys.OUTPUT_RATE_POLICY]).getOrThrow()
             RackSubchainCodec.decode(replacement[Keys.RACK_SUBCHAINS]).getOrThrow()
+            val extensionKey = stringPreferencesKey(com.aurora.music.extensions.ExtensionCodec.PREFERENCE_KEY)
+            replacement[extensionKey]?.let { json ->
+                val grants = com.aurora.music.extensions.ExtensionCodec.decode(json)
+                replacement[extensionKey] = com.aurora.music.extensions.ExtensionCodec.encode(grants.map { it.copy(enabled = false) })
+            }
             if (rack.enabled) replacement[Keys.DSP_MODE] = DspMode.CUSTOM
             // Asset ownership, hashes and remapping belong to the bundle reader before this call.
             // Keeping this transaction about preferences also permits restoring an exact snapshot

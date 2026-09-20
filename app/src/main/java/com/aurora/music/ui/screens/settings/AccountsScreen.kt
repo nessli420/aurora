@@ -119,6 +119,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
         ServerType.JELLYFIN -> "J"
         ServerType.LOCAL -> "L"
         ServerType.SUBSONIC -> "N"
+        ServerType.EXTENSION -> "E"
     }
     val host = session.server.removePrefix("http://").removePrefix("https://")
     Row(

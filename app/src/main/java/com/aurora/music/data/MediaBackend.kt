@@ -8,6 +8,7 @@ import com.aurora.music.model.Song
 // returns app domain models so callers are server-agnostic backend owns dto mapping auth and urls
 interface MediaBackend {
     val session: Session
+    val supportsOfflineBrowsing: Boolean get() = false
 
     fun playbackSourceIdentity(song: Song): PlaybackSourceIdentity? = song.playbackSource ?: when {
         song.isRadio() -> PlaybackSourceIdentity(source = com.aurora.music.data.rules.RuleSource.RADIO)

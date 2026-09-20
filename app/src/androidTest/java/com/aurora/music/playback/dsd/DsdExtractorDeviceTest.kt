@@ -22,7 +22,7 @@ import java.util.Random
 @UnstableApi
 class DsdExtractorDeviceTest {
     @Test fun dsfBothBitOrdersAndDffProduceIdenticalPcmAndSourceMetadata() {
-        for (rate in listOf(2_822_400, 5_644_800)) {
+        for (rate in DsdFormat.supportedBitRates) {
             val random = Random(91)
             val source = Array(2) { ByteArray(12345).also(random::nextBytes) }
             val dsf = Harness(DsdFixtures.dsf(source, rate)); dsf.finish()
@@ -51,15 +51,22 @@ class DsdExtractorDeviceTest {
     @Test fun seekPrerollProducesExactContinuousSuffixIncludingFinalPartialDsfBits() {
         val random = Random(82)
         val source = Array(2) { ByteArray(44001).also(random::nextBytes) }
-        for (bytes in listOf(DsdFixtures.dsf(source, sampleCount = source[0].size * 8L - 3), DsdFixtures.dff(source))) {
+        for (rate in DsdFormat.supportedBitRates) for (bytes in listOf(
+            DsdFixtures.dsf(source, rate, sampleCount = source[0].size * 8L - 3), DsdFixtures.dff(source, rate))) {
             val harness = Harness(bytes); harness.finish()
             val all = harness.output.samples.toByteArray()
-            for (time in listOf(0L, 17_000L, 89_123L)) {
+            val duration = requireNotNull(harness.output.seekMap).durationUs
+            for (time in listOf(0L, duration / 3, duration * 2 / 3)) {
                 harness.seek(time); harness.finish()
                 val firstFrame = time * 176400 / 1_000_000
                 assertArrayEquals(all.copyOfRange(firstFrame.toInt() * 8, all.size), harness.output.samples.toByteArray())
                 assertEquals(firstFrame * 1_000_000 / 176400, harness.output.timestamps.first())
             }
+            harness.seek(duration); harness.finish()
+            assertEquals(0, harness.output.samples.size())
+            assertTrue(harness.output.timestamps.isEmpty())
+            harness.seek(0); harness.finish()
+            assertArrayEquals(all, harness.output.samples.toByteArray())
         }
     }
 

@@ -14,6 +14,7 @@ class TappingAudioSink(
     delegate: AudioSink,
     private val controller: VisualizerController,
     private val meter: PcmLevelMeter = PcmLevelMeter(),
+    private val onVolume: (Float) -> Unit = {},
     private val onConfigured: (Format?) -> Unit = {},
 ) : ForwardingAudioSink(delegate) {
 
@@ -22,6 +23,11 @@ class TappingAudioSink(
     private var channelCount: Int = Format.NO_VALUE
     private var pendingBuffer: ByteBuffer? = null
     private var pendingStart = 0
+
+    override fun setVolume(volume: Float) {
+        super.setVolume(volume)
+        onVolume(volume)
+    }
 
     override fun configure(inputFormat: Format, specifiedBufferSize: Int, outputChannels: IntArray?) {
         encoding = inputFormat.pcmEncoding

@@ -195,7 +195,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                 onBypass = { bypass -> changeNode(node.id) { it.copy(bypass = bypass) } },
                                 onMove = { moveNode(node.id, it) },
                                 onRename = { nameTarget = RackNameTarget(node.id, node.name) },
-                                canDuplicate = current.nodes.size < 16 && (node.kind != RackNodeKind.CONVOLUTION || current.nodes.count { it.kind == RackNodeKind.CONVOLUTION } < 4) &&
+                                canDuplicate = current.nodes.size < 16 && (node.kind !in listOf(RackNodeKind.CONVOLUTION, RackNodeKind.SPACE) || current.nodes.count { it.kind == node.kind } < 4) &&
                                     (node.kind !in listOf(RackNodeKind.EQ, RackNodeKind.LEGACY_DSP) ||
                                         current.parametricBandCount() + node.audio.dspParametric.size <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS),
                                 onDuplicate = { change { it.copy(nodes = it.nodes + node.copy(
@@ -208,13 +208,15 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                     Icon(Icons.Filled.Add, null)
                                     Text("Add stage", Modifier.padding(start = 8.dp))
                                 }
-                                DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false }) {
+                                DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false },
+                                    modifier = Modifier.heightIn(max = 400.dp)) {
                                     RackNodeKind.entries.forEach { kind ->
                                         DropdownMenuItem(text = { Text(kind.label()) },
-                                            enabled = kind != RackNodeKind.CONVOLUTION || current.nodes.count { it.kind == kind } < 4,
+                                            enabled = kind !in listOf(RackNodeKind.CONVOLUTION, RackNodeKind.SPACE) || current.nodes.count { it.kind == kind } < 4,
                                             onClick = {
                                                 addMenu = false
                                                 val node = ProcessingRackNode(UUID.randomUUID().toString(), kind.label(), kind,
+                                                    wet = if (kind == RackNodeKind.SPACE) .25f else 1f,
                                                     audio = AudioPrefs(dspLimiterEnabled = false, dspLimiterCeilingDb = -1f))
                                                 change { it.copy(nodes = it.nodes + node) }
                                                 editingId = node.id
@@ -500,6 +502,7 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                 SettingsGroup {
                     SettingsNavRow(Icons.Filled.FolderOpen, "Impulse library", globalAudio.dspConvIrName.ifBlank { "Select a WAV" }, onClick = onPickImpulse)
                     RackImpulsePicker(node, impulseLibrary, onEdit)
+                    Text("Measured headphone spatial filters use true-stereo WAV impulses.", Modifier.padding(horizontal = 20.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
                     RackDbSlider("Makeup gain", audio.dspConvMakeupDb, -12f..12f) { value -> changeAudio { it.copy(dspConvMakeupDb = value) } }
                 }
             }
@@ -656,6 +659,10 @@ private fun RackNodeKind.label(): String = when (this) {
     RackNodeKind.MULTIBAND -> "Multiband compressor"
     RackNodeKind.LOUDNESS -> "Adaptive loudness"
     RackNodeKind.ALIGNMENT_DELAY -> "Alignment delay"
+    RackNodeKind.DYNAMICS -> "Gate, expander & de-esser"
+    RackNodeKind.TONE -> "Tone"
+    RackNodeKind.SPACE -> "Delay & reverb"
+    RackNodeKind.MODULATION -> "Modulation"
 }
 private fun ProcessingRackNode.summary(): String = when (kind) {
     RackNodeKind.LEGACY_DSP -> "Original effect order"
@@ -673,4 +680,8 @@ private fun ProcessingRackNode.summary(): String = when (kind) {
     RackNodeKind.MULTIBAND -> "Three linked stereo bands"
     RackNodeKind.LOUDNESS -> "Relative volume compensation"
     RackNodeKind.ALIGNMENT_DELAY -> "%.1f ms".format((utility ?: RackUtility()).delayMs)
+    RackNodeKind.DYNAMICS -> (dynamics ?: RackDynamicsEffect()).mode.name.lowercase().replaceFirstChar { it.uppercase() }
+    RackNodeKind.TONE -> (tone ?: RackTone()).mode.name.lowercase().replaceFirstChar { it.uppercase() }
+    RackNodeKind.SPACE -> (space ?: RackSpace()).mode.name.lowercase().replace('_', ' ').replaceFirstChar { it.uppercase() }
+    RackNodeKind.MODULATION -> (modulation ?: RackModulation()).mode.name.lowercase().replaceFirstChar { it.uppercase() }
 }

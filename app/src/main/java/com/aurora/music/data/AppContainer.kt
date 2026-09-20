@@ -35,6 +35,9 @@ class AppContainer(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val settingsStore = SettingsStore(appContext)
+    val extensions = com.aurora.music.extensions.ExtensionManager(appContext, settingsStore, scope)
+    val listeningLevels = com.aurora.music.data.listening.ListeningLevelStore(
+        java.io.File(appContext.noBackupFilesDir, "listening_levels.json"), settingsStore.processingRoutes)
     val networkOutput = com.aurora.music.playback.network.NetworkOutputManager(appContext)
     val profileImages = ProfileImages(appContext)
     val localProfileAppearance = settingsStore.localProfile.map(profileImages::appearance)
@@ -53,7 +56,7 @@ class AppContainer(context: Context) {
 
     val tagEditor = TagEditor(appContext)
 
-    val backupManager = BackupManager(settingsStore, localStore, playHistory, appContext)
+    val backupManager = BackupManager(settingsStore, localStore, playHistory, appContext, listeningLevels)
 
     val musicBrainz = com.aurora.music.data.remote.MusicBrainzClient()
 
@@ -103,6 +106,7 @@ class AppContainer(context: Context) {
         resolveSentinel = ::resolveYtSentinel,
         playbackSourceProvider = { song -> backend?.playbackSourceIdentity(song) },
         playbackCollectionProvider = { kind, id, name -> repository.playbackCollectionIdentity(kind, id)?.copy(name = name) },
+        copyExtension = extensions::copyAudio,
     )
 
     val sonicStore = SonicStore(appContext)
@@ -177,10 +181,16 @@ class AppContainer(context: Context) {
             { maxBitrate }, ::localizeSong,
         )
         ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
+        ServerType.EXTENSION -> extensions.backend(session) { song ->
+            val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
+            val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
+                ?.takeIf { java.io.File(it.audioPath).isFile } else null
+            if (downloaded != null) localizedFromDownload(song, downloaded.toSong()) else localizeSong(song)
+        }
     }
 
     private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend {
-        if (!unified || session.type == ServerType.SPOTIFY) return buildBackend(session)
+        if (!unified || session.type == ServerType.SPOTIFY || session.type == ServerType.EXTENSION) return buildBackend(session)
         // empty = all eligible servers MERGE_NONE sentinel = local files only
         val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else saved
             .filter { it.type == ServerType.SUBSONIC || it.type == ServerType.JELLYFIN }

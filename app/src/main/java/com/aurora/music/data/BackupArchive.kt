@@ -45,7 +45,7 @@ object BackupArchive {
     fun write(backup: AuroraBackup, output: OutputStream) {
         validateLibraryAssets(backup)
         val assets = linkedMapOf<String, File>()
-        val portable = remap(backup.copy(version = 2)) { path, expected ->
+        val portable = remap(backup.copy(version = 2, listeningProfiles = portableListeningProfiles(backup.listeningProfiles))) { path, expected ->
             val file = File(path)
             require(file.isFile && file.canRead()) { "An impulse response is missing. Select it again before exporting." }
             ProcessingPresetBundle.validateImpulseResponse(file)
@@ -151,7 +151,7 @@ object BackupArchive {
         val root = parseStrictJson(json)
         require(root.isJsonObject) { "Backup is not an object." }
         val o = root.asJsonObject
-        require(o.keySet().all { it in setOf("version", "createdAt", "prefs", "localStore", "playHistory") }) { "Unsupported backup fields." }
+        require(o.keySet().all { it in setOf("version", "createdAt", "prefs", "localStore", "playHistory", "listeningProfiles") }) { "Unsupported backup fields." }
         val version = number(o, "version").toInt()
         require(number(o, "version") == version.toDouble() && version in 1..2) { "Unsupported backup version." }
         val created = o.get("createdAt")?.let { number(o, "createdAt") } ?: 0.0
@@ -181,6 +181,10 @@ object BackupArchive {
             }
         }
         val local = o.get("localStore")?.let { require(it.isJsonPrimitive && it.asJsonPrimitive.isString); it.asString } ?: ""
+        o.get("listeningProfiles")?.takeUnless { it.isJsonNull }?.let {
+            require(it.isJsonPrimitive && it.asJsonPrimitive.isString) { "Invalid listening calibrations." }
+            o.addProperty("listeningProfiles", portableListeningProfiles(it.asString))
+        }
         validateLocal(local)
         val events = o.get("playHistory") ?: com.google.gson.JsonArray().also { o.add("playHistory", it) }
         require(events.isJsonArray && events.asJsonArray.size() <= 100_000) { "Invalid listening history." }
@@ -356,6 +360,10 @@ object BackupArchive {
         val value = o.get(key)
         require(value != null && value.isJsonPrimitive && value.asJsonPrimitive.isNumber && value.asDouble.isFinite()) { "Invalid $key." }
         return value.asDouble
+    }
+    private fun portableListeningProfiles(json: String?): String? = json?.let {
+        val decoded = com.aurora.music.data.listening.ListeningLevelCodec.decode(it, portable = true)
+        com.aurora.music.data.listening.ListeningLevelCodec.encode(decoded, portable = true)
     }
     private fun utf8(bytes: ByteArray) = Charsets.UTF_8.newDecoder().onMalformedInput(CodingErrorAction.REPORT)
         .onUnmappableCharacter(CodingErrorAction.REPORT).decode(ByteBuffer.wrap(bytes)).toString()

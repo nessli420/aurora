@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.async
 
 data class TagEditState(
     val loading: Boolean = true,
@@ -64,7 +65,10 @@ class TagEditViewModel(app: Application) : AndroidViewModel(app) {
         val t = _state.value.tags
         _state.update { it.copy(matching = true, matchError = null, matches = emptyList()) }
         viewModelScope.launch {
-            val results = runCatching { container.musicBrainz.search(t.title, t.artist, t.album) }.getOrDefault(emptyList())
+            val results = kotlinx.coroutines.coroutineScope {
+                val extensions = async { container.extensions.metadata(t.title, t.artist, t.album) }
+                runCatching { container.musicBrainz.search(t.title, t.artist, t.album) }.getOrDefault(emptyList()) + extensions.await()
+            }
             _state.update {
                 it.copy(matching = false, matches = results, matchError = if (results.isEmpty()) "No matches found" else null)
             }

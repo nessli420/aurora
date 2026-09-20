@@ -16,7 +16,7 @@ data class DsdFormat(
     val blockBytes: Int = 4096,
 ) {
     init {
-        require(bitRate == 2_822_400 || bitRate == 5_644_800) { "Use DSD64 or DSD128." }
+        require(supportsBitRate(bitRate)) { "Use DSD64, DSD128, DSD256 or DSD512." }
         require(channels in 1..2) { "Use mono or stereo DSD." }
         require(sampleCount in 1..bitRate.toLong() * 86_400) { "Invalid DSD duration." }
         require(dataOffset >= 0 && dataBytes > 0 && dataOffset <= Long.MAX_VALUE - dataBytes) { "Invalid DSD data range." }
@@ -29,7 +29,8 @@ data class DsdFormat(
     val bytesPerChannel: Long get() = (sampleCount + 7) / 8
     val filterTaps: Int get() = 512 * (bitRate / 2_822_400)
 
-    fun seekFrame(timeUs: Long): Long = (timeUs.coerceIn(0, durationUs) * pcmRate / 1_000_000L).coerceAtMost(pcmFrames)
+    fun seekFrame(timeUs: Long): Long = if (timeUs > 0 && timeUs >= durationUs) pcmFrames
+        else (timeUs.coerceAtLeast(0) * pcmRate / 1_000_000L).coerceAtMost(pcmFrames)
     fun prerollByte(frame: Long): Long {
         require(frame in 0..pcmFrames)
         val first = ((frame * decimation - filterTaps / 2).coerceAtLeast(0) / 8).coerceAtMost(bytesPerChannel)
@@ -39,6 +40,11 @@ data class DsdFormat(
         require(bytePerChannel in 0..bytesPerChannel)
         return dataOffset + if (container == DsdContainer.DSF) bytePerChannel / blockBytes * blockBytes * channels
             else bytePerChannel * channels
+    }
+
+    companion object {
+        val supportedBitRates: List<Int> = listOf(2_822_400, 5_644_800, 11_289_600, 22_579_200)
+        fun supportsBitRate(rate: Int): Boolean = rate in supportedBitRates
     }
 }
 
@@ -92,7 +98,7 @@ internal object DsdHeaders {
             }
             b.position(end + (size and 1).toInt())
         }
-        require(rate in setOf(2_822_400, 5_644_800) && channels in 1..2 && compression == "DSD ") { "Incomplete or unsupported DFF properties." }
+        require(DsdFormat.supportsBitRate(rate) && channels in 1..2 && compression == "DSD ") { "Incomplete or unsupported DFF properties." }
         return rate to channels
     }
 

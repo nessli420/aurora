@@ -64,7 +64,7 @@ data class ProcessingRack(
     }
 }
 
-enum class RackNodeKind { LEGACY_DSP, GAIN, EQ, SATURATION, STEREO, CROSSFEED, COMPRESSOR, LIMITER, DELAY, CONVOLUTION, UTILITY, DYNAMIC_EQ, MULTIBAND, LOUDNESS, ALIGNMENT_DELAY }
+enum class RackNodeKind { LEGACY_DSP, GAIN, EQ, SATURATION, STEREO, CROSSFEED, COMPRESSOR, LIMITER, DELAY, CONVOLUTION, UTILITY, DYNAMIC_EQ, MULTIBAND, LOUDNESS, ALIGNMENT_DELAY, DYNAMICS, TONE, SPACE, MODULATION }
 
 enum class RackEqChannel { BOTH, LEFT, RIGHT }
 
@@ -83,6 +83,10 @@ data class ProcessingRackNode(
     val loudness: RackLoudness? = null,
     val impulseId: String? = null,
     val oversampling: Int? = null,
+    val dynamics: RackDynamicsEffect? = null,
+    val tone: RackTone? = null,
+    val space: RackSpace? = null,
+    val modulation: RackModulation? = null,
 )
 
 private data class ProcessingRackDto(
@@ -154,6 +158,10 @@ object ProcessingRackCodec {
         RackNodeKind.MULTIBAND -> 10
         RackNodeKind.LOUDNESS -> 2
         RackNodeKind.UTILITY -> 4
+        RackNodeKind.DYNAMICS -> 2
+        RackNodeKind.TONE -> 4
+        RackNodeKind.MODULATION -> 6
+        RackNodeKind.SPACE -> 8
         else -> 0
     }
 

@@ -723,6 +723,8 @@ fun AuroraApp() {
                             onOpenOutput = { navController.navigate(Routes.SETTINGS_OUTPUT) },
                             onOpenNetwork = { navController.navigate(Routes.SETTINGS_NETWORK) },
                             onOpenLoudness = { navController.navigate(Routes.SETTINGS_LOUDNESS) },
+                            onOpenListening = { navController.navigate(Routes.SETTINGS_LISTENING) },
+                            onOpenExtensions = { navController.navigate(Routes.SETTINGS_EXTENSIONS) },
                             onOpenAlarm = { navController.navigate(Routes.SETTINGS_ALARM) },
                             onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
                             onOpenEq = { navController.navigate(Routes.SETTINGS_EQ) },
@@ -745,6 +747,13 @@ fun AuroraApp() {
                             onOpenBackup = { navController.navigate(Routes.SETTINGS_BACKUP) },
                             onLogout = { logout() },
                         )
+                    }
+                    composable(Routes.SETTINGS_LISTENING) {
+                        com.aurora.music.ui.screens.settings.ListeningLevelsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                    }
+                    composable(Routes.SETTINGS_EXTENSIONS) {
+                        com.aurora.music.ui.screens.settings.ExtensionsScreen(contentPadding = inner, onBack = { navController.popBackStack() },
+                            onRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) })
                     }
                     composable(Routes.SETTINGS_ACCOUNTS) {
                         com.aurora.music.ui.screens.settings.AccountsScreen(

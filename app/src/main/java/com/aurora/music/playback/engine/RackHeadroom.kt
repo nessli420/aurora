@@ -18,7 +18,7 @@ data class RackHeadroom(val sampleRate: Int, val estimatedBoostDb: Double, val a
 object RackHeadroomAnalyzer {
     fun analyze(rack: ProcessingRack, rate: Int, impulse: ImpulseResponse?, impulseMap: Map<String, ImpulseResponse> = emptyMap()): RackHeadroom {
         require(rate in 8_000..768_000)
-        if (rack.usesGraph() || rack.nodes.any { it.kind in listOf(RackNodeKind.UTILITY, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND, RackNodeKind.LOUDNESS) || it.impulseId != null }) {
+        if (rack.usesGraph() || rack.nodes.any { it.kind in listOf(RackNodeKind.UTILITY, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND, RackNodeKind.LOUDNESS, RackNodeKind.DYNAMICS, RackNodeKind.TONE, RackNodeKind.SPACE, RackNodeKind.MODULATION) || it.impulseId != null }) {
             return graphBound(rack, rate, impulse, impulseMap)
         }
         val active = rack.nodes.filter { !it.bypass && it.wet > 0f }
@@ -116,6 +116,21 @@ object RackHeadroomAnalyzer {
             val contribution = if (node.bypass || node.wet == 0f) 0.0 else {
                 val boost = when (node.kind) {
                     RackNodeKind.ALIGNMENT_DELAY -> 0.0
+                    RackNodeKind.DYNAMICS -> (node.dynamics ?: RackDynamicsEffect()).dynamics.makeupDb
+                    RackNodeKind.TONE -> (node.tone ?: RackTone()).let { t ->
+                        if (t.amount == 0.0 || t.driveDb == 0.0) 0.0 else when (t.mode) {
+                            RackToneMode.BASS -> t.driveDb * t.amount * .5
+                            RackToneMode.EXCITER -> 12.0
+                            else -> 3.0
+                        }
+                    }
+                    RackNodeKind.SPACE -> (node.space ?: RackSpace()).let { s ->
+                        20 * log10(if (s.mode == RackSpaceMode.REVERB) 9 / (1 - .001.pow(.0297 / s.decaySeconds)) else 1 / (1 - s.feedback))
+                    }
+                    RackNodeKind.MODULATION -> (node.modulation ?: RackModulation()).let { m ->
+                        if (m.depth == 0.0 || m.mode in listOf(RackModulationMode.TREMOLO, RackModulationMode.VIBRATO)) 0.0
+                        else 20 * log10(.5 + .5 / (1 - abs(m.feedback)))
+                    }
                     RackNodeKind.DYNAMIC_EQ -> (node.dynamic ?: RackDynamicEq()).let { it.dynamics.makeupDb + if (it.upward) it.dynamics.rangeDb else 0.0 }
                     RackNodeKind.MULTIBAND -> 20 * log10((node.multiband ?: RackMultiband()).bands.sumOf { if (it.mute) 0.0 else 10.0.pow(it.makeupDb / 20) }.coerceAtLeast(1e-15))
                     RackNodeKind.LOUDNESS -> (node.loudness ?: RackLoudness()).let { it.bassCapDb + it.trebleCapDb }
@@ -137,7 +152,7 @@ object RackHeadroomAnalyzer {
         }
         val boost = 20 * sum(rack.output ?: listOf(RackInput(rack.nodes.lastOrNull()?.id ?: RackInput.INPUT))) / ln(10.0)
         return RackHeadroom(rate, boost, if (boost > .001) -boost - 1 else 0.0,
-            rack.nodes.any { it.kind in listOf(RackNodeKind.SATURATION, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND) },
+            rack.nodes.any { it.kind in listOf(RackNodeKind.SATURATION, RackNodeKind.DYNAMIC_EQ, RackNodeKind.MULTIBAND, RackNodeKind.DYNAMICS, RackNodeKind.TONE) },
             rack.nodes.any { it.kind == RackNodeKind.CONVOLUTION })
     }
 

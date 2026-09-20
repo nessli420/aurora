@@ -24,8 +24,23 @@ data class RackMultiband(val lowHz: Double = 200.0, val highHz: Double = 2500.0,
 data class RackLoudness(val referenceVolume: Double = 0.8, val bassCapDb: Double = 8.0,
     val trebleCapDb: Double = 3.0, val strength: Double = 1.0)
 
+enum class RackDynamicsMode { EXPANDER, GATE, DEESSER }
+data class RackDynamicsEffect(val mode: RackDynamicsMode = RackDynamicsMode.EXPANDER,
+    val dynamics: RackDynamics = RackDynamics(thresholdDb = -45.0, ratio = 3.0, attackMs = 5.0, rangeDb = 24.0),
+    val frequencyHz: Double = 6000.0, val holdMs: Double = 30.0)
+enum class RackToneMode { EXCITER, TAPE, TUBE, BASS }
+data class RackTone(val mode: RackToneMode = RackToneMode.TAPE, val driveDb: Double = 6.0,
+    val amount: Double = 0.3, val frequencyHz: Double = 3000.0)
+enum class RackSpaceMode { DELAY, PING_PONG, REVERB }
+data class RackSpace(val mode: RackSpaceMode = RackSpaceMode.DELAY, val timeMs: Double = 250.0,
+    val feedback: Double = 0.35, val dampingHz: Double = 6000.0, val decaySeconds: Double = 1.5)
+enum class RackModulationMode { CHORUS, FLANGER, PHASER, TREMOLO, VIBRATO }
+data class RackModulation(val mode: RackModulationMode = RackModulationMode.CHORUS,
+    val rateHz: Double = 0.6, val depth: Double = 0.5, val stereoPhase: Double = 0.0,
+    val feedback: Double = 0.2)
+
 object RackAdvancedCodec {
-    val nodeKeys = setOf("inputs", "utility", "dynamic", "multiband", "loudness", "impulseId", "oversampling")
+    val nodeKeys = setOf("inputs", "utility", "dynamic", "multiband", "loudness", "impulseId", "oversampling", "dynamics", "tone", "space", "modulation")
     private val gson = Gson()
     private fun Double.bound(min: Double, max: Double, name: String) {
         require(isFinite() && this in min..max) { "Invalid $name." }
@@ -33,6 +48,7 @@ object RackAdvancedCodec {
     fun validate(rack: ProcessingRack) {
         require(rack.nodes.filter { it.kind == RackNodeKind.SATURATION && !it.bypass && it.wet > 0f && (it.oversampling ?: 1) > 1 }
             .sumOf { it.oversampling ?: 1 } <= 16) { "The rack supports up to 16× combined saturation oversampling." }
+        require(rack.nodes.count { it.kind == RackNodeKind.SPACE } <= 4) { "Use up to four space stages." }
         val preceding = mutableSetOf(RackInput.INPUT)
         rack.nodes.forEach { node ->
             node.oversampling?.let { require(node.kind == RackNodeKind.SATURATION && it in listOf(1, 2, 4, 8)) { "Invalid saturation oversampling." } }
@@ -62,6 +78,26 @@ object RackAdvancedCodec {
                 l.referenceVolume.bound(.05, 1.0, "reference volume"); l.bassCapDb.bound(0.0, 12.0, "bass cap")
                 l.trebleCapDb.bound(0.0, 6.0, "treble cap"); l.strength.bound(0.0, 1.0, "loudness strength")
             }
+            node.dynamics?.let { d ->
+                require(node.kind == RackNodeKind.DYNAMICS) { "Unexpected dynamics settings." }
+                validateDynamics(d.dynamics)
+                d.frequencyHz.bound(1000.0, 16000.0, "de-esser frequency"); d.holdMs.bound(0.0, 500.0, "gate hold")
+            }
+            node.tone?.let { t ->
+                require(node.kind == RackNodeKind.TONE) { "Unexpected tone settings." }
+                t.driveDb.bound(0.0, 24.0, "tone drive"); t.amount.bound(0.0, 1.0, "tone amount")
+                t.frequencyHz.bound(30.0, 16000.0, "tone frequency")
+            }
+            node.space?.let { s ->
+                require(node.kind == RackNodeKind.SPACE) { "Unexpected space settings." }
+                s.timeMs.bound(1.0, 750.0, "delay time"); s.feedback.bound(0.0, .65, "delay feedback")
+                s.dampingHz.bound(200.0, 16000.0, "damping frequency"); s.decaySeconds.bound(.1, 4.0, "reverb decay")
+            }
+            node.modulation?.let { m ->
+                require(node.kind == RackNodeKind.MODULATION) { "Unexpected modulation settings." }
+                m.rateHz.bound(.05, 10.0, "modulation rate"); m.depth.bound(0.0, 1.0, "modulation depth")
+                m.stereoPhase.bound(0.0, 180.0, "stereo phase"); m.feedback.bound(-.65, .65, "modulation feedback")
+            }
             preceding += node.id
         }
         rack.output?.let { validateInputs(it, preceding) }
@@ -84,6 +120,22 @@ object RackAdvancedCodec {
         }
     }
     fun readNode(node: ProcessingRackNode, o: JsonObject): ProcessingRackNode = node.copy(
+        dynamics = o.get("dynamics")?.let { v ->
+            val d = objectFields(v, setOf("mode", "dynamics", "frequencyHz", "holdMs"))
+            RackDynamicsEffect(RackDynamicsMode.valueOf(string(d,"mode")), readDynamics(d.get("dynamics")), number(d,"frequencyHz"), number(d,"holdMs"))
+        },
+        tone = o.get("tone")?.let { v ->
+            val t = objectFields(v, setOf("mode", "driveDb", "amount", "frequencyHz"))
+            RackTone(RackToneMode.valueOf(string(t,"mode")), number(t,"driveDb"), number(t,"amount"), number(t,"frequencyHz"))
+        },
+        space = o.get("space")?.let { v ->
+            val s = objectFields(v, setOf("mode", "timeMs", "feedback", "dampingHz", "decaySeconds"))
+            RackSpace(RackSpaceMode.valueOf(string(s,"mode")), number(s,"timeMs"), number(s,"feedback"), number(s,"dampingHz"), number(s,"decaySeconds"))
+        },
+        modulation = o.get("modulation")?.let { v ->
+            val m = objectFields(v, setOf("mode", "rateHz", "depth", "stereoPhase", "feedback"))
+            RackModulation(RackModulationMode.valueOf(string(m,"mode")), number(m,"rateHz"), number(m,"depth"), number(m,"stereoPhase"), number(m,"feedback"))
+        },
         inputs = o.get("inputs")?.let(::readInputs),
         oversampling = if (o.has("oversampling")) number(o, "oversampling").also { require(it == it.toInt().toDouble()) }.toInt() else null,
         impulseId = if (o.has("impulseId")) string(o, "impulseId") else null,
@@ -118,4 +170,4 @@ object RackAdvancedCodec {
     private fun number(o: JsonObject, k: String): Double = o.get(k).let { require(it.isJsonPrimitive && it.asJsonPrimitive.isNumber && it.asDouble.isFinite()); it.asDouble }
 }
 
-fun ProcessingRack.usesGraph(): Boolean = output != null || nodes.any { it.inputs != null || it.kind == RackNodeKind.ALIGNMENT_DELAY || (it.oversampling ?: 1) > 1 } || nodes.count { it.kind == RackNodeKind.CONVOLUTION } > 1
+fun ProcessingRack.usesGraph(): Boolean = output != null || nodes.any { it.inputs != null || it.kind in listOf(RackNodeKind.ALIGNMENT_DELAY, RackNodeKind.TONE, RackNodeKind.SPACE, RackNodeKind.MODULATION) || (it.oversampling ?: 1) > 1 } || nodes.count { it.kind == RackNodeKind.CONVOLUTION } > 1

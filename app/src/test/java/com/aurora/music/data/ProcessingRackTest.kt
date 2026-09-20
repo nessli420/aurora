@@ -9,7 +9,7 @@ import java.util.UUID
 class ProcessingRackTest {
     private fun node(kind: RackNodeKind = RackNodeKind.GAIN, audio: AudioPrefs = AudioPrefs()) =
         ProcessingRackNode(UUID.randomUUID().toString(), kind.name, kind, audio = audio)
-    private fun fixture() = ProcessingRack(enabled = true, name = "Desk speakers", nodes = RackNodeKind.entries.map { kind ->
+    private fun fixture() = ProcessingRack(enabled = true, name = "Desk speakers", nodes = RackNodeKind.entries.take(ProcessingRackCodec.MAX_NODES).map { kind ->
         node(kind, AudioPrefs(dspMode = DspMode.CUSTOM, dspPreampDb = -4f, dspGraphicBands = listOf(1f, -2f),
             dspParametric = listOf(ParamBand(100f, -3f, 0.7f, 1)), dspWidth = 1.2f)).copy(wet = 0.75f)
     })

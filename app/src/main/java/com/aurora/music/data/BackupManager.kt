@@ -34,6 +34,7 @@ data class AuroraBackup(
     val prefs: PrefsBackup = PrefsBackup(),
     val localStore: String = "",
     val playHistory: List<PlayEvent> = emptyList(),
+    val listeningProfiles: String? = null,
 )
 
 class BackupManager(
@@ -41,6 +42,7 @@ class BackupManager(
     private val localStore: LocalStore,
     private val playHistory: PlayHistoryStore,
     private val context: Context,
+    private val listeningLevels: com.aurora.music.data.listening.ListeningLevelStore? = null,
 ) {
     private val gson = Gson()
     private val restoreMutex = Mutex()
@@ -52,6 +54,7 @@ class BackupManager(
             prefs = settingsStore.exportPrefs(),
             localStore = localStore.exportJson(),
             playHistory = playHistory.snapshot(),
+            listeningProfiles = listeningLevels?.exportProfiles(),
         )
         return gson.toJson(backup)
     }
@@ -62,7 +65,7 @@ class BackupManager(
 
     suspend fun exportArchive(nowMs: Long, output: OutputStream): Result<Unit> = withContext(Dispatchers.IO) {
         backupResult {
-            val snapshot = AuroraBackup(2, nowMs, settingsStore.exportPrefs(), localStore.exportJson(), playHistory.snapshot())
+            val snapshot = AuroraBackup(2, nowMs, settingsStore.exportPrefs(), localStore.exportJson(), playHistory.snapshot(), listeningLevels?.exportProfiles())
             BackupArchive.write(snapshot, output)
         }
     }
@@ -117,16 +120,22 @@ class BackupManager(
         withContext(NonCancellable + Dispatchers.IO) {
             var localRollback: LocalStore.BackupRollback? = null
             var historyRollback: PlayHistoryStore.BackupRollback? = null
+            var listeningRollback: com.aurora.music.data.listening.ListeningLevelStore.BackupRollback? = null
             try {
                 if (backup.localStore.isNotBlank()) {
                     localRollback = localStore.replaceBackupJson(backup.localStore)
                 }
                 historyRollback = playHistory.replaceBackup(backup.playHistory)
+                backup.listeningProfiles?.let { listeningRollback = listeningLevels?.replaceBackupProfiles(it) }
                 // atomic preference replacement is last and cannot be cancelled
                 settingsStore.restoreBackupPrefs(backup.prefs).getOrThrow()
             } catch (failure: Exception) {
                 val rollbackFailures = mutableListOf<Exception>()
                 var retainedNewerChanges = false
+                listeningRollback?.let { token ->
+                    try { if (listeningLevels?.rollbackBackup(token) == false) retainedNewerChanges = true }
+                    catch (rollback: Exception) { rollbackFailures += rollback }
+                }
                 historyRollback?.let { token ->
                     try { if (!playHistory.rollbackBackup(token)) retainedNewerChanges = true }
                     catch (rollback: Exception) { rollbackFailures += rollback }
