@@ -304,7 +304,7 @@ class PlaybackService : MediaLibraryService() {
             val uri = dataSpec.uri
             if (uri.scheme == "aurora-yt") {
                 val real = resolver.resolveSentinel(uri)
-                    ?: throw java.io.IOException("This YouTube track is unavailable for playback. Try another track or reconnect your account.")
+                    ?: throw java.io.IOException("This YouTube stream is unavailable. Please try again.")
                 dataSpec.withUri(android.net.Uri.parse(real))
             } else if (uri.scheme == "aurora-extension") dataSpec.withUri(container.extensions.resolve(uri))
             else dataSpec
@@ -314,7 +314,8 @@ class PlaybackService : MediaLibraryService() {
         )
         val dataSourceFactory = com.aurora.music.playback.sacd.SacdDataSource.Factory(this, resolvedDataSourceFactory)
         networkDataSource = dataSourceFactory
-        val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory(rawOutput = dsdWire != null))
+        val mediaSourceFactory = YoutubeMediaSourceFactory(
+            androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory(rawOutput = dsdWire != null)), resolver)
 
         musicSourceFactory = mediaSourceFactory
         val playerBuilder = ExoPlayer.Builder(this, renderersFactory)
@@ -330,6 +331,8 @@ class PlaybackService : MediaLibraryService() {
             )
         }
         player = playerBuilder.build()
+        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
+            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true).build()
         attachSignalEvidence(player, initialEvidence)
         if (bitPerfectUsb) usbSink?.attachToPlayer(player)
 
@@ -406,6 +409,11 @@ class PlaybackService : MediaLibraryService() {
                 if (owner === player && bitPerfect && playWhenReady && player.playerError != null) player.prepare()
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                if (owner === player && error.errorCode == androidx.media3.common.PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
+                    player.seekToDefaultPosition()
+                    player.prepare()
+                    return
+                }
                 if (owner !== player || !bitPerfect) return
                 val resume = player.playWhenReady
                 if (processedUsbSink?.useAndroidAfterFailure() == true) {
@@ -1223,6 +1231,8 @@ class PlaybackService : MediaLibraryService() {
             .setAudioAttributes(player.audioAttributes, false)
             .setHandleAudioBecomingNoisy(true)
             .build().also {
+                it.trackSelectionParameters = it.trackSelectionParameters.buildUpon()
+                    .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true).build()
                 attachSignalEvidence(it, fadeEvidence)
                 it.volume = 0f
                 if (container.audioSessionId != 0) it.setAudioSessionId(container.audioSessionId)

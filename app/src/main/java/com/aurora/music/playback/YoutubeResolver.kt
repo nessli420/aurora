@@ -8,6 +8,8 @@ import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
+import org.schabi.newpipe.extractor.stream.DeliveryMethod
+import org.schabi.newpipe.extractor.stream.StreamType
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
 import org.schabi.newpipe.extractor.downloader.Request as NpRequest
@@ -19,6 +21,9 @@ class YoutubeResolver {
     private val http = OkHttpClient()
     private data class CachedStream(val url: String, val expiresAt: Long)
     private val cache = ConcurrentHashMap<String, CachedStream>()
+    data class PlaybackStream(val url: String, val mimeType: String? = null, val videoUrl: String? = null)
+    private data class CachedPlayback(val stream: PlaybackStream, val expiresAt: Long)
+    private val playbackCache = ConcurrentHashMap<String, CachedPlayback>()
     @Volatile private var initialized = false
 
     private fun ensureInit() {
@@ -64,16 +69,42 @@ class YoutubeResolver {
     }
 
     fun resolveVideo(videoId: String): String? {
+        return resolvePlayback(videoId)?.url
+    }
+
+    fun resolvePlayback(videoId: String): PlaybackStream? {
         if (!videoId.matches(Regex("[A-Za-z0-9_-]{11}"))) return null
-        cached("video:$videoId")?.let { return it }
+        playbackCache[videoId]?.takeIf { it.expiresAt > System.currentTimeMillis() }?.let { return it.stream }
         return runCatching {
             ensureInit()
             val info = StreamInfo.getInfo(ServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
-            val url = info.audioStreams.filter { !it.content.isNullOrBlank() }.maxByOrNull { it.averageBitrate }?.content
-                ?: info.videoStreams.filter { !it.content.isNullOrBlank() }
-                    .minByOrNull { it.resolution?.removeSuffix("p")?.toIntOrNull() ?: 9999 }?.content
-            url?.takeIf { it.isNotBlank() }?.also { remember("video:$videoId", it) }
-        }.getOrNull()
+            val live = info.streamType in setOf(StreamType.LIVE_STREAM, StreamType.AUDIO_LIVE_STREAM)
+            val audio = info.audioStreams.filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+                .maxByOrNull { it.averageBitrate }
+            val videos = (info.videoOnlyStreams + info.videoStreams)
+                .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+            fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) = stream.resolution.orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
+            val video = videos.filter { height(it) in 1..720 }.maxByOrNull(::height) ?: videos.minByOrNull(::height)
+            val muxed = info.videoStreams.filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+                .minByOrNull(::height)
+            val stream = when {
+                live && info.hlsUrl.isNotBlank() -> PlaybackStream(info.hlsUrl, "application/x-mpegURL")
+                live && info.dashMpdUrl.isNotBlank() -> PlaybackStream(info.dashMpdUrl, "application/dash+xml")
+                live -> null
+                audio != null -> PlaybackStream(audio.content, videoUrl = video?.content)
+                muxed != null -> PlaybackStream(muxed.content)
+                info.hlsUrl.isNotBlank() -> PlaybackStream(info.hlsUrl, "application/x-mpegURL")
+                info.dashMpdUrl.isNotBlank() -> PlaybackStream(info.dashMpdUrl, "application/dash+xml")
+                else -> null
+            }
+            stream?.also {
+                remember("video:$videoId", it.url)
+                val now = System.currentTimeMillis()
+                playbackCache.entries.removeAll { entry -> entry.value.expiresAt <= now }
+                if (playbackCache.size >= 256) playbackCache.clear()
+                playbackCache[videoId] = CachedPlayback(it, minOf(cache["video:$videoId"]!!.expiresAt, now + if (live) 60_000 else 600_000))
+            }
+        }.getOrElse { Log.w(TAG, "Stream extraction failed for $videoId: ${it.javaClass.simpleName}"); null }
     }
 
     fun resolveSentinel(uri: android.net.Uri): String? {

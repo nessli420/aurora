@@ -133,12 +133,14 @@ fun PlayerScreen(
     onSonicRadio: () -> Unit,
     onAutoDj: () -> Unit,
     onOpenMix: () -> Unit = {},
+    videoPlayer: androidx.media3.common.Player? = null,
     gestures: com.aurora.music.data.GesturePrefs = com.aurora.music.data.GesturePrefs(),
 ) {
     val song = state.current
     val ui = LocalUiPrefs.current
     val classic = ui.themeStyle == ThemeStyle.AURORA
     var showLyrics by remember { mutableStateOf(false) }
+    var showVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     val playerAccent = MaterialTheme.colorScheme.primary
     val onPlayerAccent = MaterialTheme.colorScheme.onPrimary
@@ -297,6 +299,8 @@ fun PlayerScreen(
                 ) { lyrics ->
                     if (lyrics) {
                         LyricsPanel(song = song, positionSec = state.positionSec, accent = playerAccent, onSeek = onSeek, durationSec = state.durationSec)
+                    } else if (showVideo && state.hasVideo && videoPlayer != null) {
+                        PlaybackVideo(videoPlayer, Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(20.dp)))
                     } else {
                         val artModifier = Modifier.fillMaxWidth(ui.playerArtSize.coerceIn(0.5f, 1f)).aspectRatio(1f)
                         if (classic) {
@@ -311,6 +315,14 @@ fun PlayerScreen(
             }
 
             Spacer(Modifier.height(16.dp))
+
+            if (state.hasVideo && videoPlayer != null) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    androidx.compose.material3.FilterChip(selected = !showVideo, onClick = { showVideo = false }, label = { Text("Audio") })
+                    Spacer(Modifier.width(12.dp))
+                    androidx.compose.material3.FilterChip(selected = showVideo, onClick = { showLyrics = false; showVideo = true }, label = { Text("Video") })
+                }
+            }
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (state.isPlaying) {
@@ -394,6 +406,7 @@ fun PlayerScreen(
                 progress = state.progress,
                 positionSec = state.positionSec.toInt(),
                 durationSec = state.durationSec,
+                isLive = state.isLive,
                 accent = playerAccent,
                 seed = song.id.hashCode(),
                 seekStyle = ui.playerSeekStyle,
@@ -513,14 +526,13 @@ private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, la
 }
 
 @Composable
-private fun SeekBar(progress: Float, positionSec: Int, durationSec: Int, accent: Color, seed: Int, seekStyle: Int, waveBars: Int, onSeek: (Float) -> Unit) {
+private fun SeekBar(progress: Float, positionSec: Int, durationSec: Int, isLive: Boolean, accent: Color, seed: Int, seekStyle: Int, waveBars: Int, onSeek: (Float) -> Unit) {
     Column {
         if (durationSec <= 0) {
-            // live stream has no fixed length nothing to scrub
             Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
+                if (isLive) Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
                 Spacer(Modifier.width(8.dp))
-                Text("LIVE", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = accent)
+                Text(if (isLive) "LIVE" else "Streaming", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = accent)
                 Spacer(Modifier.weight(1f))
                 Text(formatTime(positionSec), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

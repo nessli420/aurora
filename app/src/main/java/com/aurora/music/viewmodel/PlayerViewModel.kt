@@ -67,8 +67,11 @@ data class PlayerUiState(
     val camelot: String = "",
     val keyName: String = "",
     val isMix: Boolean = false,
+    val timelineDurationSec: Int = 0,
+    val isLive: Boolean = false,
+    val hasVideo: Boolean = false,
 ) {
-    val durationSec: Int get() = current.durationSec
+    val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec
     val progress: Float get() = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
     val isCurrentLiked: Boolean get() = likedIds.contains(current.id)
     val hasTrack: Boolean get() = current.id.isNotEmpty()
@@ -83,6 +86,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
     private var controller: MediaController? = null
+    val videoPlayer: Player? get() = controller
     private var ticker: Job? = null
     private var sleepJob: Job? = null
     private var queueFillJob: Job? = null
@@ -399,6 +403,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         _state.update {
             it.copy(
                 current = cur,
+                timelineDurationSec = (c.duration.coerceAtLeast(0) / 1000).toInt(),
+                isLive = c.isCurrentMediaItemLive || cur.isRadio(),
+                hasVideo = c.currentTracks.isTypeSupported(androidx.media3.common.C.TRACK_TYPE_VIDEO) &&
+                    c.isCommandAvailable(Player.COMMAND_SET_VIDEO_SURFACE),
                 isMix = container.mixController.activeProject != null,
                 isPlaying = c.effectivelyPlaying,
                 shuffle = c.shuffleModeEnabled,

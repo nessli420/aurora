@@ -975,6 +975,7 @@ fun AuroraApp() {
             ) {
                 PlayerScreen(
                     state = playerState,
+                    videoPlayer = playerVM.videoPlayer,
                     onCollapse = { playerVM.setExpanded(false) },
                     onTogglePlay = { playerVM.togglePlay() },
                     onNext = { playerVM.next() },

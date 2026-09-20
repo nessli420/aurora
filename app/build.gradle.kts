@@ -87,6 +87,7 @@ dependencies {
     implementation(libs.lottie.compose)
     implementation(libs.media3.exoplayer)
     implementation(libs.media3.exoplayer.hls)
+    implementation("androidx.media3:media3-exoplayer-dash:${libs.versions.media3.get()}")
     implementation(libs.media3.session)
     implementation(libs.media3.common)
     implementation(libs.retrofit)
