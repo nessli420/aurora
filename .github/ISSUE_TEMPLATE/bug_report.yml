@@ -1,0 +1,64 @@
+name: Bug report
+description: Report something that is not working.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/nessli420/aurora/issues) first. Report one problem per issue.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the problem and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Include relevant settings. If it happens randomly, describe what you were doing.
+      placeholder: |
+        1. Open...
+        2. Select...
+        3. The problem happens when...
+    validations:
+      required: true
+  - type: input
+    id: build
+    attributes:
+      label: Aurora build
+      description: Include the release tag or download date. For a source build, include the commit and debug or release.
+      placeholder: Release tag, download date or commit
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and Android version
+      placeholder: Phone model and Android version, or emulator details
+    validations:
+      required: true
+  - type: dropdown
+    id: source
+    attributes:
+      label: Music source
+      multiple: true
+      options:
+        - Local files
+        - Navidrome / Subsonic / OpenSubsonic
+        - Jellyfin
+        - Green Music App
+        - Podcasts / internet radio
+        - Extension
+        - Other / not relevant
+  - type: textarea
+    id: audio
+    attributes:
+      label: Playback details
+      description: For audio problems, include the output device, active effects and file format if known. For server problems, include the server software version.
+      placeholder: Speaker, Bluetooth, USB DAC model and mode, Cast or DLNA receiver; active preset; FLAC, MP3, DSF or other format.
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Screenshots or logs
+      description: Attach anything that helps. For audio problems, include Signal Path details if available. Remove passwords, tokens and private server addresses before posting.

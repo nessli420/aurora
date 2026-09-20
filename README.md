@@ -4,7 +4,7 @@
 
 An Android music player for your local files, home music server, and Green Music App library. Keep your music together, listen offline, and adjust the sound to suit your headphones or speakers.
 
-**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues)
+**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
 
 Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively developed; the source may include changes that are not in the latest release yet.
 
@@ -145,7 +145,11 @@ Local files and server playback do not need any of these. Connect only the servi
 - **USB playback stops:** check the DAC connection and USB permission, then restart Aurora. The default behavior is to pause when USB output is unavailable.
 - **An update will not install:** debug and release builds use different signing keys. Back up your data before uninstalling to switch between them.
 
-For a bug report, include your app version, phone, Android version, music source, and the steps that trigger it. For USB issues, include the DAC model. [Open an issue](https://github.com/nessli420/aurora/issues).
+Found a bug or have a feature idea? [Choose an issue form](https://github.com/nessli420/aurora/issues/new/choose). For bugs, include your build, device and steps to reproduce. For audio problems, add the output device and Signal Path details if available.
+
+## Contributing
+
+Bug reports, code fixes, feature ideas and documentation improvements are welcome. Read [Contributing to Aurora](CONTRIBUTING.md) for setup, checks and pull request guidelines.
 
 ## Build from source
 

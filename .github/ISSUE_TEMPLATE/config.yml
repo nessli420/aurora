@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Contributing to Aurora
+    url: https://github.com/nessli420/aurora/blob/main/CONTRIBUTING.md
+    about: Build instructions, code guidelines and how to submit a pull request.

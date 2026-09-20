@@ -1,0 +1,26 @@
+name: Feature request
+description: Suggest a feature or improve an existing one.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search [existing issues](https://github.com/nessli420/aurora/issues) first. Keep each request focused on one change.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What would this help you do?
+      description: Describe the problem or missing behavior, with an example if possible.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Suggested change
+      description: Explain how you would like it to work.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Alternatives or examples
+      description: Optional. Add workarounds, screenshots or relevant devices and music sources.
