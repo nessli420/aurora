@@ -2,6 +2,7 @@ package com.aurora.music.data
 
 enum class UsbOutputMode { DIRECT, PROCESSED }
 enum class UsbFallbackPolicy { PAUSE, ANDROID }
+enum class UsbDsdMode { PCM, DOP, NATIVE }
 
 object UsbOutputPolicy {
     const val MODE_KEY = "usb_output_mode"

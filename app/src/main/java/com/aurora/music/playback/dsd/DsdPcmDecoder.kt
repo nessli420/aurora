@@ -89,7 +89,9 @@ class DsdPcmDecoder(val format: DsdFormat) {
         }
     }
 
-    private companion object {
-        val kernels = ConcurrentHashMap<Int, Kernel>()
+    companion object {
+        private val kernels = ConcurrentHashMap<Int, Kernel>()
+        internal fun coefficientsFor(format: DsdFormat): DoubleArray =
+            kernels.computeIfAbsent(format.bitRate) { Kernel(it, format.filterTaps) }.coefficients
     }
 }

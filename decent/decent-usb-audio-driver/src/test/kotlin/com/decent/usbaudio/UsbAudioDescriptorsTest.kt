@@ -6,6 +6,23 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class UsbAudioDescriptorsTest {
+    @Test fun fullFormatBitmapPreservesRawDataWithoutMakingItPcm() {
+        val bytes = uac2()
+        val header = (0 until bytes.size - 16).first { bytes[it] == 16.toByte() && bytes[it + 1] == 0x24.toByte() }
+        bytes[header + 6] = 0; bytes[header + 9] = 0x80.toByte()
+        bytes[header + 16 + 5] = 32
+        val raw = UsbAudioDescriptors.parse(bytes).formats.single()
+        assertEquals(0x80000000L, raw.formatBitmap)
+        assertEquals(1, raw.formatType)
+        assertFalse(raw.pcm)
+        assertNotNull(raw.unsupportedReason)
+        assertNull(raw.transportUnsupportedReason)
+        assertNull(raw.rawUnsupportedReason)
+        assertNotNull(raw.copy(formatBitmap = 4).rawUnsupportedReason)
+        assertNotNull(raw.copy(containerBytes = 3).rawUnsupportedReason)
+        assertNotNull(raw.copy(formatType = 2).transportUnsupportedReason)
+    }
+
     private fun bytes(vararg values: Int) = values.map(Int::toByte).toByteArray()
     private fun uac2(): ByteArray = bytes(
         9, 2, 0, 0, 2, 1, 0, 0x80, 50,

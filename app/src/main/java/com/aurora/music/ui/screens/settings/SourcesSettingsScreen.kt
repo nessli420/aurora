@@ -28,6 +28,14 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.LaunchedEffect
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.material3.TextButton
+import com.aurora.music.data.SacdLibrary
+import com.aurora.music.data.SacdLibraryEntry
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -61,6 +69,26 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
     val container = remember { (ctx.applicationContext as AuroraApplication).container }
     val store = container.settingsStore
     val scope = rememberCoroutineScope()
+    val sacd = remember { SacdLibrary(ctx) }
+    var images by remember { mutableStateOf(emptyList<SacdLibraryEntry>()) }
+    var importBusy by remember { mutableStateOf(false) }
+    var importStatus by remember { mutableStateOf<String?>(null) }
+    LaunchedEffect(sacd) { images = sacd.entries() }
+    val importImage = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) scope.launch {
+            importBusy = true; importStatus = null
+            try {
+                ctx.contentResolver.takePersistableUriPermission(uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                val count = sacd.add(uri)
+                container.localLibrary.refresh()
+                images = sacd.entries()
+                importStatus = "Imported $count tracks."
+            } catch (failure: Exception) {
+                if (failure is kotlinx.coroutines.CancellationException) throw failure
+                importStatus = failure.message ?: "Image could not be imported."
+            } finally { importBusy = false }
+        }
+    }
 
     val preferLocal by store.preferLocalSources.collectAsStateWithLifecycle(initialValue = true)
     val priority by store.sourcePriority.collectAsStateWithLifecycle(initialValue = DEFAULT_SOURCE_PRIORITY)
@@ -81,6 +109,28 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                     Row(Modifier.fillMaxWidth().clickable(onClick = onArtistSeparators).padding(20.dp)) {
                         Text("Artist separators", style = MaterialTheme.typography.titleSmall)
                     }
+                    TextButton(onClick = { importImage.launch(arrayOf("*/*")) }, enabled = !importBusy,
+                        modifier = Modifier.padding(horizontal = 12.dp)) {
+                        Text(if (importBusy) "Importing…" else "Import SACD image")
+                    }
+                    importStatus?.let { Text(it, style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) }
+                }
+            }
+            items(images, key = { it.uri }) { image ->
+                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Column(Modifier.weight(1f)) {
+                        Text(image.name, style = MaterialTheme.typography.bodyMedium)
+                        image.error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
+                    }
+                    TextButton(enabled = !importBusy, onClick = { scope.launch {
+                        importBusy = true
+                        try { sacd.remove(image.uri); container.localLibrary.refresh(); images = sacd.entries() }
+                        catch (failure: Exception) {
+                            if (failure is kotlinx.coroutines.CancellationException) throw failure
+                            importStatus = "Image could not be removed."
+                        } finally { importBusy = false }
+                    } }) { Text("Remove") }
                 }
             }
 

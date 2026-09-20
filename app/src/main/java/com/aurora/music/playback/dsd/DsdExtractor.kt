@@ -21,29 +21,39 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 @UnstableApi
-class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
-    private enum class State { HEADER, DFF_CHUNKS, DSF_METADATA, AUDIO }
+class DsdExtractor(private val decodeAudio: Boolean = true, private val rawOutput: Boolean = false,
+    private val sourceContainer: String? = null) : Extractor {
+    private enum class State { HEADER, DFF_CHUNKS, DST_CHUNKS, DSF_METADATA, AUDIO }
     private var state = State.HEADER
     private lateinit var output: ExtractorOutput
     private var track: TrackOutput? = null
     private var format: DsdFormat? = null
-    private var decoder: DsdPcmDecoder? = null
+    private var decoder: DsdBlockDecoder? = null
+    private var rawSource: DsdRawSource? = null
+    private var rawSeekByte = 0L
     private var fileEnd = 0L
     private var scanPosition = 0L
     private var metadataOffset = 0L
     private var chunks = 0
     private var versionSeen = false
-    private var properties: Pair<Int, Int>? = null
+    private var properties: DsdHeaders.DffProperties? = null
+    private val dstFrames = ArrayList<DstFrame>()
+    private var dstDecoder: DstDecoder? = null
+    private var dstScan = 0L
+    private var dstEnd = 0L
+    private var dstCount = 0
+    private var dstFrame = 0
+    private var dstByte = 0
+    private var dstLoaded = false
+    private var dstDecoded = ByteArray(0)
+    private var declaredDstIndex: List<Pair<Long, Int>>? = null
+    private var dstIndexSeen = false
     private var dffDataOffset = -1L
     private var dffDataBytes = 0L
     private val metadata = ArrayList<Metadata.Entry>()
     private val cache = ByteArray(8192)
-    private var cacheStart = -1L
-    private var cacheFrames = 0
-    private var sourceByte = 0L
-    private val channelBytes = IntArray(2)
-    private val pcm = FloatArray(2048)
-    private val pcmBytes = ByteArray(8192)
+    private val pcm = FloatArray(4160)
+    private val pcmBytes = ByteArray(16640)
     private val pcmBuffer = ByteBuffer.wrap(pcmBytes).order(ByteOrder.LITTLE_ENDIAN)
     private val packet = ParsableByteArray(pcmBytes)
 
@@ -55,20 +65,27 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
     }
 
     override fun init(output: ExtractorOutput) { this.output = output }
-    override fun release() = Unit
+    override fun release() { decoder?.close(); decoder = null; dstDecoder?.close(); dstDecoder = null }
 
     override fun seek(position: Long, timeUs: Long) {
         val f = format ?: return
         val frame = f.seekFrame(timeUs)
-        sourceByte = f.prerollByte(frame)
+        rawSeekByte = minOf(f.bytesPerChannel, frame * f.decimation / 8)
+        val requestedByte = if (rawOutput) rawSeekByte else f.prerollByte(frame)
+        val sourceByte = if (dstFrames.isNotEmpty()) requestedByte / 4704 * 4704
+            else if (rawOutput) rawBlockStart(f, rawSeekByte) else requestedByte
         decoder?.reset(sourceByte, frame)
-        cacheStart = -1; cacheFrames = 0
+        if (dstFrames.isNotEmpty()) {
+            dstFrame = (sourceByte / 4704).toInt(); dstByte = 0; dstLoaded = false
+            dstDecoder?.close(); dstDecoder = DstDecoder(f.channels)
+        } else rawSource?.seek(sourceByte)
     }
 
     override fun read(input: ExtractorInput, seekPosition: PositionHolder): Int = try {
         when (state) {
             State.HEADER -> readHeader(input)
             State.DFF_CHUNKS -> readDffChunk(input, seekPosition)
+            State.DST_CHUNKS -> readDstChunk(input, seekPosition)
             State.DSF_METADATA -> readDsfMetadata(input, seekPosition)
             State.AUDIO -> readAudio(input, seekPosition)
         }
@@ -76,6 +93,8 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
         throw ParserException.createForMalformedContainer(failure.message ?: "Invalid DSD file.", failure)
     } catch (failure: EOFException) {
         throw ParserException.createForMalformedContainer("Truncated DSD file.", failure)
+    } catch (failure: UnsupportedOperationException) {
+        throw ParserException.createForUnsupportedContainerFeature(failure.message ?: "Unsupported DSD format.")
     }
 
     private fun readHeader(input: ExtractorInput): Int {
@@ -117,9 +136,18 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
     private fun readDffChunk(input: ExtractorInput, seek: PositionHolder): Int {
         if (scanPosition == fileEnd) {
             val p = requireNotNull(properties) { "Missing DFF properties." }
-            require(versionSeen && dffDataOffset >= 0 && dffDataBytes > 0 && dffDataBytes % p.second == 0L) { "Missing or misaligned DFF data." }
-            require(dffDataBytes / p.second <= Long.MAX_VALUE / 8)
-            format = DsdFormat(DsdContainer.DFF, p.first, p.second, dffDataBytes / p.second * 8, dffDataOffset, dffDataBytes)
+            require(versionSeen && dffDataOffset >= 0 && dffDataBytes > 0) { "Missing DFF data." }
+            if (p.dst) {
+                require(dstCount > 0 && (!decodeAudio || dstFrames.size == dstCount)) { "DST frame count does not match its header." }
+                if (decodeAudio) {
+                    require(dstFrames.none { it.crc != null } || dstFrames.all { it.crc != null }) { "Incomplete DST CRC list." }
+                    declaredDstIndex?.let { entries ->
+                        require(entries.size == dstFrames.size && entries.indices.all { entries[it] == dstFrames[it].let { f -> f.offset to f.size } }) { "DST index does not match its frames." }
+                    }
+                }
+            } else require(dffDataBytes % p.channels == 0L && dffDataBytes / p.channels <= Long.MAX_VALUE / 8) { "Misaligned DFF data." }
+            val samples = if (p.dst) dstCount * 37632L else dffDataBytes / p.channels * 8
+            format = DsdFormat(DsdContainer.DFF, p.rate, p.channels, samples, dffDataOffset, dffDataBytes)
             startAudio()
             return Extractor.RESULT_CONTINUE
         }
@@ -140,15 +168,64 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
             }
             "PROP" -> {
                 require(properties == null && dffDataOffset < 0 && size in 4..65_536) { "Invalid DFF properties." }
-                properties = DsdHeaders.dffProperties(bytes(input, size.toInt()))
+                properties = DsdHeaders.dffSoundProperties(bytes(input, size.toInt()))
             }
             "DSD " -> {
-                require(properties != null && dffDataOffset < 0) { "Invalid or duplicate DFF sound data." }
+                require(properties != null && properties?.dst == false && dffDataOffset < 0) { "Invalid or duplicate DFF sound data." }
                 dffDataOffset = input.position; dffDataBytes = size
             }
-            "DST " -> throw ParserException.createForUnsupportedContainerFeature("DST-compressed DFF is not supported.")
+            "DST " -> {
+                require(properties?.dst == true && dffDataOffset < 0 && size >= 18) { "Invalid DST sound data." }
+                dffDataOffset = input.position; dffDataBytes = size
+                dstScan = input.position; dstEnd = end; state = State.DST_CHUNKS
+            }
+            "DSTI" -> {
+                require(properties?.dst == true && !dstIndexSeen && size in 12..12_000_000 && size % 12 == 0L) { "Invalid DST index." }
+                dstIndexSeen = true
+                if (decodeAudio) {
+                    val index = ByteBuffer.wrap(bytes(input, size.toInt()))
+                    declaredDstIndex = List(size.toInt() / 12) {
+                        val offset = index.long; val length = index.int
+                        require(offset >= dffDataOffset && length in 2..1_048_576 && offset <= fileEnd - length) { "Invalid DST index entry." }
+                        offset to length
+                    }
+                }
+            }
             "DIIN" -> if (size <= MAX_METADATA_BYTES) readDffText(bytes(input, size.toInt()))
             "ID3 " -> if (size <= MAX_METADATA_BYTES) addId3(bytes(input, size.toInt()))
+        }
+        return Extractor.RESULT_CONTINUE
+    }
+
+    private fun readDstChunk(input: ExtractorInput, seek: PositionHolder): Int {
+        if (dstScan == dstEnd) { state = State.DFF_CHUNKS; return Extractor.RESULT_CONTINUE }
+        if (input.position != dstScan) return reposition(seek, dstScan)
+        require(dstEnd - dstScan >= 12) { "Truncated DST chunk." }
+        val header = bytes(input, 12)
+        val id = String(header, 0, 4, Charsets.US_ASCII)
+        val size = long(header, 4, false)
+        val end = boundedEnd(input.position, size, dstEnd)
+        dstScan = boundedEnd(end, size and 1, dstEnd)
+        when (id) {
+            "FRTE" -> {
+                require(dstCount == 0 && input.position == dffDataOffset + 12 && size == 6L) { "Invalid DST frame header." }
+                val info = ByteBuffer.wrap(bytes(input, 6))
+                dstCount = info.int
+                require(dstCount in 1..1_000_000 && info.short.toInt() == 75) { "Unsupported DST frame count or rate." }
+                if (!decodeAudio) dstScan = dstEnd
+            }
+            "DSTF" -> {
+                require(dstCount > 0 && dstFrames.size < dstCount && size in 2..1_048_576) { "Invalid DST frame." }
+                dstFrames += DstFrame(input.position, size.toInt())
+                input.skipFully(size.toInt() + (size and 1).toInt())
+            }
+            "DSTC" -> {
+                require(size == 4L && dstFrames.isNotEmpty() && dstFrames.last().crc == null) { "Invalid DST CRC." }
+                val previous = dstFrames.last()
+                require(input.position - 12 == previous.offset + previous.size + (previous.size and 1)) { "DST CRC must follow its frame." }
+                dstFrames[dstFrames.lastIndex] = previous.copy(crc = ByteBuffer.wrap(bytes(input, 4)).int)
+            }
+            else -> throw IllegalArgumentException("Unsupported DST subchunk.")
         }
         return Extractor.RESULT_CONTINUE
     }
@@ -199,14 +276,21 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
 
     private fun startAudio() {
         val f = checkNotNull(format)
-        decoder = if (decodeAudio) DsdPcmDecoder(f) else null
-        sourceByte = 0; cacheStart = -1; cacheFrames = 0
-        metadata.add(DsdSourceInfo(f.container.name, f.bitRate, f.channels, f.sampleCount))
+        decoder?.close()
+        decoder = if (decodeAudio && !rawOutput) DsdBlockDecoder(f) else null
+        rawSource = DsdRawSource(f)
+        dstFrame = 0; dstByte = 0; dstLoaded = false
+        if (decodeAudio && dstFrames.isNotEmpty()) {
+            dstDecoder = DstDecoder(f.channels)
+            dstDecoded = ByteArray(4704 * f.channels)
+        }
+        rawSeekByte = 0
+        metadata.add(DsdSourceInfo(sourceContainer ?: if (properties?.dst == true) "DFF / DST" else f.container.name, f.bitRate, f.channels, f.sampleCount))
         track = output.track(0, C.TRACK_TYPE_AUDIO).also { track ->
-            track.format(Format.Builder().setSampleMimeType(MimeTypes.AUDIO_RAW)
+            track.format(Format.Builder().setSampleMimeType(if (rawOutput) RawDsdAudioRenderer.MIME else MimeTypes.AUDIO_RAW)
                 .setContainerMimeType(if (f.container == DsdContainer.DSF) "audio/x-dsf" else "audio/x-dff")
-                .setCodecs("dsd${f.bitRate / 44_100}").setSampleRate(f.pcmRate).setChannelCount(f.channels)
-                .setPcmEncoding(C.ENCODING_PCM_FLOAT).setAverageBitrate(f.bitRate * f.channels)
+                .setCodecs("dsd${f.bitRate / 44_100}").setSampleRate(if (rawOutput) f.bitRate else f.pcmRate).setChannelCount(f.channels)
+                .setPcmEncoding(if (rawOutput) C.ENCODING_INVALID else C.ENCODING_PCM_FLOAT).setAverageBitrate(f.bitRate * f.channels)
                 .setMaxInputSize(pcmBytes.size).setMetadata(Metadata(metadata)).build())
         }
         output.seekMap(object : SeekMap {
@@ -214,7 +298,9 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
             override fun getDurationUs() = f.durationUs
             override fun getSeekPoints(timeUs: Long): SeekMap.SeekPoints {
                 val frame = f.seekFrame(timeUs)
-                return SeekMap.SeekPoints(SeekPoint(frame * 1_000_000L / f.pcmRate, f.position(f.prerollByte(frame))))
+                val first = if (rawOutput) rawBlockStart(f, minOf(f.bytesPerChannel, frame * f.decimation / 8)) else f.prerollByte(frame)
+                val position = if (dstFrames.isNotEmpty()) dstFrames[(first / 4704).toInt().coerceAtMost(dstFrames.lastIndex)].offset else f.position(first)
+                return SeekMap.SeekPoints(SeekPoint(frame * 1_000_000L / f.pcmRate, position))
             }
         })
         output.endTracks()
@@ -223,37 +309,20 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
 
     private fun readAudio(input: ExtractorInput, seek: PositionHolder): Int {
         if (!decodeAudio) return Extractor.RESULT_END_OF_INPUT
+        if (dstFrames.isNotEmpty()) return readDstAudio(input, seek)
+        if (rawOutput) return readRawAudio(input, seek)
         val f = checkNotNull(format)
         val d = checkNotNull(decoder)
-        if (d.isEnded) return Extractor.RESULT_END_OF_INPUT
+        if (d.ended) return Extractor.RESULT_END_OF_INPUT
+        val raw = checkNotNull(rawSource)
         val firstFrame = d.outputFrame
-        var produced = 0
-        var work = 0
-        while (produced < 1024 && !d.isEnded && ++work <= 16_384) {
-            var validBits = 0
-            if (sourceByte < f.bytesPerChannel) {
-                if (cacheStart < 0 || sourceByte >= cacheStart + cacheFrames) {
-                    val position = f.position(sourceByte)
-                    if (input.position != position) {
-                        if (produced > 0) break
-                        return reposition(seek, position)
-                    }
-                    cacheStart = sourceByte
-                    cacheFrames = if (f.container == DsdContainer.DSF) f.blockBytes
-                        else minOf((cache.size / f.channels).toLong(), f.bytesPerChannel - sourceByte).toInt()
-                    input.readFully(cache, 0, cacheFrames * f.channels)
-                }
-                val offset = (sourceByte - cacheStart).toInt()
-                for (channel in 0 until f.channels) {
-                    val at = if (f.container == DsdContainer.DSF) channel * f.blockBytes + offset else offset * f.channels + channel
-                    val value = cache[at].toInt() and 255
-                    channelBytes[channel] = if (f.leastSignificantBitFirst) Integer.reverse(value) ushr 24 else value
-                }
-                validBits = minOf(8L, f.sampleCount - sourceByte * 8).toInt()
-            }
-            if (d.push(channelBytes, validBits, pcm, produced * f.channels)) produced++
-            sourceByte++
+        val block = if (raw.ended) null else {
+            if (input.position != raw.filePosition) return reposition(seek, raw.filePosition)
+            val size = raw.readSize
+            input.readFully(cache, 0, size)
+            raw.consume(cache, size)
         }
+        val produced = d.decode(block, pcm)
         if (produced > 0) {
             pcmBuffer.clear()
             repeat(produced * f.channels) { pcmBuffer.putFloat(pcm[it]) }
@@ -264,6 +333,78 @@ class DsdExtractor(private val decodeAudio: Boolean = true) : Extractor {
         }
         return Extractor.RESULT_CONTINUE
     }
+
+    private fun readRawAudio(input: ExtractorInput, seek: PositionHolder): Int {
+        val f = checkNotNull(format)
+        val raw = checkNotNull(rawSource)
+        if (raw.ended || rawSeekByte >= f.bytesPerChannel) return Extractor.RESULT_END_OF_INPUT
+        if (input.position != raw.filePosition) return reposition(seek, raw.filePosition)
+        val size = raw.readSize
+        input.readFully(cache, 0, size)
+        val block = raw.consume(cache, size)
+        val skipped = maxOf(0L, rawSeekByte - block.firstSample / 8).toInt() * f.channels
+        if (skipped >= block.size) return Extractor.RESULT_CONTINUE
+        val partial = (block.sampleCount % 8).toInt()
+        if (partial != 0) {
+            val mask = 255 shl (8 - partial) and 255
+            for (channel in 0 until f.channels) {
+                val at = block.size - f.channels + channel
+                block.bytes[at] = (block.bytes[at].toInt() and mask or (0x69 and mask.inv())).toByte()
+            }
+        }
+        packet.reset(block.bytes, block.size)
+        packet.setPosition(skipped)
+        val time = (block.firstSample + skipped / f.channels * 8L) * 1_000_000L / f.bitRate
+        checkNotNull(track).sampleData(packet, block.size - skipped)
+        checkNotNull(track).sampleMetadata(time, C.BUFFER_FLAG_KEY_FRAME, block.size - skipped, 0, null)
+        return Extractor.RESULT_CONTINUE
+    }
+
+    private fun readDstAudio(input: ExtractorInput, seek: PositionHolder): Int {
+        val f = checkNotNull(format)
+        if (rawOutput && rawSeekByte >= f.bytesPerChannel || !rawOutput && decoder?.ended == true) return Extractor.RESULT_END_OF_INPUT
+        var block: DsdRawBlock? = null
+        if (dstFrame < dstFrames.size) {
+            val entry = dstFrames[dstFrame]
+            if (!dstLoaded) {
+                if (input.position != entry.offset) return reposition(seek, entry.offset)
+                checkNotNull(dstDecoder).decode(bytes(input, entry.size), dstDecoded)
+                require(entry.crc == null || entry.crc == DstFrameCrc.calculate(dstDecoded)) { "DST frame checksum failed." }
+                dstLoaded = true; dstByte = 0
+            }
+            val count = minOf(8192 - 8192 % f.channels, dstDecoded.size - dstByte)
+            dstDecoded.copyInto(cache, 0, dstByte, dstByte + count)
+            block = DsdRawBlock(cache, count, dstFrame * 37632L + dstByte / f.channels * 8L, count / f.channels * 8L)
+            dstByte += count
+            if (dstByte == dstDecoded.size) { dstLoaded = false; dstFrame++ }
+        }
+        if (rawOutput) {
+            if (block == null) return Extractor.RESULT_END_OF_INPUT
+            val skipped = maxOf(0L, rawSeekByte - block.firstSample / 8).toInt() * f.channels
+            if (skipped < block.size) {
+                packet.reset(block.bytes, block.size); packet.setPosition(skipped)
+                checkNotNull(track).sampleData(packet, block.size - skipped)
+                checkNotNull(track).sampleMetadata((block.firstSample + skipped / f.channels * 8L) * 1_000_000 / f.bitRate,
+                    C.BUFFER_FLAG_KEY_FRAME, block.size - skipped, 0, null)
+            }
+        } else {
+            val d = checkNotNull(decoder)
+            val frame = d.outputFrame
+            val produced = d.decode(block, pcm)
+            if (produced > 0) {
+                pcmBuffer.clear()
+                repeat(produced * f.channels) { pcmBuffer.putFloat(pcm[it]) }
+                val size = produced * f.channels * 4
+                packet.reset(pcmBytes, size)
+                checkNotNull(track).sampleData(packet, size)
+                checkNotNull(track).sampleMetadata(frame * 1_000_000 / f.pcmRate, C.BUFFER_FLAG_KEY_FRAME, size, 0, null)
+            }
+        }
+        return Extractor.RESULT_CONTINUE
+    }
+
+    private fun rawBlockStart(f: DsdFormat, byte: Long): Long =
+        if (f.container == DsdContainer.DSF && byte < f.bytesPerChannel) byte / f.blockBytes * f.blockBytes else byte
 
     private fun checkLength(input: ExtractorInput) {
         require(fileEnd >= 16 && (input.length == C.LENGTH_UNSET.toLong() || input.length == fileEnd)) { "DSD container length does not match the file." }

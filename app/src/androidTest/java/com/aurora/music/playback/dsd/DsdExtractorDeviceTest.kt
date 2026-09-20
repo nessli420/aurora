@@ -21,6 +21,30 @@ import java.util.Random
 
 @UnstableApi
 class DsdExtractorDeviceTest {
+    @Test fun rawOutputRetainsBitsAndExactSeekOriginWithoutPcmConversion() {
+        val random = Random(15)
+        val channels = Array(2) { ByteArray(12345).also(random::nextBytes) }
+        val expected = ByteArray(channels[0].size * 2) { channels[it % 2][it / 2] }
+        for (rate in DsdFormat.supportedBitRates) for (bytes in listOf(DsdFixtures.dsf(channels, rate),
+            DsdFixtures.dsf(channels, rate, lsb = false), DsdFixtures.dff(channels, rate))) {
+            val harness = Harness(bytes, raw = true)
+            try {
+                harness.finish()
+                assertArrayEquals(expected, harness.output.samples.toByteArray())
+                assertEquals(RawDsdAudioRenderer.MIME, harness.output.format!!.sampleMimeType)
+                assertEquals(C.ENCODING_INVALID, harness.output.format!!.pcmEncoding)
+                val duration = harness.output.seekMap!!.durationUs
+                val seek = duration / 2
+                harness.seek(seek); harness.finish()
+                val first = seek * 176400 / 1_000_000 * (rate / 176400) / 8
+                assertArrayEquals(expected.copyOfRange(first.toInt() * 2, expected.size), harness.output.samples.toByteArray())
+                assertEquals(first * 8 * 1_000_000 / rate, harness.output.timestamps.first())
+                harness.seek(duration); harness.finish()
+                assertEquals(0, harness.output.samples.size())
+            } finally { harness.close() }
+        }
+    }
+
     @Test fun dsfBothBitOrdersAndDffProduceIdenticalPcmAndSourceMetadata() {
         for (rate in DsdFormat.supportedBitRates) {
             val random = Random(91)
@@ -85,9 +109,9 @@ class DsdExtractorDeviceTest {
         }
     }
 
-    private class Harness(private val bytes: ByteArray) {
+    internal class Harness(private val bytes: ByteArray, raw: Boolean = false) : AutoCloseable {
         val output = Output()
-        private val extractor = DsdExtractor().apply { init(output) }
+        private val extractor = DsdExtractor(rawOutput = raw).apply { init(output) }
         private var input = inputAt(0)
         init { assertTrue(extractor.sniff(input)); assertEquals(0L, input.position) }
         fun finish() {
@@ -105,6 +129,7 @@ class DsdExtractorDeviceTest {
             extractor.seek(point.position, timeUs); input = inputAt(point.position)
             output.samples.reset(); output.timestamps.clear()
         }
+        override fun close() = extractor.release()
         private fun inputAt(position: Long): DefaultExtractorInput {
             var cursor = position.toInt()
             val reader = DataReader { target, offset, length ->
@@ -116,7 +141,7 @@ class DsdExtractorDeviceTest {
         }
     }
 
-    private class Output : ExtractorOutput, TrackOutput {
+    internal class Output : ExtractorOutput, TrackOutput {
         var format: Format? = null
         var seekMap: SeekMap? = null
         val samples = ByteArrayOutputStream()

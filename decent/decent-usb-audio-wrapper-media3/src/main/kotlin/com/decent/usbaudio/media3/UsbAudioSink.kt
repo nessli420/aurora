@@ -71,6 +71,7 @@ class UsbAudioSink(
      *  Replaces the streaming thread fallback if one was set up due to rate mismatch. */
     @Synchronized
     private fun createEngineIfNeeded() {
+        if (!config.nativeFlacEnabled || currentTrackPath?.endsWith(".flac", ignoreCase = true) != true) return
         if (nativeEngine?.isRunning == true) return  // already running
         val stream = usbAudioStream
         if (stream != null && stream.isAlive) {
@@ -796,7 +797,7 @@ class UsbAudioSink(
         usbStreamingThread = null
 
         val path = currentTrackPath
-        if (path != null && path.lowercase().endsWith(".flac")) {
+        if (config.nativeFlacEnabled && path != null && path.lowercase().endsWith(".flac")) {
             val engine = NativeAudioEngine()
             try {
                 val fd = android.os.ParcelFileDescriptor.open(

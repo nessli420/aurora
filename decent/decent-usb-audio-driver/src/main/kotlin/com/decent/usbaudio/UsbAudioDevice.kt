@@ -116,7 +116,7 @@ class UsbAudioDevice private constructor(private val context: Context) {
 
     @Synchronized fun getClockRates(format: UsbAudioFormat): List<UsbRateRange> {
         val conn = connection ?: return emptyList()
-        if (cachedDeviceInfo?.formats.orEmpty().none { it === format } || format.unsupportedReason != null) return emptyList()
+        if (cachedDeviceInfo?.formats.orEmpty().none { it === format } || format.transportUnsupportedReason != null) return emptyList()
         val key = format.controlInterfaceId to format.clockSourceId
         rates[key]?.let { return it }
         if (!claimInterface(format.controlInterfaceId)) return emptyList()
@@ -135,13 +135,17 @@ class UsbAudioDevice private constructor(private val context: Context) {
             it.validBits >= sourceBits && it.fits(rate) && getClockRates(it).any { range -> range.contains(rate) } }
             .minWithOrNull(compareBy<UsbAudioFormat> { it.containerBytes }.thenBy { it.validBits }.thenBy { it.alternateSetting })
 
-    @Synchronized fun configureFormat(format: UsbAudioFormat, rate: Int): UsbClockStatus {
+    @Synchronized fun configureFormat(format: UsbAudioFormat, rate: Int): UsbClockStatus = configure(format, rate, false)
+    @Synchronized fun configureRawFormat(format: UsbAudioFormat, rate: Int): UsbClockStatus = configure(format, rate, true)
+
+    private fun configure(format: UsbAudioFormat, rate: Int, raw: Boolean): UsbClockStatus {
         fun fail(reason: String, observed: Int? = null, valid: Boolean? = null): UsbClockStatus {
             lastFailure = reason
             return UsbClockStatus(rate, observed, valid, reason)
         }
         val conn = connection ?: return fail("USB is disconnected.")
-        if (cachedDeviceInfo?.formats.orEmpty().none { it === format } || format.unsupportedReason != null ||
+        if (cachedDeviceInfo?.formats.orEmpty().none { it === format } ||
+            (if (raw) format.rawUnsupportedReason else format.unsupportedReason) != null ||
             !format.fits(rate) || getClockRates(format).none { it.contains(rate) }) return fail("The USB format or rate is unsupported.")
         for (id in listOf(format.controlInterfaceId, format.interfaceId).distinct()) {
             if (!claimInterface(id)) return fail(lastFailure ?: "The USB interface could not be claimed.")

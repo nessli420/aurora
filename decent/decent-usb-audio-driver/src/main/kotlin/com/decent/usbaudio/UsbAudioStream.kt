@@ -41,6 +41,7 @@ class UsbAudioStream(
     maxPacketSize: Int,
     val validBits: Int = bitDepth,
     alternateSetting: Int,
+    val wireFormat: Int = WIRE_PCM,
 ) {
     @Volatile var nativeHandle: Long = 0L; private set
     private val lifecycle = ReentrantReadWriteLock(true)
@@ -48,8 +49,11 @@ class UsbAudioStream(
 
     init {
         require(channelCount in 1..2 && bitDepth in listOf(16, 24, 32) && validBits in 16..bitDepth)
+        require(wireFormat in WIRE_PCM..WIRE_NATIVE_DSD)
+        require(wireFormat != WIRE_DOP || bitDepth in listOf(24, 32) && validBits >= 24)
+        require(wireFormat != WIRE_NATIVE_DSD || bitDepth == 32 && validBits == 32)
         nativeHandle = nativeUsbAudioCreate(fd, interfaceId, endpointOut, endpointFeedback,
-            sampleRate, channelCount, bitDepth, maxPacketSize, validBits, alternateSetting)
+            sampleRate, channelCount, bitDepth, maxPacketSize, validBits, alternateSetting, wireFormat)
     }
 
     val isReady: Boolean get() = lifecycle.read { nativeHandle != 0L }
@@ -75,14 +79,23 @@ class UsbAudioStream(
     fun start(): Boolean = lifecycle.read { nativeHandle != 0L && nativeUsbAudioStart(nativeHandle) }
 
     fun write(pcmBuffer: FloatArray) = lifecycle.read {
+        check(wireFormat == WIRE_PCM)
         require(pcmBuffer.size % channelCount == 0)
         if (nativeHandle != 0L) nativeUsbAudioWrite(nativeHandle, pcmBuffer)
     }
 
     fun writeRaw(pcmBuffer: ByteArray, encoding: Int) = lifecycle.read {
+        check(wireFormat == WIRE_PCM)
         val bits = when (encoding) { 2 -> 16; 0x15 -> 24; 0x16 -> 32; else -> throw IllegalArgumentException("Unsupported PCM encoding.") }
         require(bits <= bitDepth && pcmBuffer.size % (channelCount * (bits / 8)) == 0)
         if (nativeHandle != 0L) nativeUsbAudioWriteRaw(nativeHandle, pcmBuffer, bits)
+    }
+
+    fun writePacked(bytes: ByteArray) = lifecycle.read {
+        check(wireFormat != WIRE_PCM)
+        require(bytes.size <= 1_048_576 && bytes.size % (channelCount * bitDepth / 8) == 0)
+        check(nativeHandle != 0L)
+        nativeUsbAudioWritePacked(nativeHandle, bytes)
     }
 
     fun stop() = lifecycle.read { if (nativeHandle != 0L) nativeUsbAudioStop(nativeHandle) }
@@ -102,12 +115,13 @@ class UsbAudioStream(
     }
 
     private external fun nativeUsbAudioCreate(fd: Int, interfaceId: Int, endpointOut: Int, endpointFeedback: Int,
-        sampleRate: Int, channelCount: Int, bitDepth: Int, maxPacketSize: Int, validBits: Int, alternateSetting: Int): Long
+        sampleRate: Int, channelCount: Int, bitDepth: Int, maxPacketSize: Int, validBits: Int, alternateSetting: Int, wireFormat: Int): Long
     private external fun nativeUsbAudioSetAltSetting(handle: Long, altSetting: Int): Boolean
     private external fun nativeUsbAudioSetSampleRate(handle: Long, sampleRateHz: Int, clockSourceId: Int): Boolean
     private external fun nativeUsbAudioStart(handle: Long): Boolean
     private external fun nativeUsbAudioWrite(handle: Long, pcmBuffer: FloatArray)
     private external fun nativeUsbAudioWriteRaw(handle: Long, pcmBuffer: ByteArray, inputBitDepth: Int)
+    private external fun nativeUsbAudioWritePacked(handle: Long, bytes: ByteArray)
     private external fun nativeUsbAudioStop(handle: Long)
     private external fun nativeFlush(handle: Long)
     private external fun nativeFinish(handle: Long): Boolean
@@ -118,6 +132,9 @@ class UsbAudioStream(
     private external fun nativeGetTelemetry(handle: Long): LongArray?
 
     companion object {
+        const val WIRE_PCM = 0
+        const val WIRE_DOP = 1
+        const val WIRE_NATIVE_DSD = 2
         init { System.loadLibrary("decent_usb_audio") }
         @JvmStatic external fun nativeUsbReset(fd: Int): Int
         @JvmStatic external fun nativeGetUsbSpeed(fd: Int): Int

@@ -41,6 +41,10 @@ class DsdPlaybackDeviceTest {
         playRates(11_289_600, 22_579_200, 4)
     }
 
+    @Test fun dsd1024PlaysThroughRackWithMetadataSeekPauseQueueAndEos() {
+        playRates(45_158_400, 45_158_400, 2)
+    }
+
     private fun playRates(dsfRate: Int, dffRate: Int, seconds: Int) {
         val dsf = fixture("dsf", DsdFixtures.dsf(DsdFixtures.tone(dsfRate, seconds), dsfRate, title = "DSF playback fixture"))
         val dff = fixture("dff", DsdFixtures.dff(DsdFixtures.tone(dffRate, seconds), dffRate, title = "DFF playback fixture"))

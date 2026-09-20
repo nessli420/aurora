@@ -178,6 +178,8 @@ class PlaybackService : MediaLibraryService() {
     private var pendingNeutralize = false
     private var usbSink: com.decent.usbaudio.media3.UsbAudioSink? = null
     private var processedUsbSink: ProcessedUsbAudioSink? = null
+    private var rawDsdSink: com.aurora.music.playback.dsd.RawDsdAudioSink? = null
+    @Volatile private var rawDsdFailure: String? = null
     private var usbMode = UsbOutputMode.DIRECT
     private var usbFallback = UsbFallbackPolicy.PAUSE
     private var usbModePref = UsbOutputMode.DIRECT
@@ -196,6 +198,11 @@ class PlaybackService : MediaLibraryService() {
         val bitPerfectUsb = initialPrefs.bitPerfectUsb
         usbMode = initialPrefs.usbOutputMode
         usbFallback = initialPrefs.usbFallbackPolicy
+        val dsdWire = if (bitPerfectUsb && usbMode == UsbOutputMode.DIRECT) when (initialPrefs.usbDsdMode) {
+            com.aurora.music.data.UsbDsdMode.DOP -> com.aurora.music.playback.dsd.DsdWireFormat.DOP
+            com.aurora.music.data.UsbDsdMode.NATIVE -> com.aurora.music.playback.dsd.DsdWireFormat.NATIVE_MSB32
+            else -> null
+        } else null
         bitPerfect = bitPerfectUsb
         val useFloat = bitPerfectUsb || highRes
         usePrecisionProcessing = highRes || bitPerfectUsb
@@ -214,6 +221,27 @@ class PlaybackService : MediaLibraryService() {
             .build()
 
         val renderersFactory = object : DefaultRenderersFactory(this) {
+            override fun buildAudioRenderers(context: Context, extensionRendererMode: Int,
+                mediaCodecSelector: androidx.media3.exoplayer.mediacodec.MediaCodecSelector,
+                enableDecoderFallback: Boolean, audioSink: AudioSink, eventHandler: android.os.Handler,
+                eventListener: androidx.media3.exoplayer.audio.AudioRendererEventListener,
+                out: java.util.ArrayList<androidx.media3.exoplayer.Renderer>) {
+                if (dsdWire != null) {
+                    val rawSink = com.aurora.music.playback.dsd.RawDsdAudioSink(DefaultAudioSink.Builder(context).build(), dsdWire,
+                        { usbSink?.reset(); com.aurora.music.playback.dsd.NativeDsdUsbTransport(context, dsdWire) },
+                        {
+                            rawDsdSink?.telemetry?.let {
+                                if (it.failure != null) rawDsdFailure = it.failure
+                                else if (it.active) rawDsdFailure = null
+                            }
+                            android.os.Handler(mainLooper).post { updateSignalPath() }
+                        })
+                    rawDsdSink = rawSink
+                    out.add(com.aurora.music.playback.dsd.RawDsdAudioRenderer(eventHandler, eventListener, rawSink))
+                }
+                super.buildAudioRenderers(context, extensionRendererMode, mediaCodecSelector, enableDecoderFallback,
+                    audioSink, eventHandler, eventListener, out)
+            }
             override fun buildAudioSink(
                 context: Context,
                 enableFloatOutput: Boolean,
@@ -241,6 +269,7 @@ class PlaybackService : MediaLibraryService() {
                         .also { processedUsbSink = it }
                     bitPerfectUsb -> com.decent.usbaudio.media3.UsbAudioSink(fallback, context,
                         com.decent.usbaudio.media3.UsbAudioSinkConfig(
+                            nativeFlacEnabled = dsdWire == null,
                             allowAndroidFallback = usbFallback == UsbFallbackPolicy.ANDROID,
                             onUsbFailure = { reason -> usbFailure = reason; android.os.Handler(mainLooper).post { updateSignalPath() } },
                         )).also {
@@ -254,7 +283,13 @@ class PlaybackService : MediaLibraryService() {
                         }
                     else -> fallback
                 }
-                return TappingAudioSink(sink, container.visualizer, initialEvidence.beforeMeter,
+                val exclusiveSink = if (dsdWire == null) sink else object : androidx.media3.exoplayer.audio.ForwardingAudioSink(sink) {
+                    override fun configure(inputFormat: androidx.media3.common.Format, specifiedBufferSize: Int, outputChannels: IntArray?) {
+                        rawDsdSink?.flush()
+                        super.configure(inputFormat, specifiedBufferSize, outputChannels)
+                    }
+                }
+                return TappingAudioSink(exclusiveSink, container.visualizer, initialEvidence.beforeMeter,
                     onVolume = { initialEvidence.downstreamGain = it }) { initialEvidence.decoded = it }
             }
         }
@@ -277,11 +312,12 @@ class PlaybackService : MediaLibraryService() {
             } else if (uri.scheme == "aurora-extension") dataSpec.withUri(container.extensions.resolve(uri))
             else dataSpec
         }
-        val dataSourceFactory = androidx.media3.datasource.ResolvingDataSource.Factory(
+        val resolvedDataSourceFactory = androidx.media3.datasource.ResolvingDataSource.Factory(
             androidx.media3.datasource.DefaultDataSource.Factory(this), ytResolver,
         )
+        val dataSourceFactory = com.aurora.music.playback.sacd.SacdDataSource.Factory(this, resolvedDataSourceFactory)
         networkDataSource = dataSourceFactory
-        val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory())
+        val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory(rawOutput = dsdWire != null))
 
         musicSourceFactory = mediaSourceFactory
         val playerBuilder = ExoPlayer.Builder(this, renderersFactory)
@@ -743,15 +779,46 @@ class PlaybackService : MediaLibraryService() {
         if (item == null || player.playbackState == Player.STATE_IDLE || player.playbackState == Player.STATE_ENDED) {
             container.settingsStore.processingRoutes.publish(com.aurora.music.data.routes.ProcessingRoute())
             requestBitPerfect(null, null, false)
-            val failure = processedUsbSink?.telemetry?.fallbackReason ?: usbSink?.playbackTelemetry?.failure ?: usbFailure
+            val failure = rawDsdSink?.telemetry?.failure ?: rawDsdFailure.takeIf { player.playerError != null }
+                ?: processedUsbSink?.telemetry?.fallbackReason ?: usbSink?.playbackTelemetry?.failure ?: usbFailure
             container.signalPath.value = if (bitPerfect && failure != null) SignalPath(note = failure,
                 reasons = listOf(failure), output = "USB unavailable") else SignalPath()
             return
         }
         val state = sinkEvidence[player]
+        val rawDsd = rawDsdSink?.telemetry
+        if (rawDsd?.active == true || rawDsd?.failure != null) {
+            requestBitPerfect(null, null, false)
+            container.settingsStore.processingRoutes.publish(com.aurora.music.data.routes.ProcessingRoute(
+                com.aurora.music.data.routes.ProcessingRouteKind.NATIVE_USB, label = "Raw DSD USB",
+                detail = "PCM processing is bypassed."))
+            val info = DsdSourceInfo.from(rawDsd.source)
+            val sourceFormat = info?.let { SignalFormat(it.bitRate, 1, it.channels, "DSD") }
+            val mode = if (rawDsd.wire == com.aurora.music.playback.dsd.DsdWireFormat.DOP) "DoP" else "Native DSD"
+            val status = rawDsd.status
+            val good = rawDsd.active && rawDsd.failure == null && status.error == null
+            container.signalPath.value = SignalPath(active = good, codec = "${info?.container ?: "DSD"} / DSD",
+                sampleRateHz = info?.bitRate ?: 0, bitDepth = 1, channels = info?.channels ?: 0,
+                output = "$mode · USB", bitPerfect = good,
+                preservation = if (good) com.aurora.music.data.Preservation.PRESERVED else com.aurora.music.data.Preservation.UNKNOWN,
+                note = rawDsd.failure ?: status.error ?: "Raw DSD bypasses PCM processing and software volume.",
+                reasons = listOf(rawDsd.failure ?: status.error ?: "Source DSD bits retained through USB packing"),
+                source = com.aurora.music.data.SignalStage("Source", "${info?.container} / DSD${(info?.bitRate ?: 0) / 44100}", "Container header", sourceFormat),
+                decoder = com.aurora.music.data.SignalStage("Decoder", "Raw DSD", "No PCM conversion", sourceFormat),
+                processing = com.aurora.music.data.SignalStage("Processing", "Bypassed", "EQ, gain, ReplayGain, speed, dither and PCM meters bypassed"),
+                resampling = com.aurora.music.data.SignalStage("Resampling", "None", "Original DSD bit rate"),
+                outputStage = com.aurora.music.data.SignalStage("Output", mode, "USB clock readback: ${status.clockRate ?: 0} Hz",
+                    SignalFormat(rawDsd.carrierRate, rawDsd.containerBits, 2, if (mode == "DoP") "DoP carrier" else "raw USB frames")),
+                device = com.aurora.music.data.SignalStage("Device", "USB DAC", "USB transfers confirmed; DAC decoding is not measured"),
+                usbDiagnostics = com.aurora.music.data.UsbDiagnostics(status.completedFrames, status.pendingFrames, status.packetErrors, status.timeouts))
+            return
+        }
         val native = usbSink?.playbackTelemetry
         val processed = processedUsbSink?.telemetry
-        if (native?.usbActive == true || processed?.active == true) usbFailure = null
+        if (native?.usbActive == true || processed?.active == true) {
+            usbFailure = null
+            rawDsdFailure = null
+        }
         val outputFailure = processed?.fallbackReason ?: native?.failure ?: usbFailure
         if (bitPerfect && usbFallback == UsbFallbackPolicy.PAUSE && outputFailure != null) {
             container.settingsStore.processingRoutes.publish(com.aurora.music.data.routes.ProcessingRoute())

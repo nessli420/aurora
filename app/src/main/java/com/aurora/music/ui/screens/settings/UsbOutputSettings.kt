@@ -12,6 +12,7 @@ import androidx.compose.ui.unit.dp
 import com.aurora.music.data.PlaybackPrefs
 import com.aurora.music.data.UsbFallbackPolicy
 import com.aurora.music.data.UsbOutputMode
+import com.aurora.music.data.UsbDsdMode
 
 @Composable
 fun UsbOutputSettings(
@@ -19,6 +20,7 @@ fun UsbOutputSettings(
     onEnabled: (Boolean) -> Unit,
     onMode: (UsbOutputMode) -> Unit,
     onFallback: (UsbFallbackPolicy) -> Unit,
+    onDsdMode: (UsbDsdMode) -> Unit,
 ) {
     SettingsGroup {
         SettingsSwitchRow(Icons.Filled.Usb, "USB DAC output", "Restart Aurora to apply USB settings.",
@@ -36,6 +38,14 @@ fun UsbOutputSettings(
             }
             SegmentedRow("If USB is unavailable", listOf("Pause", "Android output"), prefs.usbFallbackPolicy.ordinal) {
                 onFallback(UsbFallbackPolicy.entries[it])
+            }
+            if (prefs.usbOutputMode == UsbOutputMode.DIRECT) {
+                SegmentedRow("DSD files", listOf("PCM", "DoP", "Native"), (prefs.usbDsdMode ?: UsbDsdMode.PCM).ordinal) {
+                    onDsdMode(UsbDsdMode.entries[it])
+                }
+                Text("Raw DSD requires a supported DAC and stops if unavailable.",
+                    Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (prefs.usbFallbackPolicy == UsbFallbackPolicy.ANDROID) {
                 Text("Playback may continue through the speaker.", Modifier.padding(horizontal = 20.dp, vertical = 6.dp),

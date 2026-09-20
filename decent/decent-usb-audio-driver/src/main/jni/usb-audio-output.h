@@ -27,6 +27,7 @@ struct UsbAudioContext {
     int32_t channelCount = 0;
     int32_t bitDepth = 0;
     int32_t validBits = 0;
+    int wireFormat = 0;
     int32_t bytesPerSample = 0;
     int32_t bytesPerFrame = 0;
     int32_t maxPacketSize = 0;

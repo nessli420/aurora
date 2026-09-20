@@ -22,13 +22,26 @@ data class UsbAudioFormat(
     val clockControls: Int,
     val pcm: Boolean,
     val descriptorRates: List<UsbRateRange> = emptyList(),
+    val formatBitmap: Long = if (pcm) 1 else 0,
+    val formatType: Int = 1,
 ) {
     val containerBits get() = containerBytes * 8
     val unsupportedReason: String? get() = when {
-        protocol != 0x20 -> "Direct output requires USB Audio Class 2."
+        transportUnsupportedReason != null -> transportUnsupportedReason
         !pcm -> "The USB format is not integer PCM."
-        channels !in 1..2 -> "Direct output supports mono or stereo."
         containerBytes !in 2..4 || validBits !in 16..containerBits -> "Unsupported PCM sample layout."
+        else -> null
+    }
+    val rawUnsupportedReason: String? get() = when {
+        transportUnsupportedReason != null -> transportUnsupportedReason
+        formatType != 1 || formatBitmap != 0x80000000L -> "The USB format is not Type I raw data."
+        containerBytes != 4 || validBits != 32 -> "Unsupported raw USB sample layout."
+        else -> null
+    }
+    val transportUnsupportedReason: String? get() = when {
+        protocol != 0x20 -> "Direct output requires USB Audio Class 2."
+        formatType != 1 -> "The USB format is not Type I."
+        channels !in 1..2 -> "Direct output supports mono or stereo."
         interval != 1 -> "The USB endpoint interval is unsupported."
         maxPacketSize !in 1..512 -> "The USB packet size exceeds the driver budget."
         clockSourceId <= 0 || clockControls and 1 == 0 -> "The active USB clock cannot be verified."
@@ -50,7 +63,8 @@ object UsbAudioDescriptors {
         data class Pending(val configuration: Int, val id: Int, val alt: Int, val protocol: Int, val control: Int,
             var channels: Int = 0, var bytes: Int = 0, var bits: Int = 0, var terminal: Int = 0,
             var pcm: Boolean = false, var out: Int = -1, var feedback: Int = -1, var packet: Int = 0,
-            var interval: Int = 0, var sync: Int = 0, var rates: List<UsbRateRange> = emptyList())
+            var interval: Int = 0, var sync: Int = 0, var rates: List<UsbRateRange> = emptyList(),
+            var formats: Long = 0, var type: Int = 0)
         val pending = mutableListOf<Pending>()
         val clocks = mutableMapOf<Triple<Int, Int, Int>, Int>()
         val terminals = mutableMapOf<Triple<Int, Int, Int>, Int>()
@@ -84,8 +98,10 @@ object UsbAudioDescriptors {
                         if (subtype == 1) {
                             if (protocol == 0x20 && length >= 16) {
                                 s.terminal = u(offset + 3); s.pcm = u(offset + 5) == 1 && u(offset + 6) and 1 != 0
+                                s.type = u(offset + 5)
+                                s.formats = (0..3).fold(0L) { bits, i -> bits or (u(offset + 6 + i).toLong() shl (8 * i)) }
                                 s.channels = u(offset + 10)
-                            } else if (protocol == 0 && length >= 7) s.pcm = u(offset + 5) == 1 && u(offset + 6) == 0
+                            } else if (protocol == 0 && length >= 7) { s.pcm = u(offset + 5) == 1 && u(offset + 6) == 0; s.type = 1; s.formats = if (s.pcm) 1 else 0 }
                         }
                         if (subtype == 2 && length >= 6 && u(offset + 3) == 1) {
                             if (protocol == 0x20) { s.bytes = u(offset + 4); s.bits = u(offset + 5) }
@@ -115,7 +131,7 @@ object UsbAudioDescriptors {
         val formats = pending.filter { it.out > 0 && it.bytes > 0 && it.bits > 0 && it.channels > 0 }.map { s ->
             val clock = terminals[Triple(s.configuration, s.control, s.terminal)] ?: -1
             UsbAudioFormat(s.configuration, s.id, s.alt, s.protocol, s.channels, s.bits, s.bytes, s.out, s.feedback,
-                s.packet, s.interval, s.sync, s.control, clock, clocks[Triple(s.configuration, s.control, clock)] ?: 0, s.pcm, s.rates)
+                s.packet, s.interval, s.sync, s.control, clock, clocks[Triple(s.configuration, s.control, clock)] ?: 0, s.pcm, s.rates, s.formats, s.type)
         }
         return UsbDescriptorReport(if (malformed) emptyList() else formats, malformed)
     }

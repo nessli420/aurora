@@ -212,7 +212,20 @@ template<class Submit> static bool finishStaged(UsbAudioContext *ctx, Submit sub
     if (ctx->residualBytes == 0) return true;
     if (!ctx->running.load() || !plan(ctx)) return false;
     const int frames = ctx->residualBytes / ctx->bytesPerFrame;
-    memset(ctx->residualBuffer + ctx->residualBytes, 0, ctx->plannedBytes - ctx->residualBytes);
+    if (ctx->wireFormat == 0) memset(ctx->residualBuffer + ctx->residualBytes, 0, ctx->plannedBytes - ctx->residualBytes);
+    else {
+        int64_t frame = ctx->framesWritten.load();
+        for (int offset = ctx->residualBytes; offset < ctx->plannedBytes; offset += ctx->bytesPerFrame, ++frame) {
+            for (int channel = 0; channel < ctx->channelCount; ++channel) {
+                auto* sample = ctx->residualBuffer + offset + channel * ctx->bytesPerSample;
+                memset(sample, 0x69, ctx->bytesPerSample);
+                if (ctx->wireFormat == 1) {
+                    if (ctx->bytesPerSample == 4) sample[0] = 0;
+                    sample[ctx->bytesPerSample - 1] = (frame & 1) ? 0xfa : 0x05;
+                }
+            }
+        }
+    }
     return submit(ctx, frames);
 }
 void submitPcmToUrbs(UsbAudioContext *ctx, const uint8_t *data, int bytes) {
@@ -275,11 +288,13 @@ JNIEXPORT jint JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeGetUsbSpeed
     int speed = ioctl(fd, USBDEVFS_GET_SPEED); return speed < 0 ? -errno : speed;
 }
 JNIEXPORT jlong JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioCreate(
-        JNIEnv *, jobject, jint fd, jint iface, jint out, jint feedback, jint rate, jint channels, jint bits, jint maxPacket, jint validBits, jint alt) {
+        JNIEnv *, jobject, jint fd, jint iface, jint out, jint feedback, jint rate, jint channels, jint bits, jint maxPacket, jint validBits, jint alt, jint wireFormat) {
     if (fd < 0 || ioctl(fd, USBDEVFS_GET_SPEED) != 3 || iface < 0 || out <= 0 || out >= 0x80 ||
         (feedback > 0 && (feedback < 0x80 || feedback > 255)) || rate < 8000 || rate > 384000 ||
         channels < 1 || channels > 2 || (bits != 16 && bits != 24 && bits != 32) || validBits < 16 || validBits > bits || maxPacket <= 0 || maxPacket > 512 ||
         std::ceil(rate * (feedback > 0 ? 1.01 : 1.0) / 8000.0) * channels * (bits / 8) > maxPacket ||
+        wireFormat < 0 || wireFormat > 2 || (wireFormat == 1 && (bits < 24 || validBits < 24)) ||
+        (wireFormat == 2 && (bits != 32 || validBits != 32)) ||
         alt <= 0 || alt > 255 || readInterfaceSetting(fd, iface) != alt) return 0;
     auto *ctx = new(std::nothrow) UsbAudioContext();
     if (!ctx) return 0;
@@ -289,6 +304,7 @@ JNIEXPORT jlong JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioCr
     }
     ctx->ownerFd = fd; ctx->fd = dup(fd); ctx->interfaceId = iface; ctx->endpointOut = out; ctx->endpointFeedback = feedback;
     ctx->alternateSetting = alt;
+    ctx->wireFormat = wireFormat;
     ctx->sampleRate = rate; ctx->channelCount = channels; ctx->bitDepth = bits; ctx->validBits = validBits; ctx->bytesPerSample = bits / 8;
     ctx->bytesPerFrame = channels * ctx->bytesPerSample; ctx->maxPacketSize = maxPacket;
     ctx->calibratedFpmf.store(rate / 8000.0);
@@ -324,6 +340,7 @@ JNIEXPORT jboolean JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudi
 JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioWrite(JNIEnv *env, jobject, jlong h, jfloatArray pcm) {
     auto *ctx = reinterpret_cast<UsbAudioContext *>(h); if (!ctx) return;
     std::lock_guard<std::mutex> guard(ctx->ioMutex); if (!ctx->running.load()) return;
+    if (ctx->wireFormat != 0) { fail(ctx, EINVAL); return; }
     const int count = env->GetArrayLength(pcm);
     if (count % ctx->channelCount || count > USB_AUDIO_CONVERSION_BUFFER_SIZE / ctx->bytesPerSample) { fail(ctx, EINVAL); return; }
     auto *samples = env->GetFloatArrayElements(pcm, nullptr); if (!samples) { fail(ctx, ENOMEM); return; }
@@ -334,6 +351,7 @@ JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioWri
 JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioWriteRaw(JNIEnv *env, jobject, jlong h, jbyteArray pcm, jint bits) {
     auto *ctx = reinterpret_cast<UsbAudioContext *>(h); if (!ctx) return;
     std::lock_guard<std::mutex> guard(ctx->ioMutex); if (!ctx->running.load()) return;
+    if (ctx->wireFormat != 0) { fail(ctx, EINVAL); return; }
     const int bytes = env->GetArrayLength(pcm);
     if ((bits != 16 && bits != 24 && bits != 32) || bits > ctx->bitDepth || bytes % ((bits / 8) * ctx->channelCount)) { fail(ctx, EINVAL); return; }
     const int sourceBytes = bits / 8; const int count = bytes / sourceBytes;
@@ -354,6 +372,15 @@ JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioWri
     }
     env->ReleaseByteArrayElements(pcm, data, JNI_ABORT);
     appendPcm(ctx, ctx->transferBuffer, count * ctx->bytesPerSample);
+}
+JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioWritePacked(JNIEnv *env, jobject, jlong h, jbyteArray bytes) {
+    auto *ctx = reinterpret_cast<UsbAudioContext *>(h); if (!ctx) return;
+    std::lock_guard<std::mutex> guard(ctx->ioMutex); if (!ctx->running.load()) return;
+    const int size = env->GetArrayLength(bytes);
+    if (ctx->wireFormat == 0 || size > USB_AUDIO_CONVERSION_BUFFER_SIZE || size % ctx->bytesPerFrame) { fail(ctx, EINVAL); return; }
+    env->GetByteArrayRegion(bytes, 0, size, reinterpret_cast<jbyte*>(ctx->transferBuffer));
+    if (env->ExceptionCheck()) { fail(ctx, ENOMEM); return; }
+    appendPcm(ctx, ctx->transferBuffer, size);
 }
 JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioStop(JNIEnv *, jobject, jlong h) {
     auto *ctx = reinterpret_cast<UsbAudioContext *>(h);
@@ -414,11 +441,13 @@ JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeConnectionC
 }
 
 JNIEXPORT jbyteArray JNICALL Java_com_aurora_music_playback_UsbDriverTestSupport_packetize(
-        JNIEnv *env, jobject, jbyteArray pcm, jint rate, jint channels, jint bits, jint chunkFrames) {
+        JNIEnv *env, jobject, jbyteArray pcm, jint rate, jint channels, jint bits, jint chunkFrames, jint wireFormat) {
     const int size = env->GetArrayLength(pcm);
     if (rate < 8000 || rate > 384000 || channels < 1 || channels > 2 || (bits != 16 && bits != 24 && bits != 32) ||
-        chunkFrames < 1 || chunkFrames > 65536 || size > 1048576 || size % (channels * bits / 8)) return nullptr;
+        chunkFrames < 1 || chunkFrames > 65536 || size > 1048576 || size % (channels * bits / 8) ||
+        wireFormat < 0 || wireFormat > 2 || (wireFormat == 1 && bits < 24) || (wireFormat == 2 && bits != 32)) return nullptr;
     UsbAudioContext ctx; ctx.sampleRate = rate; ctx.channelCount = channels; ctx.bytesPerSample = bits / 8;
+    ctx.wireFormat = wireFormat;
     ctx.bytesPerFrame = channels * ctx.bytesPerSample; ctx.maxPacketSize = 512;
     ctx.calibratedFpmf.store(rate / 8000.0); ctx.running.store(true);
     std::vector<uint8_t> input(size), output;

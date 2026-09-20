@@ -16,7 +16,7 @@ data class DsdFormat(
     val blockBytes: Int = 4096,
 ) {
     init {
-        require(supportsBitRate(bitRate)) { "Use DSD64, DSD128, DSD256 or DSD512." }
+        require(supportsBitRate(bitRate)) { "Use DSD64 through DSD1024." }
         require(channels in 1..2) { "Use mono or stereo DSD." }
         require(sampleCount in 1..bitRate.toLong() * 86_400) { "Invalid DSD duration." }
         require(dataOffset >= 0 && dataBytes > 0 && dataOffset <= Long.MAX_VALUE - dataBytes) { "Invalid DSD data range." }
@@ -43,12 +43,13 @@ data class DsdFormat(
     }
 
     companion object {
-        val supportedBitRates: List<Int> = listOf(2_822_400, 5_644_800, 11_289_600, 22_579_200)
+        val supportedBitRates: List<Int> = listOf(2_822_400, 5_644_800, 11_289_600, 22_579_200, 45_158_400)
         fun supportsBitRate(rate: Int): Boolean = rate in supportedBitRates
     }
 }
 
 internal object DsdHeaders {
+    data class DffProperties(val rate: Int, val channels: Int, val dst: Boolean)
     fun dsf(format: ByteArray, dataOffset: Long, dataBytes: Long): DsdFormat {
         require(format.size >= 40) { "Incomplete DSF format." }
         val b = ByteBuffer.wrap(format).order(ByteOrder.LITTLE_ENDIAN)
@@ -68,7 +69,12 @@ internal object DsdHeaders {
         return result
     }
 
-    fun dffProperties(payload: ByteArray): Pair<Int, Int> {
+    fun dffProperties(payload: ByteArray): Pair<Int, Int> = dffSoundProperties(payload).let {
+        require(!it.dst) { "DST requires a compressed-frame source." }
+        it.rate to it.channels
+    }
+
+    fun dffSoundProperties(payload: ByteArray): DffProperties {
         val b = ByteBuffer.wrap(payload).order(ByteOrder.BIG_ENDIAN)
         require(b.remaining() >= 4 && id(b) == "SND ") { "Invalid DFF sound properties." }
         var rate = 0; var channels = 0; var compression: String? = null
@@ -92,14 +98,16 @@ internal object DsdHeaders {
                     require(compression == null && size >= 5)
                     compression = id(b)
                     val nameBytes = b.get().toInt() and 255
-                    require(nameBytes.toLong() == size - 5) { "Invalid DFF compression name." }
-                    require(compression == "DSD ") { "DST-compressed DFF is not supported." }
+                    val padding = size - 5 - nameBytes
+                    require(padding == 0L || padding == 1L && size % 2 == 0L && payload[end - 1] == 0.toByte()) { "Invalid DFF compression name." }
+                    require(compression == "DSD " || compression == "DST ") { "Unsupported DFF compression." }
                 }
             }
             b.position(end + (size and 1).toInt())
         }
-        require(DsdFormat.supportsBitRate(rate) && channels in 1..2 && compression == "DSD ") { "Incomplete or unsupported DFF properties." }
-        return rate to channels
+        require(DsdFormat.supportsBitRate(rate) && channels in 1..2 && compression != null) { "Incomplete or unsupported DFF properties." }
+        require(compression != "DST " || rate == 2_822_400) { "DST currently requires DSD64." }
+        return DffProperties(rate, channels, compression == "DST ")
     }
 
     fun id(buffer: ByteBuffer): String {

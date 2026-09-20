@@ -19,6 +19,13 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,13 +40,26 @@ import com.aurora.music.data.ServerType
 
 @Composable
 fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
-    val container = (LocalContext.current.applicationContext as AuroraApplication).container
+    val context = LocalContext.current
+    val container = (context.applicationContext as AuroraApplication).container
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
+    var showDstLicense by remember { mutableStateOf(false) }
+    if (showDstLicense) {
+        val license = remember { context.assets.open("licenses/aurora-dst-LGPL-2.1.txt").bufferedReader().use { it.readText() } }
+        AlertDialog(onDismissRequest = { showDstLicense = false }, title = { Text("DST decoder license") },
+            text = { Text("FFmpeg / DSD-Nexus. Copyright © 2014 Peter Ross. LGPL-2.1-or-later.\n\n$license",
+                modifier = Modifier.verticalScroll(rememberScrollState())) },
+            confirmButton = { TextButton(onClick = { showDstLicense = false }) { Text("Close") } },
+            dismissButton = { TextButton(onClick = {
+                context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                    android.net.Uri.parse("https://github.com/nessli420/aurora/tree/main/app/src/main/cpp/dst")))
+            }) { Text("Source") } })
+    }
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar("About Aurora", onBack)
         Column(
-            Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding() + 24.dp),
+            Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = contentPadding.calculateBottomPadding() + 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Spacer(Modifier.height(24.dp))
@@ -59,6 +79,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             InfoRow("Protocol", if (isJellyfin) "Jellyfin" else "Subsonic / OpenSubsonic")
             InfoRow("Client name", "Aurora")
             InfoRow("Playback engine", "AndroidX Media3 (ExoPlayer)")
+            TextButton(onClick = { showDstLicense = true }) { Text("DST decoder license") }
 
             Spacer(Modifier.height(20.dp))
             Text(

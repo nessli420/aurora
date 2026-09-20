@@ -74,7 +74,7 @@ class DsdPcmDecoderTest {
             val channels = Array(2) { Random(37 + it).nextBytes(f.bytesPerChannel.toInt()) }
             val decoder = DsdPcmDecoder(f)
             val full = decode(decoder, channels)
-            val frame = 1237L
+            val frame = minOf(1237L, f.pcmFrames / 2)
             val start = f.prerollByte(frame)
             decoder.reset(start, frame)
             val suffix = decode(decoder, channels, start)

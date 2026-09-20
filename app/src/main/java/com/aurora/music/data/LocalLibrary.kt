@@ -235,6 +235,7 @@ class LocalLibrary(
             albumDateAdded[albumId] = maxOf(albumDateAdded[albumId] ?: 0, song.dateAddedSec)
             (tags.releaseYear ?: tags.recordingYear)?.takeIf { it > 0 }?.let { albumYear[albumId] = it }
         }
+        out += SacdLibrary(context).songs()
         rawSongs = out
         indexArtists(separators)
         matchIndex = out.groupBy { TrackMatch.key(it.artist, it.title) }

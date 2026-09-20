@@ -17,7 +17,7 @@ class DsdHeadersTest {
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(), 92, 16383) }
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(block = 8192), 92, 8192) }
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(bits = 2), 92, 8192) }
-        assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(rate = 45_158_400), 92, 8192) }
+        assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(rate = 90_316_800), 92, 8192) }
         assertThrows(IllegalArgumentException::class.java) { DsdHeaders.dsf(dsf(samples = Long.MAX_VALUE), 92, 8192) }
     }
 
@@ -26,14 +26,14 @@ class DsdHeadersTest {
             val f = DsdHeaders.dsf(dsf(rate = rate), 92, 16384)
             assertEquals(176400, f.pcmRate)
             assertEquals(rate / 176400, f.decimation)
-            assertTrue(f.filterTaps in 512..4096)
+            assertTrue(f.filterTaps in 512..8192)
             assertEquals(0L, f.seekFrame(-1))
             assertEquals(0L, f.seekFrame(0))
             assertEquals(f.pcmFrames, f.seekFrame(f.durationUs))
             assertEquals(f.pcmFrames, f.seekFrame(Long.MAX_VALUE))
             assertTrue(f.position(f.prerollByte(f.pcmFrames)) <= f.dataOffset + f.dataBytes)
         }
-        for (rate in listOf(0, 2_822_401, 6_144_000, 45_158_400, Int.MAX_VALUE)) {
+        for (rate in listOf(0, 2_822_401, 6_144_000, 90_316_800, Int.MAX_VALUE)) {
             assertThrows(IllegalArgumentException::class.java) { DsdFormat(DsdContainer.DFF, rate, 2, 8192, 0, 2048) }
         }
     }

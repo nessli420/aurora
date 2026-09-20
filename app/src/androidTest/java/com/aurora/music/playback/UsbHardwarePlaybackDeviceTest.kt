@@ -273,7 +273,7 @@ class UsbHardwarePlaybackDeviceTest {
         }
     }
 
-    private fun withRestoredQueue(controller: MediaController, block: () -> Unit) {
+    internal fun withRestoredQueue(controller: MediaController, block: () -> Unit) {
         val queue = main { (0 until controller.mediaItemCount).map(controller::getMediaItemAt) }
         val index = main { controller.currentMediaItemIndex }
         val position = main { controller.currentPosition }
@@ -338,7 +338,7 @@ class UsbHardwarePlaybackDeviceTest {
         await("shuffle state restored") { main { controller.shuffleModeEnabled == enabled } }
     }
 
-    private fun quietWav(rate: Int, bits: Int): File {
+    internal fun quietWav(rate: Int, bits: Int): File {
         val file = File(context.cacheDir, "usb-hardware-$rate-$bits-${System.nanoTime()}.wav")
         files += file
         val frames = rate * 12

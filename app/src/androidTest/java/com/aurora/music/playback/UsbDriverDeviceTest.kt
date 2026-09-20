@@ -12,7 +12,7 @@ import java.io.File
 
 private object UsbDriverTestSupport {
     init { System.loadLibrary("decent_usb_audio") }
-    external fun packetize(pcm: ByteArray, rate: Int, channels: Int, bits: Int, chunkFrames: Int): ByteArray?
+    external fun packetize(pcm: ByteArray, rate: Int, channels: Int, bits: Int, chunkFrames: Int, wireFormat: Int = 0): ByteArray?
     external fun completeOutOfOrder(errorMode: Int): LongArray
     external fun flushLifecycle(): LongArray
     external fun resetInterface(errorMode: Int): LongArray
@@ -22,6 +22,26 @@ private object UsbDriverTestSupport {
 }
 
 class UsbDriverDeviceTest {
+    @Test fun rawDsdPacketsPreserveMarkersAndUseFormatSpecificTailPadding() {
+        for (wire in 1..2) for (bits in if (wire == 1) listOf(24, 32) else listOf(32)) for (frames in listOf(1, 31, 176, 177, 997)) {
+            val bytes = bits / 8
+            val input = ByteArray(frames * 2 * bytes) { at ->
+                if (wire == 1 && at % bytes == bytes - 1) (if (at / (2 * bytes) % 2 == 0) 5 else 0xfa).toByte()
+                else if (wire == 1 && bytes == 4 && at % bytes == 0) 0 else (at * 73).toByte()
+            }
+            for (chunk in listOf(1, 7, 177, 65536)) {
+                val actual = requireNotNull(UsbDriverTestSupport.packetize(input, 176400, 2, bits, chunk, wire))
+                assertArrayEquals(input, actual.copyOf(input.size))
+                for (at in input.size until actual.size) {
+                    val expected = if (wire == 1 && at % bytes == bytes - 1) {
+                        if (at / (2 * bytes) % 2 == 0) 5 else 0xfa
+                    } else if (wire == 1 && bytes == 4 && at % bytes == 0) 0 else 0x69
+                    assertEquals("wire=$wire bits=$bits at=$at", expected, actual[at].toInt() and 255)
+                }
+            }
+        }
+    }
+
     @Test fun seekReopensOnlyTheVerifiedInterfaceAfterAllTransfersHaveReturned() {
         assertArrayEquals(longArrayOf(1, 0, 2, 0, 3, 2, 44100), UsbDriverTestSupport.resetInterface(0))
         assertArrayEquals(longArrayOf(0, 5, 1, 0, -1, 1, 0), UsbDriverTestSupport.resetInterface(1))
