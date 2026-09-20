@@ -141,5 +141,19 @@ object YouTubeMusicParser {
     fun trackShelf(root: JsonElement): JsonElement = listOf("musicPlaylistShelfRenderer", "musicPlaylistShelfContinuation", "musicShelfContinuation", "musicShelfRenderer")
         .firstNotNullOfOrNull { root.objects(it).firstOrNull() } ?: root
 
+    fun albumPlaylistId(root: JsonObject): String? {
+        val canonical = root.obj("microformat").obj("microformatDataRenderer").string("urlCanonical")
+        val fromUrl = runCatching { java.net.URI(canonical).rawQuery.orEmpty().split('&')
+            .firstOrNull { it.startsWith("list=") }?.substringAfter('=') }.getOrNull()
+        if (fromUrl?.startsWith("OLAK5uy_") == true) return fromUrl
+        val buttons = root.objects("musicPlayButtonRenderer").map {
+            it.obj("playNavigationEndpoint").obj("watchPlaylistEndpoint").string("playlistId")
+        }
+        val rows = trackShelf(root).objects("musicResponsiveListItemRenderer").map {
+            it.obj("navigationEndpoint").obj("watchEndpoint").string("playlistId")
+        }
+        return (buttons + rows).firstOrNull { it.startsWith("OLAK5uy_") }
+    }
+
     private val ITEM_RENDERERS = setOf("musicResponsiveListItemRenderer", "musicTwoRowItemRenderer", "playlistPanelVideoRenderer", "musicCardShelfRenderer")
 }

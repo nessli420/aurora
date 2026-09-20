@@ -93,10 +93,12 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
         val header = listOf("musicResponsiveHeaderRenderer", "musicDetailHeaderRenderer", "musicImmersiveHeaderRenderer", "musicVisualHeaderRenderer")
             .firstNotNullOfOrNull { response.objects(it).firstOrNull() }
         val content = if (kind == "playlist" || kind == "album") YouTubeMusicParser.trackShelf(response) else response
-        val initial = remember(YouTubeMusicParser.results(content))
+        // Album shelves can substitute one music video for several different recordings.
+        val audioPlaylist = if (kind == "album") YouTubeMusicParser.albumPlaylistId(response) else null
+        val initial = if (audioPlaylist != null) pages("VL$audioPlaylist") else remember(YouTubeMusicParser.results(content))
         val tracks = initial.songs.toMutableList()
         // Generated mixes are changing radio queues, not finite saved playlists.
-        var token = if (kind == "playlist" && id.removePrefix("VL").startsWith("RD")) null
+        var token = if (audioPlaylist != null || (kind == "playlist" && id.removePrefix("VL").startsWith("RD"))) null
             else YouTubeMusicParser.continuation(content)
         val seen = hashSetOf<String>()
         while (token != null && kind != "artist") {

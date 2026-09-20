@@ -80,13 +80,17 @@ class YoutubeResolver {
             val info = StreamInfo.getInfo(ServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
             val live = info.streamType in setOf(StreamType.LIVE_STREAM, StreamType.AUDIO_LIVE_STREAM)
             val audio = info.audioStreams.filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
-                .maxByOrNull { it.averageBitrate }
+                .sortedByDescending { it.averageBitrate }.distinctBy { it.content }.take(6)
+                .firstOrNull { canOpenStream(it.content) }
             val videos = (info.videoOnlyStreams + info.videoStreams)
                 .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
             fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) = stream.resolution.orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
-            val video = videos.filter { height(it) in 1..720 }.maxByOrNull(::height) ?: videos.minByOrNull(::height)
-            val muxed = info.videoStreams.filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
-                .minByOrNull(::height)
+            val candidates = videos.filter { height(it) in 1..720 }.sortedByDescending(::height)
+                .ifEmpty { videos.sortedBy(::height) }
+            val video = if (live) null else candidates.distinctBy { it.content }.take(6).firstOrNull { canOpenStream(it.content) }
+            val muxed = if (audio != null || live) null else info.videoStreams
+                .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+                .sortedBy(::height).distinctBy { it.content }.take(6).firstOrNull { canOpenStream(it.content) }
             val stream = when {
                 live && info.hlsUrl.isNotBlank() -> PlaybackStream(info.hlsUrl, "application/x-mpegURL")
                 live && info.dashMpdUrl.isNotBlank() -> PlaybackStream(info.dashMpdUrl, "application/dash+xml")
@@ -105,6 +109,19 @@ class YoutubeResolver {
                 playbackCache[videoId] = CachedPlayback(it, minOf(cache["video:$videoId"]!!.expiresAt, now + if (live) 60_000 else 600_000))
             }
         }.getOrElse { Log.w(TAG, "Stream extraction failed for $videoId: ${it.javaClass.simpleName}"); null }
+    }
+
+    private fun canOpenStream(url: String): Boolean {
+        val source = androidx.media3.datasource.DefaultHttpDataSource.Factory()
+            .setConnectTimeoutMs(8_000).setReadTimeoutMs(8_000).createDataSource()
+        return try {
+            source.open(androidx.media3.datasource.DataSpec.Builder().setUri(url).build())
+            true
+        } catch (_: java.io.IOException) {
+            false
+        } finally {
+            runCatching { source.close() }
+        }
     }
 
     fun resolveSentinel(uri: android.net.Uri): String? {

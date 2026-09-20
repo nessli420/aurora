@@ -175,4 +175,33 @@ class YouTubeMusicPlaybackDeviceTest {
             }
         }
     }
+
+    @Test fun albumVersionsKeepTheirIdentityWhenPlayingEitherRow() {
+        val albumId = "MPREb_RDzw2QqWoTF"
+        org.junit.Assume.assumeTrue(runBlocking { container.settingsStore.session.first()?.type } == com.aurora.music.data.ServerType.YOUTUBE_MUSIC)
+        val tracks = runBlocking { container.repository.detail("album", albumId)!!.tracks }
+        assertEquals(listOf("coT-TN5U1V8", "hBhxjVnLQbs"), tracks.map { it.id })
+        assertEquals(listOf("still love you (Slowed)", "still love you"), tracks.map { it.title })
+        helper.withProcessingFixture(0) { controller, _ ->
+            val vm = helper.main {
+                val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).first() as androidx.activity.ComponentActivity
+                androidx.lifecycle.ViewModelProvider(activity)[com.aurora.music.viewmodel.PlayerViewModel::class.java]
+            }
+            helper.await("app player connected", controller) { helper.main { vm.videoPlayer != null } }
+            for (index in tracks.indices) {
+                helper.main { vm.playCollection("album", albumId, tracks, index, tracks.size) }
+                helper.await("selected album version $index plays", controller) {
+                    helper.main { controller.isPlaying && controller.currentMediaItemIndex == index &&
+                        controller.currentMediaItem?.mediaId == tracks[index].id &&
+                        vm.state.value.current.id == tracks[index].id && vm.state.value.current.title == tracks[index].title }
+                }
+                helper.main {
+                    assertEquals(2, controller.mediaItemCount)
+                    assertEquals(1, tracks.count { it.id == vm.state.value.current.id })
+                    assertTrue("Decoded recording duration should match this version", kotlin.math.abs(controller.duration / 1000 - tracks[index].durationSec) <= 2)
+                    controller.pause()
+                }
+            }
+        }
+    }
 }

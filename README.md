@@ -2,7 +2,7 @@
 
 # Aurora Music Player
 
-An Android music player for your local files, home music server, and Green Music App library. Keep your music together, listen offline, and adjust the sound to suit your headphones or speakers.
+An Android music player for your local files, home music server, YouTube Music, and Green Music App library. Browse your collection and recommendations, watch music videos or listen to audio, and adjust the sound to suit your headphones or speakers.
 
 **[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
 
@@ -50,8 +50,20 @@ Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively develop
 | **Navidrome / Subsonic / OpenSubsonic** | Your server address, username, and password. |
 | **Jellyfin** | Your server address, username, and password. |
 | **Green Music App** | Your own app client ID. Aurora reads your library and plays matching audio from YouTube. |
+| **YouTube Music** | Sign in with your Google account inside Aurora. No Google Cloud project or API key needed. |
 
-Save several accounts and switch between them in **Settings → Servers & accounts**. To show multiple sources together, open **Settings → Library & sources** and enable **Merge all sources**.
+Save several accounts and switch between them in **Settings → Servers & accounts**. To combine local files, Navidrome/Subsonic and Jellyfin, open **Settings → Library & sources** and enable **Merge all sources**. YouTube Music and Green Music App each run as a standalone source and do not join the merged library.
+
+### YouTube Music
+
+Connect your Google account to browse your YouTube Music library and personalized home feed. Home includes the mixes, recommended songs, albums and community playlists returned for your account, with more sections loading as you scroll.
+
+- Play songs, albums, singles and EPs, playlists, and live broadcasts.
+- Choose **Audio** or **Video** in the expanded player when a video track is available. Switching keeps your playback position; audio continues when the video screen closes.
+- Live broadcasts show **LIVE**. Regular tracks and music videos show their duration and seek controls once loaded.
+- Custom DSP, EQ and convolution remain available through Aurora's native audio player. Direct and bit-perfect output still bypass processing.
+
+YouTube streams are lossy, and some uploaded, age-restricted, regional or account-restricted content may be unavailable. YouTube listening-history updates and server ReplayGain metadata are not supplied. The integration is unofficial and its availability can change. See the [YouTube Music guide](docs/youtube-music.md) for sign-in, account storage and playback details.
 
 ## Features
 
@@ -144,6 +156,7 @@ Local files and server playback do not need any of these. Connect only the servi
 | Service | Setup |
 | --- | --- |
 | **Green Music App** | Create an app in the [developer dashboard](https://developer.spotify.com/dashboard), set its redirect to `aurora://spotify`, and enter its client ID on Aurora's sign-in screen. |
+| **YouTube Music** | Choose **Settings → Servers & accounts → Add another account → YouTube Music**, then sign in with Google. Complete any verification and tap **Connect this account**. No developer setup required. |
 | **Last.fm** | Enter your [API key and shared secret](https://www.last.fm/api/account/create) in **Settings → Integrations**, then link your account. |
 | **ListenBrainz** | Copy your [user token](https://listenbrainz.org/profile) into **Settings → Integrations**. |
 | **AcoustID** | Add an [application API key](https://acoustid.org/new-application) in **Settings → Integrations** to identify tracks from their audio. |
@@ -153,6 +166,7 @@ Local files and server playback do not need any of these. Connect only the servi
 
 - **Local music is missing:** allow music and audio access in Android's app permissions.
 - **A server will not connect:** check its address and port, and whether your phone can reach it. A server on your home network may need a VPN when you are away.
+- **Google verification stays open:** after completing it, tap **Continue to YouTube Music**, then **Connect this account**. If a saved session expires, reconnect in **Servers & accounts**.
 - **Artist names are split incorrectly:** adjust **Settings → Library & sources → Artist separators**. File tags stay unchanged.
 - **USB playback stops:** check the DAC connection and USB permission, then restart Aurora. The default behavior is to pause when USB output is unavailable.
 - **An update will not install:** debug and release builds use different signing keys. Back up your data before uninstalling to switch between them.
@@ -220,7 +234,7 @@ Aurora is licensed under [Apache 2.0](LICENSE). Third-party code and assets keep
 - [decent-player](https://github.com/Ma145/decent-player) provides the USB audio libraries. See [third-party notices](decent/NOTICE.md).
 - [libFLAC](https://github.com/xiph/flac), [Chromaprint](https://github.com/acoustid/chromaprint) with KissFFT, [Jellyfin's FFmpeg decoder](https://github.com/jellyfin/jellyfin-androidx-media), and [JAudiotagger](https://github.com/Adonai/jaudiotagger) provide audio decoding, identification, and tag support.
 - DST decoding derives from Peter Ross's FFmpeg decoder through DSD-Nexus. See the [decoder notice and license](app/src/main/cpp/dst/NOTICE.md).
-- [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) resolves YouTube audio. [JSch](https://github.com/mwiede/jsch) provides SFTP support in the bundled USB libraries.
+- [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) resolves YouTube audio, video and live streams. [JSch](https://github.com/mwiede/jsch) provides SFTP support in the bundled USB libraries.
 - [MusicBrainz](https://musicbrainz.org) and the [Cover Art Archive](https://coverartarchive.org) provide music information and artwork.
 - Vocal separation uses Ultimate Vocal Remover's model and ONNX Runtime. See [model credits and attribution](docs/vocal-separation-attribution.md).
 - Built with Jetpack Compose and Media3, alongside Glance, DataStore, Palette, Retrofit, OkHttp, Gson, Coil, Lottie, and the Google Cast SDK.

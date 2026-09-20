@@ -51,6 +51,43 @@ class YouTubeMusicBackendTest {
         try { backend.collectionTracks("playlist", "PLtest"); fail("Partial collection was accepted") } catch (_: IOException) { }
     }
 
+    @Test fun albumUsesAudioPlaylistIdsAndPreservesSameNamedVersionsInOrder() = runBlocking {
+        val requests = mutableListOf<String>()
+        val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { _, body ->
+            val id = body.string("browseId")
+            requests += id
+            when (id) {
+                "MPREversions" -> parsed("""{"header":{"musicResponsiveHeaderRenderer":{"title":{"simpleText":"Single"}}},"microformat":{"microformatDataRenderer":{"urlCanonical":"https://music.youtube.com/playlist?list=OLAK5uy_versions"}},"musicShelfRenderer":{"contents":[${track("sharedvideo")},${track("sharedvideo")}]}}""")
+                "VLOLAK5uy_versions" -> parsed("""{"musicPlaylistShelfRenderer":{"contents":[${track("slowedaudio")}],"continuations":[{"nextContinuationData":{"continuation":"audio-page-2"}}]}}""")
+                else -> {
+                    assertEquals("audio-page-2", body.string("continuation"))
+                    parsed("""{"continuationContents":{"musicPlaylistShelfContinuation":{"contents":[${track("normalaudio")}]}}}""")
+                }
+            }
+        })
+        val album = backend.detail("album", "MPREversions")!!
+        assertEquals(listOf("slowedaudio", "normalaudio"), album.tracks.map { it.id })
+        assertEquals(listOf("Track", "Track"), album.tracks.map { it.title })
+        assertEquals(listOf("aurora-yt://video/slowedaudio", "aurora-yt://video/normalaudio"), album.tracks.map { it.streamUrl })
+        assertTrue(album.tracks.all { it.album == "Single" && it.albumId == "MPREversions" })
+        assertEquals(2, album.info.songCount)
+        assertEquals(listOf("MPREversions", "VLOLAK5uy_versions", ""), requests)
+    }
+
+    @Test fun albumPlaylistCanBeReadFromRowEndpointWithoutUsingItsSubstitutedVideo() {
+        val root = parsed("""{"musicShelfRenderer":{"contents":[{"musicResponsiveListItemRenderer":{"navigationEndpoint":{"watchEndpoint":{"videoId":"sharedvideo","playlistId":"OLAK5uy_versions"}}}}]}}""")
+        assertEquals("OLAK5uy_versions", YouTubeMusicParser.albumPlaylistId(root))
+        assertNull(YouTubeMusicParser.albumPlaylistId(parsed("""{"watchEndpoint":{"playlistId":"RDAMVMsharedvideo"}}""")))
+    }
+
+    @Test fun failedAlbumAudioPlaylistDoesNotSilentlyPlaySubstitutedVersions() = runBlocking {
+        val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { _, body ->
+            if (body.string("browseId").startsWith("VL")) throw IOException("Network failed")
+            parsed("""{"microformat":{"microformatDataRenderer":{"urlCanonical":"https://music.youtube.com/playlist?list=OLAK5uy_versions"}},"musicShelfRenderer":{"contents":[${track("sharedvideo")}]}}""")
+        })
+        try { backend.detail("album", "MPREversions"); fail("Substituted track was accepted") } catch (_: IOException) { }
+    }
+
     @Test fun generatedMixUsesCurrentQueueWithoutFollowingRegeneratingPages() = runBlocking {
         var calls = 0
         val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { _, body ->
