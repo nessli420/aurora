@@ -265,7 +265,7 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier) 
         Spacer(Modifier.height(10.dp))
         Text(album.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(
-            "${album.artist} • ${album.year}",
+            listOf(album.artist, album.year.takeIf { it > 0 }?.toString().orEmpty()).filter { it.isNotBlank() }.joinToString(" • "),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             maxLines = 1,

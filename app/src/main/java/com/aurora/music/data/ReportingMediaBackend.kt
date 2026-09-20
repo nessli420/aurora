@@ -8,11 +8,12 @@ class ReportingMediaBackend(private val source: MediaBackend, private val onErro
     private suspend fun <T> attempt(fallback: T, block: suspend () -> T): T = try { block() }
         catch (e: CancellationException) { throw e }
         catch (e: Exception) {
-            onError("${source.session.typeLabel} could not complete the request. Check your connection or reconnect the account in Settings → Accounts.")
+            onError(if (e is MediaAccountExpiredException) "${source.session.typeLabel} needs you to reconnect in Settings → Accounts."
+                else "${source.session.typeLabel} could not complete this request. Please try again.")
             fallback
         }
     override suspend fun ping() = attempt(false) { source.ping() }
-    override suspend fun home() = attempt(HomeData()) { source.home() }
+    override suspend fun home() = source.home()
     override suspend fun allAlbums() = attempt(emptyList()) { source.allAlbums() }
     override suspend fun allArtists() = attempt(emptyList()) { source.allArtists() }
     override suspend fun allPlaylists() = attempt(emptyList()) { source.allPlaylists() }
@@ -36,3 +37,5 @@ class ReportingMediaBackend(private val source: MediaBackend, private val onErro
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>) = attempt(false) { source.addToPlaylist(playlistId, trackIds) }
     // Complete collection requests deliberately propagate failure rather than playing a partial list.
 }
+
+class MediaAccountExpiredException : java.io.IOException("Reconnect your music account in Settings → Accounts.")

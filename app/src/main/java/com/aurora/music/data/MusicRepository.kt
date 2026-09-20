@@ -18,7 +18,25 @@ data class HomeData(
     val playlists: List<Playlist> = emptyList(),
     val artists: List<Artist> = emptyList(),
     val starred: List<Song> = emptyList(),
+    val sections: List<HomeFeedSection> = emptyList(),
+    val continuation: String? = null,
 )
+
+data class HomeFeedSection(val id: String, val title: String, val subtitle: String = "", val items: List<HomeFeedItem>)
+
+sealed interface HomeFeedItem {
+    data class Track(val song: Song) : HomeFeedItem
+    data class Record(val album: Album) : HomeFeedItem
+    data class Collection(val playlist: Playlist) : HomeFeedItem
+    data class Performer(val artist: Artist) : HomeFeedItem
+
+    val key: String get() = when (this) {
+        is Track -> "song:${song.id}"
+        is Record -> "album:${album.id}"
+        is Collection -> "playlist:${playlist.id}"
+        is Performer -> "artist:${artist.id}"
+    }
+}
 
 data class SearchResults(
     val songs: List<Song> = emptyList(),
@@ -163,8 +181,21 @@ class MusicRepository(
             return HomeData(newReleases = albums, recentlyPlayed = albums, starred = downloadedSongs())
         }
         val source = backend ?: return HomeData()
-        return source.home().let { it.copy(starred = it.starred.map { song -> tag(song, source) }) }
+        return tagHome(source.home(), source)
     }
+
+    suspend fun homePage(continuation: String): HomeData {
+        if (offline) return HomeData()
+        val source = backend ?: return HomeData()
+        return tagHome(source.homePage(continuation), source)
+    }
+
+    private fun tagHome(data: HomeData, source: MediaBackend) = data.copy(
+        starred = data.starred.map { tag(it, source) },
+        sections = data.sections.map { section -> section.copy(items = section.items.map {
+            if (it is HomeFeedItem.Track) HomeFeedItem.Track(tag(it.song, source)) else it
+        }) },
+    )
 
     suspend fun allAlbums(): List<Album> =
         if (offline) downloadedAlbums() else backend?.allAlbums().orEmpty()

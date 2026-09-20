@@ -27,6 +27,7 @@ interface MediaBackend {
     suspend fun ping(): Boolean
 
     suspend fun home(): HomeData
+    suspend fun homePage(continuation: String): HomeData = HomeData()
     suspend fun allAlbums(): List<Album>
     suspend fun allArtists(): List<Artist>
     suspend fun allPlaylists(): List<Playlist>

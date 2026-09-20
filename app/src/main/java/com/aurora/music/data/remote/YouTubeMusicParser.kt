@@ -1,6 +1,9 @@
 package com.aurora.music.data.remote
 
 import com.aurora.music.data.SearchResults
+import com.aurora.music.data.HomeData
+import com.aurora.music.data.HomeFeedItem
+import com.aurora.music.data.HomeFeedSection
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
@@ -11,6 +14,36 @@ import com.google.gson.JsonObject
 
 /** Only content renderers become items; menu endpoints are never interpreted as tracks. */
 object YouTubeMusicParser {
+    fun home(root: JsonObject): HomeData {
+        val sections = mutableListOf<HomeFeedSection>()
+        fun visit(node: JsonElement) {
+            if (node.isJsonArray) { node.asJsonArray.forEach(::visit); return }
+            if (!node.isJsonObject) return
+            node.asJsonObject.entrySet().forEach { (key, value) ->
+                if (key in setOf("musicCarouselShelfRenderer", "musicImmersiveCarouselShelfRenderer", "musicShelfRenderer", "musicGridRenderer") && value.isJsonObject) {
+                    val shelf = value.asJsonObject
+                    val header = shelf.obj("header").entrySet().firstOrNull { it.value.isJsonObject }?.value?.asJsonObject ?: JsonObject()
+                    val title = header.obj("title").label().ifBlank { shelf.obj("title").label() }
+                    val contents = shelf.array("contents").takeIf { it.size() > 0 } ?: shelf.array("items")
+                    val items = contents.flatMap { child ->
+                        val parsed = results(child)
+                        parsed.songs.map { HomeFeedItem.Track(it) } + parsed.albums.map { HomeFeedItem.Record(it) } +
+                            parsed.playlists.map { HomeFeedItem.Collection(it) } + parsed.artists.map { HomeFeedItem.Performer(it) }
+                    }.distinctBy { it.key }
+                    if (title.isNotBlank() && items.isNotEmpty()) sections += HomeFeedSection(
+                        "${shelf.string("shelfId")}:$title", title, header.obj("strapline").label(), items)
+                } else if (key !in setOf("menu", "header", "overlay", "buttons", "trackingParams")) visit(value)
+            }
+        }
+        visit(root)
+        // A carousel can have its own continuation; only follow the page's section list.
+        val list = root.objects("sectionListRenderer").firstOrNull()
+            ?: root.obj("continuationContents").obj("sectionListContinuation")
+        val token = list.array("continuations").firstOrNull()?.let { continuation(it) }
+            ?: list.array("contents").lastOrNull()?.takeIf { it.isJsonObject && it.asJsonObject.has("continuationItemRenderer") }?.let { continuation(it) }
+        return HomeData(sections = sections.distinctBy { it.id }, continuation = token)
+    }
+
     fun results(root: JsonElement): SearchResults {
         val songs = mutableListOf<Song>()
         val albums = mutableListOf<Album>()
@@ -24,7 +57,9 @@ object YouTubeMusicParser {
                     val item = value.asJsonObject
                     val title = item.obj("title").label().ifBlank { item.obj("headline").label() }
                         .ifBlank { columns(item).firstOrNull()?.label().orEmpty() }
-                    val endpoint = item.obj("navigationEndpoint").takeIf { it.size() > 0 } ?: item.obj("onTap")
+                    val endpoint = item.obj("navigationEndpoint").takeIf { it.size() > 0 }
+                        ?: item.obj("onTap").takeIf { it.size() > 0 }
+                        ?: item.obj("title").objects("navigationEndpoint").firstOrNull() ?: JsonObject()
                     val videoId = item.string("videoId").ifBlank { item.obj("playlistItemData").string("videoId") }
                         .ifBlank { endpoint.obj("watchEndpoint").string("videoId") }
                         .ifBlank { item.obj("onTap").obj("watchEndpoint").string("videoId") }
@@ -36,7 +71,7 @@ object YouTubeMusicParser {
                     val browse = endpoint.obj("browseEndpoint")
                     val browseId = browse.string("browseId").ifBlank {
                         columns(item).firstOrNull()?.objects("browseEndpoint")?.firstOrNull()?.string("browseId").orEmpty()
-                    }
+                    }.ifBlank { endpoint.obj("watchPlaylistEndpoint").string("playlistId").let { if (it.isBlank()) "" else "VL$it" } }
                     val art = artwork(item)
                     val metadata = columns(item).drop(1) + listOf(item.obj("subtitle"), item.obj("longBylineText"))
                     val runs = metadata.flatMap { it.array("runs").toList() }.filter { it.isJsonObject }.map { it.asJsonObject }
@@ -44,7 +79,10 @@ object YouTubeMusicParser {
                     val albumRun = runs.firstOrNull { it.obj("navigationEndpoint").obj("browseEndpoint").string("browseId").startsWith("MPRE") }
                     val subtitle = metadata.map { it.label() }.filter { it.isNotBlank() }.joinToString(" · ")
                     val artist = artistRuns.joinToString(", ") { it.string("text") }.ifBlank {
-                        item.obj("longBylineText").label().ifBlank { metadata.firstOrNull()?.label().orEmpty().substringBefore(" • ") }
+                        item.obj("longBylineText").label().ifBlank {
+                            val labels = metadata.firstOrNull()?.label().orEmpty().split(" • ")
+                            labels.dropWhile { it in setOf("Song", "Video", "Album", "Single", "EP") }.firstOrNull().orEmpty()
+                        }
                     }
                     if (title.isBlank()) return@forEach
                     when {

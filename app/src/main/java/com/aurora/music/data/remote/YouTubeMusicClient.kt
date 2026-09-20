@@ -70,7 +70,8 @@ class YouTubeMusicClient(
             .header("X-YouTube-Client-Name", "67").header("X-YouTube-Client-Version", version)
             .post(payload.toString().toRequestBody("application/json".toMediaType())).build()
         http.newCall(request).execute().use { response ->
-            if (response.code == 401 || response.code == 403) throw IOException("Reconnect your YouTube Music account in Settings → Accounts.")
+            if (response.code == 401) throw com.aurora.music.data.MediaAccountExpiredException()
+            if (response.code == 403) throw IOException("YouTube Music did not allow this request. Please try again.")
             if (!response.isSuccessful) throw IOException("YouTube Music request failed (${response.code}). Try again later.")
             val result = runCatching { JsonParser.parseString(response.body?.string()).asJsonObject }
                 .getOrElse { throw IOException("YouTube Music returned an unreadable response.") }

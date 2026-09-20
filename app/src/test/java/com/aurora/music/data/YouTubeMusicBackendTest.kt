@@ -51,6 +51,17 @@ class YouTubeMusicBackendTest {
         try { backend.collectionTracks("playlist", "PLtest"); fail("Partial collection was accepted") } catch (_: IOException) { }
     }
 
+    @Test fun generatedMixUsesCurrentQueueWithoutFollowingRegeneratingPages() = runBlocking {
+        var calls = 0
+        val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { _, body ->
+            calls++
+            assertFalse(body.has("continuation"))
+            parsed("""{"musicPlaylistShelfRenderer":{"contents":[${track()},${track("zyxwvutsrqp")}],"continuations":[{"nextContinuationData":{"continuation":"regenerating-mix"}}]}}""")
+        })
+        assertEquals(2, backend.collectionTracks("playlist", "RDTMfixture").size)
+        assertEquals(1, calls)
+    }
+
     @Test fun nextResponseUsesExactTrackAndNeverSearchesForASubstitute() = runBlocking {
         val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { endpoint, body ->
             assertEquals("next", endpoint)
@@ -78,8 +89,8 @@ class YouTubeMusicBackendTest {
 
     @Test fun expiredAccountReportsFailureWithoutCrashingScreenOrPretendingToSave() = runBlocking {
         val errors = mutableListOf<String>()
-        val backend = ReportingMediaBackend(YouTubeMusicBackend(session, YouTubeMusicTransport { _, _ -> throw IOException("Expired") }), errors::add)
-        assertEquals(HomeData(), backend.home())
+        val backend = ReportingMediaBackend(YouTubeMusicBackend(session, YouTubeMusicTransport { _, _ -> throw MediaAccountExpiredException() }), errors::add)
+        assertEquals(emptyList<com.aurora.music.model.Album>(), backend.allAlbums())
         assertFalse(backend.setStarred("abcdefghijk", true, "song"))
         assertEquals(2, errors.size)
         assertTrue(errors.all { it.contains("reconnect") })

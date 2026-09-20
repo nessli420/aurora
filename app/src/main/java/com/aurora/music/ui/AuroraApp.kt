@@ -404,6 +404,8 @@ fun AuroraApp() {
                             onOpenDetail = { kind, id -> openDetail(kind, id) },
                             onPlayAlbum = { playAlbum(it) },
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
+                            onLoadMore = homeVM::loadMore,
+                            onRetry = { homeVM.load() },
                         )
                     }
                     composable(Routes.SEARCH) {

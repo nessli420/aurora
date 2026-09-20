@@ -367,7 +367,7 @@ class AppContainer(context: Context) {
         }
         scope.launch {
             var first = true
-            settingsStore.unifiedLibrary.collect {
+            settingsStore.unifiedLibrary.distinctUntilChanged().collect {
                 unifiedLibraryValue = it; rebuildBackend()
                 if (!first) _libraryReload.value++
                 first = false
@@ -375,7 +375,7 @@ class AppContainer(context: Context) {
         }
         scope.launch {
             var first = true
-            settingsStore.mergeSources.collect {
+            settingsStore.mergeSources.distinctUntilChanged().collect {
                 mergeSourceKeys = it; rebuildBackend()
                 if (!first) _libraryReload.value++
                 first = false
@@ -427,7 +427,7 @@ class AppContainer(context: Context) {
             settingsStore.alarmPrefs.distinctUntilChanged().collect { com.aurora.music.playback.AlarmScheduler.apply(appContext, it) }
         }
         scope.launch {
-            settingsStore.spotifyClientId.collect { id ->
+            settingsStore.spotifyClientId.distinctUntilChanged().collect { id ->
                 spotifyClientIdValue = id
                 // rebuild an active spotify backend so token refresh uses the up-to-date client id
                 backend?.session?.let { if (it.type == ServerType.SPOTIFY) backend = buildBackend(it) }

@@ -46,10 +46,12 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
     }
 
     override suspend fun home(): HomeData = coroutineScope {
-        val playlists = async { allPlaylists() }
-        val liked = async { starredSongs() }
-        val result = remember(YouTubeMusicParser.results(browse("FEmusic_home")))
-        HomeData(random = result.albums, playlists = playlists.await(), artists = result.artists, starred = liked.await().take(30))
+        homeData(browse("FEmusic_home"))
+    }
+    override suspend fun homePage(continuation: String): HomeData = homeData(api.request("browse", json("continuation" to continuation)))
+    private fun homeData(response: JsonObject): HomeData {
+        remember(YouTubeMusicParser.results(response))
+        return YouTubeMusicParser.home(response)
     }
     override suspend fun allAlbums() = pages("FEmusic_liked_albums").albums
     override suspend fun allArtists() = pages("FEmusic_library_corpus_track_artists").artists
@@ -93,7 +95,9 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
         val content = if (kind == "playlist" || kind == "album") YouTubeMusicParser.trackShelf(response) else response
         val initial = remember(YouTubeMusicParser.results(content))
         val tracks = initial.songs.toMutableList()
-        var token = YouTubeMusicParser.continuation(content)
+        // Generated mixes are changing radio queues, not finite saved playlists.
+        var token = if (kind == "playlist" && id.removePrefix("VL").startsWith("RD")) null
+            else YouTubeMusicParser.continuation(content)
         val seen = hashSetOf<String>()
         while (token != null && kind != "artist") {
             if (!seen.add(token) || seen.size > 500) throw IOException("YouTube Music returned an incomplete tracklist. Please retry.")
