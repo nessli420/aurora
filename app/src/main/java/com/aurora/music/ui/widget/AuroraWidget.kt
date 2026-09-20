@@ -88,7 +88,7 @@ private fun WidgetContent(np: NowPlaying, art: Bitmap?) {
                 Image(provider = ImageProvider(art), contentDescription = null, modifier = GlanceModifier.size(56.dp).cornerRadius(12.dp))
             } else {
                 Image(
-                    provider = ImageProvider(R.drawable.ic_launcher_monochrome),
+                    provider = ImageProvider(R.drawable.ic_aurora_logo),
                     contentDescription = null,
                     colorFilter = androidx.glance.ColorFilter.tint(ColorProvider(Color(0xFFFF2E7E))),
                     modifier = GlanceModifier.size(34.dp),

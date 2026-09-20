@@ -60,6 +60,10 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
+import com.aurora.music.playback.network.*
+import com.aurora.music.playback.network.audio.ProcessedNetworkRenderer
+import com.aurora.music.playback.network.endpoint.EndpointRoute
 
 @UnstableApi
 class PlaybackService : MediaLibraryService() {
@@ -72,6 +76,15 @@ class PlaybackService : MediaLibraryService() {
     private lateinit var player: ExoPlayer
     private var fadePlayer: ExoPlayer? = null
     private var castPlayer: androidx.media3.cast.CastPlayer? = null
+    private var networkPlayer: NetworkQueuePlayer? = null
+    private var networkBridge: NetworkPlaybackBridge? = null
+    private var networkServer: ScopedMediaServer? = null
+    private lateinit var networkDataSource: androidx.media3.datasource.DataSource.Factory
+    private var receiverForeground = false
+    private var networkSwitchJob: kotlinx.coroutines.Job? = null
+    private var networkOriginalStream = false
+    private var handoffPlayWhenReady: Boolean? = null
+    @Volatile private var networkDisposed = false
     private var mixPlayer: com.aurora.music.mix.MixPlayer? = null
     @Volatile private var lastIrPath: String = ""
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -170,6 +183,9 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onCreate() {
         super.onCreate()
+        val networkFiles = Regex("[0-9a-f-]{36}\\.(source|partial|wav|mp3|flac|ogg|m4a|aac)")
+        java.io.File(cacheDir, "network-audio").listFiles()?.filter { it.isFile && networkFiles.matches(it.name) }
+            ?.forEach { it.delete() }
 
         val initialPrefs = runBlocking { container.settingsStore.playbackPrefs.first() }
         val highRes = initialPrefs.preferHighRes
@@ -258,6 +274,7 @@ class PlaybackService : MediaLibraryService() {
         val dataSourceFactory = androidx.media3.datasource.ResolvingDataSource.Factory(
             androidx.media3.datasource.DefaultDataSource.Factory(this), ytResolver,
         )
+        networkDataSource = dataSourceFactory
         val mediaSourceFactory = androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory())
 
         musicSourceFactory = mediaSourceFactory
@@ -297,6 +314,8 @@ class PlaybackService : MediaLibraryService() {
             .build()
 
         setupCast()
+        networkBridge = NetworkPlaybackBridge(this, player, container.networkOutput,
+            ::selectNetworkOutput, ::rendererRoute, ::setReceiverForeground)
 
         startAudioObservers(audioAttributes)
         (getSystemService(AUDIO_SERVICE) as android.media.AudioManager)
@@ -625,7 +644,8 @@ class PlaybackService : MediaLibraryService() {
         val context = PresetContextPublisher.build(item,
             active = item != null && active.playbackState != Player.STATE_IDLE && active.playbackState != Player.STATE_ENDED,
             observedSourceFormat = if (active === player) sinkEvidence[player]?.sources?.get(item?.mediaId) else null,
-            androidAuto = androidAutoControllers.isNotEmpty(), cast = castPlayer != null && active === castPlayer)
+            androidAuto = androidAutoControllers.isNotEmpty(),
+            cast = active === networkPlayer || castPlayer != null && active === castPlayer)
         container.settingsStore.presetRuleContext.publish(context)
     }
 
@@ -647,6 +667,29 @@ class PlaybackService : MediaLibraryService() {
                 confirmedDevice = route.category))
             container.signalPath.value = if (path.active) path.copy(processing = com.aurora.music.data.SignalStage("Processing",
                 mixPlayer!!.processingDescription, "Active deck processing state; summed output and downstream hardware are not measured")) else path
+            return
+        }
+        if (networkPlayer != null && active === networkPlayer) {
+            requestBitPerfect(null, null, false)
+            container.settingsStore.processingRoutes.publish(com.aurora.music.data.routes.ProcessingRoute(
+                com.aurora.music.data.routes.ProcessingRouteKind.CAST, label = networkPlayer!!.receiver.name,
+                detail = "Network output uses a processing snapshot per track."))
+            val remote = networkPlayer!!
+            val sending = remote.receiver.kind != "Aurora"
+            val original = networkOriginalStream
+            container.signalPath.value = SignalPath(active = active.currentMediaItem != null,
+                output = "${remote.receiver.kind} · ${remote.receiver.name}", preservation = if (original) com.aurora.music.data.Preservation.UNKNOWN else com.aurora.music.data.Preservation.MODIFIED,
+                note = container.networkOutput.state.value.error ?: if (!sending) "Receiver owns DSP and audio output." else if (original) "Direct Cast; Aurora DSP is bypassed." else "Processed audio; receiver output is unmeasured.",
+                reasons = listOf(if (original) "The original audio file is shared without sample processing." else "Network audio is converted to 48 kHz stereo PCM16.", "Receiver decoding, volume and hardware output are not measured by the sender."),
+                source = com.aurora.music.data.SignalStage("Source", if (original) "Private copy of the original audio file" else "Private source decoded on this device"),
+                decoder = com.aurora.music.data.SignalStage("Decoder", if (original) "${remote.receiver.kind} receiver; decoder is remote" else "Local PCM reader or FFmpeg decoder"),
+                processing = com.aurora.music.data.SignalStage("Processing", remote.processingDescription,
+                    "Track preparation snapshot; later edits apply to the next prepared track"),
+                resampling = com.aurora.music.data.SignalStage("Resampling", if (original) "Bypassed on sender" else "Bandlimited conversion to 48000 Hz when required"),
+                outputStage = com.aurora.music.data.SignalStage("Output", if (original) "Original container; receiver format unmeasured" else "WAV · 48000 Hz · 16-bit · stereo", "Scoped HTTP media stream",
+                    if (original) null else com.aurora.music.data.SignalFormat(48000, 16, 2, "PCM")),
+                device = com.aurora.music.data.SignalStage("Device", remote.receiver.name, "Remote transport status"),
+                latency = com.aurora.music.data.SignalStage("Latency", "Full-track preparation plus receiver buffering; gapless playback is not guaranteed"))
             return
         }
         if (castPlayer != null && active === castPlayer) {
@@ -1137,13 +1180,22 @@ class PlaybackService : MediaLibraryService() {
                 }
                 CMD_EXIT_MIX -> stopMix()
                 // target 1=on 0=off -1=toggle order = pre-shuffle order when caller already shuffled
-                CMD_SHUFFLE -> if (mixPlayer != null) {
+                CMD_SHUFFLE -> if (networkPlayer != null) {
+                    networkPlayer!!.shuffle(customCommand.customExtras.getInt("target", -1),
+                        customCommand.customExtras.getStringArrayList("order"))
+                } else if (mixPlayer != null) {
                     return Futures.immediateFuture(SessionResult(androidx.media3.session.SessionError.ERROR_NOT_SUPPORTED))
                 } else setShuffle(
                     customCommand.customExtras.getInt("target", -1),
                     customCommand.customExtras.getStringArrayList("order"),
                 )
-                CMD_REPEAT -> mixPlayer?.let { mix ->
+                CMD_REPEAT -> networkPlayer?.let { remote ->
+                    remote.repeatMode = when (remote.repeatMode) {
+                        Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
+                        Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
+                        else -> Player.REPEAT_MODE_OFF
+                    }
+                } ?: mixPlayer?.let { mix ->
                     mix.repeatMode = when (mix.repeatMode) {
                         Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
                         Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
@@ -1151,6 +1203,7 @@ class PlaybackService : MediaLibraryService() {
                     }
                 } ?: cycleRepeat()
                 CMD_SLEEP_FADE -> {
+                    if (networkPlayer != null) return Futures.immediateFuture(SessionResult(androidx.media3.session.SessionError.ERROR_NOT_SUPPORTED))
                     val ms = customCommand.customExtras.getInt("fadeMs", 0)
                     mixPlayer?.let { it.sleepFade(ms); return Futures.immediateFuture(SessionResult(SessionResult.RESULT_SUCCESS)) }
                     if (ms > 0) { sleepFadeMs = ms; sleepFadeStartMs = android.os.SystemClock.elapsedRealtime(); sleepFadeActive = true }
@@ -1308,13 +1361,14 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun buildCustomLayout(): List<CommandButton> {
+        val active = mediaSession?.player ?: player
         val shuffleBtn = CommandButton.Builder(
-            if (player.shuffleModeEnabled) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
+            if (active.shuffleModeEnabled) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
         )
             .setDisplayName("Shuffle")
             .setSessionCommand(SessionCommand(CMD_SHUFFLE, Bundle.EMPTY))
             .build()
-        val repeatIcon = when (player.repeatMode) {
+        val repeatIcon = when (active.repeatMode) {
             Player.REPEAT_MODE_ONE -> CommandButton.ICON_REPEAT_ONE
             Player.REPEAT_MODE_ALL -> CommandButton.ICON_REPEAT_ALL
             else -> CommandButton.ICON_REPEAT_OFF
@@ -1417,8 +1471,19 @@ class PlaybackService : MediaLibraryService() {
         }.getOrNull() ?: return
         val cp = androidx.media3.cast.CastPlayer(castContext)
         cp.setSessionAvailabilityListener(object : androidx.media3.cast.SessionAvailabilityListener {
-            override fun onCastSessionAvailable() = switchToPlayer(toCast = true)
-            override fun onCastSessionUnavailable() = switchToPlayer(toCast = false)
+            override fun onCastSessionAvailable() {
+                if (container.networkOutput.state.value.receiverEnabled) {
+                    container.networkOutput.update { it.copy(error = "Turn off receiver mode before casting.") }
+                    return
+                }
+                selectNetworkOutput(NetworkTarget.Cast)
+            }
+            override fun onCastSessionUnavailable() {
+                if (networkPlayer?.receiver?.kind == "Cast") {
+                    selectNetworkOutput(null)
+                    container.networkOutput.update { it.copy(error = "Cast disconnected. Playback is paused.") }
+                }
+            }
         })
         castPlayer = cp
         cp.addListener(object : Player.Listener {
@@ -1428,39 +1493,179 @@ class PlaybackService : MediaLibraryService() {
         })
     }
 
-    // casting hands the receiver a plain url so the dsp chain doesnt travel
-    private fun switchToPlayer(toCast: Boolean) {
-        if (mixPlayer != null) stopMix()
-        if (xfadeActive) endXfade() else clearPrepared()
-        val cp = castPlayer ?: return
-        val from = mediaSession?.player ?: return
-        val to: Player = if (toCast) cp else player
-        if (from === to) return
-        val items = (0 until from.mediaItemCount).map { from.getMediaItemAt(it) }
-            .map { if (toCast) it.buildUpon().setMimeType(guessMime(it)).build() else it }
-        val idx = from.currentMediaItemIndex.coerceAtLeast(0)
-        val pos = from.currentPosition
-        val play = from.playWhenReady
-        from.pause()
-        if (items.isNotEmpty()) {
-            to.setMediaItems(items, idx, pos)
-            to.playWhenReady = play
-            to.prepare()
+    private fun selectNetworkOutput(target: NetworkTarget?) {
+        networkSwitchJob?.cancel()
+        val remote = networkPlayer
+        if (remote == null) { completeNetworkOutputSwitch(target); return }
+        val resume = handoffPlayWhenReady ?: remote.playWhenReady
+        handoffPlayWhenReady = resume
+        networkSwitchJob = scope.launch {
+            remote.shutdown()
+            if (isActive) {
+                completeNetworkOutputSwitch(target, resume && remote.stopConfirmed)
+                handoffPlayWhenReady = null
+                if (!remote.stopConfirmed) container.networkOutput.update { it.copy(error = "The previous receiver did not confirm stop. Playback is paused.") }
+            }
         }
-        mediaSession?.player = to
-        updateSignalPath()
-        publishNowPlaying()
     }
 
-    private fun guessMime(item: MediaItem): String {
-        val uri = item.localConfiguration?.uri?.toString().orEmpty().lowercase()
-        return when {
-            uri.contains(".flac") -> androidx.media3.common.MimeTypes.AUDIO_FLAC
-            uri.contains(".m4a") || uri.contains(".aac") || uri.contains(".mp4") -> androidx.media3.common.MimeTypes.AUDIO_AAC
-            uri.contains(".ogg") || uri.contains(".opus") -> androidx.media3.common.MimeTypes.AUDIO_OGG
-            uri.contains(".wav") -> androidx.media3.common.MimeTypes.AUDIO_WAV
-            else -> androidx.media3.common.MimeTypes.AUDIO_MPEG
+    private fun completeNetworkOutputSwitch(target: NetworkTarget?, requestedPlay: Boolean? = null) {
+        if (target != null && container.networkOutput.state.value.receiverEnabled) {
+            container.networkOutput.update { it.copy(error = "Turn off receiver mode before sending audio.") }
+            return
         }
+        if (mixPlayer != null) stopMix()
+        if (xfadeActive) endXfade() else clearPrepared()
+        val from = mediaSession?.player ?: return
+        val items = (0 until from.mediaItemCount).map { from.getMediaItemAt(it) }
+        val index = from.currentMediaItemIndex.coerceAtLeast(0)
+        val position = from.currentPosition.coerceAtLeast(0)
+        val wanted = requestedPlay ?: from.playWhenReady
+        val old = networkPlayer
+        val repeat = from.repeatMode
+        val shuffleOrder = if (old != null) old.shuffleRestoreIds else originalOrder
+        from.pause()
+        if (target == null) {
+            networkPlayer = null
+            mediaSession?.player = player
+            originalOrder = shuffleOrder
+            player.repeatMode = repeat
+            if (items.isNotEmpty()) { player.setMediaItems(items, index.coerceAtMost(items.lastIndex), position); player.prepare() }
+            else player.clearMediaItems()
+            player.playWhenReady = false
+            container.networkOutput.update { it.copy(receiverName = null, receiverKind = null, preparing = false, detail = "", error = null) }
+            old?.release()
+            updateSignalPath(); publishNowPlaying()
+            return
+        }
+        val receiver = when (target) {
+            is NetworkTarget.Dlna -> DlnaNetworkReceiver(target.renderer)
+            is NetworkTarget.Aurora -> AuroraNetworkReceiver(target.renderer)
+            NetworkTarget.Cast -> {
+                val cp = castPlayer ?: return
+                val castSession = runCatching { com.google.android.gms.cast.framework.CastContext.getSharedInstance(this)
+                    .sessionManager.currentCastSession }.getOrNull()
+                val host = castSession?.castDevice?.inetAddress?.hostAddress
+                if (host.isNullOrBlank()) {
+                    container.networkOutput.update { it.copy(error = "The Cast receiver address is unavailable.") }; return
+                }
+                CastNetworkReceiver(cp, host, castSession)
+            }
+        }
+        player.stop()
+        val processed = target != NetworkTarget.Cast || container.networkOutput.state.value.processedCast
+        networkOriginalStream = !processed || receiver.kind == "Aurora"
+        val remote = NetworkQueuePlayer(receiver, render = { item -> prepareNetworkMedia(item, receiver, processed) }) { preparing, detail, error ->
+            if (networkPlayer?.receiver === receiver) container.networkOutput.update {
+                it.copy(preparing = preparing, detail = detail, error = error)
+            }
+        }
+        networkPlayer = remote
+        mediaSession?.player = remote
+        container.networkOutput.update { it.copy(receiverName = receiver.name, receiverKind = receiver.kind, error = null) }
+        remote.addListener(object : Player.Listener {
+            override fun onEvents(player: Player, events: Player.Events) {
+                if (networkPlayer === remote) {
+                    originalOrder = remote.shuffleRestoreIds
+                    if (events.contains(Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED) ||
+                        events.contains(Player.EVENT_REPEAT_MODE_CHANGED)) updateCustomLayout()
+                    updateSignalPath(); publishNowPlaying()
+                }
+            }
+        })
+        old?.release()
+        if (items.isNotEmpty()) { remote.setMediaItems(items, index.coerceAtMost(items.lastIndex), position); remote.playWhenReady = wanted; remote.prepare() }
+        remote.repeatMode = repeat
+        remote.adoptShuffle(shuffleOrder)
+        updateCustomLayout()
+        updateSignalPath(); publishNowPlaying()
+    }
+
+    private suspend fun prepareNetworkMedia(item: MediaItem, receiver: NetworkReceiver, processed: Boolean): NetworkMedia {
+        if (!processed || receiver.kind == "Aurora") {
+            val direct = try { com.aurora.music.playback.network.audio.DirectNetworkPreparer.prepare(this, item, networkDataSource) }
+            catch (e: com.aurora.music.playback.network.audio.NetworkRenderingException) { throw NetworkOutputException(e.message ?: "Audio preparation failed.") }
+            return grantNetworkMedia(receiver, direct.file, direct.mimeType, direct.durationMs,
+                if (receiver.kind == "Aurora") "Original audio file; the Aurora receiver applies its own settings" else direct.summary)
+        }
+        val settings = container.settingsStore.processingSettings.first()
+        val snapshot = com.aurora.music.data.ProcessingSnapshot(
+            settings.audio, com.aurora.music.data.ProcessingPlaybackPrefs.from(settings.playback), rack = settings.rack)
+        val ir = currentImpulse
+        val impulses = rackImpulses.toMap()
+        val extras = item.mediaMetadata.extras
+        val db = if (settings.audio.replayGain == 2) extras?.getFloat("rgAlbum", 0f) ?: 0f else extras?.getFloat("rgTrack", 0f) ?: 0f
+        val gain = if (settings.audio.replayGain == 0) 1.0 else Math.pow(10.0, db.coerceAtMost(0f) / 20.0)
+        val relativeVolume = try { receiver.status().volume?.toDouble() ?: 1.0 }
+        catch (e: kotlinx.coroutines.CancellationException) { throw e }
+        catch (_: Exception) { 1.0 }
+        val rendered = try { ProcessedNetworkRenderer.render(this, item, networkDataSource, snapshot,
+            impulses = impulses, legacyImpulse = ir, outputGain = gain, relativeVolume = relativeVolume) }
+        catch (e: com.aurora.music.playback.network.audio.NetworkRenderingException) { throw NetworkOutputException(e.message ?: "Audio preparation failed.") }
+        return grantNetworkMedia(receiver, rendered.file, rendered.mimeType, rendered.durationMs, rendered.processingSummary)
+    }
+
+    private suspend fun grantNetworkMedia(receiver: NetworkReceiver, file: java.io.File, mime: String, duration: Long, summary: String): NetworkMedia {
+        var release: (() -> Unit)? = null
+        try {
+            val negotiatedMime = receiver.contentType(mime)
+            return withContext(Dispatchers.IO) {
+                val address = java.net.InetAddress.getByName(receiver.host)
+                val localAddress = java.net.DatagramSocket().use { socket -> socket.connect(address, 9); socket.localAddress.hostAddress!! }
+                synchronized(this@PlaybackService) {
+                    check(!networkDisposed)
+                    val server = networkServer ?: ScopedMediaServer().also { it.start(); networkServer = it }
+                    val grant = server.grant(file, negotiatedMime, 4 * 60 * 60 * 1000L, allowedClient = address)
+                    val cleanup = { server.revoke(grant.token); file.delete(); Unit }
+                    release = cleanup
+                    NetworkMedia(grant.url(localAddress, server.port), negotiatedMime, duration, summary,
+                        sizeBytes = file.length(), release = cleanup)
+                }
+            }
+        } catch (e: Exception) { release?.invoke(); file.delete(); throw e }
+    }
+
+    private fun rendererRoute(): EndpointRoute {
+        val path = container.signalPath.value
+        val usb = processedUsbSink?.telemetry?.active == true || usbSink?.playbackTelemetry?.usbActive == true
+        val id = if (usb) if (usbMode == UsbOutputMode.PROCESSED) "usb-processed" else "usb-direct" else "local"
+        return EndpointRoute(id, path.output.ifBlank { "This device" }, sampleRateHz = path.outputStage.format?.rateHz ?: 0,
+            bitDepth = path.outputStage.format?.bitDepth ?: 0, processed = path.preservation == com.aurora.music.data.Preservation.MODIFIED)
+    }
+
+    private fun setReceiverForeground(enabled: Boolean) {
+        receiverForeground = enabled
+        val notificationManager = getSystemService(NotificationManager::class.java)
+        if (!enabled) {
+            notificationManager.cancel(NETWORK_NOTIFICATION_ID)
+            if (!(mediaSession?.player?.isPlaying ?: false)) stopForeground(STOP_FOREGROUND_REMOVE)
+            mediaSession?.let { super.onUpdateNotification(it, it.player.isPlaying) }
+            return
+        }
+        notificationManager.createNotificationChannel(NotificationChannel("aurora_receiver", "Aurora receiver", NotificationManager.IMPORTANCE_LOW))
+        val open = android.app.PendingIntent.getActivity(this, 91, android.content.Intent(this, com.aurora.music.MainActivity::class.java),
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
+        val stop = android.app.PendingIntent.getService(this, 92, android.content.Intent(this, PlaybackService::class.java).setAction(ACTION_RECEIVER_STOP),
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
+        val transport = android.app.PendingIntent.getService(this, 93, android.content.Intent(this, PlaybackService::class.java).setAction(ACTION_PLAY_PAUSE),
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE)
+        val builder = androidx.core.app.NotificationCompat.Builder(this, "aurora_receiver")
+            .setSmallIcon(com.aurora.music.R.drawable.ic_aurora_logo).setContentTitle("Aurora receiver")
+            .setContentText(if (player.isPlaying) player.currentMediaItem?.mediaMetadata?.title?.toString() ?: "Playing" else "Ready for a paired device")
+            .setContentIntent(open).setOngoing(true)
+            .addAction(0, "Turn off", stop)
+        if (player.currentMediaItem != null) {
+            builder.setContentTitle(player.currentMediaItem?.mediaMetadata?.title?.toString() ?: "Aurora receiver")
+                .setContentText(player.currentMediaItem?.mediaMetadata?.artist?.toString().orEmpty())
+                .addAction(if (player.playWhenReady) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,
+                    if (player.playWhenReady) "Pause" else "Play", transport)
+            mediaSession?.let { builder.setStyle(androidx.media3.session.MediaStyleNotificationHelper.MediaStyle(it).setShowActionsInCompactView(1)) }
+        }
+        val notification = builder.build()
+        if (android.os.Build.VERSION.SDK_INT >= 29) startForeground(NETWORK_NOTIFICATION_ID, notification,
+            android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_CONNECTED_DEVICE or
+                if (player.isPlaying) android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK else 0)
+        else startForeground(NETWORK_NOTIFICATION_ID, notification)
     }
 
     private fun publishNowPlaying() {
@@ -1482,6 +1687,8 @@ class PlaybackService : MediaLibraryService() {
     override fun onStartCommand(intent: android.content.Intent?, flags: Int, startId: Int): Int {
         val transport = mediaSession?.player ?: player
         when (intent?.action) {
+            ACTION_RECEIVER_START -> setReceiverForeground(true)
+            ACTION_RECEIVER_STOP -> networkBridge?.enableReceiver(false)
             ACTION_MIX -> startMix()
             ACTION_PLAY_PAUSE -> { wakeFadeActive = false; if (transport.playWhenReady) transport.pause() else transport.play() }
             ACTION_NEXT -> transport.seekToNextMediaItem()
@@ -1495,7 +1702,7 @@ class PlaybackService : MediaLibraryService() {
     private fun startMix() {
         val request = container.mixController.pendingProject ?: return
         container.mixController.pendingProject = null
-        if (bitPerfect || mediaSession?.player === castPlayer) {
+        if (bitPerfect || mediaSession?.player === castPlayer || networkPlayer != null) {
             container.mixController.state.value = com.aurora.music.mix.MixPlaybackState(error =
                 "Mixes use this device's audio output. Disconnect Cast or turn off exclusive USB output and restart playback first.")
             return
@@ -1583,9 +1790,26 @@ class PlaybackService : MediaLibraryService() {
             val songs = runCatching { repo.starredSongs() }.getOrNull()?.takeIf { it.isNotEmpty() }
                 ?: runCatching { repo.downloadedSongs() }.getOrNull()?.takeIf { it.isNotEmpty() }
                 ?: return@launch
-            // Repository fallbacks may catch cancellation; a dismissed or replaced alarm
-            // must never publish a late lookup result back into the player.
+            // ignore dismissed or replaced alarms
             if (!isActive) return@launch
+            networkSwitchJob?.cancel()
+            networkPlayer?.let { remote ->
+                withContext(kotlinx.coroutines.NonCancellable) {
+                    remote.shutdown()
+                    if (!networkDisposed && networkPlayer === remote) {
+                        completeNetworkOutputSwitch(null)
+                        handoffPlayWhenReady = null
+                    }
+                }
+                if (!isActive || networkDisposed || networkPlayer != null) return@launch
+                if (!remote.stopConfirmed) container.networkOutput.update {
+                    it.copy(error = "The receiver did not confirm stop. The alarm is playing on this device.")
+                }
+            }
+            if (mixPlayer != null) stopMix()
+            if (xfadeActive) endXfade() else clearPrepared()
+            originalOrder = null
+            player.shuffleModeEnabled = false
             val ordered = songs.shuffled()
             player.setMediaItems(ordered.map { songItem(it) }, 0, 0L)
             player.repeatMode = Player.REPEAT_MODE_ALL
@@ -1602,7 +1826,12 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaLibrarySession? = mediaSession
 
+    override fun onUpdateNotification(session: MediaSession, startInForegroundRequired: Boolean) {
+        if (receiverForeground) setReceiverForeground(true) else super.onUpdateNotification(session, startInForegroundRequired)
+    }
+
     override fun onTaskRemoved(rootIntent: android.content.Intent?) {
+        if (receiverForeground) return
         alarmLoadJob?.cancel()
         alarmLoadJob = null
         stopMix()
@@ -1615,6 +1844,10 @@ class PlaybackService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        networkDisposed = true
+        networkBridge?.close(); networkBridge = null
+        networkPlayer?.release(); networkPlayer = null
+        networkServer?.close(); networkServer = null
         scope.cancel()
         runCatching { (getSystemService(AUDIO_SERVICE) as android.media.AudioManager).unregisterAudioDeviceCallback(outputCallback) }
         requestBitPerfect(null, null, false)
@@ -1638,6 +1871,9 @@ class PlaybackService : MediaLibraryService() {
 
     companion object {
         const val ACTION_MIX = "com.aurora.music.action.MIX"
+        const val ACTION_RECEIVER_START = "com.aurora.music.action.RECEIVER_START"
+        const val ACTION_RECEIVER_STOP = "com.aurora.music.action.RECEIVER_STOP"
+        private const val NETWORK_NOTIFICATION_ID = 0xA15
         const val CMD_EXIT_MIX = "com.aurora.music.EXIT_MIX"
         const val CMD_QUEUE_APPEND = "com.aurora.music.QUEUE_APPEND"
         const val QUEUE_TOKEN = "aurora_queue_token"

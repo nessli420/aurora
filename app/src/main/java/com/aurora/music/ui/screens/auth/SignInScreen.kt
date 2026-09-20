@@ -1,12 +1,6 @@
 package com.aurora.music.ui.screens.auth
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.infiniteRepeatable
-import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -37,7 +31,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.Lock
@@ -59,14 +52,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import com.aurora.music.R
 import com.aurora.music.data.ServerType
 import com.aurora.music.ui.theme.AuroraRose
 import com.aurora.music.viewmodel.AuthStep
@@ -124,24 +118,12 @@ fun SignInScreen(
         ) {
             Spacer(Modifier.height(56.dp))
 
-            val transition = rememberInfiniteTransition(label = "logo")
-            val angle by transition.animateFloat(
-                initialValue = 0f, targetValue = 360f,
-                animationSpec = infiniteRepeatable(tween(9000, easing = LinearEasing), RepeatMode.Restart),
-                label = "spin",
+            Icon(
+                painter = painterResource(R.drawable.ic_aurora_logo),
+                contentDescription = null,
+                tint = AuroraRose,
+                modifier = Modifier.size(92.dp),
             )
-            Box(
-                Modifier
-                    .size(92.dp)
-                    .rotate(angle)
-                    .clip(CircleShape)
-                    .background(Brush.sweepGradient(listOf(AuroraRose, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.secondary, AuroraRose))),
-                contentAlignment = Alignment.Center,
-            ) {
-                Box(Modifier.size(74.dp).clip(CircleShape).background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.GraphicEq, null, tint = AuroraRose, modifier = Modifier.size(38.dp).rotate(-angle))
-                }
-            }
 
             Spacer(Modifier.height(24.dp))
             Text("Aurora", style = MaterialTheme.typography.displayMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onBackground)

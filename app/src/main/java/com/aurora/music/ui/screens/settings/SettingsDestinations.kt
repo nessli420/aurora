@@ -14,6 +14,7 @@ object SettingsDestinations {
     val analysis = SettingsDestination(Routes.SETTINGS_SONIC, "Library analysis & discovery", "Library scans, Sonic radio and Auto DJ")
     val playback = SettingsDestination(Routes.SETTINGS_PLAYBACK, "Playback & quality", "Streaming quality, crossfade, gapless and speed")
     val output = SettingsDestination(Routes.SETTINGS_OUTPUT, "Audio output", "Output device, hi-res and USB modes")
+    val network = SettingsDestination(Routes.SETTINGS_NETWORK, "Network audio", "Cast, DLNA and paired Aurora devices")
     val equalizer = SettingsDestination(Routes.SETTINGS_EQ, "Equalizer & effects", "EQ, device presets, convolution and channels")
     val processingPresets = SettingsDestination(Routes.SETTINGS_PROCESSING_PRESETS, "Saved processing presets", "Save and restore your audio settings")
     val processingRack = SettingsDestination(Routes.SETTINGS_PROCESSING_RACK, "Processing rack", "Arrange and tune your audio processing stages")
@@ -32,7 +33,7 @@ object SettingsDestinations {
     val backup = SettingsDestination(Routes.SETTINGS_BACKUP, "Backup & restore", "Export or import settings and playlists")
     val about = SettingsDestination(Routes.SETTINGS_ABOUT, "About Aurora", "Version and app information")
 
-    val all = listOf(accounts, sources, storage, analysis, playback, output, equalizer, processingRack, tuning, impulses, comparison, presetRules, processingPresets, loudness,
+    val all = listOf(accounts, sources, storage, analysis, playback, output, network, equalizer, processingRack, tuning, impulses, comparison, presetRules, processingPresets, loudness,
         signalPath, alarm, appearance, visualizer, gestures, integrations, permissions, backup, about)
 }
 

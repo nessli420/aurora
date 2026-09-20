@@ -1,3 +1,5 @@
+<img src="docs/assets/aurora.svg" alt="Aurora logo" width="88" height="88">
+
 # Aurora Music Player
 
 An Android music player for your local files, home music server, and Green Music App library. Keep your music together, listen offline, and adjust the sound to suit your headphones or speakers.
@@ -106,7 +108,11 @@ Restart Aurora after changing USB settings. **Signal Path** shows the output in 
 
 USB support is still experimental and varies by phone and DAC. Direct and processed playback have been tested with a **FiiO KA13**. DSF/DFF files are supported through audio conversion; unchanged DSD output is not supported.
 
-Chromecast plays audio on the receiving device, so Aurora's sound effects do not carry over.
+## Network audio
+
+Play through Chromecast, a compatible DLNA receiver, or another Aurora device. Direct Cast keeps the original audio file and bypasses Aurora's effects. Processed output applies your effects before sending the track. Tracks are prepared first, so playback can take a moment to start. Crossfade, gapless transitions, speed changes, and silence skipping are unavailable when sending audio.
+
+To use another Aurora device as a player, enable **Settings → Network audio → Allow remote control** on it. Copy its pairing address and code to the controlling device. Aurora copies the queue before playback, up to 100 tracks and 512 MB, so the receiver can keep playing if the controlling device goes offline. The receiving device uses its own audio settings and output, including a connected USB DAC. Paired access can be revoked at any time.
 
 ## Optional accounts
 

@@ -28,6 +28,12 @@ class QueueReplacementDeviceTest {
     @Test fun unchangedLargeQueueStillFillsBeforeAndAfterTheStartItem() = withQueue { vm, controller, songs ->
         val startIndex = 1_290
         fixture.main { vm.playAll(songs, startIndex) }
+        fixture.await("start track selected", controller) { fixture.main {
+            if (controller.currentMediaItem?.mediaId == songs[startIndex].id) {
+                controller.pause()
+                true
+            } else false
+        } }
         awaitQueue(controller, songs.map { it.id })
         fixture.main {
             controller.pause()

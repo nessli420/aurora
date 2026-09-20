@@ -86,6 +86,46 @@ class AlarmPlaybackDeviceTest {
         assertStoppedFor(controller, 1_200)
     }
 
+    @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
+    @Test fun alarmStopsNetworkPlaybackAndUsesTheLocalSession() {
+        val lifecycle = PrecisionPlaybackDeviceTest()
+        lifecycle.keepTargetForegroundForAudioFocus()
+        val container = (context.applicationContext as AuroraApplication).container
+        val savedPrefs = runBlocking { container.settingsStore.exportPrefs() }
+        try {
+            runBlocking { container.settingsStore.setDspMode(com.aurora.music.data.DspMode.OFF) }
+            withFixture { fixture, controller ->
+                com.aurora.music.playback.network.NetworkOutputServiceDeviceTest.FakeDlna().use { receiver ->
+                    try {
+                        main {
+                            controller.setMediaItem(MediaItem.Builder().setMediaId("remote-alarm-fixture")
+                                .setUri(fixture.song.streamUrl).setMimeType("audio/wav").build())
+                            controller.prepare()
+                            controller.play()
+                            container.networkOutput.connect(com.aurora.music.playback.network.NetworkTarget.Dlna(receiver.renderer))
+                        }
+                        await("network fixture playing") { receiver.playing }
+                        send(PlaybackService.ACTION_ALARM)
+                        await("alarm takes local playback") {
+                            main { container.networkOutput.state.value.receiverName == null &&
+                                controller.currentMediaItem?.mediaId == "song_${fixture.song.id}" && controller.isPlaying }
+                        }
+                        assertFalse(receiver.playing)
+                        send(PlaybackService.ACTION_ALARM_DISMISS)
+                        await("alarm dismissed after network handoff") { main { controller.mediaItemCount == 0 } }
+                        assertStoppedFor(controller, 800)
+                    } finally {
+                        main { container.networkOutput.disconnect() }
+                        await("network fixture disconnected") { container.networkOutput.state.value.receiverName == null }
+                    }
+                }
+            }
+        } finally {
+            runBlocking { container.settingsStore.importPrefs(savedPrefs) }
+            lifecycle.removeFixturesAndFinishActivity()
+        }
+    }
+
     private fun assertStoppedFor(controller: MediaController, durationMs: Long) {
         val until = SystemClock.elapsedRealtime() + durationMs
         do {

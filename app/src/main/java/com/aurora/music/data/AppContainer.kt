@@ -35,6 +35,7 @@ class AppContainer(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
     val settingsStore = SettingsStore(appContext)
+    val networkOutput = com.aurora.music.playback.network.NetworkOutputManager(appContext)
     val profileImages = ProfileImages(appContext)
     val localProfileAppearance = settingsStore.localProfile.map(profileImages::appearance)
         .flowOn(Dispatchers.IO).stateIn(scope, SharingStarted.Eagerly, ProfileAppearance())

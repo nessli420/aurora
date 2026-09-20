@@ -4,6 +4,8 @@ import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +14,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,6 +43,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.aurora.music.AuroraApplication
+import com.aurora.music.ui.screens.settings.NetworkOutputControls
 
 private data class OutputDevice(val id: Int, val label: String, val icon: ImageVector)
 
@@ -53,7 +58,6 @@ fun PlayerCastButton(modifier: Modifier = Modifier) {
     if (show) CastSheet(onDismiss = { show = false })
 }
 
-// casting hands receiver a plain url so dsp/effects dont travel
 @Composable
 private fun CastRow() {
     var show by remember { mutableStateOf(false) }
@@ -69,7 +73,7 @@ private fun CastRow() {
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text("Cast to a device", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
-            Text("Chromecast · effects & DSP off", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Chromecast · DLNA · Aurora", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
     if (show) CastSheet(onDismiss = { show = false })
@@ -79,6 +83,7 @@ private fun CastRow() {
 @Composable
 private fun CastSheet(onDismiss: () -> Unit) {
     val context = LocalContext.current
+    val network = (context.applicationContext as AuroraApplication).container.networkOutput
     val router = remember { androidx.mediarouter.media.MediaRouter.getInstance(context.applicationContext) }
     val selector = remember {
         androidx.mediarouter.media.MediaRouteSelector.Builder()
@@ -111,11 +116,10 @@ private fun CastSheet(onDismiss: () -> Unit) {
 
     val casting = router.selectedRoute.id != router.defaultRoute.id
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
-            Text("Cast to a device", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp))
-            Text("Effects & DSP are off while casting", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
+        Column(Modifier.fillMaxWidth().heightIn(max = 650.dp).verticalScroll(rememberScrollState()).padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
+            Text("Play on a device", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp))
             if (routes.isEmpty()) {
-                Text("Searching for devices…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
+                Text("Searching for Chromecast devices…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
             }
             routes.forEach { route ->
                 val selected = route.id == selectedId
@@ -145,6 +149,7 @@ private fun CastSheet(onDismiss: () -> Unit) {
                     Text("Stop casting", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
+            NetworkOutputControls(network, onConnected = onDismiss)
         }
     }
 }

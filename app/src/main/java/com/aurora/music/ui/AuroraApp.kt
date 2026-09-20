@@ -721,6 +721,7 @@ fun AuroraApp() {
                             onBack = { navController.popBackStack() },
                             onOpenPlayback = { navController.navigate(Routes.SETTINGS_PLAYBACK) },
                             onOpenOutput = { navController.navigate(Routes.SETTINGS_OUTPUT) },
+                            onOpenNetwork = { navController.navigate(Routes.SETTINGS_NETWORK) },
                             onOpenLoudness = { navController.navigate(Routes.SETTINGS_LOUDNESS) },
                             onOpenAlarm = { navController.navigate(Routes.SETTINGS_ALARM) },
                             onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
@@ -777,6 +778,9 @@ fun AuroraApp() {
                             contentPadding = inner, onBack = { navController.popBackStack() },
                             onOpenOutput = { navController.navigate(Routes.SETTINGS_OUTPUT) },
                         )
+                    }
+                    composable(Routes.SETTINGS_NETWORK) {
+                        com.aurora.music.ui.screens.settings.NetworkOutputScreen(inner) { navController.popBackStack() }
                     }
                     composable(Routes.SETTINGS_OUTPUT) {
                         com.aurora.music.ui.screens.settings.AudioOutputSettingsScreen(
