@@ -109,6 +109,20 @@ class YouTubeMusicBackendTest {
         assertEquals(255, backend.songFor("abcdefghijk")!!.durationSec)
     }
 
+    @Test fun cachedRecommendationWithoutDurationIsEnrichedFromItsExactId() = runBlocking {
+        val calls = mutableListOf<String>()
+        val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { endpoint, body ->
+            calls += endpoint
+            if (endpoint == "next") assertEquals("abcdefghijk", body.get("videoId").asString)
+            val length = if (endpoint == "next") "4:15" else ""
+            parsed("""{"playlistPanelVideoRenderer":{"videoId":"abcdefghijk","title":{"simpleText":"Exact version"},"lengthText":{"simpleText":"$length"}}}""")
+        })
+        assertEquals(0, backend.search("version").songs.single().durationSec)
+        assertEquals(255, backend.songFor("abcdefghijk")!!.durationSec)
+        assertEquals(255, backend.songFor("abcdefghijk")!!.durationSec)
+        assertEquals(listOf("search", "next"), calls)
+    }
+
     @Test fun playlistWritesUseExpectedActionsAndPrivateCreation() = runBlocking {
         val requests = mutableListOf<Pair<String, JsonObject>>()
         val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { endpoint, body ->
@@ -138,8 +152,8 @@ class YouTubeMusicBackendTest {
         try { backend.allSongs(); fail("Cancellation swallowed") } catch (_: CancellationException) { }
     }
 
-    @Test fun standaloneSourcesCannotEnterMergedLibrary() {
-        assertFalse(ServerType.YOUTUBE_MUSIC.supportsMergedLibrary)
+    @Test fun youtubeCanMergeWhileSpotifyStaysStandalone() {
+        assertTrue(ServerType.YOUTUBE_MUSIC.supportsMergedLibrary)
         assertFalse(ServerType.SPOTIFY.supportsMergedLibrary)
         assertTrue(ServerType.LOCAL.supportsMergedLibrary)
         assertTrue(ServerType.SUBSONIC.supportsMergedLibrary)

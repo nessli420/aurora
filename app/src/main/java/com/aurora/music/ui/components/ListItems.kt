@@ -139,7 +139,7 @@ fun SongRow(
                 .padding(6.dp),
         )
         Text(
-            formatTime(song.durationSec),
+            if (song.durationSec > 0) formatTime(song.durationSec) else "—",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 6.dp),

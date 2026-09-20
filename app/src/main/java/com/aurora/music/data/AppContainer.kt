@@ -1,5 +1,7 @@
 package com.aurora.music.data
 
+import kotlinx.coroutines.flow.drop
+
 import android.content.Context
 import android.os.Build
 import android.os.VibrationEffect
@@ -181,7 +183,9 @@ class AppContainer(context: Context) {
         ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
             com.aurora.music.data.remote.YouTubeMusicClient(
                 session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }))) { message ->
-            if (lastSession?.accountKey() == session.accountKey()) _sourceErrors.tryEmit(message)
+            if (lastSession?.accountKey() == session.accountKey() ||
+                (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
+                    (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
         }
         ServerType.EXTENSION -> extensions.backend(session) { song ->
             val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
@@ -194,15 +198,17 @@ class AppContainer(context: Context) {
     private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend {
         if (!unified || !session.type.supportsMergedLibrary) return buildBackend(session)
         // empty = all eligible servers MERGE_NONE sentinel = local files only
-        val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else saved
-            .filter { it.type == ServerType.SUBSONIC || it.type == ServerType.JELLYFIN }
+        val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else (saved + session)
+            .filter { it.type.supportsMergedLibrary && it.type != ServerType.LOCAL }
             .filter { mergeKeys.isEmpty() || accountKey(it) in mergeKeys }
             .distinctBy { accountKey(it) }
         val sources = buildList {
             add(LocalBackend(localLibrary, localStore, localMergeSession))
             serverSessions.forEach { add(buildBackend(it)) }
         }
-        return if (sources.size <= 1) buildBackend(session) else MergedBackend(sources, session)
+        return MergedBackend(sources, session,
+            priority = { if (preferLocalSources) sourcePriorityValue else listOf("stream", "local", "downloaded") },
+            downloads = { downloadManager.downloads.value.values.filter { java.io.File(it.audioPath).isFile }.map { it.toSong() } })
     }
 
     private suspend fun rebuildBackend() {
@@ -371,6 +377,14 @@ class AppContainer(context: Context) {
                 unifiedLibraryValue = it; rebuildBackend()
                 if (!first) _libraryReload.value++
                 first = false
+            }
+        }
+        scope.launch {
+            settingsStore.savedSessions.distinctUntilChanged().drop(1).collect {
+                if (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true) {
+                    rebuildBackend()
+                    _libraryReload.value++
+                }
             }
         }
         scope.launch {

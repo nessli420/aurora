@@ -72,7 +72,7 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
         remember(YouTubeMusicParser.results(api.request("search", json("query" to query.trim()))))
 
     override suspend fun songFor(id: String): Song? {
-        songs[id]?.let { return it }
+        songs[id]?.takeIf { it.durationSec > 0 }?.let { return it }
         if (!id.matches(Regex("[A-Za-z0-9_-]{11}"))) return null
         return remember(YouTubeMusicParser.results(api.request("next", json("videoId" to id))))
             .songs.firstOrNull { it.id == id }

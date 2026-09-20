@@ -96,6 +96,7 @@ fun SearchScreen(
     onRemoveRecent: (String) -> Unit = {},
     onClearRecents: () -> Unit = {},
     onCommitSearch: () -> Unit = {},
+    onSelectSource: (String) -> Unit = {},
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val results = state.results
@@ -152,8 +153,19 @@ fun SearchScreen(
 
         Spacer(Modifier.height(12.dp))
 
+        if (state.sources.size > 1) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                state.sources.forEach { source ->
+                    androidx.compose.material3.FilterChip(selected = source.id == state.selectedSource,
+                        onClick = { onSelectSource(source.id) }, label = { Text(source.label) })
+                }
+            }
+            Spacer(Modifier.height(8.dp))
+        }
+
         val empty = results.songs.isEmpty() && results.albums.isEmpty() && results.artists.isEmpty() && results.playlists.isEmpty()
         when {
+            state.error != null -> EmptyHint("Search unavailable", state.error)
             state.query.isBlank() ->
                 if (recentSearches.isEmpty()) EmptyHint("Search your library", "Find any artist, album, song, or playlist")
                 else RecentSearches(recentSearches, onRecentClick, onRemoveRecent, onClearRecents, contentPadding)

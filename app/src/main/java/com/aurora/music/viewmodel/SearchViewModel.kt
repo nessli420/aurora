@@ -6,6 +6,9 @@ import androidx.lifecycle.viewModelScope
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.SearchResults
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,6 +22,9 @@ data class SearchUiState(
     val query: String = "",
     val loading: Boolean = false,
     val results: SearchResults = SearchResults(),
+    val sources: List<com.aurora.music.data.SearchSourceChoice> = emptyList(),
+    val selectedSource: String = "discovery",
+    val error: String? = null,
 )
 
 class SearchViewModel(app: Application) : AndroidViewModel(app) {
@@ -33,8 +39,22 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch {
-            container.offline.collect { if (_state.value.query.isNotBlank()) onQuery(_state.value.query) }
+            container.offline.collect { refreshSources() }
         }
+        viewModelScope.launch { container.accountEpoch.drop(1).collect { refreshSources() } }
+        viewModelScope.launch { container.libraryReload.drop(1).collect { refreshSources() } }
+    }
+
+    private fun refreshSources() {
+        val sources = container.repository.searchSources
+        _state.update { it.copy(sources = sources, selectedSource = it.selectedSource.takeIf { id -> sources.any { s -> s.id == id } } ?: "discovery") }
+        onQuery(_state.value.query)
+    }
+
+    fun selectSource(id: String) {
+        if (id == _state.value.selectedSource || _state.value.sources.none { it.id == id }) return
+        _state.update { it.copy(selectedSource = id) }
+        onQuery(_state.value.query)
     }
 
     fun commit() {
@@ -50,7 +70,7 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onQuery(q: String) {
-        _state.update { it.copy(query = q) }
+        _state.update { it.copy(query = q, results = SearchResults(), loading = q.isNotBlank(), error = null) }
         searchJob?.cancel()
         if (q.isBlank()) {
             _state.update { it.copy(results = SearchResults(), loading = false) }
@@ -58,9 +78,15 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
         }
         searchJob = viewModelScope.launch {
             delay(300)
-            _state.update { it.copy(loading = true) }
-            val r = container.repository.search(q)
-            _state.update { it.copy(loading = false, results = r) }
+            try {
+                val r = container.repository.search(q, _state.value.selectedSource)
+                ensureActive()
+                _state.update { it.copy(loading = false, results = r) }
+                val enriched = container.repository.enrichSearchDurations(r)
+                ensureActive()
+                _state.update { it.copy(results = enriched) }
+            } catch (e: CancellationException) { throw e }
+            catch (_: Exception) { _state.update { it.copy(loading = false, error = "Could not search this source. Try again.") } }
         }
     }
 }

@@ -52,7 +52,9 @@ Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively develop
 | **Green Music App** | Your own app client ID. Aurora reads your library and plays matching audio from YouTube. |
 | **YouTube Music** | Sign in with your Google account inside Aurora. No Google Cloud project or API key needed. |
 
-Save several accounts and switch between them in **Settings → Servers & accounts**. To combine local files, Navidrome/Subsonic and Jellyfin, open **Settings → Library & sources** and enable **Merge all sources**. YouTube Music and Green Music App each run as a standalone source and do not join the merged library.
+Save several accounts and switch between them in **Settings → Servers & accounts**. To combine local files, Navidrome/Subsonic, Jellyfin and YouTube Music, open **Settings → Library & sources**, enable **Merge all sources**, and choose the included accounts. Green Music App stays standalone.
+
+With YouTube Music included, Home opens your regular library feed; the button beside the notification bell switches to YouTube Music recommendations and mixes. Search offers separate **Local & servers** and **YouTube Music** results. When playback starts, Aurora checks for the same recording in your included libraries and downloads, follows your source priority, and prefers higher-quality copies within each tier. It checks that a copy can be opened before choosing it; otherwise it plays from YouTube Music. Matching uses the song title and artist, allowing featured credits and extra artist credits to differ. Missing duration or explicit tags do not block a match. Duration helps choose between multiple copies; named versions such as live, remix and slowed remain separate. Album order and YouTube likes stay attached to the original catalogue entry. All selected audio uses Aurora’s native playback and DSP path.
 
 ### YouTube Music
 

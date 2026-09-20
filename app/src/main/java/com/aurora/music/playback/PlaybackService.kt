@@ -315,7 +315,8 @@ class PlaybackService : MediaLibraryService() {
         val dataSourceFactory = com.aurora.music.playback.sacd.SacdDataSource.Factory(this, resolvedDataSourceFactory)
         networkDataSource = dataSourceFactory
         val mediaSourceFactory = YoutubeMediaSourceFactory(
-            androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory(rawOutput = dsdWire != null)), resolver)
+            androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory(rawOutput = dsdWire != null)), resolver,
+            preferred = { PreferredPlayback.resolve(this, container.repository, it) })
 
         musicSourceFactory = mediaSourceFactory
         val playerBuilder = ExoPlayer.Builder(this, renderersFactory)

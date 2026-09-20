@@ -16,6 +16,9 @@ object PresetContextPublisher {
     private val playlistPattern = Regex("playlist:[0-9a-f]{64}")
 
     fun extras(song: Song, source: PlaybackSourceIdentity? = song.playbackSource): Bundle = Bundle().apply {
+        putString("aurora.songId", song.id)
+        putInt("aurora.durationSec", song.durationSec)
+        putBoolean("aurora.explicit", song.explicit)
         putFloat("rgTrack", song.replayGainTrack); putFloat("rgAlbum", song.replayGainAlbum)
         source?.providerId?.takeIf(providerPattern::matches)?.let { putString(PREFIX + "provider", it) }
         source?.providerLabel?.let { putString(PREFIX + "providerLabel", it.take(512)) }

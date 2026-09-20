@@ -53,7 +53,7 @@ const val MERGE_NONE = "__none__"
 enum class ServerType {
     SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION, YOUTUBE_MUSIC;
 
-    val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == LOCAL
+    val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == LOCAL || this == YOUTUBE_MUSIC
 }
 
 // subsonic keeps salt+token never the raw password jellyfin uses token as access token

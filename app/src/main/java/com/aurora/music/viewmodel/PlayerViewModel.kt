@@ -324,9 +324,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 artist = md.artist?.toString() ?: "",
                 album = md.albumTitle?.toString() ?: "",
                 artworkUrl = md.artworkUri?.toString() ?: "",
-                durationSec = 0,
+                durationSec = md.extras?.getInt("aurora.durationSec") ?: 0,
                 accent = com.aurora.music.util.accentFor(mi.mediaId),
-                streamUrl = mi.localConfiguration?.uri?.toString() ?: "",
+                streamUrl = md.extras?.getString("aurora.preferred.original") ?: mi.localConfiguration?.uri?.toString() ?: "",
                 replayGainTrack = md.extras?.getFloat("rgTrack", 0f) ?: 0f,
                 replayGainAlbum = md.extras?.getFloat("rgAlbum", 0f) ?: 0f,
             )
@@ -392,11 +392,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             songById = songById + clips.associate { it.song.id to it.song }
         }
         val mediaId = c.currentMediaItem?.mediaId
-        val cur = if (mediaId.orEmpty().startsWith("aurora-mix:")) {
+        val queued = if (mediaId.orEmpty().startsWith("aurora-mix:")) {
             val metadata = c.currentMediaItem!!.mediaMetadata
             Song(mediaId!!, metadata.title?.toString().orEmpty(), metadata.artist?.toString().orEmpty(), "",
                 metadata.artworkUri?.toString().orEmpty(), (c.duration.coerceAtLeast(0) / 1000).toInt())
         } else mediaId?.let { songById[it] } ?: _state.value.current
+        val cur = com.aurora.music.playback.PreferredPlayback.applyTo(queued, c.currentMediaItem)
         val q = (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
         if (cur.id != lastKeyInfoId) { lastKeyInfoId = cur.id; lastKeyInfo = runCatching { container.sonicEngine.keyInfo(cur.id) }.getOrNull() }
         val ki = lastKeyInfo

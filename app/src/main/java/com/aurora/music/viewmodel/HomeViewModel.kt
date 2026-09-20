@@ -19,6 +19,8 @@ data class HomeUiState(
     val data: HomeData = HomeData(),
     val loadingMore: Boolean = false,
     val error: String? = null,
+    val feeds: List<com.aurora.music.data.HomeFeedChoice> = emptyList(),
+    val selectedFeed: String = "library",
 )
 
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
@@ -40,13 +42,22 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         moreJob?.cancel()
         seenPages.clear()
         loadJob = viewModelScope.launch {
-            _state.update { it.copy(loading = true, loadingMore = false, error = null, data = if (clear) HomeData() else it.data) }
+            val feeds = container.repository.homeFeeds
+            val selected = _state.value.selectedFeed.takeIf { id -> feeds.any { it.id == id } } ?: "library"
+            _state.update { it.copy(loading = true, loadingMore = false, error = null, feeds = feeds, selectedFeed = selected,
+                data = if (clear || selected != it.selectedFeed) HomeData() else it.data) }
             try {
-                val data = container.repository.home()
+                val data = container.repository.home(selected)
                 _state.update { it.copy(loading = false, data = data) }
             } catch (e: CancellationException) { throw e }
             catch (_: Exception) { _state.update { it.copy(loading = false, error = "Could not load the home feed. Try again.") } }
         }
+    }
+
+    fun selectFeed(id: String) {
+        if (id == _state.value.selectedFeed || _state.value.feeds.none { it.id == id }) return
+        _state.update { it.copy(selectedFeed = id) }
+        load(clear = true)
     }
 
     fun loadMore() {
@@ -56,7 +67,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(loadingMore = true, error = null) }
         moreJob = viewModelScope.launch {
             try {
-                val page = container.repository.homePage(token)
+                val page = container.repository.homePage(token, before.selectedFeed)
                 seenPages += token
                 _state.update { current ->
                     val sections = (current.data.sections + page.sections).groupBy { it.id }.values.map { parts ->

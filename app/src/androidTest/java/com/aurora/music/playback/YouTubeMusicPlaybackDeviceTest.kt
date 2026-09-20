@@ -180,7 +180,7 @@ class YouTubeMusicPlaybackDeviceTest {
         val albumId = "MPREb_RDzw2QqWoTF"
         org.junit.Assume.assumeTrue(runBlocking { container.settingsStore.session.first()?.type } == com.aurora.music.data.ServerType.YOUTUBE_MUSIC)
         val tracks = runBlocking { container.repository.detail("album", albumId)!!.tracks }
-        assertEquals(listOf("coT-TN5U1V8", "hBhxjVnLQbs"), tracks.map { it.id })
+        assertEquals(listOf("coT-TN5U1V8", "hBhxjVnLQbs"), tracks.map { com.aurora.music.data.stripMergeNamespace(it.id) })
         assertEquals(listOf("still love you (Slowed)", "still love you"), tracks.map { it.title })
         helper.withProcessingFixture(0) { controller, _ ->
             val vm = helper.main {

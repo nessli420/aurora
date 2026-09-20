@@ -156,6 +156,9 @@ class SubsonicBackend(
         runCatching { c.api.scrobble(id) }
     }
 
+    override suspend fun matchingSongs(song: Song): List<Song> = c.api.search3(recordingTitle(song.title),
+        artistCount = 0, albumCount = 0, songCount = 200).response.searchResult3?.song?.map { it.toModel() }.orEmpty()
+
     override suspend fun radio(seedId: String): List<Song> {
         val similar = runCatching {
             c.api.getSimilarSongs2(seedId).response.similarSongs2?.song?.map { it.toModel() }.orEmpty()

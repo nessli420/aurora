@@ -25,6 +25,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material.icons.outlined.LibraryMusic
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -65,6 +67,7 @@ fun HomeScreen(
     onPlayAll: (List<Song>, Int) -> Unit,
     onLoadMore: () -> Unit = {},
     onRetry: () -> Unit = {},
+    onSelectFeed: (String) -> Unit = {},
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val data = state.data
@@ -98,6 +101,12 @@ fun HomeScreen(
                 Column(Modifier.weight(1f)) {
                     Eyebrow(greeting(), MaterialTheme.colorScheme.primary)
                     Text(username.ifBlank { "Listener" }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                }
+                if (state.feeds.size > 1) {
+                    val next = state.feeds.first { it.id != state.selectedFeed }
+                    IconPill(if (state.selectedFeed == state.feeds.first().id) Icons.Outlined.LibraryMusic else Icons.Outlined.PlayCircle,
+                        "Switch to ${next.label} home") { onSelectFeed(next.id) }
+                    Spacer(Modifier.width(8.dp))
                 }
                 IconPill(Icons.Outlined.Notifications, "Alerts") {}
                 Spacer(Modifier.width(8.dp))

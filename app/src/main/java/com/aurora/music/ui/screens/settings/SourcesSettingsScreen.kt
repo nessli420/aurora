@@ -97,7 +97,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
     val saved by store.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val servers = remember(saved) {
-        saved.filter { it.type == ServerType.SUBSONIC || it.type == ServerType.JELLYFIN }.distinctBy { it.accountKey() }
+        saved.filter { it.type.supportsMergedLibrary && it.type != ServerType.LOCAL }.distinctBy { it.accountKey() }
     }
 
     Column(Modifier.fillMaxWidth()) {
@@ -169,7 +169,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 SettingsGroup {
                     SettingsSwitchRow(
                         Icons.Filled.MergeType, "Merge all sources",
-                        "Show albums, artists & playlists from your local files and every included server as one library", unified,
+                        "Show albums, artists & playlists from your local files and every included source as one library", unified,
                     ) { v -> scope.launch { store.setUnifiedLibrary(v) } }
                 }
             }
@@ -201,7 +201,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 if (servers.isEmpty()) {
                     item {
                         Text(
-                            "Sign into Navidrome or Jellyfin (Settings → Accounts) to merge servers. Your local files are always included.",
+                            "Sign into Navidrome, Jellyfin or YouTube Music (Settings → Accounts) to merge sources. Your local files are always included.",
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )
@@ -209,7 +209,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 }
                 item {
                     Text(
-                        "Duplicates are shown once and played from the highest-quality source. Spotify and YouTube Music run as standalone sources.",
+                        "YouTube Music adds catalogue search and a separate home feed. Matching recordings use your preferred local, downloaded or server copy. Spotify stays standalone.",
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                     )

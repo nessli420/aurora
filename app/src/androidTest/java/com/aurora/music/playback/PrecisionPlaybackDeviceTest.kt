@@ -568,7 +568,7 @@ class PrecisionPlaybackDeviceTest {
     private fun item(id: String, file: File): MediaItem =
         MediaItem.Builder().setMediaId(id).setUri(file.toURI().toString()).build()
 
-    private fun tone(rate: Int, seconds: Int): File = wav("tone-$rate", rate, seconds * rate) { frame, channel ->
+    internal fun tone(rate: Int, seconds: Int): File = wav("tone-$rate", rate, seconds * rate) { frame, channel ->
         (sin(2 * PI * 1_000 * frame / rate) * if (channel == 0) 8_192 else 4_096).toInt()
     }
 

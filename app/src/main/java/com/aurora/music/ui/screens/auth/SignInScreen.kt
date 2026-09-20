@@ -222,7 +222,7 @@ private fun TypeStep(
         ServerTypeCard(
             icon = Icons.Outlined.MusicNote,
             title = "YouTube Music",
-            subtitle = "Google account · standalone library",
+            subtitle = "Google account · music and recommendations",
             onClick = { onSelectType(ServerType.YOUTUBE_MUSIC) },
         )
         if (permDenied) {

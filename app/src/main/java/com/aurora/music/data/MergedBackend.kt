@@ -11,20 +11,94 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 
 // composite backend merging several live backends ids namespaced per source so calls route back
 class MergedBackend(
     private val sources: List<MediaBackend>,
     override val session: Session,
+    private val priority: () -> List<String> = { DEFAULT_SOURCE_PRIORITY },
+    private val downloads: () -> List<Song> = { emptyList() },
 ) : MediaBackend {
 
-    private val primary: MediaBackend? = sources.firstOrNull { it.session.type != ServerType.LOCAL } ?: sources.firstOrNull()
+    private val catalogueIndex = sources.indexOfFirst { it.session.type == ServerType.YOUTUBE_MUSIC && it.session.accountKey() == session.accountKey() }
+        .takeIf { it >= 0 } ?: sources.indexOfFirst { it.session.type == ServerType.YOUTUBE_MUSIC }
+    override val homeFeeds: List<HomeFeedChoice> get() = if (catalogueIndex < 0) emptyList() else
+        listOf(HomeFeedChoice("library", "Library"), HomeFeedChoice("discovery", "YouTube Music"))
+    override val searchSources: List<SearchSourceChoice> get() = if (catalogueIndex < 0) emptyList() else
+        listOf(SearchSourceChoice("library", "Local & servers"), SearchSourceChoice("discovery", "YouTube Music"))
 
-    private fun wrapId(idx: Int, id: String): String = if (id.isBlank()) "" else "$idx$SEP$id"
+    override suspend fun home(feed: String): HomeData = if (feed == "discovery" && catalogueIndex >= 0)
+        sources[catalogueIndex].home().wrapHome(catalogueIndex) else home()
+
+    override suspend fun homePage(feed: String, continuation: String): HomeData =
+        if (feed == "discovery" && catalogueIndex >= 0)
+            sources[catalogueIndex].homePage(continuation).wrapHome(catalogueIndex) else HomeData()
+
+    private fun HomeData.wrapHome(i: Int) = copy(
+        newReleases = newReleases.map { it.wrap(i) }, recentlyPlayed = recentlyPlayed.map { it.wrap(i) },
+        mostPlayed = mostPlayed.map { it.wrap(i) }, random = random.map { it.wrap(i) },
+        playlists = playlists.map { it.wrap(i) }, artists = artists.map { it.wrap(i) }, starred = starred.map { it.wrap(i) },
+        sections = sections.map { section -> section.copy(items = section.items.map { entry -> when (entry) {
+            is HomeFeedItem.Track -> HomeFeedItem.Track(entry.song.wrap(i))
+            is HomeFeedItem.Record -> HomeFeedItem.Record(entry.album.wrap(i))
+            is HomeFeedItem.Performer -> HomeFeedItem.Performer(entry.artist.wrap(i))
+            is HomeFeedItem.Collection -> HomeFeedItem.Collection(entry.playlist.wrap(i))
+        } }) },
+    )
+
+    private val matchMutex = Mutex()
+    private val matchCache = LinkedHashMap<String, Pair<Long, List<Song>>>()
+
+    override suspend fun playbackCandidates(song: Song): List<Song> {
+        if (SEP in song.id && unwrap(song.id) == null) return emptyList()
+        val index = unwrap(song.id)?.first ?: sources.indexOfFirst { it.session.accountKey() == session.accountKey() }
+        if (index !in sources.indices) return emptyList()
+        if (sources[index].session.type != ServerType.YOUTUBE_MUSIC) return emptyList()
+        val order = priority()
+        val copies = matchMutex.withLock {
+            val title = recordingTitle(song.title)
+            val key = order.joinToString(",") + "\u0000" + title + "\u0000" + song.artist
+            val cached = matchCache[key]?.takeIf { System.nanoTime() - it.first < 60_000_000_000L }
+            cached?.second ?: coroutineScope {
+                sources.mapIndexedNotNull { i, source ->
+                    if (source.session.type == ServerType.YOUTUBE_MUSIC) null else async<List<Song>> {
+                        try {
+                            withTimeoutOrNull(3_000) { source.matchingSongs(song).map { it.wrap(i) } }.orEmpty()
+                        } catch (e: CancellationException) { throw e }
+                        catch (_: Exception) { emptyList<Song>() }
+                    }
+                }.awaitAll().flatten()
+            }.also {
+                matchCache[key] = System.nanoTime() to it
+                while (matchCache.size > 128) matchCache.remove(matchCache.keys.first())
+            }
+        }
+        fun tier(copy: Song) = when {
+            copy.playbackSource?.source == com.aurora.music.data.rules.RuleSource.DOWNLOAD -> "downloaded"
+            copy.streamUrl.startsWith("file:") || copy.streamUrl.startsWith("content:") -> "local"
+            else -> "stream"
+        }
+        return (copies + downloads()).filter { recordingMatches(song, it) && it.streamUrl.isNotBlank() }
+            .distinctBy { it.streamUrl }
+            .sortedWith(compareBy<Song> { order.indexOf(tier(it)).let { rank -> if (rank < 0) Int.MAX_VALUE else rank } }
+                .thenBy { if (song.durationSec > 0 && it.durationSec > 0 && kotlin.math.abs(song.durationSec - it.durationSec) > TrackMatch.DURATION_TOLERANCE_SEC) 1 else 0 }
+                .thenByDescending { qualityScore(it) })
+            .map { song.withPlaybackFrom(it) }
+    }
+
+    private val primary: MediaBackend? = sources.firstOrNull { it.session.accountKey() == session.accountKey() }
+        ?: sources.firstOrNull { it.session.type != ServerType.LOCAL } ?: sources.firstOrNull()
+
+    private val namespaces = sources.map { "s" + PlaybackSourceIdentity.fromSession(it.session, "").providerId!!.removePrefix("provider:") }
+    private fun wrapId(idx: Int, id: String): String = if (id.isBlank()) "" else "${namespaces[idx]}$SEP$id"
     private fun unwrap(wrapped: String): Pair<Int, String>? {
         val i = wrapped.indexOf(SEP)
         if (i <= 0) return null
-        val idx = wrapped.substring(0, i).toIntOrNull() ?: return null
+        val namespace = wrapped.substring(0, i)
+        val idx = namespace.toIntOrNull() ?: namespaces.indexOf(namespace)
         if (idx !in sources.indices) return null
         return idx to wrapped.substring(i + 1)
     }
@@ -89,7 +163,8 @@ class MergedBackend(
 
     override suspend fun home(): HomeData {
         val homes = coroutineScope {
-            sources.mapIndexed { idx, src -> async { idx to runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { src.home() } }.getOrNull() } }.awaitAll()
+            sources.mapIndexed { idx, src -> async { idx to if (src.session.type == ServerType.YOUTUBE_MUSIC) null
+                else runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { src.home() } }.getOrNull() } }.awaitAll()
         }
         val albums = ArrayList<Album>(); val recent = ArrayList<Album>(); val most = ArrayList<Album>(); val random = ArrayList<Album>()
         val playlists = ArrayList<Playlist>(); val artists = ArrayList<Artist>(); val starred = ArrayList<Song>()
@@ -127,9 +202,18 @@ class MergedBackend(
     override suspend fun starredIds(): Set<String> =
         sources.indices.zip(fanOut { it.starredIds().toList() }).flatMap { (i, ids) -> ids.map { wrapId(i, it) } }.toSet()
 
-    override suspend fun search(query: String): SearchResults {
+    override suspend fun search(query: String): SearchResults = search(query, "discovery")
+
+    override suspend fun search(query: String, source: String): SearchResults {
+        if (catalogueIndex >= 0 && source != "library") {
+            val result = sources[catalogueIndex].search(query)
+            return result.copy(songs = result.songs.map { it.wrap(catalogueIndex) },
+                albums = result.albums.map { it.wrap(catalogueIndex) }, artists = result.artists.map { it.wrap(catalogueIndex) },
+                playlists = result.playlists.map { it.wrap(catalogueIndex) })
+        }
         val results = coroutineScope {
-            sources.mapIndexed { idx, src -> async { idx to runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { src.search(query) } }.getOrNull() } }.awaitAll()
+            sources.mapIndexed { idx, src -> async { idx to if (src.session.type == ServerType.YOUTUBE_MUSIC) null
+                else runCatching { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { src.search(query) } }.getOrNull() } }.awaitAll()
         }
         val songs = ArrayList<Song>(); val albums = ArrayList<Album>(); val artists = ArrayList<Artist>(); val playlists = ArrayList<Playlist>()
         for ((idx, r) in results) {
@@ -216,11 +300,11 @@ class MergedBackend(
     }
 
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean): String {
-        val (i, oid) = unwrap(songId) ?: return primary?.streamUrl(songId, maxBitrate, lossless) ?: ""
+        val (i, oid) = unwrap(songId) ?: return if (SEP in songId) "" else primary?.streamUrl(songId, maxBitrate, lossless) ?: ""
         return sources.getOrNull(i)?.streamUrl(oid, maxBitrate, lossless) ?: ""
     }
     override fun coverArtUrl(id: String, size: Int): String {
-        val (i, oid) = unwrap(id) ?: return primary?.coverArtUrl(id, size) ?: ""
+        val (i, oid) = unwrap(id) ?: return if (SEP in id) "" else primary?.coverArtUrl(id, size) ?: ""
         return sources.getOrNull(i)?.coverArtUrl(oid, size) ?: ""
     }
 
@@ -250,7 +334,7 @@ class MergedBackend(
         perSource.flatMapIndexed { i, list -> list.map { wrap(it, i) } }
 
     private suspend fun <R> route(id: String, block: suspend (MediaBackend, Int, String) -> R): R? {
-        val (i, oid) = unwrap(id) ?: return primary?.let { p -> runCatching { block(p, sources.indexOf(p), id) }.getOrNull() }
+        val (i, oid) = unwrap(id) ?: return if (SEP in id) null else primary?.let { p -> runCatching { block(p, sources.indexOf(p), id) }.getOrNull() }
         val src = sources.getOrNull(i) ?: return null
         return runCatching { block(src, i, oid) }.getOrNull()
     }
@@ -267,5 +351,6 @@ const val MERGE_NAMESPACE_SEP = '\u0001'   // same control char as MergedBackend
 fun stripMergeNamespace(id: String): String {
     val i = id.indexOf(MERGE_NAMESPACE_SEP)
     if (i <= 0) return id
-    return if (id.substring(0, i).all { it.isDigit() }) id.substring(i + 1) else id
+    val prefix = id.substring(0, i)
+    return if (prefix.all { it.isDigit() } || prefix.matches(Regex("s[0-9a-f]{64}"))) id.substring(i + 1) else id
 }

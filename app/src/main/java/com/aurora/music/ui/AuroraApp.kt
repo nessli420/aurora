@@ -405,6 +405,7 @@ fun AuroraApp() {
                             onPlayAlbum = { playAlbum(it) },
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
                             onLoadMore = homeVM::loadMore,
+                            onSelectFeed = homeVM::selectFeed,
                             onRetry = { homeVM.load() },
                         )
                     }
@@ -422,6 +423,7 @@ fun AuroraApp() {
                             currentSongId = playerState.current.id,
                             isPlaying = playerState.isPlaying,
                             onQuery = searchVM::onQuery,
+                            onSelectSource = searchVM::selectSource,
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
                             onAddToQueue = { playerVM.addToQueue(it); confirm("Added to queue") },
                             onPlayNext = { playerVM.playNext(it); confirm("Playing next") },

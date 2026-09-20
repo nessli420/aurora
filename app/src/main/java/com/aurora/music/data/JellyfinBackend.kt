@@ -153,6 +153,9 @@ class JellyfinBackend(
         runCatching { client.api.markPlayed(uid, id) }
     }
 
+    override suspend fun matchingSongs(song: Song): List<Song> = items(mapOf("SearchTerm" to recordingTitle(song.title),
+        "Recursive" to "true", "IncludeItemTypes" to "Audio", "Limit" to "200")).map { it.toSong() }
+
     override suspend fun radio(seedId: String): List<Song> {
         val similar = runCatching {
             client.api.similar(seedId, mapOf("userId" to uid, "limit" to "30")).Items

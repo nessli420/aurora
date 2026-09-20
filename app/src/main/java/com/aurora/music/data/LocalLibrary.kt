@@ -67,7 +67,7 @@ class LocalLibrary(
         val candidates = matchIndex[TrackMatch.key(artist, title)] ?: return null
         val byDuration = candidates.filter { durationSec > 0 && it.durationSec > 0 && abs(it.durationSec - durationSec) <= TrackMatch.DURATION_TOLERANCE_SEC }
         if (byDuration.isNotEmpty()) return byDuration.minByOrNull { abs(it.durationSec - durationSec) }
-        return candidates.singleOrNull()
+        return candidates.singleOrNull()?.takeIf { durationSec <= 0 || it.durationSec <= 0 }
     }
 
     fun browse(path: String): Pair<List<String>, List<Song>> {

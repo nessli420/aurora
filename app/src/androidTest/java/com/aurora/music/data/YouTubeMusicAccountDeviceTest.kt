@@ -13,6 +13,41 @@ import org.junit.Test
 import java.io.File
 
 class YouTubeMusicAccountDeviceTest {
+    @Test fun mergedLibraryOffersBothHomesAndYoutubeCatalogueSearch() = runBlocking {
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val container = (context.applicationContext as AuroraApplication).container
+        val store = container.settingsStore
+        val account = store.session.first()
+        assumeTrue(account?.type == ServerType.YOUTUBE_MUSIC)
+        val unified = store.unifiedLibrary.first()
+        val included = store.mergeSources.first()
+        try {
+            store.setMergeSources(setOf(account!!.accountKey()))
+            store.setUnifiedLibrary(true)
+            kotlinx.coroutines.withTimeout(10_000) {
+                while (container.repository.homeFeeds.size != 2) kotlinx.coroutines.delay(50)
+            }
+            val regular = container.repository.home("library")
+            assertTrue("Regular home includes recommendation shelves", regular.sections.isEmpty())
+            val discovery = container.repository.home("discovery")
+            assertTrue("YouTube home lost its shelves", discovery.sections.isNotEmpty())
+            discovery.continuation?.let { assertTrue(container.repository.homePage(it, "discovery").sections.isNotEmpty()) }
+            val result = container.repository.search("GLM-RST still love you")
+            assertTrue("Catalogue search is empty", result.songs.isNotEmpty() || result.albums.isNotEmpty())
+            assertTrue(result.songs.all { it.streamUrl.startsWith("aurora-yt:") })
+            val source = container.backend
+            val original = store.audioPrefs.first()
+            try {
+                store.importPrefs(PrefsBackup(floats = mapOf("dsp_preamp" to original.dspPreampDb - 0.25f)))
+                kotlinx.coroutines.delay(300)
+                assertSame("DSP edits rebuilt the merged provider", source, container.backend)
+            } finally { store.importPrefs(PrefsBackup(floats = mapOf("dsp_preamp" to original.dspPreampDb))) }
+        } finally {
+            store.setMergeSources(included)
+            store.setUnifiedLibrary(unified)
+        }
+    }
+
     @Test fun dspPreferenceWritesKeepSourceAndLibraryStable() = runBlocking {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val container = (context.applicationContext as AuroraApplication).container

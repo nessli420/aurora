@@ -1,5 +1,8 @@
 package com.aurora.music.data
 
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
@@ -175,19 +178,23 @@ class MusicRepository(
         }
         .sortedBy { it.title }
 
-    suspend fun home(): HomeData {
+    val homeFeeds: List<HomeFeedChoice> get() = if (offline) emptyList() else backend?.homeFeeds.orEmpty()
+
+    suspend fun playbackCandidates(song: Song): List<Song> = if (offline) emptyList() else backend?.playbackCandidates(song).orEmpty()
+
+    suspend fun home(feed: String = "library"): HomeData {
         if (offline) {
             val albums = downloadedAlbums()
             return HomeData(newReleases = albums, recentlyPlayed = albums, starred = downloadedSongs())
         }
         val source = backend ?: return HomeData()
-        return tagHome(source.home(), source)
+        return tagHome(source.home(feed), source)
     }
 
-    suspend fun homePage(continuation: String): HomeData {
+    suspend fun homePage(continuation: String, feed: String = "library"): HomeData {
         if (offline) return HomeData()
         val source = backend ?: return HomeData()
-        return tagHome(source.homePage(continuation), source)
+        return tagHome(source.homePage(feed, continuation), source)
     }
 
     private fun tagHome(data: HomeData, source: MediaBackend) = data.copy(
@@ -251,7 +258,31 @@ class MusicRepository(
         return source.songFor(id)?.let { tag(it, source) }
     }
 
-    suspend fun search(query: String): SearchResults {
+    val searchSources: List<SearchSourceChoice> get() = if (offline) emptyList() else backend?.searchSources.orEmpty()
+
+    suspend fun enrichSearchDurations(results: SearchResults): SearchResults = kotlinx.coroutines.coroutineScope {
+        val source = backend ?: return@coroutineScope results
+        if (offline) return@coroutineScope results
+        val gate = kotlinx.coroutines.sync.Semaphore(4)
+        val durations = results.songs.filter { it.durationSec <= 0 }.distinctBy { it.id }.take(20).map { song ->
+            async {
+                gate.acquire()
+                try {
+                    val duration = kotlinx.coroutines.withTimeoutOrNull(4_000) { source.songFor(song.id)?.durationSec } ?: 0
+                    song.id to duration
+                } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (_: Exception) { song.id to 0 }
+                finally { gate.release() }
+            }
+        }.awaitAll().toMap()
+        results.copy(songs = results.songs.map { song ->
+            durations[song.id]?.takeIf { it > 0 }?.let { song.copy(durationSec = it) } ?: song
+        })
+    }
+
+    suspend fun search(query: String): SearchResults = search(query, "discovery")
+
+    suspend fun search(query: String, sourceId: String): SearchResults {
         if (offline) {
             val q = query.trim()
             val songs = downloadedSongs().filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }
@@ -259,7 +290,7 @@ class MusicRepository(
             return SearchResults(songs = songs, albums = albums, artists = emptyList())
         }
         val source = backend ?: return SearchResults()
-        return source.search(query).let { it.copy(songs = it.songs.map { song -> tag(song, source) }) }
+        return source.search(query, sourceId).let { it.copy(songs = it.songs.map { song -> tag(song, source) }) }
     }
 
     suspend fun scrobble(id: String) {

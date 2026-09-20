@@ -9,6 +9,13 @@ import com.aurora.music.model.Song
 interface MediaBackend {
     val session: Session
     val supportsOfflineBrowsing: Boolean get() = false
+    val homeFeeds: List<HomeFeedChoice> get() = emptyList()
+    val searchSources: List<SearchSourceChoice> get() = emptyList()
+    suspend fun search(query: String, source: String): SearchResults = search(query)
+    suspend fun home(feed: String): HomeData = home()
+    suspend fun homePage(feed: String, continuation: String): HomeData = homePage(continuation)
+    suspend fun playbackCandidates(song: Song): List<Song> = emptyList()
+    suspend fun matchingSongs(song: Song): List<Song> = search(recordingTitle(song.title)).songs
 
     fun playbackSourceIdentity(song: Song): PlaybackSourceIdentity? = song.playbackSource ?: when {
         song.isRadio() -> PlaybackSourceIdentity(source = com.aurora.music.data.rules.RuleSource.RADIO)
@@ -96,3 +103,6 @@ interface MediaBackend {
 
     fun coverArtUrl(id: String, size: Int = 600): String
 }
+
+data class HomeFeedChoice(val id: String, val label: String)
+data class SearchSourceChoice(val id: String, val label: String)

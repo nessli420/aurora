@@ -24,9 +24,10 @@ import java.io.IOException
 class YoutubeMediaSourceFactory(
     private val delegate: MediaSource.Factory,
     private val resolver: YoutubeResolver,
+    private val preferred: suspend (MediaItem) -> MediaItem = { it },
 ) : MediaSource.Factory {
     override fun createMediaSource(mediaItem: MediaItem): MediaSource =
-        if (mediaItem.localConfiguration?.uri?.scheme == "aurora-yt") YoutubeMediaSource(mediaItem, delegate, resolver)
+        if (mediaItem.localConfiguration?.uri?.scheme == "aurora-yt") YoutubeMediaSource(mediaItem, delegate, resolver, preferred)
         else delegate.createMediaSource(mediaItem)
 
     override fun getSupportedTypes(): IntArray = delegate.supportedTypes
@@ -38,13 +39,15 @@ private class YoutubeMediaSource(
     private val item: MediaItem,
     private val factory: MediaSource.Factory,
     private val resolver: YoutubeResolver,
+    private val preferred: suspend (MediaItem) -> MediaItem,
 ) : CompositeMediaSource<Unit>() {
+    private var publishedItem = item
     private var child: MediaSource? = null
     private var scope: CoroutineScope? = null
     private var failure: IOException? = null
     private var generation = 0
 
-    override fun getMediaItem() = item
+    override fun getMediaItem() = publishedItem
 
     override fun prepareSourceInternal(mediaTransferListener: TransferListener?) {
         super.prepareSourceInternal(mediaTransferListener)
@@ -54,18 +57,22 @@ private class YoutubeMediaSource(
         scope = CoroutineScope(Dispatchers.IO + Job()).also { work ->
             work.launch {
                 val result = runCatching {
-                    val uri = item.localConfiguration!!.uri
-                    if (uri.host == "video") resolver.resolvePlayback(uri.lastPathSegment.orEmpty())
-                    else resolver.resolveSentinel(uri)?.let { YoutubeResolver.PlaybackStream(it) }
+                    val selected = preferred(item)
+                    val uri = selected.localConfiguration!!.uri
+                    val stream = if (uri.scheme != "aurora-yt") YoutubeResolver.PlaybackStream(uri.toString())
+                        else if (uri.host == "video") resolver.resolvePlayback(uri.lastPathSegment.orEmpty())
+                        else resolver.resolveSentinel(uri)?.let { YoutubeResolver.PlaybackStream(it) }
+                    selected to stream
                 }
                 handler.post {
                     if (generation != attempt) return@post
-                    val stream = result.getOrNull()
+                    val stream = result.getOrNull()?.second
                     if (stream == null) {
                         failure = IOException("This YouTube stream is unavailable. Please try again.", result.exceptionOrNull())
                     } else {
                         try {
-                            val audio = factory.createMediaSource(item.buildUpon().setUri(stream.url).setMimeType(stream.mimeType).build())
+                            publishedItem = result.getOrThrow().first
+                            val audio = factory.createMediaSource(publishedItem.buildUpon().setUri(stream.url).setMimeType(stream.mimeType).build())
                             child = stream.videoUrl?.let { video ->
                                 MergingMediaSource(true, audio, factory.createMediaSource(item.buildUpon().setUri(video).setMimeType(null).build()))
                             } ?: audio
@@ -87,7 +94,7 @@ private class YoutubeMediaSource(
     override fun onChildSourceInfoRefreshed(id: Unit, mediaSource: MediaSource, timeline: Timeline) {
         refreshSourceInfo(object : ForwardingTimeline(timeline) {
             override fun getWindow(index: Int, window: Timeline.Window, defaultPositionProjectionUs: Long): Timeline.Window =
-                super.getWindow(index, window, defaultPositionProjectionUs).also { it.mediaItem = item }
+                super.getWindow(index, window, defaultPositionProjectionUs).also { it.mediaItem = publishedItem }
         })
     }
 
