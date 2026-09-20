@@ -46,7 +46,7 @@ class ImportedProcessingPresetBundle internal constructor(
 
 /** portable snapshots with content-addressed impulse assets. */
 object ProcessingPresetBundle {
-    const val VERSION = 5
+    const val VERSION = ProcessingPresetCodec.SCHEMA_VERSION
     const val MAX_IR_BYTES = 64L * 1024 * 1024
     private const val MAX_MANIFEST_BYTES = 512L * 1024
     private const val MAX_ARCHIVE_BYTES = 512L * 1024 * 1024
@@ -214,7 +214,7 @@ object ProcessingPresetBundle {
             "This is not an Aurora processing preset."
         }
         val version = root.get("version")
-        require(version.isJsonPrimitive && version.asJsonPrimitive.isNumber && version.asDouble in listOf(1.0, 2.0, 3.0, 4.0, VERSION.toDouble())) {
+        require(version.isJsonPrimitive && version.asJsonPrimitive.isNumber && version.asDouble in listOf(1.0, 2.0, 3.0, 4.0, 5.0, VERSION.toDouble())) {
             "Unsupported preset bundle version."
         }
         require(root.get("preset").isJsonObject) { "Missing preset settings." }

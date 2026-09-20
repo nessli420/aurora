@@ -11,7 +11,7 @@ class PrecisionPcmPipeline(
     val inputEncoding: PcmEncoding,
     val outputEncoding: PcmEncoding,
     val rack: PrecisionSerialRack,
-    private val dither: TpdfDither? = null
+    private val dither: PcmDither? = null
 ) {
     private val block = AudioBlock(rack.format, rack.capacityFrames)
     val sourcePrecision: SamplePrecision get() = inputEncoding.precision
@@ -40,8 +40,9 @@ class PrecisionPcmPipeline(
     fun bypass(input: ByteBuffer, output: ByteBuffer, frames: Int) {
         require(inputEncoding == outputEncoding) { "Unchanged bypass cannot convert the sample format" }
         require(frames in 0..block.capacityFrames && input !== output)
+        dither?.reset()
         PcmBoundary.copyUnchanged(input, output, frames * rack.format.channelCount * inputEncoding.bytesPerSample)
     }
 
-    fun reset() = rack.reset()
+    fun reset() { rack.reset(); dither?.reset() }
 }

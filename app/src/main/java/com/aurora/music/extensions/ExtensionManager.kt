@@ -136,7 +136,7 @@ class ExtensionManager(private val context: Context, private val settings: Setti
         mutation.withLock {
             refreshLocked()
             val entry = requireNotNull(entries.value.find { it.component == component }) { "Extension is not installed." }
-            require(entry.enabled) { entry.error ?: "Enable this extension in Settings → Extensions." }
+            require(entry.enabled) { entry.error ?: "Enable this extension in Advanced audio → Extensions." }
             require(capability == null || capability in requireNotNull(entry.grant).capabilities) { "Extension access is not enabled." }
             entry
         }

@@ -23,7 +23,7 @@ data class MixAudioConfig(val params: DspParams = DspParams(), val mode: Int = D
     val convolutionGain: Float = 0f, val audioSessionId: Int = 0, val replayGain: Int = 0,
     val rack: com.aurora.music.data.ProcessingRack? = null,
     val rackImpulses: Map<String, ImpulseResponse> = emptyMap(), val tpdfDither: Boolean = false,
-    val relativeVolume: Double = 1.0)
+    val relativeVolume: Double = 1.0, val noiseShaping: Boolean = false)
 
 /** One session transport controls every deck, including lock-screen pause, seek and audio-focus loss. */
 @UnstableApi
@@ -160,6 +160,7 @@ class MixPlayer(
         engine.setRackImpulses(config.rackImpulses)
         engine.relativeVolume = config.relativeVolume
         deck.globalProcessor.tpdfDither = config.tpdfDither
+        deck.globalProcessor.noiseShaping = config.noiseShaping
         if (changedImpulse) engine.setImpulse(config.impulse, config.convolutionGain)
         engine.updateRack(config.rack?.takeIf { it.enabled && config.mode == DspMode.CUSTOM })
     }

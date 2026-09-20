@@ -202,6 +202,7 @@ class PlaybackService : MediaLibraryService() {
         useFloatOut = useFloat
         val initialEvidence = SinkEvidence()
         initialEvidence.compatibilityProcessor.tpdfDither = outputRatePolicy.tpdfDither
+        initialEvidence.compatibilityProcessor.noiseShaping = outputRatePolicy.noiseShaping == true
         compatibilityChains += initialEvidence.compatibilityProcessor.engine
         if (usePrecisionProcessing) initialEvidence.precisionProcessor = PrecisionBlockProcessor().also { precisionChains += it }
         val usbProcessor = if (bitPerfectUsb && usbMode == UsbOutputMode.PROCESSED)
@@ -426,7 +427,10 @@ class PlaybackService : MediaLibraryService() {
         scope.launch {
             store.outputRatePolicy.collect { policy ->
                 outputRatePolicy = policy
-                sinkEvidence.values.forEach { it.compatibilityProcessor.tpdfDither = policy.tpdfDither }
+                sinkEvidence.values.forEach {
+                    it.compatibilityProcessor.tpdfDither = policy.tpdfDither
+                    it.compatibilityProcessor.noiseShaping = policy.noiseShaping == true
+                }
                 mixPlayer?.applyAudioConfig(mixAudioConfig())
             }
         }
@@ -833,7 +837,7 @@ class PlaybackService : MediaLibraryService() {
             if (outputRatePolicy.tpdfDither && (raw?.pcmEncoding == C.ENCODING_PCM_FLOAT ||
                     (decoded?.bitDepth ?: 0) > (processed?.validBits ?: 32) || engine?.processingChangesSamples == true ||
                     processed?.source?.sampleRate != processed?.output?.sampleRate || processed?.softwareGain != 1.0))
-                nodes += "TPDF dither at the final integer conversion"
+                nodes += "${outputRatePolicy.ditherLabel(processed?.output?.sampleRate ?: 0)} at the final integer conversion"
             if (crossfadeMs > 0) bypassed += "Crossfade (processed USB)"
         } else if (precise) {
             nodes += "Single float32 output conversion after Aurora processing"
@@ -844,7 +848,7 @@ class PlaybackService : MediaLibraryService() {
         if (processors && engine?.processingActive == true)
             nodes += "Single PCM16 output conversion after binary64 global processing"
         if (processors && outputRatePolicy.tpdfDither && engine?.processingChangesSamples == true)
-            nodes += "TPDF dither at the final PCM16 conversion"
+            nodes += "${outputRatePolicy.ditherLabel(raw?.sampleRate ?: 0)} at the final PCM16 conversion"
         if (processors && player.skipSilenceEnabled) {
             nodes += "Silence skipping enabled"
             unknown += "Silence skipping is enabled; removed-sample counts are not instrumented"
@@ -1130,6 +1134,7 @@ class PlaybackService : MediaLibraryService() {
         fadeEvidence.precisionProcessor?.setRackImpulses(rackImpulses)
         fadeEvidence.compatibilityProcessor.engine.setRackImpulses(rackImpulses)
         fadeEvidence.compatibilityProcessor.tpdfDither = outputRatePolicy.tpdfDither
+        fadeEvidence.compatibilityProcessor.noiseShaping = outputRatePolicy.noiseShaping == true
         val factory = object : DefaultRenderersFactory(this) {
             override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): AudioSink {
                 val routedOutput = ConfirmedAudioRoute(context) { updateSignalPath() }
@@ -1788,7 +1793,8 @@ class PlaybackService : MediaLibraryService() {
         mono = monoAudioPref, impulse = currentImpulse, convolution = lastAudioPrefs?.dspConvEnabled == true,
         convolutionGain = lastAudioPrefs?.dspConvMakeupDb ?: 0f, audioSessionId = container.audioSessionId,
         replayGain = replayGainMode, rack = lastRack?.takeIf { it.enabled && lastAudioPrefs?.dspMode == DspMode.CUSTOM },
-        rackImpulses = rackImpulses, tpdfDither = outputRatePolicy.tpdfDither, relativeVolume = volume)
+        rackImpulses = rackImpulses, tpdfDither = outputRatePolicy.tpdfDither, relativeVolume = volume,
+        noiseShaping = outputRatePolicy.noiseShaping == true)
 
     private var alarmLoadJob: kotlinx.coroutines.Job? = null
 

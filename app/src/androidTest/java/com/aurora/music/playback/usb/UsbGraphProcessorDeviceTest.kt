@@ -19,6 +19,42 @@ import kotlin.math.floor
 import kotlin.math.pow
 
 class UsbGraphProcessorDeviceTest {
+    @Test fun noiseShapingReachesFinalUsbConversionResetsAndPreservesUnchangedPcm() {
+        var policy = OutputRatePolicy(tpdfDither = true, noiseShaping = true)
+        val processor = UsbGraphProcessor(PrecisionBlockProcessor(), { policy })
+        val sourceFormat = format().buildUpon().setPcmEncoding(C.ENCODING_PCM_32BIT).build()
+        processor.configure(sourceFormat, intArrayOf(48000), 24)
+        fun source() = ByteBuffer.allocate(16384 * 8).order(ByteOrder.LITTLE_ENDIAN).apply {
+            repeat(32768) { putInt(128) }; flip()
+        }
+        try {
+            val first = run(processor, source(), 0)
+            val samples = IntArray(first.size / 3) { index ->
+                val value = (first[index * 3].toInt() and 255) or
+                    ((first[index * 3 + 1].toInt() and 255) shl 8) or (first[index * 3 + 2].toInt() shl 16)
+                (value shl 8) shr 8
+            }
+            assertEquals(.5, samples.average(), .0002)
+            assertTrue(samples.all { it in -2..3 })
+            val covariance = (2 until samples.size).sumOf { (samples[it] - .5) * (samples[it - 2] - .5) } / (samples.size - 2)
+            assertTrue("shaped error covariance $covariance", covariance in -.29..-.21)
+            processor.flush()
+            assertArrayEquals(first, run(processor, source(), 0))
+            policy = policy.copy(tpdfDither = false)
+            processor.flush()
+            val undithered = run(processor, source(), 0)
+            undithered.indices.forEach { assertEquals(if (it % 3 == 0) 1 else 0, undithered[it].toInt()) }
+        } finally { processor.reset() }
+        val unchanged = UsbGraphProcessor(PrecisionBlockProcessor(), { OutputRatePolicy(tpdfDither = true, noiseShaping = true) })
+        unchanged.configure(format(), intArrayOf(48000), 24)
+        try {
+            val samples = IntArray(4096) { it * 7919 - 8000000 }
+            val input = pcm24(samples)
+            val expected = ByteArray(input.remaining()).also { input.duplicate().get(it) }
+            assertArrayEquals(expected, run(unchanged, input, 0))
+        } finally { unchanged.reset() }
+    }
+
     @Test fun enabledDitherAppliesToIntegerPrecisionReductionEvenWithoutGraphEffects() {
         val inputFormat = format().buildUpon().setPcmEncoding(C.ENCODING_PCM_32BIT).build()
         val processor = UsbGraphProcessor(PrecisionBlockProcessor(), { OutputRatePolicy(tpdfDither = true) })

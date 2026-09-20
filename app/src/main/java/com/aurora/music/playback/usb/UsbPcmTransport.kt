@@ -42,7 +42,7 @@ internal class UsbPcmQueue(private val transport: UsbPcmTransport, private val e
                     transport.status().error?.let { error(it) }
                     outstanding.addAndGet(-next.size.toLong())
                     writing = false
-                } else if (ending) {
+                } else if (ending && outstanding.get() == 0L) {
                     writing = true
                     transport.finish()
                     transport.status().error?.let { error(it) }

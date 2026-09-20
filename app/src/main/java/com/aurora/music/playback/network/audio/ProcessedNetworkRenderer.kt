@@ -140,7 +140,8 @@ object ProcessedNetworkRenderer {
                 catch (_: Exception) { throw NetworkRenderingException("The processing graph is unavailable at this sample rate.") }
                 if (prepared.convolutionUnavailableReason != null) throw NetworkRenderingException("An impulse response is unavailable.")
                 graph = prepared
-                val outputWriter = NetworkWaveWriter(destination, dither = snapshot.playback.outputRatePolicy.tpdfDither)
+                val outputWriter = NetworkWaveWriter(destination, dither = snapshot.playback.outputRatePolicy.tpdfDither,
+                    noiseShaping = snapshot.playback.outputRatePolicy.noiseShaping == true)
                 writer = outputWriter
                 processor = NetworkPcmProcessor(prepared, outputWriter, outputGain, delay, padding, checkCancelled)
                 decoded = AudioBlock(AudioStreamFormat(rate, if (channels == 1) ChannelLayout.MONO else ChannelLayout.STEREO), 256)

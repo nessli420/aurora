@@ -18,6 +18,7 @@ object Routes {
     const val LIBRARY = "library"
     const val PROFILE = "profile"
     const val SETTINGS = "settings"
+    const val SETTINGS_ADVANCED_AUDIO = "settings_advanced_audio"
     const val SETTINGS_APPEARANCE = "settings_appearance"
     const val SETTINGS_PLAYBACK = "settings_playback"
     const val SETTINGS_OUTPUT = "settings_output"

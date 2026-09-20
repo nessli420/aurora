@@ -37,7 +37,7 @@ class UsbGraphProcessor(
     private var pendingEngineOutput: AudioBlock? = null
     private var pendingEngineOffset = 0
     private val bytes = ByteBuffer.allocateDirect(8192 * 8).order(ByteOrder.LITTLE_ENDIAN).apply { limit(0) }
-    private val dither = TpdfDither()
+    private val dither = OutputDither()
     @Volatile var volume = 1.0
     var outputFormat: Format = Format.Builder().build(); private set
     var rateFallbackReason: String? = null; private set
@@ -171,9 +171,10 @@ class UsbGraphProcessor(
         if (gain != 1.0) for (i in 0 until block.sampleCount) block.samples[i] *= gain
         bytes.clear()
         outputTimeUs = if (startTimeUs == C.TIME_UNSET) C.TIME_UNSET else startTimeUs + produced * 1_000_000L / outputFormat.sampleRate
+        val needsQuantization = inputEncoding == PcmEncoding.FLOAT_32_LE ||
+            inputEncoding.integerBits > outputEncoding.integerBits || engine.processingChangesSamples || resampler != null || gain != 1.0
         PcmBoundary.encode(block, outputEncoding, bytes,
-            if (policy().tpdfDither && (inputEncoding == PcmEncoding.FLOAT_32_LE ||
-                inputEncoding.integerBits > outputEncoding.integerBits || engine.processingChangesSamples || resampler != null || gain != 1.0)) dither else null)
+            dither.select(if (needsQuantization) policy().ditherMode else OutputDitherMode.OFF))
         bytes.flip()
         after?.observe(bytes, bytes.position(), bytes.limit(), outputTimeUs)
         produced += block.frameCount
@@ -190,6 +191,7 @@ class UsbGraphProcessor(
         ended = false; engineEnded = false; resamplerEnded = false
         pendingEngineOutput = null; pendingEngineOffset = 0
         resampler?.reset()
+        dither.reset()
     }
 
     companion object {

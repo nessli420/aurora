@@ -16,7 +16,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ShowChart
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Backup
 import androidx.compose.material.icons.filled.Alarm
@@ -59,16 +58,10 @@ fun SettingsScreen(
     onOpenOutput: () -> Unit,
     onOpenNetwork: () -> Unit,
     onOpenLoudness: () -> Unit,
-    onOpenListening: () -> Unit,
-    onOpenExtensions: () -> Unit,
+    onOpenAdvancedAudio: () -> Unit,
     onOpenAlarm: () -> Unit,
     onOpenSignalPath: () -> Unit,
     onOpenEq: () -> Unit,
-    onOpenProcessingRack: () -> Unit,
-    onOpenTuning: () -> Unit,
-    onOpenImpulses: () -> Unit,
-    onOpenComparison: () -> Unit,
-    onOpenPresetRules: () -> Unit,
     onOpenVisualizer: () -> Unit,
     onOpenSonic: () -> Unit,
     onOpenSources: () -> Unit,
@@ -87,7 +80,6 @@ fun SettingsScreen(
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val signalPath by container.signalPath.collectAsStateWithLifecycle()
-    val processingRack by container.settingsStore.processingRack.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.ProcessingRack())
     val alarmSummary = alarmSettingsSummary()
     val signalSummary = if (!signalPath.active) "Nothing playing" else buildList {
         add(signalPath.output.ifBlank { "Output unknown" })
@@ -161,21 +153,9 @@ fun SettingsScreen(
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
                     SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
-                        if (processingRack.enabled) "${processingRack.name} · ${processingRack.nodes.size} stages"
-                        else "Standard processing · arrange a custom chain", onClick = onOpenProcessingRack)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.ShowChart, SettingsDestinations.tuning, onClick = onOpenTuning)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.GraphicEq, SettingsDestinations.impulses, onClick = onOpenImpulses)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.comparison, onClick = onOpenComparison)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.presetRules, onClick = onOpenPresetRules)
-                    SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
                     SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.listening, onClick = onOpenListening)
+                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.advancedAudio, onClick = onOpenAdvancedAudio)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
                 }
@@ -203,8 +183,6 @@ fun SettingsScreen(
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Extension, SettingsDestinations.integrations, onClick = onOpenIntegrations)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Extension, SettingsDestinations.extensions, onClick = onOpenExtensions)
                 }
             }
 

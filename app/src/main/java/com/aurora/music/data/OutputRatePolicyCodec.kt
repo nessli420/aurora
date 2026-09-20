@@ -15,8 +15,9 @@ object OutputRatePolicyCodec {
         return policy
     }
     fun encode(policy: OutputRatePolicy): String = Gson().toJson(linkedMapOf(
-        "schemaVersion" to 1, "mode" to validate(policy).mode.name, "fixedRate" to policy.fixedRate,
-        "preserveFamily" to policy.preserveFamily, "maximumRate" to policy.maximumRate, "tpdfDither" to policy.tpdfDither))
+        "schemaVersion" to 2, "mode" to validate(policy).mode.name, "fixedRate" to policy.fixedRate,
+        "preserveFamily" to policy.preserveFamily, "maximumRate" to policy.maximumRate,
+        "tpdfDither" to policy.tpdfDither, "noiseShaping" to (policy.noiseShaping == true)))
 
     fun decode(json: String?): Result<OutputRatePolicy> = runCatching {
         if (json == null) return@runCatching OutputRatePolicy()
@@ -33,15 +34,19 @@ object OutputRatePolicyCodec {
                         require(reader.peek() == JsonToken.NUMBER)
                         reader.nextString().toBigDecimal().intValueExact()
                     }
-                    "preserveFamily", "tpdfDither" -> { require(reader.peek() == JsonToken.BOOLEAN); reader.nextBoolean() }
+                    "preserveFamily", "tpdfDither", "noiseShaping" -> { require(reader.peek() == JsonToken.BOOLEAN); reader.nextBoolean() }
                     "mode" -> { require(reader.peek() == JsonToken.STRING); reader.nextString() }
                     else -> error("Unsupported output field.")
                 }
             }
             reader.endObject()
-            require(reader.peek() == JsonToken.END_DOCUMENT && values["schemaVersion"] == 1 && values.size == 6)
+            require(reader.peek() == JsonToken.END_DOCUMENT)
+            val version = values["schemaVersion"]
+            require((version == 1 && values.size == 6 && "noiseShaping" !in values) ||
+                (version == 2 && values.size == 7 && "noiseShaping" in values))
             validate(OutputRatePolicy(enumValueOf<OutputRateMode>(values["mode"] as String), values["fixedRate"] as Int,
-                values["preserveFamily"] as Boolean, values["maximumRate"] as Int, values["tpdfDither"] as Boolean))
+                values["preserveFamily"] as Boolean, values["maximumRate"] as Int, values["tpdfDither"] as Boolean,
+                values["noiseShaping"] as? Boolean ?: false))
         }
     }
 }

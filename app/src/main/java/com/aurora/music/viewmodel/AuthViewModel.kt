@@ -147,7 +147,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                         ServerType.JELLYFIN -> JellyfinClient.authenticate(server, s.username, s.password)
                         ServerType.SPOTIFY -> throw IllegalStateException("Spotify uses the connect button, not this form")
                         ServerType.LOCAL -> throw IllegalStateException("Local mode doesn't use this form")
-                        ServerType.EXTENSION -> throw IllegalStateException("Enable this source in Settings → Extensions.")
+                        ServerType.EXTENSION -> throw IllegalStateException("Enable this source in Advanced audio → Extensions.")
                     }
                 }
             }

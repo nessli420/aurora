@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.dp
 import com.aurora.music.data.OutputRatePolicyCodec
 import com.aurora.music.playback.engine.OutputRateMode
 import com.aurora.music.playback.engine.OutputRatePolicy
+import com.aurora.music.playback.engine.OutputDitherMode
 
 @Composable
 fun OutputRateSettings(policy: OutputRatePolicy, onChange: (OutputRatePolicy) -> Unit) {
@@ -36,9 +37,12 @@ fun OutputRateSettings(policy: OutputRatePolicy, onChange: (OutputRatePolicy) ->
                 }
                 Text("Precision Android and processed USB. Applies when output reopens.", style = MaterialTheme.typography.bodySmall)
             }
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("TPDF dither for integer output", Modifier.weight(1f))
-                Switch(policy.tpdfDither, { onChange(policy.copy(tpdfDither = it)) })
+            val ditherOptions = listOf("Off", "TPDF", "Noise-shaped")
+            OutputRateMenu("Integer dither", ditherOptions[policy.ditherMode.ordinal], ditherOptions) { index ->
+                onChange(policy.copy(tpdfDither = index != 0, noiseShaping = index == 2))
+            }
+            if (policy.ditherMode == OutputDitherMode.NOISE_SHAPED) {
+                Text("First-order shaping. Uses TPDF below 44.1 kHz.", style = MaterialTheme.typography.bodySmall)
             }
         }
     }

@@ -26,23 +26,33 @@ class PrecisionRackAudioProcessorDeviceTest {
     @Test fun optionalDitherPreservesBypassedSamplesAndOnlyQuantizesProcessedOutput() {
         val bypassed = rack(node("Bypassed gain", RackNodeKind.GAIN, AudioPrefs(dspPreampDb = -6f)).copy(bypass = true))
         val values = IntArray(32768) { (it * 31 % 60001) - 30000 }
-        val adapter = configured(bypassed).apply { tpdfDither = true }
-        try {
-            val input = pcm16(values)
-            val expected = remainingBytes(input)
-            val result = ByteArrayOutputStream()
-            feed(adapter, input, result); finish(adapter, result)
-            assertArrayEquals(expected, result.toByteArray())
-        } finally { adapter.reset() }
-        val processed = configured(rack(node("Gain", RackNodeKind.GAIN, AudioPrefs(dspPreampDb = -6f)))).apply { tpdfDither = true }
-        try {
-            val result = ByteArrayOutputStream()
-            feed(processed, pcm16(IntArray(65536) { 0 }), result); finish(processed, result)
-            val noise = shorts(result.toByteArray())
-            assertTrue(noise.any { it != 0 })
-            assertTrue(noise.all { abs(it) <= 1 })
-            assertTrue(abs(noise.average()) < .02)
-        } finally { processed.reset() }
+        for (shaping in listOf(false, true)) {
+            val adapter = configured(bypassed).apply { tpdfDither = true; noiseShaping = shaping }
+            try {
+                val input = pcm16(values)
+                val expected = remainingBytes(input)
+                val result = ByteArrayOutputStream()
+                feed(adapter, input, result); finish(adapter, result)
+                assertArrayEquals(expected, result.toByteArray())
+            } finally { adapter.reset() }
+            val processed = configured(rack(node("Gain", RackNodeKind.GAIN, AudioPrefs(dspPreampDb = -6f)))).apply {
+                tpdfDither = true; noiseShaping = shaping
+            }
+            try {
+                val result = ByteArrayOutputStream()
+                feed(processed, pcm16(IntArray(65536) { 0 }), result); finish(processed, result)
+                val noise = shorts(result.toByteArray())
+                assertTrue(noise.any { it != 0 })
+                assertTrue(noise.all { abs(it) <= if (shaping) 2 else 1 })
+                assertTrue(abs(noise.average()) < .02)
+                processed.flush()
+                awaitReady(processed.engine)
+                val replay = ByteArrayOutputStream()
+                feedChunks(processed, IntArray(65536), replay, chunkFrames = 113, outputFramesPerRead = 17)
+                finish(processed, replay)
+                assertArrayEquals("Flush clears noise history; buffer sizes do not change output", result.toByteArray(), replay.toByteArray())
+            } finally { processed.reset() }
+        }
     }
 
     @Test fun dryPcm16IsBitIdenticalIncludingFullScaleAndOneLsbSamples() {
@@ -300,10 +310,18 @@ class PrecisionRackAudioProcessorDeviceTest {
 
     private fun feed(adapter: PrecisionRackAudioProcessor, input: ByteBuffer, result: ByteArrayOutputStream,
         outputFramesPerRead: Int = Int.MAX_VALUE) {
-        await("Consume PCM16 input") {
-            if (input.hasRemaining()) adapter.queueInput(input)
+        var deadline = SystemClock.elapsedRealtime() + 5_000
+        while (input.hasRemaining()) {
+            val position = input.position()
+            val written = result.size()
+            adapter.queueInput(input)
             drain(adapter, result, outputFramesPerRead)
-            !input.hasRemaining()
+            if (input.position() != position || result.size() != written) {
+                deadline = SystemClock.elapsedRealtime() + 5_000
+            } else {
+                assertTrue("Consume PCM16 input stalled", SystemClock.elapsedRealtime() < deadline)
+                SystemClock.sleep(1)
+            }
         }
     }
 

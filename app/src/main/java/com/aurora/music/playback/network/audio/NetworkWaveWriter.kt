@@ -3,7 +3,8 @@ package com.aurora.music.playback.network.audio
 import com.aurora.music.playback.engine.AudioBlock
 import com.aurora.music.playback.engine.PcmBoundary
 import com.aurora.music.playback.engine.PcmEncoding
-import com.aurora.music.playback.engine.TpdfDither
+import com.aurora.music.playback.engine.OutputDither
+import com.aurora.music.playback.engine.OutputDitherMode
 import java.io.Closeable
 import java.io.File
 import java.io.RandomAccessFile
@@ -17,10 +18,15 @@ class NetworkWaveWriter(
     val sampleRate: Int = SAMPLE_RATE,
     private val maxBytes: Long = MAX_BYTES,
     dither: Boolean = false,
+    noiseShaping: Boolean = false,
 ) : Closeable {
     private val output: RandomAccessFile
     private val bytes = ByteBuffer.allocate(8192 * FRAME_BYTES)
-    private val noise = if (dither) TpdfDither() else null
+    private val noise = OutputDither().select(when {
+        !dither -> OutputDitherMode.OFF
+        noiseShaping -> OutputDitherMode.NOISE_SHAPED
+        else -> OutputDitherMode.TPDF
+    })
     private var finished = false
     var framesWritten: Long = 0; private set
 

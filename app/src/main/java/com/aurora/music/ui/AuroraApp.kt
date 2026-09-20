@@ -723,16 +723,10 @@ fun AuroraApp() {
                             onOpenOutput = { navController.navigate(Routes.SETTINGS_OUTPUT) },
                             onOpenNetwork = { navController.navigate(Routes.SETTINGS_NETWORK) },
                             onOpenLoudness = { navController.navigate(Routes.SETTINGS_LOUDNESS) },
-                            onOpenListening = { navController.navigate(Routes.SETTINGS_LISTENING) },
-                            onOpenExtensions = { navController.navigate(Routes.SETTINGS_EXTENSIONS) },
+                            onOpenAdvancedAudio = { navController.navigate(Routes.SETTINGS_ADVANCED_AUDIO) },
                             onOpenAlarm = { navController.navigate(Routes.SETTINGS_ALARM) },
                             onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) },
                             onOpenEq = { navController.navigate(Routes.SETTINGS_EQ) },
-                            onOpenProcessingRack = { navController.navigate(Routes.SETTINGS_PROCESSING_RACK) },
-                            onOpenTuning = { navController.navigate(Routes.SETTINGS_TUNING) },
-                            onOpenImpulses = { navController.navigate(Routes.SETTINGS_IMPULSES) },
-                            onOpenComparison = { navController.navigate(Routes.SETTINGS_COMPARISON) },
-                            onOpenPresetRules = { navController.navigate(Routes.SETTINGS_PRESET_RULES) },
                             onOpenVisualizer = { navController.navigate(Routes.SETTINGS_VISUALIZER) },
                             onOpenSonic = { navController.navigate(Routes.SETTINGS_SONIC) },
                             onOpenSources = { navController.navigate(Routes.SETTINGS_SOURCES) },
@@ -746,6 +740,13 @@ fun AuroraApp() {
                             onOpenAccounts = { navController.navigate(Routes.SETTINGS_ACCOUNTS) },
                             onOpenBackup = { navController.navigate(Routes.SETTINGS_BACKUP) },
                             onLogout = { logout() },
+                        )
+                    }
+                    composable(Routes.SETTINGS_ADVANCED_AUDIO) {
+                        com.aurora.music.ui.screens.settings.AdvancedAudioSettingsScreen(
+                            contentPadding = inner,
+                            onBack = { navController.popBackStack() },
+                            onOpen = { destination -> navController.navigate(destination.route) },
                         )
                     }
                     composable(Routes.SETTINGS_LISTENING) {

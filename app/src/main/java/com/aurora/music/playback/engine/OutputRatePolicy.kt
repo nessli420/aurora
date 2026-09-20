@@ -8,7 +8,17 @@ data class OutputRatePolicy(
     val preserveFamily: Boolean = true,
     val maximumRate: Int = 192_000,
     val tpdfDither: Boolean = false,
-)
+    val noiseShaping: Boolean? = false,
+) {
+    val ditherMode: OutputDitherMode get() = when {
+        !tpdfDither -> OutputDitherMode.OFF
+        noiseShaping == true -> OutputDitherMode.NOISE_SHAPED
+        else -> OutputDitherMode.TPDF
+    }
+
+    fun ditherLabel(sampleRate: Int): String = if (ditherMode == OutputDitherMode.NOISE_SHAPED &&
+        sampleRate >= NoiseShapedDither.MIN_SHAPED_RATE) "First-order noise-shaped dither" else "TPDF dither"
+}
 
 data class OutputRateDecision(val sampleRate: Int, val fallbackReason: String? = null)
 

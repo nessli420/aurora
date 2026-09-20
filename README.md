@@ -77,6 +77,8 @@ Save several accounts and switch between them in **Settings → Servers & accoun
 
 Start with a preset for your headphones, earbuds, or speakers, then adjust as much as you want. You can make a small bass change or build and save a complete sound setup.
 
+Everyday controls stay in Settings. Open **Advanced audio** for the processing rack, measurement tuning, correction files, preset comparisons, rules and listening calibration.
+
 - **Detailed equalizers.** Each equalizer in the processing rack supports up to 64 adjustable bands. Choose the frequency, how much to boost or cut, and how wide each adjustment should be. Make broad tone changes or target a narrow problem area, with a graph showing the combined result.
 - **Tuning from measurements.** Import measurements from tools such as REW or Squig, choose the sound you want to aim for, and let Aurora generate the equalizer settings. Set limits on boosts, cuts, and the number of bands. Adjust bass preference and the balance between darker and brighter sound, then compare the original and predicted response.
 - **Separate left and right controls.** Use different corrections for each ear or speaker, or keep them linked. Adjust each channel's volume and timing separately, along with balance and stereo width.
@@ -89,7 +91,7 @@ Start with a preset for your headphones, earbuds, or speakers, then adjust as mu
 - **Check what changed.** Compare a short section of the same song through two presets at matched volume, or use a blind listening test. **Signal Path** shows active effects, before-and-after levels and frequency graphs, and the output format in use.
 - **Estimated listening levels.** Enter your headphone sensitivity and measured DAC and volume data to estimate sound level, with uncertainty shown. Uncalibrated outputs stay unavailable. Optional level samples stay on your device.
 
-The main audio engine uses 64-bit calculations to keep extra precision as effects are combined. There are also controls for output sample rates and audio conversion. Available controls depend on the playback mode; [USB audio](#usb-audio) has its own options and limits.
+The main audio engine uses 64-bit calculations to keep extra precision as effects are combined. There are also controls for output sample rates and audio conversion. Integer output offers TPDF or noise-shaped dither; noise shaping moves conversion noise toward higher frequencies. Available controls depend on the playback mode; [USB audio](#usb-audio) has its own options and limits.
 
 ### Make it yours
 
@@ -119,7 +121,7 @@ To use another Aurora device as a player, enable **Settings → Network audio �
 
 ## Extensions
 
-Install a compatible extension app, then enable it in **Settings → Extensions**. Extensions can add sound presets, read-only music libraries, or tag suggestions. You choose when to load a preset, switch libraries, or apply suggested tags.
+Install a compatible extension app, then enable it in **Settings → Advanced audio → Extensions**. Extensions can add sound presets, read-only music libraries, or tag suggestions. You choose when to load a preset, switch libraries, or apply suggested tags.
 
 Want to build one? The [extension SDK guide](docs/extensions.md) covers API 1, access controls, supported features and the included example app.
 

@@ -232,6 +232,48 @@ class ProcessingPresetBundleTest {
         }
     }
 
+    @Test fun versionFiveBundleKeepsTpdfAndExportsAsVersionSix() {
+        val old = changedManifest {
+            it.addProperty("version", 5)
+            it.getAsJsonObject("preset").apply {
+                addProperty("schemaVersion", 5)
+                getAsJsonObject("playback").apply {
+                    addProperty("usbOutputMode", UsbOutputMode.PROCESSED.name)
+                    getAsJsonObject("outputRatePolicy").apply {
+                        addProperty("tpdfDither", true)
+                        remove("noiseShaping")
+                    }
+                }
+            }
+        }
+        ProcessingPresetBundle.read(ByteArrayInputStream(old), temporary.root).use { read ->
+            assertEquals(6, read.preset.schemaVersion)
+            assertEquals(UsbOutputMode.PROCESSED, read.preset.playback.usbOutputMode)
+            assertEquals(com.aurora.music.playback.engine.OutputRatePolicy(tpdfDither = true), read.preset.playback.outputRatePolicy)
+            val next = export(read.preset)
+            val manifest = JsonParser.parseString(entries(next).getValue("manifest.json").toString(Charsets.UTF_8)).asJsonObject
+            assertEquals(6, manifest.get("version").asInt)
+            assertEquals(6, manifest.getAsJsonObject("preset").get("schemaVersion").asInt)
+            ProcessingPresetBundle.read(ByteArrayInputStream(next), temporary.root).use { current ->
+                assertEquals(read.preset.playback, current.preset.playback)
+                assertEquals(read.preset.rack, current.preset.rack)
+            }
+        }
+    }
+
+    @Test fun versionSixBundleKeepsNoiseShapingAndRejectsMissingMode() {
+        val original = fixture()
+        val policy = com.aurora.music.playback.engine.OutputRatePolicy(tpdfDither = true, noiseShaping = true)
+        val bytes = export(original.copy(playback = original.playback.copy(outputRatePolicy = policy)))
+        ProcessingPresetBundle.read(ByteArrayInputStream(bytes), temporary.root).use {
+            assertEquals(policy, it.preset.playback.outputRatePolicy)
+        }
+        rejects(changedManifest {
+            it.getAsJsonObject("preset").getAsJsonObject("playback").getAsJsonObject("outputRatePolicy").remove("noiseShaping")
+        })
+        rejects(changedManifest { it.addProperty("version", 5) })
+    }
+
     @Test fun metadataExpansionAndInvalidUtf8AreRejected() {
         rejects(archive(mapOf("manifest.json" to ByteArray(512 * 1024 + 1) { ' '.code.toByte() })))
         rejects(archive(mapOf("manifest.json" to byteArrayOf(0xc3.toByte(), 0x28))))

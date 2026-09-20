@@ -4,8 +4,9 @@ import java.nio.ByteBuffer
 import kotlin.math.floor
 
 /** Stateful, deterministic TPDF at one integer LSB peak per random difference. */
-class TpdfDither(seed: Int = 0x51a72e3b) {
-    private var state = if (seed == 0) 1 else seed
+class TpdfDither(seed: Int = 0x51a72e3b) : PcmDither {
+    private val initialState = if (seed == 0) 1 else seed
+    private var state = initialState
     private fun uniform(): Double {
         var x = state
         x = x xor (x shl 13); x = x xor (x ushr 17); x = x xor (x shl 5)
@@ -13,6 +14,12 @@ class TpdfDither(seed: Int = 0x51a72e3b) {
         return (x ushr 1) / 2147483648.0
     }
     internal fun nextLsb(): Double = uniform() - uniform()
+    override fun quantize(value: Double, scale: Double, channel: Int): Long {
+        val finite = if (value.isFinite()) value else 0.0
+        return floor(finite.coerceIn(-1.0, 1.0) * scale + nextLsb() + 0.5)
+            .coerceIn(-scale, scale - 1.0).toLong()
+    }
+    override fun reset() { state = initialState }
 }
 
 /** No allocation, buffer-order dependency, or intermediate integer conversion. */
@@ -34,8 +41,9 @@ object PcmBoundary {
     }
 
     /** Integer output clips and rounds ties toward positive infinity; floats retain headroom. */
-    fun encode(block: AudioBlock, encoding: PcmEncoding, output: ByteBuffer, dither: TpdfDither? = null) {
+    fun encode(block: AudioBlock, encoding: PcmEncoding, output: ByteBuffer, dither: PcmDither? = null) {
         require(output.remaining() >= block.sampleCount * encoding.bytesPerSample)
+        dither?.prepare(block.format, encoding)
         var i = 0
         while (i < block.sampleCount) {
             val raw = block.samples[i++]
@@ -49,8 +57,8 @@ object PcmBoundary {
                 PcmEncoding.FLOAT_64_LE -> writeInteger(output, value.toRawBits(), 8)
                 else -> {
                     val scale = (1L shl (encoding.integerBits - 1)).toDouble()
-                    val rounded = floor(value.coerceIn(-1.0, 1.0) * scale + (dither?.nextLsb() ?: 0.0) + 0.5)
-                    val signed = rounded.coerceIn(-scale, scale - 1.0).toLong()
+                    val signed = dither?.quantize(raw, scale, (i - 1) % block.format.channelCount)
+                        ?: floor(value.coerceIn(-1.0, 1.0) * scale + 0.5).coerceIn(-scale, scale - 1.0).toLong()
                     writeInteger(output, signed, encoding.bytesPerSample)
                 }
             }

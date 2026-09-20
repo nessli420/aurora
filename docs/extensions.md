@@ -17,7 +17,7 @@ On Windows, use `gradlew.bat`. The outputs are:
 - `extension-sdk/build/outputs/aar/extension-sdk-release.aar`
 - `examples/extension/build/outputs/apk/debug/extension-example-debug.apk`
 
-Install the example APK alongside Aurora. Open **Settings → Extensions**, refresh, and enable **Aurora extension example**. It provides a gain preset, a short test tone and a tag suggestion.
+Install the example APK alongside Aurora. Open **Settings → Advanced audio → Extensions**, refresh, and enable **Aurora extension example**. It provides a gain preset, a short test tone and a tag suggestion.
 
 The [example app](../examples/extension) and [SDK](../extension-sdk) use the repository's [Apache 2.0 license](../LICENSE). Use your own package name and state your extension's license.
 
@@ -138,7 +138,7 @@ Aurora calls enabled metadata extensions when the user requests a tag lookup. Th
 
 ## Access and failure handling
 
-- Installing an extension does not enable it. The user enables its declared capabilities in **Settings → Extensions**.
+- Installing an extension does not enable it. The user enables its declared capabilities in **Settings → Advanced audio → Extensions**.
 - Aurora records the app's signing certificate digest and capabilities. A changed signer or capability list requires enabling it again. Restoring an Aurora backup leaves all extension access disabled.
 - Aurora checks the responding UID, request ID, API version, message size and response fields. The SDK service runs calls on its own worker thread in the extension app's process.
 - The SDK's default caller check accepts UIDs containing the `com.aurora.music` package. This is a basic package check, not a certificate check. Override `acceptsCaller()` and check certificates if your extension requires a specific Aurora distribution. Apply the same policy to your content provider.

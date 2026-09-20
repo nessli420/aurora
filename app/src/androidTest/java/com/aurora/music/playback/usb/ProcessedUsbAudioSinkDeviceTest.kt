@@ -222,11 +222,21 @@ class ProcessedUsbAudioSinkDeviceTest {
         val fake = Transport()
         val queue = UsbPcmQueue(fake, C.ENCODING_PCM_24BIT, 6)
         try {
-            queue.play(); SystemClock.sleep(5); queue.pause()
+            val worker = UsbPcmQueue::class.java.getDeclaredField("thread").apply { isAccessible = true }.get(queue) as Thread
+            queue.play()
+            await { worker.state == Thread.State.TIMED_WAITING }
+            queue.pause()
+            await { worker.state == Thread.State.WAITING }
             assertTrue(queue.offer(pcm(4, 900)))
-            SystemClock.sleep(60); assertEquals(0, fake.bytes().size)
-            queue.play(); queue.end(); await { queue.finished }
+            queue.end()
+            assertTrue(queue.pending)
+            assertFalse(queue.finished)
+            assertEquals(0, fake.bytes().size)
+            queue.play(); await { queue.finished }
             assertArrayEquals(pcm(4, 900).array(), fake.bytes())
+            assertEquals(4L, fake.completed)
+            assertFalse(queue.pending)
+            assertNull(queue.failure)
         } finally { queue.close() }
     }
 

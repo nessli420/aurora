@@ -123,6 +123,22 @@ class ProcessingPresetTest {
         }).error)
     }
 
+    @Test fun oldPresetsRetainTpdfAndNewPresetsRetainNoiseShaping() {
+        val policy = com.aurora.music.playback.engine.OutputRatePolicy(tpdfDither = true, noiseShaping = true)
+        val preset = fixture().copy(playback = fixture().playback.copy(outputRatePolicy = policy))
+        val json = ProcessingPresetCodec.encode(listOf(preset))
+        assertEquals(preset, ProcessingPresetCodec.decode(json).presets.single())
+        val legacy = JsonParser.parseString(json).asJsonArray.apply {
+            get(0).asJsonObject.addProperty("schemaVersion", 5)
+            get(0).asJsonObject.getAsJsonObject("playback").getAsJsonObject("outputRatePolicy").remove("noiseShaping")
+        }
+        val migrated = ProcessingPresetCodec.decode(legacy.toString())
+        assertNull(migrated.error)
+        assertEquals(policy.copy(noiseShaping = false), migrated.presets.single().playback.outputRatePolicy)
+        legacy[0].asJsonObject.addProperty("schemaVersion", 6)
+        assertNotNull(ProcessingPresetCodec.decode(legacy.toString()).error)
+    }
+
     @Test fun versionFourPresetsMigrateUsbPolicyWithoutChangingSound() {
         val original = fixture()
         val json = JsonParser.parseString(ProcessingPresetCodec.encode(listOf(original))).asJsonArray

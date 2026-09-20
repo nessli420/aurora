@@ -16,7 +16,8 @@ import java.nio.ByteOrder
 @UnstableApi
 class PrecisionRackAudioProcessor(val engine: PrecisionBlockProcessor = PrecisionBlockProcessor()) : AudioProcessor {
     @Volatile var tpdfDither: Boolean = false
-    private val dither = com.aurora.music.playback.engine.TpdfDither()
+    @Volatile var noiseShaping: Boolean = false
+    private val dither = com.aurora.music.playback.engine.OutputDither()
     private var pendingFormat = AudioFormat.NOT_SET
     private var activeFormat = AudioFormat.NOT_SET
     private var block: AudioBlock? = null
@@ -50,8 +51,13 @@ class PrecisionRackAudioProcessor(val engine: PrecisionBlockProcessor = Precisio
         if (pcm.hasRemaining()) return false
         val ready = engine.getOutput() ?: return false
         pcm.clear()
+        val mode = when {
+            !tpdfDither || !engine.processingChangesSamples -> com.aurora.music.playback.engine.OutputDitherMode.OFF
+            noiseShaping -> com.aurora.music.playback.engine.OutputDitherMode.NOISE_SHAPED
+            else -> com.aurora.music.playback.engine.OutputDitherMode.TPDF
+        }
         PcmBoundary.encode(ready, PcmEncoding.SIGNED_16_LE, pcm,
-            if (tpdfDither && engine.processingChangesSamples) dither else null)
+            dither.select(mode))
         pcm.flip()
         output = pcm
         return true
@@ -70,6 +76,7 @@ class PrecisionRackAudioProcessor(val engine: PrecisionBlockProcessor = Precisio
 
     override fun flush() {
         engine.flush()
+        dither.reset()
         activeFormat = pendingFormat
         pcm.clear().limit(0); output = AudioProcessor.EMPTY_BUFFER; ended = false
         if (activeFormat != AudioFormat.NOT_SET) {
@@ -80,6 +87,7 @@ class PrecisionRackAudioProcessor(val engine: PrecisionBlockProcessor = Precisio
 
     override fun reset() {
         engine.reset()
+        dither.reset()
         pendingFormat = AudioFormat.NOT_SET; activeFormat = AudioFormat.NOT_SET; block = null
         pcm.clear().limit(0); output = AudioProcessor.EMPTY_BUFFER; ended = false
     }

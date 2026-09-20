@@ -77,7 +77,7 @@ private data class ProcessingPresetDto(
 )
 
 object ProcessingPresetCodec {
-    const val SCHEMA_VERSION = 5
+    const val SCHEMA_VERSION = 6
     const val MAX_PRESETS = 100
     private const val MAX_JSON_CHARS = 2_000_000
     private val gson = Gson()
@@ -122,7 +122,7 @@ object ProcessingPresetCodec {
         require(element.isJsonObject) { "A saved preset is not an object." }
         val o = element.asJsonObject
         val version = number(o, "schemaVersion")
-        require(version in setOf(1.0, 2.0, 3.0, 4.0, SCHEMA_VERSION.toDouble())) { "Unsupported preset schema version." }
+        require(version in setOf(1.0, 2.0, 3.0, 4.0, 5.0, SCHEMA_VERSION.toDouble())) { "Unsupported preset schema version." }
         val keys = setOf("id", "name", "schemaVersion", "createdAtMs", "audio", "playback", "activeEqProfile", "irSha256")
         require(o.keySet() == when { version == 1.0 -> keys; version >= 4.0 -> keys + setOf("rack", "rackImpulseAssets"); else -> keys + "rack" }) { "Preset fields are incomplete or unsupported." }
         string(o, "id"); string(o, "name"); number(o, "createdAtMs")
@@ -144,9 +144,11 @@ object ProcessingPresetCodec {
             playback.addProperty("usbOutputMode", UsbOutputMode.DIRECT.name)
             playback.addProperty("usbFallbackPolicy", UsbFallbackPolicy.PAUSE.name)
         }
+        val savedOutputPolicy = playback.getAsJsonObject("outputRatePolicy")
+        if (version < 6.0 && !savedOutputPolicy.has("noiseShaping")) savedOutputPolicy.addProperty("noiseShaping", false)
         validateShape(playback, playbackShape)
         val a = readAudio(audio)
-        val outputJson = playback.getAsJsonObject("outputRatePolicy").deepCopy().apply { addProperty("schemaVersion", 1) }
+        val outputJson = savedOutputPolicy.deepCopy().apply { addProperty("schemaVersion", 2) }
         val outputPolicy = OutputRatePolicyCodec.decode(outputJson.toString()).getOrThrow()
         val mode = UsbOutputPolicy.decodeMode(string(playback, "usbOutputMode")).getOrThrow()
         val fallback = UsbOutputPolicy.decodeFallback(string(playback, "usbFallbackPolicy")).getOrThrow()
