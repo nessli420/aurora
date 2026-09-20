@@ -98,6 +98,7 @@ data class PlaybackPrefs(
     val usbOutputMode: UsbOutputMode = UsbOutputMode.DIRECT,
     val usbFallbackPolicy: UsbFallbackPolicy = UsbFallbackPolicy.PAUSE,
     val usbDsdMode: UsbDsdMode? = null,
+    val usbDsdExperimental: Boolean? = null,
 )
 
 object VisualizerStyle {
@@ -350,6 +351,7 @@ class SettingsStore(private val context: Context) {
         val BIT_PERFECT_USB = booleanPreferencesKey("bit_perfect_usb")
         val USB_OUTPUT_MODE = stringPreferencesKey(UsbOutputPolicy.MODE_KEY)
         val USB_DSD_MODE = stringPreferencesKey("usb_dsd_mode")
+        val USB_DSD_EXPERIMENTAL = booleanPreferencesKey("usb_dsd_experimental")
         val USB_FALLBACK_POLICY = stringPreferencesKey(UsbOutputPolicy.FALLBACK_KEY)
         val INDEPENDENT_OUTPUT = booleanPreferencesKey("independent_output")
         val VIZ_STYLE = intPreferencesKey("viz_style")
@@ -1545,6 +1547,7 @@ class SettingsStore(private val context: Context) {
             usbOutputMode = UsbOutputPolicy.decodeMode(p[Keys.USB_OUTPUT_MODE]).getOrThrow(),
             usbFallbackPolicy = UsbOutputPolicy.decodeFallback(p[Keys.USB_FALLBACK_POLICY]).getOrThrow(),
             usbDsdMode = p[Keys.USB_DSD_MODE]?.let { value -> UsbDsdMode.entries.firstOrNull { it.name == value } } ?: UsbDsdMode.PCM,
+            usbDsdExperimental = p[Keys.USB_DSD_EXPERIMENTAL] ?: false,
             independentOutput = p[Keys.INDEPENDENT_OUTPUT] ?: false,
             outputRatePolicy = OutputRatePolicyCodec.decode(p[Keys.OUTPUT_RATE_POLICY]).getOrThrow(),
         )
@@ -1718,6 +1721,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setBitPerfectUsb(v: Boolean) = editManualProcessing { it[Keys.BIT_PERFECT_USB] = v }
     suspend fun setUsbOutputMode(v: UsbOutputMode) = editManualProcessing { it[Keys.USB_OUTPUT_MODE] = v.name }
     suspend fun setUsbDsdMode(v: UsbDsdMode) { context.dataStore.edit { it[Keys.USB_DSD_MODE] = v.name } }
+    suspend fun setUsbDsdExperimental(v: Boolean) { context.dataStore.edit { it[Keys.USB_DSD_EXPERIMENTAL] = v } }
     suspend fun setUsbFallbackPolicy(v: UsbFallbackPolicy) = editManualProcessing { it[Keys.USB_FALLBACK_POLICY] = v.name }
     suspend fun setIndependentOutput(v: Boolean) = editManualProcessing { it[Keys.INDEPENDENT_OUTPUT] = v }
     suspend fun setScrobble(v: Boolean) = context.dataStore.edit { it[Keys.SCROBBLE] = v }

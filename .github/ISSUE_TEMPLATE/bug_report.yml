@@ -55,7 +55,7 @@ body:
     id: audio
     attributes:
       label: Playback details
-      description: For audio problems, include the output device, active effects and file format if known. For server problems, include the server software version.
+      description: Include the output device, active effects and file format. For DSD, include the DAC model, DSD rate, DoP/native mode, Experimental DSD setting and DAC mode indicator. For server problems, include the server software version.
       placeholder: Speaker, Bluetooth, USB DAC model and mode, Cast or DLNA receiver; active preset; FLAC, MP3, DSF or other format.
   - type: textarea
     id: evidence

@@ -127,6 +127,7 @@ fun AudioOutputSettingsScreen(
                     onMode = { value -> scope.launch { store.setUsbOutputMode(value) } },
                     onFallback = { value -> scope.launch { store.setUsbFallbackPolicy(value) } },
                     onDsdMode = { value -> scope.launch { store.setUsbDsdMode(value) } },
+                    onExperimentalDsd = { value -> scope.launch { store.setUsbDsdExperimental(value) } },
                 )
             }
             item { SettingsSectionTitle("Android capabilities") }

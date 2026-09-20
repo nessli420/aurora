@@ -228,7 +228,7 @@ class PlaybackService : MediaLibraryService() {
                 out: java.util.ArrayList<androidx.media3.exoplayer.Renderer>) {
                 if (dsdWire != null) {
                     val rawSink = com.aurora.music.playback.dsd.RawDsdAudioSink(DefaultAudioSink.Builder(context).build(), dsdWire,
-                        { usbSink?.reset(); com.aurora.music.playback.dsd.NativeDsdUsbTransport(context, dsdWire) },
+                        { usbSink?.reset(); com.aurora.music.playback.dsd.NativeDsdUsbTransport(context, dsdWire, initialPrefs.usbDsdExperimental == true) },
                         {
                             rawDsdSink?.telemetry?.let {
                                 if (it.failure != null) rawDsdFailure = it.failure
@@ -809,7 +809,7 @@ class PlaybackService : MediaLibraryService() {
                 resampling = com.aurora.music.data.SignalStage("Resampling", "None", "Original DSD bit rate"),
                 outputStage = com.aurora.music.data.SignalStage("Output", mode, "USB clock readback: ${status.clockRate ?: 0} Hz",
                     SignalFormat(rawDsd.carrierRate, rawDsd.containerBits, 2, if (mode == "DoP") "DoP carrier" else "raw USB frames")),
-                device = com.aurora.music.data.SignalStage("Device", "USB DAC", "USB transfers confirmed; DAC decoding is not measured"),
+                device = com.aurora.music.data.SignalStage("Device", "USB DAC", rawDsd.transportDetail ?: "USB transfers confirmed; DAC decoding is not measured"),
                 usbDiagnostics = com.aurora.music.data.UsbDiagnostics(status.completedFrames, status.pendingFrames, status.packetErrors, status.timeouts))
             return
         }

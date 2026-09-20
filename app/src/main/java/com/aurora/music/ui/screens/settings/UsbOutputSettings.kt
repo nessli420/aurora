@@ -21,6 +21,7 @@ fun UsbOutputSettings(
     onMode: (UsbOutputMode) -> Unit,
     onFallback: (UsbFallbackPolicy) -> Unit,
     onDsdMode: (UsbDsdMode) -> Unit,
+    onExperimentalDsd: (Boolean) -> Unit,
 ) {
     SettingsGroup {
         SettingsSwitchRow(Icons.Filled.Usb, "USB DAC output", "Restart Aurora to apply USB settings.",
@@ -46,6 +47,11 @@ fun UsbOutputSettings(
                 Text("Raw DSD requires a supported DAC and stops if unavailable.",
                     Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (prefs.usbDsdMode != null && prefs.usbDsdMode != UsbDsdMode.PCM) {
+                    SettingsSwitchRow(Icons.Filled.Usb, "Experimental DSD",
+                        "Other DACs and rates up to DSD1024. Untested hardware support. Disconnect headphones until DSD mode is confirmed.",
+                        prefs.usbDsdExperimental == true, onExperimentalDsd)
+                }
             }
             if (prefs.usbFallbackPolicy == UsbFallbackPolicy.ANDROID) {
                 Text("Playback may continue through the speaker.", Modifier.padding(horizontal = 20.dp, vertical = 6.dp),

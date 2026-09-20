@@ -6,7 +6,8 @@ import java.util.concurrent.ArrayBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicLong
 
-data class UsbPcmCapabilities(val rates: IntArray, val validBits: Int, val containerBits: Int, val channels: Int = 2)
+data class UsbPcmCapabilities(val rates: IntArray, val validBits: Int, val containerBits: Int, val channels: Int = 2,
+    val detail: String? = null)
 data class UsbPcmStatus(val completedFrames: Long = 0, val pendingFrames: Long = 0,
     val packetErrors: Long = 0, val timeouts: Long = 0, val clockRate: Int? = null, val error: String? = null)
 

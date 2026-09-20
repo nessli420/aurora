@@ -22,6 +22,31 @@ private object UsbDriverTestSupport {
 }
 
 class UsbDriverDeviceTest {
+    @Test fun experimentalDsdRatesPreservePayloadAndMarkersAcrossLargeUsbPackets() {
+        for (wire in 1..2) for (rate in if (wire == 1) listOf(705600, 1411200, 2822400) else listOf(705600, 1411200)) {
+            for (bits in if (wire == 1) listOf(24, 32) else listOf(32)) for (frames in listOf(1, 10003)) {
+                val bytes = bits / 8
+                val input = ByteArray(frames * 2 * bytes) { at ->
+                    if (wire == 1 && at % bytes == bytes - 1) (if (at / (2 * bytes) % 2 == 0) 5 else 0xfa).toByte()
+                    else if (wire == 1 && bytes == 4 && at % bytes == 0) 0 else (at * 73).toByte()
+                }
+                val whole = requireNotNull(UsbDriverTestSupport.packetize(input, rate, 2, bits, 65536, wire))
+                for (chunk in listOf(1, 113, 997)) {
+                    assertArrayEquals(whole, UsbDriverTestSupport.packetize(input, rate, 2, bits, chunk, wire))
+                }
+                assertArrayEquals(input, whole.copyOf(input.size))
+                for (at in input.size until whole.size) {
+                    val expected = if (wire == 1 && at % bytes == bytes - 1) {
+                        if (at / (2 * bytes) % 2 == 0) 5 else 0xfa
+                    } else if (wire == 1 && bytes == 4 && at % bytes == 0) 0 else 0x69
+                    assertEquals(expected, whole[at].toInt() and 255)
+                }
+            }
+        }
+        assertNull(UsbDriverTestSupport.packetize(ByteArray(8), 705600, 2, 32, 1, 0))
+        assertNull(UsbDriverTestSupport.packetize(ByteArray(8), 2822400, 2, 32, 1, 2))
+    }
+
     @Test fun rawDsdPacketsPreserveMarkersAndUseFormatSpecificTailPadding() {
         for (wire in 1..2) for (bits in if (wire == 1) listOf(24, 32) else listOf(32)) for (frames in listOf(1, 31, 176, 177, 997)) {
             val bytes = bits / 8

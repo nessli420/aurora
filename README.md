@@ -111,7 +111,9 @@ Connect a USB DAC and open **Settings → Audio output → USB DAC output**. A D
 
 Restart Aurora after changing USB settings. **Signal Path** shows the output in use and any fallback.
 
-USB support is still experimental and varies by phone and DAC. Direct and processed playback have been tested with a **FiiO KA13**. [DSF/DFF files](docs/audio-formats.md) are supported through audio conversion; unchanged DSD output is not supported.
+USB support varies by phone and DAC. Direct and processed playback have been tested with a **FiiO KA13**, including native DSD64–256 and DoP64–128. [DSF/DFF files](docs/audio-formats.md) through DSD1024 can also play through PCM conversion.
+
+**Experimental DSD** is an optional setting for other DACs and raw output up to DSD1024. Higher-rate hardware support is untested. The DAC must expose a compatible USB format, clock and packet capacity; some DACs need driver support that Aurora does not yet have. Disconnect headphones until the DAC confirms DSD mode. Report results with your DAC model, DSD rate, output mode and Signal Path report.
 
 ## Network audio
 

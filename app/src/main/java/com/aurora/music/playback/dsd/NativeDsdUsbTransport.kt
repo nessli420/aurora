@@ -11,7 +11,8 @@ import com.decent.usbaudio.UsbAudioFormat
 import com.decent.usbaudio.UsbAudioStream
 
 @androidx.annotation.OptIn(androidx.media3.common.util.UnstableApi::class)
-class NativeDsdUsbTransport(context: Context, private val wire: DsdWireFormat) : UsbPcmTransport {
+class NativeDsdUsbTransport(context: Context, private val wire: DsdWireFormat,
+    private val experimental: Boolean = false) : UsbPcmTransport {
     private val usb = UsbAudioDevice.getInstance(context)
     private var info: UsbAudioDeviceInfo? = null
     private var selected: UsbAudioFormat? = null
@@ -20,29 +21,31 @@ class NativeDsdUsbTransport(context: Context, private val wire: DsdWireFormat) :
 
     override fun capabilities(source: Format): UsbPcmCapabilities {
         val device = usb.findUsbAudioDevice() ?: error("No USB DAC connected.")
-        check(device.vendorId == 0x2972 && device.productId == 0x0062) { "Raw DSD is not supported for this DAC. Use PCM conversion." }
         check(usb.hasPermission(device)) { "USB permission is required." }
         val sourceInfo = requireNotNull(DsdSourceInfo.from(source))
         require(sourceInfo.channels == 2) { "Raw USB DSD requires stereo." }
-        val maximum = if (wire == DsdWireFormat.DOP) 5_644_800 else 11_289_600
-        require(sourceInfo.bitRate in DsdFormat.supportedBitRates && sourceInfo.bitRate <= maximum) { "This DSD rate exceeds the DAC's raw output range. Use PCM conversion." }
-        val opened = usb.openDevice(device) ?: error(usb.lastFailure ?: "USB could not open.")
+        val rate = DsdUsbPolicy.carrierRate(device.vendorId, device.productId, sourceInfo.bitRate, wire, experimental)
+        val opened = usb.openDevice(device, experimental) ?: error(usb.lastFailure ?: "USB could not open.")
         info = opened
-        val rate = sourceInfo.bitRate / (wire.sourceBytes * 8)
         val candidates = opened.formats.filter { f ->
-            f.channels == 2 && f.fits(rate) && (if (wire == DsdWireFormat.DOP)
-                f.unsupportedReason == null && f.validBits >= 24 else f.rawUnsupportedReason == null) &&
-                usb.getClockRates(f).any { it.contains(rate) }
+            f.channels == 2 && f.fits(rate, experimental) && (if (wire == DsdWireFormat.DOP)
+                f.pcmUnsupportedReason(experimental) == null && f.validBits >= 24 else f.rawUnsupportedReason(experimental) == null) &&
+                usb.getClockRates(f, experimental).any { it.contains(rate) }
         }
-        val format = candidates.minByOrNull { it.containerBytes } ?: error("No verified USB clock for this DSD rate.")
+        val format = candidates.minByOrNull { it.containerBytes }
+            ?: error("No compatible USB format, clock or packet capacity for DSD${sourceInfo.bitRate / 44100} ($rate Hz carrier).")
         selected = format
-        return UsbPcmCapabilities(intArrayOf(rate), format.validBits, format.containerBits)
+        val id = String.format(java.util.Locale.ROOT, "%04x:%04x", device.vendorId, device.productId)
+        val layout = if (wire == DsdWireFormat.DOP) "DoP" else "MSB32 raw"
+        val validation = if (device.vendorId == 0x2972 && device.productId == 0x0062) "KA13 profile" else "Experimental; DAC decoding unverified"
+        val detail = "$validation; USB $id; $layout; interface ${format.interfaceId}/${format.alternateSetting}; endpoint ${format.endpointOut}; packet ${format.maxPacketSize} bytes"
+        return UsbPcmCapabilities(intArrayOf(rate), format.validBits, format.containerBits, detail = detail)
     }
 
     override fun start(format: Format) {
         val selected = checkNotNull(selected)
-        val configured = if (wire == DsdWireFormat.DOP) usb.configureFormat(selected, format.sampleRate)
-            else usb.configureRawFormat(selected, format.sampleRate)
+        val configured = if (wire == DsdWireFormat.DOP) usb.configureFormat(selected, format.sampleRate, experimental)
+            else usb.configureRawFormat(selected, format.sampleRate, experimental)
         check(configured.verified) { configured.failure ?: "USB clock could not be verified." }
         clock = configured.observedHz
         val created = UsbAudioStream(checkNotNull(info).fd, selected.interfaceId, selected.endpointOut,

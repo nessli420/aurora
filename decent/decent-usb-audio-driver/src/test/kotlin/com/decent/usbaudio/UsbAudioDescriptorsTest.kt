@@ -6,6 +6,38 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 
 class UsbAudioDescriptorsTest {
+    @Test fun experimentalPacketsRequireOptInAndEnoughCapacity() {
+        val pcm = UsbAudioDescriptors.parse(uac2()).formats.single().copy(maxPacketSize = 3072)
+        assertNotNull(pcm.unsupportedReason)
+        assertNull(pcm.pcmUnsupportedReason(true))
+        assertFalse(pcm.fits(2822400))
+        assertTrue(pcm.fits(2822400, true))
+        assertFalse(pcm.copy(maxPacketSize = 2048).fits(2822400, true))
+        assertFalse(pcm.copy(maxPacketSize = 3073).transportUnsupportedReason(true) == null)
+        val raw = pcm.copy(pcm = false, formatBitmap = 0x80000000L, validBits = 32)
+        assertNull(raw.rawUnsupportedReason(true))
+        assertTrue(raw.copy(maxPacketSize = 2048).fits(1411200, true))
+        assertFalse(raw.copy(maxPacketSize = 1024).fits(1411200, true))
+        assertNotNull(raw.copy(formatBitmap = 4).rawUnsupportedReason(true))
+        assertNotNull(raw.copy(containerBytes = 3).rawUnsupportedReason(true))
+        assertNotNull(raw.copy(endpointFeedback = -1).rawUnsupportedReason(true))
+        assertNotNull(raw.copy(interval = 2).rawUnsupportedReason(true))
+    }
+
+    @Test fun highBandwidthDescriptorsRejectReservedTransactionCountsAndOversizedPayloads() {
+        fun endpoint(packet: Int): UsbDescriptorReport {
+            val bytes = uac2()
+            val start = (0 until bytes.size - 7).first { bytes[it] == 7.toByte() && bytes[it + 1] == 5.toByte() }
+            bytes[start + 4] = packet.toByte(); bytes[start + 5] = (packet ushr 8).toByte()
+            return UsbAudioDescriptors.parse(bytes)
+        }
+        assertEquals(3072, endpoint(0x1400).formats.single().maxPacketSize)
+        assertEquals(2048, endpoint(0x0c00).formats.single().maxPacketSize)
+        assertTrue(endpoint(0x1c00).malformed)
+        assertTrue(endpoint(0x1401).malformed)
+        assertTrue(endpoint(0x3400).malformed)
+    }
+
     @Test fun fullFormatBitmapPreservesRawDataWithoutMakingItPcm() {
         val bytes = uac2()
         val header = (0 until bytes.size - 16).first { bytes[it] == 16.toByte() && bytes[it + 1] == 0x24.toByte() }

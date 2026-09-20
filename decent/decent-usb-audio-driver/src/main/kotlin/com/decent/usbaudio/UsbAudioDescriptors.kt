@@ -26,29 +26,32 @@ data class UsbAudioFormat(
     val formatType: Int = 1,
 ) {
     val containerBits get() = containerBytes * 8
-    val unsupportedReason: String? get() = when {
-        transportUnsupportedReason != null -> transportUnsupportedReason
+    val unsupportedReason: String? get() = pcmUnsupportedReason(false)
+    fun pcmUnsupportedReason(experimentalDsd: Boolean): String? = when {
+        transportUnsupportedReason(experimentalDsd) != null -> transportUnsupportedReason(experimentalDsd)
         !pcm -> "The USB format is not integer PCM."
         containerBytes !in 2..4 || validBits !in 16..containerBits -> "Unsupported PCM sample layout."
         else -> null
     }
-    val rawUnsupportedReason: String? get() = when {
-        transportUnsupportedReason != null -> transportUnsupportedReason
+    val rawUnsupportedReason: String? get() = rawUnsupportedReason(false)
+    fun rawUnsupportedReason(experimentalDsd: Boolean): String? = when {
+        transportUnsupportedReason(experimentalDsd) != null -> transportUnsupportedReason(experimentalDsd)
         formatType != 1 || formatBitmap != 0x80000000L -> "The USB format is not Type I raw data."
         containerBytes != 4 || validBits != 32 -> "Unsupported raw USB sample layout."
         else -> null
     }
-    val transportUnsupportedReason: String? get() = when {
+    val transportUnsupportedReason: String? get() = transportUnsupportedReason(false)
+    fun transportUnsupportedReason(experimentalDsd: Boolean): String? = when {
         protocol != 0x20 -> "Direct output requires USB Audio Class 2."
         formatType != 1 -> "The USB format is not Type I."
         channels !in 1..2 -> "Direct output supports mono or stereo."
         interval != 1 -> "The USB endpoint interval is unsupported."
-        maxPacketSize !in 1..512 -> "The USB packet size exceeds the driver budget."
+        maxPacketSize !in 1..(if (experimentalDsd) 3072 else 512) -> "The USB packet size exceeds the driver budget."
         clockSourceId <= 0 || clockControls and 1 == 0 -> "The active USB clock cannot be verified."
         synchronization == 1 && endpointFeedback <= 0 -> "Explicit asynchronous feedback is required."
         else -> null
     }
-    fun fits(rate: Int): Boolean = rate in 8000..384000 &&
+    fun fits(rate: Int, experimentalDsd: Boolean = false): Boolean = rate in 8000..(if (experimentalDsd) 2822400 else 384000) &&
         kotlin.math.ceil(rate * (if (synchronization == 1) 1.01 else 1.0) / 8000.0).toInt() * channels * containerBytes <= maxPacketSize
 }
 
@@ -120,7 +123,10 @@ object UsbAudioDescriptors {
                     if (attributes and 3 == 1) {
                         if (address and 0x80 == 0 && attributes and 0x30 == 0) {
                             s.out = address; val packet = u(offset + 4) or (u(offset + 5) shl 8)
-                            s.packet = (packet and 0x7ff) * (1 + (packet shr 11 and 3))
+                            val payload = packet and 0x7ff
+                            val transactions = packet shr 11 and 3
+                            if (packet and 0xe000 != 0 || transactions == 3 || payload > 1024) malformed = true
+                            s.packet = payload * (1 + transactions)
                             s.interval = u(offset + 6); s.sync = attributes shr 2 and 3
                         } else if (address and 0x80 != 0 && attributes and 0x30 == 0x10) s.feedback = address
                     }

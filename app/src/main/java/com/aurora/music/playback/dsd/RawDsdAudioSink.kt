@@ -13,7 +13,7 @@ import java.nio.ByteBuffer
 
 data class DsdUsbTelemetry(val source: Format? = null, val wire: DsdWireFormat? = null,
     val carrierRate: Int = 0, val containerBits: Int = 0, val active: Boolean = false,
-    val status: UsbPcmStatus = UsbPcmStatus(), val failure: String? = null)
+    val status: UsbPcmStatus = UsbPcmStatus(), val failure: String? = null, val transportDetail: String? = null)
 
 @UnstableApi
 class RawDsdAudioSink(delegate: AudioSink, private val wire: DsdWireFormat,
@@ -53,7 +53,7 @@ class RawDsdAudioSink(delegate: AudioSink, private val wire: DsdWireFormat,
             transport = candidate
             packer = DsdUsbPacker(next.channelCount, wire, caps.containerBits / 8)
             queue = UsbPcmQueue(candidate, C.ENCODING_INVALID, next.channelCount * caps.containerBits / 8).also { if (playing) it.play() }
-            evidence = DsdUsbTelemetry(next, wire, rate, caps.containerBits, true)
+            evidence = DsdUsbTelemetry(next, wire, rate, caps.containerBits, true, transportDetail = caps.detail)
         } catch (failure: Exception) {
             runCatching { candidate.close() }
             evidence = DsdUsbTelemetry(source = next, wire = wire, failure = failure.message ?: "DSD USB output is unavailable.")
