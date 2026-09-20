@@ -48,7 +48,7 @@ import com.aurora.music.data.SignalFormat
 import com.aurora.music.data.SignalStage
 import com.aurora.music.data.AudioMeasurements
 import com.aurora.music.data.PcmLevels
-import com.aurora.music.data.AlignedSpectrum
+import com.aurora.music.data.AudioSpectrum
 import java.util.Locale
 import kotlin.math.log10
 import kotlin.math.ln
@@ -182,9 +182,9 @@ private fun MeasurementCard(measurements: AudioMeasurements) {
             if (measurements.afterAvailable) MeterReading("After app processing", measurements.after)
             else Text("After-processing measurement unavailable on this path or channel layout.", style = MaterialTheme.typography.bodySmall)
             measurements.spectrum?.let { SpectrumChart(it) }
-                ?: Text("Aligned spectrum unavailable.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                ?: Text("Waiting for audio samples.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = { details = !details }) { Text(if (details) "Hide measurement details" else "Measurement details") }
-            if (details) Text("Sample peak and RMS, before output volume and Android effects. Level windows are independent; spectra match PCM timestamps. Full-scale counts reset on seek or format change. These are not true-peak, loudness or acoustic measurements.",
+            if (details) Text("Sample peak and RMS, before output volume and Android effects. Level windows are independent; paired spectra match PCM timestamps. Full-scale counts reset on seek or format change. These are not true-peak, loudness or acoustic measurements.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (measurements.overlappingPlayers) Text("Crossfade: primary player only.",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -193,14 +193,14 @@ private fun MeasurementCard(measurements: AudioMeasurements) {
 }
 
 @Composable
-private fun SpectrumChart(spectrum: AlignedSpectrum) {
+private fun SpectrumChart(spectrum: AudioSpectrum) {
     val before = MaterialTheme.colorScheme.tertiary
     val after = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
-    Text("Aligned spectrum · Stereo power", style = MaterialTheme.typography.titleSmall)
+    Text(if (spectrum.afterDb != null) "Aligned spectrum" else "Source spectrum", style = MaterialTheme.typography.titleSmall)
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("Before", color = before, style = MaterialTheme.typography.labelMedium)
-        Text("After", color = after, style = MaterialTheme.typography.labelMedium)
+        if (spectrum.afterDb != null) Text("After", color = after, style = MaterialTheme.typography.labelMedium)
         Text("−100 to +6 dBFS", style = MaterialTheme.typography.labelSmall)
     }
     Canvas(Modifier.fillMaxWidth().height(140.dp)) {
@@ -222,7 +222,8 @@ private fun SpectrumChart(spectrum: AlignedSpectrum) {
             }
             drawPath(path, color, style = Stroke(1.5.dp.toPx()))
         }
-        draw(spectrum.beforeDb, before); draw(spectrum.afterDb, after)
+        draw(spectrum.beforeDb, before)
+        spectrum.afterDb?.let { draw(it, after) }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
         Text("20 Hz", style = MaterialTheme.typography.labelSmall)

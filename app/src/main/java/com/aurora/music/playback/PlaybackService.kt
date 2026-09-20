@@ -112,7 +112,8 @@ class PlaybackService : MediaLibraryService() {
         val beforeMeter = PcmLevelMeter()
         val afterMeter = PcmLevelMeter()
         val precisionAfterMeter = PcmLevelMeter()
-        var spectrum: com.aurora.music.data.AlignedSpectrum? = null
+        var spectrum: com.aurora.music.data.AudioSpectrum? = null
+        var spectrumGeneration = -1L
         var spectrumBusy = false
         var spectrumRequestedAt = 0L
         val afterMeterProcessor = LevelMeterAudioProcessor(afterMeter)
@@ -858,14 +859,22 @@ class PlaybackService : MediaLibraryService() {
         } else null
         val mixerDevice = device ?: automaticMixerCandidate
         requestBitPerfect(mixerDevice, track, !usb && !bitPerfect && useFloatOut && !usePrecisionProcessing && mixerDevice != null && isUsb(mixerDevice.type))
-        if (state != null && precise && player.isPlaying && !state.spectrumBusy &&
+        if (state != null && (!usb || processedUsb) && raw != null && !state.spectrumBusy &&
+            (player.isPlaying || state.spectrum == null || state.spectrumGeneration != state.beforeMeter.spectrum.generation) &&
             System.nanoTime() - state.spectrumRequestedAt > 450_000_000L) {
             state.spectrumBusy = true
             state.spectrumRequestedAt = System.nanoTime()
+            val generation = state.beforeMeter.spectrum.generation
             scope.launch {
                 try {
-                    state.spectrum = kotlinx.coroutines.withContext(Dispatchers.Default) {
-                        PcmSpectrumAnalyzer.aligned(state.beforeMeter.spectrum.windows(), state.precisionAfterMeter.spectrum.windows())
+                    val spectrum = kotlinx.coroutines.withContext(Dispatchers.Default) {
+                        val before = state.beforeMeter.spectrum.windows()
+                        val after = if (precise) state.precisionAfterMeter.spectrum.windows() else emptyList()
+                        PcmSpectrumAnalyzer.snapshot(before, after)
+                    }
+                    if (generation == state.beforeMeter.spectrum.generation) {
+                        state.spectrum = spectrum
+                        state.spectrumGeneration = generation
                     }
                 } finally { state.spectrumBusy = false }
             }
@@ -917,7 +926,9 @@ class PlaybackService : MediaLibraryService() {
             com.aurora.music.data.AudioMeasurements(state.beforeMeter.snapshot(),
                 if (precise) state.precisionAfterMeter.snapshot() else if (measuredAfter) state.afterMeter.snapshot() else null,
                 player.isPlaying, measuredAfter, xfadeActive,
-                state.spectrum?.takeIf { precise && System.nanoTime() - it.measuredAtNanos < 2_000_000_000L })
+                state.spectrum?.takeIf { state.spectrumGeneration == state.beforeMeter.spectrum.generation &&
+                    (!player.isPlaying || System.nanoTime() - it.measuredAtNanos < 2_000_000_000L) }
+                    ?.let { if (precise) it else it.copy(afterDb = null) })
             else null,
             nodeMeters = engine?.rackMeters().orEmpty(),
             latency = com.aurora.music.data.SignalStage("Latency",

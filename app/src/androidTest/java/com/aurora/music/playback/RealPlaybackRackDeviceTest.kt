@@ -71,7 +71,7 @@ class RealPlaybackRackDeviceTest {
                 if (maximum) helper.await("automatic headroom and aligned spectrum", controller) {
                     val path = container.signalPath.value
                     path.processing.detail.contains("Auto headroom") && path.measurements?.spectrum?.let { spectrum ->
-                        spectrum.sampleRate == rate && spectrum.beforeDb.all { it.isFinite() } && spectrum.afterDb.all { it.isFinite() }
+                        spectrum.sampleRate == rate && spectrum.beforeDb.all { it.isFinite() } && spectrum.afterDb?.all { it.isFinite() } == true
                     } == true
                 }
                 val initialUnderruns = requireNotNull(container.signalPath.value.audioTrackUnderruns)

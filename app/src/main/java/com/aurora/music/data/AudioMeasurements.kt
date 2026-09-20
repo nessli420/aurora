@@ -22,8 +22,8 @@ data class AudioMeasurements(
     val playing: Boolean,
     val afterAvailable: Boolean,
     val overlappingPlayers: Boolean,
-    val spectrum: AlignedSpectrum? = null,
+    val spectrum: AudioSpectrum? = null,
 )
 
-data class AlignedSpectrum(val sampleRate: Int, val presentationStartUs: Long, val measuredAtNanos: Long,
-    val beforeDb: List<Float>, val afterDb: List<Float>)
+data class AudioSpectrum(val sampleRate: Int, val presentationStartUs: Long, val measuredAtNanos: Long,
+    val beforeDb: List<Float>, val afterDb: List<Float>? = null)

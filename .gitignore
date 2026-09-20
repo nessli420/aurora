@@ -6,6 +6,7 @@ build/
 captures/
 /_artifacts/
 /_local/
+/website/
 out/
 release/
 
