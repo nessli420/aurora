@@ -101,19 +101,29 @@ The main audio engine uses 64-bit calculations to keep extra precision as effect
 - Send listening history to Last.fm or ListenBrainz using the first artist from your separator rules. Share your now-playing status on Discord.
 - Back up settings, local playlists, likes, history, your local profile, and saved sound setups in one file. Music files and downloads are not included.
 
+## DSD and SACD
+
+- **DSF and DFF:** play mono or stereo DSD64–1024 files. Aurora converts to PCM by default, so your usual sound settings still work.
+- **DST-compressed DFF:** supports unsegmented mono/stereo DSD64. Other compression layouts are not supported yet.
+- **SACD ISO:** import stereo tracks from **Settings → Library & sources → Import SACD image**, without extracting the whole image. This is experimental; broader compatibility with real disc images is still unverified. The same DST limits apply.
+
+DSD files cannot currently use network output. Multichannel DSD and PCM-to-DSD conversion are not supported. See [supported formats and limits](docs/audio-formats.md).
+
 ## USB audio
 
 Connect a USB DAC and open **Settings → Audio output → USB DAC output**. A DAC is an external audio adapter, such as a USB headphone dongle.
 
 - **Direct:** bypasses Aurora's effects and software volume. Use the DAC's volume controls.
 - **Processed:** keeps Aurora's sound settings and software volume active. Crossfade, speed/pitch changes, and silence skipping are unavailable in this mode.
-- **If USB is unavailable:** choose to pause or continue through Android's normal output. Pause is the default.
+- **If USB is unavailable:** PCM playback can pause or continue through Android's normal output. Pause is the default. Raw DSD always stops if its USB route is unavailable.
 
-Restart Aurora after changing USB settings. **Signal Path** shows the output in use and any fallback.
+Restart Aurora after changing USB settings. **Signal Path** shows the active format, USB connection details, and any fallback or output error.
 
-USB support varies by phone and DAC. Direct and processed playback have been tested with a **FiiO KA13**, including native DSD64–256 and DoP64–128. [DSF/DFF files](docs/audio-formats.md) through DSD1024 can also play through PCM conversion.
+For unchanged DSD, choose **Direct → DSD files → DoP or Native**. Both send DSD to a compatible DAC without converting it to PCM. Effects and software volume are bypassed.
 
-**Experimental DSD** is an optional setting for other DACs and raw output up to DSD1024. Higher-rate hardware support is untested. The DAC must expose a compatible USB format, clock and packet capacity; some DACs need driver support that Aurora does not yet have. Disconnect headphones until the DAC confirms DSD mode. Report results with your DAC model, DSD rate, output mode and Signal Path report.
+USB support varies by phone and DAC. The **FiiO KA13** has been tested with direct and processed PCM, native DSD64–256, and DoP DSD64–128. DSD64 passed listening checks in both modes; higher-rate checks covered data transfer and playback controls.
+
+**Experimental DSD** enables other DACs and raw output up to DSD1024. It is off by default. Higher-rate hardware support is untested, and a DAC's advertised DSD rate alone does not guarantee compatibility. Disconnect headphones until the DAC confirms DSD mode, then start at low DAC volume. Include your DAC model, DSD rate, output mode and Signal Path report when reporting results.
 
 ## Network audio
 
@@ -209,6 +219,7 @@ Aurora is licensed under [Apache 2.0](LICENSE). Third-party code and assets keep
 
 - [decent-player](https://github.com/Ma145/decent-player) provides the USB audio libraries. See [third-party notices](decent/NOTICE.md).
 - [libFLAC](https://github.com/xiph/flac), [Chromaprint](https://github.com/acoustid/chromaprint) with KissFFT, [Jellyfin's FFmpeg decoder](https://github.com/jellyfin/jellyfin-androidx-media), and [JAudiotagger](https://github.com/Adonai/jaudiotagger) provide audio decoding, identification, and tag support.
+- DST decoding derives from Peter Ross's FFmpeg decoder through DSD-Nexus. See the [decoder notice and license](app/src/main/cpp/dst/NOTICE.md).
 - [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) resolves YouTube audio. [JSch](https://github.com/mwiede/jsch) provides SFTP support in the bundled USB libraries.
 - [MusicBrainz](https://musicbrainz.org) and the [Cover Art Archive](https://coverartarchive.org) provide music information and artwork.
 - Vocal separation uses Ultimate Vocal Remover's model and ONNX Runtime. See [model credits and attribution](docs/vocal-separation-attribution.md).
