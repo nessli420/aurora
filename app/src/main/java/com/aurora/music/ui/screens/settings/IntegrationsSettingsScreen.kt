@@ -45,7 +45,6 @@ fun IntegrationsSettingsScreen(
     val discord by store.discord.collectAsStateWithLifecycle(initialValue = DiscordAccount())
 
     SettingsPage("Integrations", contentPadding, onBack) {
-        item { IntegrationIntro() }
         item { SettingsSectionTitle("Listening & sharing") }
         item {
             SettingsGroup {
@@ -78,20 +77,6 @@ fun IntegrationsSettingsScreen(
 }
 
 @Composable
-private fun IntegrationIntro() {
-    Surface(
-        modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
-        color = MaterialTheme.colorScheme.primaryContainer.copy(alpha = .48f),
-        shape = RoundedCornerShape(22.dp),
-    ) {
-        Column(Modifier.padding(22.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Your music, connected.", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-            Text("Choose a service to manage its account, behaviour and setup.", color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
-}
-
-@Composable
 private fun IntegrationRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, status: String, onClick: () -> Unit) {
     SettingsNavRow(icon, title, subtitle, status, onClick)
 }
@@ -109,7 +94,6 @@ fun LyricsIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val enabled by container.settingsStore.lrclibEnabled.collectAsStateWithLifecycle(initialValue = true)
     val scope = rememberCoroutineScope()
     SettingsPage("LRCLIB lyrics", contentPadding, onBack) {
-        item { PageLead(Icons.Filled.Lyrics, "Words that follow the music", "Aurora asks LRCLIB for plain or synchronized lyrics when your music server has none.") }
         item { SettingsGroup { SettingsSwitchRow(Icons.Filled.Lyrics, "Use LRCLIB", "Fetch lyrics from the public LRCLIB service", enabled) { scope.launch { container.settingsStore.setLrclibEnabled(it) } } } }
         item { PrivacyNote("Track title, artist, album and duration may be sent to LRCLIB to find a match.") }
     }
@@ -121,7 +105,6 @@ fun ArtistInfoIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Uni
     val enabled by container.settingsStore.artistEnrichment.collectAsStateWithLifecycle(initialValue = true)
     val scope = rememberCoroutineScope()
     SettingsPage("Artist information", contentPadding, onBack) {
-        item { PageLead(Icons.Filled.Person, "More context for every artist", "Show biographies and images from MusicBrainz and Wikipedia on artist pages.") }
         item { SettingsGroup { SettingsSwitchRow(Icons.Filled.Person, "Artist information", "Look up biographies and images", enabled) { scope.launch { container.settingsStore.setArtistEnrichment(it) } } } }
         item { PrivacyNote("Artist names are sent to the metadata providers only when Aurora needs the extra information.") }
     }
@@ -135,7 +118,6 @@ fun AcoustIdIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit)
     var key by remember(saved) { mutableStateOf(saved) }
     val scope = rememberCoroutineScope()
     SettingsPage("AcoustID", contentPadding, onBack) {
-        item { PageLead(Icons.Filled.Fingerprint, "Identify the recording", "Create an audio fingerprint to find missing track details from AcoustID and MusicBrainz.") }
         item {
             SettingsGroup {
                 OutlinedTextField(
@@ -167,7 +149,6 @@ fun LastfmIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     var addingRule by remember { mutableStateOf(false) }
 
     SettingsPage("Last.fm", contentPadding, onBack) {
-        item { PageLead(Icons.Filled.Headset, "Keep the story going", "Send now-playing updates and completed listens to your Last.fm profile.") }
         item { SettingsSectionTitle("Account") }
         item { SettingsGroup { LastfmAccountControls(acct, scope, pendingToken, busy, status, { pendingToken = it }, { busy = it }, { status = it }) } }
         item { SettingsSectionTitle("Artist replacement rules") }
@@ -258,7 +239,6 @@ fun ListenBrainzIntegrationScreen(contentPadding: PaddingValues, onBack: () -> U
     var status by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     SettingsPage("ListenBrainz", contentPadding, onBack) {
-        item { PageLead(Icons.Filled.Album, "Your listens, in the open", "Send playing-now updates and completed listens to your ListenBrainz profile.") }
         item {
             SettingsGroup {
                 if (acct.token.isNotBlank()) {
@@ -283,7 +263,6 @@ fun DiscordIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit, 
     val acct by container.settingsStore.discord.collectAsStateWithLifecycle(initialValue = DiscordAccount())
     val scope = rememberCoroutineScope()
     SettingsPage("Discord", contentPadding, onBack) {
-        item { PageLead(Icons.Filled.Forum, "Now playing, made yours", "Preview and control the listening activity your friends see in Discord.") }
         item { DiscordPreview(acct) }
         item { SettingsSectionTitle("Presence") }
         item {
@@ -357,15 +336,6 @@ private fun ArtistRuleDialog(initial: ScrobbleArtistRule?, onDismiss: () -> Unit
         confirmButton = { TextButton(onClick = { onSave(ScrobbleArtistRule(source.trim(), replacement.trim())) }, enabled = source.isNotBlank() && replacement.isNotBlank()) { Text("Save") } },
         dismissButton = { Row { if (onDelete != null) TextButton(onClick = onDelete, colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)) { Text("Remove") }; TextButton(onClick = onDismiss) { Text("Cancel") } } },
     )
-}
-
-@Composable
-private fun PageLead(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, body: String) {
-    Row(Modifier.padding(horizontal = 20.dp, vertical = 18.dp), verticalAlignment = Alignment.Top) {
-        Surface(color = MaterialTheme.colorScheme.primaryContainer, shape = RoundedCornerShape(16.dp)) { Icon(icon, null, Modifier.padding(13.dp).size(26.dp), tint = MaterialTheme.colorScheme.onPrimaryContainer) }
-        Spacer(Modifier.width(16.dp))
-        Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold); Text(body, color = MaterialTheme.colorScheme.onSurfaceVariant) }
-    }
 }
 
 @Composable
