@@ -47,6 +47,7 @@ object Routes {
     const val DISCORD_LOGIN = "discord_login"
     const val HISTORY = "history"
     const val STATS = "stats"
+    const val NOTIFICATIONS = "notifications"
     const val DUPLICATES = "duplicates"
     const val RADIO = "radio"
     const val PODCASTS = "podcasts"

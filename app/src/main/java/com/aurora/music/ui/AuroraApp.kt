@@ -391,6 +391,10 @@ fun AuroraApp() {
                             onUseSaved = { s -> authVM.useSaved(s) },   // nav to home handled by the sessionReady effect
                         )
                     }
+                    composable(Routes.NOTIFICATIONS) {
+                        com.aurora.music.ui.screens.stats.RecapInboxScreen(inner, { navController.popBackStack() },
+                            { navController.navigate("recap/${it.period.name}/${it.start}") })
+                    }
                     composable("recap/{period}/{date}") { entry ->
                         val period = runCatching { com.aurora.music.data.RecapPeriod.valueOf(entry.arguments?.getString("period").orEmpty()) }.getOrDefault(com.aurora.music.data.RecapPeriod.DAY)
                         val date = runCatching { java.time.LocalDate.parse(entry.arguments?.getString("date")) }.getOrDefault(java.time.LocalDate.now().minusDays(1))
@@ -411,7 +415,7 @@ fun AuroraApp() {
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
                             onLoadMore = homeVM::loadMore,
                             onSelectFeed = homeVM::selectFeed,
-                            onOpenRecap = { navController.navigate("recap/${it.period.name}/${it.start}") },
+                            onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                             onRetry = { homeVM.load() },
                         )
                     }

@@ -68,7 +68,7 @@ fun HomeScreen(
     onLoadMore: () -> Unit = {},
     onRetry: () -> Unit = {},
     onSelectFeed: (String) -> Unit = {},
-    onOpenRecap: (com.aurora.music.data.RecapWindow) -> Unit = {},
+    onOpenNotifications: () -> Unit = {},
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val data = state.data
@@ -109,7 +109,7 @@ fun HomeScreen(
                         "Switch to ${next.label} home") { onSelectFeed(next.id) }
                     Spacer(Modifier.width(8.dp))
                 }
-                com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenRecap)
+                com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenNotifications)
                 Spacer(Modifier.width(8.dp))
                 IconPill(Icons.Outlined.Settings, "Settings", onClick = onOpenSettings)
             }

@@ -22,9 +22,25 @@ fun RecapInsights(recap: ListeningRecap, previous: ListeningRecap) {
         Text("THE SOUND OF YOUR ${when (recap.window.period) { RecapPeriod.DAY -> "DAY"; RecapPeriod.WEEK -> "WEEK"; RecapPeriod.MONTH -> "MONTH"; RecapPeriod.YEAR -> "YEAR"; else -> "LIFE" }}", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
         Text(artist.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimaryContainer)
         Text("${artist.millis / 60_000} minutes · ${artist.millis * 100 / recap.millis.coerceAtLeast(1)}% of your listening time", color = MaterialTheme.colorScheme.onPrimaryContainer)
-        if (recap.window.period != RecapPeriod.ALL && previous.millis > 0) {
-            val difference = recap.minutes - previous.minutes
-            Text("${kotlin.math.abs(difference)} ${if (difference >= 0) "more" else "fewer"} minutes than the previous ${recap.window.period.name.lowercase()}${if (recap.window.end.isAfter(java.time.LocalDate.now())) " (current period in progress)" else ""}.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
+    }
+    if (recap.window.period != RecapPeriod.ALL && previous.window == recap.window.move(-1) && previous.millis > 0) {
+        val difference = recap.minutes - previous.minutes
+        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp))
+            .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("Total listening · All artists", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+                Column(Modifier.weight(1f)) {
+                    Text("${recap.minutes} min", style = MaterialTheme.typography.headlineSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                    Text(recap.window.label, style = MaterialTheme.typography.bodySmall)
+                }
+                Column(Modifier.weight(1f)) {
+                    Text("${previous.minutes} min", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Text(previous.window.label, style = MaterialTheme.typography.bodySmall)
+                }
+            }
+            Text(if (difference == 0L) "The same total as the previous ${recap.window.period.name.lowercase()}."
+                else "${kotlin.math.abs(difference)} ${if (difference > 0) "more" else "fewer"} minutes overall than the previous ${recap.window.period.name.lowercase()}.", style = MaterialTheme.typography.bodyMedium)
+            if (recap.window.end.isAfter(java.time.LocalDate.now())) Text("Current period so far, compared with the full previous period.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
     if (recap.window.period == RecapPeriod.MONTH || recap.window.period == RecapPeriod.YEAR || recap.window.period == RecapPeriod.WEEK) {
