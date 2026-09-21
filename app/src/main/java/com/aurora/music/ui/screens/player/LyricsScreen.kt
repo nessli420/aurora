@@ -7,6 +7,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.interaction.DragInteraction
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,6 +33,8 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -121,7 +124,7 @@ internal fun LyricsScreen(
         loading = false
     }
     LaunchedEffect(interactionVersion, pointerHeld, scrolling, seeking, loading, lyrics, touchExploration) {
-        controlsVisible = true
+        if (touchExploration) controlsVisible = true
         if (!pointerHeld && !scrolling && !seeking && !loading && !lyrics?.lines.isNullOrEmpty() && !touchExploration) {
             delay(3000)
             controlsVisible = false
@@ -153,7 +156,7 @@ internal fun LyricsScreen(
     }.clickable(
         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
         indication = null,
-    ) {}) {
+    ) { controlsVisible = !controlsVisible }) {
         LyricsBackdrop(song)
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)) {
             Row(Modifier.fillMaxWidth().lyricsChrome(controlsVisible, controlsAlpha)
@@ -186,7 +189,8 @@ internal fun LyricsScreen(
                     }
                     else -> key(song.id, song.playbackSource?.providerId) {
                         ImmersiveLyrics(content, state.positionSec, state.durationSec,
-                            onSeek = { interactionVersion++; onSeek(it) }, onScrolling = { scrolling = it })
+                            onSeek = { interactionVersion++; onSeek(it) }, onScrolling = { scrolling = it },
+                            onBackgroundTap = { controlsVisible = !controlsVisible })
                     }
                 }
             }
@@ -257,7 +261,7 @@ private fun LyricsBackdrop(song: Song) {
 
 @Composable
 private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int, onSeek: (Float) -> Unit,
-    onScrolling: (Boolean) -> Unit) {
+    onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit) {
     val lines = lyrics.lines
     val current = if (lyrics.synced) lines.indexOfLast { it.timeSec >= 0 && it.timeSec <= positionSec } else -1
     val list = rememberLazyListState()
@@ -296,6 +300,15 @@ private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int
             verticalArrangement = Arrangement.spacedBy(22.dp),
         ) {
             items(lines.size) { index ->
+                var textLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
+                val seekable = lyrics.synced && durationSec > 0 && lines[index].timeSec >= 0
+                val seekLine by rememberUpdatedState {
+                    if (seekable) {
+                        browsing = false
+                        onSeek((lines[index].timeSec.toFloat() / durationSec).coerceIn(0f, 1f))
+                    }
+                }
+                val backgroundTap by rememberUpdatedState(onBackgroundTap)
                 val active = index == current
                 val alpha by animateFloatAsState(when {
                     !lyrics.synced || browsing -> .88f
@@ -310,18 +323,24 @@ private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int
                     else ((abs(index - current) - 1).coerceAtLeast(0) * 1.6f).coerceAtMost(7f),
                     tween(450), label = "lineSoftness")
                 Text(lines[index].text.ifBlank { "•••" },
+                    onTextLayout = { textLayout = it },
                     color = Color.White.copy(alpha = alpha), fontSize = 30.sp, lineHeight = 38.sp,
                     fontWeight = FontWeight.Bold, letterSpacing = (-.5).sp,
                     modifier = Modifier.fillMaxWidth().graphicsLayer {
                         scaleX = scale; scaleY = scale; transformOrigin = TransformOrigin(0f, .5f)
-                    }.blur(soften.dp).semantics { selected = active }
-                        .clip(RoundedCornerShape(8.dp)).clickable(
-                            enabled = lyrics.synced && durationSec > 0 && lines[index].timeSec >= 0,
-                            role = Role.Button,
-                        ) {
-                            browsing = false
-                            onSeek((lines[index].timeSec.toFloat() / durationSec).coerceIn(0f, 1f))
-                        }.padding(vertical = 6.dp),
+                    }.blur(soften.dp).semantics {
+                        selected = active
+                        if (seekable) onClick { seekLine(); true }
+                    }.padding(vertical = 6.dp).pointerInput(seekable) {
+                        detectTapGestures { point ->
+                            val layout = textLayout
+                            val line = layout?.getLineForVerticalPosition(point.y)
+                            val onText = layout != null && line != null &&
+                                point.y >= layout.getLineTop(line) && point.y < layout.getLineBottom(line) &&
+                                point.x >= layout.getLineLeft(line) && point.x < layout.getLineRight(line)
+                            if (onText && seekable) seekLine() else backgroundTap()
+                        }
+                    },
                 )
             }
         }
