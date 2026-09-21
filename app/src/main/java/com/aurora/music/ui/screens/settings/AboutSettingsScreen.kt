@@ -36,6 +36,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
+import com.aurora.music.BuildConfig
 import com.aurora.music.data.ServerType
 
 @Composable
@@ -69,21 +70,33 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(44.dp)) }
             Spacer(Modifier.height(14.dp))
-            val isJellyfin = session?.type == ServerType.JELLYFIN
             Text("Aurora", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-            Text("Version 1.0  •  ${if (isJellyfin) "Jellyfin" else "Navidrome"} client", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text("Build ${BuildConfig.VERSION_CODE}${if (BuildConfig.DEBUG) " · Debug" else ""}",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(24.dp))
 
-            InfoRow("Connected server", session?.server?.removePrefix("http://")?.removePrefix("https://") ?: "—")
-            InfoRow("Signed in as", session?.username ?: "—")
-            InfoRow("Protocol", if (isJellyfin) "Jellyfin" else "Subsonic / OpenSubsonic")
-            InfoRow("Client name", "Aurora")
+            AppUpdateCard(container.appUpdater)
+            Spacer(Modifier.height(16.dp))
+            val source = when (session?.type) {
+                ServerType.JELLYFIN -> "Jellyfin"
+                ServerType.SUBSONIC -> "Subsonic / OpenSubsonic"
+                ServerType.SPOTIFY -> "Spotify"
+                ServerType.YOUTUBE_MUSIC -> "YouTube Music"
+                ServerType.LOCAL -> "On this device"
+                ServerType.EXTENSION -> "Extension"
+                null -> "—"
+            }
+            InfoRow("Music source", source)
+            if (session != null && session?.type != ServerType.LOCAL) {
+                InfoRow("Signed in as", session?.username ?: "—")
+            }
             InfoRow("Playback engine", "AndroidX Media3 (ExoPlayer)")
             TextButton(onClick = { showDstLicense = true }) { Text("DST decoder license") }
 
             Spacer(Modifier.height(20.dp))
             Text(
-                "Built with Jetpack Compose & Material 3.\nMusic streamed from your own music server.",
+                "Built with Jetpack Compose & Material 3.",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -99,7 +112,7 @@ private fun InfoRow(label: String, value: String) {
         Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
-        Text(label, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text(value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+        Text(label, modifier = Modifier.weight(1f).padding(end = 12.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(value, modifier = Modifier.weight(1f), textAlign = TextAlign.End, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
     }
 }

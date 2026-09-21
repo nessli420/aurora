@@ -39,6 +39,7 @@ class AppContainer(context: Context) {
     val sourceErrors = _sourceErrors.asSharedFlow()
 
     val settingsStore = SettingsStore(appContext)
+    val appUpdater = com.aurora.music.data.updates.AppUpdater(appContext)
     val extensions = com.aurora.music.extensions.ExtensionManager(appContext, settingsStore, scope)
     val listeningLevels = com.aurora.music.data.listening.ListeningLevelStore(
         java.io.File(appContext.noBackupFilesDir, "listening_levels.json"), settingsStore.processingRoutes)

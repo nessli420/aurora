@@ -78,6 +78,8 @@ fun SettingsScreen(
 ) {
     val container = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication).container
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
+    val appUpdate by container.appUpdater.state.collectAsStateWithLifecycle()
+    androidx.compose.runtime.LaunchedEffect(container) { container.appUpdater.checkForUpdate() }
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val signalPath by container.signalPath.collectAsStateWithLifecycle()
     val alarmSummary = alarmSettingsSummary()
@@ -194,7 +196,9 @@ fun SettingsScreen(
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Backup, SettingsDestinations.backup, onClick = onOpenBackup)
                     SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Info, SettingsDestinations.about, onClick = onOpenAbout)
+                    SettingsDestinationRow(Icons.Filled.Info, SettingsDestinations.about,
+                        if (appUpdate.updateAvailable) "${appUpdate.release?.tag} update available"
+                        else "Version ${com.aurora.music.BuildConfig.VERSION_NAME} · App updates", onClick = onOpenAbout)
                 }
             }
 

@@ -23,6 +23,8 @@ Use the included Gradle wrapper. On Windows, replace `./gradlew` with `.\gradlew
 
 The APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Debug builds use a different signing key from published releases. Use an emulator or a separate test device to keep your installed release and its data intact.
 
+For releases, set `versionName` in `version.properties` to the GitHub tag without its `V` prefix, and increase `versionCode` for every release. Build with `./gradlew :app:assembleRelease -PreleaseTag=V2.5.0` (using the intended tag); a mismatched tag fails the build. Upload the signed APK as `Aurora.apk` on that release. About and the updater read the installed build version; the updater checks GitHub's latest stable release.
+
 ## Make a change
 
 1. Fork the repository and create a branch for your change.

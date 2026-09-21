@@ -2,8 +2,12 @@
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="root" path="app_webview" />
+        <exclude domain="sharedpref" path="app_updates.xml" />
+        <exclude domain="external" path="Download/updates/" />
     </cloud-backup>
     <device-transfer>
         <exclude domain="root" path="app_webview" />
+        <exclude domain="sharedpref" path="app_updates.xml" />
+        <exclude domain="external" path="Download/updates/" />
     </device-transfer>
 </data-extraction-rules>
