@@ -55,6 +55,7 @@ interface SubsonicApi {
         @Query("name") name: String? = null,
         @Query("comment") comment: String? = null,
         @Query("songIdToAdd") songIdToAdd: List<String>? = null,
+        @Query("songIndexToRemove") songIndexToRemove: List<Int>? = null,
     ): SubsonicEnvelope
 
     @GET("rest/deletePlaylist.view")

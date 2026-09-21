@@ -55,6 +55,10 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     val state: StateFlow<LibraryUiState> = _state.asStateFlow()
 
     init {
+        viewModelScope.launch { container.repository.playlistChanges.collect {
+            val playlists = container.repository.allPlaylists()
+            _state.update { it.copy(playlists = playlists) }
+        } }
         viewModelScope.launch { container.offline.collect { load() } }
         viewModelScope.launch { container.accountEpoch.drop(1).collect { load() } }
         viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }

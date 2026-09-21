@@ -331,6 +331,19 @@ class MusicRepository(
 
     suspend fun createPlaylist(name: String): Boolean = backend?.createPlaylist(name) ?: false
 
+    private val playlistChangeEvents = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 16)
+    val playlistChanges: kotlinx.coroutines.flow.Flow<String> = playlistChangeEvents
+
+    fun playlistEditor(song: Song): PlaylistMembershipEditor? {
+        if (offline) return null
+        val source = backend ?: return null
+        val id = backendSongId(song.id) ?: return null
+        val expectedProvider = source.playbackSourceIdentity(song.copy(id = id, playbackSource = null, streamUrl = ""))?.providerId
+        if (song.playbackSource?.providerId != null && song.playbackSource.providerId != expectedProvider) return null
+        return PlaylistMembershipEditor(source, id, isActive = { !offline && backend === source },
+            onChanged = { playlistChangeEvents.tryEmit(it) })
+    }
+
     suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         backend?.addToPlaylist(playlistId, trackIds) ?: false
 

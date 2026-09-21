@@ -18,6 +18,36 @@ class YouTubeMusicBackendTest {
     private fun parsed(value: String) = JsonParser.parseString(value).asJsonObject
     private fun track(id: String = "abcdefghijk") = """{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":"$id"},"flexColumns":[{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Track"}]}}}],"fixedColumns":[{"musicResponsiveListItemFixedColumnRenderer":{"text":{"simpleText":"3:24"}}}]}}"""
 
+    @Test fun removalUsesEveryPlaylistOccurrenceAcrossPagesAndIgnoresSuggestions() = runBlocking {
+        fun entry(key: String) = track().replace("\"videoId\":", "\"playlistSetVideoId\":\"$key\",\"videoId\":")
+        val mutations = mutableListOf<JsonObject>()
+        val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { endpoint, body ->
+            when {
+                endpoint == "browse/edit_playlist" -> { mutations += body; parsed("{}") }
+                body.has("continuation") -> parsed("""{"continuationContents":{"musicPlaylistShelfContinuation":{"contents":[${entry("second")}]}}}""")
+                else -> parsed("""{"musicPlaylistShelfRenderer":{"contents":[${entry("first")}],"continuations":[{"nextContinuationData":{"continuation":"next"}}]},"suggestions":[${entry("suggested")}] }""")
+            }
+        })
+        assertTrue(backend.removeFromPlaylist("PLtest", listOf("abcdefghijk")))
+        val request = mutations.single()
+        assertEquals("PLtest", request.string("playlistId"))
+        val actions = request.getAsJsonArray("actions").map { it.asJsonObject }
+        assertEquals(listOf("first", "second"), actions.map { it.string("setVideoId") })
+        assertTrue(actions.all { it.string("action") == "ACTION_REMOVE_VIDEO" && it.string("removedVideoId") == "abcdefghijk" })
+    }
+
+    @Test fun incompletePlaylistCannotPartiallyRemoveTracks() = runBlocking {
+        var mutations = 0
+        val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { endpoint, body ->
+            if (endpoint == "browse/edit_playlist") mutations++
+            if (body.has("continuation")) throw IOException("Disconnected")
+            val entry = track().replace("\"videoId\":", "\"playlistSetVideoId\":\"first\",\"videoId\":")
+            parsed("""{"musicPlaylistShelfRenderer":{"contents":[$entry],"continuations":[{"nextContinuationData":{"continuation":"next"}}]}}""")
+        })
+        try { backend.removeFromPlaylist("PLtest", listOf("abcdefghijk")); fail("Partial removal accepted") } catch (_: IOException) { }
+        assertEquals(0, mutations)
+    }
+
     @Test fun publicSearchFixtureKeepsAlbumsSeparateFromPlayButtonsAndParsesNestedSongs() {
         val root = javaClass.getResourceAsStream("/youtube-music/search.json")!!.bufferedReader().use { parsed(it.readText()) }
         val result = YouTubeMusicParser.results(root)

@@ -35,6 +35,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val seenPages = mutableSetOf<String>()
 
     init {
+        viewModelScope.launch { container.repository.playlistChanges.collect { load() } }
         viewModelScope.launch { container.offline.collect { load() } }
         viewModelScope.launch { container.accountEpoch.drop(1).collect { load(clear = true) } }
         viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }

@@ -59,6 +59,9 @@ interface JellyfinApi {
     @POST("Playlists/{id}/Items")
     suspend fun addToPlaylist(@Path("id") id: String, @Query("ids") ids: String, @Query("userId") userId: String): Response<Unit>
 
+    @DELETE("Playlists/{id}/Items")
+    suspend fun removePlaylistItems(@Path("id") id: String, @Query("entryIds") entryIds: String): Response<Unit>
+
     @DELETE("Items/{id}")
     suspend fun deleteItem(@Path("id") id: String): Response<Unit>
 }

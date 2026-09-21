@@ -1,0 +1,11 @@
+<resources>
+    <string name="track_swipe_playlists">Playlists</string>
+    <string name="track_playlists_title">Add or remove from playlists</string>
+    <string name="track_playlists_hint">Select a playlist to add this track. Unselect it to remove it.</string>
+    <string name="track_playlists_empty">No playlists yet. Create one in your library first.</string>
+    <string name="track_playlists_unavailable">Connect to this track’s music source to edit its playlists.</string>
+    <string name="track_playlists_load_error">Couldn’t load playlists. Try again.</string>
+    <string name="track_playlists_save_error">Couldn’t update this playlist. Check your connection and editing permissions.</string>
+    <string name="track_swipe_retry">Retry</string>
+    <string name="track_swipe_done">Done</string>
+</resources>

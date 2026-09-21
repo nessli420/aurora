@@ -328,6 +328,18 @@ class MergedBackend(
         return src.addToPlaylist(oPid, sameSource)
     }
 
+    override suspend fun playlistsForSong(songId: String): List<Playlist> {
+        val (index, original) = unwrap(songId) ?: return emptyList()
+        return sources[index].playlistsForSong(original).map { it.wrap(index) }
+    }
+
+    override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean {
+        val (index, original) = unwrap(playlistId) ?: return false
+        val ids = trackIds.map { unwrap(it) ?: return false }
+        if (ids.any { it.first != index }) return false
+        return sources[index].removeFromPlaylist(original, ids.map { it.second })
+    }
+
     override suspend fun profileImageUrl(): String = primary?.profileImageUrl() ?: ""
 
     private fun <T> wrapAll(perSource: List<List<T>>, wrap: (T, Int) -> T): List<T> =

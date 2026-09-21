@@ -417,7 +417,7 @@ class SpotifyBackend(
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { api.addToPlaylist(playlistId, AddTracksBody(trackIds.map { "spotify:track:$it" })).isSuccessful }.getOrDefault(false)
 
-    suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean =
+    override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { api.removeFromPlaylist(playlistId, RemoveTracksBody(trackIds.map { TrackUri("spotify:track:$it") })).isSuccessful }.getOrDefault(false)
 
     override suspend fun serverLyrics(song: Song): Lyrics? = null

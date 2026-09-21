@@ -150,7 +150,7 @@ class LocalBackend(
     override suspend fun deletePlaylist(id: String): Boolean { store.deletePlaylist(id); return true }
 
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean { store.addTracks(playlistId, trackIds); return true }
-    suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean { store.removeTracks(playlistId, trackIds); return true }
+    override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean { store.removeTracks(playlistId, trackIds); return true }
 
     // folder tree rooted at the deepest common directory
 

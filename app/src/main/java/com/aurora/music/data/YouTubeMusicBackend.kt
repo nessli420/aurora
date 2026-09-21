@@ -162,6 +162,30 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
             add("actions", JsonArray().apply { trackIds.forEach { add(json("action" to "ACTION_ADD_VIDEO", "addedVideoId" to it)) } })
         })
     }
+    override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean {
+        var response = browse("VL${playlistId.removePrefix("VL")}")
+        val entries = linkedMapOf<String, String>()
+        val seen = hashSetOf<String>()
+        while (true) {
+            val content = YouTubeMusicParser.trackShelf(response)
+            content.objects("playlistItemData").filter { it.string("videoId") in trackIds }.forEach {
+                val entry = it.string("playlistSetVideoId")
+                check(entry.isNotBlank()) { "This playlist cannot be edited." }
+                entries[entry] = it.string("videoId")
+            }
+            val token = YouTubeMusicParser.continuation(content) ?: break
+            check(seen.add(token) && seen.size <= 500) { "Incomplete playlist" }
+            response = api.request("browse", json("continuation" to token))
+        }
+        // Missing entry IDs must not be reported as a successful removal.
+        if (entries.isEmpty()) return false
+        return mutation("browse/edit_playlist", json("playlistId" to playlistId.removePrefix("VL")).apply {
+            add("actions", JsonArray().apply { entries.forEach { (entry, video) ->
+                add(json("action" to "ACTION_REMOVE_VIDEO", "setVideoId" to entry, "removedVideoId" to video))
+            } })
+        })
+    }
+
     override suspend fun scrobble(id: String) { /* Listening history is maintained locally. */ }
     override suspend fun serverLyrics(song: Song): Lyrics? = null
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean) = YouTubeMusicParser.sentinel(songId)

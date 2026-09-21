@@ -172,6 +172,21 @@ class JellyfinBackend(
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { client.api.addToPlaylist(playlistId, trackIds.joinToString(","), uid).isSuccessful }.getOrDefault(false)
 
+    override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean {
+        val entries = mutableListOf<String>()
+        var offset = 0
+        do {
+            val page = client.api.playlistItems(playlistId, mapOf("userId" to uid, "startIndex" to "$offset", "limit" to "200"))
+            val matching = page.Items.filter { it.Id in trackIds }
+            if (matching.any { it.PlaylistItemId.isNullOrBlank() }) return false
+            entries += matching.mapNotNull { it.PlaylistItemId }
+            offset += page.Items.size
+            if (offset >= page.TotalRecordCount) break
+            check(page.Items.isNotEmpty()) { "Incomplete playlist" }
+        } while (true)
+        return entries.isEmpty() || client.api.removePlaylistItems(playlistId, entries.joinToString(",")).isSuccessful
+    }
+
     // jellyfin has no playlist rename/comment endpoint so edit is a no-op
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean = false
 

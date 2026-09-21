@@ -30,6 +30,14 @@ class DetailViewModel(app: Application) : AndroidViewModel(app) {
     private var curKind: String? = null
     private var curId: String? = null
 
+    init {
+        viewModelScope.launch {
+            container.repository.playlistChanges.collect { id ->
+                if (curKind == "playlist" && curId == id) fetch("playlist", id)
+            }
+        }
+    }
+
     fun load(kind: String, id: String) {
         val key = "$kind/$id"
         if (key == loadedKey) return

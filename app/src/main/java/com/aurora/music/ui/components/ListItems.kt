@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.QueuePlayNext
 import androidx.compose.material.icons.outlined.Explicit
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -40,6 +41,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -78,11 +80,17 @@ fun SongRow(
     onEditTags: (() -> Unit)? = null,
     serverTagEditing: Boolean = false,
 ) {
-    var menuOpen by remember { mutableStateOf(false) }
+    var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
+    var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
+    val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small
+    key(song.id, song.playbackSource?.providerId) {
+    TrackSwipeActions(modifier, shape, isLiked, enabled = !menuOpen && !showPlaylists,
+        onPlayNext = onPlayNext, onQueue = onAddToQueue, onLike = onToggleLike,
+        onPlaylists = { showPlaylists = true }) {
     Row(
-        modifier = modifier
+        modifier = Modifier
             .fillMaxWidth()
-            .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small)
+            .clip(shape)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -135,7 +143,7 @@ fun SongRow(
         }
         Icon(
             imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = appString(R.string.text_like_c7e02c),
+            contentDescription = appString(if (isLiked) R.string.text_remove_from_liked_9d1568 else R.string.text_add_to_liked_b99f26),
             tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .size(36.dp)
@@ -176,6 +184,11 @@ fun SongRow(
                     onClick = { menuOpen = false; onToggleLike() },
                     leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
                 )
+                DropdownMenuItem(
+                    text = { Text(appString(R.string.track_swipe_playlists)) },
+                    onClick = { menuOpen = false; showPlaylists = true },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
+                )
                 if (isDownloaded && onRemoveDownload != null) DropdownMenuItem(
                     text = { Text(appString(R.string.text_remove_download_147742)) },
                     onClick = { menuOpen = false; onRemoveDownload() },
@@ -204,6 +217,9 @@ fun SongRow(
             }
         }
     }
+    }
+    }
+    if (showPlaylists) TrackPlaylistsSheet(song, onDismiss = { showPlaylists = false })
 }
 
 @Composable

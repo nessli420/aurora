@@ -35,6 +35,7 @@ class ReportingMediaBackend(private val source: MediaBackend, private val onErro
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?) = attempt(false) { source.updatePlaylist(id, name, comment) }
     override suspend fun deletePlaylist(id: String) = attempt(false) { source.deletePlaylist(id) }
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>) = attempt(false) { source.addToPlaylist(playlistId, trackIds) }
+    override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>) = attempt(false) { source.removeFromPlaylist(playlistId, trackIds) }
     // Complete collection requests deliberately propagate failure rather than playing a partial list.
 }
 

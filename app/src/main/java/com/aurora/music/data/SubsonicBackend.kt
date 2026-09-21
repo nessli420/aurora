@@ -180,6 +180,21 @@ class SubsonicBackend(
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { c.api.updatePlaylist(playlistId, songIdToAdd = trackIds).response.isOk }.getOrDefault(false)
 
+    override suspend fun playlistsForSong(songId: String): List<Playlist> =
+        c.api.getPlaylists().response.let { response ->
+            check(response.isOk)
+            response.playlists?.playlist.orEmpty().filter { it.owner.isNullOrBlank() || it.owner == session.username }
+                .map { it.toModel() }
+        }
+
+    override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean {
+        val response = c.api.getPlaylist(playlistId).response
+        if (!response.isOk) return false
+        val playlist = response.playlist ?: return false
+        val indices = playlist.entry.mapIndexedNotNull { index, song -> index.takeIf { song.id in trackIds } }
+        return indices.isEmpty() || c.api.updatePlaylist(playlistId, songIndexToRemove = indices).response.isOk
+    }
+
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean =
         runCatching { c.api.updatePlaylist(id, name, comment).response.isOk }.getOrDefault(false)
 

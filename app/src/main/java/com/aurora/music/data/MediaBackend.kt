@@ -60,6 +60,8 @@ interface MediaBackend {
     suspend fun createPlaylistWithId(name: String): String? = null
 
     suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean = false
+    suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean = false
+    suspend fun playlistsForSong(songId: String): List<Playlist> = allPlaylists()
     suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean
     suspend fun detail(kind: String, id: String): DetailData?
 

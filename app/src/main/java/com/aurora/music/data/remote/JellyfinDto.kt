@@ -54,6 +54,7 @@ data class BaseItemDto(
     val Path: String? = null,            // needs Fields=Path
     val Genres: List<String>? = null,    // needs Fields=Genres
     val DateCreated: String? = null,     // needs Fields=DateCreated
+    val PlaylistItemId: String? = null,
 )
 
 data class CreatePlaylistRequest(
