@@ -29,6 +29,9 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
@@ -40,6 +43,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.Downloading
+import androidx.compose.material.icons.filled.Menu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -47,6 +52,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.NavigationRail
+import androidx.compose.material3.NavigationRailItem
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -57,6 +65,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.aurora.music.ui.layout.LocalWindowLayout
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -186,15 +196,22 @@ fun AuroraApp() {
     val currentRoute = backStackEntry?.destination?.route
     val onTopLevel = currentRoute in topLevelDestinations.map { it.route }
     val showChrome = currentRoute != null && currentRoute != Routes.SIGN_IN
+    val rail = LocalWindowLayout.current.useNavigationRail && showChrome
+    val pageWidth = when {
+        currentRoute == Routes.SIGN_IN -> 640.dp
+        currentRoute in topLevelDestinations.map { it.route } -> 1280.dp
+        currentRoute?.startsWith("settings") == true -> 840.dp
+        else -> 960.dp
+    }
 
-    var showSpeedSheet by remember { mutableStateOf(false) }
-    var showQueue by remember { mutableStateOf(false) }
+    var showSpeedSheet by rememberSaveable { mutableStateOf(false) }
+    var showQueue by rememberSaveable { mutableStateOf(false) }
     var showMix by remember { mutableStateOf(false) }
     var mixRequest by remember { mutableStateOf<com.aurora.music.mix.MixCollectionRequest?>(null) }
     var mixQueue by remember { mutableStateOf<List<com.aurora.music.model.Song>>(emptyList()) }
-    var showVisualizer by remember { mutableStateOf(false) }
-    var showOutput by remember { mutableStateOf(false) }
-    var showSleep by remember { mutableStateOf(false) }
+    var showVisualizer by rememberSaveable { mutableStateOf(false) }
+    var showOutput by rememberSaveable { mutableStateOf(false) }
+    var showSleep by rememberSaveable { mutableStateOf(false) }
 
     val mixVM: com.aurora.music.viewmodel.MixViewModel = viewModel(key = "mix-${session?.server}-${session?.username}")
     val mixUi by mixVM.state.collectAsStateWithLifecycle()
@@ -316,14 +333,20 @@ fun AuroraApp() {
     ) {
         Box(Modifier.fillMaxSize()) {
             AmbientBackground()
+            if (rail) {
+                TabletNavigation(currentRoute, ::navigateTopLevel, ::openDrawer) { navController.navigate(Routes.SETTINGS) { launchSingleTop = true } }
+            }
             Scaffold(
+                modifier = Modifier.padding(start = if (rail) 88.dp else 0.dp),
                 containerColor = Color.Transparent,
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
                     if (showChrome) {
+                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
                         Column(
                             Modifier
+                                .widthIn(max = 960.dp)
                                 .windowInsetsPadding(WindowInsets.navigationBars)
                                 .padding(horizontal = 10.dp, vertical = 8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
@@ -354,15 +377,17 @@ fun AuroraApp() {
                                 )
                                 Spacer(Modifier.height(8.dp))
                             }
-                            FloatingNav(currentRoute) { navigateTopLevel(it) }
+                            if (!rail) FloatingNav(currentRoute) { navigateTopLevel(it) }
+                        }
                         }
                     }
                 },
             ) { inner ->
+                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.TopCenter) {
                 NavHost(
                     navController = navController,
                     startDestination = startDestination,
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier.widthIn(max = pageWidth).fillMaxSize(),
                     // A drawer action followed quickly by Back interrupts Navigation
                     // 2.8's default 700 ms fade and can leave the returned page invisible.
                     // The drawer and player animate independently; route content stays visible.
@@ -1015,6 +1040,7 @@ fun AuroraApp() {
                         )
                     }
                 }
+                }
             }
 
             MaterialTheme(colorScheme = playerColors) {
@@ -1179,6 +1205,44 @@ private fun DownloadProgressBanner(count: Int, progress: Float) {
             fontWeight = FontWeight.Bold,
             color = MaterialTheme.colorScheme.primary,
         )
+    }
+}
+
+@Composable
+private fun TabletNavigation(currentRoute: String?, onNavigate: (String) -> Unit, onMenu: () -> Unit, onSettings: () -> Unit) {
+    val colors = androidx.compose.material3.NavigationRailItemDefaults.colors(
+        selectedIconColor = MaterialTheme.colorScheme.primary,
+        selectedTextColor = MaterialTheme.colorScheme.primary,
+        indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = .18f),
+    )
+    NavigationRail(
+        modifier = Modifier.width(88.dp).fillMaxHeight().windowInsetsPadding(WindowInsets.systemBars),
+        containerColor = Color.Transparent,
+        header = {
+            IconButton(onClick = onMenu) { Icon(Icons.Filled.Menu, appString(R.string.open_navigation)) }
+        },
+    ) {
+        Spacer(Modifier.height(28.dp))
+        topLevelDestinations.forEach { destination ->
+            val selected = currentRoute == destination.route
+            NavigationRailItem(
+                selected = selected,
+                colors = colors,
+                onClick = { onNavigate(destination.route) },
+                icon = { Icon(if (selected) destination.selectedIcon else destination.unselectedIcon, null) },
+                label = { Text(destination.label, maxLines = 1) },
+                modifier = Modifier.padding(vertical = 6.dp),
+            )
+        }
+        Spacer(Modifier.weight(1f))
+        NavigationRailItem(
+            selected = currentRoute == Routes.SETTINGS,
+            colors = colors,
+            onClick = onSettings,
+            icon = { Icon(Icons.Filled.Settings, null) },
+            label = { Text(appString(R.string.text_settings_c7f73b)) },
+        )
+        Spacer(Modifier.height(16.dp))
     }
 }
 

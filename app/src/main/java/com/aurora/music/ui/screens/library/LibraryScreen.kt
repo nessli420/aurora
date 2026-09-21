@@ -715,7 +715,8 @@ private fun RowsContent(
         }
     } else {
         LazyVerticalGrid(
-            columns = GridCells.Fixed(libColumns),
+            columns = if (com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail)
+                GridCells.Adaptive((360f / libColumns).coerceAtLeast(120f).dp) else GridCells.Fixed(libColumns),
             modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
             contentPadding = PaddingValues(bottom = bottom),
             horizontalArrangement = Arrangement.spacedBy(12.dp),

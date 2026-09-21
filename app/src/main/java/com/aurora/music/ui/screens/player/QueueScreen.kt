@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -112,7 +113,8 @@ fun QueueScreen(
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
         ) {
             Column(
-                Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
+                Modifier.align(Alignment.TopCenter).widthIn(max = 880.dp).fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
             ) {
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClose).padding(6.dp))

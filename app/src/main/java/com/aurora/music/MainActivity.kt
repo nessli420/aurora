@@ -1,6 +1,8 @@
 package com.aurora.music
 
 import android.content.Intent
+import android.content.pm.ActivityInfo
+import android.os.Build
 import android.app.SearchManager
 import android.os.Bundle
 import android.provider.MediaStore
@@ -9,6 +11,13 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.Modifier
+import com.aurora.music.ui.layout.LocalWindowLayout
+import com.aurora.music.ui.layout.WindowLayout
+import com.aurora.music.ui.layout.isLargeDisplay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.AuroraApp
@@ -22,6 +31,11 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        val largeDisplay = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            val bounds = windowManager.maximumWindowMetrics.bounds
+            isLargeDisplay(bounds.width(), bounds.height(), resources.displayMetrics.density)
+        } else resources.configuration.smallestScreenWidthDp >= 600
+        requestedOrientation = if (largeDisplay) ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         com.aurora.music.localization.AppStrings.useConfiguration(resources.configuration)
         val container = (application as AuroraApplication).container
         handleAuthRedirect(intent)
@@ -29,7 +43,11 @@ class MainActivity : AppCompatActivity() {
         setContent {
             val uiPrefs by container.settingsStore.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
             AuroraTheme(uiPrefs = uiPrefs) {
-                AuroraApp()
+                BoxWithConstraints(Modifier.fillMaxSize()) {
+                    CompositionLocalProvider(LocalWindowLayout provides WindowLayout(maxWidth.value.toInt(), maxHeight.value.toInt())) {
+                        AuroraApp()
+                    }
+                }
             }
         }
     }

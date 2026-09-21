@@ -14,6 +14,11 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -156,12 +161,7 @@ fun PlayerScreen(
                 indication = null,
             ) {},
     ) {
-        Column(
-            Modifier
-                .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
-                .padding(horizontal = 20.dp),
-        ) {
+        val header: @Composable () -> Unit = {
             Column(
                 Modifier
                     .fillMaxWidth(),
@@ -243,10 +243,10 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(8.dp))
 
-            Box(
-                Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
+        }
+        val artwork: @Composable (Modifier) -> Unit = { modifier ->
+            BoxWithConstraints(
+                modifier
                     .then(
                         if (gestures.swipeArtwork) Modifier.pointerInput(song.id) {
                             var dx = 0f
@@ -264,15 +264,17 @@ fun PlayerScreen(
                     ),
                 contentAlignment = Alignment.Center,
             ) {
+                val artSide = minOf(maxWidth, maxHeight) * ui.playerArtSize.coerceIn(0.5f, 1f)
+                val videoWidth = minOf(maxWidth, maxHeight * 16f / 9f)
                 AnimatedContent(
                     targetState = showVideo,
                     transitionSpec = { fadeIn() togetherWith fadeOut() },
                     label = "artVsVideo",
                 ) { video ->
                     if (video && state.hasVideo && videoPlayer != null) {
-                        PlaybackVideo(videoPlayer, Modifier.fillMaxWidth().aspectRatio(16f / 9f).clip(RoundedCornerShape(20.dp)))
+                        PlaybackVideo(videoPlayer, Modifier.width(videoWidth).aspectRatio(16f / 9f).clip(RoundedCornerShape(20.dp)))
                     } else {
-                        val artModifier = Modifier.fillMaxWidth(ui.playerArtSize.coerceIn(0.5f, 1f)).aspectRatio(1f)
+                        val artModifier = Modifier.size(artSide)
                         if (classic) {
                             Artwork(song.artworkUrl, song.accent, artModifier, corner = 20.dp)
                         } else {
@@ -284,8 +286,8 @@ fun PlayerScreen(
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-
+        }
+        val controls: @Composable () -> Unit = {
             if (state.hasVideo && videoPlayer != null) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
                     androidx.compose.material3.FilterChip(selected = !showVideo, onClick = { showVideo = false }, label = { Text(appString(R.string.text_audio_acdac2)) })
@@ -455,6 +457,25 @@ fun PlayerScreen(
                 }
             } else {
                 Spacer(Modifier.height(12.dp))
+            }
+        }
+        val landscape = com.aurora.music.ui.layout.LocalWindowLayout.current.useLandscapePlayer
+        Column(
+            Modifier.align(Alignment.TopCenter).widthIn(max = if (landscape) 1280.dp else 640.dp)
+                .fillMaxSize().windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
+                .padding(horizontal = if (landscape) 32.dp else 20.dp),
+        ) {
+            header()
+            if (landscape) {
+                Row(Modifier.fillMaxWidth().weight(1f).padding(vertical = 20.dp),
+                    horizontalArrangement = Arrangement.spacedBy(48.dp), verticalAlignment = Alignment.CenterVertically) {
+                    artwork(Modifier.weight(1f).fillMaxHeight())
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) { controls() }
+                }
+            } else {
+                artwork(Modifier.fillMaxWidth().weight(1f))
+                Spacer(Modifier.height(16.dp))
+                controls()
             }
         }
         androidx.compose.animation.AnimatedVisibility(

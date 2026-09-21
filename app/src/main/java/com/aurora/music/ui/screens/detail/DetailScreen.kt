@@ -10,6 +10,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
@@ -151,7 +152,17 @@ fun DetailScreen(
         contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
     ) {
         item {
-            Box(Modifier.fillMaxWidth().height(420.dp)) {
+            BoxWithConstraints(Modifier.fillMaxWidth()) {
+                val wideHeader = maxWidth >= 700.dp
+                val headerForeground = if (wideHeader) MaterialTheme.colorScheme.onSurface else Color.White
+            Box(Modifier.fillMaxWidth().height(if (wideHeader) 360.dp else 420.dp)) {
+                if (wideHeader) {
+                    Box(Modifier.matchParentSize().background(Brush.verticalGradient(
+                        listOf(accent.copy(alpha = .22f), MaterialTheme.colorScheme.background))))
+                    Artwork(effectiveArt, info.accent,
+                        Modifier.align(Alignment.CenterStart).padding(start = 24.dp, top = 48.dp).size(260.dp),
+                        corner = if (info.isArtist) 130.dp else 20.dp)
+                } else {
                 Artwork(effectiveArt, info.accent, Modifier.matchParentSize(), corner = 0.dp)
                 Box(
                     Modifier.matchParentSize().background(
@@ -170,14 +181,15 @@ fun DetailScreen(
                         Brush.verticalGradient(listOf(Color.Black.copy(alpha = 0.45f), Color.Transparent))
                     )
                 )
+                }
                 Row(
                     Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = Color.White, modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = headerForeground, modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
                     Spacer(Modifier.weight(1f))
                     Box {
-                        Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = Color.White, modifier = Modifier.size(40.dp).clip(CircleShape).clickable { headerMenu = true }.padding(8.dp))
+                        Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = headerForeground, modifier = Modifier.size(40.dp).clip(CircleShape).clickable { headerMenu = true }.padding(8.dp))
                         val isPlaylist = info.typeLabel.equals("Playlist", true)
                         DropdownMenu(expanded = headerMenu, onDismissRequest = { headerMenu = false }) {
                             DropdownMenuItem(text = { Text(appString(R.string.text_play_5d12bd)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onPlayAll(tracks, 0) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
@@ -195,13 +207,16 @@ fun DetailScreen(
                         }
                     }
                 }
-                Column(Modifier.align(Alignment.BottomStart).padding(start = 20.dp, end = 20.dp, bottom = 14.dp)) {
+                Column(Modifier.align(if (wideHeader) Alignment.CenterStart else Alignment.BottomStart)
+                    .padding(start = if (wideHeader) 320.dp else 20.dp, end = 20.dp,
+                        top = if (wideHeader) 48.dp else 0.dp, bottom = 14.dp)) {
                     Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accent)
                     Spacer(Modifier.height(6.dp))
-                    Text(info.title, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, color = Color.White)
+                    Text(info.title, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, color = headerForeground)
                     Spacer(Modifier.height(4.dp))
-                    Text(info.subtitle, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f))
+                    Text(info.subtitle, style = MaterialTheme.typography.bodyMedium, color = headerForeground.copy(alpha = 0.85f))
                 }
+            }
             }
         }
 

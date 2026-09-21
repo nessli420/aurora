@@ -152,7 +152,8 @@ internal fun LyricsScreen(
         indication = null,
     ) { controlsVisible = !controlsVisible }) {
         LyricsBackdrop(song)
-        Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)) {
+        Column(Modifier.align(Alignment.TopCenter).widthIn(max = 880.dp).fillMaxSize()
+            .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)) {
             Row(Modifier.fillMaxWidth().lyricsChrome(controlsVisible, controlsAlpha)
                 .padding(start = 24.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically) {

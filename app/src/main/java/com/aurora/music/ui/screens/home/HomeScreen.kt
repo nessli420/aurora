@@ -173,6 +173,8 @@ fun HomeScreen(
                 Column {
                     HorizontalPager(
                         state = pagerState,
+                        pageSize = if (com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail)
+                            androidx.compose.foundation.pager.PageSize.Fixed(400.dp) else androidx.compose.foundation.pager.PageSize.Fill,
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         pageSpacing = 12.dp,
                         modifier = Modifier.fillMaxWidth(),
