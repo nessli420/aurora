@@ -26,6 +26,9 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -35,6 +38,9 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.palette.graphics.Palette
 import androidx.core.view.WindowCompat
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import coil.imageLoader
 import coil.request.ImageRequest
 import coil.request.SuccessResult
@@ -54,6 +60,7 @@ import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 internal fun LyricsScreen(
     state: PlayerUiState,
     onClose: () -> Unit,
@@ -64,32 +71,93 @@ internal fun LyricsScreen(
 ) {
     val song = state.current
     val view = LocalView.current
+    var controlsVisible by remember { mutableStateOf(true) }
+    var interactionVersion by remember { mutableIntStateOf(0) }
+    var pointerHeld by remember { mutableStateOf(false) }
+    var scrolling by remember { mutableStateOf(false) }
+    var seeking by remember { mutableStateOf(false) }
+    val accessibility = remember(view) {
+        view.context.getSystemService(android.content.Context.ACCESSIBILITY_SERVICE) as android.view.accessibility.AccessibilityManager
+    }
+    var touchExploration by remember { mutableStateOf(accessibility.isTouchExplorationEnabled) }
+    DisposableEffect(accessibility) {
+        val listener = android.view.accessibility.AccessibilityManager.TouchExplorationStateChangeListener { touchExploration = it }
+        accessibility.addTouchExplorationStateChangeListener(listener)
+        onDispose { accessibility.removeTouchExplorationStateChangeListener(listener) }
+    }
+    val controlsAlpha by animateFloatAsState(if (controlsVisible) 1f else 0f, tween(350), label = "lyricsControls")
+    val bars = remember(view) {
+        (view.context as? android.app.Activity)?.window?.let { WindowCompat.getInsetsController(it, view) }
+    }
     DisposableEffect(view) {
-        val window = (view.context as? android.app.Activity)?.window
-        val bars = window?.let { WindowCompat.getInsetsController(it, view) }
+        val originalInsets = ViewCompat.getRootWindowInsets(view)
+        val statusVisible = originalInsets?.isVisible(WindowInsetsCompat.Type.statusBars()) != false
+        val navigationVisible = originalInsets?.isVisible(WindowInsetsCompat.Type.navigationBars()) != false
+        val originalBehavior = bars?.systemBarsBehavior
         val lightStatus = bars?.isAppearanceLightStatusBars
         val lightNavigation = bars?.isAppearanceLightNavigationBars
-        bars?.isAppearanceLightStatusBars = false
-        bars?.isAppearanceLightNavigationBars = false
         onDispose {
             if (lightStatus != null) bars.isAppearanceLightStatusBars = lightStatus
             if (lightNavigation != null) bars.isAppearanceLightNavigationBars = lightNavigation
+            if (originalBehavior != null) bars.systemBarsBehavior = originalBehavior
+            if (statusVisible) bars?.show(WindowInsetsCompat.Type.statusBars()) else bars?.hide(WindowInsetsCompat.Type.statusBars())
+            if (navigationVisible) bars?.show(WindowInsetsCompat.Type.navigationBars()) else bars?.hide(WindowInsetsCompat.Type.navigationBars())
         }
+    }
+    LaunchedEffect(controlsVisible) {
+        bars?.isAppearanceLightStatusBars = false
+        bars?.isAppearanceLightNavigationBars = false
+        bars?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        if (controlsVisible) bars?.show(WindowInsetsCompat.Type.systemBars())
+        else bars?.hide(WindowInsetsCompat.Type.systemBars())
     }
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
     var lyrics by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Lyrics?>(null) }
     var loading by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(true) }
     LaunchedEffect(song.id, song.playbackSource?.providerId) {
+        controlsVisible = true
+        interactionVersion++
         lyrics = if (song.id.isBlank()) null else container.lyricsRepository.lyricsFor(song)
         loading = false
     }
-    Box(Modifier.fillMaxSize().background(Color(0xFF17191D)).clickable(
+    LaunchedEffect(interactionVersion, pointerHeld, scrolling, seeking, loading, lyrics, touchExploration) {
+        controlsVisible = true
+        if (!pointerHeld && !scrolling && !seeking && !loading && !lyrics?.lines.isNullOrEmpty() && !touchExploration) {
+            delay(3000)
+            controlsVisible = false
+        }
+    }
+    Box(Modifier.fillMaxSize().background(Color(0xFF17191D)).pointerInput(Unit) {
+        // Observe child gestures without cancelling scrubbing or scrolling. A hidden screen's
+        // first gesture only reveals controls, so it cannot accidentally seek or skip a track.
+        awaitPointerEventScope {
+            var waking = false
+            try {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    val pressed = event.changes.any { it.pressed }
+                    if (!pointerHeld && pressed) {
+                        waking = !controlsVisible
+                        controlsVisible = true
+                        interactionVersion++
+                    }
+                    if (waking) event.changes.forEach { it.consume() }
+                    if (pointerHeld && !pressed) interactionVersion++
+                    pointerHeld = pressed
+                    if (!pressed) waking = false
+                }
+            } finally {
+                pointerHeld = false
+            }
+        }
+    }.clickable(
         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
         indication = null,
     ) {}) {
         LyricsBackdrop(song)
-        Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)) {
-            Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+        Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)) {
+            Row(Modifier.fillMaxWidth().lyricsChrome(controlsVisible, controlsAlpha)
+                .padding(start = 24.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Artwork(song.artworkUrl, song.accent, Modifier.size(44.dp), corner = 10.dp)
                 Column(Modifier.weight(1f).padding(horizontal = 14.dp)) {
@@ -98,7 +166,7 @@ internal fun LyricsScreen(
                     Text(song.artist, color = Color.White.copy(alpha = .65f), fontSize = 13.sp,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                IconButton(onClick = onClose) {
+                IconButton(onClick = onClose, enabled = controlsVisible) {
                     Icon(Icons.Default.KeyboardArrowDown, appString(R.string.text_collapse_9cf188), tint = Color.White)
                 }
             }
@@ -117,14 +185,25 @@ internal fun LyricsScreen(
                             fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     }
                     else -> key(song.id, song.playbackSource?.providerId) {
-                        ImmersiveLyrics(content, state.positionSec, state.durationSec, onSeek)
+                        ImmersiveLyrics(content, state.positionSec, state.durationSec,
+                            onSeek = { interactionVersion++; onSeek(it) }, onScrolling = { scrolling = it })
                     }
                 }
             }
-            LyricsTransport(state, lyrics?.source, onTogglePlay, onPrevious, onNext, onSeek)
+            Box(Modifier.lyricsChrome(controlsVisible, controlsAlpha)) {
+                LyricsTransport(state, lyrics?.source,
+                    onTogglePlay = { interactionVersion++; onTogglePlay() },
+                    onPrevious = { interactionVersion++; onPrevious() },
+                    onNext = { interactionVersion++; onNext() },
+                    onSeek = { interactionVersion++; onSeek(it) },
+                    enabled = controlsVisible, onSeeking = { seeking = it })
+            }
         }
     }
 }
+
+private fun Modifier.lyricsChrome(visible: Boolean, alpha: Float) =
+    graphicsLayer { this.alpha = alpha }.then(if (visible) Modifier else Modifier.clearAndSetSemantics {})
 
 // Extract several real artwork tones; app accents and Material You never enter this palette.
 @Composable
@@ -177,11 +256,17 @@ private fun LyricsBackdrop(song: Song) {
 }
 
 @Composable
-private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int, onSeek: (Float) -> Unit) {
+private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int, onSeek: (Float) -> Unit,
+    onScrolling: (Boolean) -> Unit) {
     val lines = lyrics.lines
     val current = if (lyrics.synced) lines.indexOfLast { it.timeSec >= 0 && it.timeSec <= positionSec } else -1
     val list = rememberLazyListState()
     var browsing by remember { mutableStateOf(false) }
+    val reportScrolling by rememberUpdatedState(onScrolling)
+    LaunchedEffect(list) {
+        snapshotFlow { browsing && list.isScrollInProgress }.collect { reportScrolling(it) }
+    }
+    DisposableEffect(Unit) { onDispose { reportScrolling(false) } }
     LaunchedEffect(list) {
         var settle: Job? = null
         list.interactionSource.interactions.collect { interaction ->
@@ -221,7 +306,8 @@ private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int
                 val scale by animateFloatAsState(if (active || !lyrics.synced || browsing) 1f else .96f,
                     spring(dampingRatio = .85f, stiffness = 160f), label = "lineEmphasis")
                 val soften by animateFloatAsState(
-                    if (lyrics.synced && !browsing && abs(index - current) > 1) .7f else 0f,
+                    if (!lyrics.synced || browsing || active) 0f
+                    else ((abs(index - current) - 1).coerceAtLeast(0) * 1.6f).coerceAtMost(7f),
                     tween(450), label = "lineSoftness")
                 Text(lines[index].text.ifBlank { "•••" },
                     color = Color.White.copy(alpha = alpha), fontSize = 30.sp, lineHeight = 38.sp,
@@ -260,12 +346,17 @@ private fun Modifier.lyricsEdgeFade() = graphicsLayer { compositingStrategy = Co
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
 private fun LyricsTransport(state: PlayerUiState, source: String?, onTogglePlay: () -> Unit,
-    onPrevious: () -> Unit, onNext: () -> Unit, onSeek: (Float) -> Unit) {
+    onPrevious: () -> Unit, onNext: () -> Unit, onSeek: (Float) -> Unit,
+    enabled: Boolean, onSeeking: (Boolean) -> Unit) {
     var seeking by remember(state.current.id) { mutableStateOf<Float?>(null) }
+    val reportSeeking by rememberUpdatedState(onSeeking)
+    LaunchedEffect(seeking != null) { reportSeeking(seeking != null) }
+    DisposableEffect(Unit) { onDispose { reportSeeking(false) } }
     val progress = seeking ?: if (state.durationSec > 0) state.positionSec / state.durationSec else 0f
     Column(Modifier.fillMaxWidth().padding(horizontal = 28.dp).padding(bottom = 12.dp)) {
         if (state.durationSec > 0) {
             Slider(value = progress.coerceIn(0f, 1f), onValueChange = { seeking = it },
+                enabled = enabled,
                 onValueChangeFinished = { seeking?.let(onSeek); seeking = null },
                 thumb = { Box(Modifier.size(width = 3.dp, height = 16.dp).background(Color.White, CircleShape)) },
                 track = { slider ->
@@ -282,16 +373,16 @@ private fun LyricsTransport(state: PlayerUiState, source: String?, onTogglePlay:
         }
         Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onPrevious, Modifier.size(56.dp)) {
+            IconButton(onPrevious, Modifier.size(56.dp), enabled = enabled) {
                 Icon(Icons.Default.SkipPrevious, appString(R.string.text_previous_50f942), Modifier.size(30.dp), tint = Color.White)
             }
             Spacer(Modifier.width(24.dp))
-            IconButton(onTogglePlay, Modifier.size(60.dp).background(Color.White.copy(alpha = .14f), CircleShape)) {
+            IconButton(onTogglePlay, Modifier.size(60.dp).background(Color.White.copy(alpha = .14f), CircleShape), enabled = enabled) {
                 Icon(if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
                     appString(R.string.text_play_pause_14a1d0), Modifier.size(34.dp), tint = Color.White)
             }
             Spacer(Modifier.width(24.dp))
-            IconButton(onNext, Modifier.size(56.dp)) {
+            IconButton(onNext, Modifier.size(56.dp), enabled = enabled) {
                 Icon(Icons.Default.SkipNext, appString(R.string.text_next_bc9819), Modifier.size(30.dp), tint = Color.White)
             }
         }
