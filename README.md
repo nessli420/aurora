@@ -2,11 +2,25 @@
 
 # Aurora Music Player
 
-An Android music player for your local files, home music server, YouTube Music, and Green Music App library. Browse your collection and recommendations, watch music videos or listen to audio, and adjust the sound to suit your headphones or speakers.
+An Android music player built for everyday listening and detailed audio customization. Enjoy a familiar library, lyrics, downloads and personal listening recaps, with precise equalizers, measurement-based tuning and a full custom effects rack in the same app.
+
+Bring local files, home music servers and YouTube Music together, or browse your Green Music App library in its own mode. Press play with the default sound, choose a headphone preset, or build your own processing chain. No Aurora account is required.
 
 **[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
 
 Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively developed; the source may include changes that are not in the latest release yet.
+
+## At a glance
+
+| Everyday listening | Advanced audio customization |
+| --- | --- |
+| Local files, home servers and YouTube Music in one library | Graphic and parametric EQ, with up to 64 bands per rack equalizer |
+| Lyrics, offline downloads, gapless playback and an editable queue | Up to 16 processing stages, routing and reusable effects chains |
+| Recommendations, automatic mixes and personal listening recaps | Measurement-based tuning, impulse responses and separate left/right correction |
+| Last.fm, ListenBrainz, Discord and flexible themes | Saved output presets, automatic rules and matched-volume preset comparisons |
+| Widgets, Android Auto, sleep timer and music alarms | Signal Path diagnostics, direct or processed USB audio and compatible DSD output |
+
+[Explore everyday playback](#the-everyday-comforts) · [Explore sound controls](#sound-controls)
 
 ## Screenshots
 
@@ -69,7 +83,7 @@ YouTube streams are lossy, and some uploaded, age-restricted, regional or accoun
 
 ## Features
 
-### Your music
+### Your collection and discoveries
 
 - Browse albums, artists, playlists, songs, and folders. Search across your active library.
 - Download music for offline listening and prefer local copies when available.
@@ -78,10 +92,11 @@ YouTube streams are lossy, and some uploaded, age-restricted, regional or accoun
 - List collaborations under each artist. Choose which characters or words separate names.
 - Listen to internet radio and podcasts, or add your own radio stream.
 
-### Playback
+### The everyday comforts
 
 - Gapless playback, crossfade, repeat, shuffle, and an editable queue saved for each account.
-- Lyrics, speed and pitch controls, silence skipping, and volume leveling between tracks.
+- Lyrics in the player, with synchronized words when timed lyrics are available.
+- Speed and pitch controls, silence skipping, and volume leveling between tracks.
 - A sleep timer and a music alarm with its own settings page.
 - Automatic transitions between tracks with **Mix**, plus **Mix Studio** for editing them.
 - Optional vocal or backing-track separation in Mix Studio. Processing runs on your phone after a one-time model download.
@@ -89,7 +104,14 @@ YouTube streams are lossy, and some uploaded, age-restricted, regional or accoun
 
 ### Sound controls
 
-Start with a preset for your headphones, earbuds, or speakers, then adjust as much as you want. You can make a small bass change or build and save a complete sound setup.
+Tune headphones, earbuds or speakers with a preset, precise manual controls or imported measurements. Aurora’s custom DSP supports complete processing chains as well as quick tone adjustments.
+
+- **Build your sound:** graphic and parametric EQ, up to 16 rack stages, dynamics, spatial effects and convolution.
+- **Match your equipment:** measurement-based correction, independent left/right tuning and saved output presets.
+- **Inspect and compare:** Signal Path, matched-volume comparisons and blind listening tests.
+
+<details>
+<summary>Explore the advanced sound tools</summary>
 
 Everyday controls stay in Settings. Open **Advanced audio** for the processing rack, measurement tuning, correction files, preset comparisons, rules and listening calibration.
 
@@ -107,14 +129,42 @@ Everyday controls stay in Settings. Open **Advanced audio** for the processing r
 
 The main audio engine uses 64-bit calculations to keep extra precision as effects are combined. There are also controls for output sample rates and audio conversion. Integer output offers TPDF or noise-shaped dither; noise shaping moves conversion noise toward higher frequencies. Available controls depend on the playback mode; [USB audio](#usb-audio) has its own options and limits.
 
-### Make it yours
+</details>
 
-- Light, dark, and pure black modes, multiple interface styles, custom colors, and visualizers.
-- A local profile with your own display name, avatar, and banner.
-- Listening history and statistics for your tracks, albums, and artists.
-- Send listening history to Last.fm or ListenBrainz using the first artist from your separator rules. Share your now-playing status on Discord, with a choice of artist, song or Aurora as the activity name and optional album details. Rapid skips keep the latest song; local artwork can use the configured Imgur upload.
-- Browse daily, weekly, monthly, yearly and all-time listening recaps in Statistics. The home bell lists completed recaps. Explore artists, songs and albums by plays or minutes, calendar listening patterns and period comparisons, then save a top-five summary picture in Midnight, Paper or Aurora style. New history tracks actual listening time; older entries are marked as estimated.
-- Back up settings, local playlists, likes, history, your local profile, and saved sound setups in one file. Music files and downloads are not included.
+### Listening history and recaps
+
+Your listening story is part of the player, without needing Last.fm or another service.
+
+- **Choose your period.** Revisit a day, week, month or year, or look at all-time listening from Statistics.
+- **Find your favourites.** Rank artists, albums and songs by plays or minutes. See total listening time, play counts and active days.
+- **See the patterns.** Explore listening calendars, time-of-day patterns and comparisons with the previous period. Current periods are marked as in progress and compared with the full previous period.
+- **Catch up from Home.** The notification bell opens a full-screen inbox of completed recaps.
+- **Keep a picture.** Save your top five artists and songs with listening totals in Midnight, Paper or Aurora style.
+
+New history records actual listening time. Older entries may use estimated durations, which the recap identifies.
+
+### Integrations that fit your music life
+
+Each connection is optional and managed in **Settings → Integrations**.
+
+| Integration | What it adds | Setup |
+| --- | --- | --- |
+| **Last.fm** | Now-playing updates and scrobbles to your listening profile. | Your own API key and shared secret, then account linking. |
+| **ListenBrainz** | Playing-now updates and a record of your listens. | Your ListenBrainz user token. |
+| **Discord** | A listening activity with your current track. Choose the artist, song or Aurora as its name, and show or hide album details. | Connect your account; add a Discord application ID for artwork. |
+| **AcoustID** | Identify a track by its audio when filenames or tags are incomplete. | Your own application API key. |
+| **MusicBrainz & Cover Art Archive** | Look up recording details and missing artwork, with suggestions to review before applying. | Available through the metadata tools. |
+
+Last.fm and ListenBrainz use the first artist from your separator rules for consistent credits. Both have independent enable switches. Discord follows the latest track when you skip; local or private-server cover images can use a configured Imgur upload. That uploads those images to an external service. Turning off **Show album** also removes the artwork caption.
+
+See [optional account setup](#optional-accounts) for the relevant links and sign-in steps. Aurora’s own history and recaps work without these connections.
+
+### Make it yours, keep it yours
+
+- Light, dark and pure black modes, custom colors and visualizers. Retro, Aero and Glass change the interface’s controls and surfaces as well as its palette.
+- A local profile with your own display name, avatar and banner.
+- Saved accounts and per-account queues, so switching libraries feels familiar.
+- A single backup for settings, local playlists, likes, history, your local profile and saved sound setups. Music files and downloads are not included; Google sessions are excluded.
 
 ## DSD and SACD
 
