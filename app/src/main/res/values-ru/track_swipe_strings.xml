@@ -1,11 +1,13 @@
 <resources>
     <string name="track_swipe_playlists">Плейлисты</string>
     <string name="track_playlists_title">Добавить в плейлисты или удалить</string>
-    <string name="track_playlists_hint">Отметьте плейлист, чтобы добавить трек. Снимите отметку, чтобы удалить его.</string>
+    <string name="track_playlists_hint">Нажмите, чтобы добавить или удалить трек.</string>
     <string name="track_playlists_empty">Плейлистов пока нет. Сначала создайте плейлист в медиатеке.</string>
     <string name="track_playlists_unavailable">Подключитесь к источнику этого трека, чтобы изменить его плейлисты.</string>
     <string name="track_playlists_load_error">Не удалось загрузить плейлисты. Попробуйте ещё раз.</string>
     <string name="track_playlists_save_error">Не удалось изменить плейлист. Проверьте соединение и права на редактирование.</string>
     <string name="track_swipe_retry">Повторить</string>
     <string name="track_swipe_done">Готово</string>
+    <string name="track_playlists_in_playlist">В плейлисте</string>
+    <string name="track_playlists_add">Добавить в плейлист</string>
 </resources>
