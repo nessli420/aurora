@@ -32,21 +32,29 @@ import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 
 @Composable
-fun YouTubeMusicStep(state: AuthUiState, onBack: () -> Unit, onConnect: (String) -> Unit) {
+fun YouTubeMusicStep(state: AuthUiState, onConnect: (String) -> Unit) {
     var browserOpen by remember { mutableStateOf(false) }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Your library, playlists and likes in Aurora. YouTube Music runs on its own, separate from your other sources.")
-        Text("Sign in on Google's page, then connect your YouTube Music profile. No Google Cloud setup is needed.",
-            style = MaterialTheme.typography.bodyMedium)
-        Text("Aurora’s EQ and audio effects remain available. YouTube streams are lossy; uploaded and account-restricted tracks may not play.",
-            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Text("This connection uses YouTube Music’s unofficial web interface. Aurora stores your session encrypted on this device.",
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            OutlinedButton(onClick = onBack, enabled = !state.loading) { Text("Back") }
-            Button(onClick = { browserOpen = true }, enabled = !state.loading, modifier = Modifier.weight(1f)) {
-                Text("Sign in with Google")
+    var detailsExpanded by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surface) {
+            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Text("More music. Same Aurora.", style = MaterialTheme.typography.titleMedium)
+                Text("Keep your playlists and likes close. Explore recommendations alongside your local and server libraries.",
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Shape your sound with Aurora’s EQ and audio effects.",
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+        }
+        Text("Sign in on Google’s page, then choose your YouTube Music profile. No developer setup is needed.",
+            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Button(onClick = { browserOpen = true }, enabled = !state.loading,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) {
+            Text("Sign in with Google", style = MaterialTheme.typography.titleSmall)
+        }
+        TextButton(onClick = { detailsExpanded = !detailsExpanded }) { Text(if (detailsExpanded) "Hide connection details" else "Connection details") }
+        androidx.compose.animation.AnimatedVisibility(detailsExpanded) {
+            Text("Aurora uses YouTube Music’s unofficial web interface and stores your session encrypted on this device. Streams are lossy; uploaded and account-restricted tracks may not play.",
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
     if (browserOpen) YouTubeMusicBrowser(state, { browserOpen = false }, onConnect)
