@@ -53,7 +53,10 @@ class LastfmScrobbler(
         val sk = sessionKey ?: return
         if (!enabled || song.title.isBlank() || song.artist.isBlank()) return
         scope.launch {
-            val artist = store.artistSeparators.first().split(song.artist).first()
+            val artist = replaceScrobbleArtist(
+                store.artistSeparators.first().split(song.artist).first(),
+                store.lastfmArtistRules.first(),
+            )
             c.updateNowPlaying(sk, artist, song.title, song.album.ifBlank { null })
         }
     }
@@ -63,7 +66,10 @@ class LastfmScrobbler(
         val sk = sessionKey ?: return
         if (!enabled || song.title.isBlank() || song.artist.isBlank()) return
         scope.launch {
-            val artist = store.artistSeparators.first().split(song.artist).first()
+            val artist = replaceScrobbleArtist(
+                store.artistSeparators.first().split(song.artist).first(),
+                store.lastfmArtistRules.first(),
+            )
             c.scrobble(sk, artist, song.title, song.album.ifBlank { null }, startedAtMs / 1000)
         }
     }

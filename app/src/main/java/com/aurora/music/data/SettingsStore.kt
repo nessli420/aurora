@@ -465,6 +465,7 @@ class SettingsStore(private val context: Context) {
         val LASTFM_ENABLED = booleanPreferencesKey("lastfm_enabled")
         val LASTFM_API_KEY = stringPreferencesKey("lastfm_api_key")
         val LASTFM_SECRET = stringPreferencesKey("lastfm_secret")
+        val LASTFM_ARTIST_RULES = stringPreferencesKey("lastfm_artist_rules_v1")
         val LISTENBRAINZ_TOKEN = stringPreferencesKey("listenbrainz_token")
         val LISTENBRAINZ_USER = stringPreferencesKey("listenbrainz_user")
         val LISTENBRAINZ_ENABLED = booleanPreferencesKey("listenbrainz_enabled")
@@ -501,6 +502,10 @@ class SettingsStore(private val context: Context) {
     val lastfmKeys: Flow<Pair<String, String>> = context.dataStore.data.map { p ->
         (p[Keys.LASTFM_API_KEY].orEmpty()) to (p[Keys.LASTFM_SECRET].orEmpty())
     }
+
+    val lastfmArtistRules: Flow<List<ScrobbleArtistRule>> = context.dataStore.data.map { p ->
+        runCatching { ScrobbleArtistRulesCodec.decode(p[Keys.LASTFM_ARTIST_RULES]) }.getOrDefault(emptyList())
+    }.distinctUntilChanged()
 
     val listenBrainz: Flow<ListenBrainzAccount> = context.dataStore.data.map { p ->
         ListenBrainzAccount(
@@ -1870,6 +1875,10 @@ class SettingsStore(private val context: Context) {
     suspend fun setLastfmKeys(apiKey: String, secret: String) = context.dataStore.edit { p ->
         p[Keys.LASTFM_API_KEY] = apiKey.trim()
         p[Keys.LASTFM_SECRET] = secret.trim()
+    }
+
+    suspend fun setLastfmArtistRules(rules: List<ScrobbleArtistRule>) = context.dataStore.edit { p ->
+        p[Keys.LASTFM_ARTIST_RULES] = ScrobbleArtistRulesCodec.encode(rules)
     }
 
     suspend fun saveListenBrainz(token: String, username: String) = context.dataStore.edit { p ->

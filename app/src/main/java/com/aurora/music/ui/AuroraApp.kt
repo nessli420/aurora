@@ -839,8 +839,35 @@ fun AuroraApp() {
                         com.aurora.music.ui.screens.settings.IntegrationsSettingsScreen(
                             contentPadding = inner,
                             onBack = { navController.popBackStack() },
+                            onOpenLyrics = { navController.navigate(Routes.SETTINGS_INTEGRATION_LYRICS) },
+                            onOpenLastfm = { navController.navigate(Routes.SETTINGS_INTEGRATION_LASTFM) },
+                            onOpenListenBrainz = { navController.navigate(Routes.SETTINGS_INTEGRATION_LISTENBRAINZ) },
+                            onOpenDiscord = { navController.navigate(Routes.SETTINGS_INTEGRATION_DISCORD) },
+                            onOpenArtistInfo = { navController.navigate(Routes.SETTINGS_INTEGRATION_ARTIST_INFO) },
+                            onOpenAcoustId = { navController.navigate(Routes.SETTINGS_INTEGRATION_ACOUSTID) },
+                        )
+                    }
+                    composable(Routes.SETTINGS_INTEGRATION_LYRICS) {
+                        com.aurora.music.ui.screens.settings.LyricsIntegrationScreen(inner) { navController.popBackStack() }
+                    }
+                    composable(Routes.SETTINGS_INTEGRATION_LASTFM) {
+                        com.aurora.music.ui.screens.settings.LastfmIntegrationScreen(inner) { navController.popBackStack() }
+                    }
+                    composable(Routes.SETTINGS_INTEGRATION_LISTENBRAINZ) {
+                        com.aurora.music.ui.screens.settings.ListenBrainzIntegrationScreen(inner) { navController.popBackStack() }
+                    }
+                    composable(Routes.SETTINGS_INTEGRATION_DISCORD) {
+                        com.aurora.music.ui.screens.settings.DiscordIntegrationScreen(
+                            contentPadding = inner,
+                            onBack = { navController.popBackStack() },
                             onOpenDiscordLogin = { navController.navigate(Routes.DISCORD_LOGIN) },
                         )
+                    }
+                    composable(Routes.SETTINGS_INTEGRATION_ARTIST_INFO) {
+                        com.aurora.music.ui.screens.settings.ArtistInfoIntegrationScreen(inner) { navController.popBackStack() }
+                    }
+                    composable(Routes.SETTINGS_INTEGRATION_ACOUSTID) {
+                        com.aurora.music.ui.screens.settings.AcoustIdIntegrationScreen(inner) { navController.popBackStack() }
                     }
                     composable(Routes.SETTINGS_APPEARANCE) {
                         com.aurora.music.ui.screens.settings.AppearanceScreen(contentPadding = inner, onBack = { navController.popBackStack() })

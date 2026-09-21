@@ -31,7 +31,7 @@ object SettingsDestinations {
     val appearance = SettingsDestination(Routes.SETTINGS_APPEARANCE, "Appearance", "Theme, accent and layout")
     val visualizer = SettingsDestination(Routes.SETTINGS_VISUALIZER, "Visualizer", "Spectrum, waveform, radial and particles")
     val gestures = SettingsDestination(Routes.SETTINGS_GESTURES, "Gestures & behaviour", "Swipe, haptics and private session")
-    val integrations = SettingsDestination(Routes.SETTINGS_INTEGRATIONS, "Integrations", "Last.fm, ListenBrainz, Discord and lyrics")
+    val integrations = SettingsDestination(Routes.SETTINGS_INTEGRATIONS, "Integrations", "Scrobbling, presence, lyrics and metadata")
     val permissions = SettingsDestination(Routes.SETTINGS_PERMISSIONS, "Permissions", "Notifications, background, alarms and DAC")
     val backup = SettingsDestination(Routes.SETTINGS_BACKUP, "Backup & restore", "Export or import settings and playlists")
     val about = SettingsDestination(Routes.SETTINGS_ABOUT, "About Aurora", "Version and app information")
