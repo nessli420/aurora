@@ -112,7 +112,8 @@ The main audio engine uses 64-bit calculations to keep extra precision as effect
 - Light, dark, and pure black modes, multiple interface styles, custom colors, and visualizers.
 - A local profile with your own display name, avatar, and banner.
 - Listening history and statistics for your tracks, albums, and artists.
-- Send listening history to Last.fm or ListenBrainz using the first artist from your separator rules. Share your now-playing status on Discord.
+- Send listening history to Last.fm or ListenBrainz using the first artist from your separator rules. Share your now-playing status on Discord, with a choice of artist, song or Aurora as the activity name and optional album details. Rapid skips keep the latest song; local artwork can use the configured Imgur upload.
+- Browse daily, weekly, monthly, yearly and all-time listening recaps in Statistics. The home bell lists completed recaps. Explore artists, songs and albums by plays or minutes, calendar listening patterns and period comparisons, then save a top-five summary picture in Midnight, Paper or Aurora style. New history tracks actual listening time; older entries are marked as estimated.
 - Back up settings, local playlists, likes, history, your local profile, and saved sound setups in one file. Music files and downloads are not included.
 
 ## DSD and SACD
@@ -162,7 +163,7 @@ Local files and server playback do not need any of these. Connect only the servi
 | **Last.fm** | Enter your [API key and shared secret](https://www.last.fm/api/account/create) in **Settings → Integrations**, then link your account. |
 | **ListenBrainz** | Copy your [user token](https://listenbrainz.org/profile) into **Settings → Integrations**. |
 | **AcoustID** | Add an [application API key](https://acoustid.org/new-application) in **Settings → Integrations** to identify tracks from their audio. |
-| **Discord** | Connect in **Settings → Integrations**. A [Discord application ID](https://discord.com/developers/applications) and an Imgur client ID are optional for artwork. |
+| **Discord** | Connect in **Settings → Integrations**. A [Discord application ID](https://discord.com/developers/applications) is needed for artwork; configure an Imgur client ID to publish local or private-server covers. |
 
 ## Help
 

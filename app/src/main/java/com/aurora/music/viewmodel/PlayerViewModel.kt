@@ -112,9 +112,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     // clearing for account switch must not overwrite the saved queue
     @Volatile private var suppressPersist = false
     private var playStartMs: Long = 0L
-    private var lastDiscordSig: String? = null
-    private var lastDiscordPosSec = 0f
-    private var lastDiscordWallMs = 0L
     private var lastKeyInfoId: String? = null
     private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
     @Volatile private var loadingRadio = false
@@ -162,7 +159,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         lastRecordedId = cur.id
         // radio/podcasts carry synthetic ids don't record to history server or scrobblers
         if (cur.isRadio() || cur.isPodcast() || cur.id.startsWith("aurora-mix:")) return
-        container.playHistory.record(cur, System.currentTimeMillis())
         if (privateSession) return
         if (scrobbleEnabled) viewModelScope.launch { runCatching { container.repository.scrobble(cur.id) } }
         container.lastfm.scrobble(cur, playStartMs)
@@ -424,7 +420,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 keyName = ki?.name ?: "",
             )
         }
-        updateDiscordPresence()
         maybeEnrichLocal(_state.value.current)
         persistQueue()
     }
@@ -456,22 +451,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             songById = songById.mapValues { (id, s) -> if (id == song.id) enrich(s) else s }
             _state.update { st -> if (st.current.id == song.id) st.copy(current = enrich(st.current)) else st }
         }
-    }
-
-    private fun updateDiscordPresence() {
-        val s = _state.value
-        if (s.current.id.isEmpty()) return
-        val sig = "${s.current.id}|${s.isPlaying}"
-        val now = System.currentTimeMillis()
-        val pos = s.positionSec
-        // discord animates the bar client-side from timestamps re-push on desync (loop/seek) else it sticks at the end
-        val expected = lastDiscordPosSec + if (s.isPlaying) (now - lastDiscordWallMs) / 1000f else 0f
-        val desynced = pos < expected - 2f || pos > expected + 2f
-        if (sig == lastDiscordSig && !desynced) return
-        lastDiscordSig = sig
-        lastDiscordPosSec = pos
-        lastDiscordWallMs = now
-        container.discord.update(s.current, s.isPlaying, pos)
     }
 
     private fun toMediaItem(song: Song): MediaItem = MediaItem.Builder()

@@ -20,31 +20,40 @@ import org.json.JSONObject
 class DiscordGateway(
     private val onUsername: (String) -> Unit,
     private val onConnected: (Boolean) -> Unit,
+    private val gatewayUrl: String = "wss://gateway.discord.gg/?v=10&encoding=json",
 ) {
     private val http = OkHttpClient.Builder().build()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
+    private var ready = false
+    private var generation = 0L
+    private var presenceJob: Job? = null
+    private var reconnectJob: Job? = null
+    private val presenceThrottle = PresenceThrottle<JSONObject>()
+    @Volatile private var heartbeatAcknowledged = true
     private var ws: WebSocket? = null
     private var token: String = ""
     private var seq: Int? = null
     private var heartbeatJob: Job? = null
-    private var activity: JSONObject? = null
     @Volatile private var closedByUser = false
 
-    fun connect(token: String, activity: JSONObject?) {
+    @Synchronized fun connect(token: String, activity: JSONObject?) {
         if (token.isBlank()) return
+        disconnect()
         this.token = token
-        this.activity = activity
+        presenceThrottle.offer(activity)
         closedByUser = false
         open()
     }
 
-    fun updateActivity(activity: JSONObject?) {
-        this.activity = activity
-        if (ws != null) sendPresence()
+    @Synchronized fun updateActivity(activity: JSONObject?) {
+        presenceThrottle.offer(activity)
+        if (ready) schedulePresence()
     }
 
-    fun disconnect() {
+    @Synchronized fun disconnect() {
+        generation++; ready = false
+        presenceJob?.cancel(); reconnectJob?.cancel()
         closedByUser = true
         heartbeatJob?.cancel()
         runCatching { ws?.close(1000, "bye") }
@@ -52,9 +61,12 @@ class DiscordGateway(
         onConnected(false)
     }
 
-    private fun open() {
-        val req = Request.Builder().url("wss://gateway.discord.gg/?v=10&encoding=json").build()
-        ws = http.newWebSocket(req, Listener())
+    @Synchronized private fun open() {
+        val epoch = ++generation
+        ready = false; seq = null
+        ws?.cancel()
+        val req = Request.Builder().url(gatewayUrl).build()
+        ws = http.newWebSocket(req, Listener(epoch))
     }
 
     private fun identify() {
@@ -73,7 +85,7 @@ class DiscordGateway(
 
     private fun presence(): JSONObject {
         val activities = JSONArray()
-        activity?.let { activities.put(it) }
+        presenceThrottle.latest?.let { activities.put(it) }
         return JSONObject()
             .put("status", "online")
             .put("since", 0)
@@ -81,31 +93,51 @@ class DiscordGateway(
             .put("afk", false)
     }
 
-    private fun sendPresence() {
-        runCatching { ws?.send(JSONObject().put("op", 3).put("d", presence()).toString()) }
+    @Synchronized private fun schedulePresence() {
+        if (!ready || presenceJob?.isActive == true) return
+        presenceJob = scope.launch {
+            delay(synchronized(this@DiscordGateway) { presenceThrottle.delayMs(android.os.SystemClock.elapsedRealtime()) })
+            synchronized(this@DiscordGateway) {
+                if (ready && !closedByUser) {
+                    if (ws?.send(JSONObject().put("op", 3).put("d", presence()).toString()) == true) {
+                        presenceThrottle.sent(android.os.SystemClock.elapsedRealtime())
+                    }
+                }
+                presenceJob = null
+            }
+        }
     }
 
     private fun startHeartbeat(intervalMs: Long) {
         heartbeatJob?.cancel()
+        heartbeatAcknowledged = true
         heartbeatJob = scope.launch {
             delay((intervalMs * 0.5).toLong())
             while (isActive) {
+                if (!heartbeatAcknowledged) { reconnect(); return@launch }
+                heartbeatAcknowledged = false
                 runCatching { ws?.send(JSONObject().put("op", 1).put("d", seq ?: JSONObject.NULL).toString()) }
                 delay(intervalMs)
             }
         }
     }
 
-    private fun reconnect() {
-        heartbeatJob?.cancel()
+    @Synchronized private fun reconnect() {
+        if (closedByUser || reconnectJob?.isActive == true) return
+        ready = false; generation++
+        heartbeatJob?.cancel(); presenceJob?.cancel(); presenceJob = null
+        ws?.cancel(); ws = null
         onConnected(false)
-        if (closedByUser) return
-        scope.launch { delay(5000); if (!closedByUser) open() }
+        reconnectJob = scope.launch {
+            delay(5000)
+            synchronized(this@DiscordGateway) { reconnectJob = null; if (!closedByUser) open() }
+        }
     }
 
-    private inner class Listener : WebSocketListener() {
-        override fun onMessage(webSocket: WebSocket, text: String) {
-            val json = runCatching { JSONObject(text) }.getOrNull() ?: return
+    private inner class Listener(private val epoch: Long) : WebSocketListener() {
+        override fun onMessage(webSocket: WebSocket, text: String) = synchronized(this@DiscordGateway) {
+            if (epoch != generation || closedByUser) return@synchronized
+            val json = runCatching { JSONObject(text) }.getOrNull() ?: return@synchronized
             if (!json.isNull("s")) seq = json.optInt("s")
             when (json.optInt("op", -1)) {
                 10 -> {
@@ -120,19 +152,23 @@ class DiscordGateway(
                     Log.d(TAG, "READY as $name")
                     onUsername(name)
                     onConnected(true)
-                    sendPresence()
+                    ready = true
+                    schedulePresence()
                 }
                 1 -> runCatching { ws?.send(JSONObject().put("op", 1).put("d", seq ?: JSONObject.NULL).toString()) }
+                11 -> heartbeatAcknowledged = true
                 7, 9 -> { Log.d(TAG, "reconnect requested op=${json.optInt("op")}"); reconnect() }
             }
         }
 
-        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
+        override fun onClosed(webSocket: WebSocket, code: Int, reason: String) = synchronized(this@DiscordGateway) {
+            if (epoch != generation || closedByUser) return@synchronized
             Log.d(TAG, "closed $code $reason")
             reconnect()
         }
 
-        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
+        override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) = synchronized(this@DiscordGateway) {
+            if (epoch != generation || closedByUser) return@synchronized
             Log.d(TAG, "failure ${t.message}")
             reconnect()
         }

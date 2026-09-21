@@ -258,7 +258,7 @@ class AppContainer(context: Context) {
 
     val listenBrainz = ListenBrainzScrobbler(settingsStore, scope)
 
-    val discord = DiscordRpc(settingsStore, scope)
+    val discord = DiscordRpc(appContext, settingsStore, scope)
 
     val youtubeResolver = com.aurora.music.playback.YoutubeResolver()
     val youtubeMusicCredentials = YouTubeMusicCredentials(appContext)

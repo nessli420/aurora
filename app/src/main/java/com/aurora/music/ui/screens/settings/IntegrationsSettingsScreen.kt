@@ -218,6 +218,10 @@ private fun DiscordRow(scope: CoroutineScope, onConnect: () -> Unit) {
             if (acct.username.isNotBlank()) "Connected as ${acct.username}" else "Connected",
             acct.enabled,
         ) { v -> scope.launch { container.settingsStore.setDiscordEnabled(v) } }
+        SettingsSwitchRow(Icons.Filled.Forum, "Show album", "Include the album in your listening status", acct.showAlbum) { v -> scope.launch { container.settingsStore.setDiscordShowAlbum(v) } }
+        SegmentedRow("Listening to", listOf("Aurora", "Artist", "Song"), listOf("aurora", "artist", "song").indexOf(acct.activityName).coerceAtLeast(0)) { i ->
+            scope.launch { container.settingsStore.setDiscordActivityName(listOf("aurora", "artist", "song")[i]) }
+        }
         var appId by remember { mutableStateOf(acct.appId) }
         OutlinedTextField(
             value = appId,
@@ -230,7 +234,7 @@ private fun DiscordRow(scope: CoroutineScope, onConnect: () -> Unit) {
         OutlinedTextField(
             value = imgur,
             onValueChange = { imgur = it; scope.launch { container.settingsStore.setDiscordImgur(it.trim()) } },
-            label = { Text("Imgur client ID — for album art (optional)") },
+            label = { Text("Imgur client ID — local and private album art") },
             singleLine = true,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
         )

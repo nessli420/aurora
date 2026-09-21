@@ -283,6 +283,8 @@ data class DiscordAccount(
     val enabled: Boolean = true,
     val imgurClientId: String = "",
     val appId: String = "",
+    val showAlbum: Boolean = true,
+    val activityName: String = "aurora",
 )
 
 // scoped to serverId so a pin persists across logouts but only reappears on that connection
@@ -470,6 +472,8 @@ class SettingsStore(private val context: Context) {
         val DISCORD_USER = stringPreferencesKey("discord_user")
         val DISCORD_ENABLED = booleanPreferencesKey("discord_enabled")
         val DISCORD_IMGUR = stringPreferencesKey("discord_imgur")
+        val DISCORD_SHOW_ALBUM = booleanPreferencesKey("discord_show_album")
+        val DISCORD_ACTIVITY_NAME = stringPreferencesKey("discord_activity_name")
         val DISCORD_APP_ID = stringPreferencesKey("discord_app_id")
     }
 
@@ -480,6 +484,8 @@ class SettingsStore(private val context: Context) {
             enabled = p[Keys.DISCORD_ENABLED] ?: true,
             imgurClientId = p[Keys.DISCORD_IMGUR].orEmpty(),
             appId = p[Keys.DISCORD_APP_ID].orEmpty(),
+            showAlbum = p[Keys.DISCORD_SHOW_ALBUM] ?: true,
+            activityName = p[Keys.DISCORD_ACTIVITY_NAME] ?: "aurora",
         )
     }
 
@@ -1888,6 +1894,8 @@ class SettingsStore(private val context: Context) {
 
     suspend fun setDiscordEnabled(v: Boolean) = context.dataStore.edit { it[Keys.DISCORD_ENABLED] = v }
     suspend fun setDiscordImgur(v: String) = context.dataStore.edit { it[Keys.DISCORD_IMGUR] = v.trim() }
+    suspend fun setDiscordShowAlbum(v: Boolean) = context.dataStore.edit { it[Keys.DISCORD_SHOW_ALBUM] = v }
+    suspend fun setDiscordActivityName(v: String) = context.dataStore.edit { it[Keys.DISCORD_ACTIVITY_NAME] = v }
     suspend fun setDiscordAppId(v: String) = context.dataStore.edit { it[Keys.DISCORD_APP_ID] = v.trim() }
 
     val localProfile: Flow<LocalProfile> = context.dataStore.data.map {

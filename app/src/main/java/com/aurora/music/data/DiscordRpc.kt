@@ -6,6 +6,8 @@ import com.aurora.music.data.remote.ImgurUploader
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.Dispatchers
+import androidx.core.graphics.drawable.toBitmap
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -15,6 +17,7 @@ import org.json.JSONObject
 import java.util.concurrent.ConcurrentHashMap
 
 class DiscordRpc(
+    private val context: android.content.Context,
     private val store: SettingsStore,
     private val scope: CoroutineScope,
 ) {
@@ -30,6 +33,12 @@ class DiscordRpc(
     @Volatile private var imgurClientId = ""
     @Volatile private var appId = ""
     @Volatile private var connectedToken: String? = null
+    @Volatile private var showAlbum = true
+    @Volatile private var activityName = "aurora"
+    private val loader = coil.ImageLoader(context)
+    private val inFlight = ConcurrentHashMap.newKeySet<String>()
+    private val failedImages = ConcurrentHashMap<String, Long>()
+    private var positionAt = 0L
 
     private val imageCache = ConcurrentHashMap<String, String>()
     @Volatile private var lastSong: Song? = null
@@ -42,11 +51,16 @@ class DiscordRpc(
     init {
         scope.launch {
             store.discord.collect { acct ->
-                token = acct.token
-                enabled = acct.enabled
-                imgurClientId = acct.imgurClientId
-                appId = acct.appId
-                reconcile()
+                synchronized(this@DiscordRpc) {
+                    token = acct.token
+                    enabled = acct.enabled
+                    imgurClientId = acct.imgurClientId
+                    appId = acct.appId
+                    showAlbum = acct.showAlbum
+                    activityName = acct.activityName
+                    reconcile()
+                    if (token.isNotBlank() && enabled) gateway.updateActivity(lastSong?.takeIf { lastPlaying }?.let { buildActivity(it, true, currentPosition()) })
+                }
             }
         }
     }
@@ -57,35 +71,33 @@ class DiscordRpc(
             return
         }
         if (connectedToken != token) {
-            val initial = lastSong?.takeIf { lastPlaying }?.let { buildActivity(it, true, lastPositionSec) }
+            val initial = lastSong?.takeIf { lastPlaying }?.let { buildActivity(it, true, currentPosition()) }
             gateway.connect(token, initial)
             connectedToken = token
         }
     }
 
-    fun update(song: Song, isPlaying: Boolean, positionSec: Float) {
+    @Synchronized fun update(song: Song, isPlaying: Boolean, positionSec: Float) {
+        val previous = lastSong
+        val changed = previous?.id != song.id || previous?.artworkUrl != song.artworkUrl || previous?.title != song.title || previous?.album != song.album || previous?.artist != song.artist || previous?.durationSec != song.durationSec || lastPlaying != isPlaying || kotlin.math.abs(currentPosition() - positionSec) > 2f
+        if (!changed) return
         lastSong = song; lastPlaying = isPlaying; lastPositionSec = positionSec
+        positionAt = android.os.SystemClock.elapsedRealtime()
         if (token.isBlank() || !enabled) return
         gateway.updateActivity(if (isPlaying) buildActivity(song, true, positionSec) else null)
     }
 
+    private fun currentPosition() = lastPositionSec + if (lastPlaying) (android.os.SystemClock.elapsedRealtime() - positionAt).coerceAtLeast(0) / 1000f else 0f
+    private fun imageKey(url: String) = "$appId|$imgurClientId|$url"
+
     private fun buildActivity(song: Song, isPlaying: Boolean, positionSec: Float): JSONObject? {
         if (song.title.isBlank()) return null
-        val a = JSONObject()
-            .put("name", "Aurora")
-            .put("type", 2)
-            .put("details", song.title)
-            .put("state", song.artist.ifBlank { "Unknown artist" })
-        if (isPlaying && song.durationSec > 0) {
-            val start = System.currentTimeMillis() - (positionSec * 1000).toLong()
-            a.put("timestamps", JSONObject().put("start", start).put("end", start + song.durationSec * 1000L))
-        }
+        val a = discordActivity(song, showAlbum, activityName, positionSec)
         // discord must fetch the art so without imgur skip private server urls it cant reach
         val canHost = imgurId().isNotBlank() || isLikelyPublic(song.artworkUrl)
         if (imagesPossible && song.artworkUrl.isNotBlank() && canHost) {
-            val mp = imageCache[song.artworkUrl]
-            Log.i(TAG, "art: appId=${appId.isNotBlank()} imgur=${imgurId().isNotBlank()} public=${isLikelyPublic(song.artworkUrl)} cached=${mp != null} url=${song.artworkUrl.take(60)}")
-            val assets = JSONObject().put("large_text", song.album.ifBlank { song.title })
+            val mp = imageCache[imageKey(song.artworkUrl)]
+            val assets = JSONObject().put("large_text", (if (showAlbum) song.album.ifBlank { song.title } else song.title).take(128))
             if (mp != null) assets.put("large_image", mp)
             a.put("assets", assets)
             a.put("application_id", appId)
@@ -95,25 +107,36 @@ class DiscordRpc(
     }
 
     private fun resolveImage(artUrl: String) {
-        if (imageCache.containsKey(artUrl)) return
-        scope.launch {
-            val link = if (imgurId().isNotBlank()) imgur.uploadFromUrl(artUrl, imgurId()) else artUrl
-            if (link == null) { Log.w(TAG, "resolveImage: imgur upload failed (clientId set=${imgurId().isNotBlank()})"); return@launch }
-            Log.i(TAG, "resolveImage: via=${if (imgurId().isNotBlank()) "imgur" else "direct"} link=${link.take(80)}")
-            val mp = externalAsset(link)
-            if (mp == null) { Log.w(TAG, "resolveImage: external-assets failed (appId=$appId) for $link"); return@launch }
-            Log.i(TAG, "resolveImage: art ready -> $mp")
-            imageCache[artUrl] = mp
-            lastSong?.let { if (it.artworkUrl == artUrl) gateway.updateActivity(buildActivity(it, lastPlaying, lastPositionSec)) }
+        val key = imageKey(artUrl)
+        if (imageCache.containsKey(key) || (failedImages[key] ?: 0) > System.currentTimeMillis() - 60_000 || !inFlight.add(key)) return
+        val uploadId = imgurId(); val applicationId = appId; val authorization = token
+        scope.launch(Dispatchers.IO) {
+            try {
+                val link = if (uploadId.isBlank()) artUrl else {
+                    val bytes = loadDiscordArtwork(context, loader, artUrl)
+                    bytes?.let { imgur.uploadBytes(it, uploadId) }
+                }
+                val mp = link?.let { externalAsset(it, applicationId, authorization) }
+                synchronized(this@DiscordRpc) {
+                    if (mp != null) { if (imageCache.size >= 128) imageCache.clear(); imageCache[key] = mp }
+                    else failedImages[key] = System.currentTimeMillis()
+                    val current = lastSong
+                    if (current != null && lastPlaying && enabled && token == authorization && imageKey(current.artworkUrl) == key) {
+                        gateway.updateActivity(buildActivity(current, true, currentPosition()))
+                    }
+                }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+              catch (_: Exception) { failedImages[key] = System.currentTimeMillis() }
+            finally { inFlight.remove(key) }
         }
     }
 
-    private fun externalAsset(url: String): String? = runCatching {
+    private fun externalAsset(url: String, applicationId: String, authorization: String): String? = runCatching {
         val body = JSONObject().put("urls", JSONArray().put(url)).toString()
             .toRequestBody("application/json".toMediaType())
         val req = Request.Builder()
-            .url("https://discord.com/api/v9/applications/$appId/external-assets")
-            .addHeader("Authorization", token)
+            .url("https://discord.com/api/v9/applications/$applicationId/external-assets")
+            .addHeader("Authorization", authorization)
             .post(body)
             .build()
         http.newCall(req).execute().use { resp ->
@@ -143,4 +166,30 @@ class DiscordRpc(
     }
 
     private companion object { const val TAG = "DiscordRpc" }
+}
+
+internal fun discordActivity(song: Song, showAlbum: Boolean, activityName: String, positionSec: Float, now: Long = System.currentTimeMillis()): JSONObject {
+    val album = if (showAlbum && song.album.isNotBlank()) " · ${song.album}" else ""
+    val artist = song.artist.ifBlank { "Unknown artist" }
+    val activity = JSONObject()
+        .put("name", when (activityName) { "artist" -> artist; "song" -> song.title; else -> "Aurora" }.take(128))
+        .put("type", 2)
+        .put("status_display_type", when (activityName) { "artist" -> 1; "song" -> 2; else -> 0 })
+        .put("details", (song.title + if (activityName == "artist") album else "").take(128))
+        .put("state", (artist + if (activityName == "artist") "" else album).take(128))
+    if (song.durationSec > 0) {
+        val start = now - (positionSec.coerceIn(0f, song.durationSec.toFloat()) * 1000).toLong()
+        activity.put("timestamps", JSONObject().put("start", start).put("end", start + song.durationSec * 1000L))
+    }
+    return activity
+}
+
+internal suspend fun loadDiscordArtwork(context: android.content.Context, loader: coil.ImageLoader, url: String): ByteArray? {
+    val result = loader.execute(coil.request.ImageRequest.Builder(context).data(url).size(512).allowHardware(false).build())
+    val drawable = (result as? coil.request.SuccessResult)?.drawable ?: return null
+    val bitmap = drawable.toBitmap(512, 512)
+    return java.io.ByteArrayOutputStream().use { output ->
+        if (!bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 90, output)) return null
+        output.toByteArray()
+    }
 }

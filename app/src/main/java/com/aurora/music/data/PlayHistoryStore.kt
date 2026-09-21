@@ -24,6 +24,7 @@ data class PlayEvent(
     val artworkUrl: String,
     val durationSec: Int,
     val timestamp: Long,
+    val listenedMs: Long? = null,
 )
 
 data class RankedItem(val id: String, val name: String, val subtitle: String, val artworkUrl: String, val count: Int)
@@ -35,6 +36,33 @@ class PlayHistoryStore(context: Context) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Any()
     private var revision = 0L
+    private var listeningKey = ""
+    private var listeningStamp = 0L
+    private var lastSave = 0L
+
+    fun endListeningSession() {
+        val changed = synchronized(lock) { val active = listeningKey.isNotEmpty(); listeningKey = ""; active }
+        if (changed) scope.launch { save() }
+    }
+
+    fun recordListening(song: Song, elapsedMs: Long, timestamp: Long = System.currentTimeMillis()) {
+        if (song.id.isBlank() || elapsedMs <= 0) return
+        synchronized(lock) {
+            val day = java.time.Instant.ofEpochMilli(timestamp).atZone(java.time.ZoneId.systemDefault()).toLocalDate()
+            val key = "${song.id}:$day"
+            val old = _history.value.firstOrNull()
+            if (listeningKey != key || old?.timestamp != listeningStamp || old.songId != song.id) {
+                listeningKey = key
+                listeningStamp = timestamp
+                val e = PlayEvent(song.id, song.title, song.artist, song.album, song.albumId, song.artistId, song.artworkUrl, song.durationSec, timestamp, elapsedMs)
+                _history.value = listOf(e) + _history.value.take(MAX - 1)
+            } else {
+                _history.value = listOf(old.copy(listenedMs = (old.listenedMs ?: 0) + elapsedMs)) + _history.value.drop(1)
+            }
+            revision++
+        }
+        if (timestamp - lastSave >= 15_000) { lastSave = timestamp; scope.launch { save() } }
+    }
 
     internal class BackupRollback internal constructor(internal val previous: List<PlayEvent>, internal val revision: Long)
 
@@ -96,8 +124,8 @@ class PlayHistoryStore(context: Context) {
         }
     }
 
-    fun totalPlays(): Int = _history.value.size
-    fun totalMinutes(): Long = _history.value.sumOf { it.durationSec.toLong() } / 60
+    fun totalPlays(): Int = _history.value.count { it.qualifiesAsPlay }
+    fun totalMinutes(): Long = _history.value.sumOf { it.listeningMillis } / 60_000
 
     fun since(millis: Long): List<PlayEvent> = _history.value.filter { it.timestamp >= millis }
 
@@ -151,10 +179,14 @@ class PlayHistoryStore(context: Context) {
         gson.fromJson<List<PlayEvent>>(file.readText(), type) ?: emptyList()
     }.getOrDefault(emptyList())
 
-    private fun save() = synchronized(lock) {
-        // An ordinary save queued before import may run afterward; retain atomic replacement there too.
-        runCatching { persistBackupFileAtomically(file, gson.toJson(_history.value).toByteArray(Charsets.UTF_8)) }
+    private fun save() {
+        val (version, snapshot) = synchronized(lock) { revision to _history.value }
+        val bytes = gson.toJson(snapshot).toByteArray(Charsets.UTF_8)
+        synchronized(lock) {
+            // A queued save must not overwrite a later clear or backup restore.
+            if (revision == version) runCatching { persistBackupFileAtomically(file, bytes) }
+        }
     }
 
-    companion object { const val MAX = 3000 }
+    companion object { const val MAX = 250_000 }
 }

@@ -391,6 +391,11 @@ fun AuroraApp() {
                             onUseSaved = { s -> authVM.useSaved(s) },   // nav to home handled by the sessionReady effect
                         )
                     }
+                    composable("recap/{period}/{date}") { entry ->
+                        val period = runCatching { com.aurora.music.data.RecapPeriod.valueOf(entry.arguments?.getString("period").orEmpty()) }.getOrDefault(com.aurora.music.data.RecapPeriod.DAY)
+                        val date = runCatching { java.time.LocalDate.parse(entry.arguments?.getString("date")) }.getOrDefault(java.time.LocalDate.now().minusDays(1))
+                        com.aurora.music.ui.screens.stats.ListeningStatsScreen(inner, { navController.popBackStack() }, { playById(it) }, { k, i -> openDetail(k, i) }, com.aurora.music.data.RecapWindow.containing(period, date))
+                    }
                     composable(Routes.HOME) {
                         val homeVM: HomeViewModel = viewModel()
                         val homeState by homeVM.state.collectAsStateWithLifecycle()
@@ -406,6 +411,7 @@ fun AuroraApp() {
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
                             onLoadMore = homeVM::loadMore,
                             onSelectFeed = homeVM::selectFeed,
+                            onOpenRecap = { navController.navigate("recap/${it.period.name}/${it.start}") },
                             onRetry = { homeVM.load() },
                         )
                     }

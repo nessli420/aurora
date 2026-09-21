@@ -17,6 +17,8 @@ object PresetContextPublisher {
 
     fun extras(song: Song, source: PlaybackSourceIdentity? = song.playbackSource): Bundle = Bundle().apply {
         putString("aurora.songId", song.id)
+        putString("aurora.albumId", song.albumId)
+        putString("aurora.artistId", song.artistId)
         putInt("aurora.durationSec", song.durationSec)
         putBoolean("aurora.explicit", song.explicit)
         putFloat("rgTrack", song.replayGainTrack); putFloat("rgAlbum", song.replayGainAlbum)

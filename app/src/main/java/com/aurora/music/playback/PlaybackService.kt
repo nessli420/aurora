@@ -95,6 +95,49 @@ class PlaybackService : MediaLibraryService() {
     @Volatile private var monoAudioPref: Boolean = false
     @Volatile private var lastAudioPrefs: AudioPrefs? = null
     private var listeningHistoryAllowed = false
+    private var historyTick = 0L
+    private var historySong: com.aurora.music.model.Song? = null
+    private var historyPosition = 0L
+    private var historyWasPlaying = false
+    private var historyPendingMs = 0L
+    private var historyDay = java.time.LocalDate.now()
+
+    private fun flushListeningHistory() {
+        val previous = historySong
+        if (previous != null && historyPendingMs > 0) {
+            container.playHistory.recordListening(previous, historyPendingMs,
+                if (historyDay == java.time.LocalDate.now()) System.currentTimeMillis()
+                else historyDay.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() - 1)
+        }
+        historyPendingMs = 0
+    }
+
+    private fun trackListeningHistory() {
+        val now = android.os.SystemClock.elapsedRealtime()
+        val elapsed = (now - historyTick).coerceIn(0L, 2000L)
+        historyTick = now
+        val active = mediaSession?.player ?: return
+        val item = active.currentMediaItem
+        val id = item?.mediaId.orEmpty()
+        val playing = active.isPlaying || (active === player && usbSink?.isNativeEngineActive == true && active.playWhenReady)
+        val position = active.currentPosition
+        val day = java.time.LocalDate.now()
+        val newSession = id != historySong?.id || (position < historyPosition && position < 1500 && historyPosition > 5000) || day != historyDay
+        if (newSession || !playing || !listeningHistoryAllowed) flushListeningHistory()
+        if (newSession || !listeningHistoryAllowed) container.playHistory.endListeningSession()
+        val m = item?.mediaMetadata
+        val song = com.aurora.music.model.Song(id, m?.title?.toString().orEmpty(), m?.artist?.toString().orEmpty(),
+            m?.albumTitle?.toString().orEmpty(), m?.artworkUri?.toString().orEmpty(),
+            m?.extras?.getInt("aurora.durationSec")?.takeIf { it > 0 } ?: (active.duration.coerceAtLeast(0) / 1000).toInt(),
+            albumId = m?.extras?.getString("aurora.albumId").orEmpty(), artistId = m?.extras?.getString("aurora.artistId").orEmpty())
+        container.discord.update(song, playing && id.isNotBlank(), position / 1000f)
+        if (!newSession && historyWasPlaying && playing && listeningHistoryAllowed && id.isNotBlank() &&
+            !id.startsWith("radio:") && !id.startsWith("podcast:") && !id.startsWith("aurora-mix:")) {
+            historyPendingMs += elapsed
+            if (historyPendingMs >= 5000) flushListeningHistory()
+        }
+        historySong = song; historyPosition = position; historyWasPlaying = playing; historyDay = day
+    }
     @Volatile private var useFloatOut: Boolean = false
     private var usePrecisionProcessing = false
     private val precisionChains = mutableListOf<PrecisionBlockProcessor>()
@@ -542,6 +585,7 @@ class PlaybackService : MediaLibraryService() {
                 tickAudio()
             }
         }
+        scope.launch { while (isActive) { delay(1000); trackListeningHistory() } }
         // USB engine and volume/fade changes need snapshots even without a Media3 track event.
         scope.launch { while (isActive) { delay(500); updateSignalPath() } }
     }
@@ -1970,6 +2014,9 @@ class PlaybackService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        flushListeningHistory()
+        historySong?.let { container.discord.update(it, false, 0f) }
+        container.playHistory.endListeningSession()
         networkDisposed = true
         networkBridge?.close(); networkBridge = null
         networkPlayer?.release(); networkPlayer = null

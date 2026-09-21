@@ -68,6 +68,7 @@ fun HomeScreen(
     onLoadMore: () -> Unit = {},
     onRetry: () -> Unit = {},
     onSelectFeed: (String) -> Unit = {},
+    onOpenRecap: (com.aurora.music.data.RecapWindow) -> Unit = {},
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val data = state.data
@@ -108,7 +109,7 @@ fun HomeScreen(
                         "Switch to ${next.label} home") { onSelectFeed(next.id) }
                     Spacer(Modifier.width(8.dp))
                 }
-                IconPill(Icons.Outlined.Notifications, "Alerts") {}
+                com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenRecap)
                 Spacer(Modifier.width(8.dp))
                 IconPill(Icons.Outlined.Settings, "Settings", onClick = onOpenSettings)
             }
@@ -363,7 +364,7 @@ private fun OverlayTile(title: String, artUrl: String, accent: Color, onClick: (
 }
 
 @Composable
-private fun IconPill(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, onClick: () -> Unit) {
+internal fun IconPill(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, onClick: () -> Unit) {
     Box(
         Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,

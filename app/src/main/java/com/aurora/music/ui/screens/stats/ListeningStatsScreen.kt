@@ -1,5 +1,7 @@
 package com.aurora.music.ui.screens.stats
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,6 +28,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.runtime.produceState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.TextButton
+import com.aurora.music.data.RecapWindow
+import com.aurora.music.data.RecapPeriod
+import com.aurora.music.data.ListeningRecaps
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -46,75 +55,77 @@ import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.util.accentFor
 
 @Composable
-fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPlay: (String) -> Unit, onOpenDetail: (String, String) -> Unit) {
-    val store = (LocalContext.current.applicationContext as AuroraApplication).container.playHistory
+fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPlay: (String) -> Unit, onOpenDetail: (String, String) -> Unit,
+    initialWindow: com.aurora.music.data.RecapWindow? = null) {
+    val context = LocalContext.current
+    val store = (context.applicationContext as AuroraApplication).container.playHistory
     val history by store.history.collectAsStateWithLifecycle()
+    var window by remember(initialWindow) { mutableStateOf(initialWindow ?: RecapWindow.containing(RecapPeriod.DAY, java.time.LocalDate.now().minusDays(1))) }
+    var byMinutes by remember { mutableStateOf(false) }
+    val recap by produceState(ListeningRecaps.build(emptyList(), window), history, window) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { ListeningRecaps.build(history, window) } }
+    val previous by produceState(ListeningRecaps.build(emptyList(), window.move(-1)), history, window) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { ListeningRecaps.build(history, window.move(-1)) } }
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    var range by remember { mutableIntStateOf(0) } // 0 week 1 month 2 all
-
-    val now = System.currentTimeMillis()
-    val since = when (range) {
-        0 -> now - 7L * 24 * 3600 * 1000
-        1 -> now - 30L * 24 * 3600 * 1000
-        else -> 0L
-    }
-    val events = remember(history, range) { history.filter { it.timestamp >= since } }
-    val artists = remember(events) { store.topArtists(events) }
-    val songs = remember(events) { store.topSongs(events) }
-    val albums = remember(events) { store.topAlbums(events) }
-    val minutes = remember(events) { events.sumOf { it.durationSec.toLong() } / 60 }
-    val byHour = remember(events) { store.playsByHour(events) }
-    val streak = remember(history) { store.streak() }
-
     Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
-            Spacer(Modifier.width(8.dp))
-            Text("Listening stats", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text("Your listening recap", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
-
-        LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
+        LazyColumn(contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             item {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("This week", "This month", "All time").forEachIndexed { i, label ->
-                        val sel = i == range
-                        Box(
-                            Modifier.weight(1f).clip(RoundedCornerShape(50)).background(if (sel) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh).clickable { range = i }.padding(vertical = 10.dp),
-                            contentAlignment = Alignment.Center,
-                        ) { Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (sel) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface) }
+                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    RecapPeriod.entries.forEach { period ->
+                        FilterChip(selected = window.period == period, onClick = { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }, label = { Text(period.label) })
                     }
                 }
-            }
-            item {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    StatCard("${events.size}", "Plays", Modifier.weight(1f))
-                    StatCard("$minutes", "Minutes", Modifier.weight(1f))
-                    StatCard("${artists.size}", "Artists", Modifier.weight(1f))
+                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
+                    Column(Modifier.weight(1f).clickable(enabled = window.period != RecapPeriod.ALL) {
+                        android.app.DatePickerDialog(context, { _, y, m, d -> window = RecapWindow.containing(window.period, java.time.LocalDate.of(y, m + 1, d)) }, window.start.year, window.start.monthValue - 1, window.start.dayOfMonth).apply {
+                            datePicker.maxDate = System.currentTimeMillis(); show()
+                        }
+                    }, horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(window.label, fontWeight = FontWeight.Bold)
+                        Text(if (window.period == RecapPeriod.ALL) "Your complete history" else if (window.end.isAfter(java.time.LocalDate.now())) "In progress · Choose date" else "Choose date", style = MaterialTheme.typography.labelSmall)
+                    }
+                    TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
                 }
+                Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StatCard("${recap.plays}", "Plays", Modifier.weight(1f))
+                    StatCard("${recap.minutes}", "Minutes", Modifier.weight(1f))
+                    StatCard("${recap.artists.size}", "Artists", Modifier.weight(1f))
+                }
+                Text("Plays count after 30 seconds, or half of a shorter song. Private sessions are excluded.", Modifier.padding(horizontal = 16.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (recap.estimated) Text("Older plays use estimated listening time from track lengths.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-
-            if (events.isEmpty()) {
-                item { Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) { Text("No plays in this period", color = MaterialTheme.colorScheme.onSurfaceVariant) } }
-            }
-
-            if (streak.second > 0) {
-                item { StreakCard(current = streak.first, longest = streak.second) }
-            }
-            if (events.isNotEmpty()) {
-                item { ListeningClock(byHour) }
-            }
-
-            if (artists.isNotEmpty()) {
-                item { SectionHeader("Top artists", Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
-                items(artists.size) { i -> RankRow(i + 1, artists[i], circle = true) { if (artists[i].id.isNotBlank()) onOpenDetail("artist", artists[i].id) } }
-            }
-            if (songs.isNotEmpty()) {
-                item { SectionHeader("Top songs", Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
-                items(songs.size) { i -> RankRow(i + 1, songs[i], circle = false) { onPlay(songs[i].id) } }
-            }
-            if (albums.isNotEmpty()) {
-                item { SectionHeader("Top albums", Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) }
-                items(albums.size) { i -> RankRow(i + 1, albums[i], circle = false) { if (albums[i].id.isNotBlank()) onOpenDetail("album", albums[i].id) } }
+            if (recap.millis == 0L) item { Text("No listening recorded in this period. Choose another date or play some music.", Modifier.padding(24.dp)) }
+            else {
+                item { RecapInsights(recap, previous) }
+                item {
+                    Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatCard("${recap.songs.size}", "Unique songs", Modifier.weight(1f))
+                        StatCard("${recap.albums.size}", "Albums", Modifier.weight(1f))
+                        StatCard("${recap.activeDays}", "Active days", Modifier.weight(1f))
+                    }
+                    if (window.period != RecapPeriod.DAY) {
+                        Text("Busiest day: ${recap.busiestDay} · ${recap.minutes / recap.activeDays.coerceAtLeast(1)} min per active day", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium)
+                    }
+                    ListeningClock(recap.hourly.map { (it / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }.toIntArray())
+                    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        FilterChip(!byMinutes, { byMinutes = false }, label = { Text("Most played") })
+                        FilterChip(byMinutes, { byMinutes = true }, label = { Text("Most minutes") })
+                    }
+                }
+                listOf("Top artists" to recap.artists, "Top songs" to recap.songs, "Top albums" to recap.albums).forEachIndexed { kind, (title, ranks) ->
+                    val sorted = if (byMinutes) ranks.sortedByDescending { it.millis } else ranks
+                    item { SectionHeader(title, Modifier.padding(16.dp)) }
+                    items(sorted.take(if (window.period == RecapPeriod.DAY) 5 else 20).size) { index ->
+                        val r = sorted[index]
+                        RankRow(index + 1, RankedItem(r.id, r.name, "${r.millis / 60_000} min · ${r.plays} plays" + if (kind == 0) "" else " · ${r.artist}", r.artwork, r.plays), kind == 0) {
+                            if (r.id.isNotBlank()) { if (kind == 1) onPlay(r.id) else onOpenDetail(if (kind == 0) "artist" else "album", r.id) }
+                        }
+                    }
+                }
+                item { RecapSummary(recap) }
             }
         }
     }
