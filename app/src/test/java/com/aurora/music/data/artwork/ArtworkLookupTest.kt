@@ -46,6 +46,16 @@ class ArtworkLookupTest {
         assertNull(ArtworkUrls.decode("content://com.aurora.music.artwork/v1/garbage"))
     }
 
+    @Test fun subsonicCoversRetainTheirOriginalForPlaceholderInspection() {
+        val original = "https://server/music/rest/getCoverArt.view?id=album&size=600"
+        val uri = ArtworkUrls.subsonicCover(original, "Wir sind Helden", "Von hier an blind")
+        assertEquals(original, ArtworkUrls.decode(uri)!!.original)
+        assertEquals(uri, ArtworkUrls.cover(uri, "Wir sind Helden", "Von hier an blind"))
+        assertFalse(ArtworkUrls.isServerArt("file:///rest/getCoverArt.view"))
+        assertFalse(ArtworkUrls.isServerArt("https://server/rest/stream.view"))
+        assertEquals("https://server/other", ArtworkUrls.subsonicCover("https://server/other", "Artist", "Album"))
+    }
+
     @Test fun matchingRejectsWrongArtistsAndVersionsRatherThanTakingFirstSearchResult() = runBlocking {
         val calls = mutableListOf<HttpUrl>()
         val client = client(calls) { """{"release-groups":[${group("Album", "Unrelated")},${group("Album (Live)", "Artist")},${group("ALBUM", "aRtIsT") }]}""" }

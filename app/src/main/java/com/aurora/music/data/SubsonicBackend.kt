@@ -1,5 +1,6 @@
 package com.aurora.music.data
 
+import com.aurora.music.data.artwork.ArtworkUrls
 import com.aurora.music.data.remote.AlbumDto
 import com.aurora.music.data.remote.ArtistDto
 import com.aurora.music.data.remote.PlaylistDto
@@ -30,7 +31,8 @@ class SubsonicBackend(
             title = title,
             artist = artist ?: "Unknown artist",
             album = album ?: "",
-            artworkUrl = coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
+            artworkUrl = ArtworkUrls.subsonicCover(coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
+                artist.orEmpty(), album.orEmpty(), title, duration),
             durationSec = duration,
             liked = starred != null,
             explicit = explicitStatus.equals("explicit", true),
@@ -56,7 +58,8 @@ class SubsonicBackend(
         id = id,
         title = name,
         artist = displayArtist ?: artist ?: "Unknown artist",
-        artworkUrl = coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
+        artworkUrl = ArtworkUrls.subsonicCover(coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
+            displayArtist ?: artist.orEmpty(), name),
         year = year,
         songCount = songCount,
         durationSec = duration,

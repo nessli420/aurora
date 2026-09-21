@@ -15,6 +15,7 @@ import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.*
 import org.junit.Test
+import org.junit.Assume.assumeTrue
 import java.io.ByteArrayOutputStream
 import java.io.File
 import java.io.FileNotFoundException
@@ -84,7 +85,7 @@ class ArtworkCacheDeviceTest {
             val failed = ArtworkRepository(context, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
                 client = metadata(metadataCalls), http = images(imageCalls, false), root = directory)
             repeat(2) { try { failed.open(request); fail("Expected network failure") } catch (_: java.io.IOException) { } }
-            assertEquals(3, metadataCalls.get()); assertEquals(2, imageCalls.get())
+            assertEquals(3, metadataCalls.get()); assertEquals(4, imageCalls.get())
         } finally { directory.deleteRecursively() }
     }
 
@@ -96,6 +97,60 @@ class ArtworkCacheDeviceTest {
                 client = metadata(calls), http = images(calls), root = directory)
             try { repo.open(ArtworkRequest("Artist", "Album")); fail("Disabled lookup ran") } catch (_: FileNotFoundException) { }
             assertEquals(0, calls.get())
+        } finally { directory.deleteRecursively() }
+    }
+
+    @Test fun genuineServerCoverIsPreferredEvenWithLookupDisabledAndSurvivesOffline() = runBlocking {
+        val directory = File(context.cacheDir, "artwork-device-test-${System.nanoTime()}")
+        val searches = AtomicInteger(); val downloads = AtomicInteger()
+        var offline = false
+        val repo = ArtworkRepository(context, offline = { offline }, enabled = { false }, separators = { ArtistSeparators() },
+            client = metadata(searches), http = images(downloads), root = directory)
+        val request = ArtworkRequest("Artist", "Album", original = "https://server/rest/getCoverArt.view?id=one")
+        try {
+            repeat(2) { verify(repo.open(request)) }
+            offline = true
+            verify(repo.open(request))
+            assertEquals(0, searches.get()); assertEquals(1, downloads.get())
+            assertFalse(NavidromePlaceholder.matches(png()))
+        } finally { directory.deleteRecursively() }
+    }
+
+    /** Push upstream resources/album-placeholder.webp into the target app's external files directory. */
+    @Test fun navidromeReferenceSurvivesResizingAndTriggersMatchingCover() = runBlocking {
+        val fixture = File(context.getExternalFilesDir(null), "navidrome-album-placeholder.webp")
+        assumeTrue("Optional upstream image fixture is not installed", fixture.isFile)
+        val original = fixture.readBytes()
+        assertTrue("Original placeholder", NavidromePlaceholder.matches(original))
+        val bitmap = BitmapFactory.decodeByteArray(original, 0, original.size)
+        try {
+            for (size in listOf(64, 150, 300, 600)) {
+                val scaled = Bitmap.createScaledBitmap(bitmap, size, size, true)
+                try {
+                    for (format in listOf(Bitmap.CompressFormat.JPEG, Bitmap.CompressFormat.PNG)) {
+                        val bytes = ByteArrayOutputStream().use { scaled.compress(format, 85, it); it.toByteArray() }
+                        assertTrue("Placeholder $size $format", NavidromePlaceholder.matches(bytes))
+                    }
+                } finally { scaled.recycle() }
+            }
+        } finally { bitmap.recycle() }
+        val searches = AtomicInteger(); val downloads = AtomicInteger()
+        val http = OkHttpClient.Builder().addInterceptor { chain ->
+            downloads.incrementAndGet()
+            val bytes = if (chain.request().url.host == "server") original else png()
+            Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("OK")
+                .body(bytes.toResponseBody()).build()
+        }.build()
+        val directory = File(context.cacheDir, "artwork-device-test-${System.nanoTime()}")
+        try {
+            val repo = ArtworkRepository(context, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
+                client = metadata(searches), http = http, root = directory)
+            val request = ArtworkRequest("Artist", "Album", original = "https://server/rest/getCoverArt.view?id=one")
+            repeat(2) { verify(repo.open(request)) }
+            assertEquals(1, searches.get()); assertEquals(2, downloads.get())
+            verify(repo.open(request.copy(original = "https://server/rest/getCoverArt.view?id=other")))
+            assertEquals("Album and song IDs share the verified metadata image", 1, searches.get())
+            assertEquals(3, downloads.get())
         } finally { directory.deleteRecursively() }
     }
 }
