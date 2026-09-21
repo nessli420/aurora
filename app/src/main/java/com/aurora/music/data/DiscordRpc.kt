@@ -97,7 +97,8 @@ class DiscordRpc(
         val canHost = imgurId().isNotBlank() || isLikelyPublic(song.artworkUrl)
         if (imagesPossible && song.artworkUrl.isNotBlank() && canHost) {
             val mp = imageCache[imageKey(song.artworkUrl)]
-            val assets = JSONObject().put("large_text", (if (showAlbum) song.album.ifBlank { song.title } else song.title).take(128))
+            val assets = JSONObject()
+            if (showAlbum && song.album.isNotBlank()) assets.put("large_text", song.album.take(128))
             if (mp != null) assets.put("large_image", mp)
             a.put("assets", assets)
             a.put("application_id", appId)
