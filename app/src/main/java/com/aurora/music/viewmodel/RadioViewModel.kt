@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -85,7 +88,7 @@ class RadioViewModel(app: Application) : AndroidViewModel(app) {
             uuid = "custom:${clean.hashCode()}",
             name = name.trim().ifBlank { clean.toHttpHostOrUrl() },
             streamUrl = clean,
-            tags = "Custom",
+            tags = appString(R.string.text_custom_081ae3),
             custom = true,
         )
         viewModelScope.launch { container.settingsStore.saveRadioStation(station) }

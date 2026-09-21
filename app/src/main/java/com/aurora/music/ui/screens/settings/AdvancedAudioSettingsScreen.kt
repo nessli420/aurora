@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
@@ -36,11 +39,11 @@ fun AdvancedAudioSettingsScreen(
             Modifier.fillMaxWidth().weight(1f),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
-            item { SettingsSectionTitle("Processing") }
+            item { SettingsSectionTitle(appString(R.string.text_processing_e63451)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
-                        if (rack.enabled) "${rack.name} · ${rack.nodes.size} stages" else "Arrange your effects") {
+                        if (rack.enabled) appString(R.string.text_stages_8e34a7, (rack.name), (rack.nodes.size)) else appString(R.string.text_arrange_your_effects_ded878)) {
                         onOpen(SettingsDestinations.processingRack)
                     }
                     SettingsRowDivider()
@@ -61,7 +64,7 @@ fun AdvancedAudioSettingsScreen(
                     }
                 }
             }
-            item { SettingsSectionTitle("Tuning & listening") }
+            item { SettingsSectionTitle(appString(R.string.text_tuning_listening_b4bf76)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.AutoMirrored.Filled.ShowChart, SettingsDestinations.tuning) {

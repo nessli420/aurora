@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.player
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
 import androidx.compose.foundation.background
@@ -52,7 +55,7 @@ private data class OutputDevice(val id: Int, val label: String, val icon: ImageV
 fun PlayerCastButton(modifier: Modifier = Modifier) {
     var show by remember { mutableStateOf(false) }
     Icon(
-        Icons.Filled.Cast, "Cast",
+        Icons.Filled.Cast, appString(R.string.text_cast_60745a),
         modifier = modifier.clip(CircleShape).clickable { show = true }.padding(8.dp),
     )
     if (show) CastSheet(onDismiss = { show = false })
@@ -72,7 +75,7 @@ private fun CastRow() {
         ) { Icon(Icons.Filled.Cast, null, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text("Cast to a device", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+            Text(appString(R.string.text_cast_to_a_device_1c0bd6), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
             Text("Chromecast · DLNA · Aurora", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -117,9 +120,9 @@ private fun CastSheet(onDismiss: () -> Unit) {
     val casting = router.selectedRoute.id != router.defaultRoute.id
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxWidth().heightIn(max = 650.dp).verticalScroll(rememberScrollState()).padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
-            Text("Play on a device", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp))
+            Text(appString(R.string.text_play_on_a_device_d66db5), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp))
             if (routes.isEmpty()) {
-                Text("Searching for Chromecast devices…", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
+                Text(appString(R.string.text_searching_for_chromecast_devices_13fdbb), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
             }
             routes.forEach { route ->
                 val selected = route.id == selectedId
@@ -146,7 +149,7 @@ private fun CastSheet(onDismiss: () -> Unit) {
                         Icon(Icons.Filled.Speaker, null, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(14.dp))
-                    Text("Stop casting", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
+                    Text(appString(R.string.text_stop_casting_1f7a2c), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
                 }
             }
             NetworkOutputControls(network, onConnected = onDismiss)
@@ -160,7 +163,7 @@ fun OutputDeviceSheet(currentId: Int, onSelect: (Int) -> Unit, onDismiss: () -> 
     val context = LocalContext.current
     val devices = remember {
         val am = context.getSystemService(android.content.Context.AUDIO_SERVICE) as AudioManager
-        val list = mutableListOf(OutputDevice(0, "Automatic", Icons.Filled.Check))
+        val list = mutableListOf(OutputDevice(0, appString(R.string.text_automatic_ac9041), Icons.Filled.Check))
         am.getDevices(AudioManager.GET_DEVICES_OUTPUTS)
             .filter { it.type in USEFUL_TYPES }
             .forEach { list.add(OutputDevice(it.id, deviceLabel(it), deviceIcon(it.type))) }
@@ -168,7 +171,7 @@ fun OutputDeviceSheet(currentId: Int, onSelect: (Int) -> Unit, onDismiss: () -> 
     }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
-            Text("Play on", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
+            Text(appString(R.string.text_play_on_4bd6fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
             CastRow()
             devices.forEach { d ->
                 val selected = d.id == currentId
@@ -197,15 +200,15 @@ fun SleepTimerSheet(
     onEndOfTrack: () -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val options = listOf(0 to "Off", 5 to "5 min", 15 to "15 min", 30 to "30 min", 45 to "45 min", 60 to "1 hour")
+    val options = listOf(0 to appString(R.string.text_off_e3de5a), 5 to appString(R.string.text_5_min_b45ebd), 15 to appString(R.string.text_15_min_1028d6), 30 to appString(R.string.text_30_min_d3ddf7), 45 to appString(R.string.text_45_min_983be7), 60 to appString(R.string.text_1_hour_f030c3))
     val status = when {
-        endOfTrack -> "Pausing at the end of this track"
-        currentMinutes > 0 -> "Pausing in $currentMinutes min · fades out"
-        else -> "Pause playback after a set time"
+        endOfTrack -> appString(R.string.text_pausing_at_the_end_of_this_track_d79c45)
+        currentMinutes > 0 -> appString(R.string.text_pausing_in_min_fades_out_741f18, (currentMinutes))
+        else -> appString(R.string.text_pause_playback_after_a_set_time_ef485a)
     }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 28.dp)) {
-            Text("Sleep timer", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(bottom = 4.dp))
+            Text(appString(R.string.text_sleep_timer_e90613), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(bottom = 4.dp))
             Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
@@ -224,7 +227,7 @@ fun SleepTimerSheet(
                         .background(if (endOfTrack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { onEndOfTrack(); onDismiss() }.padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {
-                    Text("End of track", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (endOfTrack) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                    Text(appString(R.string.text_end_of_track_9923e9), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (endOfTrack) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
                 }
             }
         }
@@ -247,14 +250,14 @@ private val USEFUL_TYPES = setOf(
 private fun deviceLabel(d: AudioDeviceInfo): String {
     val product = d.productName?.toString()?.trim().orEmpty()
     return when (d.type) {
-        AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> "Phone speaker"
-        AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET -> "Wired headphones"
+        AudioDeviceInfo.TYPE_BUILTIN_SPEAKER -> appString(R.string.text_phone_speaker_ae9329)
+        AudioDeviceInfo.TYPE_WIRED_HEADPHONES, AudioDeviceInfo.TYPE_WIRED_HEADSET -> appString(R.string.text_wired_headphones_56e99c)
         AudioDeviceInfo.TYPE_USB_DEVICE, AudioDeviceInfo.TYPE_USB_HEADSET, AudioDeviceInfo.TYPE_USB_ACCESSORY ->
-            if (product.isNotBlank()) "USB · $product" else "USB DAC"
+            if (product.isNotBlank()) "USB · $product" else appString(R.string.text_usb_dac_948bb8)
         AudioDeviceInfo.TYPE_BLUETOOTH_A2DP, AudioDeviceInfo.TYPE_BLE_HEADSET -> product.ifBlank { "Bluetooth" }
-        AudioDeviceInfo.TYPE_HEARING_AID -> "Hearing aid"
-        AudioDeviceInfo.TYPE_DOCK -> "Dock"
-        else -> product.ifBlank { "Output" }
+        AudioDeviceInfo.TYPE_HEARING_AID -> appString(R.string.text_hearing_aid_375267)
+        AudioDeviceInfo.TYPE_DOCK -> appString(R.string.text_dock_e8b5cb)
+        else -> product.ifBlank { appString(R.string.text_output_4bed33) }
     }
 }
 

@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.localizedMediaType
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -54,7 +59,7 @@ fun AccountsScreen(
     val activeKey = key(active)
 
     // always offered so you can jump to local even without a saved login
-    val localSession = remember { Session(server = "On this device", username = "Local Library", salt = "", token = "local", type = ServerType.LOCAL) }
+    val localSession = remember { Session(server = "On this device", username = "Local library", salt = "", token = "local", type = ServerType.LOCAL) }
     val audioPerm = if (android.os.Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO else android.Manifest.permission.READ_EXTERNAL_STORAGE
     val permLauncher = androidx.activity.compose.rememberLauncherForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission()
@@ -67,9 +72,9 @@ fun AccountsScreen(
     val rows = remember(saved) { saved + (if (saved.none { it.type == ServerType.LOCAL }) listOf(localSession) else emptyList()) }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Accounts", onBack)
+        SettingsTopBar(appString(R.string.text_accounts_36bae3), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
-            item { SettingsSectionTitle("Switch account") }
+            item { SettingsSectionTitle(appString(R.string.text_switch_account_a28b02)) }
             item {
                 SettingsGroup {
                     rows.forEachIndexed { i, s ->
@@ -98,13 +103,13 @@ fun AccountsScreen(
                     ) {
                         Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.width(14.dp))
-                        Text("Add another account", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
+                        Text(appString(R.string.text_add_another_account_5dcc79), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
                     }
                 }
             }
             item {
                 Text(
-                    "Switching servers stops playback from the previous one.",
+                    appString(R.string.text_switching_servers_stops_playback_from_the_previous_one_cbfa45),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                 )
@@ -136,7 +141,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(session.username, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text("${session.typeLabel}${if (session.type != ServerType.LOCAL) " · $host" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("${session.typeLabel.localizedMediaType()}${if (session.type != ServerType.LOCAL) " · $host" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (isActive) {
             Row(
@@ -145,11 +150,11 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
             ) {
                 Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Active", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                Text(appString(R.string.text_active_a733b8), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             }
         } else if (canForget) {
             Icon(
-                Icons.Filled.Delete, "Forget",
+                Icons.Filled.Delete, appString(R.string.text_forget_03d5d8),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(34.dp).clip(CircleShape).clickable(onClick = onForget).padding(6.dp),
             )

@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.library
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -66,12 +69,12 @@ fun FolderScreen(
     serverTagEditing: Boolean = false,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val header = title.ifBlank { content?.title ?: "Folders" }
+    val header = title.ifBlank { content?.title ?: appString(R.string.text_folders_19adc4) }
 
     Column(Modifier.fillMaxSize().padding(top = topInset)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.AutoMirrored.Filled.ArrowBack, "Back",
+                Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
@@ -79,11 +82,11 @@ fun FolderScreen(
             val songs = content?.songs.orEmpty()
             if (songs.isNotEmpty()) {
                 Icon(
-                    Icons.Filled.Shuffle, "Shuffle folder",
+                    Icons.Filled.Shuffle, appString(R.string.text_shuffle_folder_681a21),
                     modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onShufflePlay(songs) }.padding(8.dp),
                 )
                 Icon(
-                    Icons.Filled.PlayArrow, "Play folder",
+                    Icons.Filled.PlayArrow, appString(R.string.text_play_folder_3f9fd7),
                     tint = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable { onPlayAll(songs, 0) }.padding(8.dp),
                 )
@@ -94,7 +97,7 @@ fun FolderScreen(
             loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
             content == null || (content.folders.isEmpty() && content.songs.isEmpty()) ->
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("Nothing in this folder", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appString(R.string.text_nothing_in_this_folder_d2a003), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             else -> {
                 val bottom = contentPadding.calculateBottomPadding() + 24.dp

@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.profile
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -57,7 +60,7 @@ fun ProfileScreen(
     onOpenDetail: (String, String) -> Unit,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
-    val initials = username.take(2).uppercase().ifBlank { "ME" }
+    val initials = username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }
     LazyColumn(
         Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
@@ -79,9 +82,9 @@ fun ProfileScreen(
                     Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
                     Spacer(Modifier.weight(1f))
-                    Icon(Icons.Filled.MoreVert, "Settings", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSettings).padding(8.dp))
+                    Icon(Icons.Filled.MoreVert, appString(R.string.text_settings_c7f73b), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSettings).padding(8.dp))
                 }
                 Column(
                     Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
@@ -99,7 +102,7 @@ fun ProfileScreen(
                         }
                     }
                     Spacer(Modifier.height(10.dp))
-                    Text(username.ifBlank { "Listener" }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black,
+                    Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black,
                         maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 16.dp))
                     Text(serverLabel.ifBlank { server.removePrefix("http://").removePrefix("https://") }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -111,9 +114,9 @@ fun ProfileScreen(
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                Stat("${playlists.size}", "Playlists")
-                Stat("${artists.size}", "Artists")
-                Stat(serverLabel.ifBlank { "Server" }, "Server")
+                Stat("${playlists.size}", appString(R.string.text_playlists_77b69f))
+                Stat("${artists.size}", appString(R.string.text_artists_1528d8))
+                Stat(serverLabel.ifBlank { appString(R.string.text_server_cb0cb1) }, appString(R.string.text_server_cb0cb1))
             }
         }
 
@@ -126,7 +129,7 @@ fun ProfileScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Filled.Edit, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(if (onEditProfile != null) "Edit profile" else "Settings", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                        Text(if (onEditProfile != null) appString(R.string.text_edit_profile_15141e) else appString(R.string.text_settings_c7f73b), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
             }
@@ -134,7 +137,7 @@ fun ProfileScreen(
 
         if (artists.isNotEmpty()) {
             item {
-                SectionHeader("Top artists", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_top_artists_4920f8), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(artists.size) { i -> ArtistCircle(artists[i], onClick = { onOpenDetail("artist", artists[i].id) }) }
@@ -144,7 +147,7 @@ fun ProfileScreen(
 
         if (playlists.isNotEmpty()) {
             item {
-                SectionHeader("Your playlists", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_your_playlists_df03eb), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(playlists.size) { i -> PlaylistCard(playlists[i], onClick = { onOpenDetail("playlist", playlists[i].id) }) }

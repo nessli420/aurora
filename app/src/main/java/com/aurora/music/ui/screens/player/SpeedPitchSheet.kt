@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.player
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -51,12 +54,12 @@ fun SpeedPitchSheet(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-            Text("Playback controls", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.text_playback_controls_5ee1ab), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(20.dp))
 
             ControlBlock(
                 icon = { Icon(Icons.Filled.Speed, null, tint = MaterialTheme.colorScheme.primary) },
-                title = "Speed",
+                title = appString(R.string.text_speed_2d2cb0),
                 value = "${"%.2f".format(speed)}x",
             ) {
                 Slider(
@@ -73,8 +76,8 @@ fun SpeedPitchSheet(
 
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Match pitch to speed", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text("Pitch follows speed, like a turntable", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appString(R.string.text_match_pitch_to_speed_ccd7ca), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(appString(R.string.text_pitch_follows_speed_like_a_turntable_c2a28f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 Switch(
                     checked = matchPitch,
@@ -87,7 +90,7 @@ fun SpeedPitchSheet(
                 Spacer(Modifier.height(16.dp))
                 ControlBlock(
                     icon = { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.tertiary) },
-                    title = "Pitch",
+                    title = appString(R.string.text_pitch_a6c2d0),
                     value = "${if (pitch >= 0) "+" else ""}${"%.1f".format(pitch)} st",
                 ) {
                     Slider(
@@ -110,7 +113,7 @@ fun SpeedPitchSheet(
                     .padding(vertical = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text("Reset to default", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+                Text(appString(R.string.text_reset_to_default_39c90e), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
             }
         }
     }

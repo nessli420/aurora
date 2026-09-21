@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -41,7 +44,7 @@ class SmartPlaylistViewModel(app: Application) : AndroidViewModel(app) {
         val sp = _state.value
         if (sp.id.isNullOrBlank()) return
         viewModelScope.launch {
-            container.settingsStore.saveSmartPlaylist(sp.copy(name = sp.name?.trim()?.ifBlank { "Smart playlist" }))
+            container.settingsStore.saveSmartPlaylist(sp.copy(name = sp.name?.trim()?.ifBlank { appString(R.string.text_smart_playlist_f77ad7) }))
             onDone()
         }
     }

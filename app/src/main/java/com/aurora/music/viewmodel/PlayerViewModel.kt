@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import android.content.ComponentName
 import android.net.Uri
@@ -46,7 +49,7 @@ import kotlin.math.pow
 
 enum class RepeatMode { OFF, ALL, ONE }
 
-private val EMPTY_SONG = Song("", "Nothing playing", "", "", "", 0)
+private val EMPTY_SONG = Song("", appString(R.string.text_nothing_playing_13ae37), "", "", "", 0)
 
 data class PlayerUiState(
     val current: Song = EMPTY_SONG,
@@ -537,7 +540,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (_: Exception) {
-                android.widget.Toast.makeText(getApplication(), "Couldn't play this search.", android.widget.Toast.LENGTH_SHORT).show()
+                android.widget.Toast.makeText(getApplication(), appString(R.string.text_couldn_t_play_this_search_a68a3a), android.widget.Toast.LENGTH_SHORT).show()
             }
         }
     }
@@ -685,15 +688,15 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             val sonic = runCatching { container.sonicEngine.buildRadio(seed) }.getOrDefault(emptyList())
             if (sonic.size >= 2) {
                 playAll(sonic, 0)
-                onResult("Sonic radio · ${sonic.size - 1} similar tracks")
+                onResult(appString(R.string.text_sonic_radio_similar_tracks_653156, (sonic.size - 1)))
             } else {
                 val more = runCatching { container.repository.radio(seed.id) }.getOrDefault(emptyList())
                     .filter { it.id != seed.id }
                 if (more.isNotEmpty()) {
                     playAll(listOf(seed) + more, 0)
-                    onResult("Radio started")
+                    onResult(appString(R.string.text_radio_started_31fe2c))
                 } else {
-                    onResult("Not enough analyzed tracks — run Sonic analysis in Settings")
+                    onResult(appString(R.string.text_not_enough_analyzed_tracks_run_sonic_analysis_in_settings_007d98))
                 }
             }
             loadingRadio = false
@@ -708,7 +711,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             val set = runCatching { container.sonicEngine.buildAutoDj(seed) }.getOrDefault(emptyList())
             if (set.size >= 2) {
                 playAll(set, 0)
-                onResult("Auto-DJ · ${set.size} tracks, key & tempo matched")
+                onResult(appString(R.string.text_auto_dj_tracks_key_tempo_matched_83c6cc, (set.size)))
             } else {
                 loadingRadio = false
                 startSonicRadio(seed, onResult)
@@ -809,10 +812,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             .map { it.id }
             .filter { it.isNotEmpty() }
             .distinct()
-        if (ids.isEmpty()) { onResult("Nothing to save"); return }
+        if (ids.isEmpty()) { onResult(appString(R.string.text_nothing_to_save_a5dbc6)); return }
         viewModelScope.launch {
             val ok = runCatching { container.repository.createPlaylistFromSongs(title, ids) }.getOrDefault(false)
-            onResult(if (ok) "Saved “$title”" else "Couldn't save playlist")
+            onResult(if (ok) appString(R.string.text_saved_bac2cc, (title)) else appString(R.string.text_couldn_t_save_playlist_d7a0f6))
         }
     }
 

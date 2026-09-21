@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+
+import com.aurora.music.R
+import com.aurora.music.localization.localizedSignalLabel
+
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -62,7 +67,7 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
     val rack by container.settingsStore.processingRack.collectAsStateWithLifecycle(com.aurora.music.data.ProcessingRack())
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Signal Path", onBack)
+        SettingsTopBar(appString(R.string.text_signal_path_c3e29b), onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
@@ -82,16 +87,16 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(
                                 when {
-                                    !path.active -> "Nothing playing"
-                                    path.preservation == Preservation.PRESERVED -> "Samples preserved"
-                                    path.preservation == Preservation.MODIFIED -> "Samples modified"
-                                    else -> "Sample preservation unknown"
+                                    !path.active -> appString(R.string.text_nothing_playing_13ae37)
+                                    path.preservation == Preservation.PRESERVED -> appString(R.string.text_samples_preserved_091001)
+                                    path.preservation == Preservation.MODIFIED -> appString(R.string.text_samples_modified_d04e9f)
+                                    else -> appString(R.string.text_sample_preservation_unknown_7de2de)
                                 },
                                 style = MaterialTheme.typography.titleMedium,
                                 fontWeight = FontWeight.Bold,
                             )
                             Text(
-                                path.note,
+                                if (path.active) path.note else appString(R.string.signal_start_playback),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                             )
@@ -111,13 +116,13 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                     var expanded by remember { mutableStateOf(false) }
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Hide stage meters" else "Stage meters") }
+                            TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) appString(R.string.text_hide_stage_meters_c123cc) else appString(R.string.text_stage_meters_50fb37)) }
                             if (expanded) path.nodeMeters.forEach { meter ->
-                                Text(rack.nodes.firstOrNull { it.id == meter.id }?.name ?: "Stage", style = MaterialTheme.typography.titleSmall)
-                                Text(String.format(Locale.ROOT, "Peak %.1f dBFS · Change %.1f dB",
+                                Text(rack.nodes.firstOrNull { it.id == meter.id }?.name ?: appString(R.string.text_stage_ca6d0e), style = MaterialTheme.typography.titleSmall)
+                                Text(String.format(Locale.ROOT, appString(R.string.text_peak_1f_dbfs_change_1f_db_e16aea),
                                     20 * log10(meter.peak.coerceAtLeast(1e-10)), meter.changeDb), style = MaterialTheme.typography.bodySmall)
                                 if (meter.bandChangesDb.isNotEmpty()) Text(meter.bandChangesDb.joinToString(" · ") {
-                                    String.format(Locale.ROOT, "%.1f dB", it)
+                                    String.format(Locale.ROOT, appString(R.string.text_1f_db_02557a), it)
                                 }, style = MaterialTheme.typography.bodySmall)
                             }
                         }
@@ -126,8 +131,8 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                 path.audioTrackUnderruns?.let { count -> item {
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("AudioTrack underruns: $count", style = MaterialTheme.typography.titleSmall)
-                            Text("Primary player, since creation.",
+                            Text(appString(R.string.text_audiotrack_underruns_6c9f5b, (count)), style = MaterialTheme.typography.titleSmall)
+                            Text(appString(R.string.text_primary_player_since_creation_a2795e),
                                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
@@ -135,9 +140,9 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                 path.usbDiagnostics?.let { usb -> item {
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text("USB transport", style = MaterialTheme.typography.titleSmall)
-                            Text("Completed: ${usb.completedFrames} · Pending: ${usb.pendingFrames}", style = MaterialTheme.typography.bodySmall)
-                            Text("Packet errors: ${usb.packetErrors} · Timeouts: ${usb.timeouts}", style = MaterialTheme.typography.bodySmall)
+                            Text(appString(R.string.text_usb_transport_39fd7d), style = MaterialTheme.typography.titleSmall)
+                            Text(appString(R.string.text_completed_pending_bf3cd1, (usb.completedFrames), (usb.pendingFrames)), style = MaterialTheme.typography.bodySmall)
+                            Text(appString(R.string.text_packet_errors_timeouts_e3e49f, (usb.packetErrors), (usb.timeouts)), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 } }
@@ -148,7 +153,7 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                 }
                 item {
                     Text(
-                        "Unknown means the active playback path cannot report that detail. A supported or requested format does not confirm what reaches the device.",
+                        appString(R.string.text_unknown_means_the_active_playback_path_cannot_report_that_detail_c0b60e),
                         Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -157,12 +162,12 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
             }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.Devices, "Audio output", "Choose a device or output mode", onClick = onOpenOutput)
+                    SettingsNavRow(Icons.Filled.Devices, appString(R.string.text_audio_output_2b89cc), appString(R.string.text_choose_a_device_or_output_mode_72ff69), onClick = onOpenOutput)
                     SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.ContentCopy, "Copy diagnostic report", "Playback formats and processing; no account credentials") {
+                    SettingsNavRow(Icons.Filled.ContentCopy, appString(R.string.text_copy_diagnostic_report_7c8feb), appString(R.string.text_playback_formats_and_processing_no_account_credentials_9d08c4)) {
                         (context.getSystemService(Context.CLIPBOARD_SERVICE) as? ClipboardManager)
-                            ?.setPrimaryClip(ClipData.newPlainText("Aurora Signal Path", path.toDiagnosticReport()))
-                        Toast.makeText(context, "Signal Path report copied", Toast.LENGTH_SHORT).show()
+                            ?.setPrimaryClip(ClipData.newPlainText(appString(R.string.text_aurora_signal_path_b2764e), path.toDiagnosticReport()))
+                        Toast.makeText(context, appString(R.string.text_signal_path_report_copied_ecc24d), Toast.LENGTH_SHORT).show()
                     }
                 }
             }
@@ -175,18 +180,18 @@ private fun MeasurementCard(measurements: AudioMeasurements) {
     var details by remember { mutableStateOf(false) }
     SettingsGroup {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Digital sample levels", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Text(if (measurements.playing) "Latest 100 ms sample windows" else "Paused · last measured sample windows",
+            Text(appString(R.string.text_digital_sample_levels_eed86c), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text(if (measurements.playing) appString(R.string.text_latest_100_ms_sample_windows_332ea8) else appString(R.string.text_paused_last_measured_sample_windows_0c768c),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            MeterReading("Before app processing", measurements.before)
-            if (measurements.afterAvailable) MeterReading("After app processing", measurements.after)
-            else Text("After-processing measurement unavailable on this path or channel layout.", style = MaterialTheme.typography.bodySmall)
+            MeterReading(appString(R.string.text_before_app_processing_fb479a), measurements.before)
+            if (measurements.afterAvailable) MeterReading(appString(R.string.text_after_app_processing_2b0263), measurements.after)
+            else Text(appString(R.string.text_after_processing_measurement_unavailable_on_this_path_or_channel_bf6314), style = MaterialTheme.typography.bodySmall)
             measurements.spectrum?.let { SpectrumChart(it) }
-                ?: Text("Waiting for audio samples.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TextButton(onClick = { details = !details }) { Text(if (details) "Hide measurement details" else "Measurement details") }
-            if (details) Text("Sample peak and RMS, before output volume and Android effects. Level windows are independent; paired spectra match PCM timestamps. Full-scale counts reset on seek or format change. These are not true-peak, loudness or acoustic measurements.",
+                ?: Text(appString(R.string.text_waiting_for_audio_samples_e18779), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            TextButton(onClick = { details = !details }) { Text(if (details) appString(R.string.text_hide_measurement_details_a40be4) else appString(R.string.text_measurement_details_edeee9)) }
+            if (details) Text(appString(R.string.text_sample_peak_and_rms_before_output_volume_and_android_effects_leve_08e2a4),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (measurements.overlappingPlayers) Text("Crossfade: primary player only.",
+            if (measurements.overlappingPlayers) Text(appString(R.string.text_crossfade_primary_player_only_8e7de0),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -197,10 +202,10 @@ private fun SpectrumChart(spectrum: AudioSpectrum) {
     val before = MaterialTheme.colorScheme.tertiary
     val after = MaterialTheme.colorScheme.primary
     val grid = MaterialTheme.colorScheme.outlineVariant
-    Text(if (spectrum.afterDb != null) "Aligned spectrum" else "Source spectrum", style = MaterialTheme.typography.titleSmall)
+    Text(if (spectrum.afterDb != null) appString(R.string.text_aligned_spectrum_da9b60) else appString(R.string.text_source_spectrum_5d8903), style = MaterialTheme.typography.titleSmall)
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        Text("Before", color = before, style = MaterialTheme.typography.labelMedium)
-        if (spectrum.afterDb != null) Text("After", color = after, style = MaterialTheme.typography.labelMedium)
+        Text(appString(R.string.text_before_74f396), color = before, style = MaterialTheme.typography.labelMedium)
+        if (spectrum.afterDb != null) Text(appString(R.string.text_after_79ba5e), color = after, style = MaterialTheme.typography.labelMedium)
         Text("−100 to +6 dBFS", style = MaterialTheme.typography.labelSmall)
     }
     Canvas(Modifier.fillMaxWidth().height(140.dp)) {
@@ -226,8 +231,8 @@ private fun SpectrumChart(spectrum: AudioSpectrum) {
         spectrum.afterDb?.let { draw(it, after) }
     }
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-        Text("20 Hz", style = MaterialTheme.typography.labelSmall)
-        Text("${minOf(20_000, spectrum.sampleRate / 2) / 1000} kHz", style = MaterialTheme.typography.labelSmall)
+        Text(appString(R.string.text_20_hz_9d51f9), style = MaterialTheme.typography.labelSmall)
+        Text(appString(R.string.text_khz_dd177d, (minOf(20_000, spectrum.sampleRate / 2) / 1000)), style = MaterialTheme.typography.labelSmall)
     }
 }
 
@@ -235,14 +240,14 @@ private fun SpectrumChart(spectrum: AudioSpectrum) {
 private fun MeterReading(label: String, levels: PcmLevels?) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text(label, style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
-        if (levels == null) Text("Waiting for a complete mono or stereo PCM window", style = MaterialTheme.typography.bodyMedium)
+        if (levels == null) Text(appString(R.string.text_waiting_for_a_complete_mono_or_stereo_pcm_window_c07259), style = MaterialTheme.typography.bodyMedium)
         else {
             fun db(value: Double) = if (value <= 0.0) "−∞" else String.format(Locale.getDefault(), "%.1f", 20 * log10(value))
-            Text("${if (levels.channels == 1) "Mono" else "L"}   Peak ${db(levels.leftPeak)} · RMS ${db(levels.leftRms)} dBFS",
+            Text(appString(R.string.text_peak_rms_dbfs_95c5fb, (if (levels.channels == 1) appString(R.string.text_mono_c5c553) else "L"), (db(levels.leftPeak)), (db(levels.leftRms))),
                 style = MaterialTheme.typography.bodyMedium)
-            if (levels.channels == 2) Text("R   Peak ${db(levels.rightPeak)} · RMS ${db(levels.rightRms)} dBFS",
+            if (levels.channels == 2) Text(appString(R.string.text_r_peak_rms_dbfs_885a75, (db(levels.rightPeak)), (db(levels.rightRms))),
                 style = MaterialTheme.typography.bodyMedium)
-            Text("Full-scale samples: ${levels.fullScaleSamples}" + if (levels.invalidSamples > 0) " · Invalid samples: ${levels.invalidSamples}" else "",
+            Text(appString(R.string.text_full_scale_samples_2918e5, (levels.fullScaleSamples)) + if (levels.invalidSamples > 0) appString(R.string.text_invalid_samples_a16776, (levels.invalidSamples)) else "",
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -252,7 +257,7 @@ private fun MeterReading(label: String, levels: PcmLevels?) {
 private fun PathStageCard(number: Int, stage: SignalStage) {
     SettingsGroup {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("$number  ·  ${stage.title}", style = MaterialTheme.typography.labelLarge,
+            Text("$number  ·  ${stage.title.localizedSignalLabel()}", style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
             Text(stage.detail, style = MaterialTheme.typography.bodyMedium)
             stage.format?.let { format ->
@@ -268,9 +273,9 @@ private fun PathStageCard(number: Int, stage: SignalStage) {
 }
 
 private fun formatDescription(format: SignalFormat): String = buildList {
-    add(format.rateHz?.takeIf { it > 0 }?.let { String.format(Locale.getDefault(), "%.1f kHz", it / 1000f) }
-        ?: "Rate unknown")
-    add(format.bitDepth?.takeIf { it > 0 }?.let { "$it-bit" } ?: "Depth unknown")
-    add(when (format.channels) { 1 -> "Mono"; 2 -> "Stereo"; null, 0 -> "Channels unknown"; else -> "${format.channels} channels" })
+    add(format.rateHz?.takeIf { it > 0 }?.let { String.format(Locale.getDefault(), appString(R.string.text_1f_khz_92ed69), it / 1000f) }
+        ?: appString(R.string.text_rate_unknown_7e2d67))
+    add(format.bitDepth?.takeIf { it > 0 }?.let { appString(R.string.text_bit_fd7850, (it)) } ?: appString(R.string.text_depth_unknown_c30135))
+    add(when (format.channels) { 1 -> appString(R.string.text_mono_c5c553); 2 -> appString(R.string.text_stereo_f4f390); null, 0 -> appString(R.string.text_channels_unknown_b12d18); else -> appString(R.string.text_channels_f248dd, (format.channels)) })
     format.encoding?.takeIf { it.isNotBlank() }?.let(::add)
 }.joinToString(" · ")

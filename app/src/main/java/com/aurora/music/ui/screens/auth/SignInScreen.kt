@@ -1,5 +1,9 @@
 package com.aurora.music.ui.screens.auth
 
+import com.aurora.music.localization.localizedMediaType
+
+import com.aurora.music.localization.appString
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.imePadding
@@ -133,33 +137,33 @@ fun SignInScreen(
                 .verticalScroll(scroll).padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (state.step != AuthStep.TYPE) {
-                        IconButton(onClick = onBack, enabled = !state.loading) { Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back") }
+                        IconButton(onClick = onBack, enabled = !state.loading) { Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36)) }
                     } else {
                         Icon(painterResource(R.drawable.ic_aurora_logo), null, Modifier.size(32.dp), tint = AuroraRose)
                         Spacer(Modifier.width(10.dp))
                     }
-                    Text("Aurora", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Spacer(Modifier.weight(1f))
-                    Text(if (state.step == AuthStep.TYPE) "YOUR MUSIC, YOUR WAY" else when (state.step) {
-                        AuthStep.SERVER -> "01 / ADDRESS"
-                        AuthStep.CREDENTIALS -> "02 / ACCOUNT"
-                        else -> "CONNECT"
+                    Text(if (state.step == AuthStep.TYPE) appString(R.string.text_your_music_your_way_db5743) else when (state.step) {
+                        AuthStep.SERVER -> appString(R.string.text_01_address_ea85bc)
+                        AuthStep.CREDENTIALS -> appString(R.string.text_02_account_8088a4)
+                        else -> appString(R.string.text_connect_6e2889)
                     }, style = MaterialTheme.typography.labelSmall, color = palette.onSurfaceVariant, letterSpacing = 1.sp)
                 }
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     Text(when (state.step) {
-                        AuthStep.TYPE -> "A home for\nyour music."
-                        AuthStep.SERVER -> "Connect your server."
-                        AuthStep.CREDENTIALS -> "Make yourself at home."
-                        AuthStep.SPOTIFY -> "Connect Spotify."
-                        AuthStep.YOUTUBE_MUSIC -> "Connect YouTube Music."
+                        AuthStep.TYPE -> appString(R.string.text_a_home_for_your_music_20a46f)
+                        AuthStep.SERVER -> appString(R.string.text_connect_your_server_8989fc)
+                        AuthStep.CREDENTIALS -> appString(R.string.text_make_yourself_at_home_3ea2e2)
+                        AuthStep.SPOTIFY -> appString(R.string.text_connect_spotify_529d56)
+                        AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_connect_youtube_music_64e032)
                     }, fontSize = if (state.step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (state.step == AuthStep.TYPE) 43.sp else 36.sp, fontWeight = FontWeight.Bold, color = palette.onBackground)
                     Text(when (state.step) {
-                        AuthStep.TYPE -> "Your collection and your discoveries, together in one player."
-                        AuthStep.SERVER -> "Enter the address of your ${if (state.type == ServerType.JELLYFIN) "Jellyfin" else "Navidrome or Subsonic"} server."
-                        AuthStep.CREDENTIALS -> "Use your server account to open your library."
-                        AuthStep.SPOTIFY -> "Bring your playlists and saved music into Aurora."
-                        AuthStep.YOUTUBE_MUSIC -> "Your favourites, mixes and new discoveries."
+                        AuthStep.TYPE -> appString(R.string.text_your_collection_and_your_discoveries_together_in_one_player_093361)
+                        AuthStep.SERVER -> appString(R.string.text_enter_the_address_of_your_server_3f01ed, (if (state.type == ServerType.JELLYFIN) "Jellyfin" else appString(R.string.text_navidrome_or_subsonic_4e1c18)))
+                        AuthStep.CREDENTIALS -> appString(R.string.text_use_your_server_account_to_open_your_library_800ff2)
+                        AuthStep.SPOTIFY -> appString(R.string.text_bring_your_playlists_and_saved_music_into_aurora_df697e)
+                        AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_your_favourites_mixes_and_new_discoveries_6c2fa1)
                     }, style = MaterialTheme.typography.bodyLarge, color = palette.onSurfaceVariant)
                 }
                 when (state.step) {
@@ -171,7 +175,7 @@ fun SignInScreen(
                 }
                 if (state.loading) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(Modifier.size(20.dp), color = AuroraRose, strokeWidth = 2.dp)
-                    Text("Connecting your library…", color = palette.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                    Text(appString(R.string.text_connecting_your_library_a0430a), color = palette.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                 }
                 AnimatedVisibility(state.error != null) {
                     Surface(color = palette.errorContainer, shape = RoundedCornerShape(16.dp)) {
@@ -191,27 +195,27 @@ private fun TypeStep(onSelectType: (ServerType) -> Unit, onLocal: () -> Unit, pe
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (savedSessions.isNotEmpty()) {
             TextButton(onClick = { savedExpanded = !savedExpanded }, modifier = Modifier.fillMaxWidth()) {
-                Text(if (savedExpanded) "Hide saved accounts" else "Continue with a saved account (${savedSessions.size})")
+                Text(if (savedExpanded) appString(R.string.text_hide_saved_accounts_d0e9da) else appString(R.string.text_continue_with_a_saved_account_a6bc3a, (savedSessions.size)))
             }
             AnimatedVisibility(savedExpanded) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     savedSessions.forEach { account ->
-                        ServerTypeCard(Icons.Outlined.Person, account.username.ifBlank { account.typeLabel }, account.typeLabel, enabled = enabled) { onUseSaved(account) }
+                        ServerTypeCard(Icons.Outlined.Person, account.username.ifBlank { account.typeLabel.localizedMediaType() }, account.typeLabel.localizedMediaType(), enabled = enabled) { onUseSaved(account) }
                     }
                 }
             }
         }
-        ServerTypeCard(Icons.Outlined.PhoneAndroid, "Music on this device", "Start listening without an account", enabled = enabled, featured = true, onClick = onLocal)
-        SourceLabel("STREAMING")
-        ServerTypeCard(Icons.Outlined.PlayCircle, "YouTube Music", "Your Google account, playlists and mixes", enabled = enabled) { onSelectType(ServerType.YOUTUBE_MUSIC) }
-        ServerTypeCard(Icons.Outlined.MusicNote, "Spotify", "Your library, played through YouTube", enabled = enabled) { onSelectType(ServerType.SPOTIFY) }
-        SourceLabel("YOUR SERVER")
+        ServerTypeCard(Icons.Outlined.PhoneAndroid, appString(R.string.text_music_on_this_device_21b6e9), appString(R.string.text_start_listening_without_an_account_2e734d), enabled = enabled, featured = true, onClick = onLocal)
+        SourceLabel(appString(R.string.text_streaming_0247ce))
+        ServerTypeCard(Icons.Outlined.PlayCircle, "YouTube Music", appString(R.string.text_your_google_account_playlists_and_mixes_120c0f), enabled = enabled) { onSelectType(ServerType.YOUTUBE_MUSIC) }
+        ServerTypeCard(Icons.Outlined.MusicNote, "Spotify", appString(R.string.text_your_library_played_through_youtube_a53b5e), enabled = enabled) { onSelectType(ServerType.SPOTIFY) }
+        SourceLabel(appString(R.string.text_your_server_d2f076))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            ServerTile("Navidrome", "Subsonic compatible", Icons.Outlined.Dns, Modifier.weight(1f), enabled) { onSelectType(ServerType.SUBSONIC) }
-            ServerTile("Jellyfin", "Your media library", Icons.Outlined.Cloud, Modifier.weight(1f), enabled) { onSelectType(ServerType.JELLYFIN) }
+            ServerTile("Navidrome", appString(R.string.text_subsonic_compatible_b4584c), Icons.Outlined.Dns, Modifier.weight(1f), enabled) { onSelectType(ServerType.SUBSONIC) }
+            ServerTile("Jellyfin", appString(R.string.text_your_media_library_77d854), Icons.Outlined.Cloud, Modifier.weight(1f), enabled) { onSelectType(ServerType.JELLYFIN) }
         }
-        Text("You can combine local files, server libraries and YouTube Music later in Settings.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
-        if (permDenied) Text("Allow music access in Settings → Apps → Aurora → Permissions to use files on this device.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+        Text(appString(R.string.text_you_can_combine_local_files_server_libraries_and_youtube_music_la_8c6471), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+        if (permDenied) Text(appString(R.string.text_allow_music_access_in_settings_apps_aurora_permissions_to_use_fil_1503ac), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }
 }
 
@@ -241,19 +245,19 @@ private fun SpotifyStep(state: AuthUiState, onConnect: (String) -> Unit) {
     var setupExpanded by rememberSaveable { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth()) {
         Text(
-            "Aurora streams your Spotify library through YouTube, so it needs your own free Spotify app:",
+            appString(R.string.text_aurora_streams_your_spotify_library_through_youtube_so_it_needs_y_23d0ad),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Spacer(Modifier.height(12.dp))
-        TextButton(onClick = { setupExpanded = !setupExpanded }) { Text(if (setupExpanded) "Hide setup instructions" else "Set up your Spotify app") }
+        TextButton(onClick = { setupExpanded = !setupExpanded }) { Text(if (setupExpanded) appString(R.string.text_hide_setup_instructions_9a08e8) else appString(R.string.text_set_up_your_spotify_app_de4e3c)) }
         AnimatedVisibility(setupExpanded) { Column {
         listOf(
-            "Open the Spotify Developer Dashboard and create an app.",
-            "Set the Redirect URI to exactly:  aurora://spotify",
-            "Under APIs, tick Web API (and Android).",
-            "In User Management, add your own Spotify account email.",
-            "Copy the app's Client ID and paste it below.",
+            appString(R.string.text_open_the_spotify_developer_dashboard_and_create_an_app_20577c),
+            appString(R.string.text_set_the_redirect_uri_to_exactly_aurora_spotify_407b7c),
+            appString(R.string.text_under_apis_tick_web_api_and_android_61207d),
+            appString(R.string.text_in_user_management_add_your_own_spotify_account_email_2a3bd3),
+            appString(R.string.text_copy_the_app_s_client_id_and_paste_it_below_d4d070),
         ).forEachIndexed { i, line ->
             Row(Modifier.fillMaxWidth().padding(vertical = 3.dp)) {
                 Text("${i + 1}.", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = AuroraRose, modifier = Modifier.width(22.dp))
@@ -270,7 +274,7 @@ private fun SpotifyStep(state: AuthUiState, onConnect: (String) -> Unit) {
                 }
                 .padding(vertical = 12.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("Open Spotify Dashboard", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = AuroraRose) }
+        ) { Text(appString(R.string.text_open_spotify_dashboard_7a23e4), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = AuroraRose) }
         Spacer(Modifier.height(16.dp))
         OutlinedTextField(
             value = clientId,
@@ -279,8 +283,8 @@ private fun SpotifyStep(state: AuthUiState, onConnect: (String) -> Unit) {
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { if (clientId.isNotBlank() && !state.loading) onConnect(clientId) }),
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Client ID") },
-            placeholder = { Text("e.g. 4e041c00d85a40d9…") },
+            label = { Text(appString(R.string.text_client_id_a766cd)) },
+            placeholder = { Text(appString(R.string.text_e_g_4e041c00d85a40d9_b863af)) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             leadingIcon = { Icon(Icons.Outlined.MusicNote, null) },
@@ -288,7 +292,7 @@ private fun SpotifyStep(state: AuthUiState, onConnect: (String) -> Unit) {
         )
         Spacer(Modifier.height(22.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            PrimaryButton(if (state.loading) "" else "Connect", enabled = clientId.isNotBlank() && !state.loading, modifier = Modifier.weight(1f), loading = state.loading) { onConnect(clientId) }
+            PrimaryButton(if (state.loading) "" else appString(R.string.text_connect_b65463), enabled = clientId.isNotBlank() && !state.loading, modifier = Modifier.weight(1f), loading = state.loading) { onConnect(clientId) }
         }
     }
 }
@@ -340,7 +344,7 @@ private fun ServerStep(
             value = state.host,
             onValueChange = onHost,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Server address") },
+            label = { Text(appString(R.string.text_server_address_b06792)) },
             placeholder = { Text(if (state.type == ServerType.JELLYFIN) "192.168.1.10:8096" else "192.168.1.10:4533") },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
@@ -351,7 +355,7 @@ private fun ServerStep(
         )
         Spacer(Modifier.height(22.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            PrimaryButton("Continue", enabled = canContinue, modifier = Modifier.weight(1f), onClick = onContinue)
+            PrimaryButton(appString(R.string.text_continue_2e0262), enabled = canContinue, modifier = Modifier.weight(1f), onClick = onContinue)
         }
     }
 }
@@ -373,7 +377,7 @@ private fun CredentialsStep(
                 Icon(Icons.Outlined.Dns, null, tint = AuroraRose)
                 Spacer(Modifier.width(12.dp))
                 Text(state.scheme + state.host, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                TextButton(onClick = onBack, enabled = !state.loading) { Text("Edit") }
+                TextButton(onClick = onBack, enabled = !state.loading) { Text(appString(R.string.text_edit_530164)) }
             }
         }
         Spacer(Modifier.height(20.dp))
@@ -381,7 +385,7 @@ private fun CredentialsStep(
             value = state.username,
             onValueChange = onUsername,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Username") },
+            label = { Text(appString(R.string.text_username_84c290)) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             leadingIcon = { Icon(Icons.Outlined.Person, null) },
@@ -395,12 +399,12 @@ private fun CredentialsStep(
             value = state.password,
             onValueChange = onPassword,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text("Password") },
+            label = { Text(appString(R.string.text_password_8be3c9)) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             leadingIcon = { Icon(Icons.Outlined.Lock, null) },
             enabled = !state.loading,
-            trailingIcon = { IconButton(onClick = { passwordVisible = !passwordVisible }) { Icon(if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, if (passwordVisible) "Hide password" else "Show password") } },
+            trailingIcon = { IconButton(onClick = { passwordVisible = !passwordVisible }) { Icon(if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, if (passwordVisible) appString(R.string.text_hide_password_e40123) else appString(R.string.text_show_password_044b85)) } },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { if (canSubmit && !state.loading) { focus.clearFocus(); onSignIn() } }),
@@ -408,7 +412,7 @@ private fun CredentialsStep(
         )
         Spacer(Modifier.height(22.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            PrimaryButton(if (state.loading) "" else "Connect", enabled = canSubmit && !state.loading, modifier = Modifier.weight(1f), loading = state.loading, onClick = onSignIn)
+            PrimaryButton(if (state.loading) "" else appString(R.string.text_connect_b65463), enabled = canSubmit && !state.loading, modifier = Modifier.weight(1f), loading = state.loading, onClick = onSignIn)
         }
     }
 }

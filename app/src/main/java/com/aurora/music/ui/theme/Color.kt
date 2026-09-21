@@ -1,5 +1,8 @@
 package com.aurora.music.ui.theme
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 
@@ -34,15 +37,15 @@ fun brandGradient() = Brush.linearGradient(listOf(AuroraRose, AuroraCoral))
 // seed becomes the material primary scheme built around it in AuroraTheme
 data class AccentPreset(val name: String, val seed: Color)
 
-val AccentPresets = listOf(
-    AccentPreset("Rose", AuroraRose),
-    AccentPreset("Coral", AuroraCoral),
-    AccentPreset("Magenta", AuroraMagenta),
-    AccentPreset("Violet", AuroraViolet),
-    AccentPreset("Amber", AuroraAmber),
-    AccentPreset("Blue", Color(0xFF3B82F6)),
-    AccentPreset("Teal", Color(0xFF14B8A6)),
-    AccentPreset("Green", Color(0xFF22C55E)),
-    AccentPreset("Sky", Color(0xFF38BDF8)),
-    AccentPreset("Mono", Color(0xFFB8B0B4)),
+val AccentPresets: List<AccentPreset> get() = listOf(
+    AccentPreset(appString(R.string.text_rose_51ad0e), AuroraRose),
+    AccentPreset(appString(R.string.text_coral_d27ca6), AuroraCoral),
+    AccentPreset(appString(R.string.text_magenta_ff6912), AuroraMagenta),
+    AccentPreset(appString(R.string.text_violet_ddcd2f), AuroraViolet),
+    AccentPreset(appString(R.string.text_amber_27a01d), AuroraAmber),
+    AccentPreset(appString(R.string.text_blue_7d44bc), Color(0xFF3B82F6)),
+    AccentPreset(appString(R.string.text_teal_df0ad3), Color(0xFF14B8A6)),
+    AccentPreset(appString(R.string.text_green_933bf2), Color(0xFF22C55E)),
+    AccentPreset(appString(R.string.text_sky_b3d97f), Color(0xFF38BDF8)),
+    AccentPreset(appString(R.string.text_mono_c5c553), Color(0xFFB8B0B4)),
 )

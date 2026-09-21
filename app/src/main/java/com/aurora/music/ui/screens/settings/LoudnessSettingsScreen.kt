@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -37,29 +40,29 @@ fun LoudnessSettingsScreen(
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             item { SettingsSectionTitle("ReplayGain") }
             item {
-                SegmentedRow("Volume leveling", listOf("Off", "Track", "Album"), prefs.replayGain.coerceIn(0, 2)) { mode ->
+                SegmentedRow(appString(R.string.text_volume_leveling_a9df98), listOf(appString(R.string.text_off_e3de5a), appString(R.string.text_track_b1c5a7), appString(R.string.text_album_dfb4c9)), prefs.replayGain.coerceIn(0, 2)) { mode ->
                     scope.launch { store.setReplayGain(mode) }
                 }
             }
             item {
                 Text(
                     when (prefs.replayGain) {
-                        1 -> "Track mode uses each track's gain tag to reduce volume differences between songs."
-                        2 -> "Album mode uses album gain tags to preserve relative levels within an album."
-                        else -> "Off leaves ReplayGain disabled."
-                    } + " Aurora currently applies attenuation only. Missing or positive gain values leave volume unchanged. Availability depends on the active playback path.",
+                        1 -> appString(R.string.text_track_mode_uses_each_track_s_gain_tag_to_reduce_volume_difference_c08f12)
+                        2 -> appString(R.string.text_album_mode_uses_album_gain_tags_to_preserve_relative_levels_withi_99c44e)
+                        else -> appString(R.string.text_off_leaves_replaygain_disabled_56fb0f)
+                    } + appString(R.string.text_aurora_currently_applies_attenuation_only_missing_or_positive_gai_20c829),
                     Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
-            item { SettingsSectionTitle("Related settings") }
+            item { SettingsSectionTitle(appString(R.string.text_related_settings_661f04)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer,
-                        "Preamp, limiter and other effect gain controls", onClick = onOpenEq)
+                        appString(R.string.text_preamp_limiter_and_other_effect_gain_controls_32ddcd), onClick = onOpenEq)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath,
-                        "Check whether volume leveling is active or bypassed", onClick = onOpenSignalPath)
+                        appString(R.string.text_check_whether_volume_leveling_is_active_or_bypassed_05e612), onClick = onOpenSignalPath)
                 }
             }
         }

@@ -1,5 +1,7 @@
 package com.aurora.music.ui.widget
 
+import com.aurora.music.localization.appString
+
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -98,7 +100,7 @@ private fun WidgetContent(np: NowPlaying, art: Bitmap?) {
         Spacer(GlanceModifier.width(12.dp))
         Column(modifier = GlanceModifier.defaultWeight()) {
             Text(
-                if (np.hasTrack) np.title.ifBlank { "Unknown title" } else "Nothing playing",
+                if (np.hasTrack) np.title.ifBlank { appString(R.string.text_unknown_title_bceca3) } else appString(R.string.text_nothing_playing_13ae37),
                 style = TextStyle(color = white, fontSize = 15.sp, fontWeight = FontWeight.Bold),
                 maxLines = 1,
             )

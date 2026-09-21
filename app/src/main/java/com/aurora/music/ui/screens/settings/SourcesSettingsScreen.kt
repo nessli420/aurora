@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.localizedMediaType
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -51,15 +56,15 @@ import com.aurora.music.data.accountKey
 import kotlinx.coroutines.launch
 
 private fun tierLabel(t: String) = when (t) {
-    "local" -> "On-device file"
-    "downloaded" -> "Downloaded"
-    "stream" -> "Stream from server"
+    "local" -> appString(R.string.text_on_device_file_7d2f79)
+    "downloaded" -> appString(R.string.text_downloaded_c61970)
+    "stream" -> appString(R.string.text_stream_from_server_1f8520)
     else -> t
 }
 private fun tierSub(t: String) = when (t) {
-    "local" -> "A matching file in your device's music library"
-    "downloaded" -> "A track downloaded inside the app"
-    "stream" -> "Stream from Navidrome / Jellyfin"
+    "local" -> appString(R.string.text_a_matching_file_in_your_device_s_music_library_691446)
+    "downloaded" -> appString(R.string.text_a_track_downloaded_inside_the_app_8619cd)
+    "stream" -> appString(R.string.text_stream_from_navidrome_jellyfin_6c07f0)
     else -> ""
 }
 
@@ -82,10 +87,10 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 val count = sacd.add(uri)
                 container.localLibrary.refresh()
                 images = sacd.entries()
-                importStatus = "Imported $count tracks."
+                importStatus = appString(R.string.text_imported_tracks_45fc79, (count))
             } catch (failure: Exception) {
                 if (failure is kotlinx.coroutines.CancellationException) throw failure
-                importStatus = failure.message ?: "Image could not be imported."
+                importStatus = failure.message ?: appString(R.string.text_image_could_not_be_imported_d64587)
             } finally { importBusy = false }
         }
     }
@@ -101,17 +106,17 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Library & sources", onBack)
+        SettingsTopBar(appString(R.string.text_library_sources_101221), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
-            item { SettingsSectionTitle("Local library") }
+            item { SettingsSectionTitle(appString(R.string.text_local_library_1c67cd)) }
             item {
                 SettingsGroup {
                     Row(Modifier.fillMaxWidth().clickable(onClick = onArtistSeparators).padding(20.dp)) {
-                        Text("Artist separators", style = MaterialTheme.typography.titleSmall)
+                        Text(appString(R.string.text_artist_separators_4a3dc4), style = MaterialTheme.typography.titleSmall)
                     }
                     TextButton(onClick = { importImage.launch(arrayOf("*/*")) }, enabled = !importBusy,
                         modifier = Modifier.padding(horizontal = 12.dp)) {
-                        Text(if (importBusy) "Importing…" else "Import SACD image")
+                        Text(if (importBusy) appString(R.string.text_importing_820599) else appString(R.string.text_import_sacd_image_dd7548))
                     }
                     importStatus?.let { Text(it, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) }
@@ -128,25 +133,25 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                         try { sacd.remove(image.uri); container.localLibrary.refresh(); images = sacd.entries() }
                         catch (failure: Exception) {
                             if (failure is kotlinx.coroutines.CancellationException) throw failure
-                            importStatus = "Image could not be removed."
+                            importStatus = appString(R.string.text_image_could_not_be_removed_f91668)
                         } finally { importBusy = false }
-                    } }) { Text("Remove") }
+                    } }) { Text(appString(R.string.text_remove_e96390)) }
                 }
             }
 
-            item { SettingsSectionTitle("Best-source playback") }
+            item { SettingsSectionTitle(appString(R.string.text_best_source_playback_8c92cb)) }
             item {
                 SettingsGroup {
                     SettingsSwitchRow(
-                        Icons.Filled.Smartphone, "Prefer local copies",
-                        "Play a matching on-device or downloaded file instead of streaming", preferLocal,
+                        Icons.Filled.Smartphone, appString(R.string.text_prefer_local_copies_a74911),
+                        appString(R.string.text_play_a_matching_on_device_or_downloaded_file_instead_of_streaming_6f069e), preferLocal,
                     ) { v -> scope.launch { store.setPreferLocalSources(v) } }
                 }
             }
             item {
                 Text(
-                    "When a track is available from more than one place, Aurora plays it from the first " +
-                        "source below that has it. Reorder to taste.",
+                    appString(R.string.text_when_a_track_is_available_from_more_than_one_place_aurora_plays_i_99eef3) +
+                        appString(R.string.text_source_below_that_has_it_reorder_to_taste_f0910c),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
                 )
@@ -164,30 +169,30 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
             }
 
             item { Spacer(Modifier.height(8.dp)) }
-            item { SettingsSectionTitle("Unified library") }
+            item { SettingsSectionTitle(appString(R.string.text_unified_library_f888ae)) }
             item {
                 SettingsGroup {
                     SettingsSwitchRow(
-                        Icons.Filled.MergeType, "Merge all sources",
-                        "Show albums, artists & playlists from your local files and every included source as one library", unified,
+                        Icons.Filled.MergeType, appString(R.string.text_merge_all_sources_004b13),
+                        appString(R.string.text_show_albums_artists_playlists_from_your_local_files_and_every_inc_4ea040), unified,
                     ) { v -> scope.launch { store.setUnifiedLibrary(v) } }
                 }
             }
             if (unified) {
                 item {
                     Text(
-                        "Included in the unified library:",
+                        appString(R.string.text_included_in_the_unified_library_0ecc5b),
                         style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 4.dp),
                     )
                 }
-                item { SourceRow("On this device", "Local files", included = true, toggleable = false) {} }
+                item { SourceRow(appString(R.string.text_on_this_device_a7f962), appString(R.string.text_local_files_f4a889), included = true, toggleable = false) {} }
                 items(servers.size) { i ->
                     val s = servers[i]
                     val key = s.accountKey()
                     val noneSelected = mergeKeys == setOf(MERGE_NONE)
                     val included = !noneSelected && (mergeKeys.isEmpty() || key in mergeKeys)
-                    SourceRow(s.typeLabel, s.server.removePrefix("http://").removePrefix("https://"), included = included, toggleable = true) {
+                    SourceRow(s.typeLabel.localizedMediaType(), s.server.removePrefix("http://").removePrefix("https://"), included = included, toggleable = true) {
                         val current = when {
                             noneSelected -> emptySet()
                             mergeKeys.isEmpty() -> servers.map { it.accountKey() }.toSet()   // empty means all make explicit
@@ -201,7 +206,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 if (servers.isEmpty()) {
                     item {
                         Text(
-                            "Sign into Navidrome, Jellyfin or YouTube Music (Settings → Accounts) to merge sources. Your local files are always included.",
+                            appString(R.string.text_sign_into_navidrome_jellyfin_or_youtube_music_settings_accounts_t_7337d3),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )
@@ -209,7 +214,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 }
                 item {
                     Text(
-                        "YouTube Music adds catalogue search and a separate home feed. Matching recordings use your preferred local, downloaded or server copy. Spotify stays standalone.",
+                        appString(R.string.text_youtube_music_adds_catalogue_search_and_a_separate_home_feed_matc_b8a69c),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                     )
@@ -237,12 +242,12 @@ private fun PriorityRow(label: String, subtitle: String, enabled: Boolean, canUp
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha))
         }
         Icon(
-            Icons.Filled.KeyboardArrowUp, "Move up",
+            Icons.Filled.KeyboardArrowUp, appString(R.string.text_move_up_b4f57c),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canUp) 1f else 0.25f),
             modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50)).clickable(enabled = enabled && canUp, onClick = onUp).padding(8.dp),
         )
         Icon(
-            Icons.Filled.KeyboardArrowDown, "Move down",
+            Icons.Filled.KeyboardArrowDown, appString(R.string.text_move_down_260ff8),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canDown) 1f else 0.25f),
             modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50)).clickable(enabled = enabled && canDown, onClick = onDown).padding(8.dp),
         )

@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -60,23 +63,23 @@ internal fun RackEqResponseCard(node: ProcessingRackNode, decoderRate: Int?, rac
         error = null
         try { response = withContext(Dispatchers.Default) { EqResponseCalculator.calculateNode(node, sampleRate) } }
         catch (cancelled: CancellationException) { throw cancelled }
-        catch (failure: Exception) { error = failure.message ?: "Could not calculate this EQ response." }
+        catch (failure: Exception) { error = failure.message ?: appString(R.string.text_could_not_calculate_this_eq_response_223c17) }
     }
     SettingsGroup {
         Column(Modifier.padding(horizontal = 20.dp, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text("Calculated stage response", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text(if (decoderRate != null) "${eqFrequency(sampleRate.toDouble())} · current decoder sample rate" else
-                "48 kHz preview · decoder sample rate unavailable", style = MaterialTheme.typography.bodySmall,
+            Text(appString(R.string.text_calculated_stage_response_afc25a), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(if (decoderRate != null) appString(R.string.text_current_decoder_sample_rate_6f675e, (eqFrequency(sampleRate.toDouble()))) else
+                appString(R.string.text_48_khz_preview_decoder_sample_rate_unavailable_7020e9), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Graphic and parametric EQ, including this stage's wet/dry and bypass settings.",
+            Text(appString(R.string.text_graphic_and_parametric_eq_including_this_stage_s_wet_dry_and_bypa_5f1367),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             if (node.eqChannel != RackEqChannel.BOTH) Text(
-                if (node.eqChannel == RackEqChannel.LEFT) "Left channel only · right passes unchanged" else "Right channel only · left passes unchanged",
+                if (node.eqChannel == RackEqChannel.LEFT) appString(R.string.text_left_channel_only_right_passes_unchanged_681627) else appString(R.string.text_right_channel_only_left_passes_unchanged_6e2bfe),
                 style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-            if (!rackEnabled) Text("Rack inactive · preview only", style = MaterialTheme.typography.labelMedium,
+            if (!rackEnabled) Text(appString(R.string.text_rack_inactive_preview_only_41e71b), style = MaterialTheme.typography.labelMedium,
                 color = MaterialTheme.colorScheme.tertiary)
         }
-        SegmentedRow("Response", listOf("Magnitude", "Phase", "Group delay"), view) { view = it }
+        SegmentedRow(appString(R.string.text_response_6e617e), listOf(appString(R.string.text_magnitude_f2c18d), appString(R.string.text_phase_f6371a), appString(R.string.text_group_delay_e59469)), view) { view = it }
         val data = response
         when {
             error != null -> Text(requireNotNull(error), Modifier.padding(20.dp), color = MaterialTheme.colorScheme.error,
@@ -84,12 +87,12 @@ internal fun RackEqResponseCard(node: ProcessingRackNode, decoderRate: Int?, rac
             data == null -> LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp))
             else -> {
                 val values = when (view) { 1 -> data.phaseDegrees; 2 -> data.groupDelayMs; else -> data.magnitudeDb }
-                val unit = when (view) { 1 -> "°"; 2 -> "ms"; else -> "dB" }
+                val unit = when (view) { 1 -> "°"; 2 -> "ms"; else -> appString(R.string.text_db_e44622) }
                 val point = selectedPoint.coerceIn(data.frequenciesHz.indices)
                 val bounds = remember(data, view) { responseBounds(values, view) }
-                val valueLabel = if (values[point].isFinite()) "${responseNumber(values[point], view)} $unit" else "Undefined at response null"
+                val valueLabel = if (values[point].isFinite()) "${responseNumber(values[point], view)} $unit" else appString(R.string.text_undefined_at_response_null_7b5427)
                 val frequencyLabel = eqFrequency(data.frequenciesHz[point])
-                Text(when (view) { 1 -> "Unwrapped phase (degrees)"; 2 -> "Group delay (milliseconds)"; else -> "Magnitude (dB)" },
+                Text(when (view) { 1 -> appString(R.string.text_unwrapped_phase_degrees_7f6535); 2 -> appString(R.string.text_group_delay_milliseconds_8fe73b); else -> appString(R.string.text_magnitude_db_573817) },
                     Modifier.padding(horizontal = 20.dp, vertical = 4.dp), style = MaterialTheme.typography.labelLarge)
                 ResponsePlot(data, values, point, bounds, view, "$frequencyLabel: $valueLabel") { selectedPoint = it }
                 Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -97,12 +100,12 @@ internal fun RackEqResponseCard(node: ProcessingRackNode, decoderRate: Int?, rac
                     Text(valueLabel, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
                     Slider(value = point.toFloat(), onValueChange = { selectedPoint = it.roundToInt() },
                         valueRange = 0f..data.frequenciesHz.lastIndex.toFloat(),
-                        modifier = Modifier.semantics { contentDescription = "Selected response frequency. $frequencyLabel: $valueLabel" })
-                    Text("Tap the graph or adjust the frequency slider to inspect a point. Frequency uses a logarithmic scale.",
+                        modifier = Modifier.semantics { contentDescription = appString(R.string.text_selected_response_frequency_0f1ae3, (frequencyLabel), (valueLabel)) })
+                    Text(appString(R.string.text_tap_the_graph_or_adjust_the_frequency_slider_to_inspect_a_point_f_1ff543),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (view == 2) Text("This is the EQ's group delay; it does not measure device or playback latency.",
+                    if (view == 2) Text(appString(R.string.text_this_is_the_eq_s_group_delay_it_does_not_measure_device_or_playba_31e689),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    if (view != 0) Text("Gaps mark undefined values below ${eqNumber(data.phaseUndefinedBelowDb)} dB.",
+                    if (view != 0) Text(appString(R.string.text_gaps_mark_undefined_values_below_db_eb6309, (eqNumber(data.phaseUndefinedBelowDb))),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     Text(data.scope, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
@@ -126,7 +129,7 @@ private fun ResponsePlot(response: EqResponse, values: DoubleArray, selected: In
                 Text(responseNumber((top + bottom) / 2, view), style = MaterialTheme.typography.labelSmall)
                 Text(responseNumber(bottom, view), style = MaterialTheme.typography.labelSmall)
             }
-            Canvas(Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = "Calculated EQ response. $description" }
+            Canvas(Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = appString(R.string.text_calculated_eq_response_6dd321, (description)) }
                 .pointerInput(values.size) {
                     detectTapGestures { point ->
                         onSelect((point.x / size.width.coerceAtLeast(1) * values.lastIndex).roundToInt().coerceIn(values.indices))
@@ -177,4 +180,4 @@ private fun responseBounds(values: DoubleArray, view: Int): Pair<Double, Double>
 
 private fun responseNumber(value: Double, view: Int): String = if (view == 2)
     String.format(Locale.getDefault(), "%.4g", value) else eqNumber(value)
-private fun shortFrequency(value: Double): String = if (value >= 1_000) "${(value / 1_000).roundToInt()}k Hz" else "${value.roundToInt()} Hz"
+private fun shortFrequency(value: Double): String = if (value >= 1_000) appString(R.string.text_k_hz_b3d9ce, ((value / 1_000).roundToInt())) else appString(R.string.text_hz_648ee5, (value.roundToInt()))

@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -50,7 +53,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 val data = container.repository.home(selected)
                 _state.update { it.copy(loading = false, data = data) }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(loading = false, error = "Could not load the home feed. Try again.") } }
+            catch (_: Exception) { _state.update { it.copy(loading = false, error = appString(R.string.text_could_not_load_the_home_feed_try_again_f756b3)) } }
         }
     }
 
@@ -77,7 +80,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                         continuation = page.continuation?.takeUnless { it in seenPages }))
                 }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(loadingMore = false, error = "Could not load more recommendations. Try again.") } }
+            catch (_: Exception) { _state.update { it.copy(loadingMore = false, error = appString(R.string.text_could_not_load_more_recommendations_try_again_552ce1)) } }
         }
     }
 }

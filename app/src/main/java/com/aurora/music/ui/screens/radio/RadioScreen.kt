@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.radio
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -88,18 +91,18 @@ fun RadioScreen(
     Column(Modifier.fillMaxSize().padding(top = topInset)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.AutoMirrored.Filled.ArrowBack, "Back",
+                Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Text("Radio", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(appString(R.string.text_radio_b11bf1), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Icon(
-                Icons.Filled.Add, "Add custom stream",
+                Icons.Filled.Add, appString(R.string.text_add_custom_stream_638147),
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showAdd = true }.padding(8.dp),
             )
             Icon(
                 if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
-                if (searchOpen) "Close search" else "Search stations",
+                if (searchOpen) appString(R.string.text_close_search_0906f9) else appString(R.string.text_search_stations_3b38bf),
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable {
                     searchOpen = !searchOpen
                     if (!searchOpen) { query = ""; vm.clearSearch() }
@@ -112,7 +115,7 @@ fun RadioScreen(
                 value = query,
                 onValueChange = { query = it; vm.search(it) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                placeholder = { Text("Search radio stations") },
+                placeholder = { Text(appString(R.string.text_search_radio_stations_be278b)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                 singleLine = true,
                 shape = RoundedCornerShape(14.dp),
@@ -150,7 +153,7 @@ fun RadioScreen(
             }
 
             if (favorites.isNotEmpty()) {
-                item { SectionLabel("Your stations") }
+                item { SectionLabel(appString(R.string.text_your_stations_d1f54b)) }
                 items(favorites.size) { i ->
                     val st = favorites[i]
                     StationRow(st, isFavorite = true, onPlay = { playStation(st) }, onToggleFavorite = { vm.toggleFavorite(st) })
@@ -160,9 +163,9 @@ fun RadioScreen(
             item {
                 SectionLabel(
                     when {
-                        state.query.isNotBlank() -> "Results"
+                        state.query.isNotBlank() -> appString(R.string.text_results_612e12)
                         state.activeTag.isNotBlank() -> state.activeTag.replaceFirstChar { it.uppercase() }
-                        else -> "Popular worldwide"
+                        else -> appString(R.string.text_popular_worldwide_b0f24f)
                     }
                 )
             }
@@ -173,7 +176,7 @@ fun RadioScreen(
                 item {
                     Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            if (state.failed) "Couldn't reach the radio directory" else "No stations found",
+                            if (state.failed) appString(R.string.text_couldn_t_reach_the_radio_directory_c0321f) else appString(R.string.text_no_stations_found_173164),
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                     }
@@ -235,12 +238,12 @@ private fun StationRow(
         }
         Icon(
             if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-            if (isFavorite) "Unfavorite" else "Favorite",
+            if (isFavorite) appString(R.string.text_unfavorite_de9bba) else appString(R.string.text_favorite_6b90b6),
             tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onToggleFavorite).padding(8.dp),
         )
         Icon(
-            Icons.Filled.PlayArrow, "Play",
+            Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd),
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onPlay).padding(8.dp),
         )
@@ -253,15 +256,15 @@ private fun AddStreamDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     var url by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add radio stream", fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.text_add_radio_stream_48fecc), fontWeight = FontWeight.Bold) },
         text = {
             Column {
-                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Name (optional)") }, singleLine = true)
+                OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(appString(R.string.text_name_optional_9c9f03)) }, singleLine = true)
                 Spacer(Modifier.height(10.dp))
-                OutlinedTextField(value = url, onValueChange = { url = it }, label = { Text("Stream URL") }, singleLine = true, placeholder = { Text("https://…") })
+                OutlinedTextField(value = url, onValueChange = { url = it }, label = { Text(appString(R.string.text_stream_url_e25c5b)) }, singleLine = true, placeholder = { Text("https://…") })
             }
         },
-        confirmButton = { TextButton(onClick = { if (url.isNotBlank()) onAdd(name, url) }, enabled = url.isNotBlank()) { Text("Add") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { if (url.isNotBlank()) onAdd(name, url) }, enabled = url.isNotBlank()) { Text(appString(R.string.text_add_61cc55)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
 }

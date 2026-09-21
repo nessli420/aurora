@@ -1,5 +1,8 @@
 package com.aurora.music.navigation
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.LibraryMusic
@@ -10,6 +13,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.ui.graphics.vector.ImageVector
 
 object Routes {
+    const val SETTINGS_LANGUAGE = "settings_language"
     const val SETTINGS_LISTENING = "settings_listening"
     const val SETTINGS_EXTENSIONS = "settings_extensions"
     const val SIGN_IN = "sign_in"
@@ -80,13 +84,15 @@ object Routes {
 
 data class TopLevelDestination(
     val route: String,
-    val label: String,
+    @androidx.annotation.StringRes private val labelRes: Int,
     val selectedIcon: ImageVector,
     val unselectedIcon: ImageVector,
-)
+) {
+    val label: String get() = appString(labelRes)
+}
 
 val topLevelDestinations = listOf(
-    TopLevelDestination(Routes.HOME, "Home", Icons.Filled.Home, Icons.Outlined.Home),
-    TopLevelDestination(Routes.SEARCH, "Search", Icons.Filled.Search, Icons.Outlined.Search),
-    TopLevelDestination(Routes.LIBRARY, "Library", Icons.Filled.LibraryMusic, Icons.Outlined.LibraryMusic),
+    TopLevelDestination(Routes.HOME, R.string.text_home_70f8bb, Icons.Filled.Home, Icons.Outlined.Home),
+    TopLevelDestination(Routes.SEARCH, R.string.text_search_bce064, Icons.Filled.Search, Icons.Outlined.Search),
+    TopLevelDestination(Routes.LIBRARY, R.string.text_library_b8100f, Icons.Filled.LibraryMusic, Icons.Outlined.LibraryMusic),
 )

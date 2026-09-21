@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.podcasts
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -67,7 +70,7 @@ fun PodcastDetailScreen(
 
     LaunchedEffect(feedUrl) { vm.loadEpisodes(feedUrl, title, imageUrl) }
 
-    val showTitle = episodesState.channelTitle.ifBlank { title }.ifBlank { "Podcast" }
+    val showTitle = episodesState.channelTitle.ifBlank { title }.ifBlank { appString(R.string.text_podcast_bafb6e) }
     val showImage = episodesState.channelImage.ifBlank { imageUrl }
     val subscribed = subs.any { it.feedUrl == feedUrl }
     val accent = accentFor(feedUrl)
@@ -75,7 +78,7 @@ fun PodcastDetailScreen(
     Column(Modifier.fillMaxSize().padding(top = topInset)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.AutoMirrored.Filled.ArrowBack, "Back",
+                Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
@@ -110,7 +113,7 @@ fun PodcastDetailScreen(
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
-                                if (subscribed) "Subscribed" else "Subscribe",
+                                if (subscribed) appString(R.string.text_subscribed_dd1242) else appString(R.string.text_subscribe_d6981f),
                                 style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
                                 color = if (subscribed) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary,
                             )
@@ -121,7 +124,7 @@ fun PodcastDetailScreen(
 
             item {
                 Text(
-                    "Episodes",
+                    appString(R.string.text_episodes_49d641),
                     style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
                     modifier = Modifier.padding(start = 20.dp, top = 12.dp, bottom = 4.dp),
                 )
@@ -132,7 +135,7 @@ fun PodcastDetailScreen(
             } else if (episodesState.episodes.isEmpty()) {
                 item {
                     Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
-                        Text(if (episodesState.failed) "Couldn't load this feed" else "No episodes", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(if (episodesState.failed) appString(R.string.text_couldn_t_load_this_feed_d1428a) else appString(R.string.text_no_episodes_38e050), color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             } else {
@@ -153,7 +156,7 @@ private fun EpisodeRow(episode: PodcastEpisode, onPlay: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
-            Text(episode.title.ifBlank { "Episode" }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            Text(episode.title.ifBlank { appString(R.string.text_episode_8669aa) }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             val meta = listOfNotNull(
                 episode.pubDateMs.takeIf { it > 0 }?.let { formatDate(it) },
                 episode.durationSec.takeIf { it > 0 }?.let { formatDuration(it) },
@@ -162,7 +165,7 @@ private fun EpisodeRow(episode: PodcastEpisode, onPlay: () -> Unit) {
         }
         Spacer(Modifier.width(8.dp))
         Icon(
-            Icons.Filled.PlayArrow, "Play",
+            Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd),
             tint = MaterialTheme.colorScheme.primary,
             modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onPlay).padding(9.dp),
         )
@@ -177,8 +180,8 @@ private fun formatDuration(sec: Int): String {
     val h = sec / 3600
     val m = (sec % 3600) / 60
     return when {
-        h > 0 -> "${h}h ${m}m"
-        m > 0 -> "${m} min"
-        else -> "${sec}s"
+        h > 0 -> appString(R.string.text_h_m_4dc25f, (h), (m))
+        m > 0 -> appString(R.string.text_min_5c8f84, (m))
+        else -> appString(R.string.text_s_3eb314, (sec))
     }
 }

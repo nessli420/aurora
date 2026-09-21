@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.Manifest
 import android.app.AlarmManager
 import android.app.NotificationManager
@@ -94,58 +97,58 @@ fun PermissionsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Permissions", onBack)
+        SettingsTopBar(appString(R.string.text_permissions_d06d55), onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
             item {
                 Text(
-                    "Grant what you use. Aurora works without any of these, but each unlocks a feature.",
+                    appString(R.string.text_grant_what_you_use_aurora_works_without_any_of_these_but_each_unl_7a03fb),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 8.dp, bottom = 4.dp),
                 )
             }
             item {
-                PermRow(Icons.Filled.Notifications, "Notifications", "Now-playing controls, downloads & alarms", notifOk) {
+                PermRow(Icons.Filled.Notifications, appString(R.string.text_notifications_753a22), appString(R.string.text_now_playing_controls_downloads_alarms_1b631c), notifOk) {
                     if (Build.VERSION.SDK_INT >= 33) notifLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
                     else open(Settings.ACTION_APP_NOTIFICATION_SETTINGS)
                 }
             }
             item {
-                PermRow(Icons.Filled.LibraryMusic, "On-device music", "Read local audio for the library, playback & sonic analysis", audioOk) {
+                PermRow(Icons.Filled.LibraryMusic, appString(R.string.text_on_device_music_bac4c1), appString(R.string.text_read_local_audio_for_the_library_playback_sonic_analysis_5d975b), audioOk) {
                     audioLauncher.launch(audioPerm)
                 }
             }
             item {
-                PermRow(Icons.Filled.BatteryStd, "Ignore battery optimization", "Keep scanning & playback running in the background", batteryOk) {
+                PermRow(Icons.Filled.BatteryStd, appString(R.string.text_ignore_battery_optimization_77313f), appString(R.string.text_keep_scanning_playback_running_in_the_background_2e56ee), batteryOk) {
                     open(Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS, withPackage = true)
                 }
             }
             item {
-                PermRow(Icons.Filled.Alarm, "Exact alarms", "Fire the wake-to-music alarm at the precise time", exactOk) {
+                PermRow(Icons.Filled.Alarm, appString(R.string.text_exact_alarms_cd19fa), appString(R.string.text_fire_the_wake_to_music_alarm_at_the_precise_time_bbac52), exactOk) {
                     if (Build.VERSION.SDK_INT >= 31) open(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM)
                 }
             }
             item {
-                PermRow(Icons.Filled.Fullscreen, "Full-screen alarm", "Show the alarm full-screen over the lock screen", fsOk) {
+                PermRow(Icons.Filled.Fullscreen, appString(R.string.text_full_screen_alarm_a37b1c), appString(R.string.text_show_the_alarm_full_screen_over_the_lock_screen_1d1cfb), fsOk) {
                     if (Build.VERSION.SDK_INT >= 34) open(Settings.ACTION_MANAGE_APP_USE_FULL_SCREEN_INTENT, withPackage = true)
                 }
             }
             item {
                 val sub = when {
-                    dac == null -> "No USB DAC connected"
-                    dacOk -> "Access granted for ${dac.productName ?: "the DAC"}"
-                    else -> "Tap to allow bit-perfect access to ${dac.productName ?: "the DAC"}"
+                    dac == null -> appString(R.string.text_no_usb_dac_connected_446f5b)
+                    dacOk -> appString(R.string.text_access_granted_for_8fb83b, (dac.productName ?: appString(R.string.text_the_dac_05159b)))
+                    else -> appString(R.string.text_tap_to_allow_bit_perfect_access_to_c08d14, (dac.productName ?: appString(R.string.text_the_dac_05159b)))
                 }
-                PermRow(Icons.Filled.Usb, "USB DAC", sub, dacOk, enabled = dac != null) {
+                PermRow(Icons.Filled.Usb, appString(R.string.text_usb_dac_948bb8), sub, dacOk, enabled = dac != null) {
                     dac?.let { usbDev.requestPermission(it) { refresh++ } }
                 }
             }
             item {
                 Text(
-                    "Android can't grant a USB device permanently without a per-plug prompt, so the DAC " +
-                        "may re-ask on reconnect — Aurora re-requests automatically when bit-perfect is on.",
+                    appString(R.string.text_android_can_t_grant_a_usb_device_permanently_without_a_per_plug_p_706fd2) +
+                        appString(R.string.text_may_re_ask_on_reconnect_aurora_re_requests_automatically_when_bit_23facf),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
                 )
@@ -185,14 +188,14 @@ private fun PermRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(4.dp))
-                Text("Granted", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text(appString(R.string.text_granted_43b11e), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             }
         } else if (enabled) {
             Box(
                 Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
                     .clickable(onClick = onGrant).padding(horizontal = 14.dp, vertical = 7.dp),
             ) {
-                Text("Grant", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+                Text(appString(R.string.text_grant_c02329), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
             }
         }
     }

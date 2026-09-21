@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.stats
 
+import com.aurora.music.localization.appPlural
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.graphics.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -35,23 +40,23 @@ fun renderRecap(recap: ListeningRecap, style: RecapStyle): Bitmap {
         if (paint.measureText(t) > width) { val n = paint.breakText(t, true, width - paint.measureText("…"), null); t = t.take(n) + "…" }
         c.drawText(t, x, y, paint)
     }
-    text("AURORA / YOUR ${recap.window.period.label.uppercase()} RECAP", 72f, 100f, 27f, accent, true)
+    text(appString(R.string.recap_share_title, (recap.window.period.label.uppercase())), 72f, 100f, 27f, accent, true)
     text(recap.window.label, 72f, 190f, 54f, bold = true)
     text("${recap.minutes}", 72f, 325f, 104f, accent, true)
-    text("MINUTES LISTENED", 76f, 375f, 25f)
-    text("${recap.plays} plays  ·  ${recap.songs.size} songs  ·  ${recap.activeDays} active day${if (recap.activeDays == 1) "" else "s"}", 72f, 440f, 28f)
+    text(appString(R.string.text_minutes_listened_c66ef9), 76f, 375f, 25f)
+    text(appString(R.string.recap_counts, appPlural(R.plurals.play_count, (recap.plays)), appPlural(R.plurals.track_count, (recap.songs.size)), appPlural(R.plurals.active_day_count, (recap.activeDays))), 72f, 440f, 28f)
     fun list(title: String, rows: List<com.aurora.music.data.RecapRank>, y: Float, songs: Boolean = false) {
         text(title, 72f, y, 30f, accent, true)
         rows.take(5).forEachIndexed { i, r ->
             text("${i + 1}", 72f, y + 65 + i * 72, 32f, accent, true)
             text(r.name, 125f, y + 65 + i * 72, 34f, bold = true, width = 655f)
-            text(if (songs) r.artist else "${r.plays} play${if (r.plays == 1) "" else "s"}", 125f, y + 89 + i * 72, 20f, accent, width = 655f)
-            text("${r.millis / 60_000} min", 810f, y + 65 + i * 72, 26f, width = 200f)
+            text(if (songs) r.artist else appPlural(R.plurals.play_count, (r.plays)), 125f, y + 89 + i * 72, 20f, accent, width = 655f)
+            text(appString(R.string.text_min_5c8f84, (r.millis / 60_000)), 810f, y + 65 + i * 72, 26f, width = 200f)
         }
     }
-    list("TOP ARTISTS · BY PLAYS", recap.artists, 550f)
-    list("TOP SONGS · BY PLAYS", recap.songs, 1010f, songs = true)
-    text(if (recap.estimated) "Includes estimated time for older plays." else "Your music. Your listening story.", 72f, 1510f, 24f, accent)
+    list(appString(R.string.text_top_artists_by_plays_a34fe4), recap.artists, 550f)
+    list(appString(R.string.text_top_songs_by_plays_6be796), recap.songs, 1010f, songs = true)
+    text(if (recap.estimated) appString(R.string.text_includes_estimated_time_for_older_plays_647a36) else appString(R.string.text_your_music_your_listening_story_2b5397), 72f, 1510f, 24f, accent)
     return bitmap
 }
 
@@ -67,18 +72,18 @@ fun RecapSummary(recap: ListeningRecap) {
         val image = pending; pending = null
         if (uri != null && image != null) scope.launch {
             status = withContext(Dispatchers.IO) {
-                runCatching { context.contentResolver.openOutputStream(uri)?.use { check(image.compress(Bitmap.CompressFormat.PNG, 100, it)) } ?: error("No output") }
-                    .fold({ "Picture saved" }, { "Could not save picture. Please try again." })
+                runCatching { context.contentResolver.openOutputStream(uri)?.use { check(image.compress(Bitmap.CompressFormat.PNG, 100, it)) } ?: error(appString(R.string.text_no_output_8ffd4d)) }
+                    .fold({ appString(R.string.text_picture_saved_32803b) }, { appString(R.string.text_could_not_save_picture_please_try_again_80043a) })
             }
         }
     }
     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("Your recap, all together", style = MaterialTheme.typography.titleLarge)
+        Text(appString(R.string.text_your_recap_all_together_933de3), style = MaterialTheme.typography.titleLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RecapStyle.entries.forEach { s -> FilterChip(style == s, { style = s }, label = { Text(s.name.lowercase().replaceFirstChar { it.uppercase() }) }) }
+            RecapStyle.entries.forEach { s -> FilterChip(style == s, { style = s }, label = { Text(when (s) { RecapStyle.MIDNIGHT -> appString(R.string.recap_midnight); RecapStyle.PAPER -> appString(R.string.recap_paper); RecapStyle.AURORA -> "Aurora" }) }) }
         }
-        Image(bitmap.asImageBitmap(), "Recap picture preview with top five artists and songs", Modifier.fillMaxWidth().aspectRatio(1080f / 1600f))
-        Button(onClick = { pending = bitmap; save.launch("Aurora-${recap.window.key.replace(':', '-')}-${style.name.lowercase()}.png") }, modifier = Modifier.fillMaxWidth()) { Text("Save picture") }
+        Image(bitmap.asImageBitmap(), appString(R.string.text_recap_picture_preview_with_top_five_artists_and_songs_30bda2), Modifier.fillMaxWidth().aspectRatio(1080f / 1600f))
+        Button(onClick = { pending = bitmap; save.launch("Aurora-${recap.window.key.replace(':', '-')}-${style.name.lowercase()}.png") }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_save_picture_ccdb19)) }
         if (status.isNotEmpty()) Text(status)
     }
 }

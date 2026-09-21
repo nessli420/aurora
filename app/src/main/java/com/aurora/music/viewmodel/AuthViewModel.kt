@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -72,7 +75,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     fun connectSpotify(clientId: String) {
         val id = clientId.trim()
-        if (id.isBlank()) { _state.update { it.copy(error = "Paste your Spotify app's Client ID first.") }; return }
+        if (id.isBlank()) { _state.update { it.copy(error = appString(R.string.text_paste_your_spotify_app_s_client_id_first_f2d13e)) }; return }
         spotifyClientId = id
         viewModelScope.launch { runCatching { container.settingsStore.setSpotifyClientId(id) } }
         val verifier = SpotifyAuth.newVerifier()
@@ -102,7 +105,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                 throw e
             } catch (e: Exception) {
                 reference?.let { container.youtubeMusicCredentials.remove(it) }
-                _state.update { it.copy(loading = false, error = if (e is java.io.IOException) friendlyError(e) else "Could not connect YouTube Music. Please try again.") }
+                _state.update { it.copy(loading = false, error = if (e is java.io.IOException) friendlyError(e) else appString(R.string.text_could_not_connect_youtube_music_please_try_again_e327a1)) }
             }
         }
     }
@@ -112,8 +115,8 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         _state.update { it.copy(type = ServerType.LOCAL, loading = true, error = null) }
         viewModelScope.launch {
             val session = Session(
-                server = "On this device",
-                username = "Local Library",
+                server = appString(R.string.text_on_this_device_a7f962),
+                username = appString(R.string.text_local_library_a4b3e0),
                 salt = "",
                 token = "local",
                 type = ServerType.LOCAL,
@@ -133,7 +136,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                 container.applySession(session)
                 _state.update { it.copy(loading = false, error = null) }
             } else {
-                _state.update { it.copy(loading = false, error = "Spotify sign-in failed — try again.") }
+                _state.update { it.copy(loading = false, error = appString(R.string.text_spotify_sign_in_failed_try_again_dc8110)) }
             }
         }
     }
@@ -172,14 +175,14 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                         ServerType.SUBSONIC -> {
                             val session = SubsonicClient.buildSession(server, s.username, s.password)
                             val resp = SubsonicClient(session).api.ping().response
-                            if (!resp.isOk) throw IllegalStateException(resp.error?.message ?: "Login rejected")
+                            if (!resp.isOk) throw IllegalStateException(resp.error?.message ?: appString(R.string.text_login_rejected_3f73ee))
                             session
                         }
                         ServerType.JELLYFIN -> JellyfinClient.authenticate(server, s.username, s.password)
-                        ServerType.SPOTIFY -> throw IllegalStateException("Spotify uses the connect button, not this form")
-                        ServerType.YOUTUBE_MUSIC -> throw IllegalStateException("YouTube Music uses Google sign-in.")
-                        ServerType.LOCAL -> throw IllegalStateException("Local mode doesn't use this form")
-                        ServerType.EXTENSION -> throw IllegalStateException("Enable this source in Advanced audio → Extensions.")
+                        ServerType.SPOTIFY -> throw IllegalStateException(appString(R.string.text_spotify_uses_the_connect_button_not_this_form_17d56a))
+                        ServerType.YOUTUBE_MUSIC -> throw IllegalStateException(appString(R.string.text_youtube_music_uses_google_sign_in_0ba1e7))
+                        ServerType.LOCAL -> throw IllegalStateException(appString(R.string.text_local_mode_doesn_t_use_this_form_78c2dc))
+                        ServerType.EXTENSION -> throw IllegalStateException(appString(R.string.text_enable_this_source_in_advanced_audio_extensions_579558))
                     }
                 }
             }
@@ -194,10 +197,10 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun friendlyError(e: Throwable): String = when (e) {
-        is java.net.UnknownHostException -> "Server not found — check the address."
-        is java.net.ConnectException -> "Can't reach the server."
-        is java.net.SocketTimeoutException -> "Connection timed out."
-        is retrofit2.HttpException -> if (e.code() == 401) "Wrong username or password." else "Server error (${e.code()})."
-        else -> e.message ?: "Sign-in failed."
+        is java.net.UnknownHostException -> appString(R.string.text_server_not_found_check_the_address_24bc0a)
+        is java.net.ConnectException -> appString(R.string.text_can_t_reach_the_server_1371a9)
+        is java.net.SocketTimeoutException -> appString(R.string.text_connection_timed_out_647bf9)
+        is retrofit2.HttpException -> if (e.code() == 401) appString(R.string.text_wrong_username_or_password_85b465) else appString(R.string.text_server_error_c28ed6, (e.code()))
+        else -> e.message ?: appString(R.string.text_sign_in_failed_49b78c)
     }
 }

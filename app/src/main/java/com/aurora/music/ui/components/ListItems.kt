@@ -1,5 +1,10 @@
 package com.aurora.music.ui.components
 
+import com.aurora.music.localization.localizedMediaType
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -125,12 +130,12 @@ fun SongRow(
         }
         Spacer(Modifier.width(8.dp))
         if (isDownloaded) {
-            Icon(Icons.Filled.DownloadDone, "Downloaded", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+            Icon(Icons.Filled.DownloadDone, appString(R.string.text_downloaded_c61970), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
         }
         Icon(
             imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-            contentDescription = "Like",
+            contentDescription = appString(R.string.text_like_c7e02c),
             tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
                 .size(36.dp)
@@ -146,53 +151,53 @@ fun SongRow(
         )
         Box {
             Icon(
-                Icons.Outlined.MoreVert, "More",
+                Icons.Outlined.MoreVert, appString(R.string.text_more_4bab2d),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(32.dp).clip(CircleShape).clickable { menuOpen = true }.padding(4.dp),
             )
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(
-                    text = { Text("Play") },
+                    text = { Text(appString(R.string.text_play_5d12bd)) },
                     onClick = { menuOpen = false; onClick() },
                     leadingIcon = { Icon(Icons.Filled.PlayArrow, null) },
                 )
                 if (onPlayNext != null) DropdownMenuItem(
-                    text = { Text("Play next") },
+                    text = { Text(appString(R.string.text_play_next_40d33c)) },
                     onClick = { menuOpen = false; onPlayNext() },
                     leadingIcon = { Icon(Icons.Filled.QueuePlayNext, null) },
                 )
                 if (onAddToQueue != null) DropdownMenuItem(
-                    text = { Text("Add to queue") },
+                    text = { Text(appString(R.string.text_add_to_queue_69b498)) },
                     onClick = { menuOpen = false; onAddToQueue() },
                     leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
                 )
                 DropdownMenuItem(
-                    text = { Text(if (isLiked) "Remove from liked" else "Add to liked") },
+                    text = { Text(if (isLiked) appString(R.string.text_remove_from_liked_9d1568) else appString(R.string.text_add_to_liked_b99f26)) },
                     onClick = { menuOpen = false; onToggleLike() },
                     leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
                 )
                 if (isDownloaded && onRemoveDownload != null) DropdownMenuItem(
-                    text = { Text("Remove download") },
+                    text = { Text(appString(R.string.text_remove_download_147742)) },
                     onClick = { menuOpen = false; onRemoveDownload() },
                     leadingIcon = { Icon(Icons.Filled.DownloadDone, null, tint = MaterialTheme.colorScheme.primary) },
                 ) else if (onDownload != null) DropdownMenuItem(
-                    text = { Text("Download") },
+                    text = { Text(appString(R.string.text_download_a479c9)) },
                     onClick = { menuOpen = false; onDownload() },
                     leadingIcon = { Icon(Icons.Filled.Download, null) },
                 )
                 if (onGoToAlbum != null) DropdownMenuItem(
-                    text = { Text("Go to album") },
+                    text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
                     onClick = { menuOpen = false; onGoToAlbum() },
                     leadingIcon = { Icon(Icons.Filled.Album, null) },
                 )
                 if (onGoToArtist != null) DropdownMenuItem(
-                    text = { Text("Go to artist") },
+                    text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
                     onClick = { menuOpen = false; onGoToArtist() },
                     leadingIcon = { Icon(Icons.Filled.Person, null) },
                 )
                 // tag edit only on content:// files or backends with metadata write
                 if (onEditTags != null && (song.streamUrl.startsWith("content://") || serverTagEditing)) DropdownMenuItem(
-                    text = { Text("Edit tags") },
+                    text = { Text(appString(R.string.text_edit_tags_d8a5fc)) },
                     onClick = { menuOpen = false; onEditTags() },
                     leadingIcon = { Icon(Icons.Filled.Edit, null) },
                 )
@@ -248,8 +253,8 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier) 
     ) {
         Box {
             Artwork(album.artworkUrl, MaterialTheme.colorScheme.secondary, Modifier.size(140.dp), corner = 14.dp)
-            val label = album.typeLabel
-            if (label != "Album") {
+            val label = album.typeLabel.localizedMediaType()
+            if (label != appString(R.string.text_album_dfb4c9)) {
                 Text(
                     label.uppercase(),
                     fontSize = 9.sp,
@@ -287,7 +292,7 @@ fun ArtistCircle(artist: Artist, onClick: () -> Unit, modifier: Modifier = Modif
         Artwork(artist.imageUrl, MaterialTheme.colorScheme.tertiary, Modifier.size(108.dp), corner = 108.dp)
         Spacer(Modifier.height(8.dp))
         Text(artist.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        Text("Artist", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(appString(R.string.text_artist_6c3f3d), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 

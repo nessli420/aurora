@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.provider.OpenableColumns
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -48,7 +51,7 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
     var loadError by remember { mutableStateOf<String?>(null) }
     val libraryFlow = remember(store) {
         store.impulseLibrary.onEach { loadError = null }.catch {
-            loadError = it.message ?: "Could not load the IR library."
+            loadError = it.message ?: appString(R.string.text_could_not_load_the_ir_library_f5856d)
             emit(emptyList())
         }
     }
@@ -78,50 +81,50 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
         scope.launch {
             try { block() }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { notify(failure.message ?: "Could not update the IR library.") }
+            catch (failure: Exception) { notify(failure.message ?: appString(R.string.text_could_not_update_the_ir_library_b7593b)) }
             finally { busy = false }
         }
     }
     val importer = rememberLauncherForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
-        if (uri != null) perform("Importing WAV…") {
+        if (uri != null) perform(appString(R.string.text_importing_wav_5811f7)) {
             val imported = withContext(Dispatchers.IO) {
                 val name = runCatching {
                     context.contentResolver.query(uri, arrayOf(OpenableColumns.DISPLAY_NAME), null, null, null)
                         ?.use { if (it.moveToFirst()) it.getString(0) else null }
                 }.getOrNull()?.takeIf { it.isNotBlank() } ?: "Impulse.wav"
-                val input = context.contentResolver.openInputStream(uri) ?: error("Could not open the WAV file.")
+                val input = context.contentResolver.openInputStream(uri) ?: error(appString(R.string.text_could_not_open_the_wav_file_ad86f4))
                 input.use { store.importImpulse(it, name).getOrThrow() }
             }
             selectedId = imported.id
-            notify("IR imported.")
+            notify(appString(R.string.text_ir_imported_08d0ed))
         }
     }
     val exporter = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("audio/wav")) { uri ->
         val id = pendingExportId
         val prepared = pendingExportPrepared
         pendingExportId = null
-        if (uri != null && id != null) perform("Exporting WAV…") {
+        if (uri != null && id != null) perform(appString(R.string.text_exporting_wav_501d1a)) {
             withContext(Dispatchers.IO) {
-                val output = context.contentResolver.openOutputStream(uri, "wt") ?: error("Could not open the destination.")
+                val output = context.contentResolver.openOutputStream(uri, "wt") ?: error(appString(R.string.text_could_not_open_the_destination_ff7025))
                 output.use { store.exportImpulse(id, prepared, it).getOrThrow() }
             }
-            notify("WAV exported.")
+            notify(appString(R.string.text_wav_exported_78ffe9))
         }
     }
     fun export(entry: ImpulseLibraryEntry, prepared: Boolean) {
         if (!ready) return
         pendingExportId = entry.id
         pendingExportPrepared = prepared
-        val name = entry.name.filter { it.isLetterOrDigit() || it in " -_" }.trim().take(60).ifBlank { "Impulse" }
+        val name = entry.name.filter { it.isLetterOrDigit() || it in " -_" }.trim().take(60).ifBlank { appString(R.string.text_impulse_9ca8ac) }
         runCatching { exporter.launch("$name${if (prepared) " variant" else ""}.wav") }
-            .onFailure { pendingExportId = null; notify("No document picker is available.") }
+            .onFailure { pendingExportId = null; notify(appString(R.string.text_no_document_picker_is_available_a8fedf)) }
     }
     fun back() { if (!busy) { if (selectedId != null) selectedId = null else onBack() } }
     BackHandler(onBack = ::back)
 
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            SettingsTopBar(current?.name ?: "IR library", ::back)
+            SettingsTopBar(current?.name ?: appString(R.string.text_ir_library_46a40d), ::back)
             if (busy) {
                 Text(workingText, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall)
                 LinearProgressIndicator(Modifier.fillMaxWidth())
@@ -131,19 +134,19 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
                 if (loadError != null) item {
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text("IR library unavailable", style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
+                            Text(appString(R.string.text_ir_library_unavailable_ba529f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
                             Text(loadError!!, style = MaterialTheme.typography.bodySmall)
-                            Text("Changes are disabled. Restore a backup to recover the library.", style = MaterialTheme.typography.bodySmall)
+                            Text(appString(R.string.text_changes_are_disabled_restore_a_backup_to_recover_the_library_8962a5), style = MaterialTheme.typography.bodySmall)
                         }
                     }
                 }
                 if (selectedId == null) {
                     item {
                         Button(onClick = { runCatching { importer.launch(arrayOf("audio/*", "application/octet-stream")) }
-                            .onFailure { notify("No file picker is available.") } }, enabled = ready,
+                            .onFailure { notify(appString(R.string.text_no_file_picker_is_available_fb12a4)) } }, enabled = ready,
                             modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
                             Icon(Icons.Filled.Add, null)
-                            Text("Import WAV", Modifier.padding(start = 8.dp))
+                            Text(appString(R.string.text_import_wav_962ac2), Modifier.padding(start = 8.dp))
                         }
                     }
                     if (selectedPath.isNotBlank() && entries != null && entries!!.none {
@@ -151,17 +154,17 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
                     }) item {
                         SettingsGroup {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(audio?.dspConvIrName?.ifBlank { "Selected IR" } ?: "Selected IR", style = MaterialTheme.typography.titleSmall)
-                                OutlinedButton(enabled = ready, onClick = { perform("Saving selected IR…") {
+                                Text(audio?.dspConvIrName?.ifBlank { appString(R.string.text_selected_ir_6a167c) } ?: appString(R.string.text_selected_ir_6a167c), style = MaterialTheme.typography.titleSmall)
+                                OutlinedButton(enabled = ready, onClick = { perform(appString(R.string.text_saving_selected_ir_1e5b57)) {
                                     selectedId = store.importCurrentImpulse().getOrThrow().id
-                                } }, modifier = Modifier.fillMaxWidth()) { Text("Add selected IR to library") }
+                                } }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_add_selected_ir_to_library_d9c2a9)) }
                             }
                         }
                     }
                     when {
-                        entries == null -> item { ImpulseStatusText("Loading IR library…") }
+                        entries == null -> item { ImpulseStatusText(appString(R.string.text_loading_ir_library_0a9e58)) }
                         loadError != null -> Unit
-                        entries!!.isEmpty() -> item { ImpulseStatusText("No saved impulse responses.") }
+                        entries!!.isEmpty() -> item { ImpulseStatusText(appString(R.string.text_no_saved_impulse_responses_5d3fa1)) }
                         else -> items(entries!!, key = { it.id }) { entry ->
                             ImpulseLibraryRow(entry, ready, selectedPath, onOpen = { selectedId = entry.id },
                                 onRename = { rename = entry }, onDelete = { delete = entry })
@@ -170,40 +173,40 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
                 } else if (current != null) {
                     item {
                         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {
-                            TextButton(enabled = ready, onClick = { rename = current }) { Text("Rename") }
-                            TextButton(enabled = ready, onClick = { delete = current }) { Text("Delete") }
+                            TextButton(enabled = ready, onClick = { rename = current }) { Text(appString(R.string.text_rename_d3f4cb)) }
+                            TextButton(enabled = ready, onClick = { delete = current }) { Text(appString(R.string.text_delete_f6fdbe)) }
                         }
                     }
                     item {
                         ImpulseDetails(current, ready, selectedPath, playbackRate,
-                            onSelect = { prepared -> perform("Selecting IR…") {
+                            onSelect = { prepared -> perform(appString(R.string.text_selecting_ir_cac365)) {
                                 store.selectImpulse(current.id, prepared).getOrThrow()
-                                notify("IR selected.")
+                                notify(appString(R.string.text_ir_selected_9c0796))
                             } }, onExport = { export(current, it) }, onPrepare = { prepare = current })
                     }
                     if (!convolutionEnabled && audio != null && rack != null) item {
-                        ImpulseStatusText("Enable convolution in Equalizer or Processing rack.")
+                        ImpulseStatusText(appString(R.string.text_enable_convolution_in_equalizer_or_processing_rack_a19cc2))
                     }
-                } else if (entries != null && loadError == null) item { ImpulseStatusText("This IR is no longer in the library.") }
+                } else if (entries != null && loadError == null) item { ImpulseStatusText(appString(R.string.text_this_ir_is_no_longer_in_the_library_7118f3)) }
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = contentPadding.calculateBottomPadding() + 8.dp))
     }
     rename?.let { entry -> ImpulseNameDialog(entry.name, onDismiss = { rename = null }) { name ->
         rename = null
-        perform("Renaming IR…") { store.renameImpulse(entry.id, name).getOrThrow() }
+        perform(appString(R.string.text_renaming_ir_4c7642)) { store.renameImpulse(entry.id, name).getOrThrow() }
     } }
-    delete?.let { entry -> AlertDialog(onDismissRequest = { if (!busy) delete = null }, title = { Text("Delete ${entry.name}?") },
-        text = { Text("Removes this library entry. Selected IRs and saved presets stay unchanged.") },
-        confirmButton = { TextButton(enabled = ready, onClick = { perform("Deleting IR…") {
+    delete?.let { entry -> AlertDialog(onDismissRequest = { if (!busy) delete = null }, title = { Text(appString(R.string.text_delete_137cdc, (entry.name))) },
+        text = { Text(appString(R.string.text_removes_this_library_entry_selected_irs_and_saved_presets_stay_un_0fb84e)) },
+        confirmButton = { TextButton(enabled = ready, onClick = { perform(appString(R.string.text_deleting_ir_794fb8)) {
             store.deleteImpulse(entry.id).getOrThrow()
             delete = null
             if (selectedId == entry.id) selectedId = null
-        } }) { Text("Delete") } }, dismissButton = { TextButton(enabled = !busy, onClick = { delete = null }) { Text("Cancel") } }) }
+        } }) { Text(appString(R.string.text_delete_f6fdbe)) } }, dismissButton = { TextButton(enabled = !busy, onClick = { delete = null }) { Text(appString(R.string.text_cancel_77dfd2)) } }) }
     prepare?.let { entry -> ImpulsePreparationDialog(entry, onDismiss = { prepare = null }, onSave = { options ->
         store.prepareImpulse(entry.id, options).getOrThrow()
         prepare = null
-        notify("Variant saved.")
+        notify(appString(R.string.text_variant_saved_f3c476))
     }) }
 }
 
@@ -218,17 +221,17 @@ private fun ImpulseLibraryRow(entry: ImpulseLibraryEntry, enabled: Boolean, sele
                 Text(entry.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                 Text(entry.sourceMetadata.summary(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 val selection = when (selectedPath) {
-                    entry.sourcePath -> "Original selected"
-                    entry.prepared?.path -> "Variant selected"
+                    entry.sourcePath -> appString(R.string.text_original_selected_634e39)
+                    entry.prepared?.path -> appString(R.string.text_variant_selected_b06527)
                     else -> null
                 }
                 selection?.let { Text(it, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary) }
             }
             Box {
-                IconButton(enabled = enabled, onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, "Actions for ${entry.name}") }
+                IconButton(enabled = enabled, onClick = { menu = true }) { Icon(Icons.Filled.MoreVert, appString(R.string.text_actions_for_cf6f1b, (entry.name))) }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    DropdownMenuItem(text = { Text("Rename") }, onClick = { menu = false; onRename() })
-                    DropdownMenuItem(text = { Text("Delete") }, onClick = { menu = false; onDelete() })
+                    DropdownMenuItem(text = { Text(appString(R.string.text_rename_d3f4cb)) }, onClick = { menu = false; onRename() })
+                    DropdownMenuItem(text = { Text(appString(R.string.text_delete_f6fdbe)) }, onClick = { menu = false; onDelete() })
                 }
             }
         }
@@ -250,30 +253,30 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
     var previewError by remember(entry, showingPrepared) { mutableStateOf<String?>(null) }
     LaunchedEffect(entry, showingPrepared) {
         val result = withContext(Dispatchers.IO) { ImpulseLibraryFiles.preview(entry, showingPrepared) }
-        result.onSuccess { preview = it }.onFailure { previewError = it.message ?: "Could not read the waveform." }
+        result.onSuccess { preview = it }.onFailure { previewError = it.message ?: appString(R.string.text_could_not_read_the_waveform_f99d0d) }
     }
     SettingsGroup {
         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                FilterChip(selected = !showingPrepared, onClick = { prepared = false }, label = { Text("Original") })
-                if (entry.prepared != null) FilterChip(selected = showingPrepared, onClick = { prepared = true }, label = { Text("Variant") })
+                FilterChip(selected = !showingPrepared, onClick = { prepared = false }, label = { Text(appString(R.string.text_original_c0a806)) })
+                if (entry.prepared != null) FilterChip(selected = showingPrepared, onClick = { prepared = true }, label = { Text(appString(R.string.text_variant_cc91b1)) })
             }
             Text(metadata.summary(), style = MaterialTheme.typography.titleSmall)
-            Text("${metadata.frames} frames · ${impulseNumber(metadata.frames * 1000.0 / metadata.sampleRate)} ms", style = MaterialTheme.typography.bodySmall)
+            Text(appString(R.string.text_frames_ms_753397, (metadata.frames), (impulseNumber(metadata.frames * 1000.0 / metadata.sampleRate))), style = MaterialTheme.typography.bodySmall)
             val format = when (metadata.precision) {
-                SamplePrecision.FLOAT_32 -> "32-bit float"
-                SamplePrecision.FLOAT_64 -> "64-bit float"
-                else -> "${metadata.validBits}-bit PCM"
+                SamplePrecision.FLOAT_32 -> appString(R.string.text_32_bit_float_a68053)
+                SamplePrecision.FLOAT_64 -> appString(R.string.text_64_bit_float_eaae87)
+                else -> appString(R.string.text_bit_pcm_692bdd, (metadata.validBits))
             }
-            Text("$format · Peak ${metadata.peak.peakLabel()}", style = MaterialTheme.typography.bodySmall)
-            Text("Source: ${entry.sourceName}", style = MaterialTheme.typography.bodySmall)
+            Text(appString(R.string.text_peak_6a5678, (format), (metadata.peak.peakLabel())), style = MaterialTheme.typography.bodySmall)
+            Text(appString(R.string.text_source_e9f395, (entry.sourceName)), style = MaterialTheme.typography.bodySmall)
             if (showingPrepared) {
                 val options = entry.prepared!!.preparation
                 Text(buildList {
-                    add("Frames ${options.startFrame}–${options.endFrameExclusive}")
-                    if (options.normalization != ImpulseNormalization.NONE) add("Peak −1 dB")
-                    if (options.minimumPhase) add("Minimum phase")
-                    if (options.delayFrames > 0) add("${impulseNumber(options.delayFrames * 1000.0 / metadata.sampleRate)} ms delay")
+                    add(appString(R.string.text_frames_fef602, (options.startFrame), (options.endFrameExclusive)))
+                    if (options.normalization != ImpulseNormalization.NONE) add(appString(R.string.text_peak_1_db_472a8a))
+                    if (options.minimumPhase) add(appString(R.string.text_minimum_phase_500a84))
+                    if (options.delayFrames > 0) add(appString(R.string.text_ms_delay_3db8d0, (impulseNumber(options.delayFrames * 1000.0 / metadata.sampleRate))))
                 }.joinToString(" · "),
                     style = MaterialTheme.typography.bodySmall)
             }
@@ -283,18 +286,18 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
                 else -> LinearProgressIndicator(Modifier.fillMaxWidth())
             }
             if (!sourceSupported || !estimate.supported) Text(
-                if (!sourceSupported) "Trim this response before selecting it." else "Too long at ${impulseNumber(targetRate / 1000.0)} kHz. Trim first.",
+                if (!sourceSupported) appString(R.string.text_trim_this_response_before_selecting_it_c65802) else appString(R.string.text_too_long_at_khz_trim_first_79c65a, (impulseNumber(targetRate / 1000.0))),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             Button(onClick = { onSelect(showingPrepared) }, enabled = enabled && selectedPath != assetPath && preview != null && sourceSupported && estimate.supported,
-                modifier = Modifier.fillMaxWidth()) { Text(if (selectedPath == assetPath) "Selected" else "Select ${if (showingPrepared) "variant" else "original"}") }
-            OutlinedButton(onClick = { onExport(showingPrepared) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Export WAV") }
-            OutlinedButton(onClick = onPrepare, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text("Prepare impulse") }
-            TextButton(onClick = { showSize = !showSize }) { Text(if (showSize) "Hide playback size" else "Playback size") }
+                modifier = Modifier.fillMaxWidth()) { Text(if (selectedPath == assetPath) appString(R.string.text_selected_9a976f) else appString(R.string.text_select_0fc8ec, (if (showingPrepared) appString(R.string.text_variant_cc91b1) else appString(R.string.text_original_c0a806)))) }
+            OutlinedButton(onClick = { onExport(showingPrepared) }, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_export_wav_f98f7d)) }
+            OutlinedButton(onClick = onPrepare, enabled = enabled, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_prepare_impulse_828a45)) }
+            TextButton(onClick = { showSize = !showSize }) { Text(if (showSize) appString(R.string.text_hide_playback_size_fd99cc) else appString(R.string.text_playback_size_aeb4ca)) }
             if (showSize) {
-                Text("${impulseNumber(targetRate / 1000.0)} kHz · ${if (playbackRate == null) "Source rate" else "Current playback"}", style = MaterialTheme.typography.bodySmall)
-                Text("${estimate.targetFrames} taps · Estimated memory ${impulseNumber((estimate.decodedBytes + estimate.partitionBytes) / 1048576.0)} MiB",
+                Text(appString(R.string.text_khz_32b265, (impulseNumber(targetRate / 1000.0)), (if (playbackRate == null) appString(R.string.text_source_rate_cf5128) else appString(R.string.text_current_playback_27f5a5))), style = MaterialTheme.typography.bodySmall)
+                Text(appString(R.string.text_taps_estimated_memory_mib_88d38b, (estimate.targetFrames), (impulseNumber((estimate.decodedBytes + estimate.partitionBytes) / 1048576.0))),
                     style = MaterialTheme.typography.bodySmall)
-                if (estimate.resamplingDelayFrames > 0) Text("SRC delay: ${impulseNumber(estimate.resamplingDelayFrames * 1000.0 / targetRate)} ms",
+                if (estimate.resamplingDelayFrames > 0) Text(appString(R.string.text_src_delay_ms_165eac, (impulseNumber(estimate.resamplingDelayFrames * 1000.0 / targetRate))),
                     style = MaterialTheme.typography.bodySmall)
             }
         }
@@ -304,10 +307,10 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
 @Composable
 private fun ImpulseNameDialog(initial: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var name by remember { mutableStateOf(initial) }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Rename IR") }, text = {
-        OutlinedTextField(name, { name = it.take(80) }, label = { Text("Name") }, singleLine = true)
-    }, confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onSave(name.trim()) }) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(appString(R.string.text_rename_ir_350160)) }, text = {
+        OutlinedTextField(name, { name = it.take(80) }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true)
+    }, confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onSave(name.trim()) }) { Text(appString(R.string.text_save_efc007)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }
 
 @Composable
@@ -316,6 +319,6 @@ private fun ImpulseStatusText(text: String) {
         color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
-internal fun ImpulseMetadata.summary(): String = "${when (channels) { 1 -> "Mono"; 4 -> "True stereo · LL/LR/RL/RR"; else -> "Stereo" }} · ${impulseNumber(sampleRate / 1000.0)} kHz"
+internal fun ImpulseMetadata.summary(): String = appString(R.string.text_khz_368e33, (when (channels) { 1 -> appString(R.string.text_mono_c5c553); 4 -> appString(R.string.text_true_stereo_ll_lr_rl_rr_f8b7db); else -> appString(R.string.text_stereo_f4f390) }), (impulseNumber(sampleRate / 1000.0)))
 internal fun impulseNumber(value: Double): String = String.format(Locale.ROOT, "%.2f", value).trimEnd('0').trimEnd('.')
 internal fun Double.peakLabel(): String = if (this == 0.0) "−∞ dBFS" else "${impulseNumber(20.0 * log10(this))} dBFS"

@@ -9,6 +9,12 @@ class AuroraApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        com.aurora.music.localization.AppStrings.initialize(this)
         container = AppContainer(this)
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        com.aurora.music.localization.AppStrings.refresh()
     }
 }

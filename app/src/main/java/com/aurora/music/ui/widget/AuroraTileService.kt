@@ -1,5 +1,8 @@
 package com.aurora.music.ui.widget
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.content.Intent
 import android.graphics.drawable.Icon
 import android.os.Build
@@ -32,8 +35,8 @@ class AuroraTileService : TileService() {
         val np = NowPlayingStore.read(this)
         val playing = playingOverride ?: np.isPlaying
         tile.state = if (playing) Tile.STATE_ACTIVE else Tile.STATE_INACTIVE
-        tile.label = if (np.hasTrack && np.title.isNotBlank()) np.title else "Aurora"
-        if (Build.VERSION.SDK_INT >= 29) tile.subtitle = if (np.hasTrack) (if (playing) "Playing" else "Paused") else "Aurora"
+        tile.label = if (np.hasTrack && np.title.isNotBlank()) np.title else appString(R.string.text_aurora_eeee9b)
+        if (Build.VERSION.SDK_INT >= 29) tile.subtitle = if (np.hasTrack) (if (playing) appString(R.string.text_playing_298c39) else appString(R.string.text_paused_c7dfb6)) else appString(R.string.text_aurora_eeee9b)
         runCatching {
             tile.icon = Icon.createWithResource(
                 this, if (playing) android.R.drawable.ic_media_pause else android.R.drawable.ic_media_play,

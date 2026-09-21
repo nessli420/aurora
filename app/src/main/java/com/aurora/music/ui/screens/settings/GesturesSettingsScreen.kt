@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -40,36 +43,36 @@ fun GesturesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Gestures & behaviour", onBack)
+        SettingsTopBar(appString(R.string.text_gestures_behaviour_9d13b8), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
-            item { SettingsSectionTitle("Player gestures") }
+            item { SettingsSectionTitle(appString(R.string.text_player_gestures_1c6f88)) }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(Icons.Filled.Swipe, "Swipe artwork to change track", "Swipe the player artwork left / right", gestures.swipeArtwork) { v -> scope.launch { store.setGestureSwipeArtwork(v) } }
+                    SettingsSwitchRow(Icons.Filled.Swipe, appString(R.string.text_swipe_artwork_to_change_track_7a762f), appString(R.string.text_swipe_the_player_artwork_left_right_fd3460), gestures.swipeArtwork) { v -> scope.launch { store.setGestureSwipeArtwork(v) } }
                     SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.SwipeDown, "Swipe down to dismiss", "Pull down on the player & sheets to close them", gestures.swipeDownDismiss) { v -> scope.launch { store.setGestureSwipeDismiss(v) } }
+                    SettingsSwitchRow(Icons.Filled.SwipeDown, appString(R.string.text_swipe_down_to_dismiss_575cb1), appString(R.string.text_pull_down_on_the_player_sheets_to_close_them_36e776), gestures.swipeDownDismiss) { v -> scope.launch { store.setGestureSwipeDismiss(v) } }
                     SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.TouchApp, "Double-tap to play / pause", "Double-tap the player artwork", gestures.doubleTapPause) { v -> scope.launch { store.setGestureDoubleTap(v) } }
+                    SettingsSwitchRow(Icons.Filled.TouchApp, appString(R.string.text_double_tap_to_play_pause_d5e7e4), appString(R.string.text_double_tap_the_player_artwork_9ef287), gestures.doubleTapPause) { v -> scope.launch { store.setGestureDoubleTap(v) } }
                 }
             }
 
-            item { SettingsSectionTitle("Feedback") }
+            item { SettingsSectionTitle(appString(R.string.text_feedback_c8d767)) }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(Icons.Filled.Vibration, "Haptic feedback", "Subtle vibration on play, skip & navigation", haptics) { v -> scope.launch { store.setHaptics(v) } }
+                    SettingsSwitchRow(Icons.Filled.Vibration, appString(R.string.text_haptic_feedback_b0baa9), appString(R.string.text_subtle_vibration_on_play_skip_navigation_d6940c), haptics) { v -> scope.launch { store.setHaptics(v) } }
                 }
             }
 
-            item { SettingsSectionTitle("Behaviour") }
+            item { SettingsSectionTitle(appString(R.string.text_behaviour_171ca0)) }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(Icons.Filled.Notifications, "Push notifications", "New releases & recommendations", notifications) { notifications = it }
+                    SettingsSwitchRow(Icons.Filled.Notifications, appString(R.string.text_push_notifications_03be2f), appString(R.string.text_new_releases_recommendations_02976f), notifications) { notifications = it }
                     SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.Radio, "Autoplay radio", "Keep playing similar tracks when the queue ends", playback.autoplayRadio) { v -> scope.launch { store.setAutoplayRadio(v) } }
+                    SettingsSwitchRow(Icons.Filled.Radio, appString(R.string.text_autoplay_radio_7fa244), appString(R.string.text_keep_playing_similar_tracks_when_the_queue_ends_172967), playback.autoplayRadio) { v -> scope.launch { store.setAutoplayRadio(v) } }
                     SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.History, "Scrobble", "Report plays to your server", playback.scrobble) { v -> scope.launch { store.setScrobble(v) } }
+                    SettingsSwitchRow(Icons.Filled.History, appString(R.string.text_scrobble_3d49e2), appString(R.string.text_report_plays_to_your_server_262da5), playback.scrobble) { v -> scope.launch { store.setScrobble(v) } }
                     SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.Lock, "Private session", "Don't report plays to your server or Last.fm", privateSession) { v -> scope.launch { store.setPrivateSession(v) } }
+                    SettingsSwitchRow(Icons.Filled.Lock, appString(R.string.text_private_session_ec7cef), appString(R.string.text_don_t_report_plays_to_your_server_or_last_fm_074883), privateSession) { v -> scope.launch { store.setPrivateSession(v) } }
                 }
             }
         }

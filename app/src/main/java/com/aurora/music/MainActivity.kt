@@ -4,7 +4,7 @@ import android.content.Intent
 import android.app.SearchManager
 import android.os.Bundle
 import android.provider.MediaStore
-import androidx.activity.ComponentActivity
+import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
@@ -16,12 +16,13 @@ import com.aurora.music.ui.theme.AuroraTheme
 import com.aurora.music.playback.MediaSearchRequest
 import com.aurora.music.viewmodel.PlayerViewModel
 
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
     private val playerViewModel: PlayerViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()
         super.onCreate(savedInstanceState)
+        com.aurora.music.localization.AppStrings.useConfiguration(resources.configuration)
         val container = (application as AuroraApplication).container
         handleAuthRedirect(intent)
         if (savedInstanceState == null) handleMediaSearch(intent)

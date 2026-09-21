@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.search
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.content.Intent
 import android.speech.RecognizerIntent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -62,8 +65,9 @@ import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.viewmodel.SearchUiState
 
-private enum class SearchFilter(val label: String) {
-    ALL("All"), SONGS("Songs"), ALBUMS("Albums"), ARTISTS("Artists"), PLAYLISTS("Playlists")
+private enum class SearchFilter(@androidx.annotation.StringRes private val labelRes: Int) {
+    ALL(R.string.text_all_6a7208), SONGS(R.string.text_songs_e1404b), ALBUMS(R.string.text_albums_4c45e7), ARTISTS(R.string.text_artists_1528d8), PLAYLISTS(R.string.text_playlists_77b69f);
+    val label: String get() = appString(labelRes)
 }
 
 private fun sectionNonEmpty(f: SearchFilter, r: SearchResults): Boolean = when (f) {
@@ -112,7 +116,7 @@ fun SearchScreen(
     fun launchVoice() {
         val intent = Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH).apply {
             putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, RecognizerIntent.LANGUAGE_MODEL_FREE_FORM)
-            putExtra(RecognizerIntent.EXTRA_PROMPT, "Speak to search")
+            putExtra(RecognizerIntent.EXTRA_PROMPT, appString(R.string.text_speak_to_search_91f0aa))
         }
         runCatching { voiceLauncher.launch(intent) }
     }
@@ -120,22 +124,22 @@ fun SearchScreen(
 
     Column(Modifier.fillMaxWidth().padding(top = topInset)) {
         Column(Modifier.padding(start = 16.dp, top = 14.dp, bottom = 12.dp)) {
-            Eyebrow("DISCOVER", MaterialTheme.colorScheme.primary)
+            Eyebrow(appString(R.string.text_discover_d3f02e), MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(2.dp))
-            Text("Search", style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+            Text(appString(R.string.text_search_bce064), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
         }
         TextField(
             value = state.query,
             onValueChange = onQuery,
             modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
-            placeholder = { Text("Artists, albums, or songs") },
+            placeholder = { Text(appString(R.string.text_artists_albums_or_songs_d1863c)) },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
             trailingIcon = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (state.query.isNotEmpty()) {
-                        Icon(Icons.Filled.Close, "Clear", modifier = Modifier.size(36.dp).clip(CircleShape).clickable { onQuery("") }.padding(7.dp))
+                        Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(36.dp).clip(CircleShape).clickable { onQuery("") }.padding(7.dp))
                     }
-                    Icon(Icons.Filled.Mic, "Voice search", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp).clip(CircleShape).clickable { launchVoice() }.padding(8.dp))
+                    Icon(Icons.Filled.Mic, appString(R.string.text_voice_search_9df53f), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp).clip(CircleShape).clickable { launchVoice() }.padding(8.dp))
                 }
             },
             singleLine = true,
@@ -165,15 +169,15 @@ fun SearchScreen(
 
         val empty = results.songs.isEmpty() && results.albums.isEmpty() && results.artists.isEmpty() && results.playlists.isEmpty()
         when {
-            state.error != null -> EmptyHint("Search unavailable", state.error)
+            state.error != null -> EmptyHint(appString(R.string.text_search_unavailable_c32b9f), state.error)
             state.query.isBlank() ->
-                if (recentSearches.isEmpty()) EmptyHint("Search your library", "Find any artist, album, song, or playlist")
+                if (recentSearches.isEmpty()) EmptyHint(appString(R.string.text_search_your_library_d9fa3f), appString(R.string.text_find_any_artist_album_song_or_playlist_9fcb23))
                 else RecentSearches(recentSearches, onRecentClick, onRemoveRecent, onClearRecents, contentPadding)
             state.loading && empty ->
                 Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) {
                     com.aurora.music.ui.components.LottieLoader(modifier = Modifier.size(72.dp))
                 }
-            empty -> EmptyHint("No results", "Nothing matched \"${state.query}\"")
+            empty -> EmptyHint(appString(R.string.text_no_results_b993b0), appString(R.string.text_nothing_matched_f74d36, (state.query)))
             else -> {
                 // fall back to ALL when chosen type has no results
                 val effective = if (sectionNonEmpty(filter, results)) filter else SearchFilter.ALL
@@ -246,7 +250,7 @@ private fun Results(
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         if (show(SearchFilter.ARTISTS) && results.artists.isNotEmpty()) {
-            item { SectionHeader("Artists", Modifier.padding(horizontal = 16.dp)) }
+            item { SectionHeader(appString(R.string.text_artists_1528d8), Modifier.padding(horizontal = 16.dp)) }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(results.artists.size) { i -> ArtistCircle(results.artists[i], onClick = { onOpenDetail("artist", results.artists[i].id) }) }
@@ -254,7 +258,7 @@ private fun Results(
             }
         }
         if (show(SearchFilter.ALBUMS) && results.albums.isNotEmpty()) {
-            item { SectionHeader("Albums", Modifier.padding(horizontal = 16.dp)) }
+            item { SectionHeader(appString(R.string.text_albums_4c45e7), Modifier.padding(horizontal = 16.dp)) }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(results.albums.size) { i -> AlbumCard(results.albums[i], onClick = { onOpenDetail("album", results.albums[i].id) }) }
@@ -262,7 +266,7 @@ private fun Results(
             }
         }
         if (show(SearchFilter.PLAYLISTS) && results.playlists.isNotEmpty()) {
-            item { SectionHeader("Playlists", Modifier.padding(horizontal = 16.dp)) }
+            item { SectionHeader(appString(R.string.text_playlists_77b69f), Modifier.padding(horizontal = 16.dp)) }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(results.playlists.size) { i -> PlaylistCard(results.playlists[i], onClick = { onOpenDetail("playlist", results.playlists[i].id) }) }
@@ -270,7 +274,7 @@ private fun Results(
             }
         }
         if (show(SearchFilter.SONGS) && results.songs.isNotEmpty()) {
-            item { SectionHeader("Songs", Modifier.padding(horizontal = 16.dp)) }
+            item { SectionHeader(appString(R.string.text_songs_e1404b), Modifier.padding(horizontal = 16.dp)) }
             items(results.songs.size) { i ->
                 val song = results.songs[i]
                 SongRow(
@@ -307,8 +311,8 @@ private fun RecentSearches(
     ) {
         item {
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text("Recent", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Text("Clear", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+                Text(appString(R.string.text_recent_76eec7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClear).padding(horizontal = 10.dp, vertical = 6.dp))
             }
         }
@@ -321,7 +325,7 @@ private fun RecentSearches(
                 Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(14.dp))
                 Text(q, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.Close, "Remove", tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp).clip(CircleShape).clickable { onRemove(q) }.padding(6.dp))
+                Icon(Icons.Filled.Close, appString(R.string.text_remove_e96390), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp).clip(CircleShape).clickable { onRemove(q) }.padding(6.dp))
             }
         }
     }

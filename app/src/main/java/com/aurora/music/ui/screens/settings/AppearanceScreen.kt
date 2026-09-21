@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -71,21 +74,21 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val materialYouSupported = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Appearance", onBack)
+        SettingsTopBar(appString(R.string.text_appearance_41def7), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
-            item { SettingsSectionTitle("Theme") }
+            item { SettingsSectionTitle(appString(R.string.text_theme_a797e3)) }
             item { ThemeStylePicker(prefs) { style -> scope.launch { store.setThemeStyle(style) } } }
             item {
-                SegmentedRow("Mode", listOf("System", "Light", "Dark", "AMOLED"), prefs.themeMode) { i ->
+                SegmentedRow(appString(R.string.text_mode_a7b93d), listOf(appString(R.string.text_system_bc0792), appString(R.string.text_light_a36ef8), appString(R.string.text_dark_ae1ef0), "AMOLED"), prefs.themeMode) { i ->
                     scope.launch { store.setThemeMode(i) }
                 }
             }
             item {
                 Text(
                     when (prefs.themeMode) {
-                        ThemeMode.AMOLED -> "True-black surfaces — saves power on OLED screens."
-                        ThemeMode.SYSTEM -> "Follows your device's light/dark setting."
+                        ThemeMode.AMOLED -> appString(R.string.text_true_black_surfaces_saves_power_on_oled_screens_2481a8)
+                        ThemeMode.SYSTEM -> appString(R.string.text_follows_your_device_s_light_dark_setting_38c955)
                         else -> ""
                     },
                     style = MaterialTheme.typography.bodySmall,
@@ -95,9 +98,9 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             }
 
             if (prefs.themeStyle == ThemeStyle.AURORA) {
-            item { SettingsSectionTitle("Accent") }
+            item { SettingsSectionTitle(appString(R.string.text_accent_233064)) }
             item {
-                SegmentedRow("Source", listOf("Presets", "Custom", "Material You"), prefs.accentMode) { i ->
+                SegmentedRow(appString(R.string.text_source_6da13a), listOf(appString(R.string.text_presets_e709e7), appString(R.string.text_custom_081ae3), "Material You"), prefs.accentMode) { i ->
                     scope.launch { store.setAccentMode(i) }
                 }
             }
@@ -113,8 +116,8 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
                 else -> item {
                     Text(
-                        if (materialYouSupported) "Using your wallpaper colors (Material You)."
-                        else "Material You needs Android 12+. Falling back to the preset accent.",
+                        if (materialYouSupported) appString(R.string.text_using_your_wallpaper_colors_material_you_33e00d)
+                        else appString(R.string.text_material_you_needs_android_12_falling_back_to_the_preset_accent_8c9a77),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
@@ -123,76 +126,76 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             }
             }
 
-            item { SettingsSectionTitle("Display") }
+            item { SettingsSectionTitle(appString(R.string.text_display_574ff9)) }
             item {
-                SettingsSliderRow("Font size", "${(prefs.fontScale * 100).roundToInt()}%", prefs.fontScale, 0.85f..1.3f) { v ->
+                SettingsSliderRow(appString(R.string.text_font_size_83ca9e), "${(prefs.fontScale * 100).roundToInt()}%", prefs.fontScale, 0.85f..1.3f) { v ->
                     scope.launch { store.setFontScale(v) }
                 }
             }
             if (prefs.themeStyle == ThemeStyle.AURORA) item {
-                SegmentedRow("Corners", listOf("Sharp", "Default", "Rounded", "Pill"), prefs.cornerStyle) { i ->
+                SegmentedRow(appString(R.string.text_corners_f1fb13), listOf(appString(R.string.text_sharp_cf3e9a), appString(R.string.text_default_808d7d), appString(R.string.text_rounded_c5aa34), appString(R.string.text_pill_38ea5b)), prefs.cornerStyle) { i ->
                     scope.launch { store.setCornerStyle(i) }
                 }
             }
 
-            item { SettingsSectionTitle("Player") }
+            item { SettingsSectionTitle(appString(R.string.text_player_e53407)) }
             item {
-                SegmentedRow("Seek bar", listOf("Waveform", "Bar"), prefs.playerSeekStyle) { i ->
+                SegmentedRow(appString(R.string.text_seek_bar_0030d0), listOf(appString(R.string.text_waveform_200f14), appString(R.string.text_bar_e496fd)), prefs.playerSeekStyle) { i ->
                     scope.launch { store.setPlayerSeekStyle(i) }
                 }
             }
             if (prefs.playerSeekStyle == SeekStyle.WAVEFORM) {
                 item {
-                    SettingsSliderRow("Waveform bars", "${prefs.playerWaveBars}", prefs.playerWaveBars.toFloat(), 24f..96f) { v ->
+                    SettingsSliderRow(appString(R.string.text_waveform_bars_c215c9), "${prefs.playerWaveBars}", prefs.playerWaveBars.toFloat(), 24f..96f) { v ->
                         scope.launch { store.setPlayerWaveBars(v.roundToInt()) }
                     }
                 }
             }
             item {
-                SettingsSliderRow("Artwork size", "${(prefs.playerArtSize * 100).roundToInt()}%", prefs.playerArtSize, 0.6f..1f) { v ->
+                SettingsSliderRow(appString(R.string.text_artwork_size_6dd0fc), "${(prefs.playerArtSize * 100).roundToInt()}%", prefs.playerArtSize, 0.6f..1f) { v ->
                     scope.launch { store.setPlayerArtSize(v) }
                 }
             }
             if (prefs.themeStyle == ThemeStyle.AURORA) item {
-                SettingsSliderRow("Gradient intensity", "${(prefs.playerGradient * 100).roundToInt()}%", prefs.playerGradient, 0f..1.5f) { v ->
+                SettingsSliderRow(appString(R.string.text_gradient_intensity_84a1f5), "${(prefs.playerGradient * 100).roundToInt()}%", prefs.playerGradient, 0f..1.5f) { v ->
                     scope.launch { store.setPlayerGradient(v) }
                 }
             }
             item {
-                SettingsSwitchRow(title = "Bottom utilities", subtitle = "Speed · Lyrics · Queue row", checked = prefs.playerShowUtilities) { v ->
+                SettingsSwitchRow(title = appString(R.string.text_bottom_utilities_8b97ef), subtitle = appString(R.string.text_speed_lyrics_queue_row_814225), checked = prefs.playerShowUtilities) { v ->
                     scope.launch { store.setPlayerShowUtilities(v) }
                 }
             }
 
-            item { SettingsSectionTitle("Miniplayer") }
+            item { SettingsSectionTitle(appString(R.string.text_miniplayer_4adff2)) }
             item {
-                SegmentedRow("Style", listOf("Standard", "Compact", "Prominent"), prefs.miniStyle) { i ->
+                SegmentedRow(appString(R.string.text_style_99a0ef), listOf(appString(R.string.text_standard_2dfa66), appString(R.string.text_compact_1df39a), appString(R.string.text_prominent_4b3579)), prefs.miniStyle) { i ->
                     scope.launch { store.setMiniStyle(i) }
                 }
             }
             item {
-                SegmentedRow("Progress", listOf("Line", "Bar", "None"), prefs.miniProgress) { i ->
+                SegmentedRow(appString(R.string.text_progress_1b9027), listOf(appString(R.string.text_line_ea9676), appString(R.string.text_bar_e496fd), appString(R.string.text_none_6eef66)), prefs.miniProgress) { i ->
                     scope.launch { store.setMiniProgress(i) }
                 }
             }
 
-            item { SettingsSectionTitle("Library") }
+            item { SettingsSectionTitle(appString(R.string.text_library_b8100f)) }
             item {
-                SegmentedRow("Grid columns", listOf("2", "3", "4"), (prefs.libraryColumns - 2).coerceIn(0, 2)) { i ->
+                SegmentedRow(appString(R.string.text_grid_columns_b0c94c), listOf("2", "3", "4"), (prefs.libraryColumns - 2).coerceIn(0, 2)) { i ->
                     scope.launch { store.setLibraryColumns(i + 2) }
                 }
             }
 
-            item { SettingsSectionTitle("Home sections") }
+            item { SettingsSectionTitle(appString(R.string.text_home_sections_1f24fb)) }
             val homeSections = listOf(
-                HomeSection.HERO to "New release hero",
-                HomeSection.RECENT to "Jump back in",
-                HomeSection.PLAYLISTS to "Your playlists",
-                HomeSection.FAVOURITE to "From your favourites",
-                HomeSection.MOST to "Most played",
-                HomeSection.ARTISTS to "Artists",
-                HomeSection.NEW to "New releases",
-                HomeSection.RECOMMENDED to "Recommended albums",
+                HomeSection.HERO to appString(R.string.text_new_release_hero_c354b3),
+                HomeSection.RECENT to appString(R.string.text_jump_back_in_1d9181),
+                HomeSection.PLAYLISTS to appString(R.string.text_your_playlists_df03eb),
+                HomeSection.FAVOURITE to appString(R.string.text_from_your_favourites_d39722),
+                HomeSection.MOST to appString(R.string.text_most_played_14202e),
+                HomeSection.ARTISTS to appString(R.string.text_artists_1528d8),
+                HomeSection.NEW to appString(R.string.text_new_releases_3cdd02),
+                HomeSection.RECOMMENDED to appString(R.string.text_recommended_albums_36271e),
             )
             items(homeSections.size) { idx ->
                 val (id, label) = homeSections[idx]
@@ -233,7 +236,7 @@ private fun ThemeStylePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
         Text(current.description, style = MaterialTheme.typography.titleSmall)
         Text(current.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         if (prefs.themeStyle != ThemeStyle.AURORA) {
-            Text("This style includes its own colors and corners. Your Aurora customizations are saved.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(appString(R.string.text_this_style_includes_its_own_colors_and_corners_your_aurora_custom_9b4b82), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -284,7 +287,7 @@ private fun AccentPresetGrid(selected: Int, onSelect: (Int) -> Unit) {
                     ) {
                         if (isSel) {
                             val on = if (preset.seed.luminanceApprox() > 0.5f) Color.Black else Color.White
-                            Icon(Icons.Filled.Check, "Selected", tint = on, modifier = Modifier.size(22.dp))
+                            Icon(Icons.Filled.Check, appString(R.string.text_selected_9a976f), tint = on, modifier = Modifier.size(22.dp))
                         }
                     }
                 }
@@ -310,11 +313,11 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(Modifier.size(56.dp).clip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, CircleShape))
-            Text("  Live preview", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        SettingsSliderRow("Hue", "${hue.roundToInt()}°", hue, 0f..360f) { hue = it; push() }
-        SettingsSliderRow("Saturation", "${(sat * 100).roundToInt()}%", sat, 0f..1f) { sat = it; push() }
-        SettingsSliderRow("Brightness", "${(bri * 100).roundToInt()}%", bri, 0f..1f) { bri = it; push() }
+        SettingsSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f) { hue = it; push() }
+        SettingsSliderRow(appString(R.string.text_saturation_20a32b), "${(sat * 100).roundToInt()}%", sat, 0f..1f) { sat = it; push() }
+        SettingsSliderRow(appString(R.string.text_brightness_e1a2b6), "${(bri * 100).roundToInt()}%", bri, 0f..1f) { bri = it; push() }
     }
 }
 

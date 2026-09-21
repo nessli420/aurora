@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+
+import com.aurora.music.R
+import com.aurora.music.localization.localizedSignalLabel
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -26,6 +31,7 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.MergeType
 import androidx.compose.material.icons.filled.Extension
 import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Language
 import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.GraphicEq
@@ -67,6 +73,7 @@ fun SettingsScreen(
     onOpenSources: () -> Unit,
     onOpenDownloads: () -> Unit,
     onOpenAppearance: () -> Unit,
+    onOpenLanguage: () -> Unit,
     onOpenGestures: () -> Unit,
     onOpenIntegrations: () -> Unit,
     onOpenPermissions: () -> Unit,
@@ -83,22 +90,22 @@ fun SettingsScreen(
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val signalPath by container.signalPath.collectAsStateWithLifecycle()
     val alarmSummary = alarmSettingsSummary()
-    val signalSummary = if (!signalPath.active) "Nothing playing" else buildList {
-        add(signalPath.output.ifBlank { "Output unknown" })
+    val signalSummary = if (!signalPath.active) appString(R.string.text_nothing_playing_13ae37) else buildList {
+        add(signalPath.output.localizedSignalLabel().ifBlank { appString(R.string.text_output_unknown_ef4fdb) })
         if (signalPath.codec.isNotBlank()) add(signalPath.codec)
-        if (signalPath.sampleRateHz > 0) add("%.1f kHz source".format(signalPath.sampleRateHz / 1000f))
+        if (signalPath.sampleRateHz > 0) add(appString(R.string.text_1f_khz_source_51278e).format(signalPath.sampleRateHz / 1000f))
     }.joinToString(" · ")
     val serverBadge = when (session?.type) {
         com.aurora.music.data.ServerType.SPOTIFY -> "SPOTIFY"
         com.aurora.music.data.ServerType.YOUTUBE_MUSIC -> "YOUTUBE MUSIC"
         com.aurora.music.data.ServerType.JELLYFIN -> "JELLYFIN"
-        com.aurora.music.data.ServerType.LOCAL -> "LOCAL"
-        com.aurora.music.data.ServerType.EXTENSION -> "EXTENSION"
+        com.aurora.music.data.ServerType.LOCAL -> appString(R.string.text_local_9be340)
+        com.aurora.music.data.ServerType.EXTENSION -> appString(R.string.text_extension_f88c4d)
         else -> "NAVIDROME"
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Settings", onBack)
+        SettingsTopBar(appString(R.string.text_settings_c7f73b), onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
@@ -118,13 +125,13 @@ fun SettingsScreen(
                         if (avatarUrl.isNotBlank()) {
                             com.aurora.music.ui.components.Artwork(avatarUrl, MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), corner = 28.dp)
                         } else {
-                            Text(username.take(2).uppercase().ifBlank { "ME" }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
+                            Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
                         }
                     }
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(username.ifBlank { "Listener" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text("View profile", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(appString(R.string.text_view_profile_b98795), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     }
                     Box(Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).padding(horizontal = 12.dp, vertical = 6.dp)) {
                         Text(serverBadge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
@@ -132,20 +139,20 @@ fun SettingsScreen(
                 }
             }
 
-            item { SettingsSectionTitle("Library & accounts") }
+            item { SettingsSectionTitle(appString(R.string.text_library_accounts_e097be)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.SwitchAccount, SettingsDestinations.accounts, onClick = onOpenAccounts)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.MergeType, SettingsDestinations.sources, onClick = onOpenSources)
                     SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Download, SettingsDestinations.storage, "${downloads.size} downloaded · quality and offline files", onClick = onOpenDownloads)
+                    SettingsDestinationRow(Icons.Filled.Download, SettingsDestinations.storage, appString(R.string.text_downloaded_quality_and_offline_files_4bd602, (downloads.size)), onClick = onOpenDownloads)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.AutoAwesome, SettingsDestinations.analysis, onClick = onOpenSonic)
                 }
             }
 
-            item { SettingsSectionTitle("Audio") }
+            item { SettingsSectionTitle(appString(R.string.text_audio_acdac2)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.PlayCircle, SettingsDestinations.playback, onClick = onOpenPlayback)
@@ -164,16 +171,24 @@ fun SettingsScreen(
                 }
             }
 
-            item { SettingsSectionTitle("Timers") }
+            item { SettingsSectionTitle(appString(R.string.text_timers_841cd0)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Alarm, SettingsDestinations.alarm, alarmSummary, onClick = onOpenAlarm)
                 }
             }
 
-            item { SettingsSectionTitle("Appearance & controls") }
+            item { SettingsSectionTitle(appString(R.string.text_appearance_controls_76f34d)) }
             item {
                 SettingsGroup {
+                    SettingsNavRow(Icons.Filled.Language,
+                        androidx.compose.ui.res.stringResource(com.aurora.music.R.string.language_title),
+                        subtitle = when (androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().get(0)?.language) {
+                            "ru" -> "Русский"
+                            "en" -> "English"
+                            else -> androidx.compose.ui.res.stringResource(com.aurora.music.R.string.language_system)
+                        }, onClick = onOpenLanguage)
+                    SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Palette, SettingsDestinations.appearance, onClick = onOpenAppearance)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.GraphicEq, SettingsDestinations.visualizer, onClick = onOpenVisualizer)
@@ -182,14 +197,14 @@ fun SettingsScreen(
                 }
             }
 
-            item { SettingsSectionTitle("Connections") }
+            item { SettingsSectionTitle(appString(R.string.text_connections_8f3509)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Extension, SettingsDestinations.integrations, onClick = onOpenIntegrations)
                 }
             }
 
-            item { SettingsSectionTitle("App & data") }
+            item { SettingsSectionTitle(appString(R.string.text_app_data_4d9bf9)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Lock, SettingsDestinations.permissions, onClick = onOpenPermissions)
@@ -197,8 +212,8 @@ fun SettingsScreen(
                     SettingsDestinationRow(Icons.Filled.Backup, SettingsDestinations.backup, onClick = onOpenBackup)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Info, SettingsDestinations.about,
-                        if (appUpdate.updateAvailable) "${appUpdate.release?.tag} update available"
-                        else "Version ${com.aurora.music.BuildConfig.VERSION_NAME} · App updates", onClick = onOpenAbout)
+                        if (appUpdate.updateAvailable) appString(R.string.text_update_available_6d5dfc, (appUpdate.release?.tag))
+                        else appString(R.string.text_version_app_updates_ebf387, (com.aurora.music.BuildConfig.VERSION_NAME)), onClick = onOpenAbout)
                 }
             }
 
@@ -212,7 +227,7 @@ fun SettingsScreen(
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                         Spacer(Modifier.width(8.dp))
-                        Text("Log out", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                        Text(appString(R.string.text_log_out_6e78c9), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
                     }
                 }
             }

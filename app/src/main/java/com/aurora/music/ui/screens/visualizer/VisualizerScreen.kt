@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.visualizer
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
@@ -177,12 +180,12 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(
-                    Icons.Filled.Close, "Close",
+                    Icons.Filled.Close, appString(R.string.text_close_bbfa77),
                     tint = Color.White,
                     modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClose).background(Color.White.copy(alpha = 0.12f)).padding(8.dp),
                 )
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
-                    Text(song.title.ifBlank { "Aurora" }, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
+                    Text(song.title.ifBlank { appString(R.string.text_aurora_eeee9b) }, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
                     if (song.artist.isNotBlank()) Text(song.artist, color = Color.White.copy(alpha = 0.7f), maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.bodySmall)
                 }
             }

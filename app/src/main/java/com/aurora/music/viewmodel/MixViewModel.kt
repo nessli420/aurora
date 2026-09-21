@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import android.content.Intent
 import androidx.annotation.OptIn
@@ -65,7 +68,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
         val old = state.value.project
         val next = transform(old).normalized()
         if (AutoMixPlanner.maxLayers(next) > MixProject.MAX_LAYERS) {
-            _state.update { it.copy(message = "Up to eight tracks can overlap at once. Move this track later in the mix.") }; return
+            _state.update { it.copy(message = appString(R.string.text_up_to_eight_tracks_can_overlap_at_once_move_this_track_later_in_t_5644e4)) }; return
         }
         if (next == old) return
         val now = android.os.SystemClock.elapsedRealtime()
@@ -86,8 +89,8 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
     fun updateClip(clip: MixClip) = edit(coalesceKey = "clip:${clip.id}") { it.copy(clips = it.clips.map { c -> if (c.id == clip.id) clip else c }) }
     fun remove(id: String) = edit { it.copy(clips = it.clips.filter { c -> c.id != id }) }
     fun add(song: Song, layered: Boolean = false) {
-        if (state.value.project.clips.size >= MixProject.MAX_TRACKS) { _state.update { it.copy(message = "This mix has reached 10,000 tracks.") }; return }
-        if (song.durationSec <= 0 || song.streamUrl.isBlank()) { _state.update { it.copy(message = "Choose a song with a known duration and playable source.") }; return }
+        if (state.value.project.clips.size >= MixProject.MAX_TRACKS) { _state.update { it.copy(message = appString(R.string.text_this_mix_has_reached_10_000_tracks_115af4)) }; return }
+        if (song.durationSec <= 0 || song.streamUrl.isBlank()) { _state.update { it.copy(message = appString(R.string.text_choose_a_song_with_a_known_duration_and_playable_source_ff433d)) }; return }
         val previous = state.value.project.clips.lastOrNull()
         val overlap = min(8f, min(previous?.durationSec ?: 8f, song.durationSec / 2f))
         val clip = MixClip(song = song, startSec = if (layered) 0f else ((previous?.endSec ?: overlap) - overlap).coerceAtLeast(0f),
@@ -106,12 +109,12 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
         cancelSeparation()
         autoJob = viewModelScope.launch {
             previous?.join()
-            _state.update { it.copy(building = true, buildLabel = "Loading complete tracklist", buildDone = 0, buildTotal = 0) }
+            _state.update { it.copy(building = true, buildLabel = appString(R.string.text_loading_complete_tracklist_d6abc4), buildDone = 0, buildTotal = 0) }
             try {
                 val songs = container.repository.collectionTracks(kind, id)
-                check(songs.size >= 2) { "This collection needs at least two tracks to mix." }
-                check(songs.size <= MixProject.MAX_TRACKS) { "This collection exceeds the 10,000-track mix limit." }
-                check(songs.all { it.durationSec > 0 && it.streamUrl.isNotBlank() }) { "Some tracks are unavailable. Reconnect to the library and retry." }
+                check(songs.size >= 2) { appString(R.string.text_this_collection_needs_at_least_two_tracks_to_mix_142509) }
+                check(songs.size <= MixProject.MAX_TRACKS) { appString(R.string.text_this_collection_exceeds_the_10_000_track_mix_limit_b8885f) }
+                check(songs.all { it.durationSec > 0 && it.streamUrl.isNotBlank() }) { appString(R.string.text_some_tracks_are_unavailable_reconnect_to_the_library_and_retry_6b688e) }
                 if (state.value.dirty && state.value.project.clips.isNotEmpty()) container.mixStore.save(account(), state.value.project)
                 stop(); cancelAnalysis()
                 // A play action must not wait for a whole collection to decode. Reuse Sonic's
@@ -121,7 +124,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                 if (playInPlayer) for (song in songs.distinctBy { it.id }) {
                     container.mixAnalyzer.cached(owner, song)?.let { cached[song.id] = it }
                 }
-                val draft = AutoMixPlanner.plan("$name mix", songs, cached, state.value.tempoMatch)
+                val draft = AutoMixPlanner.plan(appString(R.string.text_mix_ba4dbe, (name)), songs, cached, state.value.tempoMatch)
                 undo.clear(); redo.clear()
                 _state.update { it.copy(project = draft, selectedId = draft.clips.first().id, analyses = cached, dirty = true, canUndo = false, canRedo = false) }
                 if (playInPlayer) {
@@ -131,7 +134,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                 } else buildTransitions()
                 refreshSaved()
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { _state.update { it.copy(message = e.message ?: "Could not build this mix.") } }
+            catch (e: Exception) { _state.update { it.copy(message = e.message ?: appString(R.string.text_could_not_build_this_mix_b76def)) } }
             finally { _state.update { it.copy(building = false) } }
         }
     }
@@ -141,7 +144,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(building = true) }
             try { stop(); cancelAnalysis(); buildTransitions() }
             catch (e: CancellationException) { throw e }
-            catch (e: Exception) { _state.update { it.copy(message = e.message ?: "Could not build transitions.") } }
+            catch (e: Exception) { _state.update { it.copy(message = e.message ?: appString(R.string.text_could_not_build_transitions_e78754)) } }
             finally { _state.update { it.copy(building = false) } }
         }
     }
@@ -171,8 +174,8 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                 midDb = old.midDb, trebleDb = old.trebleDb, pitchSemitones = old.pitchSemitones, muted = old.muted, solo = old.solo)
         })
         undo.addLast(original); redo.clear(); apply(result); select(result.clips.first().id)
-        _state.update { it.copy(message = if (failures == 0) "${songs.size - 1} transitions ready. Every transition is editable."
-            else "Mix ready; $failures tracks use gentle fades. Retry Auto mix to analyze them.") }
+        _state.update { it.copy(message = if (failures == 0) appString(R.string.text_transitions_ready_every_transition_is_editable_a2170c, (songs.size - 1))
+            else appString(R.string.text_mix_ready_tracks_use_gentle_fades_retry_auto_mix_to_analyze_them_b474b2, (failures))) }
     }
     fun cancelAutoMix() { autoJob?.cancel(); _state.update { it.copy(building = false, buildLabel = "") } }
     fun chooseStem(clip: MixClip, mode: StemMode) {
@@ -183,7 +186,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
         stemJob = viewModelScope.launch {
             val owner = account()
             val projectId = state.value.project.id
-            _state.update { it.copy(separating = clip.id, separationProgress = 0f, separationLabel = "Preparing vocals") }
+            _state.update { it.copy(separating = clip.id, separationProgress = 0f, separationLabel = appString(R.string.text_preparing_vocals_f38a5a)) }
             try {
                 val stems = container.stemSeparator.separate(owner, clip.song) { label, progress ->
                     if (request == stemRequest) _state.update { it.copy(separationLabel = label, separationProgress = progress) }
@@ -192,10 +195,10 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                     state.value.project.clips.firstOrNull { it.id == clip.id }?.let { current ->
                         updateClip(current.copy(stem = mode, stemUri = if (mode == StemMode.VOCALS) stems.vocals else stems.backing))
                     }
-                    _state.update { it.copy(modelReady = true, message = "Separated audio ready. Switch between vocals, backing and original.") }
+                    _state.update { it.copy(modelReady = true, message = appString(R.string.text_separated_audio_ready_switch_between_vocals_backing_and_original_3658bb)) }
                 }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { _state.update { it.copy(message = e.message ?: "Vocal separation failed. Please retry.") } }
+            catch (e: Exception) { _state.update { it.copy(message = e.message ?: appString(R.string.text_vocal_separation_failed_please_retry_d89efc)) } }
             finally { if (request == stemRequest) _state.update { it.copy(separating = "", modelReady = container.stemSeparator.modelReady()) } }
         }
     }
@@ -209,7 +212,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                 val result = if (query.isBlank()) container.repository.songsPage(0, 100) else container.repository.search(query).songs
                 _state.update { it.copy(songs = result.filter { s -> s.durationSec > 0 }, searching = false) }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { _state.update { it.copy(searching = false, message = "Could not load songs. Check your library connection.") } }
+            catch (e: Exception) { _state.update { it.copy(searching = false, message = appString(R.string.text_could_not_load_songs_check_your_library_connection_65bfc8)) } }
         }
     }
     fun analyze(clip: MixClip) {
@@ -223,7 +226,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _state.update { it.copy(analyses = it.analyses + (clip.song.id to result)) }
             } catch (e: CancellationException) { throw e }
-            catch (e: Exception) { _state.update { it.copy(message = e.message ?: "Analysis failed. You can still mix manually.") } }
+            catch (e: Exception) { _state.update { it.copy(message = e.message ?: appString(R.string.text_analysis_failed_you_can_still_mix_manually_adb74e)) } }
             finally { if (request == analysisRequest) _state.update { it.copy(analyzing = "") } }
         }
     }
@@ -250,10 +253,10 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
     fun play(fromSec: Float = 0f, tracklist: Boolean = false) {
         if (state.value.building) return
         val project = state.value.project
-        if (project.clips.size < 2) { _state.update { it.copy(message = "Add at least two tracks to play a mix.") }; return }
-        if (project.clips.any { it.song.streamUrl.isBlank() }) { _state.update { it.copy(message = "A source is unavailable. Reconnect to its library and reopen this mix.") }; return }
+        if (project.clips.size < 2) { _state.update { it.copy(message = appString(R.string.text_add_at_least_two_tracks_to_play_a_mix_367edf)) }; return }
+        if (project.clips.any { it.song.streamUrl.isBlank() }) { _state.update { it.copy(message = appString(R.string.text_a_source_is_unavailable_reconnect_to_its_library_and_reopen_this_217820)) }; return }
         if (project.clips.any { it.stem != StemMode.FULL && (it.stemUri.isBlank() || !java.io.File(android.net.Uri.parse(it.stemUri).path.orEmpty()).exists()) }) {
-            _state.update { it.copy(message = "A separated track was cleared from cache. Select Vocals or Backing again to prepare it.") }; return
+            _state.update { it.copy(message = appString(R.string.text_a_separated_track_was_cleared_from_cache_select_vocals_or_backing_0aa5dc)) }; return
         }
         container.mixController.pendingProject = project
         container.mixController.pendingPosition = fromSec
@@ -265,13 +268,13 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
     fun stop() { container.mixController.commands.tryEmit(MixCommand.Stop) }
     private fun refreshSaved() { viewModelScope.launch {
         runCatching { container.mixStore.list(account()) }.onSuccess { saved -> _state.update { it.copy(saved = saved) } }
-            .onFailure { _state.update { it.copy(message = "Saved mixes could not be read.") } }
+            .onFailure { _state.update { it.copy(message = appString(R.string.text_saved_mixes_could_not_be_read_7eab0e)) } }
     } }
     fun save() { viewModelScope.launch {
         val project = state.value.project
         _state.update { it.copy(busy = true) }
-        try { container.mixStore.save(account(), project); _state.update { it.copy(dirty = false, message = "Mix saved") }; refreshSaved() }
-        catch (e: Exception) { _state.update { it.copy(message = "Could not save the mix. Your edits are still open.") } }
+        try { container.mixStore.save(account(), project); _state.update { it.copy(dirty = false, message = appString(R.string.text_mix_saved_afa087)) }; refreshSaved() }
+        catch (e: Exception) { _state.update { it.copy(message = appString(R.string.text_could_not_save_the_mix_your_edits_are_still_open_ce467e)) } }
         finally { _state.update { it.copy(busy = false) } }
     } }
     fun open(project: MixProject) { viewModelScope.launch {
@@ -289,7 +292,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                 canUndo = false, canRedo = false, analyses = emptyMap()) }
             val key = account()
             for (c in clips) container.mixAnalyzer.cached(key, c.song)?.let { analysis -> _state.update { it.copy(analyses = it.analyses + (c.song.id to analysis)) } }
-        } catch (e: Exception) { _state.update { it.copy(message = "Could not reopen this mix. Check the library connection.") } }
+        } catch (e: Exception) { _state.update { it.copy(message = appString(R.string.text_could_not_reopen_this_mix_check_the_library_connection_956d9c)) } }
         finally { _state.update { it.copy(busy = false) } }
     } }
     fun newMix() { cancelAutoMix(); cancelAnalysis(); cancelSeparation(); stop(); undo.clear(); redo.clear(); _state.update { MixUiState(saved = it.saved, songs = it.songs, modelReady = container.stemSeparator.modelReady()) } }

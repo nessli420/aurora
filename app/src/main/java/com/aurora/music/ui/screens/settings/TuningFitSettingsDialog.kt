@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -43,50 +46,50 @@ internal fun TuningFitSettingsDialog(project: TuningProject, onDismiss: () -> Un
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Fitting settings") }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(appString(R.string.text_fitting_settings_d58cce)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            TuningChoiceRow("Channel intent", TuningChannelMode.entries.map { it.label() }, channelMode.ordinal) {
+            TuningChoiceRow(appString(R.string.text_channel_intent_e006ec), TuningChannelMode.entries.map { it.label() }, channelMode.ordinal) {
                 if (!busy) { channelMode = TuningChannelMode.entries[it]; error = null }
             }
             Text(when (channelMode) {
-                TuningChannelMode.LEFT -> "Left-channel correction."
-                TuningChannelMode.RIGHT -> "Right-channel correction."
-                TuningChannelMode.INDEPENDENT -> "Separate correction per channel. Shares the band budget."
-                TuningChannelMode.LINKED_AVERAGE -> "Averages both measurements for a shared correction."
+                TuningChannelMode.LEFT -> appString(R.string.text_left_channel_correction_210202)
+                TuningChannelMode.RIGHT -> appString(R.string.text_right_channel_correction_e4ef15)
+                TuningChannelMode.INDEPENDENT -> appString(R.string.text_separate_correction_per_channel_shares_the_band_budget_acace8)
+                TuningChannelMode.LINKED_AVERAGE -> appString(R.string.text_averages_both_measurements_for_a_shared_correction_886d6b)
             }, style = MaterialTheme.typography.bodySmall)
-            TuningChoiceRow("Level normalization", listOf("None", "Match mean 200–2000 Hz"), normalization.ordinal) {
+            TuningChoiceRow(appString(R.string.text_level_normalization_31c168), listOf(appString(R.string.text_none_6eef66), appString(R.string.text_match_mean_200_2000_hz_b8838a)), normalization.ordinal) {
                 if (!busy) { normalization = TuningNormalization.entries[it]; error = null }
             }
-            TuningChoiceRow("Controls", listOf("Fit limits", "Target shape", "Treble", "Channel limits", "Trim and delay"), section) { section = it }
+            TuningChoiceRow(appString(R.string.text_controls_bee75c), listOf(appString(R.string.text_fit_limits_ec1134), appString(R.string.text_target_shape_57174c), appString(R.string.text_treble_f66bec), appString(R.string.text_channel_limits_e045d3), appString(R.string.text_trim_and_delay_d38388)), section) { section = it }
             val fields = when (section) {
-                1 -> listOf(Triple("bass", "Bass · dB", ""), Triple("bassHz", "Bass corner · Hz", ""),
-                    Triple("tilt", "Tilt · dB/octave", ""), Triple("ear", "Ear gain · dB", ""), Triple("earHz", "Ear gain center · Hz", ""))
+                1 -> listOf(Triple("bass", appString(R.string.text_bass_db_765749), ""), Triple("bassHz", appString(R.string.text_bass_corner_hz_9bf7fa), ""),
+                    Triple("tilt", appString(R.string.text_tilt_db_octave_9349c9), ""), Triple("ear", appString(R.string.text_ear_gain_db_91d15e), ""), Triple("earHz", appString(R.string.text_ear_gain_center_hz_213d07), ""))
                 2 -> {
-                    SettingsSwitchRow(title = "Limit treble correction", subtitle = "Limits transition over one octave.", checked = treble, onCheckedChange = { treble = it })
-                    if (treble) listOf(Triple("trebleHz", "Treble start · Hz", ""), Triple("trebleBoost", "Maximum treble boost · dB", ""),
-                        Triple("trebleCut", "Maximum treble cut · dB", ""), Triple("trebleQ", "Maximum treble Q", "")) else emptyList()
+                    SettingsSwitchRow(title = appString(R.string.text_limit_treble_correction_280b63), subtitle = appString(R.string.text_limits_transition_over_one_octave_4ebf05), checked = treble, onCheckedChange = { treble = it })
+                    if (treble) listOf(Triple("trebleHz", appString(R.string.text_treble_start_hz_614974), ""), Triple("trebleBoost", appString(R.string.text_maximum_treble_boost_db_bfd6e9), ""),
+                        Triple("trebleCut", appString(R.string.text_maximum_treble_cut_db_384290), ""), Triple("trebleQ", appString(R.string.text_maximum_treble_q_659c12), "")) else emptyList()
                 }
                 3 -> {
-                    SettingsSwitchRow(title = "Linked fit limits", subtitle = "Separate limits require independent channels.", checked = linkedLimits, onCheckedChange = { linkedLimits = it })
-                    if (!linkedLimits) listOf("l" to "Left", "r" to "Right").flatMap { (prefix, label) -> listOf(
-                        Triple("${prefix}Boost", "$label maximum boost · dB", ""), Triple("${prefix}Cut", "$label maximum cut · dB", ""),
-                        Triple("${prefix}MinQ", "$label minimum Q", ""), Triple("${prefix}MaxQ", "$label maximum Q", "")) } else emptyList()
+                    SettingsSwitchRow(title = appString(R.string.text_linked_fit_limits_43f930), subtitle = appString(R.string.text_separate_limits_require_independent_channels_60e8b3), checked = linkedLimits, onCheckedChange = { linkedLimits = it })
+                    if (!linkedLimits) listOf("l" to appString(R.string.text_left_8ae1c3), "r" to appString(R.string.text_right_954daa)).flatMap { (prefix, label) -> listOf(
+                        Triple("${prefix}Boost", appString(R.string.text_maximum_boost_db_520502, (label)), ""), Triple("${prefix}Cut", appString(R.string.text_maximum_cut_db_eaff3a, (label)), ""),
+                        Triple("${prefix}MinQ", appString(R.string.text_minimum_q_270623, (label)), ""), Triple("${prefix}MaxQ", appString(R.string.text_maximum_q_b3dc54, (label)), "")) } else emptyList()
                 }
                 4 -> {
-                    Text("Manual alignment. No automatic phase correction.", style = MaterialTheme.typography.bodySmall)
-                    listOf(Triple("leftTrim", "Left trim - dB", ""), Triple("rightTrim", "Right trim - dB", ""),
-                        Triple("leftDelay", "Left delay - ms", ""), Triple("rightDelay", "Right delay - ms", ""))
+                    Text(appString(R.string.text_manual_alignment_no_automatic_phase_correction_f49cec), style = MaterialTheme.typography.bodySmall)
+                    listOf(Triple("leftTrim", appString(R.string.text_left_trim_db_27818d), ""), Triple("rightTrim", appString(R.string.text_right_trim_db_ba0e33), ""),
+                        Triple("leftDelay", appString(R.string.text_left_delay_ms_1f565b), ""), Triple("rightDelay", appString(R.string.text_right_delay_ms_ffbffc), ""))
                 }
                 else -> listOf(
-                Triple("rate", "Design sample rate · Hz", "8,000–768,000 Hz"),
-                Triple("bands", "Total parametric band budget", "1–128 total; up to 64 per channel"),
-                Triple("low", "Minimum fitting frequency · Hz", "10–24,000 Hz; below the maximum"),
-                Triple("high", "Maximum fitting frequency · Hz", "10–24,000 Hz; limited by shared data and Nyquist"),
-                Triple("boost", "Maximum boost · dB", "0–24 dB"),
-                Triple("cut", "Maximum cut · dB", "0–30 dB; enter a positive value"),
-                Triple("minQ", "Minimum Q", "0.1–100; no greater than maximum Q"),
-                Triple("maxQ", "Maximum Q", "0.1–100"),
-                Triple("smooth", "Smoothing width · octaves", "0–1; 0 is off, 0.1666667 is about 1/6 octave"),
+                Triple("rate", appString(R.string.text_design_sample_rate_hz_bdb79c), appString(R.string.text_8_000_768_000_hz_277a0d)),
+                Triple("bands", appString(R.string.text_total_parametric_band_budget_6a6f38), appString(R.string.text_1_128_total_up_to_64_per_channel_336445)),
+                Triple("low", appString(R.string.text_minimum_fitting_frequency_hz_357d9e), appString(R.string.text_10_24_000_hz_below_the_maximum_921163)),
+                Triple("high", appString(R.string.text_maximum_fitting_frequency_hz_8350af), appString(R.string.text_10_24_000_hz_limited_by_shared_data_and_nyquist_8302ea)),
+                Triple("boost", appString(R.string.text_maximum_boost_db_015774), appString(R.string.text_0_24_db_aa7fe4)),
+                Triple("cut", appString(R.string.text_maximum_cut_db_38d770), appString(R.string.text_0_30_db_enter_a_positive_value_5ac0ad)),
+                Triple("minQ", appString(R.string.text_minimum_q_e71a56), appString(R.string.text_0_1_100_no_greater_than_maximum_q_9d5f73)),
+                Triple("maxQ", appString(R.string.text_maximum_q_b595c7), "0.1–100"),
+                Triple("smooth", appString(R.string.text_smoothing_width_octaves_52255d), appString(R.string.text_0_1_0_is_off_0_1666667_is_about_1_6_octave_4ddee3)),
             )
             }
             fields.forEach { (key, label, _) ->
@@ -98,10 +101,10 @@ internal fun TuningFitSettingsDialog(project: TuningProject, onDismiss: () -> Un
                             val value = values.getValue(key)
                             values = values + (key to if (value.startsWith("-")) value.drop(1) else "-$value")
                             error = null
-                        }) { Icon(Icons.Filled.Exposure, "Change sign") }
+                        }) { Icon(Icons.Filled.Exposure, appString(R.string.text_change_sign_d00c6c)) }
                     })
             }
-            if (section != 4) Text("Magnitude correction only. Phase is not fitted.", style = MaterialTheme.typography.bodySmall)
+            if (section != 4) Text(appString(R.string.text_magnitude_correction_only_phase_is_not_fitted_885ea8), style = MaterialTheme.typography.bodySmall)
             error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
     }, confirmButton = { TextButton(enabled = !busy, onClick = {
@@ -112,8 +115,8 @@ internal fun TuningFitSettingsDialog(project: TuningProject, onDismiss: () -> Un
           try {
            val next = withContext(Dispatchers.Default) {
             fun number(key: String): Double = submitted.getValue(key).replace(',', '.').toDoubleOrNull()
-                ?.takeIf { it.isFinite() } ?: throw IllegalArgumentException("Enter a finite number for every setting.")
-            fun integer(key: String): Int = submitted.getValue(key).toIntOrNull() ?: throw IllegalArgumentException("Use whole numbers for sample rate and band budget.")
+                ?.takeIf { it.isFinite() } ?: throw IllegalArgumentException(appString(R.string.text_enter_a_finite_number_for_every_setting_49042c))
+            fun integer(key: String): Int = submitted.getValue(key).toIntOrNull() ?: throw IllegalArgumentException(appString(R.string.text_use_whole_numbers_for_sample_rate_and_band_budget_c979ce))
             val next = TuningFitConfig(integer("rate"), integer("bands"), number("low"), number("high"),
                 number("boost"), number("cut"), number("minQ"), number("maxQ"), mode, norm, number("smooth"),
                 bassDb = number("bass"), bassFrequencyHz = number("bassHz"), tiltDbPerOctave = number("tilt"),
@@ -127,10 +130,10 @@ internal fun TuningFitSettingsDialog(project: TuningProject, onDismiss: () -> Un
            }
            onSave(next)
           } catch (cancelled: CancellationException) { throw cancelled }
-          catch (failure: Exception) { error = failure.message ?: "Check the fitting limits." }
+          catch (failure: Exception) { error = failure.message ?: appString(R.string.text_check_the_fitting_limits_5de573) }
           finally { busy = false }
         }
-    }) { Text(if (busy) "Validating…" else "Use settings") } }, dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text("Cancel") } })
+    }) { Text(if (busy) appString(R.string.text_validating_c07434) else appString(R.string.text_use_settings_39966a)) } }, dismissButton = { TextButton(onClick = onDismiss, enabled = !busy) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }
 
 @Composable
@@ -141,7 +144,7 @@ internal fun TuningChoiceRow(title: String, options: List<String>, selected: Int
         Box {
             OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
                 Text(options.getOrElse(selected) { options.first() }, Modifier.weight(1f))
-                Icon(Icons.Filled.ArrowDropDown, "Choose $title")
+                Icon(Icons.Filled.ArrowDropDown, appString(R.string.text_choose_c2c00f, (title)))
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 options.forEachIndexed { index, name -> DropdownMenuItem(text = { Text(name) }, onClick = { expanded = false; onSelect(index) }) }
@@ -151,6 +154,6 @@ internal fun TuningChoiceRow(title: String, options: List<String>, selected: Int
 }
 
 internal fun TuningChannelMode.label(): String = when (this) {
-    TuningChannelMode.LEFT -> "Left only"; TuningChannelMode.RIGHT -> "Right only"
-    TuningChannelMode.INDEPENDENT -> "Independent left / right"; TuningChannelMode.LINKED_AVERAGE -> "Linked average of left / right"
+    TuningChannelMode.LEFT -> appString(R.string.text_left_only_6241b8); TuningChannelMode.RIGHT -> appString(R.string.text_right_only_ef29b6)
+    TuningChannelMode.INDEPENDENT -> appString(R.string.text_independent_left_right_d80711); TuningChannelMode.LINKED_AVERAGE -> appString(R.string.text_linked_average_of_left_right_80c6d6)
 }

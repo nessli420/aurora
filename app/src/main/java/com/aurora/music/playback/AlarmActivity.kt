@@ -1,5 +1,8 @@
 package com.aurora.music.playback
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -95,10 +98,10 @@ private fun AlarmDismissScreen(onDismiss: () -> Unit, onTurnOff: () -> Unit) {
         ) {
             Icon(Icons.Filled.Alarm, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(72.dp))
             Spacer(Modifier.height(20.dp))
-            Text("Alarm", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text(appString(R.string.text_alarm_25f8c5), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(6.dp))
             Text(
-                "Time to wake up",
+                appString(R.string.text_time_to_wake_up_0b1ade),
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -109,11 +112,11 @@ private fun AlarmDismissScreen(onDismiss: () -> Unit, onTurnOff: () -> Unit) {
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier.size(width = 220.dp, height = 56.dp),
             ) {
-                Text("Dismiss", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(appString(R.string.text_dismiss_70afe9), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             }
             Spacer(Modifier.height(10.dp))
             TextButton(onClick = onTurnOff) {
-                Text("Turn off daily alarm", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(appString(R.string.text_turn_off_daily_alarm_6c0180), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

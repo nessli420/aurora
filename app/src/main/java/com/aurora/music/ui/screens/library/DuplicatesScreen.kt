@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.library
 
+import com.aurora.music.localization.appPlural
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -45,11 +50,11 @@ fun DuplicatesScreen(
     onPlay: (Song) -> Unit,
 ) {
     Column(Modifier.fillMaxSize()) {
-        SettingsTopBar(title = "Duplicates", onBack = onBack)
+        SettingsTopBar(title = appString(R.string.text_duplicates_889a9c), onBack = onBack)
         when {
             loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
             groups.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("No duplicates found across $scanned tracks", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(appString(R.string.text_no_duplicates_found_across_tracks_8af6bb, (scanned)), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             else -> {
                 val dupCount = groups.sumOf { it.songs.size }
@@ -59,7 +64,7 @@ fun DuplicatesScreen(
                 ) {
                     item {
                         Text(
-                            "${groups.size} group${if (groups.size == 1) "" else "s"} • $dupCount tracks • $scanned scanned",
+                            appString(R.string.duplicates_counts, appPlural(R.plurals.group_count, (groups.size)), appPlural(R.plurals.track_count, (dupCount)), (scanned)),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
@@ -84,7 +89,7 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
     ) {
         Text(group.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(
-            "${group.artist} • ${group.songs.size} copies",
+            appString(R.string.text_copies_0ebf61, (group.artist), (group.songs.size)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
@@ -97,11 +102,11 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
                 Artwork(s.artworkUrl, s.accent, Modifier.size(40.dp), corner = 10.dp)
                 Spacer(Modifier.width(10.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(s.album.ifBlank { "Unknown album" }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(s.album.ifBlank { appString(R.string.text_unknown_album_feeeda) }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(specLine(s), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 if (s.id == currentSongId) {
-                    Icon(Icons.Filled.MusicNote, "Playing", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                    Icon(Icons.Filled.MusicNote, appString(R.string.text_playing_298c39), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -111,7 +116,7 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
 private fun specLine(s: Song): String {
     val parts = mutableListOf<String>()
     if (s.suffix.isNotBlank()) parts += s.suffix.uppercase()
-    if (s.bitrateKbps > 0) parts += "${s.bitrateKbps} kbps"
+    if (s.bitrateKbps > 0) parts += appString(R.string.text_kbps_f89f2e, (s.bitrateKbps))
     if (s.durationSec > 0) parts += "%d:%02d".format(s.durationSec / 60, s.durationSec % 60)
-    return parts.joinToString(" • ").ifBlank { "Unknown format" }
+    return parts.joinToString(" • ").ifBlank { appString(R.string.text_unknown_format_13526e) }
 }

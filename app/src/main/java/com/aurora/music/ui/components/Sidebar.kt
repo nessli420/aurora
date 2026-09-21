@@ -1,5 +1,8 @@
 package com.aurora.music.ui.components
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -56,8 +59,8 @@ fun SidebarContent(
     onPodcasts: () -> Unit = {},
     onLogout: () -> Unit,
 ) {
-    val initials = username.take(2).uppercase().ifBlank { "ME" }
-    val host = server.removePrefix("http://").removePrefix("https://").ifBlank { "View profile" }
+    val initials = username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }
+    val host = server.removePrefix("http://").removePrefix("https://").ifBlank { appString(R.string.text_view_profile_b98795) }
     Column(
         Modifier
             .fillMaxHeight()
@@ -85,7 +88,7 @@ fun SidebarContent(
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                Text(username.ifBlank { "Listener" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                 Text(host, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
@@ -94,18 +97,18 @@ fun SidebarContent(
         Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
         Spacer(Modifier.height(8.dp))
 
-        DrawerItem(Icons.Filled.Person, "Profile") { onProfile() }
-        DrawerItem(Icons.AutoMirrored.Filled.QueueMusic, "Your Library") { onLibrary() }
-        DrawerItem(Icons.Filled.Radio, "Radio") { onRadio() }
-        DrawerItem(Icons.Filled.Podcasts, "Podcasts") { onPodcasts() }
-        DrawerItem(Icons.Filled.History, "Listening history") { onHistory() }
-        DrawerItem(Icons.Filled.Workspaces, "Listening stats") { onStats() }
-        DrawerItem(Icons.Filled.ContentCopy, "Find duplicates") { onDuplicates() }
-        DrawerItem(Icons.Filled.Settings, "Settings") { onSettings() }
+        DrawerItem(Icons.Filled.Person, appString(R.string.text_profile_ff4fc0)) { onProfile() }
+        DrawerItem(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_your_library_fd740f)) { onLibrary() }
+        DrawerItem(Icons.Filled.Radio, appString(R.string.text_radio_b11bf1)) { onRadio() }
+        DrawerItem(Icons.Filled.Podcasts, appString(R.string.text_podcasts_fd52b4)) { onPodcasts() }
+        DrawerItem(Icons.Filled.History, appString(R.string.text_listening_history_bd9991)) { onHistory() }
+        DrawerItem(Icons.Filled.Workspaces, appString(R.string.text_listening_stats_a760b2)) { onStats() }
+        DrawerItem(Icons.Filled.ContentCopy, appString(R.string.text_find_duplicates_586f31)) { onDuplicates() }
+        DrawerItem(Icons.Filled.Settings, appString(R.string.text_settings_c7f73b)) { onSettings() }
 
         Spacer(Modifier.weight(1f))
 
-        DrawerItem(Icons.AutoMirrored.Filled.Logout, "Log out", tint = MaterialTheme.colorScheme.error) { onLogout() }
+        DrawerItem(Icons.AutoMirrored.Filled.Logout, appString(R.string.text_log_out_6e78c9), tint = MaterialTheme.colorScheme.error) { onLogout() }
         Spacer(Modifier.height(16.dp))
     }
 }

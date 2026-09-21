@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -29,7 +32,7 @@ fun ExtensionsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onRack: 
         scope.launch {
             try { action() }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { message = failure.message ?: "Extension is unavailable." }
+            catch (failure: Exception) { message = failure.message ?: appString(R.string.text_extension_is_unavailable_ad061c) }
             finally { busy = false }
         }
     }
@@ -38,32 +41,32 @@ fun ExtensionsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onRack: 
         manager.entries.value.filter { it.enabled }.forEach { manager.loadManifest(it.component) }
     }
     Column(Modifier.fillMaxSize().padding(contentPadding)) {
-        SettingsTopBar("Extensions", onBack)
+        SettingsTopBar(appString(R.string.text_extensions_656bcf), onBack)
         LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
-                Text("Install a compatible extension app, then enable it here.", style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = { run { manager.refresh() } }, enabled = !busy) { Text("Refresh") }
+                Text(appString(R.string.text_install_a_compatible_extension_app_then_enable_it_here_c7fadc), style = MaterialTheme.typography.bodyMedium)
+                TextButton(onClick = { run { manager.refresh() } }, enabled = !busy) { Text(appString(R.string.text_refresh_56e3ba)) }
                 message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
                 if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                if (entries.isEmpty()) Text("No extensions installed.")
+                if (entries.isEmpty()) Text(appString(R.string.text_no_extensions_installed_83afbc))
             }
             items(entries, key = { it.component }) { entry ->
                 SettingsGroup {
                     Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         val capabilities = entry.descriptor?.capabilities ?: entry.grant?.capabilities.orEmpty()
                         Text(entry.name, style = MaterialTheme.typography.titleMedium)
-                        Text(capabilities.map { when (it) { "audio" -> "Audio presets"; "media" -> "Read-only library"; "metadata" -> "Metadata lookups"; else -> it } }
+                        Text(capabilities.map { when (it) { "audio" -> appString(R.string.text_audio_presets_fbf3f8); "media" -> appString(R.string.text_read_only_library_ac6b49); "metadata" -> appString(R.string.text_metadata_lookups_af4cbd); else -> it } }
                             .joinToString(" · "), style = MaterialTheme.typography.bodySmall)
                         entry.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                         val license = entry.manifest?.license ?: entry.descriptor?.license.orEmpty()
-                        if (license.isNotBlank()) Text("License: $license", style = MaterialTheme.typography.bodySmall)
+                        if (license.isNotBlank()) Text(appString(R.string.text_license_1ba7bb, (license)), style = MaterialTheme.typography.bodySmall)
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text("Enabled", modifier = Modifier.padding(top = 12.dp))
+                            Text(appString(R.string.text_enabled_df174a), modifier = Modifier.padding(top = 12.dp))
                             Switch(checked = entry.enabled, enabled = !busy && entry.descriptor?.compatible == true,
                                 onCheckedChange = { enabled -> run { manager.setEnabled(entry.component, enabled, entry.descriptor).getOrThrow() } })
                         }
                         if (entry.enabled) {
-                            if ("metadata" in capabilities) Text("Receives title, artist and album when you request a tag lookup.", style = MaterialTheme.typography.bodySmall)
+                            if ("metadata" in capabilities) Text(appString(R.string.text_receives_title_artist_and_album_when_you_request_a_tag_lookup_dd0b6a), style = MaterialTheme.typography.bodySmall)
                             entry.manifest?.settings?.forEach { field ->
                                 var value by remember(entry.component, field.id, entry.grant?.settings) {
                                     mutableStateOf((entry.grant?.settings?.get(field.id) ?: field.default).toString())
@@ -71,17 +74,17 @@ fun ExtensionsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onRack: 
                                 OutlinedTextField(value, { value = it }, label = { Text(field.label) }, singleLine = true,
                                     modifier = Modifier.fillMaxWidth(), enabled = !busy)
                                 TextButton(onClick = { run {
-                                    manager.updateSetting(entry.component, field.id, value.toDoubleOrNull() ?: error("Enter a number.")).getOrThrow()
-                                    message = "Setting saved."
-                                } }, enabled = !busy) { Text("Save ${field.label.lowercase()}") }
+                                    manager.updateSetting(entry.component, field.id, value.toDoubleOrNull() ?: error(appString(R.string.text_enter_a_number_12f340))).getOrThrow()
+                                    message = appString(R.string.text_setting_saved_ac1563)
+                                } }, enabled = !busy) { Text(appString(R.string.text_save_e7ced9, (field.label.lowercase()))) }
                             }
                             if ("audio" in capabilities) TextButton(onClick = { run {
                                 pendingAudio = manager.audio(entry.component).getOrThrow()
-                            } }, enabled = !busy) { Text("Load audio preset") }
+                            } }, enabled = !busy) { Text(appString(R.string.text_load_audio_preset_1be2c8)) }
                             if ("media" in capabilities) TextButton(onClick = { run {
                                 container.switchSession(manager.useLibrary(entry.component))
-                                message = "Library selected."
-                            } }, enabled = !busy) { Text("Use this library") }
+                                message = appString(R.string.text_library_selected_8b0aae)
+                            } }, enabled = !busy) { Text(appString(R.string.text_use_this_library_742704)) }
                         }
                     }
                 }
@@ -89,17 +92,17 @@ fun ExtensionsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onRack: 
         }
     }
     pendingAudio?.let { rack ->
-        AlertDialog(onDismissRequest = { pendingAudio = null }, title = { Text("Load audio preset?") },
+        AlertDialog(onDismissRequest = { pendingAudio = null }, title = { Text(appString(R.string.text_load_audio_preset_24bd13)) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(rack.name, style = MaterialTheme.typography.titleSmall)
                     Text(rack.nodes.joinToString(" → ") { it.name })
-                    Text("This replaces the current rack. Saved presets stay available.")
+                    Text(appString(R.string.text_this_replaces_the_current_rack_saved_presets_stay_available_19c825))
                 }
             },
             confirmButton = { TextButton(onClick = {
                 pendingAudio = null
                 run { container.settingsStore.setProcessingRack(rack).getOrThrow(); onRack() }
-            }) { Text("Load") } }, dismissButton = { TextButton(onClick = { pendingAudio = null }) { Text("Cancel") } })
+            }) { Text(appString(R.string.text_load_ddcb77)) } }, dismissButton = { TextButton(onClick = { pendingAudio = null }) { Text(appString(R.string.text_cancel_77dfd2)) } })
     }
 }

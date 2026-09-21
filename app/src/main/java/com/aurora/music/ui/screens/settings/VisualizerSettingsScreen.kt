@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -63,14 +66,14 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Visualizer", onBack)
+        SettingsTopBar(appString(R.string.text_visualizer_7177c7), onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
             item { VisualizerPreview(prefs) }
 
-            item { SettingsSectionTitle("Style") }
+            item { SettingsSectionTitle(appString(R.string.text_style_99a0ef)) }
             item {
                 LazyRow(
                     Modifier.fillMaxWidth().padding(vertical = 4.dp),
@@ -96,75 +99,75 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
                 }
             }
 
-            item { SettingsSectionTitle("Colour") }
+            item { SettingsSectionTitle(appString(R.string.text_colour_f28563)) }
             item {
                 SettingsGroup {
-                    SegmentedRow("Colour source", listOf("Accent", "Custom", "Gradient", "Album"), prefs.colorSource) { save(prefs.copy(colorSource = it)) }
+                    SegmentedRow(appString(R.string.text_colour_source_92c52f), listOf(appString(R.string.text_accent_233064), appString(R.string.text_custom_081ae3), appString(R.string.text_gradient_36463c), appString(R.string.text_album_dfb4c9)), prefs.colorSource) { save(prefs.copy(colorSource = it)) }
                 }
             }
             if (prefs.colorSource == VizColor.CUSTOM || prefs.colorSource == VizColor.GRADIENT) {
-                item { Swatches("Primary", prefs.primaryColor) { save(prefs.copy(primaryColor = it)) } }
+                item { Swatches(appString(R.string.text_primary_a9a96e), prefs.primaryColor) { save(prefs.copy(primaryColor = it)) } }
             }
             if (prefs.colorSource == VizColor.GRADIENT) {
-                item { Swatches("Secondary", prefs.secondaryColor) { save(prefs.copy(secondaryColor = it)) } }
+                item { Swatches(appString(R.string.text_secondary_025de5), prefs.secondaryColor) { save(prefs.copy(secondaryColor = it)) } }
             }
 
-            item { SettingsSectionTitle("Background") }
+            item { SettingsSectionTitle(appString(R.string.text_background_64dd60)) }
             item {
                 SettingsGroup {
-                    SegmentedRow("Backdrop", listOf("Black", "Gradient", "Album blur"), prefs.background) { save(prefs.copy(background = it)) }
+                    SegmentedRow(appString(R.string.text_backdrop_d4f5e9), listOf(appString(R.string.text_black_b406fb), appString(R.string.text_gradient_36463c), appString(R.string.text_album_blur_1a1f3b)), prefs.background) { save(prefs.copy(background = it)) }
                 }
             }
 
-            item { SettingsSectionTitle("Spectrum") }
+            item { SettingsSectionTitle(appString(R.string.text_spectrum_9620cf)) }
             item {
                 SettingsGroup {
-                    SettingsSliderRow("Bar count", "${prefs.barCount}", prefs.barCount.toFloat(), 16f..160f, steps = 0) { save(prefs.copy(barCount = it.toInt())) }
+                    SettingsSliderRow(appString(R.string.text_bar_count_faa792), "${prefs.barCount}", prefs.barCount.toFloat(), 16f..160f, steps = 0) { save(prefs.copy(barCount = it.toInt())) }
                     SettingsRowDivider()
-                    SettingsSliderRow("Smoothing", "${(prefs.smoothing * 100).toInt()}%", prefs.smoothing, 0f..0.95f) { save(prefs.copy(smoothing = it)) }
+                    SettingsSliderRow(appString(R.string.text_smoothing_dcc490), "${(prefs.smoothing * 100).toInt()}%", prefs.smoothing, 0f..0.95f) { save(prefs.copy(smoothing = it)) }
                     SettingsRowDivider()
-                    SettingsSliderRow("Sensitivity", String.format("%.2fx", prefs.sensitivity), prefs.sensitivity, 0.25f..4f) { save(prefs.copy(sensitivity = it)) }
+                    SettingsSliderRow(appString(R.string.text_sensitivity_031cfc), String.format("%.2fx", prefs.sensitivity), prefs.sensitivity, 0.25f..4f) { save(prefs.copy(sensitivity = it)) }
                     SettingsRowDivider()
-                    SettingsSwitchRow(null, "Peak hold", "Falling caps on the bars", prefs.peakHold) { save(prefs.copy(peakHold = it)) }
+                    SettingsSwitchRow(null, appString(R.string.text_peak_hold_f1bbb5), appString(R.string.text_falling_caps_on_the_bars_f64a49), prefs.peakHold) { save(prefs.copy(peakHold = it)) }
                     SettingsRowDivider()
-                    SettingsSwitchRow(null, "Mirror", "Reflect the spectrum", prefs.mirror) { save(prefs.copy(mirror = it)) }
+                    SettingsSwitchRow(null, appString(R.string.text_mirror_74adc5), appString(R.string.text_reflect_the_spectrum_612298), prefs.mirror) { save(prefs.copy(mirror = it)) }
                 }
             }
 
-            item { SettingsSectionTitle("Frequency range") }
+            item { SettingsSectionTitle(appString(R.string.text_frequency_range_6f7ced)) }
             item {
                 SettingsGroup {
-                    SettingsSliderRow("Low cut", "${prefs.minHz} Hz", prefs.minHz.toFloat(), 10f..500f) { save(prefs.copy(minHz = it.toInt())) }
+                    SettingsSliderRow(appString(R.string.text_low_cut_67dd29), appString(R.string.text_hz_648ee5, (prefs.minHz)), prefs.minHz.toFloat(), 10f..500f) { save(prefs.copy(minHz = it.toInt())) }
                     SettingsRowDivider()
-                    SettingsSliderRow("High cut", "${prefs.maxHz / 1000} kHz", prefs.maxHz.toFloat(), 2000f..22000f) { save(prefs.copy(maxHz = it.toInt())) }
+                    SettingsSliderRow(appString(R.string.text_high_cut_609ed9), appString(R.string.text_khz_dd177d, (prefs.maxHz / 1000)), prefs.maxHz.toFloat(), 2000f..22000f) { save(prefs.copy(maxHz = it.toInt())) }
                 }
             }
 
-            item { SettingsSectionTitle("Motion & quality") }
+            item { SettingsSectionTitle(appString(R.string.text_motion_quality_364852)) }
             item {
                 SettingsGroup {
                     val fftIdx = when (prefs.fftSize) { 1024 -> 0; 4096 -> 2; else -> 1 }
-                    SegmentedRow("FFT resolution", listOf("1024", "2048", "4096"), fftIdx) {
+                    SegmentedRow(appString(R.string.text_fft_resolution_839073), listOf("1024", "2048", "4096"), fftIdx) {
                         save(prefs.copy(fftSize = when (it) { 0 -> 1024; 2 -> 4096; else -> 2048 }))
                     }
                     SettingsRowDivider()
                     val fpsIdx = when (prefs.fpsCap) { 30 -> 0; 90 -> 2; 120 -> 3; else -> 1 }
-                    SegmentedRow("Frame rate", listOf("30", "60", "90", "120"), fpsIdx) {
+                    SegmentedRow(appString(R.string.text_frame_rate_a245d8), listOf("30", "60", "90", "120"), fpsIdx) {
                         save(prefs.copy(fpsCap = when (it) { 0 -> 30; 2 -> 90; 3 -> 120; else -> 60 }))
                     }
                     SettingsRowDivider()
-                    SettingsSwitchRow(null, "Rotate radial styles", "Slow spin for radial / combo", prefs.rotate) { save(prefs.copy(rotate = it)) }
+                    SettingsSwitchRow(null, appString(R.string.text_rotate_radial_styles_72016a), appString(R.string.text_slow_spin_for_radial_combo_be2e95), prefs.rotate) { save(prefs.copy(rotate = it)) }
                     SettingsRowDivider()
-                    SettingsSliderRow("Particles", "${prefs.particleCount}", prefs.particleCount.toFloat(), 20f..400f) { save(prefs.copy(particleCount = it.toInt())) }
+                    SettingsSliderRow(appString(R.string.text_particles_07cdbc), "${prefs.particleCount}", prefs.particleCount.toFloat(), 20f..400f) { save(prefs.copy(particleCount = it.toInt())) }
                 }
             }
 
-            item { SettingsSectionTitle("Overlay") }
+            item { SettingsSectionTitle(appString(R.string.text_overlay_249450)) }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(null, "Album art centre", "Show artwork in radial styles", prefs.showAlbumArt) { save(prefs.copy(showAlbumArt = it)) }
+                    SettingsSwitchRow(null, appString(R.string.text_album_art_centre_757501), appString(R.string.text_show_artwork_in_radial_styles_100355), prefs.showAlbumArt) { save(prefs.copy(showAlbumArt = it)) }
                     SettingsRowDivider()
-                    SettingsSwitchRow(null, "Track info", "Title & artist over the visual", prefs.showTrackInfo) { save(prefs.copy(showTrackInfo = it)) }
+                    SettingsSwitchRow(null, appString(R.string.text_track_info_2bad97), appString(R.string.text_title_artist_over_the_visual_ff75a3), prefs.showTrackInfo) { save(prefs.copy(showTrackInfo = it)) }
                 }
             }
         }
@@ -188,7 +191,7 @@ private fun VisualizerPreview(prefs: VisualizerPrefs) {
         VisualizerCanvas(controller, prefs, colors, Modifier.fillMaxWidth().height(160.dp).padding(8.dp))
         if (controller.frame.level <= 0.001f) {
             Text(
-                "Play something to see it react",
+                appString(R.string.text_play_something_to_see_it_react_a6b517),
                 color = Color.White.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.align(Alignment.Center),

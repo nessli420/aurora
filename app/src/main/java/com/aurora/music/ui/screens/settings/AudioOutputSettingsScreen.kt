@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.content.Context
 import android.media.AudioDeviceCallback
 import android.media.AudioDeviceInfo
@@ -64,9 +67,9 @@ fun AudioOutputSettingsScreen(
         audioManager.registerAudioDeviceCallback(callback, Handler(Looper.getMainLooper()))
         onDispose { audioManager.unregisterAudioDeviceCallback(callback) }
     }
-    val preferredLabel = if (preferredId == 0) "Automatic" else devices.firstOrNull { it.id == preferredId }?.let {
-        if (it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) "Phone speaker" else it.productName.toString().ifBlank { "Connected device" }
-    } ?: "Selected device disconnected"
+    val preferredLabel = if (preferredId == 0) appString(R.string.text_automatic_ac9041) else devices.firstOrNull { it.id == preferredId }?.let {
+        if (it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER) appString(R.string.text_phone_speaker_ae9329) else it.productName.toString().ifBlank { appString(R.string.text_connected_device_6ed592) }
+    } ?: appString(R.string.text_selected_device_disconnected_c2d1b1)
     val capabilities = remember(observation, devices) {
         val route = observation.route
         val active = devices.firstOrNull { route.kind == ProcessingRouteKind.ANDROID && it.id == route.androidDeviceId }
@@ -79,42 +82,42 @@ fun AudioOutputSettingsScreen(
                     else -> AndroidMixerCapability.NOT_REPORTED
                 }
             }.getOrDefault(AndroidMixerCapability.NOT_REPORTED) else AndroidMixerCapability.NOT_REPORTED
-            AndroidOutputCapabilities(route.category?.label ?: "Android output", runCatching { active.sampleRates.toList() }.getOrNull(), mixer)
+            AndroidOutputCapabilities(route.category?.label ?: appString(R.string.text_android_output_0a3516), runCatching { active.sampleRates.toList() }.getOrNull(), mixer)
         }
     }
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(SettingsDestinations.output.label, onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
-            item { SettingsSectionTitle("Routing") }
+            item { SettingsSectionTitle(appString(R.string.text_routing_7d15dd)) }
             item {
                 SettingsGroup {
-                    SettingsNavRow(Icons.Filled.Devices, "Preferred output device", preferredLabel) { showDevices = true }
+                    SettingsNavRow(Icons.Filled.Devices, appString(R.string.text_preferred_output_device_7cecb0), preferredLabel) { showDevices = true }
                     SettingsRowDivider()
                     SettingsSwitchRow(
-                        Icons.Filled.Devices, "Independent output",
-                        "Allow other apps to play audio. Calls will not pause Aurora.",
+                        Icons.Filled.Devices, appString(R.string.text_independent_output_8bb01a),
+                        appString(R.string.text_allow_other_apps_to_play_audio_calls_will_not_pause_aurora_1aac7c),
                         prefs.independentOutput,
                     ) { value -> scope.launch { store.setIndependentOutput(value) } }
                 }
             }
             item {
-                Text("Applies to this session. Check Signal Path for the active route.",
+                Text(appString(R.string.text_applies_to_this_session_check_signal_path_for_the_active_route_81fa8c),
                     Modifier.padding(horizontal = 20.dp, vertical = 10.dp), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            item { SettingsSectionTitle("Output mode") }
+            item { SettingsSectionTitle(appString(R.string.text_output_mode_ba6e71)) }
             item { OutputRateSettings(ratePolicy) { next -> scope.launch { store.setOutputRatePolicy(next) } } }
             item {
                 SettingsGroup {
                     SettingsSwitchRow(
-                        Icons.Filled.HighQuality, "Prefer hi-res Android output",
-                        "Use float32 when supported. Restart Aurora to apply.",
+                        Icons.Filled.HighQuality, appString(R.string.text_prefer_hi_res_android_output_e20fb4),
+                        appString(R.string.text_use_float32_when_supported_restart_aurora_to_apply_79edcd),
                         prefs.preferHighRes,
                     ) { value -> scope.launch { store.setPreferHighRes(value) } }
                 }
             }
-            item { SettingsSectionTitle("USB DAC") }
+            item { SettingsSectionTitle(appString(R.string.text_usb_dac_948bb8)) }
             item {
                 UsbOutputSettings(prefs,
                     onEnabled = { value ->
@@ -130,14 +133,14 @@ fun AudioOutputSettingsScreen(
                     onExperimentalDsd = { value -> scope.launch { store.setUsbDsdExperimental(value) } },
                 )
             }
-            item { SettingsSectionTitle("Android capabilities") }
+            item { SettingsSectionTitle(appString(R.string.text_android_capabilities_5df566)) }
             item {
                 SettingsGroup {
                     Text(capabilities.describe(), Modifier.padding(20.dp), style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            item { SettingsSectionTitle("Inspect playback") }
+            item { SettingsSectionTitle(appString(R.string.text_inspect_playback_94b689)) }
             item {
                 SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, onClick = onOpenSignalPath)

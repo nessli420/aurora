@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
@@ -53,8 +56,8 @@ fun BackupScreen(contentPadding: PaddingValues, onBack: () -> Unit, confirm: (St
                         container.backupManager.exportArchive(System.currentTimeMillis(), it).getOrThrow()
                     }
                 } }
-                confirm(result.fold({ "Backup exported with processing presets and impulse responses" },
-                    { it.message ?: "Export failed" }))
+                confirm(result.fold({ appString(R.string.text_backup_exported_with_processing_presets_and_impulse_responses_fa67a8) },
+                    { it.message ?: appString(R.string.text_export_failed_d6c17e) }))
             } finally { busy = false }
         }
     }
@@ -65,25 +68,25 @@ fun BackupScreen(contentPadding: PaddingValues, onBack: () -> Unit, confirm: (St
                 val result = withContext(Dispatchers.IO) { runCatching {
                     requireNotNull(ctx.contentResolver.openInputStream(uri)).use { container.backupManager.importArchive(it).getOrThrow() }
                 } }
-                confirm(result.getOrElse { it.message ?: "Couldn't read that backup" })
+                confirm(result.getOrElse { it.message ?: appString(R.string.text_couldn_t_read_that_backup_db4478) })
             } finally { busy = false }
         }
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Backup & restore", onBack)
+        SettingsTopBar(appString(R.string.text_backup_restore_a16162), onBack)
         Column(Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             SettingsGroup {
-                ActionRow(Icons.Filled.Backup, "Export backup", "Settings, racks, presets, impulse responses, playlists and history") {
+                ActionRow(Icons.Filled.Backup, appString(R.string.text_export_backup_6043b4), appString(R.string.text_settings_racks_presets_impulse_responses_playlists_and_history_22c4f0)) {
                     if (!busy) exportLauncher.launch("aurora-backup.zip")
                 }
                 SettingsRowDivider()
-                ActionRow(Icons.Filled.Restore, "Restore backup", "Overwrites current settings & playlists") {
+                ActionRow(Icons.Filled.Restore, appString(R.string.text_restore_backup_a65eaa), appString(R.string.text_overwrites_current_settings_playlists_40eadc)) {
                     if (!busy) importLauncher.launch(arrayOf("application/zip", "application/json", "application/octet-stream"))
                 }
             }
             Text(
-                if (busy) "Preparing and validating backup…" else "Backups include saved measurement-tuning projects and impulse responses used by current processing and saved presets. Downloaded music is not included. Restore replaces settings, on-device playlists, likes and history. Older JSON backups are accepted, but their impulse responses must be selected again.",
+                if (busy) appString(R.string.text_preparing_and_validating_backup_d53752) else appString(R.string.text_backups_include_saved_measurement_tuning_projects_and_impulse_res_96c97e),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
             )

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"содержит"</string>
+    <string name="rule_is">"совпадает с"</string>
+    <string name="rule_exactly">"равно"</string>
+    <string name="answer_yes">"да"</string>
+    <string name="answer_no">"нет"</string>
+    <string name="recap_sound">"Ваш любимый исполнитель"</string>
+    <string name="recap_equal">"Столько же времени, сколько за прошлый период"</string>
+    <string name="recap_more">"На %1$s мин больше, чем за прошлый период"</string>
+    <string name="recap_less">"На %1$s мин меньше, чем за прошлый период"</string>
+    <string name="recap_pending">"Итоги появятся после завершения периода, если за это время вы слушали музыку."</string>
+    <string name="recap_new_count">"Новых итогов: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"Итоги · %1$s"</string>
+    <string name="recap_latest_title">"Последние итоги · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"Полночь"</string>
+    <string name="recap_paper">"Бумага"</string>
+    <string name="longest_streak">"Рекорд: %1$s"</string>
+    <string name="downloading_tracks">"Скачивание: %1$s"</string>
+    <string name="playlist_track_count">"Плейлист · %1$s"</string>
+    <string name="smart_rule_count">"Смарт-плейлист · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"ДАЛЕЕ · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · проверено: %3$s"</string>
+    <string name="track_count_more">"Треков: %1$s+"</string>
+    <string name="search_collection">"Поиск в подборке"</string>
+    <string name="downloaded_collection">"Скачано"</string>
+    <string name="signal_start_playback">"Включите музыку, чтобы увидеть путь аудиосигнала."</string>
+    <string name="text_source_rate_cf5128">"Частота исходного файла"</string>
+    <string name="text_current_playback_27f5a5">"Текущее воспроизведение"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"Полное стерео · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"Любой"</string>
+    <string name="text_saved_impulse_response_a5fc40">"Сохранённый импульсный отклик"</string>
+    <string name="text_hide_34d8b6">"Скрыть"</string>
+    <string name="text_show_d97d1e">"Показать"</string>
+    <string name="text_flat_target_7a50d3">"Ровная целевая кривая"</string>
+    <string name="text_unspecified_a6e7eb">"Не указано"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d трек</item>
+        <item quantity="few">%1$d трека</item>
+        <item quantity="many">%1$d треков</item>
+        <item quantity="other">%1$d треков</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d альбом</item>
+        <item quantity="few">%1$d альбома</item>
+        <item quantity="many">%1$d альбомов</item>
+        <item quantity="other">%1$d альбомов</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d исполнитель</item>
+        <item quantity="few">%1$d исполнителя</item>
+        <item quantity="many">%1$d исполнителей</item>
+        <item quantity="other">%1$d исполнителей</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d плейлист</item>
+        <item quantity="few">%1$d плейлиста</item>
+        <item quantity="many">%1$d плейлистов</item>
+        <item quantity="other">%1$d плейлистов</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d загрузка</item>
+        <item quantity="few">%1$d загрузки</item>
+        <item quantity="many">%1$d загрузок</item>
+        <item quantity="other">%1$d загрузок</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d прослушивание</item>
+        <item quantity="few">%1$d прослушивания</item>
+        <item quantity="many">%1$d прослушиваний</item>
+        <item quantity="other">%1$d прослушиваний</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d день</item>
+        <item quantity="few">%1$d дня</item>
+        <item quantity="many">%1$d дней</item>
+        <item quantity="other">%1$d дней</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">%1$d день с музыкой</item>
+        <item quantity="few">%1$d дня с музыкой</item>
+        <item quantity="many">%1$d дней с музыкой</item>
+        <item quantity="other">%1$d дней с музыкой</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d правило</item>
+        <item quantity="few">%1$d правила</item>
+        <item quantity="many">%1$d правил</item>
+        <item quantity="other">%1$d правил</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d группа</item>
+        <item quantity="few">%1$d группы</item>
+        <item quantity="many">%1$d групп</item>
+        <item quantity="other">%1$d групп</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d полоса</item>
+        <item quantity="few">%1$d полосы</item>
+        <item quantity="many">%1$d полос</item>
+        <item quantity="other">%1$d полос</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d такт</item>
+        <item quantity="few">%1$d такта</item>
+        <item quantity="many">%1$d тактов</item>
+        <item quantity="other">%1$d тактов</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"Сначала сохраните пресет"</string>
+    <string name="text_the_dac_05159b">"ЦАП"</string>
+    <string name="text_active_945637">" · включено"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome или Subsonic"</string>
+</resources>

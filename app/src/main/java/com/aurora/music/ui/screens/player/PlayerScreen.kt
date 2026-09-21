@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.player
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -205,62 +208,62 @@ fun PlayerScreen(
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Filled.KeyboardArrowDown, "Collapse",
+                        Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
                     // balances trailing icons so PLAYING FROM stays centered
                     Spacer(Modifier.width(80.dp))
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("PLAYING FROM", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
-                        Text(song.album.ifBlank { "Aurora" }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
+                        Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
+                        Text(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
                     }
                     // cast route picker tvs/chromecast show here not in the local-output sheet
                     PlayerCastButton(Modifier.size(40.dp))
                     Icon(
-                        Icons.Filled.Speaker, "Output device",
+                        Icons.Filled.Speaker, appString(R.string.text_output_device_709178),
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenOutput).padding(8.dp),
                     )
                     Box {
                         Icon(
-                            Icons.Filled.MoreVert, "More",
+                            Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                             modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showMenu = true }.padding(8.dp),
                         )
                         DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                            DropdownMenuItem(text = { Text("Mix studio") }, onClick = { showMenu = false; onOpenMix() }, leadingIcon = { Icon(Icons.Filled.GraphicEq, null) })
+                            DropdownMenuItem(text = { Text(appString(R.string.text_mix_studio_668363)) }, onClick = { showMenu = false; onOpenMix() }, leadingIcon = { Icon(Icons.Filled.GraphicEq, null) })
                             DropdownMenuItem(
-                                text = { Text("Sonic radio") },
+                                text = { Text(appString(R.string.text_sonic_radio_9b7bff)) },
                                 onClick = { showMenu = false; onSonicRadio() },
                                 leadingIcon = { Icon(Icons.Filled.Radio, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Auto-DJ") },
+                                text = { Text(appString(R.string.text_auto_dj_774a78)) },
                                 onClick = { showMenu = false; onAutoDj() },
                                 leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Visualizer") },
+                                text = { Text(appString(R.string.text_visualizer_7177c7)) },
                                 onClick = { showMenu = false; onOpenVisualizer() },
                                 leadingIcon = { Icon(Icons.Filled.GraphicEq, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Sleep timer") },
+                                text = { Text(appString(R.string.text_sleep_timer_e90613)) },
                                 onClick = { showMenu = false; onOpenSleep() },
                                 leadingIcon = { Icon(Icons.Filled.Bedtime, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Go to album") },
+                                text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
                                 enabled = song.albumId.isNotBlank(),
                                 onClick = { showMenu = false; onGoToAlbum() },
                                 leadingIcon = { Icon(Icons.Filled.Album, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("Go to artist") },
+                                text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
                                 enabled = song.artistId.isNotBlank(),
                                 onClick = { showMenu = false; onGoToArtist() },
                                 leadingIcon = { Icon(Icons.Filled.Person, null) },
                             )
                             DropdownMenuItem(
-                                text = { Text("View queue") },
+                                text = { Text(appString(R.string.text_view_queue_827a90)) },
                                 onClick = { showMenu = false; onOpenQueue() },
                                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
                             )
@@ -318,9 +321,9 @@ fun PlayerScreen(
 
             if (state.hasVideo && videoPlayer != null) {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    androidx.compose.material3.FilterChip(selected = !showVideo, onClick = { showVideo = false }, label = { Text("Audio") })
+                    androidx.compose.material3.FilterChip(selected = !showVideo, onClick = { showVideo = false }, label = { Text(appString(R.string.text_audio_acdac2)) })
                     Spacer(Modifier.width(12.dp))
-                    androidx.compose.material3.FilterChip(selected = showVideo, onClick = { showLyrics = false; showVideo = true }, label = { Text("Video") })
+                    androidx.compose.material3.FilterChip(selected = showVideo, onClick = { showLyrics = false; showVideo = true }, label = { Text(appString(R.string.text_video_bc17c1)) })
                 }
             }
 
@@ -355,7 +358,7 @@ fun PlayerScreen(
                 )
                 Icon(
                     imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                    contentDescription = "Like",
+                    contentDescription = appString(R.string.text_like_c7e02c),
                     tint = likeTint,
                     modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onToggleLike).padding(8.dp),
                 )
@@ -367,7 +370,7 @@ fun PlayerScreen(
             FlowRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .clip(RoundedCornerShape(12.dp))
-                    .clickable(role = Role.Button, onClickLabel = "Open Signal Path", onClick = onOpenSignalPath)
+                    .clickable(role = Role.Button, onClickLabel = appString(R.string.text_open_signal_path_29e042), onClick = onOpenSignalPath)
                     .padding(vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 verticalArrangement = Arrangement.spacedBy(6.dp),
@@ -375,7 +378,7 @@ fun PlayerScreen(
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
                     Icon(Icons.Filled.Route, null, modifier = Modifier.size(16.dp), tint = playerAccent)
                     Spacer(Modifier.width(4.dp))
-                    Text("Signal Path", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = playerAccent)
+                    Text(appString(R.string.text_signal_path_c3e29b), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = playerAccent)
                 }
                 if (source != null) {
                     Box(
@@ -388,7 +391,7 @@ fun PlayerScreen(
                 if (isLossless(song.suffix)) {
                     Box(
                         Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(playerAccent).padding(horizontal = 8.dp, vertical = 3.dp),
-                    ) { Text("LOSSLESS", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onPlayerAccent) }
+                    ) { Text(appString(R.string.text_lossless_32e74a), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onPlayerAccent) }
                 }
                 if (badge.isNotEmpty()) {
                     Box(
@@ -425,12 +428,12 @@ fun PlayerScreen(
             ) {
                 Icon(
                     if (state.isMix) Icons.Filled.GraphicEq else Icons.Filled.Shuffle,
-                    if (state.isMix) "Edit mix transitions" else "Shuffle",
+                    if (state.isMix) appString(R.string.text_edit_mix_transitions_76ee01) else appString(R.string.text_shuffle_5b772b),
                     tint = if (state.shuffle || state.isMix) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = if (state.isMix) onOpenMix else onToggleShuffle).padding(8.dp),
                 )
                 Icon(
-                    Icons.Filled.SkipPrevious, "Previous",
+                    Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(56.dp).clip(CircleShape).clickable(onClick = onPrevious).padding(6.dp),
                 )
@@ -444,19 +447,19 @@ fun PlayerScreen(
                 ) {
                     Icon(
                         if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = "Play/pause",
+                        contentDescription = appString(R.string.text_play_pause_14a1d0),
                         tint = onPlayerAccent,
                         modifier = Modifier.size(36.dp),
                     )
                 }
                 Icon(
-                    Icons.Filled.SkipNext, "Next",
+                    Icons.Filled.SkipNext, appString(R.string.text_next_bc9819),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(56.dp).clip(CircleShape).clickable(onClick = onNext).padding(6.dp),
                 )
                 Icon(
                     imageVector = if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
-                    contentDescription = "Repeat",
+                    contentDescription = appString(R.string.text_repeat_659eba),
                     tint = if (state.repeat != RepeatMode.OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onCycleRepeat).padding(8.dp),
                 )
@@ -471,17 +474,17 @@ fun PlayerScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     BottomUtil(
-                        Icons.Filled.Speed, "Speed ${"%.1f".format(state.speed)}x", onOpenSpeedPitch,
+                        Icons.Filled.Speed, appString(R.string.text_speed_x_72da98, ("%.1f".format(state.speed))), onOpenSpeedPitch,
                         active = kotlin.math.abs(state.speed - 1f) > 0.001f ||
                             (!state.matchPitch && kotlin.math.abs(state.pitch) > 0.001f),
                     )
                     BottomUtil(
                         Icons.Filled.Lyrics,
-                        "Lyrics",
+                        appString(R.string.text_lyrics_8670cb),
                         { showLyrics = !showLyrics },
                         active = showLyrics,
                     )
-                    BottomUtil(Icons.AutoMirrored.Filled.QueueMusic, "Queue", onOpenQueue)
+                    BottomUtil(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), onOpenQueue)
                 }
             } else {
                 Spacer(Modifier.height(12.dp))
@@ -493,17 +496,17 @@ fun PlayerScreen(
 
 private fun sourceLabel(song: com.aurora.music.model.Song): String? = when {
     song.streamUrl.isBlank() -> null
-    song.streamUrl.startsWith("content://") -> "Local"
-    song.streamUrl.startsWith("file://") -> "Downloaded"
-    else -> "Streaming"
+    song.streamUrl.startsWith("content://") -> appString(R.string.text_local_dc99d5)
+    song.streamUrl.startsWith("file://") -> appString(R.string.text_downloaded_c61970)
+    else -> appString(R.string.text_streaming_1e8325)
 }
 
 private fun formatBadge(song: com.aurora.music.model.Song): String {
     val parts = mutableListOf<String>()
     if (song.suffix.isNotBlank()) parts.add(song.suffix.uppercase())
-    if (song.sampleRateHz > 0) parts.add("%.1f kHz".format(song.sampleRateHz / 1000f))
-    if (song.bitDepth > 0) parts.add("${song.bitDepth}-bit")
-    if (song.bitrateKbps > 0) parts.add("${song.bitrateKbps} kbps")
+    if (song.sampleRateHz > 0) parts.add(appString(R.string.text_1f_khz_92ed69).format(song.sampleRateHz / 1000f))
+    if (song.bitDepth > 0) parts.add(appString(R.string.text_bit_fd7850, (song.bitDepth)))
+    if (song.bitrateKbps > 0) parts.add(appString(R.string.text_kbps_f89f2e, (song.bitrateKbps)))
     return parts.joinToString(" · ")
 }
 
@@ -532,7 +535,7 @@ private fun SeekBar(progress: Float, positionSec: Int, durationSec: Int, isLive:
             Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (isLive) Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
                 Spacer(Modifier.width(8.dp))
-                Text(if (isLive) "LIVE" else "Streaming", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = accent)
+                Text(if (isLive) appString(R.string.text_live_6990f0) else appString(R.string.text_streaming_1e8325), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = accent)
                 Spacer(Modifier.weight(1f))
                 Text(formatTime(positionSec), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
@@ -592,15 +595,15 @@ private fun LyricsPanel(song: com.aurora.music.model.Song, positionSec: Float, d
             l == null || l.lines.isEmpty() -> Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
                 Icon(Icons.Filled.Lyrics, null, tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f), modifier = Modifier.size(48.dp))
                 Spacer(Modifier.height(10.dp))
-                Text("No lyrics found", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text("Tried the server & LRCLIB", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(appString(R.string.text_no_lyrics_found_75127a), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                Text(appString(R.string.text_tried_the_server_lrclib_aeac0e), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             else -> {
                 Box(
                     Modifier.align(Alignment.TopEnd).padding(12.dp).clip(RoundedCornerShape(50))
                         .background(accent.copy(alpha = 0.85f)).padding(horizontal = 10.dp, vertical = 4.dp),
                 ) {
-                    Text(if (l.synced) l.source else "${l.source} · text", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = if (accent.luminance() > 0.6f) Color.Black else Color.White)
+                    Text(if (l.synced) l.source else appString(R.string.text_text_61e2d5, (l.source)), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = if (accent.luminance() > 0.6f) Color.Black else Color.White)
                 }
                 if (l.synced) SyncedLyrics(l.lines, positionSec, durationSec, accent, onSeek)
                 else PlainLyrics(l.lines)
@@ -707,7 +710,7 @@ private fun SyncedLyrics(lines: List<LyricLine>, positionSec: Float, durationSec
         ) {
             val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
             Text(
-                "Back to current line",
+                appString(R.string.text_back_to_current_line_d5146a),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Black,
                 color = onAccent,

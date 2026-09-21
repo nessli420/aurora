@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.player
 
+import com.aurora.music.localization.appPlural
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -109,18 +114,18 @@ fun QueueScreen(
                 Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
             ) {
                 Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.KeyboardArrowDown, "Close", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClose).padding(6.dp))
+                    Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClose).padding(6.dp))
                     Spacer(Modifier.weight(1f))
-                    Text("Queue", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
+                    Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                     Spacer(Modifier.weight(1f))
                     Icon(
-                        Icons.Filled.PlaylistAdd, "Save queue as playlist",
+                        Icons.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
                         tint = if (queue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(40.dp).clip(CircleShape)
                             .clickable(enabled = queue.isNotEmpty()) { showSaveDialog = true }.padding(8.dp),
                     )
                     Icon(
-                        Icons.Filled.DeleteSweep, "Clear queue",
+                        Icons.Filled.DeleteSweep, appString(R.string.text_clear_queue_984301),
                         tint = if (upcoming.isEmpty() || !editable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(40.dp).clip(CircleShape)
                             .clickable(enabled = upcoming.isNotEmpty() && editable, onClick = onClear).padding(8.dp),
@@ -130,7 +135,7 @@ fun QueueScreen(
                 TextButton(onClick = onOpenMix, modifier = Modifier.fillMaxWidth()) {
                     Icon(Icons.Filled.GraphicEq, null, Modifier.size(20.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(if (editable) "Open mix studio" else "Edit mix in Studio")
+                    Text(if (editable) appString(R.string.text_open_mix_studio_9ddf16) else appString(R.string.text_edit_mix_in_studio_5e8df8))
                 }
                 if (current != null) {
                     Row(
@@ -140,7 +145,7 @@ fun QueueScreen(
                         Artwork(current.artworkUrl, accent, Modifier.size(64.dp), corner = 14.dp)
                         Spacer(Modifier.width(14.dp))
                         Column(Modifier.weight(1f)) {
-                            Eyebrow("NOW PLAYING", accent)
+                            Eyebrow(appString(R.string.text_now_playing_586fa7), accent)
                             Spacer(Modifier.height(2.dp))
                             Text(current.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(current.artist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -160,7 +165,7 @@ fun QueueScreen(
                                 Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
                                 Spacer(Modifier.width(8.dp))
                                 Text(
-                                    "PREVIOUSLY PLAYED  •  ${played.size}",
+                                    appString(R.string.text_previously_played_bf618e, (played.size)),
                                     style = MaterialTheme.typography.labelMedium,
                                     fontWeight = FontWeight.Black,
                                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -185,7 +190,7 @@ fun QueueScreen(
 
                     item {
                         Text(
-                            if (upcoming.isEmpty()) "NOTHING UP NEXT" else "UP NEXT  •  ${upcoming.size} tracks",
+                            if (upcoming.isEmpty()) appString(R.string.text_nothing_up_next_295357) else appString(R.string.queue_track_count, appPlural(R.plurals.track_count, (upcoming.size))),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -276,14 +281,14 @@ private fun QueueTrackRow(
         Text(formatTime(song.durationSec), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp))
         if (onRemove != null) {
             Icon(
-                Icons.Filled.Close, "Remove",
+                Icons.Filled.Close, appString(R.string.text_remove_e96390),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onRemove).padding(7.dp),
             )
         }
         if (dragHandle != null) {
             Icon(
-                Icons.Filled.DragHandle, "Reorder",
+                Icons.Filled.DragHandle, appString(R.string.text_reorder_33d997),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.size(34.dp).padding(6.dp).then(dragHandle),
             )
@@ -296,14 +301,14 @@ private fun SaveQueueDialog(onSave: (String) -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Save queue as playlist", fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.text_save_queue_as_playlist_7f09d8), fontWeight = FontWeight.Bold) },
         text = {
             OutlinedTextField(
                 value = name, onValueChange = { name = it },
-                label = { Text("Playlist name") }, singleLine = true,
+                label = { Text(appString(R.string.text_playlist_name_544f75)) }, singleLine = true,
             )
         },
-        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onSave(name.trim()) }, enabled = name.isNotBlank()) { Text("Save") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onSave(name.trim()) }, enabled = name.isNotBlank()) { Text(appString(R.string.text_save_efc007)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
 }

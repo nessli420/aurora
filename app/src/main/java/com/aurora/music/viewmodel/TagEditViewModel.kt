@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -70,7 +73,7 @@ class TagEditViewModel(app: Application) : AndroidViewModel(app) {
                 runCatching { container.musicBrainz.search(t.title, t.artist, t.album) }.getOrDefault(emptyList()) + extensions.await()
             }
             _state.update {
-                it.copy(matching = false, matches = results, matchError = if (results.isEmpty()) "No matches found" else null)
+                it.copy(matching = false, matches = results, matchError = if (results.isEmpty()) appString(R.string.text_no_matches_found_a68d28) else null)
             }
         }
     }
@@ -84,14 +87,14 @@ class TagEditViewModel(app: Application) : AndroidViewModel(app) {
             val fingerprint = runCatching { container.acoustId.fingerprint(path) }.getOrNull()
             android.util.Log.i("AuroraFp", "fingerprint(${path.substringAfterLast('/')}) len=${fingerprint?.length ?: -1}")
             when {
-                fingerprint == null -> _state.update { it.copy(identifying = false, matchError = "Couldn't fingerprint this file") }
+                fingerprint == null -> _state.update { it.copy(identifying = false, matchError = appString(R.string.text_couldn_t_fingerprint_this_file_ccbec4)) }
                 !container.acoustId.configured -> _state.update {
-                    it.copy(identifying = false, matchError = "Fingerprint ready (${fingerprint.length} chars). Add an AcoustID API key to fetch matches.")
+                    it.copy(identifying = false, matchError = appString(R.string.text_fingerprint_ready_chars_add_an_acoustid_api_key_to_fetch_matches_1b57d9, (fingerprint.length)))
                 }
                 else -> {
                     val results = runCatching { container.acoustId.lookup(fingerprint, durationSec) }.getOrDefault(emptyList())
                     _state.update {
-                        it.copy(identifying = false, matches = results, matchError = if (results.isEmpty()) "No AcoustID match" else null)
+                        it.copy(identifying = false, matches = results, matchError = if (results.isEmpty()) appString(R.string.text_no_acoustid_match_a72740) else null)
                     }
                 }
             }

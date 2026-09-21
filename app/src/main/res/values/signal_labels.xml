@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"Android audio"</string>
+    <string name="signal_text_android_audio_mix_f88264">"Android audio · Mix"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"Direct USB transport"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"Processed USB transport"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"Cast receiver"</string>
+    <string name="signal_text_source_6da13a">"Source"</string>
+    <string name="signal_text_decoder_7be2f0">"Decoder"</string>
+    <string name="signal_text_processing_e63451">"Processing"</string>
+    <string name="signal_text_resampling_1bf1aa">"Resampling"</string>
+    <string name="signal_text_output_4bed33">"Output"</string>
+    <string name="signal_text_device_a5a74a">"Device"</string>
+    <string name="signal_text_latency_3e3997">"Latency"</string>
+</resources>

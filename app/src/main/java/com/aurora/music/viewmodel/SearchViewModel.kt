@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -86,7 +89,7 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
                 ensureActive()
                 _state.update { it.copy(results = enriched) }
             } catch (e: CancellationException) { throw e }
-            catch (_: Exception) { _state.update { it.copy(loading = false, error = "Could not search this source. Try again.") } }
+            catch (_: Exception) { _state.update { it.copy(loading = false, error = appString(R.string.text_could_not_search_this_source_try_again_a811fe)) } }
         }
     }
 }

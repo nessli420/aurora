@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.podcasts
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -52,9 +55,9 @@ import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.PodcastViewModel
 
-private val SEED_TERMS = listOf(
-    "News", "Comedy", "Technology", "Science", "True Crime",
-    "History", "Business", "Sports", "Health", "Music",
+private val SEED_TERMS: List<String> get() = listOf(
+    appString(R.string.text_news_34c808), appString(R.string.text_comedy_11381a), appString(R.string.text_technology_d018b0), appString(R.string.text_science_d2d066), appString(R.string.text_true_crime_7a3f06),
+    appString(R.string.text_history_90ccd6), appString(R.string.text_business_d6663d), appString(R.string.text_sports_2fec45), appString(R.string.text_health_3703cd), appString(R.string.text_music_131260),
 )
 
 @Composable
@@ -74,14 +77,14 @@ fun PodcastsScreen(
     Column(Modifier.fillMaxSize().padding(top = topInset)) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
-                Icons.AutoMirrored.Filled.ArrowBack, "Back",
+                Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Text("Podcasts", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(appString(R.string.text_podcasts_fd52b4), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Icon(
                 if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
-                if (searchOpen) "Close search" else "Search podcasts",
+                if (searchOpen) appString(R.string.text_close_search_0906f9) else appString(R.string.text_search_podcasts_758c3a),
                 modifier = Modifier.size(40.dp).clip(CircleShape).clickable {
                     searchOpen = !searchOpen
                     if (!searchOpen) { query = ""; vm.clearSearch() }
@@ -94,7 +97,7 @@ fun PodcastsScreen(
                 value = query,
                 onValueChange = { query = it; vm.search(it) },
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                placeholder = { Text("Search shows & topics") },
+                placeholder = { Text(appString(R.string.text_search_shows_topics_da6b61)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                 singleLine = true,
                 shape = RoundedCornerShape(14.dp),
@@ -130,7 +133,7 @@ fun PodcastsScreen(
             }
 
             if (state.query.isBlank() && subs.isNotEmpty()) {
-                item { SectionLabel("Subscribed") }
+                item { SectionLabel(appString(R.string.text_subscribed_dd1242)) }
                 items(subs.size) { i ->
                     val p = subs[i]
                     PodcastRow(p, onClick = { onOpenPodcast(p) })
@@ -138,13 +141,13 @@ fun PodcastsScreen(
             }
 
             if (state.query.isNotBlank()) {
-                item { SectionLabel("Results") }
+                item { SectionLabel(appString(R.string.text_results_612e12)) }
                 if (state.loading) {
                     item { Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(64.dp)) } }
                 } else if (state.results.isEmpty()) {
                     item {
                         Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
-                            Text(if (state.failed) "Couldn't reach the directory" else "No shows found", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            Text(if (state.failed) appString(R.string.text_couldn_t_reach_the_directory_f4b567) else appString(R.string.text_no_shows_found_2f293b), color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
                 } else {
@@ -157,7 +160,7 @@ fun PodcastsScreen(
                 item {
                     Box(Modifier.fillMaxWidth().padding(top = 60.dp, start = 32.dp, end = 32.dp), contentAlignment = Alignment.Center) {
                         Text(
-                            "Search for a show or pick a topic above to get started.",
+                            appString(R.string.text_search_for_a_show_or_pick_a_topic_above_to_get_started_681552),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )

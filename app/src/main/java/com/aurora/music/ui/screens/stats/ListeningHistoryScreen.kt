@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.stats
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -52,17 +55,17 @@ fun ListeningHistoryScreen(contentPadding: PaddingValues, onBack: () -> Unit, on
 
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Listening history", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.text_listening_history_bd9991), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
         if (history.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(56.dp))
                     Spacer(Modifier.size(12.dp))
-                    Text("Nothing played yet", style = MaterialTheme.typography.titleMedium)
-                    Text("Your recently played tracks will appear here", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appString(R.string.text_nothing_played_yet_9503da), style = MaterialTheme.typography.titleMedium)
+                    Text(appString(R.string.text_your_recently_played_tracks_will_appear_here_0bdf0b), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             return@Column
@@ -100,8 +103,8 @@ private fun dayLabel(ts: Long): String {
     now.add(Calendar.DAY_OF_YEAR, -1)
     val yesterday = now.get(Calendar.YEAR) == then.get(Calendar.YEAR) && now.get(Calendar.DAY_OF_YEAR) == then.get(Calendar.DAY_OF_YEAR)
     return when {
-        sameDay -> "Today"
-        yesterday -> "Yesterday"
+        sameDay -> appString(R.string.text_today_24345a)
+        yesterday -> appString(R.string.text_yesterday_da2483)
         else -> SimpleDateFormat("EEEE, MMM d", Locale.getDefault()).format(Date(ts))
     }
 }

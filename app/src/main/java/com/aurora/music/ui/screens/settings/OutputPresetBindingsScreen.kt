@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -26,9 +29,9 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
     val store = container.settingsStore
     val observation by store.processingRoutes.observations.collectAsStateWithLifecycle()
     var loadError by remember { mutableStateOf<String?>(null) }
-    val rulesFlow = remember(store) { store.processingRouteRules.catch { loadError = it.message ?: "Output rules unavailable." } }
+    val rulesFlow = remember(store) { store.processingRouteRules.catch { loadError = it.message ?: appString(R.string.text_output_rules_unavailable_e638bb) } }
     val rules by rulesFlow.collectAsStateWithLifecycle<ProcessingRouteRules?>(initialValue = null)
-    val orderedFlow = remember(store) { store.presetRules.catch { loadError = it.message ?: "Preset rules unavailable." } }
+    val orderedFlow = remember(store) { store.presetRules.catch { loadError = it.message ?: appString(R.string.text_preset_rules_unavailable_2c7cba) } }
     val ordered by orderedFlow.collectAsStateWithLifecycle(initialValue = PresetRuleSet())
     val library by store.processingPresetLibrary.collectAsStateWithLifecycle<ProcessingPresetLibrary?>(initialValue = null)
     val status by container.autoEqController.status.collectAsStateWithLifecycle()
@@ -45,14 +48,14 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
         scope.launch {
             try { action().getOrThrow() }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { snackbar.showSnackbar(failure.message ?: "Could not update output rules.") }
+            catch (failure: Exception) { snackbar.showSnackbar(failure.message ?: appString(R.string.text_could_not_update_output_rules_c86d7e)) }
             finally { busy = false }
         }
     }
     BackHandler(onBack = onBack)
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            SettingsTopBar("Output presets", onBack)
+            SettingsTopBar(appString(R.string.text_output_presets_8523fd), onBack)
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 item {
@@ -67,10 +70,10 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                 loadError?.let { item { Text(it, Modifier.padding(20.dp), color = MaterialTheme.colorScheme.error) } }
                 if (rules != null) item {
                     SettingsGroup {
-                        SettingsSwitchRow(title = "Apply output presets", checked = rules!!.enabled,
+                        SettingsSwitchRow(title = appString(R.string.text_apply_output_presets_a03e14), checked = rules!!.enabled,
                             onCheckedChange = { enabled -> perform { store.setRouteRulesEnabled(enabled) } })
                         if (key != null) {
-                            SettingsSwitchRow(title = "Keep current sound", subtitle = "Keep manual settings after reconnecting.",
+                            SettingsSwitchRow(title = appString(R.string.text_keep_current_sound_6e3bdc), subtitle = appString(R.string.text_keep_manual_settings_after_reconnecting_2f0892),
                                 checked = ordered.manualHold || key in rules!!.manual, onCheckedChange = { hold -> perform {
                                     store.holdCurrentRoute(hold).getOrThrow()
                                     if (!hold) store.setPresetRuleManualHold(false) else Result.success(Unit)
@@ -83,12 +86,12 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                     if (choices.any { it.isNotEmpty() }) item {
                         SettingsGroup {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text("Connected headphones", style = MaterialTheme.typography.titleSmall)
+                                Text(appString(R.string.text_connected_headphones_68a2f7), style = MaterialTheme.typography.titleSmall)
                                 (listOf("") + choices).distinct().forEach { headphones ->
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         RadioButton(selected = rules?.headphones?.get(key).orEmpty() == headphones,
                                             enabled = ready, onClick = { perform { store.chooseRouteHeadphones(key, headphones) } })
-                                        Text(headphones.ifEmpty { "Output default" })
+                                        Text(headphones.ifEmpty { appString(R.string.text_output_default_f4c103) })
                                     }
                                 }
                             }
@@ -96,8 +99,8 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                     }
                     item {
                         Button(onClick = { bindingObservation = observation }, enabled = ready && library?.error == null && library?.presets?.isNotEmpty() == true,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) { Text("Bind saved preset") }
-                        if (library?.presets?.isEmpty() == true) Text("Save a processing preset first.", Modifier.padding(horizontal = 20.dp),
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) { Text(appString(R.string.text_bind_saved_preset_ee9b6b)) }
+                        if (library?.presets?.isEmpty() == true) Text(appString(R.string.text_save_a_processing_preset_first_6dd1cf), Modifier.padding(horizontal = 20.dp),
                             style = MaterialTheme.typography.bodySmall)
                     }
                 }
@@ -107,9 +110,9 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                                 Text(binding.routeLabel, style = MaterialTheme.typography.titleSmall)
                                 if (binding.headphones.isNotEmpty()) Text(binding.headphones, style = MaterialTheme.typography.bodyMedium)
-                                Text(library?.presets?.firstOrNull { it.id == binding.presetId }?.name ?: "Deleted preset", style = MaterialTheme.typography.bodySmall)
+                                Text(library?.presets?.firstOrNull { it.id == binding.presetId }?.name ?: appString(R.string.text_deleted_preset_4bf611), style = MaterialTheme.typography.bodySmall)
                             }
-                            TextButton(enabled = ready, onClick = { perform { store.removeRouteBinding(binding) } }) { Text("Remove") }
+                            TextButton(enabled = ready, onClick = { perform { store.removeRouteBinding(binding) } }) { Text(appString(R.string.text_remove_e96390)) }
                         }
                     }
                 }
@@ -132,16 +135,16 @@ private fun OutputBindingDialog(presets: List<ProcessingPreset>, initialHeadphon
     var selected by remember { mutableStateOf(presets.firstOrNull()?.id) }
     var headphones by remember { mutableStateOf(initialHeadphones) }
     var expanded by remember { mutableStateOf(false) }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Bind to $output") }, text = {
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(appString(R.string.text_bind_to_9fa6ec, (output))) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Box {
-                OutlinedButton(onClick = { expanded = true }) { Text(presets.firstOrNull { it.id == selected }?.name ?: "Choose preset") }
+                OutlinedButton(onClick = { expanded = true }) { Text(presets.firstOrNull { it.id == selected }?.name ?: appString(R.string.text_choose_preset_005541)) }
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     presets.forEach { preset -> DropdownMenuItem(text = { Text(preset.name) }, onClick = { selected = preset.id; expanded = false }) }
                 }
             }
-            OutlinedTextField(headphones, { headphones = it.take(80) }, label = { Text("Headphones (optional)") }, singleLine = true)
+            OutlinedTextField(headphones, { headphones = it.take(80) }, label = { Text(appString(R.string.text_headphones_optional_995b8e)) }, singleLine = true)
         }
-    }, confirmButton = { TextButton(enabled = selected != null, onClick = { selected?.let { onBind(it, headphones.trim()) } }) { Text("Bind and apply") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+    }, confirmButton = { TextButton(enabled = selected != null, onClick = { selected?.let { onBind(it, headphones.trim()) } }) { Text(appString(R.string.text_bind_and_apply_d9c71d)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }

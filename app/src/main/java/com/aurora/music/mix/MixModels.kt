@@ -1,10 +1,15 @@
 package com.aurora.music.mix
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import com.aurora.music.model.Song
 import java.util.UUID
 import kotlin.math.*
 
-enum class FadeCurve(val label: String) { SMOOTH("Smooth"), LINEAR("Linear"), POWER("Equal power"), CUT("Cut") }
+enum class FadeCurve(@androidx.annotation.StringRes private val labelRes: Int) { SMOOTH(R.string.text_smooth_7f93ca), LINEAR(R.string.text_linear_af502f), POWER(R.string.text_equal_power_70e301), CUT(R.string.text_cut_38d13b);
+    val label: String get() = appString(labelRes)
+}
 
 data class MixClip(
     val id: String = UUID.randomUUID().toString(),
@@ -63,7 +68,9 @@ data class MixProject(
     companion object { const val MAX_TRACKS = 10000; const val MAX_LAYERS = 8 }
 }
 
-enum class StemMode(val label: String) { FULL("Original"), VOCALS("Vocals only"), BACKING("Backing only") }
+enum class StemMode(@androidx.annotation.StringRes private val labelRes: Int) { FULL(R.string.text_original_c0a806), VOCALS(R.string.text_vocals_only_337845), BACKING(R.string.text_backing_only_3b542d);
+    val label: String get() = appString(labelRes)
+}
 
 data class MixCollectionRequest(val kind: String, val id: String, val name: String, val token: String = UUID.randomUUID().toString())
 

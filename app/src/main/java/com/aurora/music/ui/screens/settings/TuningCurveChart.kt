@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
@@ -25,7 +28,7 @@ internal data class TuningPlotCurve(val label: String, val magnitudeDb: DoubleAr
 internal fun TuningCurveChart(frequencies: DoubleArray, curves: List<TuningPlotCurve>, scope: String) {
     if (frequencies.size < 2 || curves.isEmpty() || curves.any { it.magnitudeDb.size != frequencies.size }) return
     var selected by remember(frequencies) { mutableIntStateOf(frequencies.size / 2) }
-    var visible by remember(curves.map { it.label }) { mutableStateOf(curves.map { it.label != "Correction" && it.label != "Fitted EQ" }) }
+    var visible by remember(curves.map { it.label }) { mutableStateOf(curves.map { it.label != appString(R.string.text_correction_7f2640) && it.label != appString(R.string.text_fitted_eq_3bc5ee) }) }
     val palette = listOf(MaterialTheme.colorScheme.onSurface, MaterialTheme.colorScheme.tertiary,
         MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.primary)
     val grid = MaterialTheme.colorScheme.outlineVariant
@@ -48,10 +51,10 @@ internal fun TuningCurveChart(frequencies: DoubleArray, curves: List<TuningPlotC
         Row(Modifier.fillMaxWidth().height(200.dp)) {
             Column(Modifier.width(54.dp).fillMaxHeight(), verticalArrangement = Arrangement.SpaceBetween) {
                 Text(eqNumber(top), style = MaterialTheme.typography.labelSmall)
-                Text("dB", style = MaterialTheme.typography.labelSmall)
+                Text(appString(R.string.text_db_e44622), style = MaterialTheme.typography.labelSmall)
                 Text(eqNumber(bottom), style = MaterialTheme.typography.labelSmall)
             }
-            Canvas(Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = "Magnitude curves. Selected ${eqFrequency(frequencies[point])}. $scope" }
+            Canvas(Modifier.weight(1f).fillMaxHeight().semantics { contentDescription = appString(R.string.text_magnitude_curves_selected_95d402, (eqFrequency(frequencies[point])), (scope)) }
                 .pointerInput(frequencies) {
                     detectTapGestures { tap ->
                         val wanted = exp(lowLog + (tap.x / size.width.coerceAtLeast(1)).coerceIn(0f, 1f) * spanLog)
@@ -96,11 +99,11 @@ internal fun TuningCurveChart(frequencies: DoubleArray, curves: List<TuningPlotC
             Row(Modifier.fillMaxWidth()) {
                 Text(curve.label, Modifier.weight(1f), style = MaterialTheme.typography.bodySmall, color = palette[index % palette.size])
                 val value = curve.magnitudeDb[point]
-                Text(if (value.isFinite()) eqDb(value) else "Undefined", style = MaterialTheme.typography.bodySmall)
+                Text(if (value.isFinite()) eqDb(value) else appString(R.string.text_undefined_0646f4), style = MaterialTheme.typography.bodySmall)
             }
         }
         Slider(value = point.toFloat(), onValueChange = { selected = it.roundToInt() }, valueRange = 0f..frequencies.lastIndex.toFloat(),
-            modifier = Modifier.semantics { contentDescription = "Selected measurement frequency: ${eqFrequency(frequencies[point])}" })
+            modifier = Modifier.semantics { contentDescription = appString(R.string.text_selected_measurement_frequency_c5919f, (eqFrequency(frequencies[point]))) })
         if (scope.isNotBlank()) Text(scope, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

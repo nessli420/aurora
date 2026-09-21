@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.stats
 
+import com.aurora.music.localization.appPlural
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
@@ -67,8 +72,8 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, "Back", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
-            Text("Your listening recap", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+            Text(appString(R.string.text_your_listening_recap_2d4efe), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
         LazyColumn(contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             item {
@@ -85,42 +90,42 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                         }
                     }, horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(window.label, fontWeight = FontWeight.Bold)
-                        Text(if (window.period == RecapPeriod.ALL) "Your complete history" else if (window.end.isAfter(java.time.LocalDate.now())) "In progress · Choose date" else "Choose date", style = MaterialTheme.typography.labelSmall)
+                        Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
                     }
                     TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
                 }
                 Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatCard("${recap.plays}", "Plays", Modifier.weight(1f))
-                    StatCard("${recap.minutes}", "Minutes", Modifier.weight(1f))
-                    StatCard("${recap.artists.size}", "Artists", Modifier.weight(1f))
+                    StatCard("${recap.plays}", appString(R.string.text_plays_a6bc73), Modifier.weight(1f))
+                    StatCard("${recap.minutes}", appString(R.string.text_minutes_092f99), Modifier.weight(1f))
+                    StatCard("${recap.artists.size}", appString(R.string.text_artists_1528d8), Modifier.weight(1f))
                 }
-                Text("Plays count after 30 seconds, or half of a shorter song. Private sessions are excluded.", Modifier.padding(horizontal = 16.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (recap.estimated) Text("Older plays use estimated listening time from track lengths.", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(horizontal = 16.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (recap.millis == 0L) item { Text("No listening recorded in this period. Choose another date or play some music.", Modifier.padding(24.dp)) }
+            if (recap.millis == 0L) item { Text(appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2), Modifier.padding(24.dp)) }
             else {
                 item { RecapInsights(recap, previous) }
                 item {
                     Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatCard("${recap.songs.size}", "Unique songs", Modifier.weight(1f))
-                        StatCard("${recap.albums.size}", "Albums", Modifier.weight(1f))
-                        StatCard("${recap.activeDays}", "Active days", Modifier.weight(1f))
+                        StatCard("${recap.songs.size}", appString(R.string.text_unique_songs_5af512), Modifier.weight(1f))
+                        StatCard("${recap.albums.size}", appString(R.string.text_albums_4c45e7), Modifier.weight(1f))
+                        StatCard("${recap.activeDays}", appString(R.string.text_active_days_340f3c), Modifier.weight(1f))
                     }
                     if (window.period != RecapPeriod.DAY) {
-                        Text("Busiest day: ${recap.busiestDay} · ${recap.minutes / recap.activeDays.coerceAtLeast(1)} min per active day", Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium)
+                        Text(appString(R.string.text_busiest_day_min_per_active_day_8cd6fd, (recap.busiestDay), (recap.minutes / recap.activeDays.coerceAtLeast(1))), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium)
                     }
                     ListeningClock(recap.hourly.map { (it / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }.toIntArray())
                     Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(!byMinutes, { byMinutes = false }, label = { Text("Most played") })
-                        FilterChip(byMinutes, { byMinutes = true }, label = { Text("Most minutes") })
+                        FilterChip(!byMinutes, { byMinutes = false }, label = { Text(appString(R.string.text_most_played_14202e)) })
+                        FilterChip(byMinutes, { byMinutes = true }, label = { Text(appString(R.string.text_most_minutes_0d8b47)) })
                     }
                 }
-                listOf("Top artists" to recap.artists, "Top songs" to recap.songs, "Top albums" to recap.albums).forEachIndexed { kind, (title, ranks) ->
+                listOf(appString(R.string.text_top_artists_4920f8) to recap.artists, appString(R.string.text_top_songs_ad7864) to recap.songs, appString(R.string.text_top_albums_4dfdc0) to recap.albums).forEachIndexed { kind, (title, ranks) ->
                     val sorted = if (byMinutes) ranks.sortedByDescending { it.millis } else ranks
                     item { SectionHeader(title, Modifier.padding(16.dp)) }
                     items(sorted.take(if (window.period == RecapPeriod.DAY) 5 else 20).size) { index ->
                         val r = sorted[index]
-                        RankRow(index + 1, RankedItem(r.id, r.name, "${r.millis / 60_000} min · ${r.plays} plays" + if (kind == 0) "" else " · ${r.artist}", r.artwork, r.plays), kind == 0) {
+                        RankRow(index + 1, RankedItem(r.id, r.name, appString(R.string.text_min_plays_a8ae99, (r.millis / 60_000), (r.plays)) + if (kind == 0) "" else " · ${r.artist}", r.artwork, r.plays), kind == 0) {
                             if (r.id.isNotBlank()) { if (kind == 1) onPlay(r.id) else onOpenDetail(if (kind == 0) "artist" else "album", r.id) }
                         }
                     }
@@ -141,8 +146,8 @@ private fun StreakCard(current: Int, longest: Int) {
         Icon(Icons.Filled.LocalFireDepartment, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(if (current > 0) "$current-day streak" else "No active streak", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-            Text("Longest: $longest day${if (longest == 1) "" else "s"}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(if (current > 0) appString(R.string.text_day_streak_661711, (current)) else appString(R.string.text_no_active_streak_7f1a27), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.longest_streak, appPlural(R.plurals.day_count, (longest))), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -154,7 +159,7 @@ private fun ListeningClock(byHour: IntArray) {
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
     ) {
-        Text("Listening clock", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        Text(appString(R.string.text_listening_clock_ec2eb4), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(12.dp))
         Row(Modifier.fillMaxWidth().height(80.dp), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(2.dp)) {
             for (h in 0 until 24) {
@@ -189,7 +194,7 @@ private fun RankRow(rank: Int, item: RankedItem, circle: Boolean, onClick: () ->
         Artwork(item.artworkUrl, accentFor(item.id.ifBlank { item.name }), Modifier.size(48.dp), corner = if (circle) 48.dp else 10.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(item.name.ifBlank { "Unknown" }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(item.name.ifBlank { appString(R.string.text_unknown_bc7819) }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Box(Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 4.dp)) {

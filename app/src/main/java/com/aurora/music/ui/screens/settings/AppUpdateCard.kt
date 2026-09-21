@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
@@ -81,7 +84,7 @@ fun AppUpdateCard(updater: AppUpdater) {
             try {
                 context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(state.release?.pageUrl ?: GitHubRelease.RELEASES_URL)))
             } catch (_: Exception) {
-                Toast.makeText(context, "No browser available to open GitHub.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, appString(R.string.text_no_browser_available_to_open_github_7ec2eb), Toast.LENGTH_SHORT).show()
             }
         },
     )
@@ -98,26 +101,26 @@ internal fun AppUpdateCardContent(
     onReleaseNotes: () -> Unit,
 ) {
     val title = when {
-        state.download == UpdateDownload.READY -> "Ready to install"
-        state.download == UpdateDownload.VERIFYING -> "Preparing update"
-        state.download == UpdateDownload.DOWNLOADING -> "Downloading update"
-        state.checking -> "Checking for updates"
-        state.updateAvailable -> "Update available"
-        state.error != null -> "Couldn't check for updates"
-        state.checked -> "You're up to date"
-        else -> "App updates"
+        state.download == UpdateDownload.READY -> appString(R.string.text_ready_to_install_0bd33d)
+        state.download == UpdateDownload.VERIFYING -> appString(R.string.text_preparing_update_4a0bb6)
+        state.download == UpdateDownload.DOWNLOADING -> appString(R.string.text_downloading_update_b42347)
+        state.checking -> appString(R.string.text_checking_for_updates_78948b)
+        state.updateAvailable -> appString(R.string.text_update_available_21f186)
+        state.error != null -> appString(R.string.text_couldn_t_check_for_updates_1c6953)
+        state.checked -> appString(R.string.text_you_re_up_to_date_5fc157)
+        else -> appString(R.string.text_app_updates_16213f)
     }
     val detail = when {
-        state.download == UpdateDownload.READY && permissionNeeded -> "Allow Aurora to install updates, then return here."
-        state.download == UpdateDownload.READY -> "${state.release?.tag} · Your music and settings stay in place."
-        state.download == UpdateDownload.VERIFYING -> "Verifying the download…"
-        state.download == UpdateDownload.DOWNLOADING && state.waitingForNetwork -> "Waiting for a connection…"
-        state.download == UpdateDownload.DOWNLOADING -> state.progress?.let { "${(it * 100).toInt()}% downloaded" } ?: "Starting download…"
-        state.checking -> "Looking for the latest release on GitHub…"
-        state.updateAvailable && state.release?.apk == null -> "${state.release?.tag} is available. See GitHub for downloads."
-        state.updateAvailable -> "${state.release?.tag} is available to download."
-        state.checked -> "Latest release on GitHub: ${state.release?.tag}"
-        else -> "Get the latest version from GitHub."
+        state.download == UpdateDownload.READY && permissionNeeded -> appString(R.string.text_allow_aurora_to_install_updates_then_return_here_38efd8)
+        state.download == UpdateDownload.READY -> appString(R.string.text_your_music_and_settings_stay_in_place_f17937, (state.release?.tag))
+        state.download == UpdateDownload.VERIFYING -> appString(R.string.text_verifying_the_download_1e833e)
+        state.download == UpdateDownload.DOWNLOADING && state.waitingForNetwork -> appString(R.string.text_waiting_for_a_connection_128662)
+        state.download == UpdateDownload.DOWNLOADING -> state.progress?.let { appString(R.string.text_downloaded_a2ae75, ((it * 100).toInt())) } ?: appString(R.string.text_starting_download_43a6a6)
+        state.checking -> appString(R.string.text_looking_for_the_latest_release_on_github_d9c6e9)
+        state.updateAvailable && state.release?.apk == null -> appString(R.string.text_is_available_see_github_for_downloads_b3be50, (state.release?.tag))
+        state.updateAvailable -> appString(R.string.text_is_available_to_download_f68806, (state.release?.tag))
+        state.checked -> appString(R.string.text_latest_release_on_github_a3fe9b, (state.release?.tag))
+        else -> appString(R.string.text_get_the_latest_version_from_github_ffde96)
     }
     SettingsGroup {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -134,25 +137,25 @@ internal fun AppUpdateCardContent(
                 }
             }
             when (state.download) {
-                UpdateDownload.DOWNLOADING -> TextButton(onClick = onCancel) { Text("Cancel download") }
+                UpdateDownload.DOWNLOADING -> TextButton(onClick = onCancel) { Text(appString(R.string.text_cancel_download_67bb11)) }
                 UpdateDownload.VERIFYING -> Unit
                 UpdateDownload.READY -> {
-                    Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) { Text("Install update") }
+                    Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_install_update_8a3695)) }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = onReleaseNotes) { Text("Release notes") }
-                        TextButton(onClick = onCancel) { Text("Discard") }
+                        TextButton(onClick = onReleaseNotes) { Text(appString(R.string.text_release_notes_cd5af7)) }
+                        TextButton(onClick = onCancel) { Text(appString(R.string.text_discard_36fff6)) }
                     }
                 }
                 UpdateDownload.IDLE -> {
                     if (state.updateAvailable) {
                         Button(onClick = if (state.release?.apk != null) onDownload else onReleaseNotes,
                             enabled = !state.checking, modifier = Modifier.fillMaxWidth()) {
-                            Text(if (state.release?.apk != null) "Download update" else "View on GitHub")
+                            Text(if (state.release?.apk != null) appString(R.string.text_download_update_870d57) else appString(R.string.text_view_on_github_0c7799))
                         }
                     }
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = onCheck, enabled = !state.checking) { Text("Check for updates") }
-                        TextButton(onClick = onReleaseNotes) { Text("Release notes") }
+                        TextButton(onClick = onCheck, enabled = !state.checking) { Text(appString(R.string.text_check_for_updates_736b90)) }
+                        TextButton(onClick = onReleaseNotes) { Text(appString(R.string.text_release_notes_cd5af7)) }
                     }
                 }
             }

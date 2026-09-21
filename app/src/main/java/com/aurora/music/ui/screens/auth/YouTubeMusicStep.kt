@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.auth
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.annotation.SuppressLint
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
@@ -38,22 +41,22 @@ fun YouTubeMusicStep(state: AuthUiState, onConnect: (String) -> Unit) {
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                Text("More music. Same Aurora.", style = MaterialTheme.typography.titleMedium)
-                Text("Keep your playlists and likes close. Explore recommendations alongside your local and server libraries.",
+                Text(appString(R.string.text_more_music_same_aurora_3ae62e), style = MaterialTheme.typography.titleMedium)
+                Text(appString(R.string.text_keep_your_playlists_and_likes_close_explore_recommendations_along_fc1542),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                Text("Shape your sound with Aurora’s EQ and audio effects.",
+                Text(appString(R.string.text_shape_your_sound_with_aurora_s_eq_and_audio_effects_0b9ed1),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
-        Text("Sign in on Google’s page, then choose your YouTube Music profile. No developer setup is needed.",
+        Text(appString(R.string.text_sign_in_on_google_s_page_then_choose_your_youtube_music_profile_n_0b2a03),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
             modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) {
-            Text("Sign in with Google", style = MaterialTheme.typography.titleSmall)
+            Text(appString(R.string.text_sign_in_with_google_4a0b72), style = MaterialTheme.typography.titleSmall)
         }
-        TextButton(onClick = { detailsExpanded = !detailsExpanded }) { Text(if (detailsExpanded) "Hide connection details" else "Connection details") }
+        TextButton(onClick = { detailsExpanded = !detailsExpanded }) { Text(if (detailsExpanded) appString(R.string.text_hide_connection_details_64711a) else appString(R.string.text_connection_details_ab30a5)) }
         androidx.compose.animation.AnimatedVisibility(detailsExpanded) {
-            Text("Aurora uses YouTube Music’s unofficial web interface and stores your session encrypted on this device. Streams are lossy; uploaded and account-restricted tracks may not play.",
+            Text(appString(R.string.text_aurora_uses_youtube_music_s_unofficial_web_interface_and_stores_y_28fcb3),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -101,11 +104,11 @@ private fun YouTubeMusicBrowser(state: AuthUiState, onClose: () -> Unit, onConne
         Surface(Modifier.fillMaxSize()) {
             Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).imePadding()) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
-                    TextButton(onClick = onClose, enabled = !state.loading) { Text("Close") }
-                    TextButton(onClick = { browser?.reload() }, enabled = !state.loading && !reading) { Text("Reload") }
+                    TextButton(onClick = onClose, enabled = !state.loading) { Text(appString(R.string.text_close_bbfa77)) }
+                    TextButton(onClick = { browser?.reload() }, enabled = !state.loading && !reading) { Text(appString(R.string.text_reload_cce715)) }
                 }
-                Text(if (YouTubeMusicWebSession.isMusicPage(pageUrl)) "Choose your profile, then connect this account."
-                    else "Complete Google verification. If the page stops responding, tap Continue to YouTube Music.",
+                Text(if (YouTubeMusicWebSession.isMusicPage(pageUrl)) appString(R.string.text_choose_your_profile_then_connect_this_account_dd6fe5)
+                    else appString(R.string.text_complete_google_verification_if_the_page_stops_responding_tap_con_a561de),
                     style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp))
                 Text(runCatching { java.net.URI(pageUrl).host }.getOrNull().orEmpty(),
                     style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
@@ -134,17 +137,17 @@ private fun YouTubeMusicBrowser(state: AuthUiState, onClose: () -> Unit, onConne
                                 }
                                 captured
                             }
-                            if (auth == null) error = "Finish signing in and wait for your YouTube Music library, then try again."
+                            if (auth == null) error = appString(R.string.text_finish_signing_in_and_wait_for_your_youtube_music_library_then_tr_c7f0dd)
                             else connect(auth.encode())
                         } catch (e: CancellationException) { throw e }
-                        catch (_: Exception) { error = "Could not read the YouTube Music session. Reload and try again." }
+                        catch (_: Exception) { error = appString(R.string.text_could_not_read_the_youtube_music_session_reload_and_try_again_49d60c) }
                         finally { reading = false }
                     }
                 }, enabled = !state.loading && !reading && browser != null,
                     modifier = Modifier.fillMaxWidth().padding(16.dp)) {
-                    Text(if (state.loading || reading) "Connecting…"
-                        else if (YouTubeMusicWebSession.isMusicPage(pageUrl)) "Connect this account"
-                        else "Continue to YouTube Music")
+                    Text(if (state.loading || reading) appString(R.string.text_connecting_fd3e79)
+                        else if (YouTubeMusicWebSession.isMusicPage(pageUrl)) appString(R.string.text_connect_this_account_fd5e5e)
+                        else appString(R.string.text_continue_to_youtube_music_7f9fcb))
                 }
                 AndroidView(modifier = Modifier.weight(1f).fillMaxWidth(), factory = { context ->
                     WebView(context).apply {
@@ -164,7 +167,7 @@ private fun YouTubeMusicBrowser(state: AuthUiState, onClose: () -> Unit, onConne
                             override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean {
                                 // Google may use regional hosts during the account handoff.
                                 if (request.url.scheme == "https") return false
-                                if (request.isForMainFrame) error = "This link cannot open here. Finish verification using another method, then tap Continue to YouTube Music."
+                                if (request.isForMainFrame) error = appString(R.string.text_this_link_cannot_open_here_finish_verification_using_another_meth_0d1c6a)
                                 return true
                             }
                             override fun onPageStarted(view: WebView, url: String?, favicon: android.graphics.Bitmap?) {
@@ -177,7 +180,7 @@ private fun YouTubeMusicBrowser(state: AuthUiState, onClose: () -> Unit, onConne
                                 pageUrl = view.url.orEmpty()
                             }
                             override fun onReceivedError(view: WebView, request: WebResourceRequest, failure: android.webkit.WebResourceError) {
-                                if (request.isForMainFrame) { pageLoading = false; error = "The sign-in page could not load. Check your connection and reload." }
+                                if (request.isForMainFrame) { pageLoading = false; error = appString(R.string.text_the_sign_in_page_could_not_load_check_your_connection_and_reload_a45e09) }
                             }
                         }
                         // Keep the real WebView user agent, as in Metrolist's sign-in flow.

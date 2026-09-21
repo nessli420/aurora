@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"contains"</string>
+    <string name="rule_is">"is"</string>
+    <string name="rule_exactly">"exactly"</string>
+    <string name="answer_yes">"yes"</string>
+    <string name="answer_no">"no"</string>
+    <string name="recap_sound">"Your most-listened artist"</string>
+    <string name="recap_equal">"The same listening time as the previous period"</string>
+    <string name="recap_more">"%1$s more minutes than the previous period"</string>
+    <string name="recap_less">"%1$s fewer minutes than the previous period"</string>
+    <string name="recap_pending">"Your recap will appear when this period ends and has listening history."</string>
+    <string name="recap_new_count">"New recaps ready: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"Recap · %1$s"</string>
+    <string name="recap_latest_title">"Latest recap · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"Midnight"</string>
+    <string name="recap_paper">"Paper"</string>
+    <string name="longest_streak">"Longest: %1$s"</string>
+    <string name="downloading_tracks">"Downloading: %1$s"</string>
+    <string name="playlist_track_count">"Playlist · %1$s"</string>
+    <string name="smart_rule_count">"Smart playlist · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"UP NEXT · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · scanned: %3$s"</string>
+    <string name="track_count_more">"%1$s+ tracks"</string>
+    <string name="search_collection">"Search this collection"</string>
+    <string name="downloaded_collection">"Downloaded"</string>
+    <string name="signal_start_playback">"Start playback to inspect its signal path."</string>
+    <string name="text_source_rate_cf5128">"Source rate"</string>
+    <string name="text_current_playback_27f5a5">"Current playback"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"True stereo · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"Any"</string>
+    <string name="text_saved_impulse_response_a5fc40">"Saved impulse response"</string>
+    <string name="text_hide_34d8b6">"Hide"</string>
+    <string name="text_show_d97d1e">"Show"</string>
+    <string name="text_flat_target_7a50d3">"Flat target"</string>
+    <string name="text_unspecified_a6e7eb">"Unspecified"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d track</item>
+        <item quantity="other">%1$d tracks</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d album</item>
+        <item quantity="other">%1$d albums</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d artist</item>
+        <item quantity="other">%1$d artists</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d playlist</item>
+        <item quantity="other">%1$d playlists</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d play</item>
+        <item quantity="other">%1$d plays</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">%1$d active day</item>
+        <item quantity="other">%1$d active days</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d rule</item>
+        <item quantity="other">%1$d rules</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d group</item>
+        <item quantity="other">%1$d groups</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d band</item>
+        <item quantity="other">%1$d bands</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d bar</item>
+        <item quantity="other">%1$d bars</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"Save a preset first"</string>
+    <string name="text_the_dac_05159b">"the DAC"</string>
+    <string name="text_active_945637">" · active"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome or Subsonic"</string>
+</resources>

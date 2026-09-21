@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.detail
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.IntentSenderRequest
@@ -71,20 +74,20 @@ fun TagEditScreen(
     val doWrite: () -> Unit = {
         scope.launch {
             val uri = container.tagEditor.contentUriFor(state.songId)
-            if (uri == null) { confirm("Can't write this file"); saving = false } else {
+            if (uri == null) { confirm(appString(R.string.text_can_t_write_this_file_b1889c)); saving = false } else {
                 val art = if (state.pickedCoverUrl.isNotBlank()) container.musicBrainz.fetchImage(state.pickedCoverUrl) else null
                 val ok = container.tagEditor.write(uri, state.path, state.tags, art)
                 saving = false
                 if (ok) {
-                    confirm("Tags saved")
+                    confirm(appString(R.string.text_tags_saved_521155))
                     runCatching { container.localLibrary.refresh() }
                     onBack()
-                } else confirm("Save failed")
+                } else confirm(appString(R.string.text_save_failed_0a4444))
             }
         }
     }
     val consentLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
-        if (result.resultCode == Activity.RESULT_OK) doWrite() else { saving = false; confirm("Write permission denied") }
+        if (result.resultCode == Activity.RESULT_OK) doWrite() else { saving = false; confirm(appString(R.string.text_write_permission_denied_ad9ca7)) }
     }
     val onSave: () -> Unit = {
         saving = true
@@ -93,11 +96,11 @@ fun TagEditScreen(
             scope.launch {
                 val ok = container.repository.updateMetadata(state.songId, state.tags)
                 saving = false
-                if (ok) { confirm("Metadata updated"); onBack() } else confirm("Update failed — needs edit permission")
+                if (ok) { confirm(appString(R.string.text_metadata_updated_38fc70)); onBack() } else confirm(appString(R.string.text_update_failed_needs_edit_permission_449ec8))
             }
         } else {
             val uri = container.tagEditor.contentUriFor(state.songId)
-            if (uri == null) { confirm("Can't write this file"); saving = false } else {
+            if (uri == null) { confirm(appString(R.string.text_can_t_write_this_file_b1889c)); saving = false } else {
                 val consent = container.tagEditor.writeConsentIntent(uri)
                 if (consent != null) consentLauncher.launch(IntentSenderRequest.Builder(consent).build()) else doWrite()
             }
@@ -105,7 +108,7 @@ fun TagEditScreen(
     }
 
     Column(Modifier.fillMaxSize()) {
-        SettingsTopBar("Edit tags", onBack)
+        SettingsTopBar(appString(R.string.text_edit_tags_d8a5fc), onBack)
         if (state.loading) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
             return
@@ -118,9 +121,9 @@ fun TagEditScreen(
                 Artwork(state.pickedCoverUrl.ifBlank { state.artUrl }, MaterialTheme.colorScheme.primary, Modifier.size(72.dp), corner = 12.dp)
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(state.tags.title.ifBlank { "Untitled" }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(state.tags.title.ifBlank { appString(R.string.text_untitled_621521) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(state.path.substringAfterLast('/'), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (state.pickedCoverUrl.isNotBlank()) Text("New cover staged", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    if (state.pickedCoverUrl.isNotBlank()) Text(appString(R.string.text_new_cover_staged_ac4238), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
                 }
             }
             Spacer(Modifier.height(12.dp))
@@ -130,12 +133,12 @@ fun TagEditScreen(
                     if (state.matching) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
                     else Icon(Icons.Filled.AutoFixHigh, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
-                    Text("Match metadata")
+                    Text(appString(R.string.text_match_metadata_f9f1d7))
                 }
                 if (onIdentify != null) {
                     OutlinedButton(onClick = onIdentify, enabled = !identifying) {
                         if (identifying) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
-                        Text(if (identifying) "Identifying…" else "Auto-identify")
+                        Text(if (identifying) appString(R.string.text_identifying_883ba7) else appString(R.string.text_auto_identify_f23ca3))
                     }
                 }
             }
@@ -143,23 +146,23 @@ fun TagEditScreen(
             state.matches.forEach { m -> MatchRow(m) { onApplyMatch(m) } }
 
             Spacer(Modifier.height(8.dp))
-            TagField("Title", state.tags.title) { v -> onEdit { it.copy(title = v) } }
-            TagField("Artist", state.tags.artist) { v -> onEdit { it.copy(artist = v) } }
-            TagField("Album", state.tags.album) { v -> onEdit { it.copy(album = v) } }
-            TagField("Album artist", state.tags.albumArtist) { v -> onEdit { it.copy(albumArtist = v) } }
-            TagField("Genre", state.tags.genre) { v -> onEdit { it.copy(genre = v) } }
+            TagField(appString(R.string.text_title_768e0c), state.tags.title) { v -> onEdit { it.copy(title = v) } }
+            TagField(appString(R.string.text_artist_6c3f3d), state.tags.artist) { v -> onEdit { it.copy(artist = v) } }
+            TagField(appString(R.string.text_album_dfb4c9), state.tags.album) { v -> onEdit { it.copy(album = v) } }
+            TagField(appString(R.string.text_album_artist_f7fa2e), state.tags.albumArtist) { v -> onEdit { it.copy(albumArtist = v) } }
+            TagField(appString(R.string.text_genre_2aa31f), state.tags.genre) { v -> onEdit { it.copy(genre = v) } }
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                Box(Modifier.weight(1f)) { TagField("Year", state.tags.year) { v -> onEdit { it.copy(year = v.filter { c -> c.isDigit() }) } } }
-                Box(Modifier.weight(1f)) { TagField("Track #", state.tags.trackNumber) { v -> onEdit { it.copy(trackNumber = v.filter { c -> c.isDigit() }) } } }
+                Box(Modifier.weight(1f)) { TagField(appString(R.string.text_year_879e32), state.tags.year) { v -> onEdit { it.copy(year = v.filter { c -> c.isDigit() }) } } }
+                Box(Modifier.weight(1f)) { TagField(appString(R.string.text_track_4c2135), state.tags.trackNumber) { v -> onEdit { it.copy(trackNumber = v.filter { c -> c.isDigit() }) } } }
             }
             Spacer(Modifier.height(16.dp))
             Button(onClick = onSave, enabled = !saving, modifier = Modifier.fillMaxWidth()) {
                 if (saving) { CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp); Spacer(Modifier.width(8.dp)) }
-                Text(if (saving) "Saving…" else "Save tags", fontWeight = FontWeight.Bold)
+                Text(if (saving) appString(R.string.text_saving_56a228) else appString(R.string.text_save_tags_842d99), fontWeight = FontWeight.Bold)
             }
             Text(
-                if (state.localFile) "Writing tags edits the file on your device. Android may ask you to allow the change."
-                else "Updates this track's metadata on the server (requires an account with edit permission). Cover art isn't changed.",
+                if (state.localFile) appString(R.string.text_writing_tags_edits_the_file_on_your_device_android_may_ask_you_to_a56f12)
+                else appString(R.string.text_updates_this_track_s_metadata_on_the_server_requires_an_account_w_1127e0),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp),
             )
@@ -200,6 +203,6 @@ private fun MatchRow(m: MetadataMatch, onApply: () -> Unit) {
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
-        Text("Apply", style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
+        Text(appString(R.string.text_apply_cfea41), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
     }
 }

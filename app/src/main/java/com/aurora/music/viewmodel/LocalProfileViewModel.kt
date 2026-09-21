@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import android.net.Uri
 import androidx.lifecycle.AndroidViewModel
@@ -44,13 +47,13 @@ class LocalProfileViewModel(app: Application) : AndroidViewModel(app) {
         try {
             val encoded = container.profileImages.import(uri, banner)
             val url = withContext(Dispatchers.IO) { container.profileImages.imageUrl(encoded) }
-            check(url.isNotEmpty()) { "Cannot read this image." }
+            check(url.isNotEmpty()) { appString(R.string.text_cannot_read_this_image_9a45ce) }
             mutable.update {
                 if (banner) it.copy(profile = it.profile.copy(banner = encoded), preview = it.preview.copy(bannerUrl = url))
                 else it.copy(profile = it.profile.copy(avatar = encoded), preview = it.preview.copy(avatarUrl = url))
             }
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (failure: Exception) { mutable.update { it.copy(error = failure.message ?: "Cannot read this image.") } }
+        catch (failure: Exception) { mutable.update { it.copy(error = failure.message ?: appString(R.string.text_cannot_read_this_image_9a45ce)) } }
         finally { mutable.update { it.copy(busy = false) } }
     }
 
@@ -61,7 +64,7 @@ class LocalProfileViewModel(app: Application) : AndroidViewModel(app) {
             container.settingsStore.setLocalProfile(mutable.value.profile)
             onSaved()
         } catch (cancelled: CancellationException) { throw cancelled }
-        catch (failure: Exception) { mutable.update { it.copy(error = failure.message ?: "Could not save profile.") } }
+        catch (failure: Exception) { mutable.update { it.copy(error = failure.message ?: appString(R.string.text_could_not_save_profile_ac7801)) } }
         finally { mutable.update { it.copy(busy = false) } }
     }
 }

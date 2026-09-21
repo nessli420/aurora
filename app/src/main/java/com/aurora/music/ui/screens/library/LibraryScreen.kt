@@ -1,5 +1,12 @@
 package com.aurora.music.ui.screens.library
 
+import com.aurora.music.localization.localizedMediaType
+
+import com.aurora.music.localization.appPlural
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -190,21 +197,21 @@ fun LibraryScreen(
                     .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
                     .clickable(onClick = onOpenDrawer),
                 contentAlignment = Alignment.Center,
-            ) { Text(username.take(2).uppercase().ifBlank { "ME" }, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
+            ) { Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                Text("Library", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                Text(appString(R.string.text_library_b8100f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                 val stats = buildList {
-                    if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add("${state.playlists.size + state.smartPlaylists.size} playlists")
-                    if (state.albums.isNotEmpty()) add("${state.albums.size} albums")
-                    if (state.artists.isNotEmpty()) add("${state.artists.size} artists")
+                    if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
+                    if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
+                    if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
                 }.joinToString("  ·  ")
                 if (stats.isNotBlank()) {
                     Text(stats, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
-            Icon(Icons.Filled.Search, "Search", modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSearch).padding(8.dp))
-            Icon(Icons.Filled.Add, "Create playlist", modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showCreate = true }.padding(8.dp))
+            Icon(Icons.Filled.Search, appString(R.string.text_search_bce064), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSearch).padding(8.dp))
+            Icon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988), modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showCreate = true }.padding(8.dp))
         }
 
         if (showCreate) {
@@ -222,7 +229,7 @@ fun LibraryScreen(
         TextButton(onClick = onOpenMix, modifier = Modifier.padding(horizontal = 12.dp)) {
             Icon(Icons.Filled.Apps, null, Modifier.size(20.dp))
             Spacer(Modifier.width(8.dp))
-            Text("Mix studio")
+            Text(appString(R.string.text_mix_studio_668363))
         }
         val visibleTabs = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -261,7 +268,7 @@ fun LibraryScreen(
                 if (filter != LibraryFilter.SONGS) {
                     Icon(
                         imageVector = if (layout == LibraryLayout.LIST) Icons.Filled.GridView else Icons.AutoMirrored.Filled.List,
-                        contentDescription = "Toggle layout",
+                        contentDescription = appString(R.string.text_toggle_layout_6169e7),
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onToggleLayout).padding(8.dp),
                     )
                 }
@@ -293,9 +300,9 @@ fun LibraryScreen(
                 onPlayAllSongs = onPlayAllSongs, onPlaySong = onPlaySong,
             )
             LibraryFilter.DOWNLOADED -> {
-                val dlRows = state.downloadedRows.map { LibRow(it.title, "${it.kind.replaceFirstChar { c -> c.uppercase() }} • Downloaded", it.coverUrl, it.accent, it.id, it.kind) }
+                val dlRows = state.downloadedRows.map { LibRow(it.title, appString(R.string.downloaded_collection), it.coverUrl, it.accent, it.id, it.kind) }
                 if (dlRows.isEmpty()) {
-                    EmptyHint("No downloads yet", "Albums and playlists you download live here.")
+                    EmptyHint(appString(R.string.text_no_downloads_yet_9647c1), appString(R.string.text_albums_and_playlists_you_download_live_here_e4c7ba))
                 } else {
                     RowsContent(dlRows, layout, libColumns, sort, bottom, actions) { r -> onOpenDetail(r.kind, r.id) }
                 }
@@ -303,7 +310,7 @@ fun LibraryScreen(
             else -> {
                 val rows = buildRows(state, filter, sort, pins)
                 if (rows.isEmpty()) {
-                    EmptyHint("Nothing here yet", "Your ${filter.label.lowercase()} will show up once the server has some.")
+                    EmptyHint(appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
                 } else {
                     RowsContent(rows, layout, libColumns, sort, bottom, actions) { r ->
                         when (r.kind) {
@@ -373,11 +380,11 @@ private fun AllOverview(
         // quick access tiles
         item {
             val tiles = buildList {
-                add(QuickTile("Liked Songs", "${state.likedSongCount} songs", Icons.Filled.Favorite, state.likedCover) { onOpenDetail("liked", "liked") })
-                if (canDownload) add(QuickTile("Downloads", "${state.downloadedRows.size} items", Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
-                if (state.supportsFolders) add(QuickTile("Folders", "Browse files", Icons.Filled.Folder, "") { onOpenFolders() })
-                add(QuickTile("Radio", "Live stations", Icons.Filled.Radio, "") { onOpenRadio() })
-                add(QuickTile("Podcasts", "Shows & episodes", Icons.Filled.Podcasts, "") { onOpenPodcasts() })
+                add(QuickTile(appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), Icons.Filled.Favorite, state.likedCover) { onOpenDetail("liked", "liked") })
+                if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
+                if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
+                add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
+                add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
             }
             Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 tiles.chunked(2).forEach { pair ->
@@ -390,7 +397,7 @@ private fun AllOverview(
         }
 
         if (pins.isNotEmpty()) {
-            item { ShelfHeader("Pinned", null) {} }
+            item { ShelfHeader(appString(R.string.text_pinned_f93121), null) {} }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(pins.size) { i ->
@@ -407,31 +414,31 @@ private fun AllOverview(
 
         val playlistCount = state.smartPlaylists.size + state.playlists.size
         if (playlistCount > 0) {
-            item { ShelfHeader("Playlists", playlistCount) { onFilter(LibraryFilter.PLAYLISTS) } }
+            item { ShelfHeader(appString(R.string.text_playlists_77b69f), playlistCount) { onFilter(LibraryFilter.PLAYLISTS) } }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.smartPlaylists.size) { i ->
                         val sp = state.smartPlaylists[i]
-                        ShelfCard(sp.name ?: "Smart playlist", "Smart playlist", "", accentFor(sp.id ?: "smart"), badge = "AUTO") {
+                        ShelfCard(sp.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.text_smart_playlist_f77ad7), "", accentFor(sp.id ?: "smart"), badge = appString(R.string.text_auto_50c3f1)) {
                             onOpenDetail("smart", sp.id ?: "")
                         }
                     }
                     items(state.playlists.size) { i ->
                         val p = state.playlists[i]
-                        ShelfCard(p.title, "${p.songCount} songs", p.coverUrl, p.accent) { onOpenDetail("playlist", p.id) }
+                        ShelfCard(p.title, appPlural(R.plurals.track_count, (p.songCount)), p.coverUrl, p.accent) { onOpenDetail("playlist", p.id) }
                     }
                 }
             }
         }
 
         if (state.albums.isNotEmpty()) {
-            item { ShelfHeader("Albums", state.albums.size) { onFilter(LibraryFilter.ALBUMS) } }
+            item { ShelfHeader(appString(R.string.text_albums_4c45e7), state.albums.size) { onFilter(LibraryFilter.ALBUMS) } }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.albums.size) { i ->
                         val a = state.albums[i]
-                        val label = a.typeLabel
-                        ShelfCard(a.title, a.artist, a.artworkUrl, accentFor(a.id), badge = if (label == "Album") "" else label.uppercase()) {
+                        val label = a.typeLabel.localizedMediaType()
+                        ShelfCard(a.title, a.artist, a.artworkUrl, accentFor(a.id), badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase()) {
                             onOpenDetail("album", a.id)
                         }
                     }
@@ -440,7 +447,7 @@ private fun AllOverview(
         }
 
         if (state.artists.isNotEmpty()) {
-            item { ShelfHeader("Artists", state.artists.size) { onFilter(LibraryFilter.ARTISTS) } }
+            item { ShelfHeader(appString(R.string.text_artists_1528d8), state.artists.size) { onFilter(LibraryFilter.ARTISTS) } }
             item {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     items(state.artists.size) { i ->
@@ -510,7 +517,7 @@ private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
         Spacer(Modifier.weight(1f))
         if (count != null) {
             Text(
-                "See all",
+                appString(R.string.text_see_all_2941c5),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onSeeAll).padding(horizontal = 10.dp, vertical = 6.dp),
@@ -593,7 +600,7 @@ private fun SongsTab(
 ) {
     val songs = sortedSongs(state.songs, sort, state.localPlayCounts)
     if (songs.isEmpty() && !state.loading) {
-        EmptyHint("No songs", "Songs from your server appear here.")
+        EmptyHint(appString(R.string.text_no_songs_e6bbe2), appString(R.string.text_songs_from_your_server_appear_here_e4db53))
         return
     }
 
@@ -602,7 +609,7 @@ private fun SongsTab(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
-            "${songs.size}${if (state.canLoadMoreSongs) "+" else ""} songs",
+            if (state.canLoadMoreSongs) appString(R.string.track_count_more, (songs.size)) else appPlural(R.plurals.track_count, (songs.size)),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f),
@@ -616,13 +623,13 @@ private fun SongsTab(
                 .padding(horizontal = 18.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Icon(Icons.Filled.PlayArrow, "Play all", tint = onAccent, modifier = Modifier.size(16.dp))
+            Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_all_ebb2ff), tint = onAccent, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
-            Text("Play", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = onAccent)
+            Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = onAccent)
         }
         Spacer(Modifier.width(8.dp))
         Icon(
-            Icons.Filled.Shuffle, "Shuffle all",
+            Icons.Filled.Shuffle, appString(R.string.text_shuffle_all_7e388b),
             tint = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.size(38.dp).clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
@@ -790,14 +797,14 @@ private fun sortedSongs(songs: List<Song>, sort: LibrarySort, localPlayCounts: M
 private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>): List<LibRow> {
     val smart = state.smartPlaylists.map {
         val n = it.rules.orEmpty().size
-        LibRow(it.name ?: "Smart playlist", "Smart playlist • $n rule${if (n == 1) "" else "s"}", "", accentFor(it.id ?: "smart"), it.id ?: "", "smart", badge = "AUTO")
+        LibRow(it.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.smart_rule_count, appPlural(R.plurals.rule_count, (n))), "", accentFor(it.id ?: "smart"), it.id ?: "", "smart", badge = appString(R.string.text_auto_50c3f1))
     }
-    val playlists = smart + state.playlists.map { LibRow(it.title, "Playlist • ${it.songCount} songs", it.coverUrl, it.accent, it.id, "playlist") }
+    val playlists = smart + state.playlists.map { LibRow(it.title, appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist") }
     val albums = state.albums.map {
-        val label = it.typeLabel
+        val label = it.typeLabel.localizedMediaType()
         LibRow(
             it.title, "$label • ${it.artist}", it.artworkUrl, accentFor(it.id), it.id, "album",
-            badge = if (label == "Album") "" else label.uppercase(),
+            badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(),
             sortPlayCount = it.playCount, sortRecencySec = it.year.toLong(),
         )
     }
@@ -806,7 +813,7 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
         val tracks = state.songs.filter { it.artistId == ar.id }
         val plays = tracks.sumOf { maxOf(it.playCount, state.localPlayCounts[it.id] ?: 0) }
         val recency = tracks.maxOfOrNull { it.dateAddedSec } ?: 0L
-        LibRow(ar.name, "Artist", ar.imageUrl, accentFor(ar.id), ar.id, "artist", circle = true, sortPlayCount = plays, sortRecencySec = recency)
+        LibRow(ar.name, appString(R.string.text_artist_6c3f3d), ar.imageUrl, accentFor(ar.id), ar.id, "artist", circle = true, sortPlayCount = plays, sortRecencySec = recency)
     }
     val base = when (filter) {
         LibraryFilter.PLAYLISTS -> playlists
@@ -826,7 +833,7 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
     // playlists tab keeps liked songs on top pinned entries stay deduped
     val pinned = pins.map { it.kind to it.id }.toSet()
     val deduped = sorted.filterNot { (it.kind to it.id) in pinned }
-    val liked = LibRow("Liked Songs", "Playlist • ${state.likedSongCount} songs", state.likedCover, accentFor("liked"), "liked", "liked")
+    val liked = LibRow(appString(R.string.text_liked_songs_58c3a9), appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (state.likedSongCount))), state.likedCover, accentFor("liked"), "liked", "liked")
     return listOf(liked) + deduped
 }
 
@@ -835,25 +842,25 @@ private fun CreatePlaylistDialog(onCreate: (String) -> Unit, onCreateSmart: () -
     var name by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("New playlist", fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.text_new_playlist_a5474a), fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text("Playlist name") },
+                    label = { Text(appString(R.string.text_playlist_name_544f75)) },
                     singleLine = true,
                 )
                 TextButton(onClick = onCreateSmart, modifier = Modifier.padding(top = 6.dp)) {
-                    Text("Create a smart playlist instead")
+                    Text(appString(R.string.text_create_a_smart_playlist_instead_f73978))
                 }
                 TextButton(onClick = onImportM3u) {
-                    Text("Import an M3U file")
+                    Text(appString(R.string.text_import_an_m3u_file_3ae427))
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onCreate(name.trim()) }, enabled = name.isNotBlank()) { Text("Create") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } },
+        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onCreate(name.trim()) }, enabled = name.isNotBlank()) { Text(appString(R.string.text_create_6e157c)) } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
 }
 
@@ -893,7 +900,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
             var menuOpen by remember { mutableStateOf(false) }
             Box {
                 Icon(
-                    Icons.Filled.MoreVert, "More",
+                    Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(34.dp).clip(CircleShape).clickable { menuOpen = true }.padding(6.dp),
                 )
@@ -930,7 +937,7 @@ private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
                 var menuOpen by remember { mutableStateOf(false) }
                 Box {
                     Icon(
-                        Icons.Filled.MoreVert, "More",
+                        Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.size(28.dp).clip(CircleShape).clickable { menuOpen = true }.padding(4.dp),
                     )
@@ -949,37 +956,37 @@ private fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, 
     val isPlaylist = row.kind == "playlist"
     val liked = actions.isLiked(row.id)
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
-        DropdownMenuItem(text = { Text("Play") }, onClick = { onDismiss(); actions.onPlay(row) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
-        DropdownMenuItem(text = { Text("Shuffle") }, onClick = { onDismiss(); actions.onShuffle(row) }, leadingIcon = { Icon(Icons.Filled.Shuffle, null) })
-        DropdownMenuItem(text = { Text("Add to queue") }, onClick = { onDismiss(); actions.onQueue(row) }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) })
+        DropdownMenuItem(text = { Text(appString(R.string.text_play_5d12bd)) }, onClick = { onDismiss(); actions.onPlay(row) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
+        DropdownMenuItem(text = { Text(appString(R.string.text_shuffle_5b772b)) }, onClick = { onDismiss(); actions.onShuffle(row) }, leadingIcon = { Icon(Icons.Filled.Shuffle, null) })
+        DropdownMenuItem(text = { Text(appString(R.string.text_add_to_queue_69b498)) }, onClick = { onDismiss(); actions.onQueue(row) }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) })
         if (isPlaylist || isSmart || isVirtual) {
             DropdownMenuItem(
-                text = { Text("Export as M3U") },
+                text = { Text(appString(R.string.text_export_as_m3u_5189ed)) },
                 onClick = { onDismiss(); actions.onExport(row) },
                 leadingIcon = { Icon(Icons.Filled.IosShare, null) },
             )
         }
         if (isSmart) {
             DropdownMenuItem(
-                text = { Text("Edit rules") },
+                text = { Text(appString(R.string.text_edit_rules_83bf03)) },
                 onClick = { onDismiss(); actions.onEditSmart(row) },
                 leadingIcon = { Icon(Icons.Filled.Edit, null) },
             )
             DropdownMenuItem(
-                text = { Text("Delete") },
+                text = { Text(appString(R.string.text_delete_f6fdbe)) },
                 onClick = { onDismiss(); actions.onDeleteSmart(row) },
                 leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) },
             )
         }
         if (!isVirtual && !isSmart) {
             DropdownMenuItem(
-                text = { Text(if (liked) "Unlike" else "Like") },
+                text = { Text(if (liked) appString(R.string.text_unlike_e4fc40) else appString(R.string.text_like_c7e02c)) },
                 onClick = { onDismiss(); actions.onToggleLike(row) },
                 leadingIcon = { Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, null) },
             )
             if (isPlaylist) {
                 DropdownMenuItem(
-                    text = { Text("Delete playlist") },
+                    text = { Text(appString(R.string.text_delete_playlist_b55b18)) },
                     onClick = { onDismiss(); actions.onDelete(row) },
                     leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) },
                 )

@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -47,18 +50,18 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     var showDstLicense by remember { mutableStateOf(false) }
     if (showDstLicense) {
         val license = remember { context.assets.open("licenses/aurora-dst-LGPL-2.1.txt").bufferedReader().use { it.readText() } }
-        AlertDialog(onDismissRequest = { showDstLicense = false }, title = { Text("DST decoder license") },
+        AlertDialog(onDismissRequest = { showDstLicense = false }, title = { Text(appString(R.string.text_dst_decoder_license_1e3fba)) },
             text = { Text("FFmpeg / DSD-Nexus. Copyright © 2014 Peter Ross. LGPL-2.1-or-later.\n\n$license",
                 modifier = Modifier.verticalScroll(rememberScrollState())) },
-            confirmButton = { TextButton(onClick = { showDstLicense = false }) { Text("Close") } },
+            confirmButton = { TextButton(onClick = { showDstLicense = false }) { Text(appString(R.string.text_close_bbfa77)) } },
             dismissButton = { TextButton(onClick = {
                 context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
                     android.net.Uri.parse("https://github.com/nessli420/aurora/tree/main/app/src/main/cpp/dst")))
-            }) { Text("Source") } })
+            }) { Text(appString(R.string.text_source_6da13a)) } })
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("About Aurora", onBack)
+        SettingsTopBar(appString(R.string.text_about_aurora_b4ed8c), onBack)
         Column(
             Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = contentPadding.calculateBottomPadding() + 24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
@@ -70,9 +73,9 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 contentAlignment = Alignment.Center,
             ) { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(44.dp)) }
             Spacer(Modifier.height(14.dp))
-            Text("Aurora", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-            Text("Version ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Build ${BuildConfig.VERSION_CODE}${if (BuildConfig.DEBUG) " · Debug" else ""}",
+            Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+            Text(appString(R.string.text_version_d2f210, (BuildConfig.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(appString(R.string.text_build_007156, (BuildConfig.VERSION_CODE), (if (BuildConfig.DEBUG) " · Debug" else "")),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(24.dp))
 
@@ -83,20 +86,20 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 ServerType.SUBSONIC -> "Subsonic / OpenSubsonic"
                 ServerType.SPOTIFY -> "Spotify"
                 ServerType.YOUTUBE_MUSIC -> "YouTube Music"
-                ServerType.LOCAL -> "On this device"
-                ServerType.EXTENSION -> "Extension"
+                ServerType.LOCAL -> appString(R.string.text_on_this_device_a7f962)
+                ServerType.EXTENSION -> appString(R.string.text_extension_659087)
                 null -> "—"
             }
-            InfoRow("Music source", source)
+            InfoRow(appString(R.string.text_music_source_cb3c75), source)
             if (session != null && session?.type != ServerType.LOCAL) {
-                InfoRow("Signed in as", session?.username ?: "—")
+                InfoRow(appString(R.string.text_signed_in_as_a02107), session?.username ?: "—")
             }
-            InfoRow("Playback engine", "AndroidX Media3 (ExoPlayer)")
-            TextButton(onClick = { showDstLicense = true }) { Text("DST decoder license") }
+            InfoRow(appString(R.string.text_playback_engine_0255b8), "AndroidX Media3 (ExoPlayer)")
+            TextButton(onClick = { showDstLicense = true }) { Text(appString(R.string.text_dst_decoder_license_1e3fba)) }
 
             Spacer(Modifier.height(20.dp))
             Text(
-                "Built with Jetpack Compose & Material 3.",
+                appString(R.string.text_built_with_jetpack_compose_material_3_6a2228),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,

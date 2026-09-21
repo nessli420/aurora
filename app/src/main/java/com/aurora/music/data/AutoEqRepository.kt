@@ -1,5 +1,8 @@
 package com.aurora.music.data
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.content.Context
 import com.aurora.music.playback.DspCoeffBuilder
 import kotlinx.coroutines.Dispatchers
@@ -9,12 +12,14 @@ import okhttp3.Request
 import java.net.URLEncoder
 import java.util.Locale
 
-enum class EqDeviceKind(val label: String, val description: String, val examples: List<String>) {
-    ALL("All devices", "Measured presets for wired and Bluetooth headphones, earbuds and speakers.", listOf("Sony WH-1000XM5", "AirPods", "HD 600", "SoundLink")),
-    HEADPHONES("Headphones / studio", "Over-ear and on-ear headphones, including studio and Bluetooth models.", listOf("HD 600", "ATH-M50x", "DT 770", "WH-1000XM5")),
-    IN_EAR("IEMs / wireless buds", "In-ear monitors and sealed wireless earbuds. Match the model and ANC mode.", listOf("AirPods Pro", "Galaxy Buds", "Moondrop", "WF-1000XM5")),
-    EARBUDS("Earbuds / open-ear", "Unsealed earbuds and measured open-ear models, including Shokz.", listOf("OpenFit", "OpenRun", "AirPods 4", "VE Monk")),
-    SPEAKERS("Speakers / Bluetooth", "Measured speaker correction from Spinorama, including Bluetooth models. Placement and room acoustics still affect the result.", listOf("SoundLink", "Sonos Roam", "JBL 305", "Genelec")),
+enum class EqDeviceKind(@androidx.annotation.StringRes private val labelRes: Int, @androidx.annotation.StringRes private val descriptionRes: Int, val examples: List<String>) {
+    ALL(R.string.text_all_devices_a8b16c, R.string.text_measured_presets_for_wired_and_bluetooth_headphones_earbuds_and_s_dbd541, listOf("Sony WH-1000XM5", "AirPods", "HD 600", "SoundLink")),
+    HEADPHONES(R.string.text_headphones_studio_1f6f07, R.string.text_over_ear_and_on_ear_headphones_including_studio_and_bluetooth_mod_d79653, listOf("HD 600", "ATH-M50x", "DT 770", "WH-1000XM5")),
+    IN_EAR(R.string.text_iems_wireless_buds_d69c4c, R.string.text_in_ear_monitors_and_sealed_wireless_earbuds_match_the_model_and_a_a24f40, listOf("AirPods Pro", "Galaxy Buds", "Moondrop", "WF-1000XM5")),
+    EARBUDS(R.string.text_earbuds_open_ear_9a037e, R.string.text_unsealed_earbuds_and_measured_open_ear_models_including_shokz_c45724, listOf("OpenFit", "OpenRun", "AirPods 4", "VE Monk")),
+    SPEAKERS(R.string.text_speakers_bluetooth_6dc246, R.string.text_measured_speaker_correction_from_spinorama_including_bluetooth_mo_beaf02, listOf("SoundLink", "Sonos Roam", "JBL 305", "Genelec"));
+    val label: String get() = appString(labelRes)
+    val description: String get() = appString(descriptionRes)
 }
 
 enum class EqProvider { AUTOEQ, SQUIG, SPINORAMA }

@@ -1,5 +1,8 @@
 package com.aurora.music.ui.theme
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.material3.ColorScheme
@@ -23,11 +26,11 @@ import com.aurora.music.data.ThemeStyle
 /** Complete visual identities, independent of the classic Aurora accent controls. */
 data class ThemeIdentity(val id: Int, val name: String, val description: String, val detail: String)
 
-val ThemeIdentities = listOf(
-    ThemeIdentity(ThemeStyle.AURORA, "Aurora", "Your familiar music space", "Soft gradients · custom accents · rounded cards"),
-    ThemeIdentity(ThemeStyle.RETRO, "Retro hi-fi", "A little analogue soul", "Amber displays · monospace type · tactile frames"),
-    ThemeIdentity(ThemeStyle.AERO, "Aero", "A desktop classic, reimagined", "Windows 7 inspired · blue glass · glossy panels"),
-    ThemeIdentity(ThemeStyle.GLASS, "Liquid glass", "Light, flowing, luminous", "Pearlescent surfaces · spacious curves · soft light"),
+val ThemeIdentities: List<ThemeIdentity> get() = listOf(
+    ThemeIdentity(ThemeStyle.AURORA, appString(R.string.text_aurora_eeee9b), appString(R.string.text_your_familiar_music_space_fab491), appString(R.string.text_soft_gradients_custom_accents_rounded_cards_d3f466)),
+    ThemeIdentity(ThemeStyle.RETRO, appString(R.string.text_retro_hi_fi_a68d38), appString(R.string.text_a_little_analogue_soul_a0d7ac), appString(R.string.text_amber_displays_monospace_type_tactile_frames_27d627)),
+    ThemeIdentity(ThemeStyle.AERO, "Aero", appString(R.string.text_a_desktop_classic_reimagined_18633f), appString(R.string.text_windows_7_inspired_blue_glass_glossy_panels_27d09a)),
+    ThemeIdentity(ThemeStyle.GLASS, appString(R.string.text_liquid_glass_51a330), appString(R.string.text_light_flowing_luminous_6acb9b), appString(R.string.text_pearlescent_surfaces_spacious_curves_soft_light_b4c29d)),
 )
 
 fun styleColorScheme(style: Int, dark: Boolean): ColorScheme {

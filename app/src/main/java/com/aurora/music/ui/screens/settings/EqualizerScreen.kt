@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appPlural
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -106,71 +111,71 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLou
     val activeEq by store.activeEqProfile.collectAsStateWithLifecycle(initialValue = "")
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Equalizer & effects", onBack)
+        SettingsTopBar(appString(R.string.text_equalizer_effects_e6ad57), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
-            item { SettingsSectionTitle("Tone engine") }
+            item { SettingsSectionTitle(appString(R.string.text_tone_engine_79c7e5)) }
             item {
                 if (rack.enabled) SettingsGroup {
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
-                        "Active · ${rack.name}", onClick = onOpenProcessingRack)
-                    Text("Edit the active rack to change your sound.",
+                        appString(R.string.text_active_4a0251, (rack.name)), onClick = onOpenProcessingRack)
+                    Text(appString(R.string.text_edit_the_active_rack_to_change_your_sound_792bcb),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
                     TextButton(onClick = { scope.launch {
                         store.setProcessingRack(rack.copy(enabled = false)).onFailure {
-                            android.widget.Toast.makeText(context, "Could not switch processing mode", android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, appString(R.string.text_could_not_switch_processing_mode_a22224), android.widget.Toast.LENGTH_SHORT).show()
                         }
                     } },
-                        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)) { Text("Use standard settings") }
+                        modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)) { Text(appString(R.string.text_use_standard_settings_4e6ed9)) }
                 } else ToneEngineCard(prefs.dspMode) { i -> scope.launch { store.setDspMode(i) } }
             }
             item {
                 SettingsGroup {
                     if (!rack.enabled) {
                         SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
-                            "Arrange effects with 64 bands per Equalizer", onClick = onOpenProcessingRack)
+                            appString(R.string.text_arrange_effects_with_64_bands_per_equalizer_071bbb), onClick = onOpenProcessingRack)
                         SettingsRowDivider()
                     }
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingPresets,
-                        "Your complete processing settings, ready to recall", onClick = onOpenProcessingPresets)
+                        appString(R.string.text_your_complete_processing_settings_ready_to_recall_a6fd9f), onClick = onOpenProcessingPresets)
                 }
             }
 
             if (!rack.enabled) {
-                item { SettingsSectionTitle("Correction") }
-                collapsible("autoeq", "Device presets", Icons.Filled.Headset, activeEq.ifBlank { "Headphones, earbuds & speakers" }, expanded) {
+                item { SettingsSectionTitle(appString(R.string.text_correction_7f2640)) }
+                collapsible("autoeq", appString(R.string.text_device_presets_ca72d3), Icons.Filled.Headset, activeEq.ifBlank { appString(R.string.text_headphones_earbuds_speakers_675d43) }, expanded) {
                     AutoEqPanel(container, prefs, store, scope)
                 }
-                collapsible("conv", "Convolution (IR)", Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else "Off", expanded) {
+                collapsible("conv", appString(R.string.text_convolution_ir_d15d63), Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else appString(R.string.text_off_e3de5a), expanded) {
                     ConvolutionPanel(prefs, store, scope, onOpenImpulses)
                 }
 
                 when (prefs.dspMode) {
-                    DspMode.SYSTEM -> { item { SettingsSectionTitle("System equalizer") }; systemEqSection(prefs, fx, store, scope, expanded) }
-                    DspMode.CUSTOM -> { item { SettingsSectionTitle("Custom DSP") }; customDspSection(prefs, store, scope, expanded) }
+                    DspMode.SYSTEM -> { item { SettingsSectionTitle(appString(R.string.text_system_equalizer_be209a)) }; systemEqSection(prefs, fx, store, scope, expanded) }
+                    DspMode.CUSTOM -> { item { SettingsSectionTitle(appString(R.string.text_custom_dsp_df083c)) }; customDspSection(prefs, store, scope, expanded) }
                     else -> item {
                         Text(
-                            "Tone shaping is bypassed. Choose System or Custom above to enable the EQ.",
+                            appString(R.string.text_tone_shaping_is_bypassed_choose_system_or_custom_above_to_enable_1cdd7c),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )
                     }
                 }
 
-                item { SettingsSectionTitle("Channels") }
+                item { SettingsSectionTitle(appString(R.string.text_channels_18e03e)) }
                 item {
                     SettingsGroup {
-                        SettingsSwitchRow(Icons.Filled.Headset, "Mono audio", "Combine left and right channels where the active path supports processing", playbackPrefs.monoAudio) { value ->
+                        SettingsSwitchRow(Icons.Filled.Headset, appString(R.string.text_mono_audio_b977b4), appString(R.string.text_combine_left_and_right_channels_where_the_active_path_supports_pr_3682b6), playbackPrefs.monoAudio) { value ->
                             scope.launch { store.setMono(value) }
                         }
                     }
                 }
             }
-            item { SettingsSectionTitle("Related settings") }
+            item { SettingsSectionTitle(appString(R.string.text_related_settings_661f04)) }
             item {
                 SettingsGroup {
-                    val mode = listOf("Off", "Track", "Album")[prefs.replayGain.coerceIn(0, 2)]
+                    val mode = listOf(appString(R.string.text_off_e3de5a), appString(R.string.text_track_b1c5a7), appString(R.string.text_album_dfb4c9))[prefs.replayGain.coerceIn(0, 2)]
                     SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, "ReplayGain · $mode", onClick = onOpenLoudness)
                 }
             }
@@ -222,9 +227,9 @@ private fun ToneEngineCard(mode: Int, onSelect: (Int) -> Unit) {
         EngineDropdown(mode, onSelect)
         Text(
             when (mode) {
-                DspMode.SYSTEM -> "Android system effects — device-dependent."
-                DspMode.CUSTOM -> "Aurora software DSP — works on any device. Overrides bit-perfect output. Restart playback after switching engines."
-                else -> "All tone shaping bypassed."
+                DspMode.SYSTEM -> appString(R.string.text_android_system_effects_device_dependent_dafe2f)
+                DspMode.CUSTOM -> appString(R.string.text_aurora_software_dsp_works_on_any_device_overrides_bit_perfect_out_c3a42d)
+                else -> appString(R.string.text_all_tone_shaping_bypassed_a7e684)
             },
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
@@ -239,12 +244,12 @@ private fun HeadroomRow(peak: Float, preamp: Float, onAuto: () -> Unit) {
     val color = if (clip) Color(0xFFFF6B6B) else MaterialTheme.colorScheme.onSurfaceVariant
     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text("Headroom", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+            Text(appString(R.string.text_headroom_39deaf), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
             Text(
                 when {
-                    peak <= 0.1f -> "EQ curve stays below 0 dB — no preamp needed"
-                    clip -> "EQ peak +%.1f dB · clipping by %.1f dB".format(peak, over)
-                    else -> "EQ peak +%.1f dB · %.1f dB headroom".format(peak, -over)
+                    peak <= 0.1f -> appString(R.string.text_eq_curve_stays_below_0_db_no_preamp_needed_701882)
+                    clip -> appString(R.string.text_eq_peak_1f_db_clipping_by_1f_db_7e0752).format(peak, over)
+                    else -> appString(R.string.text_eq_peak_1f_db_1f_db_headroom_1db199).format(peak, -over)
                 },
                 style = MaterialTheme.typography.bodySmall, color = color,
             )
@@ -253,7 +258,7 @@ private fun HeadroomRow(peak: Float, preamp: Float, onAuto: () -> Unit) {
             Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
                 .clickable(onClick = onAuto).padding(horizontal = 16.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center,
-        ) { Text("Auto", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary) }
+        ) { Text(appString(R.string.text_auto_c614ba), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary) }
     }
 }
 
@@ -262,9 +267,9 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Enable convolution", style = MaterialTheme.typography.bodyLarge)
+                Text(appString(R.string.text_enable_convolution_558c8c), style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    prefs.dspConvIrName.ifBlank { "No impulse response selected" },
+                    prefs.dspConvIrName.ifBlank { appString(R.string.text_no_impulse_response_selected_a643d4) },
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
@@ -275,16 +280,16 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
                 Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable(onClick = onOpenImpulses).padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Impulse library", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
+            ) { Text(appString(R.string.text_impulse_library_ff955d), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
             if (prefs.dspConvIrName.isNotBlank()) {
                 Box(
                     Modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { scope.launch { store.setDspConvIr("", ""); store.setDspConvEnabled(false) } }.padding(horizontal = 16.dp, vertical = 12.dp),
                     contentAlignment = Alignment.Center,
-                ) { Text("Remove", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
+                ) { Text(appString(R.string.text_remove_e96390), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
             }
         }
-        DbSliderRow("Make-up gain", prefs.dspConvMakeupDb, -12f..12f) { v -> scope.launch { store.setDspConvMakeup(v) } }
+        DbSliderRow(appString(R.string.text_make_up_gain_5dc858), prefs.dspConvMakeupDb, -12f..12f) { v -> scope.launch { store.setDspConvMakeup(v) } }
     }
 }
 
@@ -352,7 +357,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
     }
 
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp)) {
-        PillSelector(listOf("Device library", "Live squig.link"), source) { source = it }
+        PillSelector(listOf(appString(R.string.text_device_library_887a24), appString(R.string.text_live_squig_link_308ef5)), source) { source = it }
         if (source == 0) {
             LazyRow(horizontalArrangement = Arrangement.spacedBy(6.dp), contentPadding = PaddingValues(vertical = 6.dp)) {
                 items(EqDeviceKind.entries.size) { i ->
@@ -375,7 +380,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             val tgtIdx = SQUIG_TARGETS.indexOfFirst { it.second == squigTargetName }.coerceAtLeast(0)
             PillSelector(SQUIG_TARGETS.map { it.first }, tgtIdx) { i -> scope.launch { store.setSquigTarget(SQUIG_TARGETS[i].second) } }
             Text(
-                "Corrections are generated on-device from live squig.link measurements toward the ${SQUIG_TARGETS.getOrNull(tgtIdx)?.first ?: "Harman"} target.",
+                appString(R.string.text_corrections_are_generated_on_device_from_live_squig_link_measurem_eb5940, (SQUIG_TARGETS.getOrNull(tgtIdx)?.first ?: "Harman")),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 4.dp),
             )
@@ -385,9 +390,9 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
                 Icon(Icons.Filled.Headset, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.width(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text("Applied: $active", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
+                Text(appString(R.string.text_applied_60aafc, (active)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
-                Text("Clear", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.clip(RoundedCornerShape(50)).clickable {
                         scope.launch { store.setDspParametric(emptyList()); store.setDspPreamp(0f); store.setActiveEqProfile("") }
                     }.padding(horizontal = 8.dp, vertical = 4.dp))
@@ -397,9 +402,9 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             value = query,
             onValueChange = { query = it },
             modifier = Modifier.fillMaxWidth(),
-            placeholder = { Text(if (source == 0) "Search brand or model" else "Search live IEM measurements") },
+            placeholder = { Text(if (source == 0) appString(R.string.text_search_brand_or_model_673f49) else appString(R.string.text_search_live_iem_measurements_24a92f)) },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
-            trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, "Clear", modifier = Modifier.clip(RoundedCornerShape(50)).clickable { query = "" }.padding(4.dp)) },
+            trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.clip(RoundedCornerShape(50)).clickable { query = "" }.padding(4.dp)) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             colors = TextFieldDefaults.colors(
@@ -417,10 +422,10 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
         if (!searching) {
             Text(
                 when {
-                    searchFailed -> "Could not load presets. Try another search."
-                    source == 1 && query.trim().length < 2 -> "Enter at least two characters to search squig.link."
-                    results.isEmpty() -> "No measured presets found. Try another model name or device category."
-                    else -> "${results.size} presets · showing ${minOf(visibleCount, results.size)}"
+                    searchFailed -> appString(R.string.text_could_not_load_presets_try_another_search_8452dd)
+                    source == 1 && query.trim().length < 2 -> appString(R.string.text_enter_at_least_two_characters_to_search_squig_link_ca1a71)
+                    results.isEmpty() -> appString(R.string.text_no_measured_presets_found_try_another_model_name_or_device_catego_06b64c)
+                    else -> appString(R.string.text_presets_showing_72ab09, (results.size), (minOf(visibleCount, results.size)))
                 },
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(vertical = 8.dp),
@@ -439,9 +444,9 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                             store.setDspMode(DspMode.CUSTOM)
                             store.setActiveEqProfile(p.name)
                             query = ""
-                            toast("Applied ${p.name} · ${eq.bands.size} bands, ${"%.1f".format(eq.preampDb)} dB preamp")
+                            toast(appString(R.string.text_applied_bands_db_preamp_cf3937, (p.name), (eq.bands.size), ("%.1f".format(eq.preampDb))))
                         } else {
-                            toast("Couldn't load a supported correction — check your connection or try another measurement")
+                            toast(appString(R.string.text_couldn_t_load_a_supported_correction_check_your_connection_or_try_ee72f6))
                         }
                         working = false
                     }
@@ -452,18 +457,18 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                     Text(p.name, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
                     Text("${p.source} · ${p.kind.label}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
                 }
-                Icon(Icons.Filled.Add, "Apply", tint = MaterialTheme.colorScheme.primary)
+                Icon(Icons.Filled.Add, appString(R.string.text_apply_cfea41), tint = MaterialTheme.colorScheme.primary)
             }
         }
         if (results.size > visibleCount) {
-            TextLink("Show 20 more") { visibleCount += 20 }
+            TextLink(appString(R.string.text_show_20_more_3b05ec)) { visibleCount += 20 }
         }
 
         Spacer(Modifier.height(6.dp))
         Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f)) {
-                Text("Auto-switch per output", style = MaterialTheme.typography.bodyLarge)
-                Text("Apply profiles to confirmed playback outputs", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(appString(R.string.text_auto_switch_per_output_66f8bf), style = MaterialTheme.typography.bodyLarge)
+                Text(appString(R.string.text_apply_profiles_to_confirmed_playback_outputs_038123), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             Switch(checked = autoSwitch, onCheckedChange = { v -> scope.launch { store.setAutoEqAutoSwitch(v) } })
         }
@@ -473,11 +478,11 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                     .clickable {
                         scope.launch {
                             store.bindEqToCurrentOutput(active, prefs.dspPreampDb, prefs.dspParametric)
-                                .onFailure { toast(it.message ?: "Could not bind this output.") }
+                                .onFailure { toast(it.message ?: appString(R.string.text_could_not_bind_this_output_15b372)) }
                         }
                     }.padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text("Bind \"$active\" to $outLabel", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
+            ) { Text(appString(R.string.text_bind_to_75e438, (active), (outLabel)), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
         }
         bindings.forEach { b ->
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -485,7 +490,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                     Text(b.deviceLabel, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1)
                     Text(b.profileName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
-                Icon(Icons.Filled.Close, "Unbind", tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                Icon(Icons.Filled.Close, appString(R.string.text_unbind_e40303), tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.clip(RoundedCornerShape(50)).clickable { scope.launch { store.removeEqBinding(b.deviceKey) } }.padding(4.dp))
             }
         }
@@ -502,17 +507,17 @@ private fun LazyListScope.systemEqSection(
     val bandCount = fx.bandCount
     item {
         SettingsGroup {
-            SettingsSwitchRow(Icons.Filled.GraphicEq, "Equalizer", if (fx.available) "${bandCount}-band graphic EQ" else "Not supported on this device", prefs.eqEnabled) { v ->
+            SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_equalizer_3b64a9), if (fx.available) appString(R.string.text_band_graphic_eq_036641, (bandCount)) else appString(R.string.text_not_supported_on_this_device_a07536), prefs.eqEnabled) { v ->
                 scope.launch { store.setEqEnabled(v) }
             }
         }
     }
 
     if (fx.presetNames.isNotEmpty()) {
-        val presetSummary = if (prefs.eqPreset >= 0) fx.presetNames.getOrElse(prefs.eqPreset) { "Custom" } else "Custom"
-        collapsible("s_presets", "Presets", Icons.Filled.AutoFixHigh, presetSummary, expanded) {
+        val presetSummary = if (prefs.eqPreset >= 0) fx.presetNames.getOrElse(prefs.eqPreset) { appString(R.string.text_custom_081ae3) } else appString(R.string.text_custom_081ae3)
+        collapsible("s_presets", appString(R.string.text_presets_e709e7), Icons.Filled.AutoFixHigh, presetSummary, expanded) {
             LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                item { PresetChip("Custom", selected = prefs.eqPreset < 0) { scope.launch { store.setEqPreset(-1) } } }
+                item { PresetChip(appString(R.string.text_custom_081ae3), selected = prefs.eqPreset < 0) { scope.launch { store.setEqPreset(-1) } } }
                 items(fx.presetNames.size) { i ->
                     PresetChip(fx.presetNames[i], selected = prefs.eqPreset == i) {
                         scope.launch {
@@ -527,7 +532,7 @@ private fun LazyListScope.systemEqSection(
     }
 
     val bands = (0 until bandCount).map { prefs.eqBands.getOrElse(it) { 0 } }
-    collapsible("s_bands", "Bands", Icons.Filled.Tune, "$bandCount-band", expanded, defaultOpen = true) {
+    collapsible("s_bands", appString(R.string.text_bands_2bc0aa), Icons.Filled.Tune, appString(R.string.text_band_56a2c1, (bandCount)), expanded, defaultOpen = true) {
         bands.forEachIndexed { i, mb ->
             BandSlider(
                 freqHz = fx.bandFreqsHz.getOrElse(i) { 0 }, valueMb = mb, minMb = fx.minBandMb, maxMb = fx.maxBandMb,
@@ -539,11 +544,11 @@ private fun LazyListScope.systemEqSection(
         }
     }
 
-    val enh = if (prefs.bassBoost > 0 || prefs.virtualizer > 0 || prefs.loudnessGain > 0) "On" else "Off"
-    collapsible("s_enh", "Enhancers", Icons.Filled.Whatshot, enh, expanded) {
-        EnhancerSlider("Bass boost", prefs.bassBoost, 0..1000) { v -> scope.launch { store.setBassBoost(v) } }
-        EnhancerSlider("Virtualizer (headphone widening)", prefs.virtualizer, 0..1000) { v -> scope.launch { store.setVirtualizer(v) } }
-        EnhancerSlider("Loudness", prefs.loudnessGain, 0..2000, unit = " mB") { v -> scope.launch { store.setLoudness(v) } }
+    val enh = if (prefs.bassBoost > 0 || prefs.virtualizer > 0 || prefs.loudnessGain > 0) appString(R.string.text_on_e0049a) else appString(R.string.text_off_e3de5a)
+    collapsible("s_enh", appString(R.string.text_enhancers_465e88), Icons.Filled.Whatshot, enh, expanded) {
+        EnhancerSlider(appString(R.string.text_bass_boost_c946c9), prefs.bassBoost, 0..1000) { v -> scope.launch { store.setBassBoost(v) } }
+        EnhancerSlider(appString(R.string.text_virtualizer_headphone_widening_fc230c), prefs.virtualizer, 0..1000) { v -> scope.launch { store.setVirtualizer(v) } }
+        EnhancerSlider(appString(R.string.text_loudness_59e6cf), prefs.loudnessGain, 0..2000, unit = " mB") { v -> scope.launch { store.setLoudness(v) } }
     }
 }
 
@@ -558,8 +563,8 @@ private fun LazyListScope.customDspSection(
     val graphic = (0 until nBands).map { prefs.dspGraphicBands.getOrElse(it) { 0f } }
     val anyGraphic = graphic.any { it != 0f }
 
-    collapsible("c_graphic", "Graphic EQ", Icons.Filled.Tune, "${layout.name}${if (anyGraphic) " · active" else ""}", expanded, defaultOpen = true) {
-        SegmentedRow("Bands", DspCoeffBuilder.GRAPHIC_LAYOUTS.map { it.name }, prefs.dspGraphicLayout) { i ->
+    collapsible("c_graphic", appString(R.string.text_graphic_eq_3df203), Icons.Filled.Tune, "${layout.name}${if (anyGraphic) appString(R.string.text_active_945637) else ""}", expanded, defaultOpen = true) {
+        SegmentedRow(appString(R.string.text_bands_2bc0aa), DspCoeffBuilder.GRAPHIC_LAYOUTS.map { it.name }, prefs.dspGraphicLayout) { i ->
             scope.launch { store.setDspGraphicLayout(i); store.setDspGraphicBands(List(DspCoeffBuilder.GRAPHIC_LAYOUTS[i].freqs.size) { 0f }) }
         }
         graphic.forEachIndexed { i, g ->
@@ -568,10 +573,10 @@ private fun LazyListScope.customDspSection(
                 scope.launch { store.setDspGraphicBands(updated) }
             }
         }
-        TextLink("Reset graphic EQ") { scope.launch { store.setDspGraphicBands(List(nBands) { 0f }) } }
+        TextLink(appString(R.string.text_reset_graphic_eq_ace461)) { scope.launch { store.setDspGraphicBands(List(nBands) { 0f }) } }
     }
 
-    collapsible("c_param", "Parametric EQ", Icons.Filled.GraphicEq, "${prefs.dspParametric.size} band${if (prefs.dspParametric.size == 1) "" else "s"}", expanded) {
+    collapsible("c_param", appString(R.string.text_parametric_eq_6e40f9), Icons.Filled.GraphicEq, appPlural(R.plurals.band_count, (prefs.dspParametric.size)), expanded) {
         prefs.dspParametric.forEachIndexed { i, band ->
             ParametricBandCard(
                 band = band,
@@ -580,47 +585,47 @@ private fun LazyListScope.customDspSection(
             )
         }
         if (prefs.dspParametric.size < DspCoeffBuilder.MAX_PARAMETRIC) {
-            TextLink("+ Add band") { scope.launch { store.setDspParametric(prefs.dspParametric + ParamBand(1000f, 0f, 1f)) } }
+            TextLink(appString(R.string.text_add_band_563c3b)) { scope.launch { store.setDspParametric(prefs.dspParametric + ParamBand(1000f, 0f, 1f)) } }
         }
     }
 
-    collapsible("c_gain", "Gain & headroom", Icons.Filled.VolumeUp, "Pre-amp ${"%+.0f".format(prefs.dspPreampDb)} dB", expanded) {
-        DbSliderRow("Pre-amp", prefs.dspPreampDb, -12f..12f) { v -> scope.launch { store.setDspPreamp(v) } }
+    collapsible("c_gain", appString(R.string.text_gain_headroom_5903cd), Icons.Filled.VolumeUp, appString(R.string.text_pre_amp_db_84974b, ("%+.0f".format(prefs.dspPreampDb))), expanded) {
+        DbSliderRow(appString(R.string.text_pre_amp_7b79c8), prefs.dspPreampDb, -12f..12f) { v -> scope.launch { store.setDspPreamp(v) } }
         val peak = androidx.compose.runtime.remember(prefs.dspGraphicBands, prefs.dspParametric, prefs.dspGraphicLayout) {
             DspCoeffBuilder.eqPeakDb(DspParams(graphic = graphic.toFloatArray(), graphicFreqs = layout.freqs, graphicQ = layout.q, parametric = prefs.dspParametric.map { DspBand.from(it) }))
         }
         HeadroomRow(peak = peak, preamp = prefs.dspPreampDb) { scope.launch { store.setDspPreamp((-peak).coerceIn(-12f, 0f)) } }
-        FloatSliderRow("Balance", prefs.dspBalance, -1f..1f, valueText = balanceLabel(prefs.dspBalance)) { v -> scope.launch { store.setDspBalance(v) } }
+        FloatSliderRow(appString(R.string.text_balance_90eef6), prefs.dspBalance, -1f..1f, valueText = balanceLabel(prefs.dspBalance)) { v -> scope.launch { store.setDspBalance(v) } }
     }
 
-    val spatial = buildList { if (prefs.dspWidth != 1f) add("Width %.2f×".format(prefs.dspWidth)); if (prefs.dspCrossfeed > 0f) add("Crossfeed ${(prefs.dspCrossfeed * 100).roundToInt()}%") }.joinToString(" · ").ifBlank { "Off" }
-    collapsible("c_spatial", "Spatial", Icons.Filled.SurroundSound, spatial, expanded) {
-        FloatSliderRow("Stereo width", prefs.dspWidth, 0f..2f, valueText = "%.2f×".format(prefs.dspWidth)) { v -> scope.launch { store.setDspWidth(v) } }
-        FloatSliderRow("Crossfeed", prefs.dspCrossfeed, 0f..1f, valueText = if (prefs.dspCrossfeed <= 0f) "Off" else "${(prefs.dspCrossfeed * 100).roundToInt()}%") { v -> scope.launch { store.setDspCrossfeed(v) } }
+    val spatial = buildList { if (prefs.dspWidth != 1f) add(appString(R.string.text_width_2f_276839).format(prefs.dspWidth)); if (prefs.dspCrossfeed > 0f) add(appString(R.string.text_crossfeed_8f1996, ((prefs.dspCrossfeed * 100).roundToInt()))) }.joinToString(" · ").ifBlank { appString(R.string.text_off_e3de5a) }
+    collapsible("c_spatial", appString(R.string.text_spatial_729ac1), Icons.Filled.SurroundSound, spatial, expanded) {
+        FloatSliderRow(appString(R.string.text_stereo_width_336051), prefs.dspWidth, 0f..2f, valueText = "%.2f×".format(prefs.dspWidth)) { v -> scope.launch { store.setDspWidth(v) } }
+        FloatSliderRow(appString(R.string.text_crossfeed_e6b7b4), prefs.dspCrossfeed, 0f..1f, valueText = if (prefs.dspCrossfeed <= 0f) appString(R.string.text_off_e3de5a) else "${(prefs.dspCrossfeed * 100).roundToInt()}%") { v -> scope.launch { store.setDspCrossfeed(v) } }
     }
 
-    collapsible("c_harm", "Harmonics", Icons.Filled.Whatshot, if (prefs.dspSaturation > 0f) "Tube ${(prefs.dspSaturation * 100).roundToInt()}%" else "Off", expanded) {
-        FloatSliderRow("Tube saturation", prefs.dspSaturation, 0f..1f, valueText = if (prefs.dspSaturation <= 0f) "Off" else "${(prefs.dspSaturation * 100).roundToInt()}%") { v -> scope.launch { store.setDspSaturation(v) } }
+    collapsible("c_harm", appString(R.string.text_harmonics_17ba48), Icons.Filled.Whatshot, if (prefs.dspSaturation > 0f) appString(R.string.text_tube_419868, ((prefs.dspSaturation * 100).roundToInt())) else appString(R.string.text_off_e3de5a), expanded) {
+        FloatSliderRow(appString(R.string.text_tube_saturation_8c63f8), prefs.dspSaturation, 0f..1f, valueText = if (prefs.dspSaturation <= 0f) appString(R.string.text_off_e3de5a) else "${(prefs.dspSaturation * 100).roundToInt()}%") { v -> scope.launch { store.setDspSaturation(v) } }
     }
 
     val aligned = prefs.dspDelayLeftMs > 0f || prefs.dspDelayRightMs > 0f || prefs.dspTrimLeftDb != 0f || prefs.dspTrimRightDb != 0f
-    collapsible("c_align", "Channel alignment", Icons.Filled.SwapHoriz, if (aligned) "Adjusted" else "Off", expanded) {
-        FloatSliderRow("Left delay", prefs.dspDelayLeftMs, 0f..20f, valueText = "%.1f ms".format(prefs.dspDelayLeftMs)) { v -> scope.launch { store.setDspDelayLeft(v) } }
-        FloatSliderRow("Right delay", prefs.dspDelayRightMs, 0f..20f, valueText = "%.1f ms".format(prefs.dspDelayRightMs)) { v -> scope.launch { store.setDspDelayRight(v) } }
-        DbSliderRow("Left trim", prefs.dspTrimLeftDb, -12f..0f) { v -> scope.launch { store.setDspTrimLeft(v) } }
-        DbSliderRow("Right trim", prefs.dspTrimRightDb, -12f..0f) { v -> scope.launch { store.setDspTrimRight(v) } }
+    collapsible("c_align", appString(R.string.text_channel_alignment_7c33be), Icons.Filled.SwapHoriz, if (aligned) appString(R.string.text_adjusted_7bba98) else appString(R.string.text_off_e3de5a), expanded) {
+        FloatSliderRow(appString(R.string.text_left_delay_c54844), prefs.dspDelayLeftMs, 0f..20f, valueText = appString(R.string.text_1f_ms_57bb04).format(prefs.dspDelayLeftMs)) { v -> scope.launch { store.setDspDelayLeft(v) } }
+        FloatSliderRow(appString(R.string.text_right_delay_ca7838), prefs.dspDelayRightMs, 0f..20f, valueText = appString(R.string.text_1f_ms_57bb04).format(prefs.dspDelayRightMs)) { v -> scope.launch { store.setDspDelayRight(v) } }
+        DbSliderRow(appString(R.string.text_left_trim_9ad513), prefs.dspTrimLeftDb, -12f..0f) { v -> scope.launch { store.setDspTrimLeft(v) } }
+        DbSliderRow(appString(R.string.text_right_trim_cadffb), prefs.dspTrimRightDb, -12f..0f) { v -> scope.launch { store.setDspTrimRight(v) } }
     }
 
-    val dyn = buildList { if (prefs.dspLimiterEnabled) add("Limiter"); if (prefs.dspCompEnabled) add("Compressor") }.joinToString(" · ").ifBlank { "Off" }
-    collapsible("c_dyn", "Dynamics", Icons.Filled.Compress, dyn, expanded) {
-        SettingsSwitchRow(Icons.Filled.GraphicEq, "Limiter", "Sample peak control with attack and release", prefs.dspLimiterEnabled) { v -> scope.launch { store.setDspLimiterEnabled(v) } }
+    val dyn = buildList { if (prefs.dspLimiterEnabled) add(appString(R.string.text_limiter_20fee6)); if (prefs.dspCompEnabled) add(appString(R.string.text_compressor_b23f61)) }.joinToString(" · ").ifBlank { appString(R.string.text_off_e3de5a) }
+    collapsible("c_dyn", appString(R.string.text_dynamics_7d5536), Icons.Filled.Compress, dyn, expanded) {
+        SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_limiter_20fee6), appString(R.string.text_sample_peak_control_with_attack_and_release_936da5), prefs.dspLimiterEnabled) { v -> scope.launch { store.setDspLimiterEnabled(v) } }
         if (prefs.dspLimiterEnabled) {
-            FloatSliderRow("Ceiling", prefs.dspLimiterCeilingDb, -6f..0f, valueText = "%.1f dB".format(prefs.dspLimiterCeilingDb)) { v -> scope.launch { store.setDspCeiling(v) } }
+            FloatSliderRow(appString(R.string.text_ceiling_e29db9), prefs.dspLimiterCeilingDb, -6f..0f, valueText = appString(R.string.text_1f_db_02557a).format(prefs.dspLimiterCeilingDb)) { v -> scope.launch { store.setDspCeiling(v) } }
         }
-        SettingsSwitchRow(Icons.Filled.GraphicEq, "Compressor", "Even out loud/quiet passages", prefs.dspCompEnabled) { v -> scope.launch { store.setDspCompEnabled(v) } }
+        SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_compressor_b23f61), appString(R.string.text_even_out_loud_quiet_passages_5f8fe4), prefs.dspCompEnabled) { v -> scope.launch { store.setDspCompEnabled(v) } }
         if (prefs.dspCompEnabled) {
-            FloatSliderRow("Threshold", prefs.dspCompThreshDb, -40f..0f, valueText = "%.0f dB".format(prefs.dspCompThreshDb)) { v -> scope.launch { store.setDspCompThresh(v) } }
-            FloatSliderRow("Ratio", prefs.dspCompRatio, 1f..10f, valueText = "%.1f:1".format(prefs.dspCompRatio)) { v -> scope.launch { store.setDspCompRatio(v) } }
+            FloatSliderRow(appString(R.string.text_threshold_c51f7b), prefs.dspCompThreshDb, -40f..0f, valueText = appString(R.string.text_0f_db_fd1f4d).format(prefs.dspCompThreshDb)) { v -> scope.launch { store.setDspCompThresh(v) } }
+            FloatSliderRow(appString(R.string.text_ratio_794f65), prefs.dspCompRatio, 1f..10f, valueText = "%.1f:1".format(prefs.dspCompRatio)) { v -> scope.launch { store.setDspCompRatio(v) } }
         }
     }
 }
@@ -636,7 +641,7 @@ private fun TextLink(text: String, onClick: () -> Unit) {
 @Composable
 private fun ParametricBandCard(band: ParamBand, onChange: (ParamBand) -> Unit, onRemove: () -> Unit) {
     var edit by remember { mutableStateOf(false) }
-    if (edit) RackBandDialog(band, "Edit filter", { edit = false }) { onChange(it); edit = false }
+    if (edit) RackBandDialog(band, appString(R.string.text_edit_filter_32d3bd), { edit = false }) { onChange(it); edit = false }
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
             .clip(RoundedCornerShape(16.dp))
@@ -645,26 +650,26 @@ private fun ParametricBandCard(band: ParamBand, onChange: (ParamBand) -> Unit, o
     ) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Text(freqLabel(band.freqHz.toInt()), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-            Text("%+.1f dB · Q%.1f".format(band.gainDb, band.q), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(appString(R.string.text_1f_db_q_1f_4fdf16).format(band.gainDb, band.q), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Icon(
-                Icons.Filled.Close, "Remove band",
+                Icons.Filled.Close, appString(R.string.text_remove_band_fb769d),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.width(28.dp).clip(RoundedCornerShape(50)).clickable(onClick = onRemove).padding(start = 8.dp),
             )
         }
-        TextButton(onClick = { edit = true }) { Text(band.filterType.label + if (band.isEnabled) "" else " (bypassed)") }
-        FloatSliderRow("Freq", band.freqHz, 20f..20000f, valueText = freqLabel(band.freqHz.toInt())) { v -> onChange(band.copy(freqHz = v)) }
-        if (band.filterType.hasGain) DbSliderRow("Gain", band.gainDb, -15f..15f) { v -> onChange(band.copy(gainDb = v)) }
+        TextButton(onClick = { edit = true }) { Text(band.filterType.label + if (band.isEnabled) "" else appString(R.string.text_bypassed_c5c251)) }
+        FloatSliderRow(appString(R.string.text_freq_f5f7de), band.freqHz, 20f..20000f, valueText = freqLabel(band.freqHz.toInt())) { v -> onChange(band.copy(freqHz = v)) }
+        if (band.filterType.hasGain) DbSliderRow(appString(R.string.text_gain_96dd91), band.gainDb, -15f..15f) { v -> onChange(band.copy(gainDb = v)) }
         if (band.filterType.hasQ) FloatSliderRow("Q", band.q, 0.3f..8f, valueText = "%.2f".format(band.q)) { v -> onChange(band.copy(q = v)) }
     }
 }
 
 @Composable
 private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {
-    val labels = listOf("System effects", "Custom DSP", "Off")
+    val labels = listOf(appString(R.string.text_system_effects_d5a44a), appString(R.string.text_custom_dsp_df083c), appString(R.string.text_off_e3de5a))
     var expanded by remember { mutableStateOf(false) }
     Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
-        Text("Engine", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+        Text(appString(R.string.text_engine_c1f65d), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
         Spacer(Modifier.height(10.dp))
         Box {
             Row(
@@ -674,7 +679,7 @@ private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(labels.getOrElse(selected) { labels[0] }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.ArrowDropDown, "Choose engine", tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(Icons.Filled.ArrowDropDown, appString(R.string.text_choose_engine_dee9e6), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                 labels.forEachIndexed { i, label ->
@@ -770,13 +775,13 @@ private fun EnhancerSlider(title: String, value: Int, range: IntRange, unit: Str
 }
 
 private fun balanceLabel(b: Float): String = when {
-    b < -0.01f -> "L ${(-b * 100).roundToInt()}%"
-    b > 0.01f -> "R ${(b * 100).roundToInt()}%"
-    else -> "Center"
+    b < -0.01f -> appString(R.string.text_l_08eea2, ((-b * 100).roundToInt()))
+    b > 0.01f -> appString(R.string.text_r_6b99ea, ((b * 100).roundToInt()))
+    else -> appString(R.string.text_center_a23911)
 }
 
 private fun freqLabel(hz: Int): String = when {
     hz <= 0 -> "—"
-    hz >= 1000 -> if (hz % 1000 == 0) "${hz / 1000} kHz" else "%.1f kHz".format(hz / 1000f)
-    else -> "$hz Hz"
+    hz >= 1000 -> if (hz % 1000 == 0) appString(R.string.text_khz_dd177d, (hz / 1000)) else appString(R.string.text_1f_khz_92ed69).format(hz / 1000f)
+    else -> appString(R.string.text_hz_648ee5, (hz))
 }

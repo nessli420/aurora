@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
@@ -56,22 +59,22 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
                 preview = withContext(Dispatchers.IO) { ImpulseLibraryFiles.previewPrepared(entry, submitted).getOrThrow() }
                 reviewed = submitted
             } catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { error = failure.message ?: "Could not prepare this IR." }
+            catch (failure: Exception) { error = failure.message ?: appString(R.string.text_could_not_prepare_this_ir_3f250b) }
             finally { busy = false }
         }
     }
     LaunchedEffect(entry.id) { loadPreview(initial) }
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text("Prepare impulse") }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(appString(R.string.text_prepare_impulse_828a45)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text("Original: $frames frames · ${entry.sourceMetadata.summary()}", style = MaterialTheme.typography.bodySmall)
-            Text("Creates a 32-bit float copy.", style = MaterialTheme.typography.bodySmall)
+            Text(appString(R.string.text_original_frames_26e777, (frames), (entry.sourceMetadata.summary())), style = MaterialTheme.typography.bodySmall)
+            Text(appString(R.string.text_creates_a_32_bit_float_copy_d569be), style = MaterialTheme.typography.bodySmall)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                OutlinedTextField(start, { start = it; changed() }, label = { Text("Start frame") }, singleLine = true,
+                OutlinedTextField(start, { start = it; changed() }, label = { Text(appString(R.string.text_start_frame_71c6c5)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, modifier = Modifier.weight(1f))
-                OutlinedTextField(end, { end = it; changed() }, label = { Text("End frame") }, singleLine = true,
+                OutlinedTextField(end, { end = it; changed() }, label = { Text(appString(R.string.text_end_frame_e4064a)) }, singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number), enabled = !busy, modifier = Modifier.weight(1f))
             }
-            Text("Start included. End excluded.", style = MaterialTheme.typography.labelSmall)
+            Text(appString(R.string.text_start_included_end_excluded_a1dbff), style = MaterialTheme.typography.labelSmall)
             val sliderStart = (startFrame ?: 0).coerceIn(0, frames - 1)
             val sliderEnd = (endFrame ?: frames).coerceIn(sliderStart + 1, frames)
             RangeSlider(value = sliderStart.toFloat()..sliderEnd.toFloat(), onValueChange = { range ->
@@ -80,30 +83,30 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
                 end = range.endInclusive.roundToInt().coerceIn(left + 1, frames).toString()
                 changed()
             }, valueRange = 0f..frames.toFloat(), enabled = !busy,
-                modifier = Modifier.semantics { contentDescription = "Trim range in source frames" })
+                modifier = Modifier.semantics { contentDescription = appString(R.string.text_trim_range_in_source_frames_d2159a) })
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text("Normalize peak to −1 dB", style = MaterialTheme.typography.titleSmall)
-                    if (entry.sourceMetadata.channels > 1) Text("One gain for all paths.", style = MaterialTheme.typography.bodySmall)
+                    Text(appString(R.string.text_normalize_peak_to_1_db_06fc92), style = MaterialTheme.typography.titleSmall)
+                    if (entry.sourceMetadata.channels > 1) Text(appString(R.string.text_one_gain_for_all_paths_f4bd76), style = MaterialTheme.typography.bodySmall)
                 }
                 Switch(normalize, onCheckedChange = { normalize = it; changed() }, enabled = !busy)
             }
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Text("Minimum phase", Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
+                Text(appString(R.string.text_minimum_phase_500a84), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall)
                 Switch(minimumPhase, onCheckedChange = { minimumPhase = it; changed() }, enabled = !busy)
             }
-            if (entry.sourceMetadata.channels == 4 && minimumPhase) Text("Converts each matrix path independently.", style = MaterialTheme.typography.bodySmall)
-            OutlinedTextField(delay, { delay = it; changed() }, label = { Text("Delay (ms)") }, singleLine = true,
+            if (entry.sourceMetadata.channels == 4 && minimumPhase) Text(appString(R.string.text_converts_each_matrix_path_independently_be282e), style = MaterialTheme.typography.bodySmall)
+            OutlinedTextField(delay, { delay = it; changed() }, label = { Text(appString(R.string.text_delay_ms_3f4bc4)) }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal), enabled = !busy, modifier = Modifier.fillMaxWidth())
-            if (options != null) Text("${options.endFrameExclusive - options.startFrame + options.delayFrames} frames · ${impulseNumber((options.endFrameExclusive - options.startFrame + options.delayFrames) * 1000.0 / entry.sourceMetadata.sampleRate)} ms",
+            if (options != null) Text(appString(R.string.text_frames_ms_753397, (options.endFrameExclusive - options.startFrame + options.delayFrames), (impulseNumber((options.endFrameExclusive - options.startFrame + options.delayFrames) * 1000.0 / entry.sourceMetadata.sampleRate))),
                 style = MaterialTheme.typography.bodySmall)
-            OutlinedButton(enabled = !busy && options != null, onClick = { options?.let(::loadPreview) }, modifier = Modifier.fillMaxWidth()) { Text("Preview") }
+            OutlinedButton(enabled = !busy && options != null, onClick = { options?.let(::loadPreview) }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_preview_f1fbb2)) }
             if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             preview?.let { result ->
                 ImpulseWaveform(result)
-                Text("Peak: ${result.metadata.peak.peakLabel()}", style = MaterialTheme.typography.bodySmall)
+                Text(appString(R.string.text_peak_932437, (result.metadata.peak.peakLabel())), style = MaterialTheme.typography.bodySmall)
             }
-            if (options == null) Text("Enter a range within the original frames.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+            if (options == null) Text(appString(R.string.text_enter_a_range_within_the_original_frames_8c9532), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
             error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
         }
     }, confirmButton = { TextButton(enabled = !busy && options != null && options == reviewed && preview != null, onClick = {
@@ -112,10 +115,10 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
         scope.launch {
             try { onSave(submitted) }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { error = failure.message ?: "Could not save the variant." }
+            catch (failure: Exception) { error = failure.message ?: appString(R.string.text_could_not_save_the_variant_8badb5) }
             finally { busy = false }
         }
-    }) { Text("Save variant") } }, dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text("Cancel") } })
+    }) { Text(appString(R.string.text_save_variant_35fac3)) } }, dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }
 
 @Composable
@@ -127,13 +130,13 @@ internal fun ImpulseWaveform(preview: ImpulsePreview) {
         2 -> listOf(preview.left, preview.right)
         else -> listOf(preview.left)
     }
-    val labels = when (channels.size) { 4 -> listOf("LL", "LR", "RL", "RR"); 2 -> listOf("Left", "Right"); else -> listOf("Mono") }
+    val labels = when (channels.size) { 4 -> listOf("LL", "LR", "RL", "RR"); 2 -> listOf(appString(R.string.text_left_8ae1c3), appString(R.string.text_right_954daa)); else -> listOf(appString(R.string.text_mono_c5c553)) }
     val peak = remember(preview) { channels.flatten().maxOfOrNull { max(abs(it.min), abs(it.max)) }?.coerceAtLeast(0.000001) ?: 1.0 }
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         channels.forEachIndexed { index, bins ->
             Text(labels[index], style = MaterialTheme.typography.labelSmall)
             Canvas(Modifier.fillMaxWidth().height(72.dp).semantics {
-                contentDescription = "${labels[index]} impulse waveform, ${preview.metadata.frames} frames"
+                contentDescription = appString(R.string.text_impulse_waveform_frames_112fd2, (labels[index]), (preview.metadata.frames))
             }) {
                 val center = size.height / 2f
                 drawLine(axisColor, Offset(0f, center), Offset(size.width, center), 1.dp.toPx())
@@ -149,8 +152,8 @@ internal fun ImpulseWaveform(preview: ImpulsePreview) {
             }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-            Text("0 ms", style = MaterialTheme.typography.labelSmall)
-            Text("${impulseNumber(preview.metadata.frames * 1000.0 / preview.metadata.sampleRate)} ms", style = MaterialTheme.typography.labelSmall)
+            Text(appString(R.string.text_0_ms_3faf04), style = MaterialTheme.typography.labelSmall)
+            Text(appString(R.string.text_ms_1191ce, (impulseNumber(preview.metadata.frames * 1000.0 / preview.metadata.sampleRate))), style = MaterialTheme.typography.labelSmall)
         }
     }
 }

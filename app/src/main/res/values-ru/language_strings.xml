@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">Язык приложения</string>
+    <string name="language_system">Как в системе</string>
+    <string name="language_description">Выберите язык интерфейса Aurora. Названия треков и имена исполнителей останутся прежними.</string>
+    <string name="widget_description">Управление воспроизведением</string>
+</resources>

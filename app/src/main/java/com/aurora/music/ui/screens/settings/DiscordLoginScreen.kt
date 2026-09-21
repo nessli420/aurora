@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.annotation.SuppressLint
 import android.util.Log
 import android.view.View
@@ -37,9 +40,9 @@ import androidx.compose.ui.viewinterop.AndroidView
 fun DiscordLoginScreen(contentPadding: PaddingValues, onBack: () -> Unit, onToken: (String) -> Unit) {
     var manual by remember { mutableStateOf("") }
     Column(Modifier.fillMaxSize()) {
-        SettingsTopBar("Connect Discord", onBack)
+        SettingsTopBar(appString(R.string.text_connect_discord_8794ce), onBack)
         Text(
-            "Log in to Discord below — Aurora reads your token locally to set Rich Presence (never sent anywhere but Discord). If the page stays blank, paste a token instead.",
+            appString(R.string.text_log_in_to_discord_below_aurora_reads_your_token_locally_to_set_ri_8ae4f4),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
@@ -52,11 +55,11 @@ fun DiscordLoginScreen(contentPadding: PaddingValues, onBack: () -> Unit, onToke
             OutlinedTextField(
                 value = manual,
                 onValueChange = { manual = it },
-                label = { Text("Paste token") },
+                label = { Text(appString(R.string.text_paste_token_3c9cd3)) },
                 singleLine = true,
                 modifier = Modifier.weight(1f),
             )
-            TextButton(onClick = { if (manual.isNotBlank()) onToken(manual.trim()) }) { Text("Link") }
+            TextButton(onClick = { if (manual.isNotBlank()) onToken(manual.trim()) }) { Text(appString(R.string.text_link_d05170)) }
         }
         AndroidView(
             modifier = Modifier.fillMaxWidth().weight(1f),

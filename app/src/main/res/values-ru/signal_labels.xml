@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"Аудиосистема Android"</string>
+    <string name="signal_text_android_audio_mix_f88264">"Аудиосистема Android · Микс"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"Прямой вывод по USB"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"USB с обработкой"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"Приёмник Cast"</string>
+    <string name="signal_text_source_6da13a">"Источник"</string>
+    <string name="signal_text_decoder_7be2f0">"Декодер"</string>
+    <string name="signal_text_processing_e63451">"Обработка"</string>
+    <string name="signal_text_resampling_1bf1aa">"Передискретизация"</string>
+    <string name="signal_text_output_4bed33">"Выход"</string>
+    <string name="signal_text_device_a5a74a">"Устройство"</string>
+    <string name="signal_text_latency_3e3997">"Задержка"</string>
+</resources>

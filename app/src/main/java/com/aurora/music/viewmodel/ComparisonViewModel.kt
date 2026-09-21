@@ -1,5 +1,8 @@
 package com.aurora.music.viewmodel
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.Application
 import android.content.ComponentName
 import android.media.AudioManager
@@ -66,15 +69,15 @@ class ComparisonViewModel internal constructor(app: Application,
         mutable.value = ComparisonUiState(preparing = true, blind = blind)
         task = viewModelScope.launch {
             try {
-                val player = controller ?: error("The player is still connecting.")
+                val player = controller ?: error(appString(R.string.text_the_player_is_still_connecting_e52aa9))
                 val route = store.processingRoutes.current.route
                 require(route.kind == ProcessingRouteKind.ANDROID || route.kind == ProcessingRouteKind.IDLE) {
-                    "Use Android audio output for comparison."
+                    appString(R.string.text_use_android_audio_output_for_comparison_9b13e7)
                 }
                 val expectedDeviceId = route.androidDeviceId
                 val preferredDeviceId = container.preferredAudioDeviceId.value
-                require(route.kind != ProcessingRouteKind.ANDROID || expectedDeviceId != null) { "Wait for the playback output to be confirmed." }
-                require(!store.presetRuleContext.current.frozen) { "Another comparison is active." }
+                require(route.kind != ProcessingRouteKind.ANDROID || expectedDeviceId != null) { appString(R.string.text_wait_for_the_playback_output_to_be_confirmed_b517cb) }
+                require(!store.presetRuleContext.current.frozen) { appString(R.string.text_another_comparison_is_active_48df0f) }
                 store.presetRuleContext.setFrozen(true); frozen = true
                 originalId = player.currentMediaItem?.mediaId
                 restorePlaying = player.playWhenReady
@@ -85,12 +88,12 @@ class ComparisonViewModel internal constructor(app: Application,
                     if (manager.getStreamVolume(AudioManager.STREAM_MUSIC) != volume || player.currentMediaItem?.mediaId != originalId ||
                         player.playWhenReady || container.preferredAudioDeviceId.value != preferredDeviceId) {
                         restorePlaying = false
-                        error("Playback, output or volume changed. Prepare the comparison again.")
+                        error(appString(R.string.text_playback_output_or_volume_changed_prepare_the_comparison_again_f65441))
                     }
                 }
                 val audio = withTimeoutOrNull(120_000) {
                     prepareAudio(getApplication(), uri, startSeconds, a, b, relativeVolume)
-                } ?: error("Preparing the comparison timed out.")
+                } ?: error(appString(R.string.text_preparing_the_comparison_timed_out_fe2312))
                 checkContext()
                 measuredLevels = audio.levels
                 val output = ComparisonPlayback(getApplication(), audio, expectedDeviceId,
@@ -107,21 +110,21 @@ class ComparisonViewModel internal constructor(app: Application,
                 while (mutable.value.active) {
                     delay(250)
                     if (manager.getStreamVolume(AudioManager.STREAM_MUSIC) != volume) {
-                        stop("Volume changed. The comparison stopped."); break
+                        stop(appString(R.string.text_volume_changed_the_comparison_stopped_09aa40)); break
                     }
                     if (container.preferredAudioDeviceId.value != preferredDeviceId) {
-                        stop("The selected output changed. The comparison stopped."); break
+                        stop(appString(R.string.text_the_selected_output_changed_the_comparison_stopped_602724)); break
                     }
                     if (player.currentMediaItem?.mediaId != originalId || player.playWhenReady) {
                         restorePlaying = false
-                        stop("Playback changed. The comparison stopped."); break
+                        stop(appString(R.string.text_playback_changed_the_comparison_stopped_2af425)); break
                     }
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (failure: Exception) {
                 if (generation == session) mutable.value = mutable.value.copy(preparing = false, active = false,
-                    error = failure.message?.takeUnless { it.contains("://") } ?: "Could not prepare this audio selection.")
+                    error = failure.message?.takeUnless { it.contains("://") } ?: appString(R.string.text_could_not_prepare_this_audio_selection_814b67))
             } finally {
                 if (generation == session) {
                     releaseOutput()

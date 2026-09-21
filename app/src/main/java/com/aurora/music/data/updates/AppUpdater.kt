@@ -1,5 +1,8 @@
 package com.aurora.music.data.updates
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.DownloadManager
 import android.content.Context
 import android.content.Intent
@@ -94,10 +97,10 @@ class AppUpdater(context: Context) {
                         .header("X-GitHub-Api-Version", "2022-11-28")
                         .header("User-Agent", "Aurora/${BuildConfig.VERSION_NAME}").build()
                     client.newCall(request).execute().use { response ->
-                        if (response.code == 403 || response.code == 429) throw IOException("GitHub is busy. Try again later.")
-                        if (response.code == 404) throw IOException("No public release is available yet.")
-                        if (!response.isSuccessful) throw IOException("Couldn't check for updates. Try again later.")
-                        response.body?.string() ?: throw IOException("GitHub returned an empty response.")
+                        if (response.code == 403 || response.code == 429) throw IOException(appString(R.string.text_github_is_busy_try_again_later_83f29b))
+                        if (response.code == 404) throw IOException(appString(R.string.text_no_public_release_is_available_yet_54a115))
+                        if (!response.isSuccessful) throw IOException(appString(R.string.text_couldn_t_check_for_updates_try_again_later_e70d9d))
+                        response.body?.string() ?: throw IOException(appString(R.string.text_github_returned_an_empty_response_06f1d4))
                     }
                 }
                 val release = GitHubRelease.parse(json)
@@ -107,9 +110,9 @@ class AppUpdater(context: Context) {
                 throw e
             } catch (e: Exception) {
                 mutableState.update { it.copy(checking = false, error = when (e) {
-                    is java.net.UnknownHostException, is java.net.SocketTimeoutException -> "Couldn't reach GitHub. Check your connection and try again."
-                    is IOException -> e.message ?: "Couldn't check for updates. Try again."
-                    else -> "Couldn't read the GitHub release. Try again later."
+                    is java.net.UnknownHostException, is java.net.SocketTimeoutException -> appString(R.string.text_couldn_t_reach_github_check_your_connection_and_try_again_47aff9)
+                    is IOException -> e.message ?: appString(R.string.text_couldn_t_check_for_updates_try_again_a15f1d)
+                    else -> appString(R.string.text_couldn_t_read_the_github_release_try_again_later_309d84)
                 }) }
             }
         }
@@ -128,7 +131,7 @@ class AppUpdater(context: Context) {
                     check(apkFile.parentFile?.mkdirs() == true || apkFile.parentFile?.isDirectory == true)
                     val request = DownloadManager.Request(Uri.parse(apk.url))
                         .setTitle("Aurora ${release.tag}")
-                        .setDescription("App update")
+                        .setDescription(appString(R.string.text_app_update_45b5d1))
                         .setMimeType("application/vnd.android.package-archive")
                         .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
                         .setDestinationInExternalFilesDir(context, Environment.DIRECTORY_DOWNLOADS, "updates/Aurora.apk")
@@ -140,7 +143,7 @@ class AppUpdater(context: Context) {
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                mutableState.update { it.copy(download = UpdateDownload.IDLE, error = "Couldn't start the download. Check available storage and try again.") }
+                mutableState.update { it.copy(download = UpdateDownload.IDLE, error = appString(R.string.text_couldn_t_start_the_download_check_available_storage_and_try_again_2afac7)) }
             }
         }
     }
@@ -159,12 +162,12 @@ class AppUpdater(context: Context) {
     }
 
     fun reportInstallError() {
-        mutableState.update { it.copy(error = "Couldn't open the installer. You can also download the update from GitHub.") }
+        mutableState.update { it.copy(error = appString(R.string.text_couldn_t_open_the_installer_you_can_also_download_the_update_from_c2a33f)) }
     }
 
     fun installerIntent(): Intent? {
         if (state.value.download != UpdateDownload.READY || !apkFile.isFile) {
-            mutableState.update { it.copy(download = UpdateDownload.IDLE, error = "The downloaded update is missing. Download it again.") }
+            mutableState.update { it.copy(download = UpdateDownload.IDLE, error = appString(R.string.text_the_downloaded_update_is_missing_download_it_again_8a84fc)) }
             return null
         }
         val uri = FileProvider.getUriForFile(context, "${context.packageName}.updates", apkFile)
@@ -177,7 +180,7 @@ class AppUpdater(context: Context) {
             while (true) {
                 val status = withContext(Dispatchers.IO) {
                     downloads.query(DownloadManager.Query().setFilterById(id)).use { cursor ->
-                        check(cursor.moveToFirst()) { "The download was removed. Try again." }
+                        check(cursor.moveToFirst()) { appString(R.string.text_the_download_was_removed_try_again_867dcc) }
                         val downloaded = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_BYTES_DOWNLOADED_SO_FAR))
                         val total = cursor.getLong(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_TOTAL_SIZE_BYTES))
                         Triple(cursor.getInt(cursor.getColumnIndexOrThrow(DownloadManager.COLUMN_STATUS)), downloaded, total)
@@ -190,7 +193,7 @@ class AppUpdater(context: Context) {
                         mutableState.update { it.copy(download = UpdateDownload.READY) }
                         return
                     }
-                    DownloadManager.STATUS_FAILED -> error("Download failed. Check your connection and storage, then try again.")
+                    DownloadManager.STATUS_FAILED -> error(appString(R.string.text_download_failed_check_your_connection_and_storage_then_try_again_3e9e00))
                     else -> mutableState.update { it.copy(
                         progress = if (status.third > 0) (status.second.toFloat() / status.third).coerceIn(0f, 1f) else null,
                         waitingForNetwork = status.first == DownloadManager.STATUS_PAUSED,
@@ -202,14 +205,14 @@ class AppUpdater(context: Context) {
             throw e
         } catch (e: Exception) {
             withContext(Dispatchers.IO) { clearDownload() }
-            mutableState.update { it.copy(download = UpdateDownload.IDLE, progress = null, error = e.message ?: "Couldn't download the update. Try again.") }
+            mutableState.update { it.copy(download = UpdateDownload.IDLE, progress = null, error = e.message ?: appString(R.string.text_couldn_t_download_the_update_try_again_5d009e)) }
         }
     }
 
     @Suppress("DEPRECATION")
     internal fun validateApk(release: AppRelease, file: File = apkFile) {
         val asset = requireNotNull(release.apk)
-        check(file.isFile && file.length() == asset.size) { "The download is incomplete. Please try again." }
+        check(file.isFile && file.length() == asset.size) { appString(R.string.text_the_download_is_incomplete_please_try_again_96c9cd) }
         asset.sha256?.let { expected ->
             val digest = MessageDigest.getInstance("SHA-256")
             file.inputStream().buffered().use { input ->
@@ -221,18 +224,18 @@ class AppUpdater(context: Context) {
                 }
             }
             val actual = digest.digest().joinToString("") { "%02x".format(it) }
-            check(actual.equals(expected, ignoreCase = true)) { "The download could not be verified. Please try again." }
+            check(actual.equals(expected, ignoreCase = true)) { appString(R.string.text_the_download_could_not_be_verified_please_try_again_95c71d) }
         }
         val manager = context.packageManager
         val candidate = manager.getPackageArchiveInfo(file.absolutePath, PackageManager.GET_SIGNATURES)
-            ?: error("The download isn't a valid app update.")
+            ?: error(appString(R.string.text_the_download_isn_t_a_valid_app_update_d50721))
         val installed = manager.getPackageInfo(context.packageName, PackageManager.GET_SIGNATURES)
         check(candidate.packageName == context.packageName && candidate.signatures?.isNotEmpty() == true &&
             candidate.signatures?.toSet() == installed.signatures?.toSet()) {
-            "This update doesn't match the installed app's signing key. Install updates from the same source."
+            appString(R.string.text_this_update_doesn_t_match_the_installed_app_s_signing_key_install_5af2e9)
         }
         check(AppVersion.parse(candidate.versionName.orEmpty()) == release.version && candidate.versionCode > installed.versionCode) {
-            "This release's APK has incompatible version information. Please check the GitHub release."
+            appString(R.string.text_this_release_s_apk_has_incompatible_version_information_please_ch_71cb07)
         }
     }
 

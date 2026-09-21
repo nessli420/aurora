@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import android.app.TimePickerDialog
 import android.content.Context
 import android.text.format.DateFormat
@@ -66,20 +69,20 @@ fun AlarmSettingsScreen(
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar("Alarm", onBack)
+        SettingsTopBar(appString(R.string.text_alarm_25f8c5), onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
-            item { SettingsSectionTitle("Daily wake-up") }
+            item { SettingsSectionTitle(appString(R.string.text_daily_wake_up_30bad6)) }
             item {
                 SettingsGroup {
                     SettingsSwitchRow(
-                        Icons.Filled.Alarm, "Wake-to-music alarm",
-                        "Fade in music from your library every day", alarm.enabled,
+                        Icons.Filled.Alarm, appString(R.string.text_wake_to_music_alarm_40ab13),
+                        appString(R.string.text_fade_in_music_from_your_library_every_day_51b4c6), alarm.enabled,
                     ) { enabled -> scope.launch { store.setAlarm(enabled, alarm.hour, alarm.minute) } }
                     SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.Alarm, "Alarm time", value = alarmTime) {
+                    SettingsNavRow(Icons.Filled.Alarm, appString(R.string.text_alarm_time_d2dd88), value = alarmTime) {
                         TimePickerDialog(
                             context,
                             { _, hour, minute -> scope.launch { store.setAlarm(alarm.enabled, hour, minute) } },
@@ -88,31 +91,31 @@ fun AlarmSettingsScreen(
                     }
                 }
             }
-            item { SettingsSectionTitle("Schedule") }
+            item { SettingsSectionTitle(appString(R.string.text_schedule_0a8ada)) }
             item {
                 SettingsGroup {
                     Column(Modifier.padding(20.dp)) {
                         val title = when {
-                            !currentResult -> "Updating alarm…"
-                            schedule.mode == AlarmScheduleMode.DISABLED -> "Alarm is off"
-                            schedule.mode == AlarmScheduleMode.EXACT -> "Exact alarm scheduled"
-                            schedule.mode == AlarmScheduleMode.INEXACT -> "Approximate alarm scheduled"
-                            !alarm.enabled -> "Could not turn off alarm"
-                            else -> "Alarm was not scheduled"
+                            !currentResult -> appString(R.string.text_updating_alarm_221e61)
+                            schedule.mode == AlarmScheduleMode.DISABLED -> appString(R.string.text_alarm_is_off_fc6331)
+                            schedule.mode == AlarmScheduleMode.EXACT -> appString(R.string.text_exact_alarm_scheduled_afe593)
+                            schedule.mode == AlarmScheduleMode.INEXACT -> appString(R.string.text_approximate_alarm_scheduled_f3c47b)
+                            !alarm.enabled -> appString(R.string.text_could_not_turn_off_alarm_a8caac)
+                            else -> appString(R.string.text_alarm_was_not_scheduled_8d9142)
                         }
                         Text(title, style = MaterialTheme.typography.titleMedium)
                         if (currentResult) {
                             schedule.nextTriggerMs?.let { trigger ->
                                 Text(
-                                    "Next: ${formatScheduledAlarm(context, trigger)}",
+                                    appString(R.string.text_next_15c20d, (formatScheduledAlarm(context, trigger))),
                                     Modifier.padding(top = 6.dp), style = MaterialTheme.typography.bodyMedium,
                                 )
                             }
                             val explanation = when (schedule.mode) {
-                                AlarmScheduleMode.DISABLED -> "Your saved time is $alarmTime."
-                                AlarmScheduleMode.EXACT -> "Android accepted the scheduled time. Music and the wake-up screen still depend on playback, notifications and lock-screen access."
-                                AlarmScheduleMode.INEXACT -> "Exact alarm access is unavailable. Android may delay this alarm, and background playback may be restricted."
-                                AlarmScheduleMode.FAILED -> schedule.error ?: "Check alarm permissions and try enabling it again."
+                                AlarmScheduleMode.DISABLED -> appString(R.string.text_your_saved_time_is_d52817, (alarmTime))
+                                AlarmScheduleMode.EXACT -> appString(R.string.text_android_accepted_the_scheduled_time_music_and_the_wake_up_screen_f303a2)
+                                AlarmScheduleMode.INEXACT -> appString(R.string.text_exact_alarm_access_is_unavailable_android_may_delay_this_alarm_an_97544e)
+                                AlarmScheduleMode.FAILED -> schedule.error ?: appString(R.string.text_check_alarm_permissions_and_try_enabling_it_again_764ff9)
                             }
                             Text(
                                 explanation, Modifier.padding(top = 6.dp),
@@ -124,19 +127,19 @@ fun AlarmSettingsScreen(
                     }
                 }
             }
-            item { SettingsSectionTitle("Access & delivery") }
+            item { SettingsSectionTitle(appString(R.string.text_access_delivery_270b49)) }
             item {
                 SettingsGroup {
                     SettingsNavRow(
-                        Icons.Filled.Security, "Alarm permissions",
-                        "Exact alarms, notifications, battery and lock-screen access",
+                        Icons.Filled.Security, appString(R.string.text_alarm_permissions_c50074),
+                        appString(R.string.text_exact_alarms_notifications_battery_and_lock_screen_access_d38e18),
                         onClick = onOpenPermissions,
                     )
                 }
             }
             item {
                 Text(
-                    "Plays your liked music, or downloaded songs when liked music is unavailable. The volume fades in over 30 seconds. Keep music available on this device or through your connected library.",
+                    appString(R.string.text_plays_your_liked_music_or_downloaded_songs_when_liked_music_is_un_58abcb),
                     Modifier.padding(horizontal = 20.dp, vertical = 14.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -152,12 +155,12 @@ fun alarmSettingsSummary(): String {
     val store = remember { (context.applicationContext as AuroraApplication).container.settingsStore }
     val alarm by store.alarmPrefs.collectAsStateWithLifecycle(initialValue = AlarmPrefs())
     val schedule by AlarmScheduler.state.collectAsStateWithLifecycle()
-    if (schedule.request != alarm) return "Checking alarm…"
+    if (schedule.request != alarm) return appString(R.string.text_checking_alarm_e06c5c)
     return when (schedule.mode) {
-        AlarmScheduleMode.DISABLED -> "Off"
-        AlarmScheduleMode.FAILED -> if (alarm.enabled) "Alarm could not be scheduled" else "Could not turn off alarm"
+        AlarmScheduleMode.DISABLED -> appString(R.string.text_off_e3de5a)
+        AlarmScheduleMode.FAILED -> if (alarm.enabled) appString(R.string.text_alarm_could_not_be_scheduled_89c0e4) else appString(R.string.text_could_not_turn_off_alarm_a8caac)
         AlarmScheduleMode.EXACT, AlarmScheduleMode.INEXACT -> {
-            val time = schedule.nextTriggerMs?.let { formatScheduledAlarm(context, it) } ?: "Checking time"
+            val time = schedule.nextTriggerMs?.let { formatScheduledAlarm(context, it) } ?: appString(R.string.text_checking_time_d916f1)
             "$time · ${if (schedule.mode == AlarmScheduleMode.EXACT) "Exact" else "Approximate"}"
         }
     }

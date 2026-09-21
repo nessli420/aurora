@@ -1,14 +1,18 @@
 package com.aurora.music.data.tuning
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import java.util.UUID
 
-enum class TuningCurveFormat(val label: String) {
-    TEXT("Hz/dB text · REW"),
-    SQUIG("Squig measurement text"),
-    AUTOEQ_RAW("AutoEq JSON · raw measurement"),
-    AUTOEQ_TARGET("AutoEq JSON · target"),
-    AUTOEQ_CSV("AutoEq target CSV"),
-    WAVELET("Wavelet GraphicEQ · correction"),
+enum class TuningCurveFormat(@androidx.annotation.StringRes private val labelRes: Int) {
+    TEXT(R.string.text_hz_db_text_rew_d34904),
+    SQUIG(R.string.text_squig_measurement_text_1ab632),
+    AUTOEQ_RAW(R.string.text_autoeq_json_raw_measurement_984669),
+    AUTOEQ_TARGET(R.string.text_autoeq_json_target_de676c),
+    AUTOEQ_CSV(R.string.text_autoeq_target_csv_231f90),
+    WAVELET(R.string.text_wavelet_graphiceq_correction_230cc2);
+    val label: String get() = appString(labelRes)
 }
 
 object TuningCurveAdapters {

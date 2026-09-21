@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.home
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -95,23 +98,23 @@ fun HomeScreen(
                     if (avatarUrl.isNotBlank()) {
                         com.aurora.music.ui.components.Artwork(avatarUrl, MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), corner = 22.dp)
                     } else {
-                        Text(username.take(2).uppercase().ifBlank { "ME" }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
+                        Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
                 Spacer(Modifier.width(12.dp))
                 Column(Modifier.weight(1f)) {
                     Eyebrow(greeting(), MaterialTheme.colorScheme.primary)
-                    Text(username.ifBlank { "Listener" }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
+                    Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
                 }
                 if (state.feeds.size > 1) {
                     val next = state.feeds.first { it.id != state.selectedFeed }
                     IconPill(if (state.selectedFeed == state.feeds.first().id) Icons.Outlined.LibraryMusic else Icons.Outlined.PlayCircle,
-                        "Switch to ${next.label} home") { onSelectFeed(next.id) }
+                        appString(R.string.text_switch_to_home_42c520, (next.label))) { onSelectFeed(next.id) }
                     Spacer(Modifier.width(8.dp))
                 }
                 com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenNotifications)
                 Spacer(Modifier.width(8.dp))
-                IconPill(Icons.Outlined.Settings, "Settings", onClick = onOpenSettings)
+                IconPill(Icons.Outlined.Settings, appString(R.string.text_settings_c7f73b), onClick = onOpenSettings)
             }
         }
 
@@ -157,7 +160,7 @@ fun HomeScreen(
                     state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                     if (state.loadingMore) androidx.compose.material3.CircularProgressIndicator(Modifier.size(28.dp))
                     else androidx.compose.material3.OutlinedButton(onClick = if (data.continuation != null) onLoadMore else onRetry) {
-                        Text(if (state.error != null) "Try again" else "More recommendations")
+                        Text(if (state.error != null) appString(R.string.text_try_again_042c86) else appString(R.string.text_more_recommendations_5fd054))
                     }
                 }
             }
@@ -194,7 +197,7 @@ fun HomeScreen(
 
         if (data.recentlyPlayed.isNotEmpty() && HomeSection.RECENT !in hidden) {
             item {
-                SectionHeader("Jump back in", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_jump_back_in_1d9181), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(12.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(data.recentlyPlayed.size) { i ->
@@ -207,7 +210,7 @@ fun HomeScreen(
 
         if (data.playlists.isNotEmpty() && HomeSection.PLAYLISTS !in hidden) {
             item {
-                SectionHeader("Your playlists", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_your_playlists_df03eb), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(data.playlists.size) { i ->
@@ -221,7 +224,7 @@ fun HomeScreen(
         if (featured != null && HomeSection.FAVOURITE !in hidden) {
             item {
                 Column(Modifier.padding(horizontal = 16.dp)) {
-                    SectionHeader("From your favourites")
+                    SectionHeader(appString(R.string.text_from_your_favourites_d39722))
                     Spacer(Modifier.height(12.dp))
                     Box(
                         Modifier
@@ -236,13 +239,13 @@ fun HomeScreen(
                                 Artwork(featured.artworkUrl, featured.accent, Modifier.size(56.dp), corner = 14.dp)
                                 Spacer(Modifier.width(14.dp))
                                 Column(Modifier.weight(1f)) {
-                                    Eyebrow("STARRED", featured.accent)
+                                    Eyebrow(appString(R.string.text_starred_5f1f99), featured.accent)
                                     Spacer(Modifier.height(2.dp))
                                     Text(featured.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(featured.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                                 }
                                 Box(Modifier.size(46.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Filled.PlayArrow, "Play", tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                                    Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
                                 }
                             }
                             Spacer(Modifier.height(14.dp))
@@ -260,7 +263,7 @@ fun HomeScreen(
 
         if (data.mostPlayed.isNotEmpty() && HomeSection.MOST !in hidden) {
             item {
-                SectionHeader("Most played", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_most_played_14202e), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(data.mostPlayed.size) { i ->
@@ -272,7 +275,7 @@ fun HomeScreen(
 
         if (data.random.isNotEmpty() && HomeSection.RECOMMENDED !in hidden) {
             item {
-                SectionHeader("Recommended albums", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_recommended_albums_36271e), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(data.random.size) { i ->
@@ -284,7 +287,7 @@ fun HomeScreen(
 
         if (data.artists.isNotEmpty() && HomeSection.ARTISTS !in hidden) {
             item {
-                SectionHeader("Artists", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_artists_1528d8), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(data.artists.size) { i ->
@@ -296,7 +299,7 @@ fun HomeScreen(
 
         if (data.newReleases.isNotEmpty() && HomeSection.NEW !in hidden) {
             item {
-                SectionHeader("New releases", Modifier.padding(horizontal = 16.dp))
+                SectionHeader(appString(R.string.text_new_releases_3cdd02), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(data.newReleases.size) { i ->
@@ -325,7 +328,7 @@ private fun HeroCard(album: Album, onOpenDetail: (String, String) -> Unit, onPla
             )
         )
         Column(Modifier.align(Alignment.BottomStart).padding(20.dp)) {
-            Eyebrow("NEW RELEASE", accent)
+            Eyebrow(appString(R.string.text_new_release_f0ec22), accent)
             Spacer(Modifier.height(6.dp))
             Text(album.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(album.artist, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f), maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -336,7 +339,7 @@ private fun HeroCard(album: Album, onOpenDetail: (String, String) -> Unit, onPla
             ) {
                 Icon(Icons.Filled.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text("Play", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = Color.Black)
+                Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = Color.Black)
             }
         }
     }
@@ -371,7 +374,7 @@ internal fun IconPill(icon: androidx.compose.ui.graphics.vector.ImageVector, des
     ) { Icon(icon, desc, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
 }
 
-private fun greeting(): String = "GOOD EVENING"
+private fun greeting(): String = appString(R.string.text_good_evening_47f6d5)
 
 @Composable
 private fun HomeTrackCard(song: Song, onClick: () -> Unit) {
@@ -380,7 +383,7 @@ private fun HomeTrackCard(song: Song, onClick: () -> Unit) {
             Artwork(song.artworkUrl, song.accent, Modifier.size(156.dp), corner = 14.dp)
             Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(34.dp).clip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
-                Icon(Icons.Filled.PlayArrow, "Play", tint = MaterialTheme.colorScheme.onSurface)
+                Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onSurface)
             }
         }
         Spacer(Modifier.height(10.dp))

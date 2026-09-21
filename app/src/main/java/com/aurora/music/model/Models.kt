@@ -1,5 +1,8 @@
 package com.aurora.music.model
 
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.compose.ui.graphics.Color
 
 data class Song(
@@ -88,20 +91,22 @@ data class DetailInfo(
     val typeLabel: String,
 )
 
-enum class LibraryFilter(val label: String) {
-    ALL("All"),
-    PLAYLISTS("Playlists"),
-    ALBUMS("Albums"),
-    ARTISTS("Artists"),
-    SONGS("Songs"),
-    DOWNLOADED("Downloaded"),
+enum class LibraryFilter(@androidx.annotation.StringRes private val labelRes: Int) {
+    ALL(R.string.text_all_6a7208),
+    PLAYLISTS(R.string.text_playlists_77b69f),
+    ALBUMS(R.string.text_albums_4c45e7),
+    ARTISTS(R.string.text_artists_1528d8),
+    SONGS(R.string.text_songs_e1404b),
+    DOWNLOADED(R.string.text_downloaded_c61970);
+    val label: String get() = appString(labelRes)
 }
 
-enum class LibrarySort(val label: String) {
-    RECENT("Recently added"),
-    ALPHABETICAL("Alphabetical"),
-    CREATOR("Creator"),
-    MOST_PLAYED("Most played"),
+enum class LibrarySort(@androidx.annotation.StringRes private val labelRes: Int) {
+    RECENT(R.string.text_recently_added_536963),
+    ALPHABETICAL(R.string.text_alphabetical_9d1260),
+    CREATOR(R.string.text_creator_817b79),
+    MOST_PLAYED(R.string.text_most_played_14202e);
+    val label: String get() = appString(labelRes)
 }
 
 enum class LibraryLayout { LIST, GRID }

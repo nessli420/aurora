@@ -1,5 +1,12 @@
 package com.aurora.music.ui
 
+import com.aurora.music.localization.localizedMediaType
+
+import com.aurora.music.localization.appPlural
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -136,9 +143,9 @@ fun AuroraApp() {
     val onDownload: (com.aurora.music.model.Song) -> Unit = {
         val already = container.downloadManager.isDownloaded(it.id)
         container.downloadManager.downloadSong(it)
-        confirm(if (already) "Already downloaded" else "Downloading “${it.title}”")
+        confirm(if (already) appString(R.string.text_already_downloaded_8acc8a) else appString(R.string.text_downloading_7f12a1, (it.title)))
     }
-    val onRemoveDownload: (String) -> Unit = { container.downloadManager.removeDownload(it); confirm("Removed download") }
+    val onRemoveDownload: (String) -> Unit = { container.downloadManager.removeDownload(it); confirm(appString(R.string.text_removed_download_8ad8f9)) }
 
     // re-pull likes on foreground so stars from other devices show up
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -166,7 +173,7 @@ fun AuroraApp() {
             hadActiveDownloads = false
             val failed = downloadStates.values.count { it is com.aurora.music.data.DownloadState.Failed }
             snackbarHostState.showSnackbar(
-                if (failed > 0) "Download finished — $failed failed" else "Download complete",
+                if (failed > 0) appString(R.string.text_download_finished_failed_21e6b1, (failed)) else appString(R.string.text_download_complete_95efb3),
                 duration = androidx.compose.material3.SnackbarDuration.Short,
             )
         }
@@ -332,7 +339,7 @@ fun AuroraApp() {
                                 ) {
                                     Icon(Icons.Filled.CloudOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
                                     Spacer(Modifier.width(6.dp))
-                                    Text("Offline mode", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                                    Text(appString(R.string.text_offline_mode_66cf31), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
                                 }
                                 Spacer(Modifier.height(8.dp))
                             }
@@ -435,8 +442,8 @@ fun AuroraApp() {
                             onQuery = searchVM::onQuery,
                             onSelectSource = searchVM::selectSource,
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
-                            onAddToQueue = { playerVM.addToQueue(it); confirm("Added to queue") },
-                            onPlayNext = { playerVM.playNext(it); confirm("Playing next") },
+                            onAddToQueue = { playerVM.addToQueue(it); confirm(appString(R.string.text_added_to_queue_9d7749)) },
+                            onPlayNext = { playerVM.playNext(it); confirm(appString(R.string.text_playing_next_b23445)) },
                             onToggleLike = { playerVM.toggleLike(it) },
                             onOpenDetail = { kind, id -> openDetail(kind, id) },
                             downloadedIds = downloadedIds,
@@ -463,7 +470,7 @@ fun AuroraApp() {
                                     val ok = runCatching {
                                         context.contentResolver.openOutputStream(uri)?.use { it.write(text.toByteArray()) } != null
                                     }.getOrDefault(false)
-                                    confirm(if (ok) "Playlist exported" else "Export failed")
+                                    confirm(if (ok) appString(R.string.text_playlist_exported_0efbda) else appString(R.string.text_export_failed_d6c17e))
                                 }
                             }
                         }
@@ -481,12 +488,12 @@ fun AuroraApp() {
                                     t to n
                                 }
                                 val entries = text?.let { com.aurora.music.data.M3u.parse(it) }.orEmpty()
-                                if (entries.isEmpty()) { confirm("No tracks found in that file") } else {
-                                    val name = displayName?.substringBeforeLast('.')?.takeIf { it.isNotBlank() } ?: "Imported playlist"
-                                    confirm("Importing ${entries.size} tracks…")
+                                if (entries.isEmpty()) { confirm(appString(R.string.text_no_tracks_found_in_that_file_754434)) } else {
+                                    val name = displayName?.substringBeforeLast('.')?.takeIf { it.isNotBlank() } ?: appString(R.string.text_imported_playlist_37a186)
+                                    confirm(appString(R.string.text_importing_tracks_3abc1a, (entries.size)))
                                     val result = container.repository.importPlaylist(name, entries)
-                                    if (result == null) confirm("Import failed") else {
-                                        confirm("Matched ${result.first} of ${result.second} tracks")
+                                    if (result == null) confirm(appString(R.string.text_import_failed_fbae89)) else {
+                                        confirm(appString(R.string.text_matched_of_tracks_09b8b1, (result.first), (result.second)))
                                         libraryVM.load()
                                     }
                                 }
@@ -504,8 +511,8 @@ fun AuroraApp() {
                             onToggleLayout = libraryVM::toggleLayout,
                             onOpenDrawer = { openDrawer() },
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
-                            onAddToQueue = { playerVM.addToQueue(it); confirm("Added to queue") },
-                            onPlayNext = { playerVM.playNext(it); confirm("Playing next") },
+                            onAddToQueue = { playerVM.addToQueue(it); confirm(appString(R.string.text_added_to_queue_9d7749)) },
+                            onPlayNext = { playerVM.playNext(it); confirm(appString(R.string.text_playing_next_b23445)) },
                             onToggleLike = { playerVM.toggleLike(it) },
                             onOpenDetail = { kind, id -> openDetail(kind, id) },
                             downloadedIds = downloadedIds,
@@ -520,7 +527,7 @@ fun AuroraApp() {
                             onImportM3u = { importM3uLauncher.launch(arrayOf("*/*")) },
                             onExportPlaylist = { id, kind, title -> scope.launch {
                                 val text = container.repository.exportPlaylist(kind, id)
-                                if (text == null) confirm("Nothing to export") else {
+                                if (text == null) confirm(appString(R.string.text_nothing_to_export_7faf33)) else {
                                     pendingM3u = text
                                     exportM3uLauncher.launch("$title.m3u8")
                                 }
@@ -533,7 +540,7 @@ fun AuroraApp() {
                             onQueueCollection = { id, kind -> scope.launch {
                                 val tracks = container.repository.detail(kind, id)?.tracks.orEmpty()
                                 tracks.forEach { playerVM.addToQueue(it) }
-                                if (tracks.isNotEmpty()) confirm("Added ${tracks.size} to queue")
+                                if (tracks.isNotEmpty()) confirm(appString(R.string.text_added_to_queue_88e96c, (tracks.size)))
                             } },
                             onToggleLikeKind = { id, kind -> playerVM.toggleLike(id, kind) },
                             onDeletePlaylist = { id -> scope.launch { container.repository.deletePlaylist(id); libraryVM.load() } },
@@ -586,8 +593,8 @@ fun AuroraApp() {
                             onOpenFolder = { id, name -> navController.navigate(Routes.folders(id, name)) },
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
                             onShufflePlay = { songs -> playerVM.shufflePlay(songs) },
-                            onAddToQueue = { playerVM.addToQueue(it); confirm("Added to queue") },
-                            onPlayNext = { playerVM.playNext(it); confirm("Playing next") },
+                            onAddToQueue = { playerVM.addToQueue(it); confirm(appString(R.string.text_added_to_queue_9d7749)) },
+                            onPlayNext = { playerVM.playNext(it); confirm(appString(R.string.text_playing_next_b23445)) },
                             onToggleLike = { playerVM.toggleLike(it) },
                             onOpenDetail = { k, i -> openDetail(k, i) },
                             downloadedIds = downloadedIds,
@@ -624,7 +631,7 @@ fun AuroraApp() {
                             contentPadding = inner,
                             username = profileAppearance.name,
                             server = session?.server ?: "",
-                            serverLabel = session?.typeLabel ?: "",
+                            serverLabel = session?.typeLabel?.localizedMediaType() ?: "",
                             bannerUrl = profileAppearance.bannerUrl,
                             onEditProfile = if (localMode) ({ editing = true }) else null,
                             avatarUrl = profileAppearance.avatarUrl,
@@ -656,12 +663,12 @@ fun AuroraApp() {
                             onShufflePlay = { songs -> playerVM.shuffleCollection(kind, id, songs, detailState.data?.info?.songCount ?: songs.size) },
                             onMix = {
                                 playerVM.setExpanded(false)
-                                mixRequest = com.aurora.music.mix.MixCollectionRequest(kind, id, detailState.data?.info?.title ?: "Collection")
+                                mixRequest = com.aurora.music.mix.MixCollectionRequest(kind, id, detailState.data?.info?.title ?: appString(R.string.text_collection_30c54a))
                                 showMix = false
-                                confirm("Preparing mix")
+                                confirm(appString(R.string.text_preparing_mix_83b489))
                             },
-                            onAddToQueue = { playerVM.addToQueue(it); confirm("Added to queue") },
-                            onPlayNext = { playerVM.playNext(it); confirm("Playing next") },
+                            onAddToQueue = { playerVM.addToQueue(it); confirm(appString(R.string.text_added_to_queue_9d7749)) },
+                            onPlayNext = { playerVM.playNext(it); confirm(appString(R.string.text_playing_next_b23445)) },
                             onToggleLike = { playerVM.toggleLike(it) },
                             onOpenDetail = { k, i -> openDetail(k, i) },
                             itemKind = kind,
@@ -679,7 +686,7 @@ fun AuroraApp() {
                                         container.downloadManager.downloadAll(d.tracks)
                                     }
                                     val n = d.tracks.count { !container.downloadManager.isDownloaded(it.id) }
-                                    confirm(if (n > 0) "Downloading $n song${if (n == 1) "" else "s"}" else "Already downloaded")
+                                    confirm(if (n > 0) appString(R.string.downloading_tracks, appPlural(R.plurals.track_count, n)) else appString(R.string.text_already_downloaded_8acc8a))
                                 }
                             },
                             onRemoveDownloads = {
@@ -752,6 +759,7 @@ fun AuroraApp() {
                             onOpenSources = { navController.navigate(Routes.SETTINGS_SOURCES) },
                             onOpenDownloads = { navController.navigate(Routes.SETTINGS_STORAGE) },
                             onOpenAppearance = { navController.navigate(Routes.SETTINGS_APPEARANCE) },
+                            onOpenLanguage = { navController.navigate(Routes.SETTINGS_LANGUAGE) },
                             onOpenGestures = { navController.navigate(Routes.SETTINGS_GESTURES) },
                             onOpenIntegrations = { navController.navigate(Routes.SETTINGS_INTEGRATIONS) },
                             onOpenPermissions = { navController.navigate(Routes.SETTINGS_PERMISSIONS) },
@@ -782,7 +790,7 @@ fun AuroraApp() {
                             onBack = { navController.popBackStack() },
                             onSwitch = { s ->
                                 scope.launch { container.switchSession(s) }   // playback stop and reload via accountEpoch
-                                confirm("Switched to ${s.typeLabel}")
+                                confirm(appString(R.string.text_switched_to_c57200, (s.typeLabel.localizedMediaType())))
                                 navController.popBackStack()
                             },
                             onForget = { s -> scope.launch { container.forgetSavedSession(s) } },
@@ -948,6 +956,9 @@ fun AuroraApp() {
                     }
                     composable(Routes.SETTINGS_ABOUT) {
                         com.aurora.music.ui.screens.settings.AboutSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
+                    }
+                    composable(Routes.SETTINGS_LANGUAGE) {
+                        com.aurora.music.ui.screens.settings.LanguageSettingsScreen(contentPadding = inner, onBack = { navController.popBackStack() })
                     }
                     composable(Routes.HISTORY) {
                         com.aurora.music.ui.screens.stats.ListeningHistoryScreen(contentPadding = inner, onBack = { navController.popBackStack() }, onPlay = { playById(it) })
@@ -1148,7 +1159,7 @@ private fun DownloadProgressBanner(count: Int, progress: Float) {
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(
-                if (count == 1) "Downloading 1 song" else "Downloading $count songs",
+                if (count == 1) appString(R.string.text_downloading_1_song_75e402) else appString(R.string.text_downloading_songs_f16c02, (count)),
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,

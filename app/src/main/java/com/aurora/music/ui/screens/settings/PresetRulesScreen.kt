@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.localization.appString
+
+import com.aurora.music.R
+import com.aurora.music.localization.localizedLabel
+
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -30,9 +35,9 @@ fun PresetRulesScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
     val store = container.settingsStore
     var loadError by remember { mutableStateOf<String?>(null) }
-    val ruleFlow = remember(store) { store.presetRules.catch { loadError = it.message ?: "Rules unavailable." } }
+    val ruleFlow = remember(store) { store.presetRules.catch { loadError = it.message ?: appString(R.string.text_rules_unavailable_4feedc) } }
     val ruleSet by ruleFlow.collectAsStateWithLifecycle<PresetRuleSet?>(initialValue = null)
-    val outputFlow = remember(store) { store.processingRouteRules.catch { loadError = it.message ?: "Output rules unavailable." } }
+    val outputFlow = remember(store) { store.processingRouteRules.catch { loadError = it.message ?: appString(R.string.text_output_rules_unavailable_e638bb) } }
     val outputRules by outputFlow.collectAsStateWithLifecycle(initialValue = ProcessingRouteRules())
     val route by store.processingRoutes.observations.collectAsStateWithLifecycle()
     val context by store.presetRuleContext.observations.collectAsStateWithLifecycle()
@@ -53,28 +58,28 @@ fun PresetRulesScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         scope.launch {
             try { action().getOrThrow() }
             catch (cancelled: CancellationException) { throw cancelled }
-            catch (failure: Exception) { snackbar.showSnackbar(failure.message ?: "Could not update preset rules.") }
+            catch (failure: Exception) { snackbar.showSnackbar(failure.message ?: appString(R.string.text_could_not_update_preset_rules_c56bf9)) }
             finally { busy = false }
         }
     }
     BackHandler(onBack = onBack)
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
-            SettingsTopBar("Preset rules", onBack)
+            SettingsTopBar(appString(R.string.text_preset_rules_c9d4d1), onBack)
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
                 verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 item {
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                            Text(preview.winner?.let { "First match: ${it.name}" } ?: "No matching rule", style = MaterialTheme.typography.titleMedium)
+                            Text(preview.winner?.let { appString(R.string.text_first_match_3faa83, (it.name)) } ?: appString(R.string.text_no_matching_rule_6426f8), style = MaterialTheme.typography.titleMedium)
                             Text(preview.pausedReason ?: status.message, style = MaterialTheme.typography.bodySmall)
-                            Text("Higher priority wins; ties use list order. Previous sound returns when rules stop matching.",
+                            Text(appString(R.string.text_higher_priority_wins_ties_use_list_order_previous_sound_returns_w_6bd32e),
                                 style = MaterialTheme.typography.bodySmall)
                         }
                         ruleSet?.let { rules ->
-                            SettingsSwitchRow(title = "Apply preset rules", checked = rules.enabled,
+                            SettingsSwitchRow(title = appString(R.string.text_apply_preset_rules_16028a), checked = rules.enabled,
                                 onCheckedChange = { enabled -> perform { store.setPresetRulesEnabled(enabled) } })
-                            SettingsSwitchRow(title = "Keep current sound", checked = rules.manualHold || route.route.key in outputRules.manual,
+                            SettingsSwitchRow(title = appString(R.string.text_keep_current_sound_6e3bdc), checked = rules.manualHold || route.route.key in outputRules.manual,
                                 onCheckedChange = { hold -> perform { store.setPresetRuleManualHold(hold) } })
                         }
                     }
@@ -84,8 +89,8 @@ fun PresetRulesScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 item {
                     Button(onClick = { editor = null; showEditor = true }, enabled = ready && library.error == null &&
                         library.presets.isNotEmpty() && (ruleSet?.rules?.size ?: 0) < PresetRuleCodec.MAX_RULES,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) { Text("Add rule") }
-                    if (library.presets.isEmpty()) Text("Save a processing preset first.", Modifier.padding(horizontal = 20.dp),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) { Text(appString(R.string.text_add_rule_11cc2b)) }
+                    if (library.presets.isEmpty()) Text(appString(R.string.text_save_a_processing_preset_first_6dd1cf), Modifier.padding(horizontal = 20.dp),
                         style = MaterialTheme.typography.bodySmall)
                 }
                 itemsIndexed(ruleSet?.rules.orEmpty(), key = { _, rule -> rule.id }) { index, rule ->
@@ -95,18 +100,18 @@ fun PresetRulesScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
                                     Text(rule.name, style = MaterialTheme.typography.titleMedium)
-                                    Text(library.presets.firstOrNull { it.id == rule.presetId }?.name ?: "Deleted preset", style = MaterialTheme.typography.bodySmall)
-                                    Text("Priority ${rule.priority} · ${if (!rule.enabled) "Off" else if (evaluation?.matched == true) "Matches" else "No match"}",
+                                    Text(library.presets.firstOrNull { it.id == rule.presetId }?.name ?: appString(R.string.text_deleted_preset_4bf611), style = MaterialTheme.typography.bodySmall)
+                                    Text(appString(R.string.text_priority_0168ee, (rule.priority), (if (!rule.enabled) appString(R.string.text_off_e3de5a) else if (evaluation?.matched == true) appString(R.string.text_matches_ee2dbd) else appString(R.string.text_no_match_3518df))),
                                         style = MaterialTheme.typography.bodySmall)
                                 }
                                 Switch(checked = rule.enabled, enabled = ready,
                                     onCheckedChange = { enabled -> perform { store.savePresetRule(rule.copy(enabled = enabled)) } })
                             }
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                TextButton(enabled = ready && index > 0, onClick = { perform { store.movePresetRule(rule.id, -1) } }) { Text("Up") }
-                                TextButton(enabled = ready && index < ruleSet!!.rules.lastIndex, onClick = { perform { store.movePresetRule(rule.id, 1) } }) { Text("Down") }
-                                TextButton(onClick = { details = rule }) { Text("Explain") }
-                                TextButton(enabled = ready, onClick = { editor = rule; showEditor = true }) { Text("Edit") }
+                                TextButton(enabled = ready && index > 0, onClick = { perform { store.movePresetRule(rule.id, -1) } }) { Text(appString(R.string.text_up_2038bd)) }
+                                TextButton(enabled = ready && index < ruleSet!!.rules.lastIndex, onClick = { perform { store.movePresetRule(rule.id, 1) } }) { Text(appString(R.string.text_down_bf93e5)) }
+                                TextButton(onClick = { details = rule }) { Text(appString(R.string.text_explain_55cbfd)) }
+                                TextButton(enabled = ready, onClick = { editor = rule; showEditor = true }) { Text(appString(R.string.text_edit_530164)) }
                             }
                         }
                     }
@@ -119,14 +124,14 @@ fun PresetRulesScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         val evaluation = PresetRuleEngine.preview(input.copy(rules = input.rules.copy(rules = listOf(selected)))).results.singleOrNull()
         AlertDialog(onDismissRequest = { details = null }, title = { Text(selected.name) }, text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                Text(if (selected.match == RuleMatch.ALL) "All conditions must match." else "Any condition may match.")
+                Text(if (selected.match == RuleMatch.ALL) appString(R.string.text_all_conditions_must_match_2a5764) else appString(R.string.text_any_condition_may_match_5c1b6f))
                 evaluation?.conditions?.forEach { condition ->
-                    Text("${condition.condition.field.label}: ${condition.state.label()}\n${condition.explanation}", style = MaterialTheme.typography.bodyMedium)
+                    Text("${condition.condition.field.localizedLabel}: ${condition.state.label()}\n${condition.explanation}", style = MaterialTheme.typography.bodyMedium)
                 }
-                if (evaluation?.matched == true && preview.winner?.id != selected.id) Text("A higher-ranked rule takes precedence.")
+                if (evaluation?.matched == true && preview.winner?.id != selected.id) Text(appString(R.string.text_a_higher_ranked_rule_takes_precedence_ae1995))
                 preview.pausedReason?.let { Text(it) }
             }
-        }, confirmButton = { TextButton(onClick = { details = null }) { Text("Done") } })
+        }, confirmButton = { TextButton(onClick = { details = null }) { Text(appString(R.string.text_done_e9b450)) } })
     }
     if (showEditor) PresetRuleEditor(editor, library.presets, input, ready, onDismiss = { showEditor = false },
         onSave = { rule -> showEditor = false; perform { store.savePresetRule(rule) } },
@@ -146,35 +151,35 @@ private fun PresetRuleEditor(initial: PresetRule?, presets: List<ProcessingPrese
     val preview = if (conditions.isEmpty()) null else PresetRuleEngine.preview(input.copy(rules = PresetRuleSet(enabled = true,
         rules = listOf(PresetRule(initial?.id ?: "00000000-0000-0000-0000-000000000001", name, selectedPreset,
             priority = priority.toIntOrNull() ?: 0, match = match, conditions = conditions))))).results.singleOrNull()
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (initial == null) "Add preset rule" else "Edit preset rule") }, text = {
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(if (initial == null) appString(R.string.text_add_preset_rule_ce17da) else appString(R.string.text_edit_preset_rule_21254a)) }, text = {
         Column(Modifier.fillMaxWidth().heightIn(max = 560.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            OutlinedTextField(name, { name = it.take(80) }, label = { Text("Name") }, singleLine = true)
-            RuleChoice("Preset", selectedPreset, presets.map { it.id to it.name }) { selectedPreset = it }
-            OutlinedTextField(priority, { priority = it.take(6) }, label = { Text("Priority (-1000 to 1000)") }, singleLine = true,
+            OutlinedTextField(name, { name = it.take(80) }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true)
+            RuleChoice(appString(R.string.text_preset_bca788), selectedPreset, presets.map { it.id to it.name }) { selectedPreset = it }
+            OutlinedTextField(priority, { priority = it.take(6) }, label = { Text(appString(R.string.text_priority_1000_to_1000_eb6c32)) }, singleLine = true,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-            RuleChoice("Match", match.name, listOf(RuleMatch.ALL.name to "All conditions", RuleMatch.ANY.name to "Any condition")) { match = RuleMatch.valueOf(it) }
+            RuleChoice(appString(R.string.text_match_033520), match.name, listOf(RuleMatch.ALL.name to appString(R.string.text_all_conditions_771ea0), RuleMatch.ANY.name to appString(R.string.text_any_condition_424666))) { match = RuleMatch.valueOf(it) }
             conditions.forEachIndexed { index, condition ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     TextButton(onClick = { conditionEditor = index }, modifier = Modifier.weight(1f)) {
-                        Text("${condition.field.label}: ${conditionSummary(condition)}")
+                        Text("${condition.field.localizedLabel}: ${conditionSummary(condition)}")
                     }
-                    TextButton(onClick = { conditions = conditions.filterIndexed { i, _ -> i != index } }) { Text("Remove") }
+                    TextButton(onClick = { conditions = conditions.filterIndexed { i, _ -> i != index } }) { Text(appString(R.string.text_remove_e96390)) }
                 }
             }
-            TextButton(enabled = conditions.size < PresetRuleCodec.MAX_CONDITIONS, onClick = { conditionEditor = conditions.size }) { Text("Add condition") }
-            preview?.let { Text(if (it.matched) "Matches current playback." else "Does not match current playback.", style = MaterialTheme.typography.bodySmall) }
+            TextButton(enabled = conditions.size < PresetRuleCodec.MAX_CONDITIONS, onClick = { conditionEditor = conditions.size }) { Text(appString(R.string.text_add_condition_42fe69)) }
+            preview?.let { Text(if (it.matched) appString(R.string.text_matches_current_playback_124000) else appString(R.string.text_does_not_match_current_playback_fb4dfe), style = MaterialTheme.typography.bodySmall) }
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
-            onDelete?.let { action -> TextButton(enabled = ready, onClick = action) { Text("Delete rule") } }
+            onDelete?.let { action -> TextButton(enabled = ready, onClick = action) { Text(appString(R.string.text_delete_rule_784bef)) } }
         }
     }, confirmButton = { TextButton(enabled = ready, onClick = {
         runCatching {
-            val parsedPriority = priority.toIntOrNull() ?: error("Enter a whole-number priority.")
+            val parsedPriority = priority.toIntOrNull() ?: error(appString(R.string.text_enter_a_whole_number_priority_dde963))
             val rule = PresetRule(initial?.id ?: UUID.randomUUID().toString(), name.trim(), selectedPreset,
                 initial?.enabled ?: true, parsedPriority, match, conditions)
             PresetRuleCodec.validate(PresetRuleSet(rules = listOf(rule)))
             onSave(rule)
-        }.onFailure { error = it.message ?: "Invalid rule." }
-    }) { Text("Save") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+        }.onFailure { error = it.message ?: appString(R.string.text_invalid_rule_c35c4d) }
+    }) { Text(appString(R.string.text_save_efc007)) } }, dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
     conditionEditor?.let { index ->
         key(index) { RuleConditionEditor(conditions.getOrNull(index), input, onDismiss = { conditionEditor = null }, onSave = { condition ->
             conditions = conditions.toMutableList().apply { if (index < size) set(index, condition) else add(condition) }
@@ -196,37 +201,37 @@ private fun RuleConditionEditor(initial: PresetRuleCondition?, input: PresetRule
         current?.let { condition -> value = condition.values.joinToString(" | ")
             minimum = condition.minRateHz?.toString().orEmpty(); maximum = condition.maxRateHz?.toString().orEmpty() }
     }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text("Rule condition") }, text = {
+    AlertDialog(onDismissRequest = onDismiss, title = { Text(appString(R.string.text_rule_condition_c6d62b)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            RuleChoice("Condition", field.name, RuleField.entries.map { it.name to it.label }) {
+            RuleChoice(appString(R.string.text_condition_2f4979), field.name, RuleField.entries.map { it.name to it.localizedLabel }) {
                 field = RuleField.valueOf(it); value = ""; minimum = ""; maximum = ""; error = null
             }
             when (field) {
-                RuleField.SOURCE -> RuleChoice("Source", value, RuleSource.entries.map { it.name to it.label }) { value = it }
-                RuleField.CONTEXT -> RuleChoice("Context", value, RulePlaybackMode.entries.map { it.name to it.label }) { value = it }
+                RuleField.SOURCE -> RuleChoice(appString(R.string.text_source_6da13a), value, RuleSource.entries.map { it.name to it.localizedLabel }) { value = it }
+                RuleField.CONTEXT -> RuleChoice(appString(R.string.text_context_cc11b3), value, RulePlaybackMode.entries.map { it.name to it.localizedLabel }) { value = it }
                 RuleField.SAMPLE_RATE -> {
-                    OutlinedTextField(minimum, { minimum = it.take(8) }, label = { Text("Minimum Hz") }, singleLine = true,
+                    OutlinedTextField(minimum, { minimum = it.take(8) }, label = { Text(appString(R.string.text_minimum_hz_c8ccab)) }, singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
-                    OutlinedTextField(maximum, { maximum = it.take(8) }, label = { Text("Maximum Hz") }, singleLine = true,
+                    OutlinedTextField(maximum, { maximum = it.take(8) }, label = { Text(appString(R.string.text_maximum_hz_77f953)) }, singleLine = true,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number))
                 }
-                RuleField.ROUTE -> Text(if (value.isEmpty()) "Choose the current confirmed output." else "Confirmed output selected.")
+                RuleField.ROUTE -> Text(if (value.isEmpty()) appString(R.string.text_choose_the_current_confirmed_output_ad4813) else appString(R.string.text_confirmed_output_selected_bfe814))
                 else -> OutlinedTextField(value, { value = it.take(2048) }, label = {
-                    Text(if (field == RuleField.HEADPHONES) "Headphones (empty for output default)" else "Values, separated by |")
+                    Text(if (field == RuleField.HEADPHONES) appString(R.string.text_headphones_empty_for_output_default_cff188) else appString(R.string.text_values_separated_by_8db2e6))
                 }, minLines = 1, maxLines = 3)
             }
-            TextButton(enabled = current != null, onClick = ::useCurrent) { Text("Use current") }
+            TextButton(enabled = current != null, onClick = ::useCurrent) { Text(appString(R.string.text_use_current_701bc0)) }
             error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
         }
     }, confirmButton = { TextButton(onClick = {
         runCatching {
-            fun number(text: String): Int? = text.takeIf { it.isNotBlank() }?.let { it.toIntOrNull() ?: error("Enter a whole-number sample rate.") }
+            fun number(text: String): Int? = text.takeIf { it.isNotBlank() }?.let { it.toIntOrNull() ?: error(appString(R.string.text_enter_a_whole_number_sample_rate_badff4)) }
             val condition = if (field == RuleField.SAMPLE_RATE) PresetRuleCondition(field, minRateHz = number(minimum), maxRateHz = number(maximum))
                 else PresetRuleCondition(field, value.split('|').map { it.trim() }.distinct())
-            PresetRuleCodec.validate(PresetRuleSet(rules = listOf(PresetRule(UUID.randomUUID().toString(), "Condition", UUID.randomUUID().toString(), conditions = listOf(condition)))))
+            PresetRuleCodec.validate(PresetRuleSet(rules = listOf(PresetRule(UUID.randomUUID().toString(), appString(R.string.text_condition_2f4979), UUID.randomUUID().toString(), conditions = listOf(condition)))))
             onSave(condition)
-        }.onFailure { error = it.message ?: "Invalid condition." }
-    }) { Text("Add") } }, dismissButton = { TextButton(onClick = onDismiss) { Text("Cancel") } })
+        }.onFailure { error = it.message ?: appString(R.string.text_invalid_condition_f757ae) }
+    }) { Text(appString(R.string.text_add_61cc55)) } }, dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }
 
 @Composable
@@ -241,17 +246,17 @@ private fun RuleChoice(label: String, selected: String, options: List<Pair<Strin
 }
 
 private fun RuleConditionState.label() = when (this) {
-    RuleConditionState.MATCH -> "Matches"
-    RuleConditionState.NO_MATCH -> "No match"
-    RuleConditionState.UNKNOWN -> "Unknown"
+    RuleConditionState.MATCH -> appString(R.string.text_matches_ee2dbd)
+    RuleConditionState.NO_MATCH -> appString(R.string.text_no_match_3518df)
+    RuleConditionState.UNKNOWN -> appString(R.string.text_unknown_bc7819)
 }
 
 private fun conditionSummary(condition: PresetRuleCondition): String = when (condition.field) {
-    RuleField.SAMPLE_RATE -> "${condition.minRateHz ?: "Any"}–${condition.maxRateHz ?: "Any"} Hz"
-    RuleField.ROUTE -> "Confirmed output"
-    RuleField.HEADPHONES -> condition.values.joinToString(" / ") { it.ifEmpty { "Output default" } }
-    RuleField.SOURCE -> condition.values.joinToString { RuleSource.valueOf(it).label }
-    RuleField.CONTEXT -> condition.values.joinToString { RulePlaybackMode.valueOf(it).label }
+    RuleField.SAMPLE_RATE -> appString(R.string.text_hz_40e093, (condition.minRateHz ?: appString(R.string.text_any_322444)), (condition.maxRateHz ?: appString(R.string.text_any_322444)))
+    RuleField.ROUTE -> appString(R.string.text_confirmed_output_52a6b9)
+    RuleField.HEADPHONES -> condition.values.joinToString(" / ") { it.ifEmpty { appString(R.string.text_output_default_f4c103) } }
+    RuleField.SOURCE -> condition.values.joinToString { RuleSource.valueOf(it).localizedLabel }
+    RuleField.CONTEXT -> condition.values.joinToString { RulePlaybackMode.valueOf(it).localizedLabel }
     else -> condition.values.joinToString(" / ")
 }
 
