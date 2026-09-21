@@ -269,7 +269,8 @@ class AppContainer(context: Context) {
     @Volatile
     private var lrclibEnabled: Boolean = true
 
-    val lyricsRepository = LyricsRepository(backendProvider = { backend }, lrclibEnabledProvider = { lrclibEnabled })
+    val lyricsRepository = LyricsRepository(backendProvider = { backend }, lrclibEnabledProvider = { lrclibEnabled },
+        separatorsProvider = { settingsStore.artistSeparators.first() })
 
     @Volatile
     private var offlineToggle: Boolean = false

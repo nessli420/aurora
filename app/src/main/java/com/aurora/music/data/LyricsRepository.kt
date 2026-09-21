@@ -4,12 +4,17 @@ import com.aurora.music.model.LyricLine
 import com.aurora.music.model.Song
 import com.aurora.music.util.TrackMatch
 import com.google.gson.Gson
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
+import java.text.Normalizer
+import java.util.Locale
 import kotlin.math.abs
 
 data class Lyrics(val lines: List<LyricLine>, val synced: Boolean, val source: String)
@@ -17,15 +22,16 @@ data class Lyrics(val lines: List<LyricLine>, val synced: Boolean, val source: S
 class LyricsRepository(
     private val backendProvider: () -> MediaBackend?,
     private val lrclibEnabledProvider: () -> Boolean,
-) {
-    private val gson = Gson()
-    private val http = OkHttpClient.Builder()
+    private val separatorsProvider: suspend () -> ArtistSeparators = { ArtistSeparators() },
+    private val http: OkHttpClient = OkHttpClient.Builder()
         .connectTimeout(8, TimeUnit.SECONDS)
         .readTimeout(8, TimeUnit.SECONDS)
-        .build()
+        .build(),
+) {
+    private val gson = Gson()
 
     suspend fun lyricsFor(song: Song): Lyrics? {
-        val server = runCatching { backendProvider()?.serverLyrics(song) }.getOrNull()
+        val server = attempt { backendProvider()?.serverLyrics(song) }
         // synced always wins regardless of source
         if (server != null && server.synced) return server
         val lrc = if (lrclibEnabledProvider()) fetchLrcLib(song) else null
@@ -35,29 +41,58 @@ class LyricsRepository(
 
     private suspend fun fetchLrcLib(song: Song): Lyrics? = withContext(Dispatchers.IO) {
         val cTitle = cleanTitle(song.title)
-        val cArtist = primaryArtist(song.artist)
+        val separators = separatorsProvider()
+        val artists = artistNames(song.artist, separators)
+        val credits = (listOf(song.artist.trim()) + artists).distinctBy(::artistNameKey)
+        val titles = listOf(song.title, cTitle).distinct()
+        var plain: Lyrics? = null
 
-        // exact get first (artist+title+album+duration) cheapest and most precise
-        runCatching { lrcGet(song.artist, song.title, song.album, song.durationSec) }.getOrNull()
-            ?.let { syncedFrom(it) }?.let { return@withContext it }
-        // mainstream tags often carry feat/remaster/version noise that the strict get rejects retry cleaned
-        if (cTitle != song.title || cArtist != song.artist) {
-            runCatching { lrcGet(cArtist, cTitle, song.album, song.durationSec) }.getOrNull()
-                ?.let { syncedFrom(it) }?.let { return@withContext it }
+        // Exhaust the full credit first, then each artist in credited order.
+        for (artist in credits) {
+            currentCoroutineContext().ensureActive()
+            val candidates = linkedSetOf<LrcLibDto>()
+            for (title in titles) {
+                attempt { lrcGet(artist, title, song.album, song.durationSec) }?.let { dto ->
+                    if (plausible(dto, song, cTitle, artists, separators)) {
+                        syncedFrom(dto)?.let { return@withContext it }
+                        candidates += dto
+                    }
+                }
+            }
+            for (title in titles) {
+                attempt { lrcSearch(title, artist) }?.let { candidates += it }
+            }
+            attempt { lrcSearchQ("$artist $cTitle") }?.let { candidates += it }
+            val plausible = candidates.filter { plausible(it, song, cTitle, artists, separators) }
+                .sortedByDescending { score(it, song) }
+            plausible.firstNotNullOfOrNull(::syncedFrom)?.let { return@withContext it }
+            if (plain == null) plain = plausible.firstNotNullOfOrNull(::lyricsFrom)
         }
+        plain
+    }
 
-        // gather search candidates from a few angles then score+pick the closest match
-        val cands = LinkedHashSet<LrcLibDto>()
-        runCatching { lrcSearch(song.title, song.artist) }.getOrNull()?.let { cands += it }
-        if (cTitle != song.title || cArtist != song.artist)
-            runCatching { lrcSearch(cTitle, cArtist) }.getOrNull()?.let { cands += it }
-        runCatching { lrcSearchQ("$cArtist $cTitle") }.getOrNull()?.let { cands += it }
+    private suspend fun <T> attempt(block: suspend () -> T): T? {
+        currentCoroutineContext().ensureActive()
+        return try { block() }
+        catch (e: CancellationException) { throw e }
+        catch (_: Exception) { null }
+    }
 
-        val plausible = cands.filter { plausible(it, song, cTitle) }
-        // synced wins outright pick the best-scoring synced candidate then fall back to plain
-        val best = plausible.filter { !it.syncedLyrics.isNullOrBlank() }.maxByOrNull { score(it, song) }
-            ?: plausible.maxByOrNull { score(it, song) }
-        best?.let { lyricsFrom(it) }
+    private fun artistNames(credit: String, separators: ArtistSeparators): List<String> {
+        if (credit.isBlank()) return emptyList()
+        val rules = separators.rules.orEmpty()
+        val extras = listOf(
+            ArtistSeparator("feat", SeparatorMatch.WORD), ArtistSeparator("ft", SeparatorMatch.WORD),
+            ArtistSeparator("featuring", SeparatorMatch.WORD), ArtistSeparator("x", SeparatorMatch.SPACED),
+            ArtistSeparator("×", SeparatorMatch.SPACED), ArtistSeparator("+", SeparatorMatch.SPACED),
+            ArtistSeparator("|", SeparatorMatch.ANYWHERE),
+        ).filter { extra -> rules.none {
+            it.text.equals(extra.text, ignoreCase = true) ||
+                (it.match == SeparatorMatch.OFF && it.text?.trimEnd('.').equals(extra.text, ignoreCase = true))
+        } }
+        val names = ArtistSeparators(rules + extras).split(credit)
+        return (if (names.size > 1) names.map { it.trim(' ', '(', ')', '[', ']') } else names)
+            .filter(String::isNotBlank).distinctBy(::artistNameKey)
     }
 
     // strip version/feat noise so the strict lrclib lookup matches mainstream releases
@@ -68,22 +103,19 @@ class LyricsRepository(
         return s.replace(Regex("\\s+"), " ").trim().ifBlank { t }
     }
 
-    // primary (first credited) artist lrclib indexes by the lead artist not the feature list
-    private fun primaryArtist(a: String): String =
-        a.split(ARTIST_SPLIT).firstOrNull { it.isNotBlank() }?.trim()?.ifBlank { a } ?: a
-
-    // a candidate is usable only if its title clearly matches guards against wrong-song lyrics
-    private fun plausible(dto: LrcLibDto, song: Song, cTitle: String): Boolean {
-        val dt = TrackMatch.norm(dto.trackName ?: return false)
-        val titleOk = dt == TrackMatch.norm(song.title) || dt == TrackMatch.norm(cTitle)
-        if (!titleOk) return false
-        val da = TrackMatch.norm(dto.artistName ?: "")
-        val sa = TrackMatch.norm(song.artist)
-        val pa = TrackMatch.norm(primaryArtist(song.artist))
-        // blank artist on either side passes otherwise need some overlap
-        return da.isBlank() || sa.isBlank() || da == sa || da == pa ||
-            da.contains(pa) || pa.contains(da) || sa.contains(da)
+    private fun plausible(dto: LrcLibDto, song: Song, cTitle: String, artists: List<String>, separators: ArtistSeparators): Boolean {
+        val title = matchKey(dto.trackName ?: return false)
+        if (title.isBlank() || title !in setOf(matchKey(song.title), matchKey(cTitle))) return false
+        val artist = dto.artistName.orEmpty()
+        if (artist.isBlank() || song.artist.isBlank()) return true
+        if (matchKey(artist) == matchKey(song.artist)) return true
+        val credited = artists.map(::matchKey).filter(String::isNotBlank).toSet()
+        return artistNames(artist, separators).any { matchKey(it) in credited }
     }
+
+    private fun matchKey(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKD)
+        .replace(Regex("""\p{M}+"""), "").lowercase(Locale.ROOT)
+        .replace(Regex("""[^\p{L}\p{N}]+"""), " ").trim()
 
     private fun score(dto: LrcLibDto, song: Song): Int {
         var s = 0
@@ -93,12 +125,13 @@ class LyricsRepository(
             val d = abs(dur - song.durationSec)
             s += if (d <= TrackMatch.DURATION_TOLERANCE_SEC) 100 else -d
         }
-        if (TrackMatch.norm(dto.trackName ?: "") == TrackMatch.norm(song.title)) s += 10
+        if (matchKey(dto.trackName ?: "") == matchKey(song.title)) s += 10
         return s
     }
 
     private fun syncedFrom(dto: LrcLibDto): Lyrics? =
-        dto.syncedLyrics?.takeIf { it.isNotBlank() }?.let { Lyrics(parseLrc(it), true, "LRCLIB") }
+        dto.syncedLyrics?.takeIf { it.isNotBlank() }?.let { parseLrc(it).takeIf { lines -> lines.any { line -> line.text.isNotBlank() } } }
+            ?.let { Lyrics(it, true, "LRCLIB") }
 
     private fun lyricsFrom(dto: LrcLibDto): Lyrics? {
         syncedFrom(dto)?.let { return it }
@@ -160,11 +193,9 @@ class LyricsRepository(
         // parenthetical/bracket version tags  e.g. "(Remastered 2011)" "[Deluxe Edition]"
         private val PAREN_NOISE = Regex("""[(\[][^)\]]*\b($VERSIONS)\b[^)\]]*[)\]]""", RegexOption.IGNORE_CASE)
         // trailing dash suffix  e.g. "Song - 2011 Remaster"
-        private val DASH_NOISE = Regex("""\s[-–]\s[^-–]*\b($VERSIONS)\b.*$""", RegexOption.IGNORE_CASE)
+        private val DASH_NOISE = Regex("""\s[-â€“]\s[^-â€“]*\b($VERSIONS)\b.*$""", RegexOption.IGNORE_CASE)
         // trailing un-bracketed feature credit  e.g. "Song feat. X"
         private val TRAIL_FEAT = Regex("""[(\[]?\s*\b(feat|ft|featuring)\b\.?.*$""", RegexOption.IGNORE_CASE)
-        // lead artist is everything before the first collaborator separator
-        private val ARTIST_SPLIT = Regex("""\s*(,|&|;|/|\bfeat\b\.?|\bft\b\.?|\bfeaturing\b)\s*""", RegexOption.IGNORE_CASE)
 
         private val TAG = Regex("""\[(\d+):(\d{1,2})(?:[.:](\d{1,3}))?]""")
 
