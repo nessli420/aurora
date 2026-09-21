@@ -99,6 +99,7 @@ fun QueueScreen(
     val listState = rememberLazyListState()
 
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+        DragToDismiss(onDismiss = onClose, enabled = dragIndex < 0 && !showSaveDialog) {
         Box(
             Modifier
                 .fillMaxSize()
@@ -225,6 +226,7 @@ fun QueueScreen(
                     }
                 }
             }
+        }
         }
     }
 
