@@ -12,7 +12,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -30,7 +29,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.systemBars
+import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -143,7 +142,7 @@ fun PlayerScreen(
 
     // player is outside the scaffold so LocalContentColor defaults to black provide it explicitly
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-    var dragAccum by remember { mutableStateOf(0f) }
+    DragToDismiss(onDismiss = onCollapse, enabled = gestures.swipeDownDismiss && !showLyrics) {
     Box(
         Modifier
             .fillMaxSize()
@@ -155,31 +154,17 @@ fun PlayerScreen(
             .clickable(
                 interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() },
                 indication = null,
-            ) {}
-            .then(
-                if (gestures.swipeDownDismiss && !showLyrics) Modifier.pointerInput(Unit) {
-                    detectVerticalDragGestures(
-                        onDragEnd = { if (dragAccum > 150f) onCollapse(); dragAccum = 0f },
-                        onDragCancel = { dragAccum = 0f },
-                        onVerticalDrag = { _, dy -> if (dy > 0f) dragAccum += dy },
-                    )
-                } else Modifier
-            ),
+            ) {},
     ) {
         Column(
             Modifier
                 .fillMaxSize()
-                .windowInsetsPadding(WindowInsets.systemBars)
+                .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
                 .padding(horizontal = 20.dp),
         ) {
             Column(
                 Modifier
-                    .fillMaxWidth()
-                    .pointerInput(Unit) {
-                        detectVerticalDragGestures { _, dragAmount ->
-                            if (dragAmount > 24f) onCollapse()
-                        }
-                    },
+                    .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 Spacer(Modifier.height(8.dp))
@@ -477,9 +462,12 @@ fun PlayerScreen(
             enter = fadeIn(tween(320)) + androidx.compose.animation.slideInVertically(tween(420)) { it / 10 },
             exit = fadeOut(tween(220)) + androidx.compose.animation.slideOutVertically(tween(280)) { it / 12 },
         ) {
-            LyricsScreen(state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
+            DragToDismiss(onDismiss = { showLyrics = false }) {
+                LyricsScreen(state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
+            }
         }
         androidx.activity.compose.BackHandler(enabled = showLyrics) { showLyrics = false }
+    }
     }
     }
 }
