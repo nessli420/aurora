@@ -327,6 +327,8 @@ class SettingsStore(private val context: Context) {
     private val gson = Gson()
 
     private object Keys {
+        val AUDIO_CACHE_ENABLED = booleanPreferencesKey("audio_cache_enabled")
+        val AUDIO_CACHE_LIMIT = intPreferencesKey("audio_cache_limit_mb")
         val PROCESSING_PRESETS = stringPreferencesKey("processing_presets_v1")
         val PROCESSING_RACK = stringPreferencesKey(ProcessingRackCodec.PREFERENCE_KEY)
         val TUNING_PROJECTS = stringPreferencesKey(TuningProjectCodec.PREFERENCE_KEY)
@@ -1436,6 +1438,17 @@ class SettingsStore(private val context: Context) {
     private fun parseParametric(s: String?): List<ParamBand> = ParamBandCodec.decodePreference(s)
 
     val offlineMode: Flow<Boolean> = context.dataStore.data.map { it[Keys.OFFLINE] ?: false }
+
+    val audioCachePrefs: Flow<com.aurora.music.data.cache.AudioCachePrefs> = context.dataStore.data.map {
+        com.aurora.music.data.cache.AudioCachePrefs(it[Keys.AUDIO_CACHE_ENABLED] ?: true,
+            (it[Keys.AUDIO_CACHE_LIMIT] ?: 1024).takeIf { mb -> mb in com.aurora.music.data.cache.AudioCachePrefs.limitsMb } ?: 1024)
+    }.distinctUntilChanged()
+
+    suspend fun setAudioCacheEnabled(enabled: Boolean) = context.dataStore.edit { it[Keys.AUDIO_CACHE_ENABLED] = enabled }
+    suspend fun setAudioCacheLimit(mb: Int) {
+        require(mb in com.aurora.music.data.cache.AudioCachePrefs.limitsMb)
+        context.dataStore.edit { it[Keys.AUDIO_CACHE_LIMIT] = mb }
+    }
     val lrclibEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.LRCLIB] ?: true }
     val dataSaver: Flow<Boolean> = context.dataStore.data.map { it[Keys.DATA_SAVER] ?: false }
     val privateSession: Flow<Boolean> = context.dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }

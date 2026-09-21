@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Automatic offline cache</string>
+    <string name="cache_description">Keep audio as you listen. Fully cached tracks appear in your library when offline.</string>
+    <string name="cache_limit">Cache limit</string>
+    <string name="cache_used">%1$s of %2$s used</string>
+    <string name="cache_policy">Older cache is removed automatically. Downloads stay until you remove them.</string>
+    <string name="cache_clear">Clear audio cache</string>
+    <string name="cache_clear_title">Clear cached audio?</string>
+    <string name="cache_clear_message">Cached tracks will need a connection to play again. Your downloads, library and settings will stay. The cache fills again as you listen.</string>
+    <string name="cache_clearing">Clearing cache…</string>
+    <string name="cache_cleared">Audio cache cleared</string>
+    <string name="cache_clear_failed">Could not clear the audio cache. Try again.</string>
+    <string name="cache_unavailable">Audio cache is unavailable. Playback can still stream normally.</string>
+    <string name="cache_loading">Checking cache…</string>
+    <string name="cache_offline_summary">Play downloaded and fully cached music</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d track ready offline</item>
+        <item quantity="other">%1$d tracks ready offline</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d downloaded track</item>
+        <item quantity="other">%1$d downloaded tracks</item>
+    </plurals>
+</resources>

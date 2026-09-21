@@ -39,6 +39,7 @@ class AppContainer(context: Context) {
     val sourceErrors = _sourceErrors.asSharedFlow()
 
     val settingsStore = SettingsStore(appContext)
+    val audioCache = com.aurora.music.data.cache.AudioCache(appContext, settingsStore, offline = { offlineFlag })
     val appUpdater = com.aurora.music.data.updates.AppUpdater(appContext)
     val extensions = com.aurora.music.extensions.ExtensionManager(appContext, settingsStore, scope)
     val listeningLevels = com.aurora.music.data.listening.ListeningLevelStore(
@@ -112,6 +113,7 @@ class AppContainer(context: Context) {
         playbackSourceProvider = { song -> backend?.playbackSourceIdentity(song) },
         playbackCollectionProvider = { kind, id, name -> repository.playbackCollectionIdentity(kind, id)?.copy(name = name) },
         copyExtension = extensions::copyAudio,
+        copyCached = audioCache::copyTo,
     )
 
     val sonicStore = SonicStore(appContext)
@@ -327,6 +329,7 @@ class AppContainer(context: Context) {
         currentServerIdProvider = { currentServerId() },
         smartPlaylistsProvider = { smartPlaylistsValue },
         smartEngine = smartEngine,
+        cachedSongsProvider = { audioCache.songs.value },
     )
 
     private fun recomputeOffline() {

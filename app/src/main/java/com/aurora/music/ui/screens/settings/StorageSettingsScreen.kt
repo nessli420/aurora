@@ -1,10 +1,13 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.localization.appPlural
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -51,7 +54,7 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.text_downloads_storage_f7c580), onBack)
-        Column(Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
+        Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(rememberScrollState()).padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             Row(
                 Modifier.fillMaxWidth().padding(16.dp).clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -59,7 +62,7 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 Icon(Icons.Filled.DownloadDone, null, tint = MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text(appString(R.string.text_downloaded_tracks_98effd, (downloads.size)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                    Text(appPlural(R.plurals.storage_downloaded_tracks, downloads.size), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                     Text(formatBytes(bytes) + appString(R.string.text_used_4eb2a7), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
@@ -71,9 +74,11 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
 
+            AudioCacheSettings(container)
+
             SettingsSectionTitle(appString(R.string.text_offline_e01fa7))
             SettingsGroup {
-                SettingsSwitchRow(Icons.Filled.CloudOff, appString(R.string.text_offline_mode_66cf31), appString(R.string.text_only_show_play_downloaded_music_c36019), offline) { v ->
+                SettingsSwitchRow(Icons.Filled.CloudOff, appString(R.string.text_offline_mode_66cf31), appString(R.string.cache_offline_summary), offline) { v ->
                     scope.launch { container.settingsStore.setOfflineMode(v) }
                 }
             }

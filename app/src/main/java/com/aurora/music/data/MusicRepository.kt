@@ -76,6 +76,7 @@ class MusicRepository(
     private val currentServerIdProvider: () -> String = { "" },
     private val smartPlaylistsProvider: () -> List<SmartPlaylist> = { emptyList() },
     private val smartEngine: SmartPlaylistEngine? = null,
+    private val cachedSongsProvider: () -> List<Song> = { emptyList() },
 ) {
     private val backend: MediaBackend? get() = backendProvider()
     private val offline: Boolean get() = offlineProvider() && backend?.supportsOfflineBrowsing != true
@@ -152,6 +153,23 @@ class MusicRepository(
     fun downloadedSongs(): List<Song> = visibleDownloads()
         .sortedBy { it.title }.map { it.toSong() }
 
+    private fun offlineSongs(): List<Song> {
+        val downloads = downloadedSongs()
+        val identities = downloads.map { it.playbackSource?.providerId to it.id }.toSet()
+        val cached = cachedSongsProvider().filter { (it.playbackSource?.providerId to it.id) !in identities &&
+            downloads.none { download -> download.id == "cached:${it.streamUrl.substringAfter("://")}" } }
+            .map { it.copy(id = "cached:${it.streamUrl.substringAfter("://")}") }
+        return (downloads + cached)
+            .sortedBy { it.title }
+    }
+
+    private fun offlineAlbums(): List<Album> = offlineSongs().filter { it.albumId.isNotBlank() }
+        .groupBy { it.playbackSource?.providerId to it.albumId }.map { (_, songs) ->
+            val first = songs.first()
+            Album(first.playbackSource?.albumId ?: first.albumId, first.album, first.artist, first.artworkUrl, 0, songs.size,
+                durationSec = songs.sumOf { it.durationSec })
+        }.sortedBy { it.title }
+
     private fun fileUri(path: String): String = if (path.isBlank()) "" else Uri.fromFile(File(path)).toString()
 
     fun downloadedLibrary(): List<DownloadRow> {
@@ -184,8 +202,8 @@ class MusicRepository(
 
     suspend fun home(feed: String = "library"): HomeData {
         if (offline) {
-            val albums = downloadedAlbums()
-            return HomeData(newReleases = albums, recentlyPlayed = albums, starred = downloadedSongs())
+            val albums = offlineAlbums()
+            return HomeData(newReleases = albums, recentlyPlayed = albums, starred = offlineSongs())
         }
         val source = backend ?: return HomeData()
         return tagHome(source.home(feed), source)
@@ -205,7 +223,7 @@ class MusicRepository(
     )
 
     suspend fun allAlbums(): List<Album> =
-        if (offline) downloadedAlbums() else backend?.allAlbums().orEmpty()
+        if (offline) offlineAlbums() else backend?.allAlbums().orEmpty()
 
     suspend fun allArtists(): List<Artist> =
         if (offline) emptyList() else backend?.allArtists().orEmpty()
@@ -214,18 +232,18 @@ class MusicRepository(
         if (offline) emptyList() else backend?.allPlaylists().orEmpty()
 
     suspend fun allSongs(): List<Song> =
-        if (offline) downloadedSongs() else sourceSongs { it.allSongs() }
+        if (offline) offlineSongs() else sourceSongs { it.allSongs() }
 
     suspend fun librarySongs(limit: Int = 2000): List<Song> =
-        if (offline) downloadedSongs() else sourceSongs { it.librarySongs(limit) }
+        if (offline) offlineSongs() else sourceSongs { it.librarySongs(limit) }
 
     suspend fun songsPage(offset: Int, count: Int = 100): List<Song> =
-        if (offline) downloadedSongs().drop(offset).take(count) else sourceSongs { it.songsPage(offset, count) }
+        if (offline) offlineSongs().drop(offset).take(count) else sourceSongs { it.songsPage(offset, count) }
 
     // walks the whole library via the paging path (guaranteed to traverse every source, unlike a
     // one-shot request which some servers cap). deduped, capped so a pathological library can't run away.
     suspend fun allLibrarySongs(cap: Int = 10000, pageSize: Int = 200): List<Song> {
-        if (offline) return downloadedSongs()
+        if (offline) return offlineSongs()
         val b = backend ?: return emptyList()
         val out = LinkedHashMap<String, Song>()
         var offset = 0
@@ -253,7 +271,7 @@ class MusicRepository(
 
     suspend fun songFor(id: String): Song? {
         downloadManager.get(id)?.let { return it.toSong() }
-        if (offline) return null
+        if (offline) return offlineSongs().singleOrNull { it.id == id }
         val source = backend ?: return null
         return source.songFor(id)?.let { tag(it, source) }
     }
@@ -285,7 +303,7 @@ class MusicRepository(
     suspend fun search(query: String, sourceId: String): SearchResults {
         if (offline) {
             val q = query.trim()
-            val songs = downloadedSongs().filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }
+            val songs = offlineSongs().filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }
             val albums = downloadedAlbums().filter { it.title.contains(q, true) || it.artist.contains(q, true) }
             return SearchResults(songs = songs, albums = albums, artists = emptyList())
         }
@@ -295,7 +313,15 @@ class MusicRepository(
 
     suspend fun scrobble(id: String) {
         if (offline) return
-        backend?.scrobble(id)
+        backend?.scrobble(backendSongId(id) ?: return)
+    }
+
+    private fun backendSongId(id: String): String? {
+        if (!id.startsWith("cached:")) return id
+        val cached = cachedSongsProvider().singleOrNull { "cached:${it.streamUrl.substringAfter("://")}" == id } ?: return null
+        val provider = cached.playbackSource?.providerId ?: return null
+        if (backend?.playbackSourceIdentity(cached)?.providerId != provider) return null
+        return cached.id
     }
 
     suspend fun radio(seedId: String): List<Song> {
@@ -349,8 +375,10 @@ class MusicRepository(
     suspend fun deletePlaylist(id: String): Boolean = backend?.deletePlaylist(id) ?: false
 
     // playlists arent server-starrable handled locally by the caller
-    suspend fun setStarred(id: String, starred: Boolean, kind: String = "song"): Boolean =
-        backend?.setStarred(id, starred, kind) ?: false
+    suspend fun setStarred(id: String, starred: Boolean, kind: String = "song"): Boolean {
+        if (offline) return false
+        return backend?.setStarred(backendSongId(id) ?: return false, starred, kind) ?: false
+    }
 
     suspend fun detail(kind: String, id: String): DetailData? {
         if (kind == "smart") {
@@ -362,9 +390,9 @@ class MusicRepository(
             )
         }
         if (offline) {
-            val dls = downloadedSongs()
+            val dls = offlineSongs()
             return when (kind) {
-                "album" -> dls.filter { it.albumId == id }.takeIf { it.isNotEmpty() }?.let { tracks ->
+                "album" -> dls.filter { it.albumId == id || it.playbackSource?.albumId == id }.takeIf { it.isNotEmpty() }?.let { tracks ->
                     val f = tracks.first()
                     val label = com.aurora.music.model.releaseTypeLabel(com.aurora.music.model.inferReleaseType(tracks.size, tracks.sumOf { it.durationSec }))
                     DetailData(DetailInfo(f.album.ifBlank { "Album" }, "${f.artist} • Downloaded", f.artworkUrl, accentFor(id), false, tracks.size, label), tracks)

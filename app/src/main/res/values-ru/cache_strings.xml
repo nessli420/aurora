@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Автоматический кэш</string>
+    <string name="cache_description">Сохранять аудио во время прослушивания. Полностью сохранённые треки будут доступны в медиатеке без интернета.</string>
+    <string name="cache_limit">Размер кэша</string>
+    <string name="cache_used">Занято %1$s из %2$s</string>
+    <string name="cache_policy">Старый кэш удаляется автоматически. Скачанные вручную треки хранятся, пока вы сами их не удалите.</string>
+    <string name="cache_clear">Очистить аудиокэш</string>
+    <string name="cache_clear_title">Очистить аудиокэш?</string>
+    <string name="cache_clear_message">Для воспроизведения треков из кэша снова понадобится интернет. Загрузки, медиатека и настройки сохранятся. Во время прослушивания кэш будет заполняться заново.</string>
+    <string name="cache_clearing">Очистка кэша…</string>
+    <string name="cache_cleared">Аудиокэш очищен</string>
+    <string name="cache_clear_failed">Не удалось очистить аудиокэш. Попробуйте ещё раз.</string>
+    <string name="cache_unavailable">Аудиокэш недоступен. Музыку по-прежнему можно слушать через интернет.</string>
+    <string name="cache_loading">Проверка кэша…</string>
+    <string name="cache_offline_summary">Слушать скачанные треки и музыку, полностью сохранённую в кэше</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d трек доступен без интернета</item>
+        <item quantity="few">%1$d трека доступны без интернета</item>
+        <item quantity="many">%1$d треков доступны без интернета</item>
+        <item quantity="other">%1$d трека доступны без интернета</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">Скачан %1$d трек</item>
+        <item quantity="few">Скачано %1$d трека</item>
+        <item quantity="many">Скачано %1$d треков</item>
+        <item quantity="other">Скачано %1$d трека</item>
+    </plurals>
+</resources>

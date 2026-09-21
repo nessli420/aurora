@@ -25,10 +25,13 @@ class YoutubeMediaSourceFactory(
     private val delegate: MediaSource.Factory,
     private val resolver: YoutubeResolver,
     private val preferred: suspend (MediaItem) -> MediaItem = { it },
+    private val prepare: (MediaItem) -> MediaItem = { it },
 ) : MediaSource.Factory {
-    override fun createMediaSource(mediaItem: MediaItem): MediaSource =
-        if (mediaItem.localConfiguration?.uri?.scheme == "aurora-yt") YoutubeMediaSource(mediaItem, delegate, resolver, preferred)
-        else delegate.createMediaSource(mediaItem)
+    override fun createMediaSource(mediaItem: MediaItem): MediaSource {
+        val prepared = prepare(mediaItem)
+        return if (prepared.localConfiguration?.uri?.scheme == "aurora-yt") YoutubeMediaSource(prepared, delegate, resolver) { prepare(preferred(it)) }
+        else delegate.createMediaSource(prepared)
+    }
 
     override fun getSupportedTypes(): IntArray = delegate.supportedTypes
     override fun setDrmSessionManagerProvider(provider: DrmSessionManagerProvider) = apply { delegate.setDrmSessionManagerProvider(provider) }
@@ -72,9 +75,14 @@ private class YoutubeMediaSource(
                     } else {
                         try {
                             publishedItem = result.getOrThrow().first
-                            val audio = factory.createMediaSource(publishedItem.buildUpon().setUri(stream.url).setMimeType(stream.mimeType).build())
+                            val audioItem = publishedItem.buildUpon().setUri(stream.url).setMimeType(stream.mimeType).apply {
+                                // HLS/DASH segments and video use separate resources, never the progressive audio key.
+                                if (androidx.media3.common.util.Util.inferContentTypeForUriAndMimeType(android.net.Uri.parse(stream.url), stream.mimeType)
+                                    != androidx.media3.common.C.CONTENT_TYPE_OTHER) setCustomCacheKey(null)
+                            }.build()
+                            val audio = factory.createMediaSource(audioItem)
                             child = stream.videoUrl?.let { video ->
-                                MergingMediaSource(true, audio, factory.createMediaSource(item.buildUpon().setUri(video).setMimeType(null).build()))
+                                MergingMediaSource(true, audio, factory.createMediaSource(item.buildUpon().setUri(video).setMimeType(null).setCustomCacheKey(null).build()))
                             } ?: audio
                             prepareChildSource(Unit, child!!)
                         } catch (error: Exception) {

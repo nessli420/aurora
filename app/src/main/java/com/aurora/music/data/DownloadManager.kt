@@ -85,6 +85,7 @@ class DownloadManager(
     private val playbackSourceProvider: (Song) -> PlaybackSourceIdentity? = { it.playbackSource },
     private val playbackCollectionProvider: (String, String, String) -> PlaybackCollectionIdentity? = { _, _, _ -> null },
     private val copyExtension: ((String, File, (Float) -> Unit) -> Unit)? = null,
+    private val copyCached: ((String, File, (Float) -> Unit) -> Unit)? = null,
 ) {
 
     private val dir = File(context.filesDir, "downloads").apply { mkdirs() }
@@ -161,17 +162,19 @@ class DownloadManager(
             setState(song.id, DownloadState.Downloading(0f))
             val audioFile = File(dir, "${song.id}.audio")
             val extension = song.streamUrl.startsWith("aurora-extension:")
-            val bitrate = if (extension) 0 else downloadBitrateProvider()
-            val provided = if (extension) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl
+            val cached = song.streamUrl.startsWith("aurora-cache:")
+            val bitrate = if (extension || cached) 0 else downloadBitrateProvider()
+            val provided = if (extension || cached) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl
             // resolve aurora-yt sentinel via the songs full sentinel which holds the search query
             val audioUrl = if (provided.startsWith("aurora-yt://")) {
                 val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else provided
                 resolveSentinel(sentinel) ?: throw IOException("No stream found for this track")
             } else provided
-            if (extension) requireNotNull(copyExtension) { "Extension downloads are unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
+            if (cached) requireNotNull(copyCached) { "Cached audio is unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
+            else if (extension) requireNotNull(copyExtension) { "Extension downloads are unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
             else downloadTo(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
             val coverFile = File(dir, "${song.id}.jpg")
-            runCatching { if (song.artworkUrl.isNotBlank()) downloadTo(song.artworkUrl, coverFile) {} }
+            runCatching { if (!cached && song.artworkUrl.isNotBlank()) downloadTo(song.artworkUrl, coverFile) {} }
             val entry = DownloadedSong(
                 id = song.id, title = song.title, artist = song.artist, album = song.album,
                 albumId = song.albumId, artistId = song.artistId, durationSec = song.durationSec,

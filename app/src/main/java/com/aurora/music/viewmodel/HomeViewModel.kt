@@ -38,6 +38,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { container.offline.collect { load() } }
         viewModelScope.launch { container.accountEpoch.drop(1).collect { load(clear = true) } }
         viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }
+        viewModelScope.launch { container.audioCache.songs.collect { if (container.offline.value) load() } }
     }
 
     fun load(clear: Boolean = false) {

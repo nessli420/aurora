@@ -101,7 +101,10 @@ class MixPlayer(
             p.volume = 0f
             if (globalConfig.audioSessionId != 0) p.setAudioSessionId(globalConfig.audioSessionId)
             p.setPreferredAudioDevice(device())
-            p.setMediaItem(MediaItem.Builder().setMediaId(clip.id).setUri(if (clip.stem == StemMode.FULL) clip.song.streamUrl else clip.stemUri).build())
+            p.setMediaItem(MediaItem.Builder().setMediaId(clip.id).setUri(if (clip.stem == StemMode.FULL) clip.song.streamUrl else clip.stemUri)
+                .setMediaMetadata(androidx.media3.common.MediaMetadata.Builder().setTitle(clip.song.title).setArtist(clip.song.artist)
+                    .setAlbumTitle(clip.song.album).setExtras(com.aurora.music.playback.PresetContextPublisher.extras(clip.song))
+                    .apply { if (clip.song.artworkUrl.isNotBlank()) setArtworkUri(android.net.Uri.parse(clip.song.artworkUrl)) }.build()).build())
             p.seekTo((clip.cueInSec * 1000).toLong())
             val deck = Deck(p, dsp, clip, globalProcessor, routedOutput)
             decks.add(deck)
