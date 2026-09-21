@@ -390,6 +390,7 @@ class SettingsStore(private val context: Context) {
         val SCROBBLE = booleanPreferencesKey("scrobble")
         val AUTOPLAY_RADIO = booleanPreferencesKey("autoplay_radio")
         val OFFLINE = booleanPreferencesKey("offline_mode")
+        val ARTWORK_LOOKUP = booleanPreferencesKey("artwork_lookup_enabled")
         val LRCLIB = booleanPreferencesKey("lrclib_enabled")
         val DATA_SAVER = booleanPreferencesKey("data_saver")
         val PRIVATE_SESSION = booleanPreferencesKey("private_session")
@@ -1449,6 +1450,7 @@ class SettingsStore(private val context: Context) {
         require(mb in com.aurora.music.data.cache.AudioCachePrefs.limitsMb)
         context.dataStore.edit { it[Keys.AUDIO_CACHE_LIMIT] = mb }
     }
+    val artworkLookupEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.ARTWORK_LOOKUP] ?: true }
     val lrclibEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.LRCLIB] ?: true }
     val dataSaver: Flow<Boolean> = context.dataStore.data.map { it[Keys.DATA_SAVER] ?: false }
     val privateSession: Flow<Boolean> = context.dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }
@@ -1759,6 +1761,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setScrobble(v: Boolean) = context.dataStore.edit { it[Keys.SCROBBLE] = v }
     suspend fun setAutoplayRadio(v: Boolean) = context.dataStore.edit { it[Keys.AUTOPLAY_RADIO] = v }
     suspend fun setOfflineMode(v: Boolean) = context.dataStore.edit { it[Keys.OFFLINE] = v }
+    suspend fun setArtworkLookupEnabled(v: Boolean) = context.dataStore.edit { it[Keys.ARTWORK_LOOKUP] = v }
     suspend fun setLrclibEnabled(v: Boolean) = context.dataStore.edit { it[Keys.LRCLIB] = v }
     suspend fun setDataSaver(v: Boolean) = context.dataStore.edit { it[Keys.DATA_SAVER] = v }
     suspend fun setPrivateSession(v: Boolean) = context.dataStore.edit { it[Keys.PRIVATE_SESSION] = v }

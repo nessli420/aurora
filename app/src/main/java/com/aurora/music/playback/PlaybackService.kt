@@ -1399,7 +1399,7 @@ class PlaybackService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = serviceFuture {
-            LibraryResult.ofItemList(browseChildren(parentId), params)
+            LibraryResult.ofItemList(browseChildren(parentId).also { grantArtwork(browser, it) }, params)
         }
 
         override fun onGetItem(
@@ -1408,7 +1408,7 @@ class PlaybackService : MediaLibraryService() {
             mediaId: String,
         ): ListenableFuture<LibraryResult<MediaItem>> = serviceFuture {
             val item = browseCache[mediaId] ?: resolvePlayable(mediaId)
-            if (item != null) LibraryResult.ofItem(item, null)
+            if (item != null) LibraryResult.ofItem(item.also { grantArtwork(browser, listOf(it)) }, null)
             else LibraryResult.ofError(androidx.media3.session.SessionError.ERROR_BAD_VALUE)
         }
 
@@ -1446,7 +1446,15 @@ class PlaybackService : MediaLibraryService() {
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = serviceFuture {
             val items = searchCache[query] ?: runCatching { searchItems(query) }.getOrDefault(emptyList()).also { searchCache[query] = it }
-            LibraryResult.ofItemList(ImmutableList.copyOf(items), params)
+            LibraryResult.ofItemList(ImmutableList.copyOf(items).also { grantArtwork(browser, it) }, params)
+        }
+    }
+
+    private fun grantArtwork(browser: MediaSession.ControllerInfo, items: List<MediaItem>) {
+        items.mapNotNull { it.mediaMetadata.artworkUri }.distinct().forEach { uri ->
+            if (com.aurora.music.data.artwork.ArtworkUrls.isArtwork(uri.toString())) runCatching {
+                grantUriPermission(browser.packageName, uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
         }
     }
 

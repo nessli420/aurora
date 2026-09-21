@@ -323,6 +323,10 @@ class AppContainer(context: Context) {
     @Volatile private var smartPlaylistsValue: List<SmartPlaylist> = emptyList()
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 
+    val artworkRepository = com.aurora.music.data.artwork.ArtworkRepository(appContext,
+        offline = { offlineToggle || !networkUp }, enabled = { settingsStore.artworkLookupEnabled.first() },
+        separators = { settingsStore.artistSeparators.first() })
+
     val repository: MusicRepository = MusicRepository(
         backendProvider = { backend },
         downloadManager = downloadManager,
@@ -331,6 +335,7 @@ class AppContainer(context: Context) {
         smartPlaylistsProvider = { smartPlaylistsValue },
         smartEngine = smartEngine,
         cachedSongsProvider = { audioCache.songs.value },
+        coverUrl = com.aurora.music.data.artwork.ArtworkUrls::cover,
     )
 
     private fun recomputeOffline() {

@@ -68,6 +68,7 @@ fun IntegrationsSettingsScreen(
                 IntegrationRow(Icons.Filled.Fingerprint, "AcoustID", appString(R.string.text_identify_tracks_from_their_audio_51a42b), if (acoustId.isBlank()) appString(R.string.text_not_set_93039e) else appString(R.string.text_ready_20c7c5), onOpenAcoustId)
             }
         }
+        item { ArtworkLookupSettings() }
         item {
             Text(
                 appString(R.string.text_connections_are_optional_aurora_s_own_library_playback_history_an_d7c6c7),

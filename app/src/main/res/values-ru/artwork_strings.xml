@@ -1,0 +1,9 @@
+<resources>
+    <string name="artwork_title">Обложки</string>
+    <string name="artwork_lookup">Искать недостающие обложки</string>
+    <string name="artwork_description">Находить обложки для треков и альбомов без изображения.</string>
+    <string name="artwork_provider">Поиск в MusicBrainz и Cover Art Archive по исполнителю, альбому и названию трека. Существующие обложки имеют приоритет.</string>
+    <string name="artwork_cache_usage">Кэш обложек: %.1f МБ из 64 МБ. Сохранённые обложки доступны без интернета.</string>
+    <string name="artwork_clear">Очистить кэш обложек</string>
+    <string name="artwork_clear_failed">Не удалось очистить кэш обложек. Попробуйте ещё раз.</string>
+</resources>

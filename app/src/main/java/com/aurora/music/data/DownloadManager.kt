@@ -88,6 +88,7 @@ class DownloadManager(
     private val copyCached: ((String, File, (Float) -> Unit) -> Unit)? = null,
 ) {
 
+    private val contentResolver = context.applicationContext.contentResolver
     private val dir = File(context.filesDir, "downloads").apply { mkdirs() }
     private val indexFile = File(dir, "index.json")
     private val collectionsFile = File(dir, "collections.json")
@@ -198,6 +199,12 @@ class DownloadManager(
     }
 
     private fun downloadTo(url: String, file: File, onProgress: (Float) -> Unit) {
+        if (url.startsWith("content://") || url.startsWith("file://")) {
+            val input = contentResolver.openInputStream(Uri.parse(url)) ?: throw IOException("Missing cover")
+            input.use { source -> file.outputStream().use { source.copyTo(it) } }
+            onProgress(1f)
+            return
+        }
         val request = Request.Builder().url(url).build()
         http.newCall(request).execute().use { resp ->
             if (!resp.isSuccessful) throw IOException("HTTP ${resp.code}")

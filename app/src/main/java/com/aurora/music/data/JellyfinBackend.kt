@@ -28,8 +28,8 @@ class JellyfinBackend(
 
     private fun BaseItemDto.imageId(): String? = when {
         ImageTags?.containsKey("Primary") == true -> Id
-        !AlbumId.isNullOrBlank() -> AlbumId
-        else -> Id
+        !AlbumPrimaryImageTag.isNullOrBlank() && !AlbumId.isNullOrBlank() -> AlbumId
+        else -> null
     }
 
     private fun BaseItemDto.toSong(): Song {
@@ -65,7 +65,7 @@ class JellyfinBackend(
         id = Id,
         title = Name ?: "Album",
         artist = AlbumArtist ?: Artists?.firstOrNull() ?: "Unknown artist",
-        artworkUrl = client.coverArtUrl(Id),
+        artworkUrl = client.coverArtUrl(imageId()),
         year = ProductionYear ?: 0,
         songCount = ChildCount ?: 0,
         durationSec = ((RunTimeTicks ?: 0L) / TICKS_PER_SEC).toInt(),
@@ -75,7 +75,7 @@ class JellyfinBackend(
     private fun BaseItemDto.toArtist(): Artist = Artist(
         id = Id,
         name = Name ?: "Artist",
-        imageUrl = client.coverArtUrl(Id),
+        imageUrl = client.coverArtUrl(imageId()),
         monthlyListeners = 0L,
     )
 
@@ -83,7 +83,7 @@ class JellyfinBackend(
         id = Id,
         title = Name ?: "Playlist",
         subtitle = "${ChildCount ?: 0} songs",
-        coverUrl = client.coverArtUrl(Id),
+        coverUrl = client.coverArtUrl(imageId()),
         songCount = ChildCount ?: 0,
         accent = accentFor(Id),
     )
@@ -205,7 +205,7 @@ class JellyfinBackend(
                 val tracks = items(mapOf("ParentId" to id, "IncludeItemTypes" to "Audio", "SortBy" to "ParentIndexNumber,IndexNumber,SortName", "Fields" to "MediaSources,Genres,DateCreated")).map { it.toSong() }
                 val typeLabel = releaseTypeLabel(inferReleaseType(tracks.size, tracks.sumOf { it.durationSec }))
                 DetailData(
-                    DetailInfo(a.Name ?: "Album", "${a.AlbumArtist ?: a.Artists?.firstOrNull() ?: ""} • ${a.ProductionYear ?: ""}", client.coverArtUrl(a.Id), accentFor(a.Id), false, tracks.size, typeLabel),
+                    DetailInfo(a.Name ?: "Album", "${a.AlbumArtist ?: a.Artists?.firstOrNull() ?: ""} • ${a.ProductionYear ?: ""}", client.coverArtUrl(a.imageId()), accentFor(a.Id), false, tracks.size, typeLabel),
                     tracks,
                 )
             }
@@ -214,7 +214,7 @@ class JellyfinBackend(
                 val albums = items(mapOf("IncludeItemTypes" to "MusicAlbum", "ArtistIds" to id, "Recursive" to "true", "SortBy" to "ProductionYear,SortName", "SortOrder" to "Descending")).map { it.toAlbum() }
                 val tracks = items(mapOf("IncludeItemTypes" to "Audio", "ArtistIds" to id, "Recursive" to "true", "Limit" to "60", "Fields" to "MediaSources,DateCreated")).map { it.toSong() }
                 DetailData(
-                    DetailInfo(ar.Name ?: "Artist", "${albums.size} albums · ${tracks.size} tracks", client.coverArtUrl(ar.Id), accentFor(ar.Id), true, tracks.size, "Artist"),
+                    DetailInfo(ar.Name ?: "Artist", "${albums.size} albums · ${tracks.size} tracks", client.coverArtUrl(ar.imageId()), accentFor(ar.Id), true, tracks.size, "Artist"),
                     tracks,
                     albums,
                 )
@@ -225,7 +225,7 @@ class JellyfinBackend(
                     client.api.playlistItems(id, mapOf("userId" to uid, "Fields" to "MediaSources,Genres,DateCreated")).Items
                 }.getOrDefault(emptyList()).map { it.toSong() }
                 DetailData(
-                    DetailInfo(p.Name ?: "Playlist", "${tracks.size} songs", client.coverArtUrl(p.Id), accentFor(p.Id), false, tracks.size, "Playlist"),
+                    DetailInfo(p.Name ?: "Playlist", "${tracks.size} songs", client.coverArtUrl(p.imageId()), accentFor(p.Id), false, tracks.size, "Playlist"),
                     tracks,
                 )
             }

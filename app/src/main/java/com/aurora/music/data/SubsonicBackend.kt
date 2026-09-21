@@ -30,7 +30,7 @@ class SubsonicBackend(
             title = title,
             artist = artist ?: "Unknown artist",
             album = album ?: "",
-            artworkUrl = c.coverArtUrl(coverArt ?: id),
+            artworkUrl = coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
             durationSec = duration,
             liked = starred != null,
             explicit = explicitStatus.equals("explicit", true),
@@ -56,7 +56,7 @@ class SubsonicBackend(
         id = id,
         title = name,
         artist = displayArtist ?: artist ?: "Unknown artist",
-        artworkUrl = c.coverArtUrl(coverArt ?: id),
+        artworkUrl = coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
         year = year,
         songCount = songCount,
         durationSec = duration,
@@ -67,7 +67,7 @@ class SubsonicBackend(
     private fun ArtistDto.toModel(): Artist = Artist(
         id = id,
         name = name,
-        imageUrl = c.coverArtUrl(coverArt ?: id),
+        imageUrl = coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
         monthlyListeners = albumCount.toLong(),
     )
 
@@ -75,7 +75,7 @@ class SubsonicBackend(
         id = id,
         title = name,
         subtitle = comment?.takeIf { it.isNotBlank() } ?: "$songCount songs",
-        coverUrl = c.coverArtUrl(coverArt ?: id),
+        coverUrl = coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
         songCount = songCount,
         accent = accentFor(id),
     )
@@ -215,7 +215,7 @@ class SubsonicBackend(
             "album" -> {
                 val a = c.api.getAlbum(id).response.album ?: return null
                 DetailData(
-                    DetailInfo(a.name, "${a.displayArtist ?: a.artist ?: ""} • ${a.year}", c.coverArtUrl(a.coverArt ?: a.id), accentFor(a.id), false, a.songCount, a.toModel().typeLabel),
+                    DetailInfo(a.name, "${a.displayArtist ?: a.artist ?: ""} • ${a.year}", a.toModel().artworkUrl, accentFor(a.id), false, a.songCount, a.toModel().typeLabel),
                     a.song.map { it.toModel() },
                 )
             }
@@ -226,7 +226,7 @@ class SubsonicBackend(
                     runCatching { c.api.getAlbum(alb.id).response.album?.song.orEmpty() }.getOrDefault(emptyList())
                 }.map { it.toModel() }
                 DetailData(
-                    DetailInfo(ar.name, "${ar.albumCount} albums · ${ar.album.sumOf { it.songCount }} tracks", c.coverArtUrl(ar.coverArt ?: ar.id), accentFor(ar.id), true, tracks.size, "Artist"),
+                    DetailInfo(ar.name, "${ar.albumCount} albums · ${ar.album.sumOf { it.songCount }} tracks", ar.coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(), accentFor(ar.id), true, tracks.size, "Artist"),
                     tracks,
                     albumModels,
                 )
@@ -234,7 +234,7 @@ class SubsonicBackend(
             "playlist" -> {
                 val p = c.api.getPlaylist(id).response.playlist ?: return null
                 DetailData(
-                    DetailInfo(p.name, p.comment?.takeIf { it.isNotBlank() } ?: "${p.songCount} songs", c.coverArtUrl(p.coverArt ?: p.id), accentFor(p.id), false, p.songCount, "Playlist"),
+                    DetailInfo(p.name, p.comment?.takeIf { it.isNotBlank() } ?: "${p.songCount} songs", p.toModel().coverUrl, accentFor(p.id), false, p.songCount, "Playlist"),
                     p.entry.map { it.toModel() },
                 )
             }
