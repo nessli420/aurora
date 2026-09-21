@@ -131,23 +131,17 @@ internal fun LyricsScreen(
         }
     }
     Box(Modifier.fillMaxSize().background(Color(0xFF17191D)).pointerInput(Unit) {
-        // Observe child gestures without cancelling scrubbing or scrolling. A hidden screen's
-        // first gesture only reveals controls, so it cannot accidentally seek or skip a track.
+        // Keep the idle timer suspended during gestures without changing control visibility.
         awaitPointerEventScope {
-            var waking = false
             try {
                 while (true) {
                     val event = awaitPointerEvent(PointerEventPass.Initial)
                     val pressed = event.changes.any { it.pressed }
                     if (!pointerHeld && pressed) {
-                        waking = !controlsVisible
-                        controlsVisible = true
                         interactionVersion++
                     }
-                    if (waking) event.changes.forEach { it.consume() }
                     if (pointerHeld && !pressed) interactionVersion++
                     pointerHeld = pressed
-                    if (!pressed) waking = false
                 }
             } finally {
                 pointerHeld = false
