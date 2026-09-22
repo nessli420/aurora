@@ -698,7 +698,13 @@ private fun FullscreenMusicVideo(
             Modifier.fillMaxSize().clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,
-                onClick = registerInteraction,
+                onClick = {
+                    if (controlsVisible) {
+                        controlsVisible = false
+                    } else {
+                        registerInteraction()
+                    }
+                },
             ),
         )
         AnimatedVisibility(
