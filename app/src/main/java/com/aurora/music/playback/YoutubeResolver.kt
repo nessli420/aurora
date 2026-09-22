@@ -23,6 +23,7 @@ class YoutubeResolver {
     private data class CachedStream(val url: String, val expiresAt: Long)
     private val cache = ConcurrentHashMap<String, CachedStream>()
     data class PlaybackStream(val url: String, val mimeType: String? = null, val videoUrl: String? = null)
+    data class MusicVideo(val videoId: String, val streamUrl: String)
     private data class CachedPlayback(val stream: PlaybackStream, val expiresAt: Long)
     private val playbackCache = ConcurrentHashMap<String, CachedPlayback>()
     @Volatile private var initialized = false
@@ -73,7 +74,7 @@ class YoutubeResolver {
         return resolvePlayback(videoId, maxHeight)?.url
     }
 
-    fun findMusicVideo(artist: String, title: String, durationSec: Int): String? {
+    fun findMusicVideo(artist: String, title: String, durationSec: Int): MusicVideo? {
         if (artist.isBlank() || title.isBlank()) return null
         return runCatching {
             ensureInit()
@@ -117,19 +118,27 @@ class YoutubeResolver {
                 .thenByDescending { it.preferred }.thenByDescending { it.score })
             ranked.take(5).firstNotNullOfOrNull { candidate ->
                 val id = candidate.item.url.substringAfter("v=", "").take(11)
-                if (id.matches(Regex("[A-Za-z0-9_-]{11}"))) runCatching { resolveVisualStream(id) }.getOrNull() else null
+                if (id.matches(Regex("[A-Za-z0-9_-]{11}"))) {
+                    runCatching { resolveVisualStream(id, 720)?.let { MusicVideo(id, it) } }.getOrNull()
+                } else null
             }
         }.getOrElse { Log.w(TAG, "Video search failed: ${it.javaClass.simpleName}"); null }
     }
 
-    private fun resolveVisualStream(videoId: String): String? {
+    fun resolveVisualStream(videoId: String, maxHeight: Int?): String? {
+        if (!videoId.matches(Regex("[A-Za-z0-9_-]{11}"))) return null
+        ensureInit()
         val info = StreamInfo.getInfo(ServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
         val streams = (info.videoOnlyStreams + info.videoStreams)
             .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
         fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) =
             stream.resolution.orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
-        return streams.filter { height(it) in 144..720 }.ifEmpty { streams }
-            .sortedByDescending(::height).distinctBy { it.content }.take(6)
+        val candidates = streams.filter { height(it) in 144..(maxHeight ?: Int.MAX_VALUE) }
+            .ifEmpty { streams.filter { height(it) > 0 }.sortedBy(::height).take(1) }
+        return candidates.sortedWith(compareByDescending<org.schabi.newpipe.extractor.stream.VideoStream>(::height)
+            .thenByDescending { it.codec.orEmpty().contains("avc", ignoreCase = true) || it.codec.orEmpty().contains("h264", ignoreCase = true) }
+            .thenByDescending { it.fps })
+            .distinctBy { it.content }.take(12)
             .firstOrNull { canOpenStream(it.content) }?.content
     }
 
