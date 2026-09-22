@@ -3,6 +3,7 @@ package com.aurora.music.ui.screens.player
 import android.app.Activity
 import android.content.Context
 import android.content.ContextWrapper
+import android.content.pm.ActivityInfo
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
@@ -162,18 +163,23 @@ fun PlayerScreen(
     val fullscreenActive = fullscreenVideo && showVideo && state.hasVideo && videoPlayer != null
     androidx.compose.runtime.DisposableEffect(activity, fullscreenActive) {
         val window = activity?.window
+        val previousOrientation = activity?.requestedOrientation
         if (window != null) {
             val controller = WindowCompat.getInsetsController(window, window.decorView)
             if (fullscreenActive) {
                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 controller.hide(WindowInsetsCompat.Type.systemBars())
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
             } else {
                 controller.show(WindowInsetsCompat.Type.systemBars())
             }
         }
         onDispose {
-            if (fullscreenActive) activity?.window?.let {
-                WindowCompat.getInsetsController(it, it.decorView).show(WindowInsetsCompat.Type.systemBars())
+            if (fullscreenActive) {
+                activity?.window?.let {
+                    WindowCompat.getInsetsController(it, it.decorView).show(WindowInsetsCompat.Type.systemBars())
+                }
+                if (previousOrientation != null) activity.requestedOrientation = previousOrientation
             }
         }
     }
@@ -650,6 +656,7 @@ private fun VideoQualityControl(qualityHeight: Int?, onQualityChange: (Int?) -> 
 }
 
 @Composable
+@OptIn(ExperimentalLayoutApi::class)
 private fun FullscreenMusicVideo(
     player: androidx.media3.common.Player,
     artworkUrl: String,
@@ -670,6 +677,7 @@ private fun FullscreenMusicVideo(
         Row(
             Modifier.align(Alignment.TopCenter).fillMaxWidth()
                 .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = .78f), Color.Transparent)))
+                .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
                 .padding(horizontal = 12.dp, vertical = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

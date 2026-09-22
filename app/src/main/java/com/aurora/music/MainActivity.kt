@@ -1,6 +1,7 @@
 package com.aurora.music
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.content.pm.ActivityInfo
 import android.os.Build
 import android.app.SearchManager
@@ -57,6 +58,11 @@ class MainActivity : AppCompatActivity() {
         setIntent(intent)
         handleAuthRedirect(intent)
         handleMediaSearch(intent)
+    }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        com.aurora.music.localization.AppStrings.useConfiguration(newConfig)
     }
 
     private fun handleMediaSearch(intent: Intent?) {
