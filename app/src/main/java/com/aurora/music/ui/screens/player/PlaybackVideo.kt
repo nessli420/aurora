@@ -32,7 +32,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 
-/** The service's player owns audio, DSP and video; the screen only attaches a surface. */
+/** Attaches the video surface to the player selected by the screen. */
 @Composable
 fun PlaybackVideo(
     player: Player,
@@ -73,15 +73,18 @@ fun PlaybackVideo(
     }
     val ratio = if (videoSize.width > 0 && videoSize.height > 0) videoSize.width * videoSize.pixelWidthHeightRatio / videoSize.height else 16f / 9f
     BoxWithConstraints(modifier.clip(RoundedCornerShape(cornerRadius))) {
-        Box(Modifier.fillMaxSize().background(
-            Brush.linearGradient(listOf(accent.copy(alpha = .38f), MaterialTheme.colorScheme.surface, Color.Black))))
-        if (artworkUrl.isNotBlank()) {
-            AsyncImage(
-                model = artworkUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.12f; scaleY = 1.12f; alpha = .4f },
-            )
+        Box(Modifier.fillMaxSize().background(Color.Black))
+        if (videoSize.width <= 0 || videoSize.height <= 0) {
+            Box(Modifier.fillMaxSize().background(
+                Brush.linearGradient(listOf(accent.copy(alpha = .38f), MaterialTheme.colorScheme.surface, Color.Black))))
+            if (artworkUrl.isNotBlank()) {
+                AsyncImage(
+                    model = artworkUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize().graphicsLayer { scaleX = 1.12f; scaleY = 1.12f; alpha = .4f },
+                )
+            }
         }
         Box(Modifier.fillMaxSize().background(
             Brush.verticalGradient(listOf(Color.Black.copy(alpha = .12f), Color.Transparent, Color.Black.copy(alpha = .28f)))))

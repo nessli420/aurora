@@ -79,6 +79,7 @@ import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -87,6 +88,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -114,6 +116,8 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.aurora.music.data.MockData
+import com.aurora.music.data.isPodcast
+import com.aurora.music.data.isRadio
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import com.aurora.music.data.SeekStyle
@@ -153,6 +157,8 @@ fun PlayerScreen(
     onOpenMix: () -> Unit = {},
     videoPlayer: androidx.media3.common.Player? = null,
     onVideoQualityChange: (Int?) -> Unit = {},
+    onRequestVideo: () -> Unit = {},
+    onVideoVisibleChange: (Boolean) -> Unit = {},
     gestures: com.aurora.music.data.GesturePrefs = com.aurora.music.data.GesturePrefs(),
 ) {
     val song = state.current
@@ -160,6 +166,7 @@ fun PlayerScreen(
     val classic = ui.themeStyle == ThemeStyle.AURORA
     var showLyrics by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
+    var requestedVideo by remember(song.id) { mutableStateOf(false) }
     var fullscreenVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
     var inlineVideoControlsVisible by remember(song.id) { mutableStateOf(false) }
     var inlineVideoInteraction by remember(song.id) { mutableStateOf(0) }
@@ -169,6 +176,17 @@ fun PlayerScreen(
     val view = LocalView.current
     val activity = remember(view) { view.context.findActivity() }
     val fullscreenActive = fullscreenVideo && showVideo && state.hasVideo && videoPlayer != null
+    LaunchedEffect(state.hasVideo, requestedVideo) {
+        if (requestedVideo && state.hasVideo) {
+            showLyrics = false
+            showVideo = true
+            requestedVideo = false
+        }
+    }
+    DisposableEffect(showVideo) {
+        onVideoVisibleChange(showVideo)
+        onDispose { if (showVideo) onVideoVisibleChange(false) }
+    }
     LaunchedEffect(showVideo, inlineVideoControlsVisible, inlineVideoInteraction) {
         if (!showVideo || !inlineVideoControlsVisible) return@LaunchedEffect
         delay(3_000)
@@ -241,16 +259,19 @@ fun PlayerScreen(
                         Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
-                    if (state.hasVideo && videoPlayer != null) {
+                    if ((state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast()) || state.hasVideo) {
                         IconButton(
                             onClick = {
                                 if (showVideo) {
                                     fullscreenVideo = false
                                     showVideo = false
-                                } else {
+                                } else if (state.hasVideo && videoPlayer != null) {
                                     showLyrics = false
                                     showVideo = true
                                     inlineVideoControlsVisible = false
+                                } else if (!state.videoLoading) {
+                                    requestedVideo = true
+                                    onRequestVideo()
                                 }
                             },
                             modifier = Modifier.size(40.dp).semantics {
@@ -259,16 +280,14 @@ fun PlayerScreen(
                                 )
                             },
                         ) {
-                            Icon(
-                                if (showVideo) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
-                                contentDescription = null,
-                                tint = Color.White,
-                                modifier = Modifier.size(22.dp),
-                            )
+                            if (state.videoLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp),
+                                color = Color.White, strokeWidth = 2.dp)
+                            else Icon(if (showVideo) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
+                                contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
                         }
                     }
                     // balances trailing icons so PLAYING FROM stays centered
-                    Spacer(Modifier.width(if (state.hasVideo && videoPlayer != null) 40.dp else 80.dp))
+                    Spacer(Modifier.width(if ((state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast()) || state.hasVideo) 40.dp else 80.dp))
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                         Text(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)

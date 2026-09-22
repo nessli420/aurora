@@ -2178,4 +2178,5 @@
     <string name="video_quality_auto">Auto</string>
     <string name="video_fullscreen_enter">Full screen</string>
     <string name="video_fullscreen_exit">Exit full screen</string>
+    <string name="video_match_not_found">No matching YouTube video is available for this song.</string>
 </resources>

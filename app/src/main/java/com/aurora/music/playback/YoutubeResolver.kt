@@ -12,6 +12,7 @@ import org.schabi.newpipe.extractor.stream.DeliveryMethod
 import org.schabi.newpipe.extractor.stream.StreamType
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
+import kotlin.math.log10
 import org.schabi.newpipe.extractor.downloader.Request as NpRequest
 import org.schabi.newpipe.extractor.downloader.Response as NpResponse
 
@@ -71,6 +72,72 @@ class YoutubeResolver {
     fun resolveVideo(videoId: String, maxHeight: Int? = null): String? {
         return resolvePlayback(videoId, maxHeight)?.url
     }
+
+    fun findMusicVideo(artist: String, title: String, durationSec: Int): String? {
+        if (artist.isBlank() || title.isBlank()) return null
+        return runCatching {
+            ensureInit()
+            val yt = ServiceList.YouTube
+            val artistName = artist.substringBefore(',').substringBefore(" feat.").trim()
+            val titleKey = videoSearchText(title.substringBefore(" ("))
+            val sourceTitle = videoSearchText(title)
+            val artistKey = videoSearchText(artistName)
+            val titleWords = titleKey.split(' ').filter { it.length > 1 }.toSet()
+            if (titleWords.isEmpty()) return@runCatching null
+            data class Candidate(val item: StreamInfoItem, val score: Double, val preferred: Boolean,
+                val artistUploaded: Boolean, val exactTitle: Boolean)
+            val found = LinkedHashMap<String, Candidate>()
+            val queries = listOf("$artistName $title official music video", "$artistName $title visualizer", "$artistName $title")
+            for (query in queries) {
+                val search = yt.getSearchExtractor(query, emptyList(), "")
+                search.fetchPage()
+                search.initialPage.items.filterIsInstance<StreamInfoItem>().take(25).forEach { item ->
+                    val name = videoSearchText(item.name)
+                    val uploader = videoSearchText(item.uploaderName.orEmpty())
+                    val overlap = titleWords.count { it in name.split(' ') }.toDouble() / titleWords.size
+                    val artistMatch = hasVideoPhrase(name, artistKey) || hasVideoPhrase(uploader, artistKey)
+                    if (overlap < 0.7 || !artistMatch || item.duration <= 0) return@forEach
+                    val durationGap = if (durationSec > 0) abs(item.duration - durationSec).toDouble() else 0.0
+                    if (durationSec > 0 && durationGap > maxOf(120.0, durationSec * 0.6)) return@forEach
+                    val preferred = name.contains("music video") || name.contains("official video") ||
+                        name.contains("musikvideo") || name.contains("visualizer") || name.contains("visualiser")
+                    val artistUploader = uploader == artistKey || uploader == "$artistKey vevo" || uploader == "$artistKey official"
+                    val unwanted = listOf("cover", "reaction", "tutorial", "karaoke", "sped up", "slowed", "nightcore", "remaster", "remastered", "live", "version")
+                        .any { hasVideoPhrase(name, it) && !hasVideoPhrase(sourceTitle, it) }
+                    val exactTitle = hasVideoPhrase(name, titleKey)
+                    val score = overlap * 100 + (if (exactTitle) 25 else 0) +
+                        (if (artistMatch) 25 else 0) + (if (artistUploader) 20 else 0) +
+                        log10(item.viewCount.coerceAtLeast(0) + 1.0) * 5 -
+                        durationGap / 12 - (if (unwanted) 70 else 0)
+                    if (!unwanted) found[item.url] = Candidate(item, score, preferred, artistUploader, exactTitle)
+                }
+            }
+            val ranked = found.values.sortedWith(compareByDescending<Candidate> { it.artistUploaded && it.preferred }
+                .thenByDescending { it.artistUploaded && it.exactTitle }
+                .thenByDescending { it.preferred }.thenByDescending { it.score })
+            ranked.take(5).firstNotNullOfOrNull { candidate ->
+                val id = candidate.item.url.substringAfter("v=", "").take(11)
+                if (id.matches(Regex("[A-Za-z0-9_-]{11}"))) runCatching { resolveVisualStream(id) }.getOrNull() else null
+            }
+        }.getOrElse { Log.w(TAG, "Video search failed: ${it.javaClass.simpleName}"); null }
+    }
+
+    private fun resolveVisualStream(videoId: String): String? {
+        val info = StreamInfo.getInfo(ServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
+        val streams = (info.videoOnlyStreams + info.videoStreams)
+            .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+        fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) =
+            stream.resolution.orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
+        return streams.filter { height(it) in 144..720 }.ifEmpty { streams }
+            .sortedByDescending(::height).distinctBy { it.content }.take(6)
+            .firstOrNull { canOpenStream(it.content) }?.content
+    }
+
+    private fun videoSearchText(value: String): String = value.lowercase(java.util.Locale.ROOT)
+        .replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim()
+
+    private fun hasVideoPhrase(value: String, phrase: String): Boolean =
+        phrase.isNotBlank() && " $value ".contains(" $phrase ")
 
     fun resolvePlayback(videoId: String, maxHeight: Int? = null): PlaybackStream? {
         if (!videoId.matches(Regex("[A-Za-z0-9_-]{11}"))) return null

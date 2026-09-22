@@ -1053,6 +1053,8 @@ fun AuroraApp() {
                     state = playerState,
                     videoPlayer = playerVM.videoPlayer,
                     onVideoQualityChange = playerVM::setVideoQuality,
+                    onRequestVideo = { playerVM.requestMusicVideo { confirm(it) } },
+                    onVideoVisibleChange = playerVM::setMusicVideoVisible,
                     onCollapse = { playerVM.setExpanded(false) },
                     onTogglePlay = { playerVM.togglePlay() },
                     onNext = { playerVM.next() },
