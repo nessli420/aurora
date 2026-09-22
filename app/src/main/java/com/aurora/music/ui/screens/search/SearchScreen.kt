@@ -24,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,8 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.LibraryMusic
+import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -51,6 +54,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
@@ -123,10 +127,37 @@ fun SearchScreen(
     val commitAnd: (() -> Unit) -> Unit = { action -> onCommitSearch(); action() }
 
     Column(Modifier.fillMaxWidth().padding(top = topInset)) {
-        Column(Modifier.padding(start = 16.dp, top = 14.dp, bottom = 12.dp)) {
-            Eyebrow(appString(R.string.text_discover_d3f02e), MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(2.dp))
-            Text(appString(R.string.text_search_bce064), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Eyebrow(appString(R.string.text_discover_d3f02e), MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(2.dp))
+                Text(appString(R.string.text_search_bce064), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+            }
+            if (state.sources.size > 1) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.sources.forEach { source ->
+                        val selected = source.id == state.selectedSource
+                        val icon = when (source.id) {
+                            "library" -> Icons.Outlined.LibraryMusic
+                            "discovery" -> Icons.Outlined.PlayCircle
+                            else -> Icons.Outlined.MusicNote
+                        }
+                        Box(
+                            Modifier.size(40.dp).clip(CircleShape)
+                                .background(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .selectable(selected = selected, role = Role.RadioButton) { onSelectSource(source.id) },
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(icon, source.label,
+                                tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+            }
         }
         TextField(
             value = state.query,
@@ -156,16 +187,6 @@ fun SearchScreen(
         )
 
         Spacer(Modifier.height(12.dp))
-
-        if (state.sources.size > 1) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.sources.forEach { source ->
-                    androidx.compose.material3.FilterChip(selected = source.id == state.selectedSource,
-                        onClick = { onSelectSource(source.id) }, label = { Text(source.label) })
-                }
-            }
-            Spacer(Modifier.height(8.dp))
-        }
 
         val empty = results.songs.isEmpty() && results.albums.isEmpty() && results.artists.isEmpty() && results.playlists.isEmpty()
         when {
