@@ -63,7 +63,9 @@ private class YoutubeMediaSource(
                     val selected = preferred(item)
                     val uri = selected.localConfiguration!!.uri
                     val stream = if (uri.scheme != "aurora-yt") YoutubeResolver.PlaybackStream(uri.toString())
-                        else if (uri.host == "video") resolver.resolvePlayback(uri.lastPathSegment.orEmpty())
+                        else if (uri.host == "video") resolver.resolvePlayback(
+                            uri.lastPathSegment.orEmpty(), uri.getQueryParameter("quality")?.toIntOrNull() ?: 720,
+                        )
                         else resolver.resolveSentinel(uri)?.let { YoutubeResolver.PlaybackStream(it) }
                     selected to stream
                 }

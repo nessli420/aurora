@@ -2174,4 +2174,8 @@
     <string name="text_your_year_month_by_month_e19b5f" formatted="false">"Your year, month by month"</string>
     <string name="text_youtube_music_adds_catalogue_search_and_a_separate_home_feed_matc_b8a69c" formatted="false">"YouTube Music adds catalogue search and a separate home feed. Matching recordings use your preferred local, downloaded or server copy. Spotify stays standalone."</string>
     <string name="text_youtube_music_uses_google_sign_in_0ba1e7" formatted="false">"YouTube Music uses Google sign-in."</string>
+    <string name="video_quality">Quality</string>
+    <string name="video_quality_auto">Auto</string>
+    <string name="video_fullscreen_enter">Full screen</string>
+    <string name="video_fullscreen_exit">Exit full screen</string>
 </resources>

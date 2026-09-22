@@ -1052,6 +1052,7 @@ fun AuroraApp() {
                 PlayerScreen(
                     state = playerState,
                     videoPlayer = playerVM.videoPlayer,
+                    onVideoQualityChange = playerVM::setVideoQuality,
                     onCollapse = { playerVM.setExpanded(false) },
                     onTogglePlay = { playerVM.togglePlay() },
                     onNext = { playerVM.next() },

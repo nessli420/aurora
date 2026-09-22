@@ -22,6 +22,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.material3.MaterialTheme
 import coil.compose.AsyncImage
@@ -39,6 +40,7 @@ fun PlaybackVideo(
     artworkUrl: String,
     accent: Color,
     modifier: Modifier = Modifier,
+    cornerRadius: Dp = 28.dp,
 ) {
     val context = LocalContext.current
     val owner = LocalLifecycleOwner.current
@@ -75,7 +77,7 @@ fun PlaybackVideo(
         }
     }
     val ratio = if (videoSize.width > 0 && videoSize.height > 0) videoSize.width * videoSize.pixelWidthHeightRatio / videoSize.height else 16f / 9f
-    BoxWithConstraints(modifier.clip(RoundedCornerShape(28.dp))) {
+    BoxWithConstraints(modifier.clip(RoundedCornerShape(cornerRadius))) {
         Box(Modifier.fillMaxSize().background(
             Brush.linearGradient(listOf(accent.copy(alpha = .38f), MaterialTheme.colorScheme.surface, Color.Black))))
         if (artworkUrl.isNotBlank()) {

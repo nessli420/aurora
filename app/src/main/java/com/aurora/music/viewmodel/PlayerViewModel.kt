@@ -73,6 +73,8 @@ data class PlayerUiState(
     val timelineDurationSec: Int = 0,
     val isLive: Boolean = false,
     val hasVideo: Boolean = false,
+    val videoQualityHeight: Int? = null,
+    val canSelectVideoQuality: Boolean = false,
 ) {
     val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec
     val progress: Float get() = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
@@ -397,6 +399,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 metadata.artworkUri?.toString().orEmpty(), (c.duration.coerceAtLeast(0) / 1000).toInt())
         } else mediaId?.let { songById[it] } ?: _state.value.current
         val cur = com.aurora.music.playback.PreferredPlayback.applyTo(queued, c.currentMediaItem)
+        val videoUri = c.currentMediaItem?.localConfiguration?.uri
         val q = (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
         if (cur.id != lastKeyInfoId) { lastKeyInfoId = cur.id; lastKeyInfo = runCatching { container.sonicEngine.keyInfo(cur.id) }.getOrNull() }
         val ki = lastKeyInfo
@@ -407,6 +410,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 isLive = c.isCurrentMediaItemLive || cur.isRadio(),
                 hasVideo = c.currentTracks.isTypeSupported(androidx.media3.common.C.TRACK_TYPE_VIDEO) &&
                     c.isCommandAvailable(Player.COMMAND_SET_VIDEO_SURFACE),
+                canSelectVideoQuality = videoUri?.scheme == "aurora-yt" && videoUri.host == "video",
+                videoQualityHeight = videoUri?.getQueryParameter("quality")?.toIntOrNull(),
                 isMix = container.mixController.activeProject != null,
                 isPlaying = c.effectivelyPlaying,
                 shuffle = c.shuffleModeEnabled,
@@ -831,6 +836,23 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val c = controller ?: return
         val dur = _state.value.durationSec
         if (dur > 0) c.seekTo((fraction.coerceIn(0f, 1f) * dur * 1000).toLong())
+    }
+
+    fun setVideoQuality(height: Int?) {
+        val c = controller ?: return
+        val index = c.currentMediaItemIndex.takeIf { it in 0 until c.mediaItemCount } ?: return
+        val item = c.getMediaItemAt(index)
+        val uri = item.localConfiguration?.uri ?: return
+        if (uri.scheme != "aurora-yt" || uri.host != "video") return
+        val quality = height?.coerceIn(144, 1080)?.toString() ?: "auto"
+        if (uri.getQueryParameter("quality") == quality) return
+        val position = c.currentPosition
+        val playWhenReady = c.playWhenReady
+        val updated = item.buildUpon().setUri(uri.buildUpon().clearQuery()
+            .appendQueryParameter("quality", quality).build()).build()
+        c.replaceMediaItem(index, updated)
+        c.seekTo(index, position)
+        c.playWhenReady = playWhenReady
     }
 
     fun next() {

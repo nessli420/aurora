@@ -2174,4 +2174,8 @@
     <string name="text_your_year_month_by_month_e19b5f" formatted="false">"Ваш год по месяцам"</string>
     <string name="text_youtube_music_adds_catalogue_search_and_a_separate_home_feed_matc_b8a69c" formatted="false">"YouTube Music добавляет поиск по каталогу и отдельную главную страницу. Для совпадающих записей используется предпочитаемая локальная, скачанная или серверная копия. Spotify работает отдельно."</string>
     <string name="text_youtube_music_uses_google_sign_in_0ba1e7" formatted="false">"В YouTube Music нужно войти через Google."</string>
+    <string name="video_quality">Качество</string>
+    <string name="video_quality_auto">Авто</string>
+    <string name="video_fullscreen_enter">На весь экран</string>
+    <string name="video_fullscreen_exit">Выйти из полноэкранного режима</string>
 </resources>

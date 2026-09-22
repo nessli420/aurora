@@ -68,13 +68,15 @@ class YoutubeResolver {
         }.getOrElse { Log.d(TAG, "resolve failed '$query': ${it.message}"); null }
     }
 
-    fun resolveVideo(videoId: String): String? {
-        return resolvePlayback(videoId)?.url
+    fun resolveVideo(videoId: String, maxHeight: Int? = 720): String? {
+        return resolvePlayback(videoId, maxHeight)?.url
     }
 
-    fun resolvePlayback(videoId: String): PlaybackStream? {
+    fun resolvePlayback(videoId: String, maxHeight: Int? = 720): PlaybackStream? {
         if (!videoId.matches(Regex("[A-Za-z0-9_-]{11}"))) return null
-        playbackCache[videoId]?.takeIf { it.expiresAt > System.currentTimeMillis() }?.let { return it.stream }
+        val qualityKey = maxHeight?.coerceIn(144, 1080) ?: 720
+        val cacheKey = "$videoId:$qualityKey"
+        playbackCache[cacheKey]?.takeIf { it.expiresAt > System.currentTimeMillis() }?.let { return it.stream }
         return runCatching {
             ensureInit()
             val info = StreamInfo.getInfo(ServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
@@ -84,8 +86,8 @@ class YoutubeResolver {
                 .firstOrNull { canOpenStream(it.content) }
             val videos = (info.videoOnlyStreams + info.videoStreams)
                 .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
-            fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) = stream.resolution.orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
-            val candidates = videos.filter { height(it) in 1..720 }
+            fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) = stream.getResolution().orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
+            val candidates = videos.filter { height(it) in 1..qualityKey }
                 .ifEmpty { videos.sortedBy(::height) }
                 .sortedWith(compareBy<org.schabi.newpipe.extractor.stream.VideoStream> {
                     val codec = it.codec.orEmpty().lowercase()
@@ -110,7 +112,7 @@ class YoutubeResolver {
                 val now = System.currentTimeMillis()
                 playbackCache.entries.removeAll { entry -> entry.value.expiresAt <= now }
                 if (playbackCache.size >= 256) playbackCache.clear()
-                playbackCache[videoId] = CachedPlayback(it, minOf(cache["video:$videoId"]!!.expiresAt, now + if (live) 60_000 else 600_000))
+                playbackCache[cacheKey] = CachedPlayback(it, minOf(cache["video:$videoId"]!!.expiresAt, now + if (live) 60_000 else 600_000))
             }
         }.getOrElse { Log.w(TAG, "Stream extraction failed for $videoId: ${it.javaClass.simpleName}"); null }
     }
@@ -130,7 +132,10 @@ class YoutubeResolver {
 
     fun resolveSentinel(uri: android.net.Uri): String? {
         if (uri.scheme != "aurora-yt") return null
-        return if (uri.host == "video") resolveVideo(uri.lastPathSegment.orEmpty())
+        return if (uri.host == "video") resolveVideo(
+            uri.lastPathSegment.orEmpty(),
+            uri.getQueryParameter("quality")?.toIntOrNull() ?: 720,
+        )
         else resolve(uri.host.orEmpty(), uri.getQueryParameter("q").orEmpty(), uri.getQueryParameter("dur")?.toIntOrNull() ?: 0)
     }
 

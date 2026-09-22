@@ -1,5 +1,8 @@
 package com.aurora.music.ui.screens.player
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
@@ -32,6 +35,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBarsIgnoringVisibility
@@ -41,8 +45,13 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Fullscreen
+import androidx.compose.material.icons.filled.FullscreenExit
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Favorite
@@ -64,7 +73,10 @@ import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -77,6 +89,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.drawWithContent
@@ -89,6 +102,11 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 import com.aurora.music.data.MockData
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
@@ -127,6 +145,7 @@ fun PlayerScreen(
     onAutoDj: () -> Unit,
     onOpenMix: () -> Unit = {},
     videoPlayer: androidx.media3.common.Player? = null,
+    onVideoQualityChange: (Int?) -> Unit = {},
     gestures: com.aurora.music.data.GesturePrefs = com.aurora.music.data.GesturePrefs(),
 ) {
     val song = state.current
@@ -134,9 +153,30 @@ fun PlayerScreen(
     val classic = ui.themeStyle == ThemeStyle.AURORA
     var showLyrics by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
+    var fullscreenVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
     var showMenu by remember { mutableStateOf(false) }
     val playerAccent = MaterialTheme.colorScheme.primary
     val onPlayerAccent = MaterialTheme.colorScheme.onPrimary
+    val view = LocalView.current
+    val activity = remember(view) { view.context.findActivity() }
+    val fullscreenActive = fullscreenVideo && showVideo && state.hasVideo && videoPlayer != null
+    androidx.compose.runtime.DisposableEffect(activity, fullscreenActive) {
+        val window = activity?.window
+        if (window != null) {
+            val controller = WindowCompat.getInsetsController(window, window.decorView)
+            if (fullscreenActive) {
+                controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+                controller.hide(WindowInsetsCompat.Type.systemBars())
+            } else {
+                controller.show(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+        onDispose {
+            if (fullscreenActive) activity?.window?.let {
+                WindowCompat.getInsetsController(it, it.decorView).show(WindowInsetsCompat.Type.systemBars())
+            }
+        }
+    }
     val g = ui.playerGradient
     val bg = Brush.verticalGradient(
         listOf(
@@ -289,25 +329,16 @@ fun PlayerScreen(
                 }
             }
             if (state.hasVideo && videoPlayer != null) {
-                Row(
-                    Modifier.align(Alignment.TopEnd).padding(12.dp)
-                        .clip(CircleShape).background(MaterialTheme.colorScheme.surface.copy(alpha = .88f))
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    PlayerVideoModeButton(
-                        label = appString(R.string.text_audio_acdac2),
-                        icon = Icons.Filled.MusicNote,
-                        selected = !showVideo,
-                        onClick = { showVideo = false },
-                    )
-                    PlayerVideoModeButton(
-                        label = appString(R.string.text_video_bc17c1),
-                        icon = Icons.Filled.VideoLibrary,
-                        selected = showVideo,
-                        onClick = { showLyrics = false; showVideo = true },
-                    )
-                }
+                InlineVideoChrome(
+                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(12.dp),
+                    showVideo = showVideo,
+                    qualityHeight = state.videoQualityHeight,
+                    canSelectQuality = state.canSelectVideoQuality,
+                    onAudio = { fullscreenVideo = false; showVideo = false },
+                    onVideo = { showLyrics = false; showVideo = true },
+                    onQualityChange = onVideoQualityChange,
+                    onFullscreen = { fullscreenVideo = true },
+                )
             }
 
         }
@@ -476,34 +507,53 @@ fun PlayerScreen(
             }
         }
         val landscape = com.aurora.music.ui.layout.LocalWindowLayout.current.useLandscapePlayer
-        Column(
-            Modifier.align(Alignment.TopCenter).widthIn(max = if (landscape) 1280.dp else 640.dp)
-                .fillMaxSize().windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
-                .padding(horizontal = if (landscape) 32.dp else 20.dp),
-        ) {
-            header()
-            if (landscape) {
-                Row(Modifier.fillMaxWidth().weight(1f).padding(vertical = 20.dp),
-                    horizontalArrangement = Arrangement.spacedBy(48.dp), verticalAlignment = Alignment.CenterVertically) {
-                    artwork(Modifier.weight(1f).fillMaxHeight())
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) { controls() }
+        if (fullscreenActive) {
+            FullscreenMusicVideo(
+                player = videoPlayer,
+                artworkUrl = song.artworkUrl,
+                accent = playerAccent,
+                state = state,
+                qualityHeight = state.videoQualityHeight,
+                canSelectQuality = state.canSelectVideoQuality,
+                onAudio = { fullscreenVideo = false; showVideo = false },
+                onExitFullscreen = { fullscreenVideo = false },
+                onVideoQualityChange = onVideoQualityChange,
+                onTogglePlay = onTogglePlay,
+                onPrevious = onPrevious,
+                onNext = onNext,
+                onSeek = onSeek,
+            )
+            androidx.activity.compose.BackHandler(enabled = fullscreenActive) { fullscreenVideo = false }
+        } else {
+            Column(
+                Modifier.align(Alignment.TopCenter).widthIn(max = if (landscape) 1280.dp else 640.dp)
+                    .fillMaxSize().windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
+                    .padding(horizontal = if (landscape) 32.dp else 20.dp),
+            ) {
+                header()
+                if (landscape) {
+                    Row(Modifier.fillMaxWidth().weight(1f).padding(vertical = 20.dp),
+                        horizontalArrangement = Arrangement.spacedBy(48.dp), verticalAlignment = Alignment.CenterVertically) {
+                        artwork(Modifier.weight(1f).fillMaxHeight())
+                        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(vertical = 16.dp)) { controls() }
+                    }
+                } else {
+                    artwork(Modifier.fillMaxWidth().weight(1f))
+                    Spacer(Modifier.height(16.dp))
+                    controls()
                 }
-            } else {
-                artwork(Modifier.fillMaxWidth().weight(1f))
-                Spacer(Modifier.height(16.dp))
-                controls()
             }
-        }
-        androidx.compose.animation.AnimatedVisibility(
-            visible = showLyrics,
-            enter = fadeIn(tween(320)) + androidx.compose.animation.slideInVertically(tween(420)) { it / 10 },
-            exit = fadeOut(tween(220)) + androidx.compose.animation.slideOutVertically(tween(280)) { it / 12 },
-        ) {
-            DragToDismiss(onDismiss = { showLyrics = false }) {
-                LyricsScreen(state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
+            androidx.compose.animation.AnimatedVisibility(
+                visible = showLyrics,
+                enter = fadeIn(tween(320)) + androidx.compose.animation.slideInVertically(tween(420)) { it / 10 },
+                exit = fadeOut(tween(220)) + androidx.compose.animation.slideOutVertically(tween(280)) { it / 12 },
+            ) {
+                DragToDismiss(onDismiss = { showLyrics = false }) {
+                    LyricsScreen(state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
+                }
             }
+            androidx.activity.compose.BackHandler(enabled = showLyrics) { showLyrics = false }
         }
-        androidx.activity.compose.BackHandler(enabled = showLyrics) { showLyrics = false }
     }
     }
     }
@@ -520,7 +570,7 @@ private fun PlayerVideoModeButton(
         if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
         label = "videoModeContainer",
     )
-    val content = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    val content = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White
     Row(
         Modifier.clip(CircleShape).background(container)
             .clickable(role = Role.Tab, onClick = onClick)
@@ -530,6 +580,144 @@ private fun PlayerVideoModeButton(
     ) {
         Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = content)
         Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = content)
+    }
+}
+
+@Composable
+private fun InlineVideoChrome(
+    modifier: Modifier,
+    showVideo: Boolean,
+    qualityHeight: Int?,
+    canSelectQuality: Boolean,
+    onAudio: () -> Unit,
+    onVideo: () -> Unit,
+    onQualityChange: (Int?) -> Unit,
+    onFullscreen: () -> Unit,
+) {
+    Row(modifier, verticalAlignment = Alignment.Top) {
+        VideoModeSelector(showVideo, onAudio, onVideo)
+        Spacer(Modifier.weight(1f))
+        if (showVideo) {
+            if (canSelectQuality) VideoQualityControl(qualityHeight, onQualityChange)
+            IconButton(
+                onClick = onFullscreen,
+                modifier = Modifier.padding(start = 6.dp).size(44.dp).clip(CircleShape)
+                    .background(Color.Black.copy(alpha = .5f))
+                    .semantics { contentDescription = appString(R.string.video_fullscreen_enter) },
+            ) { Icon(Icons.Filled.Fullscreen, null, tint = Color.White) }
+        }
+    }
+}
+
+@Composable
+private fun VideoModeSelector(showVideo: Boolean, onAudio: () -> Unit, onVideo: () -> Unit) {
+    Row(
+        Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .48f)).padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PlayerVideoModeButton(appString(R.string.text_audio_acdac2), Icons.Filled.MusicNote, !showVideo, onAudio)
+        PlayerVideoModeButton(appString(R.string.text_video_bc17c1), Icons.Filled.VideoLibrary, showVideo, onVideo)
+    }
+}
+
+@Composable
+private fun VideoQualityControl(qualityHeight: Int?, onQualityChange: (Int?) -> Unit) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = qualityHeight?.let { "${it}p" } ?: appString(R.string.video_quality_auto)
+    Box {
+        FilledTonalButton(
+            onClick = { expanded = true },
+            modifier = Modifier.height(44.dp),
+            contentPadding = PaddingValues(horizontal = 12.dp),
+            colors = ButtonDefaults.filledTonalButtonColors(
+                containerColor = Color.Black.copy(alpha = .5f), contentColor = Color.White,
+            ),
+        ) {
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+            Icon(Icons.Filled.ArrowDropDown, null, modifier = Modifier.size(18.dp))
+        }
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            listOf(null, 360, 480, 720).forEach { height ->
+                val selected = height == qualityHeight
+                DropdownMenuItem(
+                    text = { Text(height?.let { "${it}p" } ?: appString(R.string.video_quality_auto)) },
+                    leadingIcon = { if (selected) Icon(Icons.Filled.Check, null) },
+                    onClick = { expanded = false; onQualityChange(height) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun FullscreenMusicVideo(
+    player: androidx.media3.common.Player,
+    artworkUrl: String,
+    accent: Color,
+    state: PlayerUiState,
+    qualityHeight: Int?,
+    canSelectQuality: Boolean,
+    onAudio: () -> Unit,
+    onExitFullscreen: () -> Unit,
+    onVideoQualityChange: (Int?) -> Unit,
+    onTogglePlay: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeek: (Float) -> Unit,
+) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
+        PlaybackVideo(player, artworkUrl, accent, Modifier.fillMaxSize(), cornerRadius = 0.dp)
+        Row(
+            Modifier.align(Alignment.TopCenter).fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = .78f), Color.Transparent)))
+                .padding(horizontal = 12.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Row(Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .48f)).padding(4.dp)) {
+                PlayerVideoModeButton(appString(R.string.text_audio_acdac2), Icons.Filled.MusicNote, false, onAudio)
+            }
+            Column(Modifier.weight(1f).padding(horizontal = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(state.current.title, color = Color.White, style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(state.current.artist, color = Color.White.copy(alpha = .72f),
+                    style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (canSelectQuality) VideoQualityControl(qualityHeight, onVideoQualityChange)
+            IconButton(
+                onClick = onExitFullscreen,
+                modifier = Modifier.padding(start = 4.dp).size(44.dp).clip(CircleShape)
+                    .background(Color.Black.copy(alpha = .48f))
+                    .semantics { contentDescription = appString(R.string.video_fullscreen_exit) },
+            ) { Icon(Icons.Filled.FullscreenExit, null, tint = Color.White) }
+        }
+        Column(
+            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
+                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .82f))))
+                .padding(horizontal = 20.dp, vertical = 16.dp),
+        ) {
+            SeekBar(
+                progress = state.progress,
+                positionSec = state.positionSec.toInt(),
+                durationSec = state.durationSec,
+                isLive = state.isLive,
+                accent = Color.White,
+                seed = state.current.id.hashCode(),
+                seekStyle = SeekStyle.BAR,
+                waveBars = 0,
+                onSeek = onSeek,
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                IconButton(onClick = onPrevious) { Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = Color.White) }
+                IconButton(
+                    onClick = onTogglePlay,
+                    modifier = Modifier.padding(horizontal = 18.dp).size(54.dp).clip(CircleShape).background(accent),
+                ) {
+                    Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                        appString(R.string.text_play_pause_14a1d0), tint = MaterialTheme.colorScheme.onPrimary)
+                }
+                IconButton(onClick = onNext) { Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = Color.White) }
+            }
+        }
     }
 }
 
@@ -551,6 +739,12 @@ private fun formatBadge(song: com.aurora.music.model.Song): String {
 
 private fun isLossless(suffix: String): Boolean =
     suffix.lowercase() in setOf("flac", "alac", "wav", "aiff", "aif", "ape", "wv", "dsf", "dff", "m4a")
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
+}
 
 @Composable
 private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit, active: Boolean = false) {
