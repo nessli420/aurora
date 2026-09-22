@@ -8,12 +8,15 @@ import com.aurora.music.localization.appString
 import com.aurora.music.R
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.PressInteraction
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -84,9 +87,11 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -121,6 +126,7 @@ import com.aurora.music.ui.theme.auroraBackdrop
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.viewmodel.PlayerUiState
 import com.aurora.music.viewmodel.RepeatMode
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -169,7 +175,7 @@ fun PlayerScreen(
             if (fullscreenActive) {
                 controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
                 controller.hide(WindowInsetsCompat.Type.systemBars())
-                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
+                activity.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_SENSOR
             } else {
                 controller.show(WindowInsetsCompat.Type.systemBars())
             }
@@ -672,58 +678,105 @@ private fun FullscreenMusicVideo(
     onNext: () -> Unit,
     onSeek: (Float) -> Unit,
 ) {
+    var controlsVisible by remember { mutableStateOf(true) }
+    var seeking by remember { mutableStateOf(false) }
+    var interactionVersion by remember { mutableStateOf(0) }
+    val registerInteraction: () -> Unit = {
+        controlsVisible = true
+        interactionVersion++
+    }
+
+    LaunchedEffect(controlsVisible, seeking, interactionVersion) {
+        if (!controlsVisible || seeking) return@LaunchedEffect
+        delay(3_000)
+        controlsVisible = false
+    }
+
     BoxWithConstraints(Modifier.fillMaxSize().background(Color.Black)) {
         PlaybackVideo(player, artworkUrl, accent, Modifier.fillMaxSize(), cornerRadius = 0.dp)
-        Row(
-            Modifier.align(Alignment.TopCenter).fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = .78f), Color.Transparent)))
-                .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
-                .padding(horizontal = 12.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Box(
+            Modifier.fillMaxSize().clickable(
+                interactionSource = remember { MutableInteractionSource() },
+                indication = null,
+                onClick = registerInteraction,
+            ),
+        )
+        AnimatedVisibility(
+            visible = controlsVisible,
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(420)),
+            modifier = Modifier.align(Alignment.TopCenter),
         ) {
-            Row(Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .48f)).padding(4.dp)) {
-                PlayerVideoModeButton(appString(R.string.text_audio_acdac2), Icons.Filled.MusicNote, false, onAudio)
-            }
-            Column(Modifier.weight(1f).padding(horizontal = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(state.current.title, color = Color.White, style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(state.current.artist, color = Color.White.copy(alpha = .72f),
-                    style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            if (canSelectQuality) VideoQualityControl(qualityHeight, onVideoQualityChange)
-            IconButton(
-                onClick = onExitFullscreen,
-                modifier = Modifier.padding(start = 4.dp).size(44.dp).clip(CircleShape)
-                    .background(Color.Black.copy(alpha = .48f))
-                    .semantics { contentDescription = appString(R.string.video_fullscreen_exit) },
-            ) { Icon(Icons.Filled.FullscreenExit, null, tint = Color.White) }
-        }
-        Column(
-            Modifier.align(Alignment.BottomCenter).fillMaxWidth()
-                .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .82f))))
-                .padding(horizontal = 20.dp, vertical = 16.dp),
-        ) {
-            SeekBar(
-                progress = state.progress,
-                positionSec = state.positionSec.toInt(),
-                durationSec = state.durationSec,
-                isLive = state.isLive,
-                accent = Color.White,
-                seed = state.current.id.hashCode(),
-                seekStyle = SeekStyle.BAR,
-                waveBars = 0,
-                onSeek = onSeek,
-            )
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onPrevious) { Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = Color.White) }
-                IconButton(
-                    onClick = onTogglePlay,
-                    modifier = Modifier.padding(horizontal = 18.dp).size(54.dp).clip(CircleShape).background(accent),
-                ) {
-                    Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        appString(R.string.text_play_pause_14a1d0), tint = MaterialTheme.colorScheme.onPrimary)
+            Row(
+                Modifier.fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Black.copy(alpha = .78f), Color.Transparent)))
+                    .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
+                    .padding(horizontal = 12.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .48f)).padding(4.dp)) {
+                    PlayerVideoModeButton(appString(R.string.text_audio_acdac2), Icons.Filled.MusicNote, false) {
+                        registerInteraction()
+                        onAudio()
+                    }
                 }
-                IconButton(onClick = onNext) { Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = Color.White) }
+                Column(Modifier.weight(1f).padding(horizontal = 12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(state.current.title, color = Color.White, style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(state.current.artist, color = Color.White.copy(alpha = .72f),
+                        style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                if (canSelectQuality) VideoQualityControl(qualityHeight) {
+                    registerInteraction()
+                    onVideoQualityChange(it)
+                }
+                IconButton(
+                    onClick = { registerInteraction(); onExitFullscreen() },
+                    modifier = Modifier.padding(start = 4.dp).size(44.dp).clip(CircleShape)
+                        .background(Color.Black.copy(alpha = .48f))
+                        .semantics { contentDescription = appString(R.string.video_fullscreen_exit) },
+                ) { Icon(Icons.Filled.FullscreenExit, null, tint = Color.White) }
+            }
+        }
+        AnimatedVisibility(
+            visible = controlsVisible,
+            enter = fadeIn(tween(180)),
+            exit = fadeOut(tween(420)),
+            modifier = Modifier.align(Alignment.BottomCenter),
+        ) {
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = .82f))))
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+            ) {
+                SeekBar(
+                    progress = state.progress,
+                    positionSec = state.positionSec.toInt(),
+                    durationSec = state.durationSec,
+                    isLive = state.isLive,
+                    accent = Color.White,
+                    seed = state.current.id.hashCode(),
+                    seekStyle = SeekStyle.BAR,
+                    waveBars = 0,
+                    onSeek = { registerInteraction(); onSeek(it) },
+                    onInteraction = registerInteraction,
+                    onSeekingChanged = { seeking = it },
+                )
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center, verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { registerInteraction(); onPrevious() }) {
+                        Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = Color.White)
+                    }
+                    IconButton(
+                        onClick = { registerInteraction(); onTogglePlay() },
+                        modifier = Modifier.padding(horizontal = 18.dp).size(54.dp).clip(CircleShape).background(accent),
+                    ) {
+                        Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                            appString(R.string.text_play_pause_14a1d0), tint = MaterialTheme.colorScheme.onPrimary)
+                    }
+                    IconButton(onClick = { registerInteraction(); onNext() }) {
+                        Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = Color.White)
+                    }
+                }
             }
         }
     }
@@ -770,7 +823,36 @@ private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, la
 }
 
 @Composable
-private fun SeekBar(progress: Float, positionSec: Int, durationSec: Int, isLive: Boolean, accent: Color, seed: Int, seekStyle: Int, waveBars: Int, onSeek: (Float) -> Unit) {
+private fun SeekBar(
+    progress: Float,
+    positionSec: Int,
+    durationSec: Int,
+    isLive: Boolean,
+    accent: Color,
+    seed: Int,
+    seekStyle: Int,
+    waveBars: Int,
+    onSeek: (Float) -> Unit,
+    onInteraction: () -> Unit = {},
+    onSeekingChanged: (Boolean) -> Unit = {},
+) {
+    val sliderInteractionSource = remember { MutableInteractionSource() }
+    val currentOnInteraction by rememberUpdatedState(onInteraction)
+    val currentOnSeekingChanged by rememberUpdatedState(onSeekingChanged)
+    LaunchedEffect(sliderInteractionSource) {
+        sliderInteractionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    currentOnInteraction()
+                    currentOnSeekingChanged(true)
+                }
+                is PressInteraction.Release, is PressInteraction.Cancel -> {
+                    currentOnInteraction()
+                    currentOnSeekingChanged(false)
+                }
+            }
+        }
+    }
     Column {
         if (durationSec <= 0) {
             Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -785,9 +867,11 @@ private fun SeekBar(progress: Float, positionSec: Int, durationSec: Int, isLive:
         if (seekStyle == SeekStyle.BAR) {
             Slider(
                 value = progress.coerceIn(0f, 1f),
-                onValueChange = onSeek,
+                onValueChange = { onInteraction(); onSeek(it) },
+                onValueChangeFinished = onInteraction,
                 valueRange = 0f..1f,
                 colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent),
+                interactionSource = sliderInteractionSource,
                 modifier = Modifier.fillMaxWidth(),
             )
         } else {
