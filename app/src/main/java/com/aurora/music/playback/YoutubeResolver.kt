@@ -68,14 +68,14 @@ class YoutubeResolver {
         }.getOrElse { Log.d(TAG, "resolve failed '$query': ${it.message}"); null }
     }
 
-    fun resolveVideo(videoId: String, maxHeight: Int? = 720): String? {
+    fun resolveVideo(videoId: String, maxHeight: Int? = null): String? {
         return resolvePlayback(videoId, maxHeight)?.url
     }
 
-    fun resolvePlayback(videoId: String, maxHeight: Int? = 720): PlaybackStream? {
+    fun resolvePlayback(videoId: String, maxHeight: Int? = null): PlaybackStream? {
         if (!videoId.matches(Regex("[A-Za-z0-9_-]{11}"))) return null
-        val qualityKey = maxHeight?.coerceIn(144, 1080) ?: 720
-        val cacheKey = "$videoId:$qualityKey"
+        val qualityKey = maxHeight?.coerceAtLeast(144) ?: Int.MAX_VALUE
+        val cacheKey = "$videoId:${maxHeight?.coerceAtLeast(144) ?: "max"}"
         playbackCache[cacheKey]?.takeIf { it.expiresAt > System.currentTimeMillis() }?.let { return it.stream }
         return runCatching {
             ensureInit()
@@ -89,10 +89,8 @@ class YoutubeResolver {
             fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) = stream.getResolution().orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
             val candidates = videos.filter { height(it) in 1..qualityKey }
                 .ifEmpty { videos.sortedBy(::height) }
-                .sortedWith(compareBy<org.schabi.newpipe.extractor.stream.VideoStream> {
-                    val codec = it.codec.orEmpty().lowercase()
-                    if (codec.startsWith("avc") || codec.contains("h264")) 0 else 1
-                }.thenBy { if (it.fps > 30) 1 else 0 }.thenByDescending(::height))
+                .sortedWith(compareByDescending<org.schabi.newpipe.extractor.stream.VideoStream>(::height)
+                    .thenByDescending { it.fps })
             val video = if (live) null else candidates.distinctBy { it.content }.take(6).firstOrNull { canOpenStream(it.content) }
             val muxed = if (audio != null || live) null else info.videoStreams
                 .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
@@ -134,7 +132,7 @@ class YoutubeResolver {
         if (uri.scheme != "aurora-yt") return null
         return if (uri.host == "video") resolveVideo(
             uri.lastPathSegment.orEmpty(),
-            uri.getQueryParameter("quality")?.toIntOrNull() ?: 720,
+            uri.getQueryParameter("quality")?.toIntOrNull(),
         )
         else resolve(uri.host.orEmpty(), uri.getQueryParameter("q").orEmpty(), uri.getQueryParameter("dur")?.toIntOrNull() ?: 0)
     }

@@ -649,7 +649,7 @@ private fun VideoQualityControl(qualityHeight: Int?, onQualityChange: (Int?) -> 
             Icon(Icons.Filled.ArrowDropDown, null, modifier = Modifier.size(18.dp))
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-            listOf(null, 360, 480, 720).forEach { height ->
+            listOf(null, 360, 480, 720, 1080, 1440, 2160, 4320).forEach { height ->
                 val selected = height == qualityHeight
                 DropdownMenuItem(
                     text = { Text(height?.let { "${it}p" } ?: appString(R.string.video_quality_auto)) },

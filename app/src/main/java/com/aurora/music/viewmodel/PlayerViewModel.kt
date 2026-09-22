@@ -844,12 +844,15 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val item = c.getMediaItemAt(index)
         val uri = item.localConfiguration?.uri ?: return
         if (uri.scheme != "aurora-yt" || uri.host != "video") return
-        val quality = height?.coerceIn(144, 1080)?.toString() ?: "auto"
-        if (uri.getQueryParameter("quality") == quality) return
+        val quality = height?.coerceAtLeast(144)
+        val currentQuality = uri.getQueryParameter("quality")?.toIntOrNull()
+        if (currentQuality == quality && (quality != null || uri.getQueryParameter("quality") in setOf(null, "auto"))) return
         val position = c.currentPosition
         val playWhenReady = c.playWhenReady
-        val updated = item.buildUpon().setUri(uri.buildUpon().clearQuery()
-            .appendQueryParameter("quality", quality).build()).build()
+        val updatedUri = uri.buildUpon().clearQuery().apply {
+            quality?.let { appendQueryParameter("quality", it.toString()) }
+        }.build()
+        val updated = item.buildUpon().setUri(updatedUri).build()
         c.replaceMediaItem(index, updated)
         c.seekTo(index, position)
         c.playWhenReady = playWhenReady

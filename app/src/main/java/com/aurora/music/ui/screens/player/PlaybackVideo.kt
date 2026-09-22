@@ -29,7 +29,6 @@ import coil.compose.AsyncImage
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
-import androidx.media3.common.C
 import androidx.media3.common.Player
 import androidx.media3.common.VideoSize
 
@@ -49,14 +48,10 @@ fun PlaybackVideo(
     DisposableEffect(player, texture, owner) {
         fun attach() {
             player.setVideoTextureView(texture)
-            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
-                .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, false).build()
             texture.keepScreenOn = player.isPlaying
         }
         fun detach() {
             player.clearVideoTextureView(texture)
-            player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
-                .setTrackTypeDisabled(C.TRACK_TYPE_VIDEO, true).build()
             texture.keepScreenOn = false
         }
         val listener = object : Player.Listener {

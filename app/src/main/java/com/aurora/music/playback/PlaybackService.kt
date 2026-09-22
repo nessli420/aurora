@@ -375,8 +375,7 @@ class PlaybackService : MediaLibraryService() {
             )
         }
         player = playerBuilder.build()
-        player.trackSelectionParameters = player.trackSelectionParameters.buildUpon()
-            .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true).build()
+        // Keep paired YouTube video buffered in audio mode so revealing it does not reconfigure playback.
         attachSignalEvidence(player, initialEvidence)
         if (bitPerfectUsb) usbSink?.attachToPlayer(player)
 
