@@ -85,8 +85,12 @@ class YoutubeResolver {
             val videos = (info.videoOnlyStreams + info.videoStreams)
                 .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
             fun height(stream: org.schabi.newpipe.extractor.stream.VideoStream) = stream.resolution.orEmpty().takeWhile { it.isDigit() }.toIntOrNull() ?: 0
-            val candidates = videos.filter { height(it) in 1..720 }.sortedByDescending(::height)
+            val candidates = videos.filter { height(it) in 1..720 }
                 .ifEmpty { videos.sortedBy(::height) }
+                .sortedWith(compareBy<org.schabi.newpipe.extractor.stream.VideoStream> {
+                    val codec = it.codec.orEmpty().lowercase()
+                    if (codec.startsWith("avc") || codec.contains("h264")) 0 else 1
+                }.thenBy { if (it.fps > 30) 1 else 0 }.thenByDescending(::height))
             val video = if (live) null else candidates.distinctBy { it.content }.take(6).firstOrNull { canOpenStream(it.content) }
             val muxed = if (audio != null || live) null else info.videoStreams
                 .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }

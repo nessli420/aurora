@@ -50,6 +50,7 @@ import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Speaker
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Lyrics
+import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
@@ -59,6 +60,7 @@ import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speed
+import androidx.compose.material.icons.filled.VideoLibrary
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -272,7 +274,8 @@ fun PlayerScreen(
                     label = "artVsVideo",
                 ) { video ->
                     if (video && state.hasVideo && videoPlayer != null) {
-                        PlaybackVideo(videoPlayer, Modifier.width(videoWidth).aspectRatio(16f / 9f).clip(RoundedCornerShape(20.dp)))
+                        PlaybackVideo(videoPlayer, song.artworkUrl, playerAccent,
+                            Modifier.width(videoWidth).aspectRatio(16f / 9f))
                     } else {
                         val artModifier = Modifier.size(artSide)
                         if (classic) {
@@ -285,17 +288,30 @@ fun PlayerScreen(
                     }
                 }
             }
-
-        }
-        val controls: @Composable () -> Unit = {
             if (state.hasVideo && videoPlayer != null) {
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                    androidx.compose.material3.FilterChip(selected = !showVideo, onClick = { showVideo = false }, label = { Text(appString(R.string.text_audio_acdac2)) })
-                    Spacer(Modifier.width(12.dp))
-                    androidx.compose.material3.FilterChip(selected = showVideo, onClick = { showLyrics = false; showVideo = true }, label = { Text(appString(R.string.text_video_bc17c1)) })
+                Row(
+                    Modifier.align(Alignment.TopEnd).padding(12.dp)
+                        .clip(CircleShape).background(MaterialTheme.colorScheme.surface.copy(alpha = .88f))
+                        .padding(4.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    PlayerVideoModeButton(
+                        label = appString(R.string.text_audio_acdac2),
+                        icon = Icons.Filled.MusicNote,
+                        selected = !showVideo,
+                        onClick = { showVideo = false },
+                    )
+                    PlayerVideoModeButton(
+                        label = appString(R.string.text_video_bc17c1),
+                        icon = Icons.Filled.VideoLibrary,
+                        selected = showVideo,
+                        onClick = { showLyrics = false; showVideo = true },
+                    )
                 }
             }
 
+        }
+        val controls: @Composable () -> Unit = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (state.isPlaying) {
                     com.aurora.music.ui.components.LottieEqualizer(
@@ -490,6 +506,30 @@ fun PlayerScreen(
         androidx.activity.compose.BackHandler(enabled = showLyrics) { showLyrics = false }
     }
     }
+    }
+}
+
+@Composable
+private fun PlayerVideoModeButton(
+    label: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    selected: Boolean,
+    onClick: () -> Unit,
+) {
+    val container by animateColorAsState(
+        if (selected) MaterialTheme.colorScheme.primary else Color.Transparent,
+        label = "videoModeContainer",
+    )
+    val content = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+    Row(
+        Modifier.clip(CircleShape).background(container)
+            .clickable(role = Role.Tab, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 9.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        Icon(icon, contentDescription = null, modifier = Modifier.size(16.dp), tint = content)
+        Text(label, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = content)
     }
 }
 
