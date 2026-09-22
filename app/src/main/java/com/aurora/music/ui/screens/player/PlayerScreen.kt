@@ -161,12 +161,19 @@ fun PlayerScreen(
     var showLyrics by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
     var fullscreenVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
+    var inlineVideoControlsVisible by remember(song.id) { mutableStateOf(false) }
+    var inlineVideoInteraction by remember(song.id) { mutableStateOf(0) }
     var showMenu by remember { mutableStateOf(false) }
     val playerAccent = MaterialTheme.colorScheme.primary
     val onPlayerAccent = MaterialTheme.colorScheme.onPrimary
     val view = LocalView.current
     val activity = remember(view) { view.context.findActivity() }
     val fullscreenActive = fullscreenVideo && showVideo && state.hasVideo && videoPlayer != null
+    LaunchedEffect(showVideo, inlineVideoControlsVisible, inlineVideoInteraction) {
+        if (!showVideo || !inlineVideoControlsVisible) return@LaunchedEffect
+        delay(3_000)
+        inlineVideoControlsVisible = false
+    }
     androidx.compose.runtime.DisposableEffect(activity, fullscreenActive) {
         val window = activity?.window
         val previousOrientation = activity?.requestedOrientation
@@ -234,8 +241,34 @@ fun PlayerScreen(
                         Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
+                    if (state.hasVideo && videoPlayer != null) {
+                        IconButton(
+                            onClick = {
+                                if (showVideo) {
+                                    fullscreenVideo = false
+                                    showVideo = false
+                                } else {
+                                    showLyrics = false
+                                    showVideo = true
+                                    inlineVideoControlsVisible = false
+                                }
+                            },
+                            modifier = Modifier.size(40.dp).semantics {
+                                contentDescription = appString(
+                                    if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1,
+                                )
+                            },
+                        ) {
+                            Icon(
+                                if (showVideo) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(22.dp),
+                            )
+                        }
+                    }
                     // balances trailing icons so PLAYING FROM stays centered
-                    Spacer(Modifier.width(80.dp))
+                    Spacer(Modifier.width(if (state.hasVideo && videoPlayer != null) 40.dp else 80.dp))
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                         Text(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
@@ -326,8 +359,39 @@ fun PlayerScreen(
                     label = "artVsVideo",
                 ) { video ->
                     if (video && state.hasVideo && videoPlayer != null) {
-                        PlaybackVideo(videoPlayer, song.artworkUrl, playerAccent,
-                            Modifier.width(videoWidth).aspectRatio(16f / 9f))
+                        Box(Modifier.width(videoWidth).aspectRatio(16f / 9f)) {
+                            PlaybackVideo(videoPlayer, song.artworkUrl, playerAccent, Modifier.fillMaxSize())
+                            Box(
+                                Modifier.fillMaxSize().clickable(
+                                    interactionSource = remember { MutableInteractionSource() },
+                                    indication = null,
+                                    onClick = {
+                                        inlineVideoControlsVisible = !inlineVideoControlsVisible
+                                        if (inlineVideoControlsVisible) inlineVideoInteraction++
+                                    },
+                                ),
+                            )
+                            AnimatedVisibility(
+                                visible = inlineVideoControlsVisible,
+                                enter = fadeIn(tween(180)),
+                                exit = fadeOut(tween(420)),
+                                modifier = Modifier.align(Alignment.TopEnd).padding(12.dp),
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    if (state.canSelectVideoQuality) VideoQualityControl(
+                                        state.videoQualityHeight,
+                                        onVideoQualityChange,
+                                        onInteraction = { inlineVideoInteraction++ },
+                                    )
+                                    IconButton(
+                                        onClick = { fullscreenVideo = true },
+                                        modifier = Modifier.size(44.dp).clip(CircleShape)
+                                            .background(Color.Black.copy(alpha = .5f))
+                                            .semantics { contentDescription = appString(R.string.video_fullscreen_enter) },
+                                    ) { Icon(Icons.Filled.Fullscreen, null, tint = Color.White) }
+                                }
+                            }
+                        }
                     } else {
                         val artModifier = Modifier.size(artSide)
                         if (classic) {
@@ -340,19 +404,6 @@ fun PlayerScreen(
                     }
                 }
             }
-            if (state.hasVideo && videoPlayer != null) {
-                InlineVideoChrome(
-                    modifier = Modifier.align(Alignment.TopStart).fillMaxWidth().padding(12.dp),
-                    showVideo = showVideo,
-                    qualityHeight = state.videoQualityHeight,
-                    canSelectQuality = state.canSelectVideoQuality,
-                    onAudio = { fullscreenVideo = false; showVideo = false },
-                    onVideo = { showLyrics = false; showVideo = true },
-                    onQualityChange = onVideoQualityChange,
-                    onFullscreen = { fullscreenVideo = true },
-                )
-            }
-
         }
         val controls: @Composable () -> Unit = {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -596,49 +647,16 @@ private fun PlayerVideoModeButton(
 }
 
 @Composable
-private fun InlineVideoChrome(
-    modifier: Modifier,
-    showVideo: Boolean,
+private fun VideoQualityControl(
     qualityHeight: Int?,
-    canSelectQuality: Boolean,
-    onAudio: () -> Unit,
-    onVideo: () -> Unit,
     onQualityChange: (Int?) -> Unit,
-    onFullscreen: () -> Unit,
+    onInteraction: () -> Unit = {},
 ) {
-    Row(modifier, verticalAlignment = Alignment.Top) {
-        VideoModeSelector(showVideo, onAudio, onVideo)
-        Spacer(Modifier.weight(1f))
-        if (showVideo) {
-            if (canSelectQuality) VideoQualityControl(qualityHeight, onQualityChange)
-            IconButton(
-                onClick = onFullscreen,
-                modifier = Modifier.padding(start = 6.dp).size(44.dp).clip(CircleShape)
-                    .background(Color.Black.copy(alpha = .5f))
-                    .semantics { contentDescription = appString(R.string.video_fullscreen_enter) },
-            ) { Icon(Icons.Filled.Fullscreen, null, tint = Color.White) }
-        }
-    }
-}
-
-@Composable
-private fun VideoModeSelector(showVideo: Boolean, onAudio: () -> Unit, onVideo: () -> Unit) {
-    Row(
-        Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .48f)).padding(4.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        PlayerVideoModeButton(appString(R.string.text_audio_acdac2), Icons.Filled.MusicNote, !showVideo, onAudio)
-        PlayerVideoModeButton(appString(R.string.text_video_bc17c1), Icons.Filled.VideoLibrary, showVideo, onVideo)
-    }
-}
-
-@Composable
-private fun VideoQualityControl(qualityHeight: Int?, onQualityChange: (Int?) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     val label = qualityHeight?.let { "${it}p" } ?: appString(R.string.video_quality_auto)
     Box {
         FilledTonalButton(
-            onClick = { expanded = true },
+            onClick = { onInteraction(); expanded = true },
             modifier = Modifier.height(44.dp),
             contentPadding = PaddingValues(horizontal = 12.dp),
             colors = ButtonDefaults.filledTonalButtonColors(
@@ -654,7 +672,7 @@ private fun VideoQualityControl(qualityHeight: Int?, onQualityChange: (Int?) -> 
                 DropdownMenuItem(
                     text = { Text(height?.let { "${it}p" } ?: appString(R.string.video_quality_auto)) },
                     leadingIcon = { if (selected) Icon(Icons.Filled.Check, null) },
-                    onClick = { expanded = false; onQualityChange(height) },
+                    onClick = { expanded = false; onInteraction(); onQualityChange(height) },
                 )
             }
         }
@@ -732,10 +750,11 @@ private fun FullscreenMusicVideo(
                     Text(state.current.artist, color = Color.White.copy(alpha = .72f),
                         style = MaterialTheme.typography.labelMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                if (canSelectQuality) VideoQualityControl(qualityHeight) {
-                    registerInteraction()
-                    onVideoQualityChange(it)
-                }
+                if (canSelectQuality) VideoQualityControl(
+                    qualityHeight,
+                    onQualityChange = { registerInteraction(); onVideoQualityChange(it) },
+                    onInteraction = registerInteraction,
+                )
                 IconButton(
                     onClick = { registerInteraction(); onExitFullscreen() },
                     modifier = Modifier.padding(start = 4.dp).size(44.dp).clip(CircleShape)
