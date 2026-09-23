@@ -18,6 +18,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.IOException
+import java.security.MessageDigest
 
 data class DownloadedSong(
     val id: String,
@@ -88,6 +89,8 @@ class DownloadManager(
     private val copyCached: ((String, File, (Float) -> Unit) -> Unit)? = null,
 ) {
 
+    private data class DownloadRequest(val serverId: String, val url: String, val bitrate: Int, val extension: Boolean, val cached: Boolean)
+
     private val contentResolver = context.applicationContext.contentResolver
     private val dir = File(context.filesDir, "downloads").apply { mkdirs() }
     private val indexFile = File(dir, "index.json")
@@ -104,10 +107,11 @@ class DownloadManager(
 
     fun downloadCollection(id: String, kind: String, title: String, subtitle: String, coverUrl: String, songs: List<Song>) {
         val identity = playbackCollectionProvider(kind, id, title)
+        val serverId = currentServerIdProvider()
         scope.launch {
-            val coverFile = File(dir, "col_$id.jpg")
+            val coverFile = File(dir, "col_${fileStem(serverId, id)}.jpg")
             runCatching { if (coverUrl.isNotBlank()) downloadTo(coverUrl, coverFile) {} }
-            val collection = DownloadedCollection(id, kind, title, subtitle, if (coverFile.exists()) coverFile.absolutePath else "", songs.map { it.id }, currentServerIdProvider(), identity)
+            val collection = DownloadedCollection(id, kind, title, subtitle, if (coverFile.exists()) coverFile.absolutePath else "", songs.map { it.id }, serverId, identity)
             _collections.update { (it.filterNot { c -> c.id == id }) + collection }
             saveCollections()
         }
@@ -133,10 +137,21 @@ class DownloadManager(
         _downloads.value[originalId] ?: _downloads.value.values.firstOrNull { stripMergeNamespace(it.id) == originalId }
 
     fun downloadSong(song: Song) {
-        if (isDownloaded(song.id) || _states.value[song.id] is DownloadState.Downloading) return
+        if (isDownloaded(song.id) || _states.value[song.id] is DownloadState.Queued ||
+            _states.value[song.id] is DownloadState.Downloading) return
         setState(song.id, DownloadState.Queued)
         val identity = song.playbackSource ?: playbackSourceProvider(song)
-        scope.launch { doDownload(song.copy(playbackSource = identity)) }
+        val request = runCatching {
+            val extension = song.streamUrl.startsWith("aurora-extension:")
+            val cached = song.streamUrl.startsWith("aurora-cache:")
+            val bitrate = if (extension || cached) 0 else downloadBitrateProvider()
+            DownloadRequest(
+                if (extension) "extension://${android.net.Uri.parse(song.streamUrl).host}" else currentServerIdProvider(),
+                if (extension || cached) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl,
+                bitrate, extension, cached,
+            )
+        }.getOrElse { setState(song.id, DownloadState.Failed); return }
+        scope.launch { doDownload(song.copy(playbackSource = identity), request) }
     }
 
     fun downloadAll(songs: List<Song>) = songs.forEach { downloadSong(it) }
@@ -158,34 +173,31 @@ class DownloadManager(
         runCatching { File(it.audioPath).length() + (if (it.coverPath.isNotBlank()) File(it.coverPath).length() else 0L) }.getOrDefault(0L)
     }
 
-    private suspend fun doDownload(song: Song) {
+    private suspend fun doDownload(song: Song, request: DownloadRequest) {
+        val stem = fileStem(request.serverId, song.id)
         try {
             setState(song.id, DownloadState.Downloading(0f))
-            val audioFile = File(dir, "${song.id}.audio")
-            val extension = song.streamUrl.startsWith("aurora-extension:")
-            val cached = song.streamUrl.startsWith("aurora-cache:")
-            val bitrate = if (extension || cached) 0 else downloadBitrateProvider()
-            val provided = if (extension || cached) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl
+            val audioFile = File(dir, "$stem.audio")
             // resolve aurora-yt sentinel via the songs full sentinel which holds the search query
-            val audioUrl = if (provided.startsWith("aurora-yt://")) {
-                val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else provided
+            val audioUrl = if (request.url.startsWith("aurora-yt://")) {
+                val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else request.url
                 resolveSentinel(sentinel) ?: throw IOException("No stream found for this track")
-            } else provided
-            if (cached) requireNotNull(copyCached) { "Cached audio is unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
-            else if (extension) requireNotNull(copyExtension) { "Extension downloads are unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
+            } else request.url
+            if (request.cached) requireNotNull(copyCached) { "Cached audio is unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
+            else if (request.extension) requireNotNull(copyExtension) { "Extension downloads are unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
             else downloadTo(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
-            val coverFile = File(dir, "${song.id}.jpg")
-            runCatching { if (!cached && song.artworkUrl.isNotBlank()) downloadTo(song.artworkUrl, coverFile) {} }
+            val coverFile = File(dir, "$stem.jpg")
+            runCatching { if (!request.cached && song.artworkUrl.isNotBlank()) downloadTo(song.artworkUrl, coverFile) {} }
             val entry = DownloadedSong(
                 id = song.id, title = song.title, artist = song.artist, album = song.album,
                 albumId = song.albumId, artistId = song.artistId, durationSec = song.durationSec,
                 audioPath = audioFile.absolutePath,
                 coverPath = if (coverFile.exists()) coverFile.absolutePath else "",
-                suffix = if (bitrate == 0) song.suffix else "mp3",
-                bitrateKbps = if (bitrate == 0) song.bitrateKbps else bitrate,
+                suffix = if (request.bitrate == 0) song.suffix else "mp3",
+                bitrateKbps = if (request.bitrate == 0) song.bitrateKbps else request.bitrate,
                 sampleRateHz = song.sampleRateHz,
                 bitDepth = song.bitDepth,
-                serverId = if (extension) "extension://${android.net.Uri.parse(song.streamUrl).host}" else currentServerIdProvider(),
+                serverId = request.serverId,
                 playbackSource = song.playbackSource,
                 genre = song.genre,
             )
@@ -193,10 +205,13 @@ class DownloadManager(
             saveIndex()
             setState(song.id, DownloadState.Done)
         } catch (e: Exception) {
-            runCatching { File(dir, "${song.id}.audio").delete() }
+            runCatching { File(dir, "$stem.audio").delete() }
             setState(song.id, DownloadState.Failed)
         }
     }
+
+    private fun fileStem(serverId: String, id: String): String = MessageDigest.getInstance("SHA-256")
+        .digest("$serverId\u0000$id".toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
 
     private fun downloadTo(url: String, file: File, onProgress: (Float) -> Unit) {
         if (url.startsWith("content://") || url.startsWith("file://")) {

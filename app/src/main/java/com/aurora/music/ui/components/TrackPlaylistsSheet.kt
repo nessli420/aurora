@@ -43,16 +43,19 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
     val editor = remember(song.id, song.playbackSource?.providerId) { repository.playlistEditor(song) }
     val scope = rememberCoroutineScope()
     val requests = remember { Semaphore(4) }
-    var playlists by remember { mutableStateOf<List<Playlist>?>(null) }
-    val membership = remember { mutableStateMapOf<String, Boolean>() }
-    val failedReads = remember { mutableStateMapOf<String, Boolean>() }
-    var loadFailed by remember { mutableStateOf(false) }
-    var saveFailed by remember { mutableStateOf(false) }
-    var busy by remember { mutableStateOf<String?>(null) }
-    var retry by remember { mutableIntStateOf(0) }
+    var playlists by remember(editor) { mutableStateOf<List<Playlist>?>(null) }
+    val membership = remember(editor) { mutableStateMapOf<String, Boolean>() }
+    val failedReads = remember(editor) { mutableStateMapOf<String, Boolean>() }
+    var loadFailed by remember(editor) { mutableStateOf(false) }
+    var saveFailed by remember(editor) { mutableStateOf(false) }
+    var busy by remember(editor) { mutableStateOf<String?>(null) }
+    var retry by remember(editor) { mutableIntStateOf(0) }
     DisposableEffect(editor) { onDispose { editor?.publishChanges() } }
     LaunchedEffect(editor, retry) {
         if (editor == null) return@LaunchedEffect
+        playlists = null
+        membership.clear()
+        failedReads.clear()
         loadFailed = false
         try { playlists = editor.playlists() }
         catch (e: CancellationException) { throw e }
@@ -113,7 +116,7 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
                         verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 4.dp)) {
                         items(playlists!!, key = { it.id }) { playlist ->
                             var rowRetry by remember { mutableIntStateOf(0) }
-                            LaunchedEffect(playlist.id, rowRetry) {
+                            LaunchedEffect(editor, playlist.id, rowRetry) {
                                 if (membership.containsKey(playlist.id)) return@LaunchedEffect
                                 failedReads.remove(playlist.id)
                                 try { membership[playlist.id] = requests.withPermit { editor.contains(playlist.id) } }

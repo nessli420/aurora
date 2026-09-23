@@ -238,11 +238,12 @@ class SpotifyBackend(
         val out = ArrayList<Song>()
         var off = offset
         while (out.size < count) {
-            val items = api.savedTracks(limit = PAGE, offset = off).items.orEmpty()
+            val limit = minOf(PAGE, count - out.size)
+            val items = api.savedTracks(limit = limit, offset = off).items.orEmpty()
             if (items.isEmpty()) break
             out += items.mapNotNull { it.track?.toSong() }
-            if (items.size < PAGE) break
-            off += PAGE
+            if (items.size < limit) break
+            off += items.size
             delay(120)
         }
         out
