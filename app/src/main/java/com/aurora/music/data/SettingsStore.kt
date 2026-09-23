@@ -1224,6 +1224,20 @@ class SettingsStore(private val context: Context) {
     suspend fun setAutoEqAutoSwitch(v: Boolean) = context.dataStore.edit { it[Keys.AUTOEQ_SWITCH] = v }
     suspend fun setActiveEqProfile(name: String) = editManualProcessing { it[Keys.AUTOEQ_PROFILE] = name }
 
+    suspend fun applyLegacyEqProfile(name: String, correction: ParsedEq): Result<Unit> = impulseResult {
+        require(correction.bands.size <= com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC) {
+            "The standard equalizer supports up to 12 parametric bands."
+        }
+        require(correction.preampDb.isFinite() && correction.preampDb in -60f..24f) { "Invalid equalizer preamp." }
+        val bands = ParamBandCodec.encodePreference(correction.bands)
+        editManualProcessing { p ->
+            p[Keys.DSP_PARAMETRIC] = bands
+            p[Keys.DSP_PREAMP] = correction.preampDb
+            p[Keys.DSP_MODE] = DspMode.CUSTOM
+            p[Keys.AUTOEQ_PROFILE] = name
+        }
+    }
+
     suspend fun upsertEqBinding(binding: EqBinding) = context.dataStore.edit { p ->
         val cur = parseBindings(p[Keys.EQ_BINDINGS]).filterNot { it.deviceKey == binding.deviceKey }
         p[Keys.EQ_BINDINGS] = gson.toJson(cur + binding)

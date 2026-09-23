@@ -20,6 +20,47 @@ class ProcessingRackDeviceTest {
     private fun graph(enabled: Boolean = true) = ProcessingRack(enabled = enabled, name = "R1e fixture", nodes = listOf(
         ProcessingRackNode(UUID.randomUUID().toString(), "Trim", RackNodeKind.GAIN, audio = AudioPrefs(dspPreampDb = -4f))))
 
+    @Test fun applyingLegacyProfilePublishesAllCorrectionFieldsTogether() = runBlocking {
+        val original = store.exportPrefs()
+        try {
+            store.setAutoEqAutoSwitch(false)
+            store.setDspMode(DspMode.OFF)
+            store.setDspParametric(emptyList())
+            store.setDspPreamp(0f)
+            store.setActiveEqProfile("")
+            val before = store.processingSnapshot.first()
+            val correction = ParsedEq(-6f, listOf(ParamBand(1000f, -3f, 1f)))
+            val observations = mutableListOf<ProcessingSnapshot>()
+            val started = CompletableDeferred<Unit>()
+            val reached = CompletableDeferred<Unit>()
+            val watcher = launch(start = CoroutineStart.UNDISPATCHED) {
+                store.processingSnapshot.collect { value ->
+                    observations += value
+                    started.complete(Unit)
+                    if (value.activeEqProfile == "Atomic EQ fixture") reached.complete(Unit)
+                }
+            }
+            try {
+                withTimeout(5_000) { started.await() }
+                store.applyLegacyEqProfile("Atomic EQ fixture", correction).getOrThrow()
+                withTimeout(5_000) { reached.await() }
+            } finally { watcher.cancelAndJoin() }
+            assertTrue(observations.all { value ->
+                value == before || value.activeEqProfile == "Atomic EQ fixture" &&
+                    value.audio.dspMode == DspMode.CUSTOM &&
+                    value.audio.dspParametric == correction.bands &&
+                    value.audio.dspPreampDb == correction.preampDb
+            })
+            val applied = store.processingSnapshot.first()
+            assertEquals("Atomic EQ fixture", applied.activeEqProfile)
+            assertEquals(correction.bands, applied.audio.dspParametric)
+            assertTrue(store.applyLegacyEqProfile("Oversized", ParsedEq(-6f, List(13) { correction.bands[0] })).isFailure)
+            assertEquals(applied, store.processingSnapshot.first())
+            store.applyLegacyEqProfile("Flat IEM fixture", ParsedEq(0f, emptyList())).getOrThrow()
+            assertEquals(emptyList<ParamBand>(), store.processingSnapshot.first().audio.dspParametric)
+        } finally { store.restoreBackupPrefs(original).getOrThrow() }
+    }
+
     @Test fun enablingAndEditingRackPublishesCustomModeAndGraphAtomically() = runBlocking {
         val original = store.exportPrefs()
         try {

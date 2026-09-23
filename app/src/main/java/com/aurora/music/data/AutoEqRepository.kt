@@ -115,7 +115,7 @@ internal object EqTextParser {
             when {
                 t.startsWith("Preamp", true) -> {
                     preamp = Regex("^Preamp:\\s*$number\\s+dB", RegexOption.IGNORE_CASE).find(t)?.groupValues?.get(1)?.toFloatOrNull() ?: return null
-                    if (!preamp.isFinite()) return null
+                    if (!preamp.isFinite() || preamp !in -60f..24f) return null
                 }
                 t.startsWith("Filter", true) && Regex("\\bON\\b", RegexOption.IGNORE_CASE).containsMatchIn(t) -> {
                     // Never silently drop unsupported filters or positive gains from a correction.
@@ -129,8 +129,8 @@ internal object EqTextParser {
                     val fc = match.groupValues[2].toFloatOrNull() ?: return null
                     val gain = match.groupValues[3].toFloatOrNull() ?: return null
                     val q = match.groupValues[4].toFloatOrNull() ?: return null
-                    if (!fc.isFinite() || !gain.isFinite() || !q.isFinite() || fc <= 0f || q < 0.1f) return null
-                    bands.add(ParamBand(fc, gain, q, type))
+                    val band = runCatching { ParamBandCodec.validate(ParamBand(fc, gain, q, type)) }.getOrNull() ?: return null
+                    bands.add(band)
                 }
             }
         }

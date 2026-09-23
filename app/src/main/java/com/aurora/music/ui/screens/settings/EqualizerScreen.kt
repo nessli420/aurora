@@ -439,12 +439,10 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                         val eq = if (p.provider == EqProvider.SQUIG) container.squigEq.generate(p) else container.autoEq.fetch(p)
                         android.util.Log.d("AutoEQ", "apply ${p.name}: ${if (eq == null) "FETCH FAILED" else "preamp=${eq.preampDb} bands=${eq.bands.size}"}")
                         if (eq != null && eq.bands.isNotEmpty()) {
-                            store.setDspParametric(eq.bands)
-                            store.setDspPreamp(eq.preampDb)
-                            store.setDspMode(DspMode.CUSTOM)
-                            store.setActiveEqProfile(p.name)
-                            query = ""
-                            toast(appString(R.string.text_applied_bands_db_preamp_cf3937, (p.name), (eq.bands.size), ("%.1f".format(eq.preampDb))))
+                            store.applyLegacyEqProfile(p.name, eq).onSuccess {
+                                query = ""
+                                toast(appString(R.string.text_applied_bands_db_preamp_cf3937, (p.name), (eq.bands.size), ("%.1f".format(eq.preampDb))))
+                            }.onFailure { toast(it.message ?: appString(R.string.text_couldn_t_load_a_supported_correction_check_your_connection_or_try_ee72f6)) }
                         } else {
                             toast(appString(R.string.text_couldn_t_load_a_supported_correction_check_your_connection_or_try_ee72f6))
                         }

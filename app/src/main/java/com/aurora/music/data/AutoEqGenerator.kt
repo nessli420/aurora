@@ -59,7 +59,7 @@ object AutoEqGenerator {
         }
 
         if (bands.isEmpty()) return ParsedEq(0f, emptyList())
-        return ParsedEq(headroomPreamp(bands), bands)
+        return headroomPreamp(bands)?.let { ParsedEq(it, bands) }
     }
 
     private fun interpolate(curve: FrCurve): DoubleArray {
@@ -146,13 +146,13 @@ object AutoEqGenerator {
     }
 
     // negative of the largest positive combined gain so boosted eq never clips
-    private fun headroomPreamp(bands: List<ParamBand>): Float {
+    internal fun headroomPreamp(bands: List<ParamBand>): Float? {
         var maxDb = 0.0
-        for (f in grid) {
+        for (f in grid.asSequence() + bands.asSequence().map { it.freqHz.toDouble() }) {
             var sum = 0.0
             for (b in bands) sum += DspCoeffBuilder.bandMagnitudeDb(b.type, b.freqHz, b.gainDb, b.q, f)
             if (sum > maxDb) maxDb = sum
         }
-        return (-maxDb).coerceIn(-20.0, 0.0).toFloat()
+        return if (maxDb <= 60.0) (-maxDb).toFloat() else null
     }
 }
