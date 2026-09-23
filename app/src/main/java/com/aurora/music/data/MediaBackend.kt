@@ -103,6 +103,12 @@ interface MediaBackend {
     // lossless serves the original untouched file
     fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean): String
 
+    suspend fun downloadUrl(songId: String, maxBitrate: Int, lossless: Boolean): String {
+        streamUrl(songId, maxBitrate, lossless).takeIf { it.isNotBlank() }?.let { return it }
+        songFor(songId)
+        return streamUrl(songId, maxBitrate, lossless)
+    }
+
     fun coverArtUrl(id: String, size: Int = 600): String
 }
 

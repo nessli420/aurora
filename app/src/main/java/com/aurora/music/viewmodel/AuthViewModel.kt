@@ -10,10 +10,15 @@ import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.remote.JellyfinClient
+import com.aurora.music.data.remote.PlexClient
+import com.aurora.music.data.remote.PlexException
 import com.aurora.music.data.remote.SpotifyAuth
 import com.aurora.music.data.remote.SpotifyClient
 import com.aurora.music.data.remote.SubsonicClient
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -51,8 +56,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private var spotifyClientId: String? = null
+    private var signInJob: Job? = null
 
-    fun reset() = _state.update { AuthUiState() }
+    fun reset() {
+        signInJob?.cancel()
+        signInJob = null
+        _state.update { AuthUiState() }
+    }
 
     fun useSaved(session: Session, onDone: () -> Unit = {}) {
         viewModelScope.launch {
@@ -62,6 +72,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun selectType(type: ServerType) {
+        _state.update { if (it.type != type) it.copy(password = "") else it }
         if (type == ServerType.YOUTUBE_MUSIC) {
             _state.update { it.copy(type = type, step = AuthStep.YOUTUBE_MUSIC, error = null) }
             return
@@ -141,7 +152,13 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
     fun onScheme(scheme: String) = _state.update { it.copy(scheme = scheme, error = null) }
-    fun onHost(v: String) = _state.update { it.copy(host = v.trim(), error = null) }
+    fun onHost(v: String) = _state.update {
+        val value = v.trim()
+        val scheme = if (it.type == ServerType.PLEX) {
+            listOf("https://", "http://").firstOrNull { prefix -> value.startsWith(prefix, ignoreCase = true) }
+        } else null
+        it.copy(scheme = scheme ?: it.scheme, host = if (scheme != null) value.drop(scheme.length) else value, error = null)
+    }
     fun onUsername(v: String) = _state.update { it.copy(username = v, error = null) }
     fun onPassword(v: String) = _state.update { it.copy(password = v, error = null) }
 
@@ -161,13 +178,15 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     val canSubmit: Boolean
-        get() = with(_state.value) { username.isNotBlank() && password.isNotBlank() && !loading }
+        get() = with(_state.value) {
+            (type == ServerType.PLEX || username.isNotBlank()) && password.isNotBlank() && !loading
+        }
 
     fun signIn(onDone: () -> Unit) {
         val s = _state.value
         if (s.loading || !canSubmit) return
         _state.update { it.copy(loading = true, error = null) }
-        viewModelScope.launch {
+        signInJob = viewModelScope.launch {
             val server = s.scheme + s.host.trim()
             val result = withContext(Dispatchers.IO) {
                 runCatching {
@@ -179,6 +198,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                             session
                         }
                         ServerType.JELLYFIN -> JellyfinClient.authenticate(server, s.username, s.password)
+                        ServerType.PLEX -> PlexClient.authenticate(server, s.password.trim())
                         ServerType.SPOTIFY -> throw IllegalStateException(appString(R.string.text_spotify_uses_the_connect_button_not_this_form_17d56a))
                         ServerType.YOUTUBE_MUSIC -> throw IllegalStateException(appString(R.string.text_youtube_music_uses_google_sign_in_0ba1e7))
                         ServerType.LOCAL -> throw IllegalStateException(appString(R.string.text_local_mode_doesn_t_use_this_form_78c2dc))
@@ -187,20 +207,29 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
             result.onSuccess { session ->
+                ensureActive()
                 container.applySession(session)
+                ensureActive()
                 _state.update { it.copy(loading = false, error = null, password = "") }
                 onDone()
             }.onFailure { e ->
-                _state.update { it.copy(loading = false, error = friendlyError(e)) }
+                if (e is CancellationException) throw e
+                _state.update { it.copy(loading = false, error = friendlyError(e, s.type)) }
             }
         }
     }
 
-    private fun friendlyError(e: Throwable): String = when (e) {
+    private fun friendlyError(e: Throwable, type: ServerType? = null): String = when (e) {
         is java.net.UnknownHostException -> appString(R.string.text_server_not_found_check_the_address_24bc0a)
         is java.net.ConnectException -> appString(R.string.text_can_t_reach_the_server_1371a9)
         is java.net.SocketTimeoutException -> appString(R.string.text_connection_timed_out_647bf9)
-        is retrofit2.HttpException -> if (e.code() == 401) appString(R.string.text_wrong_username_or_password_85b465) else appString(R.string.text_server_error_c28ed6, (e.code()))
+        is PlexException -> if (e.statusCode in listOf(401, 403)) appString(R.string.plex_token_rejected)
+            else e.message ?: appString(R.string.text_sign_in_failed_49b78c)
+        is retrofit2.HttpException -> when {
+            type == ServerType.PLEX && e.code() in listOf(401, 403) -> appString(R.string.plex_token_rejected)
+            e.code() == 401 -> appString(R.string.text_wrong_username_or_password_85b465)
+            else -> appString(R.string.text_server_error_c28ed6, e.code())
+        }
         else -> e.message ?: appString(R.string.text_sign_in_failed_49b78c)
     }
 }

@@ -282,9 +282,17 @@ class MusicRepository(
     suspend fun profileImageUrl(): String = if (offline) "" else backend?.profileImageUrl().orEmpty()
 
     suspend fun songFor(id: String): Song? {
-        downloadManager.get(id)?.let { return artwork(it.toSong()) }
+        val source = backend
+        downloadManager.get(id)?.let { download ->
+            val song = download.toSong()
+            val storedProvider = download.playbackSource?.providerId
+            val requestedProvider = source?.playbackSourceIdentity(song.copy(playbackSource = null, streamUrl = ""))?.providerId
+            val sameSource = if (storedProvider != null) storedProvider == requestedProvider
+                else !download.serverId.isNullOrBlank() && download.serverId == source?.session?.server
+            if (offline || sameSource) return artwork(song)
+        }
         if (offline) return offlineSongs().singleOrNull { it.id == id }
-        val source = backend ?: return null
+        if (source == null) return null
         return source.songFor(id)?.let { tag(it, source) }
     }
 

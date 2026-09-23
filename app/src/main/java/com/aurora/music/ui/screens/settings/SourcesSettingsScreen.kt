@@ -64,7 +64,7 @@ private fun tierLabel(t: String) = when (t) {
 private fun tierSub(t: String) = when (t) {
     "local" -> appString(R.string.text_a_matching_file_in_your_device_s_music_library_691446)
     "downloaded" -> appString(R.string.text_a_track_downloaded_inside_the_app_8619cd)
-    "stream" -> appString(R.string.text_stream_from_navidrome_jellyfin_6c07f0)
+    "stream" -> appString(R.string.plex_sources_stream_detail)
     else -> ""
 }
 
@@ -206,7 +206,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 if (servers.isEmpty()) {
                     item {
                         Text(
-                            appString(R.string.text_sign_into_navidrome_jellyfin_or_youtube_music_settings_accounts_t_7337d3),
+                            appString(R.string.plex_sources_empty_detail),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
                             modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
                         )

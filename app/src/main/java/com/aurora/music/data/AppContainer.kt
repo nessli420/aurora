@@ -114,6 +114,7 @@ class AppContainer(context: Context) {
         playbackCollectionProvider = { kind, id, name -> repository.playbackCollectionIdentity(kind, id)?.copy(name = name) },
         copyExtension = extensions::copyAudio,
         copyCached = audioCache::copyTo,
+        downloadUrlResolverProvider = { backend?.let { source -> { id, bitrate, lossless -> source.downloadUrl(id, bitrate, lossless) } } },
     )
 
     val sonicStore = SonicStore(appContext)
@@ -147,7 +148,7 @@ class AppContainer(context: Context) {
                 "local" -> if (!alreadyLocal) {
                     localLibrary.findMatch(song.artist, song.title, song.durationSec)?.let { return localizedFromFile(song, it) }
                 }
-                "downloaded" -> downloadManager.getByOriginalId(song.id)?.let { return localizedFromDownload(song, it.toSong()) }
+                "downloaded" -> downloadManager.getByOriginalId(song.id, song.playbackSource?.providerId)?.let { return localizedFromDownload(song, it.toSong()) }
                 "stream" -> return song
             }
         }
@@ -175,12 +176,17 @@ class AppContainer(context: Context) {
             bitDepth = local.bitDepth,
             playbackSource = local.playbackSource)
 
-    private fun buildBackend(session: Session): MediaBackend = when (session.type) {
-        ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, ::localizeSong)
-        ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, ::localizeSong)
+    private fun buildBackend(session: Session): MediaBackend {
+        val localize: (Song) -> Song = { song ->
+            localizeSong(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
+        }
+        return when (session.type) {
+        ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, localize)
+        ServerType.PLEX -> PlexBackend(com.aurora.music.data.remote.PlexClient(session), { maxBitrate }, localize)
+        ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, localize)
         ServerType.SPOTIFY -> SpotifyBackend(
             SpotifyClient(session, spotifyClientIdValue, onTokenRefreshed = { tok -> scope.launch { settingsStore.updateToken(tok) } }),
-            { maxBitrate }, ::localizeSong,
+            { maxBitrate }, localize,
         )
         ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
         ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
@@ -194,7 +200,8 @@ class AppContainer(context: Context) {
             val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
             val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
                 ?.takeIf { java.io.File(it.audioPath).isFile } else null
-            if (downloaded != null) localizedFromDownload(song, downloaded.toSong()) else localizeSong(song)
+            if (downloaded != null) localizedFromDownload(song, downloaded.toSong()) else localize(song)
+        }
         }
     }
 

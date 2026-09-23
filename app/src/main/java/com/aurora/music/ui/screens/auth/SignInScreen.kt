@@ -154,14 +154,18 @@ fun SignInScreen(
                     Text(when (state.step) {
                         AuthStep.TYPE -> appString(R.string.text_a_home_for_your_music_20a46f)
                         AuthStep.SERVER -> appString(R.string.text_connect_your_server_8989fc)
-                        AuthStep.CREDENTIALS -> appString(R.string.text_make_yourself_at_home_3ea2e2)
+                        AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_connect_title else R.string.text_make_yourself_at_home_3ea2e2)
                         AuthStep.SPOTIFY -> appString(R.string.text_connect_spotify_529d56)
                         AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_connect_youtube_music_64e032)
                     }, fontSize = if (state.step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (state.step == AuthStep.TYPE) 43.sp else 36.sp, fontWeight = FontWeight.Bold, color = palette.onBackground)
                     Text(when (state.step) {
                         AuthStep.TYPE -> appString(R.string.text_your_collection_and_your_discoveries_together_in_one_player_093361)
-                        AuthStep.SERVER -> appString(R.string.text_enter_the_address_of_your_server_3f01ed, (if (state.type == ServerType.JELLYFIN) "Jellyfin" else appString(R.string.text_navidrome_or_subsonic_4e1c18)))
-                        AuthStep.CREDENTIALS -> appString(R.string.text_use_your_server_account_to_open_your_library_800ff2)
+                        AuthStep.SERVER -> appString(R.string.text_enter_the_address_of_your_server_3f01ed, when (state.type) {
+                            ServerType.JELLYFIN -> "Jellyfin"
+                            ServerType.PLEX -> "Plex"
+                            else -> appString(R.string.text_navidrome_or_subsonic_4e1c18)
+                        })
+                        AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_token_detail else R.string.text_use_your_server_account_to_open_your_library_800ff2)
                         AuthStep.SPOTIFY -> appString(R.string.text_bring_your_playlists_and_saved_music_into_aurora_df697e)
                         AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_your_favourites_mixes_and_new_discoveries_6c2fa1)
                     }, style = MaterialTheme.typography.bodyLarge, color = palette.onSurfaceVariant)
@@ -214,6 +218,7 @@ private fun TypeStep(onSelectType: (ServerType) -> Unit, onLocal: () -> Unit, pe
             ServerTile("Navidrome", appString(R.string.text_subsonic_compatible_b4584c), Icons.Outlined.Dns, Modifier.weight(1f), enabled) { onSelectType(ServerType.SUBSONIC) }
             ServerTile("Jellyfin", appString(R.string.text_your_media_library_77d854), Icons.Outlined.Cloud, Modifier.weight(1f), enabled) { onSelectType(ServerType.JELLYFIN) }
         }
+        ServerTypeCard(Icons.Outlined.PlayCircle, "Plex", appString(R.string.setup_source_plex_detail), enabled = enabled) { onSelectType(ServerType.PLEX) }
         Text(appString(R.string.text_you_can_combine_local_files_server_libraries_and_youtube_music_la_8c6471), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
         if (permDenied) Text(appString(R.string.text_allow_music_access_in_settings_apps_aurora_permissions_to_use_fil_1503ac), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }
@@ -345,7 +350,11 @@ private fun ServerStep(
             onValueChange = onHost,
             modifier = Modifier.fillMaxWidth(),
             label = { Text(appString(R.string.text_server_address_b06792)) },
-            placeholder = { Text(if (state.type == ServerType.JELLYFIN) "192.168.1.10:8096" else "192.168.1.10:4533") },
+            placeholder = { Text(when (state.type) {
+                ServerType.JELLYFIN -> "192.168.1.10:8096"
+                ServerType.PLEX -> "192.168.1.10:32400"
+                else -> "192.168.1.10:4533"
+            }) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             leadingIcon = { Icon(Icons.Outlined.Dns, null) },
@@ -353,6 +362,10 @@ private fun ServerStep(
             keyboardActions = KeyboardActions(onNext = { if (canContinue) onContinue() }),
             colors = fieldColors(),
         )
+        if (state.type == ServerType.PLEX) {
+            Text(appString(R.string.plex_server_detail), style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 10.dp))
+        }
         Spacer(Modifier.height(22.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             PrimaryButton(appString(R.string.text_continue_2e0262), enabled = canContinue, modifier = Modifier.weight(1f), onClick = onContinue)
@@ -369,8 +382,10 @@ private fun CredentialsStep(
     canSubmit: Boolean,
     onSignIn: () -> Unit,
 ) {
-    var passwordVisible by remember { mutableStateOf(false) }
+    var passwordVisible by remember(state.type) { mutableStateOf(false) }
     val focus = LocalFocusManager.current
+    val context = LocalContext.current
+    val isPlex = state.type == ServerType.PLEX
     Column(Modifier.fillMaxWidth()) {
         Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(16.dp)) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -381,35 +396,55 @@ private fun CredentialsStep(
             }
         }
         Spacer(Modifier.height(20.dp))
-        OutlinedTextField(
-            value = state.username,
-            onValueChange = onUsername,
-            modifier = Modifier.fillMaxWidth(),
-            label = { Text(appString(R.string.text_username_84c290)) },
-            singleLine = true,
-            shape = RoundedCornerShape(14.dp),
-            leadingIcon = { Icon(Icons.Outlined.Person, null) },
-            enabled = !state.loading,
-            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
-            keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
-            colors = fieldColors(),
-        )
-        Spacer(Modifier.height(14.dp))
+        if (!isPlex) {
+            OutlinedTextField(
+                value = state.username,
+                onValueChange = onUsername,
+                modifier = Modifier.fillMaxWidth(),
+                label = { Text(appString(R.string.text_username_84c290)) },
+                singleLine = true,
+                shape = RoundedCornerShape(14.dp),
+                leadingIcon = { Icon(Icons.Outlined.Person, null) },
+                enabled = !state.loading,
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
+                keyboardActions = KeyboardActions(onNext = { focus.moveFocus(FocusDirection.Down) }),
+                colors = fieldColors(),
+            )
+            Spacer(Modifier.height(14.dp))
+        }
         OutlinedTextField(
             value = state.password,
             onValueChange = onPassword,
             modifier = Modifier.fillMaxWidth(),
-            label = { Text(appString(R.string.text_password_8be3c9)) },
+            label = { Text(appString(if (isPlex) R.string.plex_token_label else R.string.text_password_8be3c9)) },
             singleLine = true,
             shape = RoundedCornerShape(14.dp),
             leadingIcon = { Icon(Icons.Outlined.Lock, null) },
             enabled = !state.loading,
-            trailingIcon = { IconButton(onClick = { passwordVisible = !passwordVisible }) { Icon(if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility, if (passwordVisible) appString(R.string.text_hide_password_e40123) else appString(R.string.text_show_password_044b85)) } },
+            trailingIcon = {
+                IconButton(onClick = { passwordVisible = !passwordVisible }) {
+                    Icon(if (passwordVisible) Icons.Outlined.VisibilityOff else Icons.Outlined.Visibility,
+                        appString(when {
+                            isPlex && passwordVisible -> R.string.plex_token_hide
+                            isPlex -> R.string.plex_token_show
+                            passwordVisible -> R.string.text_hide_password_e40123
+                            else -> R.string.text_show_password_044b85
+                        }))
+                }
+            },
             visualTransformation = if (passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password, imeAction = ImeAction.Done),
             keyboardActions = KeyboardActions(onDone = { if (canSubmit && !state.loading) { focus.clearFocus(); onSignIn() } }),
             colors = fieldColors(),
         )
+        if (isPlex) {
+            TextButton(onClick = {
+                runCatching {
+                    context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
+                        android.net.Uri.parse("https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/")))
+                }
+            }) { Text(appString(R.string.plex_token_help)) }
+        }
         Spacer(Modifier.height(22.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             PrimaryButton(if (state.loading) "" else appString(R.string.text_connect_b65463), enabled = canSubmit && !state.loading, modifier = Modifier.weight(1f), loading = state.loading, onClick = onSignIn)

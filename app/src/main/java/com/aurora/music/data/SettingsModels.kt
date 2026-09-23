@@ -9,9 +9,9 @@ val DEFAULT_SOURCE_PRIORITY = listOf("local", "downloaded", "stream")
 const val MERGE_NONE = "__none__"
 
 enum class ServerType {
-    SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION, YOUTUBE_MUSIC;
+    SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION, YOUTUBE_MUSIC, PLEX;
 
-    val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == LOCAL || this == YOUTUBE_MUSIC
+    val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == PLEX || this == LOCAL || this == YOUTUBE_MUSIC
 }
 
 // sessions store tokens without raw passwords
@@ -32,14 +32,23 @@ data class Session(
         ServerType.SPOTIFY -> "Spotify"
         ServerType.YOUTUBE_MUSIC -> "YouTube Music"
         ServerType.JELLYFIN -> "Jellyfin"
+        ServerType.PLEX -> "Plex"
         ServerType.SUBSONIC -> "Navidrome"
         ServerType.LOCAL -> "On this device"
         ServerType.EXTENSION -> "Extension"
     }
 }
 
-fun Session.accountKey(): String = if (type == ServerType.YOUTUBE_MUSIC) "${type.name}|$server|$userId"
-    else "${type.name}|$server|$username|$userId"
+fun Session.accountKey(): String = when (type) {
+    ServerType.YOUTUBE_MUSIC -> "${type.name}|$server|$userId"
+    ServerType.PLEX -> {
+        // separate users sharing the same plex server
+        val credentialId = java.security.MessageDigest.getInstance("SHA-256")
+            .digest(token.toByteArray(Charsets.UTF_8)).joinToString("") { "%02x".format(it) }
+        "${type.name}|$server|$userId|$credentialId"
+    }
+    else -> "${type.name}|$server|$username|$userId"
+}
 
 data class PlaybackPrefs(
     val skipSilence: Boolean = false,

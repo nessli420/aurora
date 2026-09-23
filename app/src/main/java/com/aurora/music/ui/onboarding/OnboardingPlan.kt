@@ -18,6 +18,7 @@ enum class SetupSource(val type: ServerType, val title: Int, val detail: Int) {
     LOCAL(ServerType.LOCAL, R.string.setup_source_local, R.string.setup_source_local_detail),
     NAVIDROME(ServerType.SUBSONIC, R.string.setup_source_navidrome, R.string.setup_source_navidrome_detail),
     JELLYFIN(ServerType.JELLYFIN, R.string.setup_source_jellyfin, R.string.setup_source_jellyfin_detail),
+    PLEX(ServerType.PLEX, R.string.setup_source_plex, R.string.setup_source_plex_detail),
     YOUTUBE(ServerType.YOUTUBE_MUSIC, R.string.setup_source_youtube, R.string.setup_source_youtube_detail),
     SPOTIFY(ServerType.SPOTIFY, R.string.setup_source_spotify, R.string.setup_source_spotify_detail),
 }

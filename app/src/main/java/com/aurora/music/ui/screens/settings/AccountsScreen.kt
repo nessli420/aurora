@@ -124,6 +124,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
         ServerType.SPOTIFY -> "S"
         ServerType.YOUTUBE_MUSIC -> "Y"
         ServerType.JELLYFIN -> "J"
+        ServerType.PLEX -> "P"
         ServerType.LOCAL -> "L"
         ServerType.SUBSONIC -> "N"
         ServerType.EXTENSION -> "E"

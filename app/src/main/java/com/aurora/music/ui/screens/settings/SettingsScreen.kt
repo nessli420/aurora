@@ -113,6 +113,7 @@ fun SettingsScreen(
         com.aurora.music.data.ServerType.SPOTIFY -> "SPOTIFY"
         com.aurora.music.data.ServerType.YOUTUBE_MUSIC -> "YOUTUBE MUSIC"
         com.aurora.music.data.ServerType.JELLYFIN -> "JELLYFIN"
+        com.aurora.music.data.ServerType.PLEX -> "PLEX"
         com.aurora.music.data.ServerType.LOCAL -> appString(R.string.text_local_9be340)
         com.aurora.music.data.ServerType.EXTENSION -> appString(R.string.text_extension_f88c4d)
         else -> "NAVIDROME"

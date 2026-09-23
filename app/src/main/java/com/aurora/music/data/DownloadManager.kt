@@ -87,9 +87,11 @@ class DownloadManager(
     private val playbackCollectionProvider: (String, String, String) -> PlaybackCollectionIdentity? = { _, _, _ -> null },
     private val copyExtension: ((String, File, (Float) -> Unit) -> Unit)? = null,
     private val copyCached: ((String, File, (Float) -> Unit) -> Unit)? = null,
+    private val downloadUrlResolverProvider: () -> (suspend (String, Int, Boolean) -> String)? = { null },
 ) {
 
-    private data class DownloadRequest(val serverId: String, val url: String, val bitrate: Int, val extension: Boolean, val cached: Boolean)
+    private data class DownloadRequest(val serverId: String, val url: String, val bitrate: Int, val extension: Boolean, val cached: Boolean,
+        val resolveUrl: (suspend (String, Int, Boolean) -> String)?)
 
     private val contentResolver = context.applicationContext.contentResolver
     private val dir = File(context.filesDir, "downloads").apply { mkdirs() }
@@ -133,8 +135,11 @@ class DownloadManager(
     fun get(id: String): DownloadedSong? = _downloads.value[id]
 
     // also matches merged-namespaced keys downloads keyed by wrapped id but localize looks up raw id
-    fun getByOriginalId(originalId: String): DownloadedSong? =
-        _downloads.value[originalId] ?: _downloads.value.values.firstOrNull { stripMergeNamespace(it.id) == originalId }
+    fun getByOriginalId(originalId: String, providerId: String? = null): DownloadedSong? =
+        _downloads.value[originalId]?.takeIf { providerId == null || it.playbackSource?.providerId == providerId }
+            ?: _downloads.value.values.firstOrNull {
+                stripMergeNamespace(it.id) == originalId && (providerId == null || it.playbackSource?.providerId == providerId)
+            }
 
     fun downloadSong(song: Song) {
         if (isDownloaded(song.id) || _states.value[song.id] is DownloadState.Queued ||
@@ -147,8 +152,9 @@ class DownloadManager(
             val bitrate = if (extension || cached) 0 else downloadBitrateProvider()
             DownloadRequest(
                 if (extension) "extension://${android.net.Uri.parse(song.streamUrl).host}" else currentServerIdProvider(),
-                if (extension || cached) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0) ?: song.streamUrl,
+                if (extension || cached) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0)?.takeIf { it.isNotBlank() } ?: song.streamUrl,
                 bitrate, extension, cached,
+                if (extension || cached) null else downloadUrlResolverProvider(),
             )
         }.getOrElse { setState(song.id, DownloadState.Failed); return }
         scope.launch { doDownload(song.copy(playbackSource = identity), request) }
@@ -179,10 +185,12 @@ class DownloadManager(
             setState(song.id, DownloadState.Downloading(0f))
             val audioFile = File(dir, "$stem.audio")
             // resolve aurora-yt sentinel via the songs full sentinel which holds the search query
-            val audioUrl = if (request.url.startsWith("aurora-yt://")) {
-                val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else request.url
+            val resolvedUrl = request.resolveUrl?.invoke(song.id, request.bitrate, request.bitrate == 0)
+                ?.takeIf { it.isNotBlank() } ?: request.url
+            val audioUrl = if (resolvedUrl.startsWith("aurora-yt://")) {
+                val sentinel = if (song.streamUrl.startsWith("aurora-yt://")) song.streamUrl else resolvedUrl
                 resolveSentinel(sentinel) ?: throw IOException("No stream found for this track")
-            } else request.url
+            } else resolvedUrl
             if (request.cached) requireNotNull(copyCached) { "Cached audio is unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
             else if (request.extension) requireNotNull(copyExtension) { "Extension downloads are unavailable." }(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }
             else downloadTo(audioUrl, audioFile) { p -> setState(song.id, DownloadState.Downloading(p)) }

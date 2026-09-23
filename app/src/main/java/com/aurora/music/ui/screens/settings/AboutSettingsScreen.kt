@@ -83,6 +83,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             val source = when (session?.type) {
                 ServerType.JELLYFIN -> "Jellyfin"
+                ServerType.PLEX -> "Plex"
                 ServerType.SUBSONIC -> "Subsonic / OpenSubsonic"
                 ServerType.SPOTIFY -> "Spotify"
                 ServerType.YOUTUBE_MUSIC -> "YouTube Music"
