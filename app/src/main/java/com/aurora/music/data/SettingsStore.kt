@@ -946,6 +946,8 @@ class SettingsStore(private val context: Context) {
     val lrclibEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.LRCLIB] ?: true }
     val dataSaver: Flow<Boolean> = context.dataStore.data.map { it[Keys.DATA_SAVER] ?: false }
     val simpleMode: Flow<Boolean> = context.dataStore.data.map { it[Keys.SIMPLE_MODE] ?: false }.distinctUntilChanged()
+    val onboardingSeen: Flow<Boolean?> = context.dataStore.data.map { it[Keys.ONBOARDING_SEEN] }.distinctUntilChanged()
+    suspend fun setOnboardingSeen() = context.dataStore.edit { it[Keys.ONBOARDING_SEEN] = true }
     val privateSession: Flow<Boolean> = context.dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }
 
     val gesturePrefs: Flow<GesturePrefs> = context.dataStore.data.map { p ->

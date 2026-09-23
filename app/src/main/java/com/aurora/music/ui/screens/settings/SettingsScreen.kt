@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,6 +25,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -56,11 +60,15 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
+import com.aurora.music.ui.onboarding.OnboardingStep
 
 @Composable
 fun SettingsScreen(
@@ -91,11 +99,19 @@ fun SettingsScreen(
     onOpenAccounts: () -> Unit,
     onOpenBackup: () -> Unit,
     onLogout: () -> Unit,
+    guideStep: OnboardingStep? = null,
+    onGuideTarget: (Rect) -> Unit = {},
+    onReplayTour: () -> Unit = {},
 ) {
     val container = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication).container
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val simpleMode by container.settingsStore.simpleMode.collectAsStateWithLifecycle(initialValue = false)
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
+    androidx.compose.runtime.LaunchedEffect(guideStep) {
+        if (guideStep == OnboardingStep.SIMPLE) listState.animateScrollToItem(12)
+        else if (guideStep == OnboardingStep.EQUALIZER) listState.animateScrollToItem(4)
+    }
     val appUpdate by container.appUpdater.state.collectAsStateWithLifecycle()
     androidx.compose.runtime.LaunchedEffect(container) { container.appUpdater.checkForUpdate() }
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
@@ -119,6 +135,7 @@ fun SettingsScreen(
         SettingsTopBar(appString(R.string.text_settings_c7f73b), onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
+            state = listState,
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
             item {
@@ -172,19 +189,28 @@ fun SettingsScreen(
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Devices, SettingsDestinations.network, onClick = onOpenNetwork)
                     SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
+                    TourTarget(OnboardingStep.EQUALIZER, guideStep, onGuideTarget) {
+                        SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
+                    }
                     AnimatedVisibility(
-                        visible = !simpleMode,
+                        visible = !simpleMode || guideStep in listOf(OnboardingStep.EQUALIZER,
+                            OnboardingStep.LOUDNESS, OnboardingStep.ADVANCED, OnboardingStep.SIGNAL),
                         enter = expandVertically(animationSpec = tween(260)) + fadeIn(animationSpec = tween(260)),
                         exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(260)),
                     ) {
                         Column {
                             SettingsRowDivider()
-                            SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
+                            TourTarget(OnboardingStep.LOUDNESS, guideStep, onGuideTarget) {
+                                SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
+                            }
                             SettingsRowDivider()
-                            SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.advancedAudio, onClick = onOpenAdvancedAudio)
+                            TourTarget(OnboardingStep.ADVANCED, guideStep, onGuideTarget) {
+                                SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.advancedAudio, onClick = onOpenAdvancedAudio)
+                            }
                             SettingsRowDivider()
-                            SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
+                            TourTarget(OnboardingStep.SIGNAL, guideStep, onGuideTarget) {
+                                SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
+                            }
                         }
                     }
                 }
@@ -226,10 +252,15 @@ fun SettingsScreen(
             item { SettingsSectionTitle(appString(R.string.text_app_data_4d9bf9)) }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(Icons.Filled.CheckCircle, appString(R.string.simple_mode),
-                        appString(R.string.simple_mode_description), simpleMode) { enabled ->
-                        scope.launch { container.settingsStore.setSimpleMode(enabled) }
+                    TourTarget(OnboardingStep.SIMPLE, guideStep, onGuideTarget) {
+                        SettingsSwitchRow(Icons.Filled.CheckCircle, appString(R.string.simple_mode),
+                            appString(R.string.simple_mode_description), simpleMode) { enabled ->
+                            scope.launch { container.settingsStore.setSimpleMode(enabled) }
+                        }
                     }
+                    SettingsRowDivider()
+                    SettingsNavRow(Icons.Filled.PlayCircle, appString(R.string.onboarding_replay_title),
+                        subtitle = appString(R.string.onboarding_replay_body), onClick = onReplayTour)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Lock, SettingsDestinations.permissions, onClick = onOpenPermissions)
                     SettingsRowDivider()
@@ -256,5 +287,19 @@ fun SettingsScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+@OptIn(ExperimentalFoundationApi::class)
+private fun TourTarget(step: OnboardingStep, active: OnboardingStep?, onTarget: (Rect) -> Unit,
+    content: @Composable () -> Unit) {
+    val requester = androidx.compose.runtime.remember { BringIntoViewRequester() }
+    androidx.compose.runtime.LaunchedEffect(active) {
+        if (active == step) requester.bringIntoView()
+    }
+    Box(Modifier.fillMaxWidth().bringIntoViewRequester(requester)
+        .onGloballyPositioned { if (active == step) onTarget(it.boundsInRoot()) }) {
+        content()
     }
 }

@@ -1,4 +1,29 @@
 <resources>
     <string name="app_name">Aurora</string>
     <string name="widget_description">Now playing controls</string>
+    <string name="onboarding_eyebrow">AURORA TOUR</string>
+    <string name="onboarding_welcome">Welcome to Aurora</string>
+    <string name="onboarding_welcome_body">Your music, shaped around the way you listen.</string>
+    <string name="onboarding_next">Next</string>
+    <string name="onboarding_skip">Skip tour</string>
+    <string name="onboarding_finish">Start listening</string>
+    <string name="onboarding_sources_title">Bring your music in</string>
+    <string name="onboarding_sources_body">Choose Music on this device to scan your songs after granting audio access. You can also connect YouTube Music, Spotify, Navidrome or Jellyfin here.</string>
+    <string name="onboarding_settings_title">Make it yours</string>
+    <string name="onboarding_settings_body">Open Settings to explore Aurora’s audio tools.</string>
+    <string name="onboarding_tap_settings">Tap the highlighted cog</string>
+    <string name="onboarding_equalizer_title">Equalizer &amp; effects</string>
+    <string name="onboarding_equalizer_body">Shape your sound with EQ, device presets, convolution and channel controls.</string>
+    <string name="onboarding_loudness_title">Volume &amp; loudness</string>
+    <string name="onboarding_loudness_body">Use ReplayGain and volume leveling for a more consistent listening level.</string>
+    <string name="onboarding_advanced_title">Advanced audio</string>
+    <string name="onboarding_advanced_body">Fine-tune processing and explore more ways to customize your playback.</string>
+    <string name="onboarding_signal_title">Signal Path</string>
+    <string name="onboarding_signal_body">See what happens to your audio from the source to the output device.</string>
+    <string name="onboarding_simple_title">Simple Mode</string>
+    <string name="onboarding_simple_body">Toggle this to disable the advanced features.</string>
+    <string name="onboarding_music_title">Your library is ready</string>
+    <string name="onboarding_music_body">For local songs, copy music files onto your device and allow Aurora access. For your own server library, add Navidrome or Jellyfin in Servers &amp; accounts. Manage all sources in Library &amp; sources.</string>
+    <string name="onboarding_replay_title">Replay welcome tour</string>
+    <string name="onboarding_replay_body">Take another look at Aurora’s features</string>
 </resources>

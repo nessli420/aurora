@@ -37,7 +37,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.boundsInRoot
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -65,6 +68,7 @@ fun HomeScreen(
     avatarUrl: String = "",
     onOpenDrawer: () -> Unit,
     onOpenSettings: () -> Unit,
+    onSettingsBounds: (Rect) -> Unit = {},
     onOpenDetail: (String, String) -> Unit,
     onPlayAlbum: (String) -> Unit,
     onPlayAll: (List<Song>, Int) -> Unit,
@@ -114,7 +118,9 @@ fun HomeScreen(
                 }
                 com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenNotifications)
                 Spacer(Modifier.width(8.dp))
-                IconPill(Icons.Outlined.Settings, appString(R.string.text_settings_c7f73b), onClick = onOpenSettings)
+                Box(Modifier.onGloballyPositioned { onSettingsBounds(it.boundsInRoot()) }) {
+                    IconPill(Icons.Outlined.Settings, appString(R.string.text_settings_c7f73b), onClick = onOpenSettings)
+                }
             }
         }
 

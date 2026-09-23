@@ -99,6 +99,9 @@ import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.ui.theme.rememberPlayerColorScheme
 import com.aurora.music.ui.screens.settings.PlaybackSettingsScreen
 import com.aurora.music.ui.screens.settings.SettingsScreen
+import com.aurora.music.ui.onboarding.AuroraOnboarding
+import com.aurora.music.ui.onboarding.OnboardingStep
+import androidx.compose.ui.geometry.Rect
 import com.aurora.music.viewmodel.AuthViewModel
 import com.aurora.music.viewmodel.DetailViewModel
 import com.aurora.music.viewmodel.HomeViewModel
@@ -106,6 +109,7 @@ import com.aurora.music.viewmodel.LibraryViewModel
 import com.aurora.music.viewmodel.PlayerViewModel
 import com.aurora.music.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun AuroraApp() {
@@ -119,6 +123,15 @@ fun AuroraApp() {
     val playerState by playerVM.state.collectAsStateWithLifecycle()
     val authState by authVM.state.collectAsStateWithLifecycle()
     val sessionReady by container.sessionReady.collectAsStateWithLifecycle()
+    var onboardingStep by remember { mutableStateOf<OnboardingStep?>(null) }
+    var onboardingTarget by remember { mutableStateOf<Rect?>(null) }
+    androidx.compose.runtime.LaunchedEffect(container) {
+        if (container.settingsStore.onboardingSeen.first() == null) {
+            val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
+            if (packageInfo.firstInstallTime == packageInfo.lastUpdateTime) onboardingStep = OnboardingStep.WELCOME
+            else container.settingsStore.setOnboardingSeen()
+        }
+    }
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val savedSessions by container.settingsStore.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadsMap by container.downloadManager.downloads.collectAsStateWithLifecycle()
@@ -194,6 +207,40 @@ fun AuroraApp() {
 
     val backStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = backStackEntry?.destination?.route
+    androidx.compose.runtime.LaunchedEffect(currentRoute, sessionReady, onboardingStep) {
+        if (onboardingStep == OnboardingStep.WAIT_HOME && sessionReady == true && currentRoute == Routes.HOME) {
+            onboardingTarget = null
+            onboardingStep = OnboardingStep.SETTINGS
+        } else if (onboardingStep == OnboardingStep.SETTINGS && currentRoute == Routes.SETTINGS) {
+            onboardingTarget = null
+            onboardingStep = OnboardingStep.EQUALIZER
+        }
+    }
+    fun finishOnboarding() {
+        onboardingStep = null
+        onboardingTarget = null
+        scope.launch { container.settingsStore.setOnboardingSeen() }
+    }
+    fun advanceOnboarding() {
+        onboardingTarget = null
+        when (onboardingStep) {
+            OnboardingStep.WELCOME -> {
+                if (sessionReady == true) {
+                    if (currentRoute != Routes.HOME) navController.navigate(Routes.HOME) { launchSingleTop = true }
+                    onboardingStep = OnboardingStep.WAIT_HOME
+                } else onboardingStep = OnboardingStep.SOURCES
+            }
+            OnboardingStep.SOURCES -> onboardingStep = OnboardingStep.WAIT_HOME
+            OnboardingStep.SETTINGS -> navController.navigate(Routes.SETTINGS) { launchSingleTop = true }
+            OnboardingStep.EQUALIZER -> onboardingStep = OnboardingStep.LOUDNESS
+            OnboardingStep.LOUDNESS -> onboardingStep = OnboardingStep.ADVANCED
+            OnboardingStep.ADVANCED -> onboardingStep = OnboardingStep.SIGNAL
+            OnboardingStep.SIGNAL -> onboardingStep = OnboardingStep.SIMPLE
+            OnboardingStep.SIMPLE -> onboardingStep = OnboardingStep.MUSIC
+            OnboardingStep.MUSIC -> finishOnboarding()
+            else -> Unit
+        }
+    }
     val onTopLevel = currentRoute in topLevelDestinations.map { it.route }
     val showChrome = currentRoute != null && currentRoute != Routes.SIGN_IN
     val rail = LocalWindowLayout.current.useNavigationRail && showChrome
@@ -442,6 +489,7 @@ fun AuroraApp() {
                             avatarUrl = profileAppearance.avatarUrl,
                             onOpenDrawer = { openDrawer() },
                             onOpenSettings = { navController.navigate(Routes.SETTINGS) },
+                            onSettingsBounds = { if (onboardingStep == OnboardingStep.SETTINGS) onboardingTarget = it },
                             onOpenDetail = { kind, id -> openDetail(kind, id) },
                             onPlayAlbum = { playAlbum(it) },
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
@@ -793,6 +841,12 @@ fun AuroraApp() {
                             onOpenAccounts = { navController.navigate(Routes.SETTINGS_ACCOUNTS) },
                             onOpenBackup = { navController.navigate(Routes.SETTINGS_BACKUP) },
                             onLogout = { logout() },
+                            guideStep = onboardingStep,
+                            onGuideTarget = { onboardingTarget = it },
+                            onReplayTour = {
+                                onboardingTarget = null
+                                onboardingStep = OnboardingStep.WELCOME
+                            },
                         )
                     }
                     composable(Routes.SETTINGS_ADVANCED_AUDIO) {
@@ -1122,6 +1176,9 @@ fun AuroraApp() {
                     onClose = { showVisualizer = false },
                 )
             }
+            onboardingStep?.let { step ->
+                AuroraOnboarding(step, onboardingTarget, ::advanceOnboarding, ::finishOnboarding)
+            }
         }
     }
 
@@ -1161,6 +1218,7 @@ fun AuroraApp() {
 
     BackHandler(enabled = showQueue) { showQueue = false }
     BackHandler(enabled = showVisualizer && !showMix) { showVisualizer = false }
+    BackHandler(enabled = onboardingStep != null && onboardingStep != OnboardingStep.WAIT_HOME) { finishOnboarding() }
     if (showMix) {
         com.aurora.music.ui.screens.player.MixScreen(mixVM, mixQueue, onClose = { showMix = false })
     }
