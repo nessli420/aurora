@@ -1,3 +1,26 @@
+# Keep only the repository entries shown in the project root.
+/*
+!/.github/
+!/app/
+!/decent/
+!/docs/
+!/examples/
+/examples/*
+!/examples/extension/
+!/extension-sdk/
+!/gradle/
+!/.gitattributes
+!/.gitignore
+!/CONTRIBUTING.md
+!/LICENSE
+!/README.md
+!/build.gradle.kts
+!/gradle.properties
+!/gradlew
+!/gradlew.bat
+!/settings.gradle.kts
+!/version.properties
+
 # ---- Build output / generated ----
 .gradle/
 .kotlin/
@@ -33,6 +56,7 @@ keystore.properties
 Thumbs.db
 
 # ---- Internal dev notes / tooling (not needed to build) ----
+.agents/
 .claude/
 CLAUDE.md
 PHASE3_HANDOFF.md

@@ -255,11 +255,13 @@ fun PlayerScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    val showVideoModeControl = (state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast()) || state.hasVideo
                     Icon(
                         Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
-                    if ((state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast()) || state.hasVideo) {
+                    if (showVideoModeControl) {
+                        Spacer(Modifier.width(20.dp))
                         IconButton(
                             onClick = {
                                 if (showVideo) {
@@ -285,9 +287,11 @@ fun PlayerScreen(
                             else Icon(if (showVideo) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
                                 contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
                         }
+                        Spacer(Modifier.width(20.dp))
+                    } else {
+                        Spacer(Modifier.width(80.dp))
                     }
                     // balances trailing icons so PLAYING FROM stays centered
-                    Spacer(Modifier.width(if ((state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast()) || state.hasVideo) 40.dp else 80.dp))
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                         Text(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
