@@ -11,6 +11,7 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.aurora.music.model.Song
 import com.aurora.music.playback.YoutubeResolver
+import com.aurora.music.playback.VideoAudioAligner
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -45,9 +46,13 @@ internal class CompanionVideoController(
     private var songId: String? = null
     private var videoId: String? = null
     private var selectedQuality: Int? = 720
+    private var audioOffsetMs = 0L
     private var lastSeekMs = 0L
     private var searchJob: Job? = null
     private var qualityJob: Job? = null
+    private var alignJob: Job? = null
+    private val aligner = VideoAudioAligner(app, resolver)
+    private val offsetCache = LinkedHashMap<Pair<String, String>, Long>()
 
     val player: Player? get() = video?.takeIf { ready }
     val isReady: Boolean get() = ready
@@ -73,6 +78,24 @@ internal class CompanionVideoController(
             }
             videoId = match.videoId
             selectedQuality = 720
+            val cacheKey = song.id to match.videoId
+            offsetCache[cacheKey]?.let { audioOffsetMs = it }
+            if (!offsetCache.containsKey(cacheKey)) {
+                alignJob = scope.launch {
+                    val offset = runCatching { aligner.offsetMs(song.streamUrl, match.videoId) }.getOrNull()
+                    ensureActive()
+                    if (songId != song.id || videoId != match.videoId) return@launch
+                    if (offset == null) {
+                        android.util.Log.d("CompanionVideo", "Audio alignment unavailable")
+                        return@launch
+                    }
+                    audioOffsetMs = offset
+                    android.util.Log.d("CompanionVideo", "Audio offset ${offset}ms")
+                    if (offsetCache.size >= 64) offsetCache.remove(offsetCache.keys.first())
+                    offsetCache[cacheKey] = offset
+                    sync(forceSeek = true)
+                }
+            }
             val candidate = ExoPlayer.Builder(app).build().apply {
                 volume = 0f
                 setMediaItem(MediaItem.fromUri(match.streamUrl))
@@ -119,7 +142,12 @@ internal class CompanionVideoController(
             candidate.playWhenReady = false
             return
         }
-        val position = audio.currentPosition.coerceAtLeast(0)
+        val position = audio.currentPosition.coerceAtLeast(0) + audioOffsetMs
+        if (position < 0) {
+            if (candidate.currentPosition > 100) candidate.seekTo(0)
+            candidate.playWhenReady = false
+            return
+        }
         val now = SystemClock.elapsedRealtime()
         val steadyDrift = candidate.playbackState == Player.STATE_READY && candidate.isPlaying && audio.isPlaying &&
             abs(candidate.currentPosition - position) > 3_000 && now - lastSeekMs > 15_000
@@ -152,7 +180,8 @@ internal class CompanionVideoController(
             if (url == null) return@launch
             selectedQuality = quality
             publish()
-            candidate.setMediaItem(MediaItem.fromUri(url), (audioPlayer()?.currentPosition ?: 0L).coerceAtLeast(0L))
+            candidate.setMediaItem(MediaItem.fromUri(url),
+                ((audioPlayer()?.currentPosition ?: 0L) + audioOffsetMs).coerceAtLeast(0L))
             candidate.prepare()
             sync()
         }
@@ -164,11 +193,14 @@ internal class CompanionVideoController(
         searchJob = null
         qualityJob?.cancel()
         qualityJob = null
+        alignJob?.cancel()
+        alignJob = null
         video?.release()
         video = null
         songId = null
         videoId = null
         selectedQuality = 720
+        audioOffsetMs = 0L
         lastSeekMs = 0L
         ready = false
         visible = false
