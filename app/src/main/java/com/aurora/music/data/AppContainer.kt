@@ -181,27 +181,27 @@ class AppContainer(context: Context) {
             localizeSong(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
         }
         return when (session.type) {
-        ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, localize)
-        ServerType.PLEX -> PlexBackend(com.aurora.music.data.remote.PlexClient(session), { maxBitrate }, localize)
-        ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, localize)
-        ServerType.SPOTIFY -> SpotifyBackend(
-            SpotifyClient(session, spotifyClientIdValue, onTokenRefreshed = { tok -> scope.launch { settingsStore.updateToken(tok) } }),
-            { maxBitrate }, localize,
-        )
-        ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
-        ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
-            com.aurora.music.data.remote.YouTubeMusicClient(
-                session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }))) { message ->
-            if (lastSession?.accountKey() == session.accountKey() ||
-                (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
-                    (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
-        }
-        ServerType.EXTENSION -> extensions.backend(session) { song ->
-            val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
-            val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
-                ?.takeIf { java.io.File(it.audioPath).isFile } else null
-            if (downloaded != null) localizedFromDownload(song, downloaded.toSong()) else localize(song)
-        }
+            ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, localize)
+            ServerType.PLEX -> PlexBackend(com.aurora.music.data.remote.PlexClient(session), { maxBitrate }, localize)
+            ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, localize)
+            ServerType.SPOTIFY -> SpotifyBackend(
+                SpotifyClient(session, spotifyClientIdValue, onTokenRefreshed = { tok -> scope.launch { settingsStore.updateToken(tok) } }),
+                { maxBitrate }, localize,
+            )
+            ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
+            ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
+                com.aurora.music.data.remote.YouTubeMusicClient(
+                    session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }))) { message ->
+                if (lastSession?.accountKey() == session.accountKey() ||
+                    (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
+                        (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
+            }
+            ServerType.EXTENSION -> extensions.backend(session) { song ->
+                val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
+                val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
+                    ?.takeIf { java.io.File(it.audioPath).isFile } else null
+                if (downloaded != null) localizedFromDownload(song, downloaded.toSong()) else localize(song)
+            }
         }
     }
 
