@@ -17,6 +17,7 @@ object Routes {
     const val SETTINGS_LISTENING = "settings_listening"
     const val SETTINGS_EXTENSIONS = "settings_extensions"
     const val SIGN_IN = "sign_in"
+    const val SETUP = "setup"
     const val HOME = "home"
     const val SEARCH = "search"
     const val LIBRARY = "library"
