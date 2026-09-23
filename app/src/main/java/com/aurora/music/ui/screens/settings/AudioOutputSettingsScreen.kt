@@ -107,7 +107,7 @@ fun AudioOutputSettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             item { SettingsSectionTitle(appString(R.string.text_output_mode_ba6e71)) }
-            item { OutputRateSettings(ratePolicy) { next -> scope.launch { store.setOutputRatePolicy(next) } } }
+            item { OutputRateSettings(ratePolicy) { change -> scope.launch { store.updateOutputRatePolicy(change) } } }
             item {
                 SettingsGroup {
                     SettingsSwitchRow(

@@ -54,7 +54,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
     val playback by store.playbackPrefs.collectAsStateWithLifecycle(initialValue = PlaybackPrefs())
     val scope = rememberCoroutineScope()
     val snackbar = remember { SnackbarHostState() }
-    val saves = remember { Channel<RackSave>(Channel.CONFLATED) }
+    val saves = remember { Channel<RackSave>(Channel.UNLIMITED) }
     var rack by remember { mutableStateOf<ProcessingRack?>(null) }
     var requestedVersion by remember { mutableIntStateOf(0) }
     var savedVersion by remember { mutableIntStateOf(0) }
@@ -77,16 +77,24 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
         if (requestedVersion == savedVersion) rack = persisted
     }
     LaunchedEffect(saves) {
-        for (request in saves) {
-            val result = store.setProcessingRack(request.rack)
-            if (request.version == requestedVersion) {
-                savedVersion = request.version
+        for (first in saves) {
+            var latest = first
+            val completions = mutableListOf<CompletableDeferred<Result<Unit>>>()
+            first.completion?.let(completions::add)
+            while (true) {
+                val next = saves.tryReceive().getOrNull() ?: break
+                latest = next
+                next.completion?.let(completions::add)
+            }
+            val result = store.setProcessingRack(latest.rack)
+            if (latest.version == requestedVersion) {
+                savedVersion = latest.version
                 if (result.isFailure) {
                     rack = store.processingRack.first()
                     scope.launch { snackbar.showSnackbar(result.exceptionOrNull()?.message ?: appString(R.string.text_could_not_save_the_rack_5f8b53)) }
                 }
             }
-            request.completion?.complete(result)
+            completions.forEach { it.complete(result) }
         }
     }
     fun change(transform: (ProcessingRack) -> ProcessingRack) {
@@ -108,7 +116,6 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
         val completion = CompletableDeferred<Result<Unit>>()
         requestedVersion++
         rack = next
-        // Gain and EQ enter the graph in one atomic store write after the explicit preview.
         saves.send(RackSave(requestedVersion, next, completion))
         return completion.await()
     }
@@ -124,7 +131,6 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
         if (leaving) return
         leaving = true
         scope.launch {
-            // Complete the latest conflated write before navigation cancels this screen's scope.
             snapshotFlow { requestedVersion == savedVersion }.first { it }
             action()
         }

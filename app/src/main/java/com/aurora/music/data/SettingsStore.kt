@@ -462,6 +462,13 @@ class SettingsStore(private val context: Context) {
         editManualProcessing { it[Keys.OUTPUT_RATE_POLICY] = encoded }
     }
 
+    suspend fun updateOutputRatePolicy(change: (com.aurora.music.playback.engine.OutputRatePolicy) -> com.aurora.music.playback.engine.OutputRatePolicy): Result<Unit> = impulseResult {
+        editManualProcessing { preferences ->
+            val current = OutputRatePolicyCodec.decode(preferences[Keys.OUTPUT_RATE_POLICY]).getOrThrow()
+            preferences[Keys.OUTPUT_RATE_POLICY] = OutputRatePolicyCodec.encode(change(current))
+        }
+    }
+
     val rackSubchains: Flow<List<RackSubchain>> = context.dataStore.data.map {
         RackSubchainCodec.decode(it[Keys.RACK_SUBCHAINS]).getOrThrow()
     }.distinctUntilChanged()
