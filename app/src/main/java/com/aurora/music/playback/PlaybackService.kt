@@ -15,9 +15,7 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.source.ShuffleOrder
 import androidx.media3.session.CommandButton
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.session.LibraryResult
-import androidx.media3.session.MediaConstants
 import androidx.media3.session.MediaLibraryService
 import androidx.media3.session.MediaLibraryService.LibraryParams
 import androidx.media3.session.MediaLibraryService.MediaLibrarySession
@@ -70,10 +68,9 @@ class PlaybackService : MediaLibraryService() {
 
     private var mediaSession: MediaLibrarySession? = null
     private val container by lazy { (application as AuroraApplication).container }
-    private val browseCache = java.util.concurrent.ConcurrentHashMap<String, MediaItem>()
-    private val searchCache = java.util.concurrent.ConcurrentHashMap<String, List<MediaItem>>()
-    private val LIBRARY_ROOT = "root"
+    private val libraryBrowser by lazy { PlaybackLibraryBrowser(this, container.repository) }
     private lateinit var player: ExoPlayer
+    private val shuffleQueue by lazy { LocalShuffleQueue(player) }
     private var fadePlayer: ExoPlayer? = null
     private var castPlayer: androidx.media3.cast.CastPlayer? = null
     private var networkPlayer: NetworkQueuePlayer? = null
@@ -94,50 +91,7 @@ class PlaybackService : MediaLibraryService() {
     @Volatile private var replayGainMode: Int = 0
     @Volatile private var monoAudioPref: Boolean = false
     @Volatile private var lastAudioPrefs: AudioPrefs? = null
-    private var listeningHistoryAllowed = false
-    private var historyTick = 0L
-    private var historySong: com.aurora.music.model.Song? = null
-    private var historyPosition = 0L
-    private var historyWasPlaying = false
-    private var historyPendingMs = 0L
-    private var historyDay = java.time.LocalDate.now()
-
-    private fun flushListeningHistory() {
-        val previous = historySong
-        if (previous != null && historyPendingMs > 0) {
-            container.playHistory.recordListening(previous, historyPendingMs,
-                if (historyDay == java.time.LocalDate.now()) System.currentTimeMillis()
-                else historyDay.plusDays(1).atStartOfDay(java.time.ZoneId.systemDefault()).toInstant().toEpochMilli() - 1)
-        }
-        historyPendingMs = 0
-    }
-
-    private fun trackListeningHistory() {
-        val now = android.os.SystemClock.elapsedRealtime()
-        val elapsed = (now - historyTick).coerceIn(0L, 2000L)
-        historyTick = now
-        val active = mediaSession?.player ?: return
-        val item = active.currentMediaItem
-        val id = item?.mediaId.orEmpty()
-        val playing = active.isPlaying || (active === player && usbSink?.isNativeEngineActive == true && active.playWhenReady)
-        val position = active.currentPosition
-        val day = java.time.LocalDate.now()
-        val newSession = id != historySong?.id || (position < historyPosition && position < 1500 && historyPosition > 5000) || day != historyDay
-        if (newSession || !playing || !listeningHistoryAllowed) flushListeningHistory()
-        if (newSession || !listeningHistoryAllowed) container.playHistory.endListeningSession()
-        val m = item?.mediaMetadata
-        val song = com.aurora.music.model.Song(id, m?.title?.toString().orEmpty(), m?.artist?.toString().orEmpty(),
-            m?.albumTitle?.toString().orEmpty(), m?.artworkUri?.toString().orEmpty(),
-            m?.extras?.getInt("aurora.durationSec")?.takeIf { it > 0 } ?: (active.duration.coerceAtLeast(0) / 1000).toInt(),
-            albumId = m?.extras?.getString("aurora.albumId").orEmpty(), artistId = m?.extras?.getString("aurora.artistId").orEmpty())
-        container.discord.update(song, playing && id.isNotBlank(), position / 1000f)
-        if (!newSession && historyWasPlaying && playing && listeningHistoryAllowed && id.isNotBlank() &&
-            !id.startsWith("radio:") && !id.startsWith("podcast:") && !id.startsWith("aurora-mix:")) {
-            historyPendingMs += elapsed
-            if (historyPendingMs >= 5000) flushListeningHistory()
-        }
-        historySong = song; historyPosition = position; historyWasPlaying = playing; historyDay = day
-    }
+    private val listeningHistory by lazy { PlaybackListeningHistory(container.playHistory, container.discord) }
     @Volatile private var useFloatOut: Boolean = false
     private var usePrecisionProcessing = false
     private val precisionChains = mutableListOf<PrecisionBlockProcessor>()
@@ -215,10 +169,6 @@ class PlaybackService : MediaLibraryService() {
     private var xfadeOutGain = 1f
     @Volatile private var bitPerfect = false // exclusive USB uses its native mixer, never a second Android output
 
-    // pre-shuffle queue order for restore on disable null = not shuffled
-    private var originalOrder: List<String>? = null
-    // items may lag the command so flag and apply neutralize on next timeline change
-    private var pendingNeutralize = false
     private var usbSink: com.decent.usbaudio.media3.UsbAudioSink? = null
     private var processedUsbSink: ProcessedUsbAudioSink? = null
     private var rawDsdSink: com.aurora.music.playback.dsd.RawDsdAudioSink? = null
@@ -478,7 +428,7 @@ class PlaybackService : MediaLibraryService() {
                 if (events.contains(Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED) ||
                     events.contains(Player.EVENT_REPEAT_MODE_CHANGED)
                 ) updateCustomLayout()
-                if (events.contains(Player.EVENT_TIMELINE_CHANGED)) maybeNeutralize()
+                if (events.contains(Player.EVENT_TIMELINE_CHANGED)) shuffleQueue.maybeNeutralize()
                 if (events.contains(Player.EVENT_TRACKS_CHANGED) ||
                     events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
                     events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) ||
@@ -574,7 +524,7 @@ class PlaybackService : MediaLibraryService() {
             container.preferredAudioDeviceId.collect { id -> applyPreferredDevice(id) }
         }
         scope.launch {
-            container.settingsStore.privateSession.collect { privateSession -> listeningHistoryAllowed = !privateSession }
+            container.settingsStore.privateSession.collect { privateSession -> listeningHistory.allowed = !privateSession }
         }
 
         scope.launch {
@@ -584,7 +534,13 @@ class PlaybackService : MediaLibraryService() {
                 tickAudio()
             }
         }
-        scope.launch { while (isActive) { delay(1000); trackListeningHistory() } }
+        scope.launch {
+            while (isActive) {
+                delay(1000)
+                val active = mediaSession?.player
+                listeningHistory.track(active, active === player && usbSink?.isNativeEngineActive == true && player.playWhenReady)
+            }
+        }
         // USB engine and volume/fade changes need snapshots even without a Media3 track event.
         scope.launch { while (isActive) { delay(500); updateSignalPath() } }
     }
@@ -769,7 +725,7 @@ class PlaybackService : MediaLibraryService() {
             route = container.settingsStore.processingRoutes.current, playing = active?.isPlaying == true,
             postDsp = measurements?.after, downstreamGain = if (normal) sinkEvidence[player]?.downstreamGain?.toDouble() else null,
             volumeIndex = volumeStep, volumeMuted = muted, pathSupported = supported,
-            allowHistory = listeningHistoryAllowed, volumeMaximum = maximum))
+            allowHistory = listeningHistory.allowed, volumeMaximum = maximum))
     }
 
     private fun updateSignalPathSnapshot() {
@@ -1188,8 +1144,7 @@ class PlaybackService : MediaLibraryService() {
         xfadeOutGain = replayGainMultiplier()
         xfadeInGain = replayGainMultiplier(incoming.currentMediaItem)
         val outgoing = player
-        // Aurora already reordered the physical queue. Preserve its shuffle flag while keeping
-        // native traversal sequential; originalOrder continues to own later unshuffle restoration.
+        // - preserve physical order and shuffle restoration
         incoming.setShuffleOrder(ShuffleOrder.UnshuffledShuffleOrder(incoming.mediaItemCount))
         incoming.shuffleModeEnabled = outgoing.shuffleModeEnabled
         // Focus belongs to the incoming/session player. Only one player requests it.
@@ -1353,7 +1308,7 @@ class PlaybackService : MediaLibraryService() {
                         customCommand.customExtras.getStringArrayList("order"))
                 } else if (mixPlayer != null) {
                     return Futures.immediateFuture(SessionResult(androidx.media3.session.SessionError.ERROR_NOT_SUPPORTED))
-                } else setShuffle(
+                } else shuffleQueue.setShuffle(
                     customCommand.customExtras.getInt("target", -1),
                     customCommand.customExtras.getStringArrayList("order"),
                 )
@@ -1386,8 +1341,7 @@ class PlaybackService : MediaLibraryService() {
             browser: MediaSession.ControllerInfo,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<MediaItem>> {
-            val root = browseItem(LIBRARY_ROOT, "Aurora", MediaMetadata.MEDIA_TYPE_FOLDER_MIXED, styleExtras(styleList, styleList))
-            return Futures.immediateFuture(LibraryResult.ofItem(root, params))
+            return Futures.immediateFuture(LibraryResult.ofItem(libraryBrowser.root(), params))
         }
 
         override fun onGetChildren(
@@ -1398,7 +1352,7 @@ class PlaybackService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = serviceFuture {
-            LibraryResult.ofItemList(browseChildren(parentId).also { grantArtwork(browser, it) }, params)
+            LibraryResult.ofItemList(libraryBrowser.children(parentId).also { libraryBrowser.grantArtwork(browser, it) }, params)
         }
 
         override fun onGetItem(
@@ -1406,8 +1360,8 @@ class PlaybackService : MediaLibraryService() {
             browser: MediaSession.ControllerInfo,
             mediaId: String,
         ): ListenableFuture<LibraryResult<MediaItem>> = serviceFuture {
-            val item = browseCache[mediaId] ?: resolvePlayable(mediaId)
-            if (item != null) LibraryResult.ofItem(item.also { grantArtwork(browser, listOf(it)) }, null)
+            val item = libraryBrowser.resolvePlayable(mediaId)
+            if (item != null) LibraryResult.ofItem(item.also { libraryBrowser.grantArtwork(browser, listOf(it)) }, null)
             else LibraryResult.ofError(androidx.media3.session.SessionError.ERROR_BAD_VALUE)
         }
 
@@ -1419,7 +1373,7 @@ class PlaybackService : MediaLibraryService() {
             if (mediaItems.all { it.localConfiguration != null }) return Futures.immediateFuture(mediaItems)
             return serviceFuture {
                 mediaItems.map { item ->
-                    if (item.localConfiguration != null) item else resolvePlayable(item.mediaId) ?: item
+                    if (item.localConfiguration != null) item else libraryBrowser.resolvePlayable(item.mediaId) ?: item
                 }.toMutableList()
             }
         }
@@ -1430,8 +1384,7 @@ class PlaybackService : MediaLibraryService() {
             query: String,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<Void>> = serviceFuture {
-            val items = runCatching { searchItems(query) }.getOrDefault(emptyList())
-            searchCache[query] = items
+            val items = libraryBrowser.search(query)
             session.notifySearchResultChanged(browser, query, items.size, params)
             LibraryResult.ofVoid()
         }
@@ -1444,96 +1397,15 @@ class PlaybackService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = serviceFuture {
-            val items = searchCache[query] ?: runCatching { searchItems(query) }.getOrDefault(emptyList()).also { searchCache[query] = it }
-            LibraryResult.ofItemList(ImmutableList.copyOf(items).also { grantArtwork(browser, it) }, params)
+            val items = libraryBrowser.searchResult(query)
+            LibraryResult.ofItemList(items.also { libraryBrowser.grantArtwork(browser, it) }, params)
         }
-    }
-
-    private fun grantArtwork(browser: MediaSession.ControllerInfo, items: List<MediaItem>) {
-        items.mapNotNull { it.mediaMetadata.artworkUri }.distinct().forEach { uri ->
-            if (com.aurora.music.data.artwork.ArtworkUrls.isArtwork(uri.toString())) runCatching {
-                grantUriPermission(browser.packageName, uri, android.content.Intent.FLAG_GRANT_READ_URI_PERMISSION)
-            }
-        }
-    }
-
-    private suspend fun searchItems(query: String): List<MediaItem> {
-        if (query.isBlank()) return emptyList()
-        val r = container.repository.search(query)
-        val songs = r.songs.map { songItem(it) }
-        val albums = r.albums.map { collectionItem("alb_${it.id}", it.title, it.artist, it.artworkUrl, MediaMetadata.MEDIA_TYPE_ALBUM) }
-        val artists = r.artists.map { collectionItem("art_${it.id}", it.name, "Artist", it.imageUrl, MediaMetadata.MEDIA_TYPE_ARTIST) }
-        return songs + albums + artists
     }
 
     private fun <T> serviceFuture(block: suspend () -> T): ListenableFuture<T> {
         val f = SettableFuture.create<T>()
         scope.launch { runCatching { f.set(block()) }.onFailure { f.setException(it) } }
         return f
-    }
-
-    private suspend fun browseChildren(parentId: String): ImmutableList<MediaItem> {
-        val repo = container.repository
-        val items: List<MediaItem> = runCatching {
-            when {
-                parentId == LIBRARY_ROOT -> listOf(
-                    browseItem("cat_liked", "Liked Songs", MediaMetadata.MEDIA_TYPE_PLAYLIST, styleExtras(styleList, styleList)),
-                    browseItem("cat_playlists", "Playlists", MediaMetadata.MEDIA_TYPE_FOLDER_PLAYLISTS, styleExtras(styleGrid, styleList)),
-                    browseItem("cat_albums", "Albums", MediaMetadata.MEDIA_TYPE_FOLDER_ALBUMS, styleExtras(styleGrid, styleList)),
-                    browseItem("cat_artists", "Artists", MediaMetadata.MEDIA_TYPE_FOLDER_ARTISTS, styleExtras(styleGrid, styleList)),
-                    browseItem("cat_downloads", "Downloads", MediaMetadata.MEDIA_TYPE_PLAYLIST, styleExtras(styleList, styleList)),
-                )
-                parentId == "cat_liked" -> repo.starredSongs().map { songItem(it) }
-                parentId == "cat_downloads" -> repo.downloadedSongs().map { songItem(it) }
-                parentId == "cat_playlists" -> repo.allPlaylists().map { collectionItem("pl_${it.id}", it.title, it.subtitle, it.coverUrl, MediaMetadata.MEDIA_TYPE_PLAYLIST) }
-                parentId == "cat_albums" -> repo.allAlbums().map { collectionItem("alb_${it.id}", it.title, it.artist, it.artworkUrl, MediaMetadata.MEDIA_TYPE_ALBUM) }
-                parentId == "cat_artists" -> repo.allArtists().map { collectionItem("art_${it.id}", it.name, "Artist", it.imageUrl, MediaMetadata.MEDIA_TYPE_ARTIST) }
-                parentId.startsWith("alb_") -> repo.detail("album", parentId.removePrefix("alb_"))?.tracks?.map { songItem(it) }.orEmpty()
-                parentId.startsWith("pl_") -> repo.detail("playlist", parentId.removePrefix("pl_"))?.tracks?.map { songItem(it) }.orEmpty()
-                parentId.startsWith("art_") -> repo.detail("artist", parentId.removePrefix("art_"))?.tracks?.map { songItem(it) }.orEmpty()
-                else -> emptyList()
-            }
-        }.getOrDefault(emptyList())
-        return ImmutableList.copyOf(items)
-    }
-
-    private suspend fun resolvePlayable(mediaId: String): MediaItem? {
-        browseCache[mediaId]?.let { return it }
-        val id = mediaId.removePrefix("song_")
-        return runCatching { container.repository.songFor(id)?.let { songItem(it) } }.getOrNull()
-    }
-
-    private val styleGrid get() = MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_GRID_ITEM
-    private val styleList get() = MediaConstants.EXTRAS_VALUE_CONTENT_STYLE_LIST_ITEM
-    private fun styleExtras(browsable: Int, playable: Int) = Bundle().apply {
-        putInt(MediaConstants.EXTRAS_KEY_CONTENT_STYLE_BROWSABLE, browsable)
-        putInt(MediaConstants.EXTRAS_KEY_CONTENT_STYLE_PLAYABLE, playable)
-    }
-
-    private fun browseItem(id: String, title: String, mediaType: Int, childExtras: Bundle? = null): MediaItem =
-        MediaItem.Builder().setMediaId(id).setMediaMetadata(
-            MediaMetadata.Builder().setTitle(title).setIsBrowsable(true).setIsPlayable(false).setMediaType(mediaType)
-                .apply { if (childExtras != null) setExtras(childExtras) }.build()
-        ).build()
-
-    private fun collectionItem(id: String, title: String, subtitle: String, art: String, mediaType: Int): MediaItem =
-        MediaItem.Builder().setMediaId(id).setMediaMetadata(
-            MediaMetadata.Builder().setTitle(title).setSubtitle(subtitle).setArtist(subtitle)
-                .setIsBrowsable(true).setIsPlayable(false).setMediaType(mediaType)
-                .setExtras(styleExtras(styleList, styleList))
-                .apply { if (art.isNotBlank()) setArtworkUri(android.net.Uri.parse(art)) }.build()
-        ).build().also { browseCache[id] = it }
-
-    private fun songItem(song: com.aurora.music.model.Song): MediaItem {
-        val id = "song_${song.id}"
-        val item = MediaItem.Builder().setMediaId(id).setUri(song.streamUrl).setMediaMetadata(
-            MediaMetadata.Builder().setTitle(song.title).setArtist(song.artist).setAlbumTitle(song.album)
-                .setExtras(PresetContextPublisher.extras(song, container.repository.playbackSourceIdentity(song)))
-                .setIsBrowsable(false).setIsPlayable(true).setMediaType(MediaMetadata.MEDIA_TYPE_MUSIC)
-                .apply { if (song.artworkUrl.isNotBlank()) setArtworkUri(android.net.Uri.parse(song.artworkUrl)) }.build()
-        ).build()
-        browseCache[id] = item
-        return item
     }
 
     private fun buildCustomLayout(): List<CommandButton> {
@@ -1565,79 +1437,6 @@ class PlaybackService : MediaLibraryService() {
             Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
             Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
             else -> Player.REPEAT_MODE_OFF
-        }
-    }
-
-    // physical shuffle reorders the actual items shuffleModeEnabled is just a ui flag with an identity ShuffleOrder so playback follows our order not a second random one
-    private fun setShuffle(target: Int, providedOrder: List<String>?) {
-        val enable = when (target) {
-            1 -> true
-            0 -> false
-            else -> !player.shuffleModeEnabled
-        }
-        // a provided order is a fresh shuffle-play always reapply otherwise skip no-ops
-        if (providedOrder == null && enable == player.shuffleModeEnabled && enable == (originalOrder != null)) return
-
-        if (enable && providedOrder != null) {
-            // caller already shuffled just remember the real order for restore
-            originalOrder = providedOrder
-            player.shuffleModeEnabled = true
-            pendingNeutralize = true
-            maybeNeutralize()
-            return
-        }
-        if (enable) {
-            // keep the current track shuffle everything after it
-            if (player.mediaItemCount <= 1) {
-                player.shuffleModeEnabled = true
-                originalOrder = currentIds()
-                return
-            }
-            val ids = currentIds()
-            originalOrder = ids
-            val curId = player.currentMediaItem?.mediaId
-            val rest = ids.filter { it != curId }.shuffled()
-            val desired = (if (curId != null) listOf(curId) else emptyList()) + rest
-            applyOrder(desired)
-            player.shuffleModeEnabled = true
-            pendingNeutralize = true
-            maybeNeutralize()
-        } else {
-            val orig = originalOrder
-            if (orig != null) {
-                val present = currentIds()
-                // restore snapshot order keep newly-added items at the end
-                val restored = orig.filter { it in present } + present.filter { it !in orig }
-                applyOrder(restored)
-            }
-            player.shuffleModeEnabled = false
-            originalOrder = null
-        }
-    }
-
-    private fun maybeNeutralize() {
-        if (!pendingNeutralize) return
-        val count = player.mediaItemCount
-        if (count <= 0) return
-        runCatching { player.setShuffleOrder(ShuffleOrder.UnshuffledShuffleOrder(count)) }
-        pendingNeutralize = false
-    }
-
-    private fun currentIds(): List<String> =
-        (0 until player.mediaItemCount).map { player.getMediaItemAt(it).mediaId }
-
-    // reorder in place via moves so playback isnt interrupted
-    private fun applyOrder(target: List<String>) {
-        for (i in target.indices) {
-            if (i >= player.mediaItemCount) break
-            val want = target[i]
-            var cur = -1
-            var j = i
-            while (j < player.mediaItemCount) {
-                if (player.getMediaItemAt(j).mediaId == want) { cur = j; break }
-                j++
-            }
-            if (cur in (i + 1) until player.mediaItemCount) player.moveMediaItem(cur, i)
         }
     }
 
@@ -1699,12 +1498,12 @@ class PlaybackService : MediaLibraryService() {
         val wanted = requestedPlay ?: from.playWhenReady
         val old = networkPlayer
         val repeat = from.repeatMode
-        val shuffleOrder = if (old != null) old.shuffleRestoreIds else originalOrder
+        val shuffleOrder = if (old != null) old.shuffleRestoreIds else shuffleQueue.originalOrder
         from.pause()
         if (target == null) {
             networkPlayer = null
             mediaSession?.player = player
-            originalOrder = shuffleOrder
+            shuffleQueue.originalOrder = shuffleOrder
             player.repeatMode = repeat
             if (items.isNotEmpty()) { player.setMediaItems(items, index.coerceAtMost(items.lastIndex), position); player.prepare() }
             else player.clearMediaItems()
@@ -1742,7 +1541,7 @@ class PlaybackService : MediaLibraryService() {
         remote.addListener(object : Player.Listener {
             override fun onEvents(player: Player, events: Player.Events) {
                 if (networkPlayer === remote) {
-                    originalOrder = remote.shuffleRestoreIds
+                    shuffleQueue.originalOrder = remote.shuffleRestoreIds
                     if (events.contains(Player.EVENT_SHUFFLE_MODE_ENABLED_CHANGED) ||
                         events.contains(Player.EVENT_REPEAT_MODE_CHANGED)) updateCustomLayout()
                     updateSignalPath(); publishNowPlaying()
@@ -1985,10 +1784,10 @@ class PlaybackService : MediaLibraryService() {
             }
             if (mixPlayer != null) stopMix()
             if (xfadeActive) endXfade() else clearPrepared()
-            originalOrder = null
+            shuffleQueue.originalOrder = null
             player.shuffleModeEnabled = false
             val ordered = songs.shuffled()
-            player.setMediaItems(ordered.map { songItem(it) }, 0, 0L)
+            player.setMediaItems(ordered.map { libraryBrowser.songItem(it) }, 0, 0L)
             player.repeatMode = Player.REPEAT_MODE_ALL
             player.prepare()
             player.volume = 0f
@@ -2021,9 +1820,7 @@ class PlaybackService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
-        flushListeningHistory()
-        historySong?.let { container.discord.update(it, false, 0f) }
-        container.playHistory.endListeningSession()
+        listeningHistory.finish()
         networkDisposed = true
         networkBridge?.close(); networkBridge = null
         networkPlayer?.release(); networkPlayer = null

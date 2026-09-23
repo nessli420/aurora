@@ -115,6 +115,22 @@ class QueueReplacementDeviceTest {
         }
     }
 
+    @Test fun smallShuffledQueueRestoresItsOriginalOrder() = withQueue(songCount = 3) { vm, controller, songs ->
+        fixture.main { vm.shufflePlay(songs) }
+        fixture.await("small shuffle reaches the service", controller) {
+            fixture.main { controller.mediaItemCount == songs.size && controller.shuffleModeEnabled }
+        }
+        val current = fixture.main { controller.currentMediaItem?.mediaId }
+        val command = SessionCommand(PlaybackService.CMD_SHUFFLE, Bundle().apply { putInt("target", 0) })
+        val result = fixture.main { controller.sendCustomCommand(command, Bundle.EMPTY) }.get(10, TimeUnit.SECONDS)
+        assertEquals(0, result.resultCode)
+        awaitQueue(controller, songs.map { it.id })
+        fixture.main {
+            assertFalse(controller.shuffleModeEnabled)
+            assertEquals(current, controller.currentMediaItem?.mediaId)
+        }
+    }
+
     private fun withQueue(songCount: Int = 2_400, block: (PlayerViewModel, MediaController, List<Song>) -> Unit) {
         fixture.withProcessingFixture(0) { controller, _ ->
             val audio = fixture.wav("queue-replacement", 48_000, 48_000 * 3) { _, _ -> 0 }

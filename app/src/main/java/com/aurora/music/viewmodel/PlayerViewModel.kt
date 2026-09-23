@@ -7,7 +7,6 @@ import android.app.Application
 import android.content.ComponentName
 import android.net.Uri
 import android.os.Bundle
-import android.os.SystemClock
 import androidx.annotation.OptIn
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
@@ -18,7 +17,6 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
@@ -45,12 +43,10 @@ import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withTimeout
 import kotlin.coroutines.resume
 import kotlin.math.pow
-import kotlin.math.abs
 
 enum class RepeatMode { OFF, ALL, ONE }
 
@@ -97,16 +93,22 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
 
     private var controller: MediaController? = null
-    val videoPlayer: Player? get() = companionVideoPlayer?.takeIf { companionVideoReady } ?: controller
-    private var companionVideoPlayer: ExoPlayer? = null
-    private var companionVideoReady = false
-    private var companionVideoVisible = false
-    private var companionSongId: String? = null
-    private var companionVideoId: String? = null
-    private var companionQualityHeight: Int? = 720
-    private var lastCompanionSeekMs = 0L
-    private var videoSearchJob: Job? = null
-    private var videoQualityJob: Job? = null
+    private val companionVideo = CompanionVideoController(
+        app = app,
+        scope = viewModelScope,
+        resolver = container.youtubeResolver,
+        audioPlayer = { controller },
+        currentSong = { _state.value.current },
+        onStateChanged = { video ->
+            _state.update { it.copy(
+                hasVideo = video.ready,
+                videoLoading = video.loading,
+                canSelectVideoQuality = video.ready,
+                videoQualityHeight = video.qualityHeight,
+            ) }
+        },
+    )
+    val videoPlayer: Player? get() = companionVideo.player ?: controller
     private var ticker: Job? = null
     private var sleepJob: Job? = null
     private var queueFillJob: Job? = null
@@ -136,17 +138,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
     @Volatile private var loadingRadio = false
 
-    // bit-perfect quirk: the native flac engine plays audio (and currentPosition advances off engine frames)
-    // while exoplayer can still report STATE_BUFFERING because the native-engine loadcontrol blocks loading, so
-    // c.isPlaying reads false on a cold connect leaving the bar frozen + a paused icon until a manual pause/play.
-    // treat "wants to play and is buffering" as playing so the ui tracks the audible reality.
-    private val Player.effectivelyPlaying: Boolean
-        get() = isPlaying || (playWhenReady && playbackState == Player.STATE_BUFFERING)
-
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             syncFromController()
-            if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)) syncCompanionVideo(forceSeek = true)
+            if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)) companionVideo.sync(forceSeek = true)
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) && player.playbackState == Player.STATE_ENDED) {
                 maybeAutoplay()
                 // last track has no transition to honour the end-of-track sleep so do it here
@@ -270,7 +265,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun stopPlayback() {
-        clearCompanionVideo()
+        companionVideo.clear()
         cancelMediaSearch()
         cancelQueueFill()
         container.mixController.commands.tryEmit(com.aurora.music.mix.MixCommand.Stop)
@@ -392,7 +387,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             while (true) {
                 delay(200)
                 val c = controller ?: continue
-                syncCompanionVideo()
+                companionVideo.sync()
                 if (c.effectivelyPlaying) {
                     val posSec = (c.currentPosition / 1000f).coerceAtLeast(0f)
                     _state.update { it.copy(positionSec = posSec) }
@@ -417,7 +412,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 metadata.artworkUri?.toString().orEmpty(), (c.duration.coerceAtLeast(0) / 1000).toInt())
         } else mediaId?.let { songById[it] } ?: _state.value.current
         val cur = com.aurora.music.playback.PreferredPlayback.applyTo(queued, c.currentMediaItem)
-        if (companionSongId != null && companionSongId != cur.id) clearCompanionVideo()
+        companionVideo.clearIfSongChanged(cur.id)
         val videoUri = c.currentMediaItem?.localConfiguration?.uri
         val q = (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
         if (cur.id != lastKeyInfoId) { lastKeyInfoId = cur.id; lastKeyInfo = runCatching { container.sonicEngine.keyInfo(cur.id) }.getOrNull() }
@@ -428,9 +423,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 timelineDurationSec = (c.duration.coerceAtLeast(0) / 1000).toInt(),
                 isLive = c.isCurrentMediaItemLive || cur.isRadio(),
                 hasVideo = (c.currentTracks.isTypeSupported(C.TRACK_TYPE_VIDEO) &&
-                    c.isCommandAvailable(Player.COMMAND_SET_VIDEO_SURFACE)) || companionVideoReady,
-                canSelectVideoQuality = companionVideoReady || videoUri?.scheme == "aurora-yt" && videoUri.host == "video",
-                videoQualityHeight = if (companionVideoReady) companionQualityHeight else videoUri?.getQueryParameter("quality")?.toIntOrNull(),
+                    c.isCommandAvailable(Player.COMMAND_SET_VIDEO_SURFACE)) || companionVideo.isReady,
+                canSelectVideoQuality = companionVideo.isReady || videoUri?.scheme == "aurora-yt" && videoUri.host == "video",
+                videoQualityHeight = if (companionVideo.isReady) companionVideo.qualityHeight else videoUri?.getQueryParameter("quality")?.toIntOrNull(),
                 isMix = container.mixController.activeProject != null,
                 isPlaying = c.effectivelyPlaying,
                 shuffle = c.shuffleModeEnabled,
@@ -452,94 +447,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun requestMusicVideo(onResult: (String) -> Unit) {
-        val song = _state.value.current
-        if (song.id.isBlank() || song.artist.isBlank() || song.title.isBlank() || _state.value.videoLoading) return
-        if (companionSongId == song.id && companionVideoReady) return
-        clearCompanionVideo()
-        companionSongId = song.id
-        _state.update { it.copy(videoLoading = true) }
-        videoSearchJob = viewModelScope.launch {
-            val match = withContext(Dispatchers.IO) {
-                container.youtubeResolver.findMusicVideo(song.artist, song.title, song.durationSec)
-            }
-            ensureActive()
-            if (_state.value.current.id != song.id) return@launch
-            if (match == null) {
-                clearCompanionVideo()
-                onResult(appString(R.string.video_match_not_found))
-                return@launch
-            }
-            companionVideoId = match.videoId
-            companionQualityHeight = 720
-            val video = ExoPlayer.Builder(getApplication()).build().apply {
-                volume = 0f
-                setMediaItem(MediaItem.fromUri(match.streamUrl))
-            }
-            companionVideoPlayer = video
-            video.addListener(object : Player.Listener {
-                override fun onPlaybackStateChanged(playbackState: Int) {
-                    if (video !== companionVideoPlayer || playbackState != Player.STATE_READY) return
-                    if (!video.currentTracks.isTypeSupported(C.TRACK_TYPE_VIDEO)) {
-                        clearCompanionVideo()
-                        onResult(appString(R.string.video_match_not_found))
-                        return
-                    }
-                    companionVideoReady = true
-                    _state.update { it.copy(hasVideo = true, videoLoading = false,
-                        canSelectVideoQuality = true, videoQualityHeight = companionQualityHeight) }
-                    syncCompanionVideo()
-                }
-
-                override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
-                    if (video !== companionVideoPlayer) return
-                    clearCompanionVideo()
-                    onResult(appString(R.string.video_match_not_found))
-                }
-            })
-            video.prepare()
-        }
+        companionVideo.request(_state.value.current) { onResult(appString(R.string.video_match_not_found)) }
     }
 
     fun setMusicVideoVisible(visible: Boolean) {
-        companionVideoVisible = visible
-        syncCompanionVideo(forceSeek = visible)
-    }
-
-    private fun syncCompanionVideo(forceSeek: Boolean = false) {
-        val video = companionVideoPlayer ?: return
-        val audio = controller ?: return
-        if (!companionVideoReady) return
-        if (!companionVideoVisible) {
-            video.playWhenReady = false
-            return
-        }
-        val position = audio.currentPosition.coerceAtLeast(0)
-        val now = SystemClock.elapsedRealtime()
-        val steadyDrift = video.playbackState == Player.STATE_READY && video.isPlaying && audio.isPlaying &&
-            abs(video.currentPosition - position) > 3_000 && now - lastCompanionSeekMs > 15_000
-        if (forceSeek || steadyDrift) {
-            video.seekTo(position)
-            lastCompanionSeekMs = now
-        }
-        if (video.playbackParameters != audio.playbackParameters) video.playbackParameters = audio.playbackParameters
-        video.playWhenReady = audio.effectivelyPlaying
-    }
-
-    private fun clearCompanionVideo() {
-        videoSearchJob?.cancel()
-        videoSearchJob = null
-        videoQualityJob?.cancel()
-        videoQualityJob = null
-        companionVideoPlayer?.release()
-        companionVideoPlayer = null
-        companionSongId = null
-        companionVideoId = null
-        companionQualityHeight = 720
-        lastCompanionSeekMs = 0L
-        companionVideoReady = false
-        companionVideoVisible = false
-        _state.update { it.copy(videoLoading = false, hasVideo = false,
-            canSelectVideoQuality = false, videoQualityHeight = null) }
+        companionVideo.setVisible(visible)
     }
 
     // mediastore lacks sample-rate/bit-depth pull them for the playing track via retriever once each
@@ -949,30 +861,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun setVideoQuality(height: Int?) {
-        if (companionVideoReady) {
-            val videoId = companionVideoId ?: return
-            val video = companionVideoPlayer ?: return
-            val songId = companionSongId ?: return
-            val quality = height?.coerceAtLeast(144)
-            if (quality == companionQualityHeight) return
-            videoQualityJob?.cancel()
-            videoQualityJob = viewModelScope.launch {
-                _state.update { it.copy(videoLoading = true) }
-                val url = withContext(Dispatchers.IO) {
-                    runCatching { container.youtubeResolver.resolveVisualStream(videoId, quality) }.getOrNull()
-                }
-                ensureActive()
-                if (songId != companionSongId || video !== companionVideoPlayer) return@launch
-                _state.update { it.copy(videoLoading = false) }
-                if (url == null) return@launch
-                companionQualityHeight = quality
-                _state.update { it.copy(videoQualityHeight = quality) }
-                video.setMediaItem(MediaItem.fromUri(url), (controller?.currentPosition ?: 0L).coerceAtLeast(0L))
-                video.prepare()
-                syncCompanionVideo()
-            }
-            return
-        }
+        if (companionVideo.setQuality(height)) return
         val c = controller ?: return
         val index = c.currentMediaItemIndex.takeIf { it in 0 until c.mediaItemCount } ?: return
         val item = c.getMediaItemAt(index)
@@ -1102,7 +991,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     override fun onCleared() {
-        clearCompanionVideo()
+        companionVideo.clear()
         persistQueue()
         container.queueStore.requestFlush()
         ticker?.cancel()
