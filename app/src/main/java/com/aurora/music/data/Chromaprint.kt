@@ -15,6 +15,34 @@ object Chromaprint {
     private external fun nativeNew(sampleRate: Int, channels: Int): Long
     private external fun nativeFeed(ctx: Long, pcm: ShortArray, length: Int)
     private external fun nativeFinish(ctx: Long): String?
+    private external fun nativeFinishRaw(ctx: Long): IntArray?
+
+    data class RawFingerprint(val itemDurationMs: Int, val delayMs: Int, val values: IntArray)
+
+    fun rawFingerprint(path: String, seconds: Int, context: android.content.Context,
+        cancelled: () -> Boolean = { false }): RawFingerprint? {
+        if (!loaded) return null
+        var ctx = 0L
+        var formatSeen = false
+        var sampleRate = 0
+        var channels = 1
+        var frames = 0L
+        AudioDecoder.decode(path, { sr, ch ->
+            formatSeen = true
+            sampleRate = sr
+            channels = ch.coerceAtLeast(1)
+            ctx = runCatching { nativeNew(sr, channels) }.getOrDefault(0L)
+        }, { pcm, len ->
+            if (ctx != 0L) {
+                nativeFeed(ctx, pcm, len)
+                frames += len / channels
+            }
+        }, { cancelled() || formatSeen && (ctx == 0L || frames >= seconds.toLong() * sampleRate) }, context)
+        if (ctx == 0L) return null
+        val raw = runCatching { nativeFinishRaw(ctx) }.getOrNull() ?: return null
+        if (raw.size < 3 || raw[0] <= 0) return null
+        return RawFingerprint(raw[0], raw[1], raw.copyOfRange(2, raw.size))
+    }
 
     fun fingerprint(path: String): String? {
         if (!loaded) return null

@@ -43,4 +43,26 @@ Java_com_aurora_music_data_Chromaprint_nativeFinish(JNIEnv *env, jobject, jlong 
     return result;
 }
 
+JNIEXPORT jintArray JNICALL
+Java_com_aurora_music_data_Chromaprint_nativeFinishRaw(JNIEnv *env, jobject, jlong ctxPtr) {
+    auto *ctx = reinterpret_cast<ChromaprintContext *>(ctxPtr);
+    if (ctx == nullptr) return nullptr;
+    jintArray result = nullptr;
+    if (chromaprint_finish(ctx) == 1) {
+        uint32_t *fingerprint = nullptr;
+        int size = 0;
+        if (chromaprint_get_raw_fingerprint(ctx, &fingerprint, &size) == 1 && fingerprint != nullptr && size > 0) {
+            result = env->NewIntArray(size + 2);
+            if (result != nullptr) {
+                const jint timing[] = {chromaprint_get_item_duration_ms(ctx), chromaprint_get_delay_ms(ctx)};
+                env->SetIntArrayRegion(result, 0, 2, timing);
+                env->SetIntArrayRegion(result, 2, size, reinterpret_cast<const jint *>(fingerprint));
+            }
+            chromaprint_dealloc(fingerprint);
+        }
+    }
+    chromaprint_free(ctx);
+    return result;
+}
+
 } // extern "C"

@@ -12,6 +12,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import com.aurora.music.model.Song
 import com.aurora.music.playback.YoutubeResolver
 import com.aurora.music.playback.VideoAudioAligner
+import com.aurora.music.playback.VideoSyncPlan
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -46,13 +47,14 @@ internal class CompanionVideoController(
     private var songId: String? = null
     private var videoId: String? = null
     private var selectedQuality: Int? = 720
-    private var audioOffsetMs = 0L
+    private var syncPlan: VideoSyncPlan? = null
+    private var activeOffsetMs = 0L
     private var lastSeekMs = 0L
     private var searchJob: Job? = null
     private var qualityJob: Job? = null
     private var alignJob: Job? = null
     private val aligner = VideoAudioAligner(app, resolver)
-    private val offsetCache = LinkedHashMap<Pair<String, String>, Long>()
+    private val planCache = LinkedHashMap<Pair<String, String>, VideoSyncPlan>()
 
     val player: Player? get() = video?.takeIf { ready }
     val isReady: Boolean get() = ready
@@ -79,20 +81,20 @@ internal class CompanionVideoController(
             videoId = match.videoId
             selectedQuality = 720
             val cacheKey = song.id to match.videoId
-            offsetCache[cacheKey]?.let { audioOffsetMs = it }
-            if (!offsetCache.containsKey(cacheKey)) {
+            planCache[cacheKey]?.let { syncPlan = it }
+            if (!planCache.containsKey(cacheKey)) {
                 alignJob = scope.launch {
-                    val offset = runCatching { aligner.offsetMs(song.streamUrl, match.videoId) }.getOrNull()
+                    val plan = runCatching { aligner.plan(song.streamUrl, match.videoId) }.getOrNull()
                     ensureActive()
                     if (songId != song.id || videoId != match.videoId) return@launch
-                    if (offset == null) {
+                    if (plan == null) {
                         android.util.Log.d("CompanionVideo", "Audio alignment unavailable")
                         return@launch
                     }
-                    audioOffsetMs = offset
-                    android.util.Log.d("CompanionVideo", "Audio offset ${offset}ms")
-                    if (offsetCache.size >= 64) offsetCache.remove(offsetCache.keys.first())
-                    offsetCache[cacheKey] = offset
+                    syncPlan = plan
+                    android.util.Log.d("CompanionVideo", "Audio sync plan $plan")
+                    if (planCache.size >= 64) planCache.remove(planCache.keys.first())
+                    planCache[cacheKey] = plan
                     sync(forceSeek = true)
                 }
             }
@@ -142,7 +144,11 @@ internal class CompanionVideoController(
             candidate.playWhenReady = false
             return
         }
-        val position = audio.currentPosition.coerceAtLeast(0) + audioOffsetMs
+        val audioPosition = audio.currentPosition.coerceAtLeast(0)
+        val offset = syncPlan?.offsetAt(audioPosition) ?: 0L
+        val segmentChanged = offset != activeOffsetMs
+        activeOffsetMs = offset
+        val position = audioPosition + offset
         if (position < 0) {
             if (candidate.currentPosition > 100) candidate.seekTo(0)
             candidate.playWhenReady = false
@@ -151,7 +157,7 @@ internal class CompanionVideoController(
         val now = SystemClock.elapsedRealtime()
         val steadyDrift = candidate.playbackState == Player.STATE_READY && candidate.isPlaying && audio.isPlaying &&
             abs(candidate.currentPosition - position) > 3_000 && now - lastSeekMs > 15_000
-        if (forceSeek || steadyDrift) {
+        if (forceSeek || segmentChanged || steadyDrift) {
             candidate.seekTo(position)
             lastSeekMs = now
         }
@@ -181,7 +187,7 @@ internal class CompanionVideoController(
             selectedQuality = quality
             publish()
             candidate.setMediaItem(MediaItem.fromUri(url),
-                ((audioPlayer()?.currentPosition ?: 0L) + audioOffsetMs).coerceAtLeast(0L))
+                ((audioPlayer()?.currentPosition ?: 0L).let { it + (syncPlan?.offsetAt(it) ?: 0L) }).coerceAtLeast(0L))
             candidate.prepare()
             sync()
         }
@@ -200,7 +206,8 @@ internal class CompanionVideoController(
         songId = null
         videoId = null
         selectedQuality = 720
-        audioOffsetMs = 0L
+        syncPlan = null
+        activeOffsetMs = 0L
         lastSeekMs = 0L
         ready = false
         visible = false
