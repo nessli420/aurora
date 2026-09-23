@@ -945,6 +945,7 @@ class SettingsStore(private val context: Context) {
     val artworkLookupEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.ARTWORK_LOOKUP] ?: true }
     val lrclibEnabled: Flow<Boolean> = context.dataStore.data.map { it[Keys.LRCLIB] ?: true }
     val dataSaver: Flow<Boolean> = context.dataStore.data.map { it[Keys.DATA_SAVER] ?: false }
+    val simpleMode: Flow<Boolean> = context.dataStore.data.map { it[Keys.SIMPLE_MODE] ?: false }.distinctUntilChanged()
     val privateSession: Flow<Boolean> = context.dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }
 
     val gesturePrefs: Flow<GesturePrefs> = context.dataStore.data.map { p ->
@@ -1210,6 +1211,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setArtworkLookupEnabled(v: Boolean) = context.dataStore.edit { it[Keys.ARTWORK_LOOKUP] = v }
     suspend fun setLrclibEnabled(v: Boolean) = context.dataStore.edit { it[Keys.LRCLIB] = v }
     suspend fun setDataSaver(v: Boolean) = context.dataStore.edit { it[Keys.DATA_SAVER] = v }
+    suspend fun setSimpleMode(v: Boolean) = context.dataStore.edit { it[Keys.SIMPLE_MODE] = v }
     suspend fun setPrivateSession(v: Boolean) = context.dataStore.edit { it[Keys.PRIVATE_SESSION] = v }
     suspend fun setGestureSwipeArtwork(v: Boolean) = context.dataStore.edit { it[Keys.GESTURE_SWIPE_ART] = v }
     suspend fun setGestureSwipeDismiss(v: Boolean) = context.dataStore.edit { it[Keys.GESTURE_SWIPE_DISMISS] = v }

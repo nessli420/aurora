@@ -167,6 +167,8 @@
     <string name="text_anywhere_cdf9bb" formatted="false">"Anywhere"</string>
     <string name="text_api_key_cf678c" formatted="false">"API key"</string>
     <string name="text_app_data_4d9bf9" formatted="false">"App &amp; data"</string>
+    <string name="simple_mode">Simple mode</string>
+    <string name="simple_mode_description">Hide advanced audio settings</string>
     <string name="text_app_dsp_and_software_volume_are_bypassed_use_the_dac_s_volume_con_9fb536" formatted="false">"App DSP and software volume are bypassed. Use the DAC\'s volume control."</string>
     <string name="text_app_update_45b5d1" formatted="false">"App update"</string>
     <string name="text_app_updates_16213f" formatted="false">"App updates"</string>

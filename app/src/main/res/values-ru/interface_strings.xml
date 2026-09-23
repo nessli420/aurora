@@ -167,6 +167,8 @@
     <string name="text_anywhere_cdf9bb" formatted="false">"Везде"</string>
     <string name="text_api_key_cf678c" formatted="false">"API-ключ"</string>
     <string name="text_app_data_4d9bf9" formatted="false">"Приложение и данные"</string>
+    <string name="simple_mode">Простой режим</string>
+    <string name="simple_mode_description">Скрыть расширенные настройки звука</string>
     <string name="text_app_dsp_and_software_volume_are_bypassed_use_the_dac_s_volume_con_9fb536" formatted="false">"DSP и программная громкость не применяются. Используйте регулятор на ЦАП."</string>
     <string name="text_app_update_45b5d1" formatted="false">"Обновление приложения"</string>
     <string name="text_app_updates_16213f" formatted="false">"Обновления приложения"</string>

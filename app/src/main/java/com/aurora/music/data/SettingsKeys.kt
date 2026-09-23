@@ -79,6 +79,7 @@ internal object SettingsKeys {
     val ARTWORK_LOOKUP = booleanPreferencesKey("artwork_lookup_enabled")
     val LRCLIB = booleanPreferencesKey("lrclib_enabled")
     val DATA_SAVER = booleanPreferencesKey("data_saver")
+    val SIMPLE_MODE = booleanPreferencesKey("simple_mode")
     val PRIVATE_SESSION = booleanPreferencesKey("private_session")
     val GESTURE_SWIPE_ART = booleanPreferencesKey("gesture_swipe_art")
     val GESTURE_SWIPE_DISMISS = booleanPreferencesKey("gesture_swipe_dismiss")

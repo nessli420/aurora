@@ -5,6 +5,12 @@ import com.aurora.music.localization.appString
 import com.aurora.music.R
 import com.aurora.music.localization.localizedSignalLabel
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -40,11 +46,13 @@ import androidx.compose.material.icons.filled.PlayCircle
 import androidx.compose.material.icons.filled.SwitchAccount
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,6 +60,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
@@ -85,6 +94,8 @@ fun SettingsScreen(
 ) {
     val container = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication).container
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
+    val simpleMode by container.settingsStore.simpleMode.collectAsStateWithLifecycle(initialValue = false)
+    val scope = rememberCoroutineScope()
     val appUpdate by container.appUpdater.state.collectAsStateWithLifecycle()
     androidx.compose.runtime.LaunchedEffect(container) { container.appUpdater.checkForUpdate() }
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
@@ -162,12 +173,20 @@ fun SettingsScreen(
                     SettingsDestinationRow(Icons.Filled.Devices, SettingsDestinations.network, onClick = onOpenNetwork)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.advancedAudio, onClick = onOpenAdvancedAudio)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
+                    AnimatedVisibility(
+                        visible = !simpleMode,
+                        enter = expandVertically(animationSpec = tween(260)) + fadeIn(animationSpec = tween(260)),
+                        exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(260)),
+                    ) {
+                        Column {
+                            SettingsRowDivider()
+                            SettingsDestinationRow(Icons.Filled.VolumeUp, SettingsDestinations.loudness, onClick = onOpenLoudness)
+                            SettingsRowDivider()
+                            SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.advancedAudio, onClick = onOpenAdvancedAudio)
+                            SettingsRowDivider()
+                            SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
+                        }
+                    }
                 }
             }
 
@@ -207,6 +226,11 @@ fun SettingsScreen(
             item { SettingsSectionTitle(appString(R.string.text_app_data_4d9bf9)) }
             item {
                 SettingsGroup {
+                    SettingsSwitchRow(Icons.Filled.CheckCircle, appString(R.string.simple_mode),
+                        appString(R.string.simple_mode_description), simpleMode) { enabled ->
+                        scope.launch { container.settingsStore.setSimpleMode(enabled) }
+                    }
+                    SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Lock, SettingsDestinations.permissions, onClick = onOpenPermissions)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Backup, SettingsDestinations.backup, onClick = onOpenBackup)
