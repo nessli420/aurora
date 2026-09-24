@@ -53,7 +53,7 @@
     <string name="text_about_6b21fb" formatted="false">"About"</string>
     <string name="text_about_aurora_b4ed8c" formatted="false">"About Aurora"</string>
     <string name="text_accent_233064" formatted="false">"Accent"</string>
-    <string name="text_access_delivery_270b49" formatted="false">"Access &amp; delivery"</string>
+    <string name="text_access_delivery_270b49" formatted="false">"Access &amp; Delivery"</string>
     <string name="text_access_granted_for_8fb83b">"Access granted for %1$s"</string>
     <string name="text_access_to_the_selected_file_was_denied_choose_the_file_or_locatio_467687" formatted="false">"Access to the selected file was denied. Choose the file or location again."</string>
     <string name="text_account_85dfa3" formatted="false">"Account"</string>
@@ -70,7 +70,7 @@
     <string name="text_add_all_to_queue_6cb104" formatted="false">"Add all to queue"</string>
     <string name="text_add_an_application_id_to_show_real_cover_artwork_faca69" formatted="false">"Add an application ID to show real cover artwork."</string>
     <string name="text_add_another_account_5dcc79" formatted="false">"Add another account"</string>
-    <string name="text_add_artist_replacement_1379e2" formatted="false">"Add artist replacement"</string>
+    <string name="text_add_artist_replacement_1379e2" formatted="false">"Add Artist Replacement"</string>
     <string name="text_add_at_least_two_tracks_to_play_a_mix_367edf" formatted="false">"Add at least two tracks to play a mix."</string>
     <string name="text_add_b61b5a">"Add %1$s"</string>
     <string name="text_add_band_563c3b" formatted="false">"+ Add band"</string>
@@ -95,7 +95,7 @@
     <string name="text_adds_gain_equalizer_at_the_end_of_the_rack_5266e9">"Adds Gain (%1$s) → Equalizer at the end of the rack."</string>
     <string name="text_adds_one_equalizer_stage_at_the_end_of_the_rack_fdf7b1" formatted="false">"Adds one Equalizer stage at the end of the rack."</string>
     <string name="text_adjusted_7bba98" formatted="false">"Adjusted"</string>
-    <string name="text_advanced_audio_decbca" formatted="false">"Advanced audio"</string>
+    <string name="text_advanced_audio_decbca" formatted="false">"Advanced Audio"</string>
     <string name="text_after_79ba5e" formatted="false">"After"</string>
     <string name="text_after_app_processing_2b0263" formatted="false">"After app processing"</string>
     <string name="text_after_append_16_stages_parametric_bands_590e32">"After append: %1$s/16 stages · %2$s/%3$s parametric bands"</string>
@@ -104,9 +104,9 @@
     <string name="text_alarm_could_not_be_scheduled_89c0e4" formatted="false">"Alarm could not be scheduled"</string>
     <string name="text_alarm_is_off_fc6331" formatted="false">"Alarm is off"</string>
     <string name="text_alarm_permissions_c50074" formatted="false">"Alarm permissions"</string>
-    <string name="text_alarm_time_d2dd88" formatted="false">"Alarm time"</string>
+    <string name="text_alarm_time_d2dd88" formatted="false">"Alarm Time"</string>
     <string name="text_alarm_was_not_scheduled_8d9142" formatted="false">"Alarm was not scheduled"</string>
-    <string name="text_album_art_centre_757501" formatted="false">"Album art centre"</string>
+    <string name="text_album_art_centre_757501" formatted="false">"Album Art Centre"</string>
     <string name="text_album_artist_f7fa2e" formatted="false">"Album artist"</string>
     <string name="text_album_blur_1a1f3b" formatted="false">"Album blur"</string>
     <string name="text_album_dfb4c9" formatted="false">"Album"</string>
@@ -132,7 +132,7 @@
     <string name="text_allow_aurora_to_install_updates_then_return_here_38efd8" formatted="false">"Allow Aurora to install updates, then return here."</string>
     <string name="text_allow_music_access_in_settings_apps_aurora_permissions_to_use_fil_1503ac" formatted="false">"Allow music access in Settings → Apps → Aurora → Permissions to use files on this device."</string>
     <string name="text_allow_other_apps_to_play_audio_calls_will_not_pause_aurora_1aac7c" formatted="false">"Allow other apps to play audio. Calls will not pause Aurora."</string>
-    <string name="text_allow_remote_control_0f0d85" formatted="false">"Allow remote control"</string>
+    <string name="text_allow_remote_control_0f0d85" formatted="false">"Allow Remote Control"</string>
     <string name="text_alphabetical_9d1260" formatted="false">"Alphabetical"</string>
     <string name="text_already_downloaded_8acc8a" formatted="false">"Already downloaded"</string>
     <string name="text_amber_27a01d" formatted="false">"Amber"</string>
@@ -152,7 +152,7 @@
     <string name="text_android_accepted_the_scheduled_time_music_and_the_wake_up_screen_f303a2" formatted="false">"Android accepted the scheduled time. Music and the wake-up screen still depend on playback, notifications and lock-screen access."</string>
     <string name="text_android_auto_beec0a" formatted="false">"Android Auto"</string>
     <string name="text_android_can_t_grant_a_usb_device_permanently_without_a_per_plug_p_706fd2" formatted="false">"Android can\'t grant a USB device permanently without a per-plug prompt, so the DAC "</string>
-    <string name="text_android_capabilities_5df566" formatted="false">"Android capabilities"</string>
+    <string name="text_android_capabilities_5df566" formatted="false">"Android Capabilities"</string>
     <string name="text_android_output_0a3516" formatted="false">"Android output"</string>
     <string name="text_android_output_hi_res_preferred_aaeb20" formatted="false">"Android output · hi-res preferred"</string>
     <string name="text_android_system_effects_device_dependent_dafe2f" formatted="false">"Android system effects — device-dependent."</string>
@@ -166,14 +166,14 @@
     <string name="text_any_rule_42d727" formatted="false">"Any rule"</string>
     <string name="text_anywhere_cdf9bb" formatted="false">"Anywhere"</string>
     <string name="text_api_key_cf678c" formatted="false">"API key"</string>
-    <string name="text_app_data_4d9bf9" formatted="false">"App &amp; data"</string>
-    <string name="simple_mode">Simple mode</string>
+    <string name="text_app_data_4d9bf9" formatted="false">"App &amp; Data"</string>
+    <string name="simple_mode">Simple Mode</string>
     <string name="simple_mode_description">Hide advanced audio settings</string>
     <string name="text_app_dsp_and_software_volume_are_bypassed_use_the_dac_s_volume_con_9fb536" formatted="false">"App DSP and software volume are bypassed. Use the DAC\'s volume control."</string>
     <string name="text_app_update_45b5d1" formatted="false">"App update"</string>
     <string name="text_app_updates_16213f" formatted="false">"App updates"</string>
     <string name="text_appearance_41def7" formatted="false">"Appearance"</string>
-    <string name="text_appearance_controls_76f34d" formatted="false">"Appearance &amp; controls"</string>
+    <string name="text_appearance_controls_76f34d" formatted="false">"Appearance &amp; Controls"</string>
     <string name="text_append_6b3a60" formatted="false">"Append"</string>
     <string name="text_append_at_the_end_of_the_rack_989ed5" formatted="false">"Append at the end of the rack."</string>
     <string name="text_append_correction_58f87b" formatted="false">"Append correction"</string>
@@ -189,8 +189,8 @@
     <string name="text_applies_when_replaygain_is_set_to_track_or_album_in_equalizer_vol_1cf41c" formatted="false">"Applies when ReplayGain is set to Track or Album in Equalizer → Volume leveling."</string>
     <string name="text_apply_app_processing_and_software_volume_crossfade_speed_pitch_an_1dad19" formatted="false">"Apply app processing and software volume. Crossfade, speed/pitch and silence skipping are unavailable."</string>
     <string name="text_apply_cfea41" formatted="false">"Apply"</string>
-    <string name="text_apply_output_presets_a03e14" formatted="false">"Apply output presets"</string>
-    <string name="text_apply_preset_rules_16028a" formatted="false">"Apply preset rules"</string>
+    <string name="text_apply_output_presets_a03e14" formatted="false">"Apply Output Presets"</string>
+    <string name="text_apply_preset_rules_16028a" formatted="false">"Apply Preset Rules"</string>
     <string name="text_apply_profiles_to_confirmed_playback_outputs_038123" formatted="false">"Apply profiles to confirmed playback outputs"</string>
     <string name="text_approximate_alarm_scheduled_f3c47b" formatted="false">"Approximate alarm scheduled"</string>
     <string name="text_arrange_and_tune_your_audio_processing_stages_67b15f" formatted="false">"Arrange and tune your audio processing stages"</string>
@@ -200,25 +200,25 @@
     <string name="text_artist_6c3f3d" formatted="false">"Artist"</string>
     <string name="text_artist_from_your_music_10b0e0" formatted="false">"Artist from your music"</string>
     <string name="text_artist_indexing_and_scrobbling_file_tags_stay_unchanged_def5b6" formatted="false">"Artist indexing and scrobbling. File tags stay unchanged."</string>
-    <string name="text_artist_information_d5c3fc" formatted="false">"Artist information"</string>
+    <string name="text_artist_information_d5c3fc" formatted="false">"Artist Information"</string>
     <string name="text_artist_names_are_sent_to_the_metadata_providers_only_when_aurora_2f1daa" formatted="false">"Artist names are sent to the metadata providers only when Aurora needs the extra information."</string>
-    <string name="text_artist_replacement_rules_ff8fa3" formatted="false">"Artist replacement rules"</string>
-    <string name="text_artist_separators_4a3dc4" formatted="false">"Artist separators"</string>
+    <string name="text_artist_replacement_rules_ff8fa3" formatted="false">"Artist Replacement Rules"</string>
+    <string name="text_artist_separators_4a3dc4" formatted="false">"Artist Separators"</string>
     <string name="text_artists_1528d8" formatted="false">"Artists"</string>
     <string name="text_artists_albums_or_songs_d1863c" formatted="false">"Artists, albums, or songs"</string>
     <string name="text_artists_e9cabf">"%1$s artists"</string>
     <string name="text_artwork_bfbeaf" formatted="false">"Artwork"</string>
-    <string name="text_artwork_size_6dd0fc" formatted="false">"Artwork size"</string>
+    <string name="text_artwork_size_6dd0fc" formatted="false">"Artwork Size"</string>
     <string name="text_ascending_2b226c" formatted="false">"Ascending"</string>
     <string name="text_attack_1b81f2" formatted="false">"Attack"</string>
     <string name="text_audio_acdac2" formatted="false">"Audio"</string>
-    <string name="text_audio_output_2b89cc" formatted="false">"Audio output"</string>
+    <string name="text_audio_output_2b89cc" formatted="false">"Audio Output"</string>
     <string name="text_audio_presets_fbf3f8" formatted="false">"Audio presets"</string>
     <string name="text_audio_presets_library_sources_and_metadata_4155ea" formatted="false">"Audio presets, library sources and metadata"</string>
     <string name="text_audiotrack_underruns_6c9f5b">"AudioTrack underruns: %1$s"</string>
     <string name="text_aurora_currently_applies_attenuation_only_missing_or_positive_gai_20c829" formatted="false">" Aurora currently applies attenuation only. Missing or positive gain values leave volume unchanged. Availability depends on the active playback path."</string>
     <string name="text_aurora_eeee9b" formatted="false">"Aurora"</string>
-    <string name="text_aurora_players_373351" formatted="false">"Aurora players"</string>
+    <string name="text_aurora_players_373351" formatted="false">"Aurora Players"</string>
     <string name="text_aurora_signal_path_b2764e" formatted="false">"Aurora Signal Path"</string>
     <string name="text_aurora_software_dsp_works_on_any_device_overrides_bit_perfect_out_c3a42d" formatted="false">"Aurora software DSP — works on any device. Overrides bit-perfect output. Restart playback after switching engines."</string>
     <string name="text_aurora_streams_your_spotify_library_through_youtube_so_it_needs_y_23d0ad" formatted="false">"Aurora streams your Spotify library through YouTube, so it needs your own free Spotify app:"</string>
@@ -240,9 +240,9 @@
     <string name="text_autoeq_snapshots_download_once_then_use_offline_ca6135" formatted="false">"AutoEq snapshots. Download once, then use offline."</string>
     <string name="text_autoeq_target_csv_231f90" formatted="false">"AutoEq target CSV"</string>
     <string name="text_automatic_ac9041" formatted="false">"Automatic"</string>
-    <string name="text_automatic_headroom_830667" formatted="false">"Automatic headroom"</string>
+    <string name="text_automatic_headroom_830667" formatted="false">"Automatic Headroom"</string>
     <string name="text_automation_a15fde" formatted="false">"Automation"</string>
-    <string name="text_autoplay_radio_7fa244" formatted="false">"Autoplay radio"</string>
+    <string name="text_autoplay_radio_7fa244" formatted="false">"Autoplay Radio"</string>
     <string name="text_avatar_7631b2" formatted="false">"Avatar"</string>
     <string name="text_averages_both_measurements_for_a_shared_correction_886d6b" formatted="false">"Averages both measurements for a shared correction."</string>
     <string name="text_back_b52b36" formatted="false">"Back"</string>
@@ -251,7 +251,7 @@
     <string name="text_background_64dd60" formatted="false">"Background"</string>
     <string name="text_backing_only_3b542d" formatted="false">"Backing only"</string>
     <string name="text_backup_exported_with_processing_presets_and_impulse_responses_fa67a8" formatted="false">"Backup exported with processing presets and impulse responses"</string>
-    <string name="text_backup_restore_a16162" formatted="false">"Backup &amp; restore"</string>
+    <string name="text_backup_restore_a16162" formatted="false">"Backup &amp; Restore"</string>
     <string name="text_backups_include_saved_measurement_tuning_projects_and_impulse_res_96c97e" formatted="false">"Backups include saved measurement-tuning projects and impulse responses used by current processing and saved presets. Downloaded music is not included. Restore replaces settings, on-device playlists, likes and history. Older JSON backups are accepted, but their impulse responses must be selected again."</string>
     <string name="text_balance_90eef6" formatted="false">"Balance"</string>
     <string name="text_balance_loud_tracks_during_overlap_to_prevent_volume_peaks_f14f26" formatted="false">"Balance loud tracks during overlap to prevent volume peaks"</string>
@@ -265,7 +265,7 @@
     <string name="text_bands_256_across_rack_39ea04">"%1$s/%2$s bands · %3$s/256 across rack"</string>
     <string name="text_bands_2bc0aa" formatted="false">"Bands"</string>
     <string name="text_banner_c8af83" formatted="false">"Banner"</string>
-    <string name="text_bar_count_faa792" formatted="false">"Bar count"</string>
+    <string name="text_bar_count_faa792" formatted="false">"Bar Count"</string>
     <string name="text_bar_e496fd" formatted="false">"Bar"</string>
     <string name="text_bars_94d0e3">"%1$s bars"</string>
     <string name="text_bass_99cb7d" formatted="false">"Bass"</string>
@@ -276,7 +276,7 @@
     <string name="text_before_74f396" formatted="false">"Before"</string>
     <string name="text_before_app_processing_fb479a" formatted="false">"Before app processing"</string>
     <string name="text_behaviour_171ca0" formatted="false">"Behaviour"</string>
-    <string name="text_best_source_playback_8c92cb" formatted="false">"Best-source playback"</string>
+    <string name="text_best_source_playback_8c92cb" formatted="false">"Best-Source Playback"</string>
     <string name="text_bind_and_apply_d9c71d" formatted="false">"Bind and apply"</string>
     <string name="text_bind_saved_preset_ee9b6b" formatted="false">"Bind saved preset"</string>
     <string name="text_bind_to_75e438">"Bind \"%1$s\" to %2$s"</string>
@@ -292,9 +292,9 @@
     <string name="text_bloom_3ef84d" formatted="false">"Bloom"</string>
     <string name="text_blue_7d44bc" formatted="false">"Blue"</string>
     <string name="text_bluetooth_output_2215ca" formatted="false">"Bluetooth output"</string>
-    <string name="text_boost_below_threshold_b552a1" formatted="false">"Boost below threshold"</string>
+    <string name="text_boost_below_threshold_b552a1" formatted="false">"Boost Below Threshold"</string>
     <string name="text_both_1f4698" formatted="false">"Both"</string>
-    <string name="text_bottom_utilities_8b97ef" formatted="false">"Bottom utilities"</string>
+    <string name="text_bottom_utilities_8b97ef" formatted="false">"Bottom Utilities"</string>
     <string name="text_bpm_tempo_estimate_db_rms_652fe5">"≈ %1$s BPM · %2$s tempo estimate · %3$s dB RMS"</string>
     <string name="text_brightness_e1a2b6" formatted="false">"Brightness"</string>
     <string name="text_bring_your_playlists_and_saved_music_into_aurora_df697e" formatted="false">"Bring your playlists and saved music into Aurora."</string>
@@ -304,12 +304,12 @@
     <string name="text_busiest_day_min_per_active_day_8cd6fd">"Busiest day: %1$s · %2$s min per active day"</string>
     <string name="text_business_d6663d" formatted="false">"Business"</string>
     <string name="text_bypass_497852" formatted="false">"Bypass"</string>
-    <string name="text_bypass_stage_2c4421" formatted="false">"Bypass stage"</string>
+    <string name="text_bypass_stage_2c4421" formatted="false">"Bypass Stage"</string>
     <string name="text_bypassed_4b6893" formatted="false">" · Bypassed"</string>
     <string name="text_bypassed_7a944b" formatted="false">"Bypassed"</string>
     <string name="text_bypassed_c5c251" formatted="false">" (bypassed)"</string>
     <string name="text_calculated_eq_response_6dd321">"Calculated EQ response. %1$s"</string>
-    <string name="text_calculated_response_a4a732" formatted="false">"Calculated response"</string>
+    <string name="text_calculated_response_a4a732" formatted="false">"Calculated Response"</string>
     <string name="text_calculated_stage_response_afc25a" formatted="false">"Calculated stage response"</string>
     <string name="text_calibration_source_50c2e0" formatted="false">"Calibration source"</string>
     <string name="text_can_t_reach_the_server_1371a9" formatted="false">"Can\'t reach the server."</string>
@@ -351,7 +351,7 @@
     <string name="text_checking_alarm_e06c5c" formatted="false">"Checking alarm…"</string>
     <string name="text_checking_for_updates_78948b" formatted="false">"Checking for updates"</string>
     <string name="text_checking_time_d916f1" formatted="false">"Checking time"</string>
-    <string name="text_choose_a_device_or_output_mode_72ff69" formatted="false">"Choose a device or output mode"</string>
+    <string name="text_choose_a_device_or_output_mode_72ff69" formatted="false">"Choose a Device or Output Mode"</string>
     <string name="text_choose_a_song_with_a_known_duration_and_playable_source_ff433d" formatted="false">"Choose a song with a known duration and playable source."</string>
     <string name="text_choose_a_utf_8_text_file_9ed3dc" formatted="false">"Choose a UTF-8 text file."</string>
     <string name="text_choose_audio_ea6db7" formatted="false">"Choose audio"</string>
@@ -384,7 +384,7 @@
     <string name="text_combo_dcae58" formatted="false">"Combo"</string>
     <string name="text_comedy_11381a" formatted="false">"Comedy"</string>
     <string name="text_compact_1df39a" formatted="false">"Compact"</string>
-    <string name="text_compare_presets_b7d8ea" formatted="false">"Compare presets"</string>
+    <string name="text_compare_presets_b7d8ea" formatted="false">"Compare Presets"</string>
     <string name="text_compatible_maximum_932602" formatted="false">"Compatible maximum"</string>
     <string name="text_compilation_aad755" formatted="false">"Compilation"</string>
     <string name="text_complete_google_verification_if_the_page_stops_responding_tap_con_a561de" formatted="false">"Complete Google verification. If the page stops responding, tap Continue to YouTube Music."</string>
@@ -432,10 +432,10 @@
     <string name="text_copies_the_queue_before_playback_up_to_100_tracks_and_512_mb_aae54a" formatted="false">"Copies the queue before playback. Up to 100 tracks and 512 MB."</string>
     <string name="text_copy_37e469">"%1$s copy"</string>
     <string name="text_copy_code_6c1069" formatted="false">"Copy code"</string>
-    <string name="text_copy_diagnostic_report_7c8feb" formatted="false">"Copy diagnostic report"</string>
+    <string name="text_copy_diagnostic_report_7c8feb" formatted="false">"Copy Diagnostic Report"</string>
     <string name="text_copy_pairing_address_fc506d" formatted="false">"Copy pairing address"</string>
     <string name="text_copy_software_dsp_and_current_channel_settings_7c4573" formatted="false">"Copy software DSP and current channel settings"</string>
-    <string name="text_copy_standard_settings_d03497" formatted="false">"Copy standard settings"</string>
+    <string name="text_copy_standard_settings_d03497" formatted="false">"Copy Standard Settings"</string>
     <string name="text_copy_the_app_s_client_id_and_paste_it_below_d4d070" formatted="false">"Copy the app\'s Client ID and paste it below."</string>
     <string name="text_copy_the_full_address_from_the_other_device_825ae9" formatted="false">"Copy the full address from the other device."</string>
     <string name="text_copy_this_from_your_listenbrainz_profile_458b1a" formatted="false">"Copy this from your ListenBrainz profile"</string>
@@ -556,10 +556,10 @@
     <string name="text_dac_output_v_rms_full_scale_sine_28c8da" formatted="false">"DAC output (V RMS, full-scale sine)"</string>
     <string name="text_dac_voltage_e5b76c" formatted="false">"DAC voltage"</string>
     <string name="text_daily_728298" formatted="false">"Daily"</string>
-    <string name="text_daily_wake_up_30bad6" formatted="false">"Daily wake-up"</string>
+    <string name="text_daily_wake_up_30bad6" formatted="false">"Daily Wake-Up"</string>
     <string name="text_damping_cutoff_5e7aff" formatted="false">"Damping cutoff"</string>
     <string name="text_dark_ae1ef0" formatted="false">"Dark"</string>
-    <string name="text_data_saver_07147b" formatted="false">"Data saver"</string>
+    <string name="text_data_saver_07147b" formatted="false">"Data Saver"</string>
     <string name="text_day_streak_661711">"%1$s-day streak"</string>
     <string name="text_db_136a33">"%1$s · ±%2$s dB"</string>
     <string name="text_db_8bb555">"%1$s ±%2$s dB"</string>
@@ -573,7 +573,7 @@
     <string name="text_decode_m_s_0898c4" formatted="false">"Decode M/S"</string>
     <string name="text_default_808d7d" formatted="false">"Default"</string>
     <string name="text_default_speed_3297b3">"%1$s× default speed"</string>
-    <string name="text_default_speed_c5ae71" formatted="false">"Default speed"</string>
+    <string name="text_default_speed_c5ae71" formatted="false">"Default Speed"</string>
     <string name="text_delay_b4c200" formatted="false">"Delay"</string>
     <string name="text_delay_l_ms_r_ms_82e61b">"Delay: L %1$s ms, R %2$s ms"</string>
     <string name="text_delay_ms_3f4bc4" formatted="false">"Delay (ms)"</string>
@@ -611,14 +611,14 @@
     <string name="text_disconnect_last_fm_e2c81c" formatted="false">"Disconnect Last.fm"</string>
     <string name="text_disconnect_listenbrainz_2a6c2c" formatted="false">"Disconnect ListenBrainz"</string>
     <string name="text_discord_application_id_2ac458" formatted="false">"Discord application ID"</string>
-    <string name="text_discord_presence_81fe83" formatted="false">"Discord presence"</string>
+    <string name="text_discord_presence_81fe83" formatted="false">"Discord Presence"</string>
     <string name="text_discord_preview_401388" formatted="false">"DISCORD PREVIEW"</string>
     <string name="text_discover_d3f02e" formatted="false">"DISCOVER"</string>
     <string name="text_dismiss_70afe9" formatted="false">"Dismiss"</string>
     <string name="text_display_574ff9" formatted="false">"Display"</string>
     <string name="text_display_name_c7874a" formatted="false">"Display name"</string>
     <string name="text_displayed_channel_2ae515" formatted="false">"Displayed channel"</string>
-    <string name="text_dlna_receivers_61e7ce" formatted="false">"DLNA receivers"</string>
+    <string name="text_dlna_receivers_61e7ce" formatted="false">"DLNA Receivers"</string>
     <string name="text_dock_e8b5cb" formatted="false">"Dock"</string>
     <string name="text_does_not_match_current_playback_fb4dfe" formatted="false">"Does not match current playback."</string>
     <string name="text_doesn_t_contain_688c39" formatted="false">"doesn\'t contain"</string>
@@ -626,13 +626,13 @@
     <string name="text_done_e9b450" formatted="false">"Done"</string>
     <string name="text_dot_matrix_d4d639" formatted="false">"Dot matrix"</string>
     <string name="text_double_tap_the_player_artwork_9ef287" formatted="false">"Double-tap the player artwork"</string>
-    <string name="text_double_tap_to_play_pause_d5e7e4" formatted="false">"Double-tap to play / pause"</string>
+    <string name="text_double_tap_to_play_pause_d5e7e4" formatted="false">"Double-Tap to Play / Pause"</string>
     <string name="text_down_bf93e5" formatted="false">"Down"</string>
     <string name="text_download_a479c9" formatted="false">"Download"</string>
     <string name="text_download_complete_95efb3" formatted="false">"Download complete"</string>
     <string name="text_download_failed_check_your_connection_and_storage_then_try_again_3e9e00" formatted="false">"Download failed. Check your connection and storage, then try again."</string>
     <string name="text_download_finished_failed_21e6b1">"Download finished — %1$s failed"</string>
-    <string name="text_download_quality_9d14a9" formatted="false">"Download quality"</string>
+    <string name="text_download_quality_9d14a9" formatted="false">"Download Quality"</string>
     <string name="text_download_quality_and_offline_files_157e78" formatted="false">"Download quality and offline files"</string>
     <string name="text_download_target_d5fd60" formatted="false">"Download target"</string>
     <string name="text_download_update_870d57" formatted="false">"Download update"</string>
@@ -647,7 +647,7 @@
     <string name="text_downloading_update_b42347" formatted="false">"Downloading update"</string>
     <string name="text_downloads_a862c2" formatted="false">"Downloads"</string>
     <string name="text_downloads_are_stored_privately_inside_the_app_and_removed_when_yo_ffbbf6" formatted="false">"Downloads are stored privately inside the app and removed when you uninstall."</string>
-    <string name="text_downloads_storage_f7c580" formatted="false">"Downloads &amp; storage"</string>
+    <string name="text_downloads_storage_f7c580" formatted="false">"Downloads &amp; Storage"</string>
     <string name="text_drive_7a34a5">"%1$s%% drive"</string>
     <string name="text_drive_a02bb4" formatted="false">"Drive"</string>
     <string name="text_dsd_files_d4d480" formatted="false">"DSD files"</string>
@@ -717,7 +717,7 @@
     <string name="text_eq_text_must_be_256_kib_or_smaller_7631fb" formatted="false">"EQ text must be 256 KiB or smaller."</string>
     <string name="text_equal_power_70e301" formatted="false">"Equal power"</string>
     <string name="text_equalizer_3b64a9" formatted="false">"Equalizer"</string>
-    <string name="text_equalizer_effects_e6ad57" formatted="false">"Equalizer &amp; effects"</string>
+    <string name="text_equalizer_effects_e6ad57" formatted="false">"Equalizer &amp; Effects"</string>
     <string name="text_estimated_sound_level_3d1a1a" formatted="false">"Estimated sound level"</string>
     <string name="text_estimated_uncertainty_db_99228f" formatted="false">"Estimated uncertainty (±dB)"</string>
     <string name="text_even_out_loud_quiet_passages_5f8fe4" formatted="false">"Even out loud/quiet passages"</string>
@@ -741,7 +741,7 @@
     <string name="text_export_f3e4fa" formatted="false">"Export"</string>
     <string name="text_export_failed_d6c17e" formatted="false">"Export failed"</string>
     <string name="text_export_or_import_settings_and_playlists_4ce918" formatted="false">"Export or import settings and playlists"</string>
-    <string name="text_export_parametric_eq_text_39190f" formatted="false">"Export parametric EQ text"</string>
+    <string name="text_export_parametric_eq_text_39190f" formatted="false">"Export Parametric EQ Text"</string>
     <string name="text_export_project_json_57cf46" formatted="false">"Export project JSON"</string>
     <string name="text_export_result_efc657" formatted="false">"Export result"</string>
     <string name="text_export_wav_f98f7d" formatted="false">"Export WAV"</string>
@@ -760,7 +760,7 @@
     <string name="text_fade_in_music_from_your_library_every_day_51b4c6" formatted="false">"Fade in music from your library every day"</string>
     <string name="text_fade_out_72f7b2" formatted="false">"Fade out"</string>
     <string name="text_fades_6d1e7d" formatted="false">"Fades"</string>
-    <string name="text_falling_caps_on_the_bars_f64a49" formatted="false">"Falling caps on the bars"</string>
+    <string name="text_falling_caps_on_the_bars_f64a49" formatted="false">"Falling Caps on the Bars"</string>
     <string name="text_favorite_6b90b6" formatted="false">"Favorite"</string>
     <string name="text_feedback_c8d767" formatted="false">"Feedback"</string>
     <string name="text_fetch_lyrics_from_the_public_lrclib_service_36057a" formatted="false">"Fetch lyrics from the public LRCLIB service"</string>
@@ -772,14 +772,14 @@
     <string name="text_filter_frequency_9f283c" formatted="false">"Filter frequency"</string>
     <string name="text_filter_q_9280eb" formatted="false">"Filter Q"</string>
     <string name="text_find_any_artist_album_song_or_playlist_9fcb23" formatted="false">"Find any artist, album, song, or playlist"</string>
-    <string name="text_find_duplicates_586f31" formatted="false">"Find duplicates"</string>
+    <string name="text_find_duplicates_586f31" formatted="false">"Find Duplicates"</string>
     <string name="text_fingerprint_ready_chars_add_an_acoustid_api_key_to_fetch_matches_1b57d9">"Fingerprint ready (%1$s chars). Add an AcoustID API key to fetch matches."</string>
-    <string name="text_finish_linking_54297c" formatted="false">"Finish linking"</string>
+    <string name="text_finish_linking_54297c" formatted="false">"Finish Linking"</string>
     <string name="text_finish_signing_in_and_wait_for_your_youtube_music_library_then_tr_c7f0dd" formatted="false">"Finish signing in and wait for your YouTube Music library, then try again."</string>
     <string name="text_fire_the_wake_to_music_alarm_at_the_precise_time_bbac52" formatted="false">"Fire the wake-to-music alarm at the precise time"</string>
     <string name="text_first_match_3faa83">"First match: %1$s"</string>
     <string name="text_first_order_shaping_uses_tpdf_below_44_1_khz_459cb0" formatted="false">"First-order shaping. Uses TPDF below 44.1 kHz."</string>
-    <string name="text_fit_correction_7446db" formatted="false">"Fit correction"</string>
+    <string name="text_fit_correction_7446db" formatted="false">"Fit Correction"</string>
     <string name="text_fit_details_generated_filters_e9ff9a" formatted="false">"Fit details &amp; generated filters"</string>
     <string name="text_fit_limits_ec1134" formatted="false">"Fit limits"</string>
     <string name="text_fitted_eq_3bc5ee" formatted="false">"Fitted EQ"</string>
@@ -794,7 +794,7 @@
     <string name="text_folders_19adc4" formatted="false">"Folders"</string>
     <string name="text_follow_source_e0e6b1" formatted="false">"Follow source"</string>
     <string name="text_follows_your_device_s_light_dark_setting_38c955" formatted="false">"Follows your device\'s light/dark setting."</string>
-    <string name="text_font_size_83ca9e" formatted="false">"Font size"</string>
+    <string name="text_font_size_83ca9e" formatted="false">"Font Size"</string>
     <string name="text_forget_03d5d8" formatted="false">"Forget"</string>
     <string name="text_format_041a5d" formatted="false">"Format"</string>
     <string name="text_format_flac_mp3_467eba" formatted="false">"Format (flac, mp3…)"</string>
@@ -803,7 +803,7 @@
     <string name="text_frames_ms_753397">"%1$s frames · %2$s ms"</string>
     <string name="text_freq_f5f7de" formatted="false">"Freq"</string>
     <string name="text_frequency_hz_c2281f" formatted="false">"Frequency · Hz"</string>
-    <string name="text_frequency_range_6f7ced" formatted="false">"Frequency range"</string>
+    <string name="text_frequency_range_6f7ced" formatted="false">"Frequency Range"</string>
     <string name="text_from_your_favourites_d39722" formatted="false">"From your favourites"</string>
     <string name="text_full_scale_samples_2918e5">"Full-scale samples: %1$s"</string>
     <string name="text_full_screen_alarm_a37b1c" formatted="false">"Full-screen alarm"</string>
@@ -813,7 +813,7 @@
     <string name="text_gain_db_cad396">"Gain: %1$s (%2$s dB)"</string>
     <string name="text_gain_headroom_5903cd" formatted="false">"Gain &amp; headroom"</string>
     <string name="text_gain_reduction_692931" formatted="false">"Gain reduction"</string>
-    <string name="text_gapless_playback_439221" formatted="false">"Gapless playback"</string>
+    <string name="text_gapless_playback_439221" formatted="false">"Gapless Playback"</string>
     <string name="text_gaps_mark_undefined_values_below_db_eb6309">"Gaps mark undefined values below %1$s dB."</string>
     <string name="text_gate_5701b5" formatted="false">"Gate"</string>
     <string name="text_gate_expander_de_esser_27c036" formatted="false">"Gate, expander &amp; de-esser"</string>
@@ -821,10 +821,10 @@
     <string name="text_generate_correction_3e0605" formatted="false">"Generate correction"</string>
     <string name="text_generated_correction_saved_b3c6de" formatted="false">"Generated correction saved"</string>
     <string name="text_generated_filters_5e5075" formatted="false">"Generated filters"</string>
-    <string name="text_generated_result_091d15" formatted="false">"Generated result"</string>
+    <string name="text_generated_result_091d15" formatted="false">"Generated Result"</string>
     <string name="text_generating_correction_b3c463" formatted="false">"Generating correction…"</string>
     <string name="text_genre_2aa31f" formatted="false">"Genre"</string>
-    <string name="text_gestures_behaviour_9d13b8" formatted="false">"Gestures &amp; behaviour"</string>
+    <string name="text_gestures_behaviour_9d13b8" formatted="false">"Gestures &amp; Behaviour"</string>
     <string name="text_get_the_latest_version_from_github_ffde96" formatted="false">"Get the latest version from GitHub."</string>
     <string name="text_github_is_busy_try_again_later_83f29b" formatted="false">"GitHub is busy. Try again later."</string>
     <string name="text_github_returned_an_empty_response_06f1d4" formatted="false">"GitHub returned an empty response."</string>
@@ -833,7 +833,7 @@
     <string name="text_good_evening_47f6d5" formatted="false">"GOOD EVENING"</string>
     <string name="text_good_listening_takes_time_eac7f9" formatted="false">"Good listening takes time"</string>
     <string name="text_gradient_36463c" formatted="false">"Gradient"</string>
-    <string name="text_gradient_intensity_84a1f5" formatted="false">"Gradient intensity"</string>
+    <string name="text_gradient_intensity_84a1f5" formatted="false">"Gradient Intensity"</string>
     <string name="text_grant_c02329" formatted="false">"Grant"</string>
     <string name="text_grant_what_you_use_aurora_works_without_any_of_these_but_each_unl_7a03fb" formatted="false">"Grant what you use. Aurora works without any of these, but each unlocks a feature."</string>
     <string name="text_granted_43b11e" formatted="false">"Granted"</string>
@@ -845,7 +845,7 @@
     <string name="text_group_delay_milliseconds_8fe73b" formatted="false">"Group delay (milliseconds)"</string>
     <string name="text_group_tracks_scanned_2a5f60">"%1$s group%2$s • %3$s tracks • %4$s scanned"</string>
     <string name="text_h_m_4dc25f">"%1$sh %2$sm"</string>
-    <string name="text_haptic_feedback_b0baa9" formatted="false">"Haptic feedback"</string>
+    <string name="text_haptic_feedback_b0baa9" formatted="false">"Haptic Feedback"</string>
     <string name="text_hardware_attenuation_bd288e" formatted="false">"hardware attenuation"</string>
     <string name="text_hardware_attenuation_db_a52110" formatted="false">"Hardware attenuation (dB)"</string>
     <string name="text_hardware_attenuation_db_f75679">"Hardware attenuation: %1$s dB"</string>
@@ -853,7 +853,7 @@
     <string name="text_harmonics_17ba48" formatted="false">"Harmonics"</string>
     <string name="text_harmonograph_225500" formatted="false">"Harmonograph"</string>
     <string name="text_hdmi_output_8346ec" formatted="false">"HDMI output"</string>
-    <string name="text_headphone_calibration_6fc5b1" formatted="false">"Headphone calibration"</string>
+    <string name="text_headphone_calibration_6fc5b1" formatted="false">"Headphone Calibration"</string>
     <string name="text_headphone_calibration_and_local_level_history_3c0581" formatted="false">"Headphone calibration and local level history"</string>
     <string name="text_headphone_name_3e45cb" formatted="false">"Headphone name"</string>
     <string name="text_headphones_453cce" formatted="false">"Headphones"</string>
@@ -867,7 +867,7 @@
     <string name="text_hearing_aid_375267" formatted="false">"Hearing aid"</string>
     <string name="text_hide_connection_details_64711a" formatted="false">"Hide connection details"</string>
     <string name="text_hide_fit_details_1c2734" formatted="false">"Hide fit details"</string>
-    <string name="text_hide_graph_0a1c33" formatted="false">"Hide graph"</string>
+    <string name="text_hide_graph_0a1c33" formatted="false">"Hide Graph"</string>
     <string name="text_hide_measurement_details_a40be4" formatted="false">"Hide measurement details"</string>
     <string name="text_hide_password_e40123" formatted="false">"Hide password"</string>
     <string name="text_hide_playback_size_fd99cc" formatted="false">"Hide playback size"</string>
@@ -876,13 +876,13 @@
     <string name="text_hide_stage_meters_c123cc" formatted="false">"Hide stage meters"</string>
     <string name="text_high_b1a595" formatted="false">"High"</string>
     <string name="text_high_crossover_ade7d1" formatted="false">"High crossover"</string>
-    <string name="text_high_cut_609ed9" formatted="false">"High cut"</string>
+    <string name="text_high_cut_609ed9" formatted="false">"High Cut"</string>
     <string name="text_high_to_low_tilt_db_1ba5c8" formatted="false">"High-to-low tilt · dB"</string>
     <string name="text_higher_priority_wins_ties_use_list_order_previous_sound_returns_w_6bd32e" formatted="false">"Higher priority wins; ties use list order. Previous sound returns when rules stop matching."</string>
     <string name="text_history_90ccd6" formatted="false">"History"</string>
     <string name="text_hold_3bd328" formatted="false">"Hold"</string>
     <string name="text_home_70f8bb" formatted="false">"Home"</string>
-    <string name="text_home_sections_1f24fb" formatted="false">"Home sections"</string>
+    <string name="text_home_sections_1f24fb" formatted="false">"Home Sections"</string>
     <string name="text_horizon_eda243" formatted="false">"Horizon"</string>
     <string name="text_hue_7e58a6" formatted="false">"Hue"</string>
     <string name="text_hz_40e093">"%1$s–%2$s Hz"</string>
@@ -918,7 +918,7 @@
     <string name="text_import_the_right_measurement_to_fit_this_channel_c6c2d4" formatted="false">"Import the right measurement to fit this channel."</string>
     <string name="text_import_tuning_project_2df594" formatted="false">"Import tuning project?"</string>
     <string name="text_import_wav_962ac2" formatted="false">"Import WAV"</string>
-    <string name="text_import_wavelet_correction_2fe17e" formatted="false">"Import Wavelet correction"</string>
+    <string name="text_import_wavelet_correction_2fe17e" formatted="false">"Import Wavelet Correction"</string>
     <string name="text_imported_eq_1d62f7" formatted="false">"Imported EQ"</string>
     <string name="text_imported_magnitude_269bf4" formatted="false">"Imported magnitude"</string>
     <string name="text_imported_playlist_37a186" formatted="false">"Imported playlist"</string>
@@ -932,8 +932,8 @@
     <string name="text_importing_tracks_3abc1a">"Importing %1$s tracks…"</string>
     <string name="text_importing_wav_5811f7" formatted="false">"Importing WAV…"</string>
     <string name="text_impulse_9ca8ac" formatted="false">"Impulse"</string>
-    <string name="text_impulse_library_ff955d" formatted="false">"Impulse library"</string>
-    <string name="text_impulse_responses_b2ac6e" formatted="false">"Impulse responses"</string>
+    <string name="text_impulse_library_ff955d" formatted="false">"Impulse Library"</string>
+    <string name="text_impulse_responses_b2ac6e" formatted="false">"Impulse Responses"</string>
     <string name="text_impulse_waveform_frames_112fd2">"%1$s impulse waveform, %2$s frames"</string>
     <string name="text_in_ear_monitors_and_sealed_wireless_earbuds_match_the_model_and_a_a24f40" formatted="false">"In-ear monitors and sealed wireless earbuds. Match the model and ANC mode."</string>
     <string name="text_in_progress_choose_date_0239bc" formatted="false">"In progress · Choose date"</string>
@@ -942,7 +942,7 @@
     <string name="text_included_in_the_unified_library_0ecc5b" formatted="false">"Included in the unified library:"</string>
     <string name="text_includes_estimated_time_for_older_plays_647a36" formatted="false">"Includes estimated time for older plays."</string>
     <string name="text_independent_left_right_d80711" formatted="false">"Independent left / right"</string>
-    <string name="text_independent_output_8bb01a" formatted="false">"Independent output"</string>
+    <string name="text_independent_output_8bb01a" formatted="false">"Independent Output"</string>
     <string name="text_independent_output_off_request_audio_focus_ee8c22" formatted="false">"Independent output off · request audio focus"</string>
     <string name="text_independent_output_on_other_apps_can_keep_playing_b84f60" formatted="false">"Independent output on · other apps can keep playing"</string>
     <string name="text_ink_bloom_32d8dc" formatted="false">"Ink bloom"</string>
@@ -950,7 +950,7 @@
     <string name="text_input_gain_39981c">"Input %1$s gain"</string>
     <string name="text_inputs_43db9d">"%1$s inputs"</string>
     <string name="text_insert_before_the_rack_s_final_limiter_stage_99ab75" formatted="false">"Insert before the rack\'s final Limiter stage."</string>
-    <string name="text_inspect_playback_94b689" formatted="false">"Inspect playback"</string>
+    <string name="text_inspect_playback_94b689" formatted="false">"Inspect Playback"</string>
     <string name="text_inspect_the_active_processing_after_applying_a_preset_c9b6f4" formatted="false">"Inspect the active processing after applying a preset"</string>
     <string name="text_inspect_the_current_playback_path_5a0995" formatted="false">"Inspect the current playback path"</string>
     <string name="text_install_a_compatible_extension_app_then_enable_it_here_c7fadc" formatted="false">"Install a compatible extension app, then enable it here."</string>
@@ -965,7 +965,7 @@
     <string name="text_invert_left_2baeba" formatted="false">"Invert left"</string>
     <string name="text_invert_right_b4bd7d" formatted="false">"Invert right"</string>
     <string name="text_ir_imported_08d0ed" formatted="false">"IR imported."</string>
-    <string name="text_ir_library_46a40d" formatted="false">"IR library"</string>
+    <string name="text_ir_library_46a40d" formatted="false">"IR Library"</string>
     <string name="text_ir_library_unavailable_ba529f" formatted="false">"IR library unavailable"</string>
     <string name="text_ir_selected_9c0796" formatted="false">"IR selected."</string>
     <string name="text_is_available_see_github_for_downloads_b3be50">"%1$s is available. See GitHub for downloads."</string>
@@ -978,7 +978,7 @@
     <string name="text_k_hz_b3d9ce">"%1$sk Hz"</string>
     <string name="text_kbps_f89f2e">"%1$s kbps"</string>
     <string name="text_keep_44_1_48_khz_family_aa509c" formatted="false">"Keep 44.1/48 kHz family"</string>
-    <string name="text_keep_current_sound_6e3bdc" formatted="false">"Keep current sound"</string>
+    <string name="text_keep_current_sound_6e3bdc" formatted="false">"Keep Current Sound"</string>
     <string name="text_keep_editing_d4d9e3" formatted="false">"Keep editing"</string>
     <string name="text_keep_manual_settings_after_reconnecting_2f0892" formatted="false">"Keep manual settings after reconnecting."</string>
     <string name="text_keep_playing_similar_tracks_when_the_queue_ends_172967" formatted="false">"Keep playing similar tracks when the queue ends"</string>
@@ -995,7 +995,7 @@
     <string name="text_l_r_db_31102b">"L %1$s · R %2$s · ±%3$s dB"</string>
     <string name="text_last_played_7201a8" formatted="false">"Last played"</string>
     <string name="text_last_played_days_ago_8e3e3b" formatted="false">"Last played (days ago)"</string>
-    <string name="text_last_stage_58b1e2" formatted="false">"Last stage"</string>
+    <string name="text_last_stage_58b1e2" formatted="false">"Last Stage"</string>
     <string name="text_latest_100_ms_sample_windows_332ea8" formatted="false">"Latest 100 ms sample windows"</string>
     <string name="text_latest_recap_a17cde">"LATEST · %1$s RECAP"</string>
     <string name="text_latest_release_on_github_a3fe9b">"Latest release on GitHub: %1$s"</string>
@@ -1007,7 +1007,7 @@
     <string name="text_left_8ae1c3" formatted="false">"Left"</string>
     <string name="text_left_channel_correction_210202" formatted="false">"Left-channel correction."</string>
     <string name="text_left_channel_only_right_passes_unchanged_681627" formatted="false">"Left channel only · right passes unchanged"</string>
-    <string name="text_left_delay_c54844" formatted="false">"Left delay"</string>
+    <string name="text_left_delay_c54844" formatted="false">"Left Delay"</string>
     <string name="text_left_delay_ms_1f565b" formatted="false">"Left delay - ms"</string>
     <string name="text_left_left_6c2130" formatted="false">"Left → Left"</string>
     <string name="text_left_measurement_4f65e1" formatted="false">"Left measurement"</string>
@@ -1017,16 +1017,16 @@
     <string name="text_left_trim_9ad513" formatted="false">"Left trim"</string>
     <string name="text_left_trim_db_27818d" formatted="false">"Left trim - dB"</string>
     <string name="text_legacy_dsp_block_cfa47f" formatted="false">"Legacy DSP block"</string>
-    <string name="text_legacy_dsp_settings_9a91d5" formatted="false">"Legacy DSP settings"</string>
+    <string name="text_legacy_dsp_settings_9a91d5" formatted="false">"Legacy DSP Settings"</string>
     <string name="text_less_than_6bb2aa" formatted="false">"less than"</string>
     <string name="text_level_matched_a_b_and_blind_abx_611108" formatted="false">"Level-matched A/B and blind ABX"</string>
     <string name="text_level_normalization_31c168" formatted="false">"Level normalization"</string>
-    <string name="text_library_accounts_e097be" formatted="false">"Library &amp; accounts"</string>
-    <string name="text_library_analysis_discovery_211d17" formatted="false">"Library analysis &amp; discovery"</string>
+    <string name="text_library_accounts_e097be" formatted="false">"Library &amp; Accounts"</string>
+    <string name="text_library_analysis_discovery_211d17" formatted="false">"Library Analysis &amp; Discovery"</string>
     <string name="text_library_b8100f" formatted="false">"Library"</string>
     <string name="text_library_scans_sonic_radio_and_auto_dj_dbb04a" formatted="false">"Library scans, Sonic radio and Auto DJ"</string>
     <string name="text_library_selected_8b0aae" formatted="false">"Library selected."</string>
-    <string name="text_library_sources_101221" formatted="false">"Library &amp; sources"</string>
+    <string name="text_library_sources_101221" formatted="false">"Library &amp; Sources"</string>
     <string name="text_license_1ba7bb">"License: %1$s"</string>
     <string name="text_light_a36ef8" formatted="false">"Light"</string>
     <string name="text_light_flowing_luminous_6acb9b" formatted="false">"Light, flowing, luminous"</string>
@@ -1034,7 +1034,7 @@
     <string name="text_liked_8c794f" formatted="false">"Liked"</string>
     <string name="text_liked_songs_58c3a9" formatted="false">"Liked Songs"</string>
     <string name="text_limit_0_all_451057" formatted="false">"Limit (0 = all)"</string>
-    <string name="text_limit_treble_correction_280b63" formatted="false">"Limit treble correction"</string>
+    <string name="text_limit_treble_correction_280b63" formatted="false">"Limit Treble Correction"</string>
     <string name="text_limiter_20fee6" formatted="false">"Limiter"</string>
     <string name="text_limiter_ceiling_b7d8bd" formatted="false">"Limiter ceiling"</string>
     <string name="text_limits_transition_over_one_octave_4ebf05" formatted="false">"Limits transition over one octave."</string>
@@ -1045,17 +1045,17 @@
     <string name="text_link_d05170" formatted="false">"Link"</string>
     <string name="text_linked_average_both_channels_6de047" formatted="false">"Linked average → both channels"</string>
     <string name="text_linked_average_of_left_right_80c6d6" formatted="false">"Linked average of left / right"</string>
-    <string name="text_linked_fit_limits_43f930" formatted="false">"Linked fit limits"</string>
+    <string name="text_linked_fit_limits_43f930" formatted="false">"Linked Fit Limits"</string>
     <string name="text_liquid_chrome_af5cd1" formatted="false">"Liquid chrome"</string>
     <string name="text_liquid_glass_51a330" formatted="false">"Liquid glass"</string>
-    <string name="text_listen_to_detector_ea443f" formatted="false">"Listen to detector"</string>
+    <string name="text_listen_to_detector_ea443f" formatted="false">"Listen to Detector"</string>
     <string name="text_listen_today_and_come_back_tomorrow_for_your_first_recap_9a9aec" formatted="false">"Listen today and come back tomorrow for your first recap."</string>
     <string name="text_listener_37ea46" formatted="false">"Listener"</string>
     <string name="text_listening_clock_ec2eb4" formatted="false">"Listening clock"</string>
-    <string name="text_listening_history_bd9991" formatted="false">"Listening history"</string>
-    <string name="text_listening_levels_c1db13" formatted="false">"Listening levels"</string>
-    <string name="text_listening_sharing_ecf6a1" formatted="false">"Listening &amp; sharing"</string>
-    <string name="text_listening_stats_a760b2" formatted="false">"Listening stats"</string>
+    <string name="text_listening_history_bd9991" formatted="false">"Listening History"</string>
+    <string name="text_listening_levels_c1db13" formatted="false">"Listening Levels"</string>
+    <string name="text_listening_sharing_ecf6a1" formatted="false">"Listening &amp; Sharing"</string>
+    <string name="text_listening_stats_a760b2" formatted="false">"Listening Statistics"</string>
     <string name="text_listening_to_aurora_24a92c" formatted="false">"Listening to Aurora"</string>
     <string name="text_listening_to_midnight_drive_35328b" formatted="false">"Listening to Midnight Drive"</string>
     <string name="text_live_65c821" formatted="false">"Live"</string>
@@ -1066,7 +1066,7 @@
     <string name="text_load_audio_preset_1be2c8" formatted="false">"Load audio preset"</string>
     <string name="text_load_audio_preset_24bd13" formatted="false">"Load audio preset?"</string>
     <string name="text_load_ddcb77" formatted="false">"Load"</string>
-    <string name="text_load_filters_and_preamp_ae1cab" formatted="false">"Load filters and preamp"</string>
+    <string name="text_load_filters_and_preamp_ae1cab" formatted="false">"Load Filters and Preamp"</string>
     <string name="text_loading_complete_tracklist_d6abc4" formatted="false">"Loading complete tracklist"</string>
     <string name="text_loading_ir_library_0a9e58" formatted="false">"Loading IR library…"</string>
     <string name="text_loading_presets_4c510b" formatted="false">"Loading presets…"</string>
@@ -1078,14 +1078,14 @@
     <string name="text_local_dc99d5" formatted="false">"Local"</string>
     <string name="text_local_file_576d5a" formatted="false">"Local file"</string>
     <string name="text_local_files_f4a889" formatted="false">"Local files"</string>
-    <string name="text_local_history_8d1ed5" formatted="false">"Local history"</string>
-    <string name="text_local_library_1c67cd" formatted="false">"Local library"</string>
+    <string name="text_local_history_8d1ed5" formatted="false">"Local History"</string>
+    <string name="text_local_library_1c67cd" formatted="false">"Local Library"</string>
     <string name="text_local_library_a4b3e0" formatted="false">"Local Library"</string>
     <string name="text_local_mode_doesn_t_use_this_form_78c2dc" formatted="false">"Local mode doesn\'t use this form"</string>
     <string name="text_local_network_0a1fc0" formatted="false">"Local network"</string>
     <string name="text_local_playback_f3fe4f" formatted="false">"Local playback"</string>
     <string name="text_log_in_to_discord_below_aurora_reads_your_token_locally_to_set_ri_8ae4f4" formatted="false">"Log in to Discord below — Aurora reads your token locally to set Rich Presence (never sent anywhere but Discord). If the page stays blank, paste a token instead."</string>
-    <string name="text_log_out_6e78c9" formatted="false">"Log out"</string>
+    <string name="text_log_out_6e78c9" formatted="false">"Log Out"</string>
     <string name="text_login_rejected_3f73ee" formatted="false">"Login rejected"</string>
     <string name="text_longest_day_4ebbeb">"Longest: %1$s day%2$s"</string>
     <string name="text_look_up_biographies_and_images_9931d4" formatted="false">"Look up biographies and images"</string>
@@ -1096,10 +1096,10 @@
     <string name="text_loudness_59e6cf" formatted="false">"Loudness"</string>
     <string name="text_low_a12494" formatted="false">"Low"</string>
     <string name="text_low_crossover_cbf2b7" formatted="false">"Low crossover"</string>
-    <string name="text_low_cut_67dd29" formatted="false">"Low cut"</string>
+    <string name="text_low_cut_67dd29" formatted="false">"Low Cut"</string>
     <string name="text_lrclib_lyrics_d22392" formatted="false">"LRCLIB lyrics"</string>
     <string name="text_lyrics_8670cb" formatted="false">"Lyrics"</string>
-    <string name="text_lyrics_metadata_eb9a3c" formatted="false">"Lyrics &amp; metadata"</string>
+    <string name="text_lyrics_metadata_eb9a3c" formatted="false">"Lyrics &amp; Metadata"</string>
     <string name="text_magenta_ff6912" formatted="false">"Magenta"</string>
     <string name="text_magnitude_correction_only_phase_is_not_fitted_885ea8" formatted="false">"Magnitude correction only. Phase is not fitted."</string>
     <string name="text_magnitude_curves_selected_95d402">"Magnitude curves. Selected %1$s. %2$s"</string>
@@ -1158,8 +1158,8 @@
     <string name="text_measurement_details_edeee9" formatted="false">"Measurement details"</string>
     <string name="text_measurement_name_18f280" formatted="false">"Measurement name"</string>
     <string name="text_measurement_text_must_be_512_kib_or_smaller_36d9de" formatted="false">"Measurement text must be 512 KiB or smaller."</string>
-    <string name="text_measurement_tuning_815052" formatted="false">"Measurement tuning"</string>
-    <string name="text_measurements_target_b6da10" formatted="false">"Measurements &amp; target"</string>
+    <string name="text_measurement_tuning_815052" formatted="false">"Measurement Tuning"</string>
+    <string name="text_measurements_target_b6da10" formatted="false">"Measurements &amp; Target"</string>
     <string name="text_measurements_targets_and_saved_correction_projects_d6f94e" formatted="false">"Measurements, targets and saved correction projects"</string>
     <string name="text_merge_all_sources_004b13" formatted="false">"Merge all sources"</string>
     <string name="text_metadata_lookups_af4cbd" formatted="false">"Metadata lookups"</string>
@@ -1193,9 +1193,9 @@
     <string name="text_mix_tracklist_a8a9ff" formatted="false">"Mix tracklist"</string>
     <string name="text_mode_a7b93d" formatted="false">"Mode"</string>
     <string name="text_modulation_f3c1a2" formatted="false">"Modulation"</string>
-    <string name="text_mono_audio_b977b4" formatted="false">"Mono audio"</string>
+    <string name="text_mono_audio_b977b4" formatted="false">"Mono Audio"</string>
     <string name="text_mono_audio_channel_processing_and_tone_6a5bfe" formatted="false">"Mono audio, channel processing and tone"</string>
-    <string name="text_mono_bass_b1ddea" formatted="false">"Mono bass"</string>
+    <string name="text_mono_bass_b1ddea" formatted="false">"Mono Bass"</string>
     <string name="text_mono_bass_cutoff_605472" formatted="false">"Mono bass cutoff"</string>
     <string name="text_mono_c5c553" formatted="false">"Mono"</string>
     <string name="text_monthly_d31edb" formatted="false">"Monthly"</string>
@@ -1205,7 +1205,7 @@
     <string name="text_more_than_f9c07b" formatted="false">"more than"</string>
     <string name="text_most_minutes_0d8b47" formatted="false">"Most minutes"</string>
     <string name="text_most_played_14202e" formatted="false">"Most played"</string>
-    <string name="text_motion_quality_364852" formatted="false">"Motion &amp; quality"</string>
+    <string name="text_motion_quality_364852" formatted="false">"Motion &amp; Quality"</string>
     <string name="text_move_down_260ff8" formatted="false">"Move down"</string>
     <string name="text_move_down_533269">"Move %1$s down"</string>
     <string name="text_move_up_a55bd8">"Move %1$s up"</string>
@@ -1226,8 +1226,8 @@
     <string name="text_native_4fc6e7" formatted="false">"Native"</string>
     <string name="text_nebula_drift_4aee62" formatted="false">"Nebula drift"</string>
     <string name="text_neon_line_af89a0" formatted="false">"Neon line"</string>
-    <string name="text_network_audio_3f82b9" formatted="false">"Network audio"</string>
-    <string name="text_network_playback_5d5a8a" formatted="false">"Network playback"</string>
+    <string name="text_network_audio_3f82b9" formatted="false">"Network Audio"</string>
+    <string name="text_network_playback_5d5a8a" formatted="false">"Network Playback"</string>
     <string name="text_new_6403f2" formatted="false">"New"</string>
     <string name="text_new_code_6499c7" formatted="false">"New code"</string>
     <string name="text_new_cover_staged_ac4238" formatted="false">"New cover staged"</string>
@@ -1238,7 +1238,7 @@
     <string name="text_new_release_f0ec22" formatted="false">"NEW RELEASE"</string>
     <string name="text_new_release_hero_c354b3" formatted="false">"New release hero"</string>
     <string name="text_new_releases_3cdd02" formatted="false">"New releases"</string>
-    <string name="text_new_releases_recommendations_02976f" formatted="false">"New releases &amp; recommendations"</string>
+    <string name="text_new_releases_recommendations_02976f" formatted="false">"New Releases &amp; Recommendations"</string>
     <string name="text_new_smart_playlist_ee2a2d" formatted="false">"New smart playlist"</string>
     <string name="text_new_tuning_project_97a69f" formatted="false">"New tuning project"</string>
     <string name="text_news_34c808" formatted="false">"News"</string>
@@ -1308,7 +1308,7 @@
     <string name="text_off_e3de5a" formatted="false">"Off"</string>
     <string name="text_off_leaves_replaygain_disabled_56fb0f" formatted="false">"Off leaves ReplayGain disabled."</string>
     <string name="text_offline_e01fa7" formatted="false">"Offline"</string>
-    <string name="text_offline_mode_66cf31" formatted="false">"Offline mode"</string>
+    <string name="text_offline_mode_66cf31" formatted="false">"Offline Mode"</string>
     <string name="text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0" formatted="false">"Older plays use estimated listening time from track lengths."</string>
     <string name="text_on_cellular_188845" formatted="false">"On cellular"</string>
     <string name="text_on_device_file_7d2f79" formatted="false">"On-device file"</string>
@@ -1348,20 +1348,20 @@
     <string name="text_output_device_709178" formatted="false">"Output device"</string>
     <string name="text_output_device_hi_res_and_usb_modes_58ec99" formatted="false">"Output device, hi-res and USB modes"</string>
     <string name="text_output_hz_float_pcm_same_route_and_volume_e7768a">"Output: %1$s Hz float PCM; same route and volume"</string>
-    <string name="text_output_mix_a04a0e" formatted="false">"Output mix"</string>
-    <string name="text_output_mode_ba6e71" formatted="false">"Output mode"</string>
+    <string name="text_output_mix_a04a0e" formatted="false">"Output Mix"</string>
+    <string name="text_output_mode_ba6e71" formatted="false">"Output Mode"</string>
     <string name="text_output_not_bound_dbaf18" formatted="false">"Output not bound"</string>
-    <string name="text_output_presets_8523fd" formatted="false">"Output presets"</string>
+    <string name="text_output_presets_8523fd" formatted="false">"Output Presets"</string>
     <string name="text_output_rules_unavailable_e638bb" formatted="false">"Output rules unavailable."</string>
     <string name="text_output_unknown_ef4fdb" formatted="false">"Output unknown"</string>
     <string name="text_over_ear_and_on_ear_headphones_including_studio_and_bluetooth_mod_d79653" formatted="false">"Over-ear and on-ear headphones, including studio and Bluetooth models."</string>
-    <string name="text_overlap_headroom_c1a0a1" formatted="false">"Overlap headroom"</string>
+    <string name="text_overlap_headroom_c1a0a1" formatted="false">"Overlap Headroom"</string>
     <string name="text_overlay_249450" formatted="false">"Overlay"</string>
     <string name="text_oversampling_75358a" formatted="false">"Oversampling"</string>
     <string name="text_overwrites_current_settings_playlists_40eadc" formatted="false">"Overwrites current settings &amp; playlists"</string>
     <string name="text_packet_errors_timeouts_e3e49f">"Packet errors: %1$s · Timeouts: %2$s"</string>
     <string name="text_pair_2537f8" formatted="false">"Pair"</string>
-    <string name="text_pair_an_aurora_player_de78d4" formatted="false">"Pair an Aurora player"</string>
+    <string name="text_pair_an_aurora_player_de78d4" formatted="false">"Pair an Aurora Player"</string>
     <string name="text_paired_devices_can_control_playback_86f484" formatted="false">"Paired devices can control playback."</string>
     <string name="text_pairing_address_0a7563" formatted="false">"Pairing address"</string>
     <string name="text_pairing_code_309e30" formatted="false">"Pairing code"</string>
@@ -1390,7 +1390,7 @@
     <string name="text_peak_932437">"Peak: %1$s"</string>
     <string name="text_peak_c83dbb" formatted="false">"Peak"</string>
     <string name="text_peak_dots_3fb145" formatted="false">"Peak dots"</string>
-    <string name="text_peak_hold_f1bbb5" formatted="false">"Peak hold"</string>
+    <string name="text_peak_hold_f1bbb5" formatted="false">"Peak Hold"</string>
     <string name="text_peak_rms_dbfs_95c5fb">"%1$s   Peak %2$s · RMS %3$s dBFS"</string>
     <string name="text_peaking_filters_coverage_550db0">"%1$s peaking filters · coverage %2$s–%3$s"</string>
     <string name="text_pearlescent_surfaces_spacious_curves_soft_light_b4c29d" formatted="false">"Pearlescent surfaces · spacious curves · soft light"</string>
@@ -1430,11 +1430,11 @@
     <string name="text_playback_formats_and_processing_no_account_credentials_9d08c4" formatted="false">"Playback formats and processing; no account credentials"</string>
     <string name="text_playback_may_continue_through_the_speaker_7f06f2" formatted="false">"Playback may continue through the speaker."</string>
     <string name="text_playback_output_or_volume_changed_prepare_the_comparison_again_f65441" formatted="false">"Playback, output or volume changed. Prepare the comparison again."</string>
-    <string name="text_playback_quality_144407" formatted="false">"Playback &amp; quality"</string>
+    <string name="text_playback_quality_144407" formatted="false">"Playback &amp; Quality"</string>
     <string name="text_playback_size_aeb4ca" formatted="false">"Playback size"</string>
-    <string name="text_playback_speed_6ff42b" formatted="false">"Playback speed"</string>
+    <string name="text_playback_speed_6ff42b" formatted="false">"Playback Speed"</string>
     <string name="text_player_e53407" formatted="false">"Player"</string>
-    <string name="text_player_gestures_1c6f88" formatted="false">"Player gestures"</string>
+    <string name="text_player_gestures_1c6f88" formatted="false">"Player Gestures"</string>
     <string name="text_playing_298c39" formatted="false">"Playing"</string>
     <string name="text_playing_from_5f4dc3" formatted="false">"PLAYING FROM"</string>
     <string name="text_playing_next_b23445" formatted="false">"Playing next"</string>
@@ -1469,7 +1469,7 @@
     <string name="text_predicted_a49225" formatted="false">"Predicted"</string>
     <string name="text_prefer_hi_res_android_output_e20fb4" formatted="false">"Prefer hi-res Android output"</string>
     <string name="text_prefer_local_copies_a74911" formatted="false">"Prefer local copies"</string>
-    <string name="text_preferred_output_device_7cecb0" formatted="false">"Preferred output device"</string>
+    <string name="text_preferred_output_device_7cecb0" formatted="false">"Preferred Output Device"</string>
     <string name="text_prepare_impulse_828a45" formatted="false">"Prepare impulse"</string>
     <string name="text_prepared_19d34e" formatted="false">" · Prepared"</string>
     <string name="text_preparing_and_validating_backup_d53752" formatted="false">"Preparing and validating backup…"</string>
@@ -1483,7 +1483,7 @@
     <string name="text_preset_bca788" formatted="false">"Preset"</string>
     <string name="text_preset_exported_with_its_saved_settings_and_any_impulse_response_58728a" formatted="false">"Preset exported with its saved settings and any impulse response."</string>
     <string name="text_preset_name_eb39e1" formatted="false">"Preset name"</string>
-    <string name="text_preset_rules_c9d4d1" formatted="false">"Preset rules"</string>
+    <string name="text_preset_rules_c9d4d1" formatted="false">"Preset Rules"</string>
     <string name="text_preset_rules_unavailable_2c7cba" formatted="false">"Preset rules unavailable."</string>
     <string name="text_presets_e709e7" formatted="false">"Presets"</string>
     <string name="text_presets_showing_72ab09">"%1$s presets · showing %2$s"</string>
@@ -1497,17 +1497,17 @@
     <string name="text_primary_player_since_creation_a2795e" formatted="false">"Primary player, since creation."</string>
     <string name="text_priority_0168ee">"Priority %1$s · %2$s"</string>
     <string name="text_priority_1000_to_1000_eb6c32" formatted="false">"Priority (-1000 to 1000)"</string>
-    <string name="text_private_session_ec7cef" formatted="false">"Private session"</string>
+    <string name="text_private_session_ec7cef" formatted="false">"Private Session"</string>
     <string name="text_processed_8291b2" formatted="false">"Processed"</string>
     <string name="text_processed_playback_uses_the_current_effects_when_each_track_start_23b137" formatted="false">"Processed playback uses the current effects when each track starts. Speed changes and crossfade are unavailable."</string>
     <string name="text_processing_e63451" formatted="false">"Processing"</string>
     <string name="text_processing_mode_7f4d30" formatted="false">"Processing mode"</string>
-    <string name="text_processing_rack_f7dff1" formatted="false">"Processing rack"</string>
+    <string name="text_processing_rack_f7dff1" formatted="false">"Processing Rack"</string>
     <string name="text_processing_tuning_and_extensions_d9a2fc" formatted="false">"Processing, tuning and extensions"</string>
     <string name="text_profile_ff4fc0" formatted="false">"Profile"</string>
     <string name="text_progress_1b9027" formatted="false">"Progress"</string>
     <string name="text_project_exported_4c0502" formatted="false">"Project exported."</string>
-    <string name="text_project_files_playback_3c21f3" formatted="false">"Project files &amp; playback"</string>
+    <string name="text_project_files_playback_3c21f3" formatted="false">"Project Files &amp; Playback"</string>
     <string name="text_project_name_ab9773" formatted="false">"Project name"</string>
     <string name="text_project_notes_7b2dc5" formatted="false">"Project notes"</string>
     <string name="text_project_saved_3a58a0" formatted="false">"Project saved"</string>
@@ -1521,7 +1521,7 @@
     <string name="text_pull_down_on_the_player_sheets_to_close_them_36e776" formatted="false">"Pull down on the player &amp; sheets to close them"</string>
     <string name="text_pulse_rings_0a7012" formatted="false">"Pulse rings"</string>
     <string name="text_purpose_listening_setup_observations_16e335" formatted="false">"Purpose, listening setup &amp; observations"</string>
-    <string name="text_push_notifications_03be2f" formatted="false">"Push notifications"</string>
+    <string name="text_push_notifications_03be2f" formatted="false">"Push Notifications"</string>
     <string name="text_queue_d325fc" formatted="false">"Queue"</string>
     <string name="text_r_6b99ea">"R %1$s%%"</string>
     <string name="text_r_peak_rms_dbfs_885a75">"R   Peak %1$s · RMS %2$s dBFS"</string>
@@ -1552,15 +1552,15 @@
     <string name="text_recent_76eec7" formatted="false">"Recent"</string>
     <string name="text_recently_added_536963" formatted="false">"Recently added"</string>
     <string name="text_recommended_albums_36271e" formatted="false">"Recommended albums"</string>
-    <string name="text_recommended_order_642c4b" formatted="false">"Recommended order"</string>
+    <string name="text_recommended_order_642c4b" formatted="false">"Recommended Order"</string>
     <string name="text_record_the_sensitivity_source_and_voltage_measurements_including_71bc84" formatted="false">"Record the sensitivity source and voltage measurements, including the load."</string>
     <string name="text_recover_the_saved_project_library_before_writing_changes_816728" formatted="false">"Recover the saved project library before writing changes."</string>
     <string name="text_redo_edit_15178f" formatted="false">"Redo edit"</string>
     <string name="text_reduce_input_gain_when_the_rack_boosts_the_signal_2a95ae" formatted="false">"Reduce input gain when the rack boosts the signal."</string>
     <string name="text_reference_volume_38aeb3" formatted="false">"Reference volume"</string>
-    <string name="text_reflect_the_spectrum_612298" formatted="false">"Reflect the spectrum"</string>
+    <string name="text_reflect_the_spectrum_612298" formatted="false">"Reflect the Spectrum"</string>
     <string name="text_refresh_56e3ba" formatted="false">"Refresh"</string>
-    <string name="text_related_settings_661f04" formatted="false">"Related settings"</string>
+    <string name="text_related_settings_661f04" formatted="false">"Related Settings"</string>
     <string name="text_relative_to_media_volume_this_is_not_an_spl_estimate_8959bd" formatted="false">"Relative to media volume. This is not an SPL estimate."</string>
     <string name="text_relative_volume_compensation_119ef9" formatted="false">"Relative volume compensation"</string>
     <string name="text_release_d41f56" formatted="false">"Release"</string>
@@ -1624,7 +1624,7 @@
     <string name="text_right_954daa" formatted="false">"Right"</string>
     <string name="text_right_channel_correction_e4ef15" formatted="false">"Right-channel correction."</string>
     <string name="text_right_channel_only_left_passes_unchanged_6e2bfe" formatted="false">"Right channel only · left passes unchanged"</string>
-    <string name="text_right_delay_ca7838" formatted="false">"Right delay"</string>
+    <string name="text_right_delay_ca7838" formatted="false">"Right Delay"</string>
     <string name="text_right_delay_ms_ffbffc" formatted="false">"Right delay - ms"</string>
     <string name="text_right_left_0aa851" formatted="false">"Right → Left"</string>
     <string name="text_right_measurement_fbacf6" formatted="false">"Right measurement"</string>
@@ -1635,7 +1635,7 @@
     <string name="text_rms_difference_3f_db_288abf" formatted="false">"RMS difference: %.3f dB"</string>
     <string name="text_rms_fitting_error_db_fc001a">"RMS fitting error: %1$s → %2$s dB"</string>
     <string name="text_rose_51ad0e" formatted="false">"Rose"</string>
-    <string name="text_rotate_radial_styles_72016a" formatted="false">"Rotate radial styles"</string>
+    <string name="text_rotate_radial_styles_72016a" formatted="false">"Rotate Radial Styles"</string>
     <string name="text_rounded_c5aa34" formatted="false">"Rounded"</string>
     <string name="text_routing_7d15dd" formatted="false">"Routing"</string>
     <string name="text_rule_condition_c6d62b" formatted="false">"Rule condition"</string>
@@ -1662,11 +1662,11 @@
     <string name="text_save_eq_effects_loudness_and_output_settings_cfa9ad" formatted="false">"Save EQ, effects, loudness and output settings."</string>
     <string name="text_save_export_project_json_9f2b2c" formatted="false">"Save &amp; export project JSON"</string>
     <string name="text_save_failed_0a4444" formatted="false">"Save failed"</string>
-    <string name="text_save_inspect_3831d9" formatted="false">"Save &amp; inspect"</string>
+    <string name="text_save_inspect_3831d9" formatted="false">"Save &amp; Inspect"</string>
     <string name="text_save_leave_fc9cb3" formatted="false">"Save &amp; leave"</string>
-    <string name="text_save_level_samples_c79a47" formatted="false">"Save level samples"</string>
+    <string name="text_save_level_samples_c79a47" formatted="false">"Save Level Samples"</string>
     <string name="text_save_mix_bba953" formatted="false">"Save mix"</string>
-    <string name="text_save_or_append_stages_5f0cc3" formatted="false">"Save or append stages"</string>
+    <string name="text_save_or_append_stages_5f0cc3" formatted="false">"Save or Append Stages"</string>
     <string name="text_save_picture_ccdb19" formatted="false">"Save picture"</string>
     <string name="text_save_project_2dd802" formatted="false">"Save project"</string>
     <string name="text_save_project_changes_026247" formatted="false">"Save project changes?"</string>
@@ -1684,9 +1684,9 @@
     <string name="text_saved_c0ae8f" formatted="false">"Saved"</string>
     <string name="text_saved_mixes_could_not_be_read_7eab0e" formatted="false">"Saved mixes could not be read."</string>
     <string name="text_saved_mixes_fe1986" formatted="false">"Saved mixes"</string>
-    <string name="text_saved_processing_presets_f22d4b" formatted="false">"Saved processing presets"</string>
+    <string name="text_saved_processing_presets_f22d4b" formatted="false">"Saved Processing Presets"</string>
     <string name="text_saved_projects_could_not_be_loaded_14d15f" formatted="false">"Saved projects could not be loaded"</string>
-    <string name="text_saved_subchains_46c948" formatted="false">"Saved subchains"</string>
+    <string name="text_saved_subchains_46c948" formatted="false">"Saved Subchains"</string>
     <string name="text_saved_tuning_projects_could_not_be_decoded_a1167f" formatted="false">"Saved tuning projects could not be decoded."</string>
     <string name="text_saved_wavs_trimming_and_normalization_732c0c" formatted="false">"Saved WAVs, trimming and normalization"</string>
     <string name="text_saving_56a228" formatted="false">"Saving…"</string>
@@ -1747,7 +1747,7 @@
     <string name="text_server_cb0cb1" formatted="false">"Server"</string>
     <string name="text_server_error_c28ed6">"Server error (%1$s)."</string>
     <string name="text_server_not_found_check_the_address_24bc0a" formatted="false">"Server not found — check the address."</string>
-    <string name="text_servers_accounts_59e105" formatted="false">"Servers &amp; accounts"</string>
+    <string name="text_servers_accounts_59e105" formatted="false">"Servers &amp; Accounts"</string>
     <string name="text_set_the_redirect_uri_to_exactly_aurora_spotify_407b7c" formatted="false">"Set the Redirect URI to exactly:  aurora://spotify"</string>
     <string name="text_set_up_your_spotify_app_de4e3c" formatted="false">"Set up your Spotify app"</string>
     <string name="text_setting_saved_ac1563" formatted="false">"Setting saved."</string>
@@ -1758,9 +1758,9 @@
     <string name="text_shared_secret_4e19fd" formatted="false">"Shared secret"</string>
     <string name="text_sharp_cf3e9a" formatted="false">"Sharp"</string>
     <string name="text_show_20_more_3b05ec" formatted="false">"Show 20 more"</string>
-    <string name="text_show_album_b04b79" formatted="false">"Show album"</string>
+    <string name="text_show_album_b04b79" formatted="false">"Show Album"</string>
     <string name="text_show_albums_artists_playlists_from_your_local_files_and_every_inc_4ea040" formatted="false">"Show albums, artists &amp; playlists from your local files and every included source as one library"</string>
-    <string name="text_show_artwork_in_radial_styles_100355" formatted="false">"Show artwork in radial styles"</string>
+    <string name="text_show_artwork_in_radial_styles_100355" formatted="false">"Show Artwork in Radial Styles"</string>
     <string name="text_show_less_4c852b" formatted="false">"Show less"</string>
     <string name="text_show_more_25911d" formatted="false">"Show more"</string>
     <string name="text_show_pairing_code_921392" formatted="false">"Show pairing code"</string>
@@ -1784,7 +1784,7 @@
     <string name="text_silk_veil_fa6add" formatted="false">"Silk veil"</string>
     <string name="text_single_dd1186" formatted="false">"Single"</string>
     <string name="text_skip_silence_3d4da2" formatted="false">"Skip silence"</string>
-    <string name="text_skip_silences_015ea3" formatted="false">"Skip silences"</string>
+    <string name="text_skip_silences_015ea3" formatted="false">"Skip Silences"</string>
     <string name="text_sky_b3d97f" formatted="false">"Sky"</string>
     <string name="text_sleep_timer_e90613" formatted="false">"Sleep timer"</string>
     <string name="text_slope_638d02" formatted="false">"Slope"</string>
@@ -1798,7 +1798,7 @@
     <string name="text_soft_gradients_custom_accents_rounded_cards_d3f466" formatted="false">"Soft gradients · custom accents · rounded cards"</string>
     <string name="text_solo_6d717d" formatted="false">" · solo"</string>
     <string name="text_solo_9fc93a" formatted="false">"Solo"</string>
-    <string name="text_solo_band_3fb8b7" formatted="false">"Solo band"</string>
+    <string name="text_solo_band_3fb8b7" formatted="false">"Solo Band"</string>
     <string name="text_some_tracks_are_unavailable_reconnect_to_the_library_and_retry_6b688e" formatted="false">"Some tracks are unavailable. Reconnect to the library and retry."</string>
     <string name="text_song_bd1189" formatted="false">"Song"</string>
     <string name="text_songs_9b614d">"%1$s songs"</string>
@@ -1837,7 +1837,7 @@
     <string name="text_squig_measurement_text_1ab632" formatted="false">"Squig measurement text"</string>
     <string name="text_src_delay_ms_165eac">"SRC delay: %1$s ms"</string>
     <string name="text_stage_ca6d0e" formatted="false">"Stage"</string>
-    <string name="text_stage_inputs_c5a9f4" formatted="false">"Stage inputs"</string>
+    <string name="text_stage_inputs_c5a9f4" formatted="false">"Stage Inputs"</string>
     <string name="text_stage_meters_50fb37" formatted="false">"Stage meters"</string>
     <string name="text_stages_8e34a7">"%1$s · %2$s stages"</string>
     <string name="text_stages_b02622">"%1$s stages"</string>
@@ -1853,7 +1853,7 @@
     <string name="text_start_included_end_excluded_a1dbff" formatted="false">"Start included. End excluded."</string>
     <string name="text_start_listening_without_an_account_2e734d" formatted="false">"Start listening without an account"</string>
     <string name="text_starting_download_43a6a6" formatted="false">"Starting download…"</string>
-    <string name="text_starting_points_8df66e" formatted="false">"Starting points"</string>
+    <string name="text_starting_points_8df66e" formatted="false">"Starting Points"</string>
     <string name="text_starts_in_mix_0762f2" formatted="false">"Starts in mix"</string>
     <string name="text_starts_with_2e2ec9" formatted="false">"starts with"</string>
     <string name="text_stereo_delay_d3073c" formatted="false">"Stereo delay"</string>
@@ -1861,7 +1861,7 @@
     <string name="text_stereo_linked_6e3759" formatted="false">"Stereo linked."</string>
     <string name="text_stereo_phase_05d1da" formatted="false">"Stereo phase"</string>
     <string name="text_stereo_trim_63a03b" formatted="false">"Stereo &amp; trim"</string>
-    <string name="text_stereo_width_336051" formatted="false">"Stereo width"</string>
+    <string name="text_stereo_width_336051" formatted="false">"Stereo Width"</string>
     <string name="text_stop_9e2534" formatted="false">"Stop"</string>
     <string name="text_stop_casting_1f7a2c" formatted="false">"Stop casting"</string>
     <string name="text_stop_mix_and_return_to_queue_eeb40f" formatted="false">"Stop mix and return to queue"</string>
@@ -1872,7 +1872,7 @@
     <string name="text_stream_url_e25c5b" formatted="false">"Stream URL"</string>
     <string name="text_streaming_0247ce" formatted="false">"STREAMING"</string>
     <string name="text_streaming_1e8325" formatted="false">"Streaming"</string>
-    <string name="text_streaming_quality_7a2799" formatted="false">"Streaming quality"</string>
+    <string name="text_streaming_quality_7a2799" formatted="false">"Streaming Quality"</string>
     <string name="text_streaming_quality_crossfade_gapless_and_speed_602d35" formatted="false">"Streaming quality, crossfade, gapless and speed"</string>
     <string name="text_strength_24d3e4" formatted="false">"Strength"</string>
     <string name="text_style_99a0ef" formatted="false">"Style"</string>
@@ -1880,11 +1880,11 @@
     <string name="text_subscribed_dd1242" formatted="false">"Subscribed"</string>
     <string name="text_subsonic_compatible_b4584c" formatted="false">"Subsonic compatible"</string>
     <string name="text_subtle_vibration_on_play_skip_navigation_d6940c" formatted="false">"Subtle vibration on play, skip &amp; navigation"</string>
-    <string name="text_swipe_artwork_to_change_track_7a762f" formatted="false">"Swipe artwork to change track"</string>
-    <string name="text_swipe_down_to_dismiss_575cb1" formatted="false">"Swipe down to dismiss"</string>
+    <string name="text_swipe_artwork_to_change_track_7a762f" formatted="false">"Swipe Artwork to Change Track"</string>
+    <string name="text_swipe_down_to_dismiss_575cb1" formatted="false">"Swipe Down to Dismiss"</string>
     <string name="text_swipe_haptics_and_private_session_19567f" formatted="false">"Swipe, haptics and private session"</string>
     <string name="text_swipe_the_player_artwork_left_right_fd3460" formatted="false">"Swipe the player artwork left / right"</string>
-    <string name="text_switch_account_a28b02" formatted="false">"Switch account"</string>
+    <string name="text_switch_account_a28b02" formatted="false">"Switch Account"</string>
     <string name="text_switch_between_saved_logins_dfa5ef" formatted="false">"Switch between saved logins"</string>
     <string name="text_switch_gain_between_boost_and_cut_ec1830" formatted="false">"Switch gain between boost and cut"</string>
     <string name="text_switch_presets_by_track_and_output_546392" formatted="false">"Switch presets by track and output"</string>
@@ -1894,7 +1894,7 @@
     <string name="text_synced_lyrics_when_your_server_has_none_b4054e" formatted="false">"Synced lyrics when your server has none"</string>
     <string name="text_system_bc0792" formatted="false">"System"</string>
     <string name="text_system_effects_d5a44a" formatted="false">"System effects"</string>
-    <string name="text_system_equalizer_be209a" formatted="false">"System equalizer"</string>
+    <string name="text_system_equalizer_be209a" formatted="false">"System Equalizer"</string>
     <string name="text_tags_saved_521155" formatted="false">"Tags saved"</string>
     <string name="text_tap_a_value_to_enter_an_exact_time_cue_points_refer_to_the_source_842e53" formatted="false">"Tap a value to enter an exact time. Cue points refer to the source song."</string>
     <string name="text_tap_the_graph_or_adjust_the_frequency_slider_to_inspect_a_point_f_1ff543" formatted="false">"Tap the graph or adjust the frequency slider to inspect a point. Frequency uses a logarithmic scale."</string>
@@ -1902,7 +1902,7 @@
     <string name="text_tape_c51c55" formatted="false">"Tape"</string>
     <string name="text_taps_estimated_memory_mib_88d38b">"%1$s taps · Estimated memory %2$s MiB"</string>
     <string name="text_target_61ad50" formatted="false">"Target"</string>
-    <string name="text_target_library_45e3b8" formatted="false">"Target library"</string>
+    <string name="text_target_library_45e3b8" formatted="false">"Target Library"</string>
     <string name="text_target_rig_6556f6">"Target rig: %1$s"</string>
     <string name="text_target_saved_79a16c" formatted="false">"Target saved."</string>
     <string name="text_target_shape_57174c" formatted="false">"Target shape"</string>
@@ -1942,10 +1942,10 @@
     <string name="text_these_filters_cannot_be_represented_in_the_eq_text_format_025451" formatted="false">"These filters cannot be represented in the EQ text format."</string>
     <string name="text_these_settings_belong_to_this_stage_the_original_eq_gain_saturati_989a35" formatted="false">"These settings belong to this stage. The original EQ → gain → saturation → stereo → dynamics → delay order is retained."</string>
     <string name="text_these_settings_match_4e8e86" formatted="false">"These settings match"</string>
-    <string name="text_third_column_is_phase_bf98b7" formatted="false">"Third column is phase"</string>
+    <string name="text_third_column_is_phase_bf98b7" formatted="false">"Third Column Is Phase"</string>
     <string name="text_this_collection_exceeds_the_10_000_track_mix_limit_b8885f" formatted="false">"This collection exceeds the 10,000-track mix limit."</string>
     <string name="text_this_collection_needs_at_least_two_tracks_to_mix_142509" formatted="false">"This collection needs at least two tracks to mix."</string>
-    <string name="text_this_device_fa5a6d" formatted="false">"This device"</string>
+    <string name="text_this_device_fa5a6d" formatted="false">"This Device"</string>
     <string name="text_this_file_is_not_a_valid_preset_archive_or_it_is_damaged_choose_a_fc090e" formatted="false">"This file is not a valid preset archive, or it is damaged. Choose an Aurora preset export."</string>
     <string name="text_this_ir_is_no_longer_in_the_library_7118f3" formatted="false">"This IR is no longer in the library."</string>
     <string name="text_this_is_the_eq_s_group_delay_it_does_not_measure_device_or_playba_31e689" formatted="false">"This is the EQ\'s group delay; it does not measure device or playback latency."</string>
@@ -1969,12 +1969,12 @@
     <string name="text_timers_841cd0" formatted="false">"Timers"</string>
     <string name="text_timing_098024" formatted="false">"Timing"</string>
     <string name="text_title_768e0c" formatted="false">"Title"</string>
-    <string name="text_title_artist_over_the_visual_ff75a3" formatted="false">"Title &amp; artist over the visual"</string>
+    <string name="text_title_artist_over_the_visual_ff75a3" formatted="false">"Title &amp; Artist over the Visual"</string>
     <string name="text_to_e8d7f8">"%1$s to %2$s"</string>
     <string name="text_today_24345a" formatted="false">"Today"</string>
     <string name="text_toggle_layout_6169e7" formatted="false">"Toggle layout"</string>
     <string name="text_tone_376990" formatted="false">"Tone"</string>
-    <string name="text_tone_engine_79c7e5" formatted="false">"Tone engine"</string>
+    <string name="text_tone_engine_79c7e5" formatted="false">"Tone Engine"</string>
     <string name="text_tone_shaping_is_bypassed_choose_system_or_custom_above_to_enable_1cdd7c" formatted="false">"Tone shaping is bypassed. Choose System or Custom above to enable the EQ."</string>
     <string name="text_tone_shaping_off_37d5aa" formatted="false">"Tone shaping off"</string>
     <string name="text_too_long_at_khz_trim_first_79c65a">"Too long at %1$s kHz. Trim first."</string>
@@ -1988,7 +1988,7 @@
     <string name="text_total_parametric_band_budget_6a6f38" formatted="false">"Total parametric band budget"</string>
     <string name="text_track_4c2135" formatted="false">"Track #"</string>
     <string name="text_track_b1c5a7" formatted="false">"Track"</string>
-    <string name="text_track_info_2bad97" formatted="false">"Track info"</string>
+    <string name="text_track_info_2bad97" formatted="false">"Track Info"</string>
     <string name="text_track_level_d1a7fd" formatted="false">"Track level"</string>
     <string name="text_track_mode_uses_each_track_s_gain_tag_to_reduce_volume_difference_c08f12" formatted="false">"Track mode uses each track\'s gain tag to reduce volume differences between songs."</string>
     <string name="text_track_replaygain_ddc5fd" formatted="false">"Track ReplayGain"</string>
@@ -2020,10 +2020,10 @@
     <string name="text_try_again_042c86" formatted="false">"Try again"</string>
     <string name="text_tube_419868">"Tube %1$s%%"</string>
     <string name="text_tube_8315d0" formatted="false">"Tube"</string>
-    <string name="text_tube_saturation_8c63f8" formatted="false">"Tube saturation"</string>
-    <string name="text_tuning_listening_b4bf76" formatted="false">"Tuning &amp; listening"</string>
-    <string name="text_tuning_project_fe107d" formatted="false">"Tuning project"</string>
-    <string name="text_tuning_projects_e28bb7" formatted="false">"Tuning projects"</string>
+    <string name="text_tube_saturation_8c63f8" formatted="false">"Tube Saturation"</string>
+    <string name="text_tuning_listening_b4bf76" formatted="false">"Tuning &amp; Listening"</string>
+    <string name="text_tuning_project_fe107d" formatted="false">"Tuning Project"</string>
+    <string name="text_tuning_projects_e28bb7" formatted="false">"Tuning Projects"</string>
     <string name="text_turn_off_daily_alarm_6c0180" formatted="false">"Turn off daily alarm"</string>
     <string name="text_unbind_e40303" formatted="false">"Unbind"</string>
     <string name="text_undefined_0646f4" formatted="false">"Undefined"</string>
@@ -2033,7 +2033,7 @@
     <string name="text_undo_edit_7e5f02" formatted="false">"Undo edit"</string>
     <string name="text_undo_last_rack_append_babadf" formatted="false">"Undo last rack append"</string>
     <string name="text_unfavorite_de9bba" formatted="false">"Unfavorite"</string>
-    <string name="text_unified_library_f888ae" formatted="false">"Unified library"</string>
+    <string name="text_unified_library_f888ae" formatted="false">"Unified Library"</string>
     <string name="text_unique_songs_5af512" formatted="false">"Unique songs"</string>
     <string name="text_unknown_album_feeeda" formatted="false">"Unknown album"</string>
     <string name="text_unknown_bc7819" formatted="false">"Unknown"</string>
@@ -2113,8 +2113,8 @@
     <string name="text_vocals_only_337845" formatted="false">"Vocals only"</string>
     <string name="text_voice_search_9df53f" formatted="false">"Voice search"</string>
     <string name="text_volume_changed_the_comparison_stopped_09aa40" formatted="false">"Volume changed. The comparison stopped."</string>
-    <string name="text_volume_leveling_a9df98" formatted="false">"Volume leveling"</string>
-    <string name="text_volume_loudness_0e8ee1" formatted="false">"Volume &amp; loudness"</string>
+    <string name="text_volume_leveling_a9df98" formatted="false">"Volume Leveling"</string>
+    <string name="text_volume_loudness_0e8ee1" formatted="false">"Volume &amp; Loudness"</string>
     <string name="text_wait_for_the_playback_output_to_be_confirmed_b517cb" formatted="false">"Wait for the playback output to be confirmed."</string>
     <string name="text_waiting_for_a_complete_mono_or_stereo_pcm_window_c07259" formatted="false">"Waiting for a complete mono or stereo PCM window"</string>
     <string name="text_waiting_for_a_connection_128662" formatted="false">"Waiting for a connection…"</string>
@@ -2123,13 +2123,13 @@
     <string name="text_wake_to_your_liked_music_e4d8ed" formatted="false">"Wake to your liked music"</string>
     <string name="text_wav_exported_78ffe9" formatted="false">"WAV exported."</string>
     <string name="text_waveform_200f14" formatted="false">"Waveform"</string>
-    <string name="text_waveform_bars_c215c9" formatted="false">"Waveform bars"</string>
+    <string name="text_waveform_bars_c215c9" formatted="false">"Waveform Bars"</string>
     <string name="text_waveform_ready_tempo_uncertain_df52c4" formatted="false">"Waveform ready · tempo uncertain"</string>
     <string name="text_wavelet_graphiceq_correction_230cc2" formatted="false">"Wavelet GraphicEQ · correction"</string>
     <string name="text_weekly_158f3d" formatted="false">"Weekly"</string>
     <string name="text_wet_1df0cd">"%1$s · %2$s%% wet"</string>
     <string name="text_wet_76d013">"%1$s%% wet"</string>
-    <string name="text_wet_dry_6769a1" formatted="false">"Wet / dry"</string>
+    <string name="text_wet_dry_6769a1" formatted="false">"Wet / Dry"</string>
     <string name="text_when_a_track_is_available_from_more_than_one_place_aurora_plays_i_99eef3" formatted="false">"When a track is available from more than one place, Aurora plays it from the first "</string>
     <string name="text_whole_word_6171b6" formatted="false">"Whole word"</string>
     <string name="text_width_2f_276839" formatted="false">"Width %.2f×"</string>

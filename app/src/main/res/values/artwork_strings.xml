@@ -1,6 +1,6 @@
 <resources>
-    <string name="artwork_title">Cover art</string>
-    <string name="artwork_lookup">Find missing covers</string>
+    <string name="artwork_title">Cover Art</string>
+    <string name="artwork_lookup">Find Missing Covers</string>
     <string name="artwork_description">Match songs and albums that have no cover art.</string>
     <string name="artwork_provider">Uses artist, album and track names to find covers on MusicBrainz and Cover Art Archive. Existing artwork stays preferred.</string>
     <string name="artwork_cache_usage">Artwork cache: %.1f MB of 64 MB. Cached covers remain available offline.</string>
