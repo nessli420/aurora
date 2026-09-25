@@ -39,6 +39,13 @@ class AppContainer(context: Context) {
     val sourceErrors = _sourceErrors.asSharedFlow()
 
     val settingsStore = SettingsStore(appContext)
+    val playbackReportingAllowed = kotlinx.coroutines.flow.combine(settingsStore.playbackPrefs, settingsStore.privateSession) { prefs, private ->
+        prefs.scrobble && !private
+    }.stateIn(scope, SharingStarted.Eagerly, false)
+    val playbackReports = PlaybackReportDispatcher(scope, allowed = { playbackReportingAllowed.value }) {
+        _sourceErrors.tryEmit(appContext.getString(com.aurora.music.R.string.playback_history_sync_failed))
+    }
+
     val audioCache = com.aurora.music.data.cache.AudioCache(appContext, settingsStore, offline = { offlineFlag })
     val appUpdater = com.aurora.music.data.updates.AppUpdater(appContext)
     val extensions = com.aurora.music.extensions.ExtensionManager(appContext, settingsStore, scope)

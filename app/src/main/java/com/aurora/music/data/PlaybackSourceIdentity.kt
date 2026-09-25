@@ -9,6 +9,7 @@ data class PlaybackSourceIdentity(
     val providerLabel: String? = null,
     val source: RuleSource? = null,
     val albumId: String? = null,
+    val songId: String? = null,
 ) {
     companion object {
         fun fromSession(session: Session, albumId: String, source: RuleSource =

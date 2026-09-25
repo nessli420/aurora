@@ -53,6 +53,15 @@ interface JellyfinApi {
     @POST("Users/{userId}/PlayedItems/{id}")
     suspend fun markPlayed(@Path("userId") userId: String, @Path("id") id: String): Response<Unit>
 
+    @POST("Sessions/Playing")
+    suspend fun playbackStarted(@Body body: JellyfinPlaybackProgress): Response<Unit>
+
+    @POST("Sessions/Playing/Progress")
+    suspend fun playbackProgress(@Body body: JellyfinPlaybackProgress): Response<Unit>
+
+    @POST("Sessions/Playing/Stopped")
+    suspend fun playbackStopped(@Body body: JellyfinPlaybackStopped): Response<Unit>
+
     @POST("Playlists")
     suspend fun createPlaylist(@Body body: CreatePlaylistRequest): CreatePlaylistResult
 

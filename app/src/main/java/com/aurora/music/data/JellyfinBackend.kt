@@ -3,6 +3,8 @@ package com.aurora.music.data
 import com.aurora.music.data.remote.BaseItemDto
 import com.aurora.music.data.remote.CreatePlaylistRequest
 import com.aurora.music.data.remote.JellyfinClient
+import com.aurora.music.data.remote.JellyfinPlaybackProgress
+import com.aurora.music.data.remote.JellyfinPlaybackStopped
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
@@ -12,6 +14,8 @@ import com.aurora.music.model.Song
 import com.aurora.music.model.inferReleaseType
 import com.aurora.music.model.releaseTypeLabel
 import com.aurora.music.util.accentFor
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
+import retrofit2.HttpException
 
 class JellyfinBackend(
     private val client: JellyfinClient,
@@ -151,6 +155,30 @@ class JellyfinBackend(
 
     override suspend fun scrobble(id: String) {
         runCatching { client.api.markPlayed(uid, id) }
+    }
+
+    override suspend fun reportPlayback(report: PlaybackReport) {
+        if (report.event == PlaybackReportEvent.SCROBBLE) return
+        val stream = report.song.streamUrl.toHttpUrlOrNull()
+        val positionTicks = report.positionMs.coerceIn(0L, Long.MAX_VALUE / 10_000L) * 10_000L
+        val mediaSourceId = stream?.queryParameter("MediaSourceId")
+        val sessionId = stream?.queryParameter("PlaySessionId")?.takeIf { it.isNotBlank() } ?: report.sessionId
+        val response = if (report.event == PlaybackReportEvent.STOP) {
+            client.api.playbackStopped(JellyfinPlaybackStopped(report.song.id, sessionId, positionTicks, mediaSourceId))
+        } else {
+            val body = JellyfinPlaybackProgress(
+                ItemId = report.song.id,
+                PlaySessionId = sessionId,
+                PositionTicks = positionTicks,
+                IsPaused = report.state != PlaybackReportState.PLAYING,
+                CanSeek = report.durationMs > 0,
+                PlayMethod = if (stream?.encodedPath?.endsWith("/universal") == true) "Transcode" else "DirectPlay",
+                MediaSourceId = mediaSourceId,
+            )
+            if (report.event == PlaybackReportEvent.START) client.api.playbackStarted(body)
+            else client.api.playbackProgress(body)
+        }
+        if (!response.isSuccessful) throw HttpException(response)
     }
 
     override suspend fun matchingSongs(song: Song): List<Song> = items(mapOf("SearchTerm" to recordingTitle(song.title),

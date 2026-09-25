@@ -28,9 +28,12 @@ data class SubsonicResponse(
     val musicFolders: MusicFoldersDto? = null,
     val indexes: IndexesDto? = null,
     val directory: DirectoryDto? = null,
+    val openSubsonicExtensions: List<OpenSubsonicExtensionDto>? = null,
 ) {
     val isOk: Boolean get() = status == "ok"
 }
+
+data class OpenSubsonicExtensionDto(val name: String? = null, val versions: List<Int>? = null)
 
 data class LyricsListDto(val structuredLyrics: List<StructuredLyricsDto> = emptyList())
 data class StructuredLyricsDto(

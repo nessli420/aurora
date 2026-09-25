@@ -1,5 +1,6 @@
 package com.aurora.music.data.remote
 
+import com.aurora.music.BuildConfig
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -8,6 +9,7 @@ import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URLEncoder
+import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 // token in X-Emby-Authorization header on api calls but as api_key query param on stream/image urls so exoplayer and coil can fetch directly
@@ -17,7 +19,11 @@ class JellyfinClient(val session: Session) {
     val userId: String = session.userId
     private val token: String = session.token
 
-    val api: JellyfinApi = buildApi(baseUrl, token)
+    val deviceId: String = session.clientToken.orEmpty().ifBlank {
+        "aurora-${UUID.nameUUIDFromBytes("$baseUrl\n$userId\n$token".toByteArray(Charsets.UTF_8))}"
+    }
+
+    val api: JellyfinApi = buildApi(baseUrl, token, deviceId)
 
     fun coverArtUrl(itemId: String?, size: Int = 600): String {
         if (itemId.isNullOrBlank()) return ""
@@ -27,28 +33,26 @@ class JellyfinClient(val session: Session) {
     // lossless or no bitrate cap streams the original file untouched
     fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean): String =
         if (lossless || maxBitrate <= 0) {
-            "$baseUrl/Audio/${enc(songId)}/stream?static=true&api_key=${enc(token)}"
+            "$baseUrl/Audio/${enc(songId)}/stream?static=true&DeviceId=${enc(deviceId)}&api_key=${enc(token)}"
         } else {
-            "$baseUrl/Audio/${enc(songId)}/universal?UserId=${enc(userId)}&DeviceId=$DEVICE_ID" +
+            "$baseUrl/Audio/${enc(songId)}/universal?UserId=${enc(userId)}&DeviceId=${enc(deviceId)}" +
                 "&MaxStreamingBitrate=${maxBitrate * 1000}&Container=mp3&AudioCodec=mp3&api_key=${enc(token)}"
         }
 
     companion object {
         const val CLIENT_NAME = "Aurora"
-        const val DEVICE_ID = "aurora-android"
-        const val VERSION = "1.0"
 
         private fun enc(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-        private fun authHeader(token: String): String = buildString {
-            append("MediaBrowser Client=\"$CLIENT_NAME\", Device=\"Android\", DeviceId=\"$DEVICE_ID\", Version=\"$VERSION\"")
+        private fun authHeader(token: String, deviceId: String): String = buildString {
+            append("MediaBrowser Client=\"$CLIENT_NAME\", Device=\"Android\", DeviceId=\"$deviceId\", Version=\"${BuildConfig.VERSION_NAME}\"")
             if (token.isNotBlank()) append(", Token=\"$token\"")
         }
 
-        private fun buildApi(server: String, token: String): JellyfinApi {
+        private fun buildApi(server: String, token: String, deviceId: String): JellyfinApi {
             val interceptor = Interceptor { chain ->
                 val req = chain.request().newBuilder()
-                    .header("X-Emby-Authorization", authHeader(token))
+                    .header("X-Emby-Authorization", authHeader(token, deviceId))
                     .build()
                 chain.proceed(req)
             }
@@ -74,7 +78,8 @@ class JellyfinClient(val session: Session) {
 
         suspend fun authenticate(server: String, username: String, password: String): Session {
             val norm = normalizeServer(server)
-            val api = buildApi(norm, "")
+            val deviceId = "aurora-${UUID.randomUUID()}"
+            val api = buildApi(norm, "", deviceId)
             val res = api.authenticate(AuthRequest(username.trim(), password))
             val token = res.AccessToken ?: throw IllegalStateException("Login rejected")
             val uid = res.User?.Id ?: throw IllegalStateException("No user id returned")
@@ -85,6 +90,7 @@ class JellyfinClient(val session: Session) {
                 token = token,
                 type = ServerType.JELLYFIN,
                 userId = uid,
+                clientToken = deviceId,
             )
         }
     }

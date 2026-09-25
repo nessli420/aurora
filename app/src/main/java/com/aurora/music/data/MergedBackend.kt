@@ -278,6 +278,18 @@ class MergedBackend(
         return sources[index].prefersServerRadio(original)
     }
     override suspend fun scrobble(id: String) { route(id) { src, _, oid -> src.scrobble(oid) } }
+
+    override fun playbackReportTarget(song: Song): PlaybackReportTarget? {
+        val provider = song.playbackSource?.providerId ?: return null
+        val source = sources.singleOrNull { PlaybackSourceIdentity.fromSession(it.session, "").providerId == provider } ?: return null
+        val id = song.playbackSource.songId ?: song.id
+        val original = if (SEP in id) {
+            val (index, raw) = unwrap(id) ?: return null
+            if (sources[index] !== source) return null
+            raw
+        } else id
+        return source.playbackReportTarget(song.copy(id = original, playbackSource = song.playbackSource.copy(songId = original)))
+    }
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean =
         route(id) { src, _, oid -> src.setStarred(oid, starred, kind) } ?: false
 

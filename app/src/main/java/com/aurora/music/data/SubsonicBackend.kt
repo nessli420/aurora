@@ -6,6 +6,7 @@ import com.aurora.music.data.remote.ArtistDto
 import com.aurora.music.data.remote.PlaylistDto
 import com.aurora.music.data.remote.SongDto
 import com.aurora.music.data.remote.SubsonicClient
+import com.aurora.music.data.remote.SubsonicResponse
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
@@ -14,6 +15,9 @@ import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.util.accentFor
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
+import retrofit2.HttpException
 
 class SubsonicBackend(
     private val client: SubsonicClient,
@@ -24,6 +28,8 @@ class SubsonicBackend(
     override val session: Session get() = client.session
 
     private val c: SubsonicClient get() = client
+    private val playbackCapabilitiesLock = Mutex()
+    private var playbackReportSupported: Boolean? = null
 
     private fun SongDto.toModel(): Song {
         val bitrate = maxBitrateProvider()
@@ -157,7 +163,59 @@ class SubsonicBackend(
     }.getOrDefault(SearchResults())
 
     override suspend fun scrobble(id: String) {
-        runCatching { c.api.scrobble(id) }
+        c.api.scrobble(id).response.checkPlaybackSuccess()
+    }
+
+    override suspend fun reportPlayback(report: PlaybackReport) {
+        if (report.event == PlaybackReportEvent.SCROBBLE) {
+            c.api.scrobble(report.song.id, time = report.startedAtMs.coerceAtLeast(0L))
+                .response.checkPlaybackSuccess()
+            return
+        }
+        if (supportsPlaybackReport()) {
+            try {
+                val rate = report.playbackRate.takeIf { it.isFinite() && it > 0f } ?: 1f
+                if (report.event == PlaybackReportEvent.START) {
+                    c.api.reportPlayback(report.song.id, report.positionMs.coerceAtLeast(0L), "starting", rate)
+                        .response.checkPlaybackSuccess()
+                }
+                val state = when (report.state) {
+                    PlaybackReportState.PLAYING -> "playing"
+                    PlaybackReportState.STOPPED -> "stopped"
+                    PlaybackReportState.PAUSED, PlaybackReportState.BUFFERING -> "paused"
+                }
+                c.api.reportPlayback(report.song.id, report.positionMs.coerceAtLeast(0L), state, rate)
+                    .response.checkPlaybackSuccess()
+                return
+            } catch (e: HttpException) {
+                if (e.code() !in listOf(404, 405, 501)) throw e
+                playbackReportSupported = false
+            }
+        }
+        if (report.state == PlaybackReportState.PLAYING) {
+            c.api.scrobble(report.song.id, submission = false).response.checkPlaybackSuccess()
+        }
+    }
+
+    private suspend fun supportsPlaybackReport(): Boolean = playbackCapabilitiesLock.withLock {
+        playbackReportSupported?.let { return@withLock it }
+        val supported = try {
+            val response = c.api.getOpenSubsonicExtensions().response
+            if (!response.isOk && response.error?.code in listOf(40, 41, 42, 43, 44, 50)) {
+                response.checkPlaybackSuccess()
+            }
+            response.isOk && response.openSubsonicExtensions.orEmpty().any {
+                it.name == "playbackReport" && 1 in it.versions.orEmpty()
+            }
+        } catch (e: HttpException) {
+            if (e.code() !in listOf(404, 405, 501)) throw e
+            false
+        }
+        supported.also { playbackReportSupported = it }
+    }
+
+    private fun SubsonicResponse.checkPlaybackSuccess() {
+        check(isOk) { "Subsonic playback report failed (${error?.code ?: 0})" }
     }
 
     override suspend fun matchingSongs(song: Song): List<Song> = c.api.search3(recordingTitle(song.title),

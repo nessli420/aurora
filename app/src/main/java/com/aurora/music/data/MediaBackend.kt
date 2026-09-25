@@ -52,6 +52,19 @@ interface MediaBackend {
     suspend fun songFor(id: String): Song?
     suspend fun search(query: String): SearchResults
     suspend fun scrobble(id: String)
+    suspend fun reportPlayback(report: PlaybackReport) {
+        if (report.event == PlaybackReportEvent.SCROBBLE) scrobble(report.song.id)
+    }
+
+    fun playbackReportTarget(song: Song): PlaybackReportTarget? {
+        val provider = PlaybackSourceIdentity.fromSession(session, "").providerId
+        val identity = song.playbackSource ?: return null
+        if (identity.providerId != provider) return null
+        val id = identity.songId ?: song.id
+        if (MERGE_NAMESPACE_SEP in id && id.substringBefore(MERGE_NAMESPACE_SEP) != "s${provider?.removePrefix("provider:")}") return null
+        val original = song.copy(id = id.substringAfter(MERGE_NAMESPACE_SEP))
+        return PlaybackReportTarget(original) { report -> reportPlayback(report.copy(song = original)) }
+    }
     suspend fun radio(seedId: String): List<Song>
     fun prefersServerRadio(seedId: String): Boolean = false
     suspend fun createPlaylist(name: String): Boolean

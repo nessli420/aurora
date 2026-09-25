@@ -68,3 +68,20 @@ data class CreatePlaylistResult(val Id: String? = null)
 
 data class JellyLyricsResult(val Lyrics: List<JellyLyricLine>? = null)
 data class JellyLyricLine(val Text: String? = null, val Start: Long? = null)  // start in ticks
+
+data class JellyfinPlaybackProgress(
+    val ItemId: String,
+    val PlaySessionId: String,
+    val PositionTicks: Long,
+    val IsPaused: Boolean,
+    val CanSeek: Boolean,
+    val PlayMethod: String,
+    val MediaSourceId: String? = null,
+)
+
+data class JellyfinPlaybackStopped(
+    val ItemId: String,
+    val PlaySessionId: String,
+    val PositionTicks: Long,
+    val MediaSourceId: String? = null,
+)

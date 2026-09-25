@@ -365,6 +365,15 @@ class MusicRepository(
         backend?.scrobble(backendSongId(id) ?: return)
     }
 
+    fun playbackReportTarget(song: Song): PlaybackReportTarget? {
+        if (offline || song.isRadio() || song.isPodcast() || song.id.startsWith("aurora-mix:")) return null
+        val source = backend ?: return null
+        val original = if (song.id.startsWith("cached:")) {
+            cachedSongsProvider().singleOrNull { "cached:${it.streamUrl.substringAfter("://")}" == song.id } ?: return null
+        } else song
+        return source.playbackReportTarget(original)
+    }
+
     private fun backendSongId(id: String): String? {
         if (!id.startsWith("cached:")) return id
         val cached = cachedSongsProvider().singleOrNull { "cached:${it.streamUrl.substringAfter("://")}" == id } ?: return null

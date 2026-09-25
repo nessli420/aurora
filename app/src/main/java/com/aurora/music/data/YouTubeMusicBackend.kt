@@ -16,6 +16,7 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
     private val songs = ConcurrentHashMap<String, Song>()
     private val pageCache = ConcurrentHashMap<String, Pair<Long, SearchResults>>()
     private val pageLock = Mutex()
+    private val playbackTracker = YouTubeMusicPlaybackTracker(api)
     private fun remember(result: SearchResults): SearchResults = result.also { it.songs.forEach { song -> songs[song.id] = song } }
     private suspend fun browse(id: String) = api.request("browse", json("browseId" to id))
 
@@ -186,7 +187,8 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
         })
     }
 
-    override suspend fun scrobble(id: String) { /* Listening history is maintained locally. */ }
+    override suspend fun scrobble(id: String) {}
+    override suspend fun reportPlayback(report: PlaybackReport) = playbackTracker.report(report)
     override suspend fun serverLyrics(song: Song): Lyrics? = null
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean) = YouTubeMusicParser.sentinel(songId)
     override fun coverArtUrl(id: String, size: Int) = songs[id]?.artworkUrl.orEmpty()

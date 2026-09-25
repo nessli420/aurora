@@ -13,6 +13,7 @@ class YouTubeMusicWebSession(
     val authUser: String = "0",
     val clientVersion: String = "",
     val userAgent: String = "",
+    val pageId: String? = null,
 ) {
     private fun sapisid(): String = cookie.split(';').mapNotNull {
         val parts = it.trim().split('=', limit = 2)
@@ -21,7 +22,7 @@ class YouTubeMusicWebSession(
 
     fun validate(): YouTubeMusicWebSession {
         if (sapisid().isBlank() || visitorData.isBlank() || !authUser.matches(Regex("[0-9]+")) ||
-            listOf(cookie, visitorData, userAgent, clientVersion).any { '\r' in it || '\n' in it }) {
+            listOf(cookie, visitorData, userAgent, clientVersion, pageId.orEmpty()).any { '\r' in it || '\n' in it }) {
             throw IOException("Finish signing in to YouTube Music, then tap Connect this account.")
         }
         return this
@@ -36,7 +37,9 @@ class YouTubeMusicWebSession(
     }
 
     fun encode(): String = json("cookie" to cookie, "visitorData" to visitorData, "dataSyncId" to dataSyncId,
-        "authUser" to authUser, "clientVersion" to clientVersion, "userAgent" to userAgent).toString()
+        "authUser" to authUser, "clientVersion" to clientVersion, "userAgent" to userAgent).apply {
+        pageId?.let { addProperty("pageId", it) }
+    }.toString()
 
     companion object {
         const val LOGIN_URL = "https://accounts.google.com/ServiceLogin?continue=https%3A%2F%2Fmusic.youtube.com"
@@ -51,7 +54,8 @@ class YouTubeMusicWebSession(
             val obj = JsonParser.parseString(value).asJsonObject
             YouTubeMusicWebSession(obj.string("cookie"), obj.string("visitorData"),
                 obj.string("dataSyncId").substringBefore("||"), obj.string("authUser").ifBlank { "0" },
-                obj.string("clientVersion"), obj.string("userAgent")).validate()
+                obj.string("clientVersion"), obj.string("userAgent"),
+                obj.get("pageId")?.takeIf { !it.isJsonNull }?.asString).validate()
         } catch (_: Exception) {
             throw IOException("Reconnect your YouTube Music account in Settings → Accounts.")
         }

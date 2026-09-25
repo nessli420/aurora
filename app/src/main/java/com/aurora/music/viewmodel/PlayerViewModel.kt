@@ -118,7 +118,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var queueToken: String? = null
     private var songById: Map<String, Song> = emptyMap()
 
-    @Volatile private var scrobbleEnabled = true
     @Volatile private var autoplayEnabled = false
     @Volatile private var privateSession = false
 
@@ -176,7 +175,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         // radio/podcasts carry synthetic ids don't record to history server or scrobblers
         if (cur.isRadio() || cur.isPodcast() || cur.id.startsWith("aurora-mix:")) return
         if (privateSession) return
-        if (scrobbleEnabled) viewModelScope.launch { runCatching { container.repository.scrobble(cur.id) } }
         container.lastfm.scrobble(cur, playStartMs)
         container.listenBrainz.scrobble(cur, playStartMs)
     }
@@ -241,7 +239,6 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             container.settingsStore.playbackPrefs.collect { p ->
-                scrobbleEnabled = p.scrobble
                 autoplayEnabled = p.autoplayRadio
                 if (_state.value.speed == 1.0f && p.defaultSpeed != 1.0f && _state.value.current.id.isEmpty()) {
                     _state.update { it.copy(speed = p.defaultSpeed) }

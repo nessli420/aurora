@@ -27,5 +27,5 @@ fun Song.withPlaybackFrom(other: Song): Song = copy(
     streamUrl = other.streamUrl, suffix = other.suffix, bitrateKbps = other.bitrateKbps,
     sampleRateHz = other.sampleRateHz, bitDepth = other.bitDepth,
     replayGainTrack = other.replayGainTrack, replayGainAlbum = other.replayGainAlbum,
-    path = other.path, playbackSource = other.playbackSource,
+    path = other.path, playbackSource = other.playbackSource?.copy(songId = other.playbackSource.songId ?: other.id),
 )

@@ -9,6 +9,19 @@ interface SubsonicApi {
     @GET("rest/ping.view")
     suspend fun ping(): SubsonicEnvelope
 
+    @GET("rest/getOpenSubsonicExtensions.view")
+    suspend fun getOpenSubsonicExtensions(): SubsonicEnvelope
+
+    @GET("rest/reportPlayback.view")
+    suspend fun reportPlayback(
+        @Query("mediaId") mediaId: String,
+        @Query("positionMs") positionMs: Long,
+        @Query("state") state: String,
+        @Query("playbackRate") playbackRate: Float,
+        @Query("mediaType") mediaType: String = "song",
+        @Query("ignoreScrobble") ignoreScrobble: Boolean = true,
+    ): SubsonicEnvelope
+
     @GET("rest/getAlbumList2.view")
     suspend fun getAlbumList2(
         @Query("type") type: String,
@@ -97,5 +110,6 @@ interface SubsonicApi {
     suspend fun scrobble(
         @Query("id") id: String,
         @Query("submission") submission: Boolean = true,
+        @Query("time") time: Long? = null,
     ): SubsonicEnvelope
 }

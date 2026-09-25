@@ -622,7 +622,7 @@
     <string name="text_dock_e8b5cb" formatted="false">"Dock"</string>
     <string name="text_does_not_match_current_playback_fb4dfe" formatted="false">"Does not match current playback."</string>
     <string name="text_doesn_t_contain_688c39" formatted="false">"doesn\'t contain"</string>
-    <string name="text_don_t_report_plays_to_your_server_or_last_fm_074883" formatted="false">"Don\'t report plays to your server or Last.fm"</string>
+    <string name="text_don_t_report_plays_to_your_server_or_last_fm_074883" formatted="false">"Pause listening history and account reporting"</string>
     <string name="text_done_e9b450" formatted="false">"Done"</string>
     <string name="text_dot_matrix_d4d639" formatted="false">"Dot matrix"</string>
     <string name="text_double_tap_the_player_artwork_9ef287" formatted="false">"Double-tap the player artwork"</string>
@@ -1601,7 +1601,7 @@
     <string name="text_replaces_and_clears_the_generated_correction_a7baba">"Replaces %1$s and clears the generated correction."</string>
     <string name="text_replaygain_and_volume_leveling_39af19" formatted="false">"ReplayGain and volume leveling"</string>
     <string name="text_replaygain_off_d67cdc" formatted="false">"ReplayGain off"</string>
-    <string name="text_report_plays_to_your_server_262da5" formatted="false">"Report plays to your server"</string>
+    <string name="text_report_plays_to_your_server_262da5" formatted="false">"Sync history and now playing with your music source"</string>
     <string name="text_required_for_audio_identification_e2b915" formatted="false">"Required for audio identification"</string>
     <string name="text_reset_defaults_7871b3" formatted="false">"Reset defaults"</string>
     <string name="text_reset_graphic_eq_ace461" formatted="false">"Reset graphic EQ"</string>
@@ -1699,7 +1699,7 @@
     <string name="text_scanning_replaygain_c527cc" formatted="false">"Scanning ReplayGain…"</string>
     <string name="text_schedule_0a8ada" formatted="false">"Schedule"</string>
     <string name="text_science_d2d066" formatted="false">"Science"</string>
-    <string name="text_scrobble_3d49e2" formatted="false">"Scrobble"</string>
+    <string name="text_scrobble_3d49e2" formatted="false">"Listening history sync"</string>
     <string name="text_scrobble_as_29e5f2">"Scrobble as %1$s"</string>
     <string name="text_scrobble_as_f81cff" formatted="false">"Scrobble as"</string>
     <string name="text_scrobble_your_listening_history_e444aa" formatted="false">"Scrobble your listening history"</string>

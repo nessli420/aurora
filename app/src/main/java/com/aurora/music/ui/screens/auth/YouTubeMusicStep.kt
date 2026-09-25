@@ -204,6 +204,7 @@ private suspend fun readYouTubeSession(view: WebView): YouTubeMusicWebSession? {
                         (window.yt && window.yt.config_ && window.yt.config_[key]) || '';
                 }
                 return {visitorData: config('VISITOR_DATA'), dataSyncId: config('DATASYNC_ID'),
+                    pageId: config('DELEGATED_SESSION_ID'),
                     authUser: String(config('SESSION_INDEX') || 0), clientVersion: config('INNERTUBE_CLIENT_VERSION')};
             })()""") { value -> if (continuation.isActive) continuation.resume(value) }
         }
@@ -213,7 +214,8 @@ private suspend fun readYouTubeSession(view: WebView): YouTubeMusicWebSession? {
         val config = JsonParser.parseString(result).asJsonObject
         YouTubeMusicWebSession(CookieManager.getInstance().getCookie(YouTubeMusicClient.ORIGIN).orEmpty(),
             config.string("visitorData"), config.string("dataSyncId").substringBefore("||"),
-            config.string("authUser"), config.string("clientVersion"), view.settings.userAgentString).validate()
+            config.string("authUser"), config.string("clientVersion"), view.settings.userAgentString,
+            config.string("pageId")).validate()
     }.getOrNull()
 }
 

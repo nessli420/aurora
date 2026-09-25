@@ -84,7 +84,7 @@ Connect your Google account to browse your YouTube Music library and personalize
 - Live broadcasts show **LIVE**. Regular tracks and music videos show their duration and seek controls once loaded.
 - Custom DSP, EQ and convolution remain available through Aurora's native audio player. Direct and bit-perfect output still bypass processing.
 
-YouTube streams are lossy, and some uploaded, age-restricted, regional or account-restricted content may be unavailable. YouTube listening-history updates and server ReplayGain metadata are not supplied. The integration is unofficial and its availability can change. See the [YouTube Music guide](docs/youtube-music.md) for sign-in, account storage and playback details.
+YouTube streams are lossy, and some uploaded, age-restricted, regional or account-restricted content may be unavailable. Server ReplayGain metadata is not supplied. Listening history sync can report playback to your connected Google account, subject to its history settings. The integration is unofficial and its availability can change. See the [YouTube Music guide](docs/youtube-music.md) for sign-in, account storage and playback details.
 
 ## Features
 
@@ -147,6 +147,8 @@ Your listening story is part of the player, without needing Last.fm or another s
 - **Keep a picture.** Save your top five artists and songs with listening totals in Midnight, Paper or Aurora style.
 
 New history records actual listening time. Older entries may use estimated durations, which the recap identifies.
+
+**Listening history sync** in **Settings → Gestures & behaviour** reports playback to supported Navidrome/Subsonic, Jellyfin, Plex and YouTube Music accounts. Private sessions stop reporting. Offline plays are not uploaded later. In merged libraries, reports follow the source actually playing; a preferred server copy updates that server instead of Google.
 
 ### Integrations that fit your music life
 

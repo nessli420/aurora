@@ -17,6 +17,7 @@ object PresetContextPublisher {
 
     fun extras(song: Song, source: PlaybackSourceIdentity? = song.playbackSource): Bundle = Bundle().apply {
         putString("aurora.songId", song.id)
+        source?.songId?.let { putString("aurora.playbackSongId", it) }
         putString("aurora.albumId", song.albumId)
         putString("aurora.artistId", song.artistId)
         putInt("aurora.durationSec", song.durationSec)
