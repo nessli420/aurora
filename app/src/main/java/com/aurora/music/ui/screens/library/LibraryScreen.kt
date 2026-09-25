@@ -148,7 +148,7 @@ fun LibraryScreen(
     onRemoveDownload: (String) -> Unit,
     onOpenSearch: () -> Unit,
     onOpenMix: () -> Unit = {},
-    onCreatePlaylist: (String) -> Unit,
+    onCreatePlaylist: suspend (String) -> Boolean,
     onCreateSmart: () -> Unit,
     onEditSmart: (String) -> Unit,
     onDeleteSmart: (String) -> Unit,
@@ -216,7 +216,7 @@ fun LibraryScreen(
 
         if (showCreate) {
             CreatePlaylistDialog(
-                onCreate = { name -> onCreatePlaylist(name); showCreate = false },
+                onCreate = onCreatePlaylist,
                 onCreateSmart = { showCreate = false; onCreateSmart() },
                 onImportM3u = { showCreate = false; onImportM3u() },
                 onDismiss = { showCreate = false },
@@ -839,29 +839,51 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
 }
 
 @Composable
-private fun CreatePlaylistDialog(onCreate: (String) -> Unit, onCreateSmart: () -> Unit, onImportM3u: () -> Unit, onDismiss: () -> Unit) {
+private fun CreatePlaylistDialog(onCreate: suspend (String) -> Boolean, onCreateSmart: () -> Unit, onImportM3u: () -> Unit, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf("") }
+    var saving by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!saving) onDismiss() },
         title = { Text(appString(R.string.text_new_playlist_a5474a), fontWeight = FontWeight.Bold) },
         text = {
             Column {
                 OutlinedTextField(
                     value = name,
-                    onValueChange = { name = it },
+                    onValueChange = { name = it; failed = false },
                     label = { Text(appString(R.string.text_playlist_name_544f75)) },
                     singleLine = true,
+                    enabled = !saving,
                 )
-                TextButton(onClick = onCreateSmart, modifier = Modifier.padding(top = 6.dp)) {
+                if (failed) {
+                    Text(appString(R.string.playlist_create_failed), color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                }
+                TextButton(onClick = onCreateSmart, enabled = !saving, modifier = Modifier.padding(top = 6.dp)) {
                     Text(appString(R.string.text_create_a_smart_playlist_instead_f73978))
                 }
-                TextButton(onClick = onImportM3u) {
+                TextButton(onClick = onImportM3u, enabled = !saving) {
                     Text(appString(R.string.text_import_an_m3u_file_3ae427))
                 }
             }
         },
-        confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onCreate(name.trim()) }, enabled = name.isNotBlank()) { Text(appString(R.string.text_create_6e157c)) } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
+        confirmButton = {
+            TextButton(onClick = {
+                saving = true
+                failed = false
+                scope.launch {
+                    try {
+                        if (onCreate(name.trim())) onDismiss() else failed = true
+                    } finally {
+                        saving = false
+                    }
+                }
+            }, enabled = name.isNotBlank() && !saving) {
+                Text(appString(if (saving) R.string.playlist_creating else R.string.text_create_6e157c))
+            }
+        },
+        dismissButton = { TextButton(onClick = onDismiss, enabled = !saving) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
 }
 

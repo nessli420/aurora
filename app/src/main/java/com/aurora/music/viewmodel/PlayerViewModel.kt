@@ -712,21 +712,38 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (seed.id.isEmpty() || loadingRadio) return
         loadingRadio = true
         viewModelScope.launch {
-            val sonic = runCatching { container.sonicEngine.buildRadio(seed) }.getOrDefault(emptyList())
-            if (sonic.size >= 2) {
-                playAll(sonic, 0)
-                onResult(appString(R.string.text_sonic_radio_similar_tracks_653156, (sonic.size - 1)))
-            } else {
-                val more = runCatching { container.repository.radio(seed.id) }.getOrDefault(emptyList())
-                    .filter { it.id != seed.id }
-                if (more.isNotEmpty()) {
-                    playAll(listOf(seed) + more, 0)
-                    onResult(appString(R.string.text_radio_started_31fe2c))
-                } else {
-                    onResult(appString(R.string.text_not_enough_analyzed_tracks_run_sonic_analysis_in_settings_007d98))
+            suspend fun serverRadio(): List<Song> = try {
+                container.repository.radio(seed.id).filter { it.id != seed.id }
+            } catch (e: kotlinx.coroutines.CancellationException) { throw e }
+            catch (_: Exception) { emptyList() }
+            try {
+                val preferServer = container.repository.prefersServerRadio(seed.id)
+                if (preferServer) {
+                    val more = serverRadio()
+                    if (more.isNotEmpty()) {
+                        playAll(listOf(seed) + more, 0)
+                        onResult(appString(R.string.text_radio_started_31fe2c))
+                        return@launch
+                    }
                 }
+                val sonic = try { container.sonicEngine.buildRadio(seed) }
+                    catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                    catch (_: Exception) { emptyList() }
+                if (sonic.size >= 2) {
+                    playAll(sonic, 0)
+                    onResult(appString(R.string.text_sonic_radio_similar_tracks_653156, (sonic.size - 1)))
+                } else {
+                    val more = if (preferServer) emptyList() else serverRadio()
+                    if (more.isNotEmpty()) {
+                        playAll(listOf(seed) + more, 0)
+                        onResult(appString(R.string.text_radio_started_31fe2c))
+                    } else {
+                        onResult(appString(R.string.text_not_enough_analyzed_tracks_run_sonic_analysis_in_settings_007d98))
+                    }
+                }
+            } finally {
+                loadingRadio = false
             }
-            loadingRadio = false
         }
     }
 
@@ -838,10 +855,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             .filterNot { it.isRadio() || it.isPodcast() }
             .map { it.id }
             .filter { it.isNotEmpty() }
-            .distinct()
         if (ids.isEmpty()) { onResult(appString(R.string.text_nothing_to_save_a5dbc6)); return }
         viewModelScope.launch {
-            val ok = runCatching { container.repository.createPlaylistFromSongs(title, ids) }.getOrDefault(false)
+            val ok = try { container.repository.createPlaylistFromSongs(title, ids) }
+                catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                catch (_: Exception) { false }
             onResult(if (ok) appString(R.string.text_saved_bac2cc, (title)) else appString(R.string.text_couldn_t_save_playlist_d7a0f6))
         }
     }

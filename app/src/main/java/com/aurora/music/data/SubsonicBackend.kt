@@ -13,6 +13,7 @@ import com.aurora.music.model.LyricLine
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.util.accentFor
+import kotlinx.coroutines.CancellationException
 
 class SubsonicBackend(
     private val client: SubsonicClient,
@@ -174,11 +175,15 @@ class SubsonicBackend(
     override suspend fun createPlaylist(name: String): Boolean =
         runCatching { c.api.createPlaylist(name).response.isOk }.getOrDefault(false)
 
-    override suspend fun createPlaylistWithId(name: String): String? = runCatching {
-        // older servers dont return the created playlist fall back to a lookup
-        c.api.createPlaylist(name).response.playlist?.id
-            ?: c.api.getPlaylists().response.playlists?.playlist?.lastOrNull { it.name == name }?.id
-    }.getOrNull()
+    override suspend fun createPlaylistWithId(name: String): String? = try {
+        val created = c.api.createPlaylist(name).response
+        if (!created.isOk) null else {
+            // older servers dont return the created playlist fall back to a lookup
+            created.playlist?.id?.takeIf { it.isNotBlank() }
+                ?: c.api.getPlaylists().response.takeIf { it.isOk }?.playlists?.playlist?.lastOrNull { it.name == name }?.id
+        }
+    } catch (e: CancellationException) { throw e }
+      catch (_: Exception) { null }
 
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
         runCatching { c.api.updatePlaylist(playlistId, songIdToAdd = trackIds).response.isOk }.getOrDefault(false)

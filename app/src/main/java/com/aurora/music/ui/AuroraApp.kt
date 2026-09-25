@@ -140,7 +140,6 @@ fun AuroraApp() {
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val savedSessions by container.settingsStore.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadsMap by container.downloadManager.downloads.collectAsStateWithLifecycle()
-    val downloadedIds = downloadsMap.keys
     val localMode = session?.type == com.aurora.music.data.ServerType.LOCAL
     val localAppearance by container.localProfileAppearance.collectAsStateWithLifecycle()
     val profileAppearance = com.aurora.music.data.profileAppearance(session, localAppearance)
@@ -151,6 +150,11 @@ fun AuroraApp() {
     val pins = allPins.filter { it.serverId == currentServer }
     val gesturePrefs by container.settingsStore.gesturePrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.GesturePrefs())
     val offlineMode by container.offline.collectAsStateWithLifecycle()
+    val downloadAccountEpoch by container.accountEpoch.collectAsStateWithLifecycle()
+    val downloadLibraryEpoch by container.libraryReload.collectAsStateWithLifecycle()
+    val downloadedIds = remember(downloadsMap, session, sessionReady, offlineMode, downloadAccountEpoch, downloadLibraryEpoch) {
+        container.repository.downloadedIds()
+    }
 
     val downloadStates by container.downloadManager.states.collectAsStateWithLifecycle()
 
@@ -169,11 +173,17 @@ fun AuroraApp() {
     }
 
     val onDownload: (com.aurora.music.model.Song) -> Unit = {
-        val already = container.downloadManager.isDownloaded(it.id)
-        container.downloadManager.downloadSong(it)
-        confirm(if (already) appString(R.string.text_already_downloaded_8acc8a) else appString(R.string.text_downloading_7f12a1, (it.title)))
+        val already = container.repository.isDownloaded(it.id)
+        val started = container.downloadManager.downloadSong(it)
+        confirm(when {
+            already -> appString(R.string.text_already_downloaded_8acc8a)
+            !started -> appString(R.string.download_start_failed)
+            else -> appString(R.string.text_downloading_7f12a1, (it.title))
+        })
     }
-    val onRemoveDownload: (String) -> Unit = { container.downloadManager.removeDownload(it); confirm(appString(R.string.text_removed_download_8ad8f9)) }
+    val onRemoveDownload: (String) -> Unit = {
+        if (container.repository.removeDownload(it)) confirm(appString(R.string.text_removed_download_8ad8f9))
+    }
 
     // re-pull likes on foreground so stars from other devices show up
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
@@ -629,7 +639,11 @@ fun AuroraApp() {
                             onRemoveDownload = onRemoveDownload,
                             onOpenSearch = { navigateTopLevel(Routes.SEARCH) },
                             onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showMix = true },
-                            onCreatePlaylist = { name -> scope.launch { container.repository.createPlaylist(name); libraryVM.load() } },
+                            onCreatePlaylist = { name ->
+                                playlistMutation { container.repository.createPlaylist(name) }.also { created ->
+                                    if (created) libraryVM.load()
+                                }
+                            },
                             onCreateSmart = { navController.navigate(Routes.smartEdit()) },
                             onEditSmart = { id -> navController.navigate(Routes.smartEdit(id)) },
                             onDeleteSmart = { id -> scope.launch { container.settingsStore.deleteSmartPlaylist(id) } },
@@ -652,7 +666,10 @@ fun AuroraApp() {
                                 if (tracks.isNotEmpty()) confirm(appString(R.string.text_added_to_queue_88e96c, (tracks.size)))
                             } },
                             onToggleLikeKind = { id, kind -> playerVM.toggleLike(id, kind) },
-                            onDeletePlaylist = { id -> scope.launch { container.repository.deletePlaylist(id); libraryVM.load() } },
+                            onDeletePlaylist = { id -> scope.launch {
+                                if (playlistMutation { container.repository.deletePlaylist(id) }) libraryVM.load()
+                                else confirm(appString(R.string.playlist_delete_failed))
+                            } },
                             canDownload = !localMode,
                             pins = pins,
                             onEditTags = { song -> navController.navigate(Routes.tagEdit(song.id)) },
@@ -789,24 +806,30 @@ fun AuroraApp() {
                             onDownloadAll = {
                                 val d = detailState.data
                                 if (d != null) {
-                                    if (kind == "album" || kind == "playlist") {
+                                    val started = if (kind == "album" || kind == "playlist") {
                                         container.downloadManager.downloadCollection(id, kind, d.info.title, d.info.subtitle, d.info.artUrl, d.tracks)
                                     } else {
                                         container.downloadManager.downloadAll(d.tracks)
                                     }
-                                    val n = d.tracks.count { !container.downloadManager.isDownloaded(it.id) }
-                                    confirm(if (n > 0) appString(R.string.downloading_tracks, appPlural(R.plurals.track_count, n)) else appString(R.string.text_already_downloaded_8acc8a))
+                                    val n = d.tracks.count { !container.repository.isDownloaded(it.id) }
+                                    confirm(if (!started) appString(R.string.download_start_failed)
+                                        else if (n > 0) appString(R.string.downloading_tracks, appPlural(R.plurals.track_count, n)) else appString(R.string.text_already_downloaded_8acc8a))
                                 }
                             },
                             onRemoveDownloads = {
-                                if (kind == "album" || kind == "playlist") container.downloadManager.removeCollection(id)
-                                detailState.data?.tracks?.forEach { container.downloadManager.removeDownload(it.id) }
+                                if (kind == "album" || kind == "playlist") container.repository.removeDownloadedCollection(id, kind)
+                                detailState.data?.tracks?.forEach { container.repository.removeDownload(it.id) }
                             },
                             onEditPlaylist = { name, desc ->
-                                scope.launch { container.repository.updatePlaylist(id, name, desc); detailVM.reload(kind, id) }
+                                playlistMutation { container.repository.updatePlaylist(id, name, desc) }.also { updated ->
+                                    if (updated) detailVM.reload(kind, id)
+                                }
                             },
                             onDeletePlaylist = {
-                                scope.launch { container.repository.deletePlaylist(id); navController.popBackStack() }
+                                scope.launch {
+                                    if (playlistMutation { container.repository.deletePlaylist(id) }) navController.popBackStack()
+                                    else confirm(appString(R.string.playlist_delete_failed))
+                                }
                             },
                             onLoadMore = { detailVM.loadMore() },
                             canDownload = !localMode,
@@ -1343,6 +1366,14 @@ private fun TabletNavigation(currentRoute: String?, onNavigate: (String) -> Unit
         )
         Spacer(Modifier.height(16.dp))
     }
+}
+
+private suspend fun playlistMutation(block: suspend () -> Boolean): Boolean = try {
+    block()
+} catch (e: kotlinx.coroutines.CancellationException) {
+    throw e
+} catch (_: Exception) {
+    false
 }
 
 @Composable

@@ -53,11 +53,18 @@ interface MediaBackend {
     suspend fun search(query: String): SearchResults
     suspend fun scrobble(id: String)
     suspend fun radio(seedId: String): List<Song>
+    fun prefersServerRadio(seedId: String): Boolean = false
     suspend fun createPlaylist(name: String): Boolean
     suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean
     suspend fun deletePlaylist(id: String): Boolean
 
     suspend fun createPlaylistWithId(name: String): String? = null
+
+    suspend fun createPlaylistWithId(name: String, trackIds: List<String>): String? {
+        if (name.isBlank()) return null
+        val id = createPlaylistWithId(name.trim()) ?: return null
+        return id.takeIf { trackIds.isEmpty() || addToPlaylist(id, trackIds) }
+    }
 
     suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean = false
     suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean = false

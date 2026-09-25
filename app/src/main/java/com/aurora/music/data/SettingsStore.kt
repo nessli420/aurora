@@ -97,6 +97,7 @@ class SettingsStore(private val context: Context) {
             accentPreset = p[Keys.UI_ACCENT_PRESET] ?: 0,
             accentColor = p[Keys.UI_ACCENT_COLOR] ?: 0xFFFF2E7EL,
             fontScale = p[Keys.UI_FONT_SCALE] ?: 1f,
+            typeface = AppTypeface.normalize(p[Keys.UI_TYPEFACE] ?: AppTypeface.THEME_DEFAULT),
             cornerStyle = p[Keys.UI_CORNER_STYLE] ?: CornerStyle.DEFAULT,
             playerSeekStyle = p[Keys.UI_PLAYER_SEEK] ?: SeekStyle.WAVEFORM,
             playerWaveBars = p[Keys.UI_PLAYER_WAVE_BARS] ?: 60,
@@ -1327,6 +1328,7 @@ class SettingsStore(private val context: Context) {
     suspend fun setAccentPreset(v: Int) = context.dataStore.edit { it[Keys.UI_ACCENT_PRESET] = v }
     suspend fun setAccentColor(v: Long) = context.dataStore.edit { it[Keys.UI_ACCENT_COLOR] = v }
     suspend fun setFontScale(v: Float) = context.dataStore.edit { it[Keys.UI_FONT_SCALE] = v }
+    suspend fun setTypeface(v: Int) = context.dataStore.edit { it[Keys.UI_TYPEFACE] = AppTypeface.normalize(v) }
     suspend fun setCornerStyle(v: Int) = context.dataStore.edit { it[Keys.UI_CORNER_STYLE] = v }
     suspend fun setPlayerSeekStyle(v: Int) = context.dataStore.edit { it[Keys.UI_PLAYER_SEEK] = v }
     suspend fun setPlayerWaveBars(v: Int) = context.dataStore.edit { it[Keys.UI_PLAYER_WAVE_BARS] = v }

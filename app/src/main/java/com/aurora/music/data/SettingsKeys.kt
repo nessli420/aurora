@@ -143,6 +143,7 @@ internal object SettingsKeys {
     val UI_ACCENT_PRESET = intPreferencesKey("ui_accent_preset")
     val UI_ACCENT_COLOR = longPreferencesKey("ui_accent_color")
     val UI_FONT_SCALE = floatPreferencesKey("ui_font_scale")
+    val UI_TYPEFACE = intPreferencesKey("ui_typeface")
     val UI_CORNER_STYLE = intPreferencesKey("ui_corner_style")
     val UI_PLAYER_SEEK = intPreferencesKey("ui_player_seek")
     val UI_PLAYER_WAVE_BARS = intPreferencesKey("ui_player_wave_bars")

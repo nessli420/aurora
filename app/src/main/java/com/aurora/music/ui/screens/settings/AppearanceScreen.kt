@@ -19,10 +19,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -45,6 +47,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.AccentMode
+import com.aurora.music.data.AppTypeface
 import com.aurora.music.data.CornerStyle
 import com.aurora.music.data.HomeSection
 import com.aurora.music.data.MiniProgress
@@ -60,6 +63,7 @@ import com.aurora.music.ui.theme.ThemeIdentity
 import com.aurora.music.ui.theme.auroraBackdrop
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.ui.theme.auroraShapes
+import com.aurora.music.ui.theme.auroraFontFamily
 import com.aurora.music.ui.theme.auroraTypography
 import com.aurora.music.ui.theme.styleColorScheme
 import kotlinx.coroutines.launch
@@ -127,6 +131,9 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             }
 
             item { SettingsSectionTitle(appString(R.string.text_display_574ff9)) }
+            item {
+                TypefacePicker(prefs) { typeface -> scope.launch { store.setTypeface(typeface) } }
+            }
             item {
                 SettingsSliderRow(appString(R.string.text_font_size_83ca9e), "${(prefs.fontScale * 100).roundToInt()}%", prefs.fontScale, 0.85f..1.3f) { v ->
                     scope.launch { store.setFontScale(v) }
@@ -208,6 +215,47 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
 }
 
 @Composable
+private fun TypefacePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
+    Text(
+        appString(R.string.typeface_title),
+        style = MaterialTheme.typography.titleSmall,
+        modifier = Modifier.padding(horizontal = 20.dp, vertical = 10.dp),
+    )
+    val options = listOf(
+        AppTypeface.THEME_DEFAULT to appString(R.string.typeface_theme_default),
+        AppTypeface.DM_SANS to "DM Sans",
+        AppTypeface.PLUS_JAKARTA_SANS to "Plus Jakarta Sans",
+        AppTypeface.MANROPE to "Manrope",
+    )
+    SettingsGroup {
+        Column(Modifier.selectableGroup()) {
+            options.forEach { (typeface, label) ->
+                val selected = prefs.typeface == typeface
+                val family = auroraFontFamily(typeface, prefs.themeStyle)
+                Row(
+                    Modifier.fillMaxWidth()
+                        .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(typeface) })
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(label, style = MaterialTheme.typography.titleMedium, fontFamily = family, fontWeight = FontWeight.Bold)
+                        Text(
+                            appString(R.string.typeface_preview),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontFamily = family,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                    RadioButton(selected = selected, onClick = null)
+                }
+            }
+        }
+    }
+}
+
+@Composable
 private fun ThemeStylePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
     val dark = MaterialTheme.colorScheme.background.luminance() < 0.3f
     Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -246,7 +294,7 @@ private fun ThemePreview(identity: ThemeIdentity, prefs: UiPrefs, dark: Boolean)
     CompositionLocalProvider(LocalUiPrefs provides prefs.copy(themeStyle = identity.id)) {
         MaterialTheme(
             colorScheme = styleColorScheme(identity.id, dark),
-            typography = auroraTypography(0.85f, identity.id),
+            typography = auroraTypography(0.85f, identity.id, prefs.typeface),
             shapes = auroraShapes(CornerStyle.DEFAULT, identity.id),
         ) {
             Column(Modifier.fillMaxWidth().height(122.dp).clip(MaterialTheme.shapes.small).auroraBackdrop().padding(10.dp), verticalArrangement = Arrangement.spacedBy(9.dp)) {

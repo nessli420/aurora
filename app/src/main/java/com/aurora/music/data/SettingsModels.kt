@@ -190,6 +190,15 @@ object ThemeStyle {
     const val GLASS = 3
 }
 
+object AppTypeface {
+    const val THEME_DEFAULT = 0
+    const val DM_SANS = 1
+    const val PLUS_JAKARTA_SANS = 2
+    const val MANROPE = 3
+
+    fun normalize(value: Int): Int = value.takeIf { it in THEME_DEFAULT..MANROPE } ?: THEME_DEFAULT
+}
+
 object AccentMode { const val PRESET = 0; const val CUSTOM = 1; const val MATERIAL_YOU = 2 }
 
 object CornerStyle { const val SHARP = 0; const val DEFAULT = 1; const val ROUNDED = 2; const val PILL = 3 }
@@ -213,6 +222,7 @@ data class UiPrefs(
     val accentPreset: Int = 0,
     val accentColor: Long = 0xFFFF2E7EL,
     val fontScale: Float = 1f,
+    val typeface: Int = AppTypeface.THEME_DEFAULT,
     val cornerStyle: Int = CornerStyle.DEFAULT,
     val playerSeekStyle: Int = SeekStyle.WAVEFORM,
     val playerWaveBars: Int = 60,

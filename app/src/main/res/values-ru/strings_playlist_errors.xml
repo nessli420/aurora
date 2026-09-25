@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">Не удалось создать плейлист. Проверьте подключение и права доступа к плейлистам, затем повторите попытку.</string>
+    <string name="playlist_update_failed">Не удалось сохранить плейлист. Проверьте подключение и права доступа к плейлистам, затем повторите попытку.</string>
+    <string name="playlist_delete_failed">Не удалось удалить плейлист. Проверьте подключение и права доступа к плейлистам, затем повторите попытку.</string>
+    <string name="playlist_creating">Создание…</string>
+    <string name="playlist_saving">Сохранение…</string>
+</resources>

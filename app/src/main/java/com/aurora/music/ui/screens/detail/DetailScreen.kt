@@ -58,6 +58,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -74,6 +75,7 @@ import com.aurora.music.ui.components.Eyebrow
 import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.viewmodel.DetailUiState
+import kotlinx.coroutines.launch
 
 @Composable
 fun DetailScreen(
@@ -97,7 +99,7 @@ fun DetailScreen(
     onRemoveDownload: (String) -> Unit,
     onDownloadAll: () -> Unit,
     onRemoveDownloads: () -> Unit,
-    onEditPlaylist: (String, String) -> Unit,
+    onEditPlaylist: suspend (String, String) -> Boolean,
     onDeletePlaylist: () -> Unit,
     onLoadMore: () -> Unit = {},
     onMix: () -> Unit = {},
@@ -423,8 +425,8 @@ fun DetailScreen(
     if (showEdit) {
         EditPlaylistDialog(
             initialName = info.title,
-            initialDesc = info.subtitle,
-            onSave = { name, desc -> onEditPlaylist(name, desc); showEdit = false },
+            initialDesc = info.editableDescription ?: info.subtitle,
+            onSave = onEditPlaylist,
             onDismiss = { showEdit = false },
         )
     }
@@ -477,20 +479,41 @@ private fun ArtistAbout(info: com.aurora.music.data.remote.ArtistInfo, accent: C
 }
 
 @Composable
-private fun EditPlaylistDialog(initialName: String, initialDesc: String, onSave: (String, String) -> Unit, onDismiss: () -> Unit) {
+private fun EditPlaylistDialog(initialName: String, initialDesc: String, onSave: suspend (String, String) -> Boolean, onDismiss: () -> Unit) {
     var name by remember { mutableStateOf(initialName) }
     var desc by remember { mutableStateOf(initialDesc) }
+    var saving by remember { mutableStateOf(false) }
+    var failed by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
     androidx.compose.material3.AlertDialog(
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!saving) onDismiss() },
         title = { Text(appString(R.string.text_edit_playlist_1528d5), fontWeight = FontWeight.Bold) },
         text = {
             Column {
-                androidx.compose.material3.OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true)
+                androidx.compose.material3.OutlinedTextField(value = name, onValueChange = { name = it; failed = false }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true, enabled = !saving)
                 Spacer(Modifier.height(10.dp))
-                androidx.compose.material3.OutlinedTextField(value = desc, onValueChange = { desc = it }, label = { Text(appString(R.string.text_description_55f8eb)) })
+                androidx.compose.material3.OutlinedTextField(value = desc, onValueChange = { desc = it; failed = false }, label = { Text(appString(R.string.text_description_55f8eb)) }, enabled = !saving)
+                if (failed) {
+                    Text(appString(R.string.playlist_update_failed), color = MaterialTheme.colorScheme.error,
+                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
+                }
             }
         },
-        confirmButton = { androidx.compose.material3.TextButton(onClick = { if (name.isNotBlank()) onSave(name.trim(), desc.trim()) }, enabled = name.isNotBlank()) { Text(appString(R.string.text_save_efc007)) } },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
+        confirmButton = {
+            androidx.compose.material3.TextButton(onClick = {
+                saving = true
+                failed = false
+                scope.launch {
+                    try {
+                        if (onSave(name.trim(), desc.trim())) onDismiss() else failed = true
+                    } finally {
+                        saving = false
+                    }
+                }
+            }, enabled = name.isNotBlank() && !saving) {
+                Text(appString(if (saving) R.string.playlist_saving else R.string.text_save_efc007))
+            }
+        },
+        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss, enabled = !saving) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
 }

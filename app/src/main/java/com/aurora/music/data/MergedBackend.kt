@@ -41,7 +41,7 @@ class MergedBackend(
         newReleases = newReleases.map { it.wrap(i) }, recentlyPlayed = recentlyPlayed.map { it.wrap(i) },
         mostPlayed = mostPlayed.map { it.wrap(i) }, random = random.map { it.wrap(i) },
         playlists = playlists.map { it.wrap(i) }, artists = artists.map { it.wrap(i) }, starred = starred.map { it.wrap(i) },
-        sections = sections.map { section -> section.copy(items = section.items.map { entry -> when (entry) {
+        sections = sections.map { section -> section.copy(id = wrapId(i, section.id), items = section.items.map { entry -> when (entry) {
             is HomeFeedItem.Track -> HomeFeedItem.Track(entry.song.wrap(i))
             is HomeFeedItem.Record -> HomeFeedItem.Record(entry.album.wrap(i))
             is HomeFeedItem.Performer -> HomeFeedItem.Performer(entry.artist.wrap(i))
@@ -168,6 +168,7 @@ class MergedBackend(
         }
         val albums = ArrayList<Album>(); val recent = ArrayList<Album>(); val most = ArrayList<Album>(); val random = ArrayList<Album>()
         val playlists = ArrayList<Playlist>(); val artists = ArrayList<Artist>(); val starred = ArrayList<Song>()
+        val sections = ArrayList<HomeFeedSection>()
         for ((idx, h) in homes) {
             if (h == null) continue
             albums += h.newReleases.map { it.wrap(idx) }
@@ -177,6 +178,7 @@ class MergedBackend(
             playlists += h.playlists.map { it.wrap(idx) }
             artists += h.artists.map { it.wrap(idx) }
             starred += h.starred.map { it.wrap(idx) }
+            sections += h.wrapHome(idx).sections
         }
         return HomeData(
             newReleases = dedupAlbums(albums),
@@ -186,6 +188,7 @@ class MergedBackend(
             playlists = playlists,
             artists = dedupArtists(artists),
             starred = dedupSongs(starred),
+            sections = sections,
         )
     }
 
@@ -269,6 +272,11 @@ class MergedBackend(
 
     override suspend fun songFor(id: String): Song? = route(id) { src, i, oid -> src.songFor(oid)?.wrap(i) }
     override suspend fun radio(seedId: String): List<Song> = route(seedId) { src, i, oid -> src.radio(oid).map { it.wrap(i) } } ?: emptyList()
+    override fun prefersServerRadio(seedId: String): Boolean {
+        val (index, original) = unwrap(seedId) ?: return if (SEP in seedId) false
+            else primary?.prefersServerRadio(seedId) ?: false
+        return sources[index].prefersServerRadio(original)
+    }
     override suspend fun scrobble(id: String) { route(id) { src, _, oid -> src.scrobble(oid) } }
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean =
         route(id) { src, _, oid -> src.setStarred(oid, starred, kind) } ?: false
@@ -314,6 +322,16 @@ class MergedBackend(
         val pid = primary?.createPlaylistWithId(name) ?: return null
         return if (pIdx >= 0) wrapId(pIdx, pid) else pid
     }
+    override suspend fun createPlaylistWithId(name: String, trackIds: List<String>): String? {
+        if (name.isBlank()) return null
+        val source = primary ?: return null
+        val index = sources.indexOfFirst { it === source }
+        if (index < 0) return null
+        val ids = trackIds.map { unwrap(it) ?: return null }
+        if (ids.any { it.first != index || it.second.isBlank() }) return null
+        val id = source.createPlaylistWithId(name.trim(), ids.map { it.second }) ?: return null
+        return wrapId(index, id)
+    }
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean =
         route(id) { src, _, oid -> src.updatePlaylist(oid, name, comment) } ?: false
     override suspend fun deletePlaylist(id: String): Boolean =
@@ -322,10 +340,9 @@ class MergedBackend(
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean {
         val (i, oPid) = unwrap(playlistId) ?: return false
         val src = sources.getOrNull(i) ?: return false
-        val sameSource = trackIds.mapNotNull { unwrap(it) }.filter { it.first == i }.map { it.second }
-        // dont report success when every track came from a different source
-        if (trackIds.isNotEmpty() && sameSource.isEmpty()) return false
-        return src.addToPlaylist(oPid, sameSource)
+        val ids = trackIds.map { unwrap(it) ?: return false }
+        if (ids.any { it.first != i }) return false
+        return src.addToPlaylist(oPid, ids.map { it.second })
     }
 
     override suspend fun playlistsForSong(songId: String): List<Playlist> {
@@ -346,9 +363,12 @@ class MergedBackend(
         perSource.flatMapIndexed { i, list -> list.map { wrap(it, i) } }
 
     private suspend fun <R> route(id: String, block: suspend (MediaBackend, Int, String) -> R): R? {
-        val (i, oid) = unwrap(id) ?: return if (SEP in id) null else primary?.let { p -> runCatching { block(p, sources.indexOf(p), id) }.getOrNull() }
-        val src = sources.getOrNull(i) ?: return null
-        return runCatching { block(src, i, oid) }.getOrNull()
+        return try {
+            val (i, oid) = unwrap(id) ?: return if (SEP in id) null else primary?.let { p -> block(p, sources.indexOf(p), id) }
+            val src = sources.getOrNull(i) ?: return null
+            block(src, i, oid)
+        } catch (e: CancellationException) { throw e }
+        catch (_: Exception) { null }
     }
 
     private companion object {

@@ -89,6 +89,7 @@ data class DetailInfo(
     val isArtist: Boolean,
     val songCount: Int,
     val typeLabel: String,
+    val editableDescription: String? = null,
 )
 
 enum class LibraryFilter(@androidx.annotation.StringRes private val labelRes: Int) {

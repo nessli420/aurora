@@ -75,7 +75,15 @@ data class DownloadedCollection(
     val trackIds: List<String>,
     val serverId: String? = "",
     val playbackCollection: PlaybackCollectionIdentity? = null,
+    val sourceProviderId: String? = null,
 )
+
+internal data class DownloadOwner(val providerId: String?, val serverId: String) {
+    fun matches(other: DownloadOwner): Boolean =
+        if (!providerId.isNullOrBlank() || !other.providerId.isNullOrBlank())
+            !providerId.isNullOrBlank() && providerId == other.providerId
+        else serverId.isNotBlank() && serverId == other.serverId
+}
 
 class DownloadManager(
     context: Context,
@@ -100,6 +108,8 @@ class DownloadManager(
     private val gson = Gson()
     private val http = OkHttpClient()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val pendingSongs = mutableMapOf<String, DownloadOwner>()
+    private val pendingCollections = mutableMapOf<String, DownloadOwner>()
 
     private val _downloads = MutableStateFlow(loadIndex())
     val downloads: StateFlow<Map<String, DownloadedSong>> = _downloads.asStateFlow()
@@ -107,25 +117,60 @@ class DownloadManager(
     private val _collections = MutableStateFlow(loadCollections())
     val collections: StateFlow<List<DownloadedCollection>> = _collections.asStateFlow()
 
-    fun downloadCollection(id: String, kind: String, title: String, subtitle: String, coverUrl: String, songs: List<Song>) {
+    @Synchronized
+    fun downloadCollection(id: String, kind: String, title: String, subtitle: String, coverUrl: String, songs: List<Song>): Boolean {
+        val mismatched = songs.filter(::hasSourceMismatch)
+        if (mismatched.isNotEmpty()) {
+            mismatched.forEach { setState(it.id, DownloadState.Failed) }
+            return false
+        }
         val identity = playbackCollectionProvider(kind, id, title)
         val serverId = currentServerIdProvider()
+        val providerId = playbackSourceProvider(Song(id, "", "", "", "", 0))?.providerId
+            ?: songs.mapNotNull { sourceIdentity(it)?.providerId }.distinct().singleOrNull()
+        val owner = DownloadOwner(providerId, serverId)
+        val existing = _collections.value.firstOrNull { it.id == id }
+        if (existing != null && !owner.matches(DownloadOwner(existing.sourceProviderId, existing.serverId.orEmpty())) &&
+            (identity?.id == null || identity.id != existing.playbackCollection?.id)) return false
+        pendingCollections[id]?.let { return owner.matches(it) }
+        val conflicts = songs.filter { song ->
+            val songOwner = DownloadOwner(sourceIdentity(song)?.providerId, serverId)
+            _downloads.value[song.id]?.let { !songOwner.matches(DownloadOwner(it.playbackSource?.providerId, it.serverId.orEmpty())) } == true ||
+                pendingSongs[song.id]?.let { !songOwner.matches(it) } == true
+        }
+        if (conflicts.isNotEmpty()) {
+            conflicts.forEach { setState(it.id, DownloadState.Failed) }
+            return false
+        }
+        pendingCollections[id] = owner
         scope.launch {
-            val coverFile = File(dir, "col_${fileStem(serverId, id)}.jpg")
-            runCatching { if (coverUrl.isNotBlank()) downloadTo(coverUrl, coverFile) {} }
-            val collection = DownloadedCollection(id, kind, title, subtitle, if (coverFile.exists()) coverFile.absolutePath else "", songs.map { it.id }, serverId, identity)
-            _collections.update { (it.filterNot { c -> c.id == id }) + collection }
-            saveCollections()
+            try {
+                val coverFile = File(dir, "col_${fileStem(serverId, id)}.jpg")
+                runCatching { if (coverUrl.isNotBlank()) downloadTo(coverUrl, coverFile) {} }
+                val collection = DownloadedCollection(id, kind, title, subtitle, if (coverFile.exists()) coverFile.absolutePath else "", songs.map { it.id }, serverId, identity, providerId)
+                _collections.update { (it.filterNot { c -> c.id == id }) + collection }
+                saveCollections()
+            } finally {
+                synchronized(this@DownloadManager) { pendingCollections.remove(id) }
+            }
         }
         downloadAll(songs)
+        return true
     }
 
     fun removeCollection(id: String) {
         val col = _collections.value.firstOrNull { it.id == id } ?: return
-        col.trackIds.forEach { removeDownload(it) }
+        removeCollection(col)
+    }
+
+    @Synchronized
+    fun removeCollection(col: DownloadedCollection, canRemoveTrack: (DownloadedSong) -> Boolean = { true }): Boolean {
+        if (_collections.value.none { it == col }) return false
+        col.trackIds.mapNotNull(::get).filter(canRemoveTrack).forEach { removeDownload(it) }
         runCatching { if (col.coverPath.isNotBlank()) File(col.coverPath).delete() }
-        _collections.update { it.filterNot { c -> c.id == id } }
+        _collections.update { it.filterNot { c -> c == col } }
         saveCollections()
+        return true
     }
 
     private val _states = MutableStateFlow<Map<String, DownloadState>>(emptyMap())
@@ -141,27 +186,55 @@ class DownloadManager(
                 stripMergeNamespace(it.id) == originalId && (providerId == null || it.playbackSource?.providerId == providerId)
             }
 
-    fun downloadSong(song: Song) {
-        if (isDownloaded(song.id) || _states.value[song.id] is DownloadState.Queued ||
-            _states.value[song.id] is DownloadState.Downloading) return
-        setState(song.id, DownloadState.Queued)
-        val identity = song.playbackSource ?: playbackSourceProvider(song)
+    private fun copiedSource(song: Song): Boolean =
+        song.streamUrl.startsWith("aurora-extension:") || song.streamUrl.startsWith("aurora-cache:")
+
+    private fun sourceIdentity(song: Song): PlaybackSourceIdentity? = if (copiedSource(song))
+        song.playbackSource ?: playbackSourceProvider(song)
+    else playbackSourceProvider(song.copy(playbackSource = null, streamUrl = "")) ?: song.playbackSource
+
+    private fun hasSourceMismatch(song: Song): Boolean {
+        if (copiedSource(song)) return false
+        val selectedProvider = song.playbackSource?.providerId ?: return false
+        val currentProvider = playbackSourceProvider(song.copy(playbackSource = null, streamUrl = ""))?.providerId ?: return false
+        return selectedProvider != currentProvider
+    }
+
+    @Synchronized
+    fun downloadSong(song: Song): Boolean {
+        if (hasSourceMismatch(song)) { setState(song.id, DownloadState.Failed); return false }
+        val identity = sourceIdentity(song)
+        val serverId = currentServerIdProvider()
+        val owner = DownloadOwner(identity?.providerId, serverId)
+        _downloads.value[song.id]?.let { existing ->
+            val matches = owner.matches(DownloadOwner(existing.playbackSource?.providerId, existing.serverId.orEmpty()))
+            setState(song.id, if (matches) DownloadState.Done else DownloadState.Failed)
+            return matches
+        }
+        pendingSongs[song.id]?.let { pending ->
+            if (!owner.matches(pending)) { setState(song.id, DownloadState.Failed); return false }
+            return true
+        }
         val request = runCatching {
             val extension = song.streamUrl.startsWith("aurora-extension:")
             val cached = song.streamUrl.startsWith("aurora-cache:")
             val bitrate = if (extension || cached) 0 else downloadBitrateProvider()
             DownloadRequest(
-                if (extension) "extension://${android.net.Uri.parse(song.streamUrl).host}" else currentServerIdProvider(),
+                if (extension) "extension://${android.net.Uri.parse(song.streamUrl).host}" else serverId,
                 if (extension || cached) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0)?.takeIf { it.isNotBlank() } ?: song.streamUrl,
                 bitrate, extension, cached,
                 if (extension || cached) null else downloadUrlResolverProvider(),
             )
-        }.getOrElse { setState(song.id, DownloadState.Failed); return }
+        }.getOrElse { setState(song.id, DownloadState.Failed); return false }
+        pendingSongs[song.id] = owner
+        setState(song.id, DownloadState.Queued)
         scope.launch { doDownload(song.copy(playbackSource = identity), request) }
+        return true
     }
 
-    fun downloadAll(songs: List<Song>) = songs.forEach { downloadSong(it) }
+    fun downloadAll(songs: List<Song>): Boolean = songs.map { downloadSong(it) }.all { it }
 
+    @Synchronized
     fun removeDownload(id: String) {
         val d = _downloads.value[id] ?: return
         runCatching { File(d.audioPath).delete() }
@@ -169,6 +242,13 @@ class DownloadManager(
         _downloads.update { it - id }
         _states.update { it - id }
         saveIndex()
+    }
+
+    @Synchronized
+    fun removeDownload(download: DownloadedSong): Boolean {
+        if (_downloads.value[download.id] != download) return false
+        removeDownload(download.id)
+        return true
     }
 
     fun clearAll() {
@@ -215,6 +295,8 @@ class DownloadManager(
         } catch (e: Exception) {
             runCatching { File(dir, "$stem.audio").delete() }
             setState(song.id, DownloadState.Failed)
+        } finally {
+            synchronized(this) { pendingSongs.remove(song.id) }
         }
     }
 

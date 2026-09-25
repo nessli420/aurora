@@ -71,6 +71,8 @@ Save several accounts and switch between them in **Settings → Servers & accoun
 
 Plex connects directly to your server (usually port `32400`) and includes every music library accessible to the token. Use the server address rather than `app.plex.tv`. Plex likes use ratings: four or five stars count as liked; liking sets five stars and unliking clears the rating. Shared-library permissions still apply to playlist changes.
 
+Create, rename and delete regular Plex playlists, and add or remove their tracks. Smart playlists remain playable, with membership controlled by Plex. Aurora also shows server recommendation shelves and lyrics. Radio uses stations offered by your server, then sonic matches or artist radio, with a shuffled-library fallback. Sonic features depend on [Plex Pass and completed server analysis](https://support.plex.tv/articles/sonic-analysis-music/).
+
 With YouTube Music included, Home opens your regular library feed; the button beside the notification bell switches to YouTube Music recommendations and mixes. Search offers separate **Local & servers** and **YouTube Music** results. When playback starts, Aurora checks for the same recording in your included libraries and downloads, follows your source priority, and prefers higher-quality copies within each tier. It checks that a copy can be opened before choosing it; otherwise it plays from YouTube Music. Matching uses the song title and artist, allowing featured credits and extra artist credits to differ. Missing duration or explicit tags do not block a match. Duration helps choose between multiple copies; named versions such as live, remix and slowed remain separate. Album order and YouTube likes stay attached to the original catalogue entry. All selected audio uses Aurora’s native playback and DSP path.
 
 ### YouTube Music
@@ -247,23 +249,7 @@ Use **JDK 21**, **Android SDK 35**, **NDK 27.0.12077973**, and **CMake 3.22.1**.
    sdk.dir=/absolute/path/to/Android/sdk
    ```
 
-3. Set up the font. Circular Std is not included in the repository. For a system font, replace the `val Circular = FontFamily(...)` declaration in [Type.kt](app/src/main/java/com/aurora/music/ui/theme/Type.kt) with:
-
-   ```kotlin
-   val Circular = FontFamily.SansSerif
-   ```
-
-   To use your licensed Circular Std files instead, place them in `app/src/main/res/font/` with these names:
-
-   ```text
-   circular_light.otf        circular_light_italic.otf
-   circular_book.otf         circular_book_italic.otf
-   circular_medium.otf       circular_medium_italic.otf
-   circular_bold.otf         circular_bold_italic.otf
-   circular_black.otf        circular_black_italic.otf
-   ```
-
-4. Point `JAVA_HOME` to JDK 21 and build:
+3. Point `JAVA_HOME` to JDK 21 and build:
 
    ```bash
    ./gradlew :app:assembleDebug
@@ -272,6 +258,8 @@ Use **JDK 21**, **Android SDK 35**, **NDK 27.0.12077973**, and **CMake 3.22.1**.
    On Windows, use `gradlew.bat` in place of `./gradlew`. The APK is saved to `app/build/outputs/apk/debug/app-debug.apk`.
 
 For a signed release, configure your own keystore in [app/build.gradle.kts](app/build.gradle.kts), then run `:app:assembleRelease`.
+
+DM Sans, Plus Jakarta Sans, and Manrope are bundled under the SIL Open Font License. No separate font setup is needed. Choose a typeface in **Settings → Appearance**; the Aurora and Glass themes use DM Sans by default, while Retro and Aero retain their system fonts. The original licenses are available in **Settings → About → Font licenses** and [font notices](app/src/main/assets/font_licenses/README.md).
 
 Run the unit tests and code checks with:
 

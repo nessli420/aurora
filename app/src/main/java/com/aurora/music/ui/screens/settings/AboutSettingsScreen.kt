@@ -48,6 +48,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val container = (context.applicationContext as AuroraApplication).container
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     var showDstLicense by remember { mutableStateOf(false) }
+    var showFontLicenses by remember { mutableStateOf(false) }
     if (showDstLicense) {
         val license = remember { context.assets.open("licenses/aurora-dst-LGPL-2.1.txt").bufferedReader().use { it.readText() } }
         AlertDialog(onDismissRequest = { showDstLicense = false }, title = { Text(appString(R.string.text_dst_decoder_license_1e3fba)) },
@@ -58,6 +59,35 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 context.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW,
                     android.net.Uri.parse("https://github.com/nessli420/aurora/tree/main/app/src/main/cpp/dst")))
             }) { Text(appString(R.string.text_source_6da13a)) } })
+    }
+    if (showFontLicenses) {
+        val licenses = remember {
+            listOf(
+                "DM Sans" to "dmsans-OFL.txt",
+                "Plus Jakarta Sans" to "plusjakartasans-OFL.txt",
+                "Manrope" to "manrope-OFL.txt",
+            ).map { (name, file) ->
+                name to context.assets.open("font_licenses/$file").bufferedReader().use { it.readText() }
+            }
+        }
+        AlertDialog(
+            onDismissRequest = { showFontLicenses = false },
+            title = { Text(appString(R.string.font_licenses_title)) },
+            text = {
+                Column(
+                    Modifier.verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    licenses.forEach { (name, license) ->
+                        Text(name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                        Text(license, style = MaterialTheme.typography.bodySmall)
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showFontLicenses = false }) { Text(appString(R.string.text_close_bbfa77)) }
+            },
+        )
     }
 
     Column(Modifier.fillMaxWidth()) {
@@ -97,6 +127,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             }
             InfoRow(appString(R.string.text_playback_engine_0255b8), "AndroidX Media3 (ExoPlayer)")
             TextButton(onClick = { showDstLicense = true }) { Text(appString(R.string.text_dst_decoder_license_1e3fba)) }
+            TextButton(onClick = { showFontLicenses = true }) { Text(appString(R.string.font_licenses_title)) }
 
             Spacer(Modifier.height(20.dp))
             Text(

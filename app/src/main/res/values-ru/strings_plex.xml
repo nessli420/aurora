@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">Музыка с вашего Plex Media Server.</string>
+    <string name="plex_connect_title">Подключить Plex</string>
+    <string name="plex_token_detail">Используйте токен аутентификации Plex с доступом к этому серверу.</string>
+    <string name="plex_token_label">Токен Plex</string>
+    <string name="plex_token_help">Как найти токен Plex</string>
+    <string name="plex_token_show">Показать токен</string>
+    <string name="plex_token_hide">Скрыть токен</string>
+    <string name="plex_token_rejected">Plex отклонил токен. Проверьте, есть ли у него доступ к этому серверу.</string>
+    <string name="plex_server_detail">Введите адрес Plex Media Server, обычно с портом 32400.</string>
+    <string name="plex_sources_stream_detail">Потоковая передача из Navidrome, Jellyfin или Plex.</string>
+    <string name="plex_sources_empty_detail">Добавьте аккаунт Navidrome, Jellyfin, Plex или YouTube Music в разделе «Настройки → Аккаунты», чтобы включить его здесь.</string>
+</resources>

@@ -32,6 +32,8 @@ class ReportingMediaBackend(private val source: MediaBackend, private val onErro
     override suspend fun setStarred(id: String, starred: Boolean, kind: String) = attempt(false) { source.setStarred(id, starred, kind) }
     override suspend fun createPlaylist(name: String) = attempt(false) { source.createPlaylist(name) }
     override suspend fun createPlaylistWithId(name: String) = attempt<String?>(null) { source.createPlaylistWithId(name) }
+    override suspend fun createPlaylistWithId(name: String, trackIds: List<String>) =
+        attempt<String?>(null) { source.createPlaylistWithId(name, trackIds) }
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?) = attempt(false) { source.updatePlaylist(id, name, comment) }
     override suspend fun deletePlaylist(id: String) = attempt(false) { source.deletePlaylist(id) }
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>) = attempt(false) { source.addToPlaylist(playlistId, trackIds) }

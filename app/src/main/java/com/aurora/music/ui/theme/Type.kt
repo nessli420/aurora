@@ -1,35 +1,57 @@
 package com.aurora.music.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import com.aurora.music.R
+import com.aurora.music.data.AppTypeface
 import com.aurora.music.data.ThemeStyle
 
-val Circular = FontFamily(
-    Font(R.font.circular_light, FontWeight.Light),
-    Font(R.font.circular_light_italic, FontWeight.Light, FontStyle.Italic),
-    Font(R.font.circular_book, FontWeight.Normal),
-    Font(R.font.circular_book_italic, FontWeight.Normal, FontStyle.Italic),
-    Font(R.font.circular_medium, FontWeight.Medium),
-    Font(R.font.circular_medium_italic, FontWeight.Medium, FontStyle.Italic),
-    Font(R.font.circular_bold, FontWeight.Bold),
-    Font(R.font.circular_bold_italic, FontWeight.Bold, FontStyle.Italic),
-    Font(R.font.circular_black, FontWeight.Black),
-    Font(R.font.circular_black_italic, FontWeight.Black, FontStyle.Italic),
+@OptIn(ExperimentalTextApi::class)
+private fun variableFontFamily(
+    regular: Int,
+    italic: Int? = null,
+    weightRange: IntRange,
+    opticalSize: Float? = null,
+): FontFamily = FontFamily(
+    buildList {
+        for (weight in 100..900 step 100) {
+            val settings = buildList {
+                add(FontVariation.weight(weight.coerceIn(weightRange)))
+                opticalSize?.let { add(FontVariation.Setting("opsz", it)) }
+            }
+            add(Font(regular, FontWeight(weight), variationSettings = FontVariation.Settings(*settings.toTypedArray())))
+            if (italic != null) {
+                add(Font(italic, FontWeight(weight), FontStyle.Italic, variationSettings = FontVariation.Settings(*settings.toTypedArray())))
+            }
+        }
+    },
 )
 
-fun auroraTypography(scale: Float = 1f, style: Int = ThemeStyle.AURORA): Typography {
-    val s = scale.coerceIn(0.8f, 1.4f)
-    val family = when (style) {
+private val DmSans = variableFontFamily(R.font.dm_sans, R.font.dm_sans_italic, 100..1000, opticalSize = 14f)
+private val PlusJakartaSans = variableFontFamily(R.font.plus_jakarta_sans, R.font.plus_jakarta_sans_italic, 200..800)
+private val Manrope = variableFontFamily(R.font.manrope, weightRange = 200..800)
+
+fun auroraFontFamily(typeface: Int = AppTypeface.THEME_DEFAULT, style: Int = ThemeStyle.AURORA): FontFamily = when (typeface) {
+    AppTypeface.DM_SANS -> DmSans
+    AppTypeface.PLUS_JAKARTA_SANS -> PlusJakartaSans
+    AppTypeface.MANROPE -> Manrope
+    else -> when (style) {
         ThemeStyle.RETRO -> FontFamily.Monospace
         ThemeStyle.AERO -> FontFamily.SansSerif
-        else -> Circular
+        else -> DmSans
     }
+}
+
+fun auroraTypography(scale: Float = 1f, style: Int = ThemeStyle.AURORA, typeface: Int = AppTypeface.THEME_DEFAULT): Typography {
+    val s = scale.coerceIn(0.8f, 1.4f)
+    val family = auroraFontFamily(typeface, style)
     fun t(weight: FontWeight, size: Float, line: Float, letter: Float = 0f) = TextStyle(
         fontFamily = family,
         fontWeight = when {

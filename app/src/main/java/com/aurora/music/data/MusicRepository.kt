@@ -144,14 +144,43 @@ class MusicRepository(
 
     // offline shows every servers downloads online scopes to the active server
     private fun visibleDownloads(): List<DownloadedSong> {
-        val all = downloadManager.downloads.value.values
-        val scoped = if (offline) all else all.filter { (it.serverId ?: "") == currentServerIdProvider() }
-        return scoped.toList()
+        return downloadManager.downloads.value.values.filter(::ownsDownload)
     }
 
     private fun visibleCollections(): List<DownloadedCollection> {
-        val all = downloadManager.collections.value
-        return if (offline) all else all.filter { (it.serverId ?: "") == currentServerIdProvider() }
+        return downloadManager.collections.value.filter(::ownsCollection)
+    }
+
+    private fun sourceOwner(id: String, albumId: String = ""): DownloadOwner? {
+        val source = backend ?: return null
+        val song = Song(id, "", "", "", "", 0, albumId = albumId)
+        return DownloadOwner(source.playbackSourceIdentity(song)?.providerId, source.session.server)
+    }
+
+    private fun ownsDownload(download: DownloadedSong): Boolean = offline ||
+        sourceOwner(download.id, download.albumId)?.matches(
+            DownloadOwner(download.playbackSource?.providerId, download.serverId.orEmpty())) == true
+
+    private fun ownsCollection(collection: DownloadedCollection): Boolean {
+        if (offline) return true
+        if (sourceOwner(collection.id)?.matches(DownloadOwner(collection.sourceProviderId, collection.serverId.orEmpty())) == true) return true
+        val savedIdentity = collection.playbackCollection?.id ?: return false
+        return savedIdentity == backend?.playbackCollectionIdentity(collection.kind, collection.id)?.id
+    }
+
+    fun downloadedIds(): Set<String> = visibleDownloads().mapTo(linkedSetOf()) { it.id }
+
+    fun isDownloaded(id: String): Boolean = downloadManager.get(id)?.let(::ownsDownload) == true
+
+    fun removeDownload(id: String): Boolean {
+        val download = downloadManager.get(id)?.takeIf(::ownsDownload) ?: return false
+        return downloadManager.removeDownload(download)
+    }
+
+    fun removeDownloadedCollection(id: String, kind: String): Boolean {
+        val collection = downloadManager.collections.value.firstOrNull { it.id == id && it.kind == kind }
+            ?.takeIf(::ownsCollection) ?: return false
+        return downloadManager.removeCollection(collection, ::ownsDownload)
     }
 
     fun downloadedSongs(): List<Song> = visibleDownloads()
@@ -346,10 +375,21 @@ class MusicRepository(
 
     suspend fun radio(seedId: String): List<Song> {
         if (offline) return emptyList()
-        return sourceSongs { it.radio(seedId) }
+        val id = backendSongId(seedId) ?: return emptyList()
+        return sourceSongs { it.radio(id) }
     }
 
-    suspend fun createPlaylist(name: String): Boolean = backend?.createPlaylist(name) ?: false
+    fun prefersServerRadio(seedId: String): Boolean {
+        if (offline) return false
+        val id = backendSongId(seedId) ?: return false
+        return backend?.prefersServerRadio(id) == true
+    }
+
+    suspend fun createPlaylist(name: String): Boolean {
+        val id = backend?.createPlaylistWithId(name) ?: return false
+        playlistChangeEvents.tryEmit(id)
+        return true
+    }
 
     private val playlistChangeEvents = kotlinx.coroutines.flow.MutableSharedFlow<String>(extraBufferCapacity = 16)
     val playlistChanges: kotlinx.coroutines.flow.Flow<String> = playlistChangeEvents
@@ -364,23 +404,29 @@ class MusicRepository(
             onChanged = { playlistChangeEvents.tryEmit(it) })
     }
 
-    suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean =
-        backend?.addToPlaylist(playlistId, trackIds) ?: false
+    suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean {
+        val added = backend?.addToPlaylist(playlistId, trackIds) ?: false
+        if (added) playlistChangeEvents.tryEmit(playlistId)
+        return added
+    }
 
     suspend fun createPlaylistFromSongs(name: String, trackIds: List<String>): Boolean {
         val b = backend ?: return false
-        val id = b.createPlaylistWithId(name) ?: return false
-        return if (trackIds.isNotEmpty()) b.addToPlaylist(id, trackIds) else true
+        val id = b.createPlaylistWithId(name, trackIds) ?: return false
+        playlistChangeEvents.tryEmit(id)
+        return true
     }
 
     suspend fun exportPlaylist(kind: String, id: String): String? =
         detail(kind, id)?.tracks?.takeIf { it.isNotEmpty() }?.let { M3u.write(it) }
 
     suspend fun importPlaylist(name: String, entries: List<M3u.Entry>): Pair<Int, Int>? {
-        if (offline || entries.isEmpty()) return null
-        val matched = entries.mapNotNull { matchEntry(it) }.distinctBy { it.id }
-        val playlistId = backend?.createPlaylistWithId(name) ?: return null
-        if (matched.isNotEmpty()) backend?.addToPlaylist(playlistId, matched.map { it.id })
+        if (offline || entries.isEmpty() || name.isBlank()) return null
+        val source = backend ?: return null
+        val matched = entries.mapNotNull { matchEntry(it) }
+        if (backend !== source || offline) return null
+        val id = source.createPlaylistWithId(name, matched.map { it.id }) ?: return null
+        playlistChangeEvents.tryEmit(id)
         return matched.size to entries.size
     }
 
@@ -402,10 +448,17 @@ class MusicRepository(
         }.filter { it.second >= 3 }.maxByOrNull { it.second }?.first
     }
 
-    suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean =
-        backend?.updatePlaylist(id, name, comment) ?: false
+    suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean {
+        val updated = backend?.updatePlaylist(id, name, comment) ?: false
+        if (updated) playlistChangeEvents.tryEmit(id)
+        return updated
+    }
 
-    suspend fun deletePlaylist(id: String): Boolean = backend?.deletePlaylist(id) ?: false
+    suspend fun deletePlaylist(id: String): Boolean {
+        val deleted = backend?.deletePlaylist(id) ?: false
+        if (deleted) playlistChangeEvents.tryEmit(id)
+        return deleted
+    }
 
     // playlists arent server-starrable handled locally by the caller
     suspend fun setStarred(id: String, starred: Boolean, kind: String = "song"): Boolean {

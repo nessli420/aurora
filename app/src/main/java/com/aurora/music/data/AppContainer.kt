@@ -182,7 +182,13 @@ class AppContainer(context: Context) {
         }
         return when (session.type) {
             ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, localize)
-            ServerType.PLEX -> PlexBackend(com.aurora.music.data.remote.PlexClient(session), { maxBitrate }, localize)
+            ServerType.PLEX -> ReportingMediaBackend(
+                PlexBackend(com.aurora.music.data.remote.PlexClient(session), { maxBitrate }, localize),
+            ) { message ->
+                if (lastSession?.accountKey() == session.accountKey() ||
+                    (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
+                        (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
+            }
             ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, localize)
             ServerType.SPOTIFY -> SpotifyBackend(
                 SpotifyClient(session, spotifyClientIdValue, onTokenRefreshed = { tok -> scope.launch { settingsStore.updateToken(tok) } }),

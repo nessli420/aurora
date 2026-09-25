@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_start_failed">Не удалось начать загрузку. Существующая загрузка может принадлежать другому источнику.</string>
+</resources>
