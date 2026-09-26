@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">Listening history could not sync. Check your connection and account.</string>
+</resources>

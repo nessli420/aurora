@@ -151,6 +151,7 @@ class PlaybackService : MediaLibraryService() {
     private val nowPlaying by lazy { NowPlayingStore(this) }
 
     private var xfadeActive = false
+    private var youtubeSkips = 0
     @Volatile private var xfadeBpPending = false   // bit-perfect crossfade fired, awaiting the transition
     private var xfadeStartMs = 0L
     private var xfadeDurationMs = 0L
@@ -163,7 +164,7 @@ class PlaybackService : MediaLibraryService() {
     private var crossfadeHeadroom = true
     private var activeCurve = "SMOOTH"
     private var activeHeadroom = true
-    private lateinit var musicSourceFactory: androidx.media3.exoplayer.source.MediaSource.Factory
+    private lateinit var musicSourceFactory: YoutubeMediaSourceFactory
     private var currentImpulse: ImpulseResponse? = null
     private var impulseLoadFailure: String? = null
     private var currentDspParams = DspParams()
@@ -300,7 +301,7 @@ class PlaybackService : MediaLibraryService() {
             val uri = dataSpec.uri
             if (uri.scheme == "aurora-yt") {
                 val real = resolver.resolveSentinel(uri)
-                    ?: throw java.io.IOException("This YouTube stream is unavailable. Please try again.")
+                    ?: throw YoutubeStreamException("This YouTube stream is unavailable. Please try again.")
                 dataSpec.withUri(android.net.Uri.parse(real))
             } else if (uri.scheme == "aurora-extension") dataSpec.withUri(container.extensions.resolve(uri))
             else dataSpec
@@ -319,6 +320,9 @@ class PlaybackService : MediaLibraryService() {
             .setMediaSourceFactory(mediaSourceFactory)
             .setAudioAttributes(audioAttributes, /* handleAudioFocus = */ true)
             .setHandleAudioBecomingNoisy(true)
+            // Hold CPU + Wi-Fi while playing or buffering: resolving the next YouTube stream happens in a
+            // silent gap, and a backgrounded device would otherwise sleep mid-resolve.
+            .setWakeMode(C.WAKE_MODE_NETWORK)
         if (bitPerfectUsb) {
             // stop exoplayer reading the file while the native flac engine handles decode + usb
             playerBuilder.setLoadControl(
@@ -407,6 +411,10 @@ class PlaybackService : MediaLibraryService() {
                 if (owner === player && bitPerfect && playWhenReady && player.playerError != null) player.prepare()
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
+                if (owner === player && isYoutubeStreamFailure(error)) {
+                    skipUnplayableYoutube()
+                    return
+                }
                 if (owner === player && error.errorCode == androidx.media3.common.PlaybackException.ERROR_CODE_BEHIND_LIVE_WINDOW) {
                     player.seekToDefaultPosition()
                     player.prepare()
@@ -434,6 +442,11 @@ class PlaybackService : MediaLibraryService() {
                     events.contains(Player.EVENT_REPEAT_MODE_CHANGED)
                 ) updateCustomLayout()
                 if (events.contains(Player.EVENT_TIMELINE_CHANGED)) shuffleQueue.maybeNeutralize()
+                if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) || events.contains(Player.EVENT_TIMELINE_CHANGED)) {
+                    val next = p.nextMediaItemIndex
+                    if (next != C.INDEX_UNSET) musicSourceFactory.prefetch(p.getMediaItemAt(next))
+                }
+                if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) && p.playbackState == Player.STATE_READY) youtubeSkips = 0
                 if (events.contains(Player.EVENT_TRACKS_CHANGED) ||
                     events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
                     events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) ||
@@ -459,6 +472,25 @@ class PlaybackService : MediaLibraryService() {
                 if (owner === player && xfadeActive && reason == Player.DISCONTINUITY_REASON_SEEK && newPosition.mediaItemIndex == player.currentMediaItemIndex) endXfade()
             }
         }
+
+    private fun isYoutubeStreamFailure(error: androidx.media3.common.PlaybackException): Boolean =
+        generateSequence<Throwable>(error) { it.cause }.take(8).any { cause ->
+            cause is YoutubeStreamException ||
+                (cause as? androidx.media3.datasource.HttpDataSource.HttpDataSourceException)
+                    ?.dataSpec?.uri?.host?.endsWith(".googlevideo.com") == true
+        }
+
+    // An unresolvable YouTube track skips ahead instead of ending the session; capped so a dead
+    // network can't spin through the whole queue.
+    private fun skipUnplayableYoutube() {
+        if (!player.hasNextMediaItem() || youtubeSkips >= MAX_YOUTUBE_SKIPS) { youtubeSkips = 0; return }
+        youtubeSkips++
+        val resume = player.playWhenReady
+        android.util.Log.w("AuroraPlayback", "Skipping unplayable YouTube track ($youtubeSkips/$MAX_YOUTUBE_SKIPS)")
+        player.seekToNextMediaItem()
+        player.prepare()
+        player.playWhenReady = resume
+    }
 
     private fun startAudioObservers(audioAttributes: AudioAttributes) {
         val store = container.settingsStore
@@ -1240,6 +1272,7 @@ class PlaybackService : MediaLibraryService() {
             .setMediaSourceFactory(musicSourceFactory)
             .setAudioAttributes(player.audioAttributes, false)
             .setHandleAudioBecomingNoisy(true)
+            .setWakeMode(C.WAKE_MODE_NETWORK)
             .build().also {
                 it.trackSelectionParameters = it.trackSelectionParameters.buildUpon()
                     .setTrackTypeDisabled(androidx.media3.common.C.TRACK_TYPE_VIDEO, true).build()
@@ -1867,6 +1900,7 @@ class PlaybackService : MediaLibraryService() {
         const val ACTION_RECEIVER_START = "com.aurora.music.action.RECEIVER_START"
         const val ACTION_RECEIVER_STOP = "com.aurora.music.action.RECEIVER_STOP"
         private const val NETWORK_NOTIFICATION_ID = 0xA15
+        private const val MAX_YOUTUBE_SKIPS = 5
         const val CMD_EXIT_MIX = "com.aurora.music.EXIT_MIX"
         const val CMD_QUEUE_APPEND = "com.aurora.music.QUEUE_APPEND"
         const val QUEUE_TOKEN = "aurora_queue_token"
