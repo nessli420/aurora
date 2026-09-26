@@ -1,7 +1,9 @@
 package com.aurora.music.data
 
+import android.Manifest
 import android.content.ContentUris
 import android.content.Context
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.provider.MediaStore
@@ -50,14 +52,18 @@ class LocalLibrary(
         if (loaded && separators == appliedSeparators) return
         mutex.withLock {
             val current = separatorsProvider()
-            if (!loaded) { scan(current); loaded = true }
+            if (!loaded) { scan(current); loaded = canReadAudio() }
             else if (current != appliedSeparators) withContext(Dispatchers.IO) { indexArtists(current) }
         }
     }
 
     suspend fun refresh() {
-        mutex.withLock { scan(separatorsProvider()); loaded = true }
+        mutex.withLock { scan(separatorsProvider()); loaded = canReadAudio() }
     }
+
+    private fun canReadAudio(): Boolean = context.checkSelfPermission(
+        if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE,
+    ) == PackageManager.PERMISSION_GRANTED
 
     fun song(id: String): Song? = byId[id]
 
