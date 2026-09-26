@@ -295,7 +295,7 @@ fun AuroraApp() {
     val playerColors = rememberPlayerColorScheme(playerState.current.artworkUrl, playerState.current.accent)
 
     fun navigateTopLevel(route: String) {
-        if (currentRoute == route) return
+        if (navController.currentDestination?.route == route) return
         container.haptic()
         // tab press lands on the tab root pop pushed detail/settings dont restore the sub-stack
         navController.navigate(route) {
