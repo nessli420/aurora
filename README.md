@@ -6,7 +6,7 @@ An Android music player built for everyday listening and detailed audio customiz
 
 Bring local files, home music servers and YouTube Music together, or browse your Green Music App library in its own mode. Press play with the default sound, choose a headphone preset, or build your own processing chain. No Aurora account is required.
 
-**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
+**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Tablet](#tablet) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
 
 Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively developed; the source may include changes that are not in the latest release yet.
 
@@ -51,6 +51,28 @@ Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively develop
 [Browse all screenshots](docs/screenshots). Screenshots are from September 2026; newer builds may look different.
 
 </details>
+
+## Tablet
+
+Aurora adapts to larger screens in portrait and landscape, with a navigation sidebar and a miniplayer across the bottom. Browse your collection while keeping playback controls within reach.
+
+- **More room for your music.** Library and Settings use two-pane layouts when space allows, keeping navigation beside the selected content.
+- **Player, queue and lyrics together.** Open queue or lyrics panels while browsing, or use the landscape Now Playing view with an adjustable divider. Lyrics can also fill the screen.
+- **A layout you can adjust.** Change dock size, panel controls, spacing, page margins and card sizes in **Settings → Appearance → Tablet Layout**. Customize navigation entries with **Navigation Menu**.
+- **Portrait support.** The player rearranges its artwork and controls for a taller screen, and setup adapts to either orientation.
+
+<table>
+  <tr>
+    <td align="center" width="50%"><a href="docs/screenshots/tablet-home.webp"><img src="docs/screenshots/thumbnails/tablet-home.webp" alt="Aurora tablet home with navigation sidebar and full-width miniplayer" width="480"></a><br><sub>Home and full-width miniplayer</sub></td>
+    <td align="center" width="50%"><a href="docs/screenshots/tablet-player-landscape.webp"><img src="docs/screenshots/thumbnails/tablet-player-landscape.webp" alt="Aurora landscape tablet player with artwork, waveform and queue panel" width="480"></a><br><sub>Landscape player and queue</sub></td>
+  </tr>
+  <tr>
+    <td align="center" width="50%"><a href="docs/screenshots/tablet-settings.webp"><img src="docs/screenshots/thumbnails/tablet-settings.webp" alt="Aurora tablet settings with categories and audio controls side by side" width="480"></a><br><sub>Split-pane settings</sub></td>
+    <td align="center" width="50%"><a href="docs/screenshots/tablet-player-portrait.webp"><img src="docs/screenshots/thumbnails/tablet-player-portrait.webp" alt="Aurora portrait tablet player with large artwork, waveform and playback controls" width="300"></a><br><sub>Portrait player</sub></td>
+  </tr>
+</table>
+
+Captured from the running app on a Pixel Tablet emulator using a sample local music library. Click a screenshot to view it at full resolution. These layouts are included in the 2.6.2 source; check the latest release for APK availability.
 
 ## Get started
 
