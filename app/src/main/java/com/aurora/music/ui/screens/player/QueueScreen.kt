@@ -37,7 +37,7 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.KeyboardArrowDown
-import androidx.compose.material.icons.filled.PlaylistAdd
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
@@ -85,6 +85,53 @@ fun QueueScreen(
     onOpenMix: () -> Unit = {},
     editable: Boolean = true,
 ) {
+    val accent = MaterialTheme.colorScheme.primary
+    var locked by remember { mutableStateOf(false) }
+
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+        DragToDismiss(onDismiss = onClose, enabled = !locked) {
+        Box(
+            Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.background)
+                .background(
+                    Brush.verticalGradient(
+                        listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.14f), MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)
+                    )
+                )
+                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
+        ) {
+            QueueContent(
+                queue = queue, currentIndex = currentIndex, isPlaying = isPlaying,
+                onJump = onJump, onRemove = onRemove, onMove = onMove, onClear = onClear,
+                onSaveAsPlaylist = onSaveAsPlaylist, onOpenMix = onOpenMix, editable = editable,
+                onClose = onClose, onLockChange = { locked = it },
+                modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 880.dp).fillMaxSize()
+                    .windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
+            )
+        }
+        }
+    }
+}
+
+@Composable
+fun QueueContent(
+    queue: List<Song>,
+    currentIndex: Int,
+    isPlaying: Boolean,
+    onJump: (Int) -> Unit,
+    onRemove: (Int) -> Unit,
+    onMove: (Int, Int) -> Unit,
+    onClear: () -> Unit,
+    onSaveAsPlaylist: (String) -> Unit,
+    onOpenMix: () -> Unit,
+    editable: Boolean,
+    modifier: Modifier = Modifier,
+    onClose: (() -> Unit)? = null,
+    showTitle: Boolean = true,
+    showActions: Boolean = true,
+    onLockChange: (Boolean) -> Unit = {},
+) {
     val current = queue.getOrNull(currentIndex)
     val startIdx = (currentIndex + 1).coerceAtLeast(0)
     val upcoming = (startIdx until queue.size).toList()
@@ -98,41 +145,30 @@ fun QueueScreen(
     var showHistory by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
+    androidx.compose.runtime.LaunchedEffect(dragIndex >= 0 || showSaveDialog) { onLockChange(dragIndex >= 0 || showSaveDialog) }
 
-    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-        DragToDismiss(onDismiss = onClose, enabled = dragIndex < 0 && !showSaveDialog) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.14f), MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)
-                    )
-                )
-                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
-        ) {
-            Column(
-                Modifier.align(Alignment.TopCenter).widthIn(max = 880.dp).fillMaxSize()
-                    .windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
-            ) {
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClose).padding(6.dp))
+            Column(modifier) {
+                if (onClose != null || showTitle || showActions) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (onClose != null) {
+                        Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClose).padding(10.dp))
+                        Spacer(Modifier.weight(1f))
+                    }
+                    if (showTitle) Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                     Spacer(Modifier.weight(1f))
-                    Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-                    Spacer(Modifier.weight(1f))
-                    Icon(
-                        Icons.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
-                        tint = if (queue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(40.dp).clip(CircleShape)
-                            .clickable(enabled = queue.isNotEmpty()) { showSaveDialog = true }.padding(8.dp),
-                    )
-                    Icon(
-                        Icons.Filled.DeleteSweep, appString(R.string.text_clear_queue_984301),
-                        tint = if (upcoming.isEmpty() || !editable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(40.dp).clip(CircleShape)
-                            .clickable(enabled = upcoming.isNotEmpty() && editable, onClick = onClear).padding(8.dp),
-                    )
+                    if (showActions) {
+                        Icon(
+                            Icons.AutoMirrored.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
+                            tint = if (queue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(48.dp).clip(CircleShape)
+                                .clickable(enabled = queue.isNotEmpty()) { showSaveDialog = true }.padding(12.dp),
+                        )
+                        Icon(
+                            Icons.Filled.DeleteSweep, appString(R.string.text_clear_queue_984301),
+                            tint = if (upcoming.isEmpty() || !editable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.size(48.dp).clip(CircleShape)
+                                .clickable(enabled = upcoming.isNotEmpty() && editable, onClick = onClear).padding(12.dp),
+                        )
+                    }
                 }
 
                 TextButton(onClick = onOpenMix, modifier = Modifier.fillMaxWidth()) {
@@ -228,10 +264,28 @@ fun QueueScreen(
                     }
                 }
             }
-        }
-        }
-    }
 
+    if (showSaveDialog) {
+        SaveQueueDialog(
+            onSave = { name -> onSaveAsPlaylist(name); showSaveDialog = false },
+            onDismiss = { showSaveDialog = false },
+        )
+    }
+}
+
+@Composable
+fun QueueActions(queue: List<Song>, currentIndex: Int, editable: Boolean, onClear: () -> Unit, onSaveAsPlaylist: (String) -> Unit) {
+    var showSaveDialog by remember { mutableStateOf(false) }
+    val hasUpcoming = currentIndex + 1 < queue.size
+    val colors = MaterialTheme.colorScheme
+    androidx.compose.material3.IconButton(onClick = { showSaveDialog = true }, enabled = queue.isNotEmpty()) {
+        Icon(Icons.AutoMirrored.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
+            tint = if (queue.isEmpty()) colors.onSurfaceVariant.copy(alpha = 0.35f) else colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
+    }
+    androidx.compose.material3.IconButton(onClick = onClear, enabled = hasUpcoming && editable) {
+        Icon(Icons.Filled.DeleteSweep, appString(R.string.text_clear_queue_984301),
+            tint = if (!hasUpcoming || !editable) colors.onSurfaceVariant.copy(alpha = 0.35f) else colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
+    }
     if (showSaveDialog) {
         SaveQueueDialog(
             onSave = { name -> onSaveAsPlaylist(name); showSaveDialog = false },
@@ -282,19 +336,20 @@ private fun QueueTrackRow(
             )
             Text(song.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Text(formatTime(song.durationSec), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 4.dp))
+        Text(formatTime(song.durationSec), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
         if (onRemove != null) {
+            Spacer(Modifier.width(if (dragHandle != null) 12.dp else 0.dp))
             Icon(
                 Icons.Filled.Close, appString(R.string.text_remove_e96390),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onRemove).padding(7.dp),
+                modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onRemove).padding(14.dp),
             )
         }
         if (dragHandle != null) {
             Icon(
                 Icons.Filled.DragHandle, appString(R.string.text_reorder_33d997),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(34.dp).padding(6.dp).then(dragHandle),
+                modifier = Modifier.size(48.dp).then(dragHandle).padding(12.dp),
             )
         }
     }

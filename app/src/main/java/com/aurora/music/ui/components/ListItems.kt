@@ -79,14 +79,19 @@ fun SongRow(
     onRemoveDownload: (() -> Unit)? = null,
     onEditTags: (() -> Unit)? = null,
     serverTagEditing: Boolean = false,
+    showAlbum: Boolean = true,
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small
+    val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
     key(song.id, song.playbackSource?.providerId) {
     TrackSwipeActions(modifier, shape, isLiked, enabled = !menuOpen && !showPlaylists,
         onPlayNext = onPlayNext, onQueue = onAddToQueue, onLike = onToggleLike,
         onPlaylists = { showPlaylists = true }) {
+    androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
+    val albumColumn = tablet && showAlbum && maxWidth >= 680.dp && song.album.isNotBlank()
+    val target = if (tablet) 48.dp else 36.dp
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -136,6 +141,16 @@ fun SongRow(
                 )
             }
         }
+        if (albumColumn) {
+            Text(
+                song.album,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(0.75f).padding(horizontal = 16.dp),
+            )
+        }
         Spacer(Modifier.width(8.dp))
         if (isDownloaded) {
             Icon(Icons.Filled.DownloadDone, appString(R.string.text_downloaded_c61970), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
@@ -146,22 +161,24 @@ fun SongRow(
             contentDescription = appString(if (isLiked) R.string.text_remove_from_liked_9d1568 else R.string.text_add_to_liked_b99f26),
             tint = if (isLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier
-                .size(36.dp)
+                .size(target)
                 .clip(CircleShape)
                 .clickable(onClick = onToggleLike)
-                .padding(6.dp),
+                .padding(if (tablet) 12.dp else 6.dp),
         )
         Text(
             if (song.durationSec > 0) formatTime(song.durationSec) else "—",
             style = MaterialTheme.typography.labelMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 6.dp),
+            textAlign = if (tablet) androidx.compose.ui.text.style.TextAlign.End else null,
+            modifier = Modifier.padding(horizontal = 6.dp).then(if (tablet) Modifier.width(44.dp) else Modifier),
         )
         Box {
             Icon(
                 Icons.Outlined.MoreVert, appString(R.string.text_more_4bab2d),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(32.dp).clip(CircleShape).clickable { menuOpen = true }.padding(4.dp),
+                modifier = Modifier.size(if (tablet) 48.dp else 32.dp).clip(CircleShape).clickable { menuOpen = true }
+                    .padding(if (tablet) 12.dp else 4.dp),
             )
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
                 DropdownMenuItem(
@@ -216,6 +233,7 @@ fun SongRow(
                 )
             }
         }
+    }
     }
     }
     }

@@ -82,7 +82,7 @@ fun IntegrationsSettingsScreen(
 
 @Composable
 private fun IntegrationRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, subtitle: String, status: String, onClick: () -> Unit) {
-    SettingsNavRow(icon, title, subtitle, status, onClick)
+    SettingsNavRow(icon, title, subtitle, status, onClick = onClick)
 }
 
 private fun connectionLabel(token: String, enabled: Boolean, username: String): String = when {
@@ -271,7 +271,7 @@ fun DiscordIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit, 
         item { SettingsSectionTitle(appString(R.string.text_presence_89a8a3)) }
         item {
             SettingsGroup {
-                if (acct.token.isBlank()) SettingsNavRow(Icons.Filled.Forum, appString(R.string.text_connect_discord_8794ce), appString(R.string.text_authorize_your_discord_account_a1f52f), appString(R.string.text_connect_b65463), onOpenDiscordLogin)
+                if (acct.token.isBlank()) SettingsNavRow(Icons.Filled.Forum, appString(R.string.text_connect_discord_8794ce), appString(R.string.text_authorize_your_discord_account_a1f52f), appString(R.string.text_connect_b65463), onClick = onOpenDiscordLogin)
                 else {
                     SettingsSwitchRow(Icons.Filled.Forum, appString(R.string.text_discord_presence_81fe83), if (acct.username.isBlank()) appString(R.string.text_connected_c2f9b7) else appString(R.string.text_connected_as_fc3300, (acct.username)), acct.enabled) { scope.launch { container.settingsStore.setDiscordEnabled(it) } }
                     SettingsRowDivider()

@@ -108,6 +108,15 @@ class SettingsStore(private val context: Context) {
             miniProgress = p[Keys.UI_MINI_PROGRESS] ?: MiniProgress.LINE,
             libraryColumns = p[Keys.UI_LIBRARY_COLUMNS] ?: 2,
             hiddenHomeSections = p[Keys.UI_HIDDEN_HOME] ?: emptySet(),
+            tabletDockScale = tabletValue(p, TabletSetting.DOCK),
+            tabletPanelScale = tabletValue(p, TabletSetting.PANEL),
+            tabletPanelSpacing = tabletValue(p, TabletSetting.PANEL_SPACING),
+            tabletNavGap = tabletValue(p, TabletSetting.NAV_GAP),
+            tabletPageMargin = tabletValue(p, TabletSetting.PAGE_MARGIN),
+            tabletHeroScale = tabletValue(p, TabletSetting.HERO),
+            tabletFavouriteScale = tabletValue(p, TabletSetting.FAVOURITE),
+            tabletPlayerSplit = tabletValue(p, TabletSetting.PLAYER_SPLIT),
+            navLayout = p[Keys.UI_NAV_LAYOUT] ?: "",
         )
     }
 
@@ -1338,6 +1347,12 @@ class SettingsStore(private val context: Context) {
     suspend fun setMiniStyle(v: Int) = context.dataStore.edit { it[Keys.UI_MINI_STYLE] = v }
     suspend fun setMiniProgress(v: Int) = context.dataStore.edit { it[Keys.UI_MINI_PROGRESS] = v }
     suspend fun setLibraryColumns(v: Int) = context.dataStore.edit { it[Keys.UI_LIBRARY_COLUMNS] = v }
+    suspend fun setTabletSetting(setting: TabletSetting, v: Float) =
+        context.dataStore.edit { it[Keys.tablet(setting)] = v.coerceIn(setting.range) }
+    private fun tabletValue(p: Preferences, setting: TabletSetting): Float =
+        (p[Keys.tablet(setting)] ?: setting.default).coerceIn(setting.range)
+    suspend fun resetTabletSettings() = context.dataStore.edit { p -> TabletSetting.entries.forEach { p.remove(Keys.tablet(it)) } }
+    suspend fun setNavLayout(v: String) = context.dataStore.edit { it[Keys.UI_NAV_LAYOUT] = v }
     suspend fun setHomeSectionHidden(id: String, hidden: Boolean) = context.dataStore.edit { p ->
         val set = (p[Keys.UI_HIDDEN_HOME] ?: emptySet()).toMutableSet()
         if (hidden) set.add(id) else set.remove(id)

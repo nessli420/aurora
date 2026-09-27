@@ -17,6 +17,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.systemBars
 import androidx.compose.foundation.shape.CircleShape
@@ -49,14 +51,11 @@ fun SidebarContent(
     username: String,
     server: String,
     avatarUrl: String = "",
+    layout: com.aurora.music.navigation.NavLayout,
+    currentRoute: String?,
     onProfile: () -> Unit,
     onSettings: () -> Unit,
-    onLibrary: () -> Unit,
-    onHistory: () -> Unit,
-    onStats: () -> Unit,
-    onDuplicates: () -> Unit,
-    onRadio: () -> Unit = {},
-    onPodcasts: () -> Unit = {},
+    onOpen: (com.aurora.music.navigation.NavMenuItem) -> Unit,
     onLogout: () -> Unit,
 ) {
     val initials = username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }
@@ -97,16 +96,13 @@ fun SidebarContent(
         Box(Modifier.fillMaxWidth().height(1.dp).background(MaterialTheme.colorScheme.outline))
         Spacer(Modifier.height(8.dp))
 
-        DrawerItem(Icons.Filled.Person, appString(R.string.text_profile_ff4fc0)) { onProfile() }
-        DrawerItem(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_your_library_fd740f)) { onLibrary() }
-        DrawerItem(Icons.Filled.Radio, appString(R.string.text_radio_b11bf1)) { onRadio() }
-        DrawerItem(Icons.Filled.Podcasts, appString(R.string.text_podcasts_fd52b4)) { onPodcasts() }
-        DrawerItem(Icons.Filled.History, appString(R.string.text_listening_history_bd9991)) { onHistory() }
-        DrawerItem(Icons.Filled.Workspaces, appString(R.string.text_listening_stats_a760b2)) { onStats() }
-        DrawerItem(Icons.Filled.ContentCopy, appString(R.string.text_find_duplicates_586f31)) { onDuplicates() }
-        DrawerItem(Icons.Filled.Settings, appString(R.string.text_settings_c7f73b)) { onSettings() }
-
-        Spacer(Modifier.weight(1f))
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            DrawerItem(Icons.Filled.Person, appString(R.string.text_profile_ff4fc0)) { onProfile() }
+            layout.main.filterNot { it.route == com.aurora.music.navigation.Routes.HOME || it.route == com.aurora.music.navigation.Routes.SEARCH }
+                .forEach { item -> DrawerItem(item.icon, item.label, selected = currentRoute == item.route) { onOpen(item) } }
+            if (layout.more.isNotEmpty()) FoldableMore(layout.more, currentRoute, onOpen, startPadding = 8.dp)
+            DrawerItem(Icons.Filled.Settings, appString(R.string.text_settings_c7f73b), selected = currentRoute == com.aurora.music.navigation.Routes.SETTINGS) { onSettings() }
+        }
 
         DrawerItem(Icons.AutoMirrored.Filled.Logout, appString(R.string.text_log_out_6e78c9), tint = MaterialTheme.colorScheme.error) { onLogout() }
         Spacer(Modifier.height(16.dp))
@@ -114,13 +110,16 @@ fun SidebarContent(
 }
 
 @Composable
-private fun DrawerItem(icon: ImageVector, label: String, tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface, onClick: () -> Unit) {
+private fun DrawerItem(icon: ImageVector, label: String, tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface, selected: Boolean = false, onClick: () -> Unit) {
+    val content = if (selected) MaterialTheme.colorScheme.primary else tint
     Row(
-        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 14.dp),
+        Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else androidx.compose.ui.graphics.Color.Transparent)
+            .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, null, tint = tint, modifier = Modifier.size(24.dp))
+        Icon(icon, null, tint = content, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(16.dp))
-        Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = tint)
+        Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, color = content)
     }
 }

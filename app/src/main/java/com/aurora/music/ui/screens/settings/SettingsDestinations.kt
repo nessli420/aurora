@@ -52,4 +52,6 @@ internal fun SettingsDestinationRow(
     destination: SettingsDestination,
     summary: String = destination.description,
     onClick: () -> Unit,
-) = SettingsNavRow(icon, destination.label, subtitle = summary, onClick = onClick)
+) = SettingsNavRow(icon, destination.label, subtitle = summary, selected = LocalSelectedSettingsRoute.current == destination.route, onClick = onClick)
+
+val LocalSelectedSettingsRoute = androidx.compose.runtime.compositionLocalOf<String?> { null }

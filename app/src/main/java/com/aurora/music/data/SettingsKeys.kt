@@ -154,6 +154,8 @@ internal object SettingsKeys {
     val UI_MINI_PROGRESS = intPreferencesKey("ui_mini_progress")
     val UI_LIBRARY_COLUMNS = intPreferencesKey("ui_library_columns")
     val UI_HIDDEN_HOME = stringSetPreferencesKey("ui_hidden_home")
+    val UI_NAV_LAYOUT = stringPreferencesKey("ui_nav_layout")
+    fun tablet(setting: TabletSetting) = floatPreferencesKey("ui_tablet_" + setting.name.lowercase())
     val LASTFM_SK = stringPreferencesKey("lastfm_sk")
     val LASTFM_USER = stringPreferencesKey("lastfm_user")
     val LASTFM_IMAGE = stringPreferencesKey("lastfm_image")

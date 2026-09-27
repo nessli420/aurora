@@ -78,6 +78,12 @@ import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.FilledTonalButton
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.foundation.layout.sizeIn
+import androidx.compose.material.icons.filled.OpenInFull
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
@@ -160,12 +166,32 @@ fun PlayerScreen(
     onRequestVideo: () -> Unit = {},
     onVideoVisibleChange: (Boolean) -> Unit = {},
     gestures: com.aurora.music.data.GesturePrefs = com.aurora.music.data.GesturePrefs(),
+    requestedPane: PlayerPane? = null,
+    onPaneRequestHandled: () -> Unit = {},
+    paneContent: (@Composable (PlayerPane, Modifier) -> Unit)? = null,
+    paneActions: (@Composable (PlayerPane) -> Unit)? = null,
+    onSplitChange: (Float) -> Unit = {},
 ) {
     val song = state.current
     val ui = LocalUiPrefs.current
     val classic = ui.themeStyle == ThemeStyle.AURORA
+    val windowLayout = com.aurora.music.ui.layout.LocalWindowLayout.current
+    val tablet = windowLayout.useNavigationRail && paneContent != null
     var showLyrics by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
+    var sidePaneName by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(PlayerPane.LYRICS.name) }
+    var portraitTabName by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    val sidePane = PlayerPane.valueOf(sidePaneName)
+    val portraitTab = portraitTabName?.let { PlayerPane.valueOf(it) }
+    LaunchedEffect(requestedPane) {
+        when {
+            requestedPane == null -> return@LaunchedEffect
+            tablet -> { sidePaneName = requestedPane.name; portraitTabName = requestedPane.name }
+            requestedPane == PlayerPane.LYRICS -> { showVideo = false; showLyrics = true }
+            else -> onOpenQueue()
+        }
+        onPaneRequestHandled()
+    }
     var requestedVideo by remember(song.id) { mutableStateOf(false) }
     var fullscreenVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
     var inlineVideoControlsVisible by remember(song.id) { mutableStateOf(false) }
@@ -256,12 +282,8 @@ fun PlayerScreen(
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     val showVideoModeControl = (state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast()) || state.hasVideo
-                    Icon(
-                        Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
-                        modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
-                    )
-                    if (showVideoModeControl) {
-                        Spacer(Modifier.width(20.dp))
+                    val headerTint = LocalContentColor.current
+                    val videoToggle: @Composable () -> Unit = {
                         IconButton(
                             onClick = {
                                 if (showVideo) {
@@ -283,10 +305,20 @@ fun PlayerScreen(
                             },
                         ) {
                             if (state.videoLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp),
-                                color = Color.White, strokeWidth = 2.dp)
+                                color = headerTint, strokeWidth = 2.dp)
                             else Icon(if (showVideo) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
-                                contentDescription = null, tint = Color.White, modifier = Modifier.size(22.dp))
+                                contentDescription = null, tint = headerTint, modifier = Modifier.size(22.dp))
                         }
+                    }
+                    Icon(
+                        Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
+                        modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
+                    )
+                    if (tablet) {
+                        Spacer(Modifier.width(if (showVideoModeControl) 120.dp else 80.dp))
+                    } else if (showVideoModeControl) {
+                        Spacer(Modifier.width(20.dp))
+                        videoToggle()
                         Spacer(Modifier.width(20.dp))
                     } else {
                         Spacer(Modifier.width(80.dp))
@@ -296,6 +328,7 @@ fun PlayerScreen(
                         Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                         Text(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
                     }
+                    if (tablet && showVideoModeControl) videoToggle()
                     // cast route picker tvs/chromecast show here not in the local-output sheet
                     PlayerCastButton(Modifier.size(40.dp))
                     Icon(
@@ -343,7 +376,10 @@ fun PlayerScreen(
                             )
                             DropdownMenuItem(
                                 text = { Text(appString(R.string.text_view_queue_827a90)) },
-                                onClick = { showMenu = false; onOpenQueue() },
+                                onClick = {
+                                    showMenu = false
+                                    if (tablet) { sidePaneName = PlayerPane.QUEUE.name; portraitTabName = PlayerPane.QUEUE.name } else onOpenQueue()
+                                },
                                 leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
                             )
                         }
@@ -572,7 +608,7 @@ fun PlayerScreen(
             if (ui.playerShowUtilities) {
                 Row(
                     Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.SpaceBetween,
+                    horizontalArrangement = if (tablet) Arrangement.spacedBy(8.dp) else Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     BottomUtil(
@@ -580,13 +616,18 @@ fun PlayerScreen(
                         active = kotlin.math.abs(state.speed - 1f) > 0.001f ||
                             (!state.matchPitch && kotlin.math.abs(state.pitch) > 0.001f),
                     )
-                    BottomUtil(
-                        Icons.Filled.Lyrics,
-                        appString(R.string.text_lyrics_8670cb),
-                        { showLyrics = !showLyrics },
-                        active = showLyrics,
-                    )
-                    BottomUtil(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), onOpenQueue)
+                    if (tablet) {
+                        BottomUtil(Icons.Filled.Bedtime, appString(R.string.text_sleep_timer_e90613), onOpenSleep,
+                            active = state.sleepTimerMinutes > 0 || state.sleepEndOfTrack)
+                    } else {
+                        BottomUtil(
+                            Icons.Filled.Lyrics,
+                            appString(R.string.text_lyrics_8670cb),
+                            { showLyrics = !showLyrics },
+                            active = showLyrics,
+                        )
+                        BottomUtil(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), onOpenQueue)
+                    }
                 }
             } else {
                 Spacer(Modifier.height(12.dp))
@@ -610,6 +651,90 @@ fun PlayerScreen(
                 onSeek = onSeek,
             )
             androidx.activity.compose.BackHandler(enabled = fullscreenActive) { fullscreenVideo = false }
+        } else if (tablet && paneContent != null) {
+            val paneCard: @Composable (PlayerPane, Modifier) -> Unit = { selected, modifier ->
+                AnimatedContent(
+                    targetState = selected,
+                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+                    label = "playerPane",
+                    modifier = modifier,
+                ) { target -> Box(Modifier.fillMaxSize()) { paneContent(target, Modifier.fillMaxSize()) } }
+            }
+            val paneSurface = if (classic) Modifier.clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
+                else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge)
+            val paneHeaderActions: @Composable (PlayerPane) -> Unit = { pane ->
+                if (pane == PlayerPane.LYRICS) {
+                    IconButton(onClick = { showVideo = false; showLyrics = true }) {
+                        Icon(Icons.Filled.OpenInFull, appString(R.string.tablet_fullscreen_lyrics),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                    }
+                } else paneActions?.invoke(pane)
+            }
+            val spacing = ui.tabletPanelSpacing.dp.coerceAtLeast(4.dp)
+            if (landscape) {
+                var split by remember(ui.tabletPlayerSplit) { mutableFloatStateOf(ui.tabletPlayerSplit) }
+                val splitRange = com.aurora.music.data.TabletSetting.PLAYER_SPLIT.range
+                Column(
+                    Modifier.align(Alignment.TopCenter).widthIn(max = 1440.dp).fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility).padding(horizontal = 32.dp),
+                ) {
+                    header()
+                    BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(bottom = 24.dp)) {
+                        val totalPx = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidth.toPx() }
+                        Row(Modifier.fillMaxSize()) {
+                            BoxWithConstraints(Modifier.weight(split).fillMaxHeight()) {
+                                val artSide = (maxHeight - 340.dp).coerceIn(160.dp, 460.dp).coerceAtMost(maxWidth)
+                                Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
+                                    artwork(Modifier.fillMaxWidth().height(artSide))
+                                    Spacer(Modifier.height(20.dp))
+                                    Column(Modifier.widthIn(max = 520.dp).fillMaxWidth()) { controls() }
+                                }
+                            }
+                            PaneDivider(
+                                onDrag = { dx -> if (totalPx > 0f) split = (split + dx / totalPx).coerceIn(splitRange) },
+                                onDragEnd = { onSplitChange(split) },
+                            )
+                            Column(Modifier.weight(1f - split).fillMaxHeight().then(paneSurface).padding(spacing)) {
+                                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                    PaneSwitcher(sidePane, { sidePaneName = it.name })
+                                    Spacer(Modifier.weight(1f))
+                                    paneHeaderActions(sidePane)
+                                }
+                                Spacer(Modifier.height(spacing))
+                                paneCard(sidePane, Modifier.weight(1f).fillMaxWidth())
+                            }
+                        }
+                    }
+                }
+            } else {
+                Column(
+                    Modifier.align(Alignment.TopCenter).widthIn(max = 720.dp).fillMaxSize()
+                        .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility).padding(horizontal = 32.dp),
+                ) {
+                    header()
+                    Box(Modifier.fillMaxWidth()) {
+                        PlayerTabs(portraitTab, { portraitTabName = it?.name }, Modifier.align(Alignment.Center))
+                        if (portraitTab != null) Row(Modifier.align(Alignment.CenterEnd), verticalAlignment = Alignment.CenterVertically) {
+                            paneHeaderActions(portraitTab)
+                        }
+                    }
+                    Spacer(Modifier.height(16.dp))
+                    if (portraitTab == null) {
+                        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                            artwork(Modifier.sizeIn(maxWidth = 600.dp, maxHeight = 600.dp).fillMaxSize())
+                        }
+                        Spacer(Modifier.height(16.dp))
+                        controls()
+                    } else {
+                        paneCard(portraitTab, Modifier.weight(1f).fillMaxWidth().then(paneSurface).padding(spacing))
+                        Spacer(Modifier.height(16.dp))
+                        CompactTransport(state, playerAccent, onPlayerAccent, onPrevious, onTogglePlay, onNext, onSeek,
+                            ui.playerSeekStyle, ui.playerWaveBars)
+                        Spacer(Modifier.height(20.dp))
+                    }
+                }
+            }
+            LyricsOverlay(showLyrics, landscape, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
         } else {
             Column(
                 Modifier.align(Alignment.TopCenter).widthIn(max = if (landscape) 1280.dp else 640.dp)
@@ -629,19 +754,110 @@ fun PlayerScreen(
                     controls()
                 }
             }
-            androidx.compose.animation.AnimatedVisibility(
-                visible = showLyrics,
-                enter = fadeIn(tween(320)) + androidx.compose.animation.slideInVertically(tween(420)) { it / 10 },
-                exit = fadeOut(tween(220)) + androidx.compose.animation.slideOutVertically(tween(280)) { it / 12 },
-            ) {
-                DragToDismiss(onDismiss = { showLyrics = false }) {
-                    LyricsScreen(state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
-                }
-            }
-            androidx.activity.compose.BackHandler(enabled = showLyrics) { showLyrics = false }
+            LyricsOverlay(showLyrics, false, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
         }
     }
     }
+    }
+}
+
+@Composable
+private fun LyricsOverlay(
+    visible: Boolean,
+    wide: Boolean,
+    state: PlayerUiState,
+    onClose: () -> Unit,
+    onTogglePlay: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeek: (Float) -> Unit,
+) {
+    androidx.compose.animation.AnimatedVisibility(
+        visible = visible,
+        enter = if (wide) fadeIn(tween(320)) + androidx.compose.animation.scaleIn(tween(380), initialScale = .96f)
+            else fadeIn(tween(320)) + androidx.compose.animation.slideInVertically(tween(420)) { it / 10 },
+        exit = if (wide) fadeOut(tween(240)) + androidx.compose.animation.scaleOut(tween(260), targetScale = .97f)
+            else fadeOut(tween(220)) + androidx.compose.animation.slideOutVertically(tween(280)) { it / 12 },
+    ) {
+        DragToDismiss(onDismiss = onClose, enabled = !wide) {
+            LyricsScreen(state, onClose = onClose, onTogglePlay, onPrevious, onNext, onSeek)
+        }
+    }
+    androidx.activity.compose.BackHandler(enabled = visible) { onClose() }
+}
+
+@Composable
+private fun PaneDivider(onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
+    var dragging by remember { mutableStateOf(false) }
+    val alpha by androidx.compose.animation.core.animateFloatAsState(if (dragging) 0.5f else 0.16f, tween(160), label = "dividerAlpha")
+    val length by androidx.compose.animation.core.animateDpAsState(if (dragging) 64.dp else 36.dp, tween(160), label = "dividerLength")
+    val description = appString(R.string.tablet_resize_panels)
+    Box(
+        Modifier.width(24.dp).fillMaxHeight()
+            .pointerHoverIcon(androidx.compose.ui.input.pointer.PointerIcon(android.view.PointerIcon.TYPE_HORIZONTAL_DOUBLE_ARROW))
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures(
+                    onDragStart = { dragging = true },
+                    onDragEnd = { dragging = false; onDragEnd() },
+                    onDragCancel = { dragging = false; onDragEnd() },
+                ) { change, amount -> change.consume(); onDrag(amount) }
+            }
+            .semantics { contentDescription = description },
+        contentAlignment = Alignment.Center,
+    ) {
+        Box(Modifier.width(3.dp).height(length).clip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)))
+    }
+}
+
+@Composable
+private fun CompactTransport(
+    state: PlayerUiState,
+    accent: Color,
+    onAccent: Color,
+    onPrevious: () -> Unit,
+    onTogglePlay: () -> Unit,
+    onNext: () -> Unit,
+    onSeek: (Float) -> Unit,
+    seekStyle: Int = SeekStyle.BAR,
+    waveBars: Int = 0,
+) {
+    val song = state.current
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Artwork(song.artworkUrl, song.accent, Modifier.size(56.dp), corner = 12.dp)
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(song.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                    color = MaterialTheme.colorScheme.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(song.artist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            if (!state.isMix) IconButton(onClick = onPrevious) {
+                Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = MaterialTheme.colorScheme.onSurface)
+            }
+            FilledIconButton(
+                onClick = onTogglePlay,
+                modifier = Modifier.size(56.dp),
+                colors = IconButtonDefaults.filledIconButtonColors(containerColor = accent, contentColor = onAccent),
+            ) {
+                Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
+                    appString(R.string.text_play_pause_14a1d0), modifier = Modifier.size(30.dp))
+            }
+            if (!state.isMix) IconButton(onClick = onNext) {
+                Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = MaterialTheme.colorScheme.onSurface)
+            }
+        }
+        SeekBar(
+            progress = state.progress,
+            positionSec = state.positionSec.toInt(),
+            durationSec = state.durationSec,
+            isLive = state.isLive,
+            accent = accent,
+            seed = song.id.hashCode(),
+            seekStyle = seekStyle,
+            waveBars = waveBars,
+            onSeek = onSeek,
+        )
     }
 }
 

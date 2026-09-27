@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Открыть экран воспроизведения</string>
+    <string name="tablet_now_playing">Сейчас играет</string>
+    <string name="tablet_seek">Перемотка</string>
+    <string name="tablet_close_panel">Закрыть панель</string>
+    <string name="tablet_player_panes">Панели воспроизведения</string>
+    <string name="tablet_fullscreen_lyrics">Текст на весь экран</string>
+    <string name="tablet_resize_panels">Изменить размер панелей</string>
+
+    <string name="tablet_layout_title">Макет для планшета</string>
+    <string name="tablet_layout_detected">Показано, потому что у устройства большой экран. Каждая настройка действует в книжной и альбомной ориентации.</string>
+    <string name="tablet_dock_size">Размер панели плеера</string>
+    <string name="tablet_panel_controls">Переключатели панелей</string>
+    <string name="tablet_panel_spacing">Отступы панелей</string>
+    <string name="tablet_nav_gap">Отступ от навигации</string>
+    <string name="tablet_page_margins">Поля страниц</string>
+    <string name="tablet_hero_size">Размер главной карточки</string>
+    <string name="tablet_favourites_size">Размер карточки избранного</string>
+    <string name="tablet_player_split">Разделение экрана воспроизведения</string>
+    <string name="tablet_player_split_hint">Разделитель также можно перетащить на экране воспроизведения.</string>
+    <string name="tablet_reset">Сбросить макет для планшета</string>
+
+    <string name="nav_menu_title">Меню навигации</string>
+    <string name="nav_menu_summary">Выберите, что показывать в основном списке и в разделе «Ещё»</string>
+    <string name="nav_section_main">Основное</string>
+    <string name="nav_section_more">Ещё</string>
+    <string name="nav_section_hidden">Не показано</string>
+    <string name="nav_menu_hint">Меняйте порядок стрелками. Откройте меню пункта, чтобы перенести его между разделами или убрать.</string>
+    <string name="nav_move_up">Выше</string>
+    <string name="nav_move_down">Ниже</string>
+    <string name="nav_move_to_main">Перенести в основное</string>
+    <string name="nav_move_to_more">Перенести в «Ещё»</string>
+    <string name="nav_add_to_main">Добавить в основное</string>
+    <string name="nav_add_to_more">Добавить в «Ещё»</string>
+    <string name="nav_remove">Убрать из меню</string>
+    <string name="nav_locked">Всегда в основном</string>
+    <string name="nav_simple_mode_hidden">Скрыто в простом режиме</string>
+    <string name="nav_empty_section">Здесь пока пусто</string>
+    <string name="nav_reset">Сбросить меню навигации</string>
+    <string name="nav_placement_options">Параметры размещения</string>
+
+    <string name="home_empty_title">Музыки пока нет</string>
+    <string name="home_empty_body">Подключите музыкальный сервер или аккаунт стримингового сервиса либо добавьте музыку на это устройство.</string>
+    <string name="home_add_source">Добавить источник</string>
+</resources>

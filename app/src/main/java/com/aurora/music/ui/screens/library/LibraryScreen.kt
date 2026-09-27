@@ -100,6 +100,12 @@ import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.LibraryUiState
 import kotlinx.coroutines.launch
 
+internal val LocalLibrarySelection = androidx.compose.runtime.compositionLocalOf<String?> { null }
+
+@Composable
+private fun selectionTint(key: String): Color =
+    if (key.isNotEmpty() && LocalLibrarySelection.current == key) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else Color.Transparent
+
 private data class LibRow(
     val title: String,
     val subtitle: String,
@@ -170,7 +176,9 @@ fun LibraryScreen(
     // songs-tab playback covers the whole library, not just the scrolled-in rows
     onPlayAllSongs: (shuffle: Boolean) -> Unit = {},
     onPlaySong: (Song) -> Unit = {},
+    selectedItem: String? = null,
 ) {
+    androidx.compose.runtime.CompositionLocalProvider(LocalLibrarySelection provides selectedItem) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var showCreate by remember { mutableStateOf(false) }
     val filter = state.filter
@@ -324,6 +332,7 @@ fun LibraryScreen(
             }
         }
     }
+    }
 }
 
 private fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
@@ -405,7 +414,7 @@ private fun AllOverview(
                         ShelfCard(
                             title = p.title, subtitle = p.kind.replaceFirstChar { it.uppercase() }, art = p.coverUrl,
                             accent = accentFor(p.id), circle = p.kind == "artist", badge = "",
-                            width = 112.dp,
+                            width = 112.dp, selectionKey = "${p.kind}:${p.id}",
                         ) { onOpenDetail(p.kind, p.id) }
                     }
                 }
@@ -425,7 +434,7 @@ private fun AllOverview(
                     }
                     items(state.playlists.size) { i ->
                         val p = state.playlists[i]
-                        ShelfCard(p.title, appPlural(R.plurals.track_count, (p.songCount)), p.coverUrl, p.accent) { onOpenDetail("playlist", p.id) }
+                        ShelfCard(p.title, appPlural(R.plurals.track_count, (p.songCount)), p.coverUrl, p.accent, selectionKey = "playlist:${p.id}") { onOpenDetail("playlist", p.id) }
                     }
                 }
             }
@@ -438,7 +447,7 @@ private fun AllOverview(
                     items(state.albums.size) { i ->
                         val a = state.albums[i]
                         val label = a.typeLabel.localizedMediaType()
-                        ShelfCard(a.title, a.artist, a.artworkUrl, accentFor(a.id), badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase()) {
+                        ShelfCard(a.title, a.artist, a.artworkUrl, accentFor(a.id), badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(), selectionKey = "album:${a.id}") {
                             onOpenDetail("album", a.id)
                         }
                     }
@@ -452,7 +461,7 @@ private fun AllOverview(
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     items(state.artists.size) { i ->
                         val ar = state.artists[i]
-                        ShelfCard(ar.name, "", ar.imageUrl, accentFor(ar.id), circle = true, width = 96.dp, centered = true) {
+                        ShelfCard(ar.name, "", ar.imageUrl, accentFor(ar.id), circle = true, width = 96.dp, centered = true, selectionKey = "artist:${ar.id}") {
                             onOpenDetail("artist", ar.id)
                         }
                     }
@@ -536,10 +545,11 @@ private fun ShelfCard(
     badge: String = "",
     width: androidx.compose.ui.unit.Dp = 132.dp,
     centered: Boolean = false,
+    selectionKey: String = "",
     onClick: () -> Unit,
 ) {
     Column(
-        Modifier.width(width).clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(4.dp),
+        Modifier.width(width).clip(RoundedCornerShape(14.dp)).background(selectionTint(selectionKey)).clickable(onClick = onClick).padding(4.dp),
         horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
     ) {
         Box {
@@ -895,6 +905,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
             .padding(horizontal = 8.dp, vertical = 4.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
+            .background(selectionTint("${row.kind}:${row.id}"))
             .clickable(onClick = onClick)
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -935,7 +946,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 
 @Composable
 private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
-    Column(Modifier.clip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(6.dp)) {
+    Column(Modifier.clip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).clickable(onClick = onClick).padding(6.dp)) {
         Box {
             Artwork(row.art, row.accent, Modifier.fillMaxWidth().aspectRatio(1f), corner = if (row.circle) 200.dp else 12.dp)
             if (row.badge.isNotBlank()) {

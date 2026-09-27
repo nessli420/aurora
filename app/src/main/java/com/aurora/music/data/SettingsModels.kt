@@ -233,7 +233,27 @@ data class UiPrefs(
     val miniProgress: Int = MiniProgress.LINE,
     val libraryColumns: Int = 2,
     val hiddenHomeSections: Set<String> = emptySet(),
+    val tabletDockScale: Float = TabletSetting.DOCK.default,
+    val tabletPanelScale: Float = TabletSetting.PANEL.default,
+    val tabletPanelSpacing: Float = TabletSetting.PANEL_SPACING.default,
+    val tabletNavGap: Float = TabletSetting.NAV_GAP.default,
+    val tabletPageMargin: Float = TabletSetting.PAGE_MARGIN.default,
+    val tabletHeroScale: Float = TabletSetting.HERO.default,
+    val tabletFavouriteScale: Float = TabletSetting.FAVOURITE.default,
+    val tabletPlayerSplit: Float = TabletSetting.PLAYER_SPLIT.default,
+    val navLayout: String = "",
 )
+
+enum class TabletSetting(val default: Float, val range: ClosedFloatingPointRange<Float>) {
+    DOCK(0.85f, 0.7f..1.15f),
+    PANEL(0.8f, 0.7f..1.1f),
+    PANEL_SPACING(6f, 0f..20f),
+    NAV_GAP(16f, 0f..40f),
+    PAGE_MARGIN(24f, 0f..120f),
+    HERO(0.85f, 0.6f..1.1f),
+    FAVOURITE(0.8f, 0.6f..1f),
+    PLAYER_SPLIT(0.5f, 0.35f..0.65f),
+}
 
 data class LastfmAccount(
     val sessionKey: String = "",

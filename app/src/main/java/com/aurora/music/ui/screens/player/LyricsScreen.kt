@@ -107,11 +107,12 @@ internal fun LyricsScreen(
             if (navigationVisible) bars?.show(WindowInsetsCompat.Type.navigationBars()) else bars?.hide(WindowInsetsCompat.Type.navigationBars())
         }
     }
-    LaunchedEffect(controlsVisible) {
+    val wide = com.aurora.music.ui.layout.LocalWindowLayout.current.useLandscapePlayer
+    LaunchedEffect(controlsVisible, wide) {
         bars?.isAppearanceLightStatusBars = false
         bars?.isAppearanceLightNavigationBars = false
         bars?.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        if (controlsVisible) bars?.show(WindowInsetsCompat.Type.systemBars())
+        if (controlsVisible && !wide) bars?.show(WindowInsetsCompat.Type.systemBars())
         else bars?.hide(WindowInsetsCompat.Type.systemBars())
     }
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
@@ -122,6 +123,10 @@ internal fun LyricsScreen(
         interactionVersion++
         lyrics = if (song.id.isBlank()) null else container.lyricsRepository.lyricsFor(song)
         loading = false
+    }
+    if (wide) {
+        WideLyrics(state, lyrics, loading, onClose, onTogglePlay, onPrevious, onNext, onSeek)
+        return
     }
     LaunchedEffect(interactionVersion, pointerHeld, scrolling, seeking, loading, lyrics, touchExploration) {
         if (touchExploration) controlsVisible = true
@@ -201,6 +206,129 @@ internal fun LyricsScreen(
     }
 }
 
+@Composable
+private fun WideLyrics(
+    state: PlayerUiState,
+    lyrics: Lyrics?,
+    loading: Boolean,
+    onClose: () -> Unit,
+    onTogglePlay: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeek: (Float) -> Unit,
+) {
+    val song = state.current
+    val ui = com.aurora.music.ui.theme.LocalUiPrefs.current
+    Box(Modifier.fillMaxSize().background(Color(0xFF17191D)).clickable(
+        interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
+    ) {}) {
+        LyricsBackdrop(song)
+        Row(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.displayCutout).padding(horizontal = 56.dp, vertical = 32.dp)) {
+            BoxWithConstraints(Modifier.weight(0.42f).fillMaxHeight(), contentAlignment = Alignment.Center) {
+                val art = minOf(maxWidth, maxHeight * .5f, 420.dp)
+                Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.widthIn(max = 460.dp)) {
+                    Artwork(song.artworkUrl, song.accent, Modifier.size(art), corner = 16.dp)
+                    Spacer(Modifier.height(24.dp))
+                    Text(song.title, color = Color.White, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(song.artist, color = Color.White.copy(alpha = .65f), style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Spacer(Modifier.height(20.dp))
+                    if (state.durationSec > 0) {
+                        com.aurora.music.ui.components.Waveform(
+                            progress = state.progress, accent = Color.White, onSeek = onSeek,
+                            modifier = Modifier.fillMaxWidth(), seed = song.id.hashCode(),
+                            barCount = ui.playerWaveBars.coerceIn(24, 96), height = 40.dp,
+                        )
+                        Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(formatTime(state.positionSec.toInt()), color = Color.White.copy(alpha = .65f), style = MaterialTheme.typography.labelSmall)
+                            Text(formatTime(state.durationSec), color = Color.White.copy(alpha = .65f), style = MaterialTheme.typography.labelSmall)
+                        }
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onPrevious, Modifier.size(52.dp)) {
+                            Icon(Icons.Default.SkipPrevious, appString(R.string.text_previous_50f942), Modifier.size(28.dp), tint = Color.White)
+                        }
+                        Spacer(Modifier.width(20.dp))
+                        IconButton(onTogglePlay, Modifier.size(60.dp).background(Color.White.copy(alpha = .16f), CircleShape)) {
+                            Icon(if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
+                                appString(R.string.text_play_pause_14a1d0), Modifier.size(32.dp), tint = Color.White)
+                        }
+                        Spacer(Modifier.width(20.dp))
+                        IconButton(onNext, Modifier.size(52.dp)) {
+                            Icon(Icons.Default.SkipNext, appString(R.string.text_next_bc9819), Modifier.size(28.dp), tint = Color.White)
+                        }
+                    }
+                }
+            }
+            Spacer(Modifier.width(48.dp))
+            Box(Modifier.weight(0.58f).fillMaxHeight()) {
+                when {
+                    loading -> CircularProgressIndicator(Modifier.align(Alignment.Center).size(28.dp),
+                        color = Color.White.copy(alpha = .8f), strokeWidth = 2.dp)
+                    lyrics == null || lyrics.lines.isEmpty() -> Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Icon(Icons.Default.Lyrics, null, Modifier.size(40.dp), tint = Color.White.copy(alpha = .55f))
+                        Spacer(Modifier.height(16.dp))
+                        Text(appString(R.string.text_no_lyrics_found_75127a), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
+                    }
+                    else -> key(song.id, song.playbackSource?.providerId) {
+                        ImmersiveLyrics(lyrics, state.positionSec, state.durationSec, onSeek = onSeek, onScrolling = {}, onBackgroundTap = {})
+                    }
+                }
+            }
+        }
+        IconButton(onClose, Modifier.align(Alignment.TopStart).padding(12.dp)) {
+            Icon(Icons.Default.CloseFullscreen, appString(R.string.text_collapse_9cf188), tint = Color.White.copy(alpha = .8f))
+        }
+        if (!lyrics?.source.isNullOrBlank()) Text(lyrics?.source.orEmpty(), color = Color.White.copy(alpha = .4f),
+            style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp))
+    }
+}
+
+@Composable
+internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier: Modifier = Modifier, compact: Boolean = true) {
+    val song = state.current
+    val container = (LocalContext.current.applicationContext as AuroraApplication).container
+    var lyrics by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Lyrics?>(null) }
+    var loading by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(true) }
+    LaunchedEffect(song.id, song.playbackSource?.providerId) {
+        lyrics = if (song.id.isBlank()) null else container.lyricsRepository.lyricsFor(song)
+        loading = false
+    }
+    Box(modifier) {
+        LyricsBackdrop(song)
+        val content = lyrics
+        when {
+            loading -> CircularProgressIndicator(Modifier.align(Alignment.Center).size(28.dp),
+                color = Color.White.copy(alpha = .8f), strokeWidth = 2.dp)
+            content == null || content.lines.isEmpty() -> Column(
+                Modifier.align(Alignment.Center).padding(32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+            ) {
+                Icon(Icons.Default.Lyrics, null, Modifier.size(36.dp), tint = Color.White.copy(alpha = .55f))
+                Spacer(Modifier.height(12.dp))
+                Text(appString(R.string.text_no_lyrics_found_75127a), color = Color.White,
+                    style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                if (song.title.isNotBlank()) Text(song.title, color = Color.White.copy(alpha = .65f),
+                    style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 4.dp))
+            }
+            else -> Column(Modifier.fillMaxSize()) {
+                Box(Modifier.weight(1f).fillMaxWidth()) {
+                    key(song.id, song.playbackSource?.providerId) {
+                        ImmersiveLyrics(content, state.positionSec, state.durationSec, onSeek = onSeek,
+                            onScrolling = {}, onBackgroundTap = {}, compact = compact)
+                    }
+                }
+                if (!content.source.isNullOrBlank()) Text(content.source, color = Color.White.copy(alpha = .45f),
+                    style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp))
+            }
+        }
+    }
+}
+
 private fun Modifier.lyricsChrome(visible: Boolean, alpha: Float) =
     graphicsLayer { this.alpha = alpha }.then(if (visible) Modifier else Modifier.clearAndSetSemantics {})
 
@@ -256,7 +384,7 @@ private fun LyricsBackdrop(song: Song) {
 
 @Composable
 private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int, onSeek: (Float) -> Unit,
-    onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit) {
+    onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit, compact: Boolean = false) {
     val lines = lyrics.lines
     val current = if (lyrics.synced) lines.indexOfLast { it.timeSec >= 0 && it.timeSec <= positionSec } else -1
     val list = rememberLazyListState()
@@ -289,10 +417,10 @@ private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int
             else list.animateScrollToItem(target)
         }
         LazyColumn(state = list,
-            modifier = Modifier.fillMaxSize().lyricsEdgeFade().padding(horizontal = 28.dp),
+            modifier = Modifier.fillMaxSize().lyricsEdgeFade().padding(horizontal = if (compact) 24.dp else 28.dp),
             contentPadding = PaddingValues(top = if (lyrics.synced) focus else 32.dp,
                 bottom = if (lyrics.synced) maxHeight * .7f else 48.dp),
-            verticalArrangement = Arrangement.spacedBy(22.dp),
+            verticalArrangement = Arrangement.spacedBy(if (compact) 14.dp else 22.dp),
         ) {
             items(lines.size) { index ->
                 var textLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -319,7 +447,8 @@ private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int
                     tween(450), label = "lineSoftness")
                 Text(lines[index].text.ifBlank { "•••" },
                     onTextLayout = { textLayout = it },
-                    color = Color.White.copy(alpha = alpha), fontSize = 30.sp, lineHeight = 38.sp,
+                    color = Color.White.copy(alpha = alpha), fontSize = if (compact) 22.sp else 30.sp,
+                    lineHeight = if (compact) 29.sp else 38.sp,
                     fontWeight = FontWeight.Bold, letterSpacing = (-.5).sp,
                     modifier = Modifier.fillMaxWidth().graphicsLayer {
                         scaleX = scale; scaleY = scale; transformOrigin = TransformOrigin(0f, .5f)

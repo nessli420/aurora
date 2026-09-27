@@ -120,7 +120,10 @@ fun SettingsScreen(
     }
 
     Column(Modifier.fillMaxWidth()) {
-        SettingsTopBar(appString(R.string.text_settings_c7f73b), onBack)
+        SettingsTopBar(
+            appString(R.string.text_settings_c7f73b), onBack,
+            showBack = !com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail,
+        )
         LazyColumn(
             Modifier.fillMaxWidth(),
             state = listState,

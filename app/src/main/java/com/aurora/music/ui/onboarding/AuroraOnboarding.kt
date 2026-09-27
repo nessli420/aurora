@@ -4,6 +4,7 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -230,9 +231,10 @@ private fun TaskPrompt(task: SetupTask?, onLeave: (Boolean?) -> Unit) {
 @Composable
 private fun SetupPage(kicker: String, title: String, detail: String,
     footer: @Composable () -> Unit, content: @Composable () -> Unit) {
-    Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
-        Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)
-            .padding(horizontal = 20.dp, vertical = 14.dp)) {
+    BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.TopCenter) {
+        val wide = maxWidth >= 600.dp
+        Column(Modifier.widthIn(max = 640.dp).fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)
+            .padding(horizontal = 20.dp, vertical = if (wide) 32.dp else 14.dp)) {
             Text(kicker, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary)
             Spacer(Modifier.height(12.dp))

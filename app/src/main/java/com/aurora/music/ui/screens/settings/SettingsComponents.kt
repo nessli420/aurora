@@ -31,6 +31,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,12 +39,28 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
+import androidx.navigation.NavBackStackEntry
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
 
+val LocalSettingsPaneRoots = compositionLocalOf<Set<String>?> { null }
+
+@Composable
+private fun isSettingsPaneRoot(): Boolean {
+    val roots = LocalSettingsPaneRoots.current ?: return false
+    val entry = LocalViewModelStoreOwner.current as? NavBackStackEntry ?: return true
+    return entry.id in roots
+}
+
 @Composable
 fun SettingsTopBar(title: String, onBack: () -> Unit) {
+    SettingsTopBar(title, onBack, showBack = !isSettingsPaneRoot())
+}
+
+@Composable
+fun SettingsTopBar(title: String, onBack: () -> Unit, showBack: Boolean) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     Row(
         Modifier.fillMaxWidth()
@@ -51,8 +68,10 @@ fun SettingsTopBar(title: String, onBack: () -> Unit) {
             .padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
-        Spacer(Modifier.width(8.dp))
+        if (showBack) {
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+            Spacer(Modifier.width(8.dp))
+        } else Spacer(Modifier.width(12.dp))
         Text(title, style = MaterialTheme.typography.headlineSmall)
     }
 }
@@ -96,11 +115,13 @@ private fun RowScaffold(
     title: String,
     subtitle: String?,
     onClick: (() -> Unit)?,
+    selected: Boolean = false,
     trailing: @Composable () -> Unit,
 ) {
     Row(
         Modifier
             .fillMaxWidth()
+            .then(if (selected) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)) else Modifier)
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(horizontal = 20.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -127,8 +148,8 @@ private fun RowScaffold(
 }
 
 @Composable
-fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String? = null, value: String? = null, onClick: () -> Unit) {
-    RowScaffold(icon, title, subtitle, onClick) {
+fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String? = null, value: String? = null, selected: Boolean = false, onClick: () -> Unit) {
+    RowScaffold(icon, title, subtitle, onClick, selected) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (value != null) Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)

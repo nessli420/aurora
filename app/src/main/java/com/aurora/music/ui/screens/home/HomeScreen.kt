@@ -27,6 +27,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Add
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.PlayCircle
@@ -76,10 +78,18 @@ fun HomeScreen(
     onRetry: () -> Unit = {},
     onSelectFeed: (String) -> Unit = {},
     onOpenNotifications: () -> Unit = {},
+    onAddSource: () -> Unit = {},
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val data = state.data
-    val hidden = com.aurora.music.ui.theme.LocalUiPrefs.current.hiddenHomeSections
+    val ui = com.aurora.music.ui.theme.LocalUiPrefs.current
+    val hidden = ui.hiddenHomeSections
+    val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
+    val heroScale = if (tablet) ui.tabletHeroScale else 1f
+    val favouriteScale = if (tablet) ui.tabletFavouriteScale else 1f
+    val nothingToShow = !state.loading && state.error == null && data.continuation == null &&
+        data.sections.isEmpty() && data.newReleases.isEmpty() && data.recentlyPlayed.isEmpty() && data.playlists.isEmpty() &&
+        data.starred.isEmpty() && data.mostPlayed.isEmpty() && data.random.isEmpty() && data.artists.isEmpty()
     LazyColumn(
         Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(
@@ -133,6 +143,37 @@ fun HomeScreen(
             return@LazyColumn
         }
 
+        if (nothingToShow) {
+            item(key = "empty") {
+                Column(
+                    Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 96.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Box(
+                        Modifier.size(88.dp).clip(CircleShape)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
+                            .clickable(onClickLabel = appString(R.string.home_add_source), onClick = onAddSource),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Icon(Icons.Filled.Add, appString(R.string.home_add_source), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+                    }
+                    Spacer(Modifier.height(20.dp))
+                    Text(appString(R.string.home_empty_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.height(6.dp))
+                    Text(appString(R.string.home_empty_body), style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+                        modifier = Modifier.widthIn(max = 420.dp))
+                    Spacer(Modifier.height(20.dp))
+                    androidx.compose.material3.Button(onClick = onAddSource) {
+                        Icon(Icons.Filled.Add, null, Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(appString(R.string.home_add_source))
+                    }
+                }
+            }
+            return@LazyColumn
+        }
+
         data.sections.forEach { section ->
             item(key = "feed:${section.id}") {
                 Column {
@@ -179,16 +220,19 @@ fun HomeScreen(
                 Column {
                     HorizontalPager(
                         state = pagerState,
-                        pageSize = if (com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail)
-                            androidx.compose.foundation.pager.PageSize.Fixed(400.dp) else androidx.compose.foundation.pager.PageSize.Fill,
+                        pageSize = if (tablet) androidx.compose.foundation.pager.PageSize.Fixed(400.dp * heroScale)
+                            else androidx.compose.foundation.pager.PageSize.Fill,
                         contentPadding = PaddingValues(horizontal = 16.dp),
                         pageSpacing = 12.dp,
                         modifier = Modifier.fillMaxWidth(),
                     ) { page ->
-                        HeroCard(heroItems[page], onOpenDetail, onPlayAlbum)
+                        HeroCard(heroItems[page], onOpenDetail, onPlayAlbum, height = 210.dp * heroScale)
                     }
                     Spacer(Modifier.height(12.dp))
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
+                    Row(
+                        if (tablet) Modifier.padding(start = 16.dp).width(400.dp * heroScale) else Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                    ) {
                         repeat(heroItems.size) { i ->
                             val active = pagerState.currentPage == i
                             Box(
@@ -240,11 +284,11 @@ fun HomeScreen(
                             .clip(RoundedCornerShape(20.dp))
                             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
                             .clickable { onPlayAll(data.starred, 0) }
-                            .padding(16.dp),
+                            .padding(16.dp * favouriteScale),
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                Artwork(featured.artworkUrl, featured.accent, Modifier.size(56.dp), corner = 14.dp)
+                                Artwork(featured.artworkUrl, featured.accent, Modifier.size(56.dp * favouriteScale), corner = 14.dp)
                                 Spacer(Modifier.width(14.dp))
                                 Column(Modifier.weight(1f)) {
                                     Eyebrow(appString(R.string.text_starred_5f1f99), featured.accent)
@@ -252,13 +296,14 @@ fun HomeScreen(
                                     Text(featured.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(featured.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                                 }
-                                Box(Modifier.size(46.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
-                                    Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp))
+                                Box(Modifier.size(46.dp * favouriteScale).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                                    Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp * favouriteScale))
                                 }
                             }
-                            Spacer(Modifier.height(14.dp))
-                            Waveform(progress = 0.0f, accent = featured.accent, onSeek = {}, seed = featured.id.hashCode(), barCount = 56, height = 40.dp)
-                            Spacer(Modifier.height(8.dp))
+                            Spacer(Modifier.height(14.dp * favouriteScale))
+                            Waveform(progress = 0.0f, accent = featured.accent, onSeek = {}, seed = featured.id.hashCode(),
+                                barCount = if (tablet) 72 else 56, height = 40.dp * favouriteScale)
+                            Spacer(Modifier.height(8.dp * favouriteScale))
                             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text("0:00", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(formatTime(featured.durationSec), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -320,12 +365,12 @@ fun HomeScreen(
 }
 
 @Composable
-private fun HeroCard(album: Album, onOpenDetail: (String, String) -> Unit, onPlayAlbum: (String) -> Unit) {
+private fun HeroCard(album: Album, onOpenDetail: (String, String) -> Unit, onPlayAlbum: (String) -> Unit, height: androidx.compose.ui.unit.Dp = 210.dp) {
     val accent = accentFor(album.id)
     Box(
         Modifier
             .fillMaxWidth()
-            .height(210.dp)
+            .height(height)
             .clip(RoundedCornerShape(24.dp))
             .clickable { onOpenDetail("album", album.id) },
     ) {

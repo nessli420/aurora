@@ -11,6 +11,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -109,9 +110,13 @@ fun SearchScreen(
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val results = state.results
     val keyboard = LocalSoftwareKeyboardController.current
-    var filter by remember { mutableStateOf(SearchFilter.ALL) }
+    var filter by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(SearchFilter.ALL) }
+    var filterQuery by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(state.query) }
     // reset filter on new query so it can't strand on an empty section
-    androidx.compose.runtime.LaunchedEffect(state.query) { filter = SearchFilter.ALL }
+    androidx.compose.runtime.LaunchedEffect(state.query) {
+        if (filterQuery != state.query) { filterQuery = state.query; filter = SearchFilter.ALL }
+    }
+    val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
 
     val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
@@ -126,7 +131,8 @@ fun SearchScreen(
     }
     val commitAnd: (() -> Unit) -> Unit = { action -> onCommitSearch(); action() }
 
-    Column(Modifier.fillMaxWidth().padding(top = topInset)) {
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+    Column(Modifier.widthIn(max = if (tablet) 960.dp else androidx.compose.ui.unit.Dp.Unspecified).fillMaxWidth().padding(top = topInset)) {
         Row(
             Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -213,6 +219,7 @@ fun SearchScreen(
                 )
             }
         }
+    }
     }
 }
 

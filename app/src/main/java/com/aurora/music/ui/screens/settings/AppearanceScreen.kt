@@ -54,8 +54,10 @@ import com.aurora.music.data.MiniProgress
 import com.aurora.music.data.MiniStyle
 import com.aurora.music.data.SeekStyle
 import com.aurora.music.data.ThemeMode
+import com.aurora.music.data.TabletSetting
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
+import androidx.compose.material.icons.filled.Menu
 import com.aurora.music.ui.theme.AccentPresets
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.ThemeIdentities
@@ -70,12 +72,20 @@ import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
 @Composable
-fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
-    val container = (LocalContext.current.applicationContext as AuroraApplication).container
+fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNavigationMenu: () -> Unit = {}) {
+    val context = LocalContext.current
+    val container = (context.applicationContext as AuroraApplication).container
     val store = container.settingsStore
     val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
     val scope = rememberCoroutineScope()
     val materialYouSupported = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
+    val largeDisplay = remember(context) {
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            val bounds = context.getSystemService(android.view.WindowManager::class.java).maximumWindowMetrics.bounds
+            com.aurora.music.ui.layout.isLargeDisplay(bounds.width(), bounds.height(), context.resources.displayMetrics.density)
+        } else context.resources.configuration.smallestScreenWidthDp >= 600
+    }
+    fun tablet(setting: TabletSetting, value: Float) { scope.launch { store.setTabletSetting(setting, value) } }
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.text_appearance_41def7), onBack)
@@ -183,6 +193,65 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             item {
                 SegmentedRow(appString(R.string.text_progress_1b9027), listOf(appString(R.string.text_line_ea9676), appString(R.string.text_bar_e496fd), appString(R.string.text_none_6eef66)), prefs.miniProgress) { i ->
                     scope.launch { store.setMiniProgress(i) }
+                }
+            }
+
+            if (largeDisplay) {
+                item { SettingsSectionTitle(appString(R.string.tablet_layout_title)) }
+                item {
+                    Text(appString(R.string.tablet_layout_detected), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp))
+                }
+                item {
+                    SettingsSliderRow(appString(R.string.tablet_dock_size), "${(prefs.tabletDockScale * 100).roundToInt()}%",
+                        prefs.tabletDockScale, TabletSetting.DOCK.range) { tablet(TabletSetting.DOCK, it) }
+                }
+                item {
+                    SettingsSliderRow(appString(R.string.tablet_panel_controls), "${(prefs.tabletPanelScale * 100).roundToInt()}%",
+                        prefs.tabletPanelScale, TabletSetting.PANEL.range) { tablet(TabletSetting.PANEL, it) }
+                }
+                item {
+                    SettingsSliderRow(appString(R.string.tablet_panel_spacing), "${prefs.tabletPanelSpacing.roundToInt()} dp",
+                        prefs.tabletPanelSpacing, TabletSetting.PANEL_SPACING.range) { tablet(TabletSetting.PANEL_SPACING, it) }
+                }
+                item {
+                    SettingsSliderRow(appString(R.string.tablet_nav_gap), "${prefs.tabletNavGap.roundToInt()} dp",
+                        prefs.tabletNavGap, TabletSetting.NAV_GAP.range) { tablet(TabletSetting.NAV_GAP, it) }
+                }
+                item {
+                    SettingsSliderRow(appString(R.string.tablet_page_margins), "${prefs.tabletPageMargin.roundToInt()} dp",
+                        prefs.tabletPageMargin, TabletSetting.PAGE_MARGIN.range) { tablet(TabletSetting.PAGE_MARGIN, it) }
+                }
+                item {
+                    SettingsSliderRow(appString(R.string.tablet_hero_size), "${(prefs.tabletHeroScale * 100).roundToInt()}%",
+                        prefs.tabletHeroScale, TabletSetting.HERO.range) { tablet(TabletSetting.HERO, it) }
+                }
+                item {
+                    SettingsSliderRow(appString(R.string.tablet_favourites_size), "${(prefs.tabletFavouriteScale * 100).roundToInt()}%",
+                        prefs.tabletFavouriteScale, TabletSetting.FAVOURITE.range) { tablet(TabletSetting.FAVOURITE, it) }
+                }
+                item {
+                    val left = (prefs.tabletPlayerSplit * 100).roundToInt()
+                    SettingsSliderRow(appString(R.string.tablet_player_split), "$left / ${100 - left}",
+                        prefs.tabletPlayerSplit, TabletSetting.PLAYER_SPLIT.range) { tablet(TabletSetting.PLAYER_SPLIT, it) }
+                }
+                item {
+                    Text(appString(R.string.tablet_player_split_hint), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+                }
+                item {
+                    androidx.compose.material3.TextButton(onClick = { scope.launch { store.resetTabletSettings() } },
+                        modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
+                        Text(appString(R.string.tablet_reset))
+                    }
+                }
+            }
+
+            item { SettingsSectionTitle(appString(R.string.nav_menu_title)) }
+            item {
+                SettingsGroup {
+                    SettingsNavRow(androidx.compose.material.icons.Icons.Filled.Menu, appString(R.string.nav_menu_title),
+                        subtitle = appString(R.string.nav_menu_summary), onClick = onOpenNavigationMenu)
                 }
             }
 

@@ -77,6 +77,7 @@ import com.aurora.music.ui.components.SongRow
 import com.aurora.music.viewmodel.DetailUiState
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DetailScreen(
     contentPadding: PaddingValues,
@@ -148,12 +149,119 @@ fun DetailScreen(
         }
     }
 
+    val actionsRow: @Composable (Modifier, Boolean) -> Unit = { rowModifier, wrap ->
+            FlowRow(
+                rowModifier,
+                horizontalArrangement = if (wrap) Arrangement.spacedBy(4.dp) else Arrangement.Start,
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
+                Row(
+                    Modifier
+                        .clip(RoundedCornerShape(50))
+                        .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.78f))))
+                        .clickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
+                        .padding(horizontal = 28.dp, vertical = 13.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = onAccent, modifier = Modifier.size(20.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = onAccent)
+                }
+                Spacer(Modifier.width(10.dp))
+                Icon(
+                    Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b),
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(48.dp).clip(CircleShape).clickable(enabled = tracks.isNotEmpty()) { onShufflePlay(tracks) }.padding(12.dp),
+                )
+                androidx.compose.material3.TextButton(onClick = onMix, enabled = tracks.isNotEmpty()) {
+                    Icon(Icons.Filled.GraphicEq, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(4.dp)); Text(appString(R.string.text_mix_fd7391))
+                }
+                if (!wrap) Spacer(Modifier.weight(1f))
+                if (itemKind == "album" || itemKind == "playlist" || itemKind == "artist") {
+                    Icon(
+                        if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
+                        if (isItemLiked) appString(R.string.text_unlike_e4fc40) else appString(R.string.text_like_c7e02c),
+                        tint = if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(48.dp).clip(CircleShape).clickable { onToggleItemLike() }.padding(12.dp),
+                    )
+                }
+                if (canDownload) {
+                    val allDownloaded = tracks.isNotEmpty() && tracks.all { downloadedIds.contains(it.id) }
+                    Icon(
+                        if (allDownloaded) Icons.Filled.DownloadDone else Icons.Filled.Download,
+                        if (allDownloaded) appString(R.string.text_remove_downloads_cbe8be) else appString(R.string.text_download_a479c9),
+                        tint = if (allDownloaded) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(48.dp).clip(CircleShape).clickable {
+                            if (allDownloaded) onRemoveDownloads() else onDownloadAll()
+                        }.padding(12.dp),
+                    )
+                }
+            }
+    }
+    val menuButton: @Composable (Color) -> Unit = { tint ->
+                    Box {
+                        Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = tint, modifier = Modifier.size(48.dp).clip(CircleShape).clickable { headerMenu = true }.padding(12.dp))
+                        val isPlaylist = info.typeLabel.equals("Playlist", true)
+                        DropdownMenu(expanded = headerMenu, onDismissRequest = { headerMenu = false }) {
+                            DropdownMenuItem(text = { Text(appString(R.string.text_play_5d12bd)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onPlayAll(tracks, 0) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
+                            DropdownMenuItem(text = { Text(appString(R.string.text_shuffle_5b772b)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onShufflePlay(tracks) }, leadingIcon = { Icon(Icons.Filled.Shuffle, null) })
+                            DropdownMenuItem(text = { Text(appString(R.string.text_add_all_to_queue_6cb104)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; tracks.forEach { onAddToQueue(it) } }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) })
+                            DropdownMenuItem(
+                                text = { Text(if (isPinned) appString(R.string.text_unpin_from_library_5b3f2e) else appString(R.string.text_pin_to_library_7b01e2)) },
+                                onClick = { headerMenu = false; onTogglePin() },
+                                leadingIcon = { Icon(if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin, null) },
+                            )
+                            if (isPlaylist) {
+                                DropdownMenuItem(text = { Text(appString(R.string.text_edit_playlist_1528d5)) }, onClick = { headerMenu = false; showEdit = true }, leadingIcon = { Icon(Icons.Filled.Edit, null) })
+                                DropdownMenuItem(text = { Text(appString(R.string.text_delete_playlist_b55b18)) }, onClick = { headerMenu = false; onDeletePlaylist() }, leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) })
+                            }
+                        }
+                    }
+    }
+    val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
+
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val compactHeader = tablet && maxWidth >= 480.dp
+    val headerArt = if (maxWidth >= 800.dp) 220.dp else 176.dp
+    val gutter = if (tablet) 24.dp else 20.dp
     LazyColumn(
         Modifier.fillMaxWidth(),
         state = listState,
         contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
     ) {
-        item {
+        if (compactHeader) item {
+            Column(
+                Modifier.fillMaxWidth()
+                    .background(Brush.verticalGradient(listOf(accent.copy(alpha = .22f), MaterialTheme.colorScheme.background)))
+                    .padding(top = topInset + 4.dp, bottom = 8.dp),
+            ) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = MaterialTheme.colorScheme.onSurface,
+                        modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onBack).padding(12.dp))
+                    Spacer(Modifier.weight(1f))
+                    menuButton(MaterialTheme.colorScheme.onSurface)
+                }
+                Row(Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = 8.dp), verticalAlignment = Alignment.Bottom) {
+                    val art = headerArt
+                    Artwork(effectiveArt, info.accent, Modifier.size(art), corner = if (info.isArtist) art / 2 else 20.dp)
+                    Spacer(Modifier.width(24.dp))
+                    Column(Modifier.weight(1f)) {
+                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accent)
+                        Spacer(Modifier.height(6.dp))
+                        Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurface, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Spacer(Modifier.height(4.dp))
+                        Text(info.subtitle, style = MaterialTheme.typography.bodyLarge, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        Spacer(Modifier.height(16.dp))
+                        actionsRow(Modifier.fillMaxWidth(), true)
+                    }
+                }
+            }
+        }
+        if (!compactHeader) item {
             BoxWithConstraints(Modifier.fillMaxWidth()) {
                 val wideHeader = maxWidth >= 700.dp
                 val headerForeground = if (wideHeader) MaterialTheme.colorScheme.onSurface else Color.White
@@ -190,24 +298,7 @@ fun DetailScreen(
                 ) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = headerForeground, modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
                     Spacer(Modifier.weight(1f))
-                    Box {
-                        Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = headerForeground, modifier = Modifier.size(40.dp).clip(CircleShape).clickable { headerMenu = true }.padding(8.dp))
-                        val isPlaylist = info.typeLabel.equals("Playlist", true)
-                        DropdownMenu(expanded = headerMenu, onDismissRequest = { headerMenu = false }) {
-                            DropdownMenuItem(text = { Text(appString(R.string.text_play_5d12bd)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onPlayAll(tracks, 0) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
-                            DropdownMenuItem(text = { Text(appString(R.string.text_shuffle_5b772b)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onShufflePlay(tracks) }, leadingIcon = { Icon(Icons.Filled.Shuffle, null) })
-                            DropdownMenuItem(text = { Text(appString(R.string.text_add_all_to_queue_6cb104)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; tracks.forEach { onAddToQueue(it) } }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) })
-                            DropdownMenuItem(
-                                text = { Text(if (isPinned) appString(R.string.text_unpin_from_library_5b3f2e) else appString(R.string.text_pin_to_library_7b01e2)) },
-                                onClick = { headerMenu = false; onTogglePin() },
-                                leadingIcon = { Icon(if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin, null) },
-                            )
-                            if (isPlaylist) {
-                                DropdownMenuItem(text = { Text(appString(R.string.text_edit_playlist_1528d5)) }, onClick = { headerMenu = false; showEdit = true }, leadingIcon = { Icon(Icons.Filled.Edit, null) })
-                                DropdownMenuItem(text = { Text(appString(R.string.text_delete_playlist_b55b18)) }, onClick = { headerMenu = false; onDeletePlaylist() }, leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) })
-                            }
-                        }
-                    }
+                    menuButton(headerForeground)
                 }
                 Column(Modifier.align(if (wideHeader) Alignment.CenterStart else Alignment.BottomStart)
                     .padding(start = if (wideHeader) 320.dp else 20.dp, end = 20.dp,
@@ -222,55 +313,8 @@ fun DetailScreen(
             }
         }
 
-        item {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
-                Row(
-                    Modifier
-                        .clip(RoundedCornerShape(50))
-                        .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.78f))))
-                        .clickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
-                        .padding(horizontal = 28.dp, vertical = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = onAccent, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = onAccent)
-                }
-                Spacer(Modifier.width(10.dp))
-                Icon(
-                    Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b),
-                    tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(46.dp).clip(CircleShape).clickable(enabled = tracks.isNotEmpty()) { onShufflePlay(tracks) }.padding(11.dp),
-                )
-                androidx.compose.material3.TextButton(onClick = onMix, enabled = tracks.isNotEmpty()) {
-                    Icon(Icons.Filled.GraphicEq, null, Modifier.size(18.dp))
-                    Spacer(Modifier.width(4.dp)); Text(appString(R.string.text_mix_fd7391))
-                }
-                Spacer(Modifier.weight(1f))
-                if (itemKind == "album" || itemKind == "playlist" || itemKind == "artist") {
-                    Icon(
-                        if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
-                        if (isItemLiked) appString(R.string.text_unlike_e4fc40) else appString(R.string.text_like_c7e02c),
-                        tint = if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(44.dp).clip(CircleShape).clickable { onToggleItemLike() }.padding(9.dp),
-                    )
-                }
-                if (canDownload) {
-                    val allDownloaded = tracks.isNotEmpty() && tracks.all { downloadedIds.contains(it.id) }
-                    Icon(
-                        if (allDownloaded) Icons.Filled.DownloadDone else Icons.Filled.Download,
-                        if (allDownloaded) appString(R.string.text_remove_downloads_cbe8be) else appString(R.string.text_download_a479c9),
-                        tint = if (allDownloaded) accent else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(44.dp).clip(CircleShape).clickable {
-                            if (allDownloaded) onRemoveDownloads() else onDownloadAll()
-                        }.padding(9.dp),
-                    )
-                }
-            }
+        if (!compactHeader) item {
+            actionsRow(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), false)
         }
 
         if (info.isArtist && artistInfo != null &&
@@ -410,6 +454,7 @@ fun DetailScreen(
                 onRemoveDownload = if (canDownload) ({ onRemoveDownload(s.id) }) else null,
                 onEditTags = onEditTags?.let { cb -> { cb(s) } },
                 serverTagEditing = serverTagEditing,
+                showAlbum = itemKind != "album",
             )
         }
 
@@ -420,6 +465,7 @@ fun DetailScreen(
                 }
             }
         }
+    }
     }
 
     if (showEdit) {

@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Open Now Playing</string>
+    <string name="tablet_now_playing">Now Playing</string>
+    <string name="tablet_seek">Seek</string>
+    <string name="tablet_close_panel">Close panel</string>
+    <string name="tablet_player_panes">Now Playing panels</string>
+    <string name="tablet_fullscreen_lyrics">Fullscreen Lyrics</string>
+    <string name="tablet_resize_panels">Resize panels</string>
+
+    <string name="tablet_layout_title">Tablet Layout</string>
+    <string name="tablet_layout_detected">Shown because this device has a large screen. Each setting applies in both portrait and landscape.</string>
+    <string name="tablet_dock_size">Dock Size</string>
+    <string name="tablet_panel_controls">Panel Controls</string>
+    <string name="tablet_panel_spacing">Panel Spacing</string>
+    <string name="tablet_nav_gap">Gap Beside Navigation</string>
+    <string name="tablet_page_margins">Page Margins</string>
+    <string name="tablet_hero_size">Featured Card Size</string>
+    <string name="tablet_favourites_size">Favourites Card Size</string>
+    <string name="tablet_player_split">Now Playing Split</string>
+    <string name="tablet_player_split_hint">You can also drag the divider in Now Playing.</string>
+    <string name="tablet_reset">Reset Tablet Layout</string>
+
+    <string name="nav_menu_title">Navigation Menu</string>
+    <string name="nav_menu_summary">Choose what appears in the main list and under More</string>
+    <string name="nav_section_main">Main</string>
+    <string name="nav_section_more">More</string>
+    <string name="nav_section_hidden">Not Shown</string>
+    <string name="nav_menu_hint">Use the arrows to reorder items. Tap an item\'s menu to move it between Main and More, or to remove it.</string>
+    <string name="nav_move_up">Move up</string>
+    <string name="nav_move_down">Move down</string>
+    <string name="nav_move_to_main">Move to Main</string>
+    <string name="nav_move_to_more">Move to More</string>
+    <string name="nav_add_to_main">Add to Main</string>
+    <string name="nav_add_to_more">Add to More</string>
+    <string name="nav_remove">Remove from menu</string>
+    <string name="nav_locked">Always in Main</string>
+    <string name="nav_simple_mode_hidden">Hidden while Simple Mode is on</string>
+    <string name="nav_empty_section">Nothing here yet</string>
+    <string name="nav_reset">Reset Navigation Menu</string>
+    <string name="nav_placement_options">Placement options</string>
+
+    <string name="home_empty_title">No Music Yet</string>
+    <string name="home_empty_body">Connect a music server or streaming account, or add music stored on this device.</string>
+    <string name="home_add_source">Add Source</string>
+</resources>
