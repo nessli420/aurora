@@ -31,7 +31,10 @@ import kotlinx.coroutines.delay
 import kotlin.math.abs
 import kotlin.random.Random
 
-private data class WaveformSeek(val fraction: Float, val dragged: Boolean, val sequence: Int)
+private data class WaveformSeek(val fraction: Float, val origin: Float, val dragged: Boolean, val sequence: Int) {
+    fun landed(position: Float) =
+        abs(position - fraction) <= 0.002f || (position >= fraction - 0.002f && abs(position - fraction) < abs(position - origin))
+}
 
 // gesture claimed on touch-down so the player overlay cant steal it
 @Composable
@@ -56,6 +59,7 @@ fun Waveform(
     val target = progress.coerceIn(0f, 1f)
     val shown = remember(seed) { Animatable(target) }
     val seek by rememberUpdatedState(onSeek)
+    val latestTarget by rememberUpdatedState(target)
     val touchSlop = LocalViewConfiguration.current.touchSlop
     var touching by remember(seed) { mutableStateOf(false) }
     var dragPosition by remember(seed) { mutableStateOf<Float?>(null) }
@@ -66,7 +70,7 @@ fun Waveform(
 
     LaunchedEffect(seed, target, touching, animatingSeek, pending) {
         if (touching || animatingSeek) return@LaunchedEffect
-        pending?.let { if (abs(target - it.fraction) > 0.002f) return@LaunchedEffect }
+        pending?.let { if (!it.landed(target)) return@LaunchedEffect }
         pending = null
         if (animated) shown.animateTo(target, tween(250, easing = LinearEasing)) else shown.snapTo(target)
     }
@@ -118,7 +122,7 @@ fun Waveform(
                             change.consume()
                         }
                         if (released) {
-                            val request = WaveformSeek(last, moved, ++seekSequence)
+                            val request = WaveformSeek(last, latestTarget, moved, ++seekSequence)
                             pending = request
                             seekRequest = request
                             animatingSeek = true

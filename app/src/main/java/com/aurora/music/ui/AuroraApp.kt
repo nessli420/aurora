@@ -806,7 +806,10 @@ fun AuroraApp() {
                 }
             }
             Scaffold(
-                modifier = Modifier.padding(start = if (rail) shell.navWidth + navGap else 0.dp),
+                modifier = Modifier.padding(start = if (rail) shell.navWidth + navGap else 0.dp).then(
+                    if (dockVisible) Modifier.windowInsetsPadding(WindowInsets.navigationBars.only(androidx.compose.foundation.layout.WindowInsetsSides.Bottom))
+                        .padding(bottom = dockHeight + 12.dp + panelSpacing) else Modifier
+                ),
                 containerColor = Color.Transparent,
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -818,7 +821,7 @@ fun AuroraApp() {
                                 .then(if (rail) Modifier.fillMaxWidth() else Modifier.widthIn(max = 960.dp))
                                 .windowInsetsPadding(WindowInsets.navigationBars)
                                 .padding(start = if (rail) pageMargin else 10.dp, end = if (rail) pageMargin.coerceAtLeast(12.dp) else 10.dp,
-                                    top = 8.dp, bottom = if (rail) 12.dp else 8.dp),
+                                    top = 8.dp, bottom = if (dockVisible) 0.dp else if (rail) 12.dp else 8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             if (activeDownloads > 0) {
@@ -836,9 +839,7 @@ fun AuroraApp() {
                                 }
                                 Spacer(Modifier.height(8.dp))
                             }
-                            if (dockVisible) {
-                                Spacer(Modifier.height(dockHeight))
-                            } else if (playerState.hasTrack && !rail) {
+                            if (playerState.hasTrack && !rail) {
                                 // The mini player belongs to the app chrome, so it uses the app palette.
                                 MiniPlayer(
                                     state = playerState,
@@ -1373,7 +1374,6 @@ fun AuroraApp() {
                 }
             }
             if (dockVisible) {
-                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().background(MaterialTheme.colorScheme.background)) {
                 PlaybackDock(
                     state = playerState,
                     openPane = if (shell.sidePanel) sidePane else null,
@@ -1385,11 +1385,11 @@ fun AuroraApp() {
                     onToggleLike = { playerVM.toggleLikeCurrent() },
                     onOpenOutput = { showOutput = true },
                     onPane = { showPane(it) },
-                    modifier = Modifier.windowInsetsPadding(WindowInsets.navigationBars)
+                    modifier = Modifier.align(Alignment.BottomCenter)
+                        .windowInsetsPadding(WindowInsets.navigationBars)
                         .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                         .onSizeChanged { dockHeight = with(density) { it.height.toDp() } },
                 )
-                }
             }
 
             MaterialTheme(colorScheme = playerColors) {
