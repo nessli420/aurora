@@ -14,6 +14,14 @@ require(releaseTag == null || releaseTag.removePrefix("V").removePrefix("v") == 
     "The release tag must match versionName in version.properties."
 }
 
+val signingProperties = Properties().apply {
+    rootProject.file("keystore.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+fun signingValue(key: String, env: String): String? = signingProperties.getProperty(key) ?: System.getenv(env)
+val releaseKeystore = rootProject.file(signingValue("storeFile", "AURORA_KEYSTORE_FILE") ?: "keystore/aurora-release.jks")
+val releaseStorePassword = signingValue("storePassword", "AURORA_KEYSTORE_PASSWORD")
+val canSignRelease = releaseKeystore.exists() && releaseStorePassword != null
+
 android {
     namespace = "com.aurora.music"
     compileSdk = 35
@@ -39,18 +47,18 @@ android {
     }
 
     signingConfigs {
-        create("release") {
-            storeFile = rootProject.file("keystore/aurora-release.jks")
-            storePassword = "aurora1234"
-            keyAlias = "aurora"
-            keyPassword = "aurora1234"
+        if (canSignRelease) create("release") {
+            storeFile = releaseKeystore
+            storePassword = releaseStorePassword
+            keyAlias = signingValue("keyAlias", "AURORA_KEY_ALIAS") ?: "aurora"
+            keyPassword = signingValue("keyPassword", "AURORA_KEY_PASSWORD") ?: releaseStorePassword
         }
     }
 
     buildTypes {
         release {
             isMinifyEnabled = false
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = if (canSignRelease) signingConfigs.getByName("release") else null
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
