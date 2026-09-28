@@ -187,6 +187,9 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
         }
         return
     }
+    val seekTarget = com.aurora.music.ui.theme.LocalContextAccent.current.color ?: colors.primary
+    val seekBrush = com.aurora.music.ui.theme.rememberColorSweep(seekTarget)
+    val thumbColor by animateColorAsState(seekTarget, androidx.compose.animation.core.tween(750), label = "dockThumb")
     var dragging by remember(state.current.id) { mutableStateOf<Float?>(null) }
     var pending by remember(state.current.id) { mutableStateOf<Float?>(null) }
     LaunchedEffect(state.progress) {
@@ -205,10 +208,10 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
             onValueChangeFinished = { dragging?.let { onSeek(it); pending = it }; dragging = null },
             modifier = Modifier.weight(1f).height(24.dp).semantics { contentDescription = appString(R.string.tablet_seek) },
             colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
-            thumb = { Box(Modifier.size(12.dp).clip(CircleShape).background(colors.primary)) },
+            thumb = { Box(Modifier.size(12.dp).clip(CircleShape).background(thumbColor)) },
             track = { slider ->
                 Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
-                    Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(colors.primary))
+                    Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(seekBrush))
                 }
             },
         )

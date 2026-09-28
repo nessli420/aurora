@@ -57,6 +57,9 @@ fun MiniPlayer(
     val isMix = song.id.startsWith("aurora-mix:")
     val ui = LocalUiPrefs.current
     val progress by animateFloatAsState(state.progress, label = "miniProgress")
+    val progressBrush = com.aurora.music.ui.theme.rememberColorSweep(
+        com.aurora.music.ui.theme.LocalContextAccent.current.color ?: MaterialTheme.colorScheme.primary,
+    )
     val likeTint by animateColorAsState(
         if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "likeTint",
@@ -139,7 +142,7 @@ fun MiniPlayer(
                         .fillMaxWidth(progress)
                         .height(barH)
                         .clip(RoundedCornerShape(barH))
-                        .background(MaterialTheme.colorScheme.primary),
+                        .background(progressBrush),
                 )
             }
         }

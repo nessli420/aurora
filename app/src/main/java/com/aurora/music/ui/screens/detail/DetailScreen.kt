@@ -138,6 +138,10 @@ fun DetailScreen(
     // artists often lack a server image fall back to enriched wiki photo
     val effectiveArt = info.artUrl.ifBlank { artistInfo?.imageUrl.orEmpty() }
     val accent by com.aurora.music.util.rememberDominantColor(effectiveArt, info.accent)
+    val baseScheme = MaterialTheme.colorScheme
+    val accentInk = com.aurora.music.ui.theme.readableAccent(accent, baseScheme.background.luminance() < 0.5f)
+    com.aurora.music.ui.theme.ProvideContextAccent(accentInk)
+    val albumScheme = baseScheme.copy(primary = accentInk, onPrimary = if (accentInk.luminance() > 0.5f) Color.Black else Color.White)
 
     val listState = androidx.compose.foundation.lazy.rememberLazyListState()
     androidx.compose.runtime.LaunchedEffect(listState, state.canLoadMore) {
@@ -222,6 +226,7 @@ fun DetailScreen(
     }
     val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
 
+    MaterialTheme(colorScheme = albumScheme) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
     val compactHeader = tablet && maxWidth >= 480.dp
     val headerArt = if (maxWidth >= 800.dp) 220.dp else 176.dp
@@ -465,6 +470,7 @@ fun DetailScreen(
                 }
             }
         }
+    }
     }
     }
 
