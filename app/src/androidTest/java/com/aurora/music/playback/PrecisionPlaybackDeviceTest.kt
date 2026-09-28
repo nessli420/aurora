@@ -342,7 +342,7 @@ class PrecisionPlaybackDeviceTest {
             val bus = MixController()
             val config = MixAudioConfig(
                 params = DspParams(preampDb = -6f, limiterEnabled = false), mode = DspMode.CUSTOM,
-                impulse = requireNotNull(ConvolutionProcessor.loadWav(impulseFile)), convolution = true,
+                impulse = requireNotNull(ImpulseResponse.loadWav(impulseFile)), convolution = true,
                 rack = if (rackOutput) fixtureRack() else null,
             )
             val mix = main {

@@ -13,7 +13,7 @@ class ImpulseResponseWavTest {
         val payload = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
             .putInt(1_073_741_825).putInt(-1_073_741_825).putInt(1).putInt(-1).array()
         withWav(payload, bits = 32, channels = 2) { file ->
-            val ir = ConvolutionProcessor.loadWavResult(file).getOrThrow()
+            val ir = ImpulseResponse.loadWavResult(file).getOrThrow()
             assertEquals(SamplePrecision.PCM_SIGNED_32, ir.sourcePrecision)
             assertEquals(2, ir.frameCount)
             assertEquals(1_073_741_825 / 2147483648.0, ir.preciseLeft[0], 0.0)
@@ -25,13 +25,13 @@ class ImpulseResponseWavTest {
 
     @Test fun pcm24StereoAndMonoPcm8UseTheirActualSourcePrecision() {
         withWav(byteArrayOf(1, 0, 0, -1, -1, -1), bits = 24, channels = 2) { file ->
-            val ir = ConvolutionProcessor.loadWavResult(file).getOrThrow()
+            val ir = ImpulseResponse.loadWavResult(file).getOrThrow()
             assertEquals(SamplePrecision.PCM_SIGNED_24, ir.sourcePrecision)
             assertEquals(1 / 8388608.0, ir.preciseLeft[0], 0.0)
             assertEquals(-1 / 8388608.0, ir.preciseRight[0], 0.0)
         }
         withWav(byteArrayOf(0, 127, -128, -1), bits = 8, channels = 1) { file ->
-            val ir = ConvolutionProcessor.loadWavResult(file).getOrThrow()
+            val ir = ImpulseResponse.loadWavResult(file).getOrThrow()
             assertEquals(SamplePrecision.PCM_SIGNED_8, ir.sourcePrecision)
             assertArrayEquals(doubleArrayOf(-1.0, -1 / 128.0, 0.0, 127 / 128.0), ir.preciseLeft, 0.0)
             assertArrayEquals(ir.preciseLeft, ir.preciseRight, 0.0)
@@ -41,11 +41,11 @@ class ImpulseResponseWavTest {
     @Test fun floatWavRejectsNonFiniteSamplesAndPreservesFiniteValues() {
         for (sample in floatArrayOf(Float.NaN, Float.POSITIVE_INFINITY)) {
             withWav(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(sample).array(), 32, 1, 3) {
-                assertTrue(ConvolutionProcessor.loadWavResult(it).isFailure)
+                assertTrue(ImpulseResponse.loadWavResult(it).isFailure)
             }
         }
         withWav(ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(0.125f).array(), 32, 1, 3) {
-            val ir = ConvolutionProcessor.loadWavResult(it).getOrThrow()
+            val ir = ImpulseResponse.loadWavResult(it).getOrThrow()
             assertEquals(SamplePrecision.FLOAT_32, ir.sourcePrecision)
             assertEquals(0.125, ir.preciseLeft[0], 0.0)
         }
@@ -54,22 +54,22 @@ class ImpulseResponseWavTest {
     @Test fun malformedChunkLengthsAlignmentAndCodecFailClosed() {
         withWav(byteArrayOf(1, 0), 16, 1) { file ->
             RandomAccessFile(file, "rw").use { it.seek(40); it.writeInt(Integer.reverseBytes(500)) }
-            assertTrue(ConvolutionProcessor.loadWavResult(file).isFailure)
+            assertTrue(ImpulseResponse.loadWavResult(file).isFailure)
         }
-        withWav(byteArrayOf(1, 0, 1), 16, 1) { assertTrue(ConvolutionProcessor.loadWavResult(it).isFailure) }
-        withWav(byteArrayOf(1, 0, 1, 0), 16, 1, 6) { assertTrue(ConvolutionProcessor.loadWavResult(it).isFailure) }
+        withWav(byteArrayOf(1, 0, 1), 16, 1) { assertTrue(ImpulseResponse.loadWavResult(it).isFailure) }
+        withWav(byteArrayOf(1, 0, 1, 0), 16, 1, 6) { assertTrue(ImpulseResponse.loadWavResult(it).isFailure) }
     }
 
     @Test fun decodedFrameLimitFailsBeforeLargeSampleAllocation() {
         val file = File.createTempFile("aurora-ir-bounds", ".wav")
         try {
-            val frames = ConvolutionProcessor.MAX_DECODED_IR_FRAMES + 1
+            val frames = ImpulseResponse.MAX_DECODED_IR_FRAMES + 1
             val dataBytes = frames * 2
             RandomAccessFile(file, "rw").use {
                 it.write(header(dataBytes, 16, 1, 1))
                 it.setLength(44L + dataBytes)
             }
-            val failure = ConvolutionProcessor.loadWavResult(file).exceptionOrNull()
+            val failure = ImpulseResponse.loadWavResult(file).exceptionOrNull()
             assertNotNull(failure)
             assertTrue(failure!!.message!!.contains("source frames"))
         } finally { file.delete() }
@@ -96,12 +96,12 @@ class ImpulseResponseWavTest {
         val file = File.createTempFile("aurora-ir-extensible", ".wav")
         try {
             file.writeBytes(bytes)
-            val ir = ConvolutionProcessor.loadWavResult(file).getOrThrow()
+            val ir = ImpulseResponse.loadWavResult(file).getOrThrow()
             assertEquals(32, ir.sourceValidBits)
             assertEquals(1_073_741_825 / 2147483648.0, ir.preciseLeft[0], 0.0)
             bytes[57] = 0
             file.writeBytes(bytes)
-            assertTrue(ConvolutionProcessor.loadWavResult(file).isFailure)
+            assertTrue(ImpulseResponse.loadWavResult(file).isFailure)
         } finally { file.delete() }
     }
 

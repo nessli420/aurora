@@ -1,5 +1,7 @@
 package com.aurora.music.playback.dsd
 
+import com.aurora.music.util.NativeLibraries
+
 class DstDecoder(val channels: Int) : AutoCloseable {
     private var handle = create(channels)
     init { require(channels in 1..2); check(handle != 0L) { "DST decoder could not start." } }
@@ -15,5 +17,5 @@ class DstDecoder(val channels: Int) : AutoCloseable {
     private external fun create(channels: Int): Long
     private external fun decode(handle: Long, input: ByteArray, output: ByteArray): Int
     private external fun destroy(handle: Long)
-    companion object { init { System.loadLibrary("aurora_dst") } }
+    companion object { init { NativeLibraries.load("aurora_dst") } }
 }

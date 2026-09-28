@@ -1,7 +1,7 @@
 package com.aurora.music.data.remote
 
-import com.google.gson.Gson
 import com.aurora.music.util.AppLog
+import com.google.gson.Gson
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext

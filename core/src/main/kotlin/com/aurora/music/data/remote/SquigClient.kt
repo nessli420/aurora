@@ -10,6 +10,7 @@ import kotlinx.coroutines.withContext
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.net.URI
 import java.util.concurrent.TimeUnit
 
 // cloudflare instances 403 default bot agents so every request carries a browser user-agent
@@ -118,7 +119,7 @@ class SquigClient {
     }
 
     private fun hostLabel(base: String): String =
-        runCatching { android.net.Uri.parse(base).host ?: base }.getOrDefault(base)
+        runCatching { URI(base).host ?: base }.getOrDefault(base)
 
     private companion object {
         const val USER_AGENT =

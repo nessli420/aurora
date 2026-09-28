@@ -15,6 +15,7 @@ import com.aurora.music.data.remote.PlexException
 import com.aurora.music.data.remote.SpotifyAuth
 import com.aurora.music.data.remote.SpotifyClient
 import com.aurora.music.data.remote.SubsonicClient
+import com.aurora.music.data.remote.appClientInfo
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -197,8 +198,8 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                             if (!resp.isOk) throw IllegalStateException(resp.error?.message ?: appString(R.string.text_login_rejected_3f73ee))
                             session
                         }
-                        ServerType.JELLYFIN -> JellyfinClient.authenticate(server, s.username, s.password)
-                        ServerType.PLEX -> PlexClient.authenticate(server, s.password.trim())
+                        ServerType.JELLYFIN -> JellyfinClient.authenticate(server, s.username, s.password, appClientInfo)
+                        ServerType.PLEX -> PlexClient.authenticate(server, s.password.trim(), appClientInfo)
                         ServerType.SPOTIFY -> throw IllegalStateException(appString(R.string.text_spotify_uses_the_connect_button_not_this_form_17d56a))
                         ServerType.YOUTUBE_MUSIC -> throw IllegalStateException(appString(R.string.text_youtube_music_uses_google_sign_in_0ba1e7))
                         ServerType.LOCAL -> throw IllegalStateException(appString(R.string.text_local_mode_doesn_t_use_this_form_78c2dc))

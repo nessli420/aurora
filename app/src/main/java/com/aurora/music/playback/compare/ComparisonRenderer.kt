@@ -14,7 +14,7 @@ import com.aurora.music.data.ProcessingRack
 import com.aurora.music.data.ProcessingPresetAssets
 import com.aurora.music.data.ProcessingPresetBundle
 import com.aurora.music.data.requiresImpulseResponse
-import com.aurora.music.playback.ConvolutionProcessor
+import com.aurora.music.playback.ImpulseResponse
 import com.aurora.music.playback.engine.AudioBlock
 import com.aurora.music.playback.engine.AudioStreamFormat
 import com.aurora.music.playback.engine.ChannelLayout
@@ -52,11 +52,11 @@ object ComparisonRenderer {
             require(preset.audio.dspConvIrPath.isNotBlank()) { "A preset impulse response is missing." }
             val file = File(preset.audio.dspConvIrPath)
             require(ProcessingPresetBundle.sha256(file) == preset.irSha256) { "A preset impulse response has changed." }
-            ConvolutionProcessor.loadWavResult(file).getOrThrow()
+            ImpulseResponse.loadWavResult(file).getOrThrow()
         } else null
         ProcessingPresetAssets.validateFiles(preset.rackImpulseAssets)
         val impulses = preset.rackImpulseAssets.associate { entry ->
-            entry.id to ConvolutionProcessor.loadWavResult(File(entry.prepared?.path ?: entry.sourcePath)).getOrThrow()
+            entry.id to ImpulseResponse.loadWavResult(File(entry.prepared?.path ?: entry.sourcePath)).getOrThrow()
         }
         val graph = ProductionSerialRack.compile(rack, source.rate, impulse, impulses, relativeVolume)
         require(graph.convolutionUnavailableReason == null) { "A preset impulse response is unavailable." }

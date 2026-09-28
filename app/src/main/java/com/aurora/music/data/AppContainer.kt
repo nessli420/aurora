@@ -13,6 +13,7 @@ import android.net.NetworkCapabilities
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.aurora.music.data.remote.JellyfinClient
+import com.aurora.music.data.remote.appClientInfo
 import com.aurora.music.data.remote.SpotifyClient
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.first
@@ -188,9 +189,9 @@ class AppContainer(context: Context) {
             localizeSong(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
         }
         return when (session.type) {
-            ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session), { maxBitrate }, localize)
+            ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session, appClientInfo), { maxBitrate }, localize)
             ServerType.PLEX -> ReportingMediaBackend(
-                PlexBackend(com.aurora.music.data.remote.PlexClient(session), { maxBitrate }, localize),
+                PlexBackend(com.aurora.music.data.remote.PlexClient(session, appClientInfo), { maxBitrate }, localize),
             ) { message ->
                 if (lastSession?.accountKey() == session.accountKey() ||
                     (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&

@@ -1,5 +1,7 @@
 package com.aurora.music.playback.dsd
 
+import com.aurora.music.util.NativeLibraries
+
 class DsdBlockDecoder(val format: DsdFormat) : AutoCloseable {
     private var handle = create(format.channels, format.decimation, format.sampleCount,
         DsdPcmDecoder.coefficientsFor(format))
@@ -38,5 +40,5 @@ class DsdBlockDecoder(val format: DsdFormat) : AutoCloseable {
     private external fun decode(handle: Long, bytes: ByteArray?, size: Int, output: FloatArray): Int
     private external fun destroy(handle: Long)
 
-    companion object { init { System.loadLibrary("aurora_dsd") } }
+    companion object { init { NativeLibraries.load("aurora_dsd") } }
 }

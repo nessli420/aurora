@@ -4,7 +4,7 @@ import android.content.ContextWrapper
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ir.*
-import com.aurora.music.playback.ConvolutionProcessor
+import com.aurora.music.playback.ImpulseResponse
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.*
@@ -63,7 +63,7 @@ class ImpulseLibraryDeviceTest {
         assertArrayEquals(bytes, File(entry.sourcePath).readBytes())
         assertEquals(2, prepared.metadata.frames)
         assertEquals(ImpulseLibraryFiles.NORMALIZED_PEAK, prepared.metadata.peak, 1e-7)
-        val ir = ConvolutionProcessor.loadWavResult(File(prepared.path)).getOrThrow()
+        val ir = ImpulseResponse.loadWavResult(File(prepared.path)).getOrThrow()
         assertEquals(ir.preciseLeft[0] / 2, ir.preciseRight[0], 1e-7)
         val originalExport = ByteArrayOutputStream()
         store.exportImpulse(entry.id, false, originalExport).getOrThrow()

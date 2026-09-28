@@ -9,7 +9,7 @@ import com.aurora.music.data.routes.ProcessingRouteRules
 import com.aurora.music.data.rules.PresetRuleCodec
 import com.aurora.music.data.rules.PresetRuleSessionCodec
 import com.aurora.music.data.rules.PresetRuleSet
-import com.aurora.music.playback.ConvolutionProcessor
+import com.aurora.music.playback.ImpulseResponse
 import com.aurora.music.playback.engine.OutputRateMode
 import com.aurora.music.playback.engine.OutputRatePolicy
 import kotlinx.coroutines.flow.first
@@ -85,7 +85,7 @@ class RackAssetsDeviceTest {
         assertEquals(saved.id, active.id)
         assertArrayEquals(originalBytes, File(active.sourcePath).readBytes())
         assertArrayEquals(preparedBytes, File(active.prepared!!.path).readBytes())
-        assertTrue(ConvolutionProcessor.loadWavResult(File(active.prepared.path)).getOrThrow().trueStereo)
+        assertTrue(ImpulseResponse.loadWavResult(File(active.prepared.path)).getOrThrow().trueStereo)
     }
 
     @Test fun portablePresetImportRehomesEveryAssetBeforeApplying() = fixture {

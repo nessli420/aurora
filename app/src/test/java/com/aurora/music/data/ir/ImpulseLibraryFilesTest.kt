@@ -1,6 +1,6 @@
 package com.aurora.music.data.ir
 
-import com.aurora.music.playback.ConvolutionProcessor
+import com.aurora.music.playback.ImpulseResponse
 import com.aurora.music.playback.engine.ConvolutionTailMode
 import com.aurora.music.playback.engine.BandlimitedResampler
 import com.aurora.music.playback.engine.SamplePrecision
@@ -26,7 +26,7 @@ class ImpulseLibraryFilesTest {
         assertEquals(2, preview.rightToLeft.size)
         val destination = File(folder.root, "matrix-prepared.wav")
         val prepared = ImpulseLibraryFiles.prepare(entry, destination, ImpulsePreparation(0, 2, delayFrames = 3)).getOrThrow()
-        val decoded = ConvolutionProcessor.loadWavResult(destination).getOrThrow()
+        val decoded = ImpulseResponse.loadWavResult(destination).getOrThrow()
         assertTrue(decoded.trueStereo)
         assertEquals(5, decoded.frameCount)
         assertEquals(3, decoded.alignmentFrames)
@@ -46,7 +46,7 @@ class ImpulseLibraryFilesTest {
         val prepared = ImpulseLibraryFiles.prepare(imported(source), output,
             ImpulsePreparation(0, 16, minimumPhase = true, delayFrames = 3)).getOrThrow()
         assertTrue(ImpulseLibraryFiles.validateAsset(prepared, true).isSuccess)
-        val impulse = ConvolutionProcessor.loadWavResult(output).getOrThrow()
+        val impulse = ImpulseResponse.loadWavResult(output).getOrThrow()
         assertEquals(3, impulse.alignmentFrames)
         assertEquals(.5, impulse.preciseLeft[3], 1e-12)
         assertEquals(-.5, impulse.preciseLeftToRight!![3], 1e-12)
@@ -76,7 +76,7 @@ class ImpulseLibraryFilesTest {
             val output = File(folder.root, name)
             val prepared = ImpulseLibraryFiles.prepare(delayed, output, options).getOrThrow()
             assertTrue(ImpulseLibraryFiles.validateAsset(prepared, true).isSuccess)
-            return ConvolutionProcessor.loadWavResult(output).getOrThrow()
+            return ImpulseResponse.loadWavResult(output).getOrThrow()
         }
         val preserved = prepare("preserved.wav", ImpulsePreparation(2, 20, delayFrames = 4))
         assertEquals(10, preserved.alignmentFrames)
@@ -118,7 +118,7 @@ class ImpulseLibraryFilesTest {
         assertEquals(1, result.prepared!!.metadata.channels)
         assertEquals(96_000, result.prepared.metadata.sampleRate)
         assertEquals(2, result.prepared.metadata.frames)
-        val decoded = ConvolutionProcessor.loadWavResult(output).getOrThrow()
+        val decoded = ImpulseResponse.loadWavResult(output).getOrThrow()
         assertEquals(1, decoded.sourceChannels)
         assertArrayEquals(doubleArrayOf(-.5, .75), decoded.preciseLeft, 0.0)
         assertArrayEquals(decoded.preciseLeft, decoded.preciseRight, 0.0)
@@ -133,7 +133,7 @@ class ImpulseLibraryFilesTest {
         val preview = ImpulseLibraryFiles.previewPrepared(entry, options).getOrThrow()
         val destination = File(folder.root, "prepared.wav")
         val result = ImpulseLibraryFiles.prepare(entry, destination, options).getOrThrow()
-        val decoded = ConvolutionProcessor.loadWavResult(destination).getOrThrow()
+        val decoded = ImpulseResponse.loadWavResult(destination).getOrThrow()
         val gain = ImpulseLibraryFiles.NORMALIZED_PEAK / .5
         assertArrayEquals(doubleArrayOf((.25 * gain).toFloat().toDouble(), (-.125 * gain).toFloat().toDouble()), decoded.preciseLeft, 0.0)
         assertArrayEquals(doubleArrayOf((-.5 * gain).toFloat().toDouble(), (.0625 * gain).toFloat().toDouble()), decoded.preciseRight, 0.0)
@@ -151,8 +151,8 @@ class ImpulseLibraryFilesTest {
         val output = File(folder.root, "copy.wav")
         val prepared = ImpulseLibraryFiles.prepare(entry, output, ImpulsePreparation(0, 2)).getOrThrow()
         assertEquals(SamplePrecision.FLOAT_32, prepared.prepared!!.metadata.precision)
-        assertEquals(.5, ConvolutionProcessor.loadWavResult(output).getOrThrow().preciseLeft[0], 0.0)
-        assertEquals(1_073_741_825 / 2147483648.0, ConvolutionProcessor.loadWavResult(source).getOrThrow().preciseLeft[0], 0.0)
+        assertEquals(.5, ImpulseResponse.loadWavResult(output).getOrThrow().preciseLeft[0], 0.0)
+        assertEquals(1_073_741_825 / 2147483648.0, ImpulseResponse.loadWavResult(source).getOrThrow().preciseLeft[0], 0.0)
     }
 
     @Test fun rejectsSilentNormalizationButAllowsAnUnnormalizedSilentCopy() {

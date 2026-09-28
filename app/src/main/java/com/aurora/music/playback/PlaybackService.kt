@@ -510,7 +510,7 @@ class PlaybackService : MediaLibraryService() {
                 val loaded = kotlinx.coroutines.withContext(Dispatchers.IO) {
                     entries.mapNotNull { entry ->
                         val file = com.aurora.music.data.ir.ImpulseLibraryFiles.validateAsset(entry, entry.prepared != null).getOrNull()
-                        file?.let { ConvolutionProcessor.loadWavResult(it).getOrNull() }?.let { entry.id to it }
+                        file?.let { ImpulseResponse.loadWavResult(it).getOrNull() }?.let { entry.id to it }
                     }.toMap()
                 }
                 rackImpulses = loaded
@@ -622,7 +622,7 @@ class PlaybackService : MediaLibraryService() {
             scope.launch {
                 val loaded = kotlinx.coroutines.withContext(Dispatchers.IO) {
                     if (ap.dspConvIrPath.isBlank()) Result.success<ImpulseResponse?>(null)
-                    else ConvolutionProcessor.loadWavResult(java.io.File(ap.dspConvIrPath))
+                    else ImpulseResponse.loadWavResult(java.io.File(ap.dspConvIrPath))
                 }
                 if (lastIrPath != ap.dspConvIrPath) return@launch
                 val ir = loaded.getOrNull()

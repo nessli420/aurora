@@ -1,6 +1,6 @@
 package com.aurora.music.data
 
-import com.aurora.music.playback.ConvolutionProcessor
+import com.aurora.music.playback.ImpulseResponse
 import com.google.gson.JsonParser
 import org.junit.Assert.*
 import org.junit.Rule
@@ -359,7 +359,7 @@ class ProcessingPresetBundleTest {
             val library = com.aurora.music.data.ir.ImpulseLibraryFiles.importOriginal(ir, "Matrix", "matrix.wav", 1).getOrThrow()
             assertEquals(4, library.sourceMetadata.channels)
             ProcessingPresetBundle.read(ByteArrayInputStream(export(fixture(ir), ir)), temporary.root).use { imported ->
-                val decoded = ConvolutionProcessor.loadWavResult(requireNotNull(imported.impulseResponse)).getOrThrow()
+                val decoded = ImpulseResponse.loadWavResult(requireNotNull(imported.impulseResponse)).getOrThrow()
                 assertTrue(decoded.trueStereo)
                 assertEquals(1, decoded.alignmentFrames)
                 assertEquals(2, decoded.frameCount)
@@ -372,7 +372,7 @@ class ProcessingPresetBundleTest {
     }
 
     @Test fun sharedIrRejectsRuntimeFrameOverflowAndMalformedAlignmentBeforeImport() {
-        val maxFrames = ConvolutionProcessor.MAX_DECODED_IR_FRAMES
+        val maxFrames = ImpulseResponse.MAX_DECODED_IR_FRAMES
         fun pcm(frames: Int) = wav().copyOf(44 + frames * 4).also {
             ByteBuffer.wrap(it).order(ByteOrder.LITTLE_ENDIAN).putInt(4, it.size - 8).putInt(40, frames * 4)
         }
@@ -406,7 +406,7 @@ class ProcessingPresetBundleTest {
         val ir = temporary.newFile().apply { writeBytes(wav()) }
         val contents = entries(export(fixture(ir), ir))
         ir.writeBytes(bytes)
-        assertTrue(ConvolutionProcessor.loadWavResult(ir).isFailure)
+        assertTrue(ImpulseResponse.loadWavResult(ir).isFailure)
         assertTrue(runCatching { export(fixture(ir), ir) }.isFailure)
         val manifest = JsonParser.parseString(contents.getValue("manifest.json").toString(Charsets.UTF_8)).asJsonObject
         manifest.getAsJsonObject("preset").addProperty("irSha256", ProcessingPresetBundle.sha256(ir))

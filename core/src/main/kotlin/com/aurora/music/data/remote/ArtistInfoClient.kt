@@ -6,8 +6,10 @@ import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.net.URLDecoder
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 
@@ -131,23 +133,24 @@ class ArtistInfoClient {
     }.getOrNull()
 
     private fun summaryFromWikipediaUrl(url: String): WikiSummary? {
-        val host = runCatching { android.net.Uri.parse(url).host }.getOrNull() ?: return null
+        val host = url.toHttpUrlOrNull()?.host ?: return null
         val lang = host.substringBefore(".wikipedia.org").ifBlank { "en" }
         // raw path not lastPathSegment so slash titles like AC/DC survive
         val rawPath = url.substringAfter("/wiki/", "").substringBefore("?").substringBefore("#")
         if (rawPath.isBlank()) return null
-        return summaryFromWikipediaTitle(lang, android.net.Uri.decode(rawPath))
+        val title = runCatching { URLDecoder.decode(rawPath.replace("+", "%2B"), "UTF-8") }.getOrNull() ?: return null
+        return summaryFromWikipediaTitle(lang, title)
     }
 
     // title must be plain decoded this percent-encodes it
     private fun summaryFromWikipediaTitle(lang: String, title: String): WikiSummary? {
         if (title.isBlank()) return null
-        val seg = android.net.Uri.encode(title.replace(" ", "_"))
+        val seg = encodeSegment(title.replace(" ", "_"))
         return getJson("https://$lang.wikipedia.org/api/rest_v1/page/summary/$seg", WikiSummary::class.java)
     }
 
     private fun resolveWikidata(wikidataUrl: String): Pair<String?, String?> {
-        val qid = android.net.Uri.parse(wikidataUrl).lastPathSegment ?: return null to null
+        val qid = wikidataUrl.toHttpUrlOrNull()?.pathSegments?.lastOrNull { it.isNotEmpty() } ?: return null to null
         val json = getJson("https://www.wikidata.org/wiki/Special:EntityData/$qid.json", JsonObject::class.java)
             ?: return null to null
         return runCatching {
@@ -175,6 +178,10 @@ class ArtistInfoClient {
     }
 
     private fun enc(s: String): String = runCatching { URLEncoder.encode(s, "UTF-8") }.getOrDefault(s)
+
+    // same unreserved set as android Uri.encode
+    private fun encodeSegment(s: String): String = URLEncoder.encode(s, "UTF-8").replace("+", "%20")
+        .replace("%21", "!").replace("%27", "'").replace("%28", "(").replace("%29", ")").replace("%7E", "~")
 
     private companion object {
         const val USER_AGENT = "Aurora/1.0 ( https://github.com/aurora-music/aurora )"

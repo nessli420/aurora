@@ -1,11 +1,13 @@
 package com.aurora.music.data
 
+import com.aurora.music.util.NativeLibraries
+
 // fingerprint only first MAX_SECONDS like fpcalc full duration sent to acoustid separately
 object Chromaprint {
     @Volatile private var loaded = false
 
     init {
-        loaded = runCatching { System.loadLibrary("aurora_fp"); true }.getOrDefault(false)
+        loaded = runCatching { NativeLibraries.load("aurora_fp"); true }.getOrDefault(false)
     }
 
     val available: Boolean get() = loaded
