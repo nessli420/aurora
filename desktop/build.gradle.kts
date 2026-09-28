@@ -48,10 +48,7 @@ val appResources = layout.buildDirectory.dir("appResources")
 val configureNative by tasks.registering(Exec::class) {
     inputs.file(nativeSource.file("CMakeLists.txt"))
     outputs.file(nativeBuildDir.map { it.file("CMakeCache.txt") })
-    commandLine(
-        "cmake", "-S", nativeSource.asFile.path, "-B", nativeBuildDir.get().asFile.path,
-        "-G", "Visual Studio 17 2022", "-A", "x64",
-    )
+    commandLine("cmake", "-S", nativeSource.asFile.path, "-B", nativeBuildDir.get().asFile.path, "-A", "x64")
 }
 
 val buildNative by tasks.registering(Exec::class) {
