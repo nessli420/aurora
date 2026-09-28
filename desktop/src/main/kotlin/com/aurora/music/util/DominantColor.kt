@@ -16,10 +16,11 @@ import coil3.compose.LocalPlatformContext
 import coil3.request.ImageRequest
 import coil3.request.SuccessResult
 import coil3.toBitmap
-import com.materialkolor.quantize.QuantizerCelebi
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import java.util.PriorityQueue
 import kotlin.math.abs
+import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.skia.ColorAlphaType
@@ -72,11 +73,76 @@ class ArtworkPalette(val swatches: List<Swatch>) {
     }
 
     companion object {
-        fun from(pixels: IntArray): ArtworkPalette = ArtworkPalette(
-            QuantizerCelebi.quantize(pixels.filter { it ushr 24 == 0xFF }.toIntArray(), 16)
-                .filterValues { it > 0 }
-                .map { (rgb, count) -> Swatch(rgb, count) },
-        )
+        fun from(pixels: IntArray, maxColors: Int = 16): ArtworkPalette {
+            val histogram = IntArray(1 shl 15)
+            pixels.forEach { histogram[(it shr 19 and 31) shl 10 or ((it shr 11 and 31) shl 5) or (it shr 3 and 31)]++ }
+            val colors = histogram.indices.filter { histogram[it] > 0 }.toIntArray()
+            if (colors.size <= maxColors) return ArtworkPalette(colors.map { Swatch(rgb888(it), histogram[it]) })
+            val boxes = PriorityQueue<ColorBox>(compareByDescending { it.volume })
+            boxes += ColorBox(colors, histogram, 0, colors.lastIndex)
+            while (boxes.size < maxColors) {
+                val box = boxes.poll().takeIf { it.canSplit } ?: break
+                boxes += box.split()
+                boxes += box
+            }
+            return ArtworkPalette(boxes.map { it.average() })
+        }
+    }
+}
+
+private fun channel(color: Int, dimension: Int) = color shr (10 - 5 * dimension) and 31
+
+private fun rgb888(color: Int) = (0xFF shl 24) or (channel(color, 0) shl 19) or (channel(color, 1) shl 11) or (channel(color, 2) shl 3)
+
+private class ColorBox(private val colors: IntArray, private val histogram: IntArray, private val lower: Int, private var upper: Int) {
+    private val min = IntArray(3)
+    private val max = IntArray(3)
+    private var population = 0
+    val volume get() = (max[0] - min[0] + 1) * (max[1] - min[1] + 1) * (max[2] - min[2] + 1)
+    val canSplit get() = upper > lower
+
+    init { fit() }
+
+    private fun fit() {
+        min.fill(31)
+        max.fill(0)
+        population = 0
+        for (i in lower..upper) {
+            for (d in 0..2) {
+                min[d] = minOf(min[d], channel(colors[i], d))
+                max[d] = maxOf(max[d], channel(colors[i], d))
+            }
+            population += histogram[colors[i]]
+        }
+    }
+
+    private fun reorder(dimension: Int) {
+        if (dimension == 0) return
+        for (i in lower..upper) {
+            val c = colors[i]
+            colors[i] = if (dimension == 1) channel(c, 1) shl 10 or (channel(c, 0) shl 5) or channel(c, 2)
+            else channel(c, 2) shl 10 or (channel(c, 1) shl 5) or channel(c, 0)
+        }
+    }
+
+    fun split(): ColorBox {
+        val dimension = (0..2).maxBy { max[it] - min[it] }
+        reorder(dimension)
+        colors.sort(lower, upper + 1)
+        reorder(dimension)
+        var count = 0
+        val point = (lower..upper).first { count += histogram[colors[it]]; count >= population / 2 }.coerceAtMost(upper - 1)
+        return ColorBox(colors, histogram, point + 1, upper).also {
+            upper = point
+            fit()
+        }
+    }
+
+    fun average(): Swatch {
+        val sums = FloatArray(3)
+        for (i in lower..upper) for (d in 0..2) sums[d] += histogram[colors[i]] * channel(colors[i], d).toFloat()
+        val mean = sums.map { (it / population).roundToInt() }
+        return Swatch(rgb888(mean[0] shl 10 or (mean[1] shl 5) or mean[2]), population)
     }
 }
 

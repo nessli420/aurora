@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
@@ -63,9 +64,11 @@ class ThemeShowcaseTest {
 
     private fun render(name: String, width: Int, height: Int, content: @Composable () -> Unit): Image {
         val scene = ImageComposeScene(width, height, Density(1f), content = content)
-        scene.render(0)
-        scene.render(16_000_000)
-        val image = scene.render(416_000_000)
+        listOf(0L, 16, 32, 432).forEach {
+            scene.render(it * 1_000_000)
+            Snapshot.sendApplyNotifications()
+        }
+        val image = scene.render(432_000_000)
         scene.close()
         shots?.let { File(it.apply { mkdirs() }, "$name.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes) }
         return image

@@ -2,7 +2,6 @@ package com.aurora.music.desktop.resources
 
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.loadXmlImageVector
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontVariation
@@ -15,7 +14,6 @@ import org.xml.sax.InputSource
 private fun resource(path: String): InputStream =
     requireNotNull(Thread.currentThread().contextClassLoader.getResourceAsStream(path)) { "Missing resource $path" }
 
-@OptIn(ExperimentalTextApi::class)
 private fun variableFontFamily(
     regular: String,
     italic: String? = null,
