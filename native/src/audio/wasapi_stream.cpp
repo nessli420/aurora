@@ -221,8 +221,9 @@ HRESULT Stream::start() {
 }
 
 void Stream::refreshLatency() {
-    REFERENCE_TIME latency = 0;
-    if (SUCCEEDED(client_->GetStreamLatency(&latency))) latency_.store(latency / 10);
+    REFERENCE_TIME latency = 0, period = 0;
+    if (FAILED(client_->GetStreamLatency(&latency)) || !latency) client_->GetDevicePeriod(&period, nullptr);
+    latency_.store(std::max(latency, period) / 10);
 }
 
 bool Stream::fill(bool prefill) {

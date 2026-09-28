@@ -87,9 +87,8 @@ internal class FfmpegInput(source: String, http: HttpOptions, private val interr
         if (interrupt.get() || code == AVERROR_EXIT) DecoderInterruptedException() else DecoderException("$what: ${errorText(code)}", code)
 
     fun endOfInput(code: Int): Boolean {
-        if (code == AVERROR_EOF) return true
-        val io = format.pb() ?: return false
-        return io.eof_reached() != 0 && io.error() == 0
+        val io = format.pb() ?: return code == AVERROR_EOF
+        return (code == AVERROR_EOF || io.eof_reached() != 0) && io.error() == 0
     }
 
     fun cover(): ByteArray? {

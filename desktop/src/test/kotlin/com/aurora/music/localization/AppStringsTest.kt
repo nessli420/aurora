@@ -13,7 +13,7 @@ class AppStringsTest {
     @After fun reset() = AppStrings.setLocale("")
 
     private fun ids(type: Class<*>) = type.declaredFields
-        .filter { Modifier.isStatic(it.modifiers) && it.type == Int::class.javaPrimitiveType }
+        .filter { Modifier.isStatic(it.modifiers) && it.type == Int::class.javaPrimitiveType && !it.name.startsWith("$") }
         .map { it.getInt(null) }
 
     private fun formats(text: String) =

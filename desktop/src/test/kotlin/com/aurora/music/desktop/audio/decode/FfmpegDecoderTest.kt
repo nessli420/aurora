@@ -216,7 +216,7 @@ class FfmpegDecoderTest {
                 val before = threads.getThreadAllocatedBytes(Thread.currentThread().id)
                 repeat(2000) { assertTrue(decoder.read(block) > 0) }
                 val allocated = threads.getThreadAllocatedBytes(Thread.currentThread().id) - before
-                assertTrue("channels=$channels allocated=$allocated", allocated < 4096)
+                assertTrue("channels=$channels allocated=$allocated", allocated < 1024)
             }
         }
     }

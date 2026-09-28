@@ -137,4 +137,20 @@ class FfmpegHttpTest {
             assertTrue(failure.message!!, failure.message!!.contains("/missing.flac"))
         }
     }
+
+    @Test fun aTruncatedResponseFailsInsteadOfEndingEarly() {
+        val wav = wavBytes(48_000, 2, 16, 960_000) { f, c -> (f + c) % 1000 }
+        TestServer { exchange ->
+            exchange.sendResponseHeaders(200, wav.size.toLong())
+            exchange.responseBody.write(wav, 0, wav.size / 2)
+        }.use { server ->
+            FfmpegDecoder.open("${server.base}/cut.wav", HttpOptions(reconnect = false)).use { decoder ->
+                val block = DoubleArray(4096)
+                var decoded = 0L
+                val failure = runCatching { while (true) decoded += decoder.read(block).takeIf { it >= 0 } ?: break }.exceptionOrNull()
+                assertTrue("$failure after $decoded", failure is DecoderException && failure !is DecoderInterruptedException)
+                assertTrue(decoded in 1 until 960_000)
+            }
+        }
+    }
 }

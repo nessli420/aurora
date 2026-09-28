@@ -232,7 +232,7 @@ class FfmpegDecoder private constructor(
 
     private fun configureResampler() {
         val format = frame.format()
-        val inputRate = frame.sample_rate().takeIf { it > 0 } ?: codec.sample_rate()
+        val inputRate = if (frame.sample_rate() > 0) frame.sample_rate() else codec.sample_rate()
         val channels = frameLayout.nb_channels()
         val mask = if (frameLayout.order() == AV_CHANNEL_ORDER_NATIVE) frameLayout.u_mask() else 0L
         if (!swr.isNull && format == swrFormat && inputRate == swrRate && channels == swrChannels && mask == swrMask) return
