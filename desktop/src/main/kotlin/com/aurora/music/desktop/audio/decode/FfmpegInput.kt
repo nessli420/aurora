@@ -67,6 +67,7 @@ internal class FfmpegInput(source: String, http: HttpOptions, private val interr
             ok(result) { "Could not open $description" }
             opened = true
             ok(avformat_find_stream_info(format, null as PointerPointer<*>?)) { "Could not read $description" }
+            if (interrupt.get()) throw DecoderInterruptedException()
             streamIndex = ok(av_find_best_stream(format, AVMEDIA_TYPE_AUDIO, -1, -1, null as PointerPointer<*>?, 0)) {
                 "No audio stream in $description"
             }

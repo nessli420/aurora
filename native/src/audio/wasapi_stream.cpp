@@ -104,7 +104,7 @@ HRESULT Stream::initialize() {
     if (FAILED(hr = client_->GetService(IID_PPV_ARGS(&render_)))) return hr;
     if (FAILED(hr = client_->GetService(IID_PPV_ARGS(&clock_)))) return hr;
     if (FAILED(hr = clock_->GetFrequency(&clockFrequency_))) return hr;
-    client_->GetStreamLatency(&latency_);
+    refreshLatency();
     const uint64_t frames = std::max<uint64_t>(static_cast<uint64_t>(config_.rate) * config_.bufferMs / 1000, 2ull * bufferFrames_);
     try {
         ring_ = std::make_unique<ByteRing>(static_cast<size_t>(frames * frameBytes_));
@@ -188,7 +188,7 @@ HRESULT Stream::execute(Command command) {
         prefill_ = true;
         const HRESULT hr = client_->Reset();
         ring_->drop();
-        deviceFrames_ = contentEnd_ = passedSilence_ = 0;
+        deviceFrames_ = contentEnd_ = passedSilence_ = silence_ = position_ = 0;
         gapHead_ = gapCount_ = 0;
         ResetEvent(drainEvent_);
         SetEvent(spaceEvent_);
@@ -216,7 +216,13 @@ HRESULT Stream::start() {
     playing_ = true;
     prefill_ = false;
     starving_ = false;
+    refreshLatency();
     return S_OK;
+}
+
+void Stream::refreshLatency() {
+    REFERENCE_TIME latency = 0;
+    if (SUCCEEDED(client_->GetStreamLatency(&latency))) latency_.store(latency / 10);
 }
 
 bool Stream::fill(bool prefill) {
@@ -261,6 +267,7 @@ bool Stream::fill(bool prefill) {
 }
 
 void Stream::addGap(uint64_t start, uint64_t length) {
+    silence_ += length;
     if (gapCount_) {
         Gap& last = gaps_[(gapHead_ + gapCount_ - 1) % gaps_.size()];
         if (last.start + last.length == start || gapCount_ == gaps_.size()) {
@@ -291,14 +298,12 @@ void Stream::fail(HRESULT hr) {
 
 void Stream::publish() {
     UINT64 position = 0, qpc = 0;
-    uint64_t frames = deviceFrames_ - queued_.load(std::memory_order_relaxed);
     if (clockFrequency_ && SUCCEEDED(clock_->GetPosition(&position, &qpc))) {
         const uint64_t rate = format_.Format.nSamplesPerSec;
-        frames = std::min<uint64_t>(position / clockFrequency_ * rate + position % clockFrequency_ * rate / clockFrequency_, deviceFrames_);
-        qpc *= 100;
-    } else {
-        qpc = qpc_.load(std::memory_order_relaxed);
+        position_ = std::min<uint64_t>(position / clockFrequency_ * rate + position % clockFrequency_ * rate / clockFrequency_, deviceFrames_);
+        positionQpc_ = qpc * 100;
     }
+    const uint64_t frames = position_;
     while (gapCount_ && gaps_[gapHead_].start + gaps_[gapHead_].length <= frames) {
         passedSilence_ += gaps_[gapHead_].length;
         gapHead_ = (gapHead_ + 1) % gaps_.size();
@@ -314,9 +319,10 @@ void Stream::publish() {
     const uint32_t seq = sequence_.load(std::memory_order_relaxed);
     sequence_.store(seq + 1, std::memory_order_relaxed);
     std::atomic_thread_fence(std::memory_order_release);
-    played_.store(frames - passedSilence_ - partial, std::memory_order_relaxed);
-    queued_.store(deviceFrames_ - frames, std::memory_order_relaxed);
-    qpc_.store(qpc, std::memory_order_relaxed);
+    const uint64_t played = frames - passedSilence_ - partial;
+    played_.store(played, std::memory_order_relaxed);
+    queued_.store(deviceFrames_ - silence_ - played, std::memory_order_relaxed);
+    qpc_.store(positionQpc_, std::memory_order_relaxed);
     sequence_.store(seq + 2, std::memory_order_release);
     int flags = config_.exclusive ? Exclusive : 0;
     if (playing_) flags |= Playing;
@@ -405,7 +411,7 @@ StreamStatus Stream::status() const {
     status.underruns = underruns_.load(std::memory_order_relaxed);
     status.flags = flags_.load();
     status.lastError = lastError_.load();
-    status.latencyUs = latency_ / 10;
+    status.latencyUs = latency_.load();
     status.positionNanos = static_cast<int64_t>(qpc);
     status.bufferFrames = bufferFrames_;
     status.ringFrames = static_cast<int64_t>(ring_->capacity() / frameBytes_);

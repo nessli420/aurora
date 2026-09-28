@@ -130,6 +130,7 @@ private:
     void publish();
     void addGap(uint64_t start, uint64_t length);
     void stopDrain(bool ended);
+    void refreshLatency();
 
     StreamConfig config_;
     std::wstring deviceId_;
@@ -141,7 +142,6 @@ private:
     ComPtr<IAudioClock> clock_;
     uint64_t clockFrequency_ = 0;
     UINT32 bufferFrames_ = 0;
-    REFERENCE_TIME latency_ = 0;
     HANDLE audioEvent_ = nullptr;
     HANDLE commandEvent_ = nullptr;
     HANDLE ackEvent_ = nullptr;
@@ -166,6 +166,9 @@ private:
     uint64_t deviceFrames_ = 0;
     uint64_t contentEnd_ = 0;
     uint64_t passedSilence_ = 0;
+    uint64_t silence_ = 0;
+    uint64_t position_ = 0;
+    uint64_t positionQpc_ = 0;
     std::array<Gap, 64> gaps_{};
     size_t gapHead_ = 0;
     size_t gapCount_ = 0;
@@ -175,6 +178,7 @@ private:
     std::atomic<uint64_t> queued_{0};
     std::atomic<uint64_t> qpc_{0};
     std::atomic<int64_t> underruns_{0};
+    std::atomic<int64_t> latency_{0};
     std::atomic<int> flags_{0};
     std::atomic<HRESULT> lastError_{S_OK};
     std::atomic<bool> closing_{false};

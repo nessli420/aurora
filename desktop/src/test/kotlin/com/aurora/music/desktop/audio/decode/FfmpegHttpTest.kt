@@ -41,12 +41,12 @@ class FfmpegHttpTest {
     }
 
     @Test fun interruptCancelsAStalledNetworkRead() {
-        val wav = wavBytes(48_000, 2, 16, 96_000) { f, c -> (f + c) % 1000 }
+        val wav = wavBytes(48_000, 2, 16, 960_000) { f, c -> (f + c) % 1000 }
         val sent = CountDownLatch(1)
         val release = CountDownLatch(1)
         TestServer { exchange ->
             exchange.sendResponseHeaders(200, wav.size.toLong())
-            exchange.responseBody.write(wav, 0, 64 * 1024)
+            exchange.responseBody.write(wav, 0, 1536 * 1024)
             exchange.responseBody.flush()
             sent.countDown()
             release.await(30, TimeUnit.SECONDS)
@@ -71,7 +71,7 @@ class FfmpegHttpTest {
                 Thread.sleep(500)
                 val stalled = decoded.get()
                 Thread.sleep(300)
-                assertTrue("$stalled ${failure.get()}", stalled in 1 until 96_000)
+                assertTrue("$stalled ${failure.get()}", stalled in 1 until 960_000)
                 assertEquals(stalled, decoded.get())
                 assertTrue(worker.isAlive)
                 val started = System.nanoTime()
@@ -89,33 +89,41 @@ class FfmpegHttpTest {
     }
 
     @Test fun interruptCancelsAStalledOpen() {
-        val release = CountDownLatch(1)
-        val requested = CountDownLatch(1)
-        TestServer { exchange ->
-            requested.countDown()
-            release.await(30, TimeUnit.SECONDS)
-        }.use { server ->
-            val cancel = AtomicBoolean()
-            val failure = AtomicReference<Throwable>()
-            val worker = thread {
-                try {
-                    FfmpegDecoder.open("${server.base}/hang.flac", HttpOptions(timeoutMs = 60_000), cancel).close()
-                } catch (t: Throwable) {
-                    failure.set(t)
+        val wav = wavBytes(48_000, 2, 16, 960_000) { f, c -> (f + c) % 1000 }
+        for (headerBytes in listOf(0, 64 * 1024)) {
+            val release = CountDownLatch(1)
+            val requested = CountDownLatch(1)
+            TestServer { exchange ->
+                if (headerBytes > 0) {
+                    exchange.sendResponseHeaders(200, wav.size.toLong())
+                    exchange.responseBody.write(wav, 0, headerBytes)
+                    exchange.responseBody.flush()
                 }
-            }
-            try {
-                assertTrue(requested.await(10, TimeUnit.SECONDS))
-                Thread.sleep(300)
-                assertTrue(worker.isAlive)
-                cancel.set(true)
-                worker.join(5_000)
-                assertFalse(worker.isAlive)
-                assertTrue("${failure.get()}", failure.get() is DecoderInterruptedException)
-            } finally {
-                release.countDown()
-                cancel.set(true)
-                worker.join(5_000)
+                requested.countDown()
+                release.await(30, TimeUnit.SECONDS)
+            }.use { server ->
+                val cancel = AtomicBoolean()
+                val failure = AtomicReference<Throwable>()
+                val worker = thread {
+                    try {
+                        FfmpegDecoder.open("${server.base}/hang.wav", HttpOptions(timeoutMs = 60_000), cancel).close()
+                    } catch (t: Throwable) {
+                        failure.set(t)
+                    }
+                }
+                try {
+                    assertTrue(requested.await(10, TimeUnit.SECONDS))
+                    Thread.sleep(300)
+                    assertTrue(worker.isAlive)
+                    cancel.set(true)
+                    worker.join(5_000)
+                    assertFalse(worker.isAlive)
+                    assertTrue("$headerBytes ${failure.get()}", failure.get() is DecoderInterruptedException)
+                } finally {
+                    release.countDown()
+                    cancel.set(true)
+                    worker.join(5_000)
+                }
             }
         }
     }
