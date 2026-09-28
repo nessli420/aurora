@@ -9,6 +9,19 @@
 #define SAMIN(a,b) ((a) < (b) ? (a) : (b))
 #define FFABS(a) ((a) < 0 ? -(a) : (a))
 #define sa_always_inline inline
+#ifdef _MSC_VER
+#include <intrin.h>
+#include <malloc.h>
+#define sa_free _aligned_free
+#define DECLARE_ALIGNED(n,t,v) __declspec(align(n)) t v
+static inline void* sa_calloc(size_t count, size_t size) {
+    if (!count || !size || count > SIZE_MAX / size) return NULL;
+    void* memory = _aligned_malloc(count * size, 64);
+    if (memory) memset(memory, 0, count * size);
+    return memory;
+}
+static inline int sa_log2(unsigned v) { unsigned long i; return _BitScanReverse(&i, v) ? (int)i : 0; }
+#else
 #define sa_free free
 #define DECLARE_ALIGNED(n,t,v) t __attribute__((aligned(n))) v
 static inline void* sa_calloc(size_t count, size_t size) {
@@ -18,8 +31,9 @@ static inline void* sa_calloc(size_t count, size_t size) {
     memset(memory, 0, count * size);
     return memory;
 }
-static inline int sa_clip(int v, int low, int high) { return v < low ? low : v > high ? high : v; }
 static inline int sa_log2(unsigned v) { return v ? 31 - __builtin_clz(v) : 0; }
+#endif
+static inline int sa_clip(int v, int low, int high) { return v < low ? low : v > high ? high : v; }
 static inline uint64_t SA_RL64A(const void* p) { uint64_t v; memcpy(&v, p, 8); return v; }
 static inline void SA_WL64A(void* p, uint64_t v) { memcpy(p, &v, 8); }
 
