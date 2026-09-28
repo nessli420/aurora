@@ -9,6 +9,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aurora.music.data.DownloadManager
+import com.aurora.music.data.androidFileUri
+import com.aurora.music.data.openUri
 import com.aurora.music.data.DownloadState
 import com.aurora.music.data.MediaBackend
 import com.aurora.music.data.MusicRepository
@@ -143,7 +145,7 @@ class PlexPlaybackDeviceTest {
                 val selected = requireNotNull(browsing.songFor("101")).copy(artworkUrl = "")
                 val fresh = PlexBackend(PlexClient(session, appClientInfo), { 0 }, { it })
                 assertTrue(fresh.streamUrl("101", 0, true).isBlank())
-                val manager = DownloadManager(isolated,
+                val manager = DownloadManager(File(isolated.filesDir, "downloads"), ::androidFileUri, isolated::openUri,
                     currentServerIdProvider = { session.server },
                     downloadUrlResolverProvider = { { _, bitrate, lossless -> fresh.downloadUrl("101", bitrate, lossless) } })
                 val firstIdentity = PlaybackSourceIdentity.fromSession(session, "")
@@ -166,7 +168,7 @@ class PlexPlaybackDeviceTest {
                 assertEquals(first.id, manager.getByOriginalId("101", firstIdentity.providerId)?.id)
                 assertEquals(second.id, manager.getByOriginalId("101", otherIdentity.providerId)?.id)
                 assertNull(manager.getByOriginalId("101", "missing-provider"))
-                val reloaded = DownloadManager(isolated)
+                val reloaded = DownloadManager(File(isolated.filesDir, "downloads"), ::androidFileUri, isolated::openUri)
                 assertEquals(first.id, reloaded.getByOriginalId("101", firstIdentity.providerId)?.id)
                 assertEquals(second.id, reloaded.getByOriginalId("101", otherIdentity.providerId)?.id)
 
@@ -221,7 +223,7 @@ class PlexPlaybackDeviceTest {
                     override fun getFilesDir() = File(directory, "guarded").apply { mkdirs() }
                     override fun getApplicationContext(): Context = this
                 }
-                val guarded = DownloadManager(guardedContext,
+                val guarded = DownloadManager(File(guardedContext.filesDir, "downloads"), ::androidFileUri, guardedContext::openUri,
                     currentServerIdProvider = { session.server },
                     playbackSourceProvider = { otherIdentity },
                     copyCached = { _, file, progress -> file.writeBytes(audio); progress(1f) },

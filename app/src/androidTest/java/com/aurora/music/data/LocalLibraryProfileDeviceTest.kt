@@ -123,7 +123,7 @@ class LocalLibraryProfileDeviceTest {
         val isolated = object : ContextWrapper(context) { override fun getContentResolver() = resolver }
         var rules = ArtistSeparators()
         val library = LocalLibrary(isolated, separatorsProvider = { rules })
-        val backend = LocalBackend(library, LocalStore(context), Session("On this device", "Local Library", "", "local", ServerType.LOCAL))
+        val backend = LocalBackend(library, LocalStore(context.filesDir), Session("On this device", "Local Library", "", "local", ServerType.LOCAL))
         val artists = backend.allArtists().associateBy { it.name }
         assertEquals(setOf("Cynthoni", "Sewerslvt", "AC/DC"), artists.keys)
         val cynthoni = requireNotNull(artists["Cynthoni"])

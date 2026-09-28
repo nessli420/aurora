@@ -60,6 +60,7 @@ import com.aurora.music.model.Song
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.model.accent
 
 @Composable
 fun SongRow(

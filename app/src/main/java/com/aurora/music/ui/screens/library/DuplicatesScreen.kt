@@ -37,6 +37,7 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.screens.settings.SettingsTopBar
+import com.aurora.music.model.accent
 
 /** Result list of the duplicate scan: one card per suspected-duplicate group. */
 @Composable

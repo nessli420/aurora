@@ -25,7 +25,7 @@ class ListeningRecapDeviceTest {
     @Test fun measuredHistorySurvivesReloadAndRepeatedSongsAreSeparatePlays() {
         val dir = File(context.cacheDir, "recap-test-${System.nanoTime()}").apply { mkdirs() }
         val isolated = object : ContextWrapper(context) { override fun getFilesDir(): File = dir }
-        val history = PlayHistoryStore(isolated)
+        val history = PlayHistoryStore(isolated.filesDir)
         history.recordListening(song, 35_000)
         history.recordListening(song, 25_000)
         history.endListeningSession()
@@ -35,8 +35,8 @@ class ListeningRecapDeviceTest {
         assertEquals(2, snapshot.size)
         assertEquals(90_000L, snapshot.sumOf { it.listeningMillis })
         val deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5)
-        while (System.nanoTime() < deadline && PlayHistoryStore(isolated).snapshot().sumOf { it.listeningMillis } != 90_000L) Thread.sleep(50)
-        assertEquals(90_000L, PlayHistoryStore(isolated).snapshot().sumOf { it.listeningMillis })
+        while (System.nanoTime() < deadline && PlayHistoryStore(isolated.filesDir).snapshot().sumOf { it.listeningMillis } != 90_000L) Thread.sleep(50)
+        assertEquals(90_000L, PlayHistoryStore(isolated.filesDir).snapshot().sumOf { it.listeningMillis })
     }
 
     @Test fun allPictureStylesEncodeReadablePng() {

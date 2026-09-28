@@ -2,7 +2,7 @@ package com.aurora.music.data
 
 import com.aurora.music.data.remote.PlexClient
 import com.aurora.music.data.remote.PlexException
-import com.aurora.music.data.remote.appClientInfo
+import com.aurora.music.data.remote.testClientInfo
 import com.aurora.music.model.LyricLine
 import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
@@ -18,7 +18,7 @@ import java.util.concurrent.TimeUnit
 class PlexLyricsTest {
     private fun client(server: MockWebServer) = PlexClient(
         Session(server.url("/").toString().trimEnd('/'), "Plex", "", "lyrics-token", ServerType.PLEX, "machine"),
-        appClientInfo,
+        testClientInfo,
         OkHttpClient.Builder().readTimeout(5, TimeUnit.SECONDS).build(),
     )
 

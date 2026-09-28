@@ -33,12 +33,12 @@ class BackupRestoreDurabilityDeviceTest {
             override fun getFilesDir() = File(root, "files").apply { mkdirs() }
             override fun getCacheDir() = File(root, "cache").apply { mkdirs() }
         }
-        val local = LocalStore(isolated)
-        val history = PlayHistoryStore(isolated)
+        val local = LocalStore(isolated.filesDir)
+        val history = PlayHistoryStore(isolated.filesDir)
         try {
             local.restoreBackupJson(initialLocal)
             history.restoreBackup(listOf(event("old")))
-            block(BackupManager(settings, local, history, isolated), local, history, isolated, original)
+            block(BackupManager(settings, local, history, isolated.filesDir, isolated.cacheDir), local, history, isolated, original)
         } finally {
             settings.restoreBackupPrefs(original).getOrThrow()
             root.deleteRecursively()
@@ -55,7 +55,7 @@ class BackupRestoreDurabilityDeviceTest {
         assertEquals(original, settings.exportPrefs())
         assertEquals(localBefore, local.exportJson())
         assertEquals(historyBefore, history.snapshot())
-        assertEquals(historyBefore, PlayHistoryStore(isolated).snapshot())
+        assertEquals(historyBefore, PlayHistoryStore(isolated.filesDir).snapshot())
         assertEquals("keep", blocker.readText())
         assertNoTemporaryFiles(isolated.filesDir)
     }
@@ -67,7 +67,7 @@ class BackupRestoreDurabilityDeviceTest {
         assertTrue(manager.importArchive(input(original)).isFailure)
         assertEquals(original, settings.exportPrefs())
         assertEquals(localBefore, local.exportJson())
-        assertEquals(localBefore, LocalStore(isolated).exportJson())
+        assertEquals(localBefore, LocalStore(isolated.filesDir).exportJson())
         assertEquals(historyBefore, history.snapshot())
         assertEquals("keep", blocker.readText())
         assertNoTemporaryFiles(isolated.filesDir)
@@ -80,9 +80,9 @@ class BackupRestoreDurabilityDeviceTest {
         assertTrue(manager.importArchive(input(invalid)).isFailure)
         assertEquals(original, settings.exportPrefs())
         assertEquals(localBefore, local.exportJson())
-        assertEquals(localBefore, LocalStore(isolated).exportJson())
+        assertEquals(localBefore, LocalStore(isolated.filesDir).exportJson())
         assertEquals(historyBefore, history.snapshot())
-        assertEquals(historyBefore, PlayHistoryStore(isolated).snapshot())
+        assertEquals(historyBefore, PlayHistoryStore(isolated.filesDir).snapshot())
         assertNoTemporaryFiles(isolated.filesDir)
     }
 
@@ -129,7 +129,7 @@ class BackupRestoreDurabilityDeviceTest {
         assertTrue(result.exceptionOrNull()?.message.orEmpty().contains("Newer changes were kept"))
         assertEquals(listOf("recent"), local.playlist(added)?.trackIds)
         assertNotNull(local.playlist("local:new"))
-        assertEquals(local.exportJson(), LocalStore(isolated).exportJson())
+        assertEquals(local.exportJson(), LocalStore(isolated.filesDir).exportJson())
         assertEquals(historyBefore, history.snapshot())
         assertEquals(original, settings.exportPrefs())
     }
@@ -144,9 +144,9 @@ class BackupRestoreDurabilityDeviceTest {
         assertTrue(local.rollbackBackup(localToken))
         assertTrue(history.rollbackBackup(historyToken))
         assertEquals(localBefore, local.exportJson())
-        assertEquals(localBefore, LocalStore(isolated).exportJson())
+        assertEquals(localBefore, LocalStore(isolated.filesDir).exportJson())
         assertEquals(historyBefore, history.snapshot())
-        assertEquals(historyBefore, PlayHistoryStore(isolated).snapshot())
+        assertEquals(historyBefore, PlayHistoryStore(isolated.filesDir).snapshot())
     }
 
     @Test fun guardedRollbackKeepsNewHistoryAndExplicitClearDurably() = fixture { _, _, history, isolated, _ ->
@@ -154,19 +154,19 @@ class BackupRestoreDurabilityDeviceTest {
         history.record(song("during"), 30)
         assertFalse(history.rollbackBackup(recorded))
         assertEquals(listOf("during", "new"), history.snapshot().map { it.songId })
-        assertEquals(history.snapshot(), PlayHistoryStore(isolated).snapshot())
+        assertEquals(history.snapshot(), PlayHistoryStore(isolated.filesDir).snapshot())
         val cleared = history.replaceBackup(listOf(event("replacement")))
         history.clear()
         assertFalse(history.rollbackBackup(cleared))
         assertTrue(history.snapshot().isEmpty())
-        assertTrue(PlayHistoryStore(isolated).snapshot().isEmpty())
+        assertTrue(PlayHistoryStore(isolated.filesDir).snapshot().isEmpty())
     }
 
     @Test fun awaitedStoreRestoresAreReloadableImmediately() = fixture { _, local, history, isolated, _ ->
         local.restoreBackupJson(replacementLocal)
         history.restoreBackup(listOf(event("new")))
-        assertEquals(local.exportJson(), LocalStore(isolated).exportJson())
-        assertEquals(history.snapshot(), PlayHistoryStore(isolated).snapshot())
+        assertEquals(local.exportJson(), LocalStore(isolated.filesDir).exportJson())
+        assertEquals(history.snapshot(), PlayHistoryStore(isolated.filesDir).snapshot())
         assertNoTemporaryFiles(isolated.filesDir)
     }
 

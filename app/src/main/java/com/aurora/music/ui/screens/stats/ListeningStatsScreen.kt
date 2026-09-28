@@ -58,6 +58,7 @@ import com.aurora.music.data.RankedItem
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.util.accentFor
+import com.aurora.music.data.label
 
 @Composable
 fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPlay: (String) -> Unit, onOpenDetail: (String, String) -> Unit,

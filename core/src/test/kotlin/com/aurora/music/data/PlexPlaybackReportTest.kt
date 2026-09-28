@@ -2,7 +2,7 @@ package com.aurora.music.data
 
 import com.aurora.music.data.remote.PlexClient
 import com.aurora.music.data.remote.PlexException
-import com.aurora.music.data.remote.appClientInfo
+import com.aurora.music.data.remote.testClientInfo
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
@@ -41,7 +41,7 @@ class PlexPlaybackReportTest {
 
     private fun backend(fixture: Fixture, path: String = "/") = PlexBackend(
         PlexClient(Session(fixture.server.url(path).toString().trimEnd('/'), "Listener", "", token,
-            ServerType.PLEX, "machine", clientToken = "fixture-device"), appClientInfo, OkHttpClient()),
+            ServerType.PLEX, "machine", clientToken = "fixture-device"), testClientInfo, OkHttpClient()),
         { 0 }, { it },
     )
 

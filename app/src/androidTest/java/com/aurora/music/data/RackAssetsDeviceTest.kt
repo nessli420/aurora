@@ -134,7 +134,7 @@ class RackAssetsDeviceTest {
             override fun getFilesDir() = File(root, "files").apply { mkdirs() }
             override fun getCacheDir() = File(root, "cache").apply { mkdirs() }
         }
-        val manager = BackupManager(store, LocalStore(isolated), PlayHistoryStore(isolated), isolated)
+        val manager = BackupManager(store, LocalStore(isolated.filesDir), PlayHistoryStore(isolated.filesDir), isolated.filesDir, isolated.cacheDir)
         val (entry, preset) = preparePreset()
         store.applyProcessingPreset(preset.id).getOrThrow()
         store.deleteProcessingPreset(preset.id).getOrThrow()

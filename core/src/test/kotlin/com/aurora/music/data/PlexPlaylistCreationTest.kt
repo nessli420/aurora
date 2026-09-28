@@ -1,7 +1,7 @@
 package com.aurora.music.data
 
 import com.aurora.music.data.remote.PlexClient
-import com.aurora.music.data.remote.appClientInfo
+import com.aurora.music.data.remote.testClientInfo
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
@@ -163,7 +163,7 @@ class PlexPlaylistCreationTest {
             server.start()
             server.enqueue(MockResponse().setHeader("Content-Type", "application/json")
                 .setBody("""{"MediaContainer":{"Metadata":[{"ratingKey":"900","type":"playlist","playlistType":"audio"}]}}"""))
-            val source = PlexBackend(PlexClient(Session(server.url("/").toString(), "Fixture", "", "token", ServerType.PLEX, "machine"), appClientInfo), { 0 }, { it })
+            val source = PlexBackend(PlexClient(Session(server.url("/").toString(), "Fixture", "", "token", ServerType.PLEX, "machine"), testClientInfo), { 0 }, { it })
             assertTrue(source.prefersServerRadio("101"))
             assertEquals("900", source.createPlaylistWithId("Repeated", listOf("101", "102", "101")))
             val request = server.takeRequest()

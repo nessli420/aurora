@@ -139,6 +139,7 @@ import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.viewmodel.PlayerUiState
 import com.aurora.music.viewmodel.RepeatMode
 import kotlinx.coroutines.delay
+import com.aurora.music.model.accent
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

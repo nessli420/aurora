@@ -30,15 +30,15 @@ class BackupArchiveDeviceTest {
             override fun getFilesDir() = File(root, "files").apply { mkdirs() }
             override fun getCacheDir() = File(root, "cache").apply { mkdirs() }
         }
-        val local = LocalStore(isolated)
-        val history = PlayHistoryStore(isolated)
+        val local = LocalStore(isolated.filesDir)
+        val history = PlayHistoryStore(isolated.filesDir)
         try {
             store.restoreBackupPrefs(original.copy(strings = original.strings + mapOf(
                 BackupArchive.PRESETS_KEY to "[]", BackupArchive.IR_PATH_KEY to "",
                 ProcessingRackCodec.PREFERENCE_KEY to ProcessingRackCodec.encode(ProcessingRack())),
                 booleans = original.booleans + ("dsp_conv_enabled" to false))).getOrThrow()
             store.setAutoEqAutoSwitch(false)
-            block(BackupManager(store, local, history, isolated), local, history, root)
+            block(BackupManager(store, local, history, isolated.filesDir, isolated.cacheDir), local, history, root)
         } finally {
             store.restoreBackupPrefs(original).getOrThrow()
             // Imported files are owned by this fixture only; original assets are untouched.

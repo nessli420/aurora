@@ -61,6 +61,7 @@ import com.aurora.music.ui.components.Waveform
 import com.aurora.music.ui.components.formatTime
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.HomeUiState
+import com.aurora.music.model.accent
 
 @Composable
 fun HomeScreen(

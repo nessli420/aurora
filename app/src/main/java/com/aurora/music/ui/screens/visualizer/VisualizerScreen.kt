@@ -68,6 +68,7 @@ import com.aurora.music.util.rememberDominantColor
 import com.aurora.music.viewmodel.PlayerUiState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import com.aurora.music.model.accent
 
 @Composable
 fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {

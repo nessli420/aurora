@@ -70,6 +70,7 @@ import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.Eyebrow
 import com.aurora.music.ui.components.formatTime
 import kotlin.math.roundToInt
+import com.aurora.music.model.accent
 
 @Composable
 fun QueueScreen(

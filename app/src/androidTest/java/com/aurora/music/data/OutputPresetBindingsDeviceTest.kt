@@ -89,7 +89,7 @@ class OutputPresetBindingsDeviceTest {
     @Test fun controllerPreservesManualSoundOnReconnectAndUnboundRoutes() = fixture { first, second ->
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         try {
-            AutoEqController(context, store, scope)
+            AutoEqController(store, scope)
             store.bindCurrentRoute(first.id, "").getOrThrow()
             withTimeout(5000) { store.audioPrefs.first { it.dspPreampDb == -5f } }
             store.applyProcessingPreset(second.id).getOrThrow()
@@ -141,7 +141,7 @@ class OutputPresetBindingsDeviceTest {
         store.setAutoEqAutoSwitch(true)
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         try {
-            AutoEqController(context, store, scope)
+            AutoEqController(store, scope)
             withTimeout(5000) { store.audioPrefs.first { it.dspPreampDb == -3f } }
             store.setDspPreamp(-11f)
             store.processingRoutes.publish(ProcessingRoute())

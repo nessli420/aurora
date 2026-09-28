@@ -20,6 +20,7 @@ import com.aurora.music.data.ListeningRecap
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import com.aurora.music.data.label
 
 enum class RecapStyle { MIDNIGHT, PAPER, AURORA }
 

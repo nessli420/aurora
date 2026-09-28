@@ -165,7 +165,7 @@ class PresetRulesDeviceTest {
             override fun getCacheDir() = File(root, "cache").apply { mkdirs() }
         }
         try {
-            val manager = BackupManager(store, LocalStore(isolated), PlayHistoryStore(isolated), isolated)
+            val manager = BackupManager(store, LocalStore(isolated.filesDir), PlayHistoryStore(isolated.filesDir), isolated.filesDir, isolated.cacheDir)
             val json = manager.export(42)
             manager.importArchive(ByteArrayInputStream(json.toByteArray(Charsets.UTF_8))).getOrThrow()
             val recovered = PresetRuleSessionCodec.decode(store.exportPrefs().strings[PresetRuleSessionCodec.PREFERENCE_KEY]).getOrThrow()!!
@@ -211,7 +211,7 @@ class PresetRulesDeviceTest {
     @Test fun unifiedControllerRestoresBaselineAndHonorsManualOverride() = fixture { _, first, _ ->
         val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
         try {
-            AutoEqController(context, store, scope)
+            AutoEqController(store, scope)
             install(rule(first))
             withTimeout(5000) { store.audioPrefs.first { it.dspPreampDb == -5f } }
             store.presetRuleContext.publish(playback.copy(genres = setOf("Jazz")))

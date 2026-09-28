@@ -5,6 +5,7 @@ import android.graphics.BitmapFactory
 import android.os.ParcelFileDescriptor
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aurora.music.data.ArtistSeparators
+import com.aurora.music.data.openUri
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -44,6 +45,8 @@ class ArtworkCacheDeviceTest {
         Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(if (successful) 200 else 503).message("Fixture")
             .body(png().toResponseBody()).build()
     }.build()
+    private suspend fun ArtworkRepository.open(request: ArtworkRequest) =
+        open(request) { ParcelFileDescriptor.open(it, ParcelFileDescriptor.MODE_READ_ONLY) }
     private fun verify(descriptor: ParcelFileDescriptor) = ParcelFileDescriptor.AutoCloseInputStream(descriptor).use {
         val bitmap = BitmapFactory.decodeStream(it)
         assertNotNull(bitmap)
@@ -55,8 +58,8 @@ class ArtworkCacheDeviceTest {
         val directory = File(context.cacheDir, "artwork-device-test-${System.nanoTime()}")
         val metadataCalls = AtomicInteger(); val imageCalls = AtomicInteger()
         var offline = false
-        fun repository() = ArtworkRepository(context, offline = { offline }, enabled = { true }, separators = { ArtistSeparators() },
-            client = metadata(metadataCalls), http = images(imageCalls), root = directory)
+        fun repository() = ArtworkRepository(directory, context::openUri, AndroidArtworkImages, offline = { offline }, enabled = { true }, separators = { ArtistSeparators() },
+            client = metadata(metadataCalls), http = images(imageCalls))
         try {
             val repo = repository()
             val request = ArtworkRequest("Artist", "Album")
@@ -77,13 +80,13 @@ class ArtworkCacheDeviceTest {
         val metadataCalls = AtomicInteger(); val imageCalls = AtomicInteger()
         try {
             val request = ArtworkRequest("Artist", "Album")
-            val miss = ArtworkRepository(context, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
-                client = metadata(metadataCalls, false), http = images(imageCalls), root = directory)
+            val miss = ArtworkRepository(directory, context::openUri, AndroidArtworkImages, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
+                client = metadata(metadataCalls, false), http = images(imageCalls))
             repeat(2) { try { miss.open(request); fail("Expected no cover") } catch (_: FileNotFoundException) { } }
             assertEquals(1, metadataCalls.get()); assertEquals(0, imageCalls.get())
             miss.clear()
-            val failed = ArtworkRepository(context, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
-                client = metadata(metadataCalls), http = images(imageCalls, false), root = directory)
+            val failed = ArtworkRepository(directory, context::openUri, AndroidArtworkImages, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
+                client = metadata(metadataCalls), http = images(imageCalls, false))
             repeat(2) { try { failed.open(request); fail("Expected network failure") } catch (_: java.io.IOException) { } }
             assertEquals(3, metadataCalls.get()); assertEquals(4, imageCalls.get())
         } finally { directory.deleteRecursively() }
@@ -93,8 +96,8 @@ class ArtworkCacheDeviceTest {
         val directory = File(context.cacheDir, "artwork-device-test-${System.nanoTime()}")
         val calls = AtomicInteger()
         try {
-            val repo = ArtworkRepository(context, offline = { false }, enabled = { false }, separators = { ArtistSeparators() },
-                client = metadata(calls), http = images(calls), root = directory)
+            val repo = ArtworkRepository(directory, context::openUri, AndroidArtworkImages, offline = { false }, enabled = { false }, separators = { ArtistSeparators() },
+                client = metadata(calls), http = images(calls))
             try { repo.open(ArtworkRequest("Artist", "Album")); fail("Disabled lookup ran") } catch (_: FileNotFoundException) { }
             assertEquals(0, calls.get())
         } finally { directory.deleteRecursively() }
@@ -104,8 +107,8 @@ class ArtworkCacheDeviceTest {
         val directory = File(context.cacheDir, "artwork-device-test-${System.nanoTime()}")
         val searches = AtomicInteger(); val downloads = AtomicInteger()
         var offline = false
-        val repo = ArtworkRepository(context, offline = { offline }, enabled = { false }, separators = { ArtistSeparators() },
-            client = metadata(searches), http = images(downloads), root = directory)
+        val repo = ArtworkRepository(directory, context::openUri, AndroidArtworkImages, offline = { offline }, enabled = { false }, separators = { ArtistSeparators() },
+            client = metadata(searches), http = images(downloads))
         val request = ArtworkRequest("Artist", "Album", original = "https://server/rest/getCoverArt.view?id=one")
         try {
             repeat(2) { verify(repo.open(request)) }
@@ -143,8 +146,8 @@ class ArtworkCacheDeviceTest {
         }.build()
         val directory = File(context.cacheDir, "artwork-device-test-${System.nanoTime()}")
         try {
-            val repo = ArtworkRepository(context, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
-                client = metadata(searches), http = http, root = directory)
+            val repo = ArtworkRepository(directory, context::openUri, AndroidArtworkImages, offline = { false }, enabled = { true }, separators = { ArtistSeparators() },
+                client = metadata(searches), http = http)
             val request = ArtworkRequest("Artist", "Album", original = "https://server/rest/getCoverArt.view?id=one")
             repeat(2) { verify(repo.open(request)) }
             assertEquals(1, searches.get()); assertEquals(2, downloads.get())

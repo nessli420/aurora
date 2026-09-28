@@ -22,7 +22,7 @@ class QueueStoreDurabilityDeviceTest {
         val entered = CountDownLatch(1)
         val release = CountDownLatch(1)
         val blockNext = AtomicBoolean(false)
-        val store = QueueStore(isolated) { file, bytes ->
+        val store = QueueStore(isolated.filesDir) { file, bytes ->
             if (blockNext.compareAndSet(true, false)) {
                 entered.countDown()
                 check(release.await(5, TimeUnit.SECONDS))
@@ -40,7 +40,7 @@ class QueueStoreDurabilityDeviceTest {
             assertThrows(TimeoutException::class.java) { restore.get(150, TimeUnit.MILLISECONDS) }
             release.countDown()
             restore.get(5, TimeUnit.SECONDS)
-            val reloaded = QueueStore(isolated)
+            val reloaded = QueueStore(isolated.filesDir)
             assertEquals(saved("original"), reloaded.get("account"))
             assertEquals(saved("untouched"), reloaded.get("other"))
             assertEquals(saved("original"), store.get("account"))
@@ -48,20 +48,20 @@ class QueueStoreDurabilityDeviceTest {
     }
 
     @Test fun removingAnOriginallyAbsentAccountIsDurableAndKeepsOtherAccounts() = fixture { isolated ->
-        val store = QueueStore(isolated)
+        val store = QueueStore(isolated.filesDir)
         runBlocking {
             store.restoreAccount("other", saved("keep"))
             store.restoreAccount("temporary", saved("fixture"))
             store.restoreAccount("temporary", null)
         }
         assertNull(store.get("temporary"))
-        val reloaded = QueueStore(isolated)
+        val reloaded = QueueStore(isolated.filesDir)
         assertNull(reloaded.get("temporary")); assertEquals(saved("keep"), reloaded.get("other"))
     }
 
     @Test fun failedDurableRestoreDoesNotPublishOrEraseTheOriginalQueue() = fixture { isolated ->
         val fail = AtomicBoolean(false)
-        val store = QueueStore(isolated) { file, bytes ->
+        val store = QueueStore(isolated.filesDir) { file, bytes ->
             if (fail.get()) throw IOException("Fixture write failure")
             persistBackupFileAtomically(file, bytes)
         }
@@ -69,7 +69,7 @@ class QueueStoreDurabilityDeviceTest {
         fail.set(true)
         assertThrows(IOException::class.java) { runBlocking { store.restoreAccount("account", saved("replacement")) } }
         assertEquals(saved("original"), store.get("account"))
-        assertEquals(saved("original"), QueueStore(isolated).get("account"))
+        assertEquals(saved("original"), QueueStore(isolated.filesDir).get("account"))
     }
 
     private fun fixture(block: (ContextWrapper) -> Unit) {

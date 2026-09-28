@@ -76,6 +76,7 @@ import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.viewmodel.DetailUiState
 import kotlinx.coroutines.launch
+import com.aurora.music.model.accent
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable

@@ -11,6 +11,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aurora.music.data.DownloadManager
+import com.aurora.music.data.androidFileUri
+import com.aurora.music.data.openUri
 import com.aurora.music.data.MediaBackend
 import com.aurora.music.data.MusicRepository
 import com.aurora.music.data.PlaybackReport
@@ -63,7 +65,7 @@ class PlaybackReportingDeviceTest {
                 return PlaybackReportTarget(song) { reports += it }
             }
         }
-        val repository = MusicRepository({ backend }, DownloadManager(isolated))
+        val repository = MusicRepository({ backend }, DownloadManager(File(isolated.filesDir, "downloads"), ::androidFileUri, isolated::openUri))
         val dispatcher = PlaybackReportDispatcher(scope, allowed = allowed::get)
         val controller = PlaybackReportingController(repository, dispatcher, allowed::get) { false }
         val audio = File(directory, "fixture.wav").apply { writeBytes(wav(seconds = 6)) }

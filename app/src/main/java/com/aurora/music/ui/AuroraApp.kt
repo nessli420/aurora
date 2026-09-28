@@ -126,6 +126,7 @@ import com.aurora.music.viewmodel.PlayerViewModel
 import com.aurora.music.viewmodel.SearchViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import com.aurora.music.model.accent
 
 @Composable
 fun AuroraApp() {

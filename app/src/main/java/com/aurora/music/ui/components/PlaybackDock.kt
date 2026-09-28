@@ -65,6 +65,7 @@ import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.viewmodel.PlayerUiState
 import kotlinx.coroutines.delay
 import kotlin.math.abs
+import com.aurora.music.model.accent
 
 @Composable
 fun PlaybackDock(

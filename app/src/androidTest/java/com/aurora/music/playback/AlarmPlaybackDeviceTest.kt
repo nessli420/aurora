@@ -161,7 +161,7 @@ class AlarmPlaybackDeviceTest {
         val originalBackend = container.backend
         val wave = wav()
         val fallback = originalBackend ?: LocalBackend(
-            container.localLibrary, LocalStore(context),
+            container.localLibrary, LocalStore(context.filesDir),
             Session("Alarm fixture", "Fixture", "", "local", ServerType.LOCAL),
         )
         val fixture = FixtureBackend(fallback, Song(

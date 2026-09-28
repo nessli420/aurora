@@ -26,7 +26,7 @@ class DownloadIsolationDeviceTest {
         val started = CountDownLatch(1)
         val proceed = CountDownLatch(1)
         val bytes = byteArrayOf(1, 2, 3, 4)
-        val manager = DownloadManager(context, currentServerIdProvider = { server.get() },
+        val manager = DownloadManager(File(context.filesDir, "downloads"), ::androidFileUri, context::openUri, currentServerIdProvider = { server.get() },
             copyCached = { _, file, progress ->
                 started.countDown()
                 check(proceed.await(5, TimeUnit.SECONDS))
@@ -54,7 +54,7 @@ class DownloadIsolationDeviceTest {
         val id = "../collection-${UUID.randomUUID()}"
         val source = File(context.cacheDir, "cover-${UUID.randomUUID()}.jpg")
         source.writeBytes(byteArrayOf(5, 6, 7))
-        val manager = DownloadManager(context, currentServerIdProvider = { "server-a" })
+        val manager = DownloadManager(File(context.filesDir, "downloads"), ::androidFileUri, context::openUri, currentServerIdProvider = { "server-a" })
         try {
             manager.downloadCollection(id, "album", "Edge", "Artist", Uri.fromFile(source).toString(), emptyList())
             val entry = withTimeout(5_000) { manager.collections.first { list -> list.any { it.id == id } }.first { it.id == id } }

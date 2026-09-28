@@ -17,6 +17,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aurora.music.data.DownloadManager
+import com.aurora.music.data.androidFileUri
+import com.aurora.music.data.openUri
 import com.aurora.music.data.MusicRepository
 import com.aurora.music.data.PlaybackSourceIdentity
 import com.aurora.music.data.rules.RuleSource
@@ -173,7 +175,7 @@ class AudioCacheDeviceTest {
         val downloadDir = File(isolated.filesDir, "downloads").apply { mkdirs() }
         val saved = File(downloadDir, "manual.flac").apply { writeBytes(byteArrayOf(1, 2, 3)) }
         val cache = AudioCache(context, null, directory = File(root, "streams"))
-        val downloads = DownloadManager(isolated, { _, _, _ -> error("Saving cached audio must not request a URL") }, copyCached = cache::copyTo)
+        val downloads = DownloadManager(File(isolated.filesDir, "downloads"), ::androidFileUri, isolated::openUri, { _, _, _ -> error("Saving cached audio must not request a URL") }, copyCached = cache::copyTo)
         try {
             ready(cache)
             val factory = cache.factory(DataSource.Factory { ByteArrayDataSource(ByteArray(4096)) })
