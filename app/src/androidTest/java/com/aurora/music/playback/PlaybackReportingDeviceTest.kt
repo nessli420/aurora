@@ -23,6 +23,7 @@ import com.aurora.music.data.PlexBackend
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.remote.PlexClient
+import com.aurora.music.data.remote.appClientInfo
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -55,7 +56,7 @@ class PlaybackReportingDeviceTest {
         val reports = CopyOnWriteArrayList<PlaybackReport>()
         val session = Session("http://127.0.0.1:1", "Playback fixture", "", "fixture-token", ServerType.PLEX, "fixture")
         val provider = PlaybackSourceIdentity.fromSession(session, "")
-        val delegate = PlexBackend(PlexClient(session), { 0 }, { it })
+        val delegate = PlexBackend(PlexClient(session, appClientInfo), { 0 }, { it })
         val backend = object : MediaBackend by delegate {
             override fun playbackReportTarget(song: Song): PlaybackReportTarget? {
                 if (song.playbackSource?.providerId != provider.providerId) return null

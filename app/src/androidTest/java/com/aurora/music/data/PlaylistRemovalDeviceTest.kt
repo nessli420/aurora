@@ -2,6 +2,7 @@ package com.aurora.music.data
 
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.SubsonicClient
+import com.aurora.music.data.remote.appClientInfo
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
 import okhttp3.mockwebserver.MockWebServer
@@ -30,7 +31,7 @@ class PlaylistRemovalDeviceTest {
             server.enqueue(MockResponse().setBody("""{"Items":[{"Id":"target","PlaylistItemId":"entry-c"}],"TotalRecordCount":3}"""))
             server.enqueue(MockResponse().setResponseCode(204))
             val session = Session(server.url("/").toString(), "listener", "", "token", ServerType.JELLYFIN, "user")
-            val backend = JellyfinBackend(JellyfinClient(session), { 0 }, { it })
+            val backend = JellyfinBackend(JellyfinClient(session, appClientInfo), { 0 }, { it })
             assertTrue(backend.removeFromPlaylist("p", listOf("target")))
             assertEquals("0", server.takeRequest(2, TimeUnit.SECONDS)!!.requestUrl!!.queryParameter("startIndex"))
             assertEquals("2", server.takeRequest(2, TimeUnit.SECONDS)!!.requestUrl!!.queryParameter("startIndex"))
@@ -44,7 +45,7 @@ class PlaylistRemovalDeviceTest {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setBody("""{"Items":[{"Id":"target"}],"TotalRecordCount":1}"""))
             val session = Session(server.url("/").toString(), "listener", "", "token", ServerType.JELLYFIN, "user")
-            val backend = JellyfinBackend(JellyfinClient(session), { 0 }, { it })
+            val backend = JellyfinBackend(JellyfinClient(session, appClientInfo), { 0 }, { it })
             assertFalse(backend.removeFromPlaylist("p", listOf("target")))
             assertEquals(1, server.requestCount)
         }

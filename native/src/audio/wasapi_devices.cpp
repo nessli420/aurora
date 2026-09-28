@@ -1,8 +1,7 @@
+#include <wrl/implements.h>
 #include <initguid.h>
 #include "audio/wasapi.h"
 #include <functiondiscoverykeys_devpkey.h>
-#include <ksmedia.h>
-#include <wrl/implements.h>
 
 namespace aurora::audio {
 namespace {
@@ -35,8 +34,8 @@ public:
     STDMETHODIMP OnPropertyValueChanged(LPCWSTR, const PROPERTYKEY) override { return S_OK; }
 
 private:
-    HRESULT notify(int kind, LPCWSTR id, int64_t value) {
-        if (id) callback_(kind, id, value);
+    HRESULT notify(int kind, LPCWSTR id, int64_t state) {
+        if (id) callback_(kind, id, state);
         return S_OK;
     }
 

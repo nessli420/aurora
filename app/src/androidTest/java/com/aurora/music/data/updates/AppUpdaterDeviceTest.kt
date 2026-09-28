@@ -20,12 +20,12 @@ class AppUpdaterDeviceTest {
             ReleaseApk("", installedApk.length(), null))
         val truncated = release.copy(apk = release.apk!!.copy(size = installedApk.length() + 1))
         assertTrue(runCatching { updater.validateApk(truncated, installedApk) }.exceptionOrNull()?.message.orEmpty().contains("incomplete"))
-        val tampered = release.copy(apk = release.apk.copy(sha256 = "0".repeat(64)))
+        val tampered = release.copy(apk = release.apk!!.copy(sha256 = "0".repeat(64)))
         assertTrue(runCatching { updater.validateApk(tampered, installedApk) }.exceptionOrNull()?.message.orEmpty().contains("verified"))
         // A correctly signed APK must still have a higher version code.
         assertTrue(runCatching { updater.validateApk(release, installedApk) }.exceptionOrNull()?.message.orEmpty().contains("version information"))
         val foreignApk = File(instrumentation.context.applicationInfo.sourceDir)
-        val foreign = release.copy(apk = release.apk.copy(size = foreignApk.length()))
+        val foreign = release.copy(apk = release.apk!!.copy(size = foreignApk.length()))
         assertTrue(runCatching { updater.validateApk(foreign, foreignApk) }.exceptionOrNull()?.message.orEmpty().contains("signing key"))
     }
 

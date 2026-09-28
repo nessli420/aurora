@@ -17,6 +17,7 @@ import com.aurora.music.data.PlaybackSourceIdentity
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.remote.PlexClient
+import com.aurora.music.data.remote.appClientInfo
 import com.aurora.music.model.Song
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.Dispatcher
@@ -70,8 +71,8 @@ class PlexPlaybackDeviceTest {
                 }
             }
             server.start()
-            val session = PlexClient.authenticate(server.url("/").toString(), token)
-            val backend = PlexBackend(PlexClient(session), { 0 }, { it })
+            val session = PlexClient.authenticate(server.url("/").toString(), token, appClientInfo)
+            val backend = PlexBackend(PlexClient(session, appClientInfo), { 0 }, { it })
             val song = requireNotNull(backend.songFor("101"))
             assertEquals("Plex playback fixture", song.title)
             assertEquals(8, song.durationSec)
@@ -138,9 +139,9 @@ class PlexPlaybackDeviceTest {
                 }
                 server.start()
                 val session = Session(server.url("/").toString().trimEnd('/'), "Download fixture", "", token, ServerType.PLEX, "fixture")
-                val browsing = PlexBackend(PlexClient(session), { 0 }, { it })
+                val browsing = PlexBackend(PlexClient(session, appClientInfo), { 0 }, { it })
                 val selected = requireNotNull(browsing.songFor("101")).copy(artworkUrl = "")
-                val fresh = PlexBackend(PlexClient(session), { 0 }, { it })
+                val fresh = PlexBackend(PlexClient(session, appClientInfo), { 0 }, { it })
                 assertTrue(fresh.streamUrl("101", 0, true).isBlank())
                 val manager = DownloadManager(isolated,
                     currentServerIdProvider = { session.server },

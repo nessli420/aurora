@@ -103,7 +103,7 @@ class ExtensionContractDeviceTest {
         val manifest = manager.loadManifest(component).getOrThrow()
         assertEquals("Apache-2.0", manifest.license)
         assertEquals("gainDb", manifest.settings.single().id)
-        assertFalse(entry.descriptor.copy(api = 2).compatible)
+        assertFalse(entry.descriptor!!.copy(api = 2).compatible)
         val unsupported = JsonObject().apply { addProperty("api", 2) }
         assertThrows(IllegalArgumentException::class.java) { ExtensionCodec.manifest(unsupported) }
         val originalRack = manager.audio(component).getOrThrow()

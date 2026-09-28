@@ -73,7 +73,7 @@ class RackAssetsDeviceTest {
         assertNotEquals(entry.sourcePath, saved.sourcePath)
         assertNotEquals(entry.prepared!!.path, saved.prepared!!.path)
         val originalBytes = File(saved.sourcePath).readBytes()
-        val preparedBytes = File(saved.prepared.path).readBytes()
+        val preparedBytes = File(saved.prepared!!.path).readBytes()
         store.prepareImpulse(entry.id, ImpulsePreparation(0, 2)).getOrThrow()
         store.deleteImpulse(entry.id).getOrThrow()
         File(entry.sourcePath).writeBytes(byteArrayOf(0))
@@ -85,7 +85,7 @@ class RackAssetsDeviceTest {
         assertEquals(saved.id, active.id)
         assertArrayEquals(originalBytes, File(active.sourcePath).readBytes())
         assertArrayEquals(preparedBytes, File(active.prepared!!.path).readBytes())
-        assertTrue(ImpulseResponse.loadWavResult(File(active.prepared.path)).getOrThrow().trueStereo)
+        assertTrue(ImpulseResponse.loadWavResult(File(active.prepared!!.path)).getOrThrow().trueStereo)
     }
 
     @Test fun portablePresetImportRehomesEveryAssetBeforeApplying() = fixture {
@@ -94,7 +94,7 @@ class RackAssetsDeviceTest {
         val saved = preset.rackImpulseAssets.single()
         val expected = File(saved.prepared!!.path).readBytes()
         store.deleteProcessingPreset(preset.id).getOrThrow()
-        File(saved.sourcePath).delete(); File(saved.prepared.path).delete()
+        File(saved.sourcePath).delete(); File(saved.prepared!!.path).delete()
         val imported = store.importProcessingPreset(ByteArrayInputStream(bytes)).getOrThrow()
         assertNotEquals(preset.id, imported.id)
         val asset = imported.rackImpulseAssets.single()
@@ -142,7 +142,7 @@ class RackAssetsDeviceTest {
         val active = store.processingRackAssets.first().single()
         val expected = File(active.prepared!!.path).readBytes()
         val backup = ByteArrayOutputStream().also { manager.exportArchive(1, it).getOrThrow() }.toByteArray()
-        File(active.sourcePath).delete(); File(active.prepared.path).delete()
+        File(active.sourcePath).delete(); File(active.prepared!!.path).delete()
         store.setProcessingRack(ProcessingRack()).getOrThrow()
         manager.importArchive(ByteArrayInputStream(backup)).getOrThrow()
         val restored = store.processingRackAssets.first().single()
