@@ -25,11 +25,11 @@ class EngineSettingsBinderTest {
                 directory, directory)
             engine.bindSettings(store, scope)
             runBlocking {
+                store.setDspMode(DspMode.CUSTOM)
+                store.setDspPreamp(-6f)
                 store.setCrossfade(4)
                 store.setCrossfadeCurve("POWER")
                 store.setReplayGain(2)
-                store.setDspMode(DspMode.CUSTOM)
-                store.setDspPreamp(-6f)
             }
             eventually { engine.config.crossfadeMs == 4_000 && engine.config.crossfadeCurve == "POWER" && engine.config.replayGain == 2 }
             Tracks().use { tracks ->

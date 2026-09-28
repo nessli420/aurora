@@ -7,9 +7,14 @@ import com.aurora.music.desktop.natives.DeviceEvent
 import com.aurora.music.desktop.natives.DeviceKind
 import com.aurora.music.desktop.natives.OutputEncoding
 import com.aurora.music.model.Song
+import com.aurora.music.playback.VisualizerController
 import com.aurora.music.playback.chain.DspChainSettings
 import com.aurora.music.playback.engine.BandlimitedResampler
 import com.aurora.music.playback.engine.OutputRatePolicy
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.cancel
 import org.junit.After
 import org.junit.Assert.*
 import org.junit.Test
@@ -156,6 +161,9 @@ class DesktopPlaybackEngineTest {
         val (file, _) = tone("long", 48_000, 16, 240_000) { frame, _ -> frame % 1_000 }
         val backend = FakeBackend(speed = 1.0, ringFrames = 12_000)
         val engine = engine(backend)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+        val visualizer = VisualizerController(scope).apply { start() }
+        engine.visualizer = visualizer
         engine.setQueue(listOf(tracks.song(file)))
         engine.await { it.positionMs >= 400 }
         Thread.sleep(150)
@@ -163,6 +171,11 @@ class DesktopPlaybackEngineTest {
         val reported = engine.state.value.positionMs
         assertTrue("reported $reported heard $heardMs", abs(reported - heardMs) <= 120)
         assertTrue(backend.awake.contains(true))
+        eventually { visualizer.frame.level > 0f }
+        assertEquals(48_000, engine.beforeMeter.snapshot()?.sampleRate)
+        assertTrue(engine.afterMeter.snapshot()!!.leftPeak > 0.0)
+        visualizer.stop()
+        scope.cancel()
         engine.pause()
         engine.await { !it.playWhenReady }
         val paused = engine.state.value.positionMs

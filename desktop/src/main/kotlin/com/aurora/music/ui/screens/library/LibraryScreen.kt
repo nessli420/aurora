@@ -7,7 +7,7 @@ import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.ScrollbarAdapter
+import androidx.compose.foundation.v2.ScrollbarAdapter
 import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background

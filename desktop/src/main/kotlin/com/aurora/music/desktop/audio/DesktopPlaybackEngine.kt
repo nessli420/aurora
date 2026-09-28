@@ -80,7 +80,7 @@ class DesktopPlaybackEngine(
     private val bytes = ByteArray(BLOCK_FRAMES * 2 * 4)
     private val bytesView = ByteBuffer.wrap(bytes)
     private val vizChunk = FloatArray(512)
-    @Volatile private var volume = 1.0
+    private val master = MasterGain()
     @Volatile private var closed = false
     @Volatile private var audioThread: Thread? = null
     @Volatile private var reportChain: DspChain? = null
@@ -120,11 +120,8 @@ class DesktopPlaybackEngine(
     private var stalled = false
     private var restartPending = false
     private var failures = 0
-    private var master = 1.0
     private var blockUnity = true
     private var lastQuantized = false
-    private var sleep: Ramp? = null
-    private var wake: Ramp? = null
     private var sleepPauseAt = -1L
     private var beforeRate = 0
     private var vizFill = 0
@@ -251,22 +248,19 @@ class DesktopPlaybackEngine(
 
     override fun setVolume(volume: Float) {
         val value = volume.coerceIn(0f, 1f).toDouble()
-        this.volume = value
+        master.volume = value
         chains.forEach { it.engine.relativeVolume = value }
         post { publish() }
     }
 
     override fun sleepFade(fadeMs: Int) = post {
-        if (fadeMs <= 0) {
-            sleep = null
-            sleepPauseAt = -1
-        } else sleep = Ramp(framesFor(fadeMs), 1.0, 0.0)
+        if (fadeMs <= 0) sleepPauseAt = -1
+        master.sleepFade(if (fadeMs <= 0) 0 else framesFor(fadeMs))
         publish()
     }
 
     override fun wakeFade(fadeMs: Int) = post {
-        wake = if (fadeMs <= 0) null else Ramp(framesFor(fadeMs), 0.0, 1.0)
-        master = targetMaster()
+        master.wakeFade(if (fadeMs <= 0) 0 else framesFor(fadeMs))
         publish()
     }
 
@@ -404,8 +398,8 @@ class DesktopPlaybackEngine(
             else emit(EngineEvent.Transition(previous?.entry, entry, reason, previous?.startMs))
         }
         error = null
-        if (sleep?.done == true) {
-            sleep = null
+        if (master.sleepFinished) {
+            master.endSleep()
             playWhenReady = false
         }
         startLoad(entry, start, reuse)
@@ -699,7 +693,7 @@ class DesktopPlaybackEngine(
 
     private fun pauseInternal() {
         playWhenReady = false
-        wake = null
+        master.cancelWake()
         if (running) {
             output?.let { runCatching { it.pause() } }
             running = false
@@ -735,8 +729,7 @@ class DesktopPlaybackEngine(
         if (failures > 0 && marker != null && marker.msPerFrame > 0 && positionOf(marker, frames) - marker.startMs >= 1_000) resetFailures()
         if (sleepPauseAt in 0..frames) {
             sleepPauseAt = -1
-            sleep = null
-            master = volume
+            master.endSleep()
             pauseInternal()
             restartAtHeard()
             return
@@ -944,20 +937,8 @@ class DesktopPlaybackEngine(
             false
         }
         tapVisualizer(target, frames)
-        val from = master
-        val to = advanceMaster(frames)
-        if (from != 1.0 || to != 1.0) {
-            unity = false
-            val step = (to - from) / frames
-            var i = 0
-            while (i < frames) {
-                val gain = from + step * i
-                target[i * 2] *= gain
-                target[i * 2 + 1] *= gain
-                i++
-            }
-        }
-        master = to
+        if (!master.apply(target, frames)) unity = false
+        if (master.sleepFinished && sleepPauseAt < 0) sleepPauseAt = streamFrames + frames
         blockUnity = unity
         if (fade != null) {
             fade.elapsed += frames
@@ -986,23 +967,6 @@ class DesktopPlaybackEngine(
         deck.consume(frames)
         return unity
     }
-
-    private fun advanceMaster(frames: Int): Double {
-        var gain = volume
-        sleep?.let { ramp ->
-            ramp.elapsed += frames
-            gain *= ramp.value
-            if (ramp.done && sleepPauseAt < 0) sleepPauseAt = streamFrames + frames
-        }
-        wake?.let { ramp ->
-            ramp.elapsed += frames
-            gain *= ramp.value
-            if (ramp.done) wake = null
-        }
-        return gain
-    }
-
-    private fun targetMaster() = volume * (sleep?.value ?: 1.0) * (wake?.value ?: 1.0)
 
     private fun tapVisualizer(samples: DoubleArray, frames: Int) {
         val target = visualizer ?: return
@@ -1171,7 +1135,7 @@ class DesktopPlaybackEngine(
             shuffleRestoreIds = queue.restoreIds,
             repeat = queue.repeat,
             speed = speed.toFloat(),
-            volume = volume.toFloat(),
+            volume = master.volume.toFloat(),
             crossfading = crossfade != null,
             source = marker?.info,
             decoderName = marker?.decoderName,
@@ -1222,12 +1186,6 @@ class DesktopPlaybackEngine(
 
     private class Crossfade(val frames: Long, val curve: String, val headroom: Boolean) {
         var elapsed = 0L
-    }
-
-    private class Ramp(val frames: Long, val from: Double, val to: Double) {
-        var elapsed = 0L
-        val done: Boolean get() = elapsed >= frames
-        val value: Double get() = from + (to - from) * (elapsed.toDouble() / frames).coerceIn(0.0, 1.0)
     }
 
     private companion object {
