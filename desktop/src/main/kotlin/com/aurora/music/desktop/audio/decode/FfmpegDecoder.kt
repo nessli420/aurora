@@ -18,6 +18,7 @@ import org.bytedeco.ffmpeg.global.avcodec.avcodec_parameters_to_context
 import org.bytedeco.ffmpeg.global.avcodec.avcodec_receive_frame
 import org.bytedeco.ffmpeg.global.avcodec.avcodec_send_packet
 import org.bytedeco.ffmpeg.global.avformat.AVSEEK_FLAG_BACKWARD
+import org.bytedeco.ffmpeg.global.avformat.AVSEEK_FLAG_BYTE
 import org.bytedeco.ffmpeg.global.avformat.av_read_frame
 import org.bytedeco.ffmpeg.global.avformat.av_seek_frame
 import org.bytedeco.ffmpeg.global.avutil.AVERROR_EAGAIN
@@ -118,9 +119,15 @@ class FfmpegDecoder private constructor(
         check(!closed) { "Decoder is closed" }
         if (interrupt.get()) throw DecoderInterruptedException()
         val target = frame.coerceAtLeast(0)
-        val from = (target - preroll).coerceAtLeast(0)
+        var from = (target - preroll).coerceAtLeast(0)
         val timestamp = startPts + Math.floorDiv(from * timeBaseDen, rate * timeBaseNum)
-        input.ok(av_seek_frame(input.format, input.streamIndex, timestamp, AVSEEK_FLAG_BACKWARD)) { "Could not seek ${input.description}" }
+        var result = av_seek_frame(input.format, input.streamIndex, timestamp, AVSEEK_FLAG_BACKWARD)
+        if (result < 0 && !interrupt.get()) {
+            // rewind and decode forward when the demuxer cannot seek by timestamp
+            result = av_seek_frame(input.format, -1, 0, AVSEEK_FLAG_BYTE)
+            from = 0
+        }
+        input.ok(result) { "Could not seek ${input.description}" }
         avcodec_flush_buffers(codec)
         if (!swr.isNull) swr_free(swr)
         pendingOffset = 0

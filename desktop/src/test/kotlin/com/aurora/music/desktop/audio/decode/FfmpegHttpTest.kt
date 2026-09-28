@@ -71,7 +71,7 @@ class FfmpegHttpTest {
                 Thread.sleep(500)
                 val stalled = decoded.get()
                 Thread.sleep(300)
-                assertTrue(stalled in 1 until 96_000)
+                assertTrue("$stalled ${failure.get()}", stalled in 1 until 96_000)
                 assertEquals(stalled, decoded.get())
                 assertTrue(worker.isAlive)
                 val started = System.nanoTime()

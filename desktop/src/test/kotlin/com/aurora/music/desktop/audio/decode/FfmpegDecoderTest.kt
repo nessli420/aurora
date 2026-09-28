@@ -89,7 +89,7 @@ class FfmpegDecoderTest {
     @Test fun monoIsDuplicatedToBothChannelsExactly() {
         val random = Random(11)
         val pcm = IntArray(3000) { random.nextInt(-8388608, 8388608) }
-        val samples = decodeWav(48_000, 1, 24) { f, _ -> pcm[f] }
+        val samples = decodeWav(48_000, 1, 24, frames = 3000) { f, _ -> pcm[f] }
         assertEquals(6000, samples.size)
         for (frame in pcm.indices) {
             assertEquals(pcm[frame] / 8388608.0, samples[frame * 2], 0.0)
@@ -209,9 +209,9 @@ class FfmpegDecoderTest {
         val threads = ManagementFactory.getThreadMXBean() as com.sun.management.ThreadMXBean
         for (channels in listOf(2, 1)) {
             val file = temp.newFile()
-            file.writeBytes(wavBytes(48_000, channels, 16, 480_000) { f, c -> (f * 31 + c) % 20000 - 10000 })
+            file.writeBytes(wavBytes(48_000, channels, 16, 720_000) { f, c -> (f * 31 + c) % 20000 - 10000 })
             FfmpegDecoder.open(file.path).use { decoder ->
-                val block = DoubleArray(2048)
+                val block = DoubleArray(512)
                 repeat(200) { decoder.read(block) }
                 val before = threads.getThreadAllocatedBytes(Thread.currentThread().id)
                 repeat(2000) { assertTrue(decoder.read(block) > 0) }
