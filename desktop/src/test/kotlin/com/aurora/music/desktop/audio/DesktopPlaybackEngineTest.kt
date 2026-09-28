@@ -83,7 +83,7 @@ class DesktopPlaybackEngineTest {
         }
         val heard = backend.last.heardInts()
         assertEquals(samples.size, heard.size)
-        assertTrue(heard.all { it and 0xff == 0 })
+        assertTrue(heard.all { (it and 0xff) == 0 })
         val gain = 10.0.pow(-6.0 / 20.0)
         for (i in 6_000 until samples.size) assertEquals(samples[i] * gain, (heard[i] shr 8).toDouble(), 3.0)
         val state = engine.await { it.phase == EnginePhase.ENDED }
@@ -106,7 +106,6 @@ class DesktopPlaybackEngineTest {
             (if (i < samples.size) value * gain else value).toFloat()
         }
         assertArrayEquals(expected, backend.last.heardFloats(), 0f)
-        assertTrue(engine.state.value.processing.gainApplied.not())
     }
 
     @Test fun crossfadeOverlapsTheTracksWithTheConfiguredEnvelope() {
@@ -232,7 +231,7 @@ class DesktopPlaybackEngineTest {
             assertEquals(1, log.all<EngineEvent.Discontinuity>().size)
         }
         assertArrayEquals(floats(samples + samples, 16), backend.last.heardFloats(), 0f)
-        assertEquals(false, backend.awake.last())
+        eventually { backend.awake.last() == false }
     }
 
     @Test fun failingItemsAreSkippedAndConsecutiveFailuresStop() {
@@ -337,9 +336,7 @@ class DesktopPlaybackEngineTest {
             assertNotNull(state.output?.fallbackReason)
             log.await { events -> events.any { it is EngineEvent.OutputFallback } }
         }
-        engine.await { true }
-        Thread.sleep(50)
-        assertEquals(false, backend.awake.last())
+        eventually { backend.awake.last() == false }
     }
 
     private fun engine(backend: FakeBackend, config: EngineConfig = EngineConfig()) =

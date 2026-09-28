@@ -328,9 +328,13 @@ class DesktopPlaybackEngine(
     }
 
     private fun post(command: () -> Unit) {
+        watch.interruptIfStalled(STALLED_READ_NANOS)
+        deliver(command)
+    }
+
+    private fun deliver(command: () -> Unit) {
         if (closed) return
         commands += command
-        watch.interruptIfStalled(STALLED_READ_NANOS)
         audioThread?.let(LockSupport::unpark)
     }
 
@@ -386,6 +390,7 @@ class DesktopPlaybackEngine(
 
     private fun restart(index: Int, positionMs: Long, reason: TransitionReason?) {
         val entry = queue.entries.getOrNull(index) ?: return
+        restartPending = false
         val reuse = detachTrack(entry.uid)
         stopAudio()
         val previous = heardMarker
@@ -533,7 +538,7 @@ class DesktopPlaybackEngine(
     private fun submit(request: Load) {
         loader.execute {
             val result = runCatching { prepare(request) }
-            if (closed) result.getOrNull()?.close() else post { onLoaded(request, result) }
+            if (closed) result.getOrNull()?.close() else deliver { onLoaded(request, result) }
         }
     }
 
@@ -756,6 +761,7 @@ class DesktopPlaybackEngine(
         val reopen = pendingReopen
         if (reopen != null) {
             pendingReopen = null
+            heardMarker = heardMarker?.let { it.frozenAt(positionOf(it, lastHeard)) }
             closeOutput()
             return begin(reopen.track, reopen.reason)
         }
@@ -810,13 +816,14 @@ class DesktopPlaybackEngine(
         val tail = fading
         if (tail != null) service(tail)
         if (restartPending) return 0
-        val frames = when {
+        var frames = when {
             tail == null -> lead.fill
             lead.finished && tail.finished -> maxOf(lead.fill, tail.fill)
             lead.finished -> tail.fill
             tail.finished -> lead.fill
             else -> minOf(lead.fill, tail.fill)
         }
+        crossfade?.let { frames = minOf(frames.toLong(), it.frames - it.elapsed).toInt() }
         stalled = frames == 0
         if (frames == 0) {
             if (lead.finished && lead.fill == 0 && (tail == null || tail.finished && tail.fill == 0)) contentEnded = true
@@ -1046,7 +1053,7 @@ class DesktopPlaybackEngine(
         loader.execute {
             val result = runCatching { open(entry, slot.interrupt) }
             if (closed) result.getOrNull()?.close()
-            else post { if (prepared === slot) slot.result = result else result.getOrNull()?.close() }
+            else deliver { if (prepared === slot) slot.result = result else result.getOrNull()?.close() }
         }
     }
 

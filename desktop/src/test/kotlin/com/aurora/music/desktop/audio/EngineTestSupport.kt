@@ -58,6 +58,12 @@ internal fun PlaybackEngine.await(timeoutMs: Long = 10_000, predicate: (EngineSt
     }
 }
 
-internal fun pcm16(value: Int) = value / 32_768.0f
+internal fun eventually(timeoutMs: Long = 2_000, condition: () -> Boolean) {
+    val deadline = System.currentTimeMillis() + timeoutMs
+    while (!condition()) {
+        check(System.currentTimeMillis() < deadline) { "Condition not met in $timeoutMs ms" }
+        Thread.sleep(5)
+    }
+}
 
 internal fun pcm24(value: Int) = value / 8_388_608.0f
