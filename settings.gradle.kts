@@ -22,6 +22,7 @@ dependencyResolutionManagement {
 
 rootProject.name = "Aurora"
 include(":app")
+include(":core", ":desktop")
 include(":extension-sdk", ":extension-example")
 project(":extension-example").projectDir = file("examples/extension")
 
