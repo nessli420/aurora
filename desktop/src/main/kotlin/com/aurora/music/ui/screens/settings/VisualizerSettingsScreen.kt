@@ -82,31 +82,33 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, controller: Visualiz
                 item { SettingsSectionTitle(appString(R.string.text_style_99a0ef)) }
                 item {
                     val styleListState = rememberLazyListState()
-                    LazyRow(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        state = styleListState,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp),
-                    ) {
-                        items((0 until VisualizerStyle.count).toList()) { s ->
-                            val selected = s == prefs.style
-                            Box(
-                                Modifier.clip(RoundedCornerShape(50))
-                                    .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                                    .pointerHoverIcon(PointerIcon.Hand)
-                                    .clickable { save(prefs.copy(style = s)) }
-                                    .padding(horizontal = 14.dp, vertical = 9.dp),
-                            ) {
-                                Text(
-                                    VisualizerStyle.label(s),
-                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    style = MaterialTheme.typography.labelMedium,
-                                )
+                    Column {
+                        LazyRow(
+                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                            state = styleListState,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            contentPadding = PaddingValues(horizontal = 12.dp),
+                        ) {
+                            items((0 until VisualizerStyle.count).toList()) { s ->
+                                val selected = s == prefs.style
+                                Box(
+                                    Modifier.clip(RoundedCornerShape(50))
+                                        .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                        .pointerHoverIcon(PointerIcon.Hand)
+                                        .clickable { save(prefs.copy(style = s)) }
+                                        .padding(horizontal = 14.dp, vertical = 9.dp),
+                                ) {
+                                    Text(
+                                        VisualizerStyle.label(s),
+                                        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                        style = MaterialTheme.typography.labelMedium,
+                                    )
+                                }
                             }
                         }
+                        HorizontalScrollbar(rememberScrollbarAdapter(styleListState), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
                     }
-                    HorizontalScrollbar(rememberScrollbarAdapter(styleListState), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
                 }
 
                 item { SettingsSectionTitle(appString(R.string.text_colour_f28563)) }

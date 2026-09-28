@@ -67,6 +67,19 @@ class DspChainTest {
         assertArrayEquals(signal, stream(chain, signal, 100, 300), 0.0)
     }
 
+    @Test fun continuationKeepsBufferedAudioAndOnlyChangesReportedFacts() {
+        val chain = DspChain()
+        chain.configure(ChainFormat(48_000, 48_000, PcmEncoding.SIGNED_16_LE, SamplePrecision.PCM_SIGNED_16))
+        assertEquals(256, chain.queueInput(signal, 0, 256))
+        chain.continueWith(ChainFormat(48_000, 48_000, PcmEncoding.SIGNED_16_LE, SamplePrecision.PCM_SIGNED_24))
+        assertEquals(256L, chain.inputFrames)
+        assertTrue(chain.needsQuantization())
+        val out = DoubleArray(512)
+        assertEquals(256, chain.readOutput(out, 0, 256))
+        assertArrayEquals(signal.copyOf(512), out, 0.0)
+        assertThrows(IllegalArgumentException::class.java) { chain.continueWith(ChainFormat(44_100, 48_000)) }
+    }
+
     @Test fun inputIsRefusedUntilPendingOutputIsRead() {
         val chain = DspChain()
         chain.configure(ChainFormat(48_000, 48_000))

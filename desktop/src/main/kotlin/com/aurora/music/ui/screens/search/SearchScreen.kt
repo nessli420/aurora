@@ -1,0 +1,369 @@
+package com.aurora.music.ui.screens.search
+
+import com.aurora.music.localization.appString
+import com.aurora.music.R
+
+import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.LibraryMusic
+import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import com.aurora.music.data.SearchResults
+import com.aurora.music.model.Song
+import com.aurora.music.ui.components.AlbumCard
+import com.aurora.music.ui.components.ArtistCircle
+import com.aurora.music.ui.components.Eyebrow
+import com.aurora.music.ui.components.LottieLoader
+import com.aurora.music.ui.components.PlaylistCard
+import com.aurora.music.ui.components.SectionHeader
+import com.aurora.music.ui.components.SongRow
+import com.aurora.music.viewmodel.SearchUiState
+
+private enum class SearchFilter(private val labelRes: Int) {
+    ALL(R.string.text_all_6a7208), SONGS(R.string.text_songs_e1404b), ALBUMS(R.string.text_albums_4c45e7), ARTISTS(R.string.text_artists_1528d8), PLAYLISTS(R.string.text_playlists_77b69f);
+    val label: String get() = appString(labelRes)
+}
+
+private fun sectionNonEmpty(f: SearchFilter, r: SearchResults): Boolean = when (f) {
+    SearchFilter.ALL -> true
+    SearchFilter.SONGS -> r.songs.isNotEmpty()
+    SearchFilter.ALBUMS -> r.albums.isNotEmpty()
+    SearchFilter.ARTISTS -> r.artists.isNotEmpty()
+    SearchFilter.PLAYLISTS -> r.playlists.isNotEmpty()
+}
+
+@Composable
+fun SearchScreen(
+    contentPadding: PaddingValues,
+    state: SearchUiState,
+    likedIds: Set<String>,
+    currentSongId: String,
+    isPlaying: Boolean,
+    onQuery: (String) -> Unit,
+    onPlayAll: (List<Song>, Int) -> Unit,
+    onAddToQueue: (Song) -> Unit,
+    onPlayNext: (Song) -> Unit,
+    onToggleLike: (String) -> Unit,
+    onOpenDetail: (String, String) -> Unit,
+    downloadedIds: Set<String>,
+    onDownload: (Song) -> Unit,
+    onRemoveDownload: (String) -> Unit,
+    canDownload: Boolean = true,
+    recentSearches: List<String> = emptyList(),
+    onRecentClick: (String) -> Unit = {},
+    onRemoveRecent: (String) -> Unit = {},
+    onClearRecents: () -> Unit = {},
+    onCommitSearch: () -> Unit = {},
+    onSelectSource: (String) -> Unit = {},
+) {
+    val results = state.results
+    var filter by rememberSaveable { mutableStateOf(SearchFilter.ALL) }
+    var filterQuery by rememberSaveable { mutableStateOf(state.query) }
+    // reset filter on new query so it can't strand on an empty section
+    LaunchedEffect(state.query) {
+        if (filterQuery != state.query) { filterQuery = state.query; filter = SearchFilter.ALL }
+    }
+    val focus = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    val commitAnd: (() -> Unit) -> Unit = { action -> onCommitSearch(); action() }
+
+    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
+    Column(Modifier.widthIn(max = 960.dp).fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 14.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Column(Modifier.weight(1f)) {
+                Eyebrow(appString(R.string.text_discover_d3f02e), MaterialTheme.colorScheme.primary)
+                Spacer(Modifier.height(2.dp))
+                Text(appString(R.string.text_search_bce064), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+            }
+            if (state.sources.size > 1) {
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    state.sources.forEach { source ->
+                        val selected = source.id == state.selectedSource
+                        val icon = when (source.id) {
+                            "library" -> Icons.Outlined.LibraryMusic
+                            "discovery" -> Icons.Outlined.PlayCircle
+                            else -> Icons.Outlined.MusicNote
+                        }
+                        Box(
+                            Modifier.size(40.dp).clip(CircleShape)
+                                .background(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .selectable(selected = selected, role = Role.RadioButton) { onSelectSource(source.id) }
+                                .pointerHoverIcon(PointerIcon.Hand),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(icon, source.label,
+                                tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(20.dp))
+                        }
+                    }
+                }
+            }
+        }
+        TextField(
+            value = state.query,
+            onValueChange = onQuery,
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).focusRequester(focus),
+            placeholder = { Text(appString(R.string.text_artists_albums_or_songs_d1863c)) },
+            leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
+            trailingIcon = if (state.query.isEmpty()) null else ({
+                Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(36.dp).clip(CircleShape)
+                    .clickable { onQuery("") }.pointerHoverIcon(PointerIcon.Hand).padding(7.dp))
+            }),
+            singleLine = true,
+            shape = RoundedCornerShape(16.dp),
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { onCommitSearch() }),
+            colors = TextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                focusedIndicatorColor = Color.Transparent,
+                unfocusedIndicatorColor = Color.Transparent,
+                cursorColor = MaterialTheme.colorScheme.primary,
+            ),
+        )
+
+        Spacer(Modifier.height(12.dp))
+
+        val empty = results.songs.isEmpty() && results.albums.isEmpty() && results.artists.isEmpty() && results.playlists.isEmpty()
+        when {
+            state.error != null -> EmptyHint(appString(R.string.text_search_unavailable_c32b9f), state.error)
+            state.query.isBlank() ->
+                if (recentSearches.isEmpty()) EmptyHint(appString(R.string.text_search_your_library_d9fa3f), appString(R.string.text_find_any_artist_album_song_or_playlist_9fcb23))
+                else RecentSearches(recentSearches, onRecentClick, onRemoveRecent, onClearRecents, contentPadding)
+            state.loading && empty ->
+                Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) {
+                    LottieLoader(modifier = Modifier.size(72.dp))
+                }
+            empty -> EmptyHint(appString(R.string.text_no_results_b993b0), appString(R.string.text_nothing_matched_f74d36, (state.query)))
+            else -> {
+                // fall back to ALL when chosen type has no results
+                val effective = if (sectionNonEmpty(filter, results)) filter else SearchFilter.ALL
+                FilterChips(effective, results) { filter = it }
+                Spacer(Modifier.height(6.dp))
+                Results(
+                    effective, results, likedIds, currentSongId, isPlaying, contentPadding,
+                    onPlayAll = { songs, i -> commitAnd { onPlayAll(songs, i) } },
+                    onAddToQueue = onAddToQueue, onPlayNext = onPlayNext, onToggleLike = onToggleLike,
+                    onOpenDetail = { k, id -> commitAnd { onOpenDetail(k, id) } },
+                    downloadedIds = downloadedIds, onDownload = onDownload, onRemoveDownload = onRemoveDownload, canDownload = canDownload,
+                )
+            }
+        }
+    }
+    }
+}
+
+@Composable
+private fun FilterChips(selected: SearchFilter, results: SearchResults, onSelect: (SearchFilter) -> Unit) {
+    val available = buildList {
+        add(SearchFilter.ALL)
+        if (results.songs.isNotEmpty()) add(SearchFilter.SONGS)
+        if (results.albums.isNotEmpty()) add(SearchFilter.ALBUMS)
+        if (results.artists.isNotEmpty()) add(SearchFilter.ARTISTS)
+        if (results.playlists.isNotEmpty()) add(SearchFilter.PLAYLISTS)
+    }
+    LazyRow(
+        contentPadding = PaddingValues(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        items(available.size) { i ->
+            val f = available[i]
+            val on = f == selected
+            Text(
+                f.label,
+                style = MaterialTheme.typography.labelLarge,
+                fontWeight = FontWeight.SemiBold,
+                color = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.clip(RoundedCornerShape(50))
+                    .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .clickable { onSelect(f) }
+                    .pointerHoverIcon(PointerIcon.Hand)
+                    .padding(horizontal = 16.dp, vertical = 8.dp),
+            )
+        }
+    }
+}
+
+@Composable
+private fun Results(
+    filter: SearchFilter,
+    results: SearchResults,
+    likedIds: Set<String>,
+    currentSongId: String,
+    isPlaying: Boolean,
+    contentPadding: PaddingValues,
+    onPlayAll: (List<Song>, Int) -> Unit,
+    onAddToQueue: (Song) -> Unit,
+    onPlayNext: (Song) -> Unit,
+    onToggleLike: (String) -> Unit,
+    onOpenDetail: (String, String) -> Unit,
+    downloadedIds: Set<String>,
+    onDownload: (Song) -> Unit,
+    onRemoveDownload: (String) -> Unit,
+    canDownload: Boolean,
+) {
+    fun show(f: SearchFilter) = filter == SearchFilter.ALL || filter == f
+    val listState = rememberLazyListState()
+    Box(Modifier.fillMaxWidth()) {
+    LazyColumn(
+        Modifier.fillMaxWidth(),
+        state = listState,
+        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        if (show(SearchFilter.ARTISTS) && results.artists.isNotEmpty()) {
+            item { SectionHeader(appString(R.string.text_artists_1528d8), Modifier.padding(horizontal = 16.dp)) }
+            item {
+                LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    items(results.artists.size) { i -> ArtistCircle(results.artists[i], onClick = { onOpenDetail("artist", results.artists[i].id) }) }
+                }
+            }
+        }
+        if (show(SearchFilter.ALBUMS) && results.albums.isNotEmpty()) {
+            item { SectionHeader(appString(R.string.text_albums_4c45e7), Modifier.padding(horizontal = 16.dp)) }
+            item {
+                LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    items(results.albums.size) { i -> AlbumCard(results.albums[i], onClick = { onOpenDetail("album", results.albums[i].id) }) }
+                }
+            }
+        }
+        if (show(SearchFilter.PLAYLISTS) && results.playlists.isNotEmpty()) {
+            item { SectionHeader(appString(R.string.text_playlists_77b69f), Modifier.padding(horizontal = 16.dp)) }
+            item {
+                LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    items(results.playlists.size) { i -> PlaylistCard(results.playlists[i], onClick = { onOpenDetail("playlist", results.playlists[i].id) }) }
+                }
+            }
+        }
+        if (show(SearchFilter.SONGS) && results.songs.isNotEmpty()) {
+            item { SectionHeader(appString(R.string.text_songs_e1404b), Modifier.padding(horizontal = 16.dp)) }
+            items(results.songs.size) { i ->
+                val song = results.songs[i]
+                SongRow(
+                    song = song,
+                    isPlaying = song.id == currentSongId && isPlaying,
+                    isLiked = likedIds.contains(song.id),
+                    onClick = { onPlayAll(results.songs, i) },
+                    onToggleLike = { onToggleLike(song.id) },
+                    modifier = Modifier.padding(horizontal = 8.dp),
+                    onAddToQueue = { onAddToQueue(song) },
+                    onPlayNext = { onPlayNext(song) },
+                    onGoToAlbum = if (song.albumId.isNotBlank()) ({ onOpenDetail("album", song.albumId) }) else null,
+                    onGoToArtist = if (song.artistId.isNotBlank()) ({ onOpenDetail("artist", song.artistId) }) else null,
+                    isDownloaded = canDownload && downloadedIds.contains(song.id),
+                    onDownload = if (canDownload) ({ onDownload(song) }) else null,
+                    onRemoveDownload = if (canDownload) ({ onRemoveDownload(song.id) }) else null,
+                )
+            }
+        }
+    }
+    VerticalScrollbar(rememberScrollbarAdapter(listState),
+        Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
+    }
+}
+
+@Composable
+private fun RecentSearches(
+    recents: List<String>,
+    onClick: (String) -> Unit,
+    onRemove: (String) -> Unit,
+    onClear: () -> Unit,
+    contentPadding: PaddingValues,
+) {
+    LazyColumn(
+        Modifier.fillMaxWidth(),
+        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
+    ) {
+        item {
+            Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(appString(R.string.text_recent_76eec7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClear).pointerHoverIcon(PointerIcon.Hand)
+                        .padding(horizontal = 10.dp, vertical = 6.dp))
+            }
+        }
+        items(recents.size) { i ->
+            val q = recents[i]
+            Row(
+                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onClick(q) }.pointerHoverIcon(PointerIcon.Hand)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                Spacer(Modifier.width(14.dp))
+                Text(q, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Icon(Icons.Filled.Close, appString(R.string.text_remove_e96390), tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(30.dp).clip(CircleShape).clickable { onRemove(q) }.pointerHoverIcon(PointerIcon.Hand).padding(6.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun EmptyHint(title: String, subtitle: String) {
+    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Icon(Icons.Outlined.MusicNote, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(56.dp))
+            Spacer(Modifier.height(12.dp))
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(4.dp))
+            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}

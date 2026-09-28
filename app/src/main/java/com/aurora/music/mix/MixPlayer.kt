@@ -13,6 +13,8 @@ import androidx.media3.exoplayer.audio.*
 import androidx.media3.exoplayer.source.MediaSource
 import com.aurora.music.playback.*
 import com.aurora.music.data.DspMode
+import com.aurora.music.playback.chain.activeFor
+import com.aurora.music.playback.chain.applyDsp
 import com.google.common.util.concurrent.Futures
 import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.*
@@ -155,17 +157,13 @@ class MixPlayer(
 
     private fun configureGlobal(deck: Deck, config: MixAudioConfig, changedImpulse: Boolean) {
         val engine = deck.globalProcessor.engine
-        engine.update(if (config.mode == DspMode.CUSTOM) config.params.copy(width = if (config.mono) 0f else config.params.width)
-            else DspParams(width = if (config.mono) 0f else 1f, limiterEnabled = false))
-        engine.enabled = config.mode == DspMode.CUSTOM || config.mono
-        engine.convolutionEnabled = config.convolution
-        engine.setMakeup(config.convolutionGain)
+        engine.applyDsp(config.params, config.mode, config.mono, config.convolution, config.convolutionGain)
         engine.setRackImpulses(config.rackImpulses)
         engine.relativeVolume = config.relativeVolume
         deck.globalProcessor.tpdfDither = config.tpdfDither
         deck.globalProcessor.noiseShaping = config.noiseShaping
         if (changedImpulse) engine.setImpulse(config.impulse, config.convolutionGain)
-        engine.updateRack(config.rack?.takeIf { it.enabled && config.mode == DspMode.CUSTOM })
+        engine.updateRack(config.rack.activeFor(config.mode))
     }
 
     val processingDescription: String get() {

@@ -43,6 +43,9 @@ import com.aurora.music.data.buildSignalPath
 import com.aurora.music.data.usesFloatPcmPath
 import com.aurora.music.data.monoProcessingLocation
 import com.aurora.music.data.MonoProcessingLocation
+import com.aurora.music.playback.chain.activeFor
+import com.aurora.music.playback.chain.applyDsp
+import com.aurora.music.playback.chain.dspParams
 import androidx.media3.common.Format
 import androidx.media3.exoplayer.analytics.AnalyticsListener
 import com.google.common.util.concurrent.Futures
@@ -592,28 +595,7 @@ class PlaybackService : MediaLibraryService() {
     private fun applyAudioEngine() {
         val ap = lastAudioPrefs ?: return
         val mode = ap.dspMode
-        val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(ap.dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS[0] }
-        val graphic = FloatArray(layout.freqs.size) { ap.dspGraphicBands.getOrElse(it) { 0f } }
-        val params = DspParams(
-            graphic = graphic,
-            graphicFreqs = layout.freqs,
-            graphicQ = layout.q,
-            parametric = ap.dspParametric.map(DspBand::from),
-            preampDb = ap.dspPreampDb,
-            balance = ap.dspBalance,
-            width = if (monoAudioPref) 0f else ap.dspWidth,
-            crossfeed = ap.dspCrossfeed,
-            saturation = ap.dspSaturation,
-            delayLeftMs = ap.dspDelayLeftMs,
-            delayRightMs = ap.dspDelayRightMs,
-            trimLeftDb = ap.dspTrimLeftDb,
-            trimRightDb = ap.dspTrimRightDb,
-            limiterEnabled = ap.dspLimiterEnabled,
-            limiterCeilingDb = ap.dspLimiterCeilingDb,
-            compEnabled = ap.dspCompEnabled,
-            compThreshDb = ap.dspCompThreshDb,
-            compRatio = ap.dspCompRatio,
-        )
+        val params = ap.dspParams(monoAudioPref)
         currentDspParams = params
         audioEffects?.setMasterEnabled(mode == DspMode.SYSTEM)
 
@@ -640,11 +622,8 @@ class PlaybackService : MediaLibraryService() {
         }
         (precisionChains + compatibilityChains).forEach { chain ->
             // OFF/System mono still runs in binary64 before the output boundary.
-            chain.update(if (mode == DspMode.CUSTOM) params else DspParams(width = if (monoAudioPref) 0f else 1f, limiterEnabled = false))
-            chain.enabled = mode == DspMode.CUSTOM || monoAudioPref
-            chain.convolutionEnabled = ap.dspConvEnabled
-            chain.setMakeup(ap.dspConvMakeupDb)
-            chain.updateRack(lastRack?.takeIf { it.enabled && mode == DspMode.CUSTOM })
+            chain.applyDsp(params, mode, monoAudioPref, ap.dspConvEnabled, ap.dspConvMakeupDb)
+            chain.updateRack(lastRack.activeFor(mode))
         }
         mixPlayer?.applyAudioConfig(mixAudioConfig())
         updateSignalPath()
