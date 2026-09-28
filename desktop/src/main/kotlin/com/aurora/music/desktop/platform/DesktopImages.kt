@@ -20,6 +20,8 @@ import okio.FileSystem
 import okio.Path.Companion.toOkioPath
 import java.io.File
 import java.io.FileNotFoundException
+import java.net.URI
+import java.nio.file.Path
 
 class ArtworkFetcher(private val repository: ArtworkRepository, private val uri: String) : Fetcher {
     override suspend fun fetch(): FetchResult {
@@ -34,10 +36,21 @@ class ArtworkFetcher(private val repository: ArtworkRepository, private val uri:
     }
 }
 
+// coil mangles non-ascii file uris so they are parsed with java.net.URI
+class LocalFileFetcher(private val path: Path) : Fetcher {
+    override suspend fun fetch(): FetchResult = SourceFetchResult(ImageSource(path.toOkioPath(), FileSystem.SYSTEM), null, DataSource.DISK)
+
+    class Factory : Fetcher.Factory<Uri> {
+        override fun create(data: Uri, options: Options, imageLoader: ImageLoader): Fetcher? =
+            if (data.scheme != "file") null else runCatching { Path.of(URI(data.toString())) }.getOrNull()?.let(::LocalFileFetcher)
+    }
+}
+
 fun desktopImageLoader(cacheDir: File, http: OkHttpClient, artwork: ArtworkRepository): ImageLoader =
     ImageLoader.Builder(PlatformContext.INSTANCE)
         .components {
             add(ArtworkFetcher.Factory(artwork))
+            add(LocalFileFetcher.Factory())
             add(OkHttpNetworkFetcherFactory(callFactory = { http }))
         }
         .memoryCache { MemoryCache.Builder().maxSizePercent(PlatformContext.INSTANCE, 0.2).build() }

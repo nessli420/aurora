@@ -1,0 +1,156 @@
+package com.aurora.music.ui.theme
+
+import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.ColorScheme
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.lightColorScheme
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.luminance
+import com.aurora.music.data.AccentMode
+import com.aurora.music.data.ThemeMode
+import com.aurora.music.data.ThemeStyle
+import com.aurora.music.data.UiPrefs
+import com.aurora.music.util.rememberDominantColor
+
+private val DarkColors = darkColorScheme(
+    primary = AuroraRose,
+    onPrimary = Color.White,
+    primaryContainer = AuroraRoseDeep,
+    onPrimaryContainer = Color.White,
+    secondary = AuroraCoral,
+    onSecondary = Color(0xFF2A0E06),
+    tertiary = AuroraMagenta,
+    onTertiary = Color.White,
+    background = DarkBackground,
+    onBackground = TextPrimaryDark,
+    surface = DarkSurface,
+    onSurface = TextPrimaryDark,
+    surfaceVariant = DarkSurfaceElevated,
+    onSurfaceVariant = TextSecondaryDark,
+    surfaceContainer = DarkSurfaceElevated,
+    surfaceContainerHigh = DarkSurfaceHigh,
+    surfaceContainerHighest = DarkSurfaceHigh,
+    outline = DarkOutline,
+    outlineVariant = DarkOutline,
+    error = Color(0xFFFF5470),
+)
+
+private val LightColors = lightColorScheme(
+    primary = AuroraRoseDeep,
+    onPrimary = Color.White,
+    primaryContainer = AuroraBlush,
+    onPrimaryContainer = TextPrimaryLight,
+    secondary = AuroraCoral,
+    onSecondary = Color.White,
+    tertiary = AuroraMagenta,
+    background = LightBackground,
+    onBackground = TextPrimaryLight,
+    surface = LightSurface,
+    onSurface = TextPrimaryLight,
+    surfaceVariant = LightSurfaceElevated,
+    onSurfaceVariant = TextSecondaryLight,
+    surfaceContainer = LightSurfaceElevated,
+    surfaceContainerHigh = LightSurfaceElevated,
+    outline = LightOutline,
+    error = Color(0xFFD11A4B),
+)
+
+val LocalUiPrefs = staticCompositionLocalOf { UiPrefs() }
+
+private fun onAccent(seed: Color): Color = if (seed.luminance() > 0.5f) Color(0xFF1A1016) else Color.White
+
+private fun ColorScheme.withAccent(seed: Color, dark: Boolean): ColorScheme {
+    val on = onAccent(seed)
+    return copy(
+        primary = seed,
+        onPrimary = on,
+        primaryContainer = if (dark) lerp(seed, Color.Black, 0.45f) else lerp(seed, Color.White, 0.6f),
+        onPrimaryContainer = if (dark) Color.White else lerp(seed, Color.Black, 0.6f),
+        secondary = seed,
+        onSecondary = on,
+        tertiary = if (dark) lerp(seed, Color.White, 0.22f) else lerp(seed, Color.Black, 0.18f),
+        onTertiary = on,
+    )
+}
+
+private fun ColorScheme.toAmoled(): ColorScheme = copy(
+    background = Color.Black,
+    surface = Color.Black,
+    surfaceVariant = Color(0xFF0B0B0B),
+    surfaceContainer = Color(0xFF0B0B0B),
+    surfaceContainerHigh = Color(0xFF151515),
+    surfaceContainerHighest = Color(0xFF1E1E1E),
+)
+
+@Composable
+fun rememberPlayerColorScheme(artworkUrl: String, fallback: Color): ColorScheme {
+    val prefs = LocalUiPrefs.current
+    val appColors = MaterialTheme.colorScheme
+    if (prefs.themeStyle != ThemeStyle.AURORA) return appColors
+
+    val accent by rememberDominantColor(artworkUrl, fallback)
+    val dark = appColors.background.luminance() < 0.5f
+    val base = (if (dark) DarkColors else LightColors).withAccent(accent, dark)
+    fun foreground(color: Color) = if (color.luminance() > 0.179f) Color.Black else Color.White
+    val colors = base.copy(
+        onPrimary = foreground(base.primary),
+        onPrimaryContainer = foreground(base.primaryContainer),
+        onSecondary = foreground(base.secondary),
+        secondaryContainer = base.primaryContainer,
+        onSecondaryContainer = foreground(base.primaryContainer),
+        onTertiary = foreground(base.tertiary),
+        tertiaryContainer = base.primaryContainer,
+        onTertiaryContainer = foreground(base.primaryContainer),
+        surfaceTint = accent,
+        inversePrimary = accent,
+    )
+    return if (prefs.themeMode == ThemeMode.AMOLED) colors.toAmoled() else colors
+}
+
+@Composable
+fun AuroraTheme(
+    uiPrefs: UiPrefs = UiPrefs(),
+    systemAccent: Color? = null,
+    content: @Composable () -> Unit,
+) {
+    val systemDark = isSystemInDarkTheme()
+    val useDark = when (uiPrefs.themeMode) {
+        ThemeMode.LIGHT -> false
+        ThemeMode.DARK, ThemeMode.AMOLED -> true
+        else -> systemDark
+    }
+    val amoled = uiPrefs.themeMode == ThemeMode.AMOLED
+
+    var colors = when {
+        uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
+        else -> {
+            val seed = when {
+                uiPrefs.accentMode == AccentMode.CUSTOM -> Color(uiPrefs.accentColor.toInt())
+                uiPrefs.accentMode == AccentMode.MATERIAL_YOU && systemAccent != null -> systemAccent
+                else -> AccentPresets.getOrElse(uiPrefs.accentPreset) { AccentPresets[0] }.seed
+            }
+            (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
+        }
+    }
+    if (amoled) colors = colors.toAmoled()
+
+    MaterialTheme(
+        colorScheme = colors,
+        typography = auroraTypography(uiPrefs.fontScale, uiPrefs.themeStyle, uiPrefs.typeface),
+        shapes = auroraShapes(uiPrefs.cornerStyle, uiPrefs.themeStyle),
+    ) {
+        // content renders outside any m3 surface so set default content color else text falls back to black
+        CompositionLocalProvider(
+            LocalContentColor provides colors.onBackground,
+            LocalUiPrefs provides uiPrefs,
+            content = content,
+        )
+    }
+}

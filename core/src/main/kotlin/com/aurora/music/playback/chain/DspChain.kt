@@ -84,6 +84,13 @@ class DspChain(val engine: PrecisionBlockProcessor = PrecisionBlockProcessor()) 
         clear()
     }
 
+    fun continueWith(format: ChainFormat) {
+        val current = checkNotNull(this.format) { "Configure the chain before continuing it" }
+        require(current.sourceRate == format.sourceRate && current.resampleRate == format.resampleRate &&
+            current.outputRate == format.outputRate) { "A continuation must keep the chain rates" }
+        this.format = format
+    }
+
     fun queueInput(samples: DoubleArray, offsetFrames: Int, frames: Int): Int {
         check(!ending) { "End of stream was already queued" }
         val block = checkNotNull(input) { "Configure the chain before queueing input" }
