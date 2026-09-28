@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">Значок приложения</string>
+    <string name="app_icon_pending">Новый значок появится на главном экране после выхода из Aurora.</string>
+    <string name="app_icon_note">Некоторые лаунчеры убирают старый значок с главного экрана при смене, поэтому Aurora может понадобиться добавить снова.</string>
+</resources>

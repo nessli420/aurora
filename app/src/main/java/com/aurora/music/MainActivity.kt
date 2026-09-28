@@ -26,8 +26,15 @@ import com.aurora.music.ui.theme.AuroraTheme
 import com.aurora.music.playback.MediaSearchRequest
 import com.aurora.music.viewmodel.PlayerViewModel
 
-class MainActivity : AppCompatActivity() {
+typealias MainActivity = AuroraActivity
+
+class AuroraActivity : AppCompatActivity() {
     private val playerViewModel: PlayerViewModel by viewModels()
+
+    override fun onStop() {
+        super.onStop()
+        if (!isChangingConfigurations) com.aurora.music.ui.appicon.AppIcons.applyPending(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge()

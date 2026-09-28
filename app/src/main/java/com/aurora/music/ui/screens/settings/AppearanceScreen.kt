@@ -111,6 +111,9 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 )
             }
 
+            item { SettingsSectionTitle(appString(R.string.app_icon_title)) }
+            item { com.aurora.music.ui.appicon.AppIconPicker() }
+
             if (prefs.themeStyle == ThemeStyle.AURORA) {
             item { SettingsSectionTitle(appString(R.string.text_accent_233064)) }
             item {

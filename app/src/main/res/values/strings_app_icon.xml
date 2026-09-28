@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">App Icon</string>
+    <string name="app_icon_pending">Your new icon appears on the home screen after you leave Aurora.</string>
+    <string name="app_icon_note">Some launchers remove the old icon from the home screen when it changes, so you may need to add Aurora again.</string>
+</resources>
