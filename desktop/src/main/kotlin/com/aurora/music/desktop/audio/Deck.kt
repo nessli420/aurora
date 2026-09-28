@@ -15,7 +15,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 internal const val BLOCK_FRAMES = 1024
 internal const val DECODE_FRAMES = 1024
 
-internal class OpenTrack(val entry: QueueEntry, val decoder: FfmpegDecoder, val interrupt: AtomicBoolean?) {
+internal class OpenTrack(val entry: QueueEntry, val decoder: FfmpegDecoder, val interrupt: AtomicBoolean) {
     val info: StreamInfo = decoder.info
     val tags: AudioTags = decoder.tags
     val rate: Int = info.sampleRate

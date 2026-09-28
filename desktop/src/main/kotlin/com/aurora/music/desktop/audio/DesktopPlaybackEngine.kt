@@ -12,6 +12,7 @@ import com.aurora.music.desktop.natives.OutputStatus
 import com.aurora.music.desktop.natives.WasapiException
 import com.aurora.music.mix.MixMath
 import com.aurora.music.model.Song
+import com.aurora.music.playback.ConvolutionPreparationState
 import com.aurora.music.playback.ImpulseResponse
 import com.aurora.music.playback.PcmConstants
 import com.aurora.music.playback.PcmLevelMeter
@@ -439,7 +440,7 @@ class DesktopPlaybackEngine(
             successorOf(heard)?.let { restart(queue.indexOf(it.uid), 0, TransitionReason.AUTO) }
             return
         }
-        var expected = heard
+        var expected: QueueEntry = heard
         for (i in 0 until markers.size) {
             val marker = markers[i]
             if (marker.reason == null && marker.entry.uid == expected.uid) continue
@@ -603,7 +604,9 @@ class DesktopPlaybackEngine(
         val deck = decks[0]
         setPrimary(deck)
         deck.tap = beforeTap
-        val latency = deck.start(track, chainFormat(track), 0)
+        val format = chainFormat(track)
+        val latency = deck.start(track, format, 0)
+        decks[1].chain.configure(format)
         addMarker(deck, latency, track, reason)
         phase = EnginePhase.READY
         publish()
@@ -769,7 +772,7 @@ class DesktopPlaybackEngine(
     private fun pump(): Boolean {
         val current = output ?: return false
         if (!playWhenReady || phase == EnginePhase.IDLE || phase == EnginePhase.ENDED) return false
-        if (!running && (writtenFrames() >= current.sampleRate / 10 || (contentEnded || stalled) && writtenFrames() > 0)) {
+        if (!running && (writtenFrames() >= current.sampleRate / 10 || (contentEnded || stalled || pendingLength > 0) && writtenFrames() > 0)) {
             try {
                 current.resume()
                 running = true
@@ -1087,7 +1090,7 @@ class DesktopPlaybackEngine(
             is DeviceEvent.StreamInvalidated -> if (current != null && event.streamId == current.id) reopenAtHeard()
             is DeviceEvent.DefaultChanged -> if (activeDeviceId() == null && current != null && current.deviceId != event.deviceId) reopenAtHeard()
             is DeviceEvent.Removed -> deviceGone(event.deviceId)
-            is DeviceEvent.StateChanged -> if (event.state and DEVICE_STATE_ACTIVE == 0) deviceGone(event.deviceId)
+            is DeviceEvent.StateChanged -> if ((event.state and DEVICE_STATE_ACTIVE) == 0) deviceGone(event.deviceId)
             is DeviceEvent.Added -> Unit
         }
     }
@@ -1171,7 +1174,7 @@ class DesktopPlaybackEngine(
             processing = ProcessingFacts(
                 dspActive = report?.processingChangesSamples == true,
                 dspDescription = report?.description.orEmpty(),
-                preparation = report?.preparation ?: com.aurora.music.playback.ConvolutionPreparationState.IDLE,
+                preparation = report?.preparation ?: ConvolutionPreparationState.IDLE,
                 resampling = report?.resampling == true,
                 gainApplied = !blockUnity,
                 ditherLabel = if (integer && lastQuantized && policy.ditherMode != OutputDitherMode.OFF)

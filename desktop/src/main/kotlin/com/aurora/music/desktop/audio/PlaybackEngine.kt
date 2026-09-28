@@ -45,7 +45,6 @@ interface PlaybackEngine : AutoCloseable {
     fun applyDsp(settings: DspChainSettings)
     fun setLegacyImpulse(impulse: ImpulseResponse?, makeupDb: Float)
     fun setRackImpulses(impulses: Map<String, ImpulseResponse>)
-    fun setRelativeVolume(volume: Double)
     fun dspReport(): DspChainReport?
     fun rackMeters(): List<RackNodeMeter>
 }
