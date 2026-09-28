@@ -383,7 +383,7 @@ private fun HeroCard(album: Album, onOpenDetail: (String, String) -> Unit, onPla
         Column(Modifier.align(Alignment.BottomStart).padding(20.dp)) {
             Eyebrow(appString(R.string.text_new_release_f0ec22), accent)
             Spacer(Modifier.height(6.dp))
-            Text(album.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = Color.White, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(album.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(album.artist, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(12.dp))
             Row(

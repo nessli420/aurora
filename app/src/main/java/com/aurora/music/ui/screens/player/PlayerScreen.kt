@@ -14,6 +14,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -111,6 +112,7 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
@@ -326,7 +328,7 @@ fun PlayerScreen(
                     // balances trailing icons so PLAYING FROM stays centered
                     Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
-                        Text(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, color = MaterialTheme.colorScheme.onSurface)
+                        MarqueeTitle(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) })
                     }
                     if (tablet && showVideoModeControl) videoToggle()
                     // cast route picker tvs/chromecast show here not in the local-output sheet
@@ -1044,6 +1046,26 @@ private fun FullscreenMusicVideo(
             }
         }
     }
+}
+
+@Composable
+private fun MarqueeTitle(text: String) {
+    var fullWidth by remember(text) { androidx.compose.runtime.mutableIntStateOf(0) }
+    var shownWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
+    val overflowing = fullWidth > shownWidth && shownWidth > 0
+    Text(
+        text, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+        maxLines = 1, softWrap = false, color = MaterialTheme.colorScheme.onSurface,
+        onTextLayout = { fullWidth = it.size.width },
+        modifier = Modifier
+            .onSizeChanged { shownWidth = it.width }
+            .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
+                drawContent()
+                drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.08f to Color.Black, 0.92f to Color.Black, 1f to Color.Transparent),
+                    blendMode = BlendMode.DstIn)
+            } else Modifier)
+            .basicMarquee(initialDelayMillis = 1500, repeatDelayMillis = 2500),
+    )
 }
 
 private fun sourceLabel(song: com.aurora.music.model.Song): String? = when {
