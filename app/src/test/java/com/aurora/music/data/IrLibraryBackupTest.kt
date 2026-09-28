@@ -50,8 +50,8 @@ class IrLibraryBackupTest {
                 assertArrayEquals(File(original.sourcePath).readBytes(), File(actual.sourcePath).readBytes())
                 original.prepared?.let {
                     assertEquals(it.metadata, actual.prepared!!.metadata)
-                    assertEquals(it.preparation, actual.prepared.preparation)
-                    assertArrayEquals(File(it.path).readBytes(), File(actual.prepared.path).readBytes())
+                    assertEquals(it.preparation, actual.prepared!!.preparation)
+                    assertArrayEquals(File(it.path).readBytes(), File(actual.prepared!!.path).readBytes())
                 }
             }
         }
@@ -79,7 +79,7 @@ class IrLibraryBackupTest {
             entry.copy(sourceSha256 = "a".repeat(64)),
             entry.copy(sourceMetadata = entry.sourceMetadata.copy(peak = 0.125)),
             entry.copy(prepared = entry.prepared!!.copy(sha256 = "b".repeat(64))),
-            entry.copy(prepared = entry.prepared.copy(metadata = entry.prepared.metadata.copy(peak = 0.25))),
+            entry.copy(prepared = entry.prepared!!.copy(metadata = entry.prepared!!.metadata.copy(peak = 0.25))),
         )
         invalid.forEach { assertTrue(runCatching { export(backup(listOf(it))) }.isFailure) }
     }
@@ -92,7 +92,7 @@ class IrLibraryBackupTest {
         val saved = library(portable).single()
         val invalid = listOf(
             saved.copy(sourceMetadata = saved.sourceMetadata.copy(peak = 0.125)),
-            saved.copy(prepared = saved.prepared!!.copy(metadata = saved.prepared.metadata.copy(peak = 0.25))),
+            saved.copy(prepared = saved.prepared!!.copy(metadata = saved.prepared!!.metadata.copy(peak = 0.25))),
         )
         invalid.forEach { forged ->
             val manifest = portable.copy(prefs = portable.prefs.copy(strings = portable.prefs.strings +

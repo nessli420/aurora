@@ -31,7 +31,7 @@ class ListeningLevelStore(private val file: File, private val routes: Processing
     private var lastObservation: ListeningObservation? = null
     private var lastHistoryNanos: Long? = null
     private var revision = 0L
-    internal class BackupRollback internal constructor(internal val previous: ListeningState, internal val revision: Long)
+    class BackupRollback internal constructor(internal val previous: ListeningState, internal val revision: Long)
 
     init { scope.launch { for (ignored in writes) saveCurrent() } }
 
@@ -105,7 +105,7 @@ class ListeningLevelStore(private val file: File, private val routes: Processing
             mutable.value.copy(profiles = combined)
         } }, onFailure = { Result.failure(it) })
 
-    internal suspend fun replaceBackupProfiles(json: String): BackupRollback = withContext(Dispatchers.IO) {
+    suspend fun replaceBackupProfiles(json: String): BackupRollback = withContext(Dispatchers.IO) {
         val imported = ListeningLevelCodec.decode(json, portable = true)
         synchronized(lock) {
             val previous = mutable.value
@@ -118,7 +118,7 @@ class ListeningLevelStore(private val file: File, private val routes: Processing
         }
     }
 
-    internal suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
+    suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
         synchronized(lock) {
             if (revision != token.revision) false else {
                 persistBackupFileAtomically(file, ListeningLevelCodec.encode(token.previous).toByteArray(Charsets.UTF_8))

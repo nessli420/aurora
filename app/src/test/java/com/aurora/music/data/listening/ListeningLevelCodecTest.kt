@@ -16,7 +16,7 @@ class ListeningLevelCodecTest {
 
     @Test fun portableExportRemovesBindingsAndHistory() {
         val json = ListeningLevelCodec.encode(state(), portable = true)
-        assertFalse(json.contains(ListeningLevelsTest.key))
+        assertFalse(json.contains(key))
         assertFalse(json.contains("\"DAC\""))
         assertFalse(json.contains("1700000000000"))
         val decoded = ListeningLevelCodec.decode(json, portable = true)
@@ -53,7 +53,7 @@ class ListeningLevelCodecTest {
         val backup = AuroraBackup(listeningProfiles = ListeningLevelCodec.encode(state()))
         val imported = BackupArchive.decodeJson(Gson().toJson(backup))
         val profileJson = requireNotNull(imported.listeningProfiles)
-        assertFalse(profileJson.contains(ListeningLevelsTest.key))
+        assertFalse(profileJson.contains(key))
         val restored = ListeningLevelCodec.decode(profileJson)
         assertTrue(restored.history.isEmpty())
         assertFalse(restored.historyEnabled)
@@ -67,7 +67,7 @@ class ListeningLevelCodecTest {
             assertEquals("backup.json", archive.nextEntry.name)
             archive.readBytes().toString(Charsets.UTF_8)
         }
-        assertFalse(json.contains(ListeningLevelsTest.key))
+        assertFalse(json.contains(key))
         val restored = ListeningLevelCodec.decode(requireNotNull(BackupArchive.decodeJson(json).listeningProfiles))
         assertTrue(restored.history.isEmpty())
     }
@@ -78,6 +78,12 @@ class ListeningLevelCodecTest {
         assertNull(BackupArchive.decodeJson(Gson().toJson(AuroraBackup())).listeningProfiles)
     }
 
-    private fun state() = ListeningState(listOf(ListeningLevelsTest.profile()), true,
+    private fun state() = ListeningState(listOf(profile()), true,
         listOf(ListeningHistoryEntry(1700000000000L, "Headphones", 82.0, null, 4.0)))
+
+    private companion object {
+        val key = "android:22:" + "a".repeat(64)
+        fun profile() = ListeningProfile("calibration-1", "Headphones", key, "DAC", 100.0, SensitivityUnit.DB_PER_VOLT,
+            32.0, 1.0, "Low", 0.0, 0.0, listOf(VolumeCalibration(10, 0.0)), "Measured loaded voltage; published 1 kHz sensitivity", 4.0, 15)
+    }
 }

@@ -3,6 +3,7 @@ package com.aurora.music.data
 import com.aurora.music.BuildConfig
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.SubsonicClient
+import com.aurora.music.data.remote.appClientInfo
 import com.aurora.music.model.Song
 import com.google.gson.JsonParser
 import kotlinx.coroutines.TimeoutCancellationException
@@ -34,7 +35,7 @@ class ServerPlaybackReportingTest {
     )
 
     private fun jellyfin(server: MockWebServer) = JellyfinBackend(
-        JellyfinClient(session(server, ServerType.JELLYFIN)), { 0 }, { it },
+        JellyfinClient(session(server, ServerType.JELLYFIN), appClientInfo), { 0 }, { it },
     )
 
     private fun ok(extra: String = "") = MockResponse().setHeader("Content-Type", "application/json")
@@ -200,11 +201,11 @@ class ServerPlaybackReportingTest {
     @Test fun jellyfinDeviceIdentityIsStablePerCredentialAndMatchesBothStreamModes() {
         MockWebServer().use { server ->
             val saved = session(server, ServerType.JELLYFIN)
-            val first = JellyfinClient(saved)
-            assertEquals(first.deviceId, JellyfinClient(saved).deviceId)
-            assertNotEquals(first.deviceId, JellyfinClient(saved.copy(token = "other-device-token")).deviceId)
+            val first = JellyfinClient(saved, appClientInfo)
+            assertEquals(first.deviceId, JellyfinClient(saved, appClientInfo).deviceId)
+            assertNotEquals(first.deviceId, JellyfinClient(saved.copy(token = "other-device-token"), appClientInfo).deviceId)
             assertFalse(first.deviceId.contains(saved.token))
-            assertEquals("saved-device", JellyfinClient(saved.copy(clientToken = "saved-device")).deviceId)
+            assertEquals("saved-device", JellyfinClient(saved.copy(clientToken = "saved-device"), appClientInfo).deviceId)
             assertEquals(first.deviceId, first.streamUrl("track", 0, true).toHttpUrl().queryParameter("DeviceId"))
             assertEquals(first.deviceId, first.streamUrl("track", 128, false).toHttpUrl().queryParameter("DeviceId"))
         }
@@ -214,11 +215,11 @@ class ServerPlaybackReportingTest {
         MockWebServer().use { server ->
             server.enqueue(MockResponse().setHeader("Content-Type", "application/json")
                 .setBody("""{"AccessToken":"new-token","User":{"Id":"user-id","Name":"Listener"}}"""))
-            val saved = JellyfinClient.authenticate(server.url("/").toString(), "Listener", "password")
+            val saved = JellyfinClient.authenticate(server.url("/").toString(), "Listener", "password", appClientInfo)
             assertTrue(saved.clientToken.startsWith("aurora-"))
             assertTrue(server.takeRequest().getHeader("X-Emby-Authorization")!!.contains("DeviceId=\"${saved.clientToken}\""))
             server.enqueue(MockResponse().setResponseCode(204))
-            val client = JellyfinClient(saved)
+            val client = JellyfinClient(saved, appClientInfo)
             JellyfinBackend(client, { 0 }, { it }).reportPlayback(report())
             assertTrue(server.takeRequest().getHeader("X-Emby-Authorization")!!.contains("DeviceId=\"${saved.clientToken}\""))
         }

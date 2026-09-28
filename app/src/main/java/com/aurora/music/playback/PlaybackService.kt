@@ -998,7 +998,9 @@ class PlaybackService : MediaLibraryService() {
                 nodes += "USB software gain (${processed?.softwareGain}×)"
                 modifications += "Software volume attenuates samples before USB output"
             }
-            if (sourceFormat?.bitDepth != null && decoded?.bitDepth != null && sourceFormat.bitDepth > decoded.bitDepth)
+            val sourceBits = sourceFormat?.bitDepth
+            val decodedBits = decoded?.bitDepth
+            if (sourceBits != null && decodedBits != null && sourceBits > decodedBits)
                 modifications += "Decoder reduces the source sample depth"
         }
         val device = requestedOutputDevice()

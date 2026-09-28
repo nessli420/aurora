@@ -5,9 +5,9 @@ import java.security.SecureRandom
 import java.util.Base64
 import java.util.UUID
 
-internal data class ControllerTrust(val controller: PairedController, val tokenHash: String)
+data class ControllerTrust(val controller: PairedController, val tokenHash: String)
 
-internal class RendererPairing(
+class RendererPairing(
     initial: List<ControllerTrust> = emptyList(),
     private val now: () -> Long = System::currentTimeMillis,
     private val persist: (List<ControllerTrust>) -> Unit = {},

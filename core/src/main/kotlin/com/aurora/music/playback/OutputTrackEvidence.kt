@@ -6,7 +6,7 @@ package com.aurora.music.playback
  * until its matching release arrives. Releases from Media3's serial release executor are FIFO
  * for identical configurations; never resurrect an older pending-release track as current.
  */
-internal class OutputTrackEvidence<T>(private val sameConfiguration: (T, T) -> Boolean) {
+class OutputTrackEvidence<T>(private val sameConfiguration: (T, T) -> Boolean) {
     private data class Entry<T>(val generation: Long, val configuration: T)
     private val pending = mutableListOf<Entry<T>>()
     private var generation = 0L

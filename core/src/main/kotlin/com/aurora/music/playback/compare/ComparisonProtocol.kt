@@ -70,7 +70,7 @@ class AbxTrial(assignments: BooleanArray = BooleanArray(16) { SecureRandomHolder
     val answered: Int get() = answers.size
     val complete: Boolean get() = answers.size == planned
     val active: Boolean get() = !complete && !interrupted
-    internal fun xIsA(): Boolean { check(active); return assignments[answers.size] }
+    fun xIsA(): Boolean { check(active); return assignments[answers.size] }
     fun guess(a: Boolean) { check(active); answers += a }
     fun interrupt() { if (!complete) interrupted = true }
     fun result(): AbxResult {

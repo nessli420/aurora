@@ -181,7 +181,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                                 }
                                 SettingsSwitchRow(title = appString(R.string.text_automatic_headroom_830667), subtitle = appString(R.string.text_reduce_input_gain_when_the_rack_boosts_the_signal_2a95ae),
                                     checked = current.autoHeadroom, onCheckedChange = { enabled -> change { it.copy(autoHeadroom = enabled) } })
-                                SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_output_mix_a04a0e), if (current.output == null) appString(R.string.text_last_stage_58b1e2) else appString(R.string.text_inputs_43db9d, (current.output.size))) { routingTarget = "output" }
+                                SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_output_mix_a04a0e), current.output?.let { appString(R.string.text_inputs_43db9d, it.size) } ?: appString(R.string.text_last_stage_58b1e2)) { routingTarget = "output" }
                                 RackDescription(if (current.enabled)
                                     appString(R.string.text_stages_run_from_top_to_bottom_008582)
                                 else appString(R.string.text_select_rack_to_use_these_stages_e161dd))
@@ -393,7 +393,7 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                         subtitle = if (rackEnabled) appString(R.string.text_keep_the_settings_while_passing_this_stage_unchanged_4d9857) else appString(R.string.text_this_rack_is_currently_inactive_f790d2),
                         onCheckedChange = { bypass -> onEdit { it.copy(bypass = bypass) } })
                     SettingsSliderRow(appString(R.string.text_wet_dry_6769a1), appString(R.string.text_wet_76d013, ((node.wet * 100).roundToInt())), node.wet, 0f..1f) { wet -> onEdit { it.copy(wet = wet) } }
-                    SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_stage_inputs_c5a9f4), if (node.inputs == null) appString(R.string.text_previous_stage_252786) else appString(R.string.text_inputs_43db9d, (node.inputs.size)), onClick = onRouting)
+                    SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_stage_inputs_c5a9f4), node.inputs?.let { appString(R.string.text_inputs_43db9d, it.size) } ?: appString(R.string.text_previous_stage_252786), onClick = onRouting)
                     TextButton(onClick = onRename, modifier = Modifier.padding(start = 12.dp)) { Text(appString(R.string.text_rename_stage_1df1d4)) }
                 }
             }

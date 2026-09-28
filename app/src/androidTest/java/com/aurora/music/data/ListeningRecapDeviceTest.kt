@@ -7,6 +7,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.aurora.music.model.Song
 import com.aurora.music.data.remote.DiscordGateway
 import com.aurora.music.ui.screens.stats.*
+import com.google.gson.JsonObject
 import okhttp3.*
 import okhttp3.mockwebserver.*
 import org.json.JSONObject
@@ -69,16 +70,16 @@ class ListeningRecapDeviceTest {
 
     @Test fun discordSettingsControlHeadlineAndAlbum() {
         val artist = discordActivity(song, true, "artist", 20f, 100_000)
-        assertEquals(song.artist, artist.getString("name"))
-        assertEquals(1, artist.getInt("status_display_type"))
-        assertEquals(song.artist, artist.getString("state"))
-        assertTrue(artist.getString("details").contains(song.album))
-        assertEquals(80_000L, artist.getJSONObject("timestamps").getLong("start"))
+        assertEquals(song.artist, artist.get("name").asString)
+        assertEquals(1, artist.get("status_display_type").asInt)
+        assertEquals(song.artist, artist.get("state").asString)
+        assertTrue(artist.get("details").asString.contains(song.album))
+        assertEquals(80_000L, artist.getAsJsonObject("timestamps").get("start").asLong)
         val title = discordActivity(song, false, "song", 0f)
-        assertEquals(song.title, title.getString("name"))
-        assertEquals(2, title.getInt("status_display_type"))
-        assertEquals(song.title, title.getString("details"))
-        assertFalse(title.getString("state").contains(song.album))
+        assertEquals(song.title, title.get("name").asString)
+        assertEquals(2, title.get("status_display_type").asInt)
+        assertEquals(song.title, title.get("details").asString)
+        assertFalse(title.get("state").asString.contains(song.album))
     }
 
     @Test fun rapidSkipsAndPauseDeliverNewestPresenceThroughGateway() {
@@ -97,9 +98,9 @@ class ListeningRecapDeviceTest {
         server.start()
         val gateway = DiscordGateway({}, {}, server.url("/").toString())
         try {
-            gateway.connect("local-fixture-token", JSONObject().put("name", "first"))
+            gateway.connect("local-fixture-token", JsonObject().apply { addProperty("name", "first") })
             assertNotNull(messages.poll(8, TimeUnit.SECONDS))
-            repeat(100) { gateway.updateActivity(JSONObject().put("name", "Song $it")) }
+            repeat(100) { gateway.updateActivity(JsonObject().apply { addProperty("name", "Song $it") }) }
             val final = messages.poll(8, TimeUnit.SECONDS) ?: error("Final song was lost")
             assertEquals("Song 99", final.getJSONArray("activities").getJSONObject(0).getString("name"))
             gateway.updateActivity(null)

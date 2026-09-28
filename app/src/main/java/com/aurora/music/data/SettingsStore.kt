@@ -228,7 +228,7 @@ class SettingsStore(private val context: Context) {
                 val selectedPath = p[Keys.DSP_CONV_PATH]
                 when {
                     selectedPath == current.sourcePath -> p[Keys.DSP_CONV_NAME] = renamed.name
-                    current.prepared != null && selectedPath == current.prepared.path -> {
+                    current.prepared != null && selectedPath == current.prepared?.path -> {
                         p[Keys.DSP_CONV_NAME] = "${renamed.name} · Variant"
                     }
                 }

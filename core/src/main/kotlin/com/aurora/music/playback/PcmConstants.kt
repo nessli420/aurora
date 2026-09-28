@@ -2,6 +2,7 @@ package com.aurora.music.playback
 
 object PcmConstants {
     const val TIME_UNSET = Long.MIN_VALUE + 1
+    const val ENCODING_PCM_8BIT = 3
     const val ENCODING_PCM_16BIT = 2
     const val ENCODING_PCM_24BIT = 21
     const val ENCODING_PCM_32BIT = 22

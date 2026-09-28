@@ -5,7 +5,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import java.net.URI
 
-internal object RendererJson {
+object RendererJson {
     val gson = Gson()
 
     fun parse(bytes: ByteArray): JsonObject = try {

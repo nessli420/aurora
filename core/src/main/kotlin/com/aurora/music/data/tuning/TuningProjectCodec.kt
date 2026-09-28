@@ -80,7 +80,7 @@ object TuningProjectCodec {
         return config
     }
 
-    internal fun validateCurve(curve: MeasurementCurve, checkSource: Boolean = true): MeasurementCurve {
+    fun validateCurve(curve: MeasurementCurve, checkSource: Boolean = true): MeasurementCurve {
         identifier(curve.id); require(curve.importedAtMs >= 0) { "Invalid measurement date." }
         note(curve.provenance.rig, 1024, "Measurement rig")
         note(curve.provenance.source, 1024, "Measurement source")

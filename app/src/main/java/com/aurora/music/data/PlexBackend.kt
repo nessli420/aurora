@@ -180,7 +180,7 @@ class PlexBackend(
                     }
                 }.distinctBy { it.key }.take(12)
                 if (items.isEmpty() || hub.title.isNullOrBlank()) null else HomeFeedSection(
-                    id = "plex:$sectionId:${hub.hubIdentifier ?: index}", title = hub.title, subtitle = section.title.orEmpty(), items = items,
+                    id = "plex:$sectionId:${hub.hubIdentifier ?: index}", title = hub.title.orEmpty(), subtitle = section.title.orEmpty(), items = items,
                 )
             }
         } }.awaitAll().flatten()

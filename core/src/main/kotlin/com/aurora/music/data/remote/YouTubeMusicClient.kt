@@ -26,12 +26,12 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
-internal fun JsonObject.string(key: String): String = get(key)?.takeIf { it.isJsonPrimitive }?.asString.orEmpty()
-internal fun JsonObject.obj(key: String): JsonObject = get(key)?.takeIf { it.isJsonObject }?.asJsonObject ?: JsonObject()
-internal fun JsonObject.array(key: String): JsonArray = get(key)?.takeIf { it.isJsonArray }?.asJsonArray ?: JsonArray()
-internal fun json(vararg values: Pair<String, String>) = JsonObject().apply { values.forEach { addProperty(it.first, it.second) } }
+fun JsonObject.string(key: String): String = get(key)?.takeIf { it.isJsonPrimitive }?.asString.orEmpty()
+fun JsonObject.obj(key: String): JsonObject = get(key)?.takeIf { it.isJsonObject }?.asJsonObject ?: JsonObject()
+fun JsonObject.array(key: String): JsonArray = get(key)?.takeIf { it.isJsonArray }?.asJsonArray ?: JsonArray()
+fun json(vararg values: Pair<String, String>) = JsonObject().apply { values.forEach { addProperty(it.first, it.second) } }
 
-internal fun JsonElement.objects(key: String): List<JsonObject> = buildList {
+fun JsonElement.objects(key: String): List<JsonObject> = buildList {
     fun visit(node: JsonElement) {
         if (node.isJsonObject) node.asJsonObject.entrySet().forEach { (name, value) ->
             if (name == key && value.isJsonObject) add(value.asJsonObject) else visit(value)
@@ -40,7 +40,7 @@ internal fun JsonElement.objects(key: String): List<JsonObject> = buildList {
     visit(this@objects)
 }
 
-internal fun JsonObject.label(): String = string("simpleText").ifBlank {
+fun JsonObject.label(): String = string("simpleText").ifBlank {
     array("runs").joinToString("") { if (it.isJsonObject) it.asJsonObject.string("text") else "" }
 }
 
@@ -137,7 +137,7 @@ class YouTubeMusicClient(
         const val ORIGIN = "https://music.youtube.com"
         const val USER_AGENT = "Aurora/1.0 (Android)"
 
-        internal fun validatedTrackingUrl(value: String): okhttp3.HttpUrl {
+        fun validatedTrackingUrl(value: String): okhttp3.HttpUrl {
             val target = value.toHttpUrlOrNull()
             require(target != null && target.scheme == "https" && target.port == 443 &&
                 target.host in setOf("music.youtube.com", "www.youtube.com", "s.youtube.com") &&

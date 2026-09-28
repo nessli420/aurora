@@ -48,7 +48,7 @@ data class DsdFormat(
     }
 }
 
-internal object DsdHeaders {
+object DsdHeaders {
     data class DffProperties(val rate: Int, val channels: Int, val dst: Boolean)
     fun dsf(format: ByteArray, dataOffset: Long, dataBytes: Long): DsdFormat {
         require(format.size >= 40) { "Incomplete DSF format." }

@@ -2,6 +2,7 @@ package com.aurora.music.data
 
 import com.aurora.music.data.remote.PlexClient
 import com.aurora.music.data.remote.PlexException
+import com.aurora.music.data.remote.appClientInfo
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.async
@@ -41,7 +42,7 @@ class PlexBackendTest {
     }
 
     private fun session(fixture: Fixture) = Session(fixture.url, "Fixture", "", token, ServerType.PLEX, "machine-fixture")
-    private fun backend(fixture: Fixture) = PlexBackend(PlexClient(session(fixture), OkHttpClient()), { 0 }, { it })
+    private fun backend(fixture: Fixture) = PlexBackend(PlexClient(session(fixture), appClientInfo, OkHttpClient()), { 0 }, { it })
     private fun json(body: String) = MockResponse().setHeader("Content-Type", "application/json").setBody(body)
     private fun page(items: List<String>, total: Int = items.size, offset: Int = 0) =
         json("""{"MediaContainer":{"size":${items.size},"totalSize":$total,"offset":$offset,"Metadata":[${items.joinToString(",")}]}}""")
@@ -75,7 +76,7 @@ class PlexBackendTest {
                 "/library/sections" -> sections()
                 else -> MockResponse().setResponseCode(404)
             } }
-            val result = PlexClient.authenticate(fixture.url, token)
+            val result = PlexClient.authenticate(fixture.url, token, appClientInfo)
             assertEquals(ServerType.PLEX, result.type)
             assertEquals(token, result.token)
             assertTrue(result.isValid)
@@ -92,7 +93,7 @@ class PlexBackendTest {
     @Test fun unauthorizedServerCannotProduceASession() = runBlocking {
         Fixture().use { fixture ->
             fixture.respond = { MockResponse().setResponseCode(401).setBody("Unauthorized") }
-            val error = runCatching { PlexClient.authenticate(fixture.url, token) }.exceptionOrNull()
+            val error = runCatching { PlexClient.authenticate(fixture.url, token, appClientInfo) }.exceptionOrNull()
             assertNotNull("An invalid token must fail authentication", error)
             assertFalse(error?.message.orEmpty().contains(token))
         }
@@ -102,7 +103,7 @@ class PlexBackendTest {
         Fixture().use { origin -> Fixture().use { foreign ->
             origin.respond = { MockResponse().setResponseCode(302).setHeader("Location", foreign.url + "/") }
             foreign.respond = { root() }
-            assertNotNull(runCatching { PlexClient.authenticate(origin.url, token) }.exceptionOrNull())
+            assertNotNull(runCatching { PlexClient.authenticate(origin.url, token, appClientInfo) }.exceptionOrNull())
             assertEquals(0, foreign.server.requestCount)
         } }
     }
@@ -114,7 +115,7 @@ class PlexBackendTest {
                 started.complete(Unit)
                 MockResponse().setSocketPolicy(SocketPolicy.NO_RESPONSE)
             }
-            val client = PlexClient(session(fixture), OkHttpClient.Builder().readTimeout(5, TimeUnit.SECONDS).build())
+            val client = PlexClient(session(fixture), appClientInfo, OkHttpClient.Builder().readTimeout(5, TimeUnit.SECONDS).build())
             cancelAfterRequestStarts(started) { client.serverInfo() }
             assertEquals(1, fixture.server.requestCount)
         }
@@ -162,7 +163,7 @@ class PlexBackendTest {
         Fixture().use { fixture ->
             fixture.respond = { request -> if (request.requestUrl!!.encodedPath == "/library/sections")
                 json("""{"MediaContainer":{"Directory":[{"key":"1","title":"Movies","type":"movie"}]}}""") else root() }
-            assertNotNull(runCatching { PlexClient.authenticate(fixture.url, token) }.exceptionOrNull())
+            assertNotNull(runCatching { PlexClient.authenticate(fixture.url, token, appClientInfo) }.exceptionOrNull())
         }
     }
 

@@ -4,6 +4,7 @@ import android.util.Log
 import com.aurora.music.data.remote.DiscordGateway
 import com.aurora.music.data.remote.ImgurUploader
 import com.aurora.music.model.Song
+import com.google.gson.JsonObject
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
@@ -90,18 +91,18 @@ class DiscordRpc(
     private fun currentPosition() = lastPositionSec + if (lastPlaying) (android.os.SystemClock.elapsedRealtime() - positionAt).coerceAtLeast(0) / 1000f else 0f
     private fun imageKey(url: String) = "$appId|$imgurClientId|$url"
 
-    private fun buildActivity(song: Song, isPlaying: Boolean, positionSec: Float): JSONObject? {
+    private fun buildActivity(song: Song, isPlaying: Boolean, positionSec: Float): JsonObject? {
         if (song.title.isBlank()) return null
         val a = discordActivity(song, showAlbum, activityName, positionSec)
         // discord must fetch the art so without imgur skip private server urls it cant reach
         val canHost = imgurId().isNotBlank() || isLikelyPublic(song.artworkUrl)
         if (imagesPossible && song.artworkUrl.isNotBlank() && canHost) {
             val mp = imageCache[imageKey(song.artworkUrl)]
-            val assets = JSONObject()
-            if (showAlbum && song.album.isNotBlank()) assets.put("large_text", song.album.take(128))
-            if (mp != null) assets.put("large_image", mp)
-            a.put("assets", assets)
-            a.put("application_id", appId)
+            val assets = JsonObject()
+            if (showAlbum && song.album.isNotBlank()) assets.addProperty("large_text", song.album.take(128))
+            if (mp != null) assets.addProperty("large_image", mp)
+            a.add("assets", assets)
+            a.addProperty("application_id", appId)
             if (mp == null) resolveImage(song.artworkUrl)
         }
         return a
@@ -169,18 +170,22 @@ class DiscordRpc(
     private companion object { const val TAG = "DiscordRpc" }
 }
 
-internal fun discordActivity(song: Song, showAlbum: Boolean, activityName: String, positionSec: Float, now: Long = System.currentTimeMillis()): JSONObject {
+internal fun discordActivity(song: Song, showAlbum: Boolean, activityName: String, positionSec: Float, now: Long = System.currentTimeMillis()): JsonObject {
     val album = if (showAlbum && song.album.isNotBlank()) " · ${song.album}" else ""
     val artist = song.artist.ifBlank { "Unknown artist" }
-    val activity = JSONObject()
-        .put("name", when (activityName) { "artist" -> artist; "song" -> song.title; else -> "Aurora" }.take(128))
-        .put("type", 2)
-        .put("status_display_type", when (activityName) { "artist" -> 1; "song" -> 2; else -> 0 })
-        .put("details", (song.title + if (activityName == "artist") album else "").take(128))
-        .put("state", (artist + if (activityName == "artist") "" else album).take(128))
+    val activity = JsonObject().apply {
+        addProperty("name", when (activityName) { "artist" -> artist; "song" -> song.title; else -> "Aurora" }.take(128))
+        addProperty("type", 2)
+        addProperty("status_display_type", when (activityName) { "artist" -> 1; "song" -> 2; else -> 0 })
+        addProperty("details", (song.title + if (activityName == "artist") album else "").take(128))
+        addProperty("state", (artist + if (activityName == "artist") "" else album).take(128))
+    }
     if (song.durationSec > 0) {
         val start = now - (positionSec.coerceIn(0f, song.durationSec.toFloat()) * 1000).toLong()
-        activity.put("timestamps", JSONObject().put("start", start).put("end", start + song.durationSec * 1000L))
+        activity.add("timestamps", JsonObject().apply {
+            addProperty("start", start)
+            addProperty("end", start + song.durationSec * 1000L)
+        })
     }
     return activity
 }

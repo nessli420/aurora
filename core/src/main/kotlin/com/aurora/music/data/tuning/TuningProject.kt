@@ -55,7 +55,7 @@ data class TuningFitConfig(
     val rightDelayMs: Double = 0.0,
 )
 
-internal fun TuningFitConfig.forChannel(channel: TuningFitChannel): TuningFitConfig {
+fun TuningFitConfig.forChannel(channel: TuningFitChannel): TuningFitConfig {
     val limits = when (channel) {
         TuningFitChannel.LEFT -> leftLimits
         TuningFitChannel.RIGHT -> rightLimits
@@ -79,9 +79,9 @@ data class TuningProject(
     val updatedAtMs: Long = 0,
 )
 
-internal val TuningFitConfig.hasChannelAlignment: Boolean
+val TuningFitConfig.hasChannelAlignment: Boolean
     get() = leftTrimDb != 0.0 || rightTrimDb != 0.0 || leftDelayMs != 0.0 || rightDelayMs != 0.0
 
-internal val TuningFitConfig.alignmentNodeCount: Int
+val TuningFitConfig.alignmentNodeCount: Int
     get() = (if (leftTrimDb != 0.0 || rightTrimDb != 0.0) 1 else 0) +
         (if (leftDelayMs != 0.0 || rightDelayMs != 0.0) 1 else 0)

@@ -4,7 +4,7 @@ import com.aurora.music.playback.Fft
 import kotlin.math.*
 
 /** Bluestein transform supports the separation model's 7680-point FFT. */
-internal class ArbitraryFft(private val n: Int) {
+class ArbitraryFft(private val n: Int) {
     private val size = Integer.highestOneBit(2 * n - 2) shl 1
     private val fft = Fft(size)
     private val cosines = FloatArray(n) { cos(PI * it.toLong() * it / n).toFloat() }
@@ -41,7 +41,7 @@ internal class ArbitraryFft(private val n: Int) {
 }
 
 /** MDX complex stereo layout: [left real, left imaginary, right real, right imaginary]. */
-internal class StemSpectrogram {
+class StemSpectrogram {
     companion object { const val FFT = 7680; const val BINS = 3072; const val HOP = 1024; const val TIMES = 256; const val FRAMES = HOP * (TIMES - 1); const val TRIM = FFT / 2 }
     private val fft = ArbitraryFft(FFT)
     private val window = FloatArray(FFT) { (.5 - .5 * cos(2 * PI * it / FFT)).toFloat() }

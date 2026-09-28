@@ -32,7 +32,7 @@ internal fun nextDailyAlarmMs(hour: Int, minute: Int, nowMs: Long, zone: ZoneId)
         .toEpochMilli()
 }
 
-internal interface AlarmScheduleBackend {
+interface AlarmScheduleBackend {
     fun canScheduleExact(): Boolean
     fun cancel()
     fun scheduleExact(triggerAtMs: Long)
@@ -40,7 +40,7 @@ internal interface AlarmScheduleBackend {
 }
 
 /** A small testable boundary around Android's schedule calls; observing/refreshing never calls them. */
-internal class AlarmScheduleController {
+class AlarmScheduleController {
     private val mutableState = MutableStateFlow(AlarmScheduleState())
     val state: StateFlow<AlarmScheduleState> = mutableState.asStateFlow()
 

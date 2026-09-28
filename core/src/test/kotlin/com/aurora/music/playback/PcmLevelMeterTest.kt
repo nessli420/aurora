@@ -1,6 +1,5 @@
 package com.aurora.music.playback
 
-import androidx.media3.common.C
 import org.junit.Assert.*
 import org.junit.Test
 import java.nio.ByteBuffer
@@ -11,7 +10,7 @@ import kotlin.math.sqrt
 
 class PcmLevelMeterTest {
     @Test fun stereoSineHasIndependentPeakAndRmsWithoutChangingTheBuffer() {
-        val meter = PcmLevelMeter().apply { configure(C.ENCODING_PCM_FLOAT, 2, 1_000) }
+        val meter = PcmLevelMeter().apply { configure(PcmConstants.ENCODING_PCM_FLOAT, 2, 1_000) }
         val buffer = ByteBuffer.allocate(800).order(ByteOrder.LITTLE_ENDIAN)
         repeat(100) { i ->
             buffer.putFloat((0.5 * sin(2 * PI * i / 100)).toFloat())
@@ -38,7 +37,7 @@ class PcmLevelMeterTest {
     }
 
     @Test fun dcWindowsWaitUntilCompleteAndDoNotCarryOldPeaks() {
-        val meter = PcmLevelMeter().apply { configure(C.ENCODING_PCM_16BIT, 2, 500) }
+        val meter = PcmLevelMeter().apply { configure(PcmConstants.ENCODING_PCM_16BIT, 2, 500) }
         val first = pcm16(50, 16_384, -8_192)
         meter.observe(first, 0, 100)
         assertNull(meter.snapshot())
@@ -59,11 +58,11 @@ class PcmLevelMeterTest {
     }
 
     @Test fun integerAndFloatFullScaleBoundariesUseLittleEndian() {
-        listOf(C.ENCODING_PCM_16BIT, C.ENCODING_PCM_24BIT, C.ENCODING_PCM_32BIT, C.ENCODING_PCM_FLOAT).forEach { encoding ->
-            val bits = when (encoding) { C.ENCODING_PCM_16BIT -> 16; C.ENCODING_PCM_24BIT -> 24; else -> 32 }
+        listOf(PcmConstants.ENCODING_PCM_16BIT, PcmConstants.ENCODING_PCM_24BIT, PcmConstants.ENCODING_PCM_32BIT, PcmConstants.ENCODING_PCM_FLOAT).forEach { encoding ->
+            val bits = when (encoding) { PcmConstants.ENCODING_PCM_16BIT -> 16; PcmConstants.ENCODING_PCM_24BIT -> 24; else -> 32 }
             val buffer = ByteBuffer.allocate(bits / 8 * 2).order(ByteOrder.LITTLE_ENDIAN)
             val positive: Double
-            if (encoding == C.ENCODING_PCM_FLOAT) {
+            if (encoding == PcmConstants.ENCODING_PCM_FLOAT) {
                 buffer.putFloat(-1f).putFloat(1f)
                 positive = 1.0
             } else {
@@ -92,7 +91,7 @@ class PcmLevelMeterTest {
         val buffer = ByteBuffer.allocate(24).order(ByteOrder.LITTLE_ENDIAN)
         samples.forEach { buffer.putFloat(it) }
         buffer.flip()
-        val meter = PcmLevelMeter().apply { configure(C.ENCODING_PCM_FLOAT, 1, 60) }
+        val meter = PcmLevelMeter().apply { configure(PcmConstants.ENCODING_PCM_FLOAT, 1, 60) }
         meter.observe(buffer, 0, buffer.limit())
         val result = requireNotNull(meter.snapshot())
         assertEquals(3L, result.invalidSamples)
@@ -103,7 +102,7 @@ class PcmLevelMeterTest {
     }
 
     @Test fun stereoCountersCountSamplesAndAccumulateAcrossWindows() {
-        val meter = PcmLevelMeter().apply { configure(C.ENCODING_PCM_FLOAT, 2, 10) }
+        val meter = PcmLevelMeter().apply { configure(PcmConstants.ENCODING_PCM_FLOAT, 2, 10) }
         val buffer = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
             .putFloat(Float.NaN).putFloat(Float.POSITIVE_INFINITY)
             .putFloat(-1f).putFloat(1f)
@@ -119,7 +118,7 @@ class PcmLevelMeterTest {
     }
 
     @Test fun resetAndReconfigureDiscardCompletedAndPartialWindows() {
-        val meter = PcmLevelMeter().apply { configure(C.ENCODING_PCM_16BIT, 2, 20) }
+        val meter = PcmLevelMeter().apply { configure(PcmConstants.ENCODING_PCM_16BIT, 2, 20) }
         val full = pcm16(3, Short.MIN_VALUE.toInt(), Short.MAX_VALUE.toInt())
         meter.observe(full, 0, full.limit())
         assertEquals(4L, requireNotNull(meter.snapshot()).fullScaleSamples)
@@ -133,7 +132,7 @@ class PcmLevelMeterTest {
         assertEquals(2L, result.framesSinceReset)
         assertEquals(0L, result.fullScaleSamples)
         assertEquals(0.0625, result.leftRms, 0.0)
-        meter.configure(C.ENCODING_PCM_FLOAT, 1, 10)
+        meter.configure(PcmConstants.ENCODING_PCM_FLOAT, 1, 10)
         assertNull(meter.snapshot())
         val mono = ByteBuffer.allocate(4).order(ByteOrder.LITTLE_ENDIAN).putFloat(0.25f)
         mono.flip()
@@ -147,13 +146,13 @@ class PcmLevelMeterTest {
     @Test fun unsupportedFormatsAndIncompleteFramesHaveNoMeasurement() {
         val buffer = pcm16(10, 1_000, 1_000)
         val meter = PcmLevelMeter()
-        meter.configure(C.ENCODING_PCM_8BIT, 2, 10)
+        meter.configure(PcmConstants.ENCODING_PCM_8BIT, 2, 10)
         meter.observe(buffer, 0, buffer.limit())
         assertNull(meter.snapshot())
-        meter.configure(C.ENCODING_PCM_16BIT, 3, 10)
+        meter.configure(PcmConstants.ENCODING_PCM_16BIT, 3, 10)
         meter.observe(buffer, 0, 36)
         assertNull(meter.snapshot())
-        meter.configure(C.ENCODING_PCM_16BIT, 2, 10)
+        meter.configure(PcmConstants.ENCODING_PCM_16BIT, 2, 10)
         meter.observe(buffer, -1, 3)
         meter.observe(buffer, 0, buffer.limit() + 4)
         meter.observe(buffer, 0, 3)
