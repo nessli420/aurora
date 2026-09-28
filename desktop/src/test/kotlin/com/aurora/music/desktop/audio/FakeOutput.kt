@@ -70,20 +70,21 @@ internal class FakeOutput(
     @Volatile var invalidated = false
     @Volatile var flushes = 0; private set
 
-    @Synchronized
     override fun write(bytes: ByteArray, offset: Int, length: Int, timeoutMs: Int): Int {
         if (invalidated) throw WasapiException(WasapiException.DEVICE_INVALIDATED)
         check(!closed)
         val deadline = System.nanoTime() + timeoutMs * 1_000_000L
         var accepted = 0
         while (true) {
-            advance()
-            val count = minOf(length - accepted, ring.size - buffered)
-            for (i in 0 until count) ring[(read + buffered + i) % ring.size] = bytes[offset + accepted + i]
-            buffered += count
-            accepted += count
+            synchronized(this) {
+                advance()
+                val count = minOf(length - accepted, ring.size - buffered)
+                for (i in 0 until count) ring[(read + buffered + i) % ring.size] = bytes[offset + accepted + i]
+                buffered += count
+                accepted += count
+            }
             if (accepted == length || System.nanoTime() >= deadline) return accepted
-            (this as Object).wait(1)
+            Thread.sleep(1)
         }
     }
 
@@ -141,7 +142,7 @@ internal class FakeOutput(
         val frames = if (speed.isInfinite()) buffered / frameBytes
             else minOf(buffered / frameBytes.toLong(), ((now - clock) * sampleRate * speed / 1e9).toLong()).toInt()
         if (frames <= 0) return
-        clock = if (speed.isInfinite()) now else clock + (frames * 1e9 / sampleRate / speed).toLong()
+        clock = if (speed.isInfinite() || frames == buffered / frameBytes) now else clock + (frames * 1e9 / sampleRate / speed).toLong()
         val count = frames * frameBytes
         for (i in 0 until count) heard.write(ring[(read + i) % ring.size].toInt())
         read = (read + count) % ring.size
