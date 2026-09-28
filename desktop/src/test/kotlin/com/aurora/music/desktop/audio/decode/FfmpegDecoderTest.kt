@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.audio.decode
 
+import com.sun.management.ThreadMXBean
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -20,6 +21,7 @@ class FfmpegDecoderTest {
         val reference = TestAssets.reference("gapless-mp3.pcm")
         FfmpegDecoder.open(TestAssets.file("gapless.mp3").path).use { decoder ->
             assertEquals("mp3", decoder.info.codec)
+            assertEquals("mp3float", decoder.decoderName)
             assertEquals(48_000, decoder.info.sampleRate)
             assertEquals(2, decoder.info.channels)
             assertEquals(SourceSampleFormat(SampleKind.LOSSY, 0), decoder.info.sampleFormat)
@@ -206,16 +208,16 @@ class FfmpegDecoderTest {
     }
 
     @Test fun steadyStateDecodingDoesNotAllocate() {
-        val threads = ManagementFactory.getThreadMXBean() as com.sun.management.ThreadMXBean
+        val threads = ManagementFactory.getThreadMXBean() as ThreadMXBean
         for (channels in listOf(2, 1)) {
             val file = temp.newFile()
             file.writeBytes(wavBytes(48_000, channels, 16, 720_000) { f, c -> (f * 31 + c) % 20000 - 10000 })
             FfmpegDecoder.open(file.path).use { decoder ->
                 val block = DoubleArray(512)
                 repeat(200) { decoder.read(block) }
-                val before = threads.getThreadAllocatedBytes(Thread.currentThread().id)
+                val before = threads.currentThreadAllocatedBytes
                 repeat(2000) { assertTrue(decoder.read(block) > 0) }
-                val allocated = threads.getThreadAllocatedBytes(Thread.currentThread().id) - before
+                val allocated = threads.currentThreadAllocatedBytes - before
                 assertTrue("channels=$channels allocated=$allocated", allocated < 1024)
             }
         }

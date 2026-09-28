@@ -1,7 +1,7 @@
 package com.aurora.music.data
 
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 
 // durationSec 0 marks non-seekable live stream
 fun RadioStation.toSong(): Song = Song(
@@ -12,7 +12,7 @@ fun RadioStation.toSong(): Song = Song(
     artworkUrl = faviconUrl.orEmpty(),
     durationSec = 0,
     streamUrl = streamUrl.orEmpty(),
-    accent = accentFor("radio:$uuid"),
+    accentArgb = accentArgbFor("radio:$uuid"),
 )
 
 fun Song.isRadio(): Boolean = id.startsWith("radio:")

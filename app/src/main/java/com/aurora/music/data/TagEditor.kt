@@ -18,16 +18,6 @@ import java.io.File
 import java.util.logging.Level
 import java.util.logging.Logger
 
-data class AudioTags(
-    val title: String = "",
-    val artist: String = "",
-    val album: String = "",
-    val albumArtist: String = "",
-    val genre: String = "",
-    val year: String = "",
-    val trackNumber: String = "",
-)
-
 class TagEditor(private val context: Context) {
     private val resolver get() = context.contentResolver
 

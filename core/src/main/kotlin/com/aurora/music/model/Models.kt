@@ -1,10 +1,5 @@
 package com.aurora.music.model
 
-import com.aurora.music.localization.appString
-import com.aurora.music.R
-
-import androidx.compose.ui.graphics.Color
-
 data class Song(
     val id: String,
     val title: String,
@@ -14,7 +9,7 @@ data class Song(
     val durationSec: Int,
     val liked: Boolean = false,
     val explicit: Boolean = false,
-    val accent: Color = Color(0xFF28D572),
+    val accentArgb: Long = 0xFF28D572,
     val streamUrl: String = "",
     val albumId: String = "",
     val artistId: String = "",
@@ -76,7 +71,7 @@ data class Playlist(
     val subtitle: String,
     val coverUrl: String,
     val songCount: Int,
-    val accent: Color = Color(0xFF28D572),
+    val accentArgb: Long = 0xFF28D572,
 )
 
 data class LyricLine(val timeSec: Int, val text: String)
@@ -85,29 +80,15 @@ data class DetailInfo(
     val title: String,
     val subtitle: String,
     val artUrl: String,
-    val accent: Color,
+    val accentArgb: Long,
     val isArtist: Boolean,
     val songCount: Int,
     val typeLabel: String,
     val editableDescription: String? = null,
 )
 
-enum class LibraryFilter(@androidx.annotation.StringRes private val labelRes: Int) {
-    ALL(R.string.text_all_6a7208),
-    PLAYLISTS(R.string.text_playlists_77b69f),
-    ALBUMS(R.string.text_albums_4c45e7),
-    ARTISTS(R.string.text_artists_1528d8),
-    SONGS(R.string.text_songs_e1404b),
-    DOWNLOADED(R.string.text_downloaded_c61970);
-    val label: String get() = appString(labelRes)
-}
+enum class LibraryFilter { ALL, PLAYLISTS, ALBUMS, ARTISTS, SONGS, DOWNLOADED }
 
-enum class LibrarySort(@androidx.annotation.StringRes private val labelRes: Int) {
-    RECENT(R.string.text_recently_added_536963),
-    ALPHABETICAL(R.string.text_alphabetical_9d1260),
-    CREATOR(R.string.text_creator_817b79),
-    MOST_PLAYED(R.string.text_most_played_14202e);
-    val label: String get() = appString(labelRes)
-}
+enum class LibrarySort { RECENT, ALPHABETICAL, CREATOR, MOST_PLAYED }
 
 enum class LibraryLayout { LIST, GRID }

@@ -1,14 +1,13 @@
 package com.aurora.music.data
 
-import android.content.Context
 import com.aurora.music.data.remote.ArtistInfo
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
 
 // bumping VERSION invalidates the cache so a schema change can't read back half-null gson missing-key trap
-class ArtistInfoStore(context: Context, private val clock: () -> Long = { System.currentTimeMillis() }) {
-    private val file = File(context.filesDir, "artist_info.json")
+class ArtistInfoStore(filesDir: File, private val clock: () -> Long = { System.currentTimeMillis() }) {
+    private val file = File(filesDir, "artist_info.json")
     private val gson = Gson()
     private val lock = Any()
 

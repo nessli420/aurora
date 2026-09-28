@@ -3,7 +3,6 @@ package com.aurora.music.data
 import com.aurora.music.data.ir.ImpulseLibraryCodec
 import com.aurora.music.data.rules.PresetRuleSessionCodec
 import com.google.gson.Gson
-import android.content.Context
 import java.io.File
 import java.io.InputStream
 import java.io.IOException
@@ -41,7 +40,8 @@ class BackupManager(
     private val settingsStore: SettingsStore,
     private val localStore: LocalStore,
     private val playHistory: PlayHistoryStore,
-    private val context: Context,
+    private val filesDir: File,
+    private val cacheDir: File,
     private val listeningLevels: com.aurora.music.data.listening.ListeningLevelStore? = null,
 ) {
     private val gson = Gson()
@@ -84,8 +84,8 @@ class BackupManager(
             require(count > 0) { "Backup is empty." }
             source.unread(signature, 0, count)
             if (count == 2 && signature[0] == 'P'.code.toByte() && signature[1] == 'K'.code.toByte()) {
-                BackupArchive.read(source, context.cacheDir).use { imported ->
-                    val directory = File(context.filesDir, "processing-presets")
+                BackupArchive.read(source, cacheDir).use { imported ->
+                    val directory = File(filesDir, "processing-presets")
                     check(directory.isDirectory || directory.mkdirs()) { "Cannot create impulse-response storage." }
                     val installed = imported.assets.mapValues { (_, file) ->
                         val destination = File(directory, "backup-${UUID.randomUUID()}.wav")

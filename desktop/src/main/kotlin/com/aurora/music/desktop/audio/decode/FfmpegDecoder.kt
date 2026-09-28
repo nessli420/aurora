@@ -60,6 +60,7 @@ class FfmpegDecoder private constructor(
 ) : AutoCloseable {
     val info: StreamInfo get() = input.info
     val tags: AudioTags get() = input.tags
+    val decoderName: String = codec.codec().name().string
     var positionFrames = 0L
         private set
     val positionMs: Long get() = positionFrames * 1000 / rate

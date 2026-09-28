@@ -1,7 +1,7 @@
 package com.aurora.music.data
 
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 
 // nullable-with-default fields per gson rule feedUrl is the stable id
 data class Podcast(
@@ -33,7 +33,7 @@ fun PodcastEpisode.toSong(podcastImage: String = ""): Song = Song(
     artworkUrl = imageUrl.ifBlank { podcastImage },
     durationSec = durationSec,
     streamUrl = audioUrl,
-    accent = accentFor("podcast:$id"),
+    accentArgb = accentArgbFor("podcast:$id"),
 )
 
 fun Song.isPodcast(): Boolean = id.startsWith("podcast:")

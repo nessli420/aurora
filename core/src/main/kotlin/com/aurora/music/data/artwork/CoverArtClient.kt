@@ -25,7 +25,7 @@ internal object CoverSearchRateLimit {
     }
 }
 
-internal class CoverArtClient(
+class CoverArtClient(
     private val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(8, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build(),
     private val beforeRequest: suspend () -> Unit = { CoverSearchRateLimit.awaitTurn() },
 ) {

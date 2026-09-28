@@ -10,7 +10,7 @@ import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.model.inferReleaseType
 import com.aurora.music.model.releaseTypeLabel
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -54,7 +54,7 @@ class PlexBackend(
             artworkUrl = client.coverArtUrl(id),
             durationSec = ((duration ?: 0L) / 1000L).coerceIn(0, Int.MAX_VALUE.toLong()).toInt(),
             liked = liked,
-            accent = accentFor(id),
+            accentArgb = accentArgbFor(id),
             streamUrl = client.streamUrl(id, bitrate, bitrate <= 0),
             albumId = albumId,
             artistId = grandparentRatingKey.orEmpty(),
@@ -93,7 +93,7 @@ class PlexBackend(
 
     private fun PlexMetadata.toPlaylist(): Playlist {
         client.remember(this)
-        return Playlist(id, title ?: "Playlist", "${leafCount ?: 0} songs", client.coverArtUrl(id), leafCount ?: 0, accentFor(id))
+        return Playlist(id, title ?: "Playlist", "${leafCount ?: 0} songs", client.coverArtUrl(id), leafCount ?: 0, accentArgbFor(id))
     }
 
     private suspend fun library(
@@ -343,7 +343,7 @@ class PlexBackend(
         if (kind == "liked") {
             val tracks = starredSongs()
             return DetailData(DetailInfo("Liked Songs", "${tracks.size} songs you love", tracks.firstOrNull()?.artworkUrl.orEmpty(),
-                accentFor("liked"), false, tracks.size, "Liked"), tracks)
+                accentArgbFor("liked"), false, tracks.size, "Liked"), tracks)
         }
         if (kind !in setOf("album", "artist", "playlist")) return null
         val item = client.metadata(id, playlist = kind == "playlist")?.takeIf { it.type == kind } ?: return null
@@ -361,7 +361,7 @@ class PlexBackend(
             "artist" -> "Artist"
             else -> "Playlist"
         }
-        return DetailData(DetailInfo(item.title ?: label, subtitle, client.coverArtUrl(id), accentFor(id),
+        return DetailData(DetailInfo(item.title ?: label, subtitle, client.coverArtUrl(id), accentArgbFor(id),
             kind == "artist", tracks.size, label,
             editableDescription = if (kind == "playlist") item.summary.orEmpty() else null), tracks, albums)
     }

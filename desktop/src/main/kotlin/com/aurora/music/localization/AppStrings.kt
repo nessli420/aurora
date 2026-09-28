@@ -7,20 +7,20 @@ import kotlinx.coroutines.flow.asStateFlow
 
 object AppStrings {
     private val systemLocale: Locale = Locale.getDefault()
-    private val tag = MutableStateFlow("")
+    private val selected = MutableStateFlow("")
     @Volatile private var loaded: StringTable? = null
 
-    val languageTag: StateFlow<String> = tag.asStateFlow()
+    val languageTag: StateFlow<String> = selected.asStateFlow()
 
     val locale: Locale get() = table.locale
 
     internal val table: StringTable
-        get() = loaded ?: synchronized(this) { loaded ?: StringTable(localeOf(tag.value)).also { loaded = it } }
+        get() = loaded ?: synchronized(this) { loaded ?: StringTable(localeOf(selected.value)).also { loaded = it } }
 
     fun setLocale(tag: String) = synchronized(this) {
         loaded = null
         Locale.setDefault(localeOf(tag))
-        this.tag.value = tag
+        selected.value = tag
     }
 
     private fun localeOf(tag: String): Locale = if (tag.isBlank()) systemLocale else Locale.forLanguageTag(tag)

@@ -13,6 +13,7 @@ import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
 import kotlin.concurrent.thread
+import kotlin.math.abs
 
 class FfmpegHttpTest {
     @Test fun requestsCarryTheConfiguredHeadersAndUserAgent() {
@@ -29,7 +30,7 @@ class FfmpegHttpTest {
                 val samples = decodeAll(decoder)
                 assertEquals(10_001 * 2, samples.size)
                 val reference = TestAssets.reference("gapless-mp3.pcm")
-                assertTrue(samples.indices.all { kotlin.math.abs(toPcm16(samples[it]) - reference[it]) <= 1 })
+                assertTrue(samples.indices.all { abs(toPcm16(samples[it]) - reference[it]) <= 1 })
             }
         }
         assertTrue(requests.isNotEmpty())

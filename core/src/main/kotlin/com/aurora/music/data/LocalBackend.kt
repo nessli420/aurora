@@ -5,11 +5,11 @@ import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 
 // mediabackend over on-device files only server-only ops are no-ops
 class LocalBackend(
-    private val library: LocalLibrary,
+    private val library: LocalCatalog,
     private val store: LocalStore,
     override val session: Session,
 ) : MediaBackend {
@@ -22,7 +22,7 @@ class LocalBackend(
             subtitle = (subtitle ?: "").ifBlank { "${tracks.size} song${if (tracks.size == 1) "" else "s"}" },
             coverUrl = tracks.firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl ?: "",
             songCount = tracks.size,
-            accent = accentFor(id),
+            accentArgb = accentArgbFor(id),
         )
     }
 
@@ -104,7 +104,7 @@ class LocalBackend(
                 val tracks = library.songsByAlbumId(id)
                 val album = library.albums.firstOrNull { it.id == id } ?: return null
                 DetailData(
-                    info = DetailInfo(album.title, album.artist, album.artworkUrl, accentFor(id), false, tracks.size, album.typeLabel),
+                    info = DetailInfo(album.title, album.artist, album.artworkUrl, accentArgbFor(id), false, tracks.size, album.typeLabel),
                     tracks = tracks,
                 )
             }
@@ -113,7 +113,7 @@ class LocalBackend(
                 val tracks = library.songsByArtistId(id)
                 val albums = library.albumsByArtistId(id)
                 DetailData(
-                    info = DetailInfo(artist.name, "${tracks.size} song${if (tracks.size == 1) "" else "s"}", artist.imageUrl, accentFor(id), true, tracks.size, "Artist"),
+                    info = DetailInfo(artist.name, "${tracks.size} song${if (tracks.size == 1) "" else "s"}", artist.imageUrl, accentArgbFor(id), true, tracks.size, "Artist"),
                     tracks = tracks,
                     albums = albums,
                 )
@@ -122,14 +122,14 @@ class LocalBackend(
                 val pl = store.playlist(id) ?: return null
                 val tracks = pl.trackIds.orEmpty().mapNotNull { library.song(it) }
                 DetailData(
-                    info = DetailInfo(pl.title ?: "", pl.subtitle ?: "", tracks.firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl ?: "", accentFor(id), false, tracks.size, "Playlist"),
+                    info = DetailInfo(pl.title ?: "", pl.subtitle ?: "", tracks.firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl ?: "", accentArgbFor(id), false, tracks.size, "Playlist"),
                     tracks = tracks,
                 )
             }
             "liked" -> {
                 val tracks = starredSongs()
                 DetailData(
-                    info = DetailInfo("Liked Songs", "${tracks.size} song${if (tracks.size == 1) "" else "s"}", tracks.firstOrNull()?.artworkUrl ?: "", accentFor("liked"), false, tracks.size, "Liked"),
+                    info = DetailInfo("Liked Songs", "${tracks.size} song${if (tracks.size == 1) "" else "s"}", tracks.firstOrNull()?.artworkUrl ?: "", accentArgbFor("liked"), false, tracks.size, "Liked"),
                     tracks = tracks,
                 )
             }

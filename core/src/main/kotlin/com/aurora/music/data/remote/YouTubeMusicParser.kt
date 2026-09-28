@@ -8,7 +8,7 @@ import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 
@@ -95,14 +95,14 @@ object YouTubeMusicParser {
                                 durations.firstNotNullOfOrNull { duration(it) } ?: 0,
                                 liked = item.objects("likeButtonRenderer").any { it.string("likeStatus") == "LIKE" },
                                 explicit = item.objects("icon").any { it.string("iconType") == "MUSIC_EXPLICIT_BADGE" },
-                                accent = accentFor(videoId), streamUrl = sentinel(videoId),
+                                accentArgb = accentArgbFor(videoId), streamUrl = sentinel(videoId),
                                 albumId = albumRun?.obj("navigationEndpoint")?.obj("browseEndpoint")?.string("browseId").orEmpty(),
                                 artistId = artistRuns.firstOrNull()?.obj("navigationEndpoint")?.obj("browseEndpoint")?.string("browseId").orEmpty())
                         }
                         browseId.startsWith("MPRE") -> albums += Album(browseId, title, artist, art,
                             runs.mapNotNull { it.string("text").toIntOrNull()?.takeIf { y -> y in 1900..2200 } }.firstOrNull() ?: 0, 0)
                         browseId.startsWith("UC") -> artists += Artist(browseId, title, art, 0)
-                        browseId.startsWith("VL") -> playlists += Playlist(browseId.removePrefix("VL"), title, subtitle, art, 0, accentFor(browseId))
+                        browseId.startsWith("VL") -> playlists += Playlist(browseId.removePrefix("VL"), title, subtitle, art, 0, accentArgbFor(browseId))
                     }
                     if (key == "musicCardShelfRenderer") visit(item.array("contents"))
                 } else if (key !in setOf("menu", "overlay", "buttons", "trackingParams")) visit(value)

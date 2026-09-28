@@ -14,7 +14,7 @@ import org.xml.sax.InputSource
 private fun resource(path: String): InputStream =
     requireNotNull(Thread.currentThread().contextClassLoader.getResourceAsStream(path)) { "Missing resource $path" }
 
-// compose 1.7 desktop ignores font variations, so each family is one skia instance and bold is synthesized
+// compose 1.7 desktop fonts ignore variation axes, so pin one instance and let compose synthesize bold
 private fun variableFontFamily(file: String, vararg axes: FontVariation): FontFamily {
     val typeface = requireNotNull(FontMgr.default.makeFromData(Data.makeFromBytes(resource("font/$file").use { it.readBytes() })))
     return FontFamily(Typeface(typeface.makeClone(arrayOf(*axes), 0), "aurora-${file.substringBefore('.')}"))

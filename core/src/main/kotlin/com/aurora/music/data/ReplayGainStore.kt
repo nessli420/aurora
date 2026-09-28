@@ -1,6 +1,5 @@
 package com.aurora.music.data
 
-import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
@@ -8,8 +7,8 @@ import java.io.File
 data class RgEntry(val track: Float = 0f, val album: Float = 0f)
 
 // keyed by absolute path so gains survive a mediastore rescan that renumbers ids
-class ReplayGainStore(context: Context) {
-    private val file = File(context.filesDir, "rg_gains.json")
+class ReplayGainStore(filesDir: File) {
+    private val file = File(filesDir, "rg_gains.json")
     private val gson = Gson()
     private val lock = Any()
 

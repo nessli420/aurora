@@ -1,6 +1,5 @@
 package com.aurora.music.data
 
-import android.content.Context
 import com.aurora.music.model.Song
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
@@ -29,9 +28,9 @@ data class PlayEvent(
 
 data class RankedItem(val id: String, val name: String, val subtitle: String, val artworkUrl: String, val count: Int)
 
-class PlayHistoryStore(context: Context) {
+class PlayHistoryStore(filesDir: File) {
 
-    private val file = File(context.filesDir, "play_history.json")
+    private val file = File(filesDir, "play_history.json")
     private val gson = Gson()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Any()

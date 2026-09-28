@@ -1,6 +1,5 @@
 package com.aurora.music.data
 
-import android.content.Context
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
@@ -21,8 +20,8 @@ private data class LocalState(
     val likedIds: List<String>? = emptyList(),
 )
 
-class LocalStore(context: Context) {
-    private val file = File(context.filesDir, "local_store.json")
+class LocalStore(filesDir: File) {
+    private val file = File(filesDir, "local_store.json")
     private val gson = Gson()
     private val lock = Any()
     private var revision = 0L

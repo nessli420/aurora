@@ -13,7 +13,7 @@ import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.model.inferReleaseType
 import com.aurora.music.model.releaseTypeLabel
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import retrofit2.HttpException
 
@@ -49,7 +49,7 @@ class JellyfinBackend(
             durationSec = ((RunTimeTicks ?: 0L) / TICKS_PER_SEC).toInt(),
             liked = UserData?.IsFavorite == true,
             explicit = false,
-            accent = accentFor(Id),
+            accentArgb = accentArgbFor(Id),
             streamUrl = client.streamUrl(Id, bitrate, bitrate == 0),
             albumId = AlbumId ?: "",
             artistId = ArtistItems?.firstOrNull()?.Id ?: AlbumArtists?.firstOrNull()?.Id ?: "",
@@ -89,7 +89,7 @@ class JellyfinBackend(
         subtitle = "${ChildCount ?: 0} songs",
         coverUrl = client.coverArtUrl(imageId()),
         songCount = ChildCount ?: 0,
-        accent = accentFor(Id),
+        accentArgb = accentArgbFor(Id),
     )
 
     private suspend fun items(params: Map<String, String>): List<BaseItemDto> =
@@ -233,7 +233,7 @@ class JellyfinBackend(
                 val tracks = items(mapOf("ParentId" to id, "IncludeItemTypes" to "Audio", "SortBy" to "ParentIndexNumber,IndexNumber,SortName", "Fields" to "MediaSources,Genres,DateCreated")).map { it.toSong() }
                 val typeLabel = releaseTypeLabel(inferReleaseType(tracks.size, tracks.sumOf { it.durationSec }))
                 DetailData(
-                    DetailInfo(a.Name ?: "Album", "${a.AlbumArtist ?: a.Artists?.firstOrNull() ?: ""} • ${a.ProductionYear ?: ""}", client.coverArtUrl(a.imageId()), accentFor(a.Id), false, tracks.size, typeLabel),
+                    DetailInfo(a.Name ?: "Album", "${a.AlbumArtist ?: a.Artists?.firstOrNull() ?: ""} • ${a.ProductionYear ?: ""}", client.coverArtUrl(a.imageId()), accentArgbFor(a.Id), false, tracks.size, typeLabel),
                     tracks,
                 )
             }
@@ -242,7 +242,7 @@ class JellyfinBackend(
                 val albums = items(mapOf("IncludeItemTypes" to "MusicAlbum", "ArtistIds" to id, "Recursive" to "true", "SortBy" to "ProductionYear,SortName", "SortOrder" to "Descending")).map { it.toAlbum() }
                 val tracks = items(mapOf("IncludeItemTypes" to "Audio", "ArtistIds" to id, "Recursive" to "true", "Limit" to "60", "Fields" to "MediaSources,DateCreated")).map { it.toSong() }
                 DetailData(
-                    DetailInfo(ar.Name ?: "Artist", "${albums.size} albums · ${tracks.size} tracks", client.coverArtUrl(ar.imageId()), accentFor(ar.Id), true, tracks.size, "Artist"),
+                    DetailInfo(ar.Name ?: "Artist", "${albums.size} albums · ${tracks.size} tracks", client.coverArtUrl(ar.imageId()), accentArgbFor(ar.Id), true, tracks.size, "Artist"),
                     tracks,
                     albums,
                 )
@@ -253,14 +253,14 @@ class JellyfinBackend(
                     client.api.playlistItems(id, mapOf("userId" to uid, "Fields" to "MediaSources,Genres,DateCreated")).Items
                 }.getOrDefault(emptyList()).map { it.toSong() }
                 DetailData(
-                    DetailInfo(p.Name ?: "Playlist", "${tracks.size} songs", client.coverArtUrl(p.imageId()), accentFor(p.Id), false, tracks.size, "Playlist"),
+                    DetailInfo(p.Name ?: "Playlist", "${tracks.size} songs", client.coverArtUrl(p.imageId()), accentArgbFor(p.Id), false, tracks.size, "Playlist"),
                     tracks,
                 )
             }
             "liked" -> {
                 val songs = starredSongs()
                 DetailData(
-                    DetailInfo("Liked Songs", "${songs.size} songs you love", songs.firstOrNull()?.artworkUrl ?: "", accentFor("liked"), false, songs.size, "Liked"),
+                    DetailInfo("Liked Songs", "${songs.size} songs you love", songs.firstOrNull()?.artworkUrl ?: "", accentArgbFor("liked"), false, songs.size, "Liked"),
                     songs,
                 )
             }

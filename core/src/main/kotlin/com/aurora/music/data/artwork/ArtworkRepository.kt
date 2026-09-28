@@ -1,9 +1,5 @@
 package com.aurora.music.data.artwork
 
-import android.content.Context
-import android.graphics.BitmapFactory
-import android.net.Uri
-import android.os.ParcelFileDescriptor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -24,16 +20,21 @@ import java.io.IOException
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
-class ArtworkRepository internal constructor(
-    context: Context,
+interface ArtworkImages {
+    fun size(bytes: ByteArray): Pair<Int, Int>?
+    fun isPlaceholder(bytes: ByteArray): Boolean
+}
+
+class ArtworkRepository(
+    private val root: File,
+    private val openStream: (String) -> InputStream?,
+    private val images: ArtworkImages,
     private val offline: () -> Boolean,
     private val enabled: suspend () -> Boolean,
     private val separators: suspend () -> com.aurora.music.data.ArtistSeparators,
     private val client: CoverArtClient = CoverArtClient(),
     private val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(8, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build(),
-    private val root: File = File(context.cacheDir, "metadata-artwork"),
 ) {
-    private val resolver = context.applicationContext.contentResolver
     private val gate = Semaphore(3)
     private val locks = Array(64) { Mutex() }
     private val matchLocks = Array(64) { Mutex() }
@@ -43,7 +44,7 @@ class ArtworkRepository internal constructor(
     val bytes = _bytes.asStateFlow()
     init { CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { synchronized(storage) { trim() } } }
 
-    internal suspend fun open(request: ArtworkRequest): ParcelFileDescriptor = withContext(Dispatchers.IO) {
+    suspend fun <T> open(request: ArtworkRequest, read: (File) -> T): T = withContext(Dispatchers.IO) {
         val key = request.key
         locks[(key.hashCode() and Int.MAX_VALUE) % locks.size].withLock {
             val image = File(root, "$key.img")
@@ -53,36 +54,36 @@ class ArtworkRepository internal constructor(
             val version = synchronized(storage) { generation }
             // A newly embedded local cover takes precedence over an older metadata match.
             val original = request.original?.takeIf { it.isNotBlank() && serverArt == null }?.let { uri ->
-                try { resolver.openInputStream(Uri.parse(uri))?.use(::readImage) }
+                try { openStream(uri)?.use(::readImage) }
                 catch (_: FileNotFoundException) { null }
                 catch (_: SecurityException) { null }
             }
-            if (original != null) return@withLock saveAndOpen(image, original, version)
+            if (original != null) return@withLock saveAndOpen(image, original, version, read)
             synchronized(storage) {
                 val freshUntil = runCatching { File(root, "$key.fresh").readText().toLong() }.getOrDefault(0L)
                 if (File(root, "$key.placeholder").isFile && match.isFile) {
-                    return@withLock saveAndOpen(image, match.readBytes(), version)
+                    return@withLock saveAndOpen(image, match.readBytes(), version, read)
                 }
                 if (image.isFile && (serverArt == null || offline() || freshUntil > System.currentTimeMillis())) {
                     image.setLastModified(System.currentTimeMillis())
-                    return@withLock ParcelFileDescriptor.open(image, ParcelFileDescriptor.MODE_READ_ONLY)
+                    return@withLock read(image)
                 }
             }
             val supplied = if (serverArt != null && !offline()) {
                 try { gate.withPermit { fetchImage(serverArt) } }
                 catch (error: IOException) {
                     synchronized(storage) {
-                        if (image.isFile) return@withLock ParcelFileDescriptor.open(image, ParcelFileDescriptor.MODE_READ_ONLY)
+                        if (image.isFile) return@withLock read(image)
                     }
                     throw error
                 }
             } else null
-            if (supplied != null && !NavidromePlaceholder.matches(supplied)) return@withLock saveAndOpen(image, supplied, version)
+            if (supplied != null && !images.isPlaceholder(supplied)) return@withLock saveAndOpen(image, supplied, version, read)
             synchronized(storage) {
-                if (match.isFile) return@withLock saveAndOpen(image, match.readBytes(), version)
+                if (match.isFile) return@withLock saveAndOpen(image, match.readBytes(), version, read)
             }
             if (offline() || !enabled()) {
-                if (supplied != null) return@withLock saveAndOpen(image, supplied, version, RETRY_TTL, placeholder = true)
+                if (supplied != null) return@withLock saveAndOpen(image, supplied, version, read, RETRY_TTL, placeholder = true)
                 throw FileNotFoundException("Artwork lookup unavailable")
             }
             synchronized(storage) {
@@ -92,7 +93,7 @@ class ArtworkRepository internal constructor(
                 // Album and track cover IDs can differ even when their metadata is identical.
                 matchLocks[(request.matchKey.hashCode() and Int.MAX_VALUE) % matchLocks.size].withLock lookup@{
                     synchronized(storage) {
-                        if (match.isFile) return@lookup saveAndOpen(image, match.readBytes(), version)
+                        if (match.isFile) return@lookup saveAndOpen(image, match.readBytes(), version, read)
                     }
                     try {
                         val candidates = client.candidates(request, separators())
@@ -103,16 +104,16 @@ class ArtworkRepository internal constructor(
                                 fetchImage(url)
                             }
                             if (data != null) {
-                                saveAndOpen(match, data, version).close()
-                                return@lookup saveAndOpen(image, data, version)
+                                saveAndOpen(match, data, version, {})
+                                return@lookup saveAndOpen(image, data, version, read)
                             }
                         }
                     } catch (error: IOException) {
                         // Keep the server image usable during a provider outage; retry shortly.
-                        if (supplied != null) return@lookup saveAndOpen(image, supplied, version, RETRY_TTL, placeholder = true)
+                        if (supplied != null) return@lookup saveAndOpen(image, supplied, version, read, RETRY_TTL, placeholder = true)
                         throw error
                     }
-                    if (supplied != null) return@lookup saveAndOpen(image, supplied, version, placeholder = true)
+                    if (supplied != null) return@lookup saveAndOpen(image, supplied, version, read, placeholder = true)
                     synchronized(storage) {
                         if (version == generation) {
                             root.mkdirs()
@@ -137,12 +138,11 @@ class ArtworkRepository internal constructor(
 
     private fun readImage(input: InputStream): ByteArray? {
         val bytes = input.readBytesLimited(MAX_IMAGE_BYTES) ?: return null
-        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
-        return bytes.takeIf { bounds.outWidth in 1..12000 && bounds.outHeight in 1..12000 }
+        val (width, height) = images.size(bytes) ?: return null
+        return bytes.takeIf { width in 1..12000 && height in 1..12000 }
     }
 
-    private fun saveAndOpen(file: File, data: ByteArray, version: Int, ttl: Long = MISS_TTL, placeholder: Boolean = false): ParcelFileDescriptor = synchronized(storage) {
+    private fun <T> saveAndOpen(file: File, data: ByteArray, version: Int, read: (File) -> T, ttl: Long = MISS_TTL, placeholder: Boolean = false): T = synchronized(storage) {
         if (version != generation) throw FileNotFoundException("Artwork cache cleared")
         root.mkdirs()
         val temporary = File(root, file.name + ".tmp")
@@ -153,9 +153,9 @@ class ArtworkRepository internal constructor(
         File(root, file.nameWithoutExtension + ".miss").delete()
         File(root, file.nameWithoutExtension + ".fresh").writeText((System.currentTimeMillis() + ttl).toString())
         File(root, file.nameWithoutExtension + ".placeholder").let { if (placeholder) it.writeText("") else it.delete() }
-        val descriptor = ParcelFileDescriptor.open(file, ParcelFileDescriptor.MODE_READ_ONLY)
+        val opened = read(file)
         trim(keep = file)
-        descriptor
+        opened
     }
 
     suspend fun clear() = withContext(Dispatchers.IO) {

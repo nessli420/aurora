@@ -9,7 +9,7 @@ import java.text.Normalizer
 import java.util.Base64
 import java.util.Locale
 
-internal data class ArtworkRequest(
+data class ArtworkRequest(
     val artist: String? = null, val album: String? = null, val title: String? = null,
     val original: String? = null, val duration: Int? = null,
 ) {
@@ -49,7 +49,7 @@ object ArtworkUrls {
         return PREFIX + Base64.getUrlEncoder().withoutPadding().encodeToString(gson.toJson(request).toByteArray(StandardCharsets.UTF_8))
     }
 
-    internal fun decode(uri: String): ArtworkRequest? = runCatching {
+    fun decode(uri: String): ArtworkRequest? = runCatching {
         if (!isArtwork(uri) || uri.length > 8192) return null
         val request = gson.fromJson(String(Base64.getUrlDecoder().decode(uri.removePrefix(PREFIX)), StandardCharsets.UTF_8), ArtworkRequest::class.java)
         if (request.artist.isNullOrBlank() || listOf(request.artist, request.album, request.title).any { (it?.length ?: 0) > 1024 }) return null

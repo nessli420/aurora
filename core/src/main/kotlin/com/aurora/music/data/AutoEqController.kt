@@ -1,6 +1,5 @@
 package com.aurora.music.data
 
-import android.content.Context
 import com.aurora.music.data.routes.*
 import com.aurora.music.data.rules.*
 import kotlinx.coroutines.CoroutineScope
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 class AutoEqController(
-    context: Context,
     private val settingsStore: SettingsStore,
     scope: CoroutineScope,
 ) {

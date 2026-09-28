@@ -12,10 +12,6 @@ import org.json.JSONObject
 import java.io.File
 import kotlin.math.*
 
-data class MixAnalysis(val peaks: List<Float>, val seconds: Float, val bpm: Float, val confidence: Float, val rmsDb: Float,
-    val sonic: List<Float> = emptyList(), val energy: List<Float> = emptyList(), val beatOffset: Float = 0f,
-    val audibleStart: Float = 0f, val audibleEnd: Float = seconds)
-
 /** Reads a playable source into bounded waveform/energy bins. No library download or retained audio. */
 class MixAnalyzer(private val context: Context, private val resolve: (String) -> String?,
     private val onAnalyzed: (String, String, FloatArray) -> Unit = { _, _, _ -> }) {

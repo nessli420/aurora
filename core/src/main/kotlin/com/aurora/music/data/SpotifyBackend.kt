@@ -16,7 +16,7 @@ import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import android.util.Log
 import com.aurora.music.data.remote.SpPlaylistItem
 import com.aurora.music.data.remote.SpSavedTrack
@@ -85,7 +85,7 @@ class SpotifyBackend(
                 if (title.isBlank()) return@mapNotNull null
                 localize(Song(
                     id = tid, title = title, artist = artist, album = plName, artworkUrl = cover,
-                    durationSec = durSec, accent = accentFor(tid), streamUrl = sentinel(tid, title, artist, durSec),
+                    durationSec = durSec, accentArgb = accentArgbFor(tid), streamUrl = sentinel(tid, title, artist, durSec),
                 ))
             }
         }.getOrDefault(emptyList())
@@ -136,7 +136,7 @@ class SpotifyBackend(
             artworkUrl = art,
             durationSec = durSec,
             explicit = explicit,
-            accent = accentFor(sid),
+            accentArgb = accentArgbFor(sid),
             streamUrl = sentinel(sid, name ?: "", artistName, durSec),
             albumId = album?.id ?: fallbackAlbumId,
             artistId = artists?.firstOrNull()?.id ?: "",
@@ -186,7 +186,7 @@ class SpotifyBackend(
         subtitle = owner?.displayName?.let { "by $it" } ?: (description ?: ""),
         coverUrl = img(images),
         songCount = items?.total ?: tracks?.total ?: 0,
-        accent = accentFor(id ?: ""),
+        accentArgb = accentArgbFor(id ?: ""),
     )
 
     override suspend fun ping(): Boolean = runCatching { api.me(); true }.getOrDefault(false)
@@ -314,7 +314,7 @@ class SpotifyBackend(
                 val tracks = a.tracks?.items?.map { it.toSong(art, a.name ?: "", a.id ?: "") }.orEmpty()
                 val total = a.tracks?.total?.takeIf { it > 0 } ?: a.totalTracks.takeIf { it > 0 } ?: tracks.size
                 DetailData(
-                    info = DetailInfo(a.name ?: "", a.artists?.mapNotNull { it.name }?.joinToString(", ") ?: "", art, accentFor(id), false, total, a.toAlbum().typeLabel),
+                    info = DetailInfo(a.name ?: "", a.artists?.mapNotNull { it.name }?.joinToString(", ") ?: "", art, accentArgbFor(id), false, total, a.toAlbum().typeLabel),
                     tracks = tracks,
                 )
             }
@@ -327,7 +327,7 @@ class SpotifyBackend(
                 val followers = ar.followers?.total ?: 0
                 val sub = if (followers > 0) "${formatCount(followers)} followers" else "Artist"
                 DetailData(
-                    info = DetailInfo(ar.name ?: "", sub, img(ar.images), accentFor(id), true, top.size, "Artist"),
+                    info = DetailInfo(ar.name ?: "", sub, img(ar.images), accentArgbFor(id), true, top.size, "Artist"),
                     tracks = top,
                     albums = albums,
                 )
@@ -339,7 +339,7 @@ class SpotifyBackend(
                 val apiTracks = apiPage?.items?.mapNotNull { (it.item ?: it.track)?.toSong() }.orEmpty()
                 if (apiTracks.isNotEmpty()) {
                     DetailData(
-                        info = DetailInfo(header?.name ?: "Playlist", sub, img(header?.images), accentFor(id), false, apiPage?.total ?: apiTracks.size, "Playlist"),
+                        info = DetailInfo(header?.name ?: "Playlist", sub, img(header?.images), accentArgbFor(id), false, apiPage?.total ?: apiTracks.size, "Playlist"),
                         tracks = apiTracks,
                     )
                 } else {
@@ -347,7 +347,7 @@ class SpotifyBackend(
                     val embed = fetchEmbedTracks(id)
                     Log.d("SpotifyBE", "playlist $id non-owned → embed tracks=${embed.size}")
                     DetailData(
-                        info = DetailInfo(header?.name ?: "Playlist", sub, img(header?.images), accentFor(id), false, embed.size, "Playlist"),
+                        info = DetailInfo(header?.name ?: "Playlist", sub, img(header?.images), accentArgbFor(id), false, embed.size, "Playlist"),
                         tracks = embed,
                     )
                 }
@@ -356,7 +356,7 @@ class SpotifyBackend(
                 val page = api.savedTracks(limit = PAGE, offset = 0)
                 val tracks = page.items?.mapNotNull { it.track?.toSong() }.orEmpty()
                 DetailData(
-                    info = DetailInfo("Liked Songs", "${page.total} songs", tracks.firstOrNull()?.artworkUrl ?: "", accentFor("liked"), false, page.total, "Liked"),
+                    info = DetailInfo("Liked Songs", "${page.total} songs", tracks.firstOrNull()?.artworkUrl ?: "", accentArgbFor("liked"), false, page.total, "Liked"),
                     tracks = tracks,
                 )
             }

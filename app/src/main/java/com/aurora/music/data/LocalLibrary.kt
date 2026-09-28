@@ -13,7 +13,7 @@ import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
 import com.aurora.music.playback.dsd.DsdMetadataReader
 import com.aurora.music.util.TrackMatch
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -28,14 +28,14 @@ class LocalLibrary(
     // scanned replaygain overlaid by path since mediastore tags rarely carry it
     private val gainProvider: (String) -> Pair<Float, Float>? = { null },
     private val separatorsProvider: suspend () -> ArtistSeparators = { ArtistSeparators() },
-) {
+) : LocalCatalog {
 
     @Volatile private var loaded = false
     private val mutex = Mutex()
 
-    @Volatile var songs: List<Song> = emptyList(); private set
-    @Volatile var albums: List<Album> = emptyList(); private set
-    @Volatile var artists: List<Artist> = emptyList(); private set
+    @Volatile override var songs: List<Song> = emptyList(); private set
+    @Volatile override var albums: List<Album> = emptyList(); private set
+    @Volatile override var artists: List<Artist> = emptyList(); private set
     private var byId: Map<String, Song> = emptyMap()
     private var rawSongs: List<Song> = emptyList()
     @Volatile private var artistIndex = LocalArtistIndex(emptyList(), ArtistSeparators())
@@ -45,9 +45,9 @@ class LocalLibrary(
 
     @Volatile private var dirOf: Map<String, String> = emptyMap()
 
-    @Volatile var folderRoot: String = ""; private set
+    @Volatile override var folderRoot: String = ""; private set
 
-    suspend fun ensureLoaded() {
+    override suspend fun ensureLoaded() {
         val separators = separatorsProvider()
         if (loaded && separators == appliedSeparators) return
         mutex.withLock {
@@ -65,7 +65,7 @@ class LocalLibrary(
         if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE,
     ) == PackageManager.PERMISSION_GRANTED
 
-    fun song(id: String): Song? = byId[id]
+    override fun song(id: String): Song? = byId[id]
 
     // only substitute on a single unambiguous match so a different version is never swapped in
     fun findMatch(artist: String, title: String, durationSec: Int): Song? {
@@ -76,7 +76,7 @@ class LocalLibrary(
         return candidates.singleOrNull()?.takeIf { durationSec <= 0 || it.durationSec <= 0 }
     }
 
-    fun browse(path: String): Pair<List<String>, List<Song>> {
+    override fun browse(path: String): Pair<List<String>, List<Song>> {
         val base = path.ifBlank { folderRoot }
         if (base.isBlank()) return emptyList<String>() to emptyList()
         val here = songs.filter { dirOf[it.id] == base }.sortedBy { it.title.lowercase() }
@@ -99,10 +99,10 @@ class LocalLibrary(
         return prefix.joinToString("/")
     }
     fun songsIn(album: Album): List<Song> = songs.filter { it.albumId == album.id }
-    fun songsByAlbumId(albumId: String): List<Song> = songs.filter { it.albumId == albumId }
-    fun artist(id: String): Artist? = artistIndex.artist(id)
-    fun songsByArtistId(artistId: String): List<Song> = artistIndex.songsBy(artistId)
-    fun albumsByArtistId(artistId: String): List<Album> =
+    override fun songsByAlbumId(albumId: String): List<Song> = songs.filter { it.albumId == albumId }
+    override fun artist(id: String): Artist? = artistIndex.artist(id)
+    override fun songsByArtistId(artistId: String): List<Song> = artistIndex.songsBy(artistId)
+    override fun albumsByArtistId(artistId: String): List<Album> =
         songsByArtistId(artistId).map { it.albumId }.distinct()
             .mapNotNull { aid -> albums.firstOrNull { it.id == aid } }
 
@@ -200,7 +200,7 @@ class LocalLibrary(
                         album = albumName,
                         artworkUrl = art,
                         durationSec = durSec,
-                        accent = accentFor(id.toString()),
+                        accentArgb = accentArgbFor(id.toString()),
                         streamUrl = uri,
                         albumId = sidAlbum,
                         artistId = artistId.toString(),
@@ -290,7 +290,7 @@ class LocalLibrary(
                     val gain = path.takeIf(String::isNotBlank)?.let(gainProvider)
                     files += Song(
                         id = id, title = name.substringBeforeLast('.'), artist = "Unknown artist", album = "Unknown album",
-                        artworkUrl = "", durationSec = 0, accent = accentFor(id),
+                        artworkUrl = "", durationSec = 0, accentArgb = accentArgbFor(id),
                         streamUrl = ContentUris.withAppendedId(collection, mediaId).toString(),
                         albumId = "local-dsd-folder-" + UUID.nameUUIDFromBytes(folder.ifBlank { id }.toByteArray(Charsets.UTF_8)),
                         suffix = suffix, path = path, replayGainTrack = gain?.first ?: 0f, replayGainAlbum = gain?.second ?: 0f,

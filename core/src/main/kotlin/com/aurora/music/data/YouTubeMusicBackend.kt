@@ -2,7 +2,7 @@ package com.aurora.music.data
 
 import com.aurora.music.data.remote.*
 import com.aurora.music.model.*
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import com.google.gson.JsonArray
 import com.google.gson.JsonObject
 import kotlinx.coroutines.async
@@ -86,7 +86,7 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
     override suspend fun detail(kind: String, id: String): DetailData? {
         if (kind == "liked") {
             val tracks = starredSongs()
-            return DetailData(DetailInfo("Liked Songs", "YouTube Music", tracks.firstOrNull()?.artworkUrl.orEmpty(), accentFor("liked"), false, tracks.size, "Liked"), tracks)
+            return DetailData(DetailInfo("Liked Songs", "YouTube Music", tracks.firstOrNull()?.artworkUrl.orEmpty(), accentArgbFor("liked"), false, tracks.size, "Liked"), tracks)
         }
         if (kind !in setOf("album", "artist", "playlist")) return null
         val browseId = if (kind == "playlist") "VL${id.removePrefix("VL")}" else id
@@ -116,7 +116,7 @@ class YouTubeMusicBackend(override val session: Session, private val api: YouTub
                 artistId = song.artistId.ifBlank { header?.obj("straplineTextOne")?.objects("browseEndpoint")?.firstOrNull()?.string("browseId").orEmpty() },
                 artworkUrl = song.artworkUrl.ifBlank { art }).also { songs[it.id] = it }
         }
-        return DetailData(DetailInfo(title, header?.obj("subtitle")?.label().orEmpty(), art, accentFor(id), kind == "artist", enriched.size,
+        return DetailData(DetailInfo(title, header?.obj("subtitle")?.label().orEmpty(), art, accentArgbFor(id), kind == "artist", enriched.size,
             kind.replaceFirstChar { it.uppercase() }), enriched, initial.albums)
     }
 

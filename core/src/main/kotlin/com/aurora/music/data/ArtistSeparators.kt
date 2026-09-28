@@ -1,8 +1,5 @@
 package com.aurora.music.data
 
-import com.aurora.music.localization.appString
-import com.aurora.music.R
-
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
 import com.google.gson.Gson
@@ -10,9 +7,7 @@ import java.security.MessageDigest
 import java.text.Normalizer
 import java.util.Locale
 
-enum class SeparatorMatch(@androidx.annotation.StringRes private val labelRes: Int) { OFF(R.string.text_off_e3de5a), SPACED(R.string.text_spaced_e2dd97), WORD(R.string.text_whole_word_6171b6), ANYWHERE(R.string.text_anywhere_cdf9bb);
-    val label: String get() = appString(labelRes)
-}
+enum class SeparatorMatch { OFF, SPACED, WORD, ANYWHERE }
 
 data class ArtistSeparator(val text: String? = "", val match: SeparatorMatch? = SeparatorMatch.SPACED)
 

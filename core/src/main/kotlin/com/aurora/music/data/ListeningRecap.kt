@@ -1,26 +1,13 @@
 package com.aurora.music.data
 
-import com.aurora.music.localization.appString
-import com.aurora.music.R
-
 import java.time.*
-import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAdjusters
 import java.util.Locale
 
-enum class RecapPeriod(@androidx.annotation.StringRes private val labelRes: Int) { DAY(R.string.text_daily_728298), WEEK(R.string.text_weekly_158f3d), MONTH(R.string.text_monthly_d31edb), YEAR(R.string.text_yearly_7622eb), ALL(R.string.text_all_time_dbad49);
-    val label: String get() = appString(labelRes)
-}
+enum class RecapPeriod { DAY, WEEK, MONTH, YEAR, ALL }
 
 data class RecapWindow(val period: RecapPeriod, val start: LocalDate, val end: LocalDate) {
     val key: String get() = "${period.name}:$start"
-    val label: String get() = when (period) {
-        RecapPeriod.DAY -> start.format(DateTimeFormatter.ofPattern("d MMM yyyy"))
-        RecapPeriod.WEEK -> "${start.format(DateTimeFormatter.ofPattern("d MMM"))} – ${end.minusDays(1).format(DateTimeFormatter.ofPattern("d MMM yyyy"))}"
-        RecapPeriod.MONTH -> start.format(DateTimeFormatter.ofPattern("MMMM yyyy"))
-        RecapPeriod.YEAR -> start.year.toString()
-        RecapPeriod.ALL -> appString(R.string.text_all_time_dbad49)
-    }
     fun move(amount: Long): RecapWindow = containing(period, when (period) {
         RecapPeriod.DAY -> start.plusDays(amount)
         RecapPeriod.WEEK -> start.plusWeeks(amount)

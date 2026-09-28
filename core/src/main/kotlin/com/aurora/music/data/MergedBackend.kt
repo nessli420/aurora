@@ -6,7 +6,7 @@ import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.util.TrackMatch
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
@@ -298,7 +298,7 @@ class MergedBackend(
         if (kind == "liked") {
             val songs = starredSongs()
             return DetailData(
-                DetailInfo("Liked Songs", "${songs.size} songs you love", songs.firstOrNull()?.artworkUrl ?: "", accentFor("liked"), false, songs.size, "Liked"),
+                DetailInfo("Liked Songs", "${songs.size} songs you love", songs.firstOrNull()?.artworkUrl ?: "", accentArgbFor("liked"), false, songs.size, "Liked"),
                 songs,
             )
         }

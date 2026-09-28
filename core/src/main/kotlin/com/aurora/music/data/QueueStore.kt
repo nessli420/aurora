@@ -1,8 +1,7 @@
 package com.aurora.music.data
 
-import android.content.Context
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -40,7 +39,7 @@ data class SavedTrack(
     fun toSong(): Song = Song(
         id = id ?: "", title = title ?: "", artist = artist ?: "", album = album ?: "",
         artworkUrl = artworkUrl ?: "", durationSec = durationSec, liked = liked, explicit = explicit,
-        accent = accentFor(id ?: ""), streamUrl = streamUrl ?: "", albumId = albumId ?: "", artistId = artistId ?: "",
+        accentArgb = accentArgbFor(id ?: ""), streamUrl = streamUrl ?: "", albumId = albumId ?: "", artistId = artistId ?: "",
         suffix = suffix ?: "", bitrateKbps = bitrateKbps, sampleRateHz = sampleRateHz, bitDepth = bitDepth,
         replayGainTrack = replayGainTrack, replayGainAlbum = replayGainAlbum, path = path ?: "", genre = genre ?: "",
         playbackSource = playbackSource, playbackCollection = playbackCollection,
@@ -65,9 +64,8 @@ data class SavedQueue(
 )
 
 // per-account so queue survives swipe-away and server switch writes coalesced by periodic flush
-class QueueStore internal constructor(context: Context, private val persist: (File, ByteArray) -> Unit) {
-    constructor(context: Context) : this(context, ::persistBackupFileAtomically)
-    private val file = File(context.filesDir, "queue_state.json")
+class QueueStore(filesDir: File, private val persist: (File, ByteArray) -> Unit = ::persistBackupFileAtomically) {
+    private val file = File(filesDir, "queue_state.json")
     private val gson = Gson()
     private val lock = Any()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

@@ -13,7 +13,7 @@ import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.LyricLine
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -43,7 +43,7 @@ class SubsonicBackend(
             durationSec = duration,
             liked = starred != null,
             explicit = explicitStatus.equals("explicit", true),
-            accent = accentFor(id),
+            accentArgb = accentArgbFor(id),
             streamUrl = streamUrl(id, bitrate, bitrate == 0),
             albumId = albumId ?: parent ?: "",
             artistId = artistId ?: "",
@@ -87,7 +87,7 @@ class SubsonicBackend(
         subtitle = comment?.takeIf { it.isNotBlank() } ?: "$songCount songs",
         coverUrl = coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(),
         songCount = songCount,
-        accent = accentFor(id),
+        accentArgb = accentArgbFor(id),
     )
 
     override suspend fun ping(): Boolean =
@@ -281,7 +281,7 @@ class SubsonicBackend(
             "album" -> {
                 val a = c.api.getAlbum(id).response.album ?: return null
                 DetailData(
-                    DetailInfo(a.name, "${a.displayArtist ?: a.artist ?: ""} • ${a.year}", a.toModel().artworkUrl, accentFor(a.id), false, a.songCount, a.toModel().typeLabel),
+                    DetailInfo(a.name, "${a.displayArtist ?: a.artist ?: ""} • ${a.year}", a.toModel().artworkUrl, accentArgbFor(a.id), false, a.songCount, a.toModel().typeLabel),
                     a.song.map { it.toModel() },
                 )
             }
@@ -292,7 +292,7 @@ class SubsonicBackend(
                     runCatching { c.api.getAlbum(alb.id).response.album?.song.orEmpty() }.getOrDefault(emptyList())
                 }.map { it.toModel() }
                 DetailData(
-                    DetailInfo(ar.name, "${ar.albumCount} albums · ${ar.album.sumOf { it.songCount }} tracks", ar.coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(), accentFor(ar.id), true, tracks.size, "Artist"),
+                    DetailInfo(ar.name, "${ar.albumCount} albums · ${ar.album.sumOf { it.songCount }} tracks", ar.coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(), accentArgbFor(ar.id), true, tracks.size, "Artist"),
                     tracks,
                     albumModels,
                 )
@@ -300,14 +300,14 @@ class SubsonicBackend(
             "playlist" -> {
                 val p = c.api.getPlaylist(id).response.playlist ?: return null
                 DetailData(
-                    DetailInfo(p.name, p.comment?.takeIf { it.isNotBlank() } ?: "${p.songCount} songs", p.toModel().coverUrl, accentFor(p.id), false, p.songCount, "Playlist"),
+                    DetailInfo(p.name, p.comment?.takeIf { it.isNotBlank() } ?: "${p.songCount} songs", p.toModel().coverUrl, accentArgbFor(p.id), false, p.songCount, "Playlist"),
                     p.entry.map { it.toModel() },
                 )
             }
             "liked" -> {
                 val songs = c.api.getStarred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
                 DetailData(
-                    DetailInfo("Liked Songs", "${songs.size} songs you love", songs.firstOrNull()?.artworkUrl ?: "", accentFor("liked"), false, songs.size, "Liked"),
+                    DetailInfo("Liked Songs", "${songs.size} songs you love", songs.firstOrNull()?.artworkUrl ?: "", accentArgbFor("liked"), false, songs.size, "Liked"),
                     songs,
                 )
             }

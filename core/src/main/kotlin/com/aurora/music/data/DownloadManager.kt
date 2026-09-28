@@ -1,9 +1,7 @@
 package com.aurora.music.data
 
-import android.content.Context
-import android.net.Uri
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.CoroutineScope
@@ -18,6 +16,8 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.IOException
+import java.io.InputStream
+import java.net.URI
 import java.security.MessageDigest
 
 data class DownloadedSong(
@@ -39,15 +39,15 @@ data class DownloadedSong(
     val playbackSource: PlaybackSourceIdentity? = null,
     val genre: String? = null,
 ) {
-    fun toSong(): Song = Song(
+    fun toSong(fileUri: (String) -> String): Song = Song(
         id = id,
         title = title,
         artist = artist,
         album = album,
-        artworkUrl = if (coverPath.isNotBlank()) Uri.fromFile(File(coverPath)).toString() else "",
+        artworkUrl = if (coverPath.isNotBlank()) fileUri(coverPath) else "",
         durationSec = durationSec,
-        accent = accentFor(id),
-        streamUrl = Uri.fromFile(File(audioPath)).toString(),
+        accentArgb = accentArgbFor(id),
+        streamUrl = fileUri(audioPath),
         albumId = albumId,
         artistId = artistId,
         suffix = suffix ?: "",
@@ -86,7 +86,9 @@ internal data class DownloadOwner(val providerId: String?, val serverId: String)
 }
 
 class DownloadManager(
-    context: Context,
+    dir: File,
+    val fileUri: (String) -> String,
+    private val openStream: (String) -> InputStream?,
     private val streamUrlProvider: (String, Int, Boolean) -> String? = { _, _, _ -> null },
     private val downloadBitrateProvider: () -> Int = { 0 },
     private val currentServerIdProvider: () -> String = { "" },
@@ -101,8 +103,7 @@ class DownloadManager(
     private data class DownloadRequest(val serverId: String, val url: String, val bitrate: Int, val extension: Boolean, val cached: Boolean,
         val resolveUrl: (suspend (String, Int, Boolean) -> String)?)
 
-    private val contentResolver = context.applicationContext.contentResolver
-    private val dir = File(context.filesDir, "downloads").apply { mkdirs() }
+    private val dir = dir.apply { mkdirs() }
     private val indexFile = File(dir, "index.json")
     private val collectionsFile = File(dir, "collections.json")
     private val gson = Gson()
@@ -220,7 +221,7 @@ class DownloadManager(
             val cached = song.streamUrl.startsWith("aurora-cache:")
             val bitrate = if (extension || cached) 0 else downloadBitrateProvider()
             DownloadRequest(
-                if (extension) "extension://${android.net.Uri.parse(song.streamUrl).host}" else serverId,
+                if (extension) "extension://${URI(song.streamUrl).host}" else serverId,
                 if (extension || cached) song.streamUrl else streamUrlProvider(song.id, bitrate, bitrate == 0)?.takeIf { it.isNotBlank() } ?: song.streamUrl,
                 bitrate, extension, cached,
                 if (extension || cached) null else downloadUrlResolverProvider(),
@@ -305,7 +306,7 @@ class DownloadManager(
 
     private fun downloadTo(url: String, file: File, onProgress: (Float) -> Unit) {
         if (url.startsWith("content://") || url.startsWith("file://")) {
-            val input = contentResolver.openInputStream(Uri.parse(url)) ?: throw IOException("Missing cover")
+            val input = openStream(url) ?: throw IOException("Missing cover")
             input.use { source -> file.outputStream().use { source.copyTo(it) } }
             onProgress(1f)
             return

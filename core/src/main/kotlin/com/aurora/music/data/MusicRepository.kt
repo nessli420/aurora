@@ -6,12 +6,9 @@ import kotlinx.coroutines.awaitAll
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
-import android.net.Uri
-import androidx.compose.ui.graphics.Color
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
-import com.aurora.music.util.accentFor
-import java.io.File
+import com.aurora.music.util.accentArgbFor
 
 data class HomeData(
     val newReleases: List<Album> = emptyList(),
@@ -65,7 +62,7 @@ data class DownloadRow(
     val title: String,
     val subtitle: String,
     val coverUrl: String,
-    val accent: Color,
+    val accentArgb: Long,
 )
 
 // server-agnostic facade online delegates to backend offline serves downloaded files
@@ -184,7 +181,7 @@ class MusicRepository(
     }
 
     fun downloadedSongs(): List<Song> = visibleDownloads()
-        .sortedBy { it.title }.map { artwork(it.toSong()) }
+        .sortedBy { it.title }.map { artwork(it.toSong(downloadManager.fileUri)) }
 
     private fun offlineSongs(): List<Song> {
         val downloads = downloadedSongs()
@@ -203,11 +200,11 @@ class MusicRepository(
                 durationSec = songs.sumOf { it.durationSec })
         }.sortedBy { it.title }
 
-    private fun fileUri(path: String): String = if (path.isBlank()) "" else Uri.fromFile(File(path)).toString()
+    private fun fileUri(path: String): String = if (path.isBlank()) "" else downloadManager.fileUri(path)
 
     fun downloadedLibrary(): List<DownloadRow> {
         val collections = visibleCollections()
-        val colRows = collections.map { DownloadRow(it.id, it.kind, it.title, it.subtitle, fileUri(it.coverPath), accentFor(it.id)) }
+        val colRows = collections.map { DownloadRow(it.id, it.kind, it.title, it.subtitle, fileUri(it.coverPath), accentArgbFor(it.id)) }
         val recordedTracks = collections.flatMap { it.trackIds }.toSet()
         val colIds = collections.map { it.id }.toSet()
         val inferred = visibleDownloads()
@@ -215,7 +212,7 @@ class MusicRepository(
             .groupBy { it.albumId }
             .map { (aid, songs) ->
                 val f = songs.first()
-                DownloadRow(aid, "album", f.album.ifBlank { "Album" }, f.artist, fileUri(f.coverPath), accentFor(aid))
+                DownloadRow(aid, "album", f.album.ifBlank { "Album" }, f.artist, fileUri(f.coverPath), accentArgbFor(aid))
             }
         return (colRows + inferred).sortedBy { it.title }
     }
@@ -225,7 +222,7 @@ class MusicRepository(
         .groupBy { it.albumId }
         .map { (albumId, songs) ->
             val first = songs.first()
-            Album(id = albumId, title = first.album.ifBlank { "Album" }, artist = first.artist, artworkUrl = first.toSong().artworkUrl, year = 0, songCount = songs.size, durationSec = songs.sumOf { it.durationSec })
+            Album(id = albumId, title = first.album.ifBlank { "Album" }, artist = first.artist, artworkUrl = first.toSong(downloadManager.fileUri).artworkUrl, year = 0, songCount = songs.size, durationSec = songs.sumOf { it.durationSec })
         }
         .sortedBy { it.title }
 
@@ -313,7 +310,7 @@ class MusicRepository(
     suspend fun songFor(id: String): Song? {
         val source = backend
         downloadManager.get(id)?.let { download ->
-            val song = download.toSong()
+            val song = download.toSong(downloadManager.fileUri)
             val storedProvider = download.playbackSource?.providerId
             val requestedProvider = source?.playbackSourceIdentity(song.copy(playbackSource = null, streamUrl = ""))?.providerId
             val sameSource = if (storedProvider != null) storedProvider == requestedProvider
@@ -480,7 +477,7 @@ class MusicRepository(
             val sp = smartPlaylistsProvider().firstOrNull { it.id == id } ?: return null
             val tracks = smartEngine?.evaluate(sp, librarySongs()).orEmpty()
             return DetailData(
-                DetailInfo(sp.name ?: "Smart playlist", "Smart playlist • ${tracks.size} songs", tracks.firstOrNull()?.artworkUrl ?: "", accentFor(id), false, tracks.size, "Smart playlist"),
+                DetailInfo(sp.name ?: "Smart playlist", "Smart playlist • ${tracks.size} songs", tracks.firstOrNull()?.artworkUrl ?: "", accentArgbFor(id), false, tracks.size, "Smart playlist"),
                 tracks,
             )
         }
@@ -490,15 +487,15 @@ class MusicRepository(
                 "album" -> dls.filter { it.albumId == id || it.playbackSource?.albumId == id }.takeIf { it.isNotEmpty() }?.let { tracks ->
                     val f = tracks.first()
                     val label = com.aurora.music.model.releaseTypeLabel(com.aurora.music.model.inferReleaseType(tracks.size, tracks.sumOf { it.durationSec }))
-                    DetailData(DetailInfo(f.album.ifBlank { "Album" }, "${f.artist} • Downloaded", f.artworkUrl, accentFor(id), false, tracks.size, label), tracks)
+                    DetailData(DetailInfo(f.album.ifBlank { "Album" }, "${f.artist} • Downloaded", f.artworkUrl, accentArgbFor(id), false, tracks.size, label), tracks)
                 }
                 "artist" -> dls.filter { it.artistId == id }.takeIf { it.isNotEmpty() }?.let { tracks ->
-                    DetailData(DetailInfo(tracks.first().artist, "${tracks.size} downloaded tracks", tracks.first().artworkUrl, accentFor(id), true, tracks.size, "Artist"), tracks)
+                    DetailData(DetailInfo(tracks.first().artist, "${tracks.size} downloaded tracks", tracks.first().artworkUrl, accentArgbFor(id), true, tracks.size, "Artist"), tracks)
                 }
                 "playlist" -> downloadManager.collections.value.firstOrNull { it.id == id }?.let { col ->
                     val byId = downloadManager.downloads.value
-                    val tracks = col.trackIds.mapNotNull { byId[it]?.toSong() }
-                    DetailData(DetailInfo(col.title, col.subtitle, fileUri(col.coverPath), accentFor(id), false, tracks.size, "Playlist"), tracks)
+                    val tracks = col.trackIds.mapNotNull { byId[it]?.toSong(downloadManager.fileUri) }
+                    DetailData(DetailInfo(col.title, col.subtitle, fileUri(col.coverPath), accentArgbFor(id), false, tracks.size, "Playlist"), tracks)
                 }
                 else -> null
             }
