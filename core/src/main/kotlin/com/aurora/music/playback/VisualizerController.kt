@@ -1,8 +1,5 @@
 package com.aurora.music.playback
 
-import androidx.annotation.OptIn
-import androidx.media3.common.C
-import androidx.media3.common.util.UnstableApi
 import com.aurora.music.data.VisualizerPrefs
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -105,7 +102,6 @@ class VisualizerController(private val scope: CoroutineScope) {
     }
 
     // absolute indexing leaves the buffer position untouched for the real sink
-    @OptIn(UnstableApi::class)
     fun pushPcm(buffer: ByteBuffer, encoding: Int, channelCount: Int, sr: Int,
                 start: Int = buffer.position(), end: Int = buffer.limit()) {
         if (!active || channelCount <= 0) return
@@ -116,7 +112,7 @@ class VisualizerController(private val scope: CoroutineScope) {
         var w = writeIdx
         val ch = channelCount
         when (encoding) {
-            C.ENCODING_PCM_16BIT -> {
+            PcmConstants.ENCODING_PCM_16BIT -> {
                 val frameBytes = 2 * ch
                 var p = pos
                 while (p + frameBytes <= lim) {
@@ -133,7 +129,7 @@ class VisualizerController(private val scope: CoroutineScope) {
                     p += frameBytes
                 }
             }
-            C.ENCODING_PCM_FLOAT -> {
+            PcmConstants.ENCODING_PCM_FLOAT -> {
                 val frameBytes = 4 * ch
                 var p = pos
                 while (p + frameBytes <= lim) {

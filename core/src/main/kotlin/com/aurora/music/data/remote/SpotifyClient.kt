@@ -2,6 +2,7 @@ package com.aurora.music.data.remote
 
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
+import com.aurora.music.util.AppLog
 import kotlinx.coroutines.runBlocking
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -34,7 +35,7 @@ class SpotifyClient(
         if (resp.code == 429) {
             val header = resp.header("Retry-After")
             val retry = (header?.toIntOrNull() ?: 8).coerceIn(1, 3600)
-            android.util.Log.d("SpotifyRL", "429 on ${chain.request().url.encodedPath} Retry-After=$header → cooldown ${retry}s")
+            AppLog.d("SpotifyRL", "429 on ${chain.request().url.encodedPath} Retry-After=$header → cooldown ${retry}s")
             blockedUntilMs = System.currentTimeMillis() + retry * 1000L
         }
         resp
@@ -84,14 +85,14 @@ class SpotifyClient(
 
         suspend fun login(clientId: String, code: String, verifier: String): Session? {
             val tok = SpotifyAuth.exchangeCode(clientId, code, verifier)
-            if (tok == null) { android.util.Log.d("SpotifyOAuth", "login: token exchange failed"); return null }
+            if (tok == null) { AppLog.d("SpotifyOAuth", "login: token exchange failed"); return null }
             val access = tok.accessToken ?: return null
             val me = runCatching { apiFor(access).me() }.getOrElse { e ->
                 val c = (e as? retrofit2.HttpException)?.code()
-                android.util.Log.d("SpotifyOAuth", "login: me() failed code=$c ${e.message}"); null
+                AppLog.d("SpotifyOAuth", "login: me() failed code=$c ${e.message}"); null
             } ?: return null
             val id = me.id ?: return null
-            android.util.Log.d("SpotifyOAuth", "login: SUCCESS user=$id")
+            AppLog.d("SpotifyOAuth", "login: SUCCESS user=$id")
             return Session(
                 server = API_BASE,
                 username = me.displayName ?: id,

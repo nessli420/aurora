@@ -40,5 +40,3 @@ class ReportingMediaBackend(private val source: MediaBackend, private val onErro
     override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>) = attempt(false) { source.removeFromPlaylist(playlistId, trackIds) }
     // Complete collection requests deliberately propagate failure rather than playing a partial list.
 }
-
-class MediaAccountExpiredException : java.io.IOException("Reconnect your music account in Settings → Accounts.")

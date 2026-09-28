@@ -1,16 +1,17 @@
 package com.aurora.music.data.remote
 
-import android.net.Uri
-import android.util.Base64
 import com.google.gson.Gson
+import com.aurora.music.util.AppLog
 import com.google.gson.annotations.SerializedName
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
+import okhttp3.HttpUrl.Companion.toHttpUrl
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.security.MessageDigest
 import java.security.SecureRandom
+import java.util.Base64
 
 // oauth pkce no client secret for mobile
 object SpotifyAuth {
@@ -37,18 +38,18 @@ object SpotifyAuth {
 
     fun challenge(verifier: String): String {
         val digest = MessageDigest.getInstance("SHA-256").digest(verifier.toByteArray(Charsets.US_ASCII))
-        return Base64.encodeToString(digest, Base64.URL_SAFE or Base64.NO_PADDING or Base64.NO_WRAP)
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(digest)
     }
 
     fun authorizeUrl(clientId: String, verifier: String, state: String): String =
-        Uri.parse("$AUTH_HOST/authorize").buildUpon()
-            .appendQueryParameter("client_id", clientId)
-            .appendQueryParameter("response_type", "code")
-            .appendQueryParameter("redirect_uri", REDIRECT)
-            .appendQueryParameter("code_challenge_method", "S256")
-            .appendQueryParameter("code_challenge", challenge(verifier))
-            .appendQueryParameter("scope", SCOPES)
-            .appendQueryParameter("state", state)
+        "$AUTH_HOST/authorize".toHttpUrl().newBuilder()
+            .addQueryParameter("client_id", clientId)
+            .addQueryParameter("response_type", "code")
+            .addQueryParameter("redirect_uri", REDIRECT)
+            .addQueryParameter("code_challenge_method", "S256")
+            .addQueryParameter("code_challenge", challenge(verifier))
+            .addQueryParameter("scope", SCOPES)
+            .addQueryParameter("state", state)
             .build().toString()
 
     suspend fun exchangeCode(clientId: String, code: String, verifier: String): TokenResp? = withContext(Dispatchers.IO) {
@@ -75,7 +76,7 @@ object SpotifyAuth {
         val req = Request.Builder().url("$AUTH_HOST/api/token").post(form).build()
         http.newCall(req).execute().use { resp ->
             if (!resp.isSuccessful) {
-                android.util.Log.d("SpotifyOAuth", "token exchange HTTP ${resp.code}: ${resp.body?.string()?.take(200)}")
+                AppLog.d("SpotifyOAuth", "token exchange HTTP ${resp.code}: ${resp.body?.string()?.take(200)}")
                 return null
             }
             gson.fromJson(resp.body?.string(), TokenResp::class.java)

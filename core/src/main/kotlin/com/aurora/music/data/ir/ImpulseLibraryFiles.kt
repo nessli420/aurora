@@ -1,9 +1,6 @@
 package com.aurora.music.data.ir
 
-import androidx.annotation.OptIn
-import androidx.media3.common.util.UnstableApi
 import com.aurora.music.data.ProcessingPresetBundle
-import com.aurora.music.playback.ConvolutionProcessor
 import com.aurora.music.playback.ImpulseResponse
 import com.aurora.music.playback.engine.SamplePrecision
 import com.aurora.music.playback.engine.BandlimitedResampler
@@ -91,12 +88,11 @@ object ImpulseLibraryFiles {
         return loaded
     }
 
-    @OptIn(UnstableApi::class)
     private fun load(file: File): Loaded {
         require(file.isFile && file.length() in 44..ImpulseLibraryCodec.MAX_WAV_BYTES) { "Impulse file is missing or exceeds 64 MiB." }
         val sha256 = checksum(file)
         ProcessingPresetBundle.validateImpulseResponse(file)
-        val impulse = ConvolutionProcessor.loadWavResult(file).getOrThrow()
+        val impulse = ImpulseResponse.loadWavResult(file).getOrThrow()
         val metadata = ImpulseMetadata(impulse.sampleRate, impulse.sourceChannels, impulse.frameCount,
             impulse.sourcePrecision, impulse.sourceValidBits, peak(impulse.matrixChannels()))
         ImpulseLibraryCodec.validateMetadata(metadata)

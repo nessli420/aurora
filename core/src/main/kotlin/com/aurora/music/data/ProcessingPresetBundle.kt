@@ -1,8 +1,6 @@
 package com.aurora.music.data
 
-import androidx.annotation.OptIn
-import androidx.media3.common.util.UnstableApi
-import com.aurora.music.playback.ConvolutionProcessor
+import com.aurora.music.playback.ImpulseResponse
 import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.google.gson.JsonArray
@@ -268,8 +266,7 @@ object ProcessingPresetBundle {
     }
 
     /** Header/chunk validation only: malformed frame counts never reach the allocating IR decoder. */
-    @OptIn(UnstableApi::class)
-    internal fun validateImpulseResponse(file: File) {
+    fun validateImpulseResponse(file: File) {
         require(file.length() in 44..MAX_IR_BYTES) { "The impulse response is not a supported WAV file." }
         RandomAccessFile(file, "r").use { wav ->
             fun uint(): Long = Integer.reverseBytes(wav.readInt()).toLong() and 0xffffffffL
@@ -342,8 +339,8 @@ object ProcessingPresetBundle {
             }
             val frameSize = channels * (bits / 8)
             require(blockAlign == frameSize && byteRate == sampleRate * frameSize && dataOffset > 0 &&
-                dataBytes % frameSize == 0L && dataBytes / frameSize <= ConvolutionProcessor.MAX_DECODED_IR_FRAMES) {
-                "The impulse response has invalid frame sizes or exceeds ${ConvolutionProcessor.MAX_DECODED_IR_FRAMES} frames."
+                dataBytes % frameSize == 0L && dataBytes / frameSize <= ImpulseResponse.MAX_DECODED_IR_FRAMES) {
+                "The impulse response has invalid frame sizes or exceeds ${ImpulseResponse.MAX_DECODED_IR_FRAMES} frames."
             }
             require(alignmentFrames < dataBytes / frameSize) { "Impulse alignment exceeds its length." }
             // Floating point IRs must not inject NaN/Infinity into live convolution.

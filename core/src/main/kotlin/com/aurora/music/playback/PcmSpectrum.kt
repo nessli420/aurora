@@ -1,48 +1,47 @@
 package com.aurora.music.playback
 
-import androidx.media3.common.C
 import com.aurora.music.data.AudioSpectrum
 import kotlin.math.*
 
-internal data class SpectrumWindow(val rate: Int, val timeUs: Long, val measuredAt: Long,
+data class SpectrumWindow(val rate: Int, val timeUs: Long, val measuredAt: Long,
     val left: FloatArray, val right: FloatArray)
 
-internal class PcmSpectrumTap {
+class PcmSpectrumTap {
     @Volatile var generation = 0L
         private set
     private class Slot {
         @Volatile var revision = 0L
-        var rate = 0; var timeUs = C.TIME_UNSET; var measuredAt = 0L
+        var rate = 0; var timeUs = PcmConstants.TIME_UNSET; var measuredAt = 0L
         val left = FloatArray(SIZE); val right = FloatArray(SIZE)
     }
     private val slots = Array(8) { Slot() }
     private var slotIndex = 0
     private var position = 0
     private var validTime = false
-    private var expectedUs = C.TIME_UNSET
+    private var expectedUs = PcmConstants.TIME_UNSET
 
     fun reset() {
         slots.forEach { if (it.revision and 1L == 0L) it.revision++; it.measuredAt = 0; it.revision++ }
-        slotIndex = 0; position = 0; validTime = false; expectedUs = C.TIME_UNSET
+        slotIndex = 0; position = 0; validTime = false; expectedUs = PcmConstants.TIME_UNSET
         generation++
     }
 
     fun observe(left: Double, right: Double, rate: Int, timeUs: Long) {
-        if (timeUs != C.TIME_UNSET && expectedUs != C.TIME_UNSET && abs(timeUs - expectedUs) > 2_000_000L / rate) {
+        if (timeUs != PcmConstants.TIME_UNSET && expectedUs != PcmConstants.TIME_UNSET && abs(timeUs - expectedUs) > 2_000_000L / rate) {
             reset()
         }
         val slot = slots[slotIndex]
         if (position == 0) {
             slot.revision++
             slot.rate = rate; slot.timeUs = timeUs
-            validTime = timeUs != C.TIME_UNSET
+            validTime = timeUs != PcmConstants.TIME_UNSET
         }
-        validTime = validTime && timeUs != C.TIME_UNSET
+        validTime = validTime && timeUs != PcmConstants.TIME_UNSET
         slot.left[position] = left.toFloat(); slot.right[position] = right.toFloat()
         position++
-        expectedUs = if (timeUs == C.TIME_UNSET) C.TIME_UNSET else timeUs + 1_000_000L / rate
+        expectedUs = if (timeUs == PcmConstants.TIME_UNSET) PcmConstants.TIME_UNSET else timeUs + 1_000_000L / rate
         if (position == SIZE) {
-            if (!validTime) slot.timeUs = C.TIME_UNSET
+            if (!validTime) slot.timeUs = PcmConstants.TIME_UNSET
             slot.measuredAt = System.nanoTime(); slot.revision++
             slotIndex = (slotIndex + 1) % slots.size; position = 0
         }
@@ -50,7 +49,7 @@ internal class PcmSpectrumTap {
 
     fun windows(): List<SpectrumWindow> = slots.mapNotNull { slot ->
         val revision = slot.revision
-        if (revision and 1L != 0L || slot.measuredAt == 0L || slot.timeUs == C.TIME_UNSET) return@mapNotNull null
+        if (revision and 1L != 0L || slot.measuredAt == 0L || slot.timeUs == PcmConstants.TIME_UNSET) return@mapNotNull null
         val result = SpectrumWindow(slot.rate, slot.timeUs, slot.measuredAt, slot.left.copyOf(), slot.right.copyOf())
         result.takeIf { revision == slot.revision }
     }
@@ -58,7 +57,7 @@ internal class PcmSpectrumTap {
     companion object { const val SIZE = 2048 }
 }
 
-internal object PcmSpectrumAnalyzer {
+object PcmSpectrumAnalyzer {
     private const val MAX_PAIR_AGE_NANOS = 1_000_000_000L
     private const val MAX_CAPTURE_AGE_NANOS = 2_000_000_000L
 
@@ -83,7 +82,7 @@ internal object PcmSpectrumAnalyzer {
             spectrum(input), spectrum(output))
     }
 
-    private fun complete(window: SpectrumWindow): Boolean = window.rate > 0 && window.timeUs != C.TIME_UNSET &&
+    private fun complete(window: SpectrumWindow): Boolean = window.rate > 0 && window.timeUs != PcmConstants.TIME_UNSET &&
         window.left.size == PcmSpectrumTap.SIZE && window.right.size == PcmSpectrumTap.SIZE
 
     private fun matchingInput(before: List<SpectrumWindow>, output: SpectrumWindow): SpectrumWindow? {

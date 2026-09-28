@@ -28,6 +28,7 @@ import kotlin.coroutines.resumeWithException
 
 class PlexClient(
     val session: Session,
+    private val clientInfo: ClientInfo,
     httpClient: OkHttpClient = defaultHttpClient(),
 ) {
     private val baseUrl = requireNotNull(normalizeServer(session.server).toHttpUrlOrNull())
@@ -170,8 +171,8 @@ class PlexClient(
             parameters.forEach { (key, value) -> setQueryParameter(key, value) }
             setQueryParameter("X-Plex-Token", session.token)
             setQueryParameter("X-Plex-Client-Identifier", clientIdentifier)
-            setQueryParameter("X-Plex-Product", "Aurora")
-            setQueryParameter("X-Plex-Platform", "Android")
+            setQueryParameter("X-Plex-Product", clientInfo.product)
+            setQueryParameter("X-Plex-Platform", clientInfo.platform)
         }.build().toString()
     }
 
@@ -229,10 +230,10 @@ class PlexClient(
             .header("Accept", accept)
             .header("X-Plex-Token", session.token)
             .header("X-Plex-Client-Identifier", clientIdentifier)
-            .header("X-Plex-Product", "Aurora")
-            .header("X-Plex-Platform", "Android")
-            .header("X-Plex-Device", "Android")
-            .header("X-Plex-Device-Name", "Aurora Android")
+            .header("X-Plex-Product", clientInfo.product)
+            .header("X-Plex-Platform", clientInfo.platform)
+            .header("X-Plex-Device", clientInfo.device)
+            .header("X-Plex-Device-Name", clientInfo.deviceName)
             .apply {
                 playbackSessionId?.let { header("X-Plex-Session-Identifier", it) }
                 offset?.let { header("X-Plex-Container-Start", it.toString()) }
@@ -308,13 +309,14 @@ class PlexClient(
         suspend fun authenticate(
             server: String,
             token: String,
+            clientInfo: ClientInfo,
             httpClient: OkHttpClient = defaultHttpClient(),
         ): Session {
             val credential = token.trim()
             require(credential.isNotBlank() && credential.all { it.code in 33..126 }) { "Enter a valid Plex token." }
             val normalized = normalizeServer(server)
             val initial = Session(normalized, "Plex", "", credential, ServerType.PLEX, clientToken = UUID.randomUUID().toString())
-            val client = PlexClient(initial, httpClient)
+            val client = PlexClient(initial, clientInfo, httpClient)
             val info = client.serverInfo()
             val machineId = info.machineIdentifier?.takeIf { ID.matches(it) }
                 ?: throw IllegalStateException("This address did not identify a Plex Media Server.")

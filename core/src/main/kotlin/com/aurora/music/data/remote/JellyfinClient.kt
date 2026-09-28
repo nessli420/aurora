@@ -1,6 +1,5 @@
 package com.aurora.music.data.remote
 
-import com.aurora.music.BuildConfig
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
@@ -13,7 +12,7 @@ import java.util.UUID
 import java.util.concurrent.TimeUnit
 
 // token in X-Emby-Authorization header on api calls but as api_key query param on stream/image urls so exoplayer and coil can fetch directly
-class JellyfinClient(val session: Session) {
+class JellyfinClient(val session: Session, clientInfo: ClientInfo) {
 
     private val baseUrl: String = session.server.trimEnd('/')
     val userId: String = session.userId
@@ -23,7 +22,7 @@ class JellyfinClient(val session: Session) {
         "aurora-${UUID.nameUUIDFromBytes("$baseUrl\n$userId\n$token".toByteArray(Charsets.UTF_8))}"
     }
 
-    val api: JellyfinApi = buildApi(baseUrl, token, deviceId)
+    val api: JellyfinApi = buildApi(baseUrl, token, deviceId, clientInfo)
 
     fun coverArtUrl(itemId: String?, size: Int = 600): String {
         if (itemId.isNullOrBlank()) return ""
@@ -40,19 +39,17 @@ class JellyfinClient(val session: Session) {
         }
 
     companion object {
-        const val CLIENT_NAME = "Aurora"
-
         private fun enc(s: String): String = URLEncoder.encode(s, "UTF-8")
 
-        private fun authHeader(token: String, deviceId: String): String = buildString {
-            append("MediaBrowser Client=\"$CLIENT_NAME\", Device=\"Android\", DeviceId=\"$deviceId\", Version=\"${BuildConfig.VERSION_NAME}\"")
+        private fun authHeader(token: String, deviceId: String, clientInfo: ClientInfo): String = buildString {
+            append("MediaBrowser Client=\"${clientInfo.product}\", Device=\"${clientInfo.device}\", DeviceId=\"$deviceId\", Version=\"${clientInfo.version}\"")
             if (token.isNotBlank()) append(", Token=\"$token\"")
         }
 
-        private fun buildApi(server: String, token: String, deviceId: String): JellyfinApi {
+        private fun buildApi(server: String, token: String, deviceId: String, clientInfo: ClientInfo): JellyfinApi {
             val interceptor = Interceptor { chain ->
                 val req = chain.request().newBuilder()
-                    .header("X-Emby-Authorization", authHeader(token, deviceId))
+                    .header("X-Emby-Authorization", authHeader(token, deviceId, clientInfo))
                     .build()
                 chain.proceed(req)
             }
@@ -76,10 +73,10 @@ class JellyfinClient(val session: Session) {
             return s.toHttpUrlOrNull()?.toString()?.trimEnd('/') ?: s
         }
 
-        suspend fun authenticate(server: String, username: String, password: String): Session {
+        suspend fun authenticate(server: String, username: String, password: String, clientInfo: ClientInfo): Session {
             val norm = normalizeServer(server)
             val deviceId = "aurora-${UUID.randomUUID()}"
-            val api = buildApi(norm, "", deviceId)
+            val api = buildApi(norm, "", deviceId, clientInfo)
             val res = api.authenticate(AuthRequest(username.trim(), password))
             val token = res.AccessToken ?: throw IllegalStateException("Login rejected")
             val uid = res.User?.Id ?: throw IllegalStateException("No user id returned")

@@ -38,6 +38,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.VisualizerPrefs
 import com.aurora.music.data.VisualizerStyle
+import com.aurora.music.data.label
 import com.aurora.music.data.VizBackground
 import com.aurora.music.data.VizColor
 import com.aurora.music.ui.screens.visualizer.VisualizerCanvas

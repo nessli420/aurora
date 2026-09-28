@@ -83,6 +83,8 @@ import com.aurora.music.data.SQUIG_TARGETS
 import com.aurora.music.data.EqBinding
 import com.aurora.music.data.EqProfile
 import com.aurora.music.data.EqDeviceKind
+import com.aurora.music.data.description
+import com.aurora.music.data.label
 import com.aurora.music.data.EqProvider
 import com.aurora.music.data.ParamBand
 import com.aurora.music.data.SettingsStore
