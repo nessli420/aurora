@@ -63,7 +63,7 @@ class PlayHistoryStore(filesDir: File) {
         if (timestamp - lastSave >= 15_000) { lastSave = timestamp; scope.launch { save() } }
     }
 
-    internal class BackupRollback internal constructor(internal val previous: List<PlayEvent>, internal val revision: Long)
+    class BackupRollback internal constructor(internal val previous: List<PlayEvent>, internal val revision: Long)
 
     private val _history = MutableStateFlow(load())
     val history: StateFlow<List<PlayEvent>> = _history.asStateFlow()
@@ -93,11 +93,11 @@ class PlayHistoryStore(filesDir: File) {
         scope.launch { save() }
     }
 
-    internal suspend fun restoreBackup(events: List<PlayEvent>) {
+    suspend fun restoreBackup(events: List<PlayEvent>) {
         replaceBackup(events)
     }
 
-    internal suspend fun replaceBackup(events: List<PlayEvent>): BackupRollback = withContext(Dispatchers.IO) {
+    suspend fun replaceBackup(events: List<PlayEvent>): BackupRollback = withContext(Dispatchers.IO) {
         val restored = events.take(MAX)
         val bytes = gson.toJson(restored).toByteArray(Charsets.UTF_8)
         synchronized(lock) {
@@ -109,7 +109,7 @@ class PlayHistoryStore(filesDir: File) {
         }
     }
 
-    internal suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
+    suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
         synchronized(lock) {
             if (revision != token.revision) {
                 persistBackupFileAtomically(file, gson.toJson(_history.value).toByteArray(Charsets.UTF_8))

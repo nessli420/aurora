@@ -26,7 +26,7 @@ class LocalStore(filesDir: File) {
     private val lock = Any()
     private var revision = 0L
 
-    internal class BackupRollback internal constructor(internal val previous: String, internal val revision: Long)
+    class BackupRollback internal constructor(internal val previous: String, internal val revision: Long)
 
     @Volatile private var state: LocalState = load()
 
@@ -84,11 +84,11 @@ class LocalStore(filesDir: File) {
         }
     }
 
-    internal suspend fun restoreBackupJson(json: String) {
+    suspend fun restoreBackupJson(json: String) {
         replaceBackupJson(json)
     }
 
-    internal suspend fun replaceBackupJson(json: String): BackupRollback = withContext(Dispatchers.IO) {
+    suspend fun replaceBackupJson(json: String): BackupRollback = withContext(Dispatchers.IO) {
         val restored = requireNotNull(gson.fromJson(json, LocalState::class.java)) { "Local library is missing." }
         val bytes = gson.toJson(restored).toByteArray(Charsets.UTF_8)
         synchronized(lock) {
@@ -99,7 +99,7 @@ class LocalStore(filesDir: File) {
         }
     }
 
-    internal suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
+    suspend fun rollbackBackup(token: BackupRollback): Boolean = withContext(Dispatchers.IO) {
         val previous = requireNotNull(gson.fromJson(token.previous, LocalState::class.java))
         synchronized(lock) {
             if (revision != token.revision) {

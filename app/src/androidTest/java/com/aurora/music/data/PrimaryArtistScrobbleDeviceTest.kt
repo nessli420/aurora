@@ -65,7 +65,7 @@ class PrimaryArtistScrobbleDeviceTest {
             val keepBand = ArtistSeparators(defaults.rules!!.map {
                 if (it.text in listOf(",", "&")) it.copy(match = SeparatorMatch.OFF) else it
             })
-            val custom = ArtistSeparators(defaults.rules + ArtistSeparator("vs.", SeparatorMatch.WORD))
+            val custom = ArtistSeparators(defaults.rules!! + ArtistSeparator("vs.", SeparatorMatch.WORD))
             listOf(
                 Triple("Cynthoni, Sewerslvt", defaults, "Cynthoni"),
                 Triple("Björk feat. Guest", defaults, "Björk"),

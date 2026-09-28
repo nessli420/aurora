@@ -5,6 +5,7 @@ import android.os.LocaleList
 import androidx.test.platform.app.InstrumentationRegistry
 import com.aurora.music.R
 import com.aurora.music.model.LibraryFilter
+import com.aurora.music.model.label
 import com.aurora.music.model.releaseTypeLabel
 import com.aurora.music.navigation.topLevelDestinations
 import com.aurora.music.ui.screens.settings.SettingsDestinations

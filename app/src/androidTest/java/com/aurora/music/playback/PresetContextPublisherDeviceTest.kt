@@ -45,7 +45,7 @@ class PresetContextPublisherDeviceTest {
     @Test fun oldDownloadsRemainProviderUnknownWhileTheirPlayableCopyIsKnown() {
         val old = DownloadedSong("download", "Title", "Artist", "Album", "album", "artist", 60,
             "/data/local/tmp/fixture.flac", "", suffix = "flac", serverId = "https://other.invalid")
-        val local = old.toSong()
+        val local = old.toSong(::androidFileUri)
         val actual = PresetContextPublisher.build(item(local), true, null, false, false)
         assertEquals(RuleSource.DOWNLOAD, actual.source)
         assertEquals("flac", actual.container)
