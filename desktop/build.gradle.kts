@@ -269,3 +269,22 @@ sourceSets.named("main") {
     resources.srcDir(generateAndroidStrings.flatMap { it.resourceDir })
     resources.srcDir(syncAndroidAssets)
 }
+
+val generateBuildInfo by tasks.registering {
+    val versionName = appVersion.getProperty("versionName")
+    val output = layout.buildDirectory.dir("generated/buildInfo/kotlin")
+    inputs.property("versionName", versionName)
+    outputs.dir(output)
+    doLast {
+        output.get().file("com/aurora/music/desktop/platform/BuildInfo.kt").asFile.apply {
+            parentFile.mkdirs()
+            writeText("package com.aurora.music.desktop.platform\n\nobject BuildInfo {\n    const val VERSION_NAME = \"$versionName\"\n}\n")
+        }
+    }
+}
+
+kotlin.sourceSets.named("main") { kotlin.srcDir(generateBuildInfo) }
+
+dependencies {
+    testImplementation(libs.okhttp.mockwebserver)
+}
