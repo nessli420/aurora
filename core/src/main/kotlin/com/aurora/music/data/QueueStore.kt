@@ -102,7 +102,7 @@ class QueueStore(filesDir: File, private val persist: (File, ByteArray) -> Unit 
     fun requestFlush() { scope.launch { flushNow() } }
 
     /** Await an atomic account restore/removal without letting an older queued flush overwrite it. */
-    internal suspend fun restoreAccount(accountKey: String, queue: SavedQueue?) = withContext(Dispatchers.IO) {
+    suspend fun restoreAccount(accountKey: String, queue: SavedQueue?) = withContext(Dispatchers.IO) {
         require(accountKey.isNotBlank())
         synchronized(lock) {
             val restored = HashMap(map)

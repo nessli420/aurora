@@ -2,7 +2,7 @@ package com.aurora.music.extensions
 
 import com.aurora.music.data.*
 import com.aurora.music.model.*
-import com.aurora.music.util.accentFor
+import com.aurora.music.util.accentArgbFor
 
 class ExtensionBackend(
     private val manager: ExtensionManager,
@@ -38,7 +38,7 @@ class ExtensionBackend(
         val songs = allSongs().filter { if (kind == "album") it.albumId == id else if (kind == "artist") it.artistId == id else false }
         val first = songs.firstOrNull() ?: return null
         val title = if (kind == "artist") first.artist else first.album
-        return DetailData(DetailInfo(title, first.artist, "", accentFor(title), kind == "artist", songs.size, kind), songs)
+        return DetailData(DetailInfo(title, first.artist, "", accentArgbFor(title), kind == "artist", songs.size, kind), songs)
     }
     override suspend fun serverLyrics(song: Song): Lyrics? = null
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean): String = android.net.Uri.Builder()

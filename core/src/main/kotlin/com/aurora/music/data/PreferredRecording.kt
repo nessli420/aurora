@@ -3,14 +3,14 @@ package com.aurora.music.data
 import com.aurora.music.model.Song
 import java.util.Locale
 
-internal fun recordingMatches(a: Song, b: Song): Boolean {
+fun recordingMatches(a: Song, b: Song): Boolean {
     fun normalized(value: String) = value.lowercase(Locale.ROOT)
         .replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim()
     return a.title.isNotBlank() && a.artist.isNotBlank() &&
         normalized(recordingTitle(a.title)) == normalized(recordingTitle(b.title)) && artistsMatch(a.artist, b.artist)
 }
 
-internal fun recordingTitle(title: String): String = title
+fun recordingTitle(title: String): String = title
     .replace(Regex("\\s*[\\[(](?:feat\\.?|ft\\.?|featuring)\\s+[^)\\]]*[)\\]]", RegexOption.IGNORE_CASE), "")
     .replace(Regex("\\s+(?:feat\\.?|ft\\.?|featuring)\\s+.*$", RegexOption.IGNORE_CASE), "").trim()
 

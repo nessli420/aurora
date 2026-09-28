@@ -1,6 +1,5 @@
 package com.aurora.music.data
 
-import androidx.compose.ui.graphics.Color
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
@@ -13,24 +12,24 @@ object MockData {
     private fun art(seed: String) = "https://picsum.photos/seed/$seed/500/500"
 
     val accents = listOf(
-        Color(0xFFFF2E7E), Color(0xFFFF7A59), Color(0xFFC24CE0),
-        Color(0xFFFB7185), Color(0xFFF7B733), Color(0xFFA855F7),
-        Color(0xFFFF5C8A), Color(0xFFFF8E6E),
+        0xFFFF2E7E, 0xFFFF7A59, 0xFFC24CE0,
+        0xFFFB7185, 0xFFF7B733, 0xFFA855F7,
+        0xFFFF5C8A, 0xFFFF8E6E,
     )
 
     val songs: List<Song> = listOf(
-        Song("s1", "Midnight Bloom", "Lunar Tide", "Nocturne", art("aurora1"), 214, liked = true, accent = accents[0]),
-        Song("s2", "Velvet Skyline", "Mara Quinn", "Neon Hours", art("aurora2"), 187, accent = accents[1]),
-        Song("s3", "Paper Planes", "The Foxgloves", "Wildflower", art("aurora3"), 241, liked = true, accent = accents[2]),
-        Song("s4", "Gravity", "Aerial", "Lightyears", art("aurora4"), 199, explicit = true, accent = accents[3]),
-        Song("s5", "Saltwater", "Coastlines", "Tidal", art("aurora5"), 263, accent = accents[4]),
-        Song("s6", "Ember", "Wren Holloway", "Slow Burn", art("aurora6"), 176, liked = true, accent = accents[5]),
-        Song("s7", "Cassette Dreams", "Polaroid Kids", "Analog", art("aurora7"), 224, accent = accents[6]),
-        Song("s8", "Northern Lights", "Glacier", "Aurora", art("aurora8"), 252, accent = accents[7]),
-        Song("s9", "Honeyglow", "Marigold", "Sundrop", art("aurora9"), 208, accent = accents[0]),
-        Song("s10", "Static Heart", "Neon Vows", "Frequency", art("aurora10"), 231, explicit = true, accent = accents[1]),
-        Song("s11", "Driftwood", "Coastlines", "Tidal", art("aurora11"), 195, accent = accents[2]),
-        Song("s12", "After Hours", "Mara Quinn", "Neon Hours", art("aurora12"), 218, liked = true, accent = accents[3]),
+        Song("s1", "Midnight Bloom", "Lunar Tide", "Nocturne", art("aurora1"), 214, liked = true, accentArgb = accents[0]),
+        Song("s2", "Velvet Skyline", "Mara Quinn", "Neon Hours", art("aurora2"), 187, accentArgb = accents[1]),
+        Song("s3", "Paper Planes", "The Foxgloves", "Wildflower", art("aurora3"), 241, liked = true, accentArgb = accents[2]),
+        Song("s4", "Gravity", "Aerial", "Lightyears", art("aurora4"), 199, explicit = true, accentArgb = accents[3]),
+        Song("s5", "Saltwater", "Coastlines", "Tidal", art("aurora5"), 263, accentArgb = accents[4]),
+        Song("s6", "Ember", "Wren Holloway", "Slow Burn", art("aurora6"), 176, liked = true, accentArgb = accents[5]),
+        Song("s7", "Cassette Dreams", "Polaroid Kids", "Analog", art("aurora7"), 224, accentArgb = accents[6]),
+        Song("s8", "Northern Lights", "Glacier", "Aurora", art("aurora8"), 252, accentArgb = accents[7]),
+        Song("s9", "Honeyglow", "Marigold", "Sundrop", art("aurora9"), 208, accentArgb = accents[0]),
+        Song("s10", "Static Heart", "Neon Vows", "Frequency", art("aurora10"), 231, explicit = true, accentArgb = accents[1]),
+        Song("s11", "Driftwood", "Coastlines", "Tidal", art("aurora11"), 195, accentArgb = accents[2]),
+        Song("s12", "After Hours", "Mara Quinn", "Neon Hours", art("aurora12"), 218, liked = true, accentArgb = accents[3]),
     )
 
     fun songById(id: String) = songs.firstOrNull { it.id == id } ?: songs.first()
@@ -78,11 +77,11 @@ object MockData {
         Playlist("r6", "Release Radar", "New music", art("dw2"), 30, accents[5]),
     )
 
-    val genres: List<Pair<String, Color>> = listOf(
+    val genres: List<Pair<String, Long>> = listOf(
         "Pop" to accents[2], "Hip-Hop" to accents[1], "Rock" to accents[5],
         "Indie" to accents[0], "Electronic" to accents[3], "Jazz" to accents[4],
-        "Lo-Fi" to accents[6], "R&B" to accents[7], "Classical" to Color(0xFF60A5FA),
-        "Metal" to Color(0xFFEF4444), "Country" to Color(0xFFFBBF24), "Workout" to Color(0xFF22D3EE),
+        "Lo-Fi" to accents[6], "R&B" to accents[7], "Classical" to 0xFF60A5FA,
+        "Metal" to 0xFFEF4444, "Country" to 0xFFFBBF24, "Workout" to 0xFF22D3EE,
     )
 
     fun formatListeners(n: Long): String = when {
@@ -93,7 +92,7 @@ object MockData {
 
     fun detailFor(kind: String, id: String): DetailInfo {
         (playlists + madeForYou + recentlyPlayed).firstOrNull { it.id == id }?.let {
-            return DetailInfo(it.title, it.subtitle, it.coverUrl, it.accent, false, it.songCount, "Playlist")
+            return DetailInfo(it.title, it.subtitle, it.coverUrl, it.accentArgb, false, it.songCount, "Playlist")
         }
         albums.firstOrNull { it.id == id }?.let {
             return DetailInfo(it.title, "${it.artist} • ${it.year}", it.artworkUrl, accents[it.year % accents.size], false, it.songCount, "Album")

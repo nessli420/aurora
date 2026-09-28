@@ -56,21 +56,21 @@ class AppContainer(context: Context) {
     val profileImages = ProfileImages(appContext)
     val localProfileAppearance = settingsStore.localProfile.map(profileImages::appearance)
         .flowOn(Dispatchers.IO).stateIn(scope, SharingStarted.Eagerly, ProfileAppearance())
-    val playHistory = PlayHistoryStore(appContext)
+    val playHistory = PlayHistoryStore(appContext.filesDir)
 
-    val queueStore = QueueStore(appContext)
+    val queueStore = QueueStore(appContext.filesDir)
 
-    val replayGainStore = ReplayGainStore(appContext)
+    val replayGainStore = ReplayGainStore(appContext.filesDir)
 
     val localLibrary = LocalLibrary(appContext, gainProvider = { path -> replayGainStore.gainsFor(path) },
         separatorsProvider = { settingsStore.artistSeparators.first() })
-    private val localStore = LocalStore(appContext)
+    private val localStore = LocalStore(appContext.filesDir)
 
     val replayGainScanner = ReplayGainScanner(localLibrary, replayGainStore)
 
     val tagEditor = TagEditor(appContext)
 
-    val backupManager = BackupManager(settingsStore, localStore, playHistory, appContext, listeningLevels)
+    val backupManager = BackupManager(settingsStore, localStore, playHistory, appContext.filesDir, appContext.cacheDir, listeningLevels)
 
     val musicBrainz = com.aurora.music.data.remote.MusicBrainzClient()
 
@@ -78,7 +78,7 @@ class AppContainer(context: Context) {
     val acoustId = com.aurora.music.data.remote.AcoustIdClient(apiKeyProvider = { acoustIdKeyValue })
 
     val autoEq = AutoEqRepository(appContext)
-    val autoEqController = AutoEqController(appContext, settingsStore, scope)
+    val autoEqController = AutoEqController(settingsStore, scope)
 
     @Volatile private var squigBaseValue: String = DEFAULT_SQUIG_BASE
     @Volatile private var squigTargetValue: String = DEFAULT_SQUIG_TARGET
@@ -113,7 +113,7 @@ class AppContainer(context: Context) {
     private fun currentServerId(): String = backend?.session?.server ?: ""
 
     val downloadManager: DownloadManager = DownloadManager(
-        appContext,
+        java.io.File(appContext.filesDir, "downloads"), ::androidFileUri, appContext::openUri,
         streamUrlProvider = { id, bitrate, lossless -> backend?.streamUrl(id, bitrate, lossless) },
         downloadBitrateProvider = { downloadBitrate },
         currentServerIdProvider = { currentServerId() },
@@ -140,7 +140,7 @@ class AppContainer(context: Context) {
     val podcastClient = com.aurora.music.data.remote.PodcastClient()
 
     val artistInfoClient = com.aurora.music.data.remote.ArtistInfoClient()
-    val artistInfoStore = ArtistInfoStore(appContext)
+    val artistInfoStore = ArtistInfoStore(appContext.filesDir)
 
     private fun resolveYtSentinel(sentinel: String): String? {
         val uri = runCatching { android.net.Uri.parse(sentinel) }.getOrNull() ?: return null
@@ -156,7 +156,7 @@ class AppContainer(context: Context) {
                 "local" -> if (!alreadyLocal) {
                     localLibrary.findMatch(song.artist, song.title, song.durationSec)?.let { return localizedFromFile(song, it) }
                 }
-                "downloaded" -> downloadManager.getByOriginalId(song.id, song.playbackSource?.providerId)?.let { return localizedFromDownload(song, it.toSong()) }
+                "downloaded" -> downloadManager.getByOriginalId(song.id, song.playbackSource?.providerId)?.let { return localizedFromDownload(song, it.toSong(downloadManager.fileUri)) }
                 "stream" -> return song
             }
         }
@@ -214,7 +214,7 @@ class AppContainer(context: Context) {
                 val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
                 val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
                     ?.takeIf { java.io.File(it.audioPath).isFile } else null
-                if (downloaded != null) localizedFromDownload(song, downloaded.toSong()) else localize(song)
+                if (downloaded != null) localizedFromDownload(song, downloaded.toSong(downloadManager.fileUri)) else localize(song)
             }
         }
     }
@@ -232,7 +232,7 @@ class AppContainer(context: Context) {
         }
         return MergedBackend(sources, session,
             priority = { if (preferLocalSources) sourcePriorityValue else listOf("stream", "local", "downloaded") },
-            downloads = { downloadManager.downloads.value.values.filter { java.io.File(it.audioPath).isFile }.map { it.toSong() } })
+            downloads = { downloadManager.downloads.value.values.filter { java.io.File(it.audioPath).isFile }.map { it.toSong(downloadManager.fileUri) } })
     }
 
     private suspend fun rebuildBackend() {
@@ -344,7 +344,8 @@ class AppContainer(context: Context) {
     @Volatile private var smartPlaylistsValue: List<SmartPlaylist> = emptyList()
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 
-    val artworkRepository = com.aurora.music.data.artwork.ArtworkRepository(appContext,
+    val artworkRepository = com.aurora.music.data.artwork.ArtworkRepository(java.io.File(appContext.cacheDir, "metadata-artwork"),
+        appContext::openUri, com.aurora.music.data.artwork.AndroidArtworkImages,
         offline = { offlineToggle || !networkUp }, enabled = { settingsStore.artworkLookupEnabled.first() },
         separators = { settingsStore.artistSeparators.first() })
 

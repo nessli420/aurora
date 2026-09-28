@@ -335,7 +335,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 album = md.albumTitle?.toString() ?: "",
                 artworkUrl = md.artworkUri?.toString() ?: "",
                 durationSec = md.extras?.getInt("aurora.durationSec") ?: 0,
-                accent = com.aurora.music.util.accentFor(mi.mediaId),
+                accentArgb = com.aurora.music.util.accentArgbFor(mi.mediaId),
                 streamUrl = md.extras?.getString("aurora.preferred.original") ?: mi.localConfiguration?.uri?.toString() ?: "",
                 replayGainTrack = md.extras?.getFloat("rgTrack", 0f) ?: 0f,
                 replayGainAlbum = md.extras?.getFloat("rgAlbum", 0f) ?: 0f,

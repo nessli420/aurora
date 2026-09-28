@@ -11,16 +11,20 @@ import com.aurora.music.data.remote.SpPlaylist
 import com.aurora.music.data.remote.SpTrack
 import com.aurora.music.data.remote.SpotifyClient
 import com.aurora.music.data.remote.TrackUri
+import com.aurora.music.data.remote.array
+import com.aurora.music.data.remote.obj
+import com.aurora.music.data.remote.string
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
-import android.util.Log
 import com.aurora.music.data.remote.SpPlaylistItem
 import com.aurora.music.data.remote.SpSavedTrack
 import com.aurora.music.data.remote.SpPaging
+import com.google.gson.JsonParser
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -28,7 +32,6 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import org.json.JSONObject
 import java.net.URLEncoder
 
 // stream urls are sentinel aurora-yt:// uris resolved to a youtube stream at play time
@@ -69,19 +72,19 @@ class SpotifyBackend(
             val html = embedHttp.newCall(req).execute().use { it.body?.string() } ?: return@runCatching emptyList()
             val script = Regex("<script id=\"__NEXT_DATA__\"[^>]*>(.*?)</script>", RegexOption.DOT_MATCHES_ALL)
                 .find(html)?.groupValues?.get(1) ?: return@runCatching emptyList()
-            val entity = JSONObject(script).getJSONObject("props").getJSONObject("pageProps")
-                .getJSONObject("state").getJSONObject("data").getJSONObject("entity")
-            val cover = entity.optJSONObject("coverArt")?.optJSONArray("sources")?.optJSONObject(0)?.optString("url").orEmpty()
-            val plName = entity.optString("name").ifBlank { entity.optString("title") }
-            val list = entity.optJSONArray("trackList") ?: return@runCatching emptyList()
-            (0 until list.length()).mapNotNull { i ->
-                val t = list.optJSONObject(i) ?: return@mapNotNull null
-                val uri = t.optString("uri")
+            val entity = JsonParser.parseString(script).asJsonObject.getAsJsonObject("props").getAsJsonObject("pageProps")
+                .getAsJsonObject("state").getAsJsonObject("data").getAsJsonObject("entity")
+            val cover = entity.obj("coverArt").array("sources").firstOrNull()?.takeIf { it.isJsonObject }?.asJsonObject?.string("url").orEmpty()
+            val plName = entity.string("name").ifBlank { entity.string("title") }
+            val list = entity.get("trackList")?.takeIf { it.isJsonArray }?.asJsonArray ?: return@runCatching emptyList()
+            list.mapNotNull { item ->
+                val t = item.takeIf { it.isJsonObject }?.asJsonObject ?: return@mapNotNull null
+                val uri = t.string("uri")
                 if (!uri.startsWith("spotify:track:")) return@mapNotNull null
                 val tid = uri.substringAfterLast(":")
-                val title = t.optString("title")
-                val artist = t.optString("subtitle").ifBlank { "Unknown artist" }
-                val durSec = (t.optLong("duration") / 1000).toInt()
+                val title = t.string("title")
+                val artist = t.string("subtitle").ifBlank { "Unknown artist" }
+                val durSec = ((t.get("duration")?.takeIf { it.isJsonPrimitive }?.let { runCatching { it.asNumber.toLong() }.getOrNull() } ?: 0L) / 1000).toInt()
                 if (title.isBlank()) return@mapNotNull null
                 localize(Song(
                     id = tid, title = title, artist = artist, album = plName, artworkUrl = cover,
@@ -292,10 +295,10 @@ class SpotifyBackend(
                 artists = r.artists?.items?.mapNotNull { it?.takeIf { a -> a.id != null }?.toArtist() }.orEmpty(),
                 playlists = r.playlists?.items?.mapNotNull { it?.takeIf { p -> p.id != null }?.toPlaylist() }.orEmpty(),
             )
-            Log.d("SpotifyBE", "search '$q' → songs=${res.songs.size} albums=${res.albums.size} artists=${res.artists.size} playlists=${res.playlists.size}")
+            AppLog.d("SpotifyBE", "search '$q' → songs=${res.songs.size} albums=${res.albums.size} artists=${res.artists.size} playlists=${res.playlists.size}")
             res
         }.getOrElse {
-            Log.d("SpotifyBE", "search '$q' failed: ${it.message}")
+            AppLog.d("SpotifyBE", "search '$q' failed: ${it.message}")
             SearchResults()
         }
     }
@@ -323,7 +326,7 @@ class SpotifyBackend(
                 val mkt = market()
                 val top = runCatching { api.artistTopTracks(id, mkt).tracks?.map { it.toSong() } }.getOrNull().orEmpty()
                 val albums = runCatching { api.artistAlbums(id).items?.map { it.toAlbum() } }.getOrNull().orEmpty()
-                Log.d("SpotifyBE", "artist $id (${ar.name}) market=$mkt → top=${top.size} albums=${albums.size}")
+                AppLog.d("SpotifyBE", "artist $id (${ar.name}) market=$mkt → top=${top.size} albums=${albums.size}")
                 val followers = ar.followers?.total ?: 0
                 val sub = if (followers > 0) "${formatCount(followers)} followers" else "Artist"
                 DetailData(
@@ -345,7 +348,7 @@ class SpotifyBackend(
                 } else {
                     // non-owned: api forbids the tracks so scrape the public embed
                     val embed = fetchEmbedTracks(id)
-                    Log.d("SpotifyBE", "playlist $id non-owned → embed tracks=${embed.size}")
+                    AppLog.d("SpotifyBE", "playlist $id non-owned → embed tracks=${embed.size}")
                     DetailData(
                         info = DetailInfo(header?.name ?: "Playlist", sub, img(header?.images), accentArgbFor(id), false, embed.size, "Playlist"),
                         tracks = embed,

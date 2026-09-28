@@ -13,6 +13,7 @@ import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.model.inferReleaseType
 import com.aurora.music.model.releaseTypeLabel
+import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import retrofit2.HttpException
@@ -266,7 +267,7 @@ class JellyfinBackend(
             }
             else -> null
         }
-    }.onFailure { android.util.Log.e("AuroraDetail", "jellyfin detail($kind,$id) failed", it) }.getOrNull()
+    }.onFailure { AppLog.e("AuroraDetail", "jellyfin detail($kind,$id) failed", it) }.getOrNull()
 
     override suspend fun collectionTracks(kind: String, id: String): List<Song> {
         if (kind !in listOf("artist", "album", "playlist")) return super.collectionTracks(kind, id)
@@ -309,7 +310,7 @@ class JellyfinBackend(
                 songs = children.filter { it.Type == "Audio" }.map { it.toSong() },
             )
         }
-    }.onFailure { android.util.Log.e("AuroraFolders", "jellyfin browseFolder($folderId) failed", it) }.getOrNull()
+    }.onFailure { AppLog.e("AuroraFolders", "jellyfin browseFolder($folderId) failed", it) }.getOrNull()
 
     override val supportsServerTagEdit: Boolean get() = true
 
@@ -344,7 +345,7 @@ class JellyfinBackend(
         tags.trackNumber.toIntOrNull()?.let { obj.addProperty("IndexNumber", it) }
 
         client.api.updateItem(songId, obj).isSuccessful
-    }.onFailure { android.util.Log.e("AuroraTagEdit", "jellyfin updateMetadata($songId) failed", it) }.getOrDefault(false)
+    }.onFailure { AppLog.e("AuroraTagEdit", "jellyfin updateMetadata($songId) failed", it) }.getOrDefault(false)
 
     override suspend fun serverLyrics(song: Song): Lyrics? {
         val lines = runCatching { client.api.lyrics(song.id).Lyrics }.getOrNull()?.filter { !it.Text.isNullOrEmpty() }.orEmpty()

@@ -7,7 +7,7 @@ import com.aurora.music.data.PlaybackReportTarget
 import com.aurora.music.model.Song
 import java.util.UUID
 
-internal data class PlaybackReportSnapshot(
+data class PlaybackReportSnapshot(
     val song: Song,
     val positionMs: Long,
     val durationMs: Long,
@@ -15,7 +15,7 @@ internal data class PlaybackReportSnapshot(
     val playbackRate: Float = 1f,
 )
 
-internal class PlaybackReportTracker(
+class PlaybackReportTracker(
     private val targetFor: (Song) -> PlaybackReportTarget?,
     private val emit: (PlaybackReportTarget, PlaybackReport) -> Unit,
     private val newSessionId: () -> String = { UUID.randomUUID().toString() },

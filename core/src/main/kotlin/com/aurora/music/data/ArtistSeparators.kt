@@ -63,7 +63,7 @@ object ArtistSeparatorsCodec {
 internal fun artistNameKey(name: String): String = Normalizer.normalize(name.trim(), Normalizer.Form.NFC)
     .replace(Regex("\\s+"), " ").lowercase(Locale.ROOT)
 
-internal class LocalArtistIndex(rawSongs: List<Song>, separators: ArtistSeparators) {
+class LocalArtistIndex(rawSongs: List<Song>, separators: ArtistSeparators) {
     private val names = linkedMapOf<String, String>()
     private val memberships = linkedMapOf<String, MutableList<Song>>()
     private val legacyIds = mutableMapOf<String, String>()

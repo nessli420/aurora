@@ -13,6 +13,7 @@ import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.LyricLine
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.sync.Mutex
@@ -313,7 +314,7 @@ class SubsonicBackend(
             }
             else -> null
         }
-    }.onFailure { android.util.Log.e("AuroraDetail", "subsonic detail($kind,$id) failed", it) }.getOrNull()
+    }.onFailure { AppLog.e("AuroraDetail", "subsonic detail($kind,$id) failed", it) }.getOrNull()
 
     override val supportsFolders: Boolean get() = true
 
@@ -337,7 +338,7 @@ class SubsonicBackend(
                 )
             }
         }
-    }.onFailure { android.util.Log.e("AuroraFolders", "subsonic browseFolder($folderId) failed", it) }.getOrNull()
+    }.onFailure { AppLog.e("AuroraFolders", "subsonic browseFolder($folderId) failed", it) }.getOrNull()
 
     private suspend fun indexLevel(musicFolderId: String?, title: String): FolderContent {
         val idx = c.api.getIndexes(musicFolderId).response.indexes
