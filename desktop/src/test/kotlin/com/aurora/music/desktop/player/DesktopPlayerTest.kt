@@ -6,7 +6,12 @@ import com.aurora.music.data.SavedQueue
 import com.aurora.music.data.remote.ListenBrainzClient
 import com.aurora.music.data.toSavedTrack
 import com.aurora.music.desktop.DesktopContainer
+import com.aurora.music.desktop.audio.DesktopPlaybackEngine
 import com.aurora.music.desktop.audio.EngineEvent
+import com.aurora.music.desktop.audio.EnginePhase
+import com.aurora.music.desktop.audio.FakeBackend
+import com.aurora.music.desktop.audio.PlaybackEngine
+import com.aurora.music.desktop.audio.Tracks
 import com.aurora.music.desktop.audio.TransitionReason
 import com.aurora.music.desktop.platform.DesktopPaths
 import kotlinx.coroutines.CoroutineScope
@@ -56,7 +61,7 @@ class DesktopPlayerTest {
     private fun deps(queueStore: QueueStore = container.queueStore) = container.playerDependencies()
         .copy(scope = scope, queueStore = queueStore, sessionReady = ready, accountEpoch = epoch, accountKey = { account })
 
-    private fun player(engine: FakeEngine = FakeEngine(), deps: PlayerDependencies = deps()): DesktopPlayer =
+    private fun player(engine: PlaybackEngine = FakeEngine(), deps: PlayerDependencies = deps()): DesktopPlayer =
         on { DesktopPlayer(engine, deps) }.also { players += it; settle() }
 
     private fun <T> on(block: () -> T): T = runBlocking(dispatcher) { block() }
@@ -247,8 +252,8 @@ class DesktopPlayerTest {
             Response.Builder().request(chain.request()).protocol(Protocol.HTTP_1_1).code(200).message("OK")
                 .body("{}".toResponseBody("application/json".toMediaType())).build()
         }.build()
-        val listenBrainz = ListenBrainzScrobbler(container.settingsStore, scope, ListenBrainzClient(http))
         runBlocking { container.settingsStore.saveListenBrainz("token", "alice") }
+        val listenBrainz = ListenBrainzScrobbler(container.settingsStore, scope, ListenBrainzClient(http))
         waitFor { listenBrainz.isConnected }
         val engine = FakeEngine()
         val player = player(engine, deps().copy(listenBrainz = listenBrainz))
@@ -310,7 +315,7 @@ class DesktopPlayerTest {
         assertEquals("dac", on { player.preferredOutput.value })
         assertTrue(on { player.exclusiveOutput.value })
         on { player.setVolume(0.3f) }
-        assertEquals(0.3f, engine.volume)
+        assertEquals(0.3f, engine.level)
         waitFor { runBlocking { container.desktopSettings.volume.first() } == 0.3f }
         assertEquals(400, engine.config.bufferMs)
     }
@@ -325,5 +330,39 @@ class DesktopPlayerTest {
         waitFor { messages.isNotEmpty() }
         job.cancel()
         assertEquals(listOf("Exclusive mode is unavailable"), messages)
+    }
+
+    @Test fun realEngineCarriesTheUiThroughTransitionsAndAnAccountSwitch() = Tracks().use { tracks ->
+        fun track(id: String) = tracks.song(tracks.wav(id, 48_000, 16, 24_000) { frame, _ -> (frame % 200) * 40 - 4_000 })
+        ready.value = true
+        val engine = DesktopPlaybackEngine(FakeBackend(speed = 4.0))
+        val player = player(engine)
+        on { player.playAll(listOf(track("a"), track("b"))) }
+        waitFor { player.state.value.current.id == "b" }
+        waitFor { engine.state.value.phase == EnginePhase.ENDED }
+        settle()
+        val ended = on { player.state.value }
+        assertEquals(listOf("a", "b"), ended.queue.map { it.id })
+        assertEquals(1, ended.currentIndex)
+        assertFalse(ended.isPlaying)
+        assertEquals(1, container.queueStore.get("subsonic|alice")?.currentIndex)
+
+        val bob = listOf(track("c"), track("d"), track("e"))
+        container.queueStore.save("subsonic|bob", SavedQueue(bob.map { it.toSavedTrack() }, currentIndex = 1, shuffle = true))
+        account = "subsonic|bob"
+        epoch.value = 1
+        waitFor { engine.state.value.entries.map { it.song.id } == listOf("c", "d", "e") && engine.state.value.phase == EnginePhase.READY }
+        settle()
+        val switched = on { player.state.value }
+        assertEquals(listOf("c", "d", "e"), switched.queue.map { it.id })
+        assertEquals("d", switched.current.id)
+        assertTrue(switched.shuffle)
+        assertFalse(switched.isPlaying)
+        assertEquals(listOf("a", "b"), container.queueStore.get("subsonic|alice")?.tracks?.map { it.id })
+        assertEquals(listOf("c", "d", "e"), container.queueStore.get("subsonic|bob")?.tracks?.map { it.id })
+        on { player.jumpTo(2) }
+        waitFor { engine.state.value.phase == EnginePhase.ENDED }
+        settle()
+        assertEquals("e", on { player.state.value.current.id })
     }
 }

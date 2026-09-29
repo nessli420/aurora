@@ -176,7 +176,6 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 engine.setVolume(saved)
             }
         }
-        // restore a saved queue only if nothing was queued before the session came up
         scope.launch {
             deps.sessionReady.collect { ready ->
                 if (ready != true) return@collect
@@ -233,7 +232,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             syncedEntries = s.entries
             syncedQueue = s.entries.map { it.song }
         }
-        val cur = s.current?.song ?: _state.value.current
+        val cur = s.current?.song ?: EMPTY_SONG
         _state.update {
             it.copy(
                 current = cur,
@@ -243,7 +242,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 shuffle = s.shuffle,
                 repeat = RepeatMode.valueOf(s.repeat.name),
                 positionSec = (s.positionMs / 1000f).coerceAtLeast(0f),
-                queue = syncedQueue.ifEmpty { it.queue },
+                queue = syncedQueue,
                 currentIndex = s.index.coerceAtLeast(0),
             )
         }
@@ -258,8 +257,6 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         when (event) {
             is EngineEvent.Transition -> {
                 reporting.transition(event, engine.state.value, uptime())
-                // reset position so the bar doesn't show the previous track until the engine reports the new one
-                _state.update { it.copy(positionSec = 0f) }
                 if (_state.value.sleepEndOfTrack && (event.reason == TransitionReason.AUTO || event.reason == TransitionReason.REPEAT)) sleepNow()
             }
             is EngineEvent.Discontinuity -> reporting.discontinuity(event, engine.state.value, uptime())
@@ -453,7 +450,6 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         queueFillJob = null
     }
 
-    // pages the rest of a collection in and stops as soon as anything else edits the queue
     private fun fillQueue(kind: String, id: String, loaded: List<Song>, total: Int, shuffle: Boolean, collection: PlaybackCollectionIdentity?) {
         cancelQueueFill()
         if (loaded.isEmpty() || loaded.size >= total || total <= 0) return

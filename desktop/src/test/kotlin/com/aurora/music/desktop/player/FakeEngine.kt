@@ -36,13 +36,13 @@ internal class FakeEngine(random: Random = Random(7)) : PlaybackEngine {
     var positionMs = 0L
     var playWhenReady = false
     var phase = EnginePhase.IDLE
-    var speed = 1f
-    var volume = 1f
+    var rate = 1f
+    var level = 1f
     var closed = false
 
     fun publish() {
         state.value = EngineState(queue.entries, queue.index, positionMs, 200_000, playWhenReady, phase,
-            shuffle = queue.shuffle, shuffleRestoreIds = queue.restoreIds, repeat = queue.repeat, speed = speed, volume = volume)
+            shuffle = queue.shuffle, shuffleRestoreIds = queue.restoreIds, repeat = queue.repeat, speed = rate, volume = level)
     }
 
     fun at(positionMs: Long) {
@@ -117,12 +117,12 @@ internal class FakeEngine(random: Random = Random(7)) : PlaybackEngine {
     override fun setShuffle(target: ShuffleTarget, originalOrder: List<String>?) = edit { queue.setShuffle(target, originalOrder) }
 
     override fun setSpeed(speed: Float) {
-        this.speed = speed
+        rate = speed
         publish()
     }
 
     override fun setVolume(volume: Float) {
-        this.volume = volume
+        level = volume
     }
 
     override fun sleepFade(fadeMs: Int) {

@@ -22,8 +22,11 @@ object WindowNative {
 
     fun setBackdrop(hwnd: Long, backdrop: WindowBackdrop): Boolean = setAttribute(hwnd, BACKDROP, backdrop.ordinal) == 0
 
+    fun accentColor(): Int? = accent().takeIf { it != 0 }
+
     private fun colorRef(argb: Int?): Int =
         if (argb == null) DEFAULT_COLOR else (argb shr 16 and 0xFF) or (argb and 0xFF00) or (argb and 0xFF shl 16)
 
     private external fun setAttribute(hwnd: Long, attribute: Int, value: Int): Int
+    private external fun accent(): Int
 }

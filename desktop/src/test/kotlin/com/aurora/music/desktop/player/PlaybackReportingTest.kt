@@ -61,7 +61,7 @@ class PlaybackReportingTest {
         reporting.sample(state(b, 1_200), now + 1_100)
         assertEquals(listOf(START, STOP), events("a"))
         assertEquals(listOf(START), events("b"))
-        assertEquals(1, reports.map { it.sessionId }.filter { id -> reports.any { it.song.id == "b" && it.sessionId == id } }.distinct().size)
+        assertEquals(3_000L, reports.single { it.event == STOP }.positionMs)
     }
 
     @Test fun repeatOneStartsANewSessionForTheSameEntry() {
