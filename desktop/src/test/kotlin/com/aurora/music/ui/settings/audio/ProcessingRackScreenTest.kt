@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import java.util.UUID
 
 class ProcessingRackScreenTest {
     private val seeded: suspend (SettingsStore) -> Unit = { store ->
@@ -55,8 +56,8 @@ class ProcessingRackScreenTest {
 
     @Test fun advancedStagesShowTheirOwnControls() {
         val nodes = listOf(
-            ProcessingRackNode("multiband", "Multiband", RackNodeKind.MULTIBAND),
-            ProcessingRackNode("tone", "Tape colour", RackNodeKind.TONE),
+            ProcessingRackNode(UUID.randomUUID().toString(), "Multiband", RackNodeKind.MULTIBAND),
+            ProcessingRackNode(UUID.randomUUID().toString(), "Tape colour", RackNodeKind.TONE),
         )
         rack("rack-advanced", path = SignalPath(), seed = { store ->
             store.setProcessingRack(ProcessingRack(enabled = true, name = "Mastering", nodes = nodes)).getOrThrow()

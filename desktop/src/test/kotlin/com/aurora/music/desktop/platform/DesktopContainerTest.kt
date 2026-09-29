@@ -9,6 +9,7 @@ import com.aurora.music.data.SubsonicBackend
 import com.aurora.music.data.accountKey
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.desktop.audio.decode.TestAssets
+import com.aurora.music.model.Song
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -22,12 +23,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
-import java.awt.image.BufferedImage
-import java.io.ByteArrayOutputStream
 import java.io.File
-import java.net.URI
-import java.util.Base64
-import javax.imageio.ImageIO
 
 class DesktopContainerTest {
     @get:Rule val temp = TemporaryFolder()
@@ -135,16 +131,14 @@ class DesktopContainerTest {
         assertEquals(1, repository.allLibrarySongs(cap = 10).size)
     }
 
-    @Test fun localProfileAppearanceAndBackupRoundTrip() = container {
-        val png = ByteArrayOutputStream().also { ImageIO.write(BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB), "png", it) }.toByteArray()
-        settingsStore.setLocalProfile(LocalProfile("Maren", Base64.getEncoder().encodeToString(png), ""))
-        val appearance = localProfileAppearance.await { it.name == "Maren" }
-        assertTrue(File(URI(appearance.avatarUrl)).readBytes().contentEquals(png))
-        assertEquals("", appearance.bannerUrl)
+    @Test fun backupRestoresProfileAndHistory() = container {
+        settingsStore.setLocalProfile(LocalProfile("Maren"))
+        playHistory.record(Song("s1", "Midnight Bloom", "Lunar Tide", "Nocturne", "", 214), 1_000L)
         val backup = backupManager.export(1L)
         settingsStore.setLocalProfile(LocalProfile())
-        localProfileAppearance.await { it.name == "Local Library" && it.avatarUrl.isEmpty() }
+        playHistory.clear()
         assertTrue(backupManager.import(backup))
-        localProfileAppearance.await { it.name == "Maren" && it.avatarUrl == appearance.avatarUrl }
+        assertEquals("Maren", settingsStore.localProfile.first().name)
+        assertEquals(listOf("s1"), playHistory.snapshot().map { it.songId })
     }
 }

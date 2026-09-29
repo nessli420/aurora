@@ -3,12 +3,15 @@ package com.aurora.music.ui.screens.stats
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
+import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -23,6 +26,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -75,13 +80,15 @@ fun RecapInboxScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpen: 
     val featured = windows.firstOrNull()
     val remaining = windows.drop(1)
     fun open(window: RecapWindow) { inbox.markRead(setOf(window.key)); onOpen(window) }
+    val listState = rememberLazyListState()
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             IconButton(onClick = onBack) { Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36)) }
             Text(appString(R.string.text_notifications_753a22), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             if (inbox.unread > 0) TextButton(onClick = { inbox.markRead(inbox.windows.map { it.key }.toSet()) }) { Text(appString(R.string.text_mark_all_read_8958e2)) }
         }
-        LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = contentPadding.calculateBottomPadding() + 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Box(Modifier.fillMaxSize()) {
+        LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(start = 20.dp, end = 20.dp, bottom = contentPadding.calculateBottomPadding() + 28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
             item {
                 Column(Modifier.padding(top = 14.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(appString(R.string.text_your_listening_revisited_9ea31f), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
@@ -118,6 +125,9 @@ fun RecapInboxScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpen: 
                 }
             }
         }
+        VerticalScrollbar(rememberScrollbarAdapter(listState),
+            Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
+        }
     }
 }
 
@@ -128,7 +138,7 @@ private fun RecapNotification(window: RecapWindow, history: List<PlayEvent>, unr
     val palette = MaterialTheme.colorScheme
     val brush = if (featured) Brush.linearGradient(listOf(palette.primaryContainer, palette.tertiaryContainer)) else Brush.linearGradient(listOf(palette.surfaceContainerHigh, palette.surfaceContainerHigh))
     val textColor = if (featured) palette.onPrimaryContainer else palette.onSurface
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(if (featured) 28.dp else 20.dp)).background(brush).clickable(onClick = onOpen).padding(if (featured) 22.dp else 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(if (featured) 28.dp else 20.dp)).background(brush).clickable(onClick = onOpen).pointerHoverIcon(PointerIcon.Hand).padding(if (featured) 22.dp else 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (featured) appString(R.string.recap_latest_title, (window.period.label.uppercase())) else appString(R.string.recap_title, (window.period.label)), style = MaterialTheme.typography.labelLarge, color = textColor, modifier = Modifier.weight(1f))
             if (unread) Box(Modifier.clip(CircleShape).background(palette.primary).padding(horizontal = 10.dp, vertical = 4.dp)) { Text(appString(R.string.text_new_6403f2), style = MaterialTheme.typography.labelSmall, color = palette.onPrimary) }

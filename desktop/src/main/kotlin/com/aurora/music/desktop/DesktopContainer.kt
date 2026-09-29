@@ -22,7 +22,6 @@ import com.aurora.music.data.PlayHistoryStore
 import com.aurora.music.data.PlaybackReportDispatcher
 import com.aurora.music.data.PlaybackSourceIdentity
 import com.aurora.music.data.PlexBackend
-import com.aurora.music.data.ProfileAppearance
 import com.aurora.music.data.QueueStore
 import com.aurora.music.data.ReplayGainStore
 import com.aurora.music.data.ReportingMediaBackend
@@ -45,7 +44,6 @@ import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.library.FolderLibrary
 import com.aurora.music.desktop.platform.DesktopPaths
 import com.aurora.music.desktop.platform.DesktopSettings
-import com.aurora.music.desktop.platform.ProfileImages
 import com.aurora.music.desktop.platform.SkiaArtworkImages
 import com.aurora.music.desktop.platform.desktopClientInfo
 import com.aurora.music.desktop.platform.desktopFileUri
@@ -70,8 +68,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.flow.flowOn
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
@@ -101,9 +97,6 @@ class DesktopContainer(
         _sourceErrors.tryEmit(appString(R.string.playback_history_sync_failed))
     }
 
-    val profileImages = ProfileImages(paths.cache)
-    val localProfileAppearance: StateFlow<ProfileAppearance> = settingsStore.localProfile.map(profileImages::appearance)
-        .flowOn(Dispatchers.IO).stateIn(scope, SharingStarted.Eagerly, ProfileAppearance())
     val playHistory = PlayHistoryStore(paths.roaming)
     val queueStore = QueueStore(paths.roaming)
     val replayGainStore = ReplayGainStore(paths.roaming)

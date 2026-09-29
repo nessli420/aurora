@@ -221,7 +221,7 @@ private fun FoldersStep(state: AuthUiState, folders: List<String>, onAdd: (Strin
         FilePickers.pickFolder("Add music folder", folders.lastOrNull()?.let(::File))?.let { onAdd(it.absolutePath) }
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SourceLabel(appString(R.string.text_folders_19adc4))
+        SourceLabel(appString(R.string.text_folders_19adc4).uppercase())
         folders.forEach { path ->
             Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surface)
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(16.dp)).padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
