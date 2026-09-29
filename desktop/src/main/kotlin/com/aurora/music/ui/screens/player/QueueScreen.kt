@@ -145,7 +145,7 @@ fun QueueContent(
     Column(modifier) {
         if (onClose != null || showTitle || showActions) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             if (onClose != null) {
-                Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClose).padding(10.dp))
+                Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClose).pointerHoverIcon(PointerIcon.Hand).padding(10.dp))
                 Spacer(Modifier.weight(1f))
             }
             if (showTitle) Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
@@ -155,13 +155,13 @@ fun QueueContent(
                     Icons.AutoMirrored.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
                     tint = if (queue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(48.dp).clip(CircleShape)
-                        .clickable(enabled = queue.isNotEmpty()) { showSaveDialog = true }.padding(12.dp),
+                        .clickable(enabled = queue.isNotEmpty()) { showSaveDialog = true }.pointerHoverIcon(PointerIcon.Hand).padding(12.dp),
                 )
                 Icon(
                     Icons.Filled.DeleteSweep, appString(R.string.text_clear_queue_984301),
                     tint = if (upcoming.isEmpty() || !editable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(48.dp).clip(CircleShape)
-                        .clickable(enabled = upcoming.isNotEmpty() && editable, onClick = onClear).padding(12.dp),
+                        .clickable(enabled = upcoming.isNotEmpty() && editable, onClick = onClear).pointerHoverIcon(PointerIcon.Hand).padding(12.dp),
                 )
             }
         }

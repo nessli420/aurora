@@ -9,7 +9,7 @@ import kotlin.math.sin
 
 class LiveAudioSmokeTest {
     @Test fun twoGeneratedTracksPlaySilentlyThroughTheDefaultDevice() {
-        assumeTrue("set -Daurora.liveAudio=true to use the real audio device", System.getProperty("aurora.liveAudio") == "true")
+        assumeTrue("set AURORA_LIVE_AUDIO=1 to use the real audio device", System.getenv("AURORA_LIVE_AUDIO") == "1")
         Tracks().use { tracks ->
             val first = tracks.wav("live-a", 44_100, 16, 22_050) { frame, _ -> (sin(frame * 0.06) * 8_000).roundToInt() }
             val second = tracks.wav("live-b", 48_000, 24, 24_000) { frame, _ -> (sin(frame * 0.05) * 2_000_000).roundToInt() }

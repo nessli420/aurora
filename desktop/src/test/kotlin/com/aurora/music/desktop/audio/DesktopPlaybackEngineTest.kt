@@ -333,7 +333,7 @@ class DesktopPlaybackEngineTest {
         assertTrue(resumed.positionMs < 1_500)
     }
 
-    @Test fun removingTheSelectedDevicePausesOnTheDefault() {
+    @Test fun removingTheSelectedDevicePausesOnTheDefaultUntilItReturns() {
         val (file, _) = tone("usb", 48_000, 16, 240_000) { frame, _ -> frame % 3_000 }
         val backend = FakeBackend(speed = 1.0, devices = listOf(
             AudioDevice("speakers", "Speakers", DeviceKind.SPEAKERS, true),
@@ -348,8 +348,36 @@ class DesktopPlaybackEngineTest {
             val state = engine.await { !it.playWhenReady && it.phase == EnginePhase.READY && it.output?.deviceId == "speakers" }
             assertNotNull(state.output?.fallbackReason)
             log.await { events -> events.any { it is EngineEvent.OutputFallback } }
+            eventually { backend.awake.last() == false }
+            backend.fire(DeviceEvent.Added("dac"))
+            val back = engine.await { it.phase == EnginePhase.READY && it.output?.deviceId == "dac" }
+            assertNull(back.output?.fallbackReason)
+            assertFalse(back.playWhenReady)
+            assertEquals(state.positionMs, back.positionMs)
         }
-        eventually { backend.awake.last() == false }
+    }
+
+    @Test fun sleepFadeRampsToSilenceThenPausesAndPlayRestoresTheLevel() {
+        val (file, _) = tone("sleep", 48_000, 16, 480_000) { _, _ -> 16_384 }
+        val backend = FakeBackend(speed = 4.0)
+        val engine = engine(backend)
+        engine.setQueue(listOf(tracks.song(file)))
+        engine.await { it.isPlaying && it.positionMs >= 300 }
+        engine.sleepFade(400)
+        val paused = engine.await { !it.playWhenReady && it.phase == EnginePhase.READY }
+        assertEquals(1f, paused.volume)
+        val faded = backend.last.heardFloats().filterIndexed { i, _ -> i % 2 == 0 }
+        val start = faded.indexOfFirst { it < 0.5f }
+        val quiet = faded.indexOfFirst { it < 0.001f }
+        assertTrue("fade $start..$quiet", start > 0 && quiet - start in 19_000..19_500)
+        for (i in start + 1..quiet) assertTrue(faded[i] <= faded[i - 1])
+        val heardBefore = backend.last.heardFrames()
+        engine.play()
+        engine.await { it.isPlaying }
+        eventually { backend.last.heardFrames() > heardBefore + 4_800 }
+        val resumed = backend.last.heardFloats()
+        assertEquals(0.5f, resumed[resumed.size - 2])
+        engine.pause()
     }
 
     private fun engine(backend: FakeBackend, config: EngineConfig = EngineConfig()) =

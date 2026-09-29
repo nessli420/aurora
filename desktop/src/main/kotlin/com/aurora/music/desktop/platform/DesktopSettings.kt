@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
+import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.flow.Flow
@@ -35,6 +36,7 @@ class DesktopSettings(private val dataStore: DataStore<Preferences>) {
     val languageTag: Flow<String> = dataStore.data.map { it[LANGUAGE] ?: "" }.distinctUntilChanged()
     val musicFolders: Flow<List<String>> = dataStore.data.map { parseFolders(it[MUSIC_FOLDERS]) }.distinctUntilChanged()
     val closeToTray: Flow<Boolean> = dataStore.data.map { it[CLOSE_TO_TRAY] ?: false }.distinctUntilChanged()
+    val recapSeen: Flow<Set<String>> = dataStore.data.map { it[RECAP_SEEN].orEmpty() }.distinctUntilChanged()
     val window: Flow<WindowPlacement?> = dataStore.data.map { p ->
         val width = p[WINDOW_WIDTH]
         val height = p[WINDOW_HEIGHT]
@@ -48,6 +50,7 @@ class DesktopSettings(private val dataStore: DataStore<Preferences>) {
     suspend fun setVolume(volume: Float) = dataStore.edit { it[VOLUME] = volume.coerceIn(0f, 1f) }
     suspend fun setLanguageTag(tag: String) = dataStore.edit { it[LANGUAGE] = tag.trim() }
     suspend fun setCloseToTray(enabled: Boolean) = dataStore.edit { it[CLOSE_TO_TRAY] = enabled }
+    suspend fun markRecapsSeen(keys: Set<String>) = dataStore.edit { it[RECAP_SEEN] = it[RECAP_SEEN].orEmpty() + keys }
 
     suspend fun setMusicFolders(folders: List<String>) = dataStore.edit { it[MUSIC_FOLDERS] = gson.toJson(normalize(folders)) }
     suspend fun addMusicFolder(folder: String) = dataStore.edit { it[MUSIC_FOLDERS] = gson.toJson(normalize(parseFolders(it[MUSIC_FOLDERS]) + folder)) }
@@ -83,6 +86,7 @@ class DesktopSettings(private val dataStore: DataStore<Preferences>) {
         private val LANGUAGE = stringPreferencesKey("language_tag")
         private val MUSIC_FOLDERS = stringPreferencesKey("music_folders")
         private val CLOSE_TO_TRAY = booleanPreferencesKey("close_to_tray")
+        private val RECAP_SEEN = stringSetPreferencesKey("recap_seen")
         private val WINDOW_X = intPreferencesKey("window_x")
         private val WINDOW_Y = intPreferencesKey("window_y")
         private val WINDOW_WIDTH = intPreferencesKey("window_width")

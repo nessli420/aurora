@@ -20,6 +20,7 @@ internal class OpenTrack(val entry: QueueEntry, val decoder: FfmpegDecoder, val 
     val tags: AudioTags = decoder.tags
     val rate: Int = info.sampleRate
     val durationMs: Long = info.durationMs.takeIf { it > 0 } ?: (entry.song.durationSec * 1000L).takeIf { it > 0 } ?: -1
+    val durationFrames: Long = if (durationMs > 0) durationMs * rate / 1000 else -1
     val precision: SamplePrecision = info.sampleFormat.let { format ->
         when {
             format.kind == SampleKind.INTEGER && format.bits in 1..8 -> SamplePrecision.PCM_SIGNED_8
@@ -99,10 +100,12 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
     var produced = 0L; private set
     var mixed = 0L; private set
     var streamStart = 0L; private set
+    var trackStart = 0L; private set
     var tap: FloatTap? = null
 
     val finished: Boolean get() = draining && pending == null && chain.isEnded
-    val renderPositionMs: Long get() = track?.let { (it.startFrame + trackFed) * 1000 / it.rate } ?: 0
+    val remainingFrames: Long?
+        get() = track?.takeIf { it.durationFrames > 0 }?.let { trackStart + outputFrames(it.durationFrames - it.startFrame) - mixed }
 
     fun start(track: OpenTrack, format: ChainFormat, streamStart: Long): Long {
         chain.configure(format)
@@ -117,7 +120,8 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
         gainTrack = track
         nextGainTrack = null
         nextGainFrame = Long.MAX_VALUE
-        return chain.latencyFrames.toLong()
+        trackStart = chain.latencyFrames.toLong()
+        return trackStart
     }
 
     fun switchTo(track: OpenTrack, format: ChainFormat): Long {
@@ -127,6 +131,7 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
         this.track = track
         resetInput()
         scheduleGain(track, boundary)
+        trackStart = boundary
         return boundary
     }
 
@@ -141,6 +146,7 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
         resetInput()
         val boundary = produced + chain.latencyFrames
         scheduleGain(next.track, boundary)
+        trackStart = boundary
         return boundary
     }
 
@@ -170,6 +176,11 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
             progress = true
         }
         return progress
+    }
+
+    fun outputFrames(sourceFrames: Long): Long {
+        val format = chain.format ?: return 0
+        return ceilDiv(sourceFrames * format.outputRate, format.resampleRate.toLong())
     }
 
     fun gain(frame: Long, mode: Int): Double {

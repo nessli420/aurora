@@ -130,6 +130,7 @@ class DesktopPlaybackEngine(
     private var successorKey = -1L
     private var successorVersion = -1L
     private var successorSkips = -1
+    private var skipVersion = 0
     private var successorValue: QueueEntry? = null
     private val listener: AutoCloseable
 
@@ -226,6 +227,8 @@ class DesktopPlaybackEngine(
 
     override fun stop() = post {
         stopAudio()
+        master.endSleep()
+        master.cancelWake()
         playWhenReady = false
         phase = EnginePhase.IDLE
         error = null
@@ -310,6 +313,7 @@ class DesktopPlaybackEngine(
     override fun close() {
         if (closed) return
         closed = true
+        watch.interruptIfStalled(0)
         audioThread?.let {
             LockSupport.unpark(it)
             it.join(2_000)
@@ -763,6 +767,7 @@ class DesktopPlaybackEngine(
         if (next != null) return restart(queue.indexOf(next.uid), 0, TransitionReason.AUTO)
         output?.let { runCatching { it.pause() } }
         running = false
+        master.endSleep()
         phase = EnginePhase.ENDED
         emit(EngineEvent.Ended)
         publish()
@@ -855,6 +860,7 @@ class DesktopPlaybackEngine(
     private fun failed(entry: QueueEntry?, failure: PlaybackFailure) {
         failures++
         if (entry != null) skipped += entry.uid
+        skipVersion++
         if (failures >= config.maxConsecutiveFailures) endError = failure
         emit(EngineEvent.Failed(entry, failure))
     }
@@ -900,10 +906,9 @@ class DesktopPlaybackEngine(
         val settings = config
         if (settings.crossfadeMs <= 0 || lead.draining || lead.decoderEnded || pendingReopen != null) return
         val track = lead.track ?: return
-        if (track.durationMs <= 0) return
-        val remaining = remainingMs(lead, track)
-        val fade = minOf(settings.crossfadeMs.toLong(), (track.durationMs / speed / 2).toLong())
-        if (remaining > fade || remaining < MIN_CROSSFADE_MS) return
+        val remaining = lead.remainingFrames ?: return
+        val fade = minOf(framesFor(settings.crossfadeMs), lead.outputFrames(track.durationFrames) / 2)
+        if (remaining > fade || remaining < framesFor(MIN_CROSSFADE_MS)) return
         val next = successorOf(track.entry) ?: return
         val slot = prepared?.takeIf { it.entry.uid == next.uid } ?: return
         val incomingTrack = slot.result?.getOrNull() ?: return
@@ -916,7 +921,7 @@ class DesktopPlaybackEngine(
         incoming.tap = beforeTap
         fading = lead
         setPrimary(incoming)
-        crossfade = Crossfade(maxOf(1L, remaining * outputRate() / 1000), settings.crossfadeCurve, settings.crossfadeHeadroom)
+        crossfade = Crossfade(remaining, settings.crossfadeCurve, settings.crossfadeHeadroom)
         addMarker(incoming, latency, incomingTrack, if (next.uid == track.entry.uid) TransitionReason.REPEAT else TransitionReason.AUTO)
     }
 
@@ -1004,8 +1009,8 @@ class DesktopPlaybackEngine(
         val next = successorOf(track.entry) ?: return
         if (prepared?.entry?.uid == next.uid) return
         if (!deck.decoderEnded) {
-            if (track.durationMs <= 0) return
-            if (remainingMs(deck, track) > maxOf(PREFETCH_MS, config.crossfadeMs + CROSSFADE_PREFETCH_MS)) return
+            val remaining = deck.remainingFrames ?: return
+            if (remaining > framesFor(maxOf(PREFETCH_MS, config.crossfadeMs + CROSSFADE_PREFETCH_MS))) return
         }
         prefetch(next)
     }
@@ -1029,14 +1034,14 @@ class DesktopPlaybackEngine(
     }
 
     private fun successorOf(entry: QueueEntry): QueueEntry? {
-        if (successorKey == entry.uid && successorVersion == queue.version && successorSkips == skipped.size) return successorValue
+        if (successorKey == entry.uid && successorVersion == queue.version && successorSkips == skipVersion) return successorValue
         val index = queue.indexOf(entry.uid)
         var candidate = if (index < 0) -1 else queue.next(index, auto = true)
         var guard = queue.size
         while (candidate >= 0 && queue[candidate].uid in skipped && guard-- > 0) candidate = queue.next(candidate, auto = false)
         successorKey = entry.uid
         successorVersion = queue.version
-        successorSkips = skipped.size
+        successorSkips = skipVersion
         successorValue = if (candidate >= 0 && queue[candidate].uid !in skipped) queue[candidate] else null
         return successorValue
     }
@@ -1059,10 +1064,14 @@ class DesktopPlaybackEngine(
         val current = output
         when (event) {
             is DeviceEvent.StreamInvalidated -> if (current != null && event.streamId == current.id) reopenAtHeard()
-            is DeviceEvent.DefaultChanged -> if (activeDeviceId() == null && current != null && current.deviceId != event.deviceId) reopenAtHeard()
+            is DeviceEvent.DefaultChanged -> if (activeDeviceId() == null && current != null && current.deviceId != event.deviceId) {
+                exclusiveBlocked = null
+                reopenAtHeard()
+            }
             is DeviceEvent.Removed -> deviceGone(event.deviceId)
-            is DeviceEvent.StateChanged -> if ((event.state and DEVICE_STATE_ACTIVE) == 0) deviceGone(event.deviceId)
-            is DeviceEvent.Added -> Unit
+            is DeviceEvent.StateChanged ->
+                if ((event.state and DEVICE_STATE_ACTIVE) == 0) deviceGone(event.deviceId) else deviceBack(event.deviceId)
+            is DeviceEvent.Added -> deviceBack(event.deviceId)
         }
     }
 
@@ -1070,8 +1079,16 @@ class DesktopPlaybackEngine(
         if (deviceId != requestedDevice || deviceFallback != null) return
         val reason = "The selected output device was disconnected"
         deviceFallback = reason
+        exclusiveBlocked = null
         emit(EngineEvent.OutputFallback(reason))
         pauseInternal()
+        reopenAtHeard()
+    }
+
+    private fun deviceBack(deviceId: String) {
+        if (deviceId != requestedDevice || deviceFallback == null) return
+        deviceFallback = null
+        exclusiveBlocked = null
         reopenAtHeard()
     }
 
@@ -1085,14 +1102,13 @@ class DesktopPlaybackEngine(
     private fun resetFailures() {
         failures = 0
         skipped.clear()
+        skipVersion++
     }
 
     private fun chainFormat(track: OpenTrack): ChainFormat {
         val format = checkNotNull(negotiated)
         return ChainFormat(track.rate, format.sampleRate, format.encoding.pcm, track.precision, config.outputRatePolicy, speed)
     }
-
-    private fun remainingMs(deck: Deck, track: OpenTrack) = ((track.durationMs - deck.renderPositionMs) / speed).toLong()
 
     private fun outputRate() = negotiated?.sampleRate ?: 48_000
 
@@ -1155,7 +1171,7 @@ class DesktopPlaybackEngine(
             ),
             error = error,
         )
-        val playing = playWhenReady && phase == EnginePhase.READY
+        val playing = playWhenReady && (phase == EnginePhase.READY || phase == EnginePhase.BUFFERING)
         if (playing != awake) {
             awake = playing
             control.execute { runCatching { backend.keepAwake(playing) } }
@@ -1196,9 +1212,9 @@ class DesktopPlaybackEngine(
         const val ACTIVE_PARK_NANOS = 2_000_000L
         const val IDLE_PARK_NANOS = 50_000_000L
         const val STALLED_READ_NANOS = 300_000_000L
-        const val PREFETCH_MS = 20_000L
-        const val CROSSFADE_PREFETCH_MS = 15_000L
-        const val MIN_CROSSFADE_MS = 150L
+        const val PREFETCH_MS = 20_000
+        const val CROSSFADE_PREFETCH_MS = 15_000
+        const val MIN_CROSSFADE_MS = 150
         const val SERVICE_ROUNDS = 8
         const val DEVICE_STATE_ACTIVE = 1
 
