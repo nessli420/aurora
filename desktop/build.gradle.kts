@@ -98,6 +98,7 @@ compose.desktop {
 }
 
 val androidRes = rootProject.layout.projectDirectory.dir("app/src/main/res")
+val desktopRes = layout.projectDirectory.dir("src/main/res")
 
 abstract class GenerateAndroidStrings : DefaultTask() {
     @get:InputFiles
@@ -246,6 +247,7 @@ abstract class GenerateAndroidStrings : DefaultTask() {
 
 val generateAndroidStrings by tasks.registering(GenerateAndroidStrings::class) {
     sources.from(fileTree(androidRes) { include("values/*.xml", "values-*/*.xml") })
+    sources.from(fileTree(desktopRes) { include("values/*.xml", "values-*/*.xml") })
     kotlinDir.set(layout.buildDirectory.dir("generated/androidStrings/kotlin"))
     resourceDir.set(layout.buildDirectory.dir("generated/androidStrings/resources"))
 }
@@ -260,6 +262,7 @@ val syncAndroidAssets by tasks.registering(Sync::class) {
         filter { it.replace("@android:color/transparent", "#00000000") }
         into("drawable")
     }
+    from(rootProject.layout.projectDirectory.dir("app/src/main/assets")) { include("licenses/**", "font_licenses/*.txt") }
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/androidAssets"))
 }
@@ -273,8 +276,10 @@ sourceSets.named("main") {
 
 val generateBuildInfo by tasks.registering {
     val versionName = appVersion.getProperty("versionName")
+    val composeVersion = libs.versions.composeMultiplatform.get()
     val output = layout.buildDirectory.dir("generated/buildInfo/kotlin")
     inputs.property("versionName", versionName)
+    inputs.property("composeVersion", composeVersion)
     outputs.dir(output)
     doLast {
         output.get().file("com/aurora/music/desktop/platform/BuildInfo.kt").asFile.apply {
