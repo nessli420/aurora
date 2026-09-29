@@ -64,7 +64,6 @@ import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshots.SnapshotStateMap
@@ -89,8 +88,6 @@ import com.aurora.music.data.ProcessingRack
 import com.aurora.music.data.SQUIG_INSTANCES
 import com.aurora.music.data.SQUIG_TARGETS
 import com.aurora.music.data.SettingsStore
-import com.aurora.music.data.SquigEqRepository
-import com.aurora.music.data.remote.SquigClient
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.playback.DspBand
 import com.aurora.music.playback.DspCoeffBuilder
@@ -336,9 +333,7 @@ private fun AutoEqPanel(prefs: AudioPrefs, store: SettingsStore, scope: Coroutin
     val squigTargetName by store.squigTarget.collectAsStateWithLifecycle(initialValue = DEFAULT_SQUIG_TARGET)
     val observedOutput by store.processingRoutes.observations.collectAsStateWithLifecycle()
     val outLabel = observedOutput.route.label
-    val base by rememberUpdatedState(squigBase)
-    val target by rememberUpdatedState(squigTargetName)
-    val squigEq = remember { SquigEqRepository(SquigClient(), { base }, { target }) }
+    val squigEq = LocalDesktopContainer.current.squigEq
 
     LaunchedEffect(query, squigBase, squigTargetName) {
         results = emptyList()

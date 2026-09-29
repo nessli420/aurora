@@ -72,7 +72,7 @@ private fun tierSub(t: String) = when (t) {
 }
 
 @Composable
-fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onArtistSeparators: () -> Unit) {
+fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onArtistSeparators: (() -> Unit)?) {
     val container = LocalDesktopContainer.current
     val store = container.settingsStore
     val library = container.folderLibrary
@@ -122,8 +122,10 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                             )
                         }
                     }
-                    SettingsRowDivider()
-                    SettingsNavRow(Icons.Filled.TextFields, appString(R.string.text_artist_separators_4a3dc4), onClick = onArtistSeparators)
+                    if (onArtistSeparators != null) {
+                        SettingsRowDivider()
+                        SettingsNavRow(Icons.Filled.TextFields, appString(R.string.text_artist_separators_4a3dc4), onClick = onArtistSeparators)
+                    }
                 }
             }
 

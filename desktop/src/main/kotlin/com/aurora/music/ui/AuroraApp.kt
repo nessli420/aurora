@@ -61,6 +61,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.backhandler.LocalBackGestureDispatcher
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -103,8 +104,8 @@ import com.aurora.music.data.ThemeStyle
 import com.aurora.music.desktop.ui.FilePickers
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.desktop.ui.LocalPlayer
+import com.aurora.music.desktop.ui.BackDispatcher
 import com.aurora.music.desktop.ui.Shortcut
-import com.aurora.music.desktop.ui.rememberBackDispatch
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
@@ -201,6 +202,7 @@ private val topLevelRoutes = topLevelDestinations.map { it.route }
 private val splitKinds = listOf("album", "artist", "playlist", "liked", "smart")
 private val mouseGestures = GesturePrefs(swipeArtwork = false)
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun AuroraApp(
     navController: NavHostController = rememberNavController(),
@@ -209,9 +211,10 @@ fun AuroraApp(
     onFullscreenChange: (Boolean) -> Unit = {},
 ) {
     val owner = LocalViewModelStoreOwner.current ?: rememberRootOwner()
+    val backDispatcher = remember { BackDispatcher() }
     val language by AppStrings.languageTag.collectAsState()
-    CompositionLocalProvider(LocalViewModelStoreOwner provides owner) {
-        key(language) { Shell(navController, owner, shortcuts, fullscreen, onFullscreenChange) }
+    CompositionLocalProvider(LocalViewModelStoreOwner provides owner, LocalBackGestureDispatcher provides backDispatcher) {
+        key(language) { Shell(navController, owner, backDispatcher::back, shortcuts, fullscreen, onFullscreenChange) }
     }
 }
 
@@ -227,6 +230,7 @@ private fun rememberRootOwner(): ViewModelStoreOwner {
 private fun Shell(
     navController: NavHostController,
     rootOwner: ViewModelStoreOwner,
+    back: () -> Boolean,
     shortcuts: Flow<Shortcut>,
     fullscreen: Boolean,
     onFullscreenChange: (Boolean) -> Unit,
@@ -403,8 +407,6 @@ private fun Shell(
         authVM.reset()
         navController.navigate(Routes.SIGN_IN) { popUpTo(navController.graph.id) { inclusive = true } }
     }
-
-    val back = rememberBackDispatch()
 
     if (sessionReady == null) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.Center) {
@@ -705,7 +707,7 @@ private fun Shell(
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
-                    if (showChrome && (activeDownloads > 0 || offlineMode)) {
+                    if (showChrome) {
                         Column(
                             Modifier.fillMaxWidth()
                                 .padding(start = pageMargin, end = pageMargin.coerceAtLeast(12.dp), top = 8.dp, bottom = if (dockVisible) 0.dp else 12.dp),
@@ -952,7 +954,7 @@ private fun Shell(
                                             ) {
                                                 val paneVM = viewModel(key = "library-detail") { DetailViewModel(container) }
                                                 detailContent(selected[0], selected[1], paneVM, inner, { librarySelection = null }) { k, i ->
-                                                    if (k in splitKinds.take(3)) librarySelection = "$k:$i" else openDetail(k, i)
+                                                    if (k in listOf("album", "artist", "playlist")) librarySelection = "$k:$i" else openDetail(k, i)
                                                 }
                                             }
                                         }

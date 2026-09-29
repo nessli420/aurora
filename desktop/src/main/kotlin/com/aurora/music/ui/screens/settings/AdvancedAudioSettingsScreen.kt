@@ -28,6 +28,7 @@ fun AdvancedAudioSettingsScreen(
     contentPadding: PaddingValues,
     onBack: () -> Unit,
     onOpen: (SettingsDestination) -> Unit,
+    available: (SettingsDestination) -> Boolean = { true },
 ) {
     val rack by LocalDesktopContainer.current.settingsStore.processingRack.collectAsStateWithLifecycle(initialValue = ProcessingRack())
     Column(Modifier.fillMaxSize()) {
@@ -51,25 +52,27 @@ fun AdvancedAudioSettingsScreen(
                     SettingsDestinationRow(Icons.Filled.GraphicEq, SettingsDestinations.impulses) {
                         onOpen(SettingsDestinations.impulses)
                     }
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.presetRules) {
-                        onOpen(SettingsDestinations.presetRules)
+                    if (available(SettingsDestinations.presetRules)) {
+                        SettingsRowDivider()
+                        SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.presetRules) {
+                            onOpen(SettingsDestinations.presetRules)
+                        }
                     }
                 }
             }
-            item { SettingsSectionTitle(appString(R.string.text_tuning_listening_b4bf76)) }
-            item {
-                SettingsGroup {
-                    SettingsDestinationRow(Icons.AutoMirrored.Filled.ShowChart, SettingsDestinations.tuning) {
-                        onOpen(SettingsDestinations.tuning)
-                    }
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.comparison) {
-                        onOpen(SettingsDestinations.comparison)
-                    }
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.AutoMirrored.Filled.VolumeUp, SettingsDestinations.listening) {
-                        onOpen(SettingsDestinations.listening)
+            val tuningRows = listOf(
+                Icons.AutoMirrored.Filled.ShowChart to SettingsDestinations.tuning,
+                Icons.Filled.Tune to SettingsDestinations.comparison,
+                Icons.AutoMirrored.Filled.VolumeUp to SettingsDestinations.listening,
+            ).filter { available(it.second) }
+            if (tuningRows.isNotEmpty()) {
+                item { SettingsSectionTitle(appString(R.string.text_tuning_listening_b4bf76)) }
+                item {
+                    SettingsGroup {
+                        tuningRows.forEachIndexed { index, (icon, destination) ->
+                            if (index > 0) SettingsRowDivider()
+                            SettingsDestinationRow(icon, destination) { onOpen(destination) }
+                        }
                     }
                 }
             }

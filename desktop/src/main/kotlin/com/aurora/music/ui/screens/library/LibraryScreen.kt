@@ -196,8 +196,8 @@ fun LibraryScreen(
     onImportM3u: () -> Unit,
     onExportPlaylist: (String, String, String) -> Unit,
     onOpenFolders: () -> Unit,
-    onOpenRadio: () -> Unit = {},
-    onOpenPodcasts: () -> Unit = {},
+    onOpenRadio: (() -> Unit)? = null,
+    onOpenPodcasts: (() -> Unit)? = null,
     onPlayCollection: (String, String) -> Unit,
     onShuffleCollection: (String, String) -> Unit,
     onQueueCollection: (String, String) -> Unit,
@@ -352,8 +352,8 @@ fun LibraryScreen(
                     RowsContent(rows, layout, libColumns, sort, bottom, actions) { r ->
                         when (r.kind) {
                             "folders" -> onOpenFolders()
-                            "radio" -> onOpenRadio()
-                            "podcasts" -> onOpenPodcasts()
+                            "radio" -> onOpenRadio?.invoke()
+                            "podcasts" -> onOpenPodcasts?.invoke()
                             else -> onOpenDetail(r.kind, r.id)
                         }
                     }
@@ -411,8 +411,8 @@ private fun AllOverview(
     onFilter: (LibraryFilter) -> Unit,
     onOpenDetail: (String, String) -> Unit,
     onOpenFolders: () -> Unit,
-    onOpenRadio: () -> Unit,
-    onOpenPodcasts: () -> Unit,
+    onOpenRadio: (() -> Unit)?,
+    onOpenPodcasts: (() -> Unit)?,
 ) {
     val listState = rememberLazyListState()
     Box(Modifier.fillMaxSize()) {
@@ -423,8 +423,8 @@ private fun AllOverview(
                 add(QuickTile(appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), Icons.Filled.Favorite, state.likedCover) { onOpenDetail("liked", "liked") })
                 if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
                 if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
-                add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
-                add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
+                if (onOpenRadio != null) add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
+                if (onOpenPodcasts != null) add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
             }
             Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 tiles.chunked(2).forEach { pair ->

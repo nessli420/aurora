@@ -79,7 +79,7 @@ fun SettingsScreen(
     onOpenSignalPath: () -> Unit,
     onOpenEq: () -> Unit,
     onOpenVisualizer: () -> Unit,
-    onOpenSonic: () -> Unit,
+    onOpenSonic: (() -> Unit)?,
     onOpenSources: () -> Unit,
     onOpenDownloads: () -> Unit,
     onOpenAppearance: () -> Unit,
@@ -152,8 +152,10 @@ fun SettingsScreen(
                     SettingsDestinationRow(Icons.Filled.MergeType, SettingsDestinations.sources, onClick = onOpenSources)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Download, SettingsDestinations.storage, appString(R.string.text_downloaded_quality_and_offline_files_4bd602, (downloads.size)), onClick = onOpenDownloads)
-                    SettingsRowDivider()
-                    SettingsDestinationRow(Icons.Filled.AutoAwesome, SettingsDestinations.analysis, onClick = onOpenSonic)
+                    if (onOpenSonic != null) {
+                        SettingsRowDivider()
+                        SettingsDestinationRow(Icons.Filled.AutoAwesome, SettingsDestinations.analysis, onClick = onOpenSonic)
+                    }
                 }
             }
 

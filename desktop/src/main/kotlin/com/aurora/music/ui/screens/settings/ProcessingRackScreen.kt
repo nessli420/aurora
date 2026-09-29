@@ -51,7 +51,7 @@ private enum class RackTemplate { LEGACY, RECOMMENDED }
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun ProcessingRackScreen(contentPadding: PaddingValues, signalPath: StateFlow<SignalPath>, onBack: () -> Unit,
-    onOpenPresets: () -> Unit, onOpenSignalPath: () -> Unit, onOpenTuning: () -> Unit, onOpenImpulses: () -> Unit) {
+    onOpenPresets: () -> Unit, onOpenSignalPath: () -> Unit, onOpenTuning: (() -> Unit)?, onOpenImpulses: () -> Unit) {
     val store = LocalDesktopContainer.current.settingsStore
     val path by signalPath.collectAsStateWithLifecycle()
     val persisted by store.processingRack.collectAsStateWithLifecycle<ProcessingRack?>(initialValue = null)
@@ -243,8 +243,10 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, signalPath: StateFlow<Si
                             item {
                                 SettingsSectionTitle(appString(R.string.text_starting_points_8df66e))
                                 SettingsGroup {
-                                    SettingsDestinationRow(Icons.AutoMirrored.Filled.ShowChart, SettingsDestinations.tuning, onClick = { leave(onOpenTuning) })
-                                    SettingsRowDivider()
+                                    if (onOpenTuning != null) {
+                                        SettingsDestinationRow(Icons.AutoMirrored.Filled.ShowChart, SettingsDestinations.tuning, onClick = { leave(onOpenTuning) })
+                                        SettingsRowDivider()
+                                    }
                                     SettingsNavRow(Icons.Filled.FileDownload, appString(R.string.text_import_eq_text_337ca7), appString(R.string.text_load_filters_and_preamp_ae1cab)) {
                                         importEq = true
                                     }

@@ -7,6 +7,8 @@ import com.aurora.music.data.ArtistInfoStore
 import com.aurora.music.data.AutoEqController
 import com.aurora.music.data.BackupManager
 import com.aurora.music.data.DEFAULT_SOURCE_PRIORITY
+import com.aurora.music.data.DEFAULT_SQUIG_BASE
+import com.aurora.music.data.DEFAULT_SQUIG_TARGET
 import com.aurora.music.data.DownloadManager
 import com.aurora.music.data.JellyfinBackend
 import com.aurora.music.data.LastfmScrobbler
@@ -30,6 +32,7 @@ import com.aurora.music.data.Session
 import com.aurora.music.data.SettingsStore
 import com.aurora.music.data.SmartPlaylist
 import com.aurora.music.data.SmartPlaylistEngine
+import com.aurora.music.data.SquigEqRepository
 import com.aurora.music.data.SubsonicBackend
 import com.aurora.music.data.accountKey
 import com.aurora.music.data.artwork.ArtworkRepository
@@ -38,6 +41,7 @@ import com.aurora.music.data.remote.ArtistInfoClient
 import com.aurora.music.data.remote.ClientInfo
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.PlexClient
+import com.aurora.music.data.remote.SquigClient
 import com.aurora.music.data.remote.SubsonicClient
 import com.aurora.music.data.rules.RuleSource
 import com.aurora.music.desktop.auth.AccountAuthenticator
@@ -113,6 +117,10 @@ class DesktopContainer(
     val authenticator = AccountAuthenticator(clientInfo)
 
     val autoEqController = AutoEqController(settingsStore, scope)
+
+    @Volatile private var squigBaseValue: String = DEFAULT_SQUIG_BASE
+    @Volatile private var squigTargetValue: String = DEFAULT_SQUIG_TARGET
+    val squigEq = SquigEqRepository(SquigClient(), baseProvider = { squigBaseValue }, targetProvider = { squigTargetValue })
 
     @Volatile private var maxBitrate: Int = 0
     @Volatile private var downloadBitrate: Int = 0
@@ -344,6 +352,12 @@ class DesktopContainer(
             settingsStore.lrclibEnabled.collect { lrclibEnabled = it }
         }
         scope.launch {
+            settingsStore.squigBaseUrl.collect { squigBaseValue = it }
+        }
+        scope.launch {
+            settingsStore.squigTarget.collect { squigTargetValue = it }
+        }
+        scope.launch {
             settingsStore.smartPlaylists.collect { smartPlaylistsValue = it }
         }
         scope.launch {
@@ -390,7 +404,8 @@ class DesktopContainer(
     }
 
     override fun close() {
-        queueStore.requestFlush()
+        queueStore.flushNow()
+        playHistory.flushNow()
         if (imageLoaderDelegate.isInitialized()) imageLoader.shutdown()
         scope.cancel()
     }
