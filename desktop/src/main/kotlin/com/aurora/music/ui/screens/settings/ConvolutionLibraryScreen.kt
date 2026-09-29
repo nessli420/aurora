@@ -91,7 +91,7 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, signalPath: StateFlo
         val file = FilePickers.openFile(appString(R.string.text_import_wav_962ac2), listOf("wav")) ?: return
         perform(appString(R.string.text_importing_wav_5811f7)) {
             val imported = withContext(Dispatchers.IO) {
-                file.inputStream().use { store.importImpulse(it, file.name.ifBlank { "Impulse.wav" }).getOrThrow() }
+                file.inputStream().use { store.importImpulse(it, file.name).getOrThrow() }
             }
             selectedId = imported.id
             notify(appString(R.string.text_ir_imported_08d0ed))

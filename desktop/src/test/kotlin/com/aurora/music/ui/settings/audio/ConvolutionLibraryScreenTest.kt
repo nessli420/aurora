@@ -4,11 +4,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import com.aurora.music.data.SignalPath
 import com.aurora.music.ui.screens.settings.ConvolutionLibraryScreen
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.first
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ConvolutionLibraryScreenTest {
-    @Test fun rendersLibrary() {
+    @Test fun opensAnImpulseAndSelectsIt() {
         val events = mutableListOf<String>()
         AudioSettingsScene("impulses", seed = { store ->
             store.importImpulse(AudioFixtures.impulseWav().inputStream(), "Studio room.wav").getOrThrow()
@@ -16,7 +18,21 @@ class ConvolutionLibraryScreenTest {
         }) {
             ConvolutionLibraryScreen(PaddingValues(), MutableStateFlow(SignalPath()), onBack = { events += "back" })
         }.use { scene ->
-            assertTrue(scene.shot("-list").distinctColors() > 10)
+            val list = scene.shot("-list")
+            assertTrue(list.distinctColors() > 10)
+            scene.click(100f, 148f)
+            val detail = scene.shot("-detail")
+            assertTrue(detail.differsFrom(list))
+            scene.click(420f, 532f)
+            val studio = scene.await(read = { it.impulseLibrary.first().first() }) { true }
+            scene.await(read = { it.audioPrefs.first().dspConvIrPath }) { it == studio.sourcePath }
+            scene.click(420f, 648f)
+            scene.shot("-prepare")
+            scene.click(28f, 26f)
+            scene.click(28f, 26f)
+            assertEquals(listOf("back"), events)
+            val entries = scene.await(read = { it.impulseLibrary.first() }) { it.size == 2 }
+            assertEquals(listOf("Studio room", "Headphone HRIR"), entries.map { it.name })
         }
     }
 }
