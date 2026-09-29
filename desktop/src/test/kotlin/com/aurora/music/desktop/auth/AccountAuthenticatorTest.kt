@@ -4,6 +4,7 @@ import com.aurora.music.R
 import com.aurora.music.data.ServerType
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.platform.desktopClientInfo
+import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appString
 import kotlinx.coroutines.runBlocking
 import okhttp3.mockwebserver.MockResponse
@@ -106,6 +107,12 @@ class AccountAuthenticatorTest {
         assertEquals(ServerType.LOCAL, local.type)
         assertEquals("local", local.token)
         assertTrue(local.isValid)
+        try {
+            AppStrings.setLocale("ru")
+            assertEquals(local, authenticator.local())
+        } finally {
+            AppStrings.setLocale("")
+        }
         assertEquals(appString(R.string.text_spotify_uses_the_connect_button_not_this_form_17d56a),
             failure { authenticator.signIn(ServerType.SPOTIFY, base, "a", "b") })
         assertEquals(setOf(ServerType.SUBSONIC, ServerType.JELLYFIN, ServerType.PLEX, ServerType.LOCAL), AccountAuthenticator.SUPPORTED)
