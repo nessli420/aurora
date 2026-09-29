@@ -153,7 +153,7 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLou
 
                     if (!rack.enabled) {
                         item { SettingsSectionTitle(appString(R.string.text_correction_7f2640)) }
-                        collapsible("autoeq", appString(R.string.text_device_presets_ca72d3), Icons.Filled.Headset, activeEq.ifBlank { appString(R.string.text_headphones_earbuds_speakers_675d43) }, expanded) {
+                        collapsible("autoeq", appString(R.string.text_device_presets_ca72d3), Icons.Filled.Headset, activeEq.ifBlank { appString(R.string.text_live_squig_link_308ef5) }, expanded) {
                             AutoEqPanel(prefs, store, scope, ::toast)
                         }
                         collapsible("conv", appString(R.string.text_convolution_ir_d15d63), Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else appString(R.string.text_off_e3de5a), expanded) {

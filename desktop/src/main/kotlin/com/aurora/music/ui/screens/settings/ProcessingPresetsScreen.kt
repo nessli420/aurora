@@ -309,11 +309,8 @@ private fun ProcessingPresetCard(
                 }
             }
         }
-        val engine = when (preset.audio.dspMode) {
-            DspMode.CUSTOM -> appString(R.string.text_custom_dsp_df083c)
-            DspMode.SYSTEM -> appString(R.string.text_system_effects_d5a44a)
-            else -> appString(R.string.text_tone_shaping_off_37d5aa)
-        }
+        val engine = if (preset.audio.dspMode == DspMode.CUSTOM) appString(R.string.text_custom_dsp_df083c)
+            else appString(R.string.text_tone_shaping_off_37d5aa)
         val replayGain = when (preset.audio.replayGain) { 1 -> appString(R.string.text_track_replaygain_ddc5fd); 2 -> appString(R.string.text_album_replaygain_23ed6d); else -> appString(R.string.text_replaygain_off_d67cdc) }
         Text("$engine · $replayGain", Modifier.padding(horizontal = 20.dp),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

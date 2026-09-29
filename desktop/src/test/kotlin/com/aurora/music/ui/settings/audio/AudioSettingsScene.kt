@@ -69,6 +69,7 @@ internal class AudioSettingsScene(
                 }
             }
         })
+        settle()
     }
 
     private fun render(): Image {
