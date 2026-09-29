@@ -45,6 +45,7 @@ import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -80,7 +81,7 @@ fun OutputDeviceSheet(
 ) {
     val colors = MaterialTheme.colorScheme
     val active = currentId?.takeIf { id -> devices.any { it.id == id } }
-    ModalBottomSheet(onDismissRequest = onDismiss, containerColor = colors.surface) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = colors.surface) {
         Column(Modifier.fillMaxWidth().heightIn(max = 650.dp).verticalScroll(rememberScrollState()).padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
             Text(appString(R.string.text_play_on_4bd6fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
             OutputRow(Icons.Filled.SettingsSuggest, appString(R.string.language_system), devices.firstOrNull { it.isDefault }?.name, active == null) { onSelect(null) }
