@@ -158,7 +158,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, signalPath: StateFlow<Si
     val listState = rememberLazyListState()
     BackHandler { if (edited != null) editingId = null else leave(onBack) }
     Box(Modifier.fillMaxSize()) {
-        if (edited != null && current != null) {
+        if (edited != null) {
             key(edited.id) {
                 RackNodeEditor(edited, current.parametricBandCount(), current.enabled, audio,
                     contentPadding, onBack = { editingId = null },

@@ -58,7 +58,7 @@ class ProfileScreenTest {
             shader = Shader.makeLinearGradient(0f, 0f, width.toFloat(), height.toFloat(), intArrayOf(Color.makeRGB(255, 46, 126), Color.makeRGB(90, 40, 200)), null)
         }
         surface.canvas.drawRect(if (opaque) Rect.makeWH(width.toFloat(), height.toFloat()) else Rect.makeXYWH(width / 4f, height / 4f, width / 2f, height / 2f), paint)
-        File(temp, name).apply { writeBytes(surface.makeImageSnapshot().encodeToData(EncodedImageFormat.PNG)!!.bytes) }
+        File(temp, name).apply { writeBytes(surface.makeImageSnapshot().encodeToData(if (opaque) EncodedImageFormat.JPEG else EncodedImageFormat.PNG, 92)!!.bytes) }
     }
 
     private fun decoded(encoded: String): Image = Image.makeFromEncoded(Base64.getDecoder().decode(encoded))
@@ -92,7 +92,7 @@ class ProfileScreenTest {
 
     @Test fun profileImagesAreResizedAndCached() = runBlocking {
         val images = ProfileImages(File(temp, "cache"))
-        val avatar = images.import(picture("avatar.png", 2400, 1600), banner = false)
+        val avatar = images.import(picture("avatar.jpg", 2400, 1600), banner = false)
         decoded(avatar).use { assertEquals(512, maxOf(it.width, it.height)) }
         val bytes = Base64.getDecoder().decode(avatar)
         assertTrue(bytes.size <= LocalProfileCodec.MAX_IMAGE_BYTES)
@@ -103,7 +103,7 @@ class ProfileScreenTest {
         decoded(banner).use { assertEquals(1280, it.width) }
         assertEquals(0x89.toByte(), Base64.getDecoder().decode(banner)[0])
 
-        val small = images.import(picture("small.png", 80, 60), banner = false)
+        val small = images.import(picture("small.jpg", 80, 60), banner = false)
         decoded(small).use { assertEquals(80, it.width) }
 
         val url = images.imageUrl(avatar)
@@ -125,8 +125,8 @@ class ProfileScreenTest {
     @Test fun localProfileDialogImportsImagesAndSaves() {
         var vm: LocalProfileViewModel? = null
         var dismissed = false
-        val avatar = picture("avatar.png", 900, 900)
-        val banner = picture("banner.png", 1600, 600)
+        val avatar = picture("avatar.jpg", 900, 900)
+        val banner = picture("banner.jpg", 1600, 600)
         AccountScene("profile-dialog") {
             val container = LocalDesktopContainer.current
             val model: LocalProfileViewModel = viewModel { LocalProfileViewModel(container) }
@@ -143,7 +143,7 @@ class ProfileScreenTest {
             assertNull(vm!!.state.value.error)
             val filled = scene.shot("-filled")
             assertTrue(filled.differsFrom(empty))
-            scene.click(706f, 772f)
+            scene.click(706f, 681f)
             val saved = scene.await(read = { settingsStore.localProfile.first() }) { it.name == "Mara" }
             assertTrue(saved.avatar.orEmpty().isNotEmpty() && saved.banner.orEmpty().isNotEmpty())
             scene.await(read = { dismissed }) { it }
@@ -152,8 +152,8 @@ class ProfileScreenTest {
 
     @Test fun localSessionShowsTheSavedProfileAppearance() {
         val images = ProfileImages(File(temp, "cache"))
-        val avatar = runBlocking { images.import(picture("avatar.png", 600, 600), banner = false) }
-        val banner = runBlocking { images.import(picture("banner.png", 1600, 500), banner = true) }
+        val avatar = runBlocking { images.import(picture("avatar.jpg", 600, 600), banner = false) }
+        val banner = runBlocking { images.import(picture("banner.jpg", 1600, 500), banner = true) }
         val plain = AccountScene("profile-local-plain", seed = { settingsStore.setLocalProfile(LocalProfile("Mara")) }) {
             val appearance = rememberProfileAppearance(local)
             ProfileScreen(padding, appearance.name, local.server, "Local", appearance.avatarUrl, appearance.bannerUrl,

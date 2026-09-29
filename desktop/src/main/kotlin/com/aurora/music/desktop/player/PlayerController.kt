@@ -2,14 +2,20 @@ package com.aurora.music.desktop.player
 
 import com.aurora.music.R
 import com.aurora.music.data.PlaybackCollectionIdentity
+import com.aurora.music.data.SignalPath
 import com.aurora.music.desktop.natives.AudioDevice
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.emptyFlow
 
 enum class RepeatMode { OFF, ALL, ONE }
 
 val EMPTY_SONG = Song("", appString(R.string.text_nothing_playing_13ae37), "", "", "", 0)
+
+private val IdleSignalPath: StateFlow<SignalPath> = MutableStateFlow(SignalPath())
 
 data class PlayerUiState(
     val current: Song = EMPTY_SONG,
@@ -49,6 +55,8 @@ interface PlayerController {
     val preferredOutput: StateFlow<String?>
     val exclusiveOutput: StateFlow<Boolean>
     val volume: StateFlow<Float>
+    val signalPath: StateFlow<SignalPath> get() = IdleSignalPath
+    val messages: Flow<String> get() = emptyFlow()
 
     fun playAll(songs: List<Song>, startIndex: Int = 0, collection: PlaybackCollectionIdentity? = null)
     fun play(song: Song)
