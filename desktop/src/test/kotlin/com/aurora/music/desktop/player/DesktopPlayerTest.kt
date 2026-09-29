@@ -3,6 +3,7 @@ package com.aurora.music.desktop.player
 import com.aurora.music.data.ListenBrainzScrobbler
 import com.aurora.music.data.QueueStore
 import com.aurora.music.data.SavedQueue
+import com.aurora.music.data.SavedTrack
 import com.aurora.music.data.remote.ListenBrainzClient
 import com.aurora.music.data.toSavedTrack
 import com.aurora.music.desktop.DesktopContainer
@@ -31,6 +32,7 @@ import okio.Buffer
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.io.File
@@ -188,10 +190,11 @@ class DesktopPlayerTest {
         settle()
         val physical = engine.ids()
         assertEquals("s2", physical.first())
-        container.queueStore.requestFlush()
-        waitFor { File(root, "Roaming/queue_state.json").let { it.isFile && "shuffle-order" in it.readText() } }
+        container.queueStore.flushNow()
+        assertFalse("#shuffle-order" in File(root, "Roaming/queue_state.json").readText())
 
         val store = QueueStore(File(root, "Roaming"))
+        assertEquals(songs.map { it.id }, store.get("subsonic|alice")?.shuffleOrder)
         val restoredEngine = FakeEngine(kotlin.random.Random(99))
         val second = player(restoredEngine, deps(store))
         waitFor { restoredEngine.state.value.entries.isNotEmpty() }
@@ -214,6 +217,35 @@ class DesktopPlayerTest {
         settle()
         assertEquals(songs.map { it.id }, restoredEngine.ids())
         assertEquals("s2", restoredEngine.state.value.current!!.song.id)
+        assertNull(store.get("subsonic|alice")?.shuffleOrder)
+    }
+
+    @Test fun legacyShuffleOrderEntriesMigrateIntoTheSavedQueue() {
+        val songs = songs(5)
+        val physical = listOf(3, 0, 4, 1, 2).map { songs[it].id }
+        val store = container.queueStore
+        store.save("subsonic|alice", SavedQueue(physical.map { song(it).toSavedTrack() }, currentIndex = 1, positionSec = 9, shuffle = true))
+        store.save("subsonic|alice#shuffle-order", SavedQueue(songs.map { SavedTrack(id = it.id) }))
+        store.save("subsonic|bob#shuffle-order", SavedQueue(listOf(SavedTrack(id = "x"))))
+        ready.value = true
+        val engine = FakeEngine()
+        player(engine)
+        waitFor { engine.state.value.entries.isNotEmpty() }
+        settle()
+        assertEquals(physical, engine.ids())
+        assertEquals(1, engine.state.value.index)
+        assertTrue(engine.state.value.shuffle)
+        assertEquals(songs.map { it.id }, engine.state.value.shuffleRestoreIds)
+        assertNull(store.get("subsonic|alice#shuffle-order"))
+        assertEquals(songs.map { it.id }, store.get("subsonic|alice")?.shuffleOrder)
+        store.flushNow()
+        val reloaded = QueueStore(File(root, "Roaming"))
+        assertNull(reloaded.get("subsonic|alice#shuffle-order"))
+        assertEquals(songs.map { it.id }, reloaded.get("subsonic|alice")?.shuffleOrder)
+        account = "subsonic|bob"
+        epoch.value = 1
+        waitFor { store.get("subsonic|bob#shuffle-order") == null }
+        assertNull(store.get("subsonic|bob"))
     }
 
     @Test fun accountSwitchSavesTheOutgoingQueueAndRestoresTheIncomingOne() {
