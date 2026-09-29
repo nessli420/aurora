@@ -18,6 +18,7 @@ import com.aurora.music.ui.screens.player.PlayerScreen
 import com.aurora.music.ui.screens.player.QueueActions
 import com.aurora.music.ui.screens.player.QueueContent
 import com.aurora.music.ui.theme.rememberPlayerColorScheme
+import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -71,10 +72,47 @@ class PlayerScreenTest {
         }
     }
 
-    @Test fun landscapePlayerRendersArtworkControlsAndPane() {
+    @Test fun landscapePlayerRoutesControlsAndSwitchesPanes() {
         val rec = Recorder()
         PlayerScene("player-lyrics", 1440, 900) { Player(PlayerFixtures.playing, rec) }.use { scene ->
-            assertTrue(scene.shot().distinctColors() > 60)
+            val lyrics = scene.shot()
+            assertTrue(lyrics.distinctColors() > 60)
+            listOf(900f to 385f, 370f to 795f, 132f to 795f, 244f to 795f, 496f to 795f, 608f to 795f, 606f to 579f,
+                150f to 639f, 165f to 859f, 280f to 859f, 1348f to 36f, 52f to 36f).forEach { (x, y) -> scene.click(x, y) }
+            assertEquals(listOf("lyric-seek", "play", "shuffle", "previous", "next", "repeat", "like",
+                "signal", "speed", "sleep", "output", "collapse"), rec.events)
+
+            scene.click(855f, 94f)
+            val queue = scene.shot("-queue")
+            assertTrue(queue.differsFrom(lyrics))
+
+            scene.click(1388f, 36f)
+            scene.shot("-menu")
+        }
+    }
+
+    @Test fun dividerResizesThePanesWithinRange() {
+        val rec = Recorder()
+        PlayerScene("player-split", 1440, 900) { Player(PlayerFixtures.playing, rec) }.use { scene ->
+            scene.shot()
+            scene.drag(720f, 470f, 138f, 0f)
+            assertEquals(0.6f, rec.split, 0.01f)
+            val moved = scene.shot()
+            scene.drag(32f + rec.split * 1352f + 12f, 470f, -600f, 0f)
+            assertEquals(0.35f, rec.split, 0.0001f)
+            assertTrue(scene.shot().differsFrom(moved))
+        }
+    }
+
+    @Test fun fullscreenLyricsOverlayOpensAndCloses() {
+        PlayerScene("player-overlay", 1440, 900) { Player(PlayerFixtures.playing, Recorder()) }.use { scene ->
+            val before = scene.shot("-before")
+            scene.click(1378f, 94f)
+            val overlay = scene.shot()
+            assertTrue(overlay.differsFrom(before))
+            scene.click(36f, 36f)
+            val after = scene.shot("-after")
+            assertEquals(before.pixel(370, 300), after.pixel(370, 300))
         }
     }
 

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.settings.general
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.BackupManager
 import com.aurora.music.data.LocalStore
@@ -9,6 +10,7 @@ import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.UiPrefs
+import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.ui.screens.settings.AboutSettingsScreen
 import com.aurora.music.ui.screens.settings.AccountsScreen
 import com.aurora.music.ui.screens.settings.AppearanceScreen
@@ -108,12 +110,14 @@ class GeneralSettingsTest {
     }
 
     @Test fun backupRenders() {
-        GeneralSettingsScene("backup") {
-            val manager = androidx.compose.runtime.remember {
-                BackupManager(container.settingsStore, LocalStore(File(root, "b")), PlayHistoryStore(File(root, "b")), File(root, "b"), File(root, "c"))
-            }
-            BackupScreen(padding, manager, onBack = {}, confirm = {})
-        }.use { assertTrue(it.shot().distinctColors() > 10) }
+        val dir = kotlin.io.path.createTempDirectory("aurora-backup").toFile()
+        try {
+            GeneralSettingsScene("backup") {
+                val store = LocalDesktopContainer.current.settingsStore
+                val manager = remember { BackupManager(store, LocalStore(dir), PlayHistoryStore(dir), dir, dir) }
+                BackupScreen(padding, manager, onBack = {}, confirm = {})
+            }.use { assertTrue(it.shot().distinctColors() > 10) }
+        } finally { dir.deleteRecursively() }
     }
 
     @Test fun lightThemeRenders() {
