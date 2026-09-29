@@ -19,6 +19,7 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.aurora.music.data.PlaybackCollectionIdentity
+import com.aurora.music.data.SignalPath
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.desktop.natives.AudioDevice
@@ -50,6 +51,7 @@ internal class FakePlayer(devices: List<AudioDevice> = SampleDevices) : PlayerCo
     override val preferredOutput = MutableStateFlow<String?>(null)
     override val exclusiveOutput = MutableStateFlow(false)
     override val volume = MutableStateFlow(1f)
+    override val signalPath = MutableStateFlow(SignalPath())
 
     override fun setPreferredDevice(deviceId: String?) { preferredOutput.value = deviceId }
     override fun setExclusiveOutput(enabled: Boolean) { exclusiveOutput.value = enabled }

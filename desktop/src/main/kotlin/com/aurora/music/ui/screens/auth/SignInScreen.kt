@@ -200,7 +200,8 @@ private fun TypeStep(onSelectType: (ServerType) -> Unit, savedSessions: List<Ses
             AnimatedVisibility(savedExpanded) {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     saved.forEach { account ->
-                        ServerTypeCard(Icons.Outlined.Person, account.username.ifBlank { account.typeLabel.localizedMediaType() }, account.typeLabel.localizedMediaType(), enabled = enabled) { onUseSaved(account) }
+                        val name = if (account.type == ServerType.LOCAL) appString(R.string.text_local_library_a4b3e0) else account.username.ifBlank { account.typeLabel.localizedMediaType() }
+                        ServerTypeCard(Icons.Outlined.Person, name, account.typeLabel.localizedMediaType(), enabled = enabled) { onUseSaved(account) }
                     }
                 }
             }

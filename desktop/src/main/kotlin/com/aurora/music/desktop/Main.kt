@@ -40,7 +40,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeoutOrNull
 import java.awt.Dimension
+import java.awt.Frame
 import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
 import kotlin.math.roundToInt
@@ -145,6 +147,8 @@ fun main() {
             LaunchedEffect(window) {
                 instance.activations.collect {
                     show()
+                    // toFront only takes effect once compose has shown and restored the window
+                    withTimeoutOrNull(1_000) { while (!window.isVisible || (window.extendedState and Frame.ICONIFIED) != 0) delay(16) }
                     window.toFront()
                     window.requestFocus()
                 }

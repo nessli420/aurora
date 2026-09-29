@@ -49,6 +49,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -59,10 +60,15 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.SignalPath
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.ui.LocalDesktopContainer
+import com.aurora.music.desktop.ui.LocalPlayer
 import com.aurora.music.localization.AppStrings
+import com.aurora.music.localization.localizedSignalLabel
 import com.aurora.music.navigation.Routes
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 @Composable
@@ -99,6 +105,9 @@ fun SettingsScreen(
     val language by AppStrings.languageTag.collectAsState()
     val scope = rememberCoroutineScope()
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
+    val player = LocalPlayer.current
+    val signalSummary by remember(player, language) { player.signalPath.map { it.settingsSummary() }.distinctUntilChanged() }
+        .collectAsStateWithLifecycle(initialValue = player.signalPath.value.settingsSummary())
     val serverBadge = when (session?.type) {
         com.aurora.music.data.ServerType.SPOTIFY -> "SPOTIFY"
         com.aurora.music.data.ServerType.YOUTUBE_MUSIC -> "YOUTUBE MUSIC"
@@ -178,7 +187,7 @@ fun SettingsScreen(
                             SettingsRowDivider()
                             SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.advancedAudio, onClick = onOpenAdvancedAudio)
                             SettingsRowDivider()
-                            SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, onClick = onOpenSignalPath)
+                            SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, signalSummary, onClick = onOpenSignalPath)
                         }
                     }
                 }
@@ -252,3 +261,9 @@ fun SettingsScreen(
         }
     }
 }
+
+private fun SignalPath.settingsSummary(): String = if (!active) appString(R.string.text_nothing_playing_13ae37) else buildList {
+    add(output.localizedSignalLabel().ifBlank { appString(R.string.text_output_unknown_ef4fdb) })
+    if (codec.isNotBlank()) add(codec)
+    if (sampleRateHz > 0) add(appString(R.string.text_1f_khz_source_51278e, sampleRateHz / 1000f))
+}.joinToString(" · ")

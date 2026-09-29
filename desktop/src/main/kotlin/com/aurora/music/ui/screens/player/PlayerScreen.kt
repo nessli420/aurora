@@ -77,6 +77,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -509,6 +510,8 @@ private fun LyricsOverlay(
 @Composable
 private fun PaneDivider(onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
     var dragging by remember { mutableStateOf(false) }
+    val drag by rememberUpdatedState(onDrag)
+    val end by rememberUpdatedState(onDragEnd)
     val hover = remember { MutableInteractionSource() }
     val hovered by hover.collectIsHoveredAsState()
     val alpha by androidx.compose.animation.core.animateFloatAsState(if (dragging) 0.5f else if (hovered) 0.32f else 0.16f, tween(160), label = "dividerAlpha")
@@ -521,9 +524,9 @@ private fun PaneDivider(onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
                     onDragStart = { dragging = true },
-                    onDragEnd = { dragging = false; onDragEnd() },
-                    onDragCancel = { dragging = false; onDragEnd() },
-                ) { change, amount -> change.consume(); onDrag(amount) }
+                    onDragEnd = { dragging = false; end() },
+                    onDragCancel = { dragging = false; end() },
+                ) { change, amount -> change.consume(); drag(amount) }
             }
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,

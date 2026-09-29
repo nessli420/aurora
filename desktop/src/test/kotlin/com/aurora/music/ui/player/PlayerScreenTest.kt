@@ -4,6 +4,10 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -17,6 +21,7 @@ import com.aurora.music.ui.screens.player.PlayerPane
 import com.aurora.music.ui.screens.player.PlayerScreen
 import com.aurora.music.ui.screens.player.QueueActions
 import com.aurora.music.ui.screens.player.QueueContent
+import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.rememberPlayerColorScheme
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -29,7 +34,7 @@ class PlayerScreenTest {
     }
 
     @Composable
-    private fun Player(state: PlayerUiState, rec: Recorder) {
+    private fun Player(state: PlayerUiState, rec: Recorder, onSaved: (Float) -> Unit = {}) {
         MaterialTheme(colorScheme = rememberPlayerColorScheme(state.current.artworkUrl, state.current.accent)) {
             PlayerScreen(
                 state = state,
@@ -67,7 +72,7 @@ class PlayerScreenTest {
                     if (pane == PlayerPane.QUEUE) QueueActions(state.queue, state.currentIndex, true,
                         onClear = { rec.events += "clear" }, onSaveAsPlaylist = { rec.events += "save:$it" })
                 },
-                onSplitChange = { rec.split = it },
+                onSplitChange = { rec.split = it; onSaved(it) },
             )
         }
     }
@@ -101,6 +106,24 @@ class PlayerScreenTest {
             scene.drag(32f + rec.split * 1352f + 12f, 470f, -600f, 0f)
             assertEquals(0.35f, rec.split, 0.0001f)
             assertTrue(scene.shot().differsFrom(moved))
+        }
+    }
+
+    @Test fun dividerFollowsTheSavedSplitAfterItChanges() {
+        val rec = Recorder()
+        var saved by mutableFloatStateOf(0.5f)
+        PlayerScene("player-split-saved", 1440, 900) {
+            CompositionLocalProvider(LocalUiPrefs provides LocalUiPrefs.current.copy(tabletPlayerSplit = saved)) {
+                Player(PlayerFixtures.playing, rec) { saved = it }
+            }
+        }.use { scene ->
+            scene.shot()
+            scene.drag(720f, 470f, 138f, 0f)
+            assertEquals(0.6f, rec.split, 0.01f)
+            saved = 0.45f
+            scene.shot()
+            scene.drag(32f + saved * 1352f + 12f, 470f, 138f, 0f)
+            assertEquals(0.55f, rec.split, 0.01f)
         }
     }
 

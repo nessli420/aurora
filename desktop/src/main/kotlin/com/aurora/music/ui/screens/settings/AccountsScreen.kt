@@ -42,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.accountKey
+import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 
 @Composable
@@ -59,9 +60,9 @@ fun AccountsScreen(
     val activeKey = key(active)
 
     // always offered so you can jump to local even without a saved login
-    val localSession = remember { Session(server = "On this device", username = "Local library", salt = "", token = "local", type = ServerType.LOCAL) }
-
-    val rows = remember(saved) { saved + (if (saved.none { it.type == ServerType.LOCAL }) listOf(localSession) else emptyList()) }
+    val rows = remember(saved) {
+        saved + (if (saved.none { it.type == ServerType.LOCAL }) listOf(AccountAuthenticator.LOCAL_SESSION) else emptyList())
+    }
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.text_accounts_36bae3), onBack)
@@ -129,7 +130,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
         ) { Text(badge, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
-            Text(session.username, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(if (session.type == ServerType.LOCAL) appString(R.string.text_local_library_a4b3e0) else session.username, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("${session.typeLabel.localizedMediaType()}${if (session.type != ServerType.LOCAL) " · $host" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (isActive) {

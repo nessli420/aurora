@@ -27,19 +27,21 @@ class NavigationTest {
     @Test fun defaultLayoutKeepsAndroidOnlyItemsOut() {
         val layout = NavMenu.parse("")
         assertEquals(listOf("home", "search", "library"), layout.main.map { it.id })
-        assertEquals(listOf("radio", "podcasts", "history", "stats", "duplicates"), layout.more.map { it.id })
+        assertEquals(listOf("history", "stats", "duplicates"), layout.more.map { it.id })
         assertEquals(listOf("playback", "output", "equalizer", "loudness", "advanced_audio", "signal_path"), layout.hidden.map { it.id })
         assertNull(NavMenu.byId("network"))
+        assertNull(NavMenu.byId("radio"))
+        assertNull(NavMenu.byId("podcasts"))
         assertTrue(NavMenu.items.all { it.label.isNotBlank() })
     }
 
     @Test fun savedLayoutsSurviveUnknownIdsAndKeepLockedItems() {
-        val layout = NavMenu.parse("main=output,network;more=home,stats,network")
+        val layout = NavMenu.parse("main=output,network,radio;more=home,podcasts,stats,network")
         assertEquals(setOf("home", "search", "library", "output"), layout.main.map { it.id }.toSet())
         assertEquals(listOf("stats"), layout.more.map { it.id })
-        assertEquals(NavPlacement.HIDDEN, layout.placementOf("radio"))
+        assertEquals(NavPlacement.HIDDEN, layout.placementOf("history"))
 
-        val edited = layout.move("radio", NavPlacement.MAIN).move("output", NavPlacement.MORE).shift("radio", -1).move("home", NavPlacement.HIDDEN)
+        val edited = layout.move("history", NavPlacement.MAIN).move("output", NavPlacement.MORE).shift("history", -1).move("home", NavPlacement.HIDDEN)
         assertEquals(NavPlacement.MAIN, edited.placementOf("home"))
         assertEquals(NavPlacement.MORE, edited.placementOf("output"))
         assertEquals(edited.main.map { it.id }, NavMenu.parse(edited.encode()).main.map { it.id })

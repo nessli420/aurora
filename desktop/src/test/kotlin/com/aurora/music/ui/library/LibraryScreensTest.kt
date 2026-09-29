@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
@@ -19,6 +22,7 @@ import com.aurora.music.model.LibraryFilter
 import com.aurora.music.model.LibraryLayout
 import com.aurora.music.model.LibrarySort
 import com.aurora.music.ui.screens.detail.DetailScreen
+import com.aurora.music.ui.screens.library.AlphabetRail
 import com.aurora.music.ui.screens.library.DuplicatesScreen
 import com.aurora.music.ui.screens.library.FolderScreen
 import com.aurora.music.ui.screens.library.LibraryScreen
@@ -87,6 +91,23 @@ class LibraryScreensTest {
         val alpha = shot("library-songs-alpha") { Library(Samples.library(LibraryFilter.SONGS, sort = LibrarySort.ALPHABETICAL)) }
         val recent = shot("library-songs-recent") { Library(Samples.library(LibraryFilter.SONGS)) }
         assertFalse(alpha.region(1180 - 40, 300, 1180 - 12, 700).contentEquals(recent.region(1180 - 40, 300, 1180 - 12, 700)))
+    }
+
+    @Test fun alphabetRailJumpsWithTheLatestList() {
+        val jumps = mutableListOf<String>()
+        var list by mutableStateOf("albums")
+        Harness(40, 540) {
+            val current = list
+            AlphabetRail(onJump = { jumps += "$current:$it" }, modifier = Modifier.fillMaxHeight())
+        }.use { h ->
+            h.settle(100)
+            h.click(12f, 10f)
+            list = "artists"
+            h.settle(100)
+            h.click(12f, 250f)
+            h.settle(100)
+        }
+        assertEquals(listOf("albums:A", "artists:M"), jumps)
     }
 
     @Test fun rightClickOpensCollectionMenu() {

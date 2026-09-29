@@ -47,10 +47,6 @@ import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,6 +73,7 @@ fun OutputDeviceSheet(
     onSelect: (String?) -> Unit,
     onExclusiveChange: (Boolean) -> Unit,
     onVolumeChange: (Float) -> Unit,
+    onToggleMute: () -> Unit,
     onDismiss: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
@@ -110,8 +107,7 @@ fun OutputDeviceSheet(
                 )
             }
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 20.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                var restore by remember { mutableFloatStateOf(1f) }
-                IconButton(onClick = { if (volume > 0f) { restore = volume; onVolumeChange(0f) } else onVolumeChange(restore) }, modifier = Modifier.size(40.dp)) {
+                IconButton(onClick = onToggleMute, modifier = Modifier.size(40.dp)) {
                     Icon(volumeIcon(volume), appString(R.string.text_mute_0f0973), tint = colors.onSurface, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(14.dp))

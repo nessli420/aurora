@@ -4,6 +4,7 @@ import com.aurora.music.R
 import com.aurora.music.data.PlaybackCollectionIdentity
 import com.aurora.music.data.SignalPath
 import com.aurora.music.desktop.natives.AudioDevice
+import com.aurora.music.desktop.platform.DesktopSettings
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
 import kotlinx.coroutines.flow.Flow
@@ -92,5 +93,6 @@ interface PlayerController {
     fun setPreferredDevice(deviceId: String?)
     fun setExclusiveOutput(enabled: Boolean)
     fun setVolume(value: Float)
+    fun toggleMute() = setVolume(if (volume.value > 0f) 0f else DesktopSettings.DEFAULT_UNMUTE_VOLUME)
     fun stopPlayback()
 }

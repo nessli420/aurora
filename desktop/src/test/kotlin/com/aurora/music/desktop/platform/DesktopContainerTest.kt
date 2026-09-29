@@ -11,6 +11,7 @@ import com.aurora.music.data.accountKey
 import com.aurora.music.data.artwork.ArtworkRequest
 import com.aurora.music.data.artwork.ArtworkUrls
 import com.aurora.music.desktop.DesktopContainer
+import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.audio.decode.TestAssets
 import com.aurora.music.model.Song
 import com.google.gson.Gson
@@ -91,6 +92,32 @@ class DesktopContainerTest {
             assertEquals(0, accountEpoch.value)
             assertEquals(listOf(local), settingsStore.savedSessions.first())
         }
+    }
+
+    @Test fun localSignInReplacesOlderLocalSpellings() = container {
+        sessionReady.await { it != null }
+        val legacy = Session("On this device", "Local library", "", "local", ServerType.LOCAL)
+        settingsStore.addSavedSession(legacy)
+        settingsStore.addSavedSession(subsonic)
+        applySession(authenticator.local())
+        assertEquals(listOf(subsonic, AccountAuthenticator.LOCAL_SESSION), settingsStore.savedSessions.first())
+    }
+
+    @Test fun credentialsAndTheQueueStayOutOfPlainRoamingFiles() {
+        val secret = Session("http://127.0.0.1:9", "alice", "pepper-salt-9", "secret-token-42")
+        File(paths.roaming.apply { mkdirs() }, "queue_state.json")
+            .writeText("""{"subsonic|alice":{"tracks":[{"id":"s1","streamUrl":"http://127.0.0.1:9/rest/stream.view?t=secret"}]}}""")
+        container {
+            sessionReady.await { it != null }
+            applySession(secret)
+            assertEquals("s1", queueStore.get("subsonic|alice")?.tracks?.single()?.id)
+        }
+        val settings = paths.settingsFile.readBytes().toString(Charsets.ISO_8859_1)
+        assertFalse("secret-token-42" in settings)
+        assertFalse("pepper-salt-9" in settings)
+        assertFalse(File(paths.roaming, "queue_state.json").exists())
+        assertTrue(File(paths.local, "queue_state.json").isFile)
+        container { assertEquals(secret, settingsStore.session.first()) }
     }
 
     @Test fun switchingAccountsRebuildsTheBackendAndBumpsTheEpoch() = container {

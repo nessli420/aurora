@@ -63,12 +63,12 @@ class NowPlayingSurfacesTest {
         PlayerScene("sheet-output", 1440, 900) {
             OutputDeviceSheet(devices, currentId = devices[1].id, exclusive = true, volume = 0.72f,
                 onSelect = { events += "select:$it" }, onExclusiveChange = { events += "exclusive:$it" },
-                onVolumeChange = { events += "volume" }, onDismiss = { events += "dismiss" })
+                onVolumeChange = { events += "volume" }, onToggleMute = { events += "mute" }, onDismiss = { events += "dismiss" })
         }.use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
             listOf(527f to 425f, 628f to 629f, 600f to 784f, 444f to 848f, 720f to 120f).forEach { (x, y) -> scene.click(x, y) }
             scene.frames(8)
-            assertEquals(listOf("select:null", "select:${devices[2].id}", "exclusive:false", "volume", "dismiss"), events)
+            assertEquals(listOf("select:null", "select:${devices[2].id}", "exclusive:false", "mute", "dismiss"), events)
         }
     }
 

@@ -1180,6 +1180,7 @@ private fun Shell(
                     onToggleShuffle = { player.toggleShuffle() },
                     onCycleRepeat = { player.cycleRepeat() },
                     onVolumeChange = { player.setVolume(it) },
+                    onToggleMute = { player.toggleMute() },
                     onOpenOutput = { showOutput = true },
                     onPane = { showPane(it) },
                     modifier = Modifier.align(Alignment.BottomCenter)
@@ -1269,6 +1270,7 @@ private fun Shell(
                 onSelect = { player.setPreferredDevice(it) },
                 onExclusiveChange = { player.setExclusiveOutput(it) },
                 onVolumeChange = { player.setVolume(it) },
+                onToggleMute = { player.toggleMute() },
                 onDismiss = { showOutput = false },
             )
         }

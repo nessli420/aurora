@@ -58,6 +58,7 @@ import com.aurora.music.data.ProcessingPreset
 import com.aurora.music.data.ProcessingPresetLibrary
 import com.aurora.music.desktop.ui.FilePickers
 import com.aurora.music.desktop.ui.LocalDesktopContainer
+import com.aurora.music.util.writeAtomically
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -118,7 +119,7 @@ fun ProcessingPresetsScreen(
     fun exportPreset(preset: ProcessingPreset) {
         val file = FilePickers.saveFile(appString(R.string.text_export_f3e4fa), processingPresetFileName(preset.name)) ?: return
         perform(appString(R.string.text_exporting_preset_f23e43)) {
-            withContext(Dispatchers.IO) { file.outputStream().use { store.exportProcessingPreset(preset.id, it).getOrThrow() } }
+            withContext(Dispatchers.IO) { file.writeAtomically { store.exportProcessingPreset(preset.id, it).getOrThrow() } }
             appString(R.string.text_preset_exported_with_its_saved_settings_and_any_impulse_response_58728a)
         }
     }

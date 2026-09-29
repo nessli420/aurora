@@ -122,6 +122,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private var sleepJob: Job? = null
     private var queueFillJob: Job? = null
     private var volumeSave: Job? = null
+    private var unmuteVolume = DesktopSettings.DEFAULT_UNMUTE_VOLUME
     private var queueGeneration = 0
     // states still showing the queue that a replace or stop is about to discard
     private var retiredEntries: List<QueueEntry>? = null
@@ -173,8 +174,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         }
         scope.launch {
             val saved = deps.desktopSettings.volume.first()
+            val audible = deps.desktopSettings.unmuteVolume.first()
             if (volumeSave == null) {
                 _volume.value = saved
+                unmuteVolume = audible
                 engine.setVolume(saved)
             }
         }
@@ -423,14 +426,18 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun setVolume(value: Float) {
         val level = value.coerceIn(0f, 1f)
+        if (level > DesktopSettings.MIN_AUDIBLE_VOLUME) unmuteVolume = level
+        val unmute = unmuteVolume
         _volume.value = level
         engine.setVolume(level)
         volumeSave?.cancel()
         volumeSave = scope.launch {
             delay(300)
-            deps.desktopSettings.setVolume(level)
+            deps.desktopSettings.setVolume(level, unmute)
         }
     }
+
+    override fun toggleMute() = setVolume(if (_volume.value > 0f) 0f else unmuteVolume)
 
     override fun playAll(songs: List<Song>, startIndex: Int, collection: PlaybackCollectionIdentity?) {
         if (songs.isEmpty()) return

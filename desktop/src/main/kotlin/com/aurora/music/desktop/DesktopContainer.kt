@@ -139,7 +139,7 @@ class DesktopContainer(
     @Volatile private var offlineFlag: Boolean = false
     @Volatile private var lrclibEnabled: Boolean = true
     @Volatile private var smartPlaylistsValue: List<SmartPlaylist> = emptyList()
-    private val localMergeSession = Session(server = "On this device", username = "Local Library", salt = "", token = "local", type = ServerType.LOCAL)
+    private val localMergeSession = AccountAuthenticator.LOCAL_SESSION
 
     @Volatile
     var backend: MediaBackend? = null
@@ -313,7 +313,7 @@ class DesktopContainer(
             settingsStore.session.distinctUntilChanged().collect { session ->
                 lastSession = session
                 // keep a disk-restored session in the saved list so it shows up for switching
-                session?.let { settingsStore.addSavedSession(it) }
+                session?.let { rememberSession(it) }
                 rebuildBackend()
                 publishSession(session)
                 // ignore the first load so startup doesn't count as an account change
@@ -394,12 +394,19 @@ class DesktopContainer(
     suspend fun applySession(session: Session) {
         lastSession = session
         settingsStore.saveSession(session)
-        settingsStore.addSavedSession(session)
+        rememberSession(session)
         rebuildBackend()
         publishSession(session)
     }
 
     suspend fun switchSession(session: Session) = applySession(session)
+
+    private suspend fun rememberSession(session: Session) {
+        if (session.type == ServerType.LOCAL) settingsStore.savedSessions.first()
+            .filter { it.type == ServerType.LOCAL && it.accountKey() != session.accountKey() }
+            .forEach { settingsStore.removeSavedSession(it) }
+        settingsStore.addSavedSession(session)
+    }
 
     suspend fun signOut() {
         lastSession = null

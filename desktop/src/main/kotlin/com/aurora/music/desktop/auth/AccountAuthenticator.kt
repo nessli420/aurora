@@ -45,13 +45,7 @@ class AccountAuthenticator(private val clientInfo: ClientInfo) {
 
     suspend fun plex(server: String, token: String): Session = signIn(ServerType.PLEX, server, "", token)
 
-    fun local(): Session = Session(
-        server = appString(R.string.text_on_this_device_a7f962),
-        username = appString(R.string.text_local_library_a4b3e0),
-        salt = "",
-        token = "local",
-        type = ServerType.LOCAL,
-    )
+    fun local(): Session = LOCAL_SESSION
 
     fun errorMessage(error: Throwable, type: ServerType? = null): String = when (error) {
         is SignInException -> error.message.orEmpty()
@@ -77,5 +71,6 @@ class AccountAuthenticator(private val clientInfo: ClientInfo) {
 
     companion object {
         val SUPPORTED: Set<ServerType> = setOf(ServerType.SUBSONIC, ServerType.JELLYFIN, ServerType.PLEX, ServerType.LOCAL)
+        val LOCAL_SESSION = Session(server = "On this device", username = "Local Library", salt = "", token = "local", type = ServerType.LOCAL)
     }
 }

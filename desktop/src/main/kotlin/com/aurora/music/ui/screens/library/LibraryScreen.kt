@@ -783,7 +783,7 @@ private fun RowsContent(
 // ---- A-Z fast scroller ----
 
 @Composable
-private fun AlphabetRail(onJump: (Char) -> Unit, modifier: Modifier = Modifier) {
+internal fun AlphabetRail(onJump: (Char) -> Unit, modifier: Modifier = Modifier) {
     val letters = remember { ('A'..'Z').toList() + '#' }
     var railHeight by remember { mutableStateOf(0) }
     var active by remember { mutableStateOf<Char?>(null) }

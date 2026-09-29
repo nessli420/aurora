@@ -74,7 +74,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             text = { Text(listOfNotNull(notice.detail, license).joinToString("\n\n"),
                 modifier = Modifier.verticalScroll(rememberScrollState())) },
             confirmButton = { TextButton(onClick = { openNotice = null }) { Text(appString(R.string.text_close_bbfa77)) } },
-            dismissButton = { TextButton(onClick = { uriHandler.openUri(notice.source) }) { Text(appString(R.string.text_source_6da13a)) } })
+            dismissButton = { TextButton(onClick = { runCatching { uriHandler.openUri(notice.source) } }) { Text(appString(R.string.text_source_6da13a)) } })
     }
     if (showFontLicenses) {
         val licenses = remember {

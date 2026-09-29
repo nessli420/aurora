@@ -56,6 +56,8 @@ class VisualizerController(private val scope: CoroutineScope) {
     @Volatile var active = false
         private set
     private var job: Job? = null
+    private val lock = Any()
+    private var users = 0
 
     fun applyPrefs(p: VisualizerPrefs) {
         bandCount = p.barCount.coerceIn(8, 256)
@@ -69,18 +71,23 @@ class VisualizerController(private val scope: CoroutineScope) {
     }
 
     fun start() {
-        if (active) return
-        active = true
-        job = scope.launch(Dispatchers.Default) { analyseLoop() }
+        synchronized(lock) {
+            if (users++ > 0) return
+            active = true
+            job = scope.launch(Dispatchers.Default) { analyseLoop() }
+        }
     }
 
     fun stop() {
-        active = false
-        job?.cancel(); job = null
-        java.util.Arrays.fill(frame.bands, 0f)
-        java.util.Arrays.fill(frame.peaks, 0f)
-        java.util.Arrays.fill(frame.wave, 0f)
-        frame.rms = 0f; frame.bass = 0f; frame.level = 0f
+        synchronized(lock) {
+            if (users == 0 || --users > 0) return
+            active = false
+            job?.cancel(); job = null
+            java.util.Arrays.fill(frame.bands, 0f)
+            java.util.Arrays.fill(frame.peaks, 0f)
+            java.util.Arrays.fill(frame.wave, 0f)
+            frame.rms = 0f; frame.bass = 0f; frame.level = 0f
+        }
     }
 
     fun pushFloat(samples: FloatArray, channelCount: Int, sr: Int) {

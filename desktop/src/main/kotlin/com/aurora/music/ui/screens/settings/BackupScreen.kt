@@ -31,6 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.BackupManager
 import com.aurora.music.desktop.ui.FilePickers
+import com.aurora.music.util.writeAtomically
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -46,7 +47,7 @@ fun BackupScreen(contentPadding: PaddingValues, backupManager: BackupManager, on
             busy = true
             try {
                 val result = withContext(Dispatchers.IO) { runCatching {
-                    file.outputStream().use { backupManager.exportArchive(System.currentTimeMillis(), it).getOrThrow() }
+                    file.writeAtomically { backupManager.exportArchive(System.currentTimeMillis(), it).getOrThrow() }
                 } }
                 confirm(result.fold({ appString(R.string.text_backup_exported_with_processing_presets_and_impulse_responses_fa67a8) },
                     { it.message ?: appString(R.string.text_export_failed_d6c17e) }))

@@ -46,7 +46,6 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
@@ -93,6 +92,7 @@ fun PlaybackDock(
     onToggleShuffle: () -> Unit,
     onCycleRepeat: () -> Unit,
     onVolumeChange: (Float) -> Unit,
+    onToggleMute: () -> Unit,
     onOpenOutput: () -> Unit,
     onPane: (PlayerPane) -> Unit,
     modifier: Modifier = Modifier,
@@ -173,7 +173,7 @@ fun PlaybackDock(
                 if (roomy) IconButton(onClick = onOpenOutput) {
                     Icon(Icons.Filled.Speaker, appString(R.string.text_output_device_709178), tint = colors.onSurfaceVariant)
                 }
-                if (roomy) DockVolume(volume, onVolumeChange, Modifier.weight(1f, fill = false).widthIn(max = 148.dp))
+                if (roomy) DockVolume(volume, onVolumeChange, onToggleMute, Modifier.weight(1f, fill = false).widthIn(max = 148.dp))
                 PaneToggle(PlayerPane.LYRICS, Icons.Filled.Lyrics, openPane == PlayerPane.LYRICS) { onPane(PlayerPane.LYRICS) }
                 PaneToggle(PlayerPane.QUEUE, Icons.AutoMirrored.Filled.QueueMusic, openPane == PlayerPane.QUEUE) { onPane(PlayerPane.QUEUE) }
                 if (roomy) IconButton(onClick = onExpand) {
@@ -200,10 +200,9 @@ private fun PaneToggle(pane: PlayerPane, icon: androidx.compose.ui.graphics.vect
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-private fun DockVolume(volume: Float, onVolumeChange: (Float) -> Unit, modifier: Modifier) {
+private fun DockVolume(volume: Float, onVolumeChange: (Float) -> Unit, onToggleMute: () -> Unit, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
     val current by rememberUpdatedState(volume)
-    var restore by remember { mutableFloatStateOf(1f) }
     Row(
         modifier.onPointerEvent(PointerEventType.Scroll) { event ->
             val delta = event.changes.firstOrNull()?.scrollDelta?.y ?: 0f
@@ -211,7 +210,7 @@ private fun DockVolume(volume: Float, onVolumeChange: (Float) -> Unit, modifier:
         },
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        IconButton(onClick = { if (volume > 0f) { restore = volume; onVolumeChange(0f) } else onVolumeChange(restore) }) {
+        IconButton(onClick = onToggleMute) {
             Icon(volumeIcon(volume), appString(R.string.text_mute_0f0973), tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
         }
         Slider(

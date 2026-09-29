@@ -9,10 +9,12 @@ import com.aurora.music.data.LocalStore
 import com.aurora.music.data.PlayHistoryStore
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
+import com.aurora.music.data.SignalPath
 import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.data.accountKey
+import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.ui.screens.settings.AboutSettingsScreen
@@ -44,7 +46,7 @@ class GeneralSettingsTest {
     private val padding = PaddingValues(bottom = 24.dp)
     private val navidrome = Session("https://music.example.com", "mara", "salt", "token")
     private val jellyfin = Session("http://192.168.1.20:8096", "mara", "", "jf", ServerType.JELLYFIN, userId = "u1")
-    private val local = Session("On this device", "Local library", "", "local", ServerType.LOCAL)
+    private val local = AccountAuthenticator.LOCAL_SESSION
 
     private fun root(name: String, simpleMode: Boolean = false, backup: Boolean = true, opened: MutableList<String>) =
         GeneralSettingsScene(name, width = 380, height = 1800, seed = {
@@ -83,6 +85,15 @@ class GeneralSettingsTest {
         }
         val withoutBackup = root("root-no-backup", backup = false, opened = mutableListOf()).use { it.shot() }
         assertTrue(withoutBackup.differsFrom(full))
+    }
+
+    @Test fun signalPathRowSummarisesTheLivePath() {
+        root("root-signal", opened = mutableListOf()).use { scene ->
+            val idle = scene.shot()
+            assertFalse(scene.shot().differsFrom(idle))
+            scene.player.signalPath.value = SignalPath(active = true, codec = "FLAC", sampleRateHz = 44_100, output = "WASAPI exclusive")
+            assertTrue(scene.shot("-playing").differsFrom(idle))
+        }
     }
 
     @Test fun playbackHidesStreamingForLocalAndRevealsFadeControls() {
@@ -157,8 +168,8 @@ class GeneralSettingsTest {
         GeneralSettingsScene("nav-menu", height = 1300) { NavigationMenuScreen(padding, onBack = {}) }.use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
             scene.click(656f, 412f)
-            scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.contains("more=podcasts,radio") }
-            scene.click(613f, 792f)
+            scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.contains("more=stats,history,duplicates") }
+            scene.click(613f, 660f)
             scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.startsWith("main=home,search,library,playback;") }
         }
     }

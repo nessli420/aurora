@@ -5,8 +5,6 @@ import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.PlayCircle
-import androidx.compose.material.icons.filled.Podcasts
-import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
@@ -78,8 +76,6 @@ object NavMenu {
         NavMenuItem("home", Routes.HOME, Icons.Outlined.Home, R.string.text_home_70f8bb, locked = true),
         NavMenuItem("search", Routes.SEARCH, Icons.Outlined.Search, R.string.text_search_bce064, locked = true),
         NavMenuItem("library", Routes.LIBRARY, Icons.Outlined.LibraryMusic, R.string.text_your_library_fd740f, locked = true),
-        NavMenuItem("radio", Routes.RADIO, Icons.Filled.Radio, R.string.text_radio_b11bf1),
-        NavMenuItem("podcasts", Routes.PODCASTS, Icons.Filled.Podcasts, R.string.text_podcasts_fd52b4),
         NavMenuItem("history", Routes.HISTORY, Icons.Filled.History, R.string.text_listening_history_bd9991),
         NavMenuItem("stats", Routes.STATS, Icons.Filled.Workspaces, R.string.text_listening_stats_a760b2),
         NavMenuItem("duplicates", Routes.DUPLICATES, Icons.Filled.ContentCopy, R.string.text_find_duplicates_586f31),
@@ -92,7 +88,7 @@ object NavMenu {
     )
 
     private val defaultMain = listOf("home", "search", "library")
-    private val defaultMore = listOf("radio", "podcasts", "history", "stats", "duplicates")
+    private val defaultMore = listOf("history", "stats", "duplicates")
 
     fun byId(id: String): NavMenuItem? = items.firstOrNull { it.id == id }
 

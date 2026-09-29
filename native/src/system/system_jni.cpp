@@ -137,6 +137,11 @@ Java_com_aurora_music_desktop_natives_SystemNative_appUserModelId(JNIEnv* env, j
     return SetCurrentProcessExplicitAppUserModelID(aurora::wide(env, id).c_str());
 }
 
+JNIEXPORT jboolean JNICALL
+Java_com_aurora_music_desktop_natives_SystemNative_allowForeground(JNIEnv*, jobject, jlong pid) {
+    return AllowSetForegroundWindow(static_cast<DWORD>(pid)) ? JNI_TRUE : JNI_FALSE;
+}
+
 JNIEXPORT jbyteArray JNICALL
 Java_com_aurora_music_desktop_natives_SystemNative_protect(JNIEnv* env, jobject, jbyteArray data, jbyteArray entropy) {
     return crypt(env, data, entropy, true);

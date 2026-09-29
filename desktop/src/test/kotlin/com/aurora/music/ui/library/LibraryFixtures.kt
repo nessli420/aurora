@@ -179,6 +179,12 @@ internal class Harness(private val width: Int, private val height: Int, dark: Bo
         return scene.render(clock)
     }
 
+    fun click(x: Float, y: Float) {
+        scene.sendPointerEvent(PointerEventType.Move, Offset(x, y))
+        scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
+        scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), buttons = PointerButtons(), button = PointerButton.Primary)
+    }
+
     fun rightClick(x: Float, y: Float) {
         scene.sendPointerEvent(PointerEventType.Move, Offset(x, y))
         scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), buttons = PointerButtons(isSecondaryPressed = true), button = PointerButton.Secondary)

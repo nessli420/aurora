@@ -75,6 +75,17 @@ class DesktopSettingsTest {
         assertEquals(0f, it.volume.first())
     }
 
+    @Test fun unmuteVolumeFallsBackToTheLastAudibleLevel() = settings {
+        assertEquals(DesktopSettings.DEFAULT_UNMUTE_VOLUME, it.unmuteVolume.first())
+        it.setVolume(0.3f)
+        assertEquals(0.3f, it.unmuteVolume.first())
+        it.setVolume(0f)
+        assertEquals(DesktopSettings.DEFAULT_UNMUTE_VOLUME, it.unmuteVolume.first())
+        it.setVolume(0f, unmute = 0.2f)
+        assertEquals(0f, it.volume.first())
+        assertEquals(0.2f, it.unmuteVolume.first())
+    }
+
     @Test fun musicFoldersAreNormalizedAndDeduplicated() = settings {
         val rock = temp.newFolder("Music", "Rock")
         val jazz = temp.newFolder("Music", "Jazz")

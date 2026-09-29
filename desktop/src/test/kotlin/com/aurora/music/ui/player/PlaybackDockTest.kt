@@ -41,6 +41,7 @@ class PlaybackDockTest {
                     onToggleShuffle = { rec.events += "shuffle" },
                     onCycleRepeat = { rec.events += "repeat" },
                     onVolumeChange = { rec.volume = it },
+                    onToggleMute = { rec.events += "mute" },
                     onOpenOutput = { rec.events += "output" },
                     onPane = { rec.events += "pane:$it" },
                     modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
@@ -60,11 +61,12 @@ class PlaybackDockTest {
             scene.click(717f, 81f)
             val seek = rec.events.single().removePrefix("seek:").toFloat()
             assertTrue("seek $seek", seek in 0.45f..0.55f)
+            rec.events.clear()
             scene.scroll(1226f, 58f, -1f)
             assertEquals(0.65f, rec.volume, 0.001f)
             scene.click(1152f, 58f)
-            assertEquals(0f, rec.volume, 0f)
             scene.click(1152f, 58f)
+            assertEquals(listOf("mute", "mute"), rec.events)
             assertEquals(0.65f, rec.volume, 0.001f)
         }
     }

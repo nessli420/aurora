@@ -15,6 +15,7 @@ import com.aurora.music.desktop.audio.PlaybackEngine
 import com.aurora.music.desktop.audio.Tracks
 import com.aurora.music.desktop.audio.TransitionReason
 import com.aurora.music.desktop.platform.DesktopPaths
+import com.aurora.music.desktop.platform.DesktopSettings
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -191,9 +192,9 @@ class DesktopPlayerTest {
         val physical = engine.ids()
         assertEquals("s2", physical.first())
         container.queueStore.flushNow()
-        assertFalse("#shuffle-order" in File(root, "Roaming/queue_state.json").readText())
+        assertFalse("#shuffle-order" in File(root, "Local/queue_state.json").readText())
 
-        val store = QueueStore(File(root, "Roaming"))
+        val store = QueueStore(File(root, "Local"))
         assertEquals(songs.map { it.id }, store.get("subsonic|alice")?.shuffleOrder)
         val restoredEngine = FakeEngine(kotlin.random.Random(99))
         val second = player(restoredEngine, deps(store))
@@ -239,7 +240,7 @@ class DesktopPlayerTest {
         assertNull(store.get("subsonic|alice#shuffle-order"))
         assertEquals(songs.map { it.id }, store.get("subsonic|alice")?.shuffleOrder)
         store.flushNow()
-        val reloaded = QueueStore(File(root, "Roaming"))
+        val reloaded = QueueStore(File(root, "Local"))
         assertNull(reloaded.get("subsonic|alice#shuffle-order"))
         assertEquals(songs.map { it.id }, reloaded.get("subsonic|alice")?.shuffleOrder)
         account = "subsonic|bob"
@@ -350,6 +351,25 @@ class DesktopPlayerTest {
         assertEquals(0.3f, engine.level)
         waitFor { runBlocking { container.desktopSettings.volume.first() } == 0.3f }
         assertEquals(400, engine.config.bufferMs)
+    }
+
+    @Test fun unmuteRestoresTheLastAudibleVolumeAfterARestart() {
+        val engine = FakeEngine()
+        val player = player(engine)
+        waitFor { "setOutput(null, false)" in engine.calls }
+        on { player.setVolume(0f) }
+        on { player.toggleMute() }
+        assertEquals(DesktopSettings.DEFAULT_UNMUTE_VOLUME, engine.level)
+        on { player.setVolume(0.2f) }
+        on { player.toggleMute() }
+        assertEquals(0f, engine.level)
+        waitFor { runBlocking { container.desktopSettings.volume.first() == 0f && container.desktopSettings.unmuteVolume.first() == 0.2f } }
+        val restarted = FakeEngine()
+        val again = player(restarted)
+        waitFor { again.volume.value == 0f }
+        on { again.toggleMute() }
+        assertEquals(0.2f, restarted.level)
+        assertEquals(0.2f, on { again.volume.value })
     }
 
     @Test fun engineFailuresBecomeMessages() {

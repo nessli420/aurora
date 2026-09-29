@@ -34,6 +34,7 @@ import com.aurora.music.data.ir.*
 import com.aurora.music.desktop.ui.FilePickers
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.playback.engine.SamplePrecision
+import com.aurora.music.util.writeAtomically
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.StateFlow
@@ -102,7 +103,7 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, signalPath: StateFlo
         val name = entry.name.filter { it.isLetterOrDigit() || it in " -_" }.trim().take(60).ifBlank { appString(R.string.text_impulse_9ca8ac) }
         val file = FilePickers.saveFile(appString(R.string.text_export_wav_f98f7d), "$name${if (prepared) " variant" else ""}.wav") ?: return
         perform(appString(R.string.text_exporting_wav_501d1a)) {
-            withContext(Dispatchers.IO) { file.outputStream().use { store.exportImpulse(entry.id, prepared, it).getOrThrow() } }
+            withContext(Dispatchers.IO) { file.writeAtomically { store.exportImpulse(entry.id, prepared, it).getOrThrow() } }
             notify(appString(R.string.text_wav_exported_78ffe9))
         }
     }
