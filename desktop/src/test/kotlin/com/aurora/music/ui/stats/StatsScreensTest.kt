@@ -68,21 +68,26 @@ class StatsScreensTest {
         }.use { scene ->
             val weekly = scene.shot()
             assertTrue(weekly.distinctColors() > 40)
-            scene.click(300f, 1254f)
-            scene.click(300f, 1631f)
-            assertEquals(1, details.size)
-            assertTrue(details.single(), details.single().startsWith("artist:ar-"))
-            assertEquals(1, played.size)
-            assertTrue(played.single() in songs.map { it.first })
+            scene.click(300f, 1230f)
+            scene.click(300f, 1607f)
+            assertEquals(listOf("artist:ar-Aerial"), details)
+            assertEquals(listOf("s4"), played)
 
             scene.click(40f, 143f)
             val previous = scene.shot("-previous")
             assertTrue(previous.differsFrom(weekly))
+            scene.click(300f, 1074f)
+            assertEquals("artist:ar-Coastlines", details.last())
+
             scene.click(480f, 143f)
-            val picker = scene.shot("-picker")
-            assertTrue(picker.differsFrom(previous))
+            assertTrue(scene.shot("-picker").differsFrom(previous))
+            scene.click(432f, 1310f)
+            scene.click(623f, 1551f)
+            scene.click(300f, 1230f)
+            assertEquals("artist:ar-Aerial", details.last())
+
             scene.click(44f, 82f)
-            assertTrue(scene.shot("-daily").differsFrom(previous))
+            assertTrue(scene.shot("-daily").differsFrom(weekly))
         }
     }
 

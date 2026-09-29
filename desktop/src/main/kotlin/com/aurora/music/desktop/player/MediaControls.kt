@@ -6,13 +6,12 @@ import com.aurora.music.desktop.natives.SmtcButton
 import com.aurora.music.desktop.natives.SmtcRepeat
 import com.aurora.music.desktop.natives.SmtcSession
 import com.aurora.music.desktop.natives.SmtcStatus
-import com.aurora.music.model.Song
 import com.aurora.music.util.AppLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.isActive
@@ -31,6 +30,7 @@ class MediaControls internal constructor(
     private val artwork: suspend (String) -> ByteArray?,
 ) : AutoCloseable {
     @Volatile private var session: SmtcSession? = null
+    private val metadataLock = Any()
     private var job: Job? = null
 
     fun attach(hwnd: Long) {
@@ -41,7 +41,7 @@ class MediaControls internal constructor(
         session = created
         job = scope.launch(Dispatchers.IO) {
             created.buttons()
-            launch { player.state.map { it.current }.distinctUntilChanged().collectLatest { publishMetadata(created, it) } }
+            launch { publishMetadata(created) }
             var status: SmtcStatus? = null
             var shuffle: Boolean? = null
             var repeat: SmtcRepeat? = null
@@ -83,14 +83,22 @@ class MediaControls internal constructor(
         }
     }
 
-    private suspend fun publishMetadata(target: SmtcSession, song: Song) {
-        if (song.id.isEmpty()) {
-            target.metadata(null, null)
-            return
+    // a stalled artwork fetch is abandoned rather than joined so the next title shows at once
+    private suspend fun publishMetadata(target: SmtcSession) = coroutineScope {
+        var thumbnail: Job? = null
+        player.state.map { it.current }.distinctUntilChanged().collect { song ->
+            thumbnail?.cancel()
+            synchronized(metadataLock) {
+                if (song.id.isEmpty()) target.metadata(null, null) else target.metadata(song.title, song.artist, song.album)
+            }
+            val url = song.artworkUrl.takeIf { song.id.isNotEmpty() && it.isNotBlank() } ?: return@collect
+            thumbnail = launch {
+                val bytes = artwork(url) ?: return@launch
+                synchronized(metadataLock) {
+                    if (isActive && player.state.value.current.id == song.id) target.metadata(song.title, song.artist, song.album, thumbnail = bytes)
+                }
+            }
         }
-        target.metadata(song.title, song.artist, song.album)
-        val thumbnail = song.artworkUrl.takeIf { it.isNotBlank() }?.let { artwork(it) } ?: return
-        target.metadata(song.title, song.artist, song.album, thumbnail = thumbnail)
     }
 
     override fun close() {
