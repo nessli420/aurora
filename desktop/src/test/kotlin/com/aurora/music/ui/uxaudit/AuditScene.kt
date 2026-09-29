@@ -147,12 +147,12 @@ internal class AuditScene(
 
     private suspend fun DesktopContainer.seed() {
         applySession(authenticator.local())
-        folderLibrary.ensureLoaded()
+        folderLibrary.refresh()
         val library = folderLibrary
         val backend = backend!!
         val random = Random(11)
         val all = library.songs
-        System.err.println("audit songs=${all.size} albums=${library.albums.map { it.title }} files=${AuditLibrary.music.walkTopDown().count { it.isFile }}")
+        System.err.println("audit songs=${all.size} albums=${library.albums.size} artists=${library.artists.size} d=${all.take(3).map { it.durationSec }}")
         AuditLibrary.playlists.forEach { (name, count) ->
             val id = backend.createPlaylistWithId(name)!!
             backend.addToPlaylist(id, all.shuffled(random).take(count).map { it.id })
