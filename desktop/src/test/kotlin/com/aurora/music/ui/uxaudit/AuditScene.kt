@@ -152,7 +152,6 @@ internal class AuditScene(
         val backend = backend!!
         val random = Random(11)
         val all = library.songs
-        System.err.println("audit songs=${all.size} albums=${library.albums.size} artists=${library.artists.size} d=${all.take(3).map { it.durationSec }}")
         AuditLibrary.playlists.forEach { (name, count) ->
             val id = backend.createPlaylistWithId(name)!!
             backend.addToPlaylist(id, all.shuffled(random).take(count).map { it.id })
@@ -221,6 +220,16 @@ internal class AuditScene(
         }
         settle(500)
     }
+
+    fun scroll(x: Float, y: Float, amount: Float) {
+        edt {
+            scene.sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
+            scene.sendPointerEvent(PointerEventType.Scroll, Offset(x, y), scrollDelta = Offset(0f, amount), timeMillis = millis)
+        }
+        settle(600)
+    }
+
+    val contentLeft: Float get() = 272f + maxOf(0f, (width - 296f - 1280f) / 2f)
 
     fun navigate(route: String, pattern: String = route) {
         edt { nav.navigate(route) }

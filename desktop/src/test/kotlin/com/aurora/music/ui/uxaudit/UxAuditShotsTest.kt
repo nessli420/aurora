@@ -58,6 +58,8 @@ class UxAuditShotsTest {
     private fun tour(scene: AuditScene) {
         scene.awaitRoute(Routes.HOME)
         scene.shot("01-home", 2_500)
+        scene.scroll(scene.width * 0.6f, scene.height * 0.5f, 12f)
+        scene.shot("01b-home-scrolled")
         scene.press(Shortcut.QUEUE)
         scene.shot("02-home-queue-panel")
         scene.press(Shortcut.QUEUE)
@@ -77,6 +79,11 @@ class UxAuditShotsTest {
         scene.shot("07-library-songs")
         library.setFilter(LibraryFilter.PLAYLISTS)
         scene.shot("08-library-playlists")
+        library.setFilter(LibraryFilter.ALBUMS)
+        library.toggleLayout()
+        scene.shot("08b-library-albums-grid")
+        scene.click(scene.contentLeft + 80f, 220f)
+        scene.shot("08c-library-album-split", 2_000)
 
         val album = scene.songs.first { it.album == "Nocturne" }
         scene.navigate(Routes.detail("album", album.albumId), Routes.DETAIL)
@@ -84,6 +91,8 @@ class UxAuditShotsTest {
         val artistId = scene.container.folderLibrary.artists.first { it.name == "Lunar Tide" }.id
         scene.navigate(Routes.detail("artist", artistId), Routes.DETAIL)
         scene.shot("10-artist", 2_000)
+        scene.scroll(scene.width * 0.6f, scene.height * 0.5f, 12f)
+        scene.shot("10b-artist-scrolled")
         val playlist = runBlocking { scene.container.repository.allPlaylists() }.first()
         scene.navigate(Routes.detail("playlist", playlist.id), Routes.DETAIL)
         scene.shot("11-playlist")
@@ -93,6 +102,10 @@ class UxAuditShotsTest {
 
         scene.navigate(Routes.SETTINGS)
         scene.shot("13-settings")
+        scene.click(scene.contentLeft + 170f, 543f)
+        scene.shot("13b-settings-pane-output")
+        scene.click(scene.contentLeft + 170f, 616f)
+        scene.shot("13c-settings-pane-eq")
         scene.navigate(Routes.SETTINGS_OUTPUT)
         scene.shot("14-settings-output-page")
         scene.navigate(Routes.SETTINGS_EQ)
