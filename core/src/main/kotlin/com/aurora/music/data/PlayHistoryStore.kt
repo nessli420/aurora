@@ -35,6 +35,7 @@ class PlayHistoryStore(filesDir: File) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val lock = Any()
     private var revision = 0L
+    private var savedRevision = 0L
     private var listeningKey = ""
     private var listeningStamp = 0L
     private var lastSave = 0L
@@ -104,6 +105,7 @@ class PlayHistoryStore(filesDir: File) {
             val previous = _history.value
             persistBackupFileAtomically(file, bytes)
             val committed = ++revision
+            savedRevision = committed
             _history.value = restored
             BackupRollback(previous, committed)
         }
@@ -113,10 +115,11 @@ class PlayHistoryStore(filesDir: File) {
         synchronized(lock) {
             if (revision != token.revision) {
                 persistBackupFileAtomically(file, gson.toJson(_history.value).toByteArray(Charsets.UTF_8))
+                savedRevision = revision
                 false
             } else {
                 persistBackupFileAtomically(file, gson.toJson(token.previous).toByteArray(Charsets.UTF_8))
-                revision++
+                savedRevision = ++revision
                 _history.value = token.previous
                 true
             }
@@ -178,12 +181,28 @@ class PlayHistoryStore(filesDir: File) {
         gson.fromJson<List<PlayEvent>>(file.readText(), type) ?: emptyList()
     }.getOrDefault(emptyList())
 
+    fun flushNow() {
+        synchronized(lock) {
+            if (revision == savedRevision) return
+            runCatching {
+                persistBackupFileAtomically(file, gson.toJson(_history.value).toByteArray(Charsets.UTF_8))
+                savedRevision = revision
+            }
+        }
+    }
+
     private fun save() {
-        val (version, snapshot) = synchronized(lock) { revision to _history.value }
+        val (version, snapshot) = synchronized(lock) {
+            if (revision == savedRevision) return
+            revision to _history.value
+        }
         val bytes = gson.toJson(snapshot).toByteArray(Charsets.UTF_8)
         synchronized(lock) {
             // A queued save must not overwrite a later clear or backup restore.
-            if (revision == version) runCatching { persistBackupFileAtomically(file, bytes) }
+            if (revision == version && savedRevision != version) runCatching {
+                persistBackupFileAtomically(file, bytes)
+                savedRevision = version
+            }
         }
     }
 

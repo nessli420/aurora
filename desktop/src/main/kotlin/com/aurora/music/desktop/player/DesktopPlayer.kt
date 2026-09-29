@@ -183,7 +183,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 if (openRestoreAttempted) return@collect
                 openRestoreAttempted = true
                 playingAccountKey = deps.accountKey()
-                val saved = playingAccountKey.takeIf { it.isNotBlank() }?.let { deps.queueStore.get(it) }
+                val saved = savedQueue(playingAccountKey)
                 if (queueSize() == 0 && saved != null) restoreQueue(saved)
             }
         }
@@ -216,7 +216,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 stopPlayback()
                 val key = deps.accountKey()
                 playingAccountKey = key
-                val saved = key.takeIf { it.isNotBlank() }?.let { deps.queueStore.get(it) }
+                val saved = savedQueue(key)
                 if (saved != null) restoreQueue(saved)
             }
         }
@@ -332,10 +332,22 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             positionSec = (s.positionMs / 1000).toInt().coerceAtLeast(0),
             shuffle = s.shuffle,
             repeat = when (s.repeat) { EngineRepeat.ALL -> 1; EngineRepeat.ONE -> 2; EngineRepeat.OFF -> 0 },
+            shuffleOrder = s.shuffleRestoreIds?.takeIf { s.shuffle },
         ))
-        val order = s.shuffleRestoreIds?.takeIf { s.shuffle }
-        if (order == null) deps.queueStore.clear(shuffleOrderKey(key))
-        else deps.queueStore.save(shuffleOrderKey(key), SavedQueue(tracks = order.map { SavedTrack(id = it) }))
+    }
+
+    // older builds kept the shuffle order in a "<key>#shuffle-order" side entry
+    private fun savedQueue(key: String): SavedQueue? {
+        if (key.isBlank()) return null
+        val store = deps.queueStore
+        val legacyKey = "$key#shuffle-order"
+        val legacy = store.get(legacyKey) ?: return store.get(key)
+        val saved = store.get(key)?.let { sq ->
+            if (!sq.shuffle || sq.shuffleOrder != null) sq
+            else sq.copy(shuffleOrder = legacy.tracks.orEmpty().mapNotNull { it.id?.ifEmpty { null } }).also { store.save(key, it) }
+        }
+        store.clear(legacyKey)
+        return saved
     }
 
     private fun restoreQueue(sq: SavedQueue) {
@@ -346,10 +358,8 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         // buffer at saved position but stay paused
         replaceQueue(songs, idx, sq.positionSec * 1000L, play = false)
         engine.setRepeat(EngineRepeat.valueOf(repeat.name))
-        if (sq.shuffle) {
-            val order = deps.queueStore.get(shuffleOrderKey(playingAccountKey))?.tracks?.mapNotNull { it.id?.ifEmpty { null } }
-            engine.setShuffle(ShuffleTarget.ON, order ?: songs.map { it.id })
-        } else engine.setShuffle(ShuffleTarget.OFF)
+        if (sq.shuffle) engine.setShuffle(ShuffleTarget.ON, sq.shuffleOrder ?: songs.map { it.id })
+        else engine.setShuffle(ShuffleTarget.OFF)
         _state.update {
             it.copy(queue = songs, current = songs[idx], positionSec = sq.positionSec.toFloat(), isPlaying = false,
                 currentIndex = idx, shuffle = sq.shuffle, repeat = repeat)
@@ -659,7 +669,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override fun close() {
         val last = engine.state.value
         persistQueue(last)
-        deps.queueStore.requestFlush()
+        deps.queueStore.flushNow()
         reporting.close(last, uptime())
         history.finish()
         mediaControls.close()
@@ -669,6 +679,5 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     private companion object {
         const val SLEEP_FADE_MS = 6_000
-        fun shuffleOrderKey(accountKey: String) = "$accountKey#shuffle-order"
     }
 }

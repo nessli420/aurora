@@ -1,5 +1,7 @@
 package com.aurora.music.desktop.natives
 
+import java.util.concurrent.CopyOnWriteArrayList
+
 enum class WindowBackdrop { AUTO, NONE, MICA, ACRYLIC, TABBED }
 
 object WindowNative {
@@ -9,6 +11,8 @@ object WindowNative {
     private const val TEXT_COLOR = 36
     private const val BACKDROP = 38
     private const val DEFAULT_COLOR = -1
+
+    private val accentListeners = CopyOnWriteArrayList<(Int) -> Unit>()
 
     init { NativeLoader.load("aurora_native") }
 
@@ -24,9 +28,26 @@ object WindowNative {
 
     fun accentColor(): Int? = accent().takeIf { it != 0 }
 
+    fun addAccentListener(listener: (Int) -> Unit): AutoCloseable {
+        synchronized(accentListeners) {
+            if (accentListeners.isEmpty()) watchAccent { argb -> accentListeners.forEach { it(argb) } }
+            accentListeners += listener
+        }
+        return AutoCloseable {
+            synchronized(accentListeners) {
+                if (accentListeners.remove(listener) && accentListeners.isEmpty()) watchAccent(null)
+            }
+        }
+    }
+
     private fun colorRef(argb: Int?): Int =
         if (argb == null) DEFAULT_COLOR else (argb shr 16 and 0xFF) or (argb and 0xFF00) or (argb and 0xFF shl 16)
 
     private external fun setAttribute(hwnd: Long, attribute: Int, value: Int): Int
     private external fun accent(): Int
+    private external fun watchAccent(listener: AccentListener?): Int
+
+    private fun interface AccentListener {
+        fun onAccent(argb: Int)
+    }
 }
