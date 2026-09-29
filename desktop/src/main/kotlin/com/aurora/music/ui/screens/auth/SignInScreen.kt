@@ -218,7 +218,7 @@ private fun TypeStep(onSelectType: (ServerType) -> Unit, savedSessions: List<Ses
 @Composable
 private fun FoldersStep(state: AuthUiState, folders: List<String>, onAdd: (String) -> Unit, onRemove: (String) -> Unit, onContinue: () -> Unit) {
     fun pick() {
-        FilePickers.pickFolder("Add music folder", folders.lastOrNull()?.let(::File))?.let { onAdd(it.absolutePath) }
+        FilePickers.pickFolder(appString(R.string.text_add_music_folder_a083d8), folders.lastOrNull()?.let(::File))?.let { onAdd(it.absolutePath) }
     }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SourceLabel(appString(R.string.text_folders_19adc4).uppercase())
@@ -241,9 +241,9 @@ private fun FoldersStep(state: AuthUiState, folders: List<String>, onAdd: (Strin
             shape = RoundedCornerShape(16.dp)) {
             Icon(Icons.Outlined.CreateNewFolder, null, Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
-            Text("Add music folder", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.text_add_music_folder_a083d8), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         }
-        if (folders.isEmpty()) Text("Choose where your music lives on this PC", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        if (folders.isEmpty()) Text(appString(R.string.text_choose_where_your_music_lives_on_this_pc_876bd8), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(10.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             PrimaryButton(if (state.loading) "" else appString(R.string.text_continue_2e0262), enabled = folders.isNotEmpty() && !state.loading,

@@ -213,8 +213,8 @@ fun SettingsScreen(
                         scope.launch { container.settingsStore.setSimpleMode(enabled) }
                     }
                     SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.Minimize, "Close to tray",
-                        "Keep Aurora playing in the notification area when the window closes", closeToTray) { enabled ->
+                    SettingsSwitchRow(Icons.Filled.Minimize, appString(R.string.text_close_to_tray_f91cc6),
+                        appString(R.string.text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5), closeToTray) { enabled ->
                         scope.launch { container.desktopSettings.setCloseToTray(enabled) }
                     }
                     if (onReplayTour != null) {

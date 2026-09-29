@@ -100,8 +100,8 @@ fun OutputDeviceSheet(
                 }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
-                    Text("Exclusive mode", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = colors.onSurface)
-                    Text("Bit-perfect output that bypasses the Windows mixer", style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                    Text(appString(R.string.text_exclusive_mode_01d9b2), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = colors.onSurface)
+                    Text(appString(R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                 }
                 Switch(
                     checked = exclusive,
@@ -119,7 +119,7 @@ fun OutputDeviceSheet(
                     value = volume.coerceIn(0f, 1f),
                     onValueChange = onVolumeChange,
                     colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
-                    modifier = Modifier.weight(1f).semantics { contentDescription = "Volume" },
+                    modifier = Modifier.weight(1f).semantics { contentDescription = appString(R.string.text_volume_3b18e8) },
                 )
                 Text("${(volume * 100).roundToInt()}%", style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant,
                     modifier = Modifier.widthIn(min = 48.dp).padding(start = 12.dp))

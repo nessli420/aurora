@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
+import com.aurora.music.R
 import com.aurora.music.data.LocalProfile
 import com.aurora.music.data.LocalProfileCodec
 import com.aurora.music.data.ProfileAppearance
@@ -13,6 +14,7 @@ import com.aurora.music.data.profileAppearance
 import com.aurora.music.desktop.platform.decodeImage
 import com.aurora.music.desktop.platform.desktopFileUri
 import com.aurora.music.desktop.ui.LocalDesktopContainer
+import com.aurora.music.localization.appString
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.jetbrains.skia.EncodedImageFormat
@@ -27,10 +29,10 @@ import java.util.Base64
 
 class ProfileImages(private val directory: File) {
     suspend fun import(file: File, banner: Boolean): String = withContext(Dispatchers.IO) {
-        require(file.length() <= 20L * 1024 * 1024) { "Choose an image smaller than 20 MB." }
-        val image = requireNotNull(decodeImage(file.readBytes())) { "Cannot read this image." }
+        require(file.length() <= 20L * 1024 * 1024) { appString(R.string.text_choose_an_image_smaller_than_20_mb_cc7669) }
+        val image = requireNotNull(decodeImage(file.readBytes())) { appString(R.string.text_cannot_read_this_image_9a45ce) }
         image.use { source ->
-            require(source.width.toLong() * source.height <= 100_000_000) { "Choose a supported image under 100 megapixels." }
+            require(source.width.toLong() * source.height <= 100_000_000) { appString(R.string.text_choose_a_supported_image_under_100_megapixels_af6c16) }
             val format = if (source.isOpaque) EncodedImageFormat.JPEG else EncodedImageFormat.PNG
             var target = if (banner) 1280 else 512
             while (target >= 64) {
@@ -45,12 +47,12 @@ class ProfileImages(private val directory: File) {
                 if (bytes != null && bytes.size <= LocalProfileCodec.MAX_IMAGE_BYTES) return@withContext Base64.getEncoder().encodeToString(bytes)
                 target = (target * .75).toInt()
             }
-            error("Cannot resize this image.")
+            error(appString(R.string.text_cannot_resize_this_image_be7b26))
         }
     }
 
     fun appearance(profile: LocalProfile): ProfileAppearance = ProfileAppearance(
-        profile.name.orEmpty().ifBlank { "Local Library" }, imageUrl(profile.avatar), imageUrl(profile.banner),
+        profile.name.orEmpty().ifBlank { appString(R.string.text_local_library_1c67cd) }, imageUrl(profile.avatar), imageUrl(profile.banner),
     )
 
     fun imageUrl(encoded: String?): String {

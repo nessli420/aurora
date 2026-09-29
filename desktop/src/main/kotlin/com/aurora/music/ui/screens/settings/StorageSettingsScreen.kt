@@ -97,15 +97,15 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             SettingsGroup {
                 FolderRow(Icons.Filled.Download, appString(R.string.text_downloads_a862c2), paths.downloads, sizes[paths.downloads]) { open(paths.downloads) }
                 SettingsRowDivider()
-                FolderRow(Icons.Filled.Image, "Cache", paths.cache, sizes[paths.cache]) { open(paths.cache) }
+                FolderRow(Icons.Filled.Image, appString(R.string.text_cache_50338b), paths.cache, sizes[paths.cache]) { open(paths.cache) }
                 SettingsRowDivider()
-                FolderRow(Icons.Filled.Description, "Logs", paths.logs, sizes[paths.logs]) { open(paths.logs) }
+                FolderRow(Icons.Filled.Description, appString(R.string.text_logs_126dd3), paths.logs, sizes[paths.logs]) { open(paths.logs) }
                 SettingsRowDivider()
                 FolderRow(Icons.Filled.Folder, appString(R.string.text_app_data_4d9bf9), paths.roaming, sizes[paths.roaming]) { open(paths.roaming) }
             }
 
             SettingsSectionTitle(appString(R.string.text_manage_bf58d1))
-            ActionRow(Icons.Filled.Image, "Clear image cache", MaterialTheme.colorScheme.primary) {
+            ActionRow(Icons.Filled.Image, appString(R.string.text_clear_image_cache_ff7b31), MaterialTheme.colorScheme.primary) {
                 scope.launch {
                     container.imageLoader.memoryCache?.clear()
                     withContext(Dispatchers.IO) { runCatching { container.imageLoader.diskCache?.clear() } }

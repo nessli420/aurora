@@ -120,7 +120,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 }
                 else -> item {
                     Text(
-                        "Using your Windows accent colour.",
+                        appString(R.string.text_using_your_windows_accent_colour_7d4b4a),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),

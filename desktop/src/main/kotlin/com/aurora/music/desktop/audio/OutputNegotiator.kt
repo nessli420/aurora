@@ -1,6 +1,8 @@
 package com.aurora.music.desktop.audio
 
+import com.aurora.music.R
 import com.aurora.music.desktop.natives.OutputEncoding
+import com.aurora.music.localization.appString
 import com.aurora.music.playback.engine.OutputRateDecision
 import com.aurora.music.playback.engine.OutputRateNegotiator
 import com.aurora.music.playback.engine.OutputRatePolicy
@@ -30,12 +32,12 @@ class OutputNegotiator(private val backend: OutputBackend) {
     fun negotiate(deviceId: String?, exclusive: Boolean, sourceRate: Int, policy: OutputRatePolicy): NegotiatedOutput {
         if (!exclusive) return shared(deviceId)
         val rates = (RATES + sourceRate).distinct().filter { supported(deviceId, it).isNotEmpty() }.toIntArray()
-        if (rates.isEmpty()) return shared(deviceId, "Exclusive mode is unavailable on this device")
+        if (rates.isEmpty()) return shared(deviceId, appString(R.string.text_exclusive_mode_is_unavailable_on_this_device_e51016))
         val requested = OutputRateNegotiator.choose(sourceRate, policy, rates)
         val chosen = if (requested.sampleRate in rates) requested else {
             val family = if (sourceRate % 11_025 == 0) 44_100 else 48_000
             val rate = rates.filter { it % family == 0 }.ifEmpty { rates.toList() }.minBy { abs(it.toLong() - sourceRate) }
-            OutputRateDecision(rate, "${requested.sampleRate} Hz is unavailable; using $rate Hz.")
+            OutputRateDecision(rate, appString(R.string.text_hz_is_unavailable_using_hz_14de1c, requested.sampleRate, rate))
         }
         return NegotiatedOutput(deviceId, true, chosen.sampleRate, supported(deviceId, chosen.sampleRate).first(), chosen.fallbackReason)
     }

@@ -1,8 +1,10 @@
 package com.aurora.music.localization
 
 import com.aurora.music.R
+import java.io.File
 import java.lang.reflect.Modifier
 import java.util.Locale
+import javax.xml.parsers.DocumentBuilderFactory
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertThrows
@@ -89,6 +91,27 @@ class AppStringsTest {
         assertEquals("Set the Redirect URI to exactly:  aurora://spotify", appString(R.string.text_set_the_redirect_uri_to_exactly_aurora_spotify_407b7c))
         assertEquals("Access & Delivery", appString(R.string.text_access_delivery_270b49))
         assertEquals("Now playing controls", appString(R.string.widget_description))
+    }
+
+    @Test fun mergesDesktopStringsIntoTheSameTables() {
+        AppStrings.setLocale("en")
+        assertEquals("Exclusive mode", appString(R.string.text_exclusive_mode_01d9b2))
+        assertEquals("88200 Hz is unavailable; using 44100 Hz.", appString(R.string.text_hz_is_unavailable_using_hz_14de1c, 88200, 44100))
+        assertTrue(appString(R.string.text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6).contains("track's own rate"))
+        assertEquals("Built with Compose Multiplatform & Material 3.", appString(R.string.text_built_with_compose_multiplatform_material_3_389c3a))
+        AppStrings.setLocale("ru")
+        assertEquals("Монопольный режим", appString(R.string.text_exclusive_mode_01d9b2))
+        assertEquals("88200 Гц недоступно; используется 44100 Гц.", appString(R.string.text_hz_is_unavailable_using_hz_14de1c, 88200, 44100))
+        assertEquals("Windows · Java 21", appString(R.string.text_windows_java_2566af, 21))
+    }
+
+    @Test fun everyDesktopStringHasARussianTranslation() {
+        fun names(dir: String) = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+            .parse(File("src/main/res/$dir/strings_desktop.xml")).getElementsByTagName("string")
+            .let { nodes -> (0 until nodes.length).map { nodes.item(it).attributes.getNamedItem("name").nodeValue } }
+        val english = names("values")
+        assertTrue(english.isNotEmpty())
+        assertEquals(english.sorted(), names("values-ru").sorted())
     }
 
     @Test fun rejectsIdsOfTheWrongType() {

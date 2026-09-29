@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
 
-internal const val OUTPUT_SUMMARY = "Device, exclusive mode and buffer"
+internal val OUTPUT_SUMMARY: String get() = appString(R.string.text_device_exclusive_mode_and_buffer_f2337c)
 
 private val BUFFERS = listOf(50, 100, 200, 400, 800, 1600)
 
@@ -105,35 +105,33 @@ fun AudioOutputSettingsScreen(
                     }
                 }
             }
-            item { Note("System default follows the Windows output device, even when it changes during playback.") }
+            item { Note(appString(R.string.text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0)) }
 
             item { SettingsSectionTitle(appString(R.string.text_output_mode_ba6e71)) }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(Icons.Filled.HighQuality, "Exclusive mode", "Bit-perfect output that bypasses the Windows mixer", exclusive) {
+                    SettingsSwitchRow(Icons.Filled.HighQuality, appString(R.string.text_exclusive_mode_01d9b2),
+                        appString(R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d), exclusive) {
                         player.setExclusiveOutput(it)
                     }
                 }
             }
             item {
-                Note(if (exclusive) "Aurora takes sole control of the device and sends samples at the track's own rate and bit depth. " +
-                    "Other apps are silent while Aurora plays. Output stays bit-perfect when processing, volume and ReplayGain leave the samples unchanged; " +
-                    "if the device refuses a format Aurora falls back to shared mode and Signal Path shows why."
-                else "Shared mode mixes Aurora with other apps through the Windows audio engine at the device's mix format. " +
-                    "Turn on exclusive mode for bit-perfect playback.")
+                Note(if (exclusive) appString(R.string.text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6)
+                else appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865))
             }
             item {
                 SettingsGroup {
-                    SegmentedRow("Output buffer", BUFFERS.map { "$it ms" }, BUFFERS.indices.minBy { abs(BUFFERS[it] - bufferMs) }) { i ->
+                    SegmentedRow(appString(R.string.text_output_buffer_61b372), BUFFERS.map { appString(R.string.text_ms_1191ce, it) }, BUFFERS.indices.minBy { abs(BUFFERS[it] - bufferMs) }) { i ->
                         scope.launch { container.desktopSettings.setOutputBufferMs(BUFFERS[i]) }
                     }
                 }
             }
-            item { Note("Larger buffers ride out heavy system load; smaller ones react faster to seeking and volume. Applies when the output reopens.") }
+            item { Note(appString(R.string.text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8)) }
             item { OutputRateSettings(ratePolicy) { change -> scope.launch { store.updateOutputRatePolicy(change) } } }
-            item { Note("The sample-rate policy and dither apply in exclusive mode. Shared mode always plays at the Windows mix format.") }
+            item { Note(appString(R.string.text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d)) }
 
-            item { SettingsSectionTitle("Windows capabilities") }
+            item { SettingsSectionTitle(appString(R.string.text_windows_capabilities_0f1fa0)) }
             item {
                 SettingsGroup {
                     Text(mix?.describe() ?: appString(R.string.text_output_unknown_ef4fdb), Modifier.padding(20.dp),
@@ -152,10 +150,10 @@ fun AudioOutputSettingsScreen(
 }
 
 private fun MixFormat.describe(): String = listOf(
-    "Shared mode mix format",
+    appString(R.string.text_shared_mode_mix_format_4a5bc8),
     appString(R.string.text_khz_dd177d, sampleRate / 1000.0),
-    "$validBits-bit ${if (isFloat) "float" else "integer"}",
-    "$channels ch",
+    appString(if (isFloat) R.string.text_bit_float_012895 else R.string.text_bit_integer_72520f, validBits),
+    appString(R.string.text_ch_282ab4, channels),
 ).joinToString(" · ")
 
 @Composable

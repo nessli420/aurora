@@ -93,7 +93,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
         saved.filter { it.type.supportsMergedLibrary && it.type != ServerType.LOCAL }.distinctBy { it.accountKey() }
     }
     fun addFolder() {
-        val picked = FilePickers.pickFolder("Add music folder", folders.lastOrNull()?.let(::File)) ?: return
+        val picked = FilePickers.pickFolder(appString(R.string.text_add_music_folder_a083d8), folders.lastOrNull()?.let(::File)) ?: return
         scope.launch { container.desktopSettings.addMusicFolder(picked.absolutePath) }
     }
 
@@ -107,8 +107,8 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                         FolderRow(path) { scope.launch { container.desktopSettings.removeMusicFolder(path) } }
                         SettingsRowDivider()
                     }
-                    SettingsNavRow(Icons.Filled.CreateNewFolder, "Add music folder",
-                        subtitle = if (folders.isEmpty()) "Choose where your music lives on this PC" else null, onClick = ::addFolder)
+                    SettingsNavRow(Icons.Filled.CreateNewFolder, appString(R.string.text_add_music_folder_a083d8),
+                        subtitle = if (folders.isEmpty()) appString(R.string.text_choose_where_your_music_lives_on_this_pc_876bd8) else null, onClick = ::addFolder)
                     if (folders.isNotEmpty()) {
                         SettingsRowDivider()
                         SettingsNavRow(Icons.Filled.Refresh, appString(R.string.text_refresh_56e3ba),

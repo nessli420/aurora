@@ -49,12 +49,12 @@ private class Notice(val name: String, val licenseName: String, val detail: Stri
 
 private const val LGPL_21 = "licenses/aurora-dst-LGPL-2.1.txt"
 
-private val notices = listOf(
-    Notice("FFmpeg", "LGPL-3.0", "Audio decoding. Copyright © the FFmpeg developers. LGPL-3.0-or-later, dynamically linked through JavaCPP Presets. " +
-        "Full licence: https://www.gnu.org/licenses/lgpl-3.0.html", "https://github.com/bytedeco/javacpp-presets/tree/master/ffmpeg", ""),
-    Notice("DST decoder", "LGPL-2.1", "FFmpeg / DSD-Nexus. Copyright © 2014 Peter Ross. LGPL-2.1-or-later.",
+private val notices: List<Notice> get() = listOf(
+    Notice("FFmpeg", "LGPL-3.0", appString(R.string.text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2),
+        "https://github.com/bytedeco/javacpp-presets/tree/master/ffmpeg", ""),
+    Notice(appString(R.string.text_dst_decoder_ffabc9), "LGPL-2.1", appString(R.string.text_ffmpeg_dsd_nexus_copyright_2014_peter_ross_lgpl_2_1_or_later_fb6d87),
         "https://github.com/nessli420/aurora/tree/main/app/src/main/cpp/dst", LGPL_21),
-    Notice("Chromaprint", "LGPL-2.1", "Audio fingerprinting. Copyright © Lukáš Lalinský. LGPL-2.1-or-later.",
+    Notice("Chromaprint", "LGPL-2.1", appString(R.string.text_audio_fingerprinting_copyright_luk_lalinsk_lgpl_2_1_or_later_0cb704),
         "https://github.com/acoustid/chromaprint", LGPL_21),
 )
 
@@ -116,7 +116,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             Spacer(Modifier.height(14.dp))
             Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
             Text(appString(R.string.text_version_d2f210, (BuildInfo.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text("Windows · Java ${Runtime.version().feature()}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(appString(R.string.text_windows_java_2566af, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(24.dp))
 
             Column(Modifier.widthIn(max = 720.dp)) {
@@ -135,7 +135,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     InfoRow(appString(R.string.text_signed_in_as_a02107), session?.username ?: "—")
                 }
                 InfoRow(appString(R.string.text_playback_engine_0255b8), "FFmpeg ${ffmpegVersion()} · WASAPI")
-                InfoRow("Compose Multiplatform", COMPOSE_VERSION)
+                InfoRow("Compose Multiplatform", BuildInfo.COMPOSE_VERSION)
             }
             Spacer(Modifier.height(8.dp))
             notices.forEach { notice ->
@@ -145,7 +145,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
 
             Spacer(Modifier.height(20.dp))
             Text(
-                "Built with Compose Multiplatform & Material 3.",
+                appString(R.string.text_built_with_compose_multiplatform_material_3_389c3a),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 textAlign = TextAlign.Center,
@@ -154,8 +154,6 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         }
     }
 }
-
-private const val COMPOSE_VERSION = "1.8.2"
 
 private fun ffmpegVersion(): String =
     org.bytedeco.ffmpeg.global.avutil::class.java.`package`?.implementationVersion?.substringBefore('-') ?: ""

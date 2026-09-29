@@ -284,7 +284,7 @@ val generateBuildInfo by tasks.registering {
     doLast {
         output.get().file("com/aurora/music/desktop/platform/BuildInfo.kt").asFile.apply {
             parentFile.mkdirs()
-            writeText("package com.aurora.music.desktop.platform\n\nobject BuildInfo {\n    const val VERSION_NAME = \"$versionName\"\n}\n")
+            writeText("package com.aurora.music.desktop.platform\n\nobject BuildInfo {\n    const val VERSION_NAME = \"$versionName\"\n    const val COMPOSE_VERSION = \"$composeVersion\"\n}\n")
         }
     }
 }

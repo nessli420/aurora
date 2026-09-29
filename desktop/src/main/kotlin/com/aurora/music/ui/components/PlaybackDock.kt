@@ -217,7 +217,7 @@ private fun DockVolume(volume: Float, onVolumeChange: (Float) -> Unit, modifier:
         Slider(
             value = volume.coerceIn(0f, 1f),
             onValueChange = onVolumeChange,
-            modifier = Modifier.weight(1f).height(24.dp).semantics { contentDescription = "Volume" },
+            modifier = Modifier.weight(1f).height(24.dp).semantics { contentDescription = appString(R.string.text_volume_3b18e8) },
             colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
             thumb = { Box(Modifier.size(12.dp).clip(CircleShape).background(colors.onSurface)) },
             track = { slider ->

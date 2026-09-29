@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.audio
 
+import com.aurora.music.R
 import com.aurora.music.desktop.audio.decode.DecoderException
 import com.aurora.music.desktop.audio.decode.DecoderInterruptedException
 import com.aurora.music.desktop.audio.decode.FfmpegDecoder
@@ -10,6 +11,7 @@ import com.aurora.music.desktop.natives.DeviceEvent
 import com.aurora.music.desktop.natives.OutputEncoding
 import com.aurora.music.desktop.natives.OutputStatus
 import com.aurora.music.desktop.natives.WasapiException
+import com.aurora.music.localization.appString
 import com.aurora.music.mix.MixMath
 import com.aurora.music.model.Song
 import com.aurora.music.playback.ConvolutionPreparationState
@@ -581,7 +583,7 @@ class DesktopPlaybackEngine(
 
     private fun loadFailed(entry: QueueEntry, cause: Throwable) {
         val kind = if (cause is UnsupportedStreamException) PlaybackFailure.Kind.UNSUPPORTED_SOURCE else PlaybackFailure.Kind.SOURCE_UNAVAILABLE
-        val failure = PlaybackFailure(kind, cause.message ?: "The track could not be opened")
+        val failure = PlaybackFailure(kind, cause.message ?: appString(R.string.text_the_track_could_not_be_opened_5719af))
         failed(entry, failure)
         val next = nextPlayable(queue.indexOf(entry.uid))
         if (failures >= config.maxConsecutiveFailures || next < 0) return stopWithError(failure)
@@ -646,7 +648,7 @@ class DesktopPlaybackEngine(
             backend.open(wanted.deviceId, wanted.exclusive, wanted.sampleRate, wanted.encoding, config.bufferMs)
         } catch (e: Exception) {
             if (!wanted.exclusive) return failOutput(e)
-            val reason = "Exclusive mode is unavailable: ${e.message}"
+            val reason = appString(R.string.text_exclusive_mode_is_unavailable_0de552, e.message)
             exclusiveBlocked = reason
             chosen = negotiator.shared(deviceId, reason)
             try {
@@ -679,7 +681,7 @@ class DesktopPlaybackEngine(
     }
 
     private fun failOutput(cause: Exception): Boolean {
-        val failure = PlaybackFailure(PlaybackFailure.Kind.OUTPUT, cause.message ?: "The audio output could not be used")
+        val failure = PlaybackFailure(PlaybackFailure.Kind.OUTPUT, cause.message ?: appString(R.string.text_the_audio_output_could_not_be_used_2b7767))
         emit(EngineEvent.Failed(heardMarker?.entry, failure))
         closeOutput()
         stopWithError(failure)
@@ -854,7 +856,7 @@ class DesktopPlaybackEngine(
             restartPending = true
             return
         }
-        failed(deck.track?.entry, PlaybackFailure(PlaybackFailure.Kind.DECODE, cause.message ?: "The track could not be decoded"))
+        failed(deck.track?.entry, PlaybackFailure(PlaybackFailure.Kind.DECODE, cause.message ?: appString(R.string.text_the_track_could_not_be_decoded_3a23e8)))
     }
 
     private fun failed(entry: QueueEntry?, failure: PlaybackFailure) {
@@ -881,7 +883,7 @@ class DesktopPlaybackEngine(
         prepared = null
         val incoming = result.getOrElse {
             failed(next, PlaybackFailure(if (it is UnsupportedStreamException) PlaybackFailure.Kind.UNSUPPORTED_SOURCE
-                else PlaybackFailure.Kind.SOURCE_UNAVAILABLE, it.message ?: "The track could not be opened"))
+                else PlaybackFailure.Kind.SOURCE_UNAVAILABLE, it.message ?: appString(R.string.text_the_track_could_not_be_opened_5719af)))
             return true
         }
         val reason = if (next.uid == track.entry.uid) TransitionReason.REPEAT else TransitionReason.AUTO
@@ -1077,7 +1079,7 @@ class DesktopPlaybackEngine(
 
     private fun deviceGone(deviceId: String) {
         if (deviceId != requestedDevice || deviceFallback != null) return
-        val reason = "The selected output device was disconnected"
+        val reason = appString(R.string.text_the_selected_output_device_was_disconnected_00e44e)
         deviceFallback = reason
         exclusiveBlocked = null
         emit(EngineEvent.OutputFallback(reason))

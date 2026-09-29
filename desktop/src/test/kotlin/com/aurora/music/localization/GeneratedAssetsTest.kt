@@ -9,6 +9,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.resources.AuroraLogo
 import com.aurora.music.desktop.resources.DmSans
 import com.aurora.music.desktop.resources.Manrope
@@ -16,6 +17,7 @@ import com.aurora.music.desktop.resources.PlusJakartaSans
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class GeneratedAssetsTest {
@@ -37,6 +39,17 @@ class GeneratedAssetsTest {
     @Test fun fontFamiliesPinTheRegularInstance() {
         listOf(DmSans, PlusJakartaSans, Manrope).forEach { assertNotEquals(0f, width(it)) }
         assertNotEquals(width(FontFamily(Font("font/manrope.ttf"))), width(Manrope))
+    }
+
+    @Test fun bundlesTheLicenceTexts() {
+        assertTrue(loader.getResource("licenses/aurora-dst-LGPL-2.1.txt")!!.readText().contains("GNU LESSER GENERAL PUBLIC LICENSE"))
+        val fonts = File(loader.getResource("font_licenses/manrope-OFL.txt")!!.toURI()).parentFile.list()!!.toSet()
+        assertEquals(setOf("dmsans-OFL.txt", "manrope-OFL.txt", "plusjakartasans-OFL.txt"), fonts)
+    }
+
+    @Test fun buildInfoCarriesTheCatalogComposeVersion() {
+        val catalog = File("../gradle/libs.versions.toml").readLines().first { it.startsWith("composeMultiplatform") }
+        assertEquals(catalog.substringAfter('"').substringBefore('"'), BuildInfo.COMPOSE_VERSION)
     }
 
     @Test fun loadsTheLogo() {
