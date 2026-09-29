@@ -61,6 +61,7 @@ data class SavedQueue(
     val positionSec: Int = 0,
     val shuffle: Boolean = false,
     val repeat: Int = 0,           // 0 off 1 all 2 one
+    val shuffleOrder: List<String>? = null,
 )
 
 // per-account so queue survives swipe-away and server switch writes coalesced by periodic flush
@@ -113,12 +114,14 @@ class QueueStore(filesDir: File, private val persist: (File, ByteArray) -> Unit 
         }
     }
 
-    private fun flushNow() = synchronized(lock) {
-        if (!dirty) return@synchronized
-        // Serialize the write as well as the snapshot. A failed ordinary write stays dirty.
-        runCatching {
-            persist(file, gson.toJson(map).toByteArray(Charsets.UTF_8))
-            dirty = false
+    fun flushNow() {
+        synchronized(lock) {
+            if (!dirty) return
+            // Serialize the write as well as the snapshot. A failed ordinary write stays dirty.
+            runCatching {
+                persist(file, gson.toJson(map).toByteArray(Charsets.UTF_8))
+                dirty = false
+            }
         }
     }
 }

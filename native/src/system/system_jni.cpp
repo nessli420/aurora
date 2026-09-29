@@ -4,10 +4,54 @@
 #include <dpapi.h>
 #include <dwmapi.h>
 #include <ShObjIdl_core.h>
+#include <winrt/Windows.Foundation.h>
+#include <winrt/Windows.UI.ViewManagement.h>
 
 using aurora::Worker;
+using winrt::Windows::Foundation::IInspectable;
+using winrt::Windows::UI::ViewManagement::UIColorType;
+using winrt::Windows::UI::ViewManagement::UISettings;
 
 namespace {
+
+struct Accent {
+    UISettings settings{nullptr};
+    winrt::event_token changed{};
+    jobject listener = nullptr;
+    jmethodID onAccent = nullptr;
+    jint last = 0;
+};
+
+Accent& accentState() {
+    static auto* value = new Accent();
+    return *value;
+}
+
+UISettings& uiSettings() {
+    auto& state = accentState();
+    if (!state.settings) state.settings = UISettings();
+    return state.settings;
+}
+
+jint accent() {
+    try {
+        const auto color = uiSettings().GetColorValue(UIColorType::Accent);
+        return static_cast<jint>(0xFF000000u | color.R << 16 | color.G << 8 | color.B);
+    } catch (const winrt::hresult_error&) {
+    }
+    DWORD color = 0;
+    BOOL opaque = FALSE;
+    return SUCCEEDED(DwmGetColorizationColor(&color, &opaque)) ? static_cast<jint>(color | 0xFF000000u) : 0;
+}
+
+void deliverAccent(JNIEnv* env) {
+    auto& state = accentState();
+    if (!state.listener) return;
+    const jint value = accent();
+    if (value == 0 || value == state.last) return;
+    state.last = value;
+    env->CallVoidMethod(state.listener, state.onAccent, value);
+}
 
 jbyteArray crypt(JNIEnv* env, jbyteArray data, jbyteArray entropy, bool protect) {
     if (!data) return nullptr;
@@ -37,6 +81,48 @@ Java_com_aurora_music_desktop_natives_WindowNative_setAttribute(JNIEnv*, jobject
     if (!root) return HRESULT_FROM_WIN32(ERROR_INVALID_WINDOW_HANDLE);
     const DWORD data = static_cast<DWORD>(value);
     return DwmSetWindowAttribute(root, static_cast<DWORD>(attribute), &data, sizeof(data));
+}
+
+JNIEXPORT jint JNICALL
+Java_com_aurora_music_desktop_natives_WindowNative_accent(JNIEnv*, jobject) {
+    return Worker::call([](JNIEnv*) { return accent(); });
+}
+
+JNIEXPORT jint JNICALL
+Java_com_aurora_music_desktop_natives_WindowNative_watchAccent(JNIEnv* env, jobject, jobject callback) {
+    jobject global = nullptr;
+    jmethodID method = nullptr;
+    if (callback) {
+        const jclass type = env->GetObjectClass(callback);
+        method = env->GetMethodID(type, "onAccent", "(I)V");
+        env->DeleteLocalRef(type);
+        if (!method) {
+            env->ExceptionClear();
+            return E_INVALIDARG;
+        }
+        global = env->NewGlobalRef(callback);
+    }
+    return Worker::call([&](JNIEnv* workerEnv) -> jint {
+        auto& state = accentState();
+        if (state.listener) workerEnv->DeleteGlobalRef(state.listener);
+        state.listener = global;
+        state.onAccent = method;
+        try {
+            if (global && !state.changed) {
+                state.last = accent();
+                state.changed = uiSettings().ColorValuesChanged([](const UISettings&, const IInspectable&) {
+                    Worker::post(deliverAccent);
+                });
+            }
+            if (!global && state.changed) {
+                state.settings.ColorValuesChanged(state.changed);
+                state.changed = {};
+            }
+            return S_OK;
+        } catch (const winrt::hresult_error& error) {
+            return error.code();
+        }
+    });
 }
 
 JNIEXPORT jboolean JNICALL
