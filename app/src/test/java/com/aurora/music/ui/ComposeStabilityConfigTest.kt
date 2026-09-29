@@ -29,7 +29,7 @@ class ComposeStabilityConfigTest {
 
     private fun packageClasses(pkg: String): List<Class<*>> {
         val path = pkg.replace('.', '/') + "/"
-        return javaClass.classLoader.getResources(path.dropLast(1)).toList().flatMap { url ->
+        return javaClass.classLoader!!.getResources(path.dropLast(1)).toList().flatMap { url ->
             if (url.protocol == "jar") (url.openConnection() as JarURLConnection).jarFile.entries().toList()
                 .map { it.name }.filter { it.startsWith(path) }.map { it.removePrefix(path) }
             else File(url.toURI()).list().orEmpty().toList()

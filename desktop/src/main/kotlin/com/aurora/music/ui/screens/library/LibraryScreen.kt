@@ -76,6 +76,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
@@ -786,6 +787,7 @@ private fun AlphabetRail(onJump: (Char) -> Unit, modifier: Modifier = Modifier) 
     val letters = remember { ('A'..'Z').toList() + '#' }
     var railHeight by remember { mutableStateOf(0) }
     var active by remember { mutableStateOf<Char?>(null) }
+    val currentOnJump by rememberUpdatedState(onJump)
     Column(
         modifier
             .width(24.dp)
@@ -799,13 +801,13 @@ private fun AlphabetRail(onJump: (Char) -> Unit, modifier: Modifier = Modifier) 
                         return letters[idx]
                     }
                     val down = awaitFirstDown()
-                    pick(down.position.y)?.let { c -> if (c != active) { active = c; onJump(c) } }
+                    pick(down.position.y)?.let { c -> if (c != active) { active = c; currentOnJump(c) } }
                     while (true) {
                         val event = awaitPointerEvent()
                         val change = event.changes.firstOrNull() ?: break
                         if (!change.pressed) break
                         change.consume()
-                        pick(change.position.y)?.let { c -> if (c != active) { active = c; onJump(c) } }
+                        pick(change.position.y)?.let { c -> if (c != active) { active = c; currentOnJump(c) } }
                     }
                     active = null
                 }

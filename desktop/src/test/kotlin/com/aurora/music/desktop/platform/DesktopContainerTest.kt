@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.platform
 
+import com.aurora.music.data.DownloadState
 import com.aurora.music.data.LocalBackend
 import com.aurora.music.data.LocalProfile
 import com.aurora.music.data.MergedBackend
@@ -7,15 +8,24 @@ import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.SubsonicBackend
 import com.aurora.music.data.accountKey
+import com.aurora.music.data.artwork.ArtworkRequest
+import com.aurora.music.data.artwork.ArtworkUrls
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.desktop.audio.decode.TestAssets
 import com.aurora.music.model.Song
+import com.google.gson.Gson
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
+import okhttp3.mockwebserver.Dispatcher
+import okhttp3.mockwebserver.MockResponse
+import okhttp3.mockwebserver.MockWebServer
+import okhttp3.mockwebserver.RecordedRequest
+import okio.Buffer
+import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -23,7 +33,11 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.Base64
+import javax.imageio.ImageIO
 
 class DesktopContainerTest {
     @get:Rule val temp = TemporaryFolder()
@@ -129,6 +143,35 @@ class DesktopContainerTest {
         assertEquals(listOf(desktopFileUri(File(music, "gapless.mp3").path)), folderLibrary.songs.map { it.streamUrl })
         libraryReload.await { it > reload }
         assertEquals(1, repository.allLibrarySongs(cap = 10).size)
+    }
+
+    @Test fun downloadsSaveTheServerCoverBehindArtworkUris() {
+        val cover = ByteArrayOutputStream().also {
+            ImageIO.write(BufferedImage(4, 4, BufferedImage.TYPE_INT_RGB).apply { setRGB(1, 1, 0x3366ff) }, "png", it)
+        }.toByteArray()
+        MockWebServer().use { server ->
+            server.dispatcher = object : Dispatcher() {
+                override fun dispatch(request: RecordedRequest): MockResponse = when (request.requestUrl?.encodedPath) {
+                    "/rest/getCoverArt.view" -> MockResponse().setBody(Buffer().write(cover))
+                    "/rest/stream.view" -> MockResponse().setBody("audio")
+                    else -> MockResponse().setResponseCode(404)
+                }
+            }
+            server.start()
+            val request = ArtworkRequest("Lunar Tide", "Nocturne", "", server.url("/rest/getCoverArt.view?id=al-1").toString(), 0)
+            val artwork = "content://${ArtworkUrls.AUTHORITY}/v1/" +
+                Base64.getUrlEncoder().withoutPadding().encodeToString(Gson().toJson(request).toByteArray())
+            val song = Song(id = "s1", title = "Midnight Bloom", artist = "Lunar Tide", album = "Nocturne", artworkUrl = artwork,
+                durationSec = 214, streamUrl = server.url("/rest/stream.view?id=s1").toString())
+            container {
+                assertEquals(request, ArtworkUrls.decode(artwork))
+                assertTrue(downloadManager.downloadCollection("al-1", "album", "Nocturne", "Lunar Tide", artwork, listOf(song)))
+                downloadManager.states.await { it["s1"] == DownloadState.Done }
+                val collection = downloadManager.collections.await { it.isNotEmpty() }.single()
+                assertArrayEquals(cover, File(downloadManager.get("s1")!!.coverPath).readBytes())
+                assertArrayEquals(cover, File(collection.coverPath).readBytes())
+            }
+        }
     }
 
     @Test fun backupRestoresProfileAndHistory() = container {

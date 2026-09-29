@@ -201,6 +201,7 @@ private val unportedRoutes = setOf(
 private val topLevelRoutes = topLevelDestinations.map { it.route }
 private val splitKinds = listOf("album", "artist", "playlist", "liked", "smart")
 private val mouseGestures = GesturePrefs(swipeArtwork = false)
+private const val LIKES_REFRESH_INTERVAL_NS = 30_000_000_000L
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -294,10 +295,17 @@ private fun Shell(
         if (repository.removeDownload(it)) confirm(appString(R.string.text_removed_download_8ad8f9))
     }
 
-    // the window lifecycle resumes on focus so likes starred elsewhere show up
+    // the window resumes on every focus so likes starred elsewhere refresh at most once per interval
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, player) {
-        val observer = LifecycleEventObserver { _, event -> if (event == Lifecycle.Event.ON_RESUME) player.refreshLikes() }
+        var refreshedAt: Long? = null
+        val observer = LifecycleEventObserver { _, event ->
+            val now = System.nanoTime()
+            if (event == Lifecycle.Event.ON_RESUME && refreshedAt?.let { now - it < LIKES_REFRESH_INTERVAL_NS } != true) {
+                refreshedAt = now
+                player.refreshLikes()
+            }
+        }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }

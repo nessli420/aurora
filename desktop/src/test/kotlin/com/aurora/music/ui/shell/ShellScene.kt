@@ -207,6 +207,14 @@ internal class ShellScene(
         settle(400)
     }
 
+    fun refocus() {
+        edt {
+            lifecycle.lifecycle.currentState = Lifecycle.State.STARTED
+            lifecycle.lifecycle.currentState = Lifecycle.State.RESUMED
+        }
+        settle(100)
+    }
+
     fun shot(suffix: String): Image {
         val image = settle()
         System.getenv("AURORA_SHOTS")?.let { File(it, "shell") }?.let { dir ->

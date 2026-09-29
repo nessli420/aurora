@@ -88,7 +88,7 @@ val composeStability = rootProject.layout.projectDirectory.file("compose-stabili
 composeCompiler {
     stabilityConfigurationFiles.add(composeStability)
 }
-// the compose plugin does not track this file, so a change would otherwise leave stale incremental output
+// the compose plugin does not track this file as a compile input
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
     inputs.file(composeStability).withPropertyName("composeStability").withPathSensitivity(PathSensitivity.NONE)
 }

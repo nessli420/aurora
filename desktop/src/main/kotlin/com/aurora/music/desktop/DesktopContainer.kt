@@ -53,6 +53,7 @@ import com.aurora.music.desktop.platform.desktopClientInfo
 import com.aurora.music.desktop.platform.desktopFileUri
 import com.aurora.music.desktop.platform.desktopImageLoader
 import com.aurora.music.desktop.platform.openDesktopUri
+import com.aurora.music.desktop.platform.protectedPreferencesStore
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
@@ -91,9 +92,12 @@ class DesktopContainer(
     private val _sourceErrors = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val sourceErrors: SharedFlow<String> = _sourceErrors.asSharedFlow()
 
-    init { paths.createDirectories() }
+    init {
+        paths.createDirectories()
+        paths.moveLegacyQueue()
+    }
 
-    val settingsStore = SettingsStore(PreferenceDataStoreFactory.create(scope = storageScope) { paths.settingsFile }, paths.roaming, paths.staging)
+    val settingsStore = SettingsStore(protectedPreferencesStore(paths.settingsFile, storageScope), paths.roaming, paths.staging)
     val desktopSettings = DesktopSettings(PreferenceDataStoreFactory.create(scope = storageScope) { paths.desktopSettingsFile })
 
     val playbackReportingAllowed: StateFlow<Boolean> = combine(settingsStore.playbackPrefs, settingsStore.privateSession) { prefs, private ->
@@ -104,7 +108,7 @@ class DesktopContainer(
     }
 
     val playHistory = PlayHistoryStore(paths.roaming)
-    val queueStore = QueueStore(paths.roaming)
+    val queueStore = QueueStore(paths.local)
     val replayGainStore = ReplayGainStore(paths.roaming)
     val artistInfoStore = ArtistInfoStore(paths.roaming)
     val artistInfoClient = ArtistInfoClient()

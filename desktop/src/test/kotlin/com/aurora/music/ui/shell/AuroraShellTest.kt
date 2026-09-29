@@ -92,6 +92,16 @@ class AuroraShellTest {
         }
     }
 
+    @Test fun refocusingTheWindowDoesNotRefetchLikesEveryTime() {
+        localScene("likes-refresh").use { scene ->
+            scene.awaitRoute(Routes.HOME)
+            val refreshes = scene.player.calls.count { it == "refreshLikes" }
+            assertTrue(refreshes > 0)
+            repeat(3) { scene.refocus() }
+            assertEquals(refreshes, scene.player.calls.count { it == "refreshLikes" })
+        }
+    }
+
     @Test fun languageChangeRerendersAndKeepsTheRoute() {
         localScene("language").use { scene ->
             scene.awaitRoute(Routes.HOME)
