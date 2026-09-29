@@ -4,6 +4,8 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import coil3.ImageLoader
 import com.aurora.music.R
 import com.aurora.music.data.ArtistInfoStore
+import com.aurora.music.data.AutoEqController
+import com.aurora.music.data.BackupManager
 import com.aurora.music.data.DEFAULT_SOURCE_PRIORITY
 import com.aurora.music.data.DownloadManager
 import com.aurora.music.data.JellyfinBackend
@@ -20,6 +22,7 @@ import com.aurora.music.data.PlayHistoryStore
 import com.aurora.music.data.PlaybackReportDispatcher
 import com.aurora.music.data.PlaybackSourceIdentity
 import com.aurora.music.data.PlexBackend
+import com.aurora.music.data.ProfileAppearance
 import com.aurora.music.data.QueueStore
 import com.aurora.music.data.ReplayGainStore
 import com.aurora.music.data.ReportingMediaBackend
@@ -42,6 +45,7 @@ import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.library.FolderLibrary
 import com.aurora.music.desktop.platform.DesktopPaths
 import com.aurora.music.desktop.platform.DesktopSettings
+import com.aurora.music.desktop.platform.ProfileImages
 import com.aurora.music.desktop.platform.SkiaArtworkImages
 import com.aurora.music.desktop.platform.desktopClientInfo
 import com.aurora.music.desktop.platform.desktopFileUri
@@ -50,6 +54,7 @@ import com.aurora.music.desktop.platform.openDesktopUri
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
+import com.aurora.music.playback.VisualizerController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -65,6 +70,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
@@ -94,12 +101,16 @@ class DesktopContainer(
         _sourceErrors.tryEmit(appString(R.string.playback_history_sync_failed))
     }
 
+    val profileImages = ProfileImages(paths.cache)
+    val localProfileAppearance: StateFlow<ProfileAppearance> = settingsStore.localProfile.map(profileImages::appearance)
+        .flowOn(Dispatchers.IO).stateIn(scope, SharingStarted.Eagerly, ProfileAppearance())
     val playHistory = PlayHistoryStore(paths.roaming)
     val queueStore = QueueStore(paths.roaming)
     val replayGainStore = ReplayGainStore(paths.roaming)
     val artistInfoStore = ArtistInfoStore(paths.roaming)
     val artistInfoClient = ArtistInfoClient()
     private val localStore = LocalStore(paths.roaming)
+    val backupManager = BackupManager(settingsStore, localStore, playHistory, paths.roaming, paths.cache)
 
     val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build()
 
@@ -107,6 +118,8 @@ class DesktopContainer(
         scope = scope, gainProvider = replayGainStore::gainsFor, separatorsProvider = { settingsStore.artistSeparators.first() })
 
     val authenticator = AccountAuthenticator(clientInfo)
+
+    val autoEqController = AutoEqController(settingsStore, scope)
 
     @Volatile private var maxBitrate: Int = 0
     @Volatile private var downloadBitrate: Int = 0
@@ -141,6 +154,8 @@ class DesktopContainer(
 
     val lastfm = LastfmScrobbler(settingsStore, scope)
     val listenBrainz = ListenBrainzScrobbler(settingsStore, scope)
+
+    val visualizer = VisualizerController(scope)
 
     val lyricsRepository = LyricsRepository(backendProvider = { backend }, lrclibEnabledProvider = { lrclibEnabled },
         separatorsProvider = { settingsStore.artistSeparators.first() })

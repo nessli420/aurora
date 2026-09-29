@@ -56,8 +56,10 @@ private val SWATCHES = listOf(
 ).map { it.toInt() }
 
 @Composable
-fun VisualizerSettingsScreen(contentPadding: PaddingValues, controller: VisualizerController, onBack: () -> Unit) {
-    val store = LocalDesktopContainer.current.settingsStore
+fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
+    val container = LocalDesktopContainer.current
+    val store = container.settingsStore
+    val controller = container.visualizer
     val prefs by store.visualizerPrefs.collectAsStateWithLifecycle(initialValue = VisualizerPrefs())
     val scope = rememberCoroutineScope()
     fun save(p: VisualizerPrefs) { scope.launch { store.setVisualizer(p) } }

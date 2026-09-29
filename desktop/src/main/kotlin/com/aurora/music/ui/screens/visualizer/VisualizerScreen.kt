@@ -67,7 +67,6 @@ import com.aurora.music.data.VizColor
 import com.aurora.music.desktop.player.PlayerUiState
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.model.accent
-import com.aurora.music.playback.VisualizerController
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.util.rememberDominantColor
 import kotlinx.coroutines.delay
@@ -75,8 +74,9 @@ import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun VisualizerScreen(state: PlayerUiState, controller: VisualizerController, onClose: () -> Unit) {
+fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
     val container = LocalDesktopContainer.current
+    val controller = container.visualizer
     val prefs by container.settingsStore.visualizerPrefs.collectAsStateWithLifecycle(initialValue = VisualizerPrefs())
     val scope = rememberCoroutineScope()
     val song = state.current

@@ -27,7 +27,8 @@ class ConvolutionLibraryScreenTest {
             val studio = scene.await(read = { it.impulseLibrary.first().first() }) { true }
             scene.await(read = { it.audioPrefs.first().dspConvIrPath }) { it == studio.sourcePath }
             scene.click(420f, 648f)
-            scene.shot("-prepare")
+            assertTrue(scene.shot("-prepare").differsFrom(detail))
+            scene.click(527f, 837f)
             scene.click(28f, 26f)
             scene.click(28f, 26f)
             assertEquals(listOf("back"), events)

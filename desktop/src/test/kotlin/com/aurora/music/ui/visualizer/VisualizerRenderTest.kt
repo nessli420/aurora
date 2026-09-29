@@ -46,8 +46,6 @@ import com.aurora.music.ui.screens.visualizer.label
 import com.aurora.music.ui.theme.AuroraTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import org.jetbrains.skia.Bitmap
@@ -146,12 +144,9 @@ class VisualizerRenderTest {
 
     private fun withContainer(block: (DesktopContainer, VisualizerController) -> Unit) {
         val container = DesktopContainer(DesktopPaths(File(temp.root, "Roaming"), File(temp.root, "Local")))
-        val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
-        val controller = VisualizerController(scope).also(::synthetic)
         try {
-            block(container, controller)
+            block(container, container.visualizer.also(::synthetic))
         } finally {
-            scope.cancel()
             container.close()
             runBlocking { container.scope.coroutineContext.job.join() }
         }
@@ -212,7 +207,7 @@ class VisualizerRenderTest {
         runBlocking { container.settingsStore.setVisualizer(VisualizerPrefs(style = VisualizerStyle.RADIAL_BARS, background = VizBackground.GRADIENT, colorSource = VizColor.GRADIENT)) }
         var closed = 0
         val scene = ImageComposeScene(1440, 900, Density(1f)) {
-            Providers(container) { VisualizerScreen(PlayerUiState(current = song, isPlaying = true), controller, onClose = { closed++ }) }
+            Providers(container) { VisualizerScreen(PlayerUiState(current = song, isPlaying = true), onClose = { closed++ }) }
         }
         val image = scene.settle(45, realMillis = 12)
         assertTrue(controller.active)
@@ -233,7 +228,7 @@ class VisualizerRenderTest {
         val scene = ImageComposeScene(1080, 900, Density(1f)) {
             Providers(container) {
                 Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.background) {
-                    VisualizerSettingsScreen(PaddingValues(0.dp), controller, onBack = {})
+                    VisualizerSettingsScreen(PaddingValues(0.dp), onBack = {})
                 }
             }
         }

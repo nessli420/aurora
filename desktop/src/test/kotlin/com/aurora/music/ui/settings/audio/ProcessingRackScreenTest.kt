@@ -2,6 +2,8 @@ package com.aurora.music.ui.settings.audio
 
 import androidx.compose.foundation.layout.PaddingValues
 import com.aurora.music.data.ProcessingRack
+import com.aurora.music.data.ProcessingRackNode
+import com.aurora.music.data.RackNodeKind
 import com.aurora.music.data.SettingsStore
 import com.aurora.music.data.SignalPath
 import com.aurora.music.ui.screens.settings.ProcessingRackScreen
@@ -16,8 +18,9 @@ class ProcessingRackScreenTest {
         store.setProcessingRack(ProcessingRack.recommended(AudioFixtures.customAudio).copy(enabled = true)).getOrThrow()
     }
 
-    private fun rack(name: String, events: MutableList<String> = mutableListOf(), path: SignalPath = AudioFixtures.activePath) =
-        AudioSettingsScene(name, seed = seeded) {
+    private fun rack(name: String, events: MutableList<String> = mutableListOf(), path: SignalPath = AudioFixtures.activePath,
+                     seed: suspend (SettingsStore) -> Unit = seeded) =
+        AudioSettingsScene(name, seed = seed) {
             ProcessingRackScreen(PaddingValues(), MutableStateFlow(path), onBack = { events += "back" }, onOpenPresets = { events += "presets" },
                 onOpenSignalPath = { events += "signal" }, onOpenTuning = { events += "tuning" }, onOpenImpulses = { events += "impulses" })
         }
@@ -47,6 +50,24 @@ class ProcessingRackScreenTest {
             assertTrue(scene.shot("-response").differsFrom(editor))
             scene.click(28f, 26f)
             assertTrue(scene.settle().differsFrom(editor))
+        }
+    }
+
+    @Test fun advancedStagesShowTheirOwnControls() {
+        val nodes = listOf(
+            ProcessingRackNode("multiband", "Multiband", RackNodeKind.MULTIBAND),
+            ProcessingRackNode("tone", "Tape colour", RackNodeKind.TONE),
+        )
+        rack("rack-advanced", path = SignalPath(), seed = { store ->
+            store.setProcessingRack(ProcessingRack(enabled = true, name = "Mastering", nodes = nodes)).getOrThrow()
+        }).use { scene ->
+            val list = scene.shot()
+            scene.click(100f, 420f)
+            val multiband = scene.shot("-multiband")
+            assertTrue(multiband.differsFrom(list))
+            scene.click(28f, 26f)
+            scene.click(100f, 559f)
+            assertTrue(scene.shot("-tone").differsFrom(multiband))
         }
     }
 }

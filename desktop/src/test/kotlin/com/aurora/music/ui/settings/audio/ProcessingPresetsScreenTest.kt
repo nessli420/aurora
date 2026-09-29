@@ -39,6 +39,9 @@ class ProcessingPresetsScreenTest {
             scene.shot("-menu")
             scene.click(741f, 478f)
             scene.shot("-confirm")
+            scene.click(620f, 492f)
+            val left = scene.await(read = { it.processingPresetLibrary.first().presets }) { it.size == 1 }
+            assertEquals("Studio flat", left.single().name)
         }
     }
 }

@@ -1,6 +1,7 @@
 package com.aurora.music.desktop.platform
 
 import com.aurora.music.data.LocalBackend
+import com.aurora.music.data.LocalProfile
 import com.aurora.music.data.MergedBackend
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
@@ -21,7 +22,12 @@ import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
+import java.awt.image.BufferedImage
+import java.io.ByteArrayOutputStream
 import java.io.File
+import java.net.URI
+import java.util.Base64
+import javax.imageio.ImageIO
 
 class DesktopContainerTest {
     @get:Rule val temp = TemporaryFolder()
@@ -127,5 +133,18 @@ class DesktopContainerTest {
         assertEquals(listOf(desktopFileUri(File(music, "gapless.mp3").path)), folderLibrary.songs.map { it.streamUrl })
         libraryReload.await { it > reload }
         assertEquals(1, repository.allLibrarySongs(cap = 10).size)
+    }
+
+    @Test fun localProfileAppearanceAndBackupRoundTrip() = container {
+        val png = ByteArrayOutputStream().also { ImageIO.write(BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB), "png", it) }.toByteArray()
+        settingsStore.setLocalProfile(LocalProfile("Maren", Base64.getEncoder().encodeToString(png), ""))
+        val appearance = localProfileAppearance.await { it.name == "Maren" }
+        assertTrue(File(URI(appearance.avatarUrl)).readBytes().contentEquals(png))
+        assertEquals("", appearance.bannerUrl)
+        val backup = backupManager.export(1L)
+        settingsStore.setLocalProfile(LocalProfile())
+        localProfileAppearance.await { it.name == "Local Library" && it.avatarUrl.isEmpty() }
+        assertTrue(backupManager.import(backup))
+        localProfileAppearance.await { it.name == "Maren" && it.avatarUrl == appearance.avatarUrl }
     }
 }

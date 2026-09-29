@@ -12,6 +12,10 @@ import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.unit.Density
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.LifecycleRegistry
+import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.desktop.platform.DesktopPaths
@@ -84,10 +88,17 @@ internal class BrowseScene(
     content: @Composable () -> Unit,
 ) : AutoCloseable {
     private val root = Files.createTempDirectory("aurora-browse").toFile()
-    private val container = DesktopContainer(DesktopPaths(File(root, "Roaming"), File(root, "Local")))
+    val container = DesktopContainer(DesktopPaths(File(root, "Roaming"), File(root, "Local")))
+    private val lifecycle = object : LifecycleOwner {
+        override val lifecycle = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
+    }
     private val scene = ImageComposeScene(width, height, Density(1f), content = {
         AuroraTheme(prefs) {
-            CompositionLocalProvider(LocalWindowLayout provides WindowLayout(1440, 900), LocalDesktopContainer provides container) {
+            CompositionLocalProvider(
+                LocalWindowLayout provides WindowLayout(1440, 900),
+                LocalLifecycleOwner provides lifecycle,
+                LocalDesktopContainer provides container,
+            ) {
                 Box(Modifier.fillMaxSize()) {
                     AmbientBackground()
                     content()

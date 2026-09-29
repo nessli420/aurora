@@ -63,6 +63,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
 import androidx.compose.ui.draw.clip
@@ -95,6 +96,7 @@ import com.aurora.music.viewmodel.AuthStep
 import com.aurora.music.viewmodel.AuthUiState
 import java.io.File
 
+@OptIn(ExperimentalComposeUiApi::class)
 @Composable
 fun SignInScreen(
     state: AuthUiState,

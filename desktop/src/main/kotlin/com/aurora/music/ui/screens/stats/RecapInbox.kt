@@ -26,7 +26,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.data.*
 import com.aurora.music.ui.components.Artwork
@@ -45,8 +44,8 @@ private data class InboxState(val windows: List<RecapWindow>, val seen: Set<Stri
 @Composable
 private fun rememberInbox(): InboxState {
     val container = LocalDesktopContainer.current
-    val history by container.playHistory.history.collectAsStateWithLifecycle()
-    val seen by container.desktopSettings.recapSeen.collectAsStateWithLifecycle(emptySet())
+    val history by container.playHistory.history.collectAsState()
+    val seen by container.desktopSettings.recapSeen.collectAsState(emptySet())
     val scope = rememberCoroutineScope()
     var today by remember { mutableStateOf(LocalDate.now()) }
     LaunchedEffect(Unit) { while (true) { today = LocalDate.now(); delay(60_000) } }
