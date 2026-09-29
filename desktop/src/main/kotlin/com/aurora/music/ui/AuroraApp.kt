@@ -1181,6 +1181,8 @@ private fun Shell(
             }
 
             MaterialTheme(colorScheme = playerColors) {
+                // registered when shown so it outranks the nav hosts yet stays below the player's own lyrics handler
+                if (playerState.expanded) BackHandler { player.setExpanded(false) }
                 AnimatedVisibility(
                     visible = playerState.expanded,
                     enter = slideInVertically(animationSpec = tween(320)) { it } + fadeIn(tween(220)),
@@ -1233,8 +1235,6 @@ private fun Shell(
         }
     }
 
-    BackHandler(enabled = playerState.expanded) { player.setExpanded(false) }
-
     MaterialTheme(colorScheme = playerColors) {
         if (showSpeedSheet) {
             SpeedPitchSheet(
@@ -1274,8 +1274,6 @@ private fun Shell(
             )
         }
     }
-
-    BackHandler(enabled = showVisualizer) { showVisualizer = false }
 }
 
 private fun NavLayout.ported() = NavLayout(main.filterNot { it.route in unportedRoutes }, more.filterNot { it.route in unportedRoutes }, hidden)
