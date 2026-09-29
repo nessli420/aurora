@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.localization.AppStrings
+import com.aurora.music.navigation.Routes
 import kotlinx.coroutines.launch
 
 @Composable
@@ -189,7 +190,7 @@ fun SettingsScreen(
                             "ru" -> "Русский"
                             "en" -> "English"
                             else -> appString(R.string.language_system)
-                        }, selected = LocalSelectedSettingsRoute.current == com.aurora.music.navigation.Routes.SETTINGS_LANGUAGE, onClick = onOpenLanguage)
+                        }, selected = LocalSelectedSettingsRoute.current == Routes.SETTINGS_LANGUAGE, onClick = onOpenLanguage)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Palette, SettingsDestinations.appearance, onClick = onOpenAppearance)
                     SettingsRowDivider()

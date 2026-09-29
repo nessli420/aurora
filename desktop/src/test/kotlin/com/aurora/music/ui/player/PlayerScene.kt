@@ -180,7 +180,7 @@ internal class PlayerScene(
     }
 
     fun shot(suffix: String = "", realMillis: Long = 40): Image {
-        val image = frames(12, realMillis)
+        val image = frames(20, realMillis)
         System.getenv("AURORA_SHOTS")?.let(::File)?.let { dir ->
             File(dir.apply { mkdirs() }, "$name$suffix.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
         }
