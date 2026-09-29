@@ -23,6 +23,7 @@ import androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.rememberNavController
 import coil3.SingletonImageLoader
+import coil3.annotation.DelicateCoilApi
 import com.aurora.music.data.LocalProfile
 import com.aurora.music.data.PlaybackCollectionIdentity
 import com.aurora.music.data.Pin
@@ -100,6 +101,7 @@ internal class AuditPlayer : PlayerController {
     override fun stopPlayback() = Unit
 }
 
+@OptIn(DelicateCoilApi::class)
 internal class AuditScene(
     private val label: String,
     val width: Int,

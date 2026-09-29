@@ -84,6 +84,15 @@ android {
     }
 }
 
+val composeStability = rootProject.layout.projectDirectory.file("compose-stability.conf")
+composeCompiler {
+    stabilityConfigurationFiles.add(composeStability)
+}
+// the compose plugin does not track this file, so a change would otherwise leave stale incremental output
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>().configureEach {
+    inputs.file(composeStability).withPropertyName("composeStability").withPathSensitivity(PathSensitivity.NONE)
+}
+
 dependencies {
     implementation(project(":core"))
     implementation(project(":extension-sdk"))

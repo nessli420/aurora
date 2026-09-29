@@ -25,7 +25,6 @@ object WasapiNative {
     external fun resume(handle: Long): Int
     external fun pause(handle: Long): Int
     external fun flush(handle: Long): Int
-    external fun drain(handle: Long, timeoutMs: Int): Int
     external fun status(handle: Long): LongArray?
     external fun streamDevice(handle: Long): String?
     external fun close(handle: Long)

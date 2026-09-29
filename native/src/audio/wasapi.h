@@ -96,7 +96,7 @@ struct StreamStatus {
 
 class Stream : public std::enable_shared_from_this<Stream> {
 public:
-    enum class Command { Resume = 1, Pause, Flush, Drain, Close };
+    enum class Command { Resume = 1, Pause, Flush, Close };
     using Copy = std::function<void(uint8_t* target, size_t offset, size_t count)>;
 
     static HRESULT open(const StreamConfig& config, std::function<void(const std::wstring&)> onInvalidated,
@@ -108,7 +108,6 @@ public:
     const std::wstring& deviceId() const { return deviceId_; }
     int write(size_t size, int timeoutMs, const Copy& copy);
     HRESULT command(Command command);
-    int drain(int timeoutMs);
     void close();
     StreamStatus status() const;
 
@@ -126,10 +125,10 @@ private:
     HRESULT execute(Command command);
     HRESULT start();
     bool fill(bool prefill);
+    void probe();
     void fail(HRESULT hr);
     void publish();
     void addGap(uint64_t start, uint64_t length);
-    void stopDrain(bool ended);
     void refreshLatency();
 
     StreamConfig config_;
@@ -146,7 +145,6 @@ private:
     HANDLE commandEvent_ = nullptr;
     HANDLE ackEvent_ = nullptr;
     HANDLE spaceEvent_ = nullptr;
-    HANDLE drainEvent_ = nullptr;
     std::thread thread_;
     std::unique_ptr<ByteRing> ring_;
     std::function<void(const std::wstring&)> onInvalidated_;
@@ -159,12 +157,9 @@ private:
     bool finished_ = false;
 
     bool playing_ = false;
-    bool draining_ = false;
-    bool ended_ = false;
     bool prefill_ = true;
     bool starving_ = false;
     uint64_t deviceFrames_ = 0;
-    uint64_t contentEnd_ = 0;
     uint64_t passedSilence_ = 0;
     uint64_t silence_ = 0;
     uint64_t position_ = 0;

@@ -165,12 +165,6 @@ Java_com_aurora_music_desktop_natives_WasapiNative_flush(JNIEnv*, jobject, jlong
     return control(handle, Stream::Command::Flush);
 }
 
-JNIEXPORT jint JNICALL
-Java_com_aurora_music_desktop_natives_WasapiNative_drain(JNIEnv*, jobject, jlong handle, jint timeoutMs) {
-    const auto stream = find(handle);
-    return stream ? stream->drain(timeoutMs) : E_HANDLE;
-}
-
 JNIEXPORT jlongArray JNICALL
 Java_com_aurora_music_desktop_natives_WasapiNative_status(JNIEnv* env, jobject, jlong handle) {
     const auto stream = find(handle);

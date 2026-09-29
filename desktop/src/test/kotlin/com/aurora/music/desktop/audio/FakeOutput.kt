@@ -68,6 +68,7 @@ internal class FakeOutput(
     private var clock = 0L
     @Volatile var closed = false; private set
     @Volatile var invalidated = false
+    @Volatile var resumeFailure = 0
     @Volatile var flushes = 0; private set
 
     override fun write(bytes: ByteArray, offset: Int, length: Int, timeoutMs: Int): Int {
@@ -90,6 +91,7 @@ internal class FakeOutput(
 
     @Synchronized
     override fun resume() {
+        if (resumeFailure != 0) throw WasapiException(resumeFailure)
         advance()
         playing = true
         clock = System.nanoTime()
@@ -113,7 +115,7 @@ internal class FakeOutput(
     @Synchronized
     override fun status(): OutputStatus {
         advance()
-        return OutputStatus(played, (buffered / frameBytes).toLong(), 0, playing, false, false, invalidated, exclusive, 0, 0,
+        return OutputStatus(played, (buffered / frameBytes).toLong(), 0, playing, invalidated, exclusive, 0, 0,
             System.nanoTime(), 480, ring.size / frameBytes)
     }
 

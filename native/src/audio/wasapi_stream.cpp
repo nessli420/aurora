@@ -7,11 +7,10 @@ namespace {
 constexpr REFERENCE_TIME kSharedBuffer = 500000;
 constexpr REFERENCE_TIME kMinimumPeriod = 100000;
 constexpr DWORD kCommandTimeout = 5000;
+constexpr DWORD kIdleProbe = 1000;
 
 enum Flag : int {
     Playing = 1,
-    Draining = 2,
-    Ended = 4,
     Invalidated = 8,
     Exclusive = 16,
 };
@@ -27,12 +26,11 @@ Stream::Stream(const StreamConfig& config)
       audioEvent_(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
       commandEvent_(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
       ackEvent_(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
-      spaceEvent_(CreateEventW(nullptr, FALSE, FALSE, nullptr)),
-      drainEvent_(CreateEventW(nullptr, TRUE, FALSE, nullptr)) {}
+      spaceEvent_(CreateEventW(nullptr, FALSE, FALSE, nullptr)) {}
 
 Stream::~Stream() {
     if (thread_.joinable()) thread_.detach();
-    for (HANDLE event : {audioEvent_, commandEvent_, ackEvent_, spaceEvent_, drainEvent_}) {
+    for (HANDLE event : {audioEvent_, commandEvent_, ackEvent_, spaceEvent_}) {
         if (event) CloseHandle(event);
     }
 }
@@ -41,7 +39,7 @@ HRESULT Stream::open(const StreamConfig& config, std::function<void(const std::w
     std::shared_ptr<Stream>& stream) {
     std::shared_ptr<Stream> created(new Stream(config));
     if (!makeFormat(config.rate, config.channels, config.encoding, created->format_)) return E_INVALIDARG;
-    if (!created->audioEvent_ || !created->commandEvent_ || !created->ackEvent_ || !created->spaceEvent_ || !created->drainEvent_) {
+    if (!created->audioEvent_ || !created->commandEvent_ || !created->ackEvent_ || !created->spaceEvent_) {
         return HRESULT_FROM_WIN32(GetLastError());
     }
     created->frameBytes_ = created->format_.Format.nBlockAlign;
@@ -138,26 +136,28 @@ void Stream::loop() {
     const HANDLE handles[] = {commandEvent_, audioEvent_};
     uint32_t handled = 0;
     for (;;) {
-        const DWORD wait = WaitForMultipleObjects(2, handles, FALSE, playing_ ? 200 : INFINITE);
+        const DWORD wait = WaitForMultipleObjects(2, handles, FALSE, playing_ ? 200 : kIdleProbe);
         const uint32_t seq = commandSeq_.load(std::memory_order_acquire);
         if (seq != handled) {
             const auto command = static_cast<Command>(pending_.load(std::memory_order_acquire));
             const HRESULT hr = execute(command);
             if (command != Command::Close) publish();
             handled = seq;
-            commandResult_.store(hr);
+            commandResult_.store(FAILED(hr) && invalidated_ ? AUDCLNT_E_DEVICE_INVALIDATED : hr);
             ackSeq_.store(seq, std::memory_order_release);
             SetEvent(ackEvent_);
             if (command == Command::Close) return;
             continue;
         }
-        if (!playing_ || invalidated_) continue;
+        if (invalidated_) continue;
+        if (!playing_) {
+            probe();
+            continue;
+        }
         if (wait == WAIT_OBJECT_0 + 1 || !config_.exclusive) {
             fill(false);
         } else {
-            UINT32 padding = 0;
-            const HRESULT hr = client_->GetCurrentPadding(&padding);
-            if (FAILED(hr)) fail(hr);
+            probe();
         }
         if (!invalidated_) publish();
     }
@@ -168,11 +168,8 @@ HRESULT Stream::execute(Command command) {
     if (invalidated_) return AUDCLNT_E_DEVICE_INVALIDATED;
     switch (command) {
     case Command::Resume:
-        ended_ = false;
-        ResetEvent(drainEvent_);
         return start();
     case Command::Pause:
-        if (draining_) stopDrain(false);
         if (playing_) {
             const HRESULT hr = client_->Stop();
             if (FAILED(hr)) {
@@ -184,22 +181,16 @@ HRESULT Stream::execute(Command command) {
         return S_OK;
     case Command::Flush: {
         if (playing_) client_->Stop();
-        playing_ = draining_ = ended_ = starving_ = false;
+        playing_ = starving_ = false;
         prefill_ = true;
         const HRESULT hr = client_->Reset();
         ring_->drop();
-        deviceFrames_ = contentEnd_ = passedSilence_ = silence_ = position_ = 0;
+        deviceFrames_ = passedSilence_ = silence_ = position_ = 0;
         gapHead_ = gapCount_ = 0;
-        ResetEvent(drainEvent_);
         SetEvent(spaceEvent_);
         if (FAILED(hr)) fail(hr);
         return hr;
     }
-    case Command::Drain:
-        draining_ = true;
-        ended_ = false;
-        ResetEvent(drainEvent_);
-        return start();
     default:
         return E_INVALIDARG;
     }
@@ -248,7 +239,7 @@ bool Stream::fill(bool prefill) {
     if (content < frames) {
         std::memset(data + static_cast<size_t>(content) * frameBytes_, 0, static_cast<size_t>(frames - content) * frameBytes_);
         addGap(deviceFrames_ + content, frames - content);
-        if (!prefill && !draining_) {
+        if (!prefill) {
             if (!starving_) underruns_.fetch_add(1, std::memory_order_relaxed);
             starving_ = true;
         }
@@ -259,10 +250,7 @@ bool Stream::fill(bool prefill) {
         fail(hr);
         return false;
     }
-    if (content) {
-        contentEnd_ = deviceFrames_ + content;
-        SetEvent(spaceEvent_);
-    }
+    if (content) SetEvent(spaceEvent_);
     deviceFrames_ += frames;
     return true;
 }
@@ -280,20 +268,19 @@ void Stream::addGap(uint64_t start, uint64_t length) {
     ++gapCount_;
 }
 
-void Stream::stopDrain(bool ended) {
-    draining_ = false;
-    ended_ = ended;
-    SetEvent(drainEvent_);
+void Stream::probe() {
+    UINT32 padding = 0;
+    const HRESULT hr = client_->GetCurrentPadding(&padding);
+    if (FAILED(hr)) fail(hr);
 }
 
 void Stream::fail(HRESULT hr) {
     lastError_.store(hr);
     if (!isInvalidation(hr) || invalidated_.exchange(true)) return;
-    playing_ = draining_ = false;
+    playing_ = false;
     flags_.fetch_or(Invalidated);
-    flags_.fetch_and(~(Playing | Draining));
+    flags_.fetch_and(~Playing);
     SetEvent(spaceEvent_);
-    SetEvent(drainEvent_);
     if (onInvalidated_) onInvalidated_(deviceId_);
 }
 
@@ -311,12 +298,6 @@ void Stream::publish() {
         --gapCount_;
     }
     const uint64_t partial = gapCount_ && gaps_[gapHead_].start < frames ? frames - gaps_[gapHead_].start : 0;
-    if (draining_ && ring_->readable() < frameBytes_ && frames >= contentEnd_) {
-        const HRESULT hr = client_->Stop();
-        if (FAILED(hr)) fail(hr);
-        playing_ = false;
-        stopDrain(true);
-    }
     const uint32_t seq = sequence_.load(std::memory_order_relaxed);
     sequence_.store(seq + 1, std::memory_order_relaxed);
     std::atomic_thread_fence(std::memory_order_release);
@@ -327,8 +308,6 @@ void Stream::publish() {
     sequence_.store(seq + 2, std::memory_order_release);
     int flags = config_.exclusive ? Exclusive : 0;
     if (playing_) flags |= Playing;
-    if (draining_) flags |= Draining;
-    if (ended_) flags |= Ended;
     if (invalidated_) flags |= Invalidated;
     flags_.store(flags);
 }
@@ -372,18 +351,9 @@ HRESULT Stream::command(Command command) {
     return commandResult_.load();
 }
 
-int Stream::drain(int timeoutMs) {
-    const HRESULT hr = command(Command::Drain);
-    if (FAILED(hr)) return hr;
-    if (WaitForSingleObject(drainEvent_, timeoutMs < 0 ? INFINITE : static_cast<DWORD>(timeoutMs)) != WAIT_OBJECT_0) return 0;
-    if (invalidated_) return AUDCLNT_E_DEVICE_INVALIDATED;
-    return (flags_.load() & Ended) ? 1 : 0;
-}
-
 void Stream::close() {
     closing_ = true;
     SetEvent(spaceEvent_);
-    SetEvent(drainEvent_);
     const HRESULT hr = command(Command::Close);
     if (!thread_.joinable()) return;
     if (hr != HRESULT_FROM_WIN32(ERROR_TIMEOUT)) {

@@ -28,8 +28,6 @@ data class OutputStatus(
     val framesBuffered: Long,
     val underruns: Long,
     val playing: Boolean,
-    val draining: Boolean,
-    val ended: Boolean,
     val deviceInvalidated: Boolean,
     val exclusive: Boolean,
     val lastError: Int,
@@ -72,8 +70,6 @@ class WasapiOutput private constructor(
 
     fun flush() { checked(WasapiNative.flush(handle())) }
 
-    fun drain(timeoutMs: Int = -1): Boolean = checked(WasapiNative.drain(handle(), timeoutMs)) == 1
-
     fun status(): OutputStatus {
         val values = WasapiNative.status(handle()) ?: throw WasapiException(WasapiException.CLOSED)
         val flags = values[3].toInt()
@@ -82,8 +78,6 @@ class WasapiOutput private constructor(
             framesBuffered = values[1],
             underruns = values[2],
             playing = flags and 1 != 0,
-            draining = flags and 2 != 0,
-            ended = flags and 4 != 0,
             deviceInvalidated = flags and 8 != 0,
             exclusive = flags and 16 != 0,
             lastError = values[4].toInt(),
