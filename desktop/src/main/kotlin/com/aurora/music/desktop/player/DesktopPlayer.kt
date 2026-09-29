@@ -137,6 +137,8 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private var serverLikedIds: Set<String> = emptySet()
     private var likedPlaylistIds: Set<String> = emptySet()
     private val likeChecked = HashSet<String>()
+    private var likeEdits = 0
+    private val likesInFlight = mutableListOf<String>()
     private var lastRecordedId: String? = null
     private var lastNowPlayingId: String? = null
     // account the live queue belongs to so it persists/restores under the right key
@@ -614,7 +616,11 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun refreshLikes() {
         scope.launch {
-            serverLikedIds = runCatching { deps.repository.starredIds() }.getOrDefault(serverLikedIds)
+            val edits = likeEdits
+            val fetched = runCatching { deps.repository.starredIds() }.getOrNull() ?: return@launch
+            // a like toggled mid-fetch makes the fetched set stale
+            if (edits != likeEdits) return@launch
+            serverLikedIds = fetched - likesInFlight + likesInFlight.filter { it in serverLikedIds }
             recomputeLikes()
         }
     }
@@ -644,8 +650,14 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             scope.launch { runCatching { deps.repository.setStarred(id, nowLiked, "playlist") } }
         } else {
             serverLikedIds = if (nowLiked) serverLikedIds + id else serverLikedIds - id
+            likeEdits++
+            likesInFlight += id
             recomputeLikes()
-            scope.launch { runCatching { deps.repository.setStarred(id, nowLiked, kind) } }
+            scope.launch {
+                runCatching { deps.repository.setStarred(id, nowLiked, kind) }
+                likeEdits++
+                likesInFlight -= id
+            }
         }
     }
 

@@ -34,7 +34,7 @@ internal class FakeBackend(
     override fun open(deviceId: String?, exclusive: Boolean, sampleRate: Int, encoding: OutputEncoding, bufferMs: Int): AudioOutput {
         if (exclusive && refuseExclusive) throw WasapiException(WasapiException.DEVICE_IN_USE)
         val resolved = deviceId ?: devices.firstOrNull { it.isDefault }?.id
-        return FakeOutput(ids.incrementAndGet(), resolved, exclusive, sampleRate, encoding, ringFrames, speed).also { opened += it }
+        return FakeOutput(ids.incrementAndGet(), resolved, exclusive, sampleRate, encoding, ringFrames, speed, bufferMs).also { opened += it }
     }
 
     override fun listen(listener: (DeviceEvent) -> Unit): AutoCloseable {
@@ -57,6 +57,7 @@ internal class FakeOutput(
     override val encoding: OutputEncoding,
     ringFrames: Int,
     private val speed: Double,
+    val bufferMs: Int,
 ) : AudioOutput {
     private val frameBytes = encoding.bytesPerSample * 2
     private val ring = ByteArray(ringFrames * frameBytes)

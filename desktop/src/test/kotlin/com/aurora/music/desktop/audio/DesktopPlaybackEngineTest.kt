@@ -6,6 +6,7 @@ import com.aurora.music.desktop.natives.AudioDevice
 import com.aurora.music.desktop.natives.DeviceEvent
 import com.aurora.music.desktop.natives.DeviceKind
 import com.aurora.music.desktop.natives.OutputEncoding
+import com.aurora.music.desktop.natives.WasapiException
 import com.aurora.music.model.Song
 import com.aurora.music.playback.VisualizerController
 import com.aurora.music.playback.chain.DspChainSettings
@@ -271,6 +272,47 @@ class DesktopPlaybackEngineTest {
         }
     }
 
+    @Test fun loadFailuresWhilePausedStayOnTheItemAtItsPosition() {
+        val (file, samples) = tone("after", 48_000, 16, 600) { frame, _ -> frame }
+        val broken = Song("yt", "Video", "Artist", "Album", "", 30, streamUrl = "aurora-yt://video/abcdefghijk")
+        val backend = FakeBackend()
+        val engine = engine(backend)
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(broken, tracks.song(file)), 0, 5_000, play = false)
+            val stopped = engine.await { it.error != null }
+            log.await { events -> events.any { it is EngineEvent.Failed } }
+            assertEquals(0, stopped.index)
+            assertEquals(5_000L, stopped.positionMs)
+            assertEquals(EnginePhase.IDLE, stopped.phase)
+            assertFalse(stopped.playWhenReady)
+            assertEquals(1, log.all<EngineEvent.Failed>().size)
+            engine.play()
+            log.await { EngineEvent.Ended in it }
+            assertEquals(2, log.all<EngineEvent.Failed>().size)
+            assertEquals("yt" to "after", log.transitions().last().let { it.from?.song?.id to it.to?.song?.id })
+        }
+        assertArrayEquals(floats(samples, 16), backend.last.heardFloats(), 0f)
+    }
+
+    @Test fun ratesTheChainCannotPlayAreSkippedAsUnsupported() {
+        val (low, _) = tone("phone", 8_000, 16, 800) { frame, _ -> frame }
+        val (a, _) = tone("ok1", 48_000, 16, 45_000) { frame, _ -> frame % 1_000 }
+        val (c, _) = tone("ok2", 48_000, 16, 2_400) { frame, _ -> -frame }
+        val backend = FakeBackend(speed = 8.0)
+        val engine = engine(backend, EngineConfig(crossfadeMs = 1_000))
+        engine.setSpeed(0.5f)
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(low), tracks.song(a), tracks.song(low, "phone2"), tracks.song(c)))
+            log.await { EngineEvent.Ended in it }
+            val failures = log.all<EngineEvent.Failed>()
+            assertEquals(listOf("phone", "phone2"), failures.map { it.entry?.song?.id })
+            assertTrue(failures.all { it.failure.kind == PlaybackFailure.Kind.UNSUPPORTED_SOURCE })
+            assertEquals(listOf(TransitionReason.QUEUE_CHANGED, TransitionReason.SEEK, TransitionReason.AUTO), log.transitions().map { it.reason })
+            assertEquals("ok1" to "ok2", log.transitions().last().let { it.from?.song?.id to it.to?.song?.id })
+        }
+        assertNull(engine.await { it.phase == EnginePhase.ENDED }.error)
+    }
+
     @Test fun sampleRateChangesAreResampledInSharedMode() {
         val (a, low) = tone("cd", 44_100, 16, 4_410) { frame, channel -> (sin(frame * 0.05 + channel) * 12_000).roundToInt() }
         val (b, high) = tone("dat", 48_000, 16, 4_800) { frame, channel -> (frame * 3 + channel) % 9_000 - 4_500 }
@@ -320,6 +362,23 @@ class DesktopPlaybackEngineTest {
         }
     }
 
+    @Test fun bufferChangesApplyWhenAStoppedOutputIsReused() {
+        val (file, _) = tone("buffer", 48_000, 16, 2_400) { frame, _ -> frame }
+        val backend = FakeBackend()
+        val engine = engine(backend)
+        engine.setQueue(listOf(tracks.song(file)), play = false)
+        engine.await { it.phase == EnginePhase.READY }
+        engine.stop()
+        engine.await { it.phase == EnginePhase.IDLE }
+        engine.configure(EngineConfig(bufferMs = 1_000))
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(file)))
+            log.await { EngineEvent.Ended in it }
+        }
+        assertEquals(listOf(250, 1_000), backend.opened.map { it.bufferMs })
+        assertTrue(backend.opened.first().closed)
+    }
+
     @Test fun invalidatedStreamsReopenAtTheHeardPosition() {
         val (file, _) = tone("device", 48_000, 16, 240_000) { frame, _ -> frame % 2_000 }
         val backend = FakeBackend(speed = 1.0, ringFrames = 9_600)
@@ -331,6 +390,26 @@ class DesktopPlaybackEngineTest {
         val resumed = engine.await { backend.opened.size == 2 && it.isPlaying && it.positionMs >= 350 }
         assertTrue(first.closed)
         assertTrue(resumed.positionMs < 1_500)
+    }
+
+    @Test fun streamsInvalidatedWhilePausedReopenWhenPlayResumes() {
+        val (file, _) = tone("asleep", 48_000, 16, 240_000) { frame, _ -> frame % 2_000 }
+        val backend = FakeBackend(speed = 1.0, ringFrames = 9_600)
+        val engine = engine(backend)
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(file)))
+            engine.await { it.isPlaying && it.positionMs >= 300 }
+            engine.pause()
+            val paused = engine.await { !it.playWhenReady }
+            val first = backend.last
+            first.resumeFailure = WasapiException.DEVICE_INVALIDATED
+            engine.play()
+            val resumed = engine.await { backend.opened.size == 2 && it.isPlaying && it.positionMs >= paused.positionMs + 50 }
+            assertTrue(first.closed)
+            assertNull(resumed.error)
+            assertTrue(resumed.positionMs < paused.positionMs + 1_500)
+            assertTrue(log.all<EngineEvent.Failed>().isEmpty())
+        }
     }
 
     @Test fun removingTheSelectedDevicePausesOnTheDefaultUntilItReturns() {
@@ -377,6 +456,37 @@ class DesktopPlaybackEngineTest {
         eventually { backend.last.heardFrames() > heardBefore + 4_800 }
         val resumed = backend.last.heardFloats()
         assertEquals(0.5f, resumed[resumed.size - 2])
+        engine.pause()
+    }
+
+    @Test fun sleepFadeWhilePausedIsDroppedAndPausingCancelsARunningFade() {
+        val (file, _) = tone("drowsy", 48_000, 16, 480_000) { _, _ -> 16_384 }
+        val backend = FakeBackend(speed = 4.0)
+        val engine = engine(backend)
+        engine.setQueue(listOf(tracks.song(file)))
+        engine.await { it.isPlaying && it.positionMs >= 300 }
+        engine.pause()
+        engine.await { !it.playWhenReady }
+        engine.sleepFade(400)
+        engine.play()
+        engine.await { it.isPlaying }
+        val resumedAt = backend.last.heardFrames()
+        eventually { backend.last.heardFrames() > resumedAt + 48_000 }
+        assertTrue(engine.state.value.playWhenReady)
+        assertTrue(backend.last.heardFloats().all { it == 0.5f })
+        engine.sleepFade(2_000)
+        val fadingAt = backend.last.heardFrames()
+        eventually { backend.last.heardFrames() > fadingAt + 24_000 }
+        engine.pause()
+        engine.await { !it.playWhenReady }
+        assertTrue(backend.last.heardFloats().any { it < 0.5f })
+        engine.play()
+        engine.await { it.isPlaying }
+        val playingAt = backend.last.heardFrames()
+        eventually { backend.last.heardFrames() > playingAt + 120_000 }
+        assertTrue(engine.state.value.playWhenReady)
+        val heard = backend.last.heardFloats()
+        assertEquals(0.5f, heard[heard.size - 2])
         engine.pause()
     }
 

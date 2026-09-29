@@ -35,6 +35,7 @@
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"Выбранное устройство вывода отключено"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"Не удалось декодировать трек"</string>
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"Не удалось открыть трек"</string>
+    <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"Частота дискретизации трека не поддерживается"</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Используется акцентный цвет Windows."</string>
     <string name="text_volume_3b18e8" formatted="false">"Громкость"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Возможности Windows"</string>

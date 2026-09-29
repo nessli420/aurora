@@ -75,8 +75,10 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import java.io.File
+import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
 class DesktopContainer(
@@ -141,8 +143,12 @@ class DesktopContainer(
 
     private fun currentServerId(): String = backend?.session?.server ?: ""
 
+    private fun openDownloadSource(uri: String): InputStream? = ArtworkUrls.decode(uri)?.let { request ->
+        runCatching { runBlocking { artworkRepository.open(request) { it.readBytes() } } }.getOrNull()?.inputStream()
+    } ?: openDesktopUri(uri)
+
     val downloadManager: DownloadManager = DownloadManager(
-        paths.downloads, ::desktopFileUri, ::openDesktopUri,
+        paths.downloads, ::desktopFileUri, ::openDownloadSource,
         streamUrlProvider = { id, bitrate, lossless -> backend?.streamUrl(id, bitrate, lossless) },
         downloadBitrateProvider = { downloadBitrate },
         currentServerIdProvider = { currentServerId() },

@@ -35,6 +35,7 @@
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"The selected output device was disconnected"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"The track could not be decoded"</string>
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"The track could not be opened"</string>
+    <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"The track\'s sample rate is not supported"</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Using your Windows accent colour."</string>
     <string name="text_volume_3b18e8" formatted="false">"Volume"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows capabilities"</string>

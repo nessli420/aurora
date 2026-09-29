@@ -99,6 +99,7 @@ class DesktopPlaybackEngine(
     private var output: AudioOutput? = null
     private var negotiated: NegotiatedOutput? = null
     private var openedFor: String? = null
+    private var openedBufferMs = 0
     private var mixBlock = AudioBlock(AudioStreamFormat(48_000, ChannelLayout.STEREO), BLOCK_FRAMES)
     private var frameBytes = 8
     private var running = false
@@ -259,8 +260,11 @@ class DesktopPlaybackEngine(
     }
 
     override fun sleepFade(fadeMs: Int) = post {
-        if (fadeMs <= 0) sleepPauseAt = -1
-        master.sleepFade(if (fadeMs <= 0) 0 else framesFor(fadeMs))
+        if (fadeMs > 0 && playWhenReady && phase != EnginePhase.IDLE && phase != EnginePhase.ENDED) master.sleepFade(framesFor(fadeMs))
+        else {
+            sleepPauseAt = -1
+            master.endSleep()
+        }
         publish()
     }
 
@@ -586,7 +590,7 @@ class DesktopPlaybackEngine(
         val failure = PlaybackFailure(kind, cause.message ?: appString(R.string.text_the_track_could_not_be_opened_5719af))
         failed(entry, failure)
         val next = nextPlayable(queue.indexOf(entry.uid))
-        if (failures >= config.maxConsecutiveFailures || next < 0) return stopWithError(failure)
+        if (!playWhenReady || failures >= config.maxConsecutiveFailures || next < 0) return stopWithError(failure)
         restart(next, 0, TransitionReason.SEEK)
     }
 
@@ -605,11 +609,15 @@ class DesktopPlaybackEngine(
             track.close()
             return
         }
+        val format = chainFormatOrNull(track)
+        if (format == null) {
+            track.close()
+            return loadFailed(track.entry, UnsupportedStreamException(unsupportedRate()))
+        }
         resetStream()
         val deck = decks[0]
         setPrimary(deck)
         deck.tap = beforeTap
-        val format = chainFormat(track)
         val latency = deck.start(track, format, 0)
         decks[1].chain.configure(format)
         addMarker(deck, latency, track, reason)
@@ -621,7 +629,7 @@ class DesktopPlaybackEngine(
         val deviceId = activeDeviceId()
         val wanted = try { negotiate(deviceId, sourceRate) } catch (e: Exception) { negotiator.shared(deviceId, e.message) }
         val current = output
-        if (current != null && openedFor == deviceId && current.exclusive == wanted.exclusive &&
+        if (current != null && openedFor == deviceId && openedBufferMs == config.bufferMs && current.exclusive == wanted.exclusive &&
             current.sampleRate == wanted.sampleRate && current.encoding == wanted.encoding) {
             negotiated = wanted
             return true
@@ -644,15 +652,16 @@ class DesktopPlaybackEngine(
     private fun openOutput(wanted: NegotiatedOutput, deviceId: String?): Boolean {
         closeOutput()
         var chosen = wanted
+        val bufferMs = config.bufferMs
         val opened = try {
-            backend.open(wanted.deviceId, wanted.exclusive, wanted.sampleRate, wanted.encoding, config.bufferMs)
+            backend.open(wanted.deviceId, wanted.exclusive, wanted.sampleRate, wanted.encoding, bufferMs)
         } catch (e: Exception) {
             if (!wanted.exclusive) return failOutput(e)
             val reason = appString(R.string.text_exclusive_mode_is_unavailable_0de552, e.message)
             exclusiveBlocked = reason
             chosen = negotiator.shared(deviceId, reason)
             try {
-                backend.open(chosen.deviceId, false, chosen.sampleRate, chosen.encoding, config.bufferMs)
+                backend.open(chosen.deviceId, false, chosen.sampleRate, chosen.encoding, bufferMs)
             } catch (shared: Exception) {
                 return failOutput(shared)
             }
@@ -662,6 +671,7 @@ class DesktopPlaybackEngine(
         output = opened
         negotiated = chosen
         openedFor = deviceId
+        openedBufferMs = bufferMs
         frameBytes = opened.encoding.bytesPerSample * 2
         if (mixBlock.format.sampleRate != opened.sampleRate) {
             mixBlock = AudioBlock(AudioStreamFormat(opened.sampleRate, ChannelLayout.STEREO), BLOCK_FRAMES)
@@ -690,6 +700,7 @@ class DesktopPlaybackEngine(
 
     private fun stopWithError(failure: PlaybackFailure) {
         stopAudio()
+        master.endSleep()
         playWhenReady = false
         phase = EnginePhase.IDLE
         error = failure
@@ -700,6 +711,8 @@ class DesktopPlaybackEngine(
     private fun pauseInternal() {
         playWhenReady = false
         master.cancelWake()
+        master.endSleep()
+        sleepPauseAt = -1
         if (running) {
             output?.let { runCatching { it.pause() } }
             running = false
@@ -734,8 +747,6 @@ class DesktopPlaybackEngine(
         val marker = heardMarker
         if (failures > 0 && marker != null && marker.msPerFrame > 0 && positionOf(marker, frames) - marker.startMs >= 1_000) resetFailures()
         if (sleepPauseAt in 0..frames) {
-            sleepPauseAt = -1
-            master.endSleep()
             pauseInternal()
             restartAtHeard()
             return
@@ -783,6 +794,9 @@ class DesktopPlaybackEngine(
                 current.resume()
                 running = true
                 lastStatus = null
+            } catch (e: WasapiException) {
+                if (e.deviceInvalidated) reopenAtHeard() else failOutput(e)
+                return false
             } catch (e: Exception) {
                 return failOutput(e)
             }
@@ -886,8 +900,13 @@ class DesktopPlaybackEngine(
                 else PlaybackFailure.Kind.SOURCE_UNAVAILABLE, it.message ?: appString(R.string.text_the_track_could_not_be_opened_5719af)))
             return true
         }
+        val format = chainFormatOrNull(incoming)
+        if (format == null) {
+            incoming.close()
+            failed(next, PlaybackFailure(PlaybackFailure.Kind.UNSUPPORTED_SOURCE, unsupportedRate()))
+            return true
+        }
         val reason = if (next.uid == track.entry.uid) TransitionReason.REPEAT else TransitionReason.AUTO
-        val format = chainFormat(incoming)
         val current = checkNotNull(deck.chain.format)
         when {
             !compatibleOutput(incoming) -> {
@@ -915,10 +934,11 @@ class DesktopPlaybackEngine(
         val slot = prepared?.takeIf { it.entry.uid == next.uid } ?: return
         val incomingTrack = slot.result?.getOrNull() ?: return
         if (!compatibleOutput(incomingTrack)) return
+        val format = chainFormatOrNull(incomingTrack) ?: return
         prepared = null
         val incoming = if (decks[0] === lead) decks[1] else decks[0]
         incoming.release()
-        val latency = incoming.start(incomingTrack, chainFormat(incomingTrack), streamFrames)
+        val latency = incoming.start(incomingTrack, format, streamFrames)
         lead.tap = null
         incoming.tap = beforeTap
         fading = lead
@@ -1111,6 +1131,11 @@ class DesktopPlaybackEngine(
         val format = checkNotNull(negotiated)
         return ChainFormat(track.rate, format.sampleRate, format.encoding.pcm, track.precision, config.outputRatePolicy, speed)
     }
+
+    private fun chainFormatOrNull(track: OpenTrack): ChainFormat? =
+        try { chainFormat(track) } catch (e: IllegalArgumentException) { null }
+
+    private fun unsupportedRate() = appString(R.string.text_the_track_s_sample_rate_is_not_supported_5c8629)
 
     private fun outputRate() = negotiated?.sampleRate ?: 48_000
 
