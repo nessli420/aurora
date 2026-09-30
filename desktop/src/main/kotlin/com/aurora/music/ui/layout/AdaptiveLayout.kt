@@ -1,5 +1,7 @@
 package com.aurora.music.ui.layout
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -61,3 +63,9 @@ fun WindowLayout.shell(panelRequested: Boolean): ShellLayout {
 val LocalWindowLayout = staticCompositionLocalOf { WindowLayout() }
 
 val LocalPageGutter = staticCompositionLocalOf { 24.dp }
+
+@Composable
+fun pagePadding(contentPadding: PaddingValues, top: Dp = 0.dp, bottom: Dp = 24.dp): PaddingValues {
+    val gutter = LocalPageGutter.current
+    return PaddingValues(start = gutter, end = gutter, top = top, bottom = contentPadding.calculateBottomPadding() + bottom)
+}

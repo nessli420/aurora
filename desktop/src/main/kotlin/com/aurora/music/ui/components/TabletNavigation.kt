@@ -27,7 +27,6 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,11 +59,11 @@ import com.aurora.music.data.Pin
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.accent
-import com.aurora.music.util.accentFor
 import com.aurora.music.navigation.NavLayout
 import com.aurora.music.navigation.NavMenuItem
 import com.aurora.music.navigation.Routes
 import com.aurora.music.ui.layout.TabletMetrics
+import com.aurora.music.util.accentFor
 
 @Composable
 fun TabletNavigationRail(currentRoute: String?, items: List<NavMenuItem>, onOpen: (NavMenuItem) -> Unit, onMenu: () -> Unit, onSettings: () -> Unit) {
@@ -139,24 +138,19 @@ fun TabletSidebar(
                 Spacer(Modifier.height(12.dp))
                 FoldableMore(layout.more, currentRoute, onOpen)
             }
+            if (pins.isNotEmpty()) {
+                SidebarHeading(appString(R.string.text_pinned_f93121))
+                pins.forEach { pin ->
+                    CollectionItem(pin.title, pin.subtitle, pin.coverUrl, accentFor(pin.id), circle = pin.kind == "artist",
+                        selected = pin.id == selectedId) { onOpenCollection(pin.kind, pin.id) }
+                }
+            }
             val pinnedIds = pins.map { it.id }.toSet()
             val others = playlists.filter { it.id !in pinnedIds }
-            if (pins.isNotEmpty() || others.isNotEmpty()) {
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    appString(R.string.text_playlists_77b69f),
-                    style = MaterialTheme.typography.labelLarge,
-                    fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.heightIn(min = 40.dp).padding(start = 16.dp, top = 12.dp),
-                )
-                pins.forEach { pin ->
-                    CollectionItem(pin.title, pin.subtitle, pin.coverUrl, accentFor(pin.id), pinned = true, selected = pin.id == selectedId) {
-                        onOpenCollection(pin.kind, pin.id)
-                    }
-                }
+            if (others.isNotEmpty()) {
+                SidebarHeading(appString(R.string.text_playlists_77b69f))
                 others.forEach { playlist ->
-                    CollectionItem(playlist.title, playlist.subtitle, playlist.coverUrl, playlist.accent, pinned = false,
+                    CollectionItem(playlist.title, playlist.subtitle, playlist.coverUrl, playlist.accent, circle = false,
                         selected = playlist.id == selectedId) { onOpenCollection("playlist", playlist.id) }
                 }
             }
@@ -166,17 +160,29 @@ fun TabletSidebar(
 }
 
 @Composable
-private fun CollectionItem(title: String, subtitle: String, coverUrl: String, accent: Color, pinned: Boolean, selected: Boolean, onClick: () -> Unit) {
+private fun SidebarHeading(text: String) {
+    Text(
+        text,
+        style = MaterialTheme.typography.labelLarge,
+        fontWeight = FontWeight.Bold,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        maxLines = 1,
+        modifier = Modifier.padding(start = 16.dp, top = 20.dp, bottom = 6.dp),
+    )
+}
+
+@Composable
+private fun CollectionItem(title: String, subtitle: String, coverUrl: String, accent: Color, circle: Boolean, selected: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val container by animateColorAsState(if (selected) colors.primary.copy(alpha = 0.16f) else Color.Transparent, label = "sidebarCollection")
     Row(
         Modifier.fillMaxWidth().padding(vertical = 1.dp).clip(MaterialTheme.shapes.medium).background(container)
             .pointerHoverIcon(PointerIcon.Hand)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
-            .heightIn(min = 52.dp).padding(horizontal = 8.dp, vertical = 6.dp),
+            .heightIn(min = 52.dp).padding(start = 12.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Artwork(coverUrl, accent, Modifier.size(40.dp), corner = 8.dp)
+        Artwork(coverUrl, accent, Modifier.size(40.dp), corner = if (circle) 40.dp else 8.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
@@ -184,8 +190,6 @@ private fun CollectionItem(title: String, subtitle: String, coverUrl: String, ac
             if (subtitle.isNotBlank()) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (pinned) Icon(Icons.Filled.PushPin, appString(R.string.text_pinned_f93121), tint = colors.primary,
-            modifier = Modifier.padding(start = 6.dp).size(14.dp))
     }
 }
 

@@ -103,6 +103,7 @@ internal class AuditScene(
     val width: Int,
     val height: Int,
     signedIn: Boolean = true,
+    setup: suspend DesktopContainer.() -> Unit = {},
     content: (@Composable () -> Unit)? = null,
 ) : AutoCloseable {
     private val root = Files.createTempDirectory("aurora-ux").toFile()
@@ -130,6 +131,7 @@ internal class AuditScene(
                 settingsStore.setLocalProfile(LocalProfile(name = "Alex Rivera"))
                 desktopSettings.setMusicFolders(listOf(AuditLibrary.music.path))
                 if (signedIn) seed()
+                setup()
             }
         }
         ui = EdtScene(width, height) {
