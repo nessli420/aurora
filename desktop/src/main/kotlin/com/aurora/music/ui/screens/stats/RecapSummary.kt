@@ -94,7 +94,7 @@ fun RecapSummary(recap: ListeningRecap) {
             }
         }
     }
-    Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(Modifier.fillMaxWidth().padding(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(appString(R.string.text_your_recap_all_together_933de3), style = MaterialTheme.typography.titleLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             RecapStyle.entries.forEach { s -> FilterChip(style == s, { style = s }, label = { Text(when (s) { RecapStyle.MIDNIGHT -> appString(R.string.recap_midnight); RecapStyle.PAPER -> appString(R.string.recap_paper); RecapStyle.AURORA -> "Aurora" }) }) }

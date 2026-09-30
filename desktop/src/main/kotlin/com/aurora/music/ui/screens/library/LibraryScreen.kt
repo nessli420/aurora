@@ -67,6 +67,7 @@ import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Podcasts
+import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Search
@@ -159,6 +160,9 @@ private val ColumnGap = 16.dp
 private val ActionSize = 36.dp
 private val TileGap = 12.dp
 private val TileMinWidth = 260.dp
+private val CompactTileMinWidth = 170.dp
+private val TileArt = 40.dp
+private val SplitCardMin = 116.dp
 private val TileMaxWidth = 320.dp
 private val CompactWidth = 720.dp
 private val RailLetter = 12.dp
@@ -332,8 +336,8 @@ fun LibraryScreen(
 
         when (filter) {
             LibraryFilter.ALL -> AllOverview(
-                state = state, pins = pins, canDownload = canDownload, bottom = bottom, cardMin = cardMin, actions = actions,
-                onFilter = onFilter, onOpen = open, onOpenDetail = onOpenDetail,
+                state = state, pins = pins, canDownload = canDownload, compact = compact, bottom = bottom, cardMin = cardMin, actions = actions,
+                onFilter = onFilter, onOpen = open,
                 onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts,
             )
             LibraryFilter.SONGS -> SongsTab(
@@ -369,7 +373,7 @@ fun LibraryScreen(
 private fun cardMinWidth(columns: Int, compact: Boolean): Dp = when (columns.coerceIn(2, 4)) {
     3 -> if (compact) 96.dp else 148.dp
     4 -> if (compact) 80.dp else 128.dp
-    else -> if (compact) 112.dp else PageMetrics.ShelfMinItemWidth
+    else -> if (compact) SplitCardMin else PageMetrics.ShelfMinItemWidth
 }
 
 @Composable
@@ -536,12 +540,12 @@ private fun AllOverview(
     state: LibraryUiState,
     pins: List<com.aurora.music.data.Pin>,
     canDownload: Boolean,
+    compact: Boolean,
     bottom: Dp,
     cardMin: Dp,
     actions: LibActions,
     onFilter: (LibraryFilter) -> Unit,
     onOpen: (LibRow) -> Unit,
-    onOpenDetail: (String, String) -> Unit,
     onOpenFolders: () -> Unit,
     onOpenRadio: (() -> Unit)?,
     onOpenPodcasts: (() -> Unit)?,
@@ -566,20 +570,19 @@ private fun AllOverview(
         verticalArrangement = Arrangement.spacedBy(PageMetrics.SectionGap),
     ) {
         item {
+            val liked = LibRow(
+                appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), state.likedCover,
+                accentFor("liked"), "liked", "liked",
+            )
             val tiles = buildList {
-                add(QuickTile(appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), Icons.Filled.Favorite, state.likedCover) { onOpenDetail("liked", "liked") })
+                add(QuickTile(liked.title, liked.subtitle, Icons.Filled.Favorite, state.likedCover, row = liked) { onOpen(liked) })
                 if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
                 if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
                 if (onOpenRadio != null) add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
                 if (onOpenPodcasts != null) add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
+                pinRows.forEach { r -> add(QuickTile(r.title, r.subtitle, null, r.art, row = r, pinned = true) { onOpen(r) }) }
             }
-            QuickTiles(tiles)
-        }
-
-        if (pinRows.isNotEmpty()) {
-            item {
-                PageSection(appString(R.string.text_pinned_f93121), count = pinRows.size) { LibShelf(pinRows, cardMin, actions, onOpen) }
-            }
+            QuickTiles(tiles, compact, actions)
         }
 
         if (playlistRows.isNotEmpty()) {
@@ -621,48 +624,92 @@ private fun LibShelf(rows: List<LibRow>, minWidth: Dp, actions: LibActions, onOp
 private data class QuickTile(
     val title: String,
     val subtitle: String,
-    val icon: ImageVector,
+    val icon: ImageVector?,
     val art: String,
+    val row: LibRow? = null,
+    val pinned: Boolean = false,
     val onClick: () -> Unit,
 )
 
 @Composable
-private fun QuickTiles(tiles: List<QuickTile>) {
+private fun QuickTiles(tiles: List<QuickTile>, compact: Boolean, actions: LibActions) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-        val columns = floor((maxWidth + TileGap) / (TileMinWidth + TileGap)).toInt().coerceAtLeast(1)
+        val min = if (compact) CompactTileMinWidth else TileMinWidth
+        val columns = floor((maxWidth + TileGap) / (min + TileGap)).toInt().coerceAtLeast(1)
         val tileWidth = if (columns == 1) maxWidth else ((maxWidth - TileGap * (columns - 1)) / columns).coerceAtMost(TileMaxWidth)
         FlowRow(horizontalArrangement = Arrangement.spacedBy(TileGap), verticalArrangement = Arrangement.spacedBy(TileGap)) {
-            tiles.forEach { t -> QuickTileCard(t, Modifier.width(tileWidth)) }
+            tiles.forEach { t -> QuickTileCard(t, actions, Modifier.width(tileWidth)) }
         }
     }
 }
 
 @Composable
-private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
+private fun QuickTileCard(tile: QuickTile, actions: LibActions, modifier: Modifier = Modifier) {
     val aurora = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
     val shape = if (aurora) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium
-    Row(
-        modifier
-            .height(64.dp)
-            .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)) else Modifier.auroraPanel(shape))
-            .clickable(onClick = tile.onClick)
-            .pointerHoverIcon(PointerIcon.Hand)
-            .padding(horizontal = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (tile.art.isNotBlank()) {
-            Artwork(tile.art, MaterialTheme.colorScheme.primary, Modifier.size(40.dp), corner = 10.dp)
-        } else {
-            Box(
-                Modifier.size(40.dp).clip(RoundedCornerShape(10.dp))
-                    .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)))),
-                contentAlignment = Alignment.Center,
-            ) { Icon(tile.icon, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp)) }
+    val row = tile.row
+    var contextAt by remember { mutableStateOf<Offset?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val selected = row != null && isSelected(row)
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Box(modifier.then(if (row != null) Modifier.onSecondaryPress { contextAt = it } else Modifier)) {
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(64.dp)
+                .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)) else Modifier.auroraPanel(shape))
+                .then(if (selected) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), shape) else Modifier)
+                .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = tile.onClick)
+                .pointerHoverIcon(PointerIcon.Hand)
+                .padding(start = 12.dp, end = if (row != null) 8.dp else 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            val circle = row?.circle == true
+            if (tile.art.isNotBlank() || tile.icon == null) {
+                Artwork(tile.art, row?.accent ?: MaterialTheme.colorScheme.primary, Modifier.size(TileArt), corner = if (circle) TileArt else 10.dp)
+            } else {
+                Box(
+                    Modifier.size(TileArt).clip(RoundedCornerShape(10.dp))
+                        .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)))),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(tile.icon, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp)) }
+            }
+            Spacer(Modifier.width(12.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    tile.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    if (tile.pinned) {
+                        Icon(Icons.Filled.PushPin, appString(R.string.text_pinned_f93121), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(11.dp))
+                        Spacer(Modifier.width(4.dp))
+                    }
+                    Text(tile.subtitle, style = MaterialTheme.typography.labelSmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            if (row != null && (hovered || menuOpen)) {
+                Box(
+                    Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)
+                        .clickable(onClickLabel = appString(R.string.text_play_5d12bd)) { actions.onPlay(row) }
+                        .pointerHoverIcon(PointerIcon.Hand),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp)) }
+                Box {
+                    Box(
+                        Modifier.size(28.dp).clip(CircleShape)
+                            .clickable(onClickLabel = appString(R.string.text_more_4bab2d)) { menuOpen = true }
+                            .pointerHoverIcon(PointerIcon.Hand),
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = muted, modifier = Modifier.size(18.dp)) }
+                    CollectionMenu(row, actions, expanded = menuOpen, onDismiss = { menuOpen = false })
+                }
+            }
         }
-        Spacer(Modifier.width(12.dp))
-        Column {
-            Text(tile.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(tile.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        if (row != null) contextAt?.let { at ->
+            Box(Modifier.offset { at.round() }) { CollectionMenu(row, actions, expanded = true, onDismiss = { contextAt = null }) }
         }
     }
 }

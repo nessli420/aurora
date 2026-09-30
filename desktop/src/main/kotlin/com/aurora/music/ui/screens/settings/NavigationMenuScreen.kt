@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -128,7 +127,7 @@ private fun NavEditRow(
     val colors = MaterialTheme.colorScheme
     Box(modifier.fillMaxWidth().padding(horizontal = 12.dp)) {
         Row(
-            Modifier.widthIn(max = 720.dp).fillMaxWidth().auroraPanel(MaterialTheme.shapes.medium)
+            Modifier.fillMaxWidth().auroraPanel(MaterialTheme.shapes.medium)
                 .heightIn(min = 60.dp).padding(start = 16.dp, end = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {

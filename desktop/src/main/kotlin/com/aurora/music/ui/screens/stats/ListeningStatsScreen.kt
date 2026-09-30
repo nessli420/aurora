@@ -10,6 +10,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -22,12 +23,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.produceState
@@ -58,7 +55,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.data.RankedItem
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.data.RecapRank
+import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.ui.components.SectionHeader
+import com.aurora.music.ui.layout.LocalPageGutter
+import com.aurora.music.ui.layout.PageMetrics
+import com.aurora.music.ui.layout.pagePadding
 import com.aurora.music.util.accentFor
 import com.aurora.music.data.label
 import java.time.Instant
@@ -77,67 +79,75 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
     val previous by produceState(ListeningRecaps.build(emptyList(), window.move(-1)), history, window) { value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { ListeningRecaps.build(history, window.move(-1)) } }
     val listState = rememberLazyListState()
     Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(top = 6.dp, start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).pointerHoverIcon(PointerIcon.Hand).padding(8.dp))
-            Text(appString(R.string.text_your_listening_recap_2d4efe), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
-        }
-        Box {
-        LazyColumn(state = listState, contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
-            item {
-                Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                    RecapPeriod.entries.forEach { period ->
-                        FilterChip(selected = window.period == period, onClick = { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }, label = { Text(period.label) })
-                    }
-                }
-                Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
-                    Column(Modifier.weight(1f).clickable(enabled = window.period != RecapPeriod.ALL) { picking = true }.pointerHoverIcon(PointerIcon.Hand), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(window.label, fontWeight = FontWeight.Bold)
-                        Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
-                    }
-                    TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
-                }
-                Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StatCard("${recap.plays}", appString(R.string.text_plays_a6bc73), Modifier.weight(1f))
-                    StatCard("${recap.minutes}", appString(R.string.text_minutes_092f99), Modifier.weight(1f))
-                    StatCard("${recap.artists.size}", appString(R.string.text_artists_1528d8), Modifier.weight(1f))
-                }
-                Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(horizontal = 16.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            if (recap.millis == 0L) item { Text(appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2), Modifier.padding(24.dp)) }
-            else {
-                item { RecapInsights(recap, previous) }
+        PageHeader(appString(R.string.text_your_listening_recap_2d4efe), Modifier.padding(horizontal = LocalPageGutter.current), onBack = onBack)
+        BoxWithConstraints {
+            val wide = maxWidth - LocalPageGutter.current * 2 >= 1100.dp
+            LazyColumn(state = listState, contentPadding = pagePadding(contentPadding)) {
                 item {
-                    Row(Modifier.fillMaxWidth().padding(16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        StatCard("${recap.songs.size}", appString(R.string.text_unique_songs_5af512), Modifier.weight(1f))
-                        StatCard("${recap.albums.size}", appString(R.string.text_albums_4c45e7), Modifier.weight(1f))
-                        StatCard("${recap.activeDays}", appString(R.string.text_active_days_340f3c), Modifier.weight(1f))
+                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        RecapPeriod.entries.forEach { period ->
+                            FilterChip(selected = window.period == period, onClick = { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }, label = { Text(period.label) })
+                        }
                     }
-                    if (window.period != RecapPeriod.DAY) {
-                        Text(appString(R.string.text_busiest_day_min_per_active_day_8cd6fd, (recap.busiestDay), (recap.minutes / recap.activeDays.coerceAtLeast(1))), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodyMedium)
+                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
+                        Column(Modifier.weight(1f).clickable(enabled = window.period != RecapPeriod.ALL) { picking = true }.pointerHoverIcon(PointerIcon.Hand), horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(window.label, fontWeight = FontWeight.Bold)
+                            Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
+                        }
+                        TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
                     }
-                    ListeningClock(recap.hourly.map { (it / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }.toIntArray())
-                    Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(!byMinutes, { byMinutes = false }, label = { Text(appString(R.string.text_most_played_14202e)) })
-                        FilterChip(byMinutes, { byMinutes = true }, label = { Text(appString(R.string.text_most_minutes_0d8b47)) })
+                    Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        StatCard("${recap.plays}", appString(R.string.text_plays_a6bc73), Modifier.weight(1f))
+                        StatCard("${recap.minutes}", appString(R.string.text_minutes_092f99), Modifier.weight(1f))
+                        StatCard("${recap.artists.size}", appString(R.string.text_artists_1528d8), Modifier.weight(1f))
                     }
+                    Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                listOf(appString(R.string.text_top_artists_4920f8) to recap.artists, appString(R.string.text_top_songs_ad7864) to recap.songs, appString(R.string.text_top_albums_4dfdc0) to recap.albums).forEachIndexed { kind, (title, ranks) ->
-                    val sorted = if (byMinutes) ranks.sortedByDescending { it.millis } else ranks
-                    item { SectionHeader(title, Modifier.padding(16.dp)) }
-                    items(sorted.take(if (window.period == RecapPeriod.DAY) 5 else 20).size) { index ->
-                        val r = sorted[index]
+                if (recap.millis == 0L) item { Text(appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2), Modifier.padding(vertical = 24.dp)) }
+                else {
+                    item { RecapInsights(recap, previous) }
+                    item {
+                        Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            StatCard("${recap.songs.size}", appString(R.string.text_unique_songs_5af512), Modifier.weight(1f))
+                            StatCard("${recap.albums.size}", appString(R.string.text_albums_4c45e7), Modifier.weight(1f))
+                            StatCard("${recap.activeDays}", appString(R.string.text_active_days_340f3c), Modifier.weight(1f))
+                        }
+                        if (window.period != RecapPeriod.DAY) {
+                            Text(appString(R.string.text_busiest_day_min_per_active_day_8cd6fd, (recap.busiestDay), (recap.minutes / recap.activeDays.coerceAtLeast(1))), style = MaterialTheme.typography.bodyMedium)
+                        }
+                        ListeningClock(recap.hourly.map { (it / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }.toIntArray())
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(!byMinutes, { byMinutes = false }, label = { Text(appString(R.string.text_most_played_14202e)) })
+                            FilterChip(byMinutes, { byMinutes = true }, label = { Text(appString(R.string.text_most_minutes_0d8b47)) })
+                        }
+                    }
+                    val rankings = listOf(appString(R.string.text_top_artists_4920f8) to recap.artists, appString(R.string.text_top_songs_ad7864) to recap.songs, appString(R.string.text_top_albums_4dfdc0) to recap.albums)
+                        .map { (title, ranks) -> title to (if (byMinutes) ranks.sortedByDescending { it.millis } else ranks).take(if (window.period == RecapPeriod.DAY) 5 else 20) }
+                    val rank: @Composable (Int, Int, RecapRank) -> Unit = { kind, index, r ->
                         RankRow(index + 1, RankedItem(r.id, r.name, appString(R.string.text_min_plays_a8ae99, (r.millis / 60_000), (r.plays)) + if (kind == 0) "" else " · ${r.artist}", r.artwork, r.plays), kind == 0) {
                             if (r.id.isNotBlank()) { if (kind == 1) onPlay(r.id) else onOpenDetail(if (kind == 0) "artist" else "album", r.id) }
                         }
                     }
+                    if (wide) item {
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(PageMetrics.SectionGap)) {
+                            rankings.forEachIndexed { kind, (title, ranks) ->
+                                Column(Modifier.weight(1f)) {
+                                    SectionHeader(title, Modifier.padding(vertical = 16.dp))
+                                    ranks.forEachIndexed { index, r -> rank(kind, index, r) }
+                                }
+                            }
+                        }
+                    } else rankings.forEachIndexed { kind, (title, ranks) ->
+                        item { SectionHeader(title, Modifier.padding(vertical = 16.dp)) }
+                        items(ranks.size) { index -> rank(kind, index, ranks[index]) }
+                    }
+                    item { RecapSummary(recap) }
                 }
-                item { RecapSummary(recap) }
             }
-        }
-        VerticalScrollbar(rememberScrollbarAdapter(listState),
-            Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
+            VerticalScrollbar(rememberScrollbarAdapter(listState),
+                Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
         }
     }
     if (picking) RecapDatePicker(window.start, onDismiss = { picking = false }) { date ->
@@ -170,7 +180,7 @@ private fun utcDate(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZo
 private fun ListeningClock(byHour: IntArray) {
     val max = (byHour.maxOrNull() ?: 0).coerceAtLeast(1)
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
+        Modifier.fillMaxWidth().padding(vertical = 6.dp)
             .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
     ) {
         Text(appString(R.string.text_listening_clock_ec2eb4), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
@@ -203,7 +213,7 @@ private fun StatCard(value: String, label: String, modifier: Modifier) {
 
 @Composable
 private fun RankRow(rank: Int, item: RankedItem, circle: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("$rank", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(28.dp))
         Artwork(item.artworkUrl, accentFor(item.id.ifBlank { item.name }), Modifier.size(48.dp), corner = if (circle) 48.dp else 10.dp)
         Spacer(Modifier.width(12.dp))

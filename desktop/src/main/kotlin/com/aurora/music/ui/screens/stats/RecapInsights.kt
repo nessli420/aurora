@@ -19,7 +19,7 @@ import com.aurora.music.data.*
 @Composable
 fun RecapInsights(recap: ListeningRecap, previous: ListeningRecap) {
     val artist = recap.artists.maxByOrNull { it.millis } ?: return
-    Column(Modifier.padding(16.dp).fillMaxWidth().clip(RoundedCornerShape(24.dp))
+    Column(Modifier.padding(vertical = 16.dp).fillMaxWidth().clip(RoundedCornerShape(24.dp))
         .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer))).padding(22.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(appString(R.string.recap_sound), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -28,7 +28,7 @@ fun RecapInsights(recap: ListeningRecap, previous: ListeningRecap) {
     }
     if (recap.window.period != RecapPeriod.ALL && previous.window == recap.window.move(-1) && previous.millis > 0) {
         val difference = recap.minutes - previous.minutes
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp))
+        Column(Modifier.padding(vertical = 8.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(appString(R.string.text_total_listening_all_artists_a37e88), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -52,7 +52,7 @@ fun RecapInsights(recap: ListeningRecap, previous: ListeningRecap) {
             else (0 until java.time.temporal.ChronoUnit.DAYS.between(recap.window.start, recap.window.end)).map { recap.window.start.plusDays(it) }
         val values = dates.map { date -> if (monthly) recap.dailyMillis.filterKeys { it.month == date.month }.values.sum() else recap.dailyMillis[date] ?: 0 }
         val max = values.maxOrNull()?.coerceAtLeast(1) ?: 1
-        Column(Modifier.padding(horizontal = 16.dp, vertical = 8.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp)) {
+        Column(Modifier.padding(vertical = 8.dp).fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp)) {
             Text(if (monthly) appString(R.string.text_your_year_month_by_month_e19b5f) else appString(R.string.text_your_listening_days_bf7f7d), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(14.dp))
             Row(Modifier.fillMaxWidth().height(90.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
