@@ -438,7 +438,7 @@ private fun Favourites(songs: List<Song>, scale: Float, onPlayAll: (List<Song>, 
             val gap = 24.dp
             val cardWidth = ((maxWidth - gap) / 2).coerceAtMost(560.dp)
             Row(Modifier.fillMaxWidth().height(FavouritesHeight), horizontalArrangement = Arrangement.spacedBy(gap)) {
-                FavouriteCard(songs, scale, Modifier.width(cardWidth).fillMaxHeight(), onPlayAll)
+                FavouriteCard(songs, scale, Modifier.width(cardWidth).fillMaxHeight(), onPlayAll, wave = 64.dp)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                     rest.forEachIndexed { i, song -> LikedRow(song) { onPlayAll(songs, i + 1) } }
                 }
@@ -450,7 +450,7 @@ private fun Favourites(songs: List<Song>, scale: Float, onPlayAll: (List<Song>, 
 }
 
 @Composable
-private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, onPlayAll: (List<Song>, Int) -> Unit) {
+private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, onPlayAll: (List<Song>, Int) -> Unit, wave: Dp = 40.dp) {
     val featured = songs.first()
     BoxWithConstraints(
         modifier
@@ -478,7 +478,7 @@ private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, o
             Spacer(Modifier.height(14.dp * scale))
             Spacer(Modifier.weight(1f))
             Waveform(progress = 0.0f, accent = featured.accent, onSeek = {}, seed = featured.id.hashCode(),
-                barCount = bars, height = 40.dp * scale)
+                barCount = bars, height = wave * scale)
             Spacer(Modifier.height(8.dp * scale))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Text("0:00", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

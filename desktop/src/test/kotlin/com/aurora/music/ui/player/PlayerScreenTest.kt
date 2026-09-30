@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.Lyrics
 import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
@@ -37,7 +38,7 @@ class PlayerScreenTest {
     }
 
     @Composable
-    private fun Player(state: PlayerUiState, rec: Recorder, onSaved: (Float) -> Unit = {}) {
+    private fun Player(state: PlayerUiState, rec: Recorder, lyrics: Lyrics? = PlayerFixtures.lyrics, onSaved: (Float) -> Unit = {}) {
         MaterialTheme(colorScheme = rememberPlayerColorScheme(state.current.artworkUrl, state.current.accent)) {
             PlayerScreen(
                 state = state,
@@ -61,7 +62,7 @@ class PlayerScreenTest {
                 paneContent = { pane, modifier ->
                     when (pane) {
                         PlayerPane.LYRICS -> LyricsPane(state, onSeek = { rec.events += "lyric-seek" },
-                            modifier = modifier.clip(RoundedCornerShape(20.dp)), loadLyrics = { PlayerFixtures.lyrics })
+                            modifier = modifier.clip(RoundedCornerShape(20.dp)), loadLyrics = { lyrics })
                         PlayerPane.QUEUE -> QueueContent(
                             queue = state.queue, currentIndex = state.currentIndex, isPlaying = state.isPlaying,
                             onJump = { rec.events += "jump:$it" }, onRemove = { rec.events += "remove:$it" },
@@ -102,6 +103,20 @@ class PlayerScreenTest {
 
             scene.click(1396f, 36f)
             scene.shot("-menu")
+        }
+    }
+
+    @Test fun missingLyricsFallBackToTheQueueUntilLyricsArePicked() {
+        val rec = Recorder()
+        PlayerScene("player-no-lyrics", 1440, 900) { Player(PlayerFixtures.playing, rec, lyrics = null) }.use { scene ->
+            val fallback = scene.shot()
+            scene.click(1000f, 312f)
+            assertEquals(listOf("jump:2"), rec.events)
+            scene.click(785f, 94f)
+            val picked = scene.shot("-picked")
+            assertTrue(picked.differsFrom(fallback))
+            scene.click(1000f, 312f)
+            assertEquals(listOf("jump:2"), rec.events)
         }
     }
 

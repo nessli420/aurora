@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -112,6 +113,7 @@ private val MetaSeparator = Regex("\\s+[•·]\\s+|\\s*[•·]\\s*$")
 private val YearPattern = Regex("(19|20)\\d{2}")
 private val CountPattern = Regex("\\d+\\s+(songs?|tracks?)(\\s+you love)?", RegexOption.IGNORE_CASE)
 private const val PopularPreview = 5
+private val SectionHeaderHeight = 32.dp
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -361,7 +363,7 @@ fun DetailScreen(
                     Artwork(effectiveArt, info.accent, Modifier.size(headerArt), corner = if (info.isArtist) headerArt / 2 else 20.dp)
                     Spacer(Modifier.width(if (pageWidth >= 800.dp) 32.dp else 24.dp))
                     Column(Modifier.weight(1f)) {
-                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accent)
+                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accentInk)
                         Spacer(Modifier.height(6.dp))
                         Text(info.title, style = titleStyle, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -476,7 +478,7 @@ fun DetailScreen(
             val popularHeader: @Composable (Modifier) -> Unit = { headerModifier ->
                 SectionHeader(
                     appString(R.string.text_popular_9bc2c5),
-                    headerModifier,
+                    headerModifier.heightIn(min = SectionHeaderHeight),
                     action = if (!filtering && shown.size > PopularPreview) appString(if (popularExpanded) R.string.text_show_less_4c852b else R.string.text_see_all_2941c5) else null,
                     onAction = { popularExpanded = !popularExpanded },
                 )
@@ -619,8 +621,9 @@ private fun MetaLine(artist: String?, onArtist: (() -> Unit)?, parts: List<Strin
 @Composable
 private fun ArtistAbout(info: ArtistInfo, accent: Color, modifier: Modifier, card: Boolean) {
     var expanded by remember { mutableStateOf(false) }
+    var clipped by remember(info.bio) { mutableStateOf(false) }
     Column(modifier.fillMaxWidth()) {
-        SectionHeader(appString(R.string.text_about_6b21fb))
+        SectionHeader(appString(R.string.text_about_6b21fb), Modifier.heightIn(min = SectionHeaderHeight))
         Spacer(Modifier.height(PageMetrics.HeaderToContent))
         Column(
             if (card) Modifier.fillMaxWidth().auroraPanel(MaterialTheme.shapes.large).padding(20.dp)
@@ -638,9 +641,10 @@ private fun ArtistAbout(info: ArtistInfo, accent: Color, modifier: Modifier, car
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = if (expanded) Int.MAX_VALUE else 5,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.widthIn(max = PageMetrics.ReadingMaxWidth).clickable { expanded = !expanded },
+                    onTextLayout = { if (!expanded) clipped = it.hasVisualOverflow },
+                    modifier = Modifier.widthIn(max = PageMetrics.ReadingMaxWidth).clickable(enabled = clipped || expanded) { expanded = !expanded },
                 )
-                Text(
+                if (clipped || expanded) Text(
                     appString(if (expanded) R.string.text_show_less_4c852b else R.string.text_show_more_25911d),
                     style = MaterialTheme.typography.labelLarge,
                     color = accent,

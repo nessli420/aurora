@@ -431,19 +431,20 @@ fun PlayerScreen(
 
             Row(
                 Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                if (ui.playerShowUtilities) {
-                    BottomUtil(
-                        Icons.Filled.Speed, appString(R.string.text_speed_x_72da98, ("%.1f".format(state.speed))), onOpenSpeedPitch,
-                        active = kotlin.math.abs(state.speed - 1f) > 0.001f,
-                    )
-                    BottomUtil(Icons.Filled.Bedtime, appString(R.string.text_sleep_timer_e90613), onOpenSleep,
-                        active = state.sleepTimerMinutes > 0 || state.sleepEndOfTrack)
+                Row(Modifier.weight(1f, fill = false), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (ui.playerShowUtilities) {
+                        BottomUtil(
+                            Icons.Filled.Speed, appString(R.string.text_speed_x_72da98, ("%.1f".format(state.speed))), onOpenSpeedPitch,
+                            active = kotlin.math.abs(state.speed - 1f) > 0.001f, modifier = Modifier.weight(1f, fill = false),
+                        )
+                        BottomUtil(Icons.Filled.Bedtime, appString(R.string.text_sleep_timer_e90613), onOpenSleep,
+                            active = state.sleepTimerMinutes > 0 || state.sleepEndOfTrack, modifier = Modifier.weight(1f, fill = false))
+                    }
                 }
-                Spacer(Modifier.weight(1f))
-                VolumeControl(volume, onVolumeChange, onToggleMute, volumeWidth, fill = playerAccent)
+                VolumeControl(volume, onVolumeChange, onToggleMute, volumeWidth, Modifier.padding(start = 8.dp), fill = playerAccent)
             }
         }
         val paneSurface = if (classic) Modifier.clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
@@ -477,7 +478,7 @@ fun PlayerScreen(
                                 artwork(Modifier.size(artSide))
                                 Spacer(Modifier.height(gap))
                                 Column(Modifier.width(controlsWidth).onSizeChanged { controlsHeight = with(density) { it.height.toDp() } }) {
-                                    controls(if (controlsWidth >= 480.dp) 160.dp else 120.dp)
+                                    controls((controlsWidth - 300.dp).coerceIn(104.dp, 160.dp))
                                 }
                             }
                         }
@@ -614,9 +615,9 @@ private fun isLossless(suffix: String): Boolean =
     suffix.lowercase() in setOf("flac", "alac", "wav", "aiff", "aif", "ape", "wv", "dsf", "dff", "m4a")
 
 @Composable
-private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit, active: Boolean = false) {
+private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit, active: Boolean = false, modifier: Modifier = Modifier) {
     Row(
-        Modifier.then(
+        modifier.then(
             if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) Modifier.clip(RoundedCornerShape(50))
             else Modifier.auroraPanel(MaterialTheme.shapes.small)
         ).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 10.dp, vertical = 6.dp),
@@ -624,7 +625,8 @@ private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, la
     ) {
         Icon(icon, label, tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(6.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

@@ -138,7 +138,7 @@ fun PlaybackDock(
         val trailing = DockButton * (if (roomy) 4 else 2) + (if (roomy) volumeWidth else 0.dp) + (if (showExpand) DockButton else 0.dp)
         val inner = maxWidth - 32.dp
         val center = (inner * DockCenterShare).coerceAtMost(680.dp)
-        val side = maxOf((inner - center) / 2, trailing)
+        val side = if (roomy) maxOf((inner - center) / 2, trailing) else trailing
         Row(
             Modifier.fillMaxWidth().heightIn(min = 84.dp * scale).padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,

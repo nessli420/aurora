@@ -7,7 +7,9 @@ import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.TooltipArea
 import androidx.compose.foundation.v2.ScrollbarAdapter
 import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
@@ -107,7 +109,10 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.Layout
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -133,7 +138,9 @@ import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.LibraryUiState
 import kotlinx.coroutines.launch
+import kotlin.math.ceil
 import kotlin.math.floor
+import kotlin.math.roundToInt
 import com.aurora.music.data.accent
 import com.aurora.music.model.accent
 import com.aurora.music.model.label
@@ -154,6 +161,7 @@ private val TileGap = 12.dp
 private val TileMinWidth = 260.dp
 private val TileMaxWidth = 320.dp
 private val CompactWidth = 720.dp
+private val RailLetter = 12.dp
 
 @Composable
 internal fun PaneScrollbar(adapter: ScrollbarAdapter, modifier: Modifier = Modifier) {
@@ -359,15 +367,15 @@ fun LibraryScreen(
 }
 
 private fun cardMinWidth(columns: Int, compact: Boolean): Dp = when (columns.coerceIn(2, 4)) {
-    3 -> if (compact) 104.dp else 148.dp
-    4 -> if (compact) 86.dp else 128.dp
-    else -> if (compact) 120.dp else PageMetrics.ShelfMinItemWidth
+    3 -> if (compact) 96.dp else 148.dp
+    4 -> if (compact) 80.dp else 128.dp
+    else -> if (compact) 112.dp else PageMetrics.ShelfMinItemWidth
 }
 
 @Composable
 private fun tableColumns(filter: LibraryFilter): List<TableColumn> = when (filter) {
     LibraryFilter.ALBUMS -> listOf(
-        TableColumn(appString(R.string.text_artist_6c3f3d), weight = 0.3f),
+        TableColumn(appString(R.string.text_artist_6c3f3d), weight = 0.33f),
         TableColumn(appString(R.string.text_year_879e32), width = 72.dp),
         TableColumn(appString(R.string.text_tracks_3dd1a4), width = 72.dp),
     )
@@ -417,7 +425,7 @@ private fun LibraryToolbar(
         ) {
             items(visibleTabs.size) { i ->
                 val f = visibleTabs[i]
-                LibTab(label = f.label, icon = tabIcon(f), selected = f == filter) { onFilter(f) }
+                LibTab(label = f.label, icon = tabIcon(f), selected = f == filter, iconOnly = compact) { onFilter(f) }
             }
         }
         if (filter != LibraryFilter.ALL) SortButton(sort, iconOnly = compact, onSort = onSort)
@@ -478,31 +486,49 @@ private fun LayoutToggle(layout: LibraryLayout, onToggle: () -> Unit) {
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
+private fun LibTab(label: String, icon: ImageVector, selected: Boolean, iconOnly: Boolean, onClick: () -> Unit) {
     val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-    Column(
-        Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 10.dp, vertical = 6.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Icon(icon, null, tint = tint, modifier = Modifier.size(16.dp))
-            Spacer(Modifier.width(6.dp))
-            Text(
-                label,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
-                color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+    val bare = iconOnly && !selected
+    val tab: @Composable () -> Unit = {
+        Column(
+            Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClickLabel = label, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 10.dp, vertical = 6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Row(Modifier.height(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(icon, if (bare) label else null, tint = tint, modifier = Modifier.size(16.dp))
+                if (!bare) {
+                    Spacer(Modifier.width(6.dp))
+                    Text(
+                        label,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
+                        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1,
+                    )
+                }
+            }
+            Spacer(Modifier.height(4.dp))
+            Box(
+                Modifier.height(3.dp).width(if (bare) 16.dp else 26.dp).clip(RoundedCornerShape(50)).background(
+                    if (selected) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
+                    else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
+                )
             )
         }
-        Spacer(Modifier.height(4.dp))
-        Box(
-            Modifier.height(3.dp).width(26.dp).clip(RoundedCornerShape(50)).background(
-                if (selected) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
-                else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
-            )
-        )
     }
+    if (bare) TooltipArea(tooltip = { TabTooltip(label) }, delayMillis = 400) { tab() } else tab()
+}
+
+@Composable
+private fun TabTooltip(label: String) {
+    Text(
+        label,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.inverseOnSurface,
+        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.inverseSurface).padding(horizontal = 8.dp, vertical = 4.dp),
+    )
 }
 
 @Composable
@@ -829,7 +855,7 @@ private fun RowsContent(
     }
 }
 
-private fun titleWeight(columns: List<TableColumn>): Float = if (columns.any { it.weight > 0f }) 0.45f else 1f
+private fun titleWeight(columns: List<TableColumn>): Float = if (columns.any { it.weight > 0f }) 0.42f else 1f
 
 private fun RowScope.cell(column: TableColumn): Modifier =
     (if (column.weight > 0f) Modifier.weight(column.weight) else Modifier.width(column.width)).padding(start = ColumnGap)
@@ -870,8 +896,23 @@ internal fun AlphabetRail(onJump: (Char) -> Unit, modifier: Modifier = Modifier)
     var railHeight by remember { mutableStateOf(0) }
     var active by remember { mutableStateOf<Char?>(null) }
     val currentOnJump by rememberUpdatedState(onJump)
-    Column(
-        modifier
+    val slot = with(LocalDensity.current) { RailLetter.toPx() }
+    val step = if (railHeight <= 0) 1 else ceil(letters.size * slot / railHeight).toInt().coerceAtLeast(1)
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+    Layout(
+        content = {
+            letters.forEachIndexed { i, c ->
+                val isActive = active == c
+                if (isActive || i % step == 0) Text(
+                    c.toString(),
+                    fontSize = if (isActive) 13.sp else 9.sp,
+                    lineHeight = if (isActive) 14.sp else 11.sp,
+                    fontWeight = if (isActive) FontWeight.Black else FontWeight.SemiBold,
+                    color = if (isActive) MaterialTheme.colorScheme.primary else muted,
+                ) else Box(Modifier)
+            }
+        },
+        modifier = modifier
             .width(24.dp)
             .onSizeChanged { railHeight = it.height }
             .pointerHoverIcon(PointerIcon.Hand)
@@ -894,17 +935,14 @@ internal fun AlphabetRail(onJump: (Char) -> Unit, modifier: Modifier = Modifier)
                     active = null
                 }
             },
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        letters.forEach { c ->
-            val isActive = active == c
-            Text(
-                "$c",
-                fontSize = if (isActive) 13.sp else 9.sp,
-                fontWeight = if (isActive) FontWeight.Black else FontWeight.SemiBold,
-                color = if (isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-            )
+    ) { measurables, constraints ->
+        val width = constraints.maxWidth
+        val height = if (constraints.hasBoundedHeight) constraints.maxHeight else (slot * letters.size).roundToInt()
+        val placeables = measurables.map { it.measure(Constraints()) }
+        layout(width, height) {
+            placeables.forEachIndexed { i, p ->
+                p.place((width - p.width) / 2, ((i + 0.5f) * height / letters.size - p.height / 2f).roundToInt())
+            }
         }
     }
 }

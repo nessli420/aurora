@@ -14,6 +14,7 @@ import com.aurora.music.ui.library.pixels
 import com.aurora.music.ui.library.save
 import com.aurora.music.ui.screens.detail.DetailScreen
 import com.aurora.music.ui.testing.distinctColors
+import com.aurora.music.ui.testing.region
 import com.aurora.music.ui.theme.ContextAccentState
 import com.aurora.music.ui.theme.LocalContextAccent
 import com.aurora.music.ui.theme.readableAccent
@@ -29,9 +30,9 @@ class DetailScreenTest {
     private val label = "browse-b"
 
     @Composable
-    private fun Detail(state: DetailUiState, kind: String, artistInfo: ArtistInfo? = null) = DetailScreen(
+    private fun Detail(state: DetailUiState, kind: String, artistInfo: ArtistInfo? = null, onOpen: (String, String) -> Unit = { _, _ -> }) = DetailScreen(
         contentPadding = PaddingValues(bottom = 96.dp), state = state, likedIds = setOf("s1", "s3"), currentSongId = "s2", isPlaying = true,
-        onBack = {}, onPlayAll = { _, _ -> }, onShufflePlay = {}, onAddToQueue = {}, onPlayNext = {}, onToggleLike = {}, onOpenDetail = { _, _ -> },
+        onBack = {}, onPlayAll = { _, _ -> }, onShufflePlay = {}, onAddToQueue = {}, onPlayNext = {}, onToggleLike = {}, onOpenDetail = onOpen,
         itemKind = kind, isItemLiked = kind == "album", onToggleItemLike = {}, downloadedIds = setOf("s0"), onDownload = {}, onRemoveDownload = {},
         onDownloadAll = {}, onRemoveDownloads = {}, onEditPlaylist = { _, _ -> true }, onDeletePlaylist = {}, isPinned = true, artistInfo = artistInfo,
     )
@@ -73,6 +74,25 @@ class DetailScreenTest {
         fun artAt(px: IntArray, w: Int, x: Int, y: Int) = Color(px[y * w + x]).let { it.red - it.green > 0.25f }
         assertTrue(artAt(narrow.pixels(), 460, 400, 200))
         assertFalse(artAt(wide.pixels(), 1180, 400, 200))
+    }
+
+    @Test fun albumArtistLinkOpensArtist() {
+        val opened = mutableListOf<Pair<String, String>>()
+        Harness(1180, 860) { Detail(DetailUiState(loading = false, data = Samples.albumDetail), "album", onOpen = { k, i -> opened += k to i }) }.use { h ->
+            h.settle(1200).save(label, "detail-album-meta")
+            h.click(290f, 191f)
+            h.settle(200)
+        }
+        assertEquals(listOf("artist" to "ar0"), opened)
+    }
+
+    @Test fun artistSeeAllRevealsEveryPopularTrack() {
+        Harness(1180, 860) { Detail(DetailUiState(loading = false, data = Samples.artistDetail), "artist") }.use { h ->
+            val preview = h.settle(1200).save(label, "detail-artist-popular")
+            h.click(1110f, 332f)
+            val expanded = h.settle(600).save(label, "detail-artist-popular-all")
+            assertFalse(preview.region(24, 650, 600, 720).contentEquals(expanded.region(24, 650, 600, 720)))
+        }
     }
 
     @Test fun loadingAndFailedStates() {

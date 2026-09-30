@@ -111,6 +111,7 @@ private fun sectionNonEmpty(f: SearchFilter, r: SearchResults): Boolean = when (
 
 private val WideResults = 1000.dp
 private val TopCardMinWidth = 320.dp
+private val TopCardMaxWidth = 480.dp
 private val TopCardMinHeight = 240.dp
 private const val TopSongs = 4
 private const val NarrowSongs = 5
@@ -358,6 +359,8 @@ private fun Results(
             SearchFilter.SONGS -> 0.dp
             else -> 24.dp
         }
+        val shelfFits = shelfColumns(width)
+        fun more(count: Int) = seeAll.takeIf { count > shelfFits }
         LazyColumn(
             Modifier.fillMaxSize(),
             state = listState,
@@ -396,21 +399,21 @@ private fun Results(
                         }
                     }
                     if (results.artists.isNotEmpty()) item(key = "artists") {
-                        PageSection(appString(R.string.text_artists_1528d8), action = seeAll, onAction = { onFilter(SearchFilter.ARTISTS) }) {
+                        PageSection(appString(R.string.text_artists_1528d8), action = more(results.artists.size), onAction = { onFilter(SearchFilter.ARTISTS) }) {
                             AdaptiveShelf(results.artists, bleed = gutter) { artist, w ->
                                 ArtistCircle(artist, onClick = { onOpenDetail("artist", artist.id) }, width = w)
                             }
                         }
                     }
                     if (results.albums.isNotEmpty()) item(key = "albums") {
-                        PageSection(appString(R.string.text_albums_4c45e7), action = seeAll, onAction = { onFilter(SearchFilter.ALBUMS) }) {
+                        PageSection(appString(R.string.text_albums_4c45e7), action = more(results.albums.size), onAction = { onFilter(SearchFilter.ALBUMS) }) {
                             AdaptiveShelf(results.albums, bleed = gutter) { album, w ->
                                 AlbumCard(album, onClick = { onOpenDetail("album", album.id) }, width = w)
                             }
                         }
                     }
                     if (results.playlists.isNotEmpty()) item(key = "playlists") {
-                        PageSection(appString(R.string.text_playlists_77b69f), action = seeAll, onAction = { onFilter(SearchFilter.PLAYLISTS) }) {
+                        PageSection(appString(R.string.text_playlists_77b69f), action = more(results.playlists.size), onAction = { onFilter(SearchFilter.PLAYLISTS) }) {
                             AdaptiveShelf(results.playlists, bleed = gutter) { playlist, w ->
                                 PlaylistCard(playlist, onClick = { onOpenDetail("playlist", playlist.id) }, width = w)
                             }
@@ -453,7 +456,7 @@ private fun TopRow(card: @Composable () -> Unit, list: @Composable () -> Unit) {
     Layout(content = { card(); list() }) { measurables, constraints ->
         val gap = 24.dp.roundToPx()
         val width = constraints.maxWidth
-        val cardWidth = maxOf(TopCardMinWidth.roundToPx(), ((width - gap) * 0.4f).roundToInt()).coerceAtMost(width)
+        val cardWidth = ((width - gap) * 0.4f).roundToInt().coerceIn(TopCardMinWidth.roundToPx(), TopCardMaxWidth.roundToPx()).coerceAtMost(width)
         val listPlaceable = measurables[1].measure(Constraints.fixedWidth((width - gap - cardWidth).coerceAtLeast(0)))
         val height = maxOf(listPlaceable.height, TopCardMinHeight.roundToPx())
         val cardPlaceable = measurables[0].measure(Constraints.fixed(cardWidth, height))
