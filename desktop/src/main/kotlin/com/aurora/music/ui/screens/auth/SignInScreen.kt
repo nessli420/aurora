@@ -200,14 +200,14 @@ fun SignInScreen(
             ) {
                 if (wide) Row(
                     Modifier.widthIn(max = PageMetrics.SignInMaxWidth).fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(64.dp, Alignment.CenterHorizontally),
+                    horizontalArrangement = Arrangement.spacedBy(56.dp, Alignment.CenterHorizontally),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Column(Modifier.width(440.dp), verticalArrangement = Arrangement.spacedBy(40.dp)) {
+                    Column(Modifier.width(400.dp), verticalArrangement = Arrangement.spacedBy(40.dp)) {
                         brand()
                         intro()
                     }
-                    Box(Modifier.width(520.dp)) { form() }
+                    Box(Modifier.width(512.dp)) { form() }
                 } else Column(Modifier.widthIn(max = 640.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     brand()
                     intro()

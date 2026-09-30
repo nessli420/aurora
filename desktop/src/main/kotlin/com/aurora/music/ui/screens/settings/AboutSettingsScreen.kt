@@ -125,12 +125,12 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
                 InfoRow(appString(R.string.text_music_source_cb3c75), source)
                 if (session != null && session?.type != ServerType.LOCAL) {
-                    SettingsRowDivider()
+                    SettingsRowDivider(20.dp)
                     InfoRow(appString(R.string.text_signed_in_as_a02107), session?.username ?: "—")
                 }
-                SettingsRowDivider()
+                SettingsRowDivider(20.dp)
                 InfoRow(appString(R.string.text_playback_engine_0255b8), "FFmpeg ${ffmpegVersion()} · WASAPI")
-                SettingsRowDivider()
+                SettingsRowDivider(20.dp)
                 InfoRow("Compose Multiplatform", BuildInfo.COMPOSE_VERSION)
             }
             Spacer(Modifier.height(8.dp))

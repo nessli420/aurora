@@ -1,8 +1,5 @@
 package com.aurora.music.ui.screens.settings
 
-import com.aurora.music.localization.appString
-import com.aurora.music.R
-
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -171,9 +168,9 @@ fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
 }
 
 @Composable
-fun SettingsRowDivider() {
+fun SettingsRowDivider(inset: Dp = 72.dp) {
     Box(
-        Modifier.fillMaxWidth().padding(start = 72.dp).height(0.7.dp)
+        Modifier.fillMaxWidth().padding(start = inset).height(0.7.dp)
             .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)),
     )
 }

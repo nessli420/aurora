@@ -117,13 +117,13 @@ class SignInScreenTest {
                 vm.onUsername("mara")
                 vm.onPassword("wrong")
                 scene.settle(200)
-                scene.click(549f, 480f)
+                scene.click(549f, 667f)
                 scene.await(read = { vm.state.value }) { !it.loading && it.error != null }
                 assertEquals(appString(R.string.text_wrong_username_or_password_85b465), vm.state.value.error)
                 assertTrue(scene.shot("-error").differsFrom(empty))
                 vm.onPassword("secret")
                 scene.settle(200)
-                scene.click(549f, 480f)
+                scene.click(549f, 629f)
                 val session = scene.await(read = { settingsStore.session.first() }) { it != null }!!
                 assertEquals(ServerType.SUBSONIC, session.type)
                 assertEquals("http://$host", session.server)
@@ -148,9 +148,9 @@ class SignInScreenTest {
             assertFalse(vm.canSubmit)
             vm.onPassword("token")
             assertTrue(vm.canSubmit)
-            scene.click(355f, 374f)
+            scene.click(331f, 577f)
             assertEquals(listOf("https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/"), opened)
-            scene.click(801f, 223f)
+            scene.click(825f, 426f)
             assertEquals(AuthStep.SERVER, vm.state.value.step)
         }
     }
