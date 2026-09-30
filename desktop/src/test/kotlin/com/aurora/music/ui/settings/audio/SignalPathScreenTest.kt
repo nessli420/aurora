@@ -20,9 +20,9 @@ class SignalPathScreenTest {
             SignalPathScreen(PaddingValues(), path, onBack = { events += "back" }, onOpenOutput = { events += "output" })
         }.use { scene ->
             val idle = scene.shot("-idle")
-            scene.click(400f, 182f)
+            scene.click(400f, 212f)
             assertEquals(listOf("output"), events)
-            scene.click(400f, 249f)
+            scene.click(400f, 279f)
             if (!GraphicsEnvironment.isHeadless()) {
                 val copied = Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor) as String
                 assertEquals(SignalPath().toDiagnosticReport(), copied)
@@ -32,7 +32,7 @@ class SignalPathScreenTest {
             path.value = AudioFixtures.activePath
             val active = scene.shot("-active")
             assertTrue(active.differsFrom(idle))
-            scene.click(88f, 766f)
+            scene.click(100f, 796f)
             assertTrue(scene.shot("-meters").differsFrom(active))
         }
     }

@@ -67,17 +67,17 @@ class SignInScreenTest {
         scene("sign-in", seed = { desktopSettings.setMusicFolders(listOf(music.path, albums.path)) }).use { scene ->
             val type = scene.shot("-type")
             assertTrue(type.distinctColors() > 20)
-            scene.click(549f, 254f)
+            scene.click(549f, 430f)
             assertEquals(AuthStep.FOLDERS, vm.state.value.step)
             assertEquals(ServerType.LOCAL, vm.state.value.type)
             assertTrue(scene.shot("-folders").differsFrom(type))
-            scene.click(818f, 315f)
+            scene.click(842f, 507f)
             assertEquals(listOf(music.path), scene.await(read = { desktopSettings.musicFolders.first() }) { it.size == 1 })
             scene.shot("-folders-one")
-            scene.click(278f, 44f)
+            scene.click(254f, 270f)
             assertEquals(AuthStep.TYPE, vm.state.value.step)
-            scene.click(549f, 254f)
-            scene.click(549f, 402f)
+            scene.click(549f, 430f)
+            scene.click(549f, 628f)
             val session = scene.await(read = { settingsStore.session.first() }) { it != null }!!
             assertEquals(ServerType.LOCAL, session.type)
             scene.await(read = { sessionReady.value }) { it == true }
@@ -87,10 +87,10 @@ class SignInScreenTest {
 
     @Test fun localContinueNeedsAFolder() {
         scene("sign-in-no-folders").use { scene ->
-            scene.click(549f, 254f)
+            scene.click(549f, 430f)
             assertEquals(AuthStep.FOLDERS, vm.state.value.step)
             scene.shot()
-            scene.click(549f, 362f)
+            scene.click(549f, 608f)
             scene.settle(300)
             assertNull(kotlinx.coroutines.runBlocking { scene.container.settingsStore.session.first() })
             assertFalse(vm.state.value.loading)
@@ -104,14 +104,14 @@ class SignInScreenTest {
             server.enqueue(MockResponse().setHeader("Content-Type", "application/json").setBody("""{"subsonic-response":{"status":"ok","version":"1.16.1"}}"""))
             val host = "${server.hostName}:${server.port}"
             scene("sign-in-navidrome").use { scene ->
-                scene.click(398f, 390f)
+                scene.click(398f, 566f)
                 assertEquals(AuthStep.SERVER, vm.state.value.step)
                 assertEquals(ServerType.SUBSONIC, vm.state.value.type)
-                scene.click(549f, 359f)
+                scene.click(549f, 606f)
                 assertEquals(AuthStep.SERVER, vm.state.value.step)
                 vm.onHost(host)
                 scene.settle(200)
-                scene.click(549f, 359f)
+                scene.click(549f, 606f)
                 assertEquals(AuthStep.CREDENTIALS, vm.state.value.step)
                 val empty = scene.shot("-credentials")
                 vm.onUsername("mara")
@@ -136,13 +136,13 @@ class SignInScreenTest {
 
     @Test fun plexAsksOnlyForATokenAndLinksToHelp() {
         scene("sign-in-plex").use { scene ->
-            scene.click(549f, 490f)
+            scene.click(549f, 667f)
             assertEquals(ServerType.PLEX, vm.state.value.type)
             vm.onHost("https://plex.local:32400")
             assertEquals("https://", vm.state.value.scheme)
             assertEquals("plex.local:32400", vm.state.value.host)
             scene.settle(200)
-            scene.click(549f, 400f)
+            scene.click(549f, 627f)
             assertEquals(AuthStep.CREDENTIALS, vm.state.value.step)
             scene.shot()
             assertFalse(vm.canSubmit)
@@ -162,9 +162,9 @@ class SignInScreenTest {
             settingsStore.addSavedSession(Session("spotify", "mara", "", "t", ServerType.SPOTIFY))
         }).use { scene ->
             val collapsed = scene.shot()
-            scene.click(549f, 241f)
+            scene.click(549f, 387f)
             assertTrue(scene.shot("-expanded").differsFrom(collapsed))
-            scene.click(549f, 313f)
+            scene.click(549f, 413f)
             val session = scene.await(read = { settingsStore.session.first() }) { it != null }!!
             assertEquals(navidrome.accountKey(), session.accountKey())
         }

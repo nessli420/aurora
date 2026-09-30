@@ -158,9 +158,9 @@ fun SignInScreen(
                         AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_connect_title else R.string.text_make_yourself_at_home_3ea2e2)
                         AuthStep.FOLDERS -> appString(R.string.text_music_on_this_device_21b6e9)
                     }
-                    if (wide) Text(headline, style = if (state.step == AuthStep.TYPE) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displaySmall,
-                        fontWeight = FontWeight.Bold, color = palette.onBackground)
-                    else Text(headline, fontSize = if (state.step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (state.step == AuthStep.TYPE) 43.sp else 36.sp,
+                    val type = state.step == AuthStep.TYPE
+                    Text(headline, fontSize = if (wide) (if (type) 52.sp else 40.sp) else if (type) 38.sp else 30.sp,
+                        lineHeight = if (wide) (if (type) 58.sp else 46.sp) else if (type) 43.sp else 36.sp,
                         fontWeight = FontWeight.Bold, color = palette.onBackground)
                     Text(when (state.step) {
                         AuthStep.TYPE -> appString(R.string.text_your_collection_and_your_discoveries_together_in_one_player_093361)

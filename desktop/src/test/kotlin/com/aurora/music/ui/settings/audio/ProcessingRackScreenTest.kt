@@ -32,11 +32,11 @@ class ProcessingRackScreenTest {
         val events = mutableListOf<String>()
         rack("rack-list", events).use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
-            scene.click(400f, 180f)
+            scene.click(400f, 210f)
             scene.await(read = { it.processingRack.first() }) { it.autoHeadroom }
-            scene.click(227f, 112f)
+            scene.click(233f, 142f)
             scene.await(read = { it.processingRack.first() }) { !it.enabled && it.autoHeadroom }
-            scene.click(28f, 26f)
+            scene.click(36f, 52f)
             scene.settle(300)
             assertEquals(listOf("back"), events)
         }
@@ -45,13 +45,13 @@ class ProcessingRackScreenTest {
     @Test fun stageEditorShowsTheCalculatedResponse() {
         rack("rack-editor").use { scene ->
             val list = scene.settle()
-            scene.click(100f, 560f)
+            scene.click(100f, 590f)
             val editor = scene.shot()
             assertTrue(editor.differsFrom(list))
-            scene.click(400f, 463f)
+            scene.click(400f, 493f)
             scene.settle(700)
             assertTrue(scene.shot("-response").differsFrom(editor))
-            scene.click(28f, 26f)
+            scene.click(36f, 52f)
             assertTrue(scene.settle().differsFrom(editor))
         }
     }
@@ -65,11 +65,11 @@ class ProcessingRackScreenTest {
             store.setProcessingRack(ProcessingRack(enabled = true, name = "Mastering", nodes = nodes)).getOrThrow()
         }).use { scene ->
             val list = scene.shot()
-            scene.click(100f, 420f)
+            scene.click(100f, 450f)
             val multiband = scene.shot("-multiband")
             assertTrue(multiband.differsFrom(list))
-            scene.click(28f, 26f)
-            scene.click(100f, 559f)
+            scene.click(36f, 52f)
+            scene.click(100f, 589f)
             assertTrue(scene.shot("-tone").differsFrom(multiband))
         }
     }

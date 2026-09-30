@@ -188,7 +188,7 @@ private fun CollapsibleSection(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp)
             .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
     ) {
-        Row(Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onToggle).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onToggle).padding(horizontal = 20.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 contentAlignment = Alignment.Center,

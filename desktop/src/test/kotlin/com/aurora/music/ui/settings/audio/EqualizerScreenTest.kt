@@ -26,14 +26,14 @@ class EqualizerScreenTest {
         equalizer("equalizer-standard", events).use { scene ->
             val standard = scene.shot()
             assertTrue(standard.distinctColors() > 20)
-            scene.click(400f, 280f)
-            scene.click(400f, 346f)
-            scene.click(400f, 780f)
+            scene.click(400f, 239f)
+            scene.click(400f, 306f)
+            scene.click(400f, 740f)
             assertEquals(listOf("rack", "presets", "loudness"), events)
 
-            scene.click(420f, 174f)
+            scene.click(420f, 162f)
             scene.shot("-engine-menu")
-            scene.click(96f, 232f)
+            scene.click(680f, 214f)
             scene.await(read = { it.audioPrefs.first().dspMode }) { it == DspMode.CUSTOM }
             assertTrue(scene.shot("-custom").differsFrom(standard))
         }
@@ -42,11 +42,11 @@ class EqualizerScreenTest {
     @Test fun devicePresetsUseLiveSquigLinkOnly() {
         equalizer("equalizer-device-presets").use { scene ->
             val collapsed = scene.settle()
-            scene.click(420f, 463f)
+            scene.click(420f, 423f)
             assertTrue(scene.shot().differsFrom(collapsed))
-            scene.click(614f, 525f)
+            scene.click(614f, 485f)
             scene.await(read = { it.squigBaseUrl.first() }) { it == SQUIG_INSTANCES[1].second }
-            scene.click(614f, 579f)
+            scene.click(614f, 539f)
             scene.await(read = { it.squigTarget.first() }) { it == SQUIG_TARGETS[1].second }
         }
     }
@@ -59,7 +59,7 @@ class EqualizerScreenTest {
             store.setDspPreamp(-3f)
         }).use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
-            scene.click(420f, 760f)
+            scene.click(420f, 730f)
             val audio = scene.await(read = { it.audioPrefs.first() }) { it.dspGraphicLayout == 1 }
             assertEquals(List(15) { 0f }, audio.dspGraphicBands)
             scene.shot("-15band")
@@ -71,7 +71,7 @@ class EqualizerScreenTest {
             store.setProcessingRack(ProcessingRack.recommended(AudioFixtures.customAudio).copy(enabled = true)).getOrThrow()
         }).use { scene ->
             val rack = scene.shot()
-            scene.click(108f, 220f)
+            scene.click(120f, 250f)
             scene.await(read = { it.processingRack.first() }) { !it.enabled }
             assertTrue(scene.shot("-standard").differsFrom(rack))
         }

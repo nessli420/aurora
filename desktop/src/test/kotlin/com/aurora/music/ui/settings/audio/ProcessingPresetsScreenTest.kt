@@ -27,19 +27,19 @@ class ProcessingPresetsScreenTest {
         presets("presets", events).use { scene ->
             val list = scene.shot()
             assertTrue(list.distinctColors() > 10)
-            scene.click(55f, 368f)
+            scene.click(67f, 398f)
             scene.await(read = { it.audioPrefs.first() }) { it.replayGain == 2 && it.dspMode == DspMode.CUSTOM }
             assertTrue(scene.shot("-applied").differsFrom(list))
-            scene.click(400f, 599f)
+            scene.click(400f, 629f)
             assertEquals(listOf("signal"), events)
         }
     }
 
     @Test fun deletesAPresetFromTheActionsMenu() {
         presets("presets-delete", mutableListOf()).use { scene ->
-            scene.click(796f, 278f)
+            scene.click(784f, 308f)
             scene.shot("-menu")
-            scene.click(741f, 478f)
+            scene.click(729f, 508f)
             scene.shot("-confirm")
             scene.click(620f, 492f)
             val left = scene.await(read = { it.processingPresetLibrary.first().presets }) { it.size == 1 }

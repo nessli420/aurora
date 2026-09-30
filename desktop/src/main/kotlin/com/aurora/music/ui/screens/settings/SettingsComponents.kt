@@ -323,7 +323,7 @@ fun SettingsDropdownRow(
     RowScaffold(icon, title, subtitle, { expanded = true }) {
         Box(Modifier.padding(start = 16.dp)) {
             Row(
-                Modifier.widthIn(min = 132.dp, max = 260.dp)
+                Modifier.widthIn(min = 160.dp, max = 260.dp)
                     .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh) else Modifier.auroraPanel(shape))
                     .padding(start = 14.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,

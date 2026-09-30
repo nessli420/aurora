@@ -26,11 +26,11 @@ class LoudnessAndOutputTest {
             LoudnessSettingsScreen(PaddingValues(), onBack = { events += "back" }, onOpenEq = { events += "eq" }, onOpenSignalPath = { events += "signal" })
         }.use { scene ->
             val off = scene.shot()
-            scene.click(420f, 156f)
+            scene.click(420f, 186f)
             scene.await(read = { it.audioPrefs.first().replayGain }) { it == 1 }
             assertTrue(scene.shot("-track").differsFrom(off))
-            scene.click(400f, 322f)
-            scene.click(400f, 389f)
+            scene.click(400f, 352f)
+            scene.click(400f, 419f)
             assertEquals(listOf("eq", "signal"), events)
         }
     }
@@ -41,7 +41,7 @@ class LoudnessAndOutputTest {
             AdvancedAudioSettingsScreen(PaddingValues(), onBack = {}, onOpen = { opened += it.route })
         }.use { scene ->
             assertTrue(scene.shot().distinctColors() > 10)
-            listOf(131f, 198f, 265f, 332f, 442f, 509f, 576f).forEach { scene.click(400f, it) }
+            listOf(161f, 228f, 295f, 362f, 472f, 539f, 606f).forEach { scene.click(400f, it) }
             assertEquals(listOf(Routes.SETTINGS_PROCESSING_RACK, Routes.SETTINGS_PROCESSING_PRESETS, Routes.SETTINGS_IMPULSES, Routes.SETTINGS_PRESET_RULES,
                 Routes.SETTINGS_TUNING, Routes.SETTINGS_COMPARISON, Routes.SETTINGS_LISTENING), opened)
         }
@@ -54,8 +54,8 @@ class LoudnessAndOutputTest {
             Column { OutputRateSettings(policy) { change -> policy = change(policy).also { latest = it } } }
         }.use { scene ->
             val follow = scene.shot()
-            scene.click(420f, 69f)
-            scene.click(72f, 173f)
+            scene.click(420f, 78f)
+            scene.click(700f, 178f)
             assertEquals(OutputRateMode.FIXED, latest.mode)
             assertTrue(scene.shot("-fixed").differsFrom(follow))
         }

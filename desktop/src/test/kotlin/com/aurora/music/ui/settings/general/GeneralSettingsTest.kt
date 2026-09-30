@@ -120,10 +120,10 @@ class GeneralSettingsTest {
         GeneralSettingsScene("appearance", height = 1600) { AppearanceScreen(padding, onBack = {}) }.use { scene ->
             val aurora = scene.shot()
             assertTrue(aurora.distinctColors() > 20)
-            scene.click(419f, 721f)
+            scene.click(419f, 751f)
             assertEquals(AccentMode.CUSTOM, scene.await(read = { settingsStore.uiPrefs.first().accentMode }) { it == AccentMode.CUSTOM })
             scene.shot("-custom")
-            scene.click(620f, 190f)
+            scene.click(617f, 220f)
             assertEquals(ThemeStyle.RETRO, scene.await(read = { settingsStore.uiPrefs.first().themeStyle }) { it == ThemeStyle.RETRO })
             assertTrue(scene.shot("-retro").differsFrom(aurora))
         }
@@ -137,10 +137,10 @@ class GeneralSettingsTest {
             settingsStore.saveSession(navidrome)
         }) { AccountsScreen(padding, onBack = {}, onSwitch = { switched += it }, onForget = { forgotten += it }, onAddAccount = {}) }.use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
-            scene.click(400f, 130f)
-            scene.click(400f, 195f)
-            scene.click(795f, 130f)
-            scene.click(400f, 260f)
+            scene.click(400f, 160f)
+            scene.click(400f, 225f)
+            scene.click(783f, 160f)
+            scene.click(400f, 290f)
         }
         assertEquals(listOf(jellyfin.accountKey(), local.accountKey()), switched.map { it.accountKey() })
         assertEquals(listOf(jellyfin), forgotten)
@@ -150,7 +150,7 @@ class GeneralSettingsTest {
         GeneralSettingsScene("about") { AboutSettingsScreen(padding, onBack = {}) }.use { scene ->
             val page = scene.shot()
             assertTrue(page.distinctColors() > 20)
-            scene.click(419f, 425f)
+            scene.click(93f, 360f)
             assertTrue(scene.shot("-ffmpeg").differsFrom(page))
         }
     }
@@ -159,7 +159,7 @@ class GeneralSettingsTest {
         try {
             GeneralSettingsScene("language") { LanguageSettingsScreen(padding, onBack = {}) }.use { scene ->
                 val english = scene.shot()
-                scene.click(100f, 233f)
+                scene.click(112f, 263f)
                 assertEquals("ru", AppStrings.languageTag.value)
                 assertEquals("ru", scene.await(read = { desktopSettings.languageTag.first() }) { it == "ru" })
                 assertTrue(scene.shot("-ru").differsFrom(english))
@@ -170,9 +170,9 @@ class GeneralSettingsTest {
     @Test fun navigationMenuReordersAndPins() {
         GeneralSettingsScene("nav-menu", height = 1300) { NavigationMenuScreen(padding, onBack = {}) }.use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
-            scene.click(656f, 412f)
+            scene.click(691f, 508f)
             scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.contains("more=stats,history,duplicates") }
-            scene.click(613f, 660f)
+            scene.click(697f, 690f)
             scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.startsWith("main=home,search,library,playback;") }
         }
     }
@@ -209,9 +209,9 @@ class GeneralSettingsTest {
                 settingsStore.setUnifiedLibrary(true)
             }) { SourcesSettingsScreen(padding, onBack = {}, onArtistSeparators = {}) }.use { scene ->
                 assertTrue(scene.shot().distinctColors() > 20)
-                scene.click(783f, 1040f)
+                scene.click(771f, 1070f)
                 assertEquals(setOf(navidrome.accountKey()), scene.await(read = { settingsStore.mergeSources.first() }) { it.isNotEmpty() })
-                scene.click(797f, 189f)
+                scene.click(785f, 219f)
                 assertEquals(listOf(music.absolutePath), scene.await(read = { desktopSettings.musicFolders.first() }) { it.size == 1 })
                 scene.shot("-edited")
             }
@@ -222,13 +222,13 @@ class GeneralSettingsTest {
         val player = FakePlayer()
         GeneralSettingsScene("output", height = 1500, player = player) { AudioOutputSettingsScreen(padding, onBack = {}, onOpenSignalPath = {}) }.use { scene ->
             val shared = scene.shot()
-            scene.click(400f, 255f)
+            scene.click(400f, 285f)
             assertEquals("dac", player.preferredOutput.value)
-            scene.click(400f, 129f)
+            scene.click(400f, 159f)
             assertNull(player.preferredOutput.value)
-            scene.click(225f, 614f)
+            scene.click(231f, 644f)
             assertEquals(100, scene.await(read = { desktopSettings.outputBufferMs.first() }) { it == 100 })
-            scene.click(400f, 467f)
+            scene.click(400f, 497f)
             assertTrue(player.exclusiveOutput.value)
             assertTrue(scene.shot("-exclusive").inkRows() > shared.inkRows())
             player.preferredOutput.value = "unplugged"

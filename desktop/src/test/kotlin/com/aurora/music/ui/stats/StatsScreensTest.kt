@@ -48,9 +48,9 @@ class StatsScreensTest {
             ListeningHistoryScreen(padding, onBack = { back++ }, onPlay = { played += it })
         }.use { scene ->
             val image = scene.shot()
-            scene.click(480f, 126f)
-            scene.click(480f, 550f)
-            scene.click(28f, 26f)
+            scene.click(480f, 152f)
+            scene.click(480f, 532f)
+            scene.click(36f, 52f)
             image
         }
         assertEquals(listOf(history[0].songId, history[6].songId), played)
@@ -68,25 +68,25 @@ class StatsScreensTest {
         }.use { scene ->
             val weekly = scene.shot()
             assertTrue(weekly.distinctColors() > 40)
-            scene.click(300f, 1230f)
-            scene.click(300f, 1607f)
+            scene.click(300f, 1262f)
+            scene.click(300f, 1620f)
             assertEquals(listOf("artist:ar-Aerial"), details)
             assertEquals(listOf("s4"), played)
 
-            scene.click(40f, 143f)
+            scene.click(53f, 176f)
             val previous = scene.shot("-previous")
             assertTrue(previous.differsFrom(weekly))
-            scene.click(300f, 1074f)
+            scene.click(300f, 1115f)
             assertEquals("artist:ar-Coastlines", details.last())
 
-            scene.click(480f, 143f)
+            scene.click(480f, 176f)
             assertTrue(scene.shot("-picker").differsFrom(previous))
             scene.click(432f, 1310f)
             scene.click(623f, 1551f)
-            scene.click(300f, 1230f)
+            scene.click(300f, 1262f)
             assertEquals("artist:ar-Aerial", details.last())
 
-            scene.click(44f, 82f)
+            scene.click(56f, 116f)
             assertTrue(scene.shot("-daily").differsFrom(weekly))
         }
     }
@@ -113,7 +113,7 @@ class StatsScreensTest {
             scene.click(480f, 380f)
             assertEquals(1, opened.size)
             scene.await(read = { desktopSettings.recapSeen.first() }) { opened.single().key in it }
-            scene.click(893f, 32f)
+            scene.click(880f, 52f)
             val all = ListeningRecaps.available(scene.container.playHistory.history.value, LocalDate.now()).map { it.key }.toSet()
             scene.await(read = { desktopSettings.recapSeen.first() }) { it.containsAll(all) }
             assertTrue(scene.shot("-read").differsFrom(unread))

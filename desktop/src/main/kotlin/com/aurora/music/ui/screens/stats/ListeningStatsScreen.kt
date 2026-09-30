@@ -94,12 +94,12 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     }
                     val navigator: @Composable (Modifier) -> Unit = { modifier ->
                         Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("9", style = MaterialTheme.typography.headlineMedium) }
+                            TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
                             Column(Modifier.weight(1f).clickable(enabled = window.period != RecapPeriod.ALL) { picking = true }.pointerHoverIcon(PointerIcon.Hand), horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(window.label, fontWeight = FontWeight.Bold)
                                 Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
                             }
-                            TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("a", style = MaterialTheme.typography.headlineMedium) }
+                            TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
                         }
                     }
                     if (wide) Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {

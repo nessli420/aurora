@@ -48,6 +48,13 @@ class SettingsShotsTest {
         scene.navigate(Routes.SETTINGS)
         scene.shot("root")
         if (short) return
+        val rows = mapOf(1440 to (527f to 594f), 1920 to (511f to 578f))[scene.width]
+        if (rows != null) {
+            scene.click(scene.navWidth + 160f, rows.first)
+            scene.shot("pane-output")
+            scene.click(scene.navWidth + 160f, rows.second)
+            scene.shot("pane-eq")
+        }
         scene.navigate(Routes.SETTINGS_OUTPUT)
         scene.shot("output-page")
         scene.scroll(scene.width * 0.6f, scene.height * 0.5f, 10f)

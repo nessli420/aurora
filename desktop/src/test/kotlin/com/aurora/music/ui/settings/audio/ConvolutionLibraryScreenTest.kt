@@ -22,17 +22,17 @@ class ConvolutionLibraryScreenTest {
         }.use { scene ->
             val list = scene.shot("-list")
             assertTrue(list.distinctColors() > 10)
-            scene.click(100f, 148f)
+            scene.click(100f, 178f)
             val detail = scene.shot("-detail")
             assertTrue(detail.differsFrom(list))
-            scene.click(420f, 532f)
+            scene.click(420f, 562f)
             val studio = scene.await(read = { it.impulseLibrary.first().first() }) { true }
             scene.await(read = { it.audioPrefs.first().dspConvIrPath }) { it == studio.sourcePath }
-            scene.click(420f, 648f)
+            scene.click(420f, 678f)
             assertTrue(scene.shot("-prepare").differsFrom(detail))
             scene.click(527f, 837f)
-            scene.click(28f, 26f)
-            scene.click(28f, 26f)
+            scene.click(36f, 52f)
+            scene.click(36f, 52f)
             assertEquals(listOf("back"), events)
             val entries = scene.await(read = { it.impulseLibrary.first() }) { it.size == 2 }
             assertEquals(listOf("Studio room", "Headphone HRIR"), entries.map { it.name })

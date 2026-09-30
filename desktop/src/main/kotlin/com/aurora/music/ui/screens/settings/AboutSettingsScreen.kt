@@ -14,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.GraphicEq
@@ -98,20 +98,21 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.text_about_aurora_b4ed8c), onBack)
-        SettingsScroll(contentPadding, horizontalAlignment = Alignment.CenterHorizontally) {
-            Spacer(Modifier.height(24.dp))
-            Box(
-                Modifier.size(88.dp).clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
-                contentAlignment = Alignment.Center,
-            ) { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(44.dp)) }
-            Spacer(Modifier.height(14.dp))
-            Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-            Text(appString(R.string.text_version_d2f210, (BuildInfo.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Text(appString(R.string.text_windows_java_2566af, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(24.dp))
-
-            Column(Modifier.widthIn(max = 720.dp)) {
+        SettingsScroll(contentPadding) {
+            Row(Modifier.padding(horizontal = 12.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Box(
+                    Modifier.size(72.dp).clip(CircleShape)
+                        .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(36.dp)) }
+                Spacer(Modifier.width(18.dp))
+                Column {
+                    Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
+                    Text(appString(R.string.text_version_d2f210, (BuildInfo.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appString(R.string.text_windows_java_2566af, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            SettingsGroup {
                 val source = when (session?.type) {
                     ServerType.JELLYFIN -> "Jellyfin"
                     ServerType.PLEX -> "Plex"
@@ -124,24 +125,26 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
                 InfoRow(appString(R.string.text_music_source_cb3c75), source)
                 if (session != null && session?.type != ServerType.LOCAL) {
+                    SettingsRowDivider()
                     InfoRow(appString(R.string.text_signed_in_as_a02107), session?.username ?: "—")
                 }
+                SettingsRowDivider()
                 InfoRow(appString(R.string.text_playback_engine_0255b8), "FFmpeg ${ffmpegVersion()} · WASAPI")
+                SettingsRowDivider()
                 InfoRow("Compose Multiplatform", BuildInfo.COMPOSE_VERSION)
             }
             Spacer(Modifier.height(8.dp))
-            notices.forEach { notice ->
-                TextButton(onClick = { openNotice = notice }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text("${notice.name} · ${notice.licenseName}") }
+            Column(Modifier.padding(horizontal = 8.dp)) {
+                notices.forEach { notice ->
+                    TextButton(onClick = { openNotice = notice }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text("${notice.name} · ${notice.licenseName}") }
+                }
+                TextButton(onClick = { showFontLicenses = true }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.font_licenses_title)) }
             }
-            TextButton(onClick = { showFontLicenses = true }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.font_licenses_title)) }
-
-            Spacer(Modifier.height(20.dp))
             Text(
                 appString(R.string.text_built_with_compose_multiplatform_material_3_389c3a),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp),
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
             )
         }
     }
@@ -153,7 +156,7 @@ private fun ffmpegVersion(): String =
 @Composable
 private fun InfoRow(label: String, value: String) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 14.dp),
         horizontalArrangement = Arrangement.SpaceBetween,
     ) {
         Text(label, modifier = Modifier.weight(1f).padding(end = 12.dp), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
