@@ -6,7 +6,7 @@ An Android music player built for everyday listening and detailed audio customiz
 
 Bring local files, home music servers and YouTube Music together, or browse your Green Music App library in its own mode. Press play with the default sound, choose a headphone preset, or build your own processing chain. No Aurora account is required.
 
-**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Tablet](#tablet) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
+**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Tablet](#tablet) · [Windows](#windows-desktop) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
 
 Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively developed; the source may include changes that are not in the latest release yet.
 
@@ -73,6 +73,20 @@ Aurora adapts to larger screens in portrait and landscape, with a navigation sid
 </table>
 
 Captured from the running app on a Pixel Tablet emulator using a sample local music library. Click a screenshot to view it at full resolution. These layouts are included in the 2.6.2 source; check the latest release for APK availability.
+
+## Windows desktop
+
+Starting with 2.7.0, Aurora also runs on Windows 10 and 11 (64-bit) as a native desktop app. It shares its library, server and sound-processing code with the Android app, so the same equalizers, effects rack and presets shape what you hear, in a layout made for a mouse, keyboard and wide windows.
+
+- **Your music on your PC.** Add music folders from your drives, or sign in to Navidrome/Subsonic, Jellyfin or Plex. Local folders are scanned for tags, cover art and ReplayGain.
+- **Built for the desktop.** A sidebar with your pinned items and playlists, grids that fill the window, a player bar with a volume slider, and queue and lyrics panels beside the page. Right-click songs for more actions.
+- **Aurora's sound engine.** Playback decodes with FFmpeg and runs through Aurora's own DSP chain, with the same equalizers, rack, convolution and ReplayGain as on Android. Gapless playback and crossfade are included.
+- **Bit-perfect output.** Play through the shared Windows mixer, or switch to exclusive mode so Aurora sets the device's sample rate and bit depth itself. With processing off and volume at 100%, the audio reaches your DAC unchanged, and **Signal Path** shows every stage along the way.
+- **Fits into Windows.** Media keys and the Windows media overlay control playback, the title bar follows your theme and accent colour, and Aurora can stay in the system tray when you close the window. Press Space to play or pause, Ctrl+←/→ to skip, Ctrl+F to search and F11 for a full-screen player.
+
+Download `Aurora-2.7.0.msi` or the `.exe` installer from the [latest release](https://github.com/nessli420/aurora/releases/latest). Java is included, so nothing else needs installing. The installer is not code-signed yet, so Windows SmartScreen may ask you to confirm the first launch.
+
+The desktop app is new, and some Android features are not available there yet: YouTube Music, Green Music App, internet radio, podcasts, the tag editor, Cast and network output, DSD output, alarms and extensions. Playback speed also changes pitch for now.
 
 ## Get started
 
@@ -293,6 +307,15 @@ Run the unit tests and code checks with:
 
 Device tests are in `app/src/androidTest/`. They use the release build by default and need release signing configured. The app code is in `app/src/main/java/com/aurora/music/`; USB audio code is in `decent/`.
 
+**Windows desktop app.** Also install Visual Studio 2022 or newer (or its Build Tools) with the C++ desktop workload, which provides MSVC and the Windows SDK, plus CMake. Gradle builds the native audio library automatically. Run the app, or create the MSI and EXE installers in `desktop/build/compose/binaries/main/`:
+
+```bash
+./gradlew :desktop:run
+./gradlew :desktop:packageDistributionForCurrentOS
+```
+
+Code shared by both apps is in `core/`, the desktop app in `desktop/`, and the native Windows audio and media controls in `native/`. Run their tests with `./gradlew :core:test :desktop:test`.
+
 </details>
 
 ## Credits and license
@@ -306,5 +329,6 @@ Aurora is licensed under [Apache 2.0](LICENSE). Third-party code and assets keep
 - [MusicBrainz](https://musicbrainz.org) and the [Cover Art Archive](https://coverartarchive.org) provide music information and artwork.
 - Vocal separation uses Ultimate Vocal Remover's model and ONNX Runtime. See [model credits and attribution](docs/vocal-separation-attribution.md).
 - Built with Jetpack Compose and Media3, alongside Glance, DataStore, Palette, Retrofit, OkHttp, Gson, Coil, Lottie, and the Google Cast SDK.
+- The Windows app is built with [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) and decodes audio with [FFmpeg](https://ffmpeg.org) (LGPL) through [JavaCPP](https://github.com/bytedeco/javacpp-presets).
 
 Aurora is an independent project and is not affiliated with the services or device makers listed here.
