@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -84,40 +85,61 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
             val wide = maxWidth - LocalPageGutter.current * 2 >= 1100.dp
             LazyColumn(state = listState, contentPadding = pagePadding(contentPadding)) {
                 item {
-                    Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(vertical = 12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        RecapPeriod.entries.forEach { period ->
-                            FilterChip(selected = window.period == period, onClick = { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }, label = { Text(period.label) })
+                    val chips: @Composable (Modifier) -> Unit = { modifier ->
+                        Row(modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                            RecapPeriod.entries.forEach { period ->
+                                FilterChip(selected = window.period == period, onClick = { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }, label = { Text(period.label) })
+                            }
                         }
                     }
-                    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
-                        Column(Modifier.weight(1f).clickable(enabled = window.period != RecapPeriod.ALL) { picking = true }.pointerHoverIcon(PointerIcon.Hand), horizontalAlignment = Alignment.CenterHorizontally) {
-                            Text(window.label, fontWeight = FontWeight.Bold)
-                            Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
+                    val navigator: @Composable (Modifier) -> Unit = { modifier ->
+                        Row(modifier, verticalAlignment = Alignment.CenterVertically) {
+                            TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("9", style = MaterialTheme.typography.headlineMedium) }
+                            Column(Modifier.weight(1f).clickable(enabled = window.period != RecapPeriod.ALL) { picking = true }.pointerHoverIcon(PointerIcon.Hand), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(window.label, fontWeight = FontWeight.Bold)
+                                Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
+                            }
+                            TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("a", style = MaterialTheme.typography.headlineMedium) }
                         }
-                        TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
+                    }
+                    if (wide) Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        chips(Modifier.weight(1f))
+                        navigator(Modifier.width(420.dp))
+                    } else {
+                        chips(Modifier.fillMaxWidth().padding(vertical = 12.dp))
+                        navigator(Modifier.fillMaxWidth())
                     }
                     Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         StatCard("${recap.plays}", appString(R.string.text_plays_a6bc73), Modifier.weight(1f))
                         StatCard("${recap.minutes}", appString(R.string.text_minutes_092f99), Modifier.weight(1f))
                         StatCard("${recap.artists.size}", appString(R.string.text_artists_1528d8), Modifier.weight(1f))
+                        if (wide && recap.millis != 0L) {
+                            StatCard("${recap.songs.size}", appString(R.string.text_unique_songs_5af512), Modifier.weight(1f))
+                            StatCard("${recap.albums.size}", appString(R.string.text_albums_4c45e7), Modifier.weight(1f))
+                            StatCard("${recap.activeDays}", appString(R.string.text_active_days_340f3c), Modifier.weight(1f))
+                        }
                     }
                     Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 if (recap.millis == 0L) item { Text(appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2), Modifier.padding(vertical = 24.dp)) }
                 else {
-                    item { RecapInsights(recap, previous) }
+                    item { RecapInsights(recap, previous, wide) }
                     item {
-                        Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        if (!wide) Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             StatCard("${recap.songs.size}", appString(R.string.text_unique_songs_5af512), Modifier.weight(1f))
                             StatCard("${recap.albums.size}", appString(R.string.text_albums_4c45e7), Modifier.weight(1f))
                             StatCard("${recap.activeDays}", appString(R.string.text_active_days_340f3c), Modifier.weight(1f))
                         }
                         if (window.period != RecapPeriod.DAY) {
-                            Text(appString(R.string.text_busiest_day_min_per_active_day_8cd6fd, (recap.busiestDay), (recap.minutes / recap.activeDays.coerceAtLeast(1))), style = MaterialTheme.typography.bodyMedium)
+                            Text(appString(R.string.text_busiest_day_min_per_active_day_8cd6fd, (recap.busiestDay), (recap.minutes / recap.activeDays.coerceAtLeast(1))),
+                                Modifier.padding(top = if (wide) 8.dp else 0.dp), style = MaterialTheme.typography.bodyMedium)
                         }
-                        ListeningClock(recap.hourly.map { (it / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }.toIntArray())
+                        val hourly = recap.hourly.map { (it / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }.toIntArray()
+                        if (wide) Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            ListeningClock(hourly, Modifier.weight(1f).fillMaxHeight())
+                            if (recap.hasDailyChart()) RecapDays(recap, Modifier.weight(1f).fillMaxHeight())
+                        } else ListeningClock(hourly, Modifier.fillMaxWidth().padding(vertical = 6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                             FilterChip(!byMinutes, { byMinutes = false }, label = { Text(appString(R.string.text_most_played_14202e)) })
                             FilterChip(byMinutes, { byMinutes = true }, label = { Text(appString(R.string.text_most_minutes_0d8b47)) })
@@ -177,11 +199,10 @@ private fun RecapDatePicker(initial: LocalDate, onDismiss: () -> Unit, onPick: (
 private fun utcDate(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZone(ZoneOffset.UTC).toLocalDate()
 
 @Composable
-private fun ListeningClock(byHour: IntArray) {
+private fun ListeningClock(byHour: IntArray, modifier: Modifier) {
     val max = (byHour.maxOrNull() ?: 0).coerceAtLeast(1)
     Column(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp)
-            .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
+        modifier.clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
     ) {
         Text(appString(R.string.text_listening_clock_ec2eb4), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(12.dp))
