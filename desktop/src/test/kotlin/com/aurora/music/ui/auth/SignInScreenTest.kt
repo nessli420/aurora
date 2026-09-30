@@ -15,6 +15,8 @@ import com.aurora.music.data.accountKey
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.localization.appString
 import com.aurora.music.ui.screens.auth.SignInScreen
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.viewmodel.AuthStep
 import com.aurora.music.viewmodel.AuthViewModel
 import kotlinx.coroutines.flow.first

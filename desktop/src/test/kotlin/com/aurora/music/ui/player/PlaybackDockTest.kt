@@ -15,6 +15,7 @@ import com.aurora.music.data.UiPrefs
 import com.aurora.music.desktop.player.PlayerUiState
 import com.aurora.music.ui.components.PlaybackDock
 import com.aurora.music.ui.screens.player.PlayerPane
+import com.aurora.music.ui.testing.distinctColors
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -52,7 +53,7 @@ class PlaybackDockTest {
     @Test fun roomyDockRoutesEveryControl() {
         val rec = Recorder()
         dock("dock-wide", 1440, PlayerFixtures.playing, rec, openPane = PlayerPane.LYRICS).use { scene ->
-            assertTrue(scene.shot().distinctColors() > 30)
+            assertTrue(scene.shot().distinctColors(6) > 30)
             listOf(720f to 46f, 612f to 46f, 668f to 46f, 772f to 46f, 828f to 46f, 225f to 58f, 1104f to 58f,
                 1300f to 58f, 1348f to 58f, 1396f to 58f, 50f to 58f).forEach { (x, y) -> scene.click(x, y) }
             assertEquals(listOf("play", "shuffle", "previous", "next", "repeat", "like", "output",
@@ -74,7 +75,7 @@ class PlaybackDockTest {
     @Test fun compactDockKeepsTransportAndPaneToggles() {
         val rec = Recorder()
         dock("dock-compact", 720, PlayerFixtures.playing, rec).use { scene ->
-            assertTrue(scene.shot().distinctColors() > 20)
+            assertTrue(scene.shot().distinctColors(6) > 20)
             scene.click(676f, 58f)
             scene.click(628f, 58f)
             assertEquals(listOf("pane:QUEUE", "pane:LYRICS"), rec.events)
@@ -83,7 +84,7 @@ class PlaybackDockTest {
 
     @Test fun rendersLightGlassAndLiveStates() {
         dock("dock-glass-light", 1440, PlayerFixtures.playing.copy(isPlaying = false, shuffle = false), Recorder(),
-            prefs = UiPrefs(themeMode = ThemeMode.LIGHT, themeStyle = ThemeStyle.GLASS)).use { assertTrue(it.shot().distinctColors() > 20) }
+            prefs = UiPrefs(themeMode = ThemeMode.LIGHT, themeStyle = ThemeStyle.GLASS)).use { assertTrue(it.shot().distinctColors(6) > 20) }
         val rec = Recorder()
         dock("dock-live", 1440, PlayerFixtures.playing.copy(isLive = true), rec).use { scene ->
             scene.shot()

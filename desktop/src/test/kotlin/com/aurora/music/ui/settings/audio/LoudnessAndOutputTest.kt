@@ -12,6 +12,8 @@ import com.aurora.music.playback.engine.OutputRatePolicy
 import com.aurora.music.ui.screens.settings.AdvancedAudioSettingsScreen
 import com.aurora.music.ui.screens.settings.LoudnessSettingsScreen
 import com.aurora.music.ui.screens.settings.OutputRateSettings
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
 import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

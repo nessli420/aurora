@@ -10,6 +10,7 @@ import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.screens.home.HomeScreen
+import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.viewmodel.HomeUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -49,7 +50,7 @@ class HomeScreenTest {
         var settings = Rect.Zero
         home("home-dark", HomeUiState(loading = false, data = library), events = events, settings = { settings = it }).use { scene ->
             val image = scene.shot()
-            assertTrue(image.distinctColors() > 40)
+            assertTrue(image.distinctColors(6) > 40)
             assertTrue(settings.width > 30f && settings.right <= scene.width)
             scene.click(settings.center.x, settings.center.y)
             scene.click(30f, 40f)
@@ -68,7 +69,7 @@ class HomeScreenTest {
         val events = mutableListOf<String>()
         home("home-feed-light", HomeUiState(loading = false, data = HomeData(sections = sections, continuation = null), feeds = feeds),
             UiPrefs(themeMode = ThemeMode.LIGHT), events).use { scene ->
-            assertTrue(scene.shot().distinctColors() > 40)
+            assertTrue(scene.shot().distinctColors(6) > 40)
             scene.click(120f, 220f)
             assertEquals("all:8:0", events.last())
         }
@@ -76,7 +77,7 @@ class HomeScreenTest {
     }
 
     @Test fun rendersLoadingAndEmptyStates() {
-        home("home-loading", HomeUiState(loading = true)).use { assertTrue(it.shot().distinctColors() > 5) }
-        home("home-empty", HomeUiState(loading = false)).use { assertTrue(it.shot().distinctColors() > 5) }
+        home("home-loading", HomeUiState(loading = true)).use { assertTrue(it.shot().distinctColors(6) > 5) }
+        home("home-empty", HomeUiState(loading = false)).use { assertTrue(it.shot().distinctColors(6) > 5) }
     }
 }

@@ -31,6 +31,9 @@ import com.aurora.music.ui.screens.settings.PlaybackSettingsScreen
 import com.aurora.music.ui.screens.settings.SettingsScreen
 import com.aurora.music.ui.screens.settings.SourcesSettingsScreen
 import com.aurora.music.ui.screens.settings.StorageSettingsScreen
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
+import com.aurora.music.ui.testing.inkRows
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withTimeout

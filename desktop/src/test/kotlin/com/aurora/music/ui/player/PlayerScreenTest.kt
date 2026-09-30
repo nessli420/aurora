@@ -20,6 +20,9 @@ import com.aurora.music.ui.screens.player.PlayerPane
 import com.aurora.music.ui.screens.player.PlayerScreen
 import com.aurora.music.ui.screens.player.QueueActions
 import com.aurora.music.ui.screens.player.QueueContent
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
+import com.aurora.music.ui.testing.pixel
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.rememberPlayerColorScheme
 import org.junit.Assert.assertEquals
@@ -79,7 +82,7 @@ class PlayerScreenTest {
         val rec = Recorder()
         PlayerScene("player-lyrics", 1440, 900) { Player(PlayerFixtures.playing, rec) }.use { scene ->
             val lyrics = scene.shot()
-            assertTrue(lyrics.distinctColors() > 60)
+            assertTrue(lyrics.distinctColors(6) > 60)
             listOf(900f to 385f, 370f to 795f, 132f to 795f, 244f to 795f, 496f to 795f, 608f to 795f, 606f to 579f,
                 150f to 639f, 165f to 859f, 280f to 859f, 1348f to 36f, 52f to 36f).forEach { (x, y) -> scene.click(x, y) }
             assertEquals(listOf("lyric-seek", "play", "shuffle", "previous", "next", "repeat", "like",
@@ -141,7 +144,7 @@ class PlayerScreenTest {
         val state = PlayerFixtures.playing.copy(isPlaying = false, shuffle = false)
         PlayerScene("player-glass-light", 1440, 900, UiPrefs(themeMode = ThemeMode.LIGHT, themeStyle = ThemeStyle.GLASS)) {
             Player(state, Recorder())
-        }.use { assertTrue(it.shot().distinctColors() > 40) }
+        }.use { assertTrue(it.shot().distinctColors(6) > 40) }
         PlayerScene("player-small", 960, 600) { Player(PlayerFixtures.playing, Recorder()) }.use { it.shot() }
     }
 }

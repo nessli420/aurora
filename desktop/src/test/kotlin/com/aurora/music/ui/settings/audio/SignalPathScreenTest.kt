@@ -3,6 +3,7 @@ package com.aurora.music.ui.settings.audio
 import androidx.compose.foundation.layout.PaddingValues
 import com.aurora.music.data.SignalPath
 import com.aurora.music.ui.screens.settings.SignalPathScreen
+import com.aurora.music.ui.testing.differsFrom
 import kotlinx.coroutines.flow.MutableStateFlow
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -10,10 +10,10 @@ import com.aurora.music.data.remote.ArtistInfo
 import com.aurora.music.model.accent
 import com.aurora.music.ui.library.Harness
 import com.aurora.music.ui.library.Samples
-import com.aurora.music.ui.library.distinctColors
 import com.aurora.music.ui.library.pixels
 import com.aurora.music.ui.library.save
 import com.aurora.music.ui.screens.detail.DetailScreen
+import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.ui.theme.ContextAccentState
 import com.aurora.music.ui.theme.LocalContextAccent
 import com.aurora.music.ui.theme.readableAccent
@@ -45,7 +45,7 @@ class DetailScreenTest {
         val image = shot("detail-album", accent = accent, inspect = { claimed = accent.color }) { Detail(DetailUiState(loading = false, data = Samples.albumDetail), "album") }
         assertNotNull(claimed)
         assertNull(accent.color)
-        assertTrue(image.distinctColors() > 200)
+        assertTrue(image.distinctColors(6) > 200)
     }
 
     @Test fun blankArtworkFallsBackToInfoAccent() {
@@ -64,7 +64,7 @@ class DetailScreenTest {
 
     @Test fun playlistOffersGenreChips() {
         val image = shot("detail-playlist") { Detail(DetailUiState(loading = false, data = Samples.playlistDetail), "playlist") }
-        assertTrue(image.distinctColors() > 200)
+        assertTrue(image.distinctColors(6) > 200)
     }
 
     @Test fun narrowPaneUsesFullBleedHeader() {

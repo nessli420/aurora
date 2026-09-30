@@ -3,6 +3,8 @@ package com.aurora.music.ui.settings.audio
 import androidx.compose.foundation.layout.PaddingValues
 import com.aurora.music.data.DspMode
 import com.aurora.music.ui.screens.settings.ProcessingPresetsScreen
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
 import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

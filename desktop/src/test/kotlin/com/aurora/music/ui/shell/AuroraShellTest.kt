@@ -4,6 +4,7 @@ import androidx.compose.ui.input.pointer.PointerButton
 import com.aurora.music.desktop.ui.Shortcut
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.navigation.Routes
+import com.aurora.music.ui.testing.region
 import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse

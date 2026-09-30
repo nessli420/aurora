@@ -6,15 +6,12 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.snapshots.Snapshot
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.unit.Density
 import com.aurora.music.data.DetailData
 import com.aurora.music.data.DownloadRow
 import com.aurora.music.data.DuplicateGroup
@@ -34,6 +31,8 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.AmbientBackground
 import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.WindowLayout
+import com.aurora.music.ui.testing.EdtScene
+import com.aurora.music.ui.testing.saveTo
 import com.aurora.music.ui.theme.AuroraTheme
 import com.aurora.music.viewmodel.LibraryUiState
 import java.awt.GradientPaint
@@ -41,7 +40,6 @@ import java.awt.image.BufferedImage
 import java.io.File
 import javax.imageio.ImageIO
 import org.jetbrains.skia.Bitmap
-import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
 
 internal object Samples {
@@ -151,8 +149,7 @@ internal object Samples {
 
 @OptIn(ExperimentalComposeUiApi::class)
 internal class Harness(private val width: Int, private val height: Int, dark: Boolean = true, content: @Composable () -> Unit) : AutoCloseable {
-    private var clock = 0L
-    val scene = ImageComposeScene(width, height, Density(1f)) {
+    private val ui = EdtScene(width, height) {
         AuroraTheme(UiPrefs(themeMode = if (dark) ThemeMode.DARK else ThemeMode.LIGHT)) {
             CompositionLocalProvider(LocalWindowLayout provides WindowLayout(1440, 900)) {
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
@@ -164,53 +161,28 @@ internal class Harness(private val width: Int, private val height: Int, dark: Bo
     }
 
     fun settle(millis: Long = 900): Image {
-        var image = frame()
+        var image = ui.frame(50)
         val end = System.currentTimeMillis() + millis
         while (System.currentTimeMillis() < end) {
             Thread.sleep(40)
-            image = frame()
+            image = ui.frame(50)
         }
         return image
     }
 
-    private fun frame(): Image {
-        Snapshot.sendApplyNotifications()
-        clock += 50_000_000
-        return scene.render(clock)
+    fun click(x: Float, y: Float) = press(x, y, PointerButton.Primary, PointerButtons(isPrimaryPressed = true))
+
+    fun rightClick(x: Float, y: Float) = press(x, y, PointerButton.Secondary, PointerButtons(isSecondaryPressed = true))
+
+    private fun press(x: Float, y: Float, button: PointerButton, pressed: PointerButtons) = ui.input {
+        sendPointerEvent(PointerEventType.Move, Offset(x, y))
+        sendPointerEvent(PointerEventType.Press, Offset(x, y), buttons = pressed, button = button)
+        sendPointerEvent(PointerEventType.Release, Offset(x, y), buttons = PointerButtons(), button = button)
     }
 
-    fun click(x: Float, y: Float) {
-        scene.sendPointerEvent(PointerEventType.Move, Offset(x, y))
-        scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
-        scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), buttons = PointerButtons(), button = PointerButton.Primary)
-    }
-
-    fun rightClick(x: Float, y: Float) {
-        scene.sendPointerEvent(PointerEventType.Move, Offset(x, y))
-        scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), buttons = PointerButtons(isSecondaryPressed = true), button = PointerButton.Secondary)
-        scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), buttons = PointerButtons(), button = PointerButton.Secondary)
-    }
-
-    override fun close() = scene.close()
+    override fun close() = ui.close()
 }
 
-internal fun Image.save(label: String, name: String): Image {
-    System.getenv("AURORA_SHOTS")?.let { File(it, label).apply { mkdirs() } }?.let { dir ->
-        File(dir, "$name.png").writeBytes(encodeToData(EncodedImageFormat.PNG)!!.bytes)
-    }
-    return this
-}
+internal fun Image.save(label: String, name: String): Image = saveTo(System.getenv("AURORA_SHOTS")?.let { File(it, label) }, name)
 
 internal fun Image.pixels(): IntArray = Bitmap.makeFromImage(this).let { b -> IntArray(width * height) { b.getColor(it % width, it / width) } }
-
-internal fun Image.distinctColors(step: Int = 6): Int {
-    val b = Bitmap.makeFromImage(this)
-    val seen = HashSet<Int>()
-    for (y in 0 until height step step) for (x in 0 until width step step) seen += b.getColor(x, y)
-    return seen.size
-}
-
-internal fun Image.region(x0: Int, y0: Int, x1: Int, y1: Int): IntArray {
-    val b = Bitmap.makeFromImage(this)
-    return IntArray((x1 - x0) * (y1 - y0)) { b.getColor(x0 + it % (x1 - x0), y0 + it / (x1 - x0)) }
-}

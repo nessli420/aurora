@@ -4,14 +4,9 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerButtons
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.unit.Density
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -27,11 +22,11 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.AmbientBackground
 import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.WindowLayout
+import com.aurora.music.ui.testing.EdtScene
+import com.aurora.music.ui.testing.saveTo
 import com.aurora.music.ui.theme.AuroraTheme
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.skia.Bitmap
-import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
 import java.io.File
 import java.nio.file.Files
@@ -92,7 +87,7 @@ internal class BrowseScene(
     private val lifecycle = object : LifecycleOwner {
         override val lifecycle = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
     }
-    private val scene = ImageComposeScene(width, height, Density(1f), content = {
+    private val ui = EdtScene(width, height) {
         AuroraTheme(prefs) {
             CompositionLocalProvider(
                 LocalWindowLayout provides WindowLayout(1440, 900),
@@ -105,50 +100,26 @@ internal class BrowseScene(
                 }
             }
         }
-    })
-    private var millis = 0L
+    }
 
     fun frames(count: Int = 6): Image {
-        var image = scene.render(millis * 1_000_000)
-        repeat(count) {
-            Snapshot.sendApplyNotifications()
-            millis += 120
-            image = scene.render(millis * 1_000_000)
-        }
+        var image = ui.frame(0, applyChanges = false)
+        repeat(count) { image = ui.frame(120) }
         return image
     }
 
     fun click(x: Float, y: Float, button: PointerButton = PointerButton.Primary) {
         val pressed = if (button == PointerButton.Secondary) PointerButtons(isSecondaryPressed = true) else PointerButtons(isPrimaryPressed = true)
-        scene.sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
-        scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = millis, buttons = pressed, button = button)
-        millis += 40
-        scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), timeMillis = millis, buttons = PointerButtons(), button = button)
+        ui.click(x, y, button, pressed)
         frames(3)
     }
 
-    fun shot(suffix: String = ""): Image {
-        val image = frames()
-        System.getenv("AURORA_SHOTS")?.let(::File)?.let { dir ->
-            File(dir.apply { mkdirs() }, "$name$suffix.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
-        }
-        return image
-    }
+    fun shot(suffix: String = ""): Image = frames().saveTo(System.getenv("AURORA_SHOTS")?.let(::File), "$name$suffix")
 
     override fun close() {
-        scene.close()
+        ui.close()
         container.close()
         runBlocking { container.scope.coroutineContext.job.join() }
         root.deleteRecursively()
     }
 }
-
-internal fun Image.distinctColors(): Int {
-    val bitmap = Bitmap.makeFromImage(this)
-    val colors = HashSet<Int>()
-    for (y in 0 until height step 6) for (x in 0 until width step 6) colors += bitmap.getColor(x, y)
-    return colors.size
-}
-
-internal fun Image.differsFrom(other: Image): Boolean =
-    !Bitmap.makeFromImage(this).readPixels()!!.contentEquals(Bitmap.makeFromImage(other).readPixels()!!)

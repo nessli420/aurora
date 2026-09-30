@@ -8,14 +8,14 @@ import com.aurora.music.data.RecapPeriod
 import com.aurora.music.data.RecapWindow
 import com.aurora.music.ui.auth.AccountScene
 import com.aurora.music.ui.auth.accountShots
-import com.aurora.music.ui.auth.differsFrom
-import com.aurora.music.ui.auth.distinctColors
-import com.aurora.music.ui.auth.inkRows
 import com.aurora.music.ui.screens.stats.ListeningHistoryScreen
 import com.aurora.music.ui.screens.stats.ListeningStatsScreen
 import com.aurora.music.ui.screens.stats.RecapInboxScreen
 import com.aurora.music.ui.screens.stats.RecapStyle
 import com.aurora.music.ui.screens.stats.renderRecap
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
+import com.aurora.music.ui.testing.inkRows
 import kotlinx.coroutines.flow.first
 import org.jetbrains.skia.EncodedImageFormat
 import org.junit.Assert.assertEquals

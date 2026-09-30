@@ -6,14 +6,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
-import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.PointerButton
-import androidx.compose.ui.input.pointer.PointerButtons
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.unit.Density
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -32,12 +25,12 @@ import com.aurora.music.desktop.ui.LocalPlayer
 import com.aurora.music.model.Song
 import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.WindowLayout
+import com.aurora.music.ui.testing.EdtScene
+import com.aurora.music.ui.testing.saveTo
 import com.aurora.music.ui.theme.AuroraTheme
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.skia.Bitmap
-import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
 import org.junit.Assert.fail
 import java.io.File
@@ -109,12 +102,11 @@ internal class GeneralSettingsScene(
     private val lifecycleOwner = object : LifecycleOwner {
         override val lifecycle = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
     }
-    private var millis = 0L
-    private val scene: ImageComposeScene
+    private val ui: EdtScene
 
     init {
         runBlocking { container.seed() }
-        scene = ImageComposeScene(width, height, Density(1f), content = {
+        ui = EdtScene(width, height) {
             CompositionLocalProvider(
                 LocalWindowLayout provides WindowLayout(1440, 900),
                 LocalLifecycleOwner provides lifecycleOwner,
@@ -125,38 +117,25 @@ internal class GeneralSettingsScene(
                     Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) { content() }
                 }
             }
-        })
-    }
-
-    private fun render(): Image {
-        Snapshot.sendApplyNotifications()
-        millis += 32
-        return scene.render(millis * 1_000_000)
+        }
     }
 
     fun settle(realMillis: Long = 500): Image {
         val until = System.currentTimeMillis() + realMillis
-        var image = render()
+        var image = ui.frame(32)
         while (System.currentTimeMillis() < until) {
             Thread.sleep(15)
-            image = render()
+            image = ui.frame(32)
         }
         return image
     }
 
     fun click(x: Float, y: Float) {
-        scene.sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
-        scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = millis, buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
-        millis += 40
-        scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), timeMillis = millis, buttons = PointerButtons(), button = PointerButton.Primary)
+        ui.click(x, y)
         settle(300)
     }
 
-    fun shot(suffix: String = ""): Image {
-        val image = settle()
-        shotsDir?.let { dir -> File(dir.apply { mkdirs() }, "$name$suffix.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes) }
-        return image
-    }
+    fun shot(suffix: String = ""): Image = settle().saveTo(shotsDir, "$name$suffix")
 
     fun <T> await(timeoutMillis: Long = 4_000, read: suspend DesktopContainer.() -> T, done: (T) -> Boolean): T {
         val until = System.currentTimeMillis() + timeoutMillis
@@ -169,25 +148,9 @@ internal class GeneralSettingsScene(
     }
 
     override fun close() {
-        scene.close()
+        ui.close()
         container.close()
         runBlocking { container.scope.coroutineContext.job.join() }
         root.deleteRecursively()
     }
-}
-
-internal fun Image.distinctColors(): Int {
-    val bitmap = Bitmap.makeFromImage(this)
-    val colors = HashSet<Int>()
-    for (y in 0 until height step 5) for (x in 0 until width step 5) colors += bitmap.getColor(x, y)
-    return colors.size
-}
-
-internal fun Image.differsFrom(other: Image): Boolean =
-    !Bitmap.makeFromImage(this).readPixels()!!.contentEquals(Bitmap.makeFromImage(other).readPixels()!!)
-
-internal fun Image.inkRows(): Int {
-    val bitmap = Bitmap.makeFromImage(this)
-    val background = bitmap.getColor(width - 3, height - 3)
-    return (0 until height).count { y -> (8 until width - 16 step 3).any { x -> bitmap.getColor(x, y) != background } }
 }

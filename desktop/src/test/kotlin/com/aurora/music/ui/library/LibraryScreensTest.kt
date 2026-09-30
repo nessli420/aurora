@@ -27,6 +27,8 @@ import com.aurora.music.ui.screens.library.DuplicatesScreen
 import com.aurora.music.ui.screens.library.FolderScreen
 import com.aurora.music.ui.screens.library.LibraryScreen
 import com.aurora.music.ui.screens.library.SmartPlaylistEditScreen
+import com.aurora.music.ui.testing.distinctColors
+import com.aurora.music.ui.testing.region
 import com.aurora.music.viewmodel.DetailUiState
 import com.aurora.music.viewmodel.LibraryUiState
 import com.aurora.music.viewmodel.sortLibrarySongs
@@ -62,7 +64,7 @@ class LibraryScreensTest {
     @Test fun overviewRendersTilesAndShelves() {
         val dark = shot("library-all") { Library(Samples.library(LibraryFilter.ALL)) }
         val light = shot("library-all-light", dark = false) { Library(Samples.library(LibraryFilter.ALL)) }
-        assertTrue(dark.distinctColors() > 200)
+        assertTrue(dark.distinctColors(6) > 200)
         assertFalse(dark.pixels().contentEquals(light.pixels()))
     }
 
@@ -138,7 +140,7 @@ class LibraryScreensTest {
                     )
                 }
             }
-        }.let { assertTrue(it.distinctColors() > 200) }
+        }.let { assertTrue(it.distinctColors(6) > 200) }
     }
 
     @Test fun folderBrowserListsFoldersThenTracks() {
@@ -156,7 +158,7 @@ class LibraryScreensTest {
                 onPlayNext = {}, onToggleLike = {}, onOpenDetail = { _, _ -> }, downloadedIds = emptySet(), onDownload = {}, onRemoveDownload = {},
             )
         }
-        assertTrue(full.distinctColors() > empty.distinctColors())
+        assertTrue(full.distinctColors(6) > empty.distinctColors(6))
     }
 
     @Test fun duplicatesListsGroups() {
@@ -166,7 +168,7 @@ class LibraryScreensTest {
         val none = shot("duplicates-none") {
             DuplicatesScreen(contentPadding = padding, loading = false, scanned = 412, groups = emptyList(), currentSongId = "", onBack = {}, onPlay = {})
         }
-        assertTrue(found.distinctColors() > none.distinctColors())
+        assertTrue(found.distinctColors(6) > none.distinctColors(6))
     }
 
     @Test fun smartPlaylistEditorShowsRules() {

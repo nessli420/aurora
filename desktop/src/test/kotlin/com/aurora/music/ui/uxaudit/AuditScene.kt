@@ -4,13 +4,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.input.pointer.PointerButton
-import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.unit.Density
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -39,18 +34,18 @@ import com.aurora.music.desktop.ui.AuroraRoot
 import com.aurora.music.desktop.ui.Shortcut
 import com.aurora.music.model.Song
 import com.aurora.music.ui.AuroraApp
-import kotlinx.coroutines.Dispatchers
+import com.aurora.music.ui.testing.EdtScene
+import com.aurora.music.ui.testing.edt
+import com.aurora.music.ui.testing.saveTo
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.Image
 import org.junit.Assert.fail
 import java.io.File
 import java.nio.file.Files
-import javax.swing.SwingUtilities
 import kotlin.random.Random
 import kotlin.reflect.KClass
 
@@ -117,8 +112,7 @@ internal class AuditScene(
     private val lifecycle = object : LifecycleOwner {
         override val lifecycle = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
     }
-    private val scene: ImageComposeScene
-    private var millis = 0L
+    private val ui: EdtScene
     val songs: List<Song> get() = container.folderLibrary.songs
 
     val route: String? get() = edt { nav.currentDestination?.route }
@@ -134,7 +128,7 @@ internal class AuditScene(
                 if (signedIn) seed()
             }
         }
-        scene = edt { ImageComposeScene(width, height, Density(1f), coroutineContext = Dispatchers.Main) {
+        ui = EdtScene(width, height) {
             val controller = rememberNavController()
             nav = controller
             CompositionLocalProvider(LocalLifecycleOwner provides lifecycle, LocalViewModelStoreOwner provides owner) {
@@ -142,7 +136,7 @@ internal class AuditScene(
                     AuroraApp(navController = controller, shortcuts = shortcuts, fullscreen = fullscreen, onFullscreenChange = { fullscreen = it })
                 }
             }
-        } }
+        }
     }
 
     private suspend fun DesktopContainer.seed() {
@@ -179,24 +173,12 @@ internal class AuditScene(
         )
     }
 
-    fun <T> edt(block: () -> T): T {
-        var result: Result<T>? = null
-        SwingUtilities.invokeAndWait { result = runCatching(block) }
-        return result!!.getOrThrow()
-    }
-
-    private fun render(): Image = edt {
-        Snapshot.sendApplyNotifications()
-        millis += 32
-        scene.render(millis * 1_000_000)
-    }
-
     fun settle(realMillis: Long = 900): Image {
         val until = System.currentTimeMillis() + realMillis
-        var image = render()
+        var image = ui.frame(32)
         while (System.currentTimeMillis() < until) {
             Thread.sleep(15)
-            image = render()
+            image = ui.frame(32)
         }
         return image
     }
@@ -211,20 +193,14 @@ internal class AuditScene(
     }
 
     fun click(x: Float, y: Float) {
-        edt {
-            scene.sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
-            scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = millis,
-                buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
-            millis += 40
-            scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), timeMillis = millis, buttons = PointerButtons(), button = PointerButton.Primary)
-        }
+        ui.click(x, y)
         settle(500)
     }
 
     fun scroll(x: Float, y: Float, amount: Float) {
-        edt {
-            scene.sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
-            scene.sendPointerEvent(PointerEventType.Scroll, Offset(x, y), scrollDelta = Offset(0f, amount), timeMillis = millis)
+        ui.input {
+            sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = ui.millis)
+            sendPointerEvent(PointerEventType.Scroll, Offset(x, y), scrollDelta = Offset(0f, amount), timeMillis = ui.millis)
         }
         settle(600)
     }
@@ -247,16 +223,11 @@ internal class AuditScene(
 
     fun <T : ViewModel> rootViewModel(type: KClass<T>): T = edt { ViewModelProvider.create(owner.viewModelStore, NoFactory)[type] }
 
-    fun shot(name: String, realMillis: Long = 1_400): Image {
-        val image = settle(realMillis)
-        System.getenv("AURORA_SHOTS")?.let { File(it, "ux-audit") }?.let { dir ->
-            File(dir.apply { mkdirs() }, "${width}x$height-$label-$name.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
-        }
-        return image
-    }
+    fun shot(name: String, realMillis: Long = 1_400): Image =
+        settle(realMillis).saveTo(System.getenv("AURORA_SHOTS")?.let { File(it, "ux-audit") }, "${width}x$height-$label-$name")
 
     override fun close() {
-        edt { scene.close() }
+        ui.close()
         container.close()
         runBlocking { container.scope.coroutineContext.job.join() }
         root.deleteRecursively()

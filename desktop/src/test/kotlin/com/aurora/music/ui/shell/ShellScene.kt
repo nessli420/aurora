@@ -4,13 +4,8 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.ImageComposeScene
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerButtons
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.unit.Density
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -27,13 +22,14 @@ import com.aurora.music.desktop.ui.AuroraRoot
 import com.aurora.music.desktop.ui.Shortcut
 import com.aurora.music.model.Song
 import com.aurora.music.ui.AuroraApp
-import kotlinx.coroutines.Dispatchers
+import com.aurora.music.ui.testing.EdtScene
+import com.aurora.music.ui.testing.edt
+import com.aurora.music.ui.testing.saveTo
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.GradientStyle
 import org.jetbrains.skia.Image
@@ -44,7 +40,6 @@ import org.jetbrains.skia.Surface
 import org.junit.Assert.fail
 import java.io.File
 import java.nio.file.Files
-import javax.swing.SwingUtilities
 
 internal object ShellFixtures {
     private val dir = Files.createTempDirectory("aurora-shell-art").toFile().apply { deleteOnExit() }
@@ -132,8 +127,7 @@ internal class ShellScene(
     private val lifecycle = object : LifecycleOwner {
         override val lifecycle = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
     }
-    private val scene: ImageComposeScene
-    private var millis = 0L
+    private val ui: EdtScene
 
     val route: String? get() = edt { nav.currentDestination?.route }
 
@@ -142,7 +136,7 @@ internal class ShellScene(
             container.settingsStore.setLrclibEnabled(false)
             container.seed()
         }
-        scene = edt { ImageComposeScene(width, height, Density(1f), coroutineContext = Dispatchers.Main) {
+        ui = EdtScene(width, height) {
             val controller = rememberNavController()
             nav = controller
             CompositionLocalProvider(LocalLifecycleOwner provides lifecycle) {
@@ -150,27 +144,15 @@ internal class ShellScene(
                     AuroraApp(navController = controller, shortcuts = shortcuts, fullscreen = fullscreen, onFullscreenChange = { fullscreen = it })
                 }
             }
-        } }
-    }
-
-    fun <T> edt(block: () -> T): T {
-        var result: Result<T>? = null
-        SwingUtilities.invokeAndWait { result = runCatching(block) }
-        return result!!.getOrThrow()
-    }
-
-    private fun render(): Image = edt {
-        Snapshot.sendApplyNotifications()
-        millis += 32
-        scene.render(millis * 1_000_000)
+        }
     }
 
     fun settle(realMillis: Long = 600): Image {
         val until = System.currentTimeMillis() + realMillis
-        var image = render()
+        var image = ui.frame(32)
         while (System.currentTimeMillis() < until) {
             Thread.sleep(15)
-            image = render()
+            image = ui.frame(32)
         }
         return image
     }
@@ -186,12 +168,7 @@ internal class ShellScene(
 
     fun click(x: Float, y: Float, button: PointerButton = PointerButton.Primary) {
         val pressed = if (button == PointerButton.Back) PointerButtons(isBackPressed = true) else PointerButtons(isPrimaryPressed = true)
-        edt {
-            scene.sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
-            scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = millis, buttons = pressed, button = button)
-            millis += 40
-            scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), timeMillis = millis, buttons = PointerButtons(), button = button)
-        }
+        ui.click(x, y, button, pressed)
         settle(400)
     }
 
@@ -213,23 +190,12 @@ internal class ShellScene(
         settle(100)
     }
 
-    fun shot(suffix: String): Image {
-        val image = settle()
-        System.getenv("AURORA_SHOTS")?.let { File(it, "shell") }?.let { dir ->
-            File(dir.apply { mkdirs() }, "$name-$suffix.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
-        }
-        return image
-    }
+    fun shot(suffix: String): Image = settle().saveTo(System.getenv("AURORA_SHOTS")?.let { File(it, "shell") }, "$name-$suffix")
 
     override fun close() {
-        edt { scene.close() }
+        ui.close()
         container.close()
         runBlocking { container.scope.coroutineContext.job.join() }
         root.deleteRecursively()
     }
-}
-
-internal fun Image.region(x0: Int, y0: Int, x1: Int, y1: Int): IntArray {
-    val bitmap = Bitmap.makeFromImage(this)
-    return IntArray((x1 - x0) * (y1 - y0)) { i -> bitmap.getColor(x0 + i % (x1 - x0), y0 + i / (x1 - x0)) }
 }

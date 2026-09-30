@@ -15,9 +15,9 @@ import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.ui.home.BrowseScene
 import com.aurora.music.ui.home.Sample
-import com.aurora.music.ui.home.differsFrom
-import com.aurora.music.ui.home.distinctColors
 import com.aurora.music.ui.screens.search.SearchScreen
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.viewmodel.SearchUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
@@ -59,13 +59,13 @@ class SearchScreenTest {
     @Test fun rendersResultsRecentsAndHints() {
         val sources = listOf(SearchSourceChoice("library", "Library"), SearchSourceChoice("discovery", "Discover"))
         search("search-results", SearchUiState(query = "night", results = results, sources = sources)).use {
-            assertTrue(it.shot().distinctColors() > 40)
+            assertTrue(it.shot().distinctColors(6) > 40)
         }
         search("search-results-light", SearchUiState(query = "night", results = results), prefs = UiPrefs(themeMode = ThemeMode.LIGHT)).use {
-            assertTrue(it.shot().distinctColors() > 40)
+            assertTrue(it.shot().distinctColors(6) > 40)
         }
         search("search-recents", SearchUiState(), recents = listOf("lunar tide", "neon hours", "paper planes")).use { it.shot() }
-        search("search-empty", SearchUiState(query = "zzz")).use { assertTrue(it.shot().distinctColors() > 5) }
+        search("search-empty", SearchUiState(query = "zzz")).use { assertTrue(it.shot().distinctColors(6) > 5) }
         search("search-loading", SearchUiState(query = "zzz", loading = true)).use { it.shot() }
     }
 

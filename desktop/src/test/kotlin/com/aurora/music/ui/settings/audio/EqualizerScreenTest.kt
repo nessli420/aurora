@@ -7,6 +7,8 @@ import com.aurora.music.data.SQUIG_INSTANCES
 import com.aurora.music.data.SQUIG_TARGETS
 import com.aurora.music.data.SettingsStore
 import com.aurora.music.ui.screens.settings.EqualizerScreen
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
 import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue

@@ -5,13 +5,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.snapshots.Snapshot
-import androidx.compose.ui.ImageComposeScene
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.unit.Density
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -28,10 +26,12 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.AmbientBackground
 import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.WindowLayout
+import com.aurora.music.ui.testing.EdtScene
+import com.aurora.music.ui.testing.edt
+import com.aurora.music.ui.testing.saveTo
 import com.aurora.music.ui.theme.AuroraTheme
 import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
-import org.jetbrains.skia.Bitmap
 import org.jetbrains.skia.EncodedImageFormat
 import org.jetbrains.skia.GradientStyle
 import org.jetbrains.skia.Image
@@ -113,12 +113,11 @@ internal class PlayerScene(
     private val lifecycle = object : LifecycleOwner {
         override val lifecycle = LifecycleRegistry.createUnsafe(this).apply { currentState = Lifecycle.State.RESUMED }
     }
-    private val scene: ImageComposeScene
-    private var millis = 0L
+    private val ui: EdtScene
 
     init {
         runBlocking { container.settingsStore.setLrclibEnabled(false) }
-        scene = ImageComposeScene(width, height, Density(1f), content = {
+        ui = EdtScene(width, height) {
             CompositionLocalProvider(
                 LocalWindowLayout provides WindowLayout(1440, 900),
                 LocalLifecycleOwner provides lifecycle,
@@ -131,78 +130,63 @@ internal class PlayerScene(
                     }
                 }
             }
-        })
+        }
     }
 
     fun frames(count: Int = 6, realMillis: Long = 0): Image {
-        var image = scene.render(millis * 1_000_000)
+        var image = ui.frame(0, applyChanges = false)
         repeat(count) {
-            Snapshot.sendApplyNotifications()
-            if (realMillis > 0) Thread.sleep(realMillis)
-            millis += 120
-            image = scene.render(millis * 1_000_000)
+            if (realMillis > 0) {
+                edt { Snapshot.sendApplyNotifications() }
+                Thread.sleep(realMillis)
+                image = ui.frame(120, applyChanges = false)
+            } else image = ui.frame(120)
         }
         return image
     }
 
-    private fun move(x: Float, y: Float) = scene.sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
+    private fun move(x: Float, y: Float) = ui.input { sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = ui.millis) }
 
     fun click(x: Float, y: Float) {
-        move(x, y)
-        scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = millis,
-            buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
-        millis += 40
-        scene.sendPointerEvent(PointerEventType.Release, Offset(x, y), timeMillis = millis,
-            buttons = PointerButtons(), button = PointerButton.Primary)
+        ui.click(x, y)
         frames(4)
     }
 
     fun drag(x: Float, y: Float, dx: Float, dy: Float, steps: Int = 12) {
         move(x, y)
-        scene.sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = millis,
-            buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
-        for (step in 1..steps) {
-            millis += 16
-            scene.sendPointerEvent(PointerEventType.Move, Offset(x + dx * step / steps, y + dy * step / steps), timeMillis = millis,
-                buttons = PointerButtons(isPrimaryPressed = true))
-            scene.render(millis * 1_000_000)
+        ui.input {
+            sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = ui.millis,
+                buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
         }
-        millis += 16
-        scene.sendPointerEvent(PointerEventType.Release, Offset(x + dx, y + dy), timeMillis = millis,
-            buttons = PointerButtons(), button = PointerButton.Primary)
+        for (step in 1..steps) {
+            ui.millis += 16
+            ui.input {
+                sendPointerEvent(PointerEventType.Move, Offset(x + dx * step / steps, y + dy * step / steps), timeMillis = ui.millis,
+                    buttons = PointerButtons(isPrimaryPressed = true))
+                render(ui.millis * 1_000_000)
+            }
+        }
+        ui.millis += 16
+        ui.input {
+            sendPointerEvent(PointerEventType.Release, Offset(x + dx, y + dy), timeMillis = ui.millis,
+                buttons = PointerButtons(), button = PointerButton.Primary)
+        }
         frames(4)
     }
 
     fun scroll(x: Float, y: Float, delta: Float) {
         move(x, y)
-        scene.sendPointerEvent(PointerEventType.Scroll, Offset(x, y), scrollDelta = Offset(0f, delta), timeMillis = millis)
+        ui.input { sendPointerEvent(PointerEventType.Scroll, Offset(x, y), scrollDelta = Offset(0f, delta), timeMillis = ui.millis) }
         frames(2)
     }
 
-    fun shot(suffix: String = "", realMillis: Long = 40): Image {
-        val image = frames(20, realMillis)
-        System.getenv("AURORA_SHOTS")?.let(::File)?.let { dir ->
-            File(dir.apply { mkdirs() }, "$name$suffix.png").writeBytes(image.encodeToData(EncodedImageFormat.PNG)!!.bytes)
-        }
-        return image
-    }
+    fun shot(suffix: String = "", realMillis: Long = 40): Image =
+        frames(20, realMillis).saveTo(System.getenv("AURORA_SHOTS")?.let(::File), "$name$suffix")
 
     override fun close() {
-        scene.close()
+        ui.close()
         container.close()
         runBlocking { container.scope.coroutineContext.job.join() }
         root.deleteRecursively()
     }
 }
-
-internal fun Image.distinctColors(): Int {
-    val bitmap = Bitmap.makeFromImage(this)
-    val colors = HashSet<Int>()
-    for (y in 0 until height step 6) for (x in 0 until width step 6) colors += bitmap.getColor(x, y)
-    return colors.size
-}
-
-internal fun Image.pixel(x: Int, y: Int): Int = Bitmap.makeFromImage(this).getColor(x, y)
-
-internal fun Image.differsFrom(other: Image): Boolean =
-    !Bitmap.makeFromImage(this).readPixels()!!.contentEquals(Bitmap.makeFromImage(other).readPixels()!!)

@@ -12,12 +12,12 @@ import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
 import com.aurora.music.ui.auth.AccountScene
-import com.aurora.music.ui.auth.differsFrom
-import com.aurora.music.ui.auth.distinctColors
 import com.aurora.music.ui.screens.profile.LocalProfileDialog
 import com.aurora.music.ui.screens.profile.ProfileImages
 import com.aurora.music.ui.screens.profile.ProfileScreen
 import com.aurora.music.ui.screens.profile.rememberProfileAppearance
+import com.aurora.music.ui.testing.differsFrom
+import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.viewmodel.LocalProfileViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
