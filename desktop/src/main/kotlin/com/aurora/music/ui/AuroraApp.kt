@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CloudOff
@@ -52,6 +51,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
@@ -71,7 +71,6 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -110,19 +109,21 @@ import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.localization.localizedMediaType
+import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.model.accent
 import com.aurora.music.navigation.NavLayout
 import com.aurora.music.navigation.NavMenu
 import com.aurora.music.navigation.NavMenuItem
 import com.aurora.music.navigation.Routes
-import com.aurora.music.navigation.topLevelDestinations
 import com.aurora.music.ui.components.AmbientBackground
 import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.components.PlaybackDock
 import com.aurora.music.ui.components.TabletNavigationRail
 import com.aurora.music.ui.components.TabletSidebar
+import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.LocalWindowLayout
+import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.layout.TabletMetrics
 import com.aurora.music.ui.layout.shell
 import com.aurora.music.ui.screens.auth.SignInScreen
@@ -198,7 +199,6 @@ import java.time.LocalDate
 private val unportedRoutes = setOf(
     Routes.RADIO, Routes.PODCASTS, Routes.SETTINGS_TUNING, Routes.SETTINGS_COMPARISON, Routes.SETTINGS_PRESET_RULES, Routes.SETTINGS_LISTENING,
 )
-private val topLevelRoutes = topLevelDestinations.map { it.route }
 private val splitKinds = listOf("album", "artist", "playlist", "liked", "smart")
 private val mouseGestures = GesturePrefs(swipeArtwork = false)
 private const val LIKES_REFRESH_INTERVAL_NS = 30_000_000_000L
@@ -341,17 +341,16 @@ private fun Shell(
     val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack)
     val uiPrefs = LocalUiPrefs.current
     val navLayout = remember(uiPrefs.navLayout, simpleMode) { NavMenu.parse(uiPrefs.navLayout).visible(simpleMode).ported() }
-    val navGap = if (rail) uiPrefs.tabletNavGap.dp else 0.dp
-    val pageMargin = if (rail) uiPrefs.tabletPageMargin.dp else 0.dp
+    val navGap = if (rail) (TabletMetrics.NavGap + (uiPrefs.tabletNavGap - TabletSetting.NAV_GAP.default).dp).coerceAtLeast(0.dp) else 0.dp
+    val gutter = LocalPageGutter.current
     val panelSpacing = uiPrefs.tabletPanelSpacing.dp.coerceAtLeast(4.dp)
     val density = LocalDensity.current
     var dockHeight by remember { mutableStateOf(0.dp) }
     val dockVisible = rail && playerState.hasTrack
-    val pageWidth = when {
-        currentRoute == Routes.SIGN_IN -> Dp.Unspecified
-        currentRoute in topLevelRoutes || currentRoute == Routes.SETTINGS -> 1280.dp
-        currentRoute?.startsWith("settings") == true -> 840.dp
-        else -> 960.dp
+    val detailId = if (currentRoute == Routes.DETAIL) backStackEntry?.arg("id") else null
+    var playlistsVersion by remember { mutableStateOf(0) }
+    val sidebarPlaylists by produceState(emptyList<Playlist>(), sessionReady, session?.server, accountEpoch, libraryReload, offlineMode, playlistsVersion) {
+        if (sessionReady == true) value = runCatching { repository.allPlaylists() }.getOrNull() ?: value
     }
 
     var showSpeedSheet by rememberSaveable { mutableStateOf(false) }
@@ -492,7 +491,12 @@ private fun Shell(
             currentIndex = playerState.currentIndex,
             editable = !playerState.isMix,
             onClear = { player.clearQueue() },
-            onSaveAsPlaylist = { name -> player.saveQueueAsPlaylist(name) { confirm(it) } },
+            onSaveAsPlaylist = { name ->
+                player.saveQueueAsPlaylist(name) {
+                    confirm(it)
+                    playlistsVersion++
+                }
+            },
         )
     }
 
@@ -543,13 +547,18 @@ private fun Shell(
                 },
                 onEditPlaylist = { name, desc ->
                     playlistMutation { repository.updatePlaylist(id, name, desc) }.also { updated ->
-                        if (updated) detailVM.reload(kind, id)
+                        if (updated) {
+                            detailVM.reload(kind, id)
+                            playlistsVersion++
+                        }
                     }
                 },
                 onDeletePlaylist = {
                     scope.launch {
-                        if (playlistMutation { repository.deletePlaylist(id) }) onBack()
-                        else confirm(appString(R.string.playlist_delete_failed))
+                        if (playlistMutation { repository.deletePlaylist(id) }) {
+                            playlistsVersion++
+                            onBack()
+                        } else confirm(appString(R.string.playlist_delete_failed))
                     }
                 },
                 onLoadMore = { detailVM.loadMore() },
@@ -669,6 +678,10 @@ private fun Shell(
                     onOpen = { item -> closeDrawerThen { openNavItem(item) } },
                     onProfile = { closeDrawerThen { navController.navigate(Routes.PROFILE) { launchSingleTop = true } } },
                     onSettings = { closeDrawerThen { navController.navigate(Routes.SETTINGS) { launchSingleTop = true } } },
+                    playlists = sidebarPlaylists,
+                    pins = pins,
+                    selectedId = detailId,
+                    onOpenCollection = { kind, id -> closeDrawerThen { openDetail(kind, id) } },
                 )
             }
         },
@@ -696,6 +709,10 @@ private fun Shell(
                             onOpen = { openNavItem(it) },
                             onProfile = { navController.navigate(Routes.PROFILE) { launchSingleTop = true } },
                             onSettings = { navController.navigate(Routes.SETTINGS) { launchSingleTop = true } },
+                            playlists = sidebarPlaylists,
+                            pins = pins,
+                            selectedId = detailId,
+                            onOpenCollection = { kind, id -> openDetail(kind, id) },
                         )
                     } else {
                         TabletNavigationRail(currentRoute, navLayout.main, { openNavItem(it) }, { openDrawer() }) {
@@ -711,10 +728,10 @@ private fun Shell(
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
-                    if (showChrome) {
+                    if (showChrome && (activeDownloads > 0 || offlineMode)) {
                         Column(
                             Modifier.fillMaxWidth()
-                                .padding(start = pageMargin, end = pageMargin.coerceAtLeast(12.dp), top = 8.dp, bottom = if (dockVisible) 0.dp else 12.dp),
+                                .padding(start = gutter, end = gutter, top = 8.dp, bottom = if (dockVisible) 0.dp else 12.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             if (activeDownloads > 0) {
@@ -739,11 +756,11 @@ private fun Shell(
                 },
             ) { inner ->
                 Row(Modifier.fillMaxSize()) {
-                    Box(Modifier.weight(1f).fillMaxHeight().padding(horizontal = pageMargin), contentAlignment = Alignment.TopCenter) {
+                    Box(Modifier.weight(1f).fillMaxHeight()) {
                         NavHost(
                             navController = navController,
                             startDestination = startDestination,
-                            modifier = Modifier.widthIn(max = pageWidth).fillMaxSize(),
+                            modifier = Modifier.fillMaxSize(),
                             enterTransition = { EnterTransition.None },
                             exitTransition = { ExitTransition.None },
                             popEnterTransition = { EnterTransition.None },
@@ -842,9 +859,11 @@ private fun Shell(
                                 var librarySelection by rememberSaveable { mutableStateOf<String?>(null) }
                                 BoxWithConstraints(Modifier.fillMaxSize()) {
                                     val split = rail && maxWidth >= 960.dp
+                                    val selected = librarySelection?.split(":", limit = 2)?.takeIf { split && it.size == 2 }
                                     BackHandler(enabled = split && librarySelection != null) { librarySelection = null }
+                                    val listWidth = if (maxWidth >= 1500.dp) 560.dp else 440.dp
                                     Row(Modifier.fillMaxSize()) {
-                                        Box(Modifier.weight(1f).fillMaxHeight()) {
+                                        Box(if (selected != null) Modifier.width(listWidth).fillMaxHeight() else Modifier.weight(1f).fillMaxHeight()) {
                                             LibraryScreen(
                                                 contentPadding = inner,
                                                 state = libraryState,
@@ -866,7 +885,12 @@ private fun Shell(
                                                 onRemoveDownload = onRemoveDownload,
                                                 onOpenSearch = { navigateTopLevel(Routes.SEARCH) },
                                                 onCreatePlaylist = { name ->
-                                                    playlistMutation { repository.createPlaylist(name) }.also { created -> if (created) libraryVM.load() }
+                                                    playlistMutation { repository.createPlaylist(name) }.also { created ->
+                                                        if (created) {
+                                                            libraryVM.load()
+                                                            playlistsVersion++
+                                                        }
+                                                    }
                                                 },
                                                 onCreateSmart = { navController.navigate(Routes.smartEdit()) },
                                                 onEditSmart = { id -> navController.navigate(Routes.smartEdit(id)) },
@@ -885,6 +909,7 @@ private fun Shell(
                                                                 if (result == null) confirm(appString(R.string.text_import_failed_fbae89)) else {
                                                                     confirm(appString(R.string.text_matched_of_tracks_09b8b1, result.first, result.second))
                                                                     libraryVM.load()
+                                                                    playlistsVersion++
                                                                 }
                                                             }
                                                         }
@@ -924,8 +949,10 @@ private fun Shell(
                                                 onToggleLikeKind = { id, kind -> player.toggleLike(id, kind) },
                                                 onDeletePlaylist = { id ->
                                                     scope.launch {
-                                                        if (playlistMutation { repository.deletePlaylist(id) }) libraryVM.load()
-                                                        else confirm(appString(R.string.playlist_delete_failed))
+                                                        if (playlistMutation { repository.deletePlaylist(id) }) {
+                                                            libraryVM.load()
+                                                            playlistsVersion++
+                                                        } else confirm(appString(R.string.playlist_delete_failed))
                                                     }
                                                 },
                                                 canDownload = !localMode,
@@ -948,17 +975,17 @@ private fun Shell(
                                                 selectedItem = if (split) librarySelection else null,
                                             )
                                         }
-                                        val selected = librarySelection?.split(":", limit = 2)
-                                        if (split && selected != null && selected.size == 2) {
-                                            Spacer(Modifier.width(16.dp))
+                                        if (selected != null) {
                                             Box(
-                                                Modifier.weight(1.1f).fillMaxHeight().padding(top = 8.dp)
+                                                Modifier.weight(1f).fillMaxHeight().padding(end = TabletMetrics.WindowInset)
                                                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                                                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                                             ) {
                                                 val paneVM = viewModel(key = "library-detail") { DetailViewModel(container) }
-                                                detailContent(selected[0], selected[1], paneVM, inner, { librarySelection = null }) { k, i ->
-                                                    if (k in listOf("album", "artist", "playlist")) librarySelection = "$k:$i" else openDetail(k, i)
+                                                CompositionLocalProvider(LocalPageGutter provides PageMetrics.PaneGutter) {
+                                                    detailContent(selected[0], selected[1], paneVM, inner, { librarySelection = null }) { k, i ->
+                                                        if (k in listOf("album", "artist", "playlist")) librarySelection = "$k:$i" else openDetail(k, i)
+                                                    }
                                                 }
                                             }
                                         }
@@ -1067,8 +1094,9 @@ private fun Shell(
                                             navController.navigate(paneRoute)
                                         }
                                     }
+                                    val listWidth = if (maxWidth >= 1300.dp) 380.dp else 320.dp
                                     Row(Modifier.fillMaxSize()) {
-                                        Box(if (twoPane) Modifier.width(360.dp).fillMaxHeight() else Modifier.weight(1f).fillMaxHeight()) {
+                                        Box(if (twoPane) Modifier.width(listWidth).fillMaxHeight() else Modifier.weight(1f).fillMaxHeight()) {
                                             CompositionLocalProvider(LocalSelectedSettingsRoute provides if (twoPane) paneRoute else null) {
                                                 SettingsScreen(
                                                     contentPadding = inner,
@@ -1098,17 +1126,16 @@ private fun Shell(
                                             }
                                         }
                                         if (twoPane) {
-                                            Spacer(Modifier.width(16.dp))
                                             Box(
-                                                Modifier.weight(1f).fillMaxHeight().padding(top = 8.dp)
+                                                Modifier.weight(1f).fillMaxHeight().padding(end = TabletMetrics.WindowInset)
                                                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                                                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                                             ) {
-                                                CompositionLocalProvider(LocalSettingsPaneRoots provides paneRoots) {
+                                                CompositionLocalProvider(LocalSettingsPaneRoots provides paneRoots, LocalPageGutter provides PageMetrics.PaneGutter) {
                                                     NavHost(
                                                         navController = paneNav,
                                                         startDestination = paneRoute,
-                                                        modifier = Modifier.widthIn(max = 840.dp).fillMaxSize(),
+                                                        modifier = Modifier.fillMaxSize(),
                                                         enterTransition = { fadeIn(tween(160)) },
                                                         exitTransition = { fadeOut(tween(120)) },
                                                         popEnterTransition = { fadeIn(tween(160)) },
@@ -1156,7 +1183,7 @@ private fun Shell(
                                 content = { target, modifier -> nowPlayingPane(target, modifier) },
                                 actions = { target -> nowPlayingPaneActions(target) },
                                 modifier = Modifier.width(TabletMetrics.SidePanelWidth).fillMaxHeight()
-                                    .padding(top = panelSpacing, end = pageMargin.coerceAtLeast(12.dp), bottom = inner.calculateBottomPadding()),
+                                    .padding(top = panelSpacing, end = TabletMetrics.WindowInset, bottom = inner.calculateBottomPadding()),
                             )
                         }
                     }

@@ -1,5 +1,6 @@
 package com.aurora.music.ui.uxaudit
 
+import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,6 +35,8 @@ import com.aurora.music.desktop.ui.AuroraRoot
 import com.aurora.music.desktop.ui.Shortcut
 import com.aurora.music.model.Song
 import com.aurora.music.ui.AuroraApp
+import com.aurora.music.ui.layout.TabletMetrics
+import com.aurora.music.ui.layout.WindowLayout
 import com.aurora.music.ui.testing.EdtScene
 import com.aurora.music.ui.testing.edt
 import com.aurora.music.ui.testing.saveTo
@@ -100,6 +103,7 @@ internal class AuditScene(
     val width: Int,
     val height: Int,
     signedIn: Boolean = true,
+    content: (@Composable () -> Unit)? = null,
 ) : AutoCloseable {
     private val root = Files.createTempDirectory("aurora-ux").toFile()
     val container = DesktopContainer(DesktopPaths(File(root, "Roaming"), File(root, "Local")))
@@ -133,7 +137,8 @@ internal class AuditScene(
             nav = controller
             CompositionLocalProvider(LocalLifecycleOwner provides lifecycle, LocalViewModelStoreOwner provides owner) {
                 AuroraRoot(container, player) {
-                    AuroraApp(navController = controller, shortcuts = shortcuts, fullscreen = fullscreen, onFullscreenChange = { fullscreen = it })
+                    if (content != null) content()
+                    else AuroraApp(navController = controller, shortcuts = shortcuts, fullscreen = fullscreen, onFullscreenChange = { fullscreen = it })
                 }
             }
         }
@@ -205,7 +210,16 @@ internal class AuditScene(
         settle(600)
     }
 
-    val contentLeft: Float get() = 272f + maxOf(0f, (width - 296f - 1280f) / 2f)
+    val navWidth: Float get() = (if (WindowLayout(width, height).canExpandSidebar) TabletMetrics.SidebarWidth else TabletMetrics.RailWidth).value
+
+    val gutter: Float get() = WindowLayout(width, height).pageGutter.value
+
+    val contentLeft: Float get() = navWidth + TabletMetrics.NavGap.value + gutter
+
+    fun hover(x: Float, y: Float) {
+        ui.input { sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = ui.millis) }
+        settle(400)
+    }
 
     fun navigate(route: String, pattern: String = route) {
         edt { nav.navigate(route) }
