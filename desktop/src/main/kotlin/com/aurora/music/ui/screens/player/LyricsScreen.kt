@@ -206,7 +206,7 @@ internal fun LyricsPane(
     }
 }
 
-// Extract several real artwork tones; app accents and Material You never enter this palette.
+// artwork tones only app accents never enter this palette
 @Composable
 private fun LyricsBackdrop(song: Song) {
     val context = LocalPlatformContext.current
@@ -274,7 +274,7 @@ private fun ImmersiveLyrics(lyrics: Lyrics, positionSec: Float, durationSec: Int
             if (!lyrics.synced || browsing) return@LaunchedEffect
             val target = current.coerceAtLeast(0)
             val item = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == target }
-            // Item offsets exclude the before-content padding, where the focus line sits.
+            // item offsets exclude the top padding where the focus line sits
             if (item != null) list.animateScrollBy(item.offset.toFloat(), tween(650, easing = FastOutSlowInEasing))
             else list.animateScrollToItem(target)
         }

@@ -3,6 +3,7 @@ package com.aurora.music.desktop.library
 import com.aurora.music.data.ArtistSeparators
 import com.aurora.music.data.LocalArtistIndex
 import com.aurora.music.data.LocalCatalog
+import com.aurora.music.data.LocalCatalogIndex
 import com.aurora.music.desktop.audio.decode.FfmpegDecoder
 import com.aurora.music.desktop.audio.decode.ProbeResult
 import com.aurora.music.desktop.audio.decode.SampleKind
@@ -10,7 +11,6 @@ import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
 import com.aurora.music.util.AppLog
-import com.aurora.music.util.TrackMatch
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -36,7 +36,6 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.UUID
-import kotlin.math.abs
 
 data class LibraryScan(val running: Boolean = false, val scanned: Int = 0, val total: Int = 0)
 
@@ -102,25 +101,10 @@ class FolderLibrary(
 
     override fun song(id: String): Song? = byId[id]
 
-    // only substitute on a single unambiguous match so a different version is never swapped in
-    fun findMatch(artist: String, title: String, durationSec: Int): Song? {
-        if (title.isBlank()) return null
-        val candidates = matchIndex[TrackMatch.key(artist, title)] ?: return null
-        val byDuration = candidates.filter { durationSec > 0 && it.durationSec > 0 && abs(it.durationSec - durationSec) <= TrackMatch.DURATION_TOLERANCE_SEC }
-        if (byDuration.isNotEmpty()) return byDuration.minByOrNull { abs(it.durationSec - durationSec) }
-        return candidates.singleOrNull()?.takeIf { durationSec <= 0 || it.durationSec <= 0 }
-    }
+    fun findMatch(artist: String, title: String, durationSec: Int): Song? =
+        LocalCatalogIndex.findMatch(matchIndex, artist, title, durationSec)
 
-    override fun browse(path: String): Pair<List<String>, List<Song>> {
-        val base = path.ifBlank { folderRoot }
-        if (base.isBlank()) return emptyList<String>() to emptyList()
-        val here = songs.filter { dirOf[it.id] == base }.sortedBy { it.title.lowercase() }
-        val subdirs = dirOf.values.asSequence()
-            .filter { it != base && it.startsWith("$base/") }
-            .map { it.removePrefix("$base/").substringBefore('/') }
-            .distinct().sortedBy { it.lowercase() }.toList()
-        return subdirs to here
-    }
+    override fun browse(path: String): Pair<List<String>, List<Song>> = LocalCatalogIndex.browse(path, folderRoot, songs, dirOf)
 
     override fun songsByAlbumId(albumId: String): List<Song> = byAlbum[albumId].orEmpty()
     override fun artist(id: String): Artist? = artistIndex.artist(id)
@@ -240,8 +224,8 @@ class FolderLibrary(
         rawSongs = built.map { it.second }
         positions = built.associate { (track, song) -> song.id to track.disc * 10_000 + track.track }
         dirOf = built.associate { (_, song) -> song.id to dirKey(File(song.path).parent.orEmpty()) }
-        folderRoot = commonDir(dirOf.values)
-        matchIndex = rawSongs.groupBy { TrackMatch.key(it.artist, it.title) }
+        folderRoot = LocalCatalogIndex.commonDir(dirOf.values)
+        matchIndex = LocalCatalogIndex.matchIndex(rawSongs)
         albums = built.groupBy { it.second.albumId }
             .map { (id, group) -> album(id, group) to group.maxOf { it.second.dateAddedSec } }
             .sortedByDescending { it.second }
@@ -316,18 +300,6 @@ class FolderLibrary(
         byAlbum = index.songs.groupBy { it.albumId }
             .mapValues { (_, list) -> list.sortedWith(compareBy<Song>({ positions[it.id] ?: 0 }, { it.title.lowercase() })) }
         appliedSeparators = separators
-    }
-
-    private fun commonDir(dirs: Collection<String>): String {
-        if (dirs.isEmpty()) return ""
-        var prefix = dirs.first().split('/')
-        for (d in dirs) {
-            val seg = d.split('/')
-            var i = 0
-            while (i < prefix.size && i < seg.size && prefix[i] == seg[i]) i++
-            prefix = prefix.subList(0, i)
-        }
-        return prefix.joinToString("/")
     }
 
     private companion object {

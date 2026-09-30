@@ -17,7 +17,7 @@ import com.aurora.music.desktop.resources.PlusJakartaSans
 import java.io.File
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
-import org.junit.Assert.assertTrue
+import org.junit.Assert.assertNull
 import org.junit.Test
 
 class GeneratedAssetsTest {
@@ -42,7 +42,7 @@ class GeneratedAssetsTest {
     }
 
     @Test fun bundlesTheLicenceTexts() {
-        assertTrue(loader.getResource("licenses/aurora-dst-LGPL-2.1.txt")!!.readText().contains("GNU LESSER GENERAL PUBLIC LICENSE"))
+        assertNull(loader.getResource("licenses/aurora-dst-LGPL-2.1.txt"))
         val fonts = File(loader.getResource("font_licenses/manrope-OFL.txt")!!.toURI()).parentFile.list()!!.toSet()
         assertEquals(setOf("dmsans-OFL.txt", "manrope-OFL.txt", "plusjakartasans-OFL.txt"), fonts)
     }

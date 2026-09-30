@@ -64,7 +64,7 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
     val scope = rememberCoroutineScope()
     fun save(p: VisualizerPrefs) { scope.launch { store.setVisualizer(p) } }
 
-    // Drive the analyser so the preview reacts to whatever is playing.
+    // drive the analyser so the preview follows playback
     DisposableEffect(Unit) { controller.start(); onDispose { controller.stop() } }
     LaunchedEffect(prefs.barCount, prefs.fftSize, prefs.smoothing, prefs.sensitivity, prefs.minHz, prefs.maxHz, prefs.peakHold, prefs.fpsCap) {
         controller.applyPrefs(prefs)

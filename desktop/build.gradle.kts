@@ -33,13 +33,12 @@ dependencies {
     implementation(libs.kotlinx.coroutines.swing)
     implementation(libs.coil3.compose)
     implementation(libs.coil3.network.okhttp)
-    implementation(libs.material.color.utilities)
-    implementation(libs.jaudiotagger.jvm)
     implementation(libs.javacpp)
     implementation(libs.ffmpeg)
     runtimeOnly(variantOf(libs.javacpp) { classifier("windows-x86_64") })
     runtimeOnly(variantOf(libs.ffmpeg) { classifier("windows-x86_64") })
     testImplementation(libs.junit)
+    testImplementation(libs.okhttp.mockwebserver)
 }
 
 val nativeSource = rootProject.layout.projectDirectory.dir("native")
@@ -55,7 +54,6 @@ val configureNative by tasks.registering(Exec::class) {
 val buildNative by tasks.registering(Exec::class) {
     dependsOn(configureNative)
     inputs.dir(nativeSource)
-    inputs.dir(rootProject.layout.projectDirectory.dir("app/src/main/cpp"))
     outputs.dir(nativeBuildDir.map { it.dir("bin") })
     commandLine("cmake", "--build", nativeBuildDir.get().asFile.path, "--config", "Release", "--parallel")
 }
@@ -262,12 +260,10 @@ val syncAndroidAssets by tasks.registering(Sync::class) {
         filter { it.replace("@android:color/transparent", "#00000000") }
         into("drawable")
     }
-    from(rootProject.layout.projectDirectory.dir("app/src/main/assets")) { include("licenses/**", "font_licenses/*.txt") }
+    from(rootProject.layout.projectDirectory.dir("app/src/main/assets")) { include("font_licenses/*.txt") }
     filteringCharset = "UTF-8"
     into(layout.buildDirectory.dir("generated/androidAssets"))
 }
-
-kotlin.sourceSets.named("main") { kotlin.srcDir(generateAndroidStrings.flatMap { it.kotlinDir }) }
 
 sourceSets.named("main") {
     resources.srcDir(generateAndroidStrings.flatMap { it.resourceDir })
@@ -289,8 +285,7 @@ val generateBuildInfo by tasks.registering {
     }
 }
 
-kotlin.sourceSets.named("main") { kotlin.srcDir(generateBuildInfo) }
-
-dependencies {
-    testImplementation(libs.okhttp.mockwebserver)
+kotlin.sourceSets.named("main") {
+    kotlin.srcDir(generateAndroidStrings.flatMap { it.kotlinDir })
+    kotlin.srcDir(generateBuildInfo)
 }

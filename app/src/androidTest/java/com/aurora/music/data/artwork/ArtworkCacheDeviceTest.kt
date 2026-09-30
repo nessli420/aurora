@@ -115,7 +115,7 @@ class ArtworkCacheDeviceTest {
             offline = true
             verify(repo.open(request))
             assertEquals(0, searches.get()); assertEquals(1, downloads.get())
-            assertFalse(NavidromePlaceholder.matches(png()))
+            assertFalse(AndroidArtworkImages.isPlaceholder(png()))
         } finally { directory.deleteRecursively() }
     }
 
@@ -124,7 +124,7 @@ class ArtworkCacheDeviceTest {
         val fixture = File(context.getExternalFilesDir(null), "navidrome-album-placeholder.webp")
         assumeTrue("Optional upstream image fixture is not installed", fixture.isFile)
         val original = fixture.readBytes()
-        assertTrue("Original placeholder", NavidromePlaceholder.matches(original))
+        assertTrue("Original placeholder", AndroidArtworkImages.isPlaceholder(original))
         val bitmap = BitmapFactory.decodeByteArray(original, 0, original.size)
         try {
             for (size in listOf(64, 150, 300, 600)) {
@@ -132,7 +132,7 @@ class ArtworkCacheDeviceTest {
                 try {
                     for (format in listOf(Bitmap.CompressFormat.JPEG, Bitmap.CompressFormat.PNG)) {
                         val bytes = ByteArrayOutputStream().use { scaled.compress(format, 85, it); it.toByteArray() }
-                        assertTrue("Placeholder $size $format", NavidromePlaceholder.matches(bytes))
+                        assertTrue("Placeholder $size $format", AndroidArtworkImages.isPlaceholder(bytes))
                     }
                 } finally { scaled.recycle() }
             }

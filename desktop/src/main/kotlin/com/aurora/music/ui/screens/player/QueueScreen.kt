@@ -9,7 +9,6 @@ import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -21,7 +20,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollbarAdapter
@@ -35,17 +33,14 @@ import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.History
-import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
-import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -55,7 +50,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -75,44 +69,6 @@ import kotlin.math.roundToInt
 import com.aurora.music.model.accent
 
 @Composable
-fun QueueScreen(
-    queue: List<Song>,
-    currentIndex: Int,
-    isPlaying: Boolean,
-    onJump: (Int) -> Unit,
-    onRemove: (Int) -> Unit,
-    onMove: (Int, Int) -> Unit,
-    onClear: () -> Unit,
-    onSaveAsPlaylist: (String) -> Unit,
-    onClose: () -> Unit,
-    editable: Boolean = true,
-) {
-    val accent = MaterialTheme.colorScheme.primary
-
-    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-        Box(
-            Modifier
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.14f), MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)
-                    )
-                )
-                .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
-        ) {
-            QueueContent(
-                queue = queue, currentIndex = currentIndex, isPlaying = isPlaying,
-                onJump = onJump, onRemove = onRemove, onMove = onMove, onClear = onClear,
-                onSaveAsPlaylist = onSaveAsPlaylist, editable = editable,
-                onClose = onClose,
-                modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 880.dp).fillMaxSize().padding(horizontal = 16.dp),
-            )
-        }
-    }
-}
-
-@Composable
 fun QueueContent(
     queue: List<Song>,
     currentIndex: Int,
@@ -120,13 +76,8 @@ fun QueueContent(
     onJump: (Int) -> Unit,
     onRemove: (Int) -> Unit,
     onMove: (Int, Int) -> Unit,
-    onClear: () -> Unit,
-    onSaveAsPlaylist: (String) -> Unit,
     editable: Boolean,
     modifier: Modifier = Modifier,
-    onClose: (() -> Unit)? = null,
-    showTitle: Boolean = true,
-    showActions: Boolean = true,
 ) {
     val current = queue.getOrNull(currentIndex)
     val startIdx = (currentIndex + 1).coerceAtLeast(0)
@@ -139,33 +90,9 @@ fun QueueContent(
     var dragIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
     var showHistory by remember { mutableStateOf(false) }
-    var showSaveDialog by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
 
     Column(modifier) {
-        if (onClose != null || showTitle || showActions) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (onClose != null) {
-                Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClose).pointerHoverIcon(PointerIcon.Hand).padding(10.dp))
-                Spacer(Modifier.weight(1f))
-            }
-            if (showTitle) Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-            Spacer(Modifier.weight(1f))
-            if (showActions) {
-                Icon(
-                    Icons.AutoMirrored.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
-                    tint = if (queue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(48.dp).clip(CircleShape)
-                        .clickable(enabled = queue.isNotEmpty()) { showSaveDialog = true }.pointerHoverIcon(PointerIcon.Hand).padding(12.dp),
-                )
-                Icon(
-                    Icons.Filled.DeleteSweep, appString(R.string.text_clear_queue_984301),
-                    tint = if (upcoming.isEmpty() || !editable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(48.dp).clip(CircleShape)
-                        .clickable(enabled = upcoming.isNotEmpty() && editable, onClick = onClear).pointerHoverIcon(PointerIcon.Hand).padding(12.dp),
-                )
-            }
-        }
-
         if (current != null) {
             Row(
                 Modifier.fillMaxWidth().padding(vertical = 14.dp),
@@ -257,13 +184,6 @@ fun QueueContent(
             }
             VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
         }
-    }
-
-    if (showSaveDialog) {
-        SaveQueueDialog(
-            onSave = { name -> onSaveAsPlaylist(name); showSaveDialog = false },
-            onDismiss = { showSaveDialog = false },
-        )
     }
 }
 

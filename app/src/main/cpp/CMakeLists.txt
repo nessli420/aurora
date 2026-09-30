@@ -44,19 +44,11 @@ add_library(aurora_fp SHARED
     ${KISS}/tools/kiss_fftr.c
 )
 
-if(ANDROID)
-    find_library(log-lib log)
-    target_link_libraries(aurora_fp ${log-lib})
-endif()
+find_library(log-lib log)
+target_link_libraries(aurora_fp ${log-lib})
 
 add_library(aurora_dsd SHARED aurora_dsd.cpp)
-add_library(aurora_dst SHARED dst/decoder.c dst/jni.cpp)
+target_compile_options(aurora_dsd PRIVATE -O3 -fno-fast-math -ffp-contract=off)
 
-if(MSVC)
-    target_compile_options(aurora_dsd PRIVATE /O2 /fp:precise)
-    target_compile_options(aurora_dst PRIVATE /O2)
-    set_target_properties(aurora_dst PROPERTIES C_STANDARD 11)
-else()
-    target_compile_options(aurora_dsd PRIVATE -O3 -fno-fast-math -ffp-contract=off)
-    target_compile_options(aurora_dst PRIVATE -O3 -fno-strict-aliasing)
-endif()
+add_library(aurora_dst SHARED dst/decoder.c dst/jni.cpp)
+target_compile_options(aurora_dst PRIVATE -O3 -fno-strict-aliasing)

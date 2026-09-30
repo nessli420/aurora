@@ -1,6 +1,5 @@
 package com.aurora.music.ui.theme
 
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import com.aurora.music.R
 import com.aurora.music.localization.appString
@@ -27,11 +26,6 @@ val LightSurfaceElevated = Color(0xFFF6EEF2)
 val LightOutline = Color(0xFFEADCE3)
 val TextPrimaryLight = Color(0xFF1A1016)
 val TextSecondaryLight = Color(0xFF6B5560)
-
-val PlayerGradient = listOf(Color(0xFF3A1626), Color(0xFF1A0F16), DarkBackground)
-val AuthGradient = listOf(Color(0xFF2A0E1C), Color(0xFF0E0A0D))
-
-fun brandGradient() = Brush.linearGradient(listOf(AuroraRose, AuroraCoral))
 
 data class AccentPreset(val name: String, val seed: Color)
 

@@ -53,5 +53,3 @@ fun auroraTypography(scale: Float = 1f, style: Int = ThemeStyle.AURORA, typeface
         labelSmall = t(FontWeight.Medium, 11f, 14f, 0.5f),
     )
 }
-
-val AuroraTypography = auroraTypography(1f)

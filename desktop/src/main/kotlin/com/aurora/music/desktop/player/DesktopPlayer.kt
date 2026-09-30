@@ -213,7 +213,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 }
             }
         }
-        // on account change save outgoing queue first stop then restore incoming epoch only bumps on real transitions
+        // account change saves the outgoing queue then restores the incoming one
         scope.launch {
             deps.accountEpoch.drop(1).collect {
                 persistQueue(engine.state.value)
@@ -325,7 +325,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     private fun persistQueue(s: EngineState) {
         val key = playingAccountKey.ifBlank { deps.accountKey() }
-        // don't save an empty engine it fires at startup before restore and wipes what we're about to restore
+        // skip saving the empty startup engine so restore is not wiped
         if (key.isBlank() || s.entries.isEmpty()) return
         if (s.entries !== savedEntries) {
             savedEntries = s.entries
@@ -676,12 +676,8 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         engine.setSpeed(snapped)
     }
 
-    override fun setPitch(value: Float) = _state.update { it.copy(pitch = value.coerceIn(-6f, 6f)) }
-
-    override fun setMatchPitch(match: Boolean) = _state.update { it.copy(matchPitch = match) }
-
     override fun resetSpeedPitch() {
-        _state.update { it.copy(speed = 1.0f, pitch = 0.0f) }
+        _state.update { it.copy(speed = 1.0f) }
         engine.setSpeed(1.0f)
     }
 

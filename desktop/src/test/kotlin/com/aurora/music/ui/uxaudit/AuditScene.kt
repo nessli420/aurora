@@ -90,8 +90,6 @@ internal class AuditPlayer : PlayerController {
     override fun checkLiked(ids: List<String>) = Unit
     override fun toggleLike(id: String, kind: String) = Unit
     override fun setSpeed(value: Float) = Unit
-    override fun setPitch(value: Float) = Unit
-    override fun setMatchPitch(match: Boolean) = Unit
     override fun resetSpeedPitch() = Unit
     override fun setSleepTimer(minutes: Int) = Unit
     override fun setSleepEndOfTrack() = Unit

@@ -6,8 +6,6 @@ import androidx.compose.ui.unit.dp
 
 data class WindowLayout(val widthDp: Int = 0, val heightDp: Int = 0) {
     val useNavigationRail: Boolean get() = widthDp >= 600
-    val useLandscapePlayer: Boolean get() = widthDp >= 840 && widthDp > heightDp
-    val useTabletDock: Boolean get() = useNavigationRail
     val canExpandSidebar: Boolean get() = widthDp >= 1200
     val canShowSidePanel: Boolean get() = useNavigationRail &&
         widthDp - TabletMetrics.RailWidth.value - TabletMetrics.SidePanelWidth.value >= TabletMetrics.MinContentWidth.value
@@ -37,6 +35,3 @@ fun WindowLayout.shell(panelRequested: Boolean): ShellLayout {
 }
 
 val LocalWindowLayout = staticCompositionLocalOf { WindowLayout() }
-
-internal fun isLargeDisplay(widthPx: Int, heightPx: Int, density: Float): Boolean =
-    density > 0f && minOf(widthPx, heightPx) / density >= 600f

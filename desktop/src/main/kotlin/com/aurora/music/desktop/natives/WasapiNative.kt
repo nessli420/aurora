@@ -1,7 +1,5 @@
 package com.aurora.music.desktop.natives
 
-import java.nio.ByteBuffer
-
 fun interface WasapiListener {
     fun onEvent(kind: Int, deviceId: String?, value: Long)
 }
@@ -21,7 +19,6 @@ object WasapiNative {
     external fun probe(deviceId: String?, exclusive: Boolean, sampleRate: Int, channels: Int, encoding: Int): Int
     external fun open(deviceId: String?, exclusive: Boolean, sampleRate: Int, channels: Int, encoding: Int, bufferMs: Int): Long
     external fun write(handle: Long, bytes: ByteArray, offset: Int, length: Int, timeoutMs: Int): Int
-    external fun writeDirect(handle: Long, buffer: ByteBuffer, offset: Int, length: Int, timeoutMs: Int): Int
     external fun resume(handle: Long): Int
     external fun pause(handle: Long): Int
     external fun flush(handle: Long): Int

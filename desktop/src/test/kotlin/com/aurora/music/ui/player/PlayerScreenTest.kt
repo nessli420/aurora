@@ -8,7 +8,6 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.ThemeMode
@@ -62,9 +61,8 @@ class PlayerScreenTest {
                         PlayerPane.QUEUE -> QueueContent(
                             queue = state.queue, currentIndex = state.currentIndex, isPlaying = state.isPlaying,
                             onJump = { rec.events += "jump:$it" }, onRemove = { rec.events += "remove:$it" },
-                            onMove = { from, to -> rec.events += "move:$from:$to" }, onClear = { rec.events += "clear" },
-                            onSaveAsPlaylist = { rec.events += "save:$it" }, editable = true,
-                            showTitle = false, showActions = false, modifier = modifier.padding(horizontal = 4.dp),
+                            onMove = { from, to -> rec.events += "move:$from:$to" }, editable = true,
+                            modifier = modifier.padding(horizontal = 4.dp),
                         )
                     }
                 },

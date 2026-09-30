@@ -45,17 +45,11 @@ import com.aurora.music.data.ServerType
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 
-private class Notice(val name: String, val licenseName: String, val detail: String, val source: String, val license: String)
-
-private const val LGPL_21 = "licenses/aurora-dst-LGPL-2.1.txt"
+private class Notice(val name: String, val licenseName: String, val detail: String, val source: String)
 
 private val notices: List<Notice> get() = listOf(
     Notice("FFmpeg", "LGPL-3.0", appString(R.string.text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2),
-        "https://github.com/bytedeco/javacpp-presets/tree/master/ffmpeg", ""),
-    Notice(appString(R.string.text_dst_decoder_ffabc9), "LGPL-2.1", appString(R.string.text_ffmpeg_dsd_nexus_copyright_2014_peter_ross_lgpl_2_1_or_later_fb6d87),
-        "https://github.com/nessli420/aurora/tree/main/app/src/main/cpp/dst", LGPL_21),
-    Notice("Chromaprint", "LGPL-2.1", appString(R.string.text_audio_fingerprinting_copyright_luk_lalinsk_lgpl_2_1_or_later_0cb704),
-        "https://github.com/acoustid/chromaprint", LGPL_21),
+        "https://github.com/bytedeco/javacpp-presets/tree/master/ffmpeg"),
 )
 
 private fun resourceText(path: String): String? =
@@ -69,10 +63,8 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     var openNotice by remember { mutableStateOf<Notice?>(null) }
     var showFontLicenses by remember { mutableStateOf(false) }
     openNotice?.let { notice ->
-        val license = remember(notice) { notice.license.takeIf { it.isNotEmpty() }?.let(::resourceText) }
         AlertDialog(onDismissRequest = { openNotice = null }, title = { Text(notice.name) },
-            text = { Text(listOfNotNull(notice.detail, license).joinToString("\n\n"),
-                modifier = Modifier.verticalScroll(rememberScrollState())) },
+            text = { Text(notice.detail, modifier = Modifier.verticalScroll(rememberScrollState())) },
             confirmButton = { TextButton(onClick = { openNotice = null }) { Text(appString(R.string.text_close_bbfa77)) } },
             dismissButton = { TextButton(onClick = { runCatching { uriHandler.openUri(notice.source) } }) { Text(appString(R.string.text_source_6da13a)) } })
     }

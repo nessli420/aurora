@@ -233,7 +233,6 @@ fun LibraryScreen(
     )
 
     Column(Modifier.fillMaxWidth()) {
-        // ---- header: identity + stats ----
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(38.dp).clip(CircleShape)
@@ -268,7 +267,6 @@ fun LibraryScreen(
 
         Spacer(Modifier.height(10.dp))
 
-        // ---- tab rail: icon + label with accent underline, not pills ----
         val visibleTabs = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
         LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             items(visibleTabs.size) { i ->
@@ -279,7 +277,6 @@ fun LibraryScreen(
 
         Spacer(Modifier.height(6.dp))
 
-        // ---- contextual tool row ----
         if (filter != LibraryFilter.ALL) {
             var sortMenu by remember { mutableStateOf(false) }
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -401,8 +398,6 @@ private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onClick:
     }
 }
 
-// ---- ALL tab: sectioned overview with quick tiles + shelves per type ----
-
 @Composable
 private fun AllOverview(
     state: LibraryUiState,
@@ -418,7 +413,6 @@ private fun AllOverview(
     val listState = rememberLazyListState()
     Box(Modifier.fillMaxSize()) {
     LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = bottom)) {
-        // quick access tiles
         item {
             val tiles = buildList {
                 add(QuickTile(appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), Icons.Filled.Favorite, state.likedCover) { onOpenDetail("liked", "liked") })
@@ -619,8 +613,6 @@ private fun ShelfCard(
     }
 }
 
-// ---- SONGS tab: infinite paging + A-Z rail ----
-
 @Composable
 private fun SongsTab(
     state: LibraryUiState,
@@ -733,8 +725,6 @@ private fun SongsTab(
     }
 }
 
-// ---- shared rows content for playlist/album/artist/download tabs ----
-
 @Composable
 private fun RowsContent(
     rows: List<LibRow>,
@@ -779,8 +769,6 @@ private fun RowsContent(
         }
     }
 }
-
-// ---- A-Z fast scroller ----
 
 @Composable
 internal fun AlphabetRail(onJump: (Char) -> Unit, modifier: Modifier = Modifier) {
@@ -864,7 +852,7 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
             sortPlayCount = it.playCount, sortRecencySec = it.year.toLong(),
         )
     }
-    // no per-artist play/added data from the server aggregate over whatever song pages are currently loaded
+    // artist sort aggregates the loaded song pages
     val artists = state.artists.map { ar ->
         val tracks = state.songs.filter { it.artistId == ar.id }
         val plays = tracks.sumOf { maxOf(it.playCount, state.localPlayCounts[it.id] ?: 0) }

@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.audio.decode
 
+import com.aurora.music.desktop.platform.DesktopPaths
 import org.bytedeco.ffmpeg.global.avcodec
 import org.bytedeco.ffmpeg.global.avformat
 import org.bytedeco.ffmpeg.global.avutil
@@ -10,10 +11,7 @@ import java.io.File
 object FfmpegRuntime {
     @Volatile private var ready = false
 
-    val defaultCacheDir: File
-        get() = File(System.getenv("LOCALAPPDATA") ?: File(System.getProperty("user.home"), "AppData/Local").path, "Aurora/javacpp")
-
-    fun init(cacheDir: File = defaultCacheDir) {
+    fun init(cacheDir: File = DesktopPaths.default().javacpp) {
         if (ready) return
         synchronized(this) {
             if (ready) return

@@ -16,10 +16,9 @@ class NavigationTest {
     @Test fun routeArgumentsEncodeSpacesAsPercentTwenty() {
         assertEquals("folders?fid=C%3A%5CMusic%5CMy%20Album&title=Rock%20%26%20Roll", Routes.folders("C:\\Music\\My Album", "Rock & Roll"))
         assertEquals("smart_edit?id=a%2Bb%20c", Routes.smartEdit("a+b c"))
-        assertEquals("tag_edit/file%3A%2F%2F%2FC%3A%2Fx%20y.flac", Routes.tagEdit("file:///C:/x y.flac"))
-        val podcast = Routes.podcastDetail("https://feeds.example.com/show?id=1&x=2", "Talk Show", "", "Jo")
-        assertFalse(podcast.contains('+'))
-        assertEquals("https://feeds.example.com/show?id=1&x=2", URLDecoder.decode(podcast.substringAfter("feed=").substringBefore("&title"), Charsets.UTF_8))
+        val folder = Routes.folders("https://feeds.example.com/show?id=1&x=2", "Talk Show")
+        assertFalse(folder.contains('+'))
+        assertEquals("https://feeds.example.com/show?id=1&x=2", URLDecoder.decode(folder.substringAfter("fid=").substringBefore("&title"), Charsets.UTF_8))
         assertEquals(listOf(Routes.HOME, Routes.SEARCH, Routes.LIBRARY), topLevelDestinations.map { it.route })
         assertTrue(topLevelDestinations.all { it.label.isNotBlank() })
     }
@@ -55,7 +54,7 @@ class NavigationTest {
     @Test fun settingsDestinationsAreUniqueAndDesktopOnly() {
         val all = SettingsDestinations.all
         assertEquals(all.size, all.map { it.route }.distinct().size)
-        val androidOnly = setOf(Routes.SETTINGS_NETWORK, Routes.SETTINGS_ALARM, Routes.SETTINGS_GESTURES, Routes.SETTINGS_PERMISSIONS, Routes.SETTINGS_EXTENSIONS)
+        val androidOnly = setOf("settings_network", "settings_alarm", "settings_gestures", "settings_permissions", "settings_extensions")
         assertTrue(all.none { it.route in androidOnly })
         assertTrue(all.all { it.label.isNotBlank() && it.description.isNotBlank() })
     }

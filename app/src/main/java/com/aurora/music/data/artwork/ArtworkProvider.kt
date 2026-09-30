@@ -32,5 +32,12 @@ internal object AndroidArtworkImages : ArtworkImages {
         return bounds.outWidth to bounds.outHeight
     }
 
-    override fun isPlaceholder(bytes: ByteArray) = NavidromePlaceholder.matches(bytes)
+    override fun isPlaceholder(bytes: ByteArray): Boolean {
+        val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
+        if (!NavidromePlaceholder.sizeEligible(bounds.outWidth, bounds.outHeight)) return false
+        val options = BitmapFactory.Options().apply { inSampleSize = NavidromePlaceholder.sampleSize(bounds.outWidth) }
+        val bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.size, options) ?: return false
+        return try { NavidromePlaceholder.matches(bitmap.width, bitmap.height, bitmap::getPixel) } finally { bitmap.recycle() }
+    }
 }

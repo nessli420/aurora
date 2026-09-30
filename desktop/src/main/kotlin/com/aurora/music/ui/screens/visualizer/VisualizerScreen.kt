@@ -100,13 +100,13 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
         }
     }
     var controlsVisible by remember { mutableStateOf(true) }
-    // Keep the picker position when AnimatedVisibility removes its content.
+    // keep the picker position when animatedvisibility drops its content
     val selectedStyle = prefs.style.coerceIn(0, VisualizerStyle.count - 1)
     val modeListState = rememberLazyListState(initialFirstVisibleItemIndex = selectedStyle)
     var pointerDown by remember { mutableStateOf(false) }
     var controlsInteraction by remember { mutableIntStateOf(0) }
     LaunchedEffect(controlsVisible, pointerDown, modeListState.isScrollInProgress, controlsInteraction) {
-        // A full idle interval starts after the finger lifts AND any fling settles.
+        // idle interval starts after the finger lifts and any fling settles
         if (controlsVisible && !pointerDown && !modeListState.isScrollInProgress) {
             delay(4500)
             controlsVisible = false
@@ -134,7 +134,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             .fillMaxSize()
             .background(Color.Black)
             .pointerInput(Unit) {
-                // Observe even events consumed by the mode row, without stealing its gestures.
+                // observe events the mode row consumes without stealing its gestures
                 try {
                     awaitPointerEventScope {
                         while (true) {

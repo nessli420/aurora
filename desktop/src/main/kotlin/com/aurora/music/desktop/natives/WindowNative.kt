@@ -2,14 +2,11 @@ package com.aurora.music.desktop.natives
 
 import java.util.concurrent.CopyOnWriteArrayList
 
-enum class WindowBackdrop { AUTO, NONE, MICA, ACRYLIC, TABBED }
-
 object WindowNative {
     private const val DARK_MODE = 20
     private const val BORDER_COLOR = 34
     private const val CAPTION_COLOR = 35
     private const val TEXT_COLOR = 36
-    private const val BACKDROP = 38
     private const val DEFAULT_COLOR = -1
 
     private val accentListeners = CopyOnWriteArrayList<(Int) -> Unit>()
@@ -23,8 +20,6 @@ object WindowNative {
     fun setTextColor(hwnd: Long, argb: Int?): Boolean = setAttribute(hwnd, TEXT_COLOR, colorRef(argb)) == 0
 
     fun setBorderColor(hwnd: Long, argb: Int?): Boolean = setAttribute(hwnd, BORDER_COLOR, colorRef(argb)) == 0
-
-    fun setBackdrop(hwnd: Long, backdrop: WindowBackdrop): Boolean = setAttribute(hwnd, BACKDROP, backdrop.ordinal) == 0
 
     fun accentColor(): Int? = accent().takeIf { it != 0 }
 

@@ -4,7 +4,6 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import coil3.ImageLoader
 import com.aurora.music.R
 import com.aurora.music.data.ArtistInfoStore
-import com.aurora.music.data.AutoEqController
 import com.aurora.music.data.BackupManager
 import com.aurora.music.data.DEFAULT_SOURCE_PRIORITY
 import com.aurora.music.data.DEFAULT_SQUIG_BASE
@@ -16,7 +15,6 @@ import com.aurora.music.data.ListenBrainzScrobbler
 import com.aurora.music.data.LocalBackend
 import com.aurora.music.data.LocalStore
 import com.aurora.music.data.LyricsRepository
-import com.aurora.music.data.MERGE_NONE
 import com.aurora.music.data.MediaBackend
 import com.aurora.music.data.MergedBackend
 import com.aurora.music.data.MusicRepository
@@ -32,6 +30,7 @@ import com.aurora.music.data.Session
 import com.aurora.music.data.SettingsStore
 import com.aurora.music.data.SmartPlaylist
 import com.aurora.music.data.SmartPlaylistEngine
+import com.aurora.music.data.SourceLocalizer
 import com.aurora.music.data.SquigEqRepository
 import com.aurora.music.data.SubsonicBackend
 import com.aurora.music.data.accountKey
@@ -43,7 +42,6 @@ import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.PlexClient
 import com.aurora.music.data.remote.SquigClient
 import com.aurora.music.data.remote.SubsonicClient
-import com.aurora.music.data.rules.RuleSource
 import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.library.FolderLibrary
 import com.aurora.music.desktop.platform.DesktopPaths
@@ -78,7 +76,6 @@ import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
-import java.io.File
 import java.io.InputStream
 import java.util.concurrent.TimeUnit
 
@@ -122,8 +119,6 @@ class DesktopContainer(
 
     val authenticator = AccountAuthenticator(clientInfo)
 
-    val autoEqController = AutoEqController(settingsStore, scope)
-
     @Volatile private var squigBaseValue: String = DEFAULT_SQUIG_BASE
     @Volatile private var squigTargetValue: String = DEFAULT_SQUIG_TARGET
     val squigEq = SquigEqRepository(SquigClient(), baseProvider = { squigBaseValue }, targetProvider = { squigTargetValue })
@@ -160,6 +155,10 @@ class DesktopContainer(
         playbackCollectionProvider = { kind, id, name -> repository.playbackCollectionIdentity(kind, id)?.copy(name = name) },
         downloadUrlResolverProvider = { backend?.let { source -> { id, bitrate, lossless -> source.downloadUrl(id, bitrate, lossless) } } },
     )
+
+    private val sourceLocalizer = SourceLocalizer(localMergeSession, downloadManager,
+        preferLocal = { preferLocalSources }, priority = { sourcePriorityValue },
+        isLocalUrl = { it.startsWith("file:") }, findLocal = folderLibrary::findMatch)
 
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 
@@ -212,49 +211,9 @@ class DesktopContainer(
 
     fun currentAccountKey(): String = backend?.session?.accountKey().orEmpty()
 
-    // rewrites only streamUrl/metadata id stays the server's so server features keep working
-    private fun localizeSong(song: Song): Song {
-        if (!preferLocalSources) return song
-        val alreadyLocal = song.streamUrl.startsWith("file:")
-        for (tier in sourcePriorityValue) {
-            when (tier) {
-                "local" -> if (!alreadyLocal) {
-                    folderLibrary.findMatch(song.artist, song.title, song.durationSec)?.let { return localizedFromFile(song, it) }
-                }
-                "downloaded" -> downloadManager.getByOriginalId(song.id, song.playbackSource?.providerId)
-                    ?.let { return localizedFromDownload(song, it.toSong(downloadManager.fileUri)) }
-                "stream" -> return song
-            }
-        }
-        return song
-    }
-
-    private fun localizedFromFile(song: Song, local: Song): Song = song.copy(
-        streamUrl = local.streamUrl,
-        artworkUrl = song.artworkUrl.ifBlank { local.artworkUrl },
-        replayGainTrack = local.replayGainTrack,
-        replayGainAlbum = local.replayGainAlbum,
-        suffix = local.suffix,
-        bitrateKbps = local.bitrateKbps,
-        sampleRateHz = local.sampleRateHz,
-        bitDepth = local.bitDepth,
-        path = local.path,
-        playbackSource = PlaybackSourceIdentity.fromSession(localMergeSession, local.albumId, RuleSource.LOCAL_FILE),
-    )
-
-    private fun localizedFromDownload(song: Song, local: Song): Song = song.copy(
-        streamUrl = local.streamUrl,
-        artworkUrl = local.artworkUrl.ifBlank { song.artworkUrl },
-        suffix = local.suffix,
-        bitrateKbps = local.bitrateKbps,
-        sampleRateHz = local.sampleRateHz,
-        bitDepth = local.bitDepth,
-        playbackSource = local.playbackSource,
-    )
-
     private fun buildBackend(session: Session): MediaBackend? {
         val localize: (Song) -> Song = { song ->
-            localizeSong(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
+            sourceLocalizer.localize(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
         }
         return when (session.type) {
             ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, localize)
@@ -272,18 +231,8 @@ class DesktopContainer(
     private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend? {
         if (session.type !in AccountAuthenticator.SUPPORTED) return null
         if (!unified || !session.type.supportsMergedLibrary) return buildBackend(session)
-        // empty = all eligible servers MERGE_NONE sentinel = local files only
-        val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else (saved + session)
-            .filter { it.type in AccountAuthenticator.SUPPORTED && it.type.supportsMergedLibrary && it.type != ServerType.LOCAL }
-            .filter { mergeKeys.isEmpty() || it.accountKey() in mergeKeys }
-            .distinctBy { it.accountKey() }
-        val sources = buildList {
-            add(LocalBackend(folderLibrary, localStore, localMergeSession))
-            serverSessions.forEach { buildBackend(it)?.let(::add) }
-        }
-        return MergedBackend(sources, session,
-            priority = { if (preferLocalSources) sourcePriorityValue else listOf("stream", "local", "downloaded") },
-            downloads = { downloadManager.downloads.value.values.filter { File(it.audioPath).isFile }.map { it.toSong(downloadManager.fileUri) } })
+        return sourceLocalizer.mergedBackend(session, mergeKeys, saved, LocalBackend(folderLibrary, localStore, localMergeSession),
+            eligible = { it.type in AccountAuthenticator.SUPPORTED }, build = ::buildBackend)
     }
 
     private suspend fun rebuildBackend() {

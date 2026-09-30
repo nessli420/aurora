@@ -15,11 +15,6 @@ add_compile_options(/utf-8 /fp:precise)
 
 find_package(JNI REQUIRED)
 
-add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../app/src/main/cpp ${CMAKE_BINARY_DIR}/shared)
-foreach(target aurora_fp aurora_dsd aurora_dst)
-    target_link_libraries(${target} PRIVATE JNI::JNI)
-endforeach()
-
 add_library(aurora_native SHARED
     src/jni_support.cpp
     src/audio/wasapi_devices.cpp

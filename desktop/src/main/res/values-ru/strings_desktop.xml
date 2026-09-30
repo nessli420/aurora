@@ -2,7 +2,6 @@
 <resources>
     <string name="text_add_music_folder_a083d8" formatted="false">"Добавить папку с музыкой"</string>
     <string name="text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2" formatted="false">"Декодирование аудио. Copyright © разработчики FFmpeg. LGPL-3.0-or-later, динамическая компоновка через JavaCPP Presets. Полный текст лицензии: https://www.gnu.org/licenses/lgpl-3.0.html"</string>
-    <string name="text_audio_fingerprinting_copyright_luk_lalinsk_lgpl_2_1_or_later_0cb704" formatted="false">"Акустические отпечатки. Copyright © Lukáš Lalinský. LGPL-2.1-or-later."</string>
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora получает единоличный доступ к устройству и передаёт сэмплы с частотой и разрядностью самого трека. Другие приложения молчат, пока играет Aurora. Вывод остаётся bit-perfect, если обработка, громкость и ReplayGain не изменяют сэмплы; если устройство не принимает формат, Aurora переходит в общий режим, а «Путь сигнала» показывает причину."</string>
     <string name="text_bit_float_012895">"%1$d-бит float"</string>
     <string name="text_bit_integer_72520f">"%1$d-бит целочисленный"</string>
@@ -17,11 +16,9 @@
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Очистить кэш изображений"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Сворачивать в трей"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Устройство, монопольный режим и буфер"</string>
-    <string name="text_dst_decoder_ffabc9" formatted="false">"Декодер DST"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Монопольный режим"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Монопольный режим недоступен: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Монопольный режим недоступен на этом устройстве"</string>
-    <string name="text_ffmpeg_dsd_nexus_copyright_2014_peter_ross_lgpl_2_1_or_later_fb6d87" formatted="false">"FFmpeg / DSD-Nexus. Copyright © 2014 Peter Ross. LGPL-2.1-or-later."</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Гц недоступно; используется %2$d Гц."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"После закрытия окна Aurora продолжает играть из области уведомлений"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Большой буфер выдерживает высокую нагрузку на систему, маленький быстрее реагирует на перемотку и громкость. Применяется при повторном открытии вывода."</string>

@@ -425,8 +425,7 @@ fun PlayerScreen(
                 ) {
                     BottomUtil(
                         Icons.Filled.Speed, appString(R.string.text_speed_x_72da98, ("%.1f".format(state.speed))), onOpenSpeedPitch,
-                        active = kotlin.math.abs(state.speed - 1f) > 0.001f ||
-                            (!state.matchPitch && kotlin.math.abs(state.pitch) > 0.001f),
+                        active = kotlin.math.abs(state.speed - 1f) > 0.001f,
                     )
                     BottomUtil(Icons.Filled.Bedtime, appString(R.string.text_sleep_timer_e90613), onOpenSleep,
                         active = state.sleepTimerMinutes > 0 || state.sleepEndOfTrack)

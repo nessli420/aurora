@@ -394,7 +394,7 @@ private fun AccentPresetGrid(selected: Int, onSelect: (Int) -> Unit) {
                         }
                     }
                 }
-                // Pad short final row so swatches keep their width.
+                // pad the short final row so swatches keep their width
                 repeat(5 - row.size) { Box(Modifier.weight(1f)) }
             }
         }

@@ -12,9 +12,7 @@ import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
 import com.aurora.music.playback.dsd.DsdMetadataReader
-import com.aurora.music.util.TrackMatch
 import com.aurora.music.util.accentArgbFor
-import kotlin.math.abs
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
@@ -67,37 +65,11 @@ class LocalLibrary(
 
     override fun song(id: String): Song? = byId[id]
 
-    // only substitute on a single unambiguous match so a different version is never swapped in
-    fun findMatch(artist: String, title: String, durationSec: Int): Song? {
-        if (title.isBlank()) return null
-        val candidates = matchIndex[TrackMatch.key(artist, title)] ?: return null
-        val byDuration = candidates.filter { durationSec > 0 && it.durationSec > 0 && abs(it.durationSec - durationSec) <= TrackMatch.DURATION_TOLERANCE_SEC }
-        if (byDuration.isNotEmpty()) return byDuration.minByOrNull { abs(it.durationSec - durationSec) }
-        return candidates.singleOrNull()?.takeIf { durationSec <= 0 || it.durationSec <= 0 }
-    }
+    fun findMatch(artist: String, title: String, durationSec: Int): Song? =
+        LocalCatalogIndex.findMatch(matchIndex, artist, title, durationSec)
 
-    override fun browse(path: String): Pair<List<String>, List<Song>> {
-        val base = path.ifBlank { folderRoot }
-        if (base.isBlank()) return emptyList<String>() to emptyList()
-        val here = songs.filter { dirOf[it.id] == base }.sortedBy { it.title.lowercase() }
-        val subdirs = dirOf.values.asSequence()
-            .filter { it != base && it.startsWith("$base/") }
-            .map { it.removePrefix("$base/").substringBefore('/') }
-            .distinct().sortedBy { it.lowercase() }.toList()
-        return subdirs to here
-    }
+    override fun browse(path: String): Pair<List<String>, List<Song>> = LocalCatalogIndex.browse(path, folderRoot, songs, dirOf)
 
-    private fun commonDir(dirs: Collection<String>): String {
-        if (dirs.isEmpty()) return ""
-        var prefix = dirs.first().split('/')
-        for (d in dirs) {
-            val seg = d.split('/')
-            var i = 0
-            while (i < prefix.size && i < seg.size && prefix[i] == seg[i]) i++
-            prefix = prefix.subList(0, i)
-        }
-        return prefix.joinToString("/")
-    }
     fun songsIn(album: Album): List<Song> = songs.filter { it.albumId == album.id }
     override fun songsByAlbumId(albumId: String): List<Song> = songs.filter { it.albumId == albumId }
     override fun artist(id: String): Artist? = artistIndex.artist(id)
@@ -244,9 +216,9 @@ class LocalLibrary(
         out += SacdLibrary(context).songs()
         rawSongs = out
         indexArtists(separators)
-        matchIndex = out.groupBy { TrackMatch.key(it.artist, it.title) }
+        matchIndex = LocalCatalogIndex.matchIndex(out)
         dirOf = dirs
-        folderRoot = commonDir(dirs.values)
+        folderRoot = LocalCatalogIndex.commonDir(dirs.values)
         albums = out.groupBy { it.albumId }
             .map { (aid, tracks) ->
                 val f = tracks.first()

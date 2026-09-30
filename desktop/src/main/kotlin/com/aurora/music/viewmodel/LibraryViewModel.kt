@@ -35,15 +35,12 @@ data class LibraryUiState(
     val likedCover: String = "",
     val supportsFolders: Boolean = false,
     val smartPlaylists: List<com.aurora.music.data.SmartPlaylist> = emptyList(),
-    // aurora's own local play tracking used to fill in "most played" where the server reports no playCount
     val localPlayCounts: Map<String, Int> = emptyMap(),
 )
 
-// single source of truth for library song order so the on-screen list and the queue built on Play match
 fun sortLibrarySongs(songs: List<Song>, sort: LibrarySort, localPlayCounts: Map<String, Int>): List<Song> = when (sort) {
     LibrarySort.ALPHABETICAL -> songs.sortedBy { it.title.lowercase() }
     LibrarySort.CREATOR -> songs.sortedBy { it.artist.lowercase() }
-    // server play count wins when reported; local history fills the gap for local files/spotify
     LibrarySort.MOST_PLAYED -> songs.sortedByDescending { maxOf(it.playCount, localPlayCounts[it.id] ?: 0) }
     LibrarySort.RECENT -> songs.sortedByDescending { it.dateAddedSec }
 }
@@ -85,8 +82,7 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
     // offset advances by the requested page size not the returned size merged sources dedup within a page
     private var songsOffset = 0
 
-    // the complete library, loaded on demand for playback so Play/Shuffle/tap cover every song
-    // (the on-screen list only holds what's been scrolled). invalidated whenever the library reloads.
+    // full library for play and shuffle cleared on reload
     @Volatile private var fullSongsJob: Deferred<List<Song>>? = null
 
     fun load() {
@@ -102,7 +98,6 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
             _state.update {
                 it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = container.repository.downloadedLibrary(), likedSongCount = likedCount, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders)
             }
-            // warm the full-library cache in the background so the first Play is instant
             fullSongsAsync()
         }
     }
@@ -128,13 +123,11 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
         fullSongsJob?.let { if (!it.isCompleted || it.getCompleted().isNotEmpty()) return it }
         return viewModelScope.async {
             val all = container.repository.allLibrarySongs()
-            // once the whole library is in, show it all so the on-screen order matches what Play queues
             if (all.isNotEmpty()) _state.update { it.copy(songs = all, canLoadMoreSongs = false, songsLoadingMore = false) }
             all
         }.also { fullSongsJob = it }
     }
 
-    // the whole library in the current sort order; awaits the full load if it hasn't finished yet
     suspend fun fullSortedSongs(): List<Song> {
         val all = fullSongsAsync().await().ifEmpty { _state.value.songs }
         val s = _state.value

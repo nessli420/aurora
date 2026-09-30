@@ -18,8 +18,6 @@ the repository's Gradle wrapper. All modified library source and build files are
 included. The application may be rebuilt or repackaged with a modified library;
 reverse engineering for debugging modifications to this library is permitted.
 
-Windows builds compile the same sources as `aurora_dst.dll` with MSVC through `native/CMakeLists.txt`; `compat.h` adds an `_MSC_VER` branch using `_aligned_malloc`/`_aligned_free`, `__declspec(align)` and `_BitScanReverse`.
-
 Support currently covers mono/stereo DSD64 frames with shared, unsegmented
 filter/probability data. Other segmentation modes return an explicit unsupported
 error. Files are never treated as uncompressed DSD after a decode failure.

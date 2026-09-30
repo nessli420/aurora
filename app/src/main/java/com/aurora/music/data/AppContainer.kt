@@ -125,6 +125,10 @@ class AppContainer(context: Context) {
         downloadUrlResolverProvider = { backend?.let { source -> { id, bitrate, lossless -> source.downloadUrl(id, bitrate, lossless) } } },
     )
 
+    private val sourceLocalizer = SourceLocalizer(localMergeSession, downloadManager,
+        preferLocal = { preferLocalSources }, priority = { sourcePriorityValue },
+        isLocalUrl = { it.startsWith("content://") || it.startsWith("file://") }, findLocal = localLibrary::findMatch)
+
     val sonicStore = SonicStore(appContext)
     val mixStore = com.aurora.music.mix.MixStore(appContext)
     val mixController = com.aurora.music.mix.MixController()
@@ -147,46 +151,9 @@ class AppContainer(context: Context) {
         return youtubeResolver.resolveSentinel(uri)
     }
 
-    // rewrites only streamUrl/metadata id stays the server's so server features keep working
-    private fun localizeSong(song: Song): Song {
-        if (!preferLocalSources) return song
-        val alreadyLocal = song.streamUrl.startsWith("content://") || song.streamUrl.startsWith("file://")
-        for (tier in sourcePriorityValue) {
-            when (tier) {
-                "local" -> if (!alreadyLocal) {
-                    localLibrary.findMatch(song.artist, song.title, song.durationSec)?.let { return localizedFromFile(song, it) }
-                }
-                "downloaded" -> downloadManager.getByOriginalId(song.id, song.playbackSource?.providerId)?.let { return localizedFromDownload(song, it.toSong(downloadManager.fileUri)) }
-                "stream" -> return song
-            }
-        }
-        return song
-    }
-
-    // carry the file's replaygain + format so loudness/ui match what actually plays
-    private fun localizedFromFile(song: Song, local: Song): Song = song.copy(
-        streamUrl = local.streamUrl,
-        artworkUrl = song.artworkUrl.ifBlank { local.artworkUrl },
-        replayGainTrack = local.replayGainTrack,
-        replayGainAlbum = local.replayGainAlbum,
-        suffix = local.suffix,
-        bitrateKbps = local.bitrateKbps,
-        sampleRateHz = local.sampleRateHz,
-        bitDepth = local.bitDepth,
-        path = local.path,
-        playbackSource = PlaybackSourceIdentity.fromSession(localMergeSession, local.albumId,
-            com.aurora.music.data.rules.RuleSource.LOCAL_FILE),
-    )
-
-    private fun localizedFromDownload(song: Song, local: Song): Song =
-        song.copy(streamUrl = local.streamUrl, artworkUrl = local.artworkUrl.ifBlank { song.artworkUrl },
-            suffix = local.suffix, bitrateKbps = local.bitrateKbps, sampleRateHz = local.sampleRateHz,
-            bitDepth = local.bitDepth,
-            playbackSource = local.playbackSource)
-
     private fun buildBackend(session: Session): MediaBackend {
         val localize: (Song) -> Song = { song ->
-            localizeSong(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
+            sourceLocalizer.localize(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
         }
         return when (session.type) {
             ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session, appClientInfo), { maxBitrate }, localize)
@@ -214,25 +181,14 @@ class AppContainer(context: Context) {
                 val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
                 val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
                     ?.takeIf { java.io.File(it.audioPath).isFile } else null
-                if (downloaded != null) localizedFromDownload(song, downloaded.toSong(downloadManager.fileUri)) else localize(song)
+                if (downloaded != null) sourceLocalizer.fromDownload(song, downloaded.toSong(downloadManager.fileUri)) else localize(song)
             }
         }
     }
 
     private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend {
         if (!unified || !session.type.supportsMergedLibrary) return buildBackend(session)
-        // empty = all eligible servers MERGE_NONE sentinel = local files only
-        val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else (saved + session)
-            .filter { it.type.supportsMergedLibrary && it.type != ServerType.LOCAL }
-            .filter { mergeKeys.isEmpty() || accountKey(it) in mergeKeys }
-            .distinctBy { accountKey(it) }
-        val sources = buildList {
-            add(LocalBackend(localLibrary, localStore, localMergeSession))
-            serverSessions.forEach { add(buildBackend(it)) }
-        }
-        return MergedBackend(sources, session,
-            priority = { if (preferLocalSources) sourcePriorityValue else listOf("stream", "local", "downloaded") },
-            downloads = { downloadManager.downloads.value.values.filter { java.io.File(it.audioPath).isFile }.map { it.toSong(downloadManager.fileUri) } })
+        return sourceLocalizer.mergedBackend(session, mergeKeys, saved, LocalBackend(localLibrary, localStore, localMergeSession), build = ::buildBackend)
     }
 
     private suspend fun rebuildBackend() {

@@ -814,10 +814,7 @@ fun DrawScope.drawSuperformulaBloom(f: VisualizerController.Frame, c: VizColors,
     drawCircle(Brush.radialGradient(listOf(c.secondary, c.primary.copy(alpha = 0f)), center = Offset(cx, cy), radius = coreR * 2f), radius = coreR * 2f, center = Offset(cx, cy))
 }
 
-// ── ambient / textural modes ────────────────────────────────────────
-// these read sustained energy (rms), spectral colour (centroid) and slow time evolution rather than
-// transient beats so shoegaze / cloud rap / ambient still look alive where beat-driven modes go flat.
-
+// ambient modes follow rms and centroid instead of beats
 private fun VisualizerController.Frame.centroid(): Float {
     val b = bands; val n = b.size
     if (n < 2) return 0f

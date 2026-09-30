@@ -16,7 +16,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,8 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -41,14 +38,9 @@ import androidx.compose.ui.unit.dp
 @Composable
 fun SpeedPitchSheet(
     speed: Float,
-    pitch: Float,
-    matchPitch: Boolean,
     onSpeed: (Float) -> Unit,
-    onPitch: (Float) -> Unit,
-    onMatchPitch: (Boolean) -> Unit,
     onReset: () -> Unit,
     onDismiss: () -> Unit,
-    pitchControls: Boolean = true,
 ) {
     val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     ModalBottomSheet(
@@ -73,39 +65,6 @@ fun SpeedPitchSheet(
                     colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
                 )
                 QuickPicks(listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f), speed) { onSpeed(it) }
-            }
-
-            if (pitchControls) {
-                Spacer(Modifier.height(16.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(appString(R.string.text_match_pitch_to_speed_ccd7ca), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(appString(R.string.text_pitch_follows_speed_like_a_turntable_c2a28f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Switch(
-                        checked = matchPitch,
-                        onCheckedChange = onMatchPitch,
-                        colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onPrimary, checkedTrackColor = MaterialTheme.colorScheme.primary),
-                    )
-                }
-
-                if (!matchPitch) {
-                    Spacer(Modifier.height(16.dp))
-                    ControlBlock(
-                        icon = { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.tertiary) },
-                        title = appString(R.string.text_pitch_a6c2d0),
-                        value = "${if (pitch >= 0) "+" else ""}${"%.1f".format(pitch)} st",
-                    ) {
-                        Slider(
-                            value = pitch,
-                            onValueChange = onPitch,
-                            valueRange = -6f..6f,
-                            steps = 11,
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.tertiary, activeTrackColor = MaterialTheme.colorScheme.tertiary),
-                        )
-                    }
-                }
             }
 
             Spacer(Modifier.height(24.dp))

@@ -481,11 +481,7 @@ private fun Shell(
                 onJump = { player.jumpTo(it) },
                 onRemove = { player.removeFromQueue(it) },
                 onMove = { from, to -> player.moveQueueItem(from, to) },
-                onClear = { player.clearQueue() },
-                onSaveAsPlaylist = { name -> player.saveQueueAsPlaylist(name) { confirm(it) } },
                 editable = !playerState.isMix,
-                showTitle = false,
-                showActions = false,
                 modifier = modifier.padding(horizontal = 4.dp),
             )
         }
@@ -1248,14 +1244,9 @@ private fun Shell(
         if (showSpeedSheet) {
             SpeedPitchSheet(
                 speed = playerState.speed,
-                pitch = playerState.pitch,
-                matchPitch = playerState.matchPitch,
                 onSpeed = { player.setSpeed(it) },
-                onPitch = { player.setPitch(it) },
-                onMatchPitch = { player.setMatchPitch(it) },
                 onReset = { player.resetSpeedPitch() },
                 onDismiss = { showSpeedSheet = false },
-                pitchControls = false,
             )
         }
         if (showOutput) {

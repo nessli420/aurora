@@ -2,7 +2,6 @@
 <resources>
     <string name="text_add_music_folder_a083d8" formatted="false">"Add music folder"</string>
     <string name="text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2" formatted="false">"Audio decoding. Copyright © the FFmpeg developers. LGPL-3.0-or-later, dynamically linked through JavaCPP Presets. Full licence: https://www.gnu.org/licenses/lgpl-3.0.html"</string>
-    <string name="text_audio_fingerprinting_copyright_luk_lalinsk_lgpl_2_1_or_later_0cb704" formatted="false">"Audio fingerprinting. Copyright © Lukáš Lalinský. LGPL-2.1-or-later."</string>
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora takes sole control of the device and sends samples at the track\'s own rate and bit depth. Other apps are silent while Aurora plays. Output stays bit-perfect when processing, volume and ReplayGain leave the samples unchanged; if the device refuses a format Aurora falls back to shared mode and Signal Path shows why."</string>
     <string name="text_bit_float_012895">"%1$d-bit float"</string>
     <string name="text_bit_integer_72520f">"%1$d-bit integer"</string>
@@ -17,11 +16,9 @@
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Clear image cache"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Close to tray"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Device, exclusive mode and buffer"</string>
-    <string name="text_dst_decoder_ffabc9" formatted="false">"DST decoder"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Exclusive mode"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Exclusive mode is unavailable: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Exclusive mode is unavailable on this device"</string>
-    <string name="text_ffmpeg_dsd_nexus_copyright_2014_peter_ross_lgpl_2_1_or_later_fb6d87" formatted="false">"FFmpeg / DSD-Nexus. Copyright © 2014 Peter Ross. LGPL-2.1-or-later."</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz is unavailable; using %2$d Hz."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Keep Aurora playing in the notification area when the window closes"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Larger buffers ride out heavy system load; smaller ones react faster to seeking and volume. Applies when the output reopens."</string>

@@ -27,8 +27,6 @@ data class PlayerUiState(
     val repeat: RepeatMode = RepeatMode.OFF,
     val expanded: Boolean = false,
     val speed: Float = 1.0f,
-    val pitch: Float = 0.0f,
-    val matchPitch: Boolean = true,
     val likedIds: Set<String> = emptySet(),
     val currentIndex: Int = 0,
     val sleepTimerMinutes: Int = 0,
@@ -39,10 +37,6 @@ data class PlayerUiState(
     val isMix: Boolean = false,
     val timelineDurationSec: Int = 0,
     val isLive: Boolean = false,
-    val hasVideo: Boolean = false,
-    val videoLoading: Boolean = false,
-    val videoQualityHeight: Int? = null,
-    val canSelectVideoQuality: Boolean = false,
 ) {
     val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec
     val progress: Float get() = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
@@ -85,8 +79,6 @@ interface PlayerController {
     fun toggleLike(id: String, kind: String = "song")
     fun setExpanded(value: Boolean)
     fun setSpeed(value: Float)
-    fun setPitch(value: Float)
-    fun setMatchPitch(match: Boolean)
     fun resetSpeedPitch()
     fun setSleepTimer(minutes: Int)
     fun setSleepEndOfTrack()

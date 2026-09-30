@@ -139,18 +139,6 @@ Java_com_aurora_music_desktop_natives_WasapiNative_write(JNIEnv* env, jobject, j
 }
 
 JNIEXPORT jint JNICALL
-Java_com_aurora_music_desktop_natives_WasapiNative_writeDirect(JNIEnv* env, jobject, jlong handle, jobject buffer,
-    jint offset, jint length, jint timeoutMs) {
-    const auto stream = find(handle);
-    if (!stream) return E_HANDLE;
-    const auto* data = buffer ? static_cast<const uint8_t*>(env->GetDirectBufferAddress(buffer)) : nullptr;
-    if (!data || offset < 0 || length < 0 || offset > env->GetDirectBufferCapacity(buffer) - length) return E_INVALIDARG;
-    return stream->write(static_cast<size_t>(length), timeoutMs, [&](uint8_t* target, size_t at, size_t count) {
-        std::memcpy(target, data + offset + at, count);
-    });
-}
-
-JNIEXPORT jint JNICALL
 Java_com_aurora_music_desktop_natives_WasapiNative_resume(JNIEnv*, jobject, jlong handle) {
     return control(handle, Stream::Command::Resume);
 }

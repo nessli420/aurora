@@ -44,17 +44,12 @@ object AudioDevices {
         }
     }
 
-    fun defaultId(): String? = WasapiNative.defaultDevice()
-
     fun mixFormat(deviceId: String? = null): MixFormat? = WasapiNative.mixFormat(deviceId)?.let {
         MixFormat(it[0], it[1], it[2], it[3], it[4] != 0, it[5])
     }
 
     fun supportsExclusive(deviceId: String?, sampleRate: Int, encoding: OutputEncoding, channels: Int = 2): Boolean =
         WasapiNative.probe(deviceId, true, sampleRate, channels, encoding.ordinal) == 0
-
-    fun exclusiveEncodings(deviceId: String?, sampleRate: Int, channels: Int = 2): List<OutputEncoding> =
-        OutputEncoding.entries.filter { supportsExclusive(deviceId, sampleRate, it, channels) }
 
     fun addListener(listener: (DeviceEvent) -> Unit): AutoCloseable {
         synchronized(listeners) {

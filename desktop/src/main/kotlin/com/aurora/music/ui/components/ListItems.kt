@@ -357,30 +357,3 @@ fun ArtistCircle(artist: Artist, onClick: () -> Unit, modifier: Modifier = Modif
         Text(appString(R.string.text_artist_6c3f3d), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
-
-@Composable
-fun RecentTile(playlist: Playlist, onClick: () -> Unit, modifier: Modifier = Modifier) {
-    Row(
-        modifier = modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .then(
-                if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
-                    Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                else Modifier.auroraPanel(MaterialTheme.shapes.small)
-            )
-            .clickable(onClick = onClick)
-            .pointerHoverIcon(PointerIcon.Hand),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Artwork(playlist.coverUrl, playlist.accent, Modifier.size(60.dp), corner = 0.dp)
-        Text(
-            playlist.title,
-            style = MaterialTheme.typography.titleSmall,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(horizontal = 10.dp).weight(1f),
-        )
-    }
-}

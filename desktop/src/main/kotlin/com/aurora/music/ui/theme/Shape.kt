@@ -38,5 +38,3 @@ fun auroraShapes(style: Int, themeStyle: Int = ThemeStyle.AURORA): Shapes = when
         extraLarge = RoundedCornerShape(cornerDp(style, 32.dp)),
     )
 }
-
-val AuroraShapes = auroraShapes(CornerStyle.DEFAULT)
