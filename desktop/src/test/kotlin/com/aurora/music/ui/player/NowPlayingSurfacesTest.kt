@@ -8,6 +8,7 @@ import com.aurora.music.ui.screens.player.QueueScreen
 import com.aurora.music.ui.screens.player.SleepTimerSheet
 import com.aurora.music.ui.screens.player.SpeedPitchSheet
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -69,6 +70,21 @@ class NowPlayingSurfacesTest {
             listOf(527f to 425f, 628f to 629f, 600f to 784f, 444f to 848f, 720f to 120f).forEach { (x, y) -> scene.click(x, y) }
             scene.frames(8)
             assertEquals(listOf("select:null", "select:${devices[2].id}", "exclusive:false", "mute", "dismiss"), events)
+        }
+    }
+
+    @Test fun outputSheetKeepsADisconnectedPreferenceSelected() {
+        val events = mutableListOf<String>()
+        PlayerScene("sheet-output-disconnected", 1440, 900) {
+            OutputDeviceSheet(devices, currentId = "{0.0.0.00000000}.{unplugged}", exclusive = false, volume = 0.5f,
+                onSelect = { events += "select:$it" }, onExclusiveChange = {}, onVolumeChange = {}, onToggleMute = {}, onDismiss = {})
+        }.use { scene ->
+            val image = scene.shot()
+            val idle = image.pixel(430, 425)
+            assertEquals(idle, image.pixel(430, 357))
+            assertNotEquals(idle, image.pixel(430, 697))
+            scene.click(527f, 357f)
+            assertEquals(listOf("select:null"), events)
         }
     }
 

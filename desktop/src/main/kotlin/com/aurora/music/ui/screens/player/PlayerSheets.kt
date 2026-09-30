@@ -31,6 +31,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.HighQuality
+import androidx.compose.material.icons.filled.LinkOff
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material.icons.filled.SettingsSuggest
 import androidx.compose.material.icons.filled.Speaker
@@ -77,13 +78,16 @@ fun OutputDeviceSheet(
     onDismiss: () -> Unit,
 ) {
     val colors = MaterialTheme.colorScheme
-    val active = currentId?.takeIf { id -> devices.any { it.id == id } }
+    val systemDefault = devices.firstOrNull { it.isDefault }
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = colors.surface) {
         Column(Modifier.fillMaxWidth().heightIn(max = 650.dp).verticalScroll(rememberScrollState()).padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
             Text(appString(R.string.text_play_on_4bd6fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
-            OutputRow(Icons.Filled.SettingsSuggest, appString(R.string.language_system), devices.firstOrNull { it.isDefault }?.name, active == null) { onSelect(null) }
+            OutputRow(Icons.Filled.SettingsSuggest, appString(R.string.language_system), systemDefault?.name, currentId == null) { onSelect(null) }
             devices.forEach { d ->
-                OutputRow(deviceIcon(d.kind), d.name, if (d.isDefault) appString(R.string.text_default_808d7d) else null, d.id == active) { onSelect(d.id) }
+                OutputRow(deviceIcon(d.kind), d.name, if (d.isDefault) appString(R.string.text_default_808d7d) else null, d.id == currentId) { onSelect(d.id) }
+            }
+            if (currentId != null && devices.none { it.id == currentId }) {
+                OutputRow(Icons.Filled.LinkOff, appString(R.string.text_selected_device_disconnected_c2d1b1), systemDefault?.name, selected = true) {}
             }
             HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = colors.outlineVariant.copy(alpha = 0.5f))
             Row(
