@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -91,6 +92,7 @@ import com.aurora.music.data.Session
 import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.resources.AuroraLogo
 import com.aurora.music.desktop.ui.FilePickers
+import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.AuroraRose
 import com.aurora.music.viewmodel.AuthStep
 import com.aurora.music.viewmodel.AuthUiState
@@ -125,46 +127,55 @@ fun SignInScreen(
         onBackground = Color(0xFFF6F2F3), onSurface = Color(0xFFF6F2F3), onSurfaceVariant = Color(0xFFB5B0BA),
         outline = Color(0xFF45434C), outlineVariant = Color(0xFF303139))
     MaterialTheme(colorScheme = palette) {
-        Box(Modifier.fillMaxSize().background(palette.background)) {
+        BoxWithConstraints(Modifier.fillMaxSize().background(palette.background)) {
+            val wide = maxWidth >= 1200.dp
             Box(Modifier.fillMaxWidth().height(280.dp).background(Brush.verticalGradient(listOf(AuroraRose.copy(alpha = .09f), Color.Transparent))))
-            Column(Modifier.fillMaxSize().verticalScroll(scroll), horizontalAlignment = Alignment.CenterHorizontally) {
-                Column(Modifier.widthIn(max = 640.dp).fillMaxWidth().padding(horizontal = 24.dp), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Row(Modifier.fillMaxWidth().padding(top = 20.dp), verticalAlignment = Alignment.CenterVertically) {
-                        if (state.step != AuthStep.TYPE) {
-                            IconButton(onClick = onBack, enabled = !state.loading, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
-                                Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36))
-                            }
-                        } else {
-                            Icon(rememberVectorPainter(AuroraLogo), null, Modifier.size(32.dp), tint = AuroraRose)
-                            Spacer(Modifier.width(10.dp))
+            val brand: @Composable () -> Unit = {
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    if (state.step != AuthStep.TYPE) {
+                        IconButton(onClick = onBack, enabled = !state.loading, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+                            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36))
                         }
-                        Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Spacer(Modifier.weight(1f))
-                        Text(when (state.step) {
-                            AuthStep.TYPE -> appString(R.string.text_your_music_your_way_db5743)
-                            AuthStep.SERVER -> appString(R.string.text_01_address_ea85bc)
-                            AuthStep.CREDENTIALS -> appString(R.string.text_02_account_8088a4)
-                            AuthStep.FOLDERS -> appString(R.string.text_connect_6e2889)
-                        }, style = MaterialTheme.typography.labelSmall, color = palette.onSurfaceVariant, letterSpacing = 1.sp)
+                    } else {
+                        Icon(rememberVectorPainter(AuroraLogo), null, Modifier.size(32.dp), tint = AuroraRose)
+                        Spacer(Modifier.width(10.dp))
                     }
-                    Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        Text(when (state.step) {
-                            AuthStep.TYPE -> appString(R.string.text_a_home_for_your_music_20a46f)
-                            AuthStep.SERVER -> appString(R.string.text_connect_your_server_8989fc)
-                            AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_connect_title else R.string.text_make_yourself_at_home_3ea2e2)
-                            AuthStep.FOLDERS -> appString(R.string.text_music_on_this_device_21b6e9)
-                        }, fontSize = if (state.step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (state.step == AuthStep.TYPE) 43.sp else 36.sp, fontWeight = FontWeight.Bold, color = palette.onBackground)
-                        Text(when (state.step) {
-                            AuthStep.TYPE -> appString(R.string.text_your_collection_and_your_discoveries_together_in_one_player_093361)
-                            AuthStep.SERVER -> appString(R.string.text_enter_the_address_of_your_server_3f01ed, when (state.type) {
-                                ServerType.JELLYFIN -> "Jellyfin"
-                                ServerType.PLEX -> "Plex"
-                                else -> appString(R.string.text_navidrome_or_subsonic_4e1c18)
-                            })
-                            AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_token_detail else R.string.text_use_your_server_account_to_open_your_library_800ff2)
-                            AuthStep.FOLDERS -> appString(R.string.text_start_listening_without_an_account_2e734d)
-                        }, style = MaterialTheme.typography.bodyLarge, color = palette.onSurfaceVariant)
+                    Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Spacer(Modifier.weight(1f))
+                    Text(when (state.step) {
+                        AuthStep.TYPE -> appString(R.string.text_your_music_your_way_db5743)
+                        AuthStep.SERVER -> appString(R.string.text_01_address_ea85bc)
+                        AuthStep.CREDENTIALS -> appString(R.string.text_02_account_8088a4)
+                        AuthStep.FOLDERS -> appString(R.string.text_connect_6e2889)
+                    }, style = MaterialTheme.typography.labelSmall, color = palette.onSurfaceVariant, letterSpacing = 1.sp)
+                }
+            }
+            val intro: @Composable () -> Unit = {
+                Column(verticalArrangement = Arrangement.spacedBy(if (wide) 16.dp else 10.dp)) {
+                    val headline = when (state.step) {
+                        AuthStep.TYPE -> appString(R.string.text_a_home_for_your_music_20a46f)
+                        AuthStep.SERVER -> appString(R.string.text_connect_your_server_8989fc)
+                        AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_connect_title else R.string.text_make_yourself_at_home_3ea2e2)
+                        AuthStep.FOLDERS -> appString(R.string.text_music_on_this_device_21b6e9)
                     }
+                    if (wide) Text(headline, style = if (state.step == AuthStep.TYPE) MaterialTheme.typography.displayMedium else MaterialTheme.typography.displaySmall,
+                        fontWeight = FontWeight.Bold, color = palette.onBackground)
+                    else Text(headline, fontSize = if (state.step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (state.step == AuthStep.TYPE) 43.sp else 36.sp,
+                        fontWeight = FontWeight.Bold, color = palette.onBackground)
+                    Text(when (state.step) {
+                        AuthStep.TYPE -> appString(R.string.text_your_collection_and_your_discoveries_together_in_one_player_093361)
+                        AuthStep.SERVER -> appString(R.string.text_enter_the_address_of_your_server_3f01ed, when (state.type) {
+                            ServerType.JELLYFIN -> "Jellyfin"
+                            ServerType.PLEX -> "Plex"
+                            else -> appString(R.string.text_navidrome_or_subsonic_4e1c18)
+                        })
+                        AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_token_detail else R.string.text_use_your_server_account_to_open_your_library_800ff2)
+                        AuthStep.FOLDERS -> appString(R.string.text_start_listening_without_an_account_2e734d)
+                    }, style = MaterialTheme.typography.bodyLarge, color = palette.onSurfaceVariant)
+                }
+            }
+            val form: @Composable () -> Unit = {
+                Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(24.dp)) {
                     when (state.step) {
                         AuthStep.TYPE -> TypeStep(onSelectType, savedSessions, onUseSaved, !state.loading)
                         AuthStep.SERVER -> ServerStep(state, onScheme, onHost, canContinueServer, onContinueServer)
@@ -180,7 +191,27 @@ fun SignInScreen(
                             Text(state.error.orEmpty(), Modifier.fillMaxWidth().padding(16.dp), color = palette.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
-                    Spacer(Modifier.height(8.dp))
+                }
+            }
+            Column(
+                Modifier.fillMaxSize().verticalScroll(scroll).padding(horizontal = 24.dp, vertical = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center,
+            ) {
+                if (wide) Row(
+                    Modifier.widthIn(max = PageMetrics.SignInMaxWidth).fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(64.dp, Alignment.CenterHorizontally),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Column(Modifier.width(440.dp), verticalArrangement = Arrangement.spacedBy(40.dp)) {
+                        brand()
+                        intro()
+                    }
+                    Box(Modifier.width(520.dp)) { form() }
+                } else Column(Modifier.widthIn(max = 640.dp).fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                    brand()
+                    intro()
+                    form()
                 }
             }
             VerticalScrollbar(rememberScrollbarAdapter(scroll), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
