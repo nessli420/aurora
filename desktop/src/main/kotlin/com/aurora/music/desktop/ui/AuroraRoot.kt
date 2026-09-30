@@ -13,9 +13,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.TabletSetting
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.desktop.player.PlayerController
+import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.WindowLayout
 import com.aurora.music.ui.theme.AuroraTheme
@@ -42,7 +44,10 @@ fun AuroraRoot(
             )
             CompositionLocalProvider(LocalScrollbarStyle provides scrollbar) {
                 BoxWithConstraints(Modifier.fillMaxSize()) {
-                    CompositionLocalProvider(LocalWindowLayout provides WindowLayout(maxWidth.value.toInt(), maxHeight.value.toInt())) {
+                    val window = WindowLayout(maxWidth.value.toInt(), maxHeight.value.toInt())
+                    val margin = uiPrefs.tabletPageMargin - TabletSetting.PAGE_MARGIN.default
+                    val gutter = (window.pageGutter + margin.dp).coerceAtLeast(0.dp)
+                    CompositionLocalProvider(LocalWindowLayout provides window, LocalPageGutter provides gutter) {
                         content()
                     }
                 }

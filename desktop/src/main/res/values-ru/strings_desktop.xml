@@ -15,6 +15,7 @@
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Укажите, где на этом компьютере хранится ваша музыка"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Очистить кэш изображений"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Сворачивать в трей"</string>
+    <string name="text_date_added_56ab7a" formatted="false">"Дата добавления"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Устройство, монопольный режим и буфер"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Монопольный режим"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Монопольный режим недоступен: %1$s"</string>

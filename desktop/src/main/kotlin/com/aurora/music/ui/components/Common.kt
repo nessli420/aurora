@@ -2,19 +2,27 @@ package com.aurora.music.ui.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.ArrowForwardIos
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -24,8 +32,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -33,7 +44,10 @@ import coil3.compose.LocalPlatformContext
 import coil3.compose.SubcomposeAsyncImage
 import coil3.request.ImageRequest
 import coil3.request.crossfade
+import com.aurora.music.R
 import com.aurora.music.data.ThemeStyle
+import com.aurora.music.localization.appString
+import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraBackdrop
 
@@ -73,11 +87,50 @@ fun Artwork(
 }
 
 @Composable
+fun PageHeader(
+    title: String,
+    modifier: Modifier = Modifier,
+    subtitle: String? = null,
+    onBack: (() -> Unit)? = null,
+    actions: @Composable RowScope.() -> Unit = {},
+) {
+    Row(
+        modifier.fillMaxWidth().padding(top = PageMetrics.HeaderTop).heightIn(min = PageMetrics.HeaderHeight),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        if (onBack != null) {
+            IconButton(onClick = onBack, modifier = Modifier.offset(x = (-8).dp).pointerHoverIcon(PointerIcon.Hand)) {
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36))
+            }
+            Spacer(Modifier.width(4.dp))
+        }
+        Column(Modifier.weight(1f)) {
+            Text(
+                title,
+                style = MaterialTheme.typography.headlineMedium,
+                fontWeight = FontWeight.Black,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            if (!subtitle.isNullOrBlank()) Text(
+                subtitle,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+        Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically, content = actions)
+    }
+}
+
+@Composable
 fun SectionHeader(
     title: String,
     modifier: Modifier = Modifier,
     action: String? = null,
     onAction: (() -> Unit)? = null,
+    count: Int? = null,
 ) {
     Row(
         modifier = modifier.fillMaxWidth(),
@@ -95,17 +148,26 @@ fun SectionHeader(
                 ),
         )
         Spacer(Modifier.width(10.dp))
-        Text(
-            text = title,
-            style = MaterialTheme.typography.headlineSmall,
-            modifier = Modifier.weight(1f),
-        )
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f, fill = false),
+            )
+            if (count != null) {
+                Spacer(Modifier.width(10.dp))
+                Text(count.toString(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+        }
         if (action != null && onAction != null) {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .clip(RoundedCornerShape(50))
                     .clickable(onClick = onAction)
+                    .pointerHoverIcon(PointerIcon.Hand)
                     .padding(start = 10.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
             ) {
                 Text(
@@ -122,6 +184,22 @@ fun SectionHeader(
                 )
             }
         }
+    }
+}
+
+@Composable
+fun PageSection(
+    title: String,
+    modifier: Modifier = Modifier,
+    action: String? = null,
+    onAction: (() -> Unit)? = null,
+    count: Int? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Column(modifier.fillMaxWidth()) {
+        SectionHeader(title, action = action, onAction = onAction, count = count)
+        Spacer(Modifier.height(PageMetrics.HeaderToContent))
+        content()
     }
 }
 
