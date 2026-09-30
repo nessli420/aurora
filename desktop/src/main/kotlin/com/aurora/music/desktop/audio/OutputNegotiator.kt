@@ -26,6 +26,11 @@ class OutputNegotiator(private val backend: OutputBackend) {
         mixRates.clear()
     }
 
+    fun forget(deviceId: String?) {
+        encodings.keys.removeIf { it.first == deviceId }
+        mixRates.remove(deviceId)
+    }
+
     fun shared(deviceId: String?, fallbackReason: String? = null) = NegotiatedOutput(deviceId, false,
         mixRates.getOrPut(deviceId) { backend.mixRate(deviceId) ?: DEFAULT_RATE }, OutputEncoding.F32, fallbackReason = fallbackReason)
 

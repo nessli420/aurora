@@ -1081,20 +1081,39 @@ class DesktopPlaybackEngine(
     }
 
     private fun onDevice(event: DeviceEvent) {
-        negotiator.clear()
         control.execute { runCatching { backend.devices() }.onSuccess { mutableOutputs.value = it } }
         val current = output
+        val defaultDevice = current?.deviceId?.takeIf { activeDeviceId() == null }
         when (event) {
-            is DeviceEvent.StreamInvalidated -> if (current != null && event.streamId == current.id) reopenAtHeard()
-            is DeviceEvent.DefaultChanged -> if (activeDeviceId() == null && current != null && current.deviceId != event.deviceId) {
-                exclusiveBlocked = null
+            is DeviceEvent.StreamInvalidated -> if (current != null && event.streamId == current.id) {
+                negotiator.clear()
                 reopenAtHeard()
             }
-            is DeviceEvent.Removed -> deviceGone(event.deviceId)
-            is DeviceEvent.StateChanged ->
+            is DeviceEvent.DefaultChanged -> {
+                if (defaultDevice == null || defaultDevice != event.deviceId) negotiator.forget(null)
+                if (activeDeviceId() == null && current != null && current.deviceId != event.deviceId) {
+                    exclusiveBlocked = null
+                    reopenAtHeard()
+                }
+            }
+            is DeviceEvent.Removed -> {
+                forgetDevice(event.deviceId, defaultDevice)
+                deviceGone(event.deviceId)
+            }
+            is DeviceEvent.StateChanged -> {
+                forgetDevice(event.deviceId, defaultDevice)
                 if ((event.state and DEVICE_STATE_ACTIVE) == 0) deviceGone(event.deviceId) else deviceBack(event.deviceId)
-            is DeviceEvent.Added -> deviceBack(event.deviceId)
+            }
+            is DeviceEvent.Added -> {
+                forgetDevice(event.deviceId, defaultDevice)
+                deviceBack(event.deviceId)
+            }
         }
+    }
+
+    private fun forgetDevice(deviceId: String, defaultDevice: String?) {
+        negotiator.forget(deviceId)
+        if (defaultDevice == null || defaultDevice == deviceId) negotiator.forget(null)
     }
 
     private fun deviceGone(deviceId: String) {

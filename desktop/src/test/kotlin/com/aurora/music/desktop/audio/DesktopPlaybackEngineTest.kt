@@ -436,6 +436,34 @@ class DesktopPlaybackEngineTest {
         }
     }
 
+    @Test fun unrelatedDeviceEventsKeepExclusiveProbesOffTheGaplessBoundary() {
+        val (a, _) = tone("album-a", 48_000, 16, 144_000) { frame, _ -> frame % 2_000 }
+        val (b, _) = tone("album-b", 48_000, 16, 4_800) { frame, _ -> frame % 1_000 }
+        val backend = FakeBackend(exclusive = hiRes, speed = 2.0)
+        val engine = engine(backend)
+        engine.setOutput(null, exclusive = true)
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(a), tracks.song(b)))
+            engine.await { it.isPlaying && it.output?.exclusive == true }
+            val probed = backend.probes.get()
+            val listed = backend.listings.get()
+            backend.fire(DeviceEvent.Added("hdmi"))
+            backend.fire(DeviceEvent.StateChanged("hdmi", 0))
+            backend.fire(DeviceEvent.Removed("hdmi"))
+            backend.fire(DeviceEvent.DefaultChanged("speakers"))
+            eventually { backend.listings.get() >= listed + 4 }
+            assertEquals(1, log.transitions().size)
+            log.await { EngineEvent.Ended in it }
+            assertEquals(TransitionReason.AUTO, log.transitions().last().reason)
+            assertEquals(probed, backend.probes.get())
+            assertEquals(1, backend.opened.size)
+            backend.fire(DeviceEvent.StateChanged("speakers", 1))
+            eventually { backend.listings.get() >= listed + 5 }
+            engine.setQueue(listOf(tracks.song(b)))
+            eventually { backend.probes.get() > probed }
+        }
+    }
+
     @Test fun sleepFadeRampsToSilenceThenPausesAndPlayRestoresTheLevel() {
         val (file, _) = tone("sleep", 48_000, 16, 480_000) { _, _ -> 16_384 }
         val backend = FakeBackend(speed = 4.0)

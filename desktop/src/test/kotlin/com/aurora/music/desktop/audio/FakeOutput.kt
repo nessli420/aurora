@@ -10,6 +10,7 @@ import java.io.ByteArrayOutputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.concurrent.CopyOnWriteArrayList
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 internal class FakeBackend(
@@ -22,14 +23,17 @@ internal class FakeBackend(
 ) : OutputBackend {
     val opened = CopyOnWriteArrayList<FakeOutput>()
     val awake = CopyOnWriteArrayList<Boolean>()
+    val probes = AtomicInteger()
+    val listings = AtomicInteger()
     private val listeners = CopyOnWriteArrayList<(DeviceEvent) -> Unit>()
     private val ids = AtomicLong()
 
     val last: FakeOutput get() = opened.last()
 
-    override fun devices() = devices
-    override fun mixRate(deviceId: String?) = mixRate
-    override fun supportsExclusive(deviceId: String?, sampleRate: Int, encoding: OutputEncoding) = (sampleRate to encoding) in exclusive
+    override fun devices() = devices.also { listings.incrementAndGet() }
+    override fun mixRate(deviceId: String?) = mixRate.also { probes.incrementAndGet() }
+    override fun supportsExclusive(deviceId: String?, sampleRate: Int, encoding: OutputEncoding) =
+        ((sampleRate to encoding) in exclusive).also { probes.incrementAndGet() }
 
     override fun open(deviceId: String?, exclusive: Boolean, sampleRate: Int, encoding: OutputEncoding, bufferMs: Int): AudioOutput {
         if (exclusive && refuseExclusive) throw WasapiException(WasapiException.DEVICE_IN_USE)

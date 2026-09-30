@@ -33,6 +33,30 @@ class OutputNegotiatorTest {
         assertEquals(96_000, maximum.sampleRate)
     }
 
+    @Test fun forgettingADeviceReprobesOnlyThatDevice() {
+        val negotiator = OutputNegotiator(device)
+        negotiator.negotiate(null, true, 48_000, OutputRatePolicy())
+        negotiator.negotiate("dac", true, 48_000, OutputRatePolicy())
+        negotiator.negotiate("dac", false, 48_000, OutputRatePolicy())
+        val probed = device.probes.get()
+        negotiator.forget("hdmi")
+        negotiator.negotiate(null, true, 48_000, OutputRatePolicy())
+        negotiator.negotiate("dac", true, 48_000, OutputRatePolicy())
+        assertEquals(probed, device.probes.get())
+        negotiator.forget("dac")
+        negotiator.negotiate(null, true, 48_000, OutputRatePolicy())
+        assertEquals(probed, device.probes.get())
+        negotiator.negotiate("dac", true, 48_000, OutputRatePolicy())
+        negotiator.negotiate("dac", false, 48_000, OutputRatePolicy())
+        assertTrue(device.probes.get() > probed)
+        val reprobed = device.probes.get()
+        negotiator.forget(null)
+        negotiator.negotiate("dac", true, 48_000, OutputRatePolicy())
+        assertEquals(reprobed, device.probes.get())
+        negotiator.negotiate(null, true, 48_000, OutputRatePolicy())
+        assertTrue(device.probes.get() > reprobed)
+    }
+
     @Test fun devicesWithoutExclusiveSupportStayShared() {
         val chosen = OutputNegotiator(FakeBackend()).negotiate("speakers", true, 44_100, OutputRatePolicy())
         assertFalse(chosen.exclusive)
