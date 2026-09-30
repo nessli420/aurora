@@ -173,108 +173,103 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, signalPath: StateFlow<Si
         } else {
             Column(Modifier.fillMaxSize()) {
                 SettingsTopBar(appString(R.string.text_processing_rack_f7dff1)) { leave(onBack) }
-                Box(Modifier.fillMaxWidth().weight(1f)) {
-                    LazyColumn(Modifier.fillMaxSize(), state = listState,
-                        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
-                        verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        if (current == null) item { Text(appString(R.string.text_loading_your_rack_cb2909), Modifier.padding(20.dp)) }
-                        else {
-                            item {
-                                SettingsGroup {
-                                    SegmentedRow(appString(R.string.text_processing_mode_7f4d30), listOf(appString(R.string.text_standard_2dfa66), appString(R.string.text_rack_f93caa)), if (current.enabled) 1 else 0) { choice ->
-                                        change { it.copy(enabled = choice == 1) }
-                                    }
-                                    SettingsSwitchRow(title = appString(R.string.text_automatic_headroom_830667), subtitle = appString(R.string.text_reduce_input_gain_when_the_rack_boosts_the_signal_2a95ae),
-                                        checked = current.autoHeadroom, onCheckedChange = { enabled -> change { it.copy(autoHeadroom = enabled) } })
-                                    SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_output_mix_a04a0e), current.output?.let { appString(R.string.text_inputs_43db9d, it.size) } ?: appString(R.string.text_last_stage_58b1e2)) { routingTarget = "output" }
-                                    RackDescription(if (current.enabled)
-                                        appString(R.string.text_stages_run_from_top_to_bottom_008582)
-                                    else appString(R.string.text_select_rack_to_use_these_stages_e161dd))
+                SettingsList(contentPadding, state = listState, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    if (current == null) item { Text(appString(R.string.text_loading_your_rack_cb2909), Modifier.padding(20.dp)) }
+                    else {
+                        item {
+                            SettingsGroup {
+                                SegmentedRow(appString(R.string.text_processing_mode_7f4d30), listOf(appString(R.string.text_standard_2dfa66), appString(R.string.text_rack_f93caa)), if (current.enabled) 1 else 0) { choice ->
+                                    change { it.copy(enabled = choice == 1) }
                                 }
-                            }
-                            item {
-                                Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                    Column(Modifier.weight(1f)) {
-                                        Text(current.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
-                                        Text(appString(R.string.text_16_stages_256_parametric_bands_cc3e87, (current.nodes.size), (current.parametricBandCount())),
-                                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                    IconButton(onClick = { nameTarget = RackNameTarget(null, current.name) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
-                                        Icon(Icons.Filled.Edit, appString(R.string.text_rename_rack_519beb))
-                                    }
-                                }
-                            }
-                            itemsIndexed(current.nodes, key = { _, node -> node.id }) { index, node ->
-                                RackNodeCard(node, index, current.nodes.size, onEdit = { editingId = node.id },
-                                    onBypass = { bypass -> changeNode(node.id) { it.copy(bypass = bypass) } },
-                                    onMove = { moveNode(node.id, it) },
-                                    onRename = { nameTarget = RackNameTarget(node.id, node.name) },
-                                    canDuplicate = current.nodes.size < 16 && (node.kind !in listOf(RackNodeKind.CONVOLUTION, RackNodeKind.SPACE) || current.nodes.count { it.kind == node.kind } < 4) &&
-                                        (node.kind !in listOf(RackNodeKind.EQ, RackNodeKind.LEGACY_DSP) ||
-                                            current.parametricBandCount() + node.audio.dspParametric.size <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS),
-                                    onDuplicate = { change { it.copy(nodes = it.nodes + node.copy(
-                                        id = UUID.randomUUID().toString(), name = appString(R.string.text_copy_37e469, (node.name.take(70))))) } },
-                                    onRemove = { removeTarget = node })
-                            }
-                            item {
-                                Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
-                                    Button(onClick = { addMenu = true }, enabled = current.nodes.size < 16, modifier = Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand)) {
-                                        Icon(Icons.Filled.Add, null)
-                                        Text(appString(R.string.text_add_stage_931c98), Modifier.padding(start = 8.dp))
-                                    }
-                                    DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false },
-                                        modifier = Modifier.heightIn(max = 400.dp)) {
-                                        RackNodeKind.entries.forEach { kind ->
-                                            DropdownMenuItem(text = { Text(kind.label()) },
-                                                enabled = kind !in listOf(RackNodeKind.CONVOLUTION, RackNodeKind.SPACE) || current.nodes.count { it.kind == kind } < 4,
-                                                onClick = {
-                                                    addMenu = false
-                                                    val node = ProcessingRackNode(UUID.randomUUID().toString(), kind.label(), kind,
-                                                        wet = if (kind == RackNodeKind.SPACE) .25f else 1f,
-                                                        audio = AudioPrefs(dspLimiterEnabled = false, dspLimiterCeilingDb = -1f))
-                                                    change { it.copy(nodes = it.nodes + node) }
-                                                    editingId = node.id
-                                                })
-                                        }
-                                    }
-                                }
-                                if (current.nodes.isEmpty()) RackDescription(appString(R.string.text_add_a_stage_to_begin_an_empty_rack_passes_audio_through_5edd41))
-                            }
-                            item {
-                                SettingsSectionTitle(appString(R.string.text_starting_points_8df66e))
-                                SettingsGroup {
-                                    if (onOpenTuning != null) {
-                                        SettingsDestinationRow(Icons.AutoMirrored.Filled.ShowChart, SettingsDestinations.tuning, onClick = { leave(onOpenTuning) })
-                                        SettingsRowDivider()
-                                    }
-                                    SettingsNavRow(Icons.Filled.FileDownload, appString(R.string.text_import_eq_text_337ca7), appString(R.string.text_load_filters_and_preamp_ae1cab)) {
-                                        importEq = true
-                                    }
-                                    SettingsRowDivider()
-                                    SettingsNavRow(Icons.Filled.History, appString(R.string.text_copy_standard_settings_d03497), appString(R.string.text_copy_software_dsp_and_current_channel_settings_7c4573)) {
-                                        template = RackTemplate.LEGACY
-                                    }
-                                    SettingsRowDivider()
-                                    SettingsNavRow(Icons.Filled.AutoAwesome, appString(R.string.text_recommended_order_642c4b), appString(R.string.text_separate_stages_with_a_final_limiter_after_convolution_32ae6f)) {
-                                        template = RackTemplate.RECOMMENDED
-                                    }
-                                }
-                            }
-                            item {
-                                SettingsSectionTitle(appString(R.string.text_save_inspect_3831d9))
-                                SettingsGroup {
-                                    SettingsNavRow(Icons.Filled.Layers, appString(R.string.text_saved_subchains_46c948), appString(R.string.text_save_or_append_stages_5f0cc3)) { subchainsOpen = true }
-                                    SettingsRowDivider()
-                                    SettingsDestinationRow(Icons.Filled.Bookmark, SettingsDestinations.processingPresets, onClick = { leave(onOpenPresets) })
-                                    SettingsRowDivider()
-                                    SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, onClick = { leave(onOpenSignalPath) })
-                                }
-                                RackDescription(if (requestedVersion != savedVersion) appString(R.string.text_saving_changes_804053) else
-                                    appString(R.string.text_changes_save_automatically_b3fdb8))
+                                SettingsSwitchRow(title = appString(R.string.text_automatic_headroom_830667), subtitle = appString(R.string.text_reduce_input_gain_when_the_rack_boosts_the_signal_2a95ae),
+                                    checked = current.autoHeadroom, onCheckedChange = { enabled -> change { it.copy(autoHeadroom = enabled) } })
+                                SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_output_mix_a04a0e), current.output?.let { appString(R.string.text_inputs_43db9d, it.size) } ?: appString(R.string.text_last_stage_58b1e2)) { routingTarget = "output" }
+                                RackDescription(if (current.enabled)
+                                    appString(R.string.text_stages_run_from_top_to_bottom_008582)
+                                else appString(R.string.text_select_rack_to_use_these_stages_e161dd))
                             }
                         }
+                        item {
+                            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                                Column(Modifier.weight(1f)) {
+                                    Text(current.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                                    Text(appString(R.string.text_16_stages_256_parametric_bands_cc3e87, (current.nodes.size), (current.parametricBandCount())),
+                                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                                IconButton(onClick = { nameTarget = RackNameTarget(null, current.name) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+                                    Icon(Icons.Filled.Edit, appString(R.string.text_rename_rack_519beb))
+                                }
+                            }
+                        }
+                        itemsIndexed(current.nodes, key = { _, node -> node.id }) { index, node ->
+                            RackNodeCard(node, index, current.nodes.size, onEdit = { editingId = node.id },
+                                onBypass = { bypass -> changeNode(node.id) { it.copy(bypass = bypass) } },
+                                onMove = { moveNode(node.id, it) },
+                                onRename = { nameTarget = RackNameTarget(node.id, node.name) },
+                                canDuplicate = current.nodes.size < 16 && (node.kind !in listOf(RackNodeKind.CONVOLUTION, RackNodeKind.SPACE) || current.nodes.count { it.kind == node.kind } < 4) &&
+                                    (node.kind !in listOf(RackNodeKind.EQ, RackNodeKind.LEGACY_DSP) ||
+                                        current.parametricBandCount() + node.audio.dspParametric.size <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS),
+                                onDuplicate = { change { it.copy(nodes = it.nodes + node.copy(
+                                    id = UUID.randomUUID().toString(), name = appString(R.string.text_copy_37e469, (node.name.take(70))))) } },
+                                onRemove = { removeTarget = node })
+                        }
+                        item {
+                            Box(Modifier.fillMaxWidth().padding(horizontal = 20.dp)) {
+                                Button(onClick = { addMenu = true }, enabled = current.nodes.size < 16, modifier = Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand)) {
+                                    Icon(Icons.Filled.Add, null)
+                                    Text(appString(R.string.text_add_stage_931c98), Modifier.padding(start = 8.dp))
+                                }
+                                DropdownMenu(expanded = addMenu, onDismissRequest = { addMenu = false },
+                                    modifier = Modifier.heightIn(max = 400.dp)) {
+                                    RackNodeKind.entries.forEach { kind ->
+                                        DropdownMenuItem(text = { Text(kind.label()) },
+                                            enabled = kind !in listOf(RackNodeKind.CONVOLUTION, RackNodeKind.SPACE) || current.nodes.count { it.kind == kind } < 4,
+                                            onClick = {
+                                                addMenu = false
+                                                val node = ProcessingRackNode(UUID.randomUUID().toString(), kind.label(), kind,
+                                                    wet = if (kind == RackNodeKind.SPACE) .25f else 1f,
+                                                    audio = AudioPrefs(dspLimiterEnabled = false, dspLimiterCeilingDb = -1f))
+                                                change { it.copy(nodes = it.nodes + node) }
+                                                editingId = node.id
+                                            })
+                                    }
+                                }
+                            }
+                            if (current.nodes.isEmpty()) RackDescription(appString(R.string.text_add_a_stage_to_begin_an_empty_rack_passes_audio_through_5edd41))
+                        }
+                        item {
+                            SettingsSectionTitle(appString(R.string.text_starting_points_8df66e))
+                            SettingsGroup {
+                                if (onOpenTuning != null) {
+                                    SettingsDestinationRow(Icons.AutoMirrored.Filled.ShowChart, SettingsDestinations.tuning, onClick = { leave(onOpenTuning) })
+                                    SettingsRowDivider()
+                                }
+                                SettingsNavRow(Icons.Filled.FileDownload, appString(R.string.text_import_eq_text_337ca7), appString(R.string.text_load_filters_and_preamp_ae1cab)) {
+                                    importEq = true
+                                }
+                                SettingsRowDivider()
+                                SettingsNavRow(Icons.Filled.History, appString(R.string.text_copy_standard_settings_d03497), appString(R.string.text_copy_software_dsp_and_current_channel_settings_7c4573)) {
+                                    template = RackTemplate.LEGACY
+                                }
+                                SettingsRowDivider()
+                                SettingsNavRow(Icons.Filled.AutoAwesome, appString(R.string.text_recommended_order_642c4b), appString(R.string.text_separate_stages_with_a_final_limiter_after_convolution_32ae6f)) {
+                                    template = RackTemplate.RECOMMENDED
+                                }
+                            }
+                        }
+                        item {
+                            SettingsSectionTitle(appString(R.string.text_save_inspect_3831d9))
+                            SettingsGroup {
+                                SettingsNavRow(Icons.Filled.Layers, appString(R.string.text_saved_subchains_46c948), appString(R.string.text_save_or_append_stages_5f0cc3)) { subchainsOpen = true }
+                                SettingsRowDivider()
+                                SettingsDestinationRow(Icons.Filled.Bookmark, SettingsDestinations.processingPresets, onClick = { leave(onOpenPresets) })
+                                SettingsRowDivider()
+                                SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath, onClick = { leave(onOpenSignalPath) })
+                            }
+                            RackDescription(if (requestedVersion != savedVersion) appString(R.string.text_saving_changes_804053) else
+                                appString(R.string.text_changes_save_automatically_b3fdb8))
+                        }
                     }
-                    VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
                 }
             }
         }
@@ -388,140 +383,135 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
     val listState = rememberLazyListState()
     Column(Modifier.fillMaxSize()) {
         SettingsTopBar(node.name, onBack)
-        Box(Modifier.fillMaxWidth().weight(1f)) {
-            LazyColumn(Modifier.fillMaxSize(), state = listState,
-                contentPadding = PaddingValues(bottom = padding.calculateBottomPadding() + 24.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                item {
-                    SettingsGroup {
-                        SettingsSwitchRow(title = appString(R.string.text_bypass_stage_2c4421), checked = node.bypass,
-                            subtitle = if (rackEnabled) appString(R.string.text_keep_the_settings_while_passing_this_stage_unchanged_4d9857) else appString(R.string.text_this_rack_is_currently_inactive_f790d2),
-                            onCheckedChange = { bypass -> onEdit { it.copy(bypass = bypass) } })
-                        SettingsSliderRow(appString(R.string.text_wet_dry_6769a1), appString(R.string.text_wet_76d013, ((node.wet * 100).roundToInt())), node.wet, 0f..1f) { wet -> onEdit { it.copy(wet = wet) } }
-                        SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_stage_inputs_c5a9f4), node.inputs?.let { appString(R.string.text_inputs_43db9d, it.size) } ?: appString(R.string.text_previous_stage_252786), onClick = onRouting)
-                        TextButton(onClick = onRename, modifier = Modifier.padding(start = 12.dp)) { Text(appString(R.string.text_rename_stage_1df1d4)) }
-                    }
+        SettingsList(padding, state = listState, verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            item {
+                SettingsGroup {
+                    SettingsSwitchRow(title = appString(R.string.text_bypass_stage_2c4421), checked = node.bypass,
+                        subtitle = if (rackEnabled) appString(R.string.text_keep_the_settings_while_passing_this_stage_unchanged_4d9857) else appString(R.string.text_this_rack_is_currently_inactive_f790d2),
+                        onCheckedChange = { bypass -> onEdit { it.copy(bypass = bypass) } })
+                    SettingsSliderRow(appString(R.string.text_wet_dry_6769a1), appString(R.string.text_wet_76d013, ((node.wet * 100).roundToInt())), node.wet, 0f..1f) { wet -> onEdit { it.copy(wet = wet) } }
+                    SettingsNavRow(Icons.Filled.AccountTree, appString(R.string.text_stage_inputs_c5a9f4), node.inputs?.let { appString(R.string.text_inputs_43db9d, it.size) } ?: appString(R.string.text_previous_stage_252786), onClick = onRouting)
+                    TextButton(onClick = onRename, modifier = Modifier.padding(start = 12.dp)) { Text(appString(R.string.text_rename_stage_1df1d4)) }
                 }
-                item { RackAdvancedControls(node, onEdit, nodeMeter, decoderRate) }
-                if (legacy) item {
-                    SettingsGroup {
-                        Box {
-                            SettingsNavRow(Icons.Filled.Tune, appString(R.string.text_legacy_dsp_settings_9a91d5), legacySection) { sectionMenu = true }
-                            DropdownMenu(expanded = sectionMenu, onDismissRequest = { sectionMenu = false }) {
-                                listOf(appString(R.string.text_equalizer_3b64a9), appString(R.string.text_gain_96dd91), appString(R.string.text_stereo_f4f390), appString(R.string.text_crossfeed_e6b7b4), appString(R.string.text_saturation_20a32b), appString(R.string.text_dynamics_7d5536), appString(R.string.text_delay_b4c200)).forEach { section ->
-                                    DropdownMenuItem(text = { Text(section) }, onClick = { legacySection = section; sectionMenu = false })
-                                }
+            }
+            item { RackAdvancedControls(node, onEdit, nodeMeter, decoderRate) }
+            if (legacy) item {
+                SettingsGroup {
+                    Box {
+                        SettingsNavRow(Icons.Filled.Tune, appString(R.string.text_legacy_dsp_settings_9a91d5), legacySection) { sectionMenu = true }
+                        DropdownMenu(expanded = sectionMenu, onDismissRequest = { sectionMenu = false }) {
+                            listOf(appString(R.string.text_equalizer_3b64a9), appString(R.string.text_gain_96dd91), appString(R.string.text_stereo_f4f390), appString(R.string.text_crossfeed_e6b7b4), appString(R.string.text_saturation_20a32b), appString(R.string.text_dynamics_7d5536), appString(R.string.text_delay_b4c200)).forEach { section ->
+                                DropdownMenuItem(text = { Text(section) }, onClick = { legacySection = section; sectionMenu = false })
                             }
                         }
-                        RackDescription(appString(R.string.text_these_settings_belong_to_this_stage_the_original_eq_gain_saturati_989a35))
                     }
+                    RackDescription(appString(R.string.text_these_settings_belong_to_this_stage_the_original_eq_gain_saturati_989a35))
                 }
-                if (eq) {
-                    if (!legacy) {
-                        item {
-                            SettingsGroup {
-                                SegmentedRow(appString(R.string.text_channels_18e03e), listOf(appString(R.string.text_both_1f4698), appString(R.string.text_left_8ae1c3), appString(R.string.text_right_954daa)), node.eqChannel.ordinal) { selected ->
-                                    onEdit { it.copy(eqChannel = RackEqChannel.entries[selected]) }
-                                }
-                                SettingsNavRow(Icons.AutoMirrored.Filled.ShowChart, appString(R.string.text_calculated_response_a4a732), if (showResponse) appString(R.string.text_hide_graph_0a1c33) else appString(R.string.text_magnitude_phase_and_group_delay_for_this_stage_b32404)) {
-                                    showResponse = !showResponse
-                                }
-                                SettingsRowDivider()
-                                SettingsNavRow(Icons.Filled.FileUpload, appString(R.string.text_export_parametric_eq_text_39190f), appString(R.string.text_review_what_the_text_file_includes_before_saving_feb089), onClick = onExportEq)
-                            }
-                        }
-                        if (showResponse) item { RackEqResponseCard(node, decoderRate, rackEnabled) }
-                    }
-                    val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(audio.dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS[0] }
+            }
+            if (eq) {
+                if (!legacy) {
                     item {
                         SettingsGroup {
-                            SettingsNavRow(Icons.Filled.Tune, appString(R.string.text_graphic_eq_3df203), appString(R.string.text_controls_af1fce, (layout.name), (if (showGraphic) appString(R.string.text_hide_34d8b6) else appString(R.string.text_show_d97d1e)))) { showGraphic = !showGraphic }
-                            if (showGraphic) {
-                                SegmentedRow(appString(R.string.text_layout_972ad8), DspCoeffBuilder.GRAPHIC_LAYOUTS.map { it.name }, audio.dspGraphicLayout) { selected ->
-                                    changeAudio { old -> old.copy(dspGraphicLayout = selected) }
-                                }
-                                layout.freqs.forEachIndexed { index, frequency ->
-                                    val gain = audio.dspGraphicBands.getOrElse(index) { 0f }
-                                    SettingsSliderRow(rackFrequency(frequency), rackDb(gain), gain.coerceIn(-12f, 12f), -12f..12f) { value ->
-                                        changeAudio { old -> old.copy(dspGraphicBands = List(maxOf(old.dspGraphicBands.size, layout.freqs.size)) {
-                                            if (it == index) value else old.dspGraphicBands.getOrElse(it) { 0f }
-                                        }) }
-                                    }
+                            SegmentedRow(appString(R.string.text_channels_18e03e), listOf(appString(R.string.text_both_1f4698), appString(R.string.text_left_8ae1c3), appString(R.string.text_right_954daa)), node.eqChannel.ordinal) { selected ->
+                                onEdit { it.copy(eqChannel = RackEqChannel.entries[selected]) }
+                            }
+                            SettingsNavRow(Icons.AutoMirrored.Filled.ShowChart, appString(R.string.text_calculated_response_a4a732), if (showResponse) appString(R.string.text_hide_graph_0a1c33) else appString(R.string.text_magnitude_phase_and_group_delay_for_this_stage_b32404)) {
+                                showResponse = !showResponse
+                            }
+                            SettingsRowDivider()
+                            SettingsNavRow(Icons.Filled.FileUpload, appString(R.string.text_export_parametric_eq_text_39190f), appString(R.string.text_review_what_the_text_file_includes_before_saving_feb089), onClick = onExportEq)
+                        }
+                    }
+                    if (showResponse) item { RackEqResponseCard(node, decoderRate, rackEnabled) }
+                }
+                val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(audio.dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS[0] }
+                item {
+                    SettingsGroup {
+                        SettingsNavRow(Icons.Filled.Tune, appString(R.string.text_graphic_eq_3df203), appString(R.string.text_controls_af1fce, (layout.name), (if (showGraphic) appString(R.string.text_hide_34d8b6) else appString(R.string.text_show_d97d1e)))) { showGraphic = !showGraphic }
+                        if (showGraphic) {
+                            SegmentedRow(appString(R.string.text_layout_972ad8), DspCoeffBuilder.GRAPHIC_LAYOUTS.map { it.name }, audio.dspGraphicLayout) { selected ->
+                                changeAudio { old -> old.copy(dspGraphicLayout = selected) }
+                            }
+                            layout.freqs.forEachIndexed { index, frequency ->
+                                val gain = audio.dspGraphicBands.getOrElse(index) { 0f }
+                                SettingsSliderRow(rackFrequency(frequency), rackDb(gain), gain.coerceIn(-12f, 12f), -12f..12f) { value ->
+                                    changeAudio { old -> old.copy(dspGraphicBands = List(maxOf(old.dspGraphicBands.size, layout.freqs.size)) {
+                                        if (it == index) value else old.dspGraphicBands.getOrElse(it) { 0f }
+                                    }) }
                                 }
                             }
                         }
                     }
-                    item {
-                        SettingsSectionTitle(appString(R.string.text_parametric_eq_02ed4c, (audio.dspParametric.size), (if (audio.dspParametric.size == 1) "band" else "bands")))
-                        RackDescription(appString(R.string.text_bands_256_across_rack_39ea04, (audio.dspParametric.size), (if (legacy) 12 else 64), (totalBands)))
-                    }
-                    itemsIndexed(audio.dspParametric) { index, band ->
-                        RackBandRow(index, band, audio.dspParametric.size, canDuplicate = totalBands < ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS && audio.dspParametric.size < (if (legacy) 12 else 64),
-                            onEdit = { bandEdit = index }, onToggle = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.mapIndexed { i, b -> if (i == index) b.copy(enabled = !b.isEnabled) else b }) } }, onMove = { step -> changeAudio { old ->
-                                val list = old.dspParametric.toMutableList()
-                                if (index in list.indices && index + step in list.indices) list.add(index + step, list.removeAt(index))
-                                old.copy(dspParametric = list)
-                            } }, onDuplicate = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.toMutableList().also { it.add(index + 1, band) }) } },
-                            onRemove = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.filterIndexed { i, _ -> i != index }) } })
-                    }
-                    item {
-                        OutlinedButton(onClick = { bandEdit = -1 }, enabled = totalBands < ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS && audio.dspParametric.size < (if (legacy) 12 else 64),
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand)) {
-                            Icon(Icons.Filled.Add, null); Text(appString(R.string.text_add_parametric_band_0c91fd), Modifier.padding(start = 8.dp))
-                        }
-                    }
                 }
-                if (shows(RackNodeKind.GAIN, appString(R.string.text_gain_96dd91))) item {
-                    SettingsGroup { RackDbSlider(appString(R.string.text_preamp_fa89ca), audio.dspPreampDb, -12f..12f) { value -> changeAudio { it.copy(dspPreampDb = value) } } }
+                item {
+                    SettingsSectionTitle(appString(R.string.text_parametric_eq_02ed4c, (audio.dspParametric.size), (if (audio.dspParametric.size == 1) "band" else "bands")))
+                    RackDescription(appString(R.string.text_bands_256_across_rack_39ea04, (audio.dspParametric.size), (if (legacy) 12 else 64), (totalBands)))
                 }
-                if (shows(RackNodeKind.STEREO, appString(R.string.text_stereo_f4f390))) item {
-                    SettingsGroup {
-                        SettingsSliderRow(appString(R.string.text_stereo_width_336051), "%.2f×".format(audio.dspWidth), audio.dspWidth.coerceIn(0f, 2f), 0f..2f) { value -> changeAudio { it.copy(dspWidth = value) } }
-                        RackDescription(appString(R.string.text_0_combines_the_channels_to_mono_1_keeps_the_stereo_width_unchange_18be43))
-                        SettingsSliderRow(appString(R.string.text_balance_90eef6), if (audio.dspBalance == 0f) appString(R.string.text_center_a23911) else "${(kotlin.math.abs(audio.dspBalance) * 100).roundToInt()}% ${if (audio.dspBalance < 0f) "left" else "right"}",
-                            audio.dspBalance.coerceIn(-1f, 1f), -1f..1f) { value -> changeAudio { it.copy(dspBalance = value) } }
-                        RackDbSlider(appString(R.string.text_left_trim_9ad513), audio.dspTrimLeftDb, -12f..0f) { value -> changeAudio { it.copy(dspTrimLeftDb = value) } }
-                        RackDbSlider(appString(R.string.text_right_trim_cadffb), audio.dspTrimRightDb, -12f..0f) { value -> changeAudio { it.copy(dspTrimRightDb = value) } }
-                    }
+                itemsIndexed(audio.dspParametric) { index, band ->
+                    RackBandRow(index, band, audio.dspParametric.size, canDuplicate = totalBands < ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS && audio.dspParametric.size < (if (legacy) 12 else 64),
+                        onEdit = { bandEdit = index }, onToggle = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.mapIndexed { i, b -> if (i == index) b.copy(enabled = !b.isEnabled) else b }) } }, onMove = { step -> changeAudio { old ->
+                            val list = old.dspParametric.toMutableList()
+                            if (index in list.indices && index + step in list.indices) list.add(index + step, list.removeAt(index))
+                            old.copy(dspParametric = list)
+                        } }, onDuplicate = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.toMutableList().also { it.add(index + 1, band) }) } },
+                        onRemove = { changeAudio { old -> old.copy(dspParametric = old.dspParametric.filterIndexed { i, _ -> i != index }) } })
                 }
-                if (shows(RackNodeKind.SATURATION, appString(R.string.text_saturation_20a32b))) item {
-                    SettingsGroup { SettingsSliderRow(appString(R.string.text_tube_saturation_8c63f8), "${(audio.dspSaturation * 100).roundToInt()}%", audio.dspSaturation.coerceIn(0f, 1f), 0f..1f) { value -> changeAudio { it.copy(dspSaturation = value) } } }
-                }
-                if (shows(RackNodeKind.CROSSFEED, appString(R.string.text_crossfeed_e6b7b4))) item {
-                    SettingsGroup { SettingsSliderRow(appString(R.string.text_crossfeed_e6b7b4), "${(audio.dspCrossfeed * 100).roundToInt()}%", audio.dspCrossfeed.coerceIn(0f, 1f), 0f..1f) { value -> changeAudio { it.copy(dspCrossfeed = value) } } }
-                }
-                if (shows(RackNodeKind.COMPRESSOR, appString(R.string.text_dynamics_7d5536))) item {
-                    SettingsGroup {
-                        if (legacy) SettingsSwitchRow(title = appString(R.string.text_compressor_b23f61), checked = audio.dspCompEnabled,
-                            onCheckedChange = { value -> changeAudio { it.copy(dspCompEnabled = value) } })
-                        RackDbSlider(appString(R.string.text_threshold_c51f7b), audio.dspCompThreshDb, -40f..0f) { value -> changeAudio { it.copy(dspCompThreshDb = value) } }
-                        SettingsSliderRow(appString(R.string.text_ratio_794f65), "%.1f:1".format(audio.dspCompRatio), audio.dspCompRatio.coerceIn(1f, 10f), 1f..10f) { value -> changeAudio { it.copy(dspCompRatio = value) } }
-                    }
-                }
-                if (shows(RackNodeKind.LIMITER, appString(R.string.text_dynamics_7d5536))) item {
-                    SettingsGroup {
-                        if (legacy) SettingsSwitchRow(title = appString(R.string.text_limiter_20fee6), checked = audio.dspLimiterEnabled,
-                            onCheckedChange = { value -> changeAudio { it.copy(dspLimiterEnabled = value) } })
-                        RackDbSlider(appString(R.string.text_limiter_ceiling_b7d8bd), audio.dspLimiterCeilingDb, -6f..0f) { value -> changeAudio { it.copy(dspLimiterCeilingDb = value) } }
-                        RackDescription(appString(R.string.text_place_a_limiter_last_to_protect_the_final_output_b017dd))
-                    }
-                }
-                if (shows(RackNodeKind.DELAY, appString(R.string.text_delay_b4c200))) item {
-                    SettingsGroup {
-                        SettingsSliderRow(appString(R.string.text_left_delay_c54844), appString(R.string.text_1f_ms_57bb04).format(audio.dspDelayLeftMs), audio.dspDelayLeftMs.coerceIn(0f, 20f), 0f..20f) { value -> changeAudio { it.copy(dspDelayLeftMs = value) } }
-                        SettingsSliderRow(appString(R.string.text_right_delay_ca7838), appString(R.string.text_1f_ms_57bb04).format(audio.dspDelayRightMs), audio.dspDelayRightMs.coerceIn(0f, 20f), 0f..20f) { value -> changeAudio { it.copy(dspDelayRightMs = value) } }
-                    }
-                }
-                if (node.kind == RackNodeKind.CONVOLUTION) item {
-                    SettingsGroup {
-                        SettingsNavRow(Icons.Filled.FolderOpen, appString(R.string.text_impulse_library_ff955d), globalAudio.dspConvIrName.ifBlank { appString(R.string.text_select_a_wav_779ee2) }, onClick = onPickImpulse)
-                        RackImpulsePicker(node, impulseLibrary, onEdit)
-                        Text(appString(R.string.text_measured_headphone_spatial_filters_use_true_stereo_wav_impulses_f68789), Modifier.padding(horizontal = 20.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
-                        RackDbSlider(appString(R.string.text_makeup_gain_bced0d), audio.dspConvMakeupDb, -12f..12f) { value -> changeAudio { it.copy(dspConvMakeupDb = value) } }
+                item {
+                    OutlinedButton(onClick = { bandEdit = -1 }, enabled = totalBands < ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS && audio.dspParametric.size < (if (legacy) 12 else 64),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand)) {
+                        Icon(Icons.Filled.Add, null); Text(appString(R.string.text_add_parametric_band_0c91fd), Modifier.padding(start = 8.dp))
                     }
                 }
             }
-            VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+            if (shows(RackNodeKind.GAIN, appString(R.string.text_gain_96dd91))) item {
+                SettingsGroup { RackDbSlider(appString(R.string.text_preamp_fa89ca), audio.dspPreampDb, -12f..12f) { value -> changeAudio { it.copy(dspPreampDb = value) } } }
+            }
+            if (shows(RackNodeKind.STEREO, appString(R.string.text_stereo_f4f390))) item {
+                SettingsGroup {
+                    SettingsSliderRow(appString(R.string.text_stereo_width_336051), "%.2f×".format(audio.dspWidth), audio.dspWidth.coerceIn(0f, 2f), 0f..2f) { value -> changeAudio { it.copy(dspWidth = value) } }
+                    RackDescription(appString(R.string.text_0_combines_the_channels_to_mono_1_keeps_the_stereo_width_unchange_18be43))
+                    SettingsSliderRow(appString(R.string.text_balance_90eef6), if (audio.dspBalance == 0f) appString(R.string.text_center_a23911) else "${(kotlin.math.abs(audio.dspBalance) * 100).roundToInt()}% ${if (audio.dspBalance < 0f) "left" else "right"}",
+                        audio.dspBalance.coerceIn(-1f, 1f), -1f..1f) { value -> changeAudio { it.copy(dspBalance = value) } }
+                    RackDbSlider(appString(R.string.text_left_trim_9ad513), audio.dspTrimLeftDb, -12f..0f) { value -> changeAudio { it.copy(dspTrimLeftDb = value) } }
+                    RackDbSlider(appString(R.string.text_right_trim_cadffb), audio.dspTrimRightDb, -12f..0f) { value -> changeAudio { it.copy(dspTrimRightDb = value) } }
+                }
+            }
+            if (shows(RackNodeKind.SATURATION, appString(R.string.text_saturation_20a32b))) item {
+                SettingsGroup { SettingsSliderRow(appString(R.string.text_tube_saturation_8c63f8), "${(audio.dspSaturation * 100).roundToInt()}%", audio.dspSaturation.coerceIn(0f, 1f), 0f..1f) { value -> changeAudio { it.copy(dspSaturation = value) } } }
+            }
+            if (shows(RackNodeKind.CROSSFEED, appString(R.string.text_crossfeed_e6b7b4))) item {
+                SettingsGroup { SettingsSliderRow(appString(R.string.text_crossfeed_e6b7b4), "${(audio.dspCrossfeed * 100).roundToInt()}%", audio.dspCrossfeed.coerceIn(0f, 1f), 0f..1f) { value -> changeAudio { it.copy(dspCrossfeed = value) } } }
+            }
+            if (shows(RackNodeKind.COMPRESSOR, appString(R.string.text_dynamics_7d5536))) item {
+                SettingsGroup {
+                    if (legacy) SettingsSwitchRow(title = appString(R.string.text_compressor_b23f61), checked = audio.dspCompEnabled,
+                        onCheckedChange = { value -> changeAudio { it.copy(dspCompEnabled = value) } })
+                    RackDbSlider(appString(R.string.text_threshold_c51f7b), audio.dspCompThreshDb, -40f..0f) { value -> changeAudio { it.copy(dspCompThreshDb = value) } }
+                    SettingsSliderRow(appString(R.string.text_ratio_794f65), "%.1f:1".format(audio.dspCompRatio), audio.dspCompRatio.coerceIn(1f, 10f), 1f..10f) { value -> changeAudio { it.copy(dspCompRatio = value) } }
+                }
+            }
+            if (shows(RackNodeKind.LIMITER, appString(R.string.text_dynamics_7d5536))) item {
+                SettingsGroup {
+                    if (legacy) SettingsSwitchRow(title = appString(R.string.text_limiter_20fee6), checked = audio.dspLimiterEnabled,
+                        onCheckedChange = { value -> changeAudio { it.copy(dspLimiterEnabled = value) } })
+                    RackDbSlider(appString(R.string.text_limiter_ceiling_b7d8bd), audio.dspLimiterCeilingDb, -6f..0f) { value -> changeAudio { it.copy(dspLimiterCeilingDb = value) } }
+                    RackDescription(appString(R.string.text_place_a_limiter_last_to_protect_the_final_output_b017dd))
+                }
+            }
+            if (shows(RackNodeKind.DELAY, appString(R.string.text_delay_b4c200))) item {
+                SettingsGroup {
+                    SettingsSliderRow(appString(R.string.text_left_delay_c54844), appString(R.string.text_1f_ms_57bb04).format(audio.dspDelayLeftMs), audio.dspDelayLeftMs.coerceIn(0f, 20f), 0f..20f) { value -> changeAudio { it.copy(dspDelayLeftMs = value) } }
+                    SettingsSliderRow(appString(R.string.text_right_delay_ca7838), appString(R.string.text_1f_ms_57bb04).format(audio.dspDelayRightMs), audio.dspDelayRightMs.coerceIn(0f, 20f), 0f..20f) { value -> changeAudio { it.copy(dspDelayRightMs = value) } }
+                }
+            }
+            if (node.kind == RackNodeKind.CONVOLUTION) item {
+                SettingsGroup {
+                    SettingsNavRow(Icons.Filled.FolderOpen, appString(R.string.text_impulse_library_ff955d), globalAudio.dspConvIrName.ifBlank { appString(R.string.text_select_a_wav_779ee2) }, onClick = onPickImpulse)
+                    RackImpulsePicker(node, impulseLibrary, onEdit)
+                    Text(appString(R.string.text_measured_headphone_spatial_filters_use_true_stereo_wav_impulses_f68789), Modifier.padding(horizontal = 20.dp, vertical = 8.dp), style = MaterialTheme.typography.bodySmall)
+                    RackDbSlider(appString(R.string.text_makeup_gain_bced0d), audio.dspConvMakeupDb, -12f..12f) { value -> changeAudio { it.copy(dspConvMakeupDb = value) } }
+                }
+            }
         }
     }
     bandEdit?.let { index ->

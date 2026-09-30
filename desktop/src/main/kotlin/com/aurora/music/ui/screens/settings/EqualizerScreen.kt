@@ -31,8 +31,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowDropDown
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Compress
 import androidx.compose.material.icons.filled.ExpandLess
@@ -44,8 +42,6 @@ import androidx.compose.material.icons.filled.SurroundSound
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.Whatshot
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -117,69 +113,66 @@ fun EqualizerScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenLou
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             SettingsTopBar(appString(R.string.text_equalizer_effects_e6ad57), onBack)
-            Box(Modifier.fillMaxWidth().weight(1f)) {
-                LazyColumn(Modifier.fillMaxWidth(), state = listState, contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
-
-                    item { SettingsSectionTitle(appString(R.string.text_tone_engine_79c7e5)) }
-                    item {
-                        if (rack.enabled) SettingsGroup {
+            SettingsList(contentPadding, state = listState) {
+                item { SettingsSectionTitle(appString(R.string.text_tone_engine_79c7e5)) }
+                item {
+                    if (rack.enabled) SettingsGroup {
+                        SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
+                            appString(R.string.text_active_4a0251, (rack.name)), onClick = onOpenProcessingRack)
+                        Text(appString(R.string.text_edit_the_active_rack_to_change_your_sound_792bcb),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                        TextButton(onClick = { scope.launch {
+                            store.setProcessingRack(rack.copy(enabled = false)).onFailure {
+                                toast(appString(R.string.text_could_not_switch_processing_mode_a22224))
+                            }
+                        } },
+                            modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)) { Text(appString(R.string.text_use_standard_settings_4e6ed9)) }
+                    } else ToneEngineCard(prefs.dspMode) { i -> scope.launch { store.setDspMode(i) } }
+                }
+                item { Spacer(Modifier.height(10.dp)) }
+                item {
+                    SettingsGroup {
+                        if (!rack.enabled) {
                             SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
-                                appString(R.string.text_active_4a0251, (rack.name)), onClick = onOpenProcessingRack)
-                            Text(appString(R.string.text_edit_the_active_rack_to_change_your_sound_792bcb),
-                                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
-                            TextButton(onClick = { scope.launch {
-                                store.setProcessingRack(rack.copy(enabled = false)).onFailure {
-                                    toast(appString(R.string.text_could_not_switch_processing_mode_a22224))
-                                }
-                            } },
-                                modifier = Modifier.padding(start = 12.dp, bottom = 8.dp)) { Text(appString(R.string.text_use_standard_settings_4e6ed9)) }
-                        } else ToneEngineCard(prefs.dspMode) { i -> scope.launch { store.setDspMode(i) } }
+                                appString(R.string.text_arrange_effects_with_64_bands_per_equalizer_071bbb), onClick = onOpenProcessingRack)
+                            SettingsRowDivider()
+                        }
+                        SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingPresets,
+                            appString(R.string.text_your_complete_processing_settings_ready_to_recall_a6fd9f), onClick = onOpenProcessingPresets)
                     }
+                }
+
+                if (!rack.enabled) {
+                    item { SettingsSectionTitle(appString(R.string.text_correction_7f2640)) }
+                    collapsible("autoeq", appString(R.string.text_device_presets_ca72d3), Icons.Filled.Headset, activeEq.ifBlank { appString(R.string.text_live_squig_link_308ef5) }, expanded) {
+                        AutoEqPanel(prefs, store, scope, ::toast)
+                    }
+                    collapsible("conv", appString(R.string.text_convolution_ir_d15d63), Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else appString(R.string.text_off_e3de5a), expanded) {
+                        ConvolutionPanel(prefs, store, scope, onOpenImpulses)
+                    }
+
+                    if (prefs.dspMode == DspMode.CUSTOM) {
+                        item { SettingsSectionTitle(appString(R.string.text_custom_dsp_df083c)) }
+                        customDspSection(prefs, store, scope, expanded)
+                    }
+
+                    item { SettingsSectionTitle(appString(R.string.text_channels_18e03e)) }
                     item {
                         SettingsGroup {
-                            if (!rack.enabled) {
-                                SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingRack,
-                                    appString(R.string.text_arrange_effects_with_64_bands_per_equalizer_071bbb), onClick = onOpenProcessingRack)
-                                SettingsRowDivider()
+                            SettingsSwitchRow(Icons.Filled.Headset, appString(R.string.text_mono_audio_b977b4), appString(R.string.text_combine_left_and_right_channels_where_the_active_path_supports_pr_3682b6), playbackPrefs.monoAudio) { value ->
+                                scope.launch { store.setMono(value) }
                             }
-                            SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.processingPresets,
-                                appString(R.string.text_your_complete_processing_settings_ready_to_recall_a6fd9f), onClick = onOpenProcessingPresets)
-                        }
-                    }
-
-                    if (!rack.enabled) {
-                        item { SettingsSectionTitle(appString(R.string.text_correction_7f2640)) }
-                        collapsible("autoeq", appString(R.string.text_device_presets_ca72d3), Icons.Filled.Headset, activeEq.ifBlank { appString(R.string.text_live_squig_link_308ef5) }, expanded) {
-                            AutoEqPanel(prefs, store, scope, ::toast)
-                        }
-                        collapsible("conv", appString(R.string.text_convolution_ir_d15d63), Icons.Filled.GraphicEq, if (prefs.dspConvEnabled && prefs.dspConvIrName.isNotBlank()) prefs.dspConvIrName else appString(R.string.text_off_e3de5a), expanded) {
-                            ConvolutionPanel(prefs, store, scope, onOpenImpulses)
-                        }
-
-                        if (prefs.dspMode == DspMode.CUSTOM) {
-                            item { SettingsSectionTitle(appString(R.string.text_custom_dsp_df083c)) }
-                            customDspSection(prefs, store, scope, expanded)
-                        }
-
-                        item { SettingsSectionTitle(appString(R.string.text_channels_18e03e)) }
-                        item {
-                            SettingsGroup {
-                                SettingsSwitchRow(Icons.Filled.Headset, appString(R.string.text_mono_audio_b977b4), appString(R.string.text_combine_left_and_right_channels_where_the_active_path_supports_pr_3682b6), playbackPrefs.monoAudio) { value ->
-                                    scope.launch { store.setMono(value) }
-                                }
-                            }
-                        }
-                    }
-                    item { SettingsSectionTitle(appString(R.string.text_related_settings_661f04)) }
-                    item {
-                        SettingsGroup {
-                            val mode = listOf(appString(R.string.text_off_e3de5a), appString(R.string.text_track_b1c5a7), appString(R.string.text_album_dfb4c9))[prefs.replayGain.coerceIn(0, 2)]
-                            SettingsDestinationRow(Icons.AutoMirrored.Filled.VolumeUp, SettingsDestinations.loudness, "ReplayGain · $mode", onClick = onOpenLoudness)
                         }
                     }
                 }
-                VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                item { SettingsSectionTitle(appString(R.string.text_related_settings_661f04)) }
+                item {
+                    SettingsGroup {
+                        val mode = listOf(appString(R.string.text_off_e3de5a), appString(R.string.text_track_b1c5a7), appString(R.string.text_album_dfb4c9))[prefs.replayGain.coerceIn(0, 2)]
+                        SettingsDestinationRow(Icons.AutoMirrored.Filled.VolumeUp, SettingsDestinations.loudness, "ReplayGain · $mode", onClick = onOpenLoudness)
+                    }
+                }
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = contentPadding.calculateBottomPadding() + 8.dp))
@@ -224,16 +217,16 @@ private fun LazyListScope.collapsible(
 
 @Composable
 private fun ToneEngineCard(mode: Int, onSelect: (Int) -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp).clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)).padding(12.dp),
-    ) {
-        EngineDropdown(mode, onSelect)
-        Text(
-            if (mode == DspMode.CUSTOM) appString(R.string.text_aurora_software_dsp_works_on_any_device_overrides_bit_perfect_out_c3a42d)
-            else appString(R.string.text_all_tone_shaping_bypassed_a7e684),
-            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-        )
+    val engines = listOf(DspMode.CUSTOM to appString(R.string.text_custom_dsp_df083c), DspMode.OFF to appString(R.string.text_off_e3de5a))
+    val current = engines.indexOfFirst { it.first == (if (mode == DspMode.CUSTOM) DspMode.CUSTOM else DspMode.OFF) }
+    SettingsGroup {
+        SettingsDropdownRow(
+            appString(R.string.text_engine_c1f65d), engines[current].second, engines.map { it.second }, current,
+            icon = Icons.Filled.GraphicEq,
+            subtitle = if (mode == DspMode.CUSTOM) appString(R.string.text_aurora_software_dsp_works_on_any_device_overrides_bit_perfect_out_c3a42d)
+                else appString(R.string.text_all_tone_shaping_bypassed_a7e684),
+            menuLabel = appString(R.string.text_choose_engine_dee9e6),
+        ) { index -> onSelect(engines[index].first) }
     }
 }
 
@@ -581,40 +574,6 @@ private fun ParametricBandCard(band: ParamBand, onChange: (ParamBand) -> Unit, o
         FloatSliderRow(appString(R.string.text_freq_f5f7de), band.freqHz, 20f..20000f, valueText = freqLabel(band.freqHz.toInt())) { v -> onChange(band.copy(freqHz = v)) }
         if (band.filterType.hasGain) DbSliderRow(appString(R.string.text_gain_96dd91), band.gainDb, -15f..15f) { v -> onChange(band.copy(gainDb = v)) }
         if (band.filterType.hasQ) FloatSliderRow("Q", band.q, 0.3f..8f, valueText = "%.2f".format(band.q)) { v -> onChange(band.copy(q = v)) }
-    }
-}
-
-@Composable
-private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {
-    val engines = listOf(DspMode.CUSTOM to appString(R.string.text_custom_dsp_df083c), DspMode.OFF to appString(R.string.text_off_e3de5a))
-    val current = if (selected == DspMode.CUSTOM) DspMode.CUSTOM else DspMode.OFF
-    var expanded by remember { mutableStateOf(false) }
-    Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
-        Text(appString(R.string.text_engine_c1f65d), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
-        Spacer(Modifier.height(10.dp))
-        Box {
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .pointerHoverIcon(PointerIcon.Hand)
-                    .clickable { expanded = true }.padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Text(engines.first { it.first == current }.second, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.ArrowDropDown, appString(R.string.text_choose_engine_dee9e6), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
-            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                engines.forEach { (mode, label) ->
-                    DropdownMenuItem(
-                        text = { Text(label, fontWeight = if (mode == current) FontWeight.Bold else FontWeight.Normal) },
-                        onClick = { onSelect(mode); expanded = false },
-                        trailingIcon = if (mode == current) {
-                            { Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary) }
-                        } else null,
-                    )
-                }
-            }
-        }
     }
 }
 

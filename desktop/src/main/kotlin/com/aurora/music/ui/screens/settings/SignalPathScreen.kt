@@ -79,110 +79,102 @@ fun SignalPathScreen(contentPadding: PaddingValues, signalPath: StateFlow<Signal
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             SettingsTopBar(appString(R.string.text_signal_path_c3e29b), onBack)
-            Box(Modifier.fillMaxWidth().weight(1f)) {
-                LazyColumn(
-                    Modifier.fillMaxSize(),
-                    state = listState,
-                    contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    item {
-                        SettingsGroup {
-                            Row(Modifier.padding(20.dp), verticalAlignment = Alignment.Top) {
-                                val icon = when {
-                                    !path.active -> Icons.Filled.MusicNote
-                                    path.preservation == Preservation.PRESERVED -> Icons.Filled.Verified
-                                    path.preservation == Preservation.MODIFIED -> Icons.Filled.GraphicEq
-                                    else -> Icons.Filled.Info
-                                }
-                                Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
-                                Spacer(Modifier.width(14.dp))
-                                Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(
-                                        when {
-                                            !path.active -> appString(R.string.text_nothing_playing_13ae37)
-                                            path.preservation == Preservation.PRESERVED -> appString(R.string.text_samples_preserved_091001)
-                                            path.preservation == Preservation.MODIFIED -> appString(R.string.text_samples_modified_d04e9f)
-                                            else -> appString(R.string.text_sample_preservation_unknown_7de2de)
-                                        },
-                                        style = MaterialTheme.typography.titleMedium,
-                                        fontWeight = FontWeight.Bold,
-                                    )
-                                    Text(
-                                        if (path.active) path.note else appString(R.string.signal_start_playback),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                    )
-                                    if (path.active) path.reasons.distinct().filter { it != path.note }.forEach { reason ->
-                                        Text(reason, style = MaterialTheme.typography.bodySmall,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                    }
-                                }
+            SettingsList(contentPadding, state = listState, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                item {
+                    SettingsGroup {
+                        Row(Modifier.padding(20.dp), verticalAlignment = Alignment.Top) {
+                            val icon = when {
+                                !path.active -> Icons.Filled.MusicNote
+                                path.preservation == Preservation.PRESERVED -> Icons.Filled.Verified
+                                path.preservation == Preservation.MODIFIED -> Icons.Filled.GraphicEq
+                                else -> Icons.Filled.Info
                             }
-                        }
-                    }
-                    if (path.active) {
-                        path.measurements?.let { measurements ->
-                            item { MeasurementCard(measurements) }
-                        }
-                        if (path.nodeMeters.isNotEmpty()) item {
-                            var expanded by remember { mutableStateOf(false) }
-                            SettingsGroup {
-                                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                    TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) appString(R.string.text_hide_stage_meters_c123cc) else appString(R.string.text_stage_meters_50fb37)) }
-                                    if (expanded) path.nodeMeters.forEach { meter ->
-                                        Text(rack.nodes.firstOrNull { it.id == meter.id }?.name ?: appString(R.string.text_stage_ca6d0e), style = MaterialTheme.typography.titleSmall)
-                                        Text(String.format(Locale.ROOT, appString(R.string.text_peak_1f_dbfs_change_1f_db_e16aea),
-                                            20 * log10(meter.peak.coerceAtLeast(1e-10)), meter.changeDb), style = MaterialTheme.typography.bodySmall)
-                                        if (meter.bandChangesDb.isNotEmpty()) Text(meter.bandChangesDb.joinToString(" · ") {
-                                            String.format(Locale.ROOT, appString(R.string.text_1f_db_02557a), it)
-                                        }, style = MaterialTheme.typography.bodySmall)
-                                    }
+                            Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+                            Spacer(Modifier.width(14.dp))
+                            Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(
+                                    when {
+                                        !path.active -> appString(R.string.text_nothing_playing_13ae37)
+                                        path.preservation == Preservation.PRESERVED -> appString(R.string.text_samples_preserved_091001)
+                                        path.preservation == Preservation.MODIFIED -> appString(R.string.text_samples_modified_d04e9f)
+                                        else -> appString(R.string.text_sample_preservation_unknown_7de2de)
+                                    },
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                )
+                                Text(
+                                    if (path.active) path.note else appString(R.string.signal_start_playback),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                                if (path.active) path.reasons.distinct().filter { it != path.note }.forEach { reason ->
+                                    Text(reason, style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                            }
-                        }
-                        path.audioTrackUnderruns?.let { count -> item {
-                            SettingsGroup {
-                                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(appString(R.string.text_audiotrack_underruns_6c9f5b, (count)), style = MaterialTheme.typography.titleSmall)
-                                    Text(appString(R.string.text_primary_player_since_creation_a2795e),
-                                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                }
-                            }
-                        } }
-                        path.usbDiagnostics?.let { usb -> item {
-                            SettingsGroup {
-                                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(appString(R.string.text_usb_transport_39fd7d), style = MaterialTheme.typography.titleSmall)
-                                    Text(appString(R.string.text_completed_pending_bf3cd1, (usb.completedFrames), (usb.pendingFrames)), style = MaterialTheme.typography.bodySmall)
-                                    Text(appString(R.string.text_packet_errors_timeouts_e3e49f, (usb.packetErrors), (usb.timeouts)), style = MaterialTheme.typography.bodySmall)
-                                }
-                            }
-                        } }
-                        itemsIndexed(path.stages) { index, stage ->
-                            PathStageCard(index + 1, stage)
-                        }
-                        item {
-                            Text(
-                                appString(R.string.text_unknown_means_the_active_playback_path_cannot_report_that_detail_c0b60e),
-                                Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            )
-                        }
-                    }
-                    item {
-                        SettingsGroup {
-                            SettingsNavRow(Icons.Filled.Devices, appString(R.string.text_audio_output_2b89cc), appString(R.string.text_choose_a_device_or_output_mode_72ff69), onClick = onOpenOutput)
-                            SettingsRowDivider()
-                            SettingsNavRow(Icons.Filled.ContentCopy, appString(R.string.text_copy_diagnostic_report_7c8feb), appString(R.string.text_playback_formats_and_processing_no_account_credentials_9d08c4)) {
-                                runCatching { Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(path.toDiagnosticReport()), null) }
-                                    .onSuccess { scope.launch { snackbar.showSnackbar(appString(R.string.text_signal_path_report_copied_ecc24d)) } }
                             }
                         }
                     }
                 }
-                VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                if (path.active) {
+                    path.measurements?.let { measurements ->
+                        item { MeasurementCard(measurements) }
+                    }
+                    if (path.nodeMeters.isNotEmpty()) item {
+                        var expanded by remember { mutableStateOf(false) }
+                        SettingsGroup {
+                            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                                TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) appString(R.string.text_hide_stage_meters_c123cc) else appString(R.string.text_stage_meters_50fb37)) }
+                                if (expanded) path.nodeMeters.forEach { meter ->
+                                    Text(rack.nodes.firstOrNull { it.id == meter.id }?.name ?: appString(R.string.text_stage_ca6d0e), style = MaterialTheme.typography.titleSmall)
+                                    Text(String.format(Locale.ROOT, appString(R.string.text_peak_1f_dbfs_change_1f_db_e16aea),
+                                        20 * log10(meter.peak.coerceAtLeast(1e-10)), meter.changeDb), style = MaterialTheme.typography.bodySmall)
+                                    if (meter.bandChangesDb.isNotEmpty()) Text(meter.bandChangesDb.joinToString(" · ") {
+                                        String.format(Locale.ROOT, appString(R.string.text_1f_db_02557a), it)
+                                    }, style = MaterialTheme.typography.bodySmall)
+                                }
+                            }
+                        }
+                    }
+                    path.audioTrackUnderruns?.let { count -> item {
+                        SettingsGroup {
+                            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(appString(R.string.text_audiotrack_underruns_6c9f5b, (count)), style = MaterialTheme.typography.titleSmall)
+                                Text(appString(R.string.text_primary_player_since_creation_a2795e),
+                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    } }
+                    path.usbDiagnostics?.let { usb -> item {
+                        SettingsGroup {
+                            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(appString(R.string.text_usb_transport_39fd7d), style = MaterialTheme.typography.titleSmall)
+                                Text(appString(R.string.text_completed_pending_bf3cd1, (usb.completedFrames), (usb.pendingFrames)), style = MaterialTheme.typography.bodySmall)
+                                Text(appString(R.string.text_packet_errors_timeouts_e3e49f, (usb.packetErrors), (usb.timeouts)), style = MaterialTheme.typography.bodySmall)
+                            }
+                        }
+                    } }
+                    itemsIndexed(path.stages) { index, stage ->
+                        PathStageCard(index + 1, stage)
+                    }
+                    item {
+                        Text(
+                            appString(R.string.text_unknown_means_the_active_playback_path_cannot_report_that_detail_c0b60e),
+                            Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                item {
+                    SettingsGroup {
+                        SettingsNavRow(Icons.Filled.Devices, appString(R.string.text_audio_output_2b89cc), appString(R.string.text_choose_a_device_or_output_mode_72ff69), onClick = onOpenOutput)
+                        SettingsRowDivider()
+                        SettingsNavRow(Icons.Filled.ContentCopy, appString(R.string.text_copy_diagnostic_report_7c8feb), appString(R.string.text_playback_formats_and_processing_no_account_credentials_9d08c4)) {
+                            runCatching { Toolkit.getDefaultToolkit().systemClipboard.setContents(StringSelection(path.toDiagnosticReport()), null) }
+                                .onSuccess { scope.launch { snackbar.showSnackbar(appString(R.string.text_signal_path_report_copied_ecc24d)) } }
+                        }
+                    }
+                }
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = contentPadding.calculateBottomPadding() + 8.dp))

@@ -73,119 +73,112 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
     val listState = rememberLazyListState()
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.text_visualizer_7177c7), onBack)
-        Box(Modifier.fillMaxWidth().weight(1f)) {
-            LazyColumn(
-                Modifier.fillMaxWidth(),
-                state = listState,
-                contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
-            ) {
-                item { VisualizerPreview(prefs, controller) }
+        SettingsList(contentPadding, state = listState) {
+            item { VisualizerPreview(prefs, controller) }
 
-                item { SettingsSectionTitle(appString(R.string.text_style_99a0ef)) }
-                item {
-                    val styleListState = rememberLazyListState()
-                    Column {
-                        LazyRow(
-                            Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                            state = styleListState,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            contentPadding = PaddingValues(horizontal = 12.dp),
-                        ) {
-                            items((0 until VisualizerStyle.count).toList()) { s ->
-                                val selected = s == prefs.style
-                                Box(
-                                    Modifier.clip(RoundedCornerShape(50))
-                                        .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                                        .pointerHoverIcon(PointerIcon.Hand)
-                                        .clickable { save(prefs.copy(style = s)) }
-                                        .padding(horizontal = 14.dp, vertical = 9.dp),
-                                ) {
-                                    Text(
-                                        VisualizerStyle.label(s),
-                                        color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                        fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                        style = MaterialTheme.typography.labelMedium,
-                                    )
-                                }
+            item { SettingsSectionTitle(appString(R.string.text_style_99a0ef)) }
+            item {
+                val styleListState = rememberLazyListState()
+                Column {
+                    LazyRow(
+                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                        state = styleListState,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        contentPadding = PaddingValues(horizontal = 12.dp),
+                    ) {
+                        items((0 until VisualizerStyle.count).toList()) { s ->
+                            val selected = s == prefs.style
+                            Box(
+                                Modifier.clip(RoundedCornerShape(50))
+                                    .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                    .pointerHoverIcon(PointerIcon.Hand)
+                                    .clickable { save(prefs.copy(style = s)) }
+                                    .padding(horizontal = 14.dp, vertical = 9.dp),
+                            ) {
+                                Text(
+                                    VisualizerStyle.label(s),
+                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                    style = MaterialTheme.typography.labelMedium,
+                                )
                             }
                         }
-                        HorizontalScrollbar(rememberScrollbarAdapter(styleListState), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
                     }
-                }
-
-                item { SettingsSectionTitle(appString(R.string.text_colour_f28563)) }
-                item {
-                    SettingsGroup {
-                        SegmentedRow(appString(R.string.text_colour_source_92c52f), listOf(appString(R.string.text_accent_233064), appString(R.string.text_custom_081ae3), appString(R.string.text_gradient_36463c), appString(R.string.text_album_dfb4c9)), prefs.colorSource) { save(prefs.copy(colorSource = it)) }
-                    }
-                }
-                if (prefs.colorSource == VizColor.CUSTOM || prefs.colorSource == VizColor.GRADIENT) {
-                    item { Swatches(appString(R.string.text_primary_a9a96e), prefs.primaryColor) { save(prefs.copy(primaryColor = it)) } }
-                }
-                if (prefs.colorSource == VizColor.GRADIENT) {
-                    item { Swatches(appString(R.string.text_secondary_025de5), prefs.secondaryColor) { save(prefs.copy(secondaryColor = it)) } }
-                }
-
-                item { SettingsSectionTitle(appString(R.string.text_background_64dd60)) }
-                item {
-                    SettingsGroup {
-                        SegmentedRow(appString(R.string.text_backdrop_d4f5e9), listOf(appString(R.string.text_black_b406fb), appString(R.string.text_gradient_36463c), appString(R.string.text_album_blur_1a1f3b)), prefs.background) { save(prefs.copy(background = it)) }
-                    }
-                }
-
-                item { SettingsSectionTitle(appString(R.string.text_spectrum_9620cf)) }
-                item {
-                    SettingsGroup {
-                        SettingsSliderRow(appString(R.string.text_bar_count_faa792), "${prefs.barCount}", prefs.barCount.toFloat(), 16f..160f, steps = 0) { save(prefs.copy(barCount = it.toInt())) }
-                        SettingsRowDivider()
-                        SettingsSliderRow(appString(R.string.text_smoothing_dcc490), "${(prefs.smoothing * 100).toInt()}%", prefs.smoothing, 0f..0.95f) { save(prefs.copy(smoothing = it)) }
-                        SettingsRowDivider()
-                        SettingsSliderRow(appString(R.string.text_sensitivity_031cfc), String.format("%.2fx", prefs.sensitivity), prefs.sensitivity, 0.25f..4f) { save(prefs.copy(sensitivity = it)) }
-                        SettingsRowDivider()
-                        SettingsSwitchRow(null, appString(R.string.text_peak_hold_f1bbb5), appString(R.string.text_falling_caps_on_the_bars_f64a49), prefs.peakHold) { save(prefs.copy(peakHold = it)) }
-                        SettingsRowDivider()
-                        SettingsSwitchRow(null, appString(R.string.text_mirror_74adc5), appString(R.string.text_reflect_the_spectrum_612298), prefs.mirror) { save(prefs.copy(mirror = it)) }
-                    }
-                }
-
-                item { SettingsSectionTitle(appString(R.string.text_frequency_range_6f7ced)) }
-                item {
-                    SettingsGroup {
-                        SettingsSliderRow(appString(R.string.text_low_cut_67dd29), appString(R.string.text_hz_648ee5, (prefs.minHz)), prefs.minHz.toFloat(), 10f..500f) { save(prefs.copy(minHz = it.toInt())) }
-                        SettingsRowDivider()
-                        SettingsSliderRow(appString(R.string.text_high_cut_609ed9), appString(R.string.text_khz_dd177d, (prefs.maxHz / 1000)), prefs.maxHz.toFloat(), 2000f..22000f) { save(prefs.copy(maxHz = it.toInt())) }
-                    }
-                }
-
-                item { SettingsSectionTitle(appString(R.string.text_motion_quality_364852)) }
-                item {
-                    SettingsGroup {
-                        val fftIdx = when (prefs.fftSize) { 1024 -> 0; 4096 -> 2; else -> 1 }
-                        SegmentedRow(appString(R.string.text_fft_resolution_839073), listOf("1024", "2048", "4096"), fftIdx) {
-                            save(prefs.copy(fftSize = when (it) { 0 -> 1024; 2 -> 4096; else -> 2048 }))
-                        }
-                        SettingsRowDivider()
-                        val fpsIdx = when (prefs.fpsCap) { 30 -> 0; 90 -> 2; 120 -> 3; else -> 1 }
-                        SegmentedRow(appString(R.string.text_frame_rate_a245d8), listOf("30", "60", "90", "120"), fpsIdx) {
-                            save(prefs.copy(fpsCap = when (it) { 0 -> 30; 2 -> 90; 3 -> 120; else -> 60 }))
-                        }
-                        SettingsRowDivider()
-                        SettingsSwitchRow(null, appString(R.string.text_rotate_radial_styles_72016a), appString(R.string.text_slow_spin_for_radial_combo_be2e95), prefs.rotate) { save(prefs.copy(rotate = it)) }
-                        SettingsRowDivider()
-                        SettingsSliderRow(appString(R.string.text_particles_07cdbc), "${prefs.particleCount}", prefs.particleCount.toFloat(), 20f..400f) { save(prefs.copy(particleCount = it.toInt())) }
-                    }
-                }
-
-                item { SettingsSectionTitle(appString(R.string.text_overlay_249450)) }
-                item {
-                    SettingsGroup {
-                        SettingsSwitchRow(null, appString(R.string.text_album_art_centre_757501), appString(R.string.text_show_artwork_in_radial_styles_100355), prefs.showAlbumArt) { save(prefs.copy(showAlbumArt = it)) }
-                        SettingsRowDivider()
-                        SettingsSwitchRow(null, appString(R.string.text_track_info_2bad97), appString(R.string.text_title_artist_over_the_visual_ff75a3), prefs.showTrackInfo) { save(prefs.copy(showTrackInfo = it)) }
-                    }
+                    HorizontalScrollbar(rememberScrollbarAdapter(styleListState), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
                 }
             }
-            VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+
+            item { SettingsSectionTitle(appString(R.string.text_colour_f28563)) }
+            item {
+                SettingsGroup {
+                    SegmentedRow(appString(R.string.text_colour_source_92c52f), listOf(appString(R.string.text_accent_233064), appString(R.string.text_custom_081ae3), appString(R.string.text_gradient_36463c), appString(R.string.text_album_dfb4c9)), prefs.colorSource) { save(prefs.copy(colorSource = it)) }
+                }
+            }
+            if (prefs.colorSource == VizColor.CUSTOM || prefs.colorSource == VizColor.GRADIENT) {
+                item { Swatches(appString(R.string.text_primary_a9a96e), prefs.primaryColor) { save(prefs.copy(primaryColor = it)) } }
+            }
+            if (prefs.colorSource == VizColor.GRADIENT) {
+                item { Swatches(appString(R.string.text_secondary_025de5), prefs.secondaryColor) { save(prefs.copy(secondaryColor = it)) } }
+            }
+
+            item { SettingsSectionTitle(appString(R.string.text_background_64dd60)) }
+            item {
+                SettingsGroup {
+                    SegmentedRow(appString(R.string.text_backdrop_d4f5e9), listOf(appString(R.string.text_black_b406fb), appString(R.string.text_gradient_36463c), appString(R.string.text_album_blur_1a1f3b)), prefs.background) { save(prefs.copy(background = it)) }
+                }
+            }
+
+            item { SettingsSectionTitle(appString(R.string.text_spectrum_9620cf)) }
+            item {
+                SettingsGroup {
+                    SettingsSliderRow(appString(R.string.text_bar_count_faa792), "${prefs.barCount}", prefs.barCount.toFloat(), 16f..160f, steps = 0) { save(prefs.copy(barCount = it.toInt())) }
+                    SettingsRowDivider()
+                    SettingsSliderRow(appString(R.string.text_smoothing_dcc490), "${(prefs.smoothing * 100).toInt()}%", prefs.smoothing, 0f..0.95f) { save(prefs.copy(smoothing = it)) }
+                    SettingsRowDivider()
+                    SettingsSliderRow(appString(R.string.text_sensitivity_031cfc), String.format("%.2fx", prefs.sensitivity), prefs.sensitivity, 0.25f..4f) { save(prefs.copy(sensitivity = it)) }
+                    SettingsRowDivider()
+                    SettingsSwitchRow(null, appString(R.string.text_peak_hold_f1bbb5), appString(R.string.text_falling_caps_on_the_bars_f64a49), prefs.peakHold) { save(prefs.copy(peakHold = it)) }
+                    SettingsRowDivider()
+                    SettingsSwitchRow(null, appString(R.string.text_mirror_74adc5), appString(R.string.text_reflect_the_spectrum_612298), prefs.mirror) { save(prefs.copy(mirror = it)) }
+                }
+            }
+
+            item { SettingsSectionTitle(appString(R.string.text_frequency_range_6f7ced)) }
+            item {
+                SettingsGroup {
+                    SettingsSliderRow(appString(R.string.text_low_cut_67dd29), appString(R.string.text_hz_648ee5, (prefs.minHz)), prefs.minHz.toFloat(), 10f..500f) { save(prefs.copy(minHz = it.toInt())) }
+                    SettingsRowDivider()
+                    SettingsSliderRow(appString(R.string.text_high_cut_609ed9), appString(R.string.text_khz_dd177d, (prefs.maxHz / 1000)), prefs.maxHz.toFloat(), 2000f..22000f) { save(prefs.copy(maxHz = it.toInt())) }
+                }
+            }
+
+            item { SettingsSectionTitle(appString(R.string.text_motion_quality_364852)) }
+            item {
+                SettingsGroup {
+                    val fftIdx = when (prefs.fftSize) { 1024 -> 0; 4096 -> 2; else -> 1 }
+                    SegmentedRow(appString(R.string.text_fft_resolution_839073), listOf("1024", "2048", "4096"), fftIdx) {
+                        save(prefs.copy(fftSize = when (it) { 0 -> 1024; 2 -> 4096; else -> 2048 }))
+                    }
+                    SettingsRowDivider()
+                    val fpsIdx = when (prefs.fpsCap) { 30 -> 0; 90 -> 2; 120 -> 3; else -> 1 }
+                    SegmentedRow(appString(R.string.text_frame_rate_a245d8), listOf("30", "60", "90", "120"), fpsIdx) {
+                        save(prefs.copy(fpsCap = when (it) { 0 -> 30; 2 -> 90; 3 -> 120; else -> 60 }))
+                    }
+                    SettingsRowDivider()
+                    SettingsSwitchRow(null, appString(R.string.text_rotate_radial_styles_72016a), appString(R.string.text_slow_spin_for_radial_combo_be2e95), prefs.rotate) { save(prefs.copy(rotate = it)) }
+                    SettingsRowDivider()
+                    SettingsSliderRow(appString(R.string.text_particles_07cdbc), "${prefs.particleCount}", prefs.particleCount.toFloat(), 20f..400f) { save(prefs.copy(particleCount = it.toInt())) }
+                }
+            }
+
+            item { SettingsSectionTitle(appString(R.string.text_overlay_249450)) }
+            item {
+                SettingsGroup {
+                    SettingsSwitchRow(null, appString(R.string.text_album_art_centre_757501), appString(R.string.text_show_artwork_in_radial_styles_100355), prefs.showAlbumArt) { save(prefs.copy(showAlbumArt = it)) }
+                    SettingsRowDivider()
+                    SettingsSwitchRow(null, appString(R.string.text_track_info_2bad97), appString(R.string.text_title_artist_over_the_visual_ff75a3), prefs.showTrackInfo) { save(prefs.copy(showTrackInfo = it)) }
+                }
+            }
         }
     }
 }

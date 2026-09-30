@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Route
 import androidx.compose.material.icons.filled.Tune
@@ -35,7 +34,7 @@ fun LoudnessSettingsScreen(
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(SettingsDestinations.loudness.label, onBack)
-        LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
+        SettingsList(contentPadding) {
             item { SettingsSectionTitle("ReplayGain") }
             item {
                 SegmentedRow(appString(R.string.text_volume_leveling_a9df98), listOf(appString(R.string.text_off_e3de5a), appString(R.string.text_track_b1c5a7), appString(R.string.text_album_dfb4c9)), prefs.replayGain.coerceIn(0, 2)) { mode ->

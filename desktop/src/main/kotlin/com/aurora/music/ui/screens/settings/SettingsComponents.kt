@@ -26,11 +26,9 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -55,6 +53,22 @@ import androidx.navigation.NavBackStackEntry
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.material.icons.filled.ArrowDropDown
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import com.aurora.music.ui.components.PageHeader
+import com.aurora.music.ui.layout.LocalPageGutter
+import com.aurora.music.ui.layout.PageMetrics
 
 val LocalSettingsPaneRoots = compositionLocalOf<Set<String>?> { null }
 
@@ -72,19 +86,27 @@ fun SettingsTopBar(title: String, onBack: () -> Unit) {
 
 @Composable
 fun SettingsTopBar(title: String, onBack: () -> Unit, showBack: Boolean) {
-    Row(
+    val gutter = LocalPageGutter.current
+    Box(
         Modifier.fillMaxWidth()
             .then(if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) Modifier.auroraPanel(RectangleShape) else Modifier)
-            .padding(top = 6.dp, start = 8.dp, end = 16.dp, bottom = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .padding(start = gutter, end = if (LocalSettingsListPane.current) ListPaneEnd + GroupInset else gutter, bottom = 4.dp),
     ) {
-        if (showBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape)
-                .pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onBack).padding(8.dp))
-            Spacer(Modifier.width(8.dp))
-        } else Spacer(Modifier.width(12.dp))
-        Text(title, style = MaterialTheme.typography.headlineSmall)
+        PageHeader(title, onBack = if (showBack) onBack else null)
     }
+}
+
+private val GroupInset = 12.dp
+private val ListPaneEnd = 4.dp
+
+val LocalSettingsListPane = compositionLocalOf { false }
+
+@Composable
+fun settingsContentPadding(width: Dp, contentPadding: PaddingValues, bottom: Dp = 24.dp): PaddingValues {
+    val start = (LocalPageGutter.current - GroupInset).coerceAtLeast(0.dp)
+    val end = if (LocalSettingsListPane.current) ListPaneEnd
+        else (width - start - PageMetrics.FormMaxWidth - GroupInset * 2).coerceAtLeast(start)
+    return PaddingValues(start = start, end = end, bottom = contentPadding.calculateBottomPadding() + bottom)
 }
 
 @Composable
@@ -94,11 +116,11 @@ fun ColumnScope.SettingsList(
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: LazyListScope.() -> Unit,
 ) {
-    Box(Modifier.fillMaxWidth().weight(1f)) {
+    BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
         LazyColumn(
             Modifier.fillMaxSize(),
             state = state,
-            contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
+            contentPadding = settingsContentPadding(maxWidth, contentPadding),
             verticalArrangement = verticalArrangement,
             content = content,
         )
@@ -113,9 +135,9 @@ fun ColumnScope.SettingsScroll(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scroll = rememberScrollState()
-    Box(Modifier.fillMaxWidth().weight(1f)) {
+    BoxWithConstraints(Modifier.fillMaxWidth().weight(1f)) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(scroll).padding(bottom = contentPadding.calculateBottomPadding() + 24.dp),
+            Modifier.fillMaxWidth().verticalScroll(scroll).padding(settingsContentPadding(maxWidth, contentPadding)),
             horizontalAlignment = horizontalAlignment,
             content = content,
         )
@@ -164,30 +186,50 @@ private fun RowScaffold(
     onClick: (() -> Unit)?,
     selected: Boolean = false,
     trailing: @Composable () -> Unit,
+) = SettingsRowScaffold(
+    leading = icon?.let { { SettingsRowIcon(it) } },
+    title = title, subtitle = subtitle, onClick = onClick, selected = selected, trailing = trailing,
+)
+
+@Composable
+internal fun SettingsRowIcon(icon: ImageVector) {
+    Box(
+        Modifier.size(if (LocalSettingsListPane.current) 34.dp else 38.dp).then(
+            if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
+                Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
+        ),
+        contentAlignment = Alignment.Center,
+    ) { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
+}
+
+@Composable
+internal fun SettingsRowScaffold(
+    leading: (@Composable () -> Unit)?,
+    title: String,
+    subtitle: String?,
+    onClick: (() -> Unit)?,
+    selected: Boolean = false,
+    subtitleColor: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+    trailing: @Composable () -> Unit,
 ) {
+    val dense = LocalSettingsListPane.current
     Row(
         Modifier
             .fillMaxWidth()
             .then(if (selected) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)) else Modifier)
             .then(if (onClick != null) Modifier.pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onClick) else Modifier)
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(horizontal = if (dense) 14.dp else 20.dp, vertical = if (dense) 12.dp else 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (icon != null) {
-            Box(
-                Modifier.size(38.dp).then(
-                    if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
-                        Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
-                ),
-                contentAlignment = Alignment.Center,
-            ) { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
-            Spacer(Modifier.width(14.dp))
+        if (leading != null) {
+            leading()
+            Spacer(Modifier.width(if (dense) 12.dp else 14.dp))
         }
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
             if (subtitle != null) {
-                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(subtitle, style = MaterialTheme.typography.bodySmall, color = subtitleColor)
             }
         }
         trailing()
@@ -199,7 +241,7 @@ fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String? = null, v
     RowScaffold(icon, title, subtitle, onClick, selected) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (value != null) Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (!LocalSettingsListPane.current) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -258,6 +300,49 @@ fun SegmentedRow(title: String, options: List<String>, selected: Int, onSelect: 
                     contentAlignment = Alignment.Center,
                 ) {
                     Text(opt, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsDropdownRow(
+    title: String,
+    value: String,
+    options: List<String>,
+    selected: Int,
+    icon: ImageVector? = null,
+    subtitle: String? = null,
+    menuLabel: String? = null,
+    onSelect: (Int) -> Unit,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val aurora = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
+    val shape = if (aurora) RoundedCornerShape(12.dp) else MaterialTheme.shapes.small
+    RowScaffold(icon, title, subtitle, { expanded = true }) {
+        Box(Modifier.padding(start = 16.dp)) {
+            Row(
+                Modifier.widthIn(min = 132.dp, max = 260.dp)
+                    .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh) else Modifier.auroraPanel(shape))
+                    .padding(start = 14.dp, end = 6.dp, top = 8.dp, bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(value, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                Icon(Icons.Filled.ArrowDropDown, menuLabel, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
+            DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+                options.forEachIndexed { index, label ->
+                    DropdownMenuItem(
+                        text = { Text(label, fontWeight = if (index == selected) FontWeight.Bold else FontWeight.Normal) },
+                        onClick = { onSelect(index); expanded = false },
+                        modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+                        trailingIcon = if (index == selected) {
+                            { Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary) }
+                        } else null,
+                    )
                 }
             }
         }

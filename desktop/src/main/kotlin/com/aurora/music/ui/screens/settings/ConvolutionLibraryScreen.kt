@@ -118,67 +118,63 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, signalPath: StateFlo
                 Text(workingText, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall)
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
-            Box(Modifier.fillMaxWidth().weight(1f)) {
-                LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (loadError != null) item {
+            SettingsList(contentPadding, state = listState, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                if (loadError != null) item {
+                    SettingsGroup {
+                        Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Text(appString(R.string.text_ir_library_unavailable_ba529f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
+                            Text(loadError!!, style = MaterialTheme.typography.bodySmall)
+                            Text(appString(R.string.text_changes_are_disabled_restore_a_backup_to_recover_the_library_8962a5), style = MaterialTheme.typography.bodySmall)
+                        }
+                    }
+                }
+                if (selectedId == null) {
+                    item {
+                        Button(onClick = ::importWav, enabled = ready,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand)) {
+                            Icon(Icons.Filled.Add, null)
+                            Text(appString(R.string.text_import_wav_962ac2), Modifier.padding(start = 8.dp))
+                        }
+                    }
+                    if (selectedPath.isNotBlank() && entries != null && entries!!.none {
+                        it.sourcePath == selectedPath || it.prepared?.path == selectedPath
+                    }) item {
                         SettingsGroup {
-                            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                                Text(appString(R.string.text_ir_library_unavailable_ba529f), style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.error)
-                                Text(loadError!!, style = MaterialTheme.typography.bodySmall)
-                                Text(appString(R.string.text_changes_are_disabled_restore_a_backup_to_recover_the_library_8962a5), style = MaterialTheme.typography.bodySmall)
+                            Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                Text(audio?.dspConvIrName?.ifBlank { appString(R.string.text_selected_ir_6a167c) } ?: appString(R.string.text_selected_ir_6a167c), style = MaterialTheme.typography.titleSmall)
+                                OutlinedButton(enabled = ready, onClick = { perform(appString(R.string.text_saving_selected_ir_1e5b57)) {
+                                    selectedId = store.importCurrentImpulse().getOrThrow().id
+                                } }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_add_selected_ir_to_library_d9c2a9)) }
                             }
                         }
                     }
-                    if (selectedId == null) {
-                        item {
-                            Button(onClick = ::importWav, enabled = ready,
-                                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand)) {
-                                Icon(Icons.Filled.Add, null)
-                                Text(appString(R.string.text_import_wav_962ac2), Modifier.padding(start = 8.dp))
-                            }
+                    when {
+                        entries == null -> item { ImpulseStatusText(appString(R.string.text_loading_ir_library_0a9e58)) }
+                        loadError != null -> Unit
+                        entries!!.isEmpty() -> item { ImpulseStatusText(appString(R.string.text_no_saved_impulse_responses_5d3fa1)) }
+                        else -> items(entries!!, key = { it.id }) { entry ->
+                            ImpulseLibraryRow(entry, ready, selectedPath, onOpen = { selectedId = entry.id },
+                                onRename = { rename = entry }, onDelete = { delete = entry })
                         }
-                        if (selectedPath.isNotBlank() && entries != null && entries!!.none {
-                            it.sourcePath == selectedPath || it.prepared?.path == selectedPath
-                        }) item {
-                            SettingsGroup {
-                                Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text(audio?.dspConvIrName?.ifBlank { appString(R.string.text_selected_ir_6a167c) } ?: appString(R.string.text_selected_ir_6a167c), style = MaterialTheme.typography.titleSmall)
-                                    OutlinedButton(enabled = ready, onClick = { perform(appString(R.string.text_saving_selected_ir_1e5b57)) {
-                                        selectedId = store.importCurrentImpulse().getOrThrow().id
-                                    } }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_add_selected_ir_to_library_d9c2a9)) }
-                                }
-                            }
+                    }
+                } else if (current != null) {
+                    item {
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {
+                            TextButton(enabled = ready, onClick = { rename = current }) { Text(appString(R.string.text_rename_d3f4cb)) }
+                            TextButton(enabled = ready, onClick = { delete = current }) { Text(appString(R.string.text_delete_f6fdbe)) }
                         }
-                        when {
-                            entries == null -> item { ImpulseStatusText(appString(R.string.text_loading_ir_library_0a9e58)) }
-                            loadError != null -> Unit
-                            entries!!.isEmpty() -> item { ImpulseStatusText(appString(R.string.text_no_saved_impulse_responses_5d3fa1)) }
-                            else -> items(entries!!, key = { it.id }) { entry ->
-                                ImpulseLibraryRow(entry, ready, selectedPath, onOpen = { selectedId = entry.id },
-                                    onRename = { rename = entry }, onDelete = { delete = entry })
-                            }
-                        }
-                    } else if (current != null) {
-                        item {
-                            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), horizontalArrangement = Arrangement.End) {
-                                TextButton(enabled = ready, onClick = { rename = current }) { Text(appString(R.string.text_rename_d3f4cb)) }
-                                TextButton(enabled = ready, onClick = { delete = current }) { Text(appString(R.string.text_delete_f6fdbe)) }
-                            }
-                        }
-                        item {
-                            ImpulseDetails(current, ready, selectedPath, playbackRate,
-                                onSelect = { prepared -> perform(appString(R.string.text_selecting_ir_cac365)) {
-                                    store.selectImpulse(current.id, prepared).getOrThrow()
-                                    notify(appString(R.string.text_ir_selected_9c0796))
-                                } }, onExport = { exportWav(current, it) }, onPrepare = { prepare = current })
-                        }
-                        if (!convolutionEnabled && audio != null && rack != null) item {
-                            ImpulseStatusText(appString(R.string.text_enable_convolution_in_equalizer_or_processing_rack_a19cc2))
-                        }
-                    } else if (entries != null && loadError == null) item { ImpulseStatusText(appString(R.string.text_this_ir_is_no_longer_in_the_library_7118f3)) }
-                }
-                VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                    }
+                    item {
+                        ImpulseDetails(current, ready, selectedPath, playbackRate,
+                            onSelect = { prepared -> perform(appString(R.string.text_selecting_ir_cac365)) {
+                                store.selectImpulse(current.id, prepared).getOrThrow()
+                                notify(appString(R.string.text_ir_selected_9c0796))
+                            } }, onExport = { exportWav(current, it) }, onPrepare = { prepare = current })
+                    }
+                    if (!convolutionEnabled && audio != null && rack != null) item {
+                        ImpulseStatusText(appString(R.string.text_enable_convolution_in_equalizer_or_processing_rack_a19cc2))
+                    }
+                } else if (entries != null && loadError == null) item { ImpulseStatusText(appString(R.string.text_this_ir_is_no_longer_in_the_library_7118f3)) }
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = contentPadding.calculateBottomPadding() + 8.dp))

@@ -136,111 +136,103 @@ fun ProcessingPresetsScreen(
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             SettingsTopBar(appString(R.string.text_saved_processing_presets_f22d4b), onBack)
-            Box(Modifier.fillMaxWidth().weight(1f)) {
-                LazyColumn(
-                    Modifier.fillMaxSize(),
-                    state = listState,
-                    contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
-                    verticalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
+            SettingsList(contentPadding, state = listState, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                item {
+                    Text(
+                        appString(R.string.text_save_eq_effects_loudness_and_output_settings_cfa9ad),
+                        Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                item {
+                    Button(
+                        onClick = { nameDialog = PresetNameDialog(PresetNameMode.SAVE) },
+                        enabled = editable,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand),
+                    ) {
+                        Icon(Icons.Filled.Add, contentDescription = null)
+                        Text(appString(R.string.text_save_current_settings_0eaab9), Modifier.padding(start = 8.dp))
+                    }
+                }
+                item {
+                    OutlinedButton(
+                        onClick = ::importPreset,
+                        enabled = editable,
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand),
+                    ) {
+                        Icon(Icons.Filled.FileDownload, contentDescription = null)
+                        Text(appString(R.string.text_import_preset_a72e4d), Modifier.padding(start = 8.dp))
+                    }
+                    Text(appString(R.string.text_imported_presets_stay_inactive_until_applied_cdd01b),
+                        Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                if (busy) {
                     item {
-                        Text(
-                            appString(R.string.text_save_eq_effects_loudness_and_output_settings_cfa9ad),
-                            Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
+                        Text(busyMessage, Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
                     }
+                }
+                if (autoEqAutoSwitch) {
                     item {
-                        Button(
-                            onClick = { nameDialog = PresetNameDialog(PresetNameMode.SAVE) },
-                            enabled = editable,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand),
-                        ) {
-                            Icon(Icons.Filled.Add, contentDescription = null)
-                            Text(appString(R.string.text_save_current_settings_0eaab9), Modifier.padding(start = 8.dp))
-                        }
+                        Text(appString(R.string.text_manual_presets_pause_automatic_switching_76e93a),
+                            Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
+                }
+                library?.error?.let { error ->
                     item {
-                        OutlinedButton(
-                            onClick = ::importPreset,
-                            enabled = editable,
-                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand),
-                        ) {
-                            Icon(Icons.Filled.FileDownload, contentDescription = null)
-                            Text(appString(R.string.text_import_preset_a72e4d), Modifier.padding(start = 8.dp))
-                        }
-                        Text(appString(R.string.text_imported_presets_stay_inactive_until_applied_cdd01b),
-                            Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    if (busy) {
-                        item {
-                            Text(busyMessage, Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                    if (autoEqAutoSwitch) {
-                        item {
-                            Text(appString(R.string.text_manual_presets_pause_automatic_switching_76e93a),
-                                Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                        SettingsGroup {
+                            Text(appString(R.string.text_presets_unavailable_d18129), Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp),
+                                style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.error)
+                            Text(error, Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
                                 style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
                     }
-                    library?.error?.let { error ->
-                        item {
-                            SettingsGroup {
-                                Text(appString(R.string.text_presets_unavailable_d18129), Modifier.padding(start = 20.dp, end = 20.dp, top = 16.dp),
-                                    style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.error)
-                                Text(error, Modifier.padding(horizontal = 20.dp, vertical = 12.dp),
-                                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            }
-                        }
+                }
+                lastAction?.takeIf { actionFailed }?.let { message ->
+                    item {
+                        Text(message, Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = if (actionFailed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
                     }
-                    lastAction?.takeIf { actionFailed }?.let { message ->
-                        item {
-                            Text(message, Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = if (actionFailed) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary)
-                        }
-                    }
-                    if (library == null) {
-                        item { Text(appString(R.string.text_loading_presets_4c510b), Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium) }
-                    } else if (library?.error == null && library?.presets.isNullOrEmpty()) {
-                        item {
-                            SettingsGroup {
-                                Text(appString(R.string.text_no_saved_presets_yet_a819ff), Modifier.padding(20.dp),
-                                    style = MaterialTheme.typography.titleMedium)
-                            }
-                        }
-                    }
-                    items(library?.presets.orEmpty(), key = { it.id }) { preset ->
-                        ProcessingPresetCard(
-                            preset = preset,
-                            enabled = editable,
-                            onApply = {
-                                perform {
-                                    val applied = store.applyProcessingPreset(preset.id).getOrThrow()
-                                    appString(R.string.text_applied_3d3cce, (applied.presetName)) + if (applied.restartRequired)
-                                        appString(R.string.text_restart_aurora_to_activate_the_changed_output_or_engine_settings_b7046b)
-                                    else ""
-                                }
-                            },
-                            onRename = { nameDialog = PresetNameDialog(PresetNameMode.RENAME, preset) },
-                            onDuplicate = { nameDialog = PresetNameDialog(PresetNameMode.DUPLICATE, preset) },
-                            onExport = { exportPreset(preset) },
-                            onDelete = { deleteTarget = preset },
-                        )
-                    }
+                }
+                if (library == null) {
+                    item { Text(appString(R.string.text_loading_presets_4c510b), Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium) }
+                } else if (library?.error == null && library?.presets.isNullOrEmpty()) {
                     item {
                         SettingsGroup {
-                            SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath,
-                                appString(R.string.text_inspect_the_active_processing_after_applying_a_preset_c9b6f4), onClick = onOpenSignalPath)
+                            Text(appString(R.string.text_no_saved_presets_yet_a819ff), Modifier.padding(20.dp),
+                                style = MaterialTheme.typography.titleMedium)
                         }
                     }
                 }
-                VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+                items(library?.presets.orEmpty(), key = { it.id }) { preset ->
+                    ProcessingPresetCard(
+                        preset = preset,
+                        enabled = editable,
+                        onApply = {
+                            perform {
+                                val applied = store.applyProcessingPreset(preset.id).getOrThrow()
+                                appString(R.string.text_applied_3d3cce, (applied.presetName)) + if (applied.restartRequired)
+                                    appString(R.string.text_restart_aurora_to_activate_the_changed_output_or_engine_settings_b7046b)
+                                else ""
+                            }
+                        },
+                        onRename = { nameDialog = PresetNameDialog(PresetNameMode.RENAME, preset) },
+                        onDuplicate = { nameDialog = PresetNameDialog(PresetNameMode.DUPLICATE, preset) },
+                        onExport = { exportPreset(preset) },
+                        onDelete = { deleteTarget = preset },
+                    )
+                }
+                item {
+                    SettingsGroup {
+                        SettingsDestinationRow(Icons.Filled.Route, SettingsDestinations.signalPath,
+                            appString(R.string.text_inspect_the_active_processing_after_applying_a_preset_c9b6f4), onClick = onOpenSignalPath)
+                    }
+                }
             }
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = contentPadding.calculateBottomPadding()))
