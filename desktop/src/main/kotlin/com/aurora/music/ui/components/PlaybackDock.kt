@@ -3,6 +3,11 @@ package com.aurora.music.ui.components
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.hoverable
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsDraggedAsState
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -55,28 +60,43 @@ import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntRect
+import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupPositionProvider
 import com.aurora.music.R
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.desktop.player.PlayerUiState
 import com.aurora.music.desktop.player.RepeatMode
 import com.aurora.music.localization.appString
+import com.aurora.music.model.accent
 import com.aurora.music.ui.screens.player.PlayerPane
 import com.aurora.music.ui.screens.player.volumeIcon
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
 import kotlinx.coroutines.delay
 import kotlin.math.abs
-import com.aurora.music.model.accent
+import kotlin.math.roundToInt
+
+private val DockButton = 48.dp
+private const val DockCenterShare = 1.4f / 3.4f
 
 @Composable
 fun PlaybackDock(
@@ -96,6 +116,7 @@ fun PlaybackDock(
     onOpenOutput: () -> Unit,
     onPane: (PlayerPane) -> Unit,
     modifier: Modifier = Modifier,
+    onOpenArtist: (() -> Unit)? = null,
 ) {
     val song = state.current
     val ui = LocalUiPrefs.current
@@ -112,6 +133,12 @@ fun PlaybackDock(
             ),
     ) {
         val roomy = maxWidth >= 760.dp
+        val showExpand = maxWidth >= 1400.dp
+        val volumeWidth = if (maxWidth >= 1100.dp) 140.dp else 104.dp
+        val trailing = DockButton * (if (roomy) 4 else 2) + (if (roomy) volumeWidth else 0.dp) + (if (showExpand) DockButton else 0.dp)
+        val inner = maxWidth - 32.dp
+        val center = (inner * DockCenterShare).coerceAtMost(680.dp)
+        val side = maxOf((inner - center) / 2, trailing)
         Row(
             Modifier.fillMaxWidth().heightIn(min = 84.dp * scale).padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -129,8 +156,7 @@ fun PlaybackDock(
                     Column(Modifier.weight(1f, fill = false)) {
                         Text(song.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
                             color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(song.artist, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        DockArtist(song.artist, if (song.artistId.isNotBlank()) onOpenArtist else null)
                     }
                 }
                 val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurfaceVariant, label = "dockLike")
@@ -140,7 +166,7 @@ fun PlaybackDock(
                 }
             }
             Spacer(Modifier.width(8.dp))
-            Column(Modifier.weight(if (roomy) 1.3f else 0.9f).widthIn(max = 560.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+            Column(Modifier.width(center), horizontalAlignment = Alignment.CenterHorizontally) {
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     IconButton(onClick = onToggleShuffle) {
                         Icon(Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b), modifier = Modifier.size(20.dp),
@@ -169,14 +195,14 @@ fun PlaybackDock(
                 DockSeek(state, onSeek, showTimes = roomy)
             }
             Spacer(Modifier.width(8.dp))
-            Row(if (roomy) Modifier.weight(1f) else Modifier, horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+            Row(Modifier.width(side), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
+                PaneToggle(PlayerPane.LYRICS, Icons.Filled.Lyrics, openPane == PlayerPane.LYRICS) { onPane(PlayerPane.LYRICS) }
+                PaneToggle(PlayerPane.QUEUE, Icons.AutoMirrored.Filled.QueueMusic, openPane == PlayerPane.QUEUE) { onPane(PlayerPane.QUEUE) }
                 if (roomy) IconButton(onClick = onOpenOutput) {
                     Icon(Icons.Filled.Speaker, appString(R.string.text_output_device_709178), tint = colors.onSurfaceVariant)
                 }
-                if (roomy) DockVolume(volume, onVolumeChange, onToggleMute, Modifier.weight(1f, fill = false).widthIn(max = 148.dp))
-                PaneToggle(PlayerPane.LYRICS, Icons.Filled.Lyrics, openPane == PlayerPane.LYRICS) { onPane(PlayerPane.LYRICS) }
-                PaneToggle(PlayerPane.QUEUE, Icons.AutoMirrored.Filled.QueueMusic, openPane == PlayerPane.QUEUE) { onPane(PlayerPane.QUEUE) }
-                if (roomy) IconButton(onClick = onExpand) {
+                if (roomy) VolumeControl(volume, onVolumeChange, onToggleMute, volumeWidth)
+                if (showExpand) IconButton(onClick = onExpand) {
                     Icon(Icons.Filled.OpenInFull, appString(R.string.tablet_open_now_playing), tint = colors.onSurfaceVariant)
                 }
             }
@@ -185,7 +211,24 @@ fun PlaybackDock(
 }
 
 @Composable
-private fun PaneToggle(pane: PlayerPane, icon: androidx.compose.ui.graphics.vector.ImageVector, checked: Boolean, onClick: () -> Unit) {
+private fun DockArtist(artist: String, onOpenArtist: (() -> Unit)?) {
+    val colors = MaterialTheme.colorScheme
+    val hover = remember { MutableInteractionSource() }
+    val hovered by hover.collectIsHoveredAsState()
+    val link = onOpenArtist != null
+    Text(
+        artist, style = MaterialTheme.typography.bodySmall,
+        color = if (link && hovered) colors.onSurface else colors.onSurfaceVariant,
+        textDecoration = if (link && hovered) TextDecoration.Underline else null,
+        maxLines = 1, overflow = TextOverflow.Ellipsis,
+        modifier = if (onOpenArtist == null) Modifier else Modifier
+            .clickable(interactionSource = hover, indication = null, onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = onOpenArtist)
+            .pointerHoverIcon(PointerIcon.Hand),
+    )
+}
+
+@Composable
+private fun PaneToggle(pane: PlayerPane, icon: ImageVector, checked: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     IconToggleButton(
         checked = checked,
@@ -200,30 +243,72 @@ private fun PaneToggle(pane: PlayerPane, icon: androidx.compose.ui.graphics.vect
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalComposeUiApi::class)
 @Composable
-private fun DockVolume(volume: Float, onVolumeChange: (Float) -> Unit, onToggleMute: () -> Unit, modifier: Modifier) {
+fun VolumeControl(
+    volume: Float,
+    onVolumeChange: (Float) -> Unit,
+    onToggleMute: () -> Unit,
+    sliderWidth: Dp,
+    modifier: Modifier = Modifier,
+    fill: Color = MaterialTheme.colorScheme.onSurfaceVariant,
+) {
     val colors = MaterialTheme.colorScheme
     val current by rememberUpdatedState(volume)
+    val change by rememberUpdatedState(onVolumeChange)
+    val hover = remember { MutableInteractionSource() }
+    val touch = remember { MutableInteractionSource() }
+    val hovered by hover.collectIsHoveredAsState()
+    val dragged by touch.collectIsDraggedAsState()
+    val pressed by touch.collectIsPressedAsState()
+    val level = volume.coerceIn(0f, 1f)
     Row(
-        modifier.onPointerEvent(PointerEventType.Scroll) { event ->
+        modifier.hoverable(hover).onPointerEvent(PointerEventType.Scroll) { event ->
             val delta = event.changes.firstOrNull()?.scrollDelta?.y ?: 0f
-            if (delta != 0f) onVolumeChange((current - delta * 0.05f).coerceIn(0f, 1f))
+            if (delta != 0f) change((current - delta * 0.05f).coerceIn(0f, 1f))
         },
         verticalAlignment = Alignment.CenterVertically,
     ) {
         IconButton(onClick = onToggleMute) {
             Icon(volumeIcon(volume), appString(R.string.text_mute_0f0973), tint = colors.onSurfaceVariant, modifier = Modifier.size(22.dp))
         }
-        Slider(
-            value = volume.coerceIn(0f, 1f),
-            onValueChange = onVolumeChange,
-            modifier = Modifier.weight(1f).height(24.dp).semantics { contentDescription = appString(R.string.text_volume_3b18e8) },
-            colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
-            thumb = { Box(Modifier.size(12.dp).clip(CircleShape).background(colors.onSurface)) },
-            track = { slider ->
-                Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
-                    Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(colors.onSurfaceVariant))
-                }
-            },
+        Box(Modifier.width(sliderWidth), contentAlignment = Alignment.Center) {
+            Slider(
+                value = level,
+                onValueChange = onVolumeChange,
+                interactionSource = touch,
+                modifier = Modifier.fillMaxWidth().height(24.dp).semantics { contentDescription = appString(R.string.text_volume_3b18e8) },
+                colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
+                thumb = { Box(Modifier.size(12.dp).clip(CircleShape).background(colors.onSurface)) },
+                track = { slider ->
+                    Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
+                        Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(fill))
+                    }
+                },
+            )
+            if (hovered || dragged || pressed) VolumeTip(level, sliderWidth)
+        }
+    }
+}
+
+@Composable
+private fun VolumeTip(level: Float, width: Dp) {
+    val colors = MaterialTheme.colorScheme
+    val density = LocalDensity.current
+    val gap = with(density) { 6.dp.roundToPx() }
+    val thumbX = with(density) { (6.dp + (width - 12.dp) * level).roundToPx() }
+    val provider = remember(thumbX, gap) {
+        object : PopupPositionProvider {
+            override fun calculatePosition(anchorBounds: IntRect, windowSize: IntSize, layoutDirection: LayoutDirection, popupContentSize: IntSize) =
+                IntOffset(
+                    (anchorBounds.left + thumbX - popupContentSize.width / 2).coerceIn(0, (windowSize.width - popupContentSize.width).coerceAtLeast(0)),
+                    anchorBounds.top - popupContentSize.height - gap,
+                )
+        }
+    }
+    Popup(popupPositionProvider = provider) {
+        Text(
+            "${(level * 100).roundToInt()}%",
+            style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = colors.inverseOnSurface,
+            modifier = Modifier.clip(RoundedCornerShape(8.dp)).background(colors.inverseSurface).padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }
 }

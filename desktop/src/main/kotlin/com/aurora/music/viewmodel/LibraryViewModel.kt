@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 data class LibraryUiState(
     val filter: LibraryFilter = LibraryFilter.ALL,
     val sort: LibrarySort = LibrarySort.RECENT,
-    val layout: LibraryLayout = LibraryLayout.LIST,
+    val layouts: Map<LibraryFilter, LibraryLayout> = emptyMap(),
     val loading: Boolean = true,
     val albums: List<Album> = emptyList(),
     val artists: List<Artist> = emptyList(),
@@ -36,7 +36,12 @@ data class LibraryUiState(
     val supportsFolders: Boolean = false,
     val smartPlaylists: List<com.aurora.music.data.SmartPlaylist> = emptyList(),
     val localPlayCounts: Map<String, Int> = emptyMap(),
-)
+) {
+    val layout: LibraryLayout get() = layouts[filter] ?: defaultLibraryLayout(filter)
+}
+
+fun defaultLibraryLayout(filter: LibraryFilter): LibraryLayout =
+    if (filter == LibraryFilter.ALBUMS || filter == LibraryFilter.ARTISTS) LibraryLayout.GRID else LibraryLayout.LIST
 
 fun sortLibrarySongs(songs: List<Song>, sort: LibrarySort, localPlayCounts: Map<String, Int>): List<Song> = when (sort) {
     LibrarySort.ALPHABETICAL -> songs.sortedBy { it.title.lowercase() }
@@ -137,7 +142,7 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
     fun setFilter(f: LibraryFilter) = _state.update { it.copy(filter = f) }
     fun setSort(s: LibrarySort) = _state.update { it.copy(sort = s) }
     fun toggleLayout() = _state.update {
-        it.copy(layout = if (it.layout == LibraryLayout.LIST) LibraryLayout.GRID else LibraryLayout.LIST)
+        it.copy(layouts = it.layouts + (it.filter to if (it.layout == LibraryLayout.LIST) LibraryLayout.GRID else LibraryLayout.LIST))
     }
 
     private companion object { const val SONG_PAGE = 100 }

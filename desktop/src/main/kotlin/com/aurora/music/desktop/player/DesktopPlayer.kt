@@ -178,7 +178,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             if (volumeSave == null) {
                 _volume.value = saved
                 unmuteVolume = audible
-                engine.setVolume(saved)
+                engine.setVolume(volumeGain(saved))
             }
         }
         scope.launch {
@@ -429,7 +429,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         if (level > DesktopSettings.MIN_AUDIBLE_VOLUME) unmuteVolume = level
         val unmute = unmuteVolume
         _volume.value = level
-        engine.setVolume(level)
+        engine.setVolume(volumeGain(level))
         volumeSave?.cancel()
         volumeSave = scope.launch {
             delay(300)

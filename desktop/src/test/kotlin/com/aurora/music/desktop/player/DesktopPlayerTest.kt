@@ -348,7 +348,8 @@ class DesktopPlayerTest {
         assertEquals("dac", on { player.preferredOutput.value })
         assertTrue(on { player.exclusiveOutput.value })
         on { player.setVolume(0.3f) }
-        assertEquals(0.3f, engine.level)
+        assertEquals(0.3f, on { player.volume.value })
+        assertEquals(0.027f, engine.level, 1e-6f)
         waitFor { runBlocking { container.desktopSettings.volume.first() } == 0.3f }
         assertEquals(400, engine.config.bufferMs)
     }
@@ -359,7 +360,8 @@ class DesktopPlayerTest {
         waitFor { "setOutput(null, false)" in engine.calls }
         on { player.setVolume(0f) }
         on { player.toggleMute() }
-        assertEquals(DesktopSettings.DEFAULT_UNMUTE_VOLUME, engine.level)
+        assertEquals(DesktopSettings.DEFAULT_UNMUTE_VOLUME, on { player.volume.value })
+        assertEquals(0.125f, engine.level, 1e-6f)
         on { player.setVolume(0.2f) }
         on { player.toggleMute() }
         assertEquals(0f, engine.level)
@@ -368,7 +370,7 @@ class DesktopPlayerTest {
         val again = player(restarted)
         waitFor { again.volume.value == 0f }
         on { again.toggleMute() }
-        assertEquals(0.2f, restarted.level)
+        assertEquals(0.008f, restarted.level, 1e-6f)
         assertEquals(0.2f, on { again.volume.value })
     }
 
