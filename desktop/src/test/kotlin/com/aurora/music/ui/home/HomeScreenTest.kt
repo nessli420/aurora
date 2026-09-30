@@ -1,7 +1,6 @@
 package com.aurora.music.ui.home
 
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.ui.geometry.Rect
 import com.aurora.music.data.HomeData
 import com.aurora.music.data.HomeFeedChoice
 import com.aurora.music.data.HomeFeedItem
@@ -27,8 +26,7 @@ class HomeScreenTest {
         starred = Sample.songs.filter { it.liked },
     )
 
-    private fun home(name: String, state: HomeUiState, prefs: UiPrefs = UiPrefs(), events: MutableList<String> = mutableListOf(),
-                     settings: (Rect) -> Unit = {}) =
+    private fun home(name: String, state: HomeUiState, prefs: UiPrefs = UiPrefs(), events: MutableList<String> = mutableListOf()) =
         BrowseScene(name, 1208, 820, prefs) {
             HomeScreen(
                 contentPadding = PaddingValues(),
@@ -36,26 +34,25 @@ class HomeScreenTest {
                 username = "Maren",
                 onOpenDrawer = { events += "drawer" },
                 onOpenSettings = { events += "settings" },
-                onSettingsBounds = settings,
                 onOpenDetail = { kind, id -> events += "$kind:$id" },
                 onPlayAlbum = { events += "play:$it" },
                 onPlayAll = { songs, index -> events += "all:${songs.size}:$index" },
                 onSelectFeed = { events += "feed:$it" },
                 onAddSource = { events += "add" },
+                onOpenNotifications = { events += "inbox" },
             )
         }
 
     @Test fun libraryHomeRendersAndRoutesClicks() {
         val events = mutableListOf<String>()
-        var settings = Rect.Zero
-        home("home-dark", HomeUiState(loading = false, data = library), events = events, settings = { settings = it }).use { scene ->
+        home("home-dark", HomeUiState(loading = false, data = library), events = events).use { scene ->
             val image = scene.shot()
             assertTrue(image.distinctColors(6) > 40)
-            assertTrue(settings.width > 30f && settings.right <= scene.width)
-            scene.click(settings.center.x, settings.center.y)
+            scene.click(1164f, 52f)
             scene.click(30f, 40f)
             scene.click(120f, 150f)
-            assertEquals(listOf("settings", "drawer", "album:a1"), events)
+            scene.click(356f, 263f)
+            assertEquals(listOf("inbox", "album:a1", "play:a1"), events)
         }
     }
 
@@ -72,6 +69,8 @@ class HomeScreenTest {
             assertTrue(scene.shot().distinctColors(6) > 40)
             scene.click(120f, 220f)
             assertEquals("all:8:0", events.last())
+            scene.click(1116f, 52f)
+            assertEquals("feed:discovery", events.last())
         }
         home("home-glass", HomeUiState(loading = false, data = library), UiPrefs(themeStyle = ThemeStyle.GLASS)).use { it.shot() }
     }

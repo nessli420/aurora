@@ -74,6 +74,7 @@ import androidx.compose.material3.Text
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -95,6 +96,7 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -106,7 +108,9 @@ import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.rules.RuleSource
 import com.aurora.music.desktop.player.PlayerUiState
 import com.aurora.music.desktop.player.RepeatMode
+import com.aurora.music.desktop.ui.LocalPlayer
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.VolumeControl
 import com.aurora.music.ui.components.Waveform
 import com.aurora.music.ui.components.formatTime
 import com.aurora.music.ui.theme.LocalUiPrefs
@@ -142,16 +146,21 @@ fun PlayerScreen(
     onPaneRequestHandled: () -> Unit = {},
     paneActions: (@Composable (PlayerPane) -> Unit)? = null,
     onSplitChange: (Float) -> Unit = {},
+    volume: Float = LocalPlayer.current.volume.collectAsState().value,
+    onVolumeChange: (Float) -> Unit = LocalPlayer.current::setVolume,
+    onToggleMute: () -> Unit = LocalPlayer.current::toggleMute,
 ) {
     val song = state.current
     val ui = LocalUiPrefs.current
     val classic = ui.themeStyle == ThemeStyle.AURORA
     var showLyrics by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    var sidePaneName by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(PlayerPane.LYRICS.name) }
-    val sidePane = PlayerPane.valueOf(sidePaneName)
+    var pickedPane by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
+    var lyricsMissing by remember { mutableStateOf(false) }
+    val sidePane = pickedPane?.let(PlayerPane::valueOf) ?: if (lyricsMissing) PlayerPane.QUEUE else PlayerPane.LYRICS
+    val reportLyrics = remember { { available: Boolean -> lyricsMissing = !available } }
     LaunchedEffect(requestedPane) {
         if (requestedPane == null) return@LaunchedEffect
-        sidePaneName = requestedPane.name
+        pickedPane = requestedPane.name
         onPaneRequestHandled()
     }
     var showMenu by remember { mutableStateOf(false) }
@@ -169,7 +178,7 @@ fun PlayerScreen(
 
     // player is outside the scaffold so LocalContentColor defaults to black provide it explicitly
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
-    Box(
+    BoxWithConstraints(
         Modifier
             .fillMaxSize()
             .then(
@@ -182,8 +191,12 @@ fun PlayerScreen(
                 indication = null,
             ) {},
     ) {
+        val short = maxHeight < 700.dp
         val header: @Composable () -> Unit = {
-            Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = if (short) 8.dp else 16.dp, bottom = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Icon(
                     Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                     modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
@@ -238,7 +251,7 @@ fun PlayerScreen(
                         )
                         DropdownMenuItem(
                             text = { Text(appString(R.string.text_view_queue_827a90)) },
-                            onClick = { showMenu = false; sidePaneName = PlayerPane.QUEUE.name },
+                            onClick = { showMenu = false; pickedPane = PlayerPane.QUEUE.name },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
                         )
                     }
@@ -246,7 +259,7 @@ fun PlayerScreen(
             }
         }
         val artwork: @Composable (Modifier) -> Unit = { modifier ->
-            BoxWithConstraints(
+            Box(
                 modifier
                     .then(
                         if (gestures.swipeArtwork) Modifier.pointerInput(song.id) {
@@ -265,17 +278,16 @@ fun PlayerScreen(
                     ),
                 contentAlignment = Alignment.Center,
             ) {
-                val artModifier = Modifier.size(minOf(maxWidth, maxHeight) * ui.playerArtSize.coerceIn(0.5f, 1f))
                 if (classic) {
-                    Artwork(song.artworkUrl, song.accent, artModifier, corner = 20.dp)
+                    Artwork(song.artworkUrl, song.accent, Modifier.fillMaxSize(), corner = 20.dp)
                 } else {
-                    Box(artModifier.auroraPanel(MaterialTheme.shapes.large, emphasized = true).padding(6.dp)) {
+                    Box(Modifier.fillMaxSize().auroraPanel(MaterialTheme.shapes.large, emphasized = true).padding(6.dp)) {
                         Artwork(song.artworkUrl, song.accent, Modifier.fillMaxSize(), corner = 20.dp)
                     }
                 }
             }
         }
-        val controls: @Composable () -> Unit = {
+        val controls: @Composable (Dp) -> Unit = { volumeWidth ->
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (state.isPlaying) {
                     com.aurora.music.ui.components.LottieEqualizer(
@@ -417,12 +429,12 @@ fun PlayerScreen(
 
             Spacer(Modifier.height(12.dp))
 
-            if (ui.playerShowUtilities) {
-                Row(
-                    Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+            Row(
+                Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (ui.playerShowUtilities) {
                     BottomUtil(
                         Icons.Filled.Speed, appString(R.string.text_speed_x_72da98, ("%.1f".format(state.speed))), onOpenSpeedPitch,
                         active = kotlin.math.abs(state.speed - 1f) > 0.001f,
@@ -430,8 +442,8 @@ fun PlayerScreen(
                     BottomUtil(Icons.Filled.Bedtime, appString(R.string.text_sleep_timer_e90613), onOpenSleep,
                         active = state.sleepTimerMinutes > 0 || state.sleepEndOfTrack)
                 }
-            } else {
-                Spacer(Modifier.height(12.dp))
+                Spacer(Modifier.weight(1f))
+                VolumeControl(volume, onVolumeChange, onToggleMute, volumeWidth, fill = playerAccent)
             }
         }
         val paneSurface = if (classic) Modifier.clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
@@ -439,43 +451,65 @@ fun PlayerScreen(
         val spacing = ui.tabletPanelSpacing.dp.coerceAtLeast(4.dp)
         var split by remember(ui.tabletPlayerSplit) { mutableFloatStateOf(ui.tabletPlayerSplit) }
         val splitRange = com.aurora.music.data.TabletSetting.PLAYER_SPLIT.range
-        Column(
-            Modifier.align(Alignment.TopCenter).widthIn(max = 1440.dp).fillMaxSize().padding(horizontal = 32.dp),
-        ) {
+        val density = androidx.compose.ui.platform.LocalDensity.current
+        Column(Modifier.fillMaxSize()) {
             header()
-            BoxWithConstraints(Modifier.fillMaxWidth().weight(1f).padding(bottom = 24.dp)) {
-                val totalPx = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidth.toPx() }
-                Row(Modifier.fillMaxSize()) {
-                    BoxWithConstraints(Modifier.weight(split).fillMaxHeight()) {
-                        val artSide = (maxHeight - 340.dp).coerceIn(160.dp, 460.dp).coerceAtMost(maxWidth)
-                        Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
-                            artwork(Modifier.fillMaxWidth().height(artSide))
-                            Spacer(Modifier.height(20.dp))
-                            Column(Modifier.widthIn(max = 520.dp).fillMaxWidth()) { controls() }
-                        }
-                    }
-                    PaneDivider(
-                        onDrag = { dx -> if (totalPx > 0f) split = (split + dx / totalPx).coerceIn(splitRange) },
-                        onDragEnd = { onSplitChange(split) },
-                    )
-                    Column(Modifier.weight(1f - split).fillMaxHeight().then(paneSurface).padding(spacing)) {
-                        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                            PaneSwitcher(sidePane, { sidePaneName = it.name })
-                            Spacer(Modifier.weight(1f))
-                            if (sidePane == PlayerPane.LYRICS) {
-                                IconButton(onClick = { showLyrics = true }) {
-                                    Icon(Icons.Filled.OpenInFull, appString(R.string.tablet_fullscreen_lyrics),
-                                        tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            Box(
+                Modifier.fillMaxWidth().weight(1f).padding(start = 32.dp, end = 32.dp, bottom = if (short) 16.dp else 24.dp),
+                contentAlignment = Alignment.TopCenter,
+            ) {
+                BoxWithConstraints(Modifier.widthIn(max = BodyMaxWidth).fillMaxSize()) {
+                    val totalPx = with(density) { maxWidth.toPx() }
+                    Row(Modifier.fillMaxSize()) {
+                        BoxWithConstraints(Modifier.weight(split).fillMaxHeight()) {
+                            val gap = if (short) 12.dp else 20.dp
+                            var controlsHeight by remember { mutableStateOf(0.dp) }
+                            val reserve = if (controlsHeight > 0.dp) controlsHeight else ControlsEstimate
+                            val artScale = ui.playerArtSize.coerceIn(0.5f, 1.2f) / DefaultArtSize
+                            val fit = (maxHeight - reserve - gap).coerceAtMost(maxWidth - 32.dp)
+                            val artSide = minOf(fit * artScale.coerceAtMost(1f), MaxArt * artScale).coerceAtLeast(MinArt).coerceAtMost(maxWidth)
+                            val controlsWidth = artSide.coerceAtLeast(420.dp).coerceAtMost(maxWidth)
+                            Column(
+                                Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).heightIn(min = maxHeight),
+                                horizontalAlignment = Alignment.CenterHorizontally,
+                                verticalArrangement = Arrangement.Center,
+                            ) {
+                                artwork(Modifier.size(artSide))
+                                Spacer(Modifier.height(gap))
+                                Column(Modifier.width(controlsWidth).onSizeChanged { controlsHeight = with(density) { it.height.toDp() } }) {
+                                    controls(if (controlsWidth >= 480.dp) 160.dp else 120.dp)
                                 }
-                            } else paneActions?.invoke(sidePane)
+                            }
                         }
-                        Spacer(Modifier.height(spacing))
-                        AnimatedContent(
-                            targetState = sidePane,
-                            transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
-                            label = "playerPane",
-                            modifier = Modifier.weight(1f).fillMaxWidth(),
-                        ) { target -> Box(Modifier.fillMaxSize()) { paneContent(target, Modifier.fillMaxSize()) } }
+                        PaneDivider(
+                            onDrag = { dx -> if (totalPx > 0f) split = (split + dx / totalPx).coerceIn(splitRange) },
+                            onDragEnd = { onSplitChange(split) },
+                        )
+                        Column(Modifier.weight(1f - split).fillMaxHeight().then(paneSurface).padding(spacing)) {
+                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                                PaneSwitcher(sidePane, { pickedPane = it.name })
+                                Spacer(Modifier.weight(1f))
+                                if (sidePane == PlayerPane.LYRICS) {
+                                    IconButton(onClick = { showLyrics = true }) {
+                                        Icon(Icons.Filled.OpenInFull, appString(R.string.tablet_fullscreen_lyrics),
+                                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+                                    }
+                                } else paneActions?.invoke(sidePane)
+                            }
+                            Spacer(Modifier.height(spacing))
+                            AnimatedContent(
+                                targetState = sidePane,
+                                transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+                                label = "playerPane",
+                                modifier = Modifier.weight(1f).fillMaxWidth(),
+                            ) { target ->
+                                Box(Modifier.fillMaxSize()) {
+                                    CompositionLocalProvider(LocalLyricsAvailability provides if (pickedPane == null) reportLyrics else null) {
+                                        paneContent(target, Modifier.fillMaxSize())
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -484,6 +518,12 @@ fun PlayerScreen(
     }
     }
 }
+
+private const val DefaultArtSize = 0.86f
+private val MaxArt = 640.dp
+private val MinArt = 160.dp
+private val ControlsEstimate = 330.dp
+private val BodyMaxWidth = 1680.dp
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable

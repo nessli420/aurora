@@ -4,7 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -121,13 +120,31 @@ class LibraryScreensTest {
         }
     }
 
+    @Test fun layoutIsRememberedPerTab() {
+        val albums = LibraryUiState(filter = LibraryFilter.ALBUMS)
+        assertEquals(LibraryLayout.GRID, albums.layout)
+        assertEquals(LibraryLayout.GRID, albums.copy(filter = LibraryFilter.ARTISTS).layout)
+        assertEquals(LibraryLayout.LIST, albums.copy(filter = LibraryFilter.PLAYLISTS).layout)
+        assertEquals(LibraryLayout.LIST, albums.copy(filter = LibraryFilter.DOWNLOADED).layout)
+        val listed = albums.copy(layouts = mapOf(LibraryFilter.ALBUMS to LibraryLayout.LIST))
+        assertEquals(LibraryLayout.LIST, listed.layout)
+        assertEquals(LibraryLayout.GRID, listed.copy(filter = LibraryFilter.ARTISTS).layout)
+    }
+
+    @Test fun splitListKeepsEveryTabUsable() {
+        val shots = listOf(LibraryFilter.ALL, LibraryFilter.ALBUMS, LibraryFilter.SONGS, LibraryFilter.PLAYLISTS).map { f ->
+            shot("library-split-list-${f.name.lowercase()}", width = 440) { Library(Samples.library(f, sort = LibrarySort.ALPHABETICAL), selected = "album:a0") }
+        }
+        shots.forEach { assertTrue(it.distinctColors(6) > 60) }
+        shots.map { it.pixels().contentHashCode() }.let { assertEquals(it.size, it.distinct().size) }
+    }
+
     @Test fun splitPaneHostsDetailBesideLibrary() {
         shot("library-split", width = 1352) {
             Row(Modifier.fillMaxSize()) {
-                Box(Modifier.weight(1f).fillMaxHeight()) { Library(Samples.library(LibraryFilter.ALBUMS, LibraryLayout.GRID), selected = "album:a0") }
-                Spacer(Modifier.width(16.dp))
+                Box(Modifier.width(440.dp).fillMaxHeight()) { Library(Samples.library(LibraryFilter.ALBUMS, LibraryLayout.GRID), selected = "album:a0") }
                 Box(
-                    Modifier.weight(1.1f).fillMaxHeight().padding(top = 8.dp)
+                    Modifier.weight(1f).fillMaxHeight().padding(end = 12.dp)
                         .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                 ) {

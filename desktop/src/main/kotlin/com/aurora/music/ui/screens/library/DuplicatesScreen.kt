@@ -7,6 +7,7 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -19,8 +20,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
@@ -41,7 +43,11 @@ import com.aurora.music.data.DuplicateGroup
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.LottieLoader
-import com.aurora.music.ui.screens.settings.SettingsTopBar
+import com.aurora.music.ui.components.PageHeader
+import com.aurora.music.data.ThemeStyle
+import com.aurora.music.ui.layout.LocalPageGutter
+import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.model.accent
 
 @Composable
@@ -54,34 +60,32 @@ fun DuplicatesScreen(
     onBack: () -> Unit,
     onPlay: (Song) -> Unit,
 ) {
+    val gutter = LocalPageGutter.current
     Column(Modifier.fillMaxSize()) {
-        SettingsTopBar(title = appString(R.string.text_duplicates_889a9c), onBack = onBack)
+        val counts = if (loading || groups.isEmpty()) null else appString(
+            R.string.duplicates_counts, appPlural(R.plurals.group_count, (groups.size)), appPlural(R.plurals.track_count, (groups.sumOf { it.songs.size })), (scanned),
+        )
+        PageHeader(appString(R.string.text_duplicates_889a9c), Modifier.padding(horizontal = gutter), subtitle = counts, onBack = onBack)
         when {
             loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
             groups.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 Text(appString(R.string.text_no_duplicates_found_across_tracks_8af6bb, (scanned)), color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             else -> {
-                val dupCount = groups.sumOf { it.songs.size }
                 val bottom = contentPadding.calculateBottomPadding() + 24.dp
-                val listState = rememberLazyListState()
+                val gridState = rememberLazyGridState()
                 Box(Modifier.fillMaxSize()) {
-                    LazyColumn(
-                        Modifier.fillMaxWidth().padding(horizontal = 12.dp),
-                        state = listState,
-                        contentPadding = PaddingValues(bottom = bottom),
+                    LazyVerticalGrid(
+                        columns = GridCells.Adaptive(380.dp),
+                        modifier = Modifier.fillMaxSize(),
+                        state = gridState,
+                        contentPadding = PaddingValues(start = gutter, end = gutter, top = 12.dp, bottom = bottom),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        item {
-                            Text(
-                                appString(R.string.duplicates_counts, appPlural(R.plurals.group_count, (groups.size)), appPlural(R.plurals.track_count, (dupCount)), (scanned)),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 6.dp),
-                            )
-                        }
                         items(groups.size) { i -> GroupCard(groups[i], currentSongId, onPlay) }
                     }
-                    PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
+                    PaneScrollbar(rememberScrollbarAdapter(gridState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
                 }
             }
         }
@@ -90,12 +94,12 @@ fun DuplicatesScreen(
 
 @Composable
 private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Song) -> Unit) {
+    val aurora = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
+    val shape = if (aurora) RoundedCornerShape(18.dp) else MaterialTheme.shapes.medium
     Column(
         Modifier
             .fillMaxWidth()
-            .padding(vertical = 5.dp)
-            .clip(RoundedCornerShape(18.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
+            .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f)) else Modifier.auroraPanel(shape))
             .padding(12.dp),
     ) {
         Text(group.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)

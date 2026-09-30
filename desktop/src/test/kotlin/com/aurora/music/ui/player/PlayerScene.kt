@@ -147,8 +147,18 @@ internal class PlayerScene(
 
     private fun move(x: Float, y: Float) = ui.input { sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = ui.millis) }
 
+    fun hover(x: Float, y: Float) {
+        move(x, y)
+        frames(4)
+    }
+
     fun click(x: Float, y: Float) {
         ui.click(x, y)
+        frames(4)
+    }
+
+    fun rightClick(x: Float, y: Float) {
+        ui.click(x, y, PointerButton.Secondary, PointerButtons(isSecondaryPressed = true))
         frames(4)
     }
 

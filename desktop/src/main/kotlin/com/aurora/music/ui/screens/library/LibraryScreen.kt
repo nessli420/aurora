@@ -7,24 +7,32 @@ import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.v2.ScrollbarAdapter
 import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -65,26 +73,32 @@ import androidx.compose.material.icons.filled.SwapVert
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -97,23 +111,49 @@ import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.round
 import androidx.compose.ui.unit.sp
+import com.aurora.music.data.ThemeStyle
 import com.aurora.music.model.LibraryFilter
 import com.aurora.music.model.LibraryLayout
 import com.aurora.music.model.LibrarySort
 import com.aurora.music.model.Song
+import com.aurora.music.ui.components.AdaptiveShelf
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.PageHeader
+import com.aurora.music.ui.components.PageSection
+import com.aurora.music.ui.components.SongListHeader
 import com.aurora.music.ui.components.SongRow
+import com.aurora.music.ui.layout.LocalPageGutter
+import com.aurora.music.ui.layout.PageMetrics
+import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.LibraryUiState
 import kotlinx.coroutines.launch
+import kotlin.math.floor
 import com.aurora.music.data.accent
 import com.aurora.music.model.accent
 import com.aurora.music.model.label
 
 internal val LocalLibrarySelection = androidx.compose.runtime.compositionLocalOf<String?> { null }
+
+private data class LibInsets(val start: Dp, val end: Dp)
+
+private val LocalLibInsets = staticCompositionLocalOf { LibInsets(24.dp, 24.dp) }
+
+private val RowInset = 8.dp
+private val RailReserve = 40.dp
+private val ListArt = 44.dp
+private val CellGap = 12.dp
+private val ColumnGap = 16.dp
+private val ActionSize = 36.dp
+private val TileGap = 12.dp
+private val TileMinWidth = 260.dp
+private val TileMaxWidth = 320.dp
+private val CompactWidth = 720.dp
 
 @Composable
 internal fun PaneScrollbar(adapter: ScrollbarAdapter, modifier: Modifier = Modifier) {
@@ -140,8 +180,7 @@ internal fun Modifier.onSecondaryPress(onPress: (Offset) -> Unit): Modifier = po
 }
 
 @Composable
-private fun selectionTint(key: String): Color =
-    if (key.isNotEmpty() && LocalLibrarySelection.current == key) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else Color.Transparent
+private fun isSelected(row: LibRow): Boolean = LocalLibrarySelection.current == "${row.kind}:${row.id}"
 
 private data class LibRow(
     val title: String,
@@ -155,7 +194,11 @@ private data class LibRow(
     val badge: String = "",
     val sortPlayCount: Int = 0,
     val sortRecencySec: Long = 0,
+    val detail: String = subtitle,
+    val cells: List<String> = emptyList(),
 )
+
+private class TableColumn(val label: String, val weight: Float = 0f, val width: Dp = 0.dp)
 
 private class LibActions(
     val isLiked: (String) -> Boolean,
@@ -214,12 +257,16 @@ fun LibraryScreen(
     onPlaySong: (Song) -> Unit = {},
     selectedItem: String? = null,
 ) {
-    androidx.compose.runtime.CompositionLocalProvider(LocalLibrarySelection provides selectedItem) {
+    val gutter = LocalPageGutter.current
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+    val compact = maxWidth < CompactWidth
+    val insets = LibInsets(gutter, if (compact && selectedItem != null) 16.dp else gutter)
+    CompositionLocalProvider(LocalLibrarySelection provides selectedItem, LocalLibInsets provides insets) {
     var showCreate by remember { mutableStateOf(false) }
     val filter = state.filter
     val sort = state.sort
     val layout = state.layout
-    val libColumns = com.aurora.music.ui.theme.LocalUiPrefs.current.libraryColumns.coerceIn(2, 4)
+    val cardMin = cardMinWidth(LocalUiPrefs.current.libraryColumns, compact)
     val actions = LibActions(
         isLiked = { id -> likedIds.contains(id) },
         onPlay = { r -> onPlayCollection(r.id, r.kind) },
@@ -231,29 +278,28 @@ fun LibraryScreen(
         onDeleteSmart = { r -> onDeleteSmart(r.id) },
         onExport = { r -> onExportPlaylist(r.id, r.kind, r.title) },
     )
+    val open: (LibRow) -> Unit = { r ->
+        when (r.kind) {
+            "folders" -> onOpenFolders()
+            "radio" -> onOpenRadio?.invoke()
+            "podcasts" -> onOpenPodcasts?.invoke()
+            else -> onOpenDetail(r.kind, r.id)
+        }
+    }
 
-    Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier.size(38.dp).clip(CircleShape)
-                    .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
-                    .clickable(onClick = onOpenDrawer).pointerHoverIcon(PointerIcon.Hand),
-                contentAlignment = Alignment.Center,
-            ) { Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
-            Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(appString(R.string.text_library_b8100f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                val stats = buildList {
-                    if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
-                    if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
-                    if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
-                }.joinToString("  ·  ")
-                if (stats.isNotBlank()) {
-                    Text(stats, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
-            Icon(Icons.Filled.Search, appString(R.string.text_search_bce064), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSearch).pointerHoverIcon(PointerIcon.Hand).padding(8.dp))
-            Icon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988), modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showCreate = true }.pointerHoverIcon(PointerIcon.Hand).padding(8.dp))
+    Column(Modifier.fillMaxSize()) {
+        val stats = if (compact) null else buildList {
+            if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
+            if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
+            if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
+        }.joinToString("  ·  ")
+        PageHeader(
+            appString(R.string.text_library_b8100f),
+            Modifier.padding(start = insets.start, end = (insets.end - RowInset).coerceAtLeast(0.dp)),
+            subtitle = stats,
+        ) {
+            HeaderAction(Icons.Filled.Search, appString(R.string.text_search_bce064), onOpenSearch)
+            HeaderAction(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988)) { showCreate = true }
         }
 
         if (showCreate) {
@@ -265,51 +311,7 @@ fun LibraryScreen(
             )
         }
 
-        Spacer(Modifier.height(10.dp))
-
-        val visibleTabs = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
-        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-            items(visibleTabs.size) { i ->
-                val f = visibleTabs[i]
-                LibTab(label = f.label, icon = tabIcon(f), selected = f == filter) { onFilter(f) }
-            }
-        }
-
-        Spacer(Modifier.height(6.dp))
-
-        if (filter != LibraryFilter.ALL) {
-            var sortMenu by remember { mutableStateOf(false) }
-            Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Box {
-                    Row(
-                        Modifier.clip(RoundedCornerShape(50)).clickable { sortMenu = true }.pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Icon(Icons.Filled.SwapVert, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(sort.label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
-                    }
-                    DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
-                        LibrarySort.entries.forEach { s ->
-                            DropdownMenuItem(
-                                text = { Text(s.label) },
-                                onClick = { onSort(s); sortMenu = false },
-                                trailingIcon = { if (s == sort) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary) },
-                            )
-                        }
-                    }
-                }
-                Spacer(Modifier.weight(1f))
-                if (filter != LibraryFilter.SONGS) {
-                    Icon(
-                        imageVector = if (layout == LibraryLayout.LIST) Icons.Filled.GridView else Icons.AutoMirrored.Filled.List,
-                        contentDescription = appString(R.string.text_toggle_layout_6169e7),
-                        modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onToggleLayout).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
-                    )
-                }
-            }
-            Spacer(Modifier.height(2.dp))
-        }
+        LibraryToolbar(filter, sort, layout, canDownload, compact, onFilter, onSort, onToggleLayout)
 
         val bottom = contentPadding.calculateBottomPadding() + 24.dp
 
@@ -322,8 +324,8 @@ fun LibraryScreen(
 
         when (filter) {
             LibraryFilter.ALL -> AllOverview(
-                state = state, pins = pins, canDownload = canDownload, bottom = bottom,
-                onFilter = onFilter, onOpenDetail = onOpenDetail,
+                state = state, pins = pins, canDownload = canDownload, bottom = bottom, cardMin = cardMin, actions = actions,
+                onFilter = onFilter, onOpen = open, onOpenDetail = onOpenDetail,
                 onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts,
             )
             LibraryFilter.SONGS -> SongsTab(
@@ -339,7 +341,7 @@ fun LibraryScreen(
                 if (dlRows.isEmpty()) {
                     EmptyHint(appString(R.string.text_no_downloads_yet_9647c1), appString(R.string.text_albums_and_playlists_you_download_live_here_e4c7ba))
                 } else {
-                    RowsContent(dlRows, layout, libColumns, sort, bottom, actions) { r -> onOpenDetail(r.kind, r.id) }
+                    RowsContent(dlRows, emptyList(), layout, cardMin, sort, bottom, actions, open)
                 }
             }
             else -> {
@@ -347,18 +349,37 @@ fun LibraryScreen(
                 if (rows.isEmpty()) {
                     EmptyHint(appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
                 } else {
-                    RowsContent(rows, layout, libColumns, sort, bottom, actions) { r ->
-                        when (r.kind) {
-                            "folders" -> onOpenFolders()
-                            "radio" -> onOpenRadio?.invoke()
-                            "podcasts" -> onOpenPodcasts?.invoke()
-                            else -> onOpenDetail(r.kind, r.id)
-                        }
-                    }
+                    key(filter) { RowsContent(rows, tableColumns(filter), layout, cardMin, sort, bottom, actions, open) }
                 }
             }
         }
     }
+    }
+    }
+}
+
+private fun cardMinWidth(columns: Int, compact: Boolean): Dp = when (columns.coerceIn(2, 4)) {
+    3 -> if (compact) 104.dp else 148.dp
+    4 -> if (compact) 86.dp else 128.dp
+    else -> if (compact) 120.dp else PageMetrics.ShelfMinItemWidth
+}
+
+@Composable
+private fun tableColumns(filter: LibraryFilter): List<TableColumn> = when (filter) {
+    LibraryFilter.ALBUMS -> listOf(
+        TableColumn(appString(R.string.text_artist_6c3f3d), weight = 0.3f),
+        TableColumn(appString(R.string.text_year_879e32), width = 72.dp),
+        TableColumn(appString(R.string.text_tracks_3dd1a4), width = 72.dp),
+    )
+    LibraryFilter.ARTISTS -> listOf(TableColumn(appString(R.string.text_albums_4c45e7), width = 88.dp))
+    LibraryFilter.PLAYLISTS -> listOf(TableColumn(appString(R.string.text_tracks_3dd1a4), width = 72.dp))
+    else -> emptyList()
+}
+
+@Composable
+private fun HeaderAction(icon: ImageVector, label: String, onClick: () -> Unit) {
+    IconButton(onClick = onClick, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+        Icon(icon, label)
     }
 }
 
@@ -369,6 +390,92 @@ private fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
     LibraryFilter.ARTISTS -> Icons.Filled.Person
     LibraryFilter.SONGS -> Icons.Filled.MusicNote
     LibraryFilter.DOWNLOADED -> Icons.Filled.Download
+}
+
+@Composable
+private fun LibraryToolbar(
+    filter: LibraryFilter,
+    sort: LibrarySort,
+    layout: LibraryLayout,
+    canDownload: Boolean,
+    compact: Boolean,
+    onFilter: (LibraryFilter) -> Unit,
+    onSort: (LibrarySort) -> Unit,
+    onToggleLayout: () -> Unit,
+) {
+    val insets = LocalLibInsets.current
+    val visibleTabs = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
+    Row(
+        Modifier.fillMaxWidth().height(52.dp).padding(end = insets.end),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        LazyRow(
+            Modifier.weight(1f),
+            contentPadding = PaddingValues(start = (insets.start - 10.dp).coerceAtLeast(0.dp), end = 8.dp),
+            horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            items(visibleTabs.size) { i ->
+                val f = visibleTabs[i]
+                LibTab(label = f.label, icon = tabIcon(f), selected = f == filter) { onFilter(f) }
+            }
+        }
+        if (filter != LibraryFilter.ALL) SortButton(sort, iconOnly = compact, onSort = onSort)
+        if (filter != LibraryFilter.ALL && filter != LibraryFilter.SONGS) {
+            Spacer(Modifier.width(6.dp))
+            LayoutToggle(layout, onToggleLayout)
+        }
+    }
+}
+
+@Composable
+private fun SortButton(sort: LibrarySort, iconOnly: Boolean, onSort: (LibrarySort) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    val label = appString(R.string.text_sort_by_a2a5bd)
+    Box {
+        Row(
+            Modifier.height(36.dp).clip(RoundedCornerShape(50))
+                .clickable(onClickLabel = label) { open = true }
+                .pointerHoverIcon(PointerIcon.Hand)
+                .padding(horizontal = if (iconOnly) 9.dp else 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Filled.SwapVert, if (iconOnly) sort.label else label, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            if (!iconOnly) {
+                Spacer(Modifier.width(6.dp))
+                Text(sort.label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 1)
+            }
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            LibrarySort.entries.forEach { s ->
+                DropdownMenuItem(
+                    text = { Text(s.label) },
+                    onClick = { onSort(s); open = false },
+                    trailingIcon = { if (s == sort) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun LayoutToggle(layout: LibraryLayout, onToggle: () -> Unit) {
+    val label = appString(R.string.text_toggle_layout_6169e7)
+    val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(50) else MaterialTheme.shapes.small
+    Row(Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)).padding(3.dp)) {
+        listOf(LibraryLayout.LIST to Icons.AutoMirrored.Filled.List, LibraryLayout.GRID to Icons.Filled.GridView).forEach { (mode, icon) ->
+            val on = mode == layout
+            Box(
+                Modifier.size(30.dp).clip(shape)
+                    .background(if (on) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else Color.Transparent)
+                    .clickable(enabled = !on, onClickLabel = label, onClick = onToggle)
+                    .pointerHoverIcon(PointerIcon.Hand),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(icon, label, tint = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+            }
+        }
+    }
 }
 
 @Composable
@@ -403,16 +510,35 @@ private fun AllOverview(
     state: LibraryUiState,
     pins: List<com.aurora.music.data.Pin>,
     canDownload: Boolean,
-    bottom: androidx.compose.ui.unit.Dp,
+    bottom: Dp,
+    cardMin: Dp,
+    actions: LibActions,
     onFilter: (LibraryFilter) -> Unit,
+    onOpen: (LibRow) -> Unit,
     onOpenDetail: (String, String) -> Unit,
     onOpenFolders: () -> Unit,
     onOpenRadio: (() -> Unit)?,
     onOpenPodcasts: (() -> Unit)?,
 ) {
+    val insets = LocalLibInsets.current
     val listState = rememberLazyListState()
+    val seeAll = appString(R.string.text_see_all_2941c5)
+    val pinRows = pins.map { p ->
+        LibRow(p.title, p.subtitle.ifBlank { kindLabel(p.kind) }, p.coverUrl, accentFor(p.id), p.id, p.kind, circle = p.kind == "artist")
+    }
+    val playlistRows = state.smartPlaylists.map { sp ->
+        LibRow(sp.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.text_smart_playlist_f77ad7), "", accentFor(sp.id ?: "smart"), sp.id ?: "", "smart", badge = appString(R.string.text_auto_50c3f1))
+    } + state.playlists.map { p -> LibRow(p.title, appPlural(R.plurals.track_count, (p.songCount)), p.coverUrl, p.accent, p.id, "playlist") }
+    val albumRows = state.albums.map { albumRow(it) }
+    val albumsByArtist = remember(state.albums) { state.albums.groupingBy { it.artist.lowercase() }.eachCount() }
+    val artistRows = state.artists.map { artistRow(it, albumsByArtist[it.name.lowercase()] ?: 0) }
     Box(Modifier.fillMaxSize()) {
-    LazyColumn(Modifier.fillMaxSize(), state = listState, contentPadding = PaddingValues(bottom = bottom)) {
+    LazyColumn(
+        Modifier.fillMaxSize(),
+        state = listState,
+        contentPadding = PaddingValues(start = insets.start, end = insets.end, top = 8.dp, bottom = bottom),
+        verticalArrangement = Arrangement.spacedBy(PageMetrics.SectionGap),
+    ) {
         item {
             val tiles = buildList {
                 add(QuickTile(appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), Icons.Filled.Favorite, state.likedCover) { onOpenDetail("liked", "liked") })
@@ -421,81 +547,48 @@ private fun AllOverview(
                 if (onOpenRadio != null) add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
                 if (onOpenPodcasts != null) add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
             }
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                tiles.chunked(2).forEach { pair ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        pair.forEach { t -> QuickTileCard(t, Modifier.weight(1f)) }
-                        if (pair.size == 1) Spacer(Modifier.weight(1f))
-                    }
+            QuickTiles(tiles)
+        }
+
+        if (pinRows.isNotEmpty()) {
+            item {
+                PageSection(appString(R.string.text_pinned_f93121), count = pinRows.size) { LibShelf(pinRows, cardMin, actions, onOpen) }
+            }
+        }
+
+        if (playlistRows.isNotEmpty()) {
+            item {
+                PageSection(appString(R.string.text_playlists_77b69f), action = seeAll, onAction = { onFilter(LibraryFilter.PLAYLISTS) }, count = playlistRows.size) {
+                    LibShelf(playlistRows, cardMin, actions, onOpen)
                 }
             }
         }
 
-        if (pins.isNotEmpty()) {
-            item { ShelfHeader(appString(R.string.text_pinned_f93121), null) {} }
+        if (albumRows.isNotEmpty()) {
             item {
-                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(pins.size) { i ->
-                        val p = pins[i]
-                        ShelfCard(
-                            title = p.title, subtitle = p.kind.replaceFirstChar { it.uppercase() }, art = p.coverUrl,
-                            accent = accentFor(p.id), circle = p.kind == "artist", badge = "",
-                            width = 112.dp, selectionKey = "${p.kind}:${p.id}",
-                        ) { onOpenDetail(p.kind, p.id) }
-                    }
+                PageSection(appString(R.string.text_albums_4c45e7), action = seeAll, onAction = { onFilter(LibraryFilter.ALBUMS) }, count = albumRows.size) {
+                    LibShelf(albumRows, cardMin, actions, onOpen)
                 }
             }
         }
 
-        val playlistCount = state.smartPlaylists.size + state.playlists.size
-        if (playlistCount > 0) {
-            item { ShelfHeader(appString(R.string.text_playlists_77b69f), playlistCount) { onFilter(LibraryFilter.PLAYLISTS) } }
+        if (artistRows.isNotEmpty()) {
             item {
-                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(state.smartPlaylists.size) { i ->
-                        val sp = state.smartPlaylists[i]
-                        ShelfCard(sp.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.text_smart_playlist_f77ad7), "", accentFor(sp.id ?: "smart"), badge = appString(R.string.text_auto_50c3f1)) {
-                            onOpenDetail("smart", sp.id ?: "")
-                        }
-                    }
-                    items(state.playlists.size) { i ->
-                        val p = state.playlists[i]
-                        ShelfCard(p.title, appPlural(R.plurals.track_count, (p.songCount)), p.coverUrl, p.accent, selectionKey = "playlist:${p.id}") { onOpenDetail("playlist", p.id) }
-                    }
-                }
-            }
-        }
-
-        if (state.albums.isNotEmpty()) {
-            item { ShelfHeader(appString(R.string.text_albums_4c45e7), state.albums.size) { onFilter(LibraryFilter.ALBUMS) } }
-            item {
-                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    items(state.albums.size) { i ->
-                        val a = state.albums[i]
-                        val label = a.typeLabel.localizedMediaType()
-                        ShelfCard(a.title, a.artist, a.artworkUrl, accentFor(a.id), badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(), selectionKey = "album:${a.id}") {
-                            onOpenDetail("album", a.id)
-                        }
-                    }
-                }
-            }
-        }
-
-        if (state.artists.isNotEmpty()) {
-            item { ShelfHeader(appString(R.string.text_artists_1528d8), state.artists.size) { onFilter(LibraryFilter.ARTISTS) } }
-            item {
-                LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-                    items(state.artists.size) { i ->
-                        val ar = state.artists[i]
-                        ShelfCard(ar.name, "", ar.imageUrl, accentFor(ar.id), circle = true, width = 96.dp, centered = true, selectionKey = "artist:${ar.id}") {
-                            onOpenDetail("artist", ar.id)
-                        }
-                    }
+                PageSection(appString(R.string.text_artists_1528d8), action = seeAll, onAction = { onFilter(LibraryFilter.ARTISTS) }, count = artistRows.size) {
+                    LibShelf(artistRows, cardMin, actions, onOpen)
                 }
             }
         }
     }
     PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
+    }
+}
+
+@Composable
+private fun LibShelf(rows: List<LibRow>, minWidth: Dp, actions: LibActions, onOpen: (LibRow) -> Unit) {
+    val insets = LocalLibInsets.current
+    AdaptiveShelf(rows, minItemWidth = minWidth, bleed = minOf(insets.start, insets.end)) { row, _ ->
+        LibCard(row, actions) { onOpen(row) }
     }
 }
 
@@ -508,107 +601,42 @@ private data class QuickTile(
 )
 
 @Composable
+private fun QuickTiles(tiles: List<QuickTile>) {
+    BoxWithConstraints(Modifier.fillMaxWidth()) {
+        val columns = floor((maxWidth + TileGap) / (TileMinWidth + TileGap)).toInt().coerceAtLeast(1)
+        val tileWidth = if (columns == 1) maxWidth else ((maxWidth - TileGap * (columns - 1)) / columns).coerceAtMost(TileMaxWidth)
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(TileGap), verticalArrangement = Arrangement.spacedBy(TileGap)) {
+            tiles.forEach { t -> QuickTileCard(t, Modifier.width(tileWidth)) }
+        }
+    }
+}
+
+@Composable
 private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
+    val aurora = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
+    val shape = if (aurora) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium
     Row(
         modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f))
+            .height(64.dp)
+            .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)) else Modifier.auroraPanel(shape))
             .clickable(onClick = tile.onClick)
             .pointerHoverIcon(PointerIcon.Hand)
-            .padding(10.dp),
+            .padding(horizontal = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (tile.art.isNotBlank()) {
-            Artwork(tile.art, MaterialTheme.colorScheme.primary, Modifier.size(38.dp), corner = 10.dp)
+            Artwork(tile.art, MaterialTheme.colorScheme.primary, Modifier.size(40.dp), corner = 10.dp)
         } else {
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+                Modifier.size(40.dp).clip(RoundedCornerShape(10.dp))
                     .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)))),
                 contentAlignment = Alignment.Center,
-            ) { Icon(tile.icon, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(19.dp)) }
+            ) { Icon(tile.icon, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp)) }
         }
-        Spacer(Modifier.width(10.dp))
+        Spacer(Modifier.width(12.dp))
         Column {
             Text(tile.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(tile.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-    }
-}
-
-@Composable
-private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 18.dp, bottom = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
-        if (count != null) {
-            Spacer(Modifier.width(8.dp))
-            Text(
-                "$count",
-                style = MaterialTheme.typography.labelMedium,
-                fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp),
-            )
-        }
-        Spacer(Modifier.weight(1f))
-        if (count != null) {
-            Text(
-                appString(R.string.text_see_all_2941c5),
-                style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onSeeAll).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 10.dp, vertical = 6.dp),
-            )
-        }
-    }
-}
-
-@Composable
-private fun ShelfCard(
-    title: String,
-    subtitle: String,
-    art: String,
-    accent: Color,
-    circle: Boolean = false,
-    badge: String = "",
-    width: androidx.compose.ui.unit.Dp = 132.dp,
-    centered: Boolean = false,
-    selectionKey: String = "",
-    onClick: () -> Unit,
-) {
-    Column(
-        Modifier.width(width).clip(RoundedCornerShape(14.dp)).background(selectionTint(selectionKey)).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(4.dp),
-        horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
-    ) {
-        Box {
-            Artwork(art, accent, Modifier.fillMaxWidth().aspectRatio(1f), corner = if (circle) 200.dp else 14.dp)
-            if (badge.isNotBlank()) {
-                Text(
-                    badge,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
-                        .clip(RoundedCornerShape(6.dp)).background(Color.Black.copy(alpha = 0.55f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                )
-            }
-        }
-        Spacer(Modifier.height(7.dp))
-        Text(
-            title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-            maxLines = 1, overflow = TextOverflow.Ellipsis,
-            textAlign = if (centered) TextAlign.Center else TextAlign.Start,
-            modifier = Modifier.fillMaxWidth(),
-        )
-        if (subtitle.isNotBlank()) {
-            Text(
-                subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1, overflow = TextOverflow.Ellipsis,
-                textAlign = if (centered) TextAlign.Center else TextAlign.Start,
-                modifier = Modifier.fillMaxWidth(),
-            )
         }
     }
 }
@@ -620,7 +648,7 @@ private fun SongsTab(
     likedIds: Set<String>,
     currentSongId: String,
     isPlaying: Boolean,
-    bottom: androidx.compose.ui.unit.Dp,
+    bottom: Dp,
     canDownload: Boolean,
     downloadedIds: Set<String>,
     onAddToQueue: (Song) -> Unit,
@@ -635,22 +663,21 @@ private fun SongsTab(
     onPlayAllSongs: (shuffle: Boolean) -> Unit,
     onPlaySong: (Song) -> Unit,
 ) {
-    val songs = sortedSongs(state.songs, sort, state.localPlayCounts)
+    val songs = remember(state.songs, sort, state.localPlayCounts) { sortedSongs(state.songs, sort, state.localPlayCounts) }
     if (songs.isEmpty() && !state.loading) {
         EmptyHint(appString(R.string.text_no_songs_e6bbe2), appString(R.string.text_songs_from_your_server_appear_here_e4db53))
         return
     }
+    val insets = LocalLibInsets.current
+    val rail = sort == LibrarySort.ALPHABETICAL && songs.size > 30
+    val rowStart = insets.start - RowInset
+    val rowEnd = if (rail) maxOf(insets.end - RowInset, RailReserve) else (insets.end - RowInset).coerceAtLeast(0.dp)
 
+    Column(Modifier.fillMaxSize()) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        Modifier.fillMaxWidth().padding(start = insets.start, end = insets.end, top = 4.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(
-            if (state.canLoadMoreSongs) appString(R.string.track_count_more, (songs.size)) else appPlural(R.plurals.track_count, (songs.size)),
-            style = MaterialTheme.typography.labelLarge,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f),
-        )
         val accent = MaterialTheme.colorScheme.primary
         val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
         Row(
@@ -675,7 +702,17 @@ private fun SongsTab(
                 .pointerHoverIcon(PointerIcon.Hand)
                 .padding(9.dp),
         )
+        Spacer(Modifier.width(16.dp))
+        Text(
+            if (state.canLoadMoreSongs) appString(R.string.track_count_more, (songs.size)) else appPlural(R.plurals.track_count, (songs.size)),
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
     }
+
+    SongListHeader(Modifier.padding(start = rowStart, end = rowEnd), showIndex = false, showArt = true, showAlbum = true, showDateAdded = true)
 
     val listState = rememberLazyListState()
     LaunchedEffect(listState, state.canLoadMoreSongs) {
@@ -689,7 +726,11 @@ private fun SongsTab(
     val scope = rememberCoroutineScope()
 
     Box(Modifier.fillMaxSize()) {
-        LazyColumn(Modifier.fillMaxSize().padding(horizontal = 8.dp), state = listState, contentPadding = PaddingValues(bottom = bottom)) {
+        LazyColumn(
+            Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(start = rowStart, end = rowEnd, top = 4.dp, bottom = bottom),
+        ) {
             items(songs.size) { i ->
                 val s = songs[i]
                 SongRow(
@@ -703,6 +744,7 @@ private fun SongsTab(
                     onRemoveDownload = if (canDownload) ({ onRemoveDownload(s.id) }) else null,
                     onEditTags = onEditTags?.let { cb -> { cb(s) } },
                     serverTagEditing = serverTagEditing,
+                    showDateAdded = true,
                 )
             }
             if (state.songsLoadingMore) {
@@ -714,58 +756,110 @@ private fun SongsTab(
             }
         }
         PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
-        if (sort == LibrarySort.ALPHABETICAL && songs.size > 30) {
+        if (rail) {
             AlphabetRail(
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 10.dp, bottom = bottom),
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 12.dp, bottom = bottom),
                 onJump = { c ->
                     jumpIndex(songs.map { it.title }, c)?.let { idx -> scope.launch { listState.scrollToItem(idx) } }
                 },
             )
         }
     }
+    }
 }
 
 @Composable
 private fun RowsContent(
     rows: List<LibRow>,
+    columns: List<TableColumn>,
     layout: LibraryLayout,
-    libColumns: Int,
+    cardMin: Dp,
     sort: LibrarySort,
-    bottom: androidx.compose.ui.unit.Dp,
+    bottom: Dp,
     actions: LibActions,
     onOpen: (LibRow) -> Unit,
 ) {
+    val insets = LocalLibInsets.current
     if (layout == LibraryLayout.LIST) {
         val listState = rememberLazyListState()
         val scope = rememberCoroutineScope()
-        Box(Modifier.fillMaxSize()) {
-            LazyColumn(Modifier.fillMaxSize().padding(horizontal = 8.dp), state = listState, contentPadding = PaddingValues(bottom = bottom)) {
-                items(rows.size) { i -> LibListItem(rows[i], actions) { onOpen(rows[i]) } }
-            }
-            PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
-            if (sort == LibrarySort.ALPHABETICAL && rows.size > 30) {
-                AlphabetRail(
-                    modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 10.dp, bottom = bottom),
-                    onJump = { c ->
-                        jumpIndex(rows.map { it.title }, c)?.let { idx -> scope.launch { listState.scrollToItem(idx) } }
-                    },
-                )
+        val rail = sort == LibrarySort.ALPHABETICAL && rows.size > 30
+        val rowStart = insets.start - RowInset
+        val rowEnd = if (rail) maxOf(insets.end - RowInset, RailReserve) else (insets.end - RowInset).coerceAtLeast(0.dp)
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val table = columns.isNotEmpty() && maxWidth - rowStart - rowEnd >= PageMetrics.SongTableMinWidth
+            val shown = if (table) columns else emptyList()
+            Column(Modifier.fillMaxSize()) {
+                if (table) LibTableHeader(shown, Modifier.padding(start = rowStart, end = rowEnd))
+                Box(Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(start = rowStart, end = rowEnd, top = 4.dp, bottom = bottom),
+                    ) {
+                        items(rows.size) { i -> LibListItem(rows[i], shown, actions) { onOpen(rows[i]) } }
+                    }
+                    PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
+                    if (rail) {
+                        AlphabetRail(
+                            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 12.dp, bottom = bottom),
+                            onJump = { c ->
+                                jumpIndex(rows.map { it.title }, c)?.let { idx -> scope.launch { listState.scrollToItem(idx) } }
+                            },
+                        )
+                    }
+                }
             }
         }
     } else {
         val gridState = rememberLazyGridState()
         Box(Modifier.fillMaxSize()) {
             LazyVerticalGrid(
-                columns = GridCells.Adaptive((360f / libColumns).coerceAtLeast(120f).dp),
-                modifier = Modifier.fillMaxSize().padding(horizontal = 12.dp),
+                columns = GridCells.Adaptive(cardMin),
+                modifier = Modifier.fillMaxSize(),
                 state = gridState,
-                contentPadding = PaddingValues(bottom = bottom),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(start = insets.start, end = insets.end, top = 8.dp, bottom = bottom),
+                horizontalArrangement = Arrangement.spacedBy(PageMetrics.ShelfSpacing),
+                verticalArrangement = Arrangement.spacedBy(24.dp),
             ) {
-                items(rows.size) { i -> LibGridItem(rows[i], actions) { onOpen(rows[i]) } }
+                items(rows.size) { i -> LibCard(rows[i], actions) { onOpen(rows[i]) } }
             }
             PaneScrollbar(rememberScrollbarAdapter(gridState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
+        }
+    }
+}
+
+private fun titleWeight(columns: List<TableColumn>): Float = if (columns.any { it.weight > 0f }) 0.45f else 1f
+
+private fun RowScope.cell(column: TableColumn): Modifier =
+    (if (column.weight > 0f) Modifier.weight(column.weight) else Modifier.width(column.width)).padding(start = ColumnGap)
+
+@Composable
+private fun LibTableHeader(columns: List<TableColumn>, modifier: Modifier = Modifier) {
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Column(modifier.fillMaxWidth()) {
+        Row(Modifier.fillMaxWidth().height(36.dp).padding(horizontal = RowInset), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.width(ListArt + CellGap))
+            Text(appString(R.string.text_title_768e0c), style = MaterialTheme.typography.labelMedium, color = muted, maxLines = 1, modifier = Modifier.weight(titleWeight(columns)))
+            columns.forEach { c ->
+                Text(
+                    c.label, style = MaterialTheme.typography.labelMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                    textAlign = if (c.weight > 0f) TextAlign.Start else TextAlign.End, modifier = cell(c),
+                )
+            }
+            Spacer(Modifier.width(RowInset + ActionSize))
+        }
+        HorizontalDivider(color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
+    }
+}
+
+@Composable
+private fun EmptyHint(title: String, message: String) {
+    Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
+        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Spacer(Modifier.height(6.dp))
+            Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
         }
     }
 }
@@ -824,45 +918,59 @@ private fun jumpIndex(titles: List<String>, c: Char): Int? {
     return titles.indexOfFirst { (it.trimStart().firstOrNull()?.uppercaseChar() ?: ' ') > c }.takeIf { it >= 0 }
 }
 
-@Composable
-private fun EmptyHint(title: String, message: String) {
-    Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
-            Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-        }
-    }
-}
-
 private fun sortedSongs(songs: List<Song>, sort: LibrarySort, localPlayCounts: Map<String, Int>): List<Song> =
     com.aurora.music.viewmodel.sortLibrarySongs(songs, sort, localPlayCounts)
 
+private fun kindLabel(kind: String): String = when (kind) {
+    "album" -> appString(R.string.text_album_dfb4c9)
+    "artist" -> appString(R.string.text_artist_6c3f3d)
+    "playlist" -> appString(R.string.text_playlist_cd95b4)
+    else -> kind.replaceFirstChar { it.uppercase() }
+}
+
+private fun albumRow(album: com.aurora.music.model.Album): LibRow {
+    val label = album.typeLabel.localizedMediaType()
+    val year = album.year.takeIf { it > 0 }?.toString().orEmpty()
+    return LibRow(
+        album.title, listOf(album.artist, year).filter { it.isNotBlank() }.joinToString(" • "), album.artworkUrl, accentFor(album.id), album.id, "album",
+        badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(),
+        sortPlayCount = album.playCount, sortRecencySec = album.year.toLong(),
+        detail = label, cells = listOf(album.artist, year, album.songCount.takeIf { it > 0 }?.toString().orEmpty()),
+    )
+}
+
+private fun artistRow(artist: com.aurora.music.model.Artist, albums: Int, plays: Int = 0, recency: Long = 0): LibRow = LibRow(
+    artist.name, if (albums > 0) appPlural(R.plurals.album_count, albums) else appString(R.string.text_artist_6c3f3d), artist.imageUrl,
+    accentFor(artist.id), artist.id, "artist", circle = true, sortPlayCount = plays, sortRecencySec = recency,
+    detail = appString(R.string.text_artist_6c3f3d), cells = listOf(albums.takeIf { it > 0 }?.toString().orEmpty()),
+)
+
 private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>): List<LibRow> {
-    val smart = state.smartPlaylists.map {
-        val n = it.rules.orEmpty().size
-        LibRow(it.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.smart_rule_count, appPlural(R.plurals.rule_count, (n))), "", accentFor(it.id ?: "smart"), it.id ?: "", "smart", badge = appString(R.string.text_auto_50c3f1))
-    }
-    val playlists = smart + state.playlists.map { LibRow(it.title, appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist") }
-    val albums = state.albums.map {
-        val label = it.typeLabel.localizedMediaType()
-        LibRow(
-            it.title, "$label • ${it.artist}", it.artworkUrl, accentFor(it.id), it.id, "album",
-            badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(),
-            sortPlayCount = it.playCount, sortRecencySec = it.year.toLong(),
-        )
-    }
-    // artist sort aggregates the loaded song pages
-    val artists = state.artists.map { ar ->
-        val tracks = state.songs.filter { it.artistId == ar.id }
-        val plays = tracks.sumOf { maxOf(it.playCount, state.localPlayCounts[it.id] ?: 0) }
-        val recency = tracks.maxOfOrNull { it.dateAddedSec } ?: 0L
-        LibRow(ar.name, appString(R.string.text_artist_6c3f3d), ar.imageUrl, accentFor(ar.id), ar.id, "artist", circle = true, sortPlayCount = plays, sortRecencySec = recency)
-    }
     val base = when (filter) {
-        LibraryFilter.PLAYLISTS -> playlists
-        LibraryFilter.ALBUMS -> albums
-        LibraryFilter.ARTISTS -> artists
+        LibraryFilter.PLAYLISTS -> {
+            val smart = state.smartPlaylists.map {
+                val n = it.rules.orEmpty().size
+                LibRow(it.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.smart_rule_count, appPlural(R.plurals.rule_count, (n))), "", accentFor(it.id ?: "smart"), it.id ?: "", "smart", badge = appString(R.string.text_auto_50c3f1))
+            }
+            smart + state.playlists.map {
+                LibRow(
+                    it.title, appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist",
+                    detail = appString(R.string.text_playlist_cd95b4), cells = listOf(it.songCount.toString()),
+                )
+            }
+        }
+        LibraryFilter.ALBUMS -> state.albums.map { albumRow(it) }
+        LibraryFilter.ARTISTS -> {
+            // artist sort aggregates the loaded song pages
+            val tracksByArtist = state.songs.groupBy { it.artistId }
+            val albumsByArtist = state.albums.groupingBy { it.artist.lowercase() }.eachCount()
+            state.artists.map { ar ->
+                val tracks = tracksByArtist[ar.id].orEmpty()
+                val plays = tracks.sumOf { maxOf(it.playCount, state.localPlayCounts[it.id] ?: 0) }
+                val recency = tracks.maxOfOrNull { it.dateAddedSec } ?: 0L
+                artistRow(ar, albumsByArtist[ar.name.lowercase()] ?: 0, plays, recency)
+            }
+        }
         else -> emptyList()
     }
     val sorted = when (sort) {
@@ -877,7 +985,10 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
     // playlists tab keeps liked songs on top pinned entries stay deduped
     val pinned = pins.map { it.kind to it.id }.toSet()
     val deduped = sorted.filterNot { (it.kind to it.id) in pinned }
-    val liked = LibRow(appString(R.string.text_liked_songs_58c3a9), appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (state.likedSongCount))), state.likedCover, accentFor("liked"), "liked", "liked")
+    val liked = LibRow(
+        appString(R.string.text_liked_songs_58c3a9), appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (state.likedSongCount))), state.likedCover, accentFor("liked"), "liked", "liked",
+        detail = appString(R.string.text_playlist_cd95b4), cells = listOf(state.likedSongCount.toString()),
+    )
     return listOf(liked) + deduped
 }
 
@@ -931,49 +1042,80 @@ private fun CreatePlaylistDialog(onCreate: suspend (String) -> Boolean, onCreate
 }
 
 @Composable
-private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
+private fun rowShape(): Shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(12.dp) else MaterialTheme.shapes.small
+
+@Composable
+private fun artShape(row: LibRow): Shape = if (row.circle) CircleShape else RoundedCornerShape(
+    when (LocalUiPrefs.current.themeStyle) {
+        ThemeStyle.RETRO -> 2.dp
+        ThemeStyle.AERO -> 5.dp
+        ThemeStyle.GLASS -> 18.dp
+        else -> 14.dp
+    }
+)
+
+@Composable
+private fun Badge(text: String, modifier: Modifier = Modifier, small: Boolean = false) {
+    Text(
+        text,
+        fontSize = if (small) 8.sp else 9.sp,
+        fontWeight = FontWeight.Black,
+        color = Color.White,
+        modifier = modifier.padding(if (small) 3.dp else 8.dp)
+            .clip(RoundedCornerShape(if (small) 5.dp else 6.dp)).background(Color.Black.copy(alpha = 0.55f))
+            .padding(horizontal = if (small) 4.dp else 6.dp, vertical = if (small) 1.dp else 2.dp),
+    )
+}
+
+@Composable
+private fun LibListItem(row: LibRow, columns: List<TableColumn>, actions: LibActions, onClick: () -> Unit) {
     var contextAt by remember { mutableStateOf<Offset?>(null) }
+    var menuOpen by remember { mutableStateOf(false) }
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val selected = isSelected(row)
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Box(Modifier.fillMaxWidth().onSecondaryPress { contextAt = it }) {
     Row(
         Modifier
             .fillMaxWidth()
-            .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
-            .background(selectionTint("${row.kind}:${row.id}"))
-            .clickable(onClick = onClick)
+            .heightIn(min = PageMetrics.SongRowHeight)
+            .clip(rowShape())
+            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else Color.Transparent)
+            .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
-            .padding(8.dp),
+            .padding(horizontal = RowInset, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
-            Artwork(row.art, row.accent, Modifier.size(56.dp), corner = if (row.circle) 56.dp else 14.dp)
-            if (row.badge.isNotBlank()) {
-                Text(
-                    row.badge,
-                    fontSize = 8.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.BottomStart).padding(3.dp)
-                        .clip(RoundedCornerShape(5.dp)).background(Color.Black.copy(alpha = 0.55f))
-                        .padding(horizontal = 4.dp, vertical = 1.dp),
-                )
-            }
+            Artwork(row.art, row.accent, Modifier.size(ListArt), corner = if (row.circle) ListArt else 10.dp)
+            if (row.badge.isNotBlank()) Badge(row.badge, Modifier.align(Alignment.BottomStart), small = true)
         }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(row.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Spacer(Modifier.height(2.dp))
-            Text(row.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Spacer(Modifier.width(CellGap))
+        Column(Modifier.weight(titleWeight(columns))) {
+            Text(
+                row.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
+                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                maxLines = 1, overflow = TextOverflow.Ellipsis,
+            )
+            Text(if (columns.isEmpty()) row.subtitle else row.detail, style = MaterialTheme.typography.bodySmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (row.menu) {
-            var menuOpen by remember { mutableStateOf(false) }
-            Box {
-                Icon(
-                    Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(34.dp).clip(CircleShape).clickable { menuOpen = true }.pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
-                )
+        columns.forEachIndexed { i, c ->
+            Text(
+                row.cells.getOrElse(i) { "" }, style = MaterialTheme.typography.bodySmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                textAlign = if (c.weight > 0f) TextAlign.Start else TextAlign.End, modifier = cell(c),
+            )
+        }
+        Spacer(Modifier.width(RowInset))
+        Box(Modifier.size(ActionSize)) {
+            if (row.menu) {
+                Box(
+                    Modifier.size(ActionSize).clip(CircleShape)
+                        .then(if (hovered || menuOpen) Modifier.clickable(onClickLabel = appString(R.string.text_more_4bab2d)) { menuOpen = true }.pointerHoverIcon(PointerIcon.Hand) else Modifier),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (hovered || menuOpen) Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = muted, modifier = Modifier.size(20.dp))
+                }
                 CollectionMenu(row, actions, expanded = menuOpen, onDismiss = { menuOpen = false })
             }
         }
@@ -985,42 +1127,61 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 }
 
 @Composable
-private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
+private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
     var contextAt by remember { mutableStateOf<Offset?>(null) }
-    Box(Modifier.onSecondaryPress { contextAt = it }) {
-    Column(Modifier.clip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(6.dp)) {
-        Box {
-            Artwork(row.art, row.accent, Modifier.fillMaxWidth().aspectRatio(1f), corner = if (row.circle) 200.dp else 12.dp)
-            if (row.badge.isNotBlank()) {
-                Text(
-                    row.badge,
-                    fontSize = 9.sp,
-                    fontWeight = FontWeight.Black,
-                    color = Color.White,
-                    modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
-                        .clip(RoundedCornerShape(6.dp)).background(Color.Black.copy(alpha = 0.55f))
-                        .padding(horizontal = 6.dp, vertical = 2.dp),
-                )
+    var menuOpen by remember { mutableStateOf(false) }
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    val aurora = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
+    val shape = if (aurora) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium
+    val selected = isSelected(row)
+    val showActions = row.menu && (hovered || menuOpen)
+    val align = if (row.circle) TextAlign.Center else TextAlign.Start
+    Box(Modifier.fillMaxWidth().onSecondaryPress { contextAt = it }) {
+    Column(
+        Modifier.fillMaxWidth()
+            .clip(shape)
+            .then(if (aurora) Modifier else Modifier.auroraPanel(shape))
+            .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick)
+            .pointerHoverIcon(PointerIcon.Hand)
+            .padding(if (aurora) 0.dp else 8.dp),
+    ) {
+        Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
+            Artwork(row.art, row.accent, Modifier.fillMaxSize(), corner = if (row.circle) 400.dp else 14.dp)
+            if (selected) Box(Modifier.matchParentSize().border(3.dp, MaterialTheme.colorScheme.primary, artShape(row)))
+            if (row.badge.isNotBlank()) Badge(row.badge, Modifier.align(Alignment.TopStart))
+            if (showActions) {
+                Box(Modifier.align(Alignment.TopEnd).padding(6.dp)) {
+                    Box(
+                        Modifier.size(32.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f))
+                            .clickable(onClickLabel = appString(R.string.text_more_4bab2d)) { menuOpen = true }
+                            .pointerHoverIcon(PointerIcon.Hand),
+                        contentAlignment = Alignment.Center,
+                    ) { Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = Color.White, modifier = Modifier.size(18.dp)) }
+                }
+                Box(
+                    Modifier.align(Alignment.BottomEnd).padding(8.dp).size(40.dp).clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable(onClickLabel = appString(R.string.text_play_5d12bd)) { actions.onPlay(row) }
+                        .pointerHoverIcon(PointerIcon.Hand),
+                    contentAlignment = Alignment.Center,
+                ) { Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(22.dp)) }
             }
+            if (row.menu) Box(Modifier.align(Alignment.TopEnd)) { CollectionMenu(row, actions, expanded = menuOpen, onDismiss = { menuOpen = false }) }
         }
         Spacer(Modifier.height(8.dp))
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) {
-                Text(row.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                Text(row.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            }
-            if (row.menu) {
-                var menuOpen by remember { mutableStateOf(false) }
-                Box {
-                    Icon(
-                        Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(28.dp).clip(CircleShape).clickable { menuOpen = true }.pointerHoverIcon(PointerIcon.Hand).padding(4.dp),
-                    )
-                    CollectionMenu(row, actions, expanded = menuOpen, onDismiss = { menuOpen = false })
-                }
-            }
+        Text(
+            row.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+            color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = align, modifier = Modifier.fillMaxWidth(),
+        )
+        if (row.subtitle.isNotBlank()) {
+            Text(
+                row.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, textAlign = align, modifier = Modifier.fillMaxWidth(),
+            )
         }
+        if (aurora) Spacer(Modifier.height(6.dp))
     }
     if (row.menu) contextAt?.let { at ->
         Box(Modifier.offset { at.round() }) { CollectionMenu(row, actions, expanded = true, onDismiss = { contextAt = null }) }

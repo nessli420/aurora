@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
@@ -54,7 +55,9 @@ import com.aurora.music.data.SmartPlaylist
 import com.aurora.music.data.SmartRule
 import com.aurora.music.ui.screens.settings.SegmentedRow
 import com.aurora.music.ui.screens.settings.SettingsGroup
-import com.aurora.music.ui.screens.settings.SettingsTopBar
+import com.aurora.music.ui.components.PageHeader
+import com.aurora.music.ui.layout.LocalPageGutter
+import com.aurora.music.ui.layout.PageMetrics
 
 // keys must match SmartPlaylistEngine
 private const val TYPE_TEXT = 0
@@ -98,20 +101,25 @@ fun SmartPlaylistEditScreen(
     onSave: () -> Unit,
     onBack: () -> Unit,
 ) {
+    val gutter = LocalPageGutter.current
     Column(Modifier.fillMaxSize()) {
-        SettingsTopBar(title = if (isNew) appString(R.string.text_new_smart_playlist_ee2a2d) else appString(R.string.text_edit_smart_playlist_5fd608), onBack = onBack)
+        PageHeader(
+            if (isNew) appString(R.string.text_new_smart_playlist_ee2a2d) else appString(R.string.text_edit_smart_playlist_5fd608),
+            Modifier.padding(horizontal = gutter), onBack = onBack,
+        )
         val scroll = rememberScrollState()
         Box(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
         Column(
-            Modifier.fillMaxWidth().verticalScroll(scroll)
-                .padding(bottom = contentPadding.calculateBottomPadding() + 24.dp),
+            Modifier.padding(start = gutter - 12.dp, end = gutter - 12.dp, top = 12.dp, bottom = contentPadding.calculateBottomPadding() + 24.dp)
+                .widthIn(max = PageMetrics.FormMaxWidth + 24.dp),
         ) {
             OutlinedTextField(
                 value = playlist.name.orEmpty(),
                 onValueChange = { v -> onUpdate { it.copy(name = v) } },
                 label = { Text(appString(R.string.text_name_709a23)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             )
             Spacer(Modifier.height(14.dp))
 
@@ -135,7 +143,7 @@ fun SmartPlaylistEditScreen(
                     onRemove = { onUpdate { it.copy(rules = rules.toMutableList().apply { removeAt(i) }) } },
                 )
             }
-            TextButton(onClick = { onUpdate { it.copy(rules = rules + SmartRule()) } }, modifier = Modifier.padding(horizontal = 12.dp)) {
+            TextButton(onClick = { onUpdate { it.copy(rules = rules + SmartRule()) } }) {
                 Icon(Icons.Filled.Add, null, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
                 Text(appString(R.string.text_add_rule_11cc2b))
@@ -176,8 +184,9 @@ fun SmartPlaylistEditScreen(
             Button(
                 onClick = onSave,
                 enabled = !playlist.name.isNullOrBlank(),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             ) { Text(if (isNew) appString(R.string.text_create_smart_playlist_6ea764) else appString(R.string.text_save_changes_179359), fontWeight = FontWeight.Bold) }
+        }
         }
         PaneScrollbar(rememberScrollbarAdapter(scroll), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
         }

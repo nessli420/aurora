@@ -108,7 +108,7 @@ internal object Samples {
     val pins = listOf(Pin("a1", "album", "Neon Hours", "Mara Quinn", art(1)), Pin("ar0", "artist", "Lunar Tide", "", art(2)))
 
     fun library(filter: com.aurora.music.model.LibraryFilter, layout: com.aurora.music.model.LibraryLayout = com.aurora.music.model.LibraryLayout.LIST, sort: com.aurora.music.model.LibrarySort = com.aurora.music.model.LibrarySort.RECENT) = LibraryUiState(
-        filter = filter, sort = sort, layout = layout, loading = false,
+        filter = filter, sort = sort, layouts = mapOf(filter to layout), loading = false,
         albums = albums, artists = artistList, playlists = playlists, songs = songs,
         downloadedRows = listOf(DownloadRow("a0", "album", "Nocturne", "Lunar Tide", art(0), accents[0]), DownloadRow("p2", "playlist", "Late Night Drive", "", art(5), accents[1])),
         likedSongCount = 128, likedCover = art(4), supportsFolders = true, smartPlaylists = listOf(smart),

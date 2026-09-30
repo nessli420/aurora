@@ -22,7 +22,9 @@ import com.aurora.music.ui.screens.player.SpeedPitchSheet
 import com.aurora.music.ui.testing.differsFrom
 import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.ui.testing.pixel
+import com.aurora.music.ui.testing.region
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Test
@@ -69,11 +71,23 @@ class NowPlayingSurfacesTest {
         }.use { scene ->
             val collapsed = scene.shot()
             assertTrue(collapsed.distinctColors(6) > 40)
-            scene.click(600f, 248f)
-            scene.click(1054f, 312f)
-            scene.drag(1102f, 248f, 0f, 128f)
+            scene.click(600f, 244f)
+            scene.hover(700f, 300f)
+            val hovered = scene.shot("-hover")
+            assertFalse(collapsed.region(1062, 284, 1126, 316).contentEquals(hovered.region(1062, 284, 1126, 316)))
+            assertTrue(collapsed.region(1062, 340, 1126, 372).contentEquals(hovered.region(1062, 340, 1126, 372)))
+            scene.click(1078f, 300f)
+            scene.hover(700f, 244f)
+            scene.drag(1110f, 244f, 0f, 112f)
             scene.click(1120f, 32f)
             assertEquals(listOf("jump:2", "remove:3", "move:2:4", "clear"), events)
+            events.clear()
+            scene.rightClick(600f, 356f)
+            scene.shot("-menu")
+            scene.click(660f, 436f)
+            scene.rightClick(600f, 356f)
+            scene.click(660f, 484f)
+            assertEquals(listOf("move:4:2", "remove:4"), events)
             scene.click(700f, 166f)
             assertTrue(scene.shot("-history").differsFrom(collapsed))
         }

@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -72,7 +73,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -116,7 +116,7 @@ private const val PopularPreview = 5
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun DetailScreen(
-    contentPadding: androidx.compose.foundation.layout.PaddingValues,
+    contentPadding: PaddingValues,
     state: DetailUiState,
     likedIds: Set<String>,
     currentSongId: String,
@@ -193,10 +193,8 @@ fun DetailScreen(
     val year = if (isAlbum) segments.firstOrNull { YearPattern.matches(it) } else null
     val described = segments.filterNot { it == year || CountPattern.matches(it) || it.equals(info.typeLabel, true) }
     val albumArtist = if (isAlbum) described.firstOrNull() ?: tracks.map { it.artist }.distinct().singleOrNull() else null
-    val albumArtistId = if (isAlbum) remember(tracks, albumArtist) {
-        tracks.map { it.artistId }.filter { it.isNotBlank() }.distinct().singleOrNull()
-            ?: tracks.firstOrNull { it.artist.equals(albumArtist, true) && it.artistId.isNotBlank() }?.artistId
-    } else null
+    val albumArtistId = if (!isAlbum) null else tracks.map { it.artistId }.filter { it.isNotBlank() }.distinct().singleOrNull()
+        ?: tracks.firstOrNull { it.artist.equals(albumArtist, true) && it.artistId.isNotBlank() }?.artistId
     val description = if (!isAlbum && !info.isArtist) described.joinToString("  •  ").takeIf { it.isNotBlank() } else null
     val metaParts = when {
         info.isArtist -> listOf(info.subtitle).filter { it.isNotBlank() }
@@ -311,7 +309,9 @@ fun DetailScreen(
 
     MaterialTheme(colorScheme = albumScheme) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
-    val wideHeader = maxWidth >= 480.dp
+    val pageWidth = maxWidth
+    val pageHeight = maxHeight
+    val wideHeader = pageWidth >= 480.dp
     val shortViewport = maxHeight < 700.dp
     val headerArt = when {
         shortViewport -> 144.dp
@@ -359,7 +359,7 @@ fun DetailScreen(
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
                     Artwork(effectiveArt, info.accent, Modifier.size(headerArt), corner = if (info.isArtist) headerArt / 2 else 20.dp)
-                    Spacer(Modifier.width(if (maxWidth >= 800.dp) 32.dp else 24.dp))
+                    Spacer(Modifier.width(if (pageWidth >= 800.dp) 32.dp else 24.dp))
                     Column(Modifier.weight(1f)) {
                         Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accent)
                         Spacer(Modifier.height(6.dp))
@@ -380,7 +380,7 @@ fun DetailScreen(
         }
         if (!wideHeader) item(key = "header") {
             Column(Modifier.bleed(gutter)) {
-                Box(Modifier.fillMaxWidth().height(minOf(420.dp, maxHeight * 0.55f))) {
+                Box(Modifier.fillMaxWidth().height(minOf(420.dp, pageHeight * 0.55f))) {
                     Artwork(effectiveArt, info.accent, Modifier.matchParentSize(), corner = 0.dp)
                     Box(
                         Modifier.matchParentSize().background(
@@ -481,7 +481,7 @@ fun DetailScreen(
                     onAction = { popularExpanded = !popularExpanded },
                 )
             }
-            if (sideBySide && aboutInfo != null) {
+            if (sideBySide) {
                 item(key = "popular-about") {
                     Row(Modifier.fillMaxWidth().padding(top = 28.dp)) {
                         Column(Modifier.weight(0.6f)) {

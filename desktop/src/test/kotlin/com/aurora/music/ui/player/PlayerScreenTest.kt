@@ -33,6 +33,7 @@ class PlayerScreenTest {
     private class Recorder {
         val events = mutableListOf<String>()
         var split = -1f
+        var volume by mutableFloatStateOf(0.6f)
     }
 
     @Composable
@@ -74,6 +75,9 @@ class PlayerScreenTest {
                         onClear = { rec.events += "clear" }, onSaveAsPlaylist = { rec.events += "save:$it" })
                 },
                 onSplitChange = { rec.split = it; onSaved(it) },
+                volume = rec.volume,
+                onVolumeChange = { rec.volume = it },
+                onToggleMute = { rec.events += "mute" },
             )
         }
     }
@@ -83,16 +87,20 @@ class PlayerScreenTest {
         PlayerScene("player-lyrics", 1440, 900) { Player(PlayerFixtures.playing, rec) }.use { scene ->
             val lyrics = scene.shot()
             assertTrue(lyrics.distinctColors(6) > 60)
-            listOf(900f to 385f, 370f to 795f, 132f to 795f, 244f to 795f, 496f to 795f, 608f to 795f, 606f to 579f,
-                150f to 639f, 165f to 859f, 280f to 859f, 1348f to 36f, 52f to 36f).forEach { (x, y) -> scene.click(x, y) }
+            listOf(900f to 385f, 370f to 780f, 176f to 780f, 265f to 780f, 474f to 780f, 564f to 780f, 563f to 552f,
+                200f to 612f, 205f to 852f, 325f to 852f, 443f to 852f, 1356f to 36f, 44f to 36f).forEach { (x, y) -> scene.click(x, y) }
             assertEquals(listOf("lyric-seek", "play", "shuffle", "previous", "next", "repeat", "like",
-                "signal", "speed", "sleep", "output", "collapse"), rec.events)
+                "signal", "speed", "sleep", "mute", "output", "collapse"), rec.events)
+            scene.click(585f, 852f)
+            assertEquals(1f, rec.volume, 0.01f)
+            scene.scroll(530f, 852f, 2f)
+            assertEquals(0.9f, rec.volume, 0.001f)
 
             scene.click(855f, 94f)
             val queue = scene.shot("-queue")
             assertTrue(queue.differsFrom(lyrics))
 
-            scene.click(1388f, 36f)
+            scene.click(1396f, 36f)
             scene.shot("-menu")
         }
     }

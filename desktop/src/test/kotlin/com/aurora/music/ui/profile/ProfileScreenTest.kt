@@ -71,11 +71,11 @@ class ProfileScreenTest {
                 onOpenDetail = { kind, id -> opened += "$kind:$id" })
         }.use { scene ->
             val image = scene.shot()
-            scene.click(480f, 380f)
-            scene.click(28f, 26f)
-            scene.click(932f, 26f)
-            scene.click(70f, 518f)
-            scene.click(86f, 755f)
+            scene.click(880f, 286f)
+            scene.click(44f, 44f)
+            scene.click(916f, 44f)
+            scene.click(108f, 470f)
+            scene.click(108f, 760f)
             image
         }
         assertTrue(page.distinctColors() > 20)
@@ -85,7 +85,7 @@ class ProfileScreenTest {
         val server = AccountScene("profile-empty") {
             ProfileScreen(padding, "", "https://music.example.com", "", "", playlists = emptyList(), artists = emptyList(),
                 onBack = {}, onOpenSettings = { opened += "settings" }, onOpenDetail = { _, _ -> })
-        }.use { scene -> scene.shot().also { scene.click(480f, 380f) } }
+        }.use { scene -> scene.shot().also { scene.click(880f, 286f) } }
         assertEquals(listOf("settings"), opened)
         assertTrue(server.differsFrom(page))
     }

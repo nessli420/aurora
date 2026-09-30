@@ -6,6 +6,19 @@ import com.aurora.music.localization.appString
 import com.aurora.music.R
 
 import androidx.compose.foundation.VerticalScrollbar
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsHoveredAsState
+import androidx.compose.foundation.layout.offset
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.QueuePlayNext
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.unit.round
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -84,7 +97,7 @@ fun QueueContent(
     val upcoming = (startIdx until queue.size).toList()
     val played = (currentIndex - 1 downTo 0).toList()
     val accent = MaterialTheme.colorScheme.primary
-    val rowHeight = 64.dp
+    val rowHeight = 56.dp
     val rowPx = with(LocalDensity.current) { rowHeight.toPx() }
 
     var dragIndex by remember { mutableIntStateOf(-1) }
@@ -166,6 +179,7 @@ fun QueueContent(
                         dragOffset = if (dragging) dragOffset else 0f,
                         onClick = { onJump(i) },
                         onRemove = if (editable) ({ onRemove(i) }) else null,
+                        onPlayNext = if (editable && i != startIdx) ({ onMove(i, startIdx) }) else null,
                         // key on i/startIdx so gesture re-captures fresh indices when current advances or rows shift
                         dragHandle = if (!editable) null else Modifier.pointerInput(queue.size, i, startIdx) {
                             detectDragGestures(
@@ -220,52 +234,95 @@ private fun QueueTrackRow(
     onClick: () -> Unit,
     onRemove: (() -> Unit)?,
     dragHandle: Modifier?,
+    onPlayNext: (() -> Unit)? = null,
 ) {
-    Row(
+    val interaction = remember { MutableInteractionSource() }
+    val hovered by interaction.collectIsHoveredAsState()
+    var contextAt by remember(song.id) { mutableStateOf<Offset?>(null) }
+    val actions = hovered || dragging || contextAt != null
+    val muted = MaterialTheme.colorScheme.onSurfaceVariant
+    Box(
         Modifier
             .fillMaxWidth()
-            .height(rowHeight)
             .zIndex(if (dragging) 1f else 0f)
             .graphicsLayer {
                 translationY = dragOffset
                 if (dragging) { shadowElevation = 16f; scaleX = 1.02f; scaleY = 1.02f }
             }
-            .clip(RoundedCornerShape(14.dp))
-            .background(if (dragging) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
-            .clickable(onClick = onClick)
-            .pointerHoverIcon(PointerIcon.Hand)
-            .padding(horizontal = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent(PointerEventPass.Initial)
+                        if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                            event.changes.forEach { it.consume() }
+                            contextAt = event.changes.first().position
+                        }
+                    }
+                }
+            },
     ) {
-        Box(Modifier.width(26.dp), contentAlignment = Alignment.Center) {
-            if (index != null) Text("$index", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .height(rowHeight)
+                .clip(RoundedCornerShape(12.dp))
+                .background(if (dragging) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
+                .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick)
+                .pointerHoverIcon(PointerIcon.Hand)
+                .padding(horizontal = 8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Box(Modifier.width(24.dp), contentAlignment = Alignment.Center) {
+                if (index != null) Text("$index", style = MaterialTheme.typography.labelMedium, color = muted)
+            }
+            Spacer(Modifier.width(8.dp))
+            Artwork(song.artworkUrl, song.accent, Modifier.size(40.dp), corner = 8.dp)
+            Spacer(Modifier.width(12.dp))
+            val alpha = if (dimmed) 0.6f else 1f
+            Column(Modifier.weight(1f)) {
+                Text(
+                    song.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis,
+                )
+                Text(song.artist, style = MaterialTheme.typography.bodySmall, color = muted.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+            Text(formatTime(song.durationSec), style = MaterialTheme.typography.labelSmall, color = muted, modifier = Modifier.padding(start = 8.dp))
+            if (actions && onRemove != null) {
+                Spacer(Modifier.width(4.dp))
+                Icon(
+                    Icons.Filled.Close, appString(R.string.text_remove_e96390),
+                    tint = muted,
+                    modifier = Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onRemove).pointerHoverIcon(PointerIcon.Hand).padding(7.dp),
+                )
+            }
+            if (actions && dragHandle != null) {
+                Icon(
+                    Icons.Filled.DragHandle, appString(R.string.text_reorder_33d997),
+                    tint = muted,
+                    modifier = Modifier.size(32.dp).pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR))).then(dragHandle).padding(6.dp),
+                )
+            }
         }
-        Spacer(Modifier.width(8.dp))
-        Artwork(song.artworkUrl, song.accent, Modifier.size(44.dp), corner = 10.dp)
-        Spacer(Modifier.width(12.dp))
-        val alpha = if (dimmed) 0.6f else 1f
-        Column(Modifier.weight(1f)) {
-            Text(
-                song.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis,
-            )
-            Text(song.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        Text(formatTime(song.durationSec), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
-        if (onRemove != null) {
-            Spacer(Modifier.width(if (dragHandle != null) 12.dp else 0.dp))
-            Icon(
-                Icons.Filled.Close, appString(R.string.text_remove_e96390),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onRemove).padding(14.dp),
-            )
-        }
-        if (dragHandle != null) {
-            Icon(
-                Icons.Filled.DragHandle, appString(R.string.text_reorder_33d997),
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(48.dp).pointerHoverIcon(PointerIcon(Cursor(Cursor.N_RESIZE_CURSOR))).then(dragHandle).padding(12.dp),
-            )
+        contextAt?.let { at ->
+            Box(Modifier.offset { at.round() }) {
+                DropdownMenu(expanded = true, onDismissRequest = { contextAt = null }) {
+                    DropdownMenuItem(
+                        text = { Text(appString(R.string.text_play_5d12bd)) },
+                        onClick = { contextAt = null; onClick() },
+                        leadingIcon = { Icon(Icons.Filled.PlayArrow, null) },
+                    )
+                    if (onPlayNext != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_play_next_40d33c)) },
+                        onClick = { contextAt = null; onPlayNext() },
+                        leadingIcon = { Icon(Icons.Filled.QueuePlayNext, null) },
+                    )
+                    if (onRemove != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_remove_e96390)) },
+                        onClick = { contextAt = null; onRemove() },
+                        leadingIcon = { Icon(Icons.Filled.Close, null) },
+                    )
+                }
+            }
         }
     }
 }

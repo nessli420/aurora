@@ -25,6 +25,8 @@ data class HomeUiState(
     val selectedFeed: String = "library",
 )
 
+private const val RECENT_ALBUMS = 12
+
 class HomeViewModel(private val container: DesktopContainer) : ViewModel() {
     private val _state = MutableStateFlow(HomeUiState())
     val state: StateFlow<HomeUiState> = _state.asStateFlow()
@@ -49,11 +51,24 @@ class HomeViewModel(private val container: DesktopContainer) : ViewModel() {
             _state.update { it.copy(loading = true, loadingMore = false, error = null, feeds = feeds, selectedFeed = selected,
                 data = if (clear || selected != it.selectedFeed) HomeData() else it.data) }
             try {
-                val data = container.repository.home(selected)
+                val data = withHistory(container.repository.home(selected))
                 _state.update { it.copy(loading = false, data = data) }
             } catch (e: CancellationException) { throw e }
             catch (_: Exception) { _state.update { it.copy(loading = false, error = appString(R.string.text_could_not_load_the_home_feed_try_again_f756b3)) } }
         }
+    }
+
+    private suspend fun withHistory(data: HomeData): HomeData {
+        if (data.recentlyPlayed.isNotEmpty() || data.sections.isNotEmpty()) return data
+        val ids = container.playHistory.snapshot().asSequence().map { it.albumId }.filter { it.isNotBlank() }
+            .distinct().take(RECENT_ALBUMS * 2).toList()
+        if (ids.isEmpty()) return data
+        val known = (data.newReleases + data.mostPlayed + data.random).associateBy { it.id }
+        val albums = if (ids.all { it in known }) known else {
+            val all = try { container.repository.allAlbums() } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+            known + all.associateBy { it.id }
+        }
+        return data.copy(recentlyPlayed = ids.mapNotNull { albums[it] }.take(RECENT_ALBUMS))
     }
 
     fun selectFeed(id: String) {

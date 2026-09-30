@@ -159,6 +159,8 @@ private fun WideLyrics(
     }
 }
 
+internal val LocalLyricsAvailability = staticCompositionLocalOf<((Boolean) -> Unit)?> { null }
+
 @Composable
 internal fun LyricsPane(
     state: PlayerUiState,
@@ -168,11 +170,13 @@ internal fun LyricsPane(
     loadLyrics: suspend (Song) -> Lyrics? = LocalDesktopContainer.current.lyricsRepository::lyricsFor,
 ) {
     val song = state.current
+    val report by rememberUpdatedState(LocalLyricsAvailability.current)
     var lyrics by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Lyrics?>(null) }
     var loading by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(true) }
     LaunchedEffect(song.id, song.playbackSource?.providerId) {
         lyrics = if (song.id.isBlank()) null else loadLyrics(song)
         loading = false
+        report?.invoke(lyrics?.lines.isNullOrEmpty().not())
     }
     Box(modifier) {
         LyricsBackdrop(song)
