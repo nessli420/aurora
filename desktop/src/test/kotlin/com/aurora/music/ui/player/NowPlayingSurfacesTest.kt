@@ -124,7 +124,7 @@ class NowPlayingSurfacesTest {
             SpeedPitchSheet(speed = 1.25f, onSpeed = { speed += "speed:$it" }, onReset = { speed += "reset" }, onDismiss = { speed += "dismiss" })
         }.use { scene ->
             scene.shot()
-            scene.click(869f, 631f)
+            scene.click(869f, 783f)
             scene.click(720f, 845f)
             assertEquals(listOf("speed:1.5", "reset"), speed)
         }
