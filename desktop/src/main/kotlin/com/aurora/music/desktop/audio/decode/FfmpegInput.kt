@@ -40,9 +40,8 @@ import java.nio.file.Path
 import java.util.Locale
 import java.util.concurrent.atomic.AtomicBoolean
 
-internal class FfmpegInput(source: String, http: HttpOptions, private val interrupt: AtomicBoolean) : AutoCloseable {
+internal class FfmpegInput(source: String, http: HttpOptions, val interrupt: AtomicBoolean) : AutoCloseable {
     val description = describe(source)
-    private val callback = InterruptCallback(interrupt)
     val format: AVFormatContext = avformat_alloc_context() ?: throw DecoderException("Could not allocate a demuxer")
     private var opened = false
     private var closed = false
@@ -54,19 +53,19 @@ internal class FfmpegInput(source: String, http: HttpOptions, private val interr
 
     init {
         try {
-            format.interrupt_callback().callback(callback)
+            format.interrupt_callback().callback(Interrupts)
             val options = AVDictionary(null as Pointer?)
             if (isHttp(source)) httpOptions(http).forEach { (key, value) -> av_dict_set(options, key, value, 0) }
             val url = BytePointer(ffmpegUrl(source), Charsets.UTF_8)
             val result = try {
-                avformat_open_input(format, url, null, options)
+                io { avformat_open_input(format, url, null, options) }
             } finally {
                 av_dict_free(options)
                 url.close()
             }
             ok(result) { "Could not open $description" }
             opened = true
-            ok(avformat_find_stream_info(format, null as PointerPointer<*>?)) { "Could not read $description" }
+            ok(io { avformat_find_stream_info(format, null as PointerPointer<*>?) }) { "Could not read $description" }
             if (interrupt.get()) throw DecoderInterruptedException()
             streamIndex = ok(av_find_best_stream(format, AVMEDIA_TYPE_AUDIO, -1, -1, null as PointerPointer<*>?, 0)) {
                 "No audio stream in $description"
@@ -78,6 +77,16 @@ internal class FfmpegInput(source: String, http: HttpOptions, private val interr
         } catch (e: Throwable) {
             close()
             throw e
+        }
+    }
+
+    inline fun <T> io(block: () -> T): T {
+        val outer = Interrupts.current.get()
+        Interrupts.current.set(interrupt)
+        try {
+            return block()
+        } finally {
+            Interrupts.current.set(outer)
         }
     }
 
@@ -104,8 +113,7 @@ internal class FfmpegInput(source: String, http: HttpOptions, private val interr
     override fun close() {
         if (closed) return
         closed = true
-        if (opened) avformat_close_input(format) else if (!format.isNull) avformat_free_context(format)
-        callback.close()
+        if (opened) io { avformat_close_input(format) } else if (!format.isNull) avformat_free_context(format)
     }
 
     private fun readInfo(): StreamInfo {
@@ -152,10 +160,13 @@ internal class FfmpegInput(source: String, http: HttpOptions, private val interr
         }
         return all
     }
+}
 
-    private class InterruptCallback(private val flag: AtomicBoolean) : AVIOInterruptCB.Callback_Pointer() {
-        override fun call(opaque: Pointer?): Int = if (flag.get()) 1 else 0
-    }
+// javacpp callback slots are allocated and freed without locking so every input shares one that is never freed
+internal object Interrupts : AVIOInterruptCB.Callback_Pointer() {
+    val current = ThreadLocal<AtomicBoolean?>()
+
+    override fun call(opaque: Pointer?): Int = if (current.get()?.get() == true) 1 else 0
 }
 
 internal fun isHttp(source: String) = source.startsWith("http://", ignoreCase = true) || source.startsWith("https://", ignoreCase = true)

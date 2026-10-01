@@ -12,6 +12,7 @@ import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
 import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -36,6 +37,8 @@ import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
 import java.util.Locale
 import java.util.UUID
+import java.util.concurrent.ConcurrentHashMap
+import java.util.concurrent.atomic.AtomicBoolean
 
 data class LibraryScan(val running: Boolean = false, val scanned: Int = 0, val total: Int = 0)
 
@@ -46,12 +49,14 @@ class FolderLibrary(
     private val scope: CoroutineScope,
     private val gainProvider: (String) -> Pair<Float, Float>? = { null },
     private val separatorsProvider: suspend () -> ArtistSeparators = { ArtistSeparators() },
-    private val probe: (File) -> ProbeResult = { FfmpegDecoder.probe(it) },
-) : LocalCatalog {
+    private val probe: (File, AtomicBoolean) -> ProbeResult = FfmpegDecoder::probe,
+) : LocalCatalog, AutoCloseable {
     private val index = LibraryIndex(File(dir, "index.json"))
     private val covers = File(dir, "covers")
     private val mutex = Mutex()
     private val prober = Dispatchers.IO.limitedParallelism(4)
+    private val probing = ConcurrentHashMap.newKeySet<AtomicBoolean>()
+    @Volatile private var closed = false
 
     @Volatile private var loaded = false
     @Volatile private var tracks: List<IndexedTrack> = emptyList()
@@ -84,7 +89,9 @@ class FolderLibrary(
                 if (cached != null && cached.folders == configured()) {
                     withContext(Dispatchers.IO) { publish(cached.tracks, current) }
                     loaded = true
-                    scope.launch { runCatching { refresh() }.onFailure { AppLog.e(TAG, "Library refresh failed", it) } }
+                    scope.launch {
+                        runCatching { refresh() }.onFailure { if (it !is CancellationException) AppLog.e(TAG, "Library refresh failed", it) }
+                    }
                 } else {
                     scan(cached?.tracks.orEmpty(), current)
                     loaded = true
@@ -97,6 +104,15 @@ class FolderLibrary(
         val previous = if (loaded) tracks else withContext(Dispatchers.IO) { index.read()?.tracks.orEmpty() }
         scan(previous, separatorsProvider())
         loaded = true
+    }
+
+    override fun close() {
+        closed = true
+        val deadline = System.nanoTime() + CLOSE_TIMEOUT_NS
+        while (probing.isNotEmpty() && System.nanoTime() < deadline) {
+            probing.forEach { it.set(true) }
+            Thread.sleep(5)
+        }
     }
 
     override fun song(id: String): Song? = byId[id]
@@ -166,7 +182,8 @@ class FolderLibrary(
         val modified = attributes.lastModifiedTime().toMillis()
         if (previous != null && previous.size == size && previous.modifiedMs == modified &&
             (previous.cover.isEmpty() || File(covers, previous.cover).isFile)) return previous.copy(path = file.path)
-        val result = try { probe(file) } catch (e: Exception) {
+        val result = try { interruptibleProbe(file) } catch (e: Exception) {
+            if (closed) throw CancellationException("Library closed")
             AppLog.w(TAG, "Skipping ${file.path}", e)
             return null
         }
@@ -195,6 +212,17 @@ class FolderLibrary(
             albumGainDb = tags.albumGainDb ?: tags.r128AlbumGainDb?.plus(R128_TO_REPLAYGAIN_DB),
             cover = result.cover?.let(::saveCover).orEmpty(),
         )
+    }
+
+    private fun interruptibleProbe(file: File): ProbeResult {
+        val interrupt = AtomicBoolean()
+        probing += interrupt
+        try {
+            if (closed) throw CancellationException("Library closed")
+            return probe(file, interrupt)
+        } finally {
+            probing -= interrupt
+        }
     }
 
     private fun saveCover(bytes: ByteArray): String? {
@@ -304,6 +332,7 @@ class FolderLibrary(
 
     private companion object {
         const val TAG = "FolderLibrary"
+        const val CLOSE_TIMEOUT_NS = 3_000_000_000L
         // virtual root so folders on different drives still share a parent
         const val ROOT = "Computer"
         const val UNKNOWN_ARTIST = "Unknown artist"

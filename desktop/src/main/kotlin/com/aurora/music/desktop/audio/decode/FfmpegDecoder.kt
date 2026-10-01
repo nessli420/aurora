@@ -122,10 +122,10 @@ class FfmpegDecoder private constructor(
         val target = frame.coerceAtLeast(0)
         var from = (target - preroll).coerceAtLeast(0)
         val timestamp = startPts + Math.floorDiv(from * timeBaseDen, rate * timeBaseNum)
-        var result = av_seek_frame(input.format, input.streamIndex, timestamp, AVSEEK_FLAG_BACKWARD)
+        var result = input.io { av_seek_frame(input.format, input.streamIndex, timestamp, AVSEEK_FLAG_BACKWARD) }
         if (result < 0 && !interrupt.get()) {
             // rewind and decode forward when the demuxer cannot seek by timestamp
-            result = av_seek_frame(input.format, -1, 0, AVSEEK_FLAG_BYTE)
+            result = input.io { av_seek_frame(input.format, -1, 0, AVSEEK_FLAG_BYTE) }
             from = 0
         }
         input.ok(result) { "Could not seek ${input.description}" }
@@ -177,7 +177,7 @@ class FfmpegDecoder private constructor(
 
     private fun feed() {
         while (true) {
-            val read = av_read_frame(input.format, packet)
+            val read = input.io { av_read_frame(input.format, packet) }
             if (read < 0) {
                 if (interrupt.get() || !input.endOfInput(read)) throw input.failure(read, "Could not read ${input.description}")
                 avcodec_send_packet(codec, null as AVPacket?)
@@ -297,9 +297,9 @@ class FfmpegDecoder private constructor(
             }
         }
 
-        fun probe(file: File): ProbeResult {
+        fun probe(file: File, interrupt: AtomicBoolean = AtomicBoolean()): ProbeResult {
             FfmpegRuntime.init()
-            return FfmpegInput(file.path, HttpOptions(), AtomicBoolean()).use { ProbeResult(it.info, it.tags, it.cover()) }
+            return FfmpegInput(file.path, HttpOptions(), interrupt).use { ProbeResult(it.info, it.tags, it.cover()) }
         }
     }
 }

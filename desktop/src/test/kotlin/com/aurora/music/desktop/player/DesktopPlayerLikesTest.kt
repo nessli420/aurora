@@ -4,6 +4,7 @@ import com.aurora.music.data.MediaBackend
 import com.aurora.music.data.MusicRepository
 import com.aurora.music.data.Session
 import com.aurora.music.desktop.DesktopContainer
+import com.aurora.music.desktop.closeAndJoin
 import com.aurora.music.desktop.platform.DesktopPaths
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
@@ -52,7 +53,7 @@ class DesktopPlayerLikesTest {
     @After fun tearDown() {
         on { player.close() }
         scope.cancel()
-        container.close()
+        container.closeAndJoin()
         executor.shutdownNow()
         root.deleteRecursively()
     }

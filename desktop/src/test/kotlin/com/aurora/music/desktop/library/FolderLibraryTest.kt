@@ -4,6 +4,7 @@ import com.aurora.music.data.LocalBackend
 import com.aurora.music.data.LocalStore
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
+import com.aurora.music.desktop.audio.decode.DecoderInterruptedException
 import com.aurora.music.desktop.audio.decode.FfmpegDecoder
 import com.aurora.music.desktop.audio.decode.TestAssets
 import com.aurora.music.desktop.audio.decode.taggedFlac
@@ -11,16 +12,19 @@ import com.aurora.music.desktop.audio.decode.taggedMp3
 import com.aurora.music.desktop.audio.decode.wavBytes
 import com.aurora.music.desktop.platform.desktopFileUri
 import com.aurora.music.desktop.platform.openDesktopUri
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
+import kotlinx.coroutines.async
+import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.job
 import kotlinx.coroutines.joinAll
 import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -30,6 +34,8 @@ import org.junit.rules.TemporaryFolder
 import java.awt.image.BufferedImage
 import java.io.ByteArrayOutputStream
 import java.io.File
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import javax.imageio.ImageIO
 
@@ -55,7 +61,7 @@ class FolderLibraryTest {
         write("notes.txt", "not audio".toByteArray())
     }
 
-    @After fun tearDown() = scope.cancel()
+    @After fun tearDown() = runBlocking { scope.coroutineContext.job.cancelAndJoin() }
 
     private fun write(path: String, bytes: ByteArray) = File(music, path).apply { parentFile.mkdirs(); writeBytes(bytes) }
 
@@ -69,7 +75,7 @@ class FolderLibraryTest {
     private fun wav(seconds: Int) = wavBytes(44_100, 2, 16, 44_100 * seconds) { frame, _ -> frame % 64 }
 
     private fun library(vararg roots: File, scope: CoroutineScope = this.scope) = FolderLibrary(index, folders = { roots.map { it.path } },
-        fileUri = ::desktopFileUri, scope = scope, probe = { probes.incrementAndGet(); FfmpegDecoder.probe(it) })
+        fileUri = ::desktopFileUri, scope = scope, probe = { file, interrupt -> probes.incrementAndGet(); FfmpegDecoder.probe(file, interrupt) })
 
     @Test fun scanReadsTagsFormatsAndCovers() = runBlocking {
         write("Loose/broken.mp3", ByteArray(512) { 7 })
@@ -166,7 +172,7 @@ class FolderLibraryTest {
             assertEquals(listOf(mp3Cover.toList()), File(index, "covers").listFiles()!!.map { it.readBytes().toList() })
             assertEquals(1, probes.get())
         } finally {
-            own.cancel()
+            own.coroutineContext.job.cancelAndJoin()
         }
     }
 
@@ -183,5 +189,27 @@ class FolderLibraryTest {
         val narrowed = library(music)
         narrowed.ensureLoaded()
         assertEquals(4, narrowed.songs.size)
+    }
+
+    @Test fun closeInterruptsProbesInFlightWithoutWritingAPartialIndex() = runBlocking {
+        val started = CountDownLatch(1)
+        val active = AtomicInteger()
+        val library = FolderLibrary(index, folders = { listOf(music.path) }, fileUri = ::desktopFileUri, scope = scope, probe = { _, interrupt ->
+            active.incrementAndGet()
+            try {
+                started.countDown()
+                while (!interrupt.get()) Thread.sleep(5)
+                throw DecoderInterruptedException()
+            } finally {
+                active.decrementAndGet()
+            }
+        })
+        val scan = scope.async { library.ensureLoaded() }
+        assertTrue(started.await(10, TimeUnit.SECONDS))
+        library.close()
+        assertEquals(0, active.get())
+        assertTrue(runCatching { scan.await() }.exceptionOrNull() is CancellationException)
+        assertFalse(File(index, "index.json").exists())
+        assertFalse(library.scan.value.running)
     }
 }

@@ -2,6 +2,7 @@ package com.aurora.music.desktop.player
 
 import androidx.compose.ui.awt.ComposeWindow
 import com.aurora.music.desktop.DesktopContainer
+import com.aurora.music.desktop.closeAndJoin
 import com.aurora.music.desktop.platform.DesktopPaths
 import com.aurora.music.util.AppLog
 import kotlinx.coroutines.CoroutineExceptionHandler
@@ -66,7 +67,7 @@ class MediaControlsSmokeTest {
             AppLog.sink = sink
             SwingUtilities.invokeAndWait { window.dispose() }
             scope.cancel()
-            container.close()
+            container.closeAndJoin()
             executor.shutdownNow()
             root.deleteRecursively()
         }

@@ -370,6 +370,7 @@ class DesktopContainer(
     }
 
     override fun close() {
+        folderLibrary.close()
         queueStore.flushNow()
         playHistory.flushNow()
         if (imageLoaderDelegate.isInitialized()) imageLoader.shutdown()

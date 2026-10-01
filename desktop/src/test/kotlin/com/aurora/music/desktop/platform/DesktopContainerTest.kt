@@ -11,6 +11,7 @@ import com.aurora.music.data.accountKey
 import com.aurora.music.data.artwork.ArtworkRequest
 import com.aurora.music.data.artwork.ArtworkUrls
 import com.aurora.music.desktop.DesktopContainer
+import com.aurora.music.desktop.closeAndJoin
 import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.audio.decode.TestAssets
 import com.aurora.music.model.Song
@@ -18,7 +19,6 @@ import com.google.gson.Gson
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.job
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import okhttp3.mockwebserver.Dispatcher
@@ -51,8 +51,7 @@ class DesktopContainerTest {
         try {
             runBlocking { container.block() }
         } finally {
-            container.close()
-            runBlocking { container.scope.coroutineContext.job.join() }
+            container.closeAndJoin()
         }
     }
 

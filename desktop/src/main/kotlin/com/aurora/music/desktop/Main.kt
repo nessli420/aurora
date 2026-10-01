@@ -63,7 +63,7 @@ fun main() {
     AppStrings.setLocale(language)
     val player = DesktopPlayer(DesktopPlaybackEngine(), container.playerDependencies())
     val shortcuts = MutableSharedFlow<Shortcut>(extraBufferCapacity = 8)
-    Runtime.getRuntime().addShutdownHook(Thread { container.queueStore.flushNow(); container.playHistory.flushNow() })
+    Runtime.getRuntime().addShutdownHook(Thread { container.folderLibrary.close(); container.queueStore.flushNow(); container.playHistory.flushNow() })
 
     application {
         val windowState = rememberWindowState(

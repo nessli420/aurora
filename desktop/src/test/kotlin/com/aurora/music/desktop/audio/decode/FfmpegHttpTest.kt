@@ -129,6 +129,41 @@ class FfmpegHttpTest {
         }
     }
 
+    @Test fun manyConcurrentOpensKeepTheirOwnInterrupt() {
+        val count = 16
+        val release = CountDownLatch(1)
+        val requested = CountDownLatch(count)
+        TestServer { requested.countDown(); release.await(30, TimeUnit.SECONDS) }.use { server ->
+            val cancels = List(count) { AtomicBoolean() }
+            val failures = List(count) { AtomicReference<Throwable>() }
+            val workers = List(count) { i ->
+                thread {
+                    try {
+                        FfmpegDecoder.open("${server.base}/hang-$i.wav", HttpOptions(timeoutMs = 60_000), cancels[i]).close()
+                    } catch (t: Throwable) {
+                        failures[i].set(t)
+                    }
+                }
+            }
+            try {
+                assertTrue(requested.await(10, TimeUnit.SECONDS))
+                val (first, second) = workers.indices.partition { it % 2 == 0 }
+                first.forEach { cancels[it].set(true) }
+                first.forEach { workers[it].join(5_000) }
+                assertTrue(first.none { workers[it].isAlive })
+                assertTrue(second.all { workers[it].isAlive })
+                second.forEach { cancels[it].set(true) }
+                second.forEach { workers[it].join(5_000) }
+                assertTrue(workers.none { it.isAlive })
+                assertTrue(failures.map { it.get() }.toString(), failures.all { it.get() is DecoderInterruptedException })
+            } finally {
+                release.countDown()
+                cancels.forEach { it.set(true) }
+                workers.forEach { it.join(5_000) }
+            }
+        }
+    }
+
     @Test fun httpErrorsKeepTheCodeAndHideTheQuery() {
         TestServer { exchange -> exchange.sendResponseHeaders(404, -1) }.use { server ->
             val failure = runCatching { FfmpegDecoder.open("${server.base}/missing.flac?api_key=secret-token") }.exceptionOrNull()

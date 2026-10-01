@@ -7,6 +7,7 @@ import com.aurora.music.data.SavedTrack
 import com.aurora.music.data.remote.ListenBrainzClient
 import com.aurora.music.data.toSavedTrack
 import com.aurora.music.desktop.DesktopContainer
+import com.aurora.music.desktop.closeAndJoin
 import com.aurora.music.desktop.audio.DesktopPlaybackEngine
 import com.aurora.music.desktop.audio.EngineEvent
 import com.aurora.music.desktop.audio.EnginePhase
@@ -56,7 +57,7 @@ class DesktopPlayerTest {
     @After fun tearDown() {
         players.forEach { player -> on { player.close() } }
         scope.cancel()
-        container.close()
+        container.closeAndJoin()
         executor.shutdownNow()
         root.deleteRecursively()
     }
