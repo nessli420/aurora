@@ -766,7 +766,7 @@ class UsbAudioSink(
         if (!clock.verified) { signalUsbFailure(clock.failure ?: "The USB clock could not be verified."); return }
         val stream = UsbAudioStream(info.fd, format.interfaceId, format.endpointOut, format.endpointFeedback,
             sampleRate, channelCount, format.containerBits, format.maxPacketSize, validBits = format.validBits,
-            alternateSetting = format.alternateSetting)
+            alternateSetting = format.alternateSetting, endpointRateControl = format.endpointRateControl)
         if (!stream.isReady || !stream.start()) {
             stream.release()
             usbAudioDevice.setAltSetting(0)

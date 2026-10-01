@@ -94,16 +94,18 @@ class UsbAudioDevice private constructor(private val context: Context) {
         val report = UsbAudioDescriptors.parse(conn.rawDescriptors ?: ByteArray(0))
         val config = ByteArray(1)
         val activeConfiguration = if (conn.controlTransfer(0x80, 8, 0, 0, config, 1, 500) == 1) config[0].toInt() and 255 else -1
-        val formats = report.formats.filter { it.configuration == activeConfiguration }
         val speed = UsbAudioStream.nativeGetUsbSpeed(conn.fileDescriptor)
+        val formats = report.formats.filter { it.configuration == activeConfiguration }.map { it.copy(fullSpeed = speed == 2) }
         val supported = formats.filter { it.pcmUnsupportedReason(experimentalDsd) == null ||
             experimentalDsd && it.rawUnsupportedReason(true) == null }
         val best = supported.maxWithOrNull(compareBy<UsbAudioFormat> { it.validBits }.thenBy { it.containerBytes })
-        if (best == null || speed != 3) {
+        if (best == null || speed !in 2..3) {
             lastFailure = when {
                 report.malformed -> "USB descriptors are malformed."
-                speed != 3 -> "Direct output requires a verified high-speed USB connection."
-                else -> formats.firstOrNull()?.unsupportedReason ?: "No supported USB PCM output was found."
+                speed !in 2..3 -> "Direct output requires a verified full-speed or high-speed USB connection."
+                else -> (formats.firstOrNull()?.unsupportedReason ?: "No supported USB PCM output was found.") + formats.joinToString("; ") {
+                    "UAC${if (it.protocol == 0x20) 2 else if (it.protocol == 0) 1 else 3} ${it.channels} ch ${it.validBits}/${it.containerBits}-bit, packet ${it.maxPacketSize}, interval ${it.interval}"
+                }.takeIf(String::isNotEmpty)?.let { " Detected: $it." }.orEmpty()
             }
             closeDevice(); return null
         }
@@ -118,6 +120,7 @@ class UsbAudioDevice private constructor(private val context: Context) {
     @Synchronized fun getClockRates(format: UsbAudioFormat, experimentalDsd: Boolean = false): List<UsbRateRange> {
         val conn = connection ?: return emptyList()
         if (cachedDeviceInfo?.formats.orEmpty().none { it === format } || format.transportUnsupportedReason(experimentalDsd) != null) return emptyList()
+        if (format.protocol == 0) return format.descriptorRates
         val key = format.controlInterfaceId to format.clockSourceId
         rates[key]?.let { return it }
         if (!claimInterface(format.controlInterfaceId)) return emptyList()
@@ -153,6 +156,7 @@ class UsbAudioDevice private constructor(private val context: Context) {
         }
         selectedFormat = format
         if (!setAltSetting(0)) return fail("The USB stream could not be stopped.")
+        if (format.protocol == 0) return configureEndpointRate(conn, format, rate, ::fail)
         val observedBefore = readSampleRate().takeIf { it > 0 }
         if (observedBefore != rate) {
             if (format.clockControls and 2 == 0) return fail("The USB clock is read-only.", observedBefore)
@@ -171,6 +175,23 @@ class UsbAudioDevice private constructor(private val context: Context) {
             Thread.sleep(10)
         }
         return fail("The USB clock could not be verified.", observed, valid)
+    }
+
+    private fun configureEndpointRate(conn: UsbDeviceConnection, format: UsbAudioFormat, rate: Int,
+        fail: (String, Int?, Boolean?) -> UsbClockStatus): UsbClockStatus {
+        if (!setAltSetting(format.alternateSetting)) return fail("The USB streaming setting was rejected.", null, null)
+        if (format.endpointRateControl) {
+            val data = ByteArray(3) { (rate shr (it * 8)).toByte() }
+            if (conn.controlTransfer(0x22, 1, 0x0100, format.endpointOut, data, 3, 1000) != 3)
+                return fail("The USB endpoint rejected the requested rate.", null, null)
+            val read = ByteArray(3)
+            if (conn.controlTransfer(0xa2, 0x81, 0x0100, format.endpointOut, read, 3, 500) == 3) {
+                val observed = (0..2).fold(0) { value, i -> value or ((read[i].toInt() and 255) shl (i * 8)) }
+                if (observed != rate) return fail("The USB endpoint did not apply the requested rate.", observed, null)
+            }
+        }
+        lastFailure = null
+        return UsbClockStatus(rate, rate, null, null)
     }
 
     private fun claimInterface(id: Int): Boolean {
@@ -202,7 +223,7 @@ class UsbAudioDevice private constructor(private val context: Context) {
 
     @Synchronized fun readSampleRate(): Int {
         val conn = connection ?: return -1
-        val format = selectedFormat ?: return -1
+        val format = selectedFormat?.takeIf { it.protocol == 0x20 } ?: return -1
         val bytes = ByteArray(4)
         if (conn.controlTransfer(0xa1, 1, 0x0100, format.clockSourceId shl 8 or format.controlInterfaceId, bytes, 4, 500) != 4) return -1
         var rate = 0L
@@ -213,7 +234,7 @@ class UsbAudioDevice private constructor(private val context: Context) {
     @Synchronized fun readClockValidity(): Boolean? {
         val conn = connection ?: return null
         val format = selectedFormat ?: return null
-        if (format.clockControls and 4 == 0) return null
+        if (format.protocol != 0x20 || format.clockControls and 4 == 0) return null
         val value = ByteArray(1)
         if (conn.controlTransfer(0xa1, 1, 0x0200, format.clockSourceId shl 8 or format.controlInterfaceId, value, 1, 500) != 1) return false
         return value[0].toInt() == 1

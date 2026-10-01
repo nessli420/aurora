@@ -24,8 +24,12 @@ data class UsbAudioFormat(
     val descriptorRates: List<UsbRateRange> = emptyList(),
     val formatBitmap: Long = if (pcm) 1 else 0,
     val formatType: Int = 1,
+    val fullSpeed: Boolean = false,
+    val frequencyControl: Boolean = false,
 ) {
     val containerBits get() = containerBytes * 8
+    val packetsPerSecond get() = if (fullSpeed) 1000 else 8000
+    val endpointRateControl get() = protocol == 0 && frequencyControl
     val unsupportedReason: String? get() = pcmUnsupportedReason(false)
     fun pcmUnsupportedReason(experimentalDsd: Boolean): String? = when {
         transportUnsupportedReason(experimentalDsd) != null -> transportUnsupportedReason(experimentalDsd)
@@ -42,17 +46,20 @@ data class UsbAudioFormat(
     }
     val transportUnsupportedReason: String? get() = transportUnsupportedReason(false)
     fun transportUnsupportedReason(experimentalDsd: Boolean): String? = when {
-        protocol != 0x20 -> "Direct output requires USB Audio Class 2."
+        protocol != 0x20 && protocol != 0 -> "Direct output requires USB Audio Class 1 or 2."
         formatType != 1 -> "The USB format is not Type I."
         channels !in 1..2 -> "Direct output supports mono or stereo."
         interval != 1 -> "The USB endpoint interval is unsupported."
-        maxPacketSize !in 1..(if (experimentalDsd) 3072 else 512) -> "The USB packet size exceeds the driver budget."
-        clockSourceId <= 0 || clockControls and 1 == 0 -> "The active USB clock cannot be verified."
+        maxPacketSize !in 1..(if (experimentalDsd) 3072 else if (fullSpeed) 1023 else 512) -> "The USB packet size exceeds the driver budget."
+        protocol == 0x20 && (clockSourceId <= 0 || clockControls and 1 == 0) -> "The active USB clock cannot be verified."
+        protocol == 0 && descriptorRates.isEmpty() -> "The USB sample rates are not declared."
+        protocol == 0 && !frequencyControl && descriptorRates.singleOrNull()?.let { it.minimum == it.maximum } != true ->
+            "The USB sample rate cannot be selected."
         synchronization == 1 && endpointFeedback <= 0 -> "Explicit asynchronous feedback is required."
         else -> null
     }
     fun fits(rate: Int, experimentalDsd: Boolean = false): Boolean = rate in 8000..(if (experimentalDsd) 2822400 else 384000) &&
-        kotlin.math.ceil(rate * (if (synchronization == 1) 1.01 else 1.0) / 8000.0).toInt() * channels * containerBytes <= maxPacketSize
+        kotlin.math.ceil(rate * (if (synchronization == 1) 1.01 else 1.0) / packetsPerSecond).toInt() * channels * containerBytes <= maxPacketSize
 }
 
 data class UsbClockStatus(val requestedHz: Int, val observedHz: Int?, val clockValid: Boolean?, val failure: String?) {
@@ -67,7 +74,7 @@ object UsbAudioDescriptors {
             var channels: Int = 0, var bytes: Int = 0, var bits: Int = 0, var terminal: Int = 0,
             var pcm: Boolean = false, var out: Int = -1, var feedback: Int = -1, var packet: Int = 0,
             var interval: Int = 0, var sync: Int = 0, var rates: List<UsbRateRange> = emptyList(),
-            var formats: Long = 0, var type: Int = 0)
+            var formats: Long = 0, var type: Int = 0, var frequency: Boolean = false)
         val pending = mutableListOf<Pending>()
         val clocks = mutableMapOf<Triple<Int, Int, Int>, Int>()
         val terminals = mutableMapOf<Triple<Int, Int, Int>, Int>()
@@ -128,16 +135,19 @@ object UsbAudioDescriptors {
                             if (packet and 0xe000 != 0 || transactions == 3 || payload > 1024) malformed = true
                             s.packet = payload * (1 + transactions)
                             s.interval = u(offset + 6); s.sync = attributes shr 2 and 3
-                        } else if (address and 0x80 != 0 && attributes and 0x30 == 0x10) s.feedback = address
+                        } else if (address and 0x80 != 0 && (attributes and 0x30 == 0x10 || s.protocol == 0 && s.out > 0)) s.feedback = address
                     }
                 } else malformed = true
+                0x25 -> if (length >= 4 && interfaceClass == 1) stream?.let { s ->
+                    if (s.protocol == 0 && u(offset + 2) == 1 && s.out > 0 && s.feedback < 0) s.frequency = u(offset + 3) and 1 != 0
+                }
             }
             offset += length
         }
         val formats = pending.filter { it.out > 0 && it.bytes > 0 && it.bits > 0 && it.channels > 0 }.map { s ->
             val clock = terminals[Triple(s.configuration, s.control, s.terminal)] ?: -1
             UsbAudioFormat(s.configuration, s.id, s.alt, s.protocol, s.channels, s.bits, s.bytes, s.out, s.feedback,
-                s.packet, s.interval, s.sync, s.control, clock, clocks[Triple(s.configuration, s.control, clock)] ?: 0, s.pcm, s.rates, s.formats, s.type)
+                s.packet, s.interval, s.sync, s.control, clock, clocks[Triple(s.configuration, s.control, clock)] ?: 0, s.pcm, s.rates, s.formats, s.type, frequencyControl = s.frequency)
         }
         return UsbDescriptorReport(if (malformed) emptyList() else formats, malformed)
     }

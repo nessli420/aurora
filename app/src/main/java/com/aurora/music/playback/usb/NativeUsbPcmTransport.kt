@@ -17,7 +17,7 @@ class NativeUsbPcmTransport(context: Context) : UsbPcmTransport {
     override fun capabilities(source: Format): UsbPcmCapabilities {
         val attached = device.findUsbAudioDevice() ?: error("No USB DAC connected.")
         check(device.hasPermission(attached)) { "USB permission is required." }
-        val opened = device.openDevice(attached) ?: error("USB audio format is unsupported.")
+        val opened = device.openDevice(attached) ?: error(device.lastFailure ?: "USB audio format is unsupported.")
         info = opened
         val formats = opened.formats.filter { it.unsupportedReason == null && it.channels == 2 && it.validBits in setOf(16, 24, 32) }
         val format = formats.maxWithOrNull(compareBy<UsbAudioFormat> { it.validBits }.thenBy { it.containerBits })
@@ -38,7 +38,7 @@ class NativeUsbPcmTransport(context: Context) : UsbPcmTransport {
         clockRate = clock.observedHz
         val created = UsbAudioStream(info.fd, selected.interfaceId, selected.endpointOut, selected.endpointFeedback,
             format.sampleRate, 2, selected.containerBits, selected.maxPacketSize, validBits = selected.validBits,
-            alternateSetting = selected.alternateSetting)
+            alternateSetting = selected.alternateSetting, endpointRateControl = selected.endpointRateControl)
         try {
             check(created.isReady && created.start()) { "USB stream could not start." }
             stream = created

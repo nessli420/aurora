@@ -108,7 +108,7 @@ class UsbAudioDescriptorsTest {
         assertTrue(format.copy(maxPacketSize = 48, synchronization = 3, endpointFeedback = -1).fits(48000))
     }
 
-    @Test fun uac1UsesItsOwnChannelAndRateOffsetsWithoutClaimingNativeSupport() {
+    @Test fun uac1UsesItsOwnChannelAndRateOffsets() {
         val descriptors = bytes(9, 2, 0, 0, 2, 1, 0, 0x80, 50,
             9, 4, 0, 0, 0, 1, 1, 0, 0, 9, 4, 1, 1, 1, 1, 2, 0, 0,
             7, 0x24, 1, 1, 0, 1, 0, 11, 0x24, 2, 1, 2, 3, 24, 1, 0x80, 0xbb, 0,
@@ -116,7 +116,29 @@ class UsbAudioDescriptorsTest {
         val format = UsbAudioDescriptors.parse(descriptors).formats.single()
         assertEquals(2, format.channels); assertEquals(24, format.validBits); assertEquals(3, format.containerBytes)
         assertEquals(listOf(UsbRateRange(48000, 48000, 0)), format.descriptorRates)
-        assertNotNull(format.unsupportedReason)
+        assertNull(format.unsupportedReason)
+        assertFalse(format.endpointRateControl)
+        assertFalse(format.copy(fullSpeed = true).fits(96000))
+        assertTrue(format.copy(fullSpeed = true).fits(48000))
+    }
+
+    @Test fun uac1SelectsRatesThroughTheEndpointAndFindsItsFeedbackEndpoint() {
+        val descriptors = bytes(9, 2, 0, 0, 2, 1, 0, 0x80, 50,
+            9, 4, 0, 0, 0, 1, 1, 0, 0, 9, 4, 1, 1, 2, 1, 2, 0, 0,
+            7, 0x24, 1, 1, 0, 1, 0, 14, 0x24, 2, 1, 2, 3, 24, 2, 0x80, 0xbb, 0, 0, 0x77, 1,
+            9, 5, 1, 5, 0x47, 2, 1, 0, 0x81, 7, 0x25, 1, 1, 0, 0, 0,
+            9, 5, 0x81, 1, 3, 0, 1, 2, 0)
+        val format = UsbAudioDescriptors.parse(descriptors).formats.single().copy(fullSpeed = true)
+        assertEquals(listOf(UsbRateRange(48000, 48000, 0), UsbRateRange(96000, 96000, 0)), format.descriptorRates)
+        assertEquals(0x81, format.endpointFeedback); assertEquals(1, format.synchronization)
+        assertTrue(format.endpointRateControl)
+        assertNull(format.unsupportedReason)
+        assertTrue(format.fits(96000)); assertFalse(format.copy(maxPacketSize = 576).fits(96000))
+        assertNotNull(format.copy(frequencyControl = false).unsupportedReason)
+        assertNotNull(format.copy(endpointFeedback = -1).unsupportedReason)
+        assertNotNull(format.copy(descriptorRates = emptyList()).unsupportedReason)
+        assertNotNull(format.copy(maxPacketSize = 1024).unsupportedReason)
+        assertNotNull(format.copy(fullSpeed = false).unsupportedReason)
     }
 
     @Test fun clockRangesValidateLengthsAndRespectDiscreteSteps() {

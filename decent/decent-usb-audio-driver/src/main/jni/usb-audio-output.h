@@ -31,6 +31,8 @@ struct UsbAudioContext {
     int32_t bytesPerSample = 0;
     int32_t bytesPerFrame = 0;
     int32_t maxPacketSize = 0;
+    int32_t packetsPerSecond = 8000;
+    bool endpointRateControl = false;
     std::mutex ioMutex;
     std::atomic<bool> running{false};
     std::atomic<bool> startRequested{false};

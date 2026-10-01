@@ -42,6 +42,7 @@ class UsbAudioStream(
     val validBits: Int = bitDepth,
     alternateSetting: Int,
     val wireFormat: Int = WIRE_PCM,
+    endpointRateControl: Boolean = false,
 ) {
     @Volatile var nativeHandle: Long = 0L; private set
     private val lifecycle = ReentrantReadWriteLock(true)
@@ -54,6 +55,7 @@ class UsbAudioStream(
         require(wireFormat != WIRE_NATIVE_DSD || bitDepth == 32 && validBits == 32)
         nativeHandle = nativeUsbAudioCreate(fd, interfaceId, endpointOut, endpointFeedback,
             sampleRate, channelCount, bitDepth, maxPacketSize, validBits, alternateSetting, wireFormat)
+        if (endpointRateControl && nativeHandle != 0L) nativeUseEndpointRateControl(nativeHandle)
     }
 
     val isReady: Boolean get() = lifecycle.read { nativeHandle != 0L }
@@ -116,6 +118,7 @@ class UsbAudioStream(
 
     private external fun nativeUsbAudioCreate(fd: Int, interfaceId: Int, endpointOut: Int, endpointFeedback: Int,
         sampleRate: Int, channelCount: Int, bitDepth: Int, maxPacketSize: Int, validBits: Int, alternateSetting: Int, wireFormat: Int): Long
+    private external fun nativeUseEndpointRateControl(handle: Long)
     private external fun nativeUsbAudioSetAltSetting(handle: Long, altSetting: Int): Boolean
     private external fun nativeUsbAudioSetSampleRate(handle: Long, sampleRateHz: Int, clockSourceId: Int): Boolean
     private external fun nativeUsbAudioStart(handle: Long): Boolean

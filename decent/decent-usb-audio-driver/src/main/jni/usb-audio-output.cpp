@@ -46,11 +46,13 @@ static bool submitFeedback(UsbAudioContext *ctx) {
 static bool completeUrb(UsbAudioContext *ctx, usbdevfs_urb *u, bool cancelling) {
     if (u == ctx->feedbackUrb) {
         ctx->feedbackInFlight = false;
-        if (!cancelling && ctx->running.load() && u->status == 0 && u->iso_frame_desc[0].status == 0 && u->iso_frame_desc[0].actual_length == 4) {
+        const unsigned length = u->iso_frame_desc[0].actual_length;
+        const bool fullSpeed = ctx->packetsPerSecond == 1000;
+        if (!cancelling && ctx->running.load() && u->status == 0 && u->iso_frame_desc[0].status == 0 && (length == 4 || (fullSpeed && length == 3))) {
             const auto *b = ctx->feedbackBuffer;
-            const uint32_t raw = uint32_t(b[0]) | (uint32_t(b[1]) << 8) | (uint32_t(b[2]) << 16) | (uint32_t(b[3]) << 24);
-            const double measured = raw / 65536.0;
-            const double nominal = ctx->sampleRate / 8000.0;
+            const uint32_t raw = uint32_t(b[0]) | (uint32_t(b[1]) << 8) | (uint32_t(b[2]) << 16) | (length == 4 ? uint32_t(b[3]) << 24 : 0);
+            const double measured = raw / (length == 3 ? 16384.0 : 65536.0);
+            const double nominal = double(ctx->sampleRate) / ctx->packetsPerSecond;
             if (measured >= nominal * .99 && measured <= nominal * 1.01) {
                 ctx->calibratedFpmf.store(measured); ctx->feedbackPackets.fetch_add(1);
             } else ctx->invalidFeedbackPackets.fetch_add(1);
@@ -134,16 +136,23 @@ static bool resetStreamingInterface(UsbAudioContext *ctx, ReadAlt readAlt, SetAl
     }
     const int observed = readAlt();
     if (observed != ctx->alternateSetting) { fail(ctx, observed < 0 ? -observed : EPROTO); return false; }
-    ctx->calibratedFpmf.store(ctx->sampleRate / 8000.0);
+    ctx->calibratedFpmf.store(double(ctx->sampleRate) / ctx->packetsPerSecond);
     return true;
 }
 static bool resetStreamingInterface(UsbAudioContext *ctx) {
-    return resetStreamingInterface(ctx,
+    if (!resetStreamingInterface(ctx,
         [ctx] { return readInterfaceSetting(ctx->fd, ctx->interfaceId); },
         [ctx](int alt) {
             usbdevfs_setinterface request{}; request.interface = ctx->interfaceId; request.altsetting = alt;
             return ioctl(ctx->fd, USBDEVFS_SETINTERFACE, &request) == 0 ? 0 : errno;
-        });
+        })) return false;
+    if (!ctx->endpointRateControl) return true;
+    uint8_t rate[3] = {uint8_t(ctx->sampleRate), uint8_t(ctx->sampleRate >> 8), uint8_t(ctx->sampleRate >> 16)};
+    usbdevfs_ctrltransfer request{};
+    request.bRequestType = 0x22; request.bRequest = 1; request.wValue = 0x0100; request.wIndex = ctx->endpointOut;
+    request.wLength = 3; request.timeout = 1000; request.data = rate;
+    if (ioctl(ctx->fd, USBDEVFS_CONTROL, &request) != 3) { fail(ctx, errno); return false; }
+    return true;
 }
 static bool startUsbStream(UsbAudioContext *ctx) {
     if (ctx->running.load()) return true;
@@ -152,9 +161,10 @@ static bool startUsbStream(UsbAudioContext *ctx) {
     ctx->running.store(true);
     if (!submitFeedback(ctx)) return false;
     if (ctx->endpointFeedback > 0) {
-        const int64_t deadline = nowMs() + 100;
+        const int wait = ctx->packetsPerSecond == 1000 ? 1000 : 100;
+        const int64_t deadline = nowMs() + wait;
         while (ctx->feedbackPackets.load() == feedbackBefore && ctx->running.load() && nowMs() < deadline)
-            if (reap(ctx, 100) < 0) return false;
+            if (reap(ctx, wait) < 0) return false;
         if (!ctx->running.load()) return false;
         if (ctx->feedbackPackets.load() == feedbackBefore) { fail(ctx, EPROTO); return false; }
     }
@@ -289,10 +299,12 @@ JNIEXPORT jint JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeGetUsbSpeed
 }
 JNIEXPORT jlong JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioCreate(
         JNIEnv *, jobject, jint fd, jint iface, jint out, jint feedback, jint rate, jint channels, jint bits, jint maxPacket, jint validBits, jint alt, jint wireFormat) {
-    if (fd < 0 || ioctl(fd, USBDEVFS_GET_SPEED) != 3 || iface < 0 || out <= 0 || out >= 0x80 ||
+    const int speed = fd < 0 ? -1 : ioctl(fd, USBDEVFS_GET_SPEED);
+    const int packetsPerSecond = speed == 2 ? 1000 : 8000;
+    if ((speed != 3 && !(speed == 2 && wireFormat == 0)) || iface < 0 || out <= 0 || out >= 0x80 ||
         (feedback > 0 && (feedback < 0x80 || feedback > 255)) || rate < 8000 || rate > (wireFormat == 0 ? 384000 : wireFormat == 1 ? 2822400 : 1411200) ||
-        channels < 1 || channels > 2 || (bits != 16 && bits != 24 && bits != 32) || validBits < 16 || validBits > bits || maxPacket <= 0 || maxPacket > (wireFormat == 0 ? 512 : 3072) ||
-        std::ceil(rate * (feedback > 0 ? 1.01 : 1.0) / 8000.0) * channels * (bits / 8) > maxPacket ||
+        channels < 1 || channels > 2 || (bits != 16 && bits != 24 && bits != 32) || validBits < 16 || validBits > bits || maxPacket <= 0 || maxPacket > (wireFormat != 0 ? 3072 : speed == 2 ? 1023 : 512) ||
+        std::ceil(rate * (feedback > 0 ? 1.01 : 1.0) / packetsPerSecond) * channels * (bits / 8) > maxPacket ||
         wireFormat < 0 || wireFormat > 2 || (wireFormat == 1 && (bits < 24 || validBits < 24)) ||
         (wireFormat == 2 && (bits != 32 || validBits != 32)) ||
         alt <= 0 || alt > 255 || readInterfaceSetting(fd, iface) != alt) return 0;
@@ -307,7 +319,8 @@ JNIEXPORT jlong JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioCr
     ctx->wireFormat = wireFormat;
     ctx->sampleRate = rate; ctx->channelCount = channels; ctx->bitDepth = bits; ctx->validBits = validBits; ctx->bytesPerSample = bits / 8;
     ctx->bytesPerFrame = channels * ctx->bytesPerSample; ctx->maxPacketSize = maxPacket;
-    ctx->calibratedFpmf.store(rate / 8000.0);
+    ctx->packetsPerSecond = packetsPerSecond;
+    ctx->calibratedFpmf.store(double(rate) / packetsPerSecond);
     for (auto &slot : ctx->ring) {
         slot.urb = static_cast<usbdevfs_urb *>(calloc(1, sizeof(usbdevfs_urb) + USB_AUDIO_PACKETS_PER_URB * sizeof(usbdevfs_iso_packet_desc)));
         slot.buffer = static_cast<uint8_t *>(malloc(maxPacket * USB_AUDIO_PACKETS_PER_URB));
@@ -317,6 +330,9 @@ JNIEXPORT jlong JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioCr
     ctx->transferBuffer = static_cast<uint8_t *>(malloc(USB_AUDIO_CONVERSION_BUFFER_SIZE));
     if (ctx->fd < 0 || !ctx->feedbackUrb || !ctx->transferBuffer) { freeMemory(ctx); delete ctx; return 0; }
     return reinterpret_cast<jlong>(ctx);
+}
+JNIEXPORT void JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUseEndpointRateControl(JNIEnv *, jobject, jlong h) {
+    if (auto *ctx = reinterpret_cast<UsbAudioContext *>(h)) ctx->endpointRateControl = true;
 }
 JNIEXPORT jboolean JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioSetAltSetting(JNIEnv *, jobject, jlong h, jint alt) {
     auto *ctx = reinterpret_cast<UsbAudioContext *>(h); if (!ctx || alt < 0) return false;
@@ -426,7 +442,7 @@ JNIEXPORT jlongArray JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeGetTe
     const jlong values[] = {ctx->framesWritten.load(), ctx->submittedFrames.load(), ctx->completedFrames.load(),
         ctx->packetErrors.load(), ctx->submitErrors.load(), ctx->reapTimeouts.load(), ctx->starvationEvents.load(),
         ctx->feedbackPackets.load(), ctx->invalidFeedbackPackets.load(), ctx->lastError.load(),
-        jlong(ctx->calibratedFpmf.load() * 8000.0), ctx->urbsInFlight.load()};
+        jlong(ctx->calibratedFpmf.load() * ctx->packetsPerSecond), ctx->urbsInFlight.load()};
     auto out = env->NewLongArray(12); if (out) env->SetLongArrayRegion(out, 0, 12, values); return out;
 }
 JNIEXPORT jint JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbReset(JNIEnv *, jclass, jint fd) {
