@@ -86,6 +86,27 @@ class DesktopSettingsTest {
         assertEquals(0.2f, it.unmuteVolume.first())
     }
 
+    @Test fun paneWidthsPersistUntilResetToTheDefault() {
+        settings {
+            assertNull(it.libraryListWidth.first())
+            assertNull(it.settingsListWidth.first())
+            assertNull(it.sidePanelWidth.first())
+            it.setLibraryListWidth(512f)
+            it.setSettingsListWidth(300f)
+            it.setSidePanelWidth(420f)
+        }
+        settings {
+            assertEquals(512f, it.libraryListWidth.first())
+            assertEquals(300f, it.settingsListWidth.first())
+            assertEquals(420f, it.sidePanelWidth.first())
+            it.setLibraryListWidth(null)
+            it.setSidePanelWidth(Float.NaN)
+            assertNull(it.libraryListWidth.first())
+            assertNull(it.sidePanelWidth.first())
+            assertEquals(300f, it.settingsListWidth.first())
+        }
+    }
+
     @Test fun musicFoldersAreNormalizedAndDeduplicated() = settings {
         val rock = temp.newFolder("Music", "Rock")
         val jazz = temp.newFolder("Music", "Jazz")

@@ -6,6 +6,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.input.pointer.PointerButton
+import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -200,6 +202,31 @@ internal class AuditScene(
     }
 
     fun click(x: Float, y: Float) {
+        ui.click(x, y)
+        settle(500)
+    }
+
+    fun drag(x: Float, y: Float, dx: Float, steps: Int = 12) {
+        val pressed = PointerButtons(isPrimaryPressed = true)
+        ui.input {
+            sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = ui.millis)
+            sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = ui.millis, buttons = pressed, button = PointerButton.Primary)
+        }
+        for (step in 1..steps) {
+            ui.millis += 16
+            ui.input {
+                sendPointerEvent(PointerEventType.Move, Offset(x + dx * step / steps, y), timeMillis = ui.millis, buttons = pressed)
+                render(ui.millis * 1_000_000)
+            }
+        }
+        ui.millis += 16
+        ui.input { sendPointerEvent(PointerEventType.Release, Offset(x + dx, y), timeMillis = ui.millis, buttons = PointerButtons(), button = PointerButton.Primary) }
+        settle(500)
+    }
+
+    fun doubleClick(x: Float, y: Float) {
+        ui.click(x, y)
+        ui.millis += 80
         ui.click(x, y)
         settle(500)
     }
