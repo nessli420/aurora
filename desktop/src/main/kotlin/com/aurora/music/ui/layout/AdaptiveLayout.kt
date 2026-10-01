@@ -11,6 +11,8 @@ data class WindowLayout(val widthDp: Int = 0, val heightDp: Int = 0) {
     val canExpandSidebar: Boolean get() = widthDp >= 1200
     val canShowSidePanel: Boolean get() = useNavigationRail &&
         widthDp - TabletMetrics.RailWidth.value - TabletMetrics.SidePanelWidth.value >= TabletMetrics.MinContentWidth.value
+    val maxSidePanelWidth: Dp get() = (widthDp.dp - TabletMetrics.RailWidth - TabletMetrics.MinContentWidth)
+        .coerceIn(TabletMetrics.SidePanelMinWidth, TabletMetrics.SidePanelMaxWidth)
     val pageGutter: Dp get() = when {
         widthDp >= 1800 -> 48.dp
         widthDp >= 1400 -> 40.dp
@@ -23,10 +25,17 @@ object TabletMetrics {
     val RailWidth: Dp = 88.dp
     val SidebarWidth: Dp = 232.dp
     val SidePanelWidth: Dp = 360.dp
+    val SidePanelMinWidth: Dp = 300.dp
+    val SidePanelMaxWidth: Dp = 560.dp
     val MinContentWidth: Dp = 600.dp
     val ComfortableContentWidth: Dp = 600.dp
     val NavGap: Dp = 8.dp
     val WindowInset: Dp = 12.dp
+    val DividerWidth: Dp = 8.dp
+    val SplitListMinWidth: Dp = 320.dp
+    val SplitPaneMinWidth: Dp = 480.dp
+    val SettingsListMinWidth: Dp = 280.dp
+    val SettingsListMaxWidth: Dp = 520.dp
 }
 
 object PageMetrics {
@@ -51,9 +60,9 @@ data class ShellLayout(val expandedSidebar: Boolean, val sidePanel: Boolean) {
     val navWidth: Dp get() = if (expandedSidebar) TabletMetrics.SidebarWidth else TabletMetrics.RailWidth
 }
 
-fun WindowLayout.shell(panelRequested: Boolean): ShellLayout {
+fun WindowLayout.shell(panelRequested: Boolean, panelWidth: Dp = TabletMetrics.SidePanelWidth): ShellLayout {
     val panel = panelRequested && canShowSidePanel
-    val roomWithSidebar = widthDp - TabletMetrics.SidebarWidth.value - (if (panel) TabletMetrics.SidePanelWidth.value else 0f)
+    val roomWithSidebar = widthDp - TabletMetrics.SidebarWidth.value - (if (panel) panelWidth.value else 0f)
     return ShellLayout(
         expandedSidebar = canExpandSidebar && roomWithSidebar >= TabletMetrics.ComfortableContentWidth.value,
         sidePanel = panel,

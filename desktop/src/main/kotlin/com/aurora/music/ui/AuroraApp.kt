@@ -118,9 +118,11 @@ import com.aurora.music.navigation.NavMenuItem
 import com.aurora.music.navigation.Routes
 import com.aurora.music.ui.components.AmbientBackground
 import com.aurora.music.ui.components.LottieLoader
+import com.aurora.music.ui.components.PaneDivider
 import com.aurora.music.ui.components.PlaybackDock
 import com.aurora.music.ui.components.TabletNavigationRail
 import com.aurora.music.ui.components.TabletSidebar
+import com.aurora.music.ui.components.rememberPaneWidth
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.PageMetrics
@@ -160,6 +162,7 @@ import com.aurora.music.ui.screens.settings.LanguageSettingsScreen
 import com.aurora.music.ui.screens.settings.LastfmIntegrationScreen
 import com.aurora.music.ui.screens.settings.ListenBrainzIntegrationScreen
 import com.aurora.music.ui.screens.settings.LocalSelectedSettingsRoute
+import com.aurora.music.ui.screens.settings.LocalSettingsPaneExpand
 import com.aurora.music.ui.screens.settings.LocalSettingsPaneRoots
 import com.aurora.music.ui.screens.settings.LoudnessSettingsScreen
 import com.aurora.music.ui.screens.settings.LyricsIntegrationScreen
@@ -239,6 +242,7 @@ private fun Shell(
     val container = LocalDesktopContainer.current
     val player = LocalPlayer.current
     val store = container.settingsStore
+    val desktopSettings = container.desktopSettings
     val repository = container.repository
     val authVM = viewModel(viewModelStoreOwner = rootOwner) { AuthViewModel(container) }
 
@@ -264,6 +268,9 @@ private fun Shell(
     val downloadStates by container.downloadManager.states.collectAsStateWithLifecycle()
     val simpleMode by store.simpleMode.collectAsStateWithLifecycle(initialValue = false)
     val unsupportedAccount by container.unsupportedAccount.collectAsStateWithLifecycle()
+    val savedLibraryWidth by desktopSettings.libraryListWidth.collectAsStateWithLifecycle(initialValue = null)
+    val savedSettingsWidth by desktopSettings.settingsListWidth.collectAsStateWithLifecycle(initialValue = null)
+    val savedPanelWidth by desktopSettings.sidePanelWidth.collectAsStateWithLifecycle(initialValue = null)
 
     val snackbarHostState = remember { SnackbarHostState() }
     LaunchedEffect(container, player) {
@@ -338,7 +345,9 @@ private fun Shell(
     val rail = windowLayout.useNavigationRail && showChrome
     var sidePaneName by rememberSaveable { mutableStateOf<String?>(null) }
     val sidePane = sidePaneName?.let { runCatching { PlayerPane.valueOf(it) }.getOrNull() }
-    val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack)
+    val panelPane = rememberPaneWidth(savedPanelWidth)
+    val panelWidth = panelPane.resolve(TabletMetrics.SidePanelWidth, TabletMetrics.SidePanelMinWidth, windowLayout.maxSidePanelWidth)
+    val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack, panelWidth = panelWidth)
     val uiPrefs = LocalUiPrefs.current
     val navLayout = remember(uiPrefs.navLayout, simpleMode) { NavMenu.parse(uiPrefs.navLayout).visible(simpleMode).ported() }
     val navGap = if (rail) (TabletMetrics.NavGap + (uiPrefs.tabletNavGap - TabletSetting.NAV_GAP.default).dp).coerceAtLeast(0.dp) else 0.dp
@@ -500,8 +509,8 @@ private fun Shell(
         )
     }
 
-    val detailContent: @Composable (String, String, DetailViewModel, PaddingValues, () -> Unit, (String, String) -> Unit) -> Unit =
-        { kind, id, detailVM, padding, onBack, onOpen ->
+    val detailContent: @Composable (String, String, DetailViewModel, PaddingValues, () -> Unit, (String, String) -> Unit, (() -> Unit)?) -> Unit =
+        { kind, id, detailVM, padding, onBack, onOpen, onExpand ->
             LaunchedEffect(kind, id) { detailVM.load(kind, id) }
             val detailState by detailVM.state.collectAsStateWithLifecycle()
             LaunchedEffect(detailState.data?.tracks?.size) {
@@ -576,6 +585,7 @@ private fun Shell(
                     scope.launch { store.togglePin(pin) }
                 },
                 artistInfo = detailState.artistInfo,
+                onExpand = onExpand,
             )
         }
 
@@ -861,7 +871,12 @@ private fun Shell(
                                     val split = rail && maxWidth >= 960.dp
                                     val selected = librarySelection?.split(":", limit = 2)?.takeIf { split && it.size == 2 }
                                     BackHandler(enabled = split && librarySelection != null) { librarySelection = null }
-                                    val listWidth = if (maxWidth >= 1500.dp) 560.dp else 440.dp
+                                    val listPane = rememberPaneWidth(savedLibraryWidth)
+                                    val listWidth = listPane.resolve(
+                                        default = if (maxWidth >= 1500.dp) 560.dp else 440.dp,
+                                        min = TabletMetrics.SplitListMinWidth,
+                                        max = maxWidth - TabletMetrics.SplitPaneMinWidth - TabletMetrics.DividerWidth - TabletMetrics.WindowInset,
+                                    )
                                     Row(Modifier.fillMaxSize()) {
                                         Box(if (selected != null) Modifier.width(listWidth).fillMaxHeight() else Modifier.weight(1f).fillMaxHeight()) {
                                             LibraryScreen(
@@ -976,6 +991,7 @@ private fun Shell(
                                             )
                                         }
                                         if (selected != null) {
+                                            PaneDivider(listPane, onSave = { scope.launch { desktopSettings.setLibraryListWidth(it) } })
                                             Box(
                                                 Modifier.weight(1f).fillMaxHeight().padding(end = TabletMetrics.WindowInset)
                                                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
@@ -983,8 +999,11 @@ private fun Shell(
                                             ) {
                                                 val paneVM = viewModel(key = "library-detail") { DetailViewModel(container) }
                                                 CompositionLocalProvider(LocalPageGutter provides PageMetrics.PaneGutter) {
-                                                    detailContent(selected[0], selected[1], paneVM, inner, { librarySelection = null }) { k, i ->
+                                                    detailContent(selected[0], selected[1], paneVM, inner, { librarySelection = null }, { k, i ->
                                                         if (k in listOf("album", "artist", "playlist")) librarySelection = "$k:$i" else openDetail(k, i)
+                                                    }) {
+                                                        librarySelection = null
+                                                        openDetail(selected[0], selected[1])
                                                     }
                                                 }
                                             }
@@ -1061,7 +1080,7 @@ private fun Shell(
                             }
                             composable(Routes.DETAIL) { entry ->
                                 detailContent(entry.arg("kind"), entry.arg("id"), viewModel { DetailViewModel(container) }, inner,
-                                    { navController.popBackStack() }, { k, i -> openDetail(k, i) })
+                                    { navController.popBackStack() }, { k, i -> openDetail(k, i) }, null)
                             }
                             composable(Routes.SETTINGS) {
                                 val paneNav = rememberNavController()
@@ -1075,6 +1094,7 @@ private fun Shell(
                                 }
                                 var paneRoute by rememberSaveable { mutableStateOf(Routes.SETTINGS_PLAYBACK) }
                                 var paneTouched by rememberSaveable { mutableStateOf(false) }
+                                val openFullPage: (String) -> Unit = remember(navController) { { route -> navController.navigate(route) } }
                                 BoxWithConstraints(Modifier.fillMaxSize()) {
                                     val twoPane = maxWidth >= 840.dp
                                     fun open(route: String) {
@@ -1094,7 +1114,13 @@ private fun Shell(
                                             navController.navigate(paneRoute)
                                         }
                                     }
-                                    val listWidth = if (maxWidth >= 1300.dp) 380.dp else 320.dp
+                                    val listPane = rememberPaneWidth(savedSettingsWidth)
+                                    val listWidth = listPane.resolve(
+                                        default = if (maxWidth >= 1300.dp) 380.dp else 320.dp,
+                                        min = TabletMetrics.SettingsListMinWidth,
+                                        max = minOf(TabletMetrics.SettingsListMaxWidth,
+                                            maxWidth - TabletMetrics.SplitPaneMinWidth - TabletMetrics.DividerWidth - TabletMetrics.WindowInset),
+                                    )
                                     Row(Modifier.fillMaxSize()) {
                                         Box(if (twoPane) Modifier.width(listWidth).fillMaxHeight() else Modifier.weight(1f).fillMaxHeight()) {
                                             CompositionLocalProvider(LocalSelectedSettingsRoute provides if (twoPane) paneRoute else null) {
@@ -1126,12 +1152,17 @@ private fun Shell(
                                             }
                                         }
                                         if (twoPane) {
+                                            PaneDivider(listPane, onSave = { scope.launch { desktopSettings.setSettingsListWidth(it) } })
                                             Box(
                                                 Modifier.weight(1f).fillMaxHeight().padding(end = TabletMetrics.WindowInset)
                                                     .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                                                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                                             ) {
-                                                CompositionLocalProvider(LocalSettingsPaneRoots provides paneRoots, LocalPageGutter provides PageMetrics.PaneGutter) {
+                                                CompositionLocalProvider(
+                                                    LocalSettingsPaneRoots provides paneRoots,
+                                                    LocalPageGutter provides PageMetrics.PaneGutter,
+                                                    LocalSettingsPaneExpand provides openFullPage,
+                                                ) {
                                                     NavHost(
                                                         navController = paneNav,
                                                         startDestination = paneRoute,
@@ -1176,15 +1207,17 @@ private fun Shell(
                             enter = expandHorizontally(tween(240)) + fadeIn(tween(200)),
                             exit = shrinkHorizontally(tween(220)) + fadeOut(tween(160)),
                         ) {
-                            NowPlayingSidePanel(
-                                pane = sidePane ?: PlayerPane.QUEUE,
-                                onSelect = { sidePaneName = it.name },
-                                onClose = { sidePaneName = null },
-                                content = { target, modifier -> nowPlayingPane(target, modifier) },
-                                actions = { target -> nowPlayingPaneActions(target) },
-                                modifier = Modifier.width(TabletMetrics.SidePanelWidth).fillMaxHeight()
-                                    .padding(top = panelSpacing, end = TabletMetrics.WindowInset, bottom = inner.calculateBottomPadding()),
-                            )
+                            Row(Modifier.fillMaxHeight().padding(top = panelSpacing, bottom = inner.calculateBottomPadding())) {
+                                PaneDivider(panelPane, onSave = { scope.launch { desktopSettings.setSidePanelWidth(it) } }, fromEnd = true)
+                                NowPlayingSidePanel(
+                                    pane = sidePane ?: PlayerPane.QUEUE,
+                                    onSelect = { sidePaneName = it.name },
+                                    onClose = { sidePaneName = null },
+                                    content = { target, modifier -> nowPlayingPane(target, modifier) },
+                                    actions = { target -> nowPlayingPaneActions(target) },
+                                    modifier = Modifier.width(panelWidth).fillMaxHeight().padding(end = TabletMetrics.WindowInset),
+                                )
+                            }
                         }
                     }
                 }

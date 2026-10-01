@@ -46,6 +46,9 @@ class DesktopSettings(private val dataStore: DataStore<Preferences>) {
         if (width == null || height == null) null
         else WindowPlacement(p[WINDOW_X] ?: 0, p[WINDOW_Y] ?: 0, width, height, p[WINDOW_MAXIMIZED] ?: false)
     }.distinctUntilChanged()
+    val libraryListWidth: Flow<Float?> = dataStore.data.map { it[LIBRARY_LIST_WIDTH] }.distinctUntilChanged()
+    val settingsListWidth: Flow<Float?> = dataStore.data.map { it[SETTINGS_LIST_WIDTH] }.distinctUntilChanged()
+    val sidePanelWidth: Flow<Float?> = dataStore.data.map { it[SIDE_PANEL_WIDTH] }.distinctUntilChanged()
 
     suspend fun setOutputDevice(id: String?) = dataStore.edit { if (id.isNullOrBlank()) it.remove(OUTPUT_DEVICE) else it[OUTPUT_DEVICE] = id }
     suspend fun setExclusiveMode(enabled: Boolean) = dataStore.edit { it[EXCLUSIVE] = enabled }
@@ -71,6 +74,14 @@ class DesktopSettings(private val dataStore: DataStore<Preferences>) {
         it[WINDOW_WIDTH] = placement.width
         it[WINDOW_HEIGHT] = placement.height
         it[WINDOW_MAXIMIZED] = placement.maximized
+    }
+
+    suspend fun setLibraryListWidth(dp: Float?) = setWidth(LIBRARY_LIST_WIDTH, dp)
+    suspend fun setSettingsListWidth(dp: Float?) = setWidth(SETTINGS_LIST_WIDTH, dp)
+    suspend fun setSidePanelWidth(dp: Float?) = setWidth(SIDE_PANEL_WIDTH, dp)
+
+    private suspend fun setWidth(key: Preferences.Key<Float>, dp: Float?) = dataStore.edit {
+        if (dp == null || !dp.isFinite() || dp <= 0f) it.remove(key) else it[key] = dp
     }
 
     private fun parseFolders(json: String?): List<String> = runCatching {
@@ -101,5 +112,8 @@ class DesktopSettings(private val dataStore: DataStore<Preferences>) {
         private val WINDOW_WIDTH = intPreferencesKey("window_width")
         private val WINDOW_HEIGHT = intPreferencesKey("window_height")
         private val WINDOW_MAXIMIZED = booleanPreferencesKey("window_maximized")
+        private val LIBRARY_LIST_WIDTH = floatPreferencesKey("library_list_width")
+        private val SETTINGS_LIST_WIDTH = floatPreferencesKey("settings_list_width")
+        private val SIDE_PANEL_WIDTH = floatPreferencesKey("side_panel_width")
     }
 }

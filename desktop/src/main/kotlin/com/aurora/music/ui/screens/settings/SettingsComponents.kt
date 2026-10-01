@@ -1,6 +1,5 @@
 package com.aurora.music.ui.screens.settings
 
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -10,19 +9,18 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -63,11 +61,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import com.aurora.music.ui.components.FullPageButton
 import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
 
 val LocalSettingsPaneRoots = compositionLocalOf<Set<String>?> { null }
+
+val LocalSettingsPaneExpand = compositionLocalOf<((String) -> Unit)?> { null }
 
 @Composable
 private fun isSettingsPaneRoot(): Boolean {
@@ -84,12 +85,16 @@ fun SettingsTopBar(title: String, onBack: () -> Unit) {
 @Composable
 fun SettingsTopBar(title: String, onBack: () -> Unit, showBack: Boolean) {
     val gutter = LocalPageGutter.current
+    val expand = LocalSettingsPaneExpand.current
+    val route = (LocalViewModelStoreOwner.current as? NavBackStackEntry)?.destination?.route
     Box(
         Modifier.fillMaxWidth()
             .then(if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) Modifier.auroraPanel(RectangleShape) else Modifier)
             .padding(start = gutter, end = if (LocalSettingsListPane.current) ListPaneEnd + GroupInset else gutter, bottom = 4.dp),
     ) {
-        PageHeader(title, onBack = if (showBack) onBack else null)
+        PageHeader(title, onBack = if (showBack) onBack else null) {
+            if (expand != null && route != null) FullPageButton({ expand(route) }, Modifier.offset(x = 14.dp))
+        }
     }
 }
 
@@ -121,7 +126,6 @@ fun ColumnScope.SettingsList(
             verticalArrangement = verticalArrangement,
             content = content,
         )
-        VerticalScrollbar(rememberScrollbarAdapter(state), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
     }
 }
 
@@ -138,7 +142,6 @@ fun ColumnScope.SettingsScroll(
             horizontalAlignment = horizontalAlignment,
             content = content,
         )
-        VerticalScrollbar(rememberScrollbarAdapter(scroll), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
     }
 }
 

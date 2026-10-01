@@ -3,7 +3,6 @@ package com.aurora.music.ui.screens.stats
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -15,7 +14,6 @@ import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.grid.items as gridItems
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -94,50 +92,46 @@ fun RecapInboxScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpen: 
                 Text(appString(R.string.text_mark_all_read_8958e2))
             }
         }
-        Box(Modifier.fillMaxSize()) {
-            LazyVerticalGrid(
-                GridCells.Adaptive(minSize = 360.dp), Modifier.fillMaxSize(), state = gridState,
-                contentPadding = pagePadding(contentPadding, bottom = 28.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                item(span = full) {
-                    Column(Modifier.padding(top = 8.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        Text(appString(R.string.text_your_listening_revisited_9ea31f), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
-                        Text(if (inbox.unread > 0) appString(R.string.recap_new_count, (inbox.unread)) else appString(R.string.text_the_songs_artists_and_moments_that_made_your_days_641b13), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+        LazyVerticalGrid(
+            GridCells.Adaptive(minSize = 360.dp), Modifier.fillMaxSize(), state = gridState,
+            contentPadding = pagePadding(contentPadding, bottom = 28.dp),
+            horizontalArrangement = Arrangement.spacedBy(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp),
+        ) {
+            item(span = full) {
+                Column(Modifier.padding(top = 8.dp, bottom = 4.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(appString(R.string.text_your_listening_revisited_9ea31f), style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black)
+                    Text(if (inbox.unread > 0) appString(R.string.recap_new_count, (inbox.unread)) else appString(R.string.text_the_songs_artists_and_moments_that_made_your_days_641b13), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
-                item(span = full) {
-                    LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        item { FilterChip(filter == "ALL", { filter = "ALL" }, label = { Text(appString(R.string.text_all_6a7208)) }) }
-                        items(RecapPeriod.entries.filter { it != RecapPeriod.ALL }) { period ->
-                            FilterChip(filter == period.name, { filter = period.name }, label = { Text(period.label) })
-                        }
-                    }
-                }
-                if (inbox.loading) item(span = full) { Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
-                else if (featured == null) item(span = full) {
-                    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                        Icon(Icons.Outlined.Headphones, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
-                        Text(appString(R.string.text_good_listening_takes_time_eac7f9), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                        Text(if (filter == "ALL") appString(R.string.text_listen_today_and_come_back_tomorrow_for_your_first_recap_9a9aec) else appString(R.string.recap_pending), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                }
-                else {
-                    item(key = "featured:${featured.key}", span = full) { RecapNotification(featured, inbox.history, featured.key !in inbox.seen, true) { open(featured) } }
-                    val new = remaining.filter { it.key !in inbox.seen }
-                    val read = remaining.filter { it.key in inbox.seen }
-                    if (new.isNotEmpty()) {
-                        item(span = full) { Text(appString(R.string.text_ready_to_open_3b5015), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
-                        gridItems(new, key = { it.key }) { window -> RecapNotification(window, inbox.history, true, false) { open(window) } }
-                    }
-                    if (read.isNotEmpty()) {
-                        item(span = full) { Text(appString(R.string.text_your_archive_3a5ad5), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
-                        gridItems(read, key = { it.key }) { window -> RecapNotification(window, inbox.history, false, false) { open(window) } }
+            }
+            item(span = full) {
+                LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    item { FilterChip(filter == "ALL", { filter = "ALL" }, label = { Text(appString(R.string.text_all_6a7208)) }) }
+                    items(RecapPeriod.entries.filter { it != RecapPeriod.ALL }) { period ->
+                        FilterChip(filter == period.name, { filter = period.name }, label = { Text(period.label) })
                     }
                 }
             }
-            VerticalScrollbar(rememberScrollbarAdapter(gridState),
-                Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
+            if (inbox.loading) item(span = full) { Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
+            else if (featured == null) item(span = full) {
+                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Icon(Icons.Outlined.Headphones, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
+                    Text(appString(R.string.text_good_listening_takes_time_eac7f9), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text(if (filter == "ALL") appString(R.string.text_listen_today_and_come_back_tomorrow_for_your_first_recap_9a9aec) else appString(R.string.recap_pending), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+            }
+            else {
+                item(key = "featured:${featured.key}", span = full) { RecapNotification(featured, inbox.history, featured.key !in inbox.seen, true) { open(featured) } }
+                val new = remaining.filter { it.key !in inbox.seen }
+                val read = remaining.filter { it.key in inbox.seen }
+                if (new.isNotEmpty()) {
+                    item(span = full) { Text(appString(R.string.text_ready_to_open_3b5015), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+                    gridItems(new, key = { it.key }) { window -> RecapNotification(window, inbox.history, true, false) { open(window) } }
+                }
+                if (read.isNotEmpty()) {
+                    item(span = full) { Text(appString(R.string.text_your_archive_3a5ad5), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+                    gridItems(read, key = { it.key }) { window -> RecapNotification(window, inbox.history, false, false) { open(window) } }
+                }
+            }
         }
     }
 }

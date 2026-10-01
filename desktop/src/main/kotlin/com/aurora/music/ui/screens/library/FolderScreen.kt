@@ -12,7 +12,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
@@ -102,39 +100,36 @@ fun FolderScreen(
             else -> {
                 val bottom = contentPadding.calculateBottomPadding() + 24.dp
                 val listState = rememberLazyListState()
-                Box(Modifier.fillMaxSize()) {
-                    LazyColumn(
-                        Modifier.fillMaxSize(),
-                        state = listState,
-                        contentPadding = PaddingValues(start = gutter - 8.dp, end = gutter - 8.dp, top = 8.dp, bottom = bottom),
-                    ) {
-                        if (content.folders.isNotEmpty()) {
-                            item {
-                                FolderGrid(content.folders.map { it.id to it.name }, Modifier.padding(horizontal = 8.dp)) { id, name -> onOpenFolder(id, name) }
-                            }
-                        }
-                        if (content.songs.isNotEmpty()) {
-                            item {
-                                SongListHeader(Modifier.padding(top = if (content.folders.isNotEmpty()) PageMetrics.SectionGap else 0.dp), showIndex = false)
-                            }
-                        }
-                        items(content.songs.size) { i ->
-                            val s = content.songs[i]
-                            SongRow(
-                                s, isPlaying = s.id == currentSongId && isPlaying, isLiked = likedIds.contains(s.id),
-                                onClick = { onPlayAll(content.songs, i) }, onToggleLike = { onToggleLike(s.id) },
-                                onAddToQueue = { onAddToQueue(s) }, onPlayNext = { onPlayNext(s) },
-                                onGoToAlbum = if (s.albumId.isNotBlank()) ({ onOpenDetail("album", s.albumId) }) else null,
-                                onGoToArtist = if (s.artistId.isNotBlank()) ({ onOpenDetail("artist", s.artistId) }) else null,
-                                isDownloaded = canDownload && downloadedIds.contains(s.id),
-                                onDownload = if (canDownload) ({ onDownload(s) }) else null,
-                                onRemoveDownload = if (canDownload) ({ onRemoveDownload(s.id) }) else null,
-                                onEditTags = onEditTags?.let { cb -> { cb(s) } },
-                                serverTagEditing = serverTagEditing,
-                            )
+                LazyColumn(
+                    Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(start = gutter - 8.dp, end = gutter - 8.dp, top = 8.dp, bottom = bottom),
+                ) {
+                    if (content.folders.isNotEmpty()) {
+                        item {
+                            FolderGrid(content.folders.map { it.id to it.name }, Modifier.padding(horizontal = 8.dp)) { id, name -> onOpenFolder(id, name) }
                         }
                     }
-                    PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
+                    if (content.songs.isNotEmpty()) {
+                        item {
+                            SongListHeader(Modifier.padding(top = if (content.folders.isNotEmpty()) PageMetrics.SectionGap else 0.dp), showIndex = false)
+                        }
+                    }
+                    items(content.songs.size) { i ->
+                        val s = content.songs[i]
+                        SongRow(
+                            s, isPlaying = s.id == currentSongId && isPlaying, isLiked = likedIds.contains(s.id),
+                            onClick = { onPlayAll(content.songs, i) }, onToggleLike = { onToggleLike(s.id) },
+                            onAddToQueue = { onAddToQueue(s) }, onPlayNext = { onPlayNext(s) },
+                            onGoToAlbum = if (s.albumId.isNotBlank()) ({ onOpenDetail("album", s.albumId) }) else null,
+                            onGoToArtist = if (s.artistId.isNotBlank()) ({ onOpenDetail("artist", s.artistId) }) else null,
+                            isDownloaded = canDownload && downloadedIds.contains(s.id),
+                            onDownload = if (canDownload) ({ onDownload(s) }) else null,
+                            onRemoveDownload = if (canDownload) ({ onRemoveDownload(s.id) }) else null,
+                            onEditTags = onEditTags?.let { cb -> { cb(s) } },
+                            serverTagEditing = serverTagEditing,
+                        )
+                    }
                 }
             }
         }

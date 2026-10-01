@@ -11,9 +11,7 @@ import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.hoverable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.interaction.collectIsHoveredAsState
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -78,7 +76,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
@@ -98,8 +95,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import com.aurora.music.data.GesturePrefs
@@ -110,13 +105,13 @@ import com.aurora.music.desktop.player.PlayerUiState
 import com.aurora.music.desktop.player.RepeatMode
 import com.aurora.music.desktop.ui.LocalPlayer
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.PaneDivider
 import com.aurora.music.ui.components.VolumeControl
 import com.aurora.music.ui.components.Waveform
 import com.aurora.music.ui.components.formatTime
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraBackdrop
 import com.aurora.music.ui.theme.auroraPanel
-import java.awt.Cursor
 import com.aurora.music.model.accent
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -460,7 +455,7 @@ fun PlayerScreen(
                 contentAlignment = Alignment.TopCenter,
             ) {
                 BoxWithConstraints(Modifier.widthIn(max = BodyMaxWidth).fillMaxSize()) {
-                    val totalPx = with(density) { maxWidth.toPx() }
+                    val total = maxWidth
                     Row(Modifier.fillMaxSize()) {
                         BoxWithConstraints(Modifier.weight(split).fillMaxHeight()) {
                             val gap = if (short) 12.dp else 20.dp
@@ -483,8 +478,9 @@ fun PlayerScreen(
                             }
                         }
                         PaneDivider(
-                            onDrag = { dx -> if (totalPx > 0f) split = (split + dx / totalPx).coerceIn(splitRange) },
+                            onDrag = { dx -> if (total > 0.dp) split = (split + dx / total).coerceIn(splitRange) },
                             onDragEnd = { onSplitChange(split) },
+                            width = 24.dp,
                         )
                         Column(Modifier.weight(1f - split).fillMaxHeight().then(paneSurface).padding(spacing)) {
                             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -545,34 +541,6 @@ private fun LyricsOverlay(
         LyricsScreen(state, onClose = onClose, onTogglePlay, onPrevious, onNext, onSeek)
     }
     BackHandler(enabled = visible) { onClose() }
-}
-
-@Composable
-private fun PaneDivider(onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
-    var dragging by remember { mutableStateOf(false) }
-    val drag by rememberUpdatedState(onDrag)
-    val end by rememberUpdatedState(onDragEnd)
-    val hover = remember { MutableInteractionSource() }
-    val hovered by hover.collectIsHoveredAsState()
-    val alpha by androidx.compose.animation.core.animateFloatAsState(if (dragging) 0.5f else if (hovered) 0.32f else 0.16f, tween(160), label = "dividerAlpha")
-    val length by androidx.compose.animation.core.animateDpAsState(if (dragging) 64.dp else 36.dp, tween(160), label = "dividerLength")
-    val description = appString(R.string.tablet_resize_panels)
-    Box(
-        Modifier.width(24.dp).fillMaxHeight()
-            .hoverable(hover)
-            .pointerHoverIcon(PointerIcon(Cursor(Cursor.E_RESIZE_CURSOR)))
-            .pointerInput(Unit) {
-                detectHorizontalDragGestures(
-                    onDragStart = { dragging = true },
-                    onDragEnd = { dragging = false; end() },
-                    onDragCancel = { dragging = false; end() },
-                ) { change, amount -> change.consume(); drag(amount) }
-            }
-            .semantics { contentDescription = description },
-        contentAlignment = Alignment.Center,
-    ) {
-        Box(Modifier.width(3.dp).height(length).clip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)))
-    }
 }
 
 @Composable

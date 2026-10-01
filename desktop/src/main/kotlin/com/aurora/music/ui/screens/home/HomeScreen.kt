@@ -6,7 +6,6 @@ import com.aurora.music.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -34,7 +33,6 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -279,8 +277,6 @@ fun HomeScreen(
         albumShelf("new", appString(R.string.text_new_releases_3cdd02),
             data.newReleases.drop(heroItems.size).takeIf { HomeSection.NEW !in hidden }, gutter, onOpenDetail)
     }
-    VerticalScrollbar(rememberScrollbarAdapter(listState),
-        Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
     }
 }
 

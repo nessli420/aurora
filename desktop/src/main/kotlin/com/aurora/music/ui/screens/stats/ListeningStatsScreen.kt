@@ -3,7 +3,6 @@ package com.aurora.music.ui.screens.stats
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.MaterialTheme
@@ -168,8 +166,6 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     item { RecapSummary(recap) }
                 }
             }
-            VerticalScrollbar(rememberScrollbarAdapter(listState),
-                Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
         }
     }
     if (picking) RecapDatePicker(window.start, onDismiss = { picking = false }) { date ->

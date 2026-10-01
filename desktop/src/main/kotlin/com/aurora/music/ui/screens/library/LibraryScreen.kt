@@ -10,9 +10,6 @@ import com.aurora.music.R
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.TooltipArea
-import androidx.compose.foundation.v2.ScrollbarAdapter
-import androidx.compose.foundation.ScrollbarStyle
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -45,7 +42,6 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -126,6 +122,7 @@ import com.aurora.music.model.LibraryFilter
 import com.aurora.music.model.LibraryLayout
 import com.aurora.music.model.LibrarySort
 import com.aurora.music.model.Song
+import com.aurora.music.ui.components.HoverTooltip
 import com.aurora.music.ui.components.AdaptiveShelf
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.PageHeader
@@ -166,18 +163,6 @@ private val SplitCardMin = 116.dp
 private val TileMaxWidth = 320.dp
 private val CompactWidth = 720.dp
 private val RailLetter = 12.dp
-
-@Composable
-internal fun PaneScrollbar(adapter: ScrollbarAdapter, modifier: Modifier = Modifier) {
-    val ink = MaterialTheme.colorScheme.onSurface
-    VerticalScrollbar(
-        adapter, modifier,
-        style = ScrollbarStyle(
-            minimalHeight = 32.dp, thickness = 8.dp, shape = RoundedCornerShape(4.dp), hoverDurationMillis = 300,
-            unhoverColor = ink.copy(alpha = 0.18f), hoverColor = ink.copy(alpha = 0.45f),
-        ),
-    )
-}
 
 internal fun Modifier.onSecondaryPress(onPress: (Offset) -> Unit): Modifier = pointerInput(Unit) {
     awaitPointerEventScope {
@@ -522,17 +507,7 @@ private fun LibTab(label: String, icon: ImageVector, selected: Boolean, iconOnly
             )
         }
     }
-    if (bare) TooltipArea(tooltip = { TabTooltip(label) }, delayMillis = 400) { tab() } else tab()
-}
-
-@Composable
-private fun TabTooltip(label: String) {
-    Text(
-        label,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.inverseOnSurface,
-        modifier = Modifier.clip(RoundedCornerShape(6.dp)).background(MaterialTheme.colorScheme.inverseSurface).padding(horizontal = 8.dp, vertical = 4.dp),
-    )
+    if (bare) TooltipArea(tooltip = { HoverTooltip(label) }, delayMillis = 400) { tab() } else tab()
 }
 
 @Composable
@@ -562,7 +537,6 @@ private fun AllOverview(
     val albumRows = state.albums.map { albumRow(it) }
     val albumsByArtist = remember(state.albums) { state.albums.groupingBy { it.artist.lowercase() }.eachCount() }
     val artistRows = state.artists.map { artistRow(it, albumsByArtist[it.name.lowercase()] ?: 0) }
-    Box(Modifier.fillMaxSize()) {
     LazyColumn(
         Modifier.fillMaxSize(),
         state = listState,
@@ -608,8 +582,6 @@ private fun AllOverview(
                 }
             }
         }
-    }
-    PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
     }
 }
 
@@ -828,10 +800,9 @@ private fun SongsTab(
                 }
             }
         }
-        PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
         if (rail) {
             AlphabetRail(
-                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 12.dp, bottom = bottom),
+                modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 4.dp, bottom = bottom),
                 onJump = { c ->
                     jumpIndex(songs.map { it.title }, c)?.let { idx -> scope.launch { listState.scrollToItem(idx) } }
                 },
@@ -872,10 +843,9 @@ private fun RowsContent(
                     ) {
                         items(rows.size) { i -> LibListItem(rows[i], shown, actions) { onOpen(rows[i]) } }
                     }
-                    PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
                     if (rail) {
                         AlphabetRail(
-                            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 12.dp, bottom = bottom),
+                            modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(end = 4.dp, bottom = bottom),
                             onJump = { c ->
                                 jumpIndex(rows.map { it.title }, c)?.let { idx -> scope.launch { listState.scrollToItem(idx) } }
                             },
@@ -886,18 +856,15 @@ private fun RowsContent(
         }
     } else {
         val gridState = rememberLazyGridState()
-        Box(Modifier.fillMaxSize()) {
-            LazyVerticalGrid(
-                columns = GridCells.Adaptive(cardMin),
-                modifier = Modifier.fillMaxSize(),
-                state = gridState,
-                contentPadding = PaddingValues(start = insets.start, end = insets.end, top = 8.dp, bottom = bottom),
-                horizontalArrangement = Arrangement.spacedBy(PageMetrics.ShelfSpacing),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                items(rows.size) { i -> LibCard(rows[i], actions) { onOpen(rows[i]) } }
-            }
-            PaneScrollbar(rememberScrollbarAdapter(gridState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom))
+        LazyVerticalGrid(
+            columns = GridCells.Adaptive(cardMin),
+            modifier = Modifier.fillMaxSize(),
+            state = gridState,
+            contentPadding = PaddingValues(start = insets.start, end = insets.end, top = 8.dp, bottom = bottom),
+            horizontalArrangement = Arrangement.spacedBy(PageMetrics.ShelfSpacing),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            items(rows.size) { i -> LibCard(rows[i], actions) { onOpen(rows[i]) } }
         }
     }
 }

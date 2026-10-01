@@ -5,7 +5,6 @@ import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -26,7 +25,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,7 +33,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -123,80 +120,77 @@ fun QueueContent(
             }
         }
 
-        Box(Modifier.fillMaxWidth().weight(1f)) {
-            LazyColumn(state = listState, modifier = Modifier.fillMaxSize().padding(end = 10.dp)) {
-                if (played.isNotEmpty()) {
-                    item {
-                        Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
-                                .clickable { showHistory = !showHistory }.pointerHoverIcon(PointerIcon.Hand)
-                                .padding(vertical = 8.dp, horizontal = 2.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
-                            Spacer(Modifier.width(8.dp))
-                            Text(
-                                appString(R.string.text_previously_played_bf618e, (played.size)),
-                                style = MaterialTheme.typography.labelMedium,
-                                fontWeight = FontWeight.Black,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                modifier = Modifier.weight(1f),
-                            )
-                            Icon(
-                                if (showHistory) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null,
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp),
-                            )
-                        }
-                    }
-                    if (showHistory) {
-                        items(played.size) { hi ->
-                            val i = played[hi]
-                            QueueTrackRow(
-                                song = queue[i], index = null, rowHeight = rowHeight,
-                                dimmed = true, onClick = { onJump(i) }, onRemove = null, dragHandle = null,
-                            )
-                        }
-                    }
-                }
-
+        LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().weight(1f)) {
+            if (played.isNotEmpty()) {
                 item {
-                    Text(
-                        if (upcoming.isEmpty()) appString(R.string.text_nothing_up_next_295357) else appString(R.string.queue_track_count, appPlural(R.plurals.track_count, (upcoming.size))),
-                        style = MaterialTheme.typography.labelMedium,
-                        fontWeight = FontWeight.Black,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 8.dp),
-                    )
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                            .clickable { showHistory = !showHistory }.pointerHoverIcon(PointerIcon.Hand)
+                            .padding(vertical = 8.dp, horizontal = 2.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(
+                            appString(R.string.text_previously_played_bf618e, (played.size)),
+                            style = MaterialTheme.typography.labelMedium,
+                            fontWeight = FontWeight.Black,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.weight(1f),
+                        )
+                        Icon(
+                            if (showHistory) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp),
+                        )
+                    }
                 }
-                items(upcoming.size) { vi ->
-                    val i = upcoming[vi]
-                    val dragging = i == dragIndex
-                    QueueTrackRow(
-                        song = queue[i],
-                        index = vi + 1,
-                        rowHeight = rowHeight,
-                        dragging = dragging,
-                        dragOffset = if (dragging) dragOffset else 0f,
-                        onClick = { onJump(i) },
-                        onRemove = if (editable) ({ onRemove(i) }) else null,
-                        onPlayNext = if (editable && i != startIdx) ({ onMove(i, startIdx) }) else null,
-                        // key on i/startIdx so gesture re-captures fresh indices when current advances or rows shift
-                        dragHandle = if (!editable) null else Modifier.pointerInput(queue.size, i, startIdx) {
-                            detectDragGestures(
-                                onDragStart = { dragIndex = i; dragOffset = 0f },
-                                onDragEnd = {
-                                    val target = (dragIndex + (dragOffset / rowPx).roundToInt()).coerceIn(startIdx, queue.size - 1)
-                                    if (target != dragIndex && dragIndex >= 0) onMove(dragIndex, target)
-                                    dragIndex = -1; dragOffset = 0f
-                                },
-                                onDragCancel = { dragIndex = -1; dragOffset = 0f },
-                                onDrag = { change, amount -> change.consume(); dragOffset += amount.y },
-                            )
-                        },
-                    )
+                if (showHistory) {
+                    items(played.size) { hi ->
+                        val i = played[hi]
+                        QueueTrackRow(
+                            song = queue[i], index = null, rowHeight = rowHeight,
+                            dimmed = true, onClick = { onJump(i) }, onRemove = null, dragHandle = null,
+                        )
+                    }
                 }
             }
-            VerticalScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
+
+            item {
+                Text(
+                    if (upcoming.isEmpty()) appString(R.string.text_nothing_up_next_295357) else appString(R.string.queue_track_count, appPlural(R.plurals.track_count, (upcoming.size))),
+                    style = MaterialTheme.typography.labelMedium,
+                    fontWeight = FontWeight.Black,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(vertical = 8.dp),
+                )
+            }
+            items(upcoming.size) { vi ->
+                val i = upcoming[vi]
+                val dragging = i == dragIndex
+                QueueTrackRow(
+                    song = queue[i],
+                    index = vi + 1,
+                    rowHeight = rowHeight,
+                    dragging = dragging,
+                    dragOffset = if (dragging) dragOffset else 0f,
+                    onClick = { onJump(i) },
+                    onRemove = if (editable) ({ onRemove(i) }) else null,
+                    onPlayNext = if (editable && i != startIdx) ({ onMove(i, startIdx) }) else null,
+                    // key on i/startIdx so gesture re-captures fresh indices when current advances or rows shift
+                    dragHandle = if (!editable) null else Modifier.pointerInput(queue.size, i, startIdx) {
+                        detectDragGestures(
+                            onDragStart = { dragIndex = i; dragOffset = 0f },
+                            onDragEnd = {
+                                val target = (dragIndex + (dragOffset / rowPx).roundToInt()).coerceIn(startIdx, queue.size - 1)
+                                if (target != dragIndex && dragIndex >= 0) onMove(dragIndex, target)
+                                dragIndex = -1; dragOffset = 0f
+                            },
+                            onDragCancel = { dragIndex = -1; dragOffset = 0f },
+                            onDrag = { change, amount -> change.consume(); dragOffset += amount.y },
+                        )
+                    },
+                )
+            }
         }
     }
 }

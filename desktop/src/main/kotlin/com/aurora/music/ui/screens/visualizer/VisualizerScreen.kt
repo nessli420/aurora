@@ -6,8 +6,6 @@ import com.aurora.music.R
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.HorizontalScrollbar
-import androidx.compose.foundation.ScrollbarStyle
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -23,7 +21,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -68,6 +65,7 @@ import com.aurora.music.desktop.player.PlayerUiState
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.model.accent
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.wheelScrollsHorizontally
 import com.aurora.music.util.rememberDominantColor
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -199,55 +197,39 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
         }
 
         AnimatedVisibility(controlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.BottomCenter)) {
-            Column(Modifier.fillMaxWidth().padding(vertical = 16.dp)) {
-                LazyRow(
-                    Modifier.fillMaxWidth(),
-                    state = modeListState,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    contentPadding = PaddingValues(horizontal = 16.dp),
-                ) {
-                    items((0 until VisualizerStyle.count).toList(), key = { it }) { s ->
-                        val selected = s == prefs.style
-                        Box(
-                            Modifier
-                                .clip(RoundedCornerShape(50))
-                                .background(if (selected) colors.primary else Color.White.copy(alpha = 0.14f))
-                                .pointerHoverIcon(PointerIcon.Hand)
-                                .selectable(selected = selected, role = Role.RadioButton) {
-                                    controlsInteraction++
-                                    scope.launch { container.settingsStore.setVisualizer(prefs.copy(style = s)) }
-                                }
-                                .padding(horizontal = 14.dp, vertical = 9.dp),
-                        ) {
-                            Text(
-                                VisualizerStyle.label(s),
-                                color = if (selected) Color.Black else Color.White,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                style = MaterialTheme.typography.labelMedium,
-                            )
-                        }
+            LazyRow(
+                Modifier.fillMaxWidth().padding(vertical = 16.dp).wheelScrollsHorizontally(modeListState),
+                state = modeListState,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                contentPadding = PaddingValues(horizontal = 16.dp),
+            ) {
+                items((0 until VisualizerStyle.count).toList(), key = { it }) { s ->
+                    val selected = s == prefs.style
+                    Box(
+                        Modifier
+                            .clip(RoundedCornerShape(50))
+                            .background(if (selected) colors.primary else Color.White.copy(alpha = 0.14f))
+                            .pointerHoverIcon(PointerIcon.Hand)
+                            .selectable(selected = selected, role = Role.RadioButton) {
+                                controlsInteraction++
+                                scope.launch { container.settingsStore.setVisualizer(prefs.copy(style = s)) }
+                            }
+                            .padding(horizontal = 14.dp, vertical = 9.dp),
+                    ) {
+                        Text(
+                            VisualizerStyle.label(s),
+                            color = if (selected) Color.Black else Color.White,
+                            fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
                     }
                 }
-                HorizontalScrollbar(
-                    rememberScrollbarAdapter(modeListState),
-                    Modifier.fillMaxWidth().padding(start = 16.dp, top = 10.dp, end = 16.dp),
-                    style = ModeScrollbarStyle,
-                )
             }
         }
     }
 
     BackHandler { onClose() }
 }
-
-private val ModeScrollbarStyle = ScrollbarStyle(
-    minimalHeight = 16.dp,
-    thickness = 4.dp,
-    shape = RoundedCornerShape(2.dp),
-    hoverDurationMillis = 300,
-    unhoverColor = Color.White.copy(alpha = 0.18f),
-    hoverColor = Color.White.copy(alpha = 0.45f),
-)
 
 private fun bgGradient(c: Color): Brush = Brush.verticalGradient(
     listOf(c.copy(alpha = 0.35f), c.copy(alpha = 0.08f), Color.Black, Color.Black),

@@ -3,7 +3,6 @@ package com.aurora.music.ui.screens.settings
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -42,6 +40,7 @@ import com.aurora.music.data.VisualizerStyle
 import com.aurora.music.data.VizColor
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.playback.VisualizerController
+import com.aurora.music.ui.components.wheelScrollsHorizontally
 import com.aurora.music.ui.screens.visualizer.VisualizerCanvas
 import com.aurora.music.ui.screens.visualizer.VizColors
 import com.aurora.music.ui.screens.visualizer.label
@@ -76,32 +75,29 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
             item { SettingsSectionTitle(appString(R.string.text_style_99a0ef)) }
             item {
                 val styleListState = rememberLazyListState()
-                Column {
-                    LazyRow(
-                        Modifier.fillMaxWidth().padding(vertical = 4.dp),
-                        state = styleListState,
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        contentPadding = PaddingValues(horizontal = 12.dp),
-                    ) {
-                        items((0 until VisualizerStyle.count).toList()) { s ->
-                            val selected = s == prefs.style
-                            Box(
-                                Modifier.clip(RoundedCornerShape(50))
-                                    .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                                    .pointerHoverIcon(PointerIcon.Hand)
-                                    .clickable { save(prefs.copy(style = s)) }
-                                    .padding(horizontal = 14.dp, vertical = 9.dp),
-                            ) {
-                                Text(
-                                    VisualizerStyle.label(s),
-                                    color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                                    fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                                    style = MaterialTheme.typography.labelMedium,
-                                )
-                            }
+                LazyRow(
+                    Modifier.fillMaxWidth().padding(vertical = 4.dp).wheelScrollsHorizontally(styleListState),
+                    state = styleListState,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    contentPadding = PaddingValues(horizontal = 12.dp),
+                ) {
+                    items((0 until VisualizerStyle.count).toList()) { s ->
+                        val selected = s == prefs.style
+                        Box(
+                            Modifier.clip(RoundedCornerShape(50))
+                                .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .pointerHoverIcon(PointerIcon.Hand)
+                                .clickable { save(prefs.copy(style = s)) }
+                                .padding(horizontal = 14.dp, vertical = 9.dp),
+                        ) {
+                            Text(
+                                VisualizerStyle.label(s),
+                                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
+                                style = MaterialTheme.typography.labelMedium,
+                            )
                         }
                     }
-                    HorizontalScrollbar(rememberScrollbarAdapter(styleListState), Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp))
                 }
             }
 

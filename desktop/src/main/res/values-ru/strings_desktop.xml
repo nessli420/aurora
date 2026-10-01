@@ -24,6 +24,7 @@
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"После закрытия окна Aurora продолжает играть из области уведомлений"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Большой буфер выдерживает высокую нагрузку на систему, маленький быстрее реагирует на перемотку и громкость. Применяется при повторном открытии вывода."</string>
     <string name="text_logs_126dd3" formatted="false">"Журналы"</string>
+    <string name="text_open_in_full_page_0ec923" formatted="false">"Открыть на всю страницу"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Буфер вывода"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Формат микшера общего режима"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Общий режим смешивает Aurora с другими приложениями через аудиодвижок Windows в формате микшера устройства. Включите монопольный режим для воспроизведения bit-perfect."</string>

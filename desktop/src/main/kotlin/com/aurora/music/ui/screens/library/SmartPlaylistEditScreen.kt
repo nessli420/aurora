@@ -11,7 +11,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -20,7 +19,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -108,7 +106,6 @@ fun SmartPlaylistEditScreen(
             Modifier.padding(horizontal = gutter), onBack = onBack,
         )
         val scroll = rememberScrollState()
-        Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize().verticalScroll(scroll)) {
         Column(
             Modifier.padding(start = gutter - 12.dp, end = gutter - 12.dp, top = 12.dp, bottom = contentPadding.calculateBottomPadding() + 24.dp)
@@ -187,8 +184,6 @@ fun SmartPlaylistEditScreen(
                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             ) { Text(if (isNew) appString(R.string.text_create_smart_playlist_6ea764) else appString(R.string.text_save_changes_179359), fontWeight = FontWeight.Bold) }
         }
-        }
-        PaneScrollbar(rememberScrollbarAdapter(scroll), Modifier.align(Alignment.CenterEnd).fillMaxHeight())
         }
     }
 }

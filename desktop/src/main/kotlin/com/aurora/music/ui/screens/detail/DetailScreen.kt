@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -27,7 +26,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -96,11 +94,11 @@ import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.components.PageSection
 import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.components.SongListHeader
+import com.aurora.music.ui.components.FullPageButton
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.layout.pagePadding
-import com.aurora.music.ui.screens.library.PaneScrollbar
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.ProvideContextAccent
 import com.aurora.music.ui.theme.auroraPanel
@@ -147,6 +145,7 @@ fun DetailScreen(
     onEditTags: ((Song) -> Unit)? = null,
     serverTagEditing: Boolean = false,
     artistInfo: ArtistInfo? = null,
+    onExpand: (() -> Unit)? = null,
 ) {
     var headerMenu by remember { mutableStateOf(false) }
     var showEdit by remember { mutableStateOf(false) }
@@ -162,6 +161,8 @@ fun DetailScreen(
         Box(Modifier.fillMaxSize()) {
             HeaderIcon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), MaterialTheme.colorScheme.onSurface,
                 Modifier.padding(start = gutter - 12.dp, top = 16.dp), onClick = onBack)
+            if (onExpand != null) FullPageButton(onExpand, Modifier.align(Alignment.TopEnd).padding(end = gutter - 14.dp, top = 16.dp),
+                tint = MaterialTheme.colorScheme.onSurface)
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (state.loading) LottieLoader(modifier = Modifier.size(72.dp))
                 else Text(appString(R.string.text_couldn_t_load_8b7b6b), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -357,6 +358,7 @@ fun DetailScreen(
                     HeaderIcon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), MaterialTheme.colorScheme.onSurface,
                         Modifier.offset(x = (-12).dp), onClick = onBack)
                     Spacer(Modifier.weight(1f))
+                    if (onExpand != null) FullPageButton(onExpand, Modifier.offset(x = 12.dp), tint = MaterialTheme.colorScheme.onSurface)
                     menuButton(MaterialTheme.colorScheme.onSurface, Modifier.offset(x = 12.dp))
                 }
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.Bottom) {
@@ -400,6 +402,7 @@ fun DetailScreen(
                     Row(Modifier.fillMaxWidth().padding(top = 4.dp, start = gutter - 12.dp, end = gutter - 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         HeaderIcon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), Color.White, onClick = onBack)
                         Spacer(Modifier.weight(1f))
+                        if (onExpand != null) FullPageButton(onExpand, tint = Color.White)
                         menuButton(Color.White, Modifier)
                     }
                     Column(Modifier.align(Alignment.BottomStart).padding(start = gutter, end = gutter, bottom = 14.dp)) {
@@ -540,7 +543,6 @@ fun DetailScreen(
             }
         }
     }
-    PaneScrollbar(rememberScrollbarAdapter(listState), Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = padding.calculateBottomPadding()))
     }
     }
 

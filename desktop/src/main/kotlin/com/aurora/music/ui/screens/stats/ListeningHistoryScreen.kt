@@ -3,14 +3,12 @@ package com.aurora.music.ui.screens.stats
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.VerticalScrollbar
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
@@ -19,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.foundation.rememberScrollbarAdapter
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
@@ -71,33 +68,29 @@ fun ListeningHistoryScreen(contentPadding: PaddingValues, onBack: () -> Unit, on
         }
         val grouped = history.groupBy { dayLabel(it.timestamp) }
         val listState = rememberLazyListState()
-        Box(Modifier.fillMaxWidth()) {
-            LazyColumn(Modifier.fillMaxWidth(), state = listState, contentPadding = pagePadding(contentPadding)) {
-                grouped.forEach { (day, events) ->
-                    item {
-                        Text(day, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary,
-                            modifier = Modifier.padding(top = 20.dp, bottom = 6.dp))
-                    }
-                    items(events.size) { i ->
-                        val e = events[i]
-                        Row(
-                            Modifier.fillMaxWidth().heightIn(min = PageMetrics.SongRowHeight).clip(RoundedCornerShape(12.dp)).clickable { onPlay(e.songId) }
-                                .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 8.dp, vertical = 4.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            Artwork(e.artworkUrl, accentFor(e.songId), Modifier.size(40.dp), corner = 8.dp)
-                            Spacer(Modifier.width(12.dp))
-                            Column(Modifier.weight(1f)) {
-                                Text(e.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                                Text(e.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                            }
-                            Text(timeFmt.format(Date(e.timestamp)), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        LazyColumn(Modifier.fillMaxWidth(), state = listState, contentPadding = pagePadding(contentPadding)) {
+            grouped.forEach { (day, events) ->
+                item {
+                    Text(day, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(top = 20.dp, bottom = 6.dp))
+                }
+                items(events.size) { i ->
+                    val e = events[i]
+                    Row(
+                        Modifier.fillMaxWidth().heightIn(min = PageMetrics.SongRowHeight).clip(RoundedCornerShape(12.dp)).clickable { onPlay(e.songId) }
+                            .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 8.dp, vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Artwork(e.artworkUrl, accentFor(e.songId), Modifier.size(40.dp), corner = 8.dp)
+                        Spacer(Modifier.width(12.dp))
+                        Column(Modifier.weight(1f)) {
+                            Text(e.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                            Text(e.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
+                        Text(timeFmt.format(Date(e.timestamp)), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
             }
-            VerticalScrollbar(rememberScrollbarAdapter(listState),
-                Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = contentPadding.calculateBottomPadding()))
         }
     }
 }
