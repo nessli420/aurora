@@ -4,8 +4,11 @@ import android.Manifest
 import android.content.ContentUris
 import android.content.Context
 import android.content.pm.PackageManager
+import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
+import android.os.Environment
+import android.os.SystemClock
 import android.provider.MediaStore
 import androidx.media3.common.util.UnstableApi
 import com.aurora.music.model.Album
@@ -16,10 +19,15 @@ import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
+import java.io.File
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import kotlin.coroutines.resume
 
 class LocalLibrary(
     private val context: Context,
@@ -30,6 +38,7 @@ class LocalLibrary(
 
     @Volatile private var loaded = false
     private val mutex = Mutex()
+    @Volatile private var lastAutoScanMs = -AUTO_SCAN_GAP_MS
 
     @Volatile override var songs: List<Song> = emptyList(); private set
     @Volatile override var albums: List<Album> = emptyList(); private set
@@ -55,8 +64,66 @@ class LocalLibrary(
         }
     }
 
-    suspend fun refresh() {
-        mutex.withLock { scan(separatorsProvider()); loaded = canReadAudio() }
+    val inUse: Boolean get() = loaded
+
+    suspend fun refresh(): Boolean = mutex.withLock {
+        val before = rawSongs
+        scan(separatorsProvider())
+        loaded = canReadAudio()
+        rawSongs != before
+    }
+
+    suspend fun rescan(full: Boolean = false, folder: String? = null): LocalRescanResult {
+        ensureLoaded()
+        val before = songKeys()
+        val targets = when {
+            folder != null -> listOf(folder)
+            full -> volumeRoots()
+            else -> LocalRescan.roots(standardFolders() + dirOf.values)
+        }
+        requestMediaScan(targets, if (full) FULL_SCAN_TIMEOUT_MS else SCAN_TIMEOUT_MS)
+        refresh()
+        return LocalRescan.result(before, songKeys())
+    }
+
+    // files copied onto the device stay hidden from other apps until android scans them, so scan the music folders too
+    suspend fun syncWithMediaStore(): Boolean {
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastAutoScanMs >= AUTO_SCAN_GAP_MS) {
+            lastAutoScanMs = now
+            requestMediaScan(LocalRescan.roots(standardFolders() + dirOf.values), SCAN_TIMEOUT_MS)
+            lastAutoScanMs = SystemClock.elapsedRealtime()
+        }
+        return refresh()
+    }
+
+    private fun songKeys(): Set<String> = songs.mapTo(HashSet()) { it.path.ifBlank { it.id } }
+
+    private fun volumeRoots(): List<String> = context.getExternalFilesDirs(null).filterNotNull()
+        .map { it.absolutePath.substringBefore("/Android/data/") }.distinct()
+
+    @Suppress("DEPRECATION")
+    private fun standardFolders(): List<String> = listOf(Environment.DIRECTORY_MUSIC, Environment.DIRECTORY_DOWNLOADS)
+        .map { Environment.getExternalStoragePublicDirectory(it).absolutePath }
+
+    // before android 10 the system scanner does not descend into folders
+    private fun audioFilesUnder(folder: String): List<String> = File(folder).walkTopDown().maxDepth(12)
+        .filter { it.isFile && it.extension.lowercase() in LocalRescan.AUDIO_EXTENSIONS }
+        .take(MAX_LEGACY_SCAN_FILES).map { it.absolutePath }.toList()
+
+    private suspend fun requestMediaScan(paths: List<String>, timeoutMs: Long) {
+        if (!canReadAudio()) return
+        val targets = if (Build.VERSION.SDK_INT >= 29) paths
+            else withContext(Dispatchers.IO) { paths.flatMap { runCatching { audioFilesUnder(it) }.getOrDefault(emptyList()) } }
+        if (targets.isEmpty()) return
+        withTimeoutOrNull(timeoutMs) {
+            suspendCancellableCoroutine { continuation ->
+                val remaining = AtomicInteger(targets.size)
+                MediaScannerConnection.scanFile(context, targets.toTypedArray(), null) { _, _ ->
+                    if (remaining.decrementAndGet() == 0 && continuation.isActive) continuation.resume(Unit)
+                }
+            }
+        }
     }
 
     private fun canReadAudio(): Boolean = context.checkSelfPermission(
@@ -285,5 +352,9 @@ class LocalLibrary(
 
     private companion object {
         val ALBUM_ART_BASE: Uri = Uri.parse("content://media/external/audio/albumart")
+        const val SCAN_TIMEOUT_MS = 60_000L
+        const val FULL_SCAN_TIMEOUT_MS = 300_000L
+        const val MAX_LEGACY_SCAN_FILES = 20_000
+        const val AUTO_SCAN_GAP_MS = 15_000L
     }
 }

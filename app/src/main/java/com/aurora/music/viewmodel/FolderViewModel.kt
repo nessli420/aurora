@@ -13,6 +13,7 @@ import kotlinx.coroutines.launch
 
 data class FolderUiState(
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
     val content: FolderContent? = null,
 )
 
@@ -31,6 +32,22 @@ class FolderViewModel(app: Application) : AndroidViewModel(app) {
             _state.update { it.copy(loading = true, content = null) }
             val content = container.repository.browseFolder(folderId)
             _state.update { it.copy(loading = false, content = content) }
+        }
+    }
+
+    fun refresh() {
+        val folderId = loadedId ?: return
+        if (_state.value.refreshing) return
+        _state.update { it.copy(refreshing = true) }
+        viewModelScope.launch {
+            try {
+                val path = (_state.value.content?.id ?: folderId).takeIf { it.startsWith("/") }
+                container.rescanLocalLibrary(folder = path)
+                val content = container.repository.browseFolder(folderId)
+                _state.update { it.copy(loading = false, content = content) }
+            } finally {
+                _state.update { it.copy(refreshing = false) }
+            }
         }
     }
 }

@@ -5,6 +5,8 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -45,6 +47,7 @@ import com.aurora.music.ui.components.SongRow
 
 /** One level of the folder/file-tree browser: subfolders on top, this folder's tracks below. */
 @Composable
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 fun FolderScreen(
     contentPadding: PaddingValues,
     title: String,
@@ -67,6 +70,8 @@ fun FolderScreen(
     canDownload: Boolean = true,
     onEditTags: ((Song) -> Unit)? = null,
     serverTagEditing: Boolean = false,
+    refreshing: Boolean = false,
+    onRefresh: () -> Unit = {},
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val header = title.ifBlank { content?.title ?: appString(R.string.text_folders_19adc4) }
@@ -93,10 +98,13 @@ fun FolderScreen(
             }
         }
 
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = refreshing, onRefresh = onRefresh, modifier = Modifier.fillMaxSize(),
+        ) {
         when {
             loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
             content == null || (content.folders.isEmpty() && content.songs.isEmpty()) ->
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.Center) {
                     Text(appString(R.string.text_nothing_in_this_folder_d2a003), color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             else -> {
@@ -129,6 +137,7 @@ fun FolderScreen(
                     }
                 }
             }
+        }
         }
     }
 }

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Пересканировать локальную библиотеку</string>
+    <string name="rescan_summary">Найти музыку, добавленную, перемещённую или удалённую на этом устройстве</string>
+    <string name="rescan_running">Сканирование устройства…</string>
+    <string name="rescan_result">Добавлено: %1$d, удалено: %2$d</string>
+    <string name="rescan_unchanged">Изменений нет · песен: %1$d</string>
+    <string name="rescan_failed">Не удалось завершить сканирование. Попробуйте ещё раз.</string>
+    <string name="rescan_permission">Разрешите доступ к музыке на этом устройстве, чтобы просканировать его.</string>
+</resources>

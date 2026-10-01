@@ -25,6 +25,7 @@ data class LibraryUiState(
     val sort: LibrarySort = LibrarySort.RECENT,
     val layout: LibraryLayout = LibraryLayout.LIST,
     val loading: Boolean = true,
+    val refreshing: Boolean = false,
     val albums: List<Album> = emptyList(),
     val artists: List<Artist> = emptyList(),
     val playlists: List<Playlist> = emptyList(),
@@ -61,7 +62,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         } }
         viewModelScope.launch { container.offline.collect { load() } }
         viewModelScope.launch { container.accountEpoch.drop(1).collect { load() } }
-        viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }
+        viewModelScope.launch { container.libraryReload.drop(1).collect { if (!_state.value.refreshing) load() } }
         viewModelScope.launch { container.audioCache.songs.collect { if (container.offline.value) load() } }
         viewModelScope.launch {
             container.downloadManager.downloads.collect {
@@ -93,21 +94,36 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     @Volatile private var fullSongsJob: Deferred<List<Song>>? = null
 
     fun load() {
-        fullSongsJob = null
+        viewModelScope.launch { reload(showLoading = true) }
+    }
+
+    fun refresh() {
+        if (_state.value.refreshing) return
+        _state.update { it.copy(refreshing = true) }
         viewModelScope.launch {
-            _state.update { it.copy(loading = true) }
-            val playlists = container.repository.allPlaylists()
-            val albums = container.repository.allAlbums()
-            val artists = container.repository.allArtists()
-            val songs = container.repository.songsPage(0, SONG_PAGE)
-            songsOffset = SONG_PAGE
-            val likedCount = container.repository.starredCount()
-            _state.update {
-                it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = container.repository.downloadedLibrary(), likedSongCount = likedCount, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders)
+            try {
+                container.rescanLocalLibrary()
+                reload(showLoading = false)
+            } finally {
+                _state.update { it.copy(refreshing = false) }
             }
-            // warm the full-library cache in the background so the first Play is instant
-            fullSongsAsync()
         }
+    }
+
+    private suspend fun reload(showLoading: Boolean) {
+        fullSongsJob = null
+        if (showLoading) _state.update { it.copy(loading = true) }
+        val playlists = container.repository.allPlaylists()
+        val albums = container.repository.allAlbums()
+        val artists = container.repository.allArtists()
+        val songs = container.repository.songsPage(0, SONG_PAGE)
+        songsOffset = SONG_PAGE
+        val likedCount = container.repository.starredCount()
+        _state.update {
+            it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = container.repository.downloadedLibrary(), likedSongCount = likedCount, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders)
+        }
+        // warm the full-library cache in the background so the first Play is instant
+        fullSongsAsync()
     }
 
     fun loadMoreSongs() {

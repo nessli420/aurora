@@ -1011,6 +1011,7 @@ fun AuroraApp() {
                             LibraryScreen(
                                 contentPadding = inner,
                                 state = libraryState,
+                                onRefresh = libraryVM::refresh,
                                 username = profileAppearance.name,
                                 likedIds = playerState.likedIds,
                                 currentSongId = playerState.current.id,
@@ -1120,6 +1121,8 @@ fun AuroraApp() {
                             title = folderTitle,
                             loading = folderState.loading,
                             content = folderState.content,
+                            refreshing = folderState.refreshing,
+                            onRefresh = folderVM::refresh,
                             likedIds = playerState.likedIds,
                             currentSongId = playerState.current.id,
                             isPlaying = playerState.isPlaying,

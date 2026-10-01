@@ -9,6 +9,8 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.layout.Arrangement
@@ -136,6 +138,7 @@ private class LibActions(
 )
 
 @Composable
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 fun LibraryScreen(
     contentPadding: PaddingValues,
     state: LibraryUiState,
@@ -180,6 +183,7 @@ fun LibraryScreen(
     onPlayAllSongs: (shuffle: Boolean) -> Unit = {},
     onPlaySong: (Song) -> Unit = {},
     selectedItem: String? = null,
+    onRefresh: () -> Unit = {},
 ) {
     androidx.compose.runtime.CompositionLocalProvider(LocalLibrarySelection provides selectedItem) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -296,6 +300,10 @@ fun LibraryScreen(
             return@Column
         }
 
+        androidx.compose.material3.pulltorefresh.PullToRefreshBox(
+            isRefreshing = state.refreshing, onRefresh = onRefresh, modifier = Modifier.fillMaxSize(),
+        ) {
+        Column(Modifier.fillMaxSize()) {
         when (filter) {
             LibraryFilter.ALL -> AllOverview(
                 state = state, pins = pins, canDownload = canDownload, bottom = bottom,
@@ -333,6 +341,8 @@ fun LibraryScreen(
                     }
                 }
             }
+        }
+        }
         }
     }
     }
@@ -796,7 +806,7 @@ private fun jumpIndex(titles: List<String>, c: Char): Int? {
 
 @Composable
 private fun EmptyHint(title: String, message: String) {
-    Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
+    Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
         Column(horizontalAlignment = Alignment.CenterHorizontally) {
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(6.dp))

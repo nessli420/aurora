@@ -1,5 +1,7 @@
 package com.aurora.music.data
 
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.drop
 
 import android.content.Context
@@ -285,6 +287,27 @@ class AppContainer(context: Context) {
     // reloads home/library without the playback-stopping semantics of an account change
     private val _libraryReload = MutableStateFlow(0)
     val libraryReload: StateFlow<Int> = _libraryReload.asStateFlow()
+
+    private val mediaStoreChanges = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(
+        extraBufferCapacity = 1, onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST)
+    private val mediaStoreObserver = object : android.database.ContentObserver(android.os.Handler(android.os.Looper.getMainLooper())) {
+        override fun onChange(selfChange: Boolean) { mediaStoreChanges.tryEmit(Unit) }
+    }
+
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
+    private suspend fun followMediaStore() {
+        mediaStoreChanges.onStart { emit(Unit) }.debounce(MEDIA_STORE_SETTLE_MS).collect {
+            if (localLibrary.inUse && runCatching { localLibrary.syncWithMediaStore() }.getOrDefault(false)) _libraryReload.value++
+        }
+    }
+
+    suspend fun rescanLocalLibrary(full: Boolean = false, folder: String? = null, force: Boolean = false): LocalRescanResult? {
+        val result = if (force || localLibrary.inUse) try { localLibrary.rescan(full, folder) }
+            catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
+            catch (_: Exception) { null } else null
+        _libraryReload.value++
+        return result
+    }
     @Volatile private var lastAccountKey: String? = null
     private fun accountKey(s: Session?): String = s?.accountKey() ?: ""
 
@@ -333,6 +356,11 @@ class AppContainer(context: Context) {
     }
 
     init {
+        runCatching {
+            appContext.contentResolver.registerContentObserver(
+                android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, true, mediaStoreObserver)
+        }
+        scope.launch { followMediaStore() }
         scope.launch {
             var first = true
             settingsStore.artistSeparators.collect {
@@ -487,5 +515,6 @@ class AppContainer(context: Context) {
 
     private companion object {
         const val DATA_SAVER_KBPS = 96
+        const val MEDIA_STORE_SETTLE_MS = 2500L
     }
 }

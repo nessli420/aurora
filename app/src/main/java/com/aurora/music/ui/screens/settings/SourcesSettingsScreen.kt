@@ -95,6 +95,29 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
         }
     }
 
+    var rescanBusy by remember { mutableStateOf(false) }
+    var rescanStatus by remember { mutableStateOf<String?>(null) }
+    fun rescan() {
+        if (rescanBusy) return
+        scope.launch {
+            rescanBusy = true
+            rescanStatus = appString(R.string.rescan_running)
+            try {
+                val result = container.rescanLocalLibrary(full = true, force = true)
+                rescanStatus = when {
+                    result == null -> appString(R.string.rescan_failed)
+                    result.changed -> appString(R.string.rescan_result, result.added, result.removed)
+                    else -> appString(R.string.rescan_unchanged, result.total)
+                }
+            } finally { rescanBusy = false }
+        }
+    }
+    val audioPermission = if (android.os.Build.VERSION.SDK_INT >= 33) android.Manifest.permission.READ_MEDIA_AUDIO
+        else android.Manifest.permission.READ_EXTERNAL_STORAGE
+    val requestAudio = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (granted) rescan() else rescanStatus = appString(R.string.rescan_permission)
+    }
+
     val preferLocal by store.preferLocalSources.collectAsStateWithLifecycle(initialValue = true)
     val priority by store.sourcePriority.collectAsStateWithLifecycle(initialValue = DEFAULT_SOURCE_PRIORITY)
     val unified by store.unifiedLibrary.collectAsStateWithLifecycle(initialValue = false)
@@ -111,6 +134,20 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
             item { SettingsSectionTitle(appString(R.string.text_local_library_1c67cd)) }
             item {
                 SettingsGroup {
+                    Row(
+                        Modifier.fillMaxWidth().clickable(enabled = !rescanBusy) {
+                            if (ctx.checkSelfPermission(audioPermission) == android.content.pm.PackageManager.PERMISSION_GRANTED) rescan()
+                            else requestAudio.launch(audioPermission)
+                        }.padding(20.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            Text(appString(R.string.rescan_title), style = MaterialTheme.typography.titleSmall)
+                            Text(rescanStatus ?: appString(R.string.rescan_summary), style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        if (rescanBusy) androidx.compose.material3.CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    }
                     Row(Modifier.fillMaxWidth().clickable(onClick = onArtistSeparators).padding(20.dp)) {
                         Text(appString(R.string.text_artist_separators_4a3dc4), style = MaterialTheme.typography.titleSmall)
                     }

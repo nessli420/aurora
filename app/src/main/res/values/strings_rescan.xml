@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Rescan Local Library</string>
+    <string name="rescan_summary">Find music added, moved or deleted on this device</string>
+    <string name="rescan_running">Scanning this device…</string>
+    <string name="rescan_result">%1$d added, %2$d removed</string>
+    <string name="rescan_unchanged">Up to date · %1$d songs</string>
+    <string name="rescan_failed">The scan could not finish. Try again.</string>
+    <string name="rescan_permission">Allow access to music on this device to scan it.</string>
+</resources>
