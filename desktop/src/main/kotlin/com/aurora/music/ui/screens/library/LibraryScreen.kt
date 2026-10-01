@@ -985,7 +985,7 @@ private fun albumRow(album: com.aurora.music.model.Album): LibRow {
     val year = album.year.takeIf { it > 0 }?.toString().orEmpty()
     return LibRow(
         album.title, listOf(album.artist, year).filter { it.isNotBlank() }.joinToString(" • "), album.artworkUrl, accentFor(album.id), album.id, "album",
-        badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(),
+        badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(java.util.Locale.getDefault()),
         sortPlayCount = album.playCount, sortRecencySec = album.year.toLong(),
         detail = label, cells = listOf(album.artist, year, album.songCount.takeIf { it > 0 }?.toString().orEmpty()),
     )

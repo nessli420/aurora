@@ -175,6 +175,7 @@ fun SettingsScreen(
                         SettingsNavRow(Icons.Filled.Language, appString(R.string.language_title),
                             subtitle = when (language.substringBefore('-')) {
                                 "ru" -> "Русский"
+                                "tr" -> "Türkçe"
                                 "en" -> "English"
                                 else -> appString(R.string.language_system)
                             }, selected = LocalSelectedSettingsRoute.current == Routes.SETTINGS_LANGUAGE, onClick = onOpenLanguage)

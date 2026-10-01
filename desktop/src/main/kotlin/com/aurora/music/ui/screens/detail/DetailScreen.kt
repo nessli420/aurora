@@ -363,7 +363,7 @@ fun DetailScreen(
                     Artwork(effectiveArt, info.accent, Modifier.size(headerArt), corner = if (info.isArtist) headerArt / 2 else 20.dp)
                     Spacer(Modifier.width(if (pageWidth >= 800.dp) 32.dp else 24.dp))
                     Column(Modifier.weight(1f)) {
-                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accentInk)
+                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accentInk)
                         Spacer(Modifier.height(6.dp))
                         Text(info.title, style = titleStyle, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2, overflow = TextOverflow.Ellipsis)
@@ -404,7 +404,7 @@ fun DetailScreen(
                         menuButton(Color.White, Modifier)
                     }
                     Column(Modifier.align(Alignment.BottomStart).padding(start = gutter, end = gutter, bottom = 14.dp)) {
-                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accent)
+                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accent)
                         Spacer(Modifier.height(6.dp))
                         Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = Color.White,
                             maxLines = 2, overflow = TextOverflow.Ellipsis)

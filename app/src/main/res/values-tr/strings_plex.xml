@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">Plex Media Server\'ınızdaki müzik.</string>
+    <string name="plex_connect_title">Plex\'i bağla</string>
+    <string name="plex_token_detail">Bu sunucuya erişimi olan bir Plex kimlik doğrulama belirteci kullanın.</string>
+    <string name="plex_token_label">Plex belirteci</string>
+    <string name="plex_token_help">Plex belirtecinizi nasıl bulursunuz</string>
+    <string name="plex_token_show">Belirteci göster</string>
+    <string name="plex_token_hide">Belirteci gizle</string>
+    <string name="plex_token_rejected">Plex bu belirteci reddetti. Bu sunucuya erişimi olduğunu denetleyin.</string>
+    <string name="plex_server_detail">Plex Media Server adresinizi kullanın; genellikle 32400 bağlantı noktasıyla.</string>
+    <string name="plex_sources_stream_detail">Navidrome, Jellyfin veya Plex\'ten akış.</string>
+    <string name="plex_sources_empty_detail">Buraya dahil etmek için Ayarlar → Hesaplar\'dan bir Navidrome, Jellyfin, Plex veya YouTube Music hesabı ekleyin.</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Yerel kitaplığı yeniden tara</string>
+    <string name="rescan_summary">Bu cihazda eklenen, taşınan veya silinen müzikleri bul</string>
+    <string name="rescan_running">Bu cihaz taranıyor…</string>
+    <string name="rescan_result">%1$d eklendi, %2$d kaldırıldı</string>
+    <string name="rescan_unchanged">Güncel · %1$d şarkı</string>
+    <string name="rescan_failed">Tarama tamamlanamadı. Tekrar deneyin.</string>
+    <string name="rescan_permission">Taramak için bu cihazdaki müziğe erişime izin verin.</string>
+</resources>

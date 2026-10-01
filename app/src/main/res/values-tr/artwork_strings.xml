@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Kapak resmi</string>
+    <string name="artwork_lookup">Eksik kapakları bul</string>
+    <string name="artwork_description">Kapak resmi olmayan şarkıları ve albümleri eşleştir.</string>
+    <string name="artwork_provider">MusicBrainz ve Cover Art Archive\'da kapak bulmak için sanatçı, albüm ve parça adlarını kullanır. Mevcut kapak resmi öncelikli kalır.</string>
+    <string name="artwork_cache_usage">Kapak önbelleği: %.1f MB / 64 MB. Önbelleğe alınan kapaklar çevrimdışıyken de kullanılabilir.</string>
+    <string name="artwork_clear">Kapak önbelleğini temizle</string>
+    <string name="artwork_clear_failed">Kapak önbelleği temizlenemedi. Tekrar deneyin.</string>
+</resources>

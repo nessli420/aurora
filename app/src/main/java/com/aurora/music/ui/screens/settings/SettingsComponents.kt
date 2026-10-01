@@ -79,7 +79,7 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, showBack: Boolean) {
 @Composable
 fun SettingsSectionTitle(title: String) {
     Text(
-        title.uppercase(),
+        title.uppercase(java.util.Locale.getDefault()),
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Bold,
         color = MaterialTheme.colorScheme.primary,

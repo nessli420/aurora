@@ -460,7 +460,7 @@ private fun AllOverview(
                     items(state.albums.size) { i ->
                         val a = state.albums[i]
                         val label = a.typeLabel.localizedMediaType()
-                        ShelfCard(a.title, a.artist, a.artworkUrl, accentFor(a.id), badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(), selectionKey = "album:${a.id}") {
+                        ShelfCard(a.title, a.artist, a.artworkUrl, accentFor(a.id), badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(java.util.Locale.getDefault()), selectionKey = "album:${a.id}") {
                             onOpenDetail("album", a.id)
                         }
                     }
@@ -828,7 +828,7 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
         val label = it.typeLabel.localizedMediaType()
         LibRow(
             it.title, "$label • ${it.artist}", it.artworkUrl, accentFor(it.id), it.id, "album",
-            badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(),
+            badge = if (label == appString(R.string.text_album_dfb4c9)) "" else label.uppercase(java.util.Locale.getDefault()),
             sortPlayCount = it.playCount, sortRecencySec = it.year.toLong(),
         )
     }

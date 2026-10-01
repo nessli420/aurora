@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Otomatik çevrimdışı önbellek</string>
+    <string name="cache_description">Dinledikçe sesi sakla. Tamamen önbelleğe alınan parçalar çevrimdışıyken kitaplığınızda görünür.</string>
+    <string name="cache_limit">Önbellek sınırı</string>
+    <string name="cache_used">%2$s içinden %1$s kullanılıyor</string>
+    <string name="cache_policy">Eski önbellek otomatik olarak silinir. İndirilenler siz kaldırana kadar kalır.</string>
+    <string name="cache_clear">Ses önbelleğini temizle</string>
+    <string name="cache_clear_title">Önbelleğe alınan ses temizlensin mi?</string>
+    <string name="cache_clear_message">Önbelleğe alınan parçaların yeniden çalınması için bağlantı gerekecek. İndirilenleriniz, kitaplığınız ve ayarlarınız kalır. Önbellek dinledikçe yeniden dolar.</string>
+    <string name="cache_clearing">Önbellek temizleniyor…</string>
+    <string name="cache_cleared">Ses önbelleği temizlendi</string>
+    <string name="cache_clear_failed">Ses önbelleği temizlenemedi. Tekrar deneyin.</string>
+    <string name="cache_unavailable">Ses önbelleği kullanılamıyor. Oynatma yine de normal şekilde akış yapabilir.</string>
+    <string name="cache_loading">Önbellek denetleniyor…</string>
+    <string name="cache_offline_summary">İndirilen ve tamamen önbelleğe alınan müziği çal</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d parça çevrimdışı hazır</item>
+        <item quantity="other">%1$d parça çevrimdışı hazır</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d indirilen parça</item>
+        <item quantity="other">%1$d indirilen parça</item>
+    </plurals>
+</resources>

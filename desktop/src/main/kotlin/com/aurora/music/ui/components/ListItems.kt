@@ -401,7 +401,7 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier, 
             val label = album.typeLabel.localizedMediaType()
             if (label != appString(R.string.text_album_dfb4c9)) {
                 Text(
-                    label.uppercase(),
+                    label.uppercase(java.util.Locale.getDefault()),
                     fontSize = 9.sp,
                     fontWeight = FontWeight.Black,
                     color = Color.White,

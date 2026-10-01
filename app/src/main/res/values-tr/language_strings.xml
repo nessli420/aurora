@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">Uygulama dili</string>
+    <string name="language_system">Sistem varsayılanı</string>
+    <string name="language_description">Aurora\'da kullanılan dili seçin. Müzik başlıkları ve sanatçı adları olduğu gibi kalır.</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">Uygulama simgesi</string>
+    <string name="app_icon_pending">Yeni simgeniz, Aurora\'dan çıktıktan sonra ana ekranda görünür.</string>
+    <string name="app_icon_note">Bazı başlatıcılar simge değiştiğinde eskisini ana ekrandan kaldırır, bu yüzden Aurora\'yı yeniden eklemeniz gerekebilir.</string>
+</resources>

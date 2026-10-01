@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Şimdi çalıyor\'u aç</string>
+    <string name="tablet_now_playing">Şimdi çalıyor</string>
+    <string name="tablet_seek">Konuma git</string>
+    <string name="tablet_close_panel">Paneli kapat</string>
+    <string name="tablet_player_panes">Şimdi çalıyor panelleri</string>
+    <string name="tablet_fullscreen_lyrics">Tam ekran şarkı sözleri</string>
+    <string name="tablet_resize_panels">Panelleri yeniden boyutlandır</string>
+    <string name="tablet_layout_title">Tablet düzeni</string>
+    <string name="tablet_layout_detected">Bu cihazın ekranı büyük olduğu için gösterilir. Her ayar hem dikey hem yatay konumda geçerlidir.</string>
+    <string name="tablet_dock_size">Dock boyutu</string>
+    <string name="tablet_panel_controls">Panel denetimleri</string>
+    <string name="tablet_panel_spacing">Panel aralığı</string>
+    <string name="tablet_nav_gap">Gezinme yanındaki boşluk</string>
+    <string name="tablet_page_margins">Sayfa kenar boşlukları</string>
+    <string name="tablet_hero_size">Öne çıkan kart boyutu</string>
+    <string name="tablet_favourites_size">Favoriler kart boyutu</string>
+    <string name="tablet_player_split">Şimdi çalıyor bölmesi</string>
+    <string name="tablet_player_split_hint">Şimdi çalıyor\'da ayırıcıyı da sürükleyebilirsiniz.</string>
+    <string name="tablet_reset">Tablet düzenini sıfırla</string>
+    <string name="nav_menu_title">Gezinme menüsü</string>
+    <string name="nav_menu_summary">Ana listede ve Diğer altında nelerin görüneceğini seçin</string>
+    <string name="nav_section_main">Ana</string>
+    <string name="nav_section_more">Diğer</string>
+    <string name="nav_section_hidden">Gösterilmeyenler</string>
+    <string name="nav_menu_hint">Öğeleri yeniden sıralamak için okları kullanın. Bir öğeyi Ana ile Diğer arasında taşımak veya kaldırmak için menüsüne dokunun.</string>
+    <string name="nav_move_up">Yukarı taşı</string>
+    <string name="nav_move_down">Aşağı taşı</string>
+    <string name="nav_move_to_main">Ana\'ya taşı</string>
+    <string name="nav_move_to_more">Diğer\'e taşı</string>
+    <string name="nav_add_to_main">Ana\'ya ekle</string>
+    <string name="nav_add_to_more">Diğer\'e ekle</string>
+    <string name="nav_remove">Menüden kaldır</string>
+    <string name="nav_locked">Her zaman Ana\'da</string>
+    <string name="nav_simple_mode_hidden">Basit mod açıkken gizlenir</string>
+    <string name="nav_empty_section">Burada henüz bir şey yok</string>
+    <string name="nav_reset">Gezinme menüsünü sıfırla</string>
+    <string name="nav_placement_options">Yerleşim seçenekleri</string>
+    <string name="home_empty_title">Henüz müzik yok</string>
+    <string name="home_empty_body">Bir müzik sunucusu veya akış hesabı bağlayın ya da bu cihazda saklanan müzikleri ekleyin.</string>
+    <string name="home_add_source">Kaynak ekle</string>
+</resources>

@@ -26,7 +26,7 @@ class AppStringsTest {
         val plurals = ids(R.plurals::class.java)
         assertTrue(strings.size > 2000)
         assertTrue(plurals.size > 10)
-        for (tag in listOf("en", "ru")) {
+        for (tag in listOf("en", "ru", "tr")) {
             AppStrings.setLocale(tag)
             strings.forEach { appString(it) }
             plurals.forEach { id -> (0..112).forEach { appPlural(id, it) } }
@@ -112,6 +112,15 @@ class AppStringsTest {
         val english = names("values")
         assertTrue(english.isNotEmpty())
         assertEquals(english.sorted(), names("values-ru").sorted())
+    }
+
+    @Test fun turkishStringsAndPlurals() {
+        AppStrings.setLocale("tr")
+        assertEquals("Sistem varsayılanı", appString(R.string.language_system))
+        assertEquals("Özel mod", appString(R.string.text_exclusive_mode_01d9b2))
+        assertEquals("%50 indirildi", appString(R.string.text_downloaded_a2ae75, "50"))
+        listOf(0, 1, 2, 21).forEach { assertEquals("$it parça", appPlural(R.plurals.track_count, it)) }
+        assertEquals("KİTAPLIK", appString(R.string.text_library_b8100f).uppercase(Locale.getDefault()))
     }
 
     @Test fun rejectsIdsOfTheWrongType() {

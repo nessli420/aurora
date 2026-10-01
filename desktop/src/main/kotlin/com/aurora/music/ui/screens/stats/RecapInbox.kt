@@ -145,7 +145,7 @@ private fun RecapNotification(window: RecapWindow, history: List<PlayEvent>, unr
     val textColor = if (featured) palette.onPrimaryContainer else palette.onSurface
     Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(if (featured) 28.dp else 20.dp)).background(brush).clickable(onClick = onOpen).pointerHoverIcon(PointerIcon.Hand).padding(if (featured) 22.dp else 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(if (featured) appString(R.string.recap_latest_title, (window.period.label.uppercase())) else appString(R.string.recap_title, (window.period.label)), style = MaterialTheme.typography.labelLarge, color = textColor, modifier = Modifier.weight(1f))
+            Text(if (featured) appString(R.string.recap_latest_title, (window.period.label.uppercase(java.util.Locale.getDefault()))) else appString(R.string.recap_title, (window.period.label)), style = MaterialTheme.typography.labelLarge, color = textColor, modifier = Modifier.weight(1f))
             if (unread) Box(Modifier.clip(CircleShape).background(palette.primary).padding(horizontal = 10.dp, vertical = 4.dp)) { Text(appString(R.string.text_new_6403f2), style = MaterialTheme.typography.labelSmall, color = palette.onPrimary) }
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {

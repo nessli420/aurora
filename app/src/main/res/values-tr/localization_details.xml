@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"içerir"</string>
+    <string name="rule_is">"eşittir"</string>
+    <string name="rule_exactly">"tam olarak"</string>
+    <string name="answer_yes">"evet"</string>
+    <string name="answer_no">"hayır"</string>
+    <string name="recap_sound">"En çok dinlediğiniz sanatçı"</string>
+    <string name="recap_equal">"Önceki dönemle aynı dinleme süresi"</string>
+    <string name="recap_more">"Önceki döneme göre %1$s dakika daha fazla"</string>
+    <string name="recap_less">"Önceki döneme göre %1$s dakika daha az"</string>
+    <string name="recap_pending">"Özetiniz, bu dönem bittiğinde ve dinleme geçmişi olduğunda görünür."</string>
+    <string name="recap_new_count">"Yeni özetler hazır: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"Özet · %1$s"</string>
+    <string name="recap_latest_title">"Son özet · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"Gece yarısı"</string>
+    <string name="recap_paper">"Kâğıt"</string>
+    <string name="longest_streak">"En uzun: %1$s"</string>
+    <string name="downloading_tracks">"İndiriliyor: %1$s"</string>
+    <string name="playlist_track_count">"Çalma listesi · %1$s"</string>
+    <string name="smart_rule_count">"Akıllı çalma listesi · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"SIRADAKİ · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · taranan: %3$s"</string>
+    <string name="track_count_more">"%1$s+ parça"</string>
+    <string name="search_collection">"Bu koleksiyonda ara"</string>
+    <string name="downloaded_collection">"İndirildi"</string>
+    <string name="signal_start_playback">"Sinyal yolunu incelemek için oynatmayı başlatın."</string>
+    <string name="text_source_rate_cf5128">"Kaynak hızı"</string>
+    <string name="text_current_playback_27f5a5">"Geçerli oynatma"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"Gerçek stereo · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"Herhangi biri"</string>
+    <string name="text_saved_impulse_response_a5fc40">"Kayıtlı dürtü yanıtı"</string>
+    <string name="text_hide_34d8b6">"Gizle"</string>
+    <string name="text_show_d97d1e">"Göster"</string>
+    <string name="text_flat_target_7a50d3">"Düz hedef"</string>
+    <string name="text_unspecified_a6e7eb">"Belirtilmemiş"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d parça</item>
+        <item quantity="other">%1$d parça</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d albüm</item>
+        <item quantity="other">%1$d albüm</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d sanatçı</item>
+        <item quantity="other">%1$d sanatçı</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d çalma listesi</item>
+        <item quantity="other">%1$d çalma listesi</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d öğe</item>
+        <item quantity="other">%1$d öğe</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d çalma</item>
+        <item quantity="other">%1$d çalma</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d gün</item>
+        <item quantity="other">%1$d gün</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">%1$d etkin gün</item>
+        <item quantity="other">%1$d etkin gün</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d kural</item>
+        <item quantity="other">%1$d kural</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d grup</item>
+        <item quantity="other">%1$d grup</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d bant</item>
+        <item quantity="other">%1$d bant</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d ölçü</item>
+        <item quantity="other">%1$d ölçü</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"Önce bir ön ayar kaydedin"</string>
+    <string name="text_the_dac_05159b">"DAC"</string>
+    <string name="text_active_945637">" · etkin"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome veya Subsonic"</string>
+</resources>

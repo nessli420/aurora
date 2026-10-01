@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"Android ses"</string>
+    <string name="signal_text_android_audio_mix_f88264">"Android ses · Miks"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"Doğrudan USB aktarımı"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"İşlenmiş USB aktarımı"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"Cast alıcısı"</string>
+    <string name="signal_text_source_6da13a">"Kaynak"</string>
+    <string name="signal_text_decoder_7be2f0">"Kod çözücü"</string>
+    <string name="signal_text_processing_e63451">"İşleme"</string>
+    <string name="signal_text_resampling_1bf1aa">"Yeniden örnekleme"</string>
+    <string name="signal_text_output_4bed33">"Çıkış"</string>
+    <string name="signal_text_device_a5a74a">"Cihaz"</string>
+    <string name="signal_text_latency_3e3997">"Gecikme"</string>
+</resources>

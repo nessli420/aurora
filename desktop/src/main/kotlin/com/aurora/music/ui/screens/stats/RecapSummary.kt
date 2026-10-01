@@ -58,7 +58,7 @@ fun renderRecap(recap: ListeningRecap, style: RecapStyle): Image = Surface.makeR
         }
         c.drawTextLine(line, x, y, paint)
     }
-    text(appString(R.string.recap_share_title, (recap.window.period.label.uppercase())), 72f, 100f, 27f, accent, true)
+    text(appString(R.string.recap_share_title, (recap.window.period.label.uppercase(java.util.Locale.getDefault()))), 72f, 100f, 27f, accent, true)
     text(recap.window.label, 72f, 190f, 54f, bold = true)
     text("${recap.minutes}", 72f, 325f, 104f, accent, true)
     text(appString(R.string.text_minutes_listened_c66ef9), 76f, 375f, 25f)

@@ -254,7 +254,7 @@ fun DetailScreen(
                     Artwork(effectiveArt, info.accent, Modifier.size(art), corner = if (info.isArtist) art / 2 else 20.dp)
                     Spacer(Modifier.width(24.dp))
                     Column(Modifier.weight(1f)) {
-                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accent)
+                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accent)
                         Spacer(Modifier.height(6.dp))
                         Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurface, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
@@ -309,7 +309,7 @@ fun DetailScreen(
                 Column(Modifier.align(if (wideHeader) Alignment.CenterStart else Alignment.BottomStart)
                     .padding(start = if (wideHeader) 320.dp else 20.dp, end = 20.dp,
                         top = if (wideHeader) 48.dp else 0.dp, bottom = 14.dp)) {
-                    Eyebrow(info.typeLabel.localizedMediaType().uppercase(), accent)
+                    Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accent)
                     Spacer(Modifier.height(6.dp))
                     Text(info.title, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, color = headerForeground)
                     Spacer(Modifier.height(4.dp))

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">Çalma listeleri</string>
+    <string name="track_playlists_title">Çalma listelerine ekle veya çıkar</string>
+    <string name="track_playlists_hint">Bu parçayı eklemek veya çıkarmak için dokunun.</string>
+    <string name="track_playlists_empty">Henüz çalma listesi yok. Önce kitaplığınızda bir tane oluşturun.</string>
+    <string name="track_playlists_unavailable">Çalma listelerini düzenlemek için bu parçanın müzik kaynağına bağlanın.</string>
+    <string name="track_playlists_load_error">Çalma listeleri yüklenemedi. Tekrar deneyin.</string>
+    <string name="track_playlists_save_error">Bu çalma listesi güncellenemedi. Bağlantınızı ve düzenleme izinlerinizi denetleyin.</string>
+    <string name="track_swipe_retry">Yeniden dene</string>
+    <string name="track_swipe_done">Bitti</string>
+    <string name="track_playlists_in_playlist">Çalma listesinde</string>
+    <string name="track_playlists_add">Çalma listesine ekle</string>
+</resources>
