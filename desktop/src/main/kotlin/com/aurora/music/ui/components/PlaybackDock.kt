@@ -327,7 +327,7 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
         }
         return
     }
-    val seekTarget = com.aurora.music.ui.theme.LocalContextAccent.current.color ?: colors.primary
+    val seekTarget = colors.primary
     val seekBrush = com.aurora.music.ui.theme.rememberColorSweep(seekTarget)
     val thumbColor by animateColorAsState(seekTarget, androidx.compose.animation.core.tween(750), label = "dockThumb")
     var dragging by remember(state.current.id) { mutableStateOf<Float?>(null) }

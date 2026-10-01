@@ -2,7 +2,6 @@ package com.aurora.music.ui.detail
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.DetailData
@@ -15,14 +14,10 @@ import com.aurora.music.ui.library.save
 import com.aurora.music.ui.screens.detail.DetailScreen
 import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.ui.testing.region
-import com.aurora.music.ui.theme.ContextAccentState
-import com.aurora.music.ui.theme.LocalContextAccent
 import com.aurora.music.ui.theme.readableAccent
 import com.aurora.music.viewmodel.DetailUiState
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -37,24 +32,20 @@ class DetailScreenTest {
         onDownloadAll = {}, onRemoveDownloads = {}, onEditPlaylist = { _, _ -> true }, onDeletePlaylist = {}, isPinned = true, artistInfo = artistInfo,
     )
 
-    private fun shot(name: String, width: Int = 1180, height: Int = 860, accent: ContextAccentState = ContextAccentState(), inspect: () -> Unit = {}, content: @Composable () -> Unit) =
-        Harness(width, height) { CompositionLocalProvider(LocalContextAccent provides accent) { content() } }.use { it.settle(1200).save(label, name).also { inspect() } }
+    private fun shot(name: String, width: Int = 1180, height: Int = 860, content: @Composable () -> Unit) =
+        Harness(width, height) { content() }.use { it.settle(1200).save(label, name) }
 
-    @Test fun albumClaimsItsArtworkAccent() {
-        val accent = ContextAccentState()
-        var claimed: Color? = null
-        val image = shot("detail-album", accent = accent, inspect = { claimed = accent.color }) { Detail(DetailUiState(loading = false, data = Samples.albumDetail), "album") }
-        assertNotNull(claimed)
-        assertNull(accent.color)
+    @Test fun albumPaintsItsArtwork() {
+        val image = shot("detail-album") { Detail(DetailUiState(loading = false, data = Samples.albumDetail), "album") }
         assertTrue(image.distinctColors(6) > 200)
     }
 
     @Test fun blankArtworkFallsBackToInfoAccent() {
-        val accent = ContextAccentState()
-        var claimed: Color? = null
         val data = DetailData(Samples.albumDetail.info.copy(artUrl = ""), Samples.albumDetail.tracks)
-        shot("detail-album-noart", accent = accent, inspect = { claimed = accent.color }) { Detail(DetailUiState(loading = false, data = data), "album") }
-        assertEquals(readableAccent(data.info.accent, darkBackground = true), claimed)
+        val image = shot("detail-album-noart") { Detail(DetailUiState(loading = false, data = data), "album") }
+        val expected = readableAccent(data.info.accent, darkBackground = true)
+        fun near(c: Color) = kotlin.math.abs(c.red - expected.red) + kotlin.math.abs(c.green - expected.green) + kotlin.math.abs(c.blue - expected.blue) < 0.03f
+        assertTrue(image.pixels().count { near(Color(it)) } > 400)
     }
 
     @Test fun artistShowsAboutAndReleaseShelves() {
@@ -96,11 +87,8 @@ class DetailScreenTest {
     }
 
     @Test fun loadingAndFailedStates() {
-        val accent = ContextAccentState()
-        var claimed: Color? = Color.Unspecified
-        val loading = shot("detail-loading", accent = accent, inspect = { claimed = accent.color }) { Detail(DetailUiState(loading = true), "album") }
+        val loading = shot("detail-loading") { Detail(DetailUiState(loading = true), "album") }
         val failed = shot("detail-failed") { Detail(DetailUiState(loading = false), "album") }
-        assertNull(claimed)
         assertFalse(loading.pixels().contentEquals(failed.pixels()))
     }
 }

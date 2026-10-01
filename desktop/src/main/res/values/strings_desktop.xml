@@ -20,6 +20,7 @@
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Exclusive mode"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Exclusive mode is unavailable: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Exclusive mode is unavailable on this device"</string>
+    <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Follow the playing cover"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz is unavailable; using %2$d Hz."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Keep Aurora playing in the notification area when the window closes"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Larger buffers ride out heavy system load; smaller ones react faster to seeking and volume. Applies when the output reopens."</string>
@@ -35,6 +36,7 @@
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"The track could not be decoded"</string>
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"The track could not be opened"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"The track\'s sample rate is not supported"</string>
+    <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Tint the whole app with the colour of the song that's playing"</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Using your Windows accent colour."</string>
     <string name="text_volume_3b18e8" formatted="false">"Volume"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows capabilities"</string>

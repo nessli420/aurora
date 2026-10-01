@@ -118,6 +118,7 @@ fun rememberPlayerColorScheme(artworkUrl: String, fallback: Color): ColorScheme 
 fun AuroraTheme(
     uiPrefs: UiPrefs = UiPrefs(),
     systemAccent: Color? = null,
+    playingAccent: Color? = null,
     content: @Composable () -> Unit,
 ) {
     val systemDark = isSystemInDarkTheme()
@@ -132,6 +133,7 @@ fun AuroraTheme(
         uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
         else -> {
             val seed = when {
+                playingAccent != null -> readableAccent(playingAccent, useDark)
                 uiPrefs.accentMode == AccentMode.CUSTOM -> Color(uiPrefs.accentColor.toInt())
                 uiPrefs.accentMode == AccentMode.MATERIAL_YOU && systemAccent != null -> systemAccent
                 else -> AccentPresets.getOrElse(uiPrefs.accentPreset) { AccentPresets[0] }.seed

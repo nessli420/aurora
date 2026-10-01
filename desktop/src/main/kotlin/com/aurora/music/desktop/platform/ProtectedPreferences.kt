@@ -13,8 +13,11 @@ import okio.Buffer
 import okio.BufferedSink
 import okio.BufferedSource
 import okio.FileSystem
+import okio.ForwardingFileSystem
+import okio.Path
 import okio.Path.Companion.toOkioPath
 import java.io.File
+import java.nio.file.AccessDeniedException
 import java.nio.file.Files
 import java.nio.file.StandardCopyOption
 
@@ -60,5 +63,26 @@ fun protectedPreferencesStore(
     serializer: ProtectedPreferencesSerializer = ProtectedPreferencesSerializer(),
 ): DataStore<Preferences> {
     runCatching { serializer.protectFile(file) }
-    return PreferenceDataStoreFactory.create(OkioStorage(FileSystem.SYSTEM, serializer) { file.absoluteFile.toOkioPath() }, scope = scope)
+    return PreferenceDataStoreFactory.create(OkioStorage(RetryingFileSystem(), serializer) { file.absoluteFile.toOkioPath() }, scope = scope)
+}
+
+fun preferencesStore(file: File, scope: CoroutineScope): DataStore<Preferences> =
+    PreferenceDataStoreFactory.create(OkioStorage(RetryingFileSystem(), PreferencesSerializer) { file.absoluteFile.toOkioPath() }, scope = scope)
+
+// defender and the search indexer briefly lock freshly written files, which fails the datastore rename
+internal class RetryingFileSystem(delegate: FileSystem = SYSTEM) : ForwardingFileSystem(delegate) {
+    override fun atomicMove(source: Path, target: Path) {
+        for (attempt in 1..ATTEMPTS) {
+            try {
+                return super.atomicMove(source, target)
+            } catch (e: AccessDeniedException) {
+                if (attempt == ATTEMPTS) throw e
+                Thread.sleep(attempt * 25L)
+            }
+        }
+    }
+
+    private companion object {
+        const val ATTEMPTS = 8
+    }
 }

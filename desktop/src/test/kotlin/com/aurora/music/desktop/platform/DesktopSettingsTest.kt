@@ -11,6 +11,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -105,6 +106,14 @@ class DesktopSettingsTest {
             assertNull(it.sidePanelWidth.first())
             assertEquals(300f, it.settingsListWidth.first())
         }
+    }
+
+    @Test fun accentFollowsPlayingIsOffUntilEnabled() {
+        settings {
+            assertFalse(it.accentFollowsPlaying.first())
+            it.setAccentFollowsPlaying(true)
+        }
+        settings { assertTrue(it.accentFollowsPlaying.first()) }
     }
 
     @Test fun musicFoldersAreNormalizedAndDeduplicated() = settings {

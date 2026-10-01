@@ -4,51 +4,18 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.SideEffect
-import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import kotlinx.coroutines.launch
 import kotlin.math.abs
-
-@Stable
-class ContextAccentState {
-    var color by mutableStateOf<Color?>(null)
-        private set
-    private var owner: Any? = null
-
-    fun claim(token: Any, value: Color) {
-        owner = token
-        color = value
-    }
-
-    fun release(token: Any) {
-        if (owner === token) {
-            owner = null
-            color = null
-        }
-    }
-}
-
-val LocalContextAccent = staticCompositionLocalOf { ContextAccentState() }
-
-@Composable
-fun ProvideContextAccent(color: Color) {
-    val state = LocalContextAccent.current
-    val token = remember { Any() }
-    SideEffect { state.claim(token, color) }
-    DisposableEffect(state, token) { onDispose { state.release(token) } }
-}
 
 fun readableAccent(color: Color, darkBackground: Boolean): Color {
     val lum = color.luminance()

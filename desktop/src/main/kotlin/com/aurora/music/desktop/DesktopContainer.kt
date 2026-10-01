@@ -1,6 +1,5 @@
 package com.aurora.music.desktop
 
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import coil3.ImageLoader
 import com.aurora.music.R
 import com.aurora.music.data.ArtistInfoStore
@@ -51,6 +50,7 @@ import com.aurora.music.desktop.platform.desktopClientInfo
 import com.aurora.music.desktop.platform.desktopFileUri
 import com.aurora.music.desktop.platform.desktopImageLoader
 import com.aurora.music.desktop.platform.openDesktopUri
+import com.aurora.music.desktop.platform.preferencesStore
 import com.aurora.music.desktop.platform.protectedPreferencesStore
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appString
@@ -95,7 +95,7 @@ class DesktopContainer(
     }
 
     val settingsStore = SettingsStore(protectedPreferencesStore(paths.settingsFile, storageScope), paths.roaming, paths.staging)
-    val desktopSettings = DesktopSettings(PreferenceDataStoreFactory.create(scope = storageScope) { paths.desktopSettingsFile })
+    val desktopSettings = DesktopSettings(preferencesStore(paths.desktopSettingsFile, storageScope))
 
     val playbackReportingAllowed: StateFlow<Boolean> = combine(settingsStore.playbackPrefs, settingsStore.privateSession) { prefs, private ->
         prefs.scrobble && !private

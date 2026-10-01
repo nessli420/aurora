@@ -1300,40 +1300,38 @@ private fun Shell(
         }
     }
 
-    MaterialTheme(colorScheme = playerColors) {
-        if (showSpeedSheet) {
-            SpeedPitchSheet(
-                speed = playerState.speed,
-                onSpeed = { player.setSpeed(it) },
-                onReset = { player.resetSpeedPitch() },
-                onDismiss = { showSpeedSheet = false },
-            )
-        }
-        if (showOutput) {
-            val outputs by player.outputs.collectAsStateWithLifecycle()
-            val preferred by player.preferredOutput.collectAsStateWithLifecycle()
-            val exclusive by player.exclusiveOutput.collectAsStateWithLifecycle()
-            OutputDeviceSheet(
-                devices = outputs,
-                currentId = preferred,
-                exclusive = exclusive,
-                volume = volume,
-                onSelect = { player.setPreferredDevice(it) },
-                onExclusiveChange = { player.setExclusiveOutput(it) },
-                onVolumeChange = { player.setVolume(it) },
-                onToggleMute = { player.toggleMute() },
-                onDismiss = { showOutput = false },
-            )
-        }
-        if (showSleep) {
-            SleepTimerSheet(
-                currentMinutes = playerState.sleepTimerMinutes,
-                endOfTrack = playerState.sleepEndOfTrack,
-                onSelect = { player.setSleepTimer(it) },
-                onEndOfTrack = { player.setSleepEndOfTrack() },
-                onDismiss = { showSleep = false },
-            )
-        }
+    if (showSpeedSheet) {
+        SpeedPitchSheet(
+            speed = playerState.speed,
+            onSpeed = { player.setSpeed(it) },
+            onReset = { player.resetSpeedPitch() },
+            onDismiss = { showSpeedSheet = false },
+        )
+    }
+    if (showOutput) {
+        val outputs by player.outputs.collectAsStateWithLifecycle()
+        val preferred by player.preferredOutput.collectAsStateWithLifecycle()
+        val exclusive by player.exclusiveOutput.collectAsStateWithLifecycle()
+        OutputDeviceSheet(
+            devices = outputs,
+            currentId = preferred,
+            exclusive = exclusive,
+            volume = volume,
+            onSelect = { player.setPreferredDevice(it) },
+            onExclusiveChange = { player.setExclusiveOutput(it) },
+            onVolumeChange = { player.setVolume(it) },
+            onToggleMute = { player.toggleMute() },
+            onDismiss = { showOutput = false },
+        )
+    }
+    if (showSleep) {
+        SleepTimerSheet(
+            currentMinutes = playerState.sleepTimerMinutes,
+            endOfTrack = playerState.sleepEndOfTrack,
+            onSelect = { player.setSleepTimer(it) },
+            onEndOfTrack = { player.setSleepEndOfTrack() },
+            onDismiss = { showSleep = false },
+        )
     }
 }
 

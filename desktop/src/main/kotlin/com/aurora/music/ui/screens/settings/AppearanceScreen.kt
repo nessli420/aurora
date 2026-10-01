@@ -72,8 +72,10 @@ import kotlin.math.roundToInt
 
 @Composable
 fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNavigationMenu: () -> Unit = {}) {
+    val desktopSettings = LocalDesktopContainer.current.desktopSettings
     val store = LocalDesktopContainer.current.settingsStore
     val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+    val followPlaying by desktopSettings.accentFollowsPlaying.collectAsStateWithLifecycle(initialValue = false)
     val scope = rememberCoroutineScope()
     fun tablet(setting: TabletSetting, value: Float) { scope.launch { store.setTabletSetting(setting, value) } }
 
@@ -107,6 +109,13 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 SegmentedRow(appString(R.string.text_source_6da13a), listOf(appString(R.string.text_presets_e709e7), appString(R.string.text_custom_081ae3), appString(R.string.text_system_bc0792)), prefs.accentMode) { i ->
                     scope.launch { store.setAccentMode(i) }
                 }
+            }
+            item {
+                SettingsSwitchRow(
+                    title = appString(R.string.text_follow_the_playing_cover_5d2e91),
+                    subtitle = appString(R.string.text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17),
+                    checked = followPlaying,
+                ) { v -> scope.launch { desktopSettings.setAccentFollowsPlaying(v) } }
             }
 
             when (prefs.accentMode) {

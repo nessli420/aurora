@@ -20,6 +20,7 @@
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Монопольный режим"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Монопольный режим недоступен: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Монопольный режим недоступен на этом устройстве"</string>
+    <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Цвет текущей обложки"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Гц недоступно; используется %2$d Гц."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"После закрытия окна Aurora продолжает играть из области уведомлений"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Большой буфер выдерживает высокую нагрузку на систему, маленький быстрее реагирует на перемотку и громкость. Применяется при повторном открытии вывода."</string>
@@ -35,6 +36,7 @@
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"Не удалось декодировать трек"</string>
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"Не удалось открыть трек"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"Частота дискретизации трека не поддерживается"</string>
+    <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Окрашивать всё приложение в цвет обложки играющего трека"</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Используется акцентный цвет Windows."</string>
     <string name="text_volume_3b18e8" formatted="false">"Громкость"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Возможности Windows"</string>

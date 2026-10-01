@@ -100,7 +100,6 @@ import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.layout.pagePadding
 import com.aurora.music.ui.theme.LocalUiPrefs
-import com.aurora.music.ui.theme.ProvideContextAccent
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.ui.theme.readableAccent
 import com.aurora.music.util.rememberDominantColor
@@ -177,7 +176,6 @@ fun DetailScreen(
     val accent by rememberDominantColor(effectiveArt, info.accent)
     val baseScheme = MaterialTheme.colorScheme
     val accentInk = readableAccent(accent, baseScheme.background.luminance() < 0.5f)
-    ProvideContextAccent(accentInk)
     val albumScheme = baseScheme.copy(primary = accentInk, onPrimary = if (accentInk.luminance() > 0.5f) Color.Black else Color.White)
 
     val listState = rememberLazyListState()
