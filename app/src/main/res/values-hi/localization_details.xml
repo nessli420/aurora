@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"शामिल है"</string>
+    <string name="rule_is">"है"</string>
+    <string name="rule_exactly">"बिल्कुल"</string>
+    <string name="answer_yes">"हाँ"</string>
+    <string name="answer_no">"नहीं"</string>
+    <string name="recap_sound">"आपका सबसे ज़्यादा सुना गया कलाकार"</string>
+    <string name="recap_equal">"पिछली अवधि जितना ही सुनने का समय"</string>
+    <string name="recap_more">"पिछली अवधि से %1$s मिनट ज़्यादा"</string>
+    <string name="recap_less">"पिछली अवधि से %1$s मिनट कम"</string>
+    <string name="recap_pending">"यह अवधि ख़त्म होने और सुनने का इतिहास होने पर आपका रीकैप दिखेगा।"</string>
+    <string name="recap_new_count">"नए रीकैप तैयार: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"रीकैप · %1$s"</string>
+    <string name="recap_latest_title">"नवीनतम रीकैप · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"आधी रात"</string>
+    <string name="recap_paper">"काग़ज़"</string>
+    <string name="longest_streak">"सबसे लंबा: %1$s"</string>
+    <string name="downloading_tracks">"डाउनलोड हो रहा है: %1$s"</string>
+    <string name="playlist_track_count">"प्लेलिस्ट · %1$s"</string>
+    <string name="smart_rule_count">"स्मार्ट प्लेलिस्ट · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"आगे · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · स्कैन हुए: %3$s"</string>
+    <string name="track_count_more">"%1$s+ ट्रैक"</string>
+    <string name="search_collection">"इस संग्रह में खोजें"</string>
+    <string name="downloaded_collection">"डाउनलोड किया गया"</string>
+    <string name="signal_start_playback">"इसका सिग्नल पाथ देखने के लिए प्लेबैक शुरू करें।"</string>
+    <string name="text_source_rate_cf5128">"स्रोत रेट"</string>
+    <string name="text_current_playback_27f5a5">"मौजूदा प्लेबैक"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"ट्रू स्टीरियो · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"कोई भी"</string>
+    <string name="text_saved_impulse_response_a5fc40">"सहेजा गया इम्पल्स रिस्पॉन्स"</string>
+    <string name="text_hide_34d8b6">"छिपाएँ"</string>
+    <string name="text_show_d97d1e">"दिखाएँ"</string>
+    <string name="text_flat_target_7a50d3">"फ़्लैट टारगेट"</string>
+    <string name="text_unspecified_a6e7eb">"निर्दिष्ट नहीं"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d ट्रैक</item>
+        <item quantity="other">%1$d ट्रैक</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d एल्बम</item>
+        <item quantity="other">%1$d एल्बम</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d कलाकार</item>
+        <item quantity="other">%1$d कलाकार</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d प्लेलिस्ट</item>
+        <item quantity="other">%1$d प्लेलिस्ट</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d आइटम</item>
+        <item quantity="other">%1$d आइटम</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d प्ले</item>
+        <item quantity="other">%1$d प्ले</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d दिन</item>
+        <item quantity="other">%1$d दिन</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">%1$d सक्रिय दिन</item>
+        <item quantity="other">%1$d सक्रिय दिन</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d नियम</item>
+        <item quantity="other">%1$d नियम</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d ग्रुप</item>
+        <item quantity="other">%1$d ग्रुप</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d बैंड</item>
+        <item quantity="other">%1$d बैंड</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d बार</item>
+        <item quantity="other">%1$d बार</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"पहले एक प्रीसेट सहेजें"</string>
+    <string name="text_the_dac_05159b">"DAC"</string>
+    <string name="text_active_945637">" · सक्रिय"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome या Subsonic"</string>
+</resources>

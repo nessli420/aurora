@@ -29,7 +29,9 @@ import kotlinx.coroutines.launch
 fun LanguageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val container = LocalDesktopContainer.current
     val selected = AppStrings.languageTag.collectAsState().value.substringBefore('-')
-    val languages = listOf("" to appString(R.string.language_system), "en" to "English", "ru" to "Русский", "tr" to "Türkçe")
+    val languages = listOf("" to appString(R.string.language_system), "en" to "English", "ru" to "Русский", "tr" to "Türkçe",
+        "es" to "Español", "fr" to "Français", "zh" to "简体中文",
+        "pt" to "Português", "hi" to "हिन्दी", "ur" to "اردو")
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.language_title), onBack)
         SettingsScroll(contentPadding) {

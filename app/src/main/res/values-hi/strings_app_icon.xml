@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">ऐप आइकन</string>
+    <string name="app_icon_pending">Aurora से बाहर निकलने के बाद आपका नया आइकन होम स्क्रीन पर दिखता है।</string>
+    <string name="app_icon_note">कुछ लॉन्चर आइकन बदलने पर पुराना आइकन होम स्क्रीन से हटा देते हैं, इसलिए आपको Aurora फिर से जोड़ना पड़ सकता है।</string>
+</resources>

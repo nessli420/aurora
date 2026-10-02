@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">自动离线缓存</string>
+    <string name="cache_description">边听边保存音频。完全缓存的曲目在离线时会显示在音乐库中。</string>
+    <string name="cache_limit">缓存上限</string>
+    <string name="cache_used">已使用 %1$s / %2$s</string>
+    <string name="cache_policy">较旧的缓存会自动删除。下载内容会保留到你将其移除为止。</string>
+    <string name="cache_clear">清除音频缓存</string>
+    <string name="cache_clear_title">清除已缓存的音频？</string>
+    <string name="cache_clear_message">已缓存的曲目需要联网才能再次播放。你的下载、音乐库和设置都会保留。缓存会在你聆听时重新填充。</string>
+    <string name="cache_clearing">正在清除缓存…</string>
+    <string name="cache_cleared">音频缓存已清除</string>
+    <string name="cache_clear_failed">无法清除音频缓存。请重试。</string>
+    <string name="cache_unavailable">音频缓存不可用。仍可正常进行流式播放。</string>
+    <string name="cache_loading">正在检查缓存…</string>
+    <string name="cache_offline_summary">播放已下载和完全缓存的音乐</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d 首曲目可离线播放</item>
+        <item quantity="other">%1$d 首曲目可离线播放</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d 首已下载曲目</item>
+        <item quantity="other">%1$d 首已下载曲目</item>
+    </plurals>
+</resources>

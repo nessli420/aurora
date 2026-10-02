@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Cache offline automático</string>
+    <string name="cache_description">Guarda o áudio enquanto você ouve. Faixas totalmente em cache aparecem na sua biblioteca quando você está offline.</string>
+    <string name="cache_limit">Limite do cache</string>
+    <string name="cache_used">%1$s de %2$s em uso</string>
+    <string name="cache_policy">O cache mais antigo é removido automaticamente. Os downloads ficam até você removê-los.</string>
+    <string name="cache_clear">Limpar cache de áudio</string>
+    <string name="cache_clear_title">Limpar o áudio em cache?</string>
+    <string name="cache_clear_message">As faixas em cache vão precisar de conexão para tocar de novo. Seus downloads, sua biblioteca e seus ajustes continuam. O cache volta a encher enquanto você ouve.</string>
+    <string name="cache_clearing">Limpando cache…</string>
+    <string name="cache_cleared">Cache de áudio limpo</string>
+    <string name="cache_clear_failed">Não foi possível limpar o cache de áudio. Tente de novo.</string>
+    <string name="cache_unavailable">O cache de áudio não está disponível. A reprodução por streaming continua normalmente.</string>
+    <string name="cache_loading">Verificando cache…</string>
+    <string name="cache_offline_summary">Tocar músicas baixadas e totalmente em cache</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d faixa pronta offline</item>
+        <item quantity="other">%1$d faixas prontas offline</item>
+        <item quantity="many">%1$d faixas prontas offline</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d faixa baixada</item>
+        <item quantity="other">%1$d faixas baixadas</item>
+        <item quantity="many">%1$d faixas baixadas</item>
+    </plurals>
+</resources>

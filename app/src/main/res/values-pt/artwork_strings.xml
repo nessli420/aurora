@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Capas</string>
+    <string name="artwork_lookup">Buscar capas ausentes</string>
+    <string name="artwork_description">Encontra capas para músicas e álbuns que não têm.</string>
+    <string name="artwork_provider">Usa os nomes do artista, do álbum e da faixa para buscar capas no MusicBrainz e no Cover Art Archive. As capas existentes continuam tendo prioridade.</string>
+    <string name="artwork_cache_usage">Cache de capas: %.1f MB de 64 MB. As capas em cache continuam disponíveis offline.</string>
+    <string name="artwork_clear">Limpar cache de capas</string>
+    <string name="artwork_clear_failed">Não foi possível limpar o cache de capas. Tente de novo.</string>
+</resources>

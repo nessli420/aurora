@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">来自你的 Plex Media Server 的音乐。</string>
+    <string name="plex_connect_title">连接 Plex</string>
+    <string name="plex_token_detail">请使用有权访问此服务器的 Plex 身份验证令牌。</string>
+    <string name="plex_token_label">Plex 令牌</string>
+    <string name="plex_token_help">如何找到你的 Plex 令牌</string>
+    <string name="plex_token_show">显示令牌</string>
+    <string name="plex_token_hide">隐藏令牌</string>
+    <string name="plex_token_rejected">Plex 拒绝了此令牌。请确认它有权访问此服务器。</string>
+    <string name="plex_server_detail">请使用你的 Plex Media Server 地址，通常端口为 32400。</string>
+    <string name="plex_sources_stream_detail">从 Navidrome、Jellyfin 或 Plex 流式播放。</string>
+    <string name="plex_sources_empty_detail">在“设置 → 账号”中添加 Navidrome、Jellyfin、Plex 或 YouTube Music 账号，即可将其包含在这里。</string>
+</resources>

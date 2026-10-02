@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">Ícone do app</string>
+    <string name="app_icon_pending">Seu novo ícone aparece na tela inicial depois que você sai do Aurora.</string>
+    <string name="app_icon_note">Alguns launchers removem o ícone antigo da tela inicial quando ele muda, então talvez você precise adicionar o Aurora de novo.</string>
+</resources>

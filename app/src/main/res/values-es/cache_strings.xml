@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Caché automática sin conexión</string>
+    <string name="cache_description">Guarda el audio mientras escuchas. Las pistas completamente en caché aparecen en tu biblioteca cuando no hay conexión.</string>
+    <string name="cache_limit">Límite de caché</string>
+    <string name="cache_used">%1$s de %2$s en uso</string>
+    <string name="cache_policy">La caché más antigua se elimina automáticamente. Las descargas se conservan hasta que las quites.</string>
+    <string name="cache_clear">Borrar caché de audio</string>
+    <string name="cache_clear_title">¿Borrar el audio en caché?</string>
+    <string name="cache_clear_message">Las pistas en caché necesitarán conexión para volver a reproducirse. Tus descargas, biblioteca y ajustes se conservan. La caché se vuelve a llenar mientras escuchas.</string>
+    <string name="cache_clearing">Borrando caché…</string>
+    <string name="cache_cleared">Caché de audio borrada</string>
+    <string name="cache_clear_failed">No se pudo borrar la caché de audio. Inténtalo de nuevo.</string>
+    <string name="cache_unavailable">La caché de audio no está disponible. La reproducción puede seguir en streaming con normalidad.</string>
+    <string name="cache_loading">Comprobando caché…</string>
+    <string name="cache_offline_summary">Reproduce música descargada y completamente en caché</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d pista lista sin conexión</item>
+        <item quantity="other">%1$d pistas listas sin conexión</item>
+        <item quantity="many">%1$d pistas listas sin conexión</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d pista descargada</item>
+        <item quantity="other">%1$d pistas descargadas</item>
+        <item quantity="many">%1$d pistas descargadas</item>
+    </plurals>
+</resources>

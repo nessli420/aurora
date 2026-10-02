@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">Icône de l\'application</string>
+    <string name="app_icon_pending">Votre nouvelle icône apparaît sur l\'écran d\'accueil après avoir quitté Aurora.</string>
+    <string name="app_icon_note">Certains lanceurs retirent l\'ancienne icône de l\'écran d\'accueil lorsqu\'elle change ; vous devrez peut-être rajouter Aurora.</string>
+</resources>

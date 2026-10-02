@@ -176,6 +176,12 @@ fun SettingsScreen(
                             subtitle = when (language.substringBefore('-')) {
                                 "ru" -> "Русский"
                                 "tr" -> "Türkçe"
+                                "es" -> "Español"
+                                "fr" -> "Français"
+                                "zh" -> "简体中文"
+                                "pt" -> "Português"
+                                "hi" -> "हिन्दी"
+                                "ur" -> "اردو"
                                 "en" -> "English"
                                 else -> appString(R.string.language_system)
                             }, selected = LocalSelectedSettingsRoute.current == Routes.SETTINGS_LANGUAGE, onClick = onOpenLanguage)

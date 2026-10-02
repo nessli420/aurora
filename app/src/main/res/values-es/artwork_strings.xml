@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Carátulas</string>
+    <string name="artwork_lookup">Buscar carátulas que faltan</string>
+    <string name="artwork_description">Busca carátulas para canciones y álbumes que no tienen.</string>
+    <string name="artwork_provider">Usa los nombres del artista, el álbum y la pista para buscar carátulas en MusicBrainz y Cover Art Archive. Las carátulas existentes siguen teniendo prioridad.</string>
+    <string name="artwork_cache_usage">Caché de carátulas: %.1f MB de 64 MB. Las carátulas en caché siguen disponibles sin conexión.</string>
+    <string name="artwork_clear">Borrar caché de carátulas</string>
+    <string name="artwork_clear_failed">No se pudo borrar la caché de carátulas. Inténtalo de nuevo.</string>
+</resources>

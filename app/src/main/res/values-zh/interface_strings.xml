@@ -1,0 +1,2184 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="text_01_address_ea85bc" formatted="false">"01 / 地址"</string>
+    <string name="text_02_account_8088a4" formatted="false">"02 / 账号"</string>
+    <string name="text_0_1_0_is_off_0_1666667_is_about_1_6_octave_4ddee3" formatted="false">"0–1；0 为关闭，0.1666667 约为 1/6 倍频程"</string>
+    <string name="text_0_1_100_no_greater_than_maximum_q_9d5f73" formatted="false">"0.1–100；不超过最大 Q 值"</string>
+    <string name="text_0_24_db_aa7fe4" formatted="false">"0–24 dB"</string>
+    <string name="text_0_30_db_enter_a_positive_value_5ac0ad" formatted="false">"0–30 dB；请输入正值"</string>
+    <string name="text_0_combines_the_channels_to_mono_1_keeps_the_stereo_width_unchange_18be43" formatted="false">"0 将声道合并为单声道。1 保持立体声宽度不变。"</string>
+    <string name="text_0_mb_f921c9" formatted="false">"0 MB"</string>
+    <string name="text_0_ms_3faf04" formatted="false">"0 ms"</string>
+    <string name="text_0f_db_fd1f4d" formatted="false">"%.0f dB"</string>
+    <string name="text_0f_hz_1f_db_range_f6e243" formatted="false">"%.0f Hz · 范围 %.1f dB"</string>
+    <string name="text_0f_hz_7d94a7" formatted="false">"%.0f Hz"</string>
+    <string name="text_10_24_000_hz_70fbdf" formatted="false">"10-24,000 Hz"</string>
+    <string name="text_10_24_000_hz_below_the_maximum_921163" formatted="false">"10–24,000 Hz；低于最大值"</string>
+    <string name="text_10_24_000_hz_limited_by_shared_data_and_nyquist_8302ea" formatted="false">"10–24,000 Hz；受共享数据和奈奎斯特频率限制"</string>
+    <string name="text_15_min_1028d6" formatted="false">"15 分钟"</string>
+    <string name="text_16_stages_256_parametric_bands_cc3e87">"%1$s/16 个阶段 · %2$s/256 个参数频段"</string>
+    <string name="text_1_128_total_up_to_64_per_channel_336445" formatted="false">"共 1–128 个；每声道最多 64 个"</string>
+    <string name="text_1_hour_f030c3" formatted="false">"1 小时"</string>
+    <string name="text_1f_db_02557a" formatted="false">"%.1f dB"</string>
+    <string name="text_1f_db_22efd4">"%1$s · %%+.1f dB"</string>
+    <string name="text_1f_db_731a6b" formatted="false">"%+.1f dB"</string>
+    <string name="text_1f_db_q_1f_4fdf16" formatted="false">"%+.1f dB · Q%.1f"</string>
+    <string name="text_1f_khz_92ed69" formatted="false">"%.1f kHz"</string>
+    <string name="text_1f_khz_source_51278e" formatted="false">"音源 %.1f kHz"</string>
+    <string name="text_1f_mb_ffb598" formatted="false">"%.1f MB"</string>
+    <string name="text_1f_ms_57bb04" formatted="false">"%.1f ms"</string>
+    <string name="text_20_hz_9d51f9" formatted="false">"20 Hz"</string>
+    <string name="text_20_hz_hz_24_db_filter_only_e3a70a">"20 Hz–%1$s Hz · ±24 dB · 仅滤波器"</string>
+    <string name="text_2f_db_3bd998" formatted="false">"%+.2f dB"</string>
+    <string name="text_2f_gb_56759f" formatted="false">"%.2f GB"</string>
+    <string name="text_2f_khz_720dba" formatted="false">"%.2f kHz"</string>
+    <string name="text_2f_width_52a8cc" formatted="false">"宽度 %.2f×"</string>
+    <string name="text_2u00d7_oversampling_tape_and_tube_are_tone_effects_7297b7" formatted="false">"2× 过采样。磁带和电子管属于音色效果。"</string>
+    <string name="text_30_min_d3ddf7" formatted="false">"30 分钟"</string>
+    <string name="text_30_to_30_db_54c909" formatted="false">"-30 至 +30 dB"</string>
+    <string name="text_32_bit_float_a68053" formatted="false">"32 位浮点"</string>
+    <string name="text_45_min_983be7" formatted="false">"45 分钟"</string>
+    <string name="text_48_khz_preview_decoder_sample_rate_unavailable_7020e9" formatted="false">"48 kHz 预览 · 解码器采样率不可用"</string>
+    <string name="text_5_min_b45ebd" formatted="false">"5 分钟"</string>
+    <string name="text_64_bit_float_eaae87" formatted="false">"64 位浮点"</string>
+    <string name="text_8_000_768_000_hz_277a0d" formatted="false">"8,000–768,000 Hz"</string>
+    <string name="text_a_desktop_classic_reimagined_18633f" formatted="false">"桌面经典，重新演绎"</string>
+    <string name="text_a_higher_ranked_rule_takes_precedence_ae1995" formatted="false">"排名较高的规则优先。"</string>
+    <string name="text_a_home_for_your_music_20a46f" formatted="false">"你的音乐\n之家。"</string>
+    <string name="text_a_little_analogue_soul_a0d7ac" formatted="false">"一点模拟的灵魂"</string>
+    <string name="text_a_matching_file_in_your_device_s_music_library_691446" formatted="false">"设备音乐库中的匹配文件"</string>
+    <string name="text_a_separated_track_was_cleared_from_cache_select_vocals_or_backing_0aa5dc" formatted="false">"一条分离出的音轨已从缓存中清除。请重新选择“人声”或“伴奏”以再次准备。"</string>
+    <string name="text_a_source_is_unavailable_reconnect_to_its_library_and_reopen_this_217820" formatted="false">"某个来源不可用。请重新连接其音乐库并重新打开此混音。"</string>
+    <string name="text_a_track_downloaded_inside_the_app_8619cd" formatted="false">"在应用内下载的曲目"</string>
+    <string name="text_about_6b21fb" formatted="false">"关于"</string>
+    <string name="text_about_aurora_b4ed8c" formatted="false">"关于 Aurora"</string>
+    <string name="text_accent_233064" formatted="false">"强调色"</string>
+    <string name="text_access_delivery_270b49" formatted="false">"访问与传输"</string>
+    <string name="text_access_granted_for_8fb83b">"已获得 %1$s 的访问权限"</string>
+    <string name="text_access_to_the_selected_file_was_denied_choose_the_file_or_locatio_467687" formatted="false">"对所选文件的访问被拒绝。请重新选择文件或位置。"</string>
+    <string name="text_account_85dfa3" formatted="false">"账号"</string>
+    <string name="text_accounts_36bae3" formatted="false">"账号"</string>
+    <string name="text_actions_for_band_c9bc9b">"频段 %1$s 的操作"</string>
+    <string name="text_actions_for_cf6f1b">"%1$s 的操作"</string>
+    <string name="text_active_4a0251">"已启用 · %1$s"</string>
+    <string name="text_active_a733b8" formatted="false">"已启用"</string>
+    <string name="text_active_days_340f3c" formatted="false">"活跃天数"</string>
+    <string name="text_activity_name_09adc3" formatted="false">"活动名称"</string>
+    <string name="text_adaptive_loudness_dbbc9d" formatted="false">"自适应响度"</string>
+    <string name="text_add_61cc55" formatted="false">"添加"</string>
+    <string name="text_add_a_stage_to_begin_an_empty_rack_passes_audio_through_5edd41" formatted="false">"添加一个阶段即可开始。空机架会让音频原样通过。"</string>
+    <string name="text_add_all_to_queue_6cb104" formatted="false">"全部添加到队列"</string>
+    <string name="text_add_an_application_id_to_show_real_cover_artwork_faca69" formatted="false">"添加应用 ID 以显示真实封面。"</string>
+    <string name="text_add_another_account_5dcc79" formatted="false">"添加其他账号"</string>
+    <string name="text_add_artist_replacement_1379e2" formatted="false">"添加艺人替换"</string>
+    <string name="text_add_at_least_two_tracks_to_play_a_mix_367edf" formatted="false">"至少添加两首曲目才能播放混音。"</string>
+    <string name="text_add_b61b5a">"添加%1$s"</string>
+    <string name="text_add_band_563c3b" formatted="false">"+ 添加频段"</string>
+    <string name="text_add_calibration_d9508f" formatted="false">"添加校准"</string>
+    <string name="text_add_condition_42fe69" formatted="false">"添加条件"</string>
+    <string name="text_add_custom_stream_638147" formatted="false">"添加自定义流"</string>
+    <string name="text_add_input_2a21ea" formatted="false">"添加输入"</string>
+    <string name="text_add_parametric_band_0c91fd" formatted="false">"添加参数频段"</string>
+    <string name="text_add_preset_rule_ce17da" formatted="false">"添加预设规则"</string>
+    <string name="text_add_radio_stream_48fecc" formatted="false">"添加电台流"</string>
+    <string name="text_add_rule_11cc2b" formatted="false">"添加规则"</string>
+    <string name="text_add_selected_ir_to_library_d9c2a9" formatted="false">"将所选 IR 添加到库"</string>
+    <string name="text_add_separator_230f65" formatted="false">"添加分隔符"</string>
+    <string name="text_add_stage_931c98" formatted="false">"添加阶段"</string>
+    <string name="text_add_to_liked_b99f26" formatted="false">"添加到喜欢"</string>
+    <string name="text_add_to_queue_69b498" formatted="false">"添加到队列"</string>
+    <string name="text_add_to_your_mix_927f93" formatted="false">"添加到你的混音"</string>
+    <string name="text_add_track_316cad" formatted="false">"添加曲目"</string>
+    <string name="text_added_to_queue_88e96c">"已将 %1$s 添加到队列"</string>
+    <string name="text_added_to_queue_9d7749" formatted="false">"已添加到队列"</string>
+    <string name="text_additional_gain_db_b50044" formatted="false">"附加增益 (dB)"</string>
+    <string name="text_adds_gain_equalizer_at_the_end_of_the_rack_5266e9">"在机架末尾添加增益 (%1$s) → 均衡器。"</string>
+    <string name="text_adds_one_equalizer_stage_at_the_end_of_the_rack_fdf7b1" formatted="false">"在机架末尾添加一个均衡器阶段。"</string>
+    <string name="text_adjusted_7bba98" formatted="false">"已调整"</string>
+    <string name="text_advanced_audio_decbca" formatted="false">"高级音频"</string>
+    <string name="text_after_79ba5e" formatted="false">"处理后"</string>
+    <string name="text_after_app_processing_2b0263" formatted="false">"应用处理之后"</string>
+    <string name="text_after_append_16_stages_parametric_bands_590e32">"追加后：%1$s/16 个阶段 · %2$s/%3$s 个参数频段"</string>
+    <string name="text_after_processing_measurement_unavailable_on_this_path_or_channel_bf6314" formatted="false">"此路径或声道布局无法进行处理后测量。"</string>
+    <string name="text_alarm_25f8c5" formatted="false">"闹钟"</string>
+    <string name="text_alarm_could_not_be_scheduled_89c0e4" formatted="false">"无法设定闹钟"</string>
+    <string name="text_alarm_is_off_fc6331" formatted="false">"闹钟已关闭"</string>
+    <string name="text_alarm_permissions_c50074" formatted="false">"闹钟权限"</string>
+    <string name="text_alarm_time_d2dd88" formatted="false">"闹钟时间"</string>
+    <string name="text_alarm_was_not_scheduled_8d9142" formatted="false">"闹钟未设定"</string>
+    <string name="text_album_art_centre_757501" formatted="false">"专辑封面居中"</string>
+    <string name="text_album_artist_f7fa2e" formatted="false">"专辑艺人"</string>
+    <string name="text_album_blur_1a1f3b" formatted="false">"专辑模糊"</string>
+    <string name="text_album_dfb4c9" formatted="false">"专辑"</string>
+    <string name="text_album_id_f7b6dc" formatted="false">"专辑 ID"</string>
+    <string name="text_album_mode_uses_album_gain_tags_to_preserve_relative_levels_withi_99c44e" formatted="false">"专辑模式使用专辑增益标签来保持专辑内的相对电平。"</string>
+    <string name="text_album_replaygain_23ed6d" formatted="false">"专辑 ReplayGain"</string>
+    <string name="text_albums_3d822b">"%1$s 张专辑"</string>
+    <string name="text_albums_4c45e7" formatted="false">"专辑"</string>
+    <string name="text_albums_and_playlists_you_download_live_here_e4c7ba" formatted="false">"你下载的专辑和播放列表会显示在这里。"</string>
+    <string name="text_alerts_d0efe0" formatted="false">"提醒"</string>
+    <string name="text_alerts_new_recaps_8837f7">"提醒，%1$s 个新回顾"</string>
+    <string name="text_aligned_spectrum_da9b60" formatted="false">"对齐后的频谱"</string>
+    <string name="text_alignment_delay_56ff3c" formatted="false">"对齐延迟"</string>
+    <string name="text_all_6a7208" formatted="false">"全部"</string>
+    <string name="text_all_conditions_771ea0" formatted="false">"所有条件"</string>
+    <string name="text_all_conditions_must_match_2a5764" formatted="false">"必须满足所有条件。"</string>
+    <string name="text_all_devices_a8b16c" formatted="false">"所有设备"</string>
+    <string name="text_all_rules_f0e38d" formatted="false">"所有规则"</string>
+    <string name="text_all_time_dbad49" formatted="false">"全部时间"</string>
+    <string name="text_all_tone_shaping_bypassed_a7e684" formatted="false">"所有音色塑造均已旁通。"</string>
+    <string name="text_all_tracks_d1ccb9">"全部 %1$s 首曲目"</string>
+    <string name="text_allow_access_in_the_browser_then_return_here_4c48b2" formatted="false">"在浏览器中允许访问，然后返回此处"</string>
+    <string name="text_allow_aurora_to_install_updates_then_return_here_38efd8" formatted="false">"允许 Aurora 安装更新，然后返回此处。"</string>
+    <string name="text_allow_music_access_in_settings_apps_aurora_permissions_to_use_fil_1503ac" formatted="false">"请在“设置 → 应用 → Aurora → 权限”中允许访问音乐，以使用此设备上的文件。"</string>
+    <string name="text_allow_other_apps_to_play_audio_calls_will_not_pause_aurora_1aac7c" formatted="false">"允许其他应用播放音频。来电不会暂停 Aurora。"</string>
+    <string name="text_allow_remote_control_0f0d85" formatted="false">"允许远程控制"</string>
+    <string name="text_alphabetical_9d1260" formatted="false">"按字母顺序"</string>
+    <string name="text_already_downloaded_8acc8a" formatted="false">"已下载"</string>
+    <string name="text_amber_27a01d" formatted="false">"琥珀色"</string>
+    <string name="text_amber_displays_monospace_type_tactile_frames_27d627" formatted="false">"琥珀色显示屏 · 等宽字体 · 触感边框"</string>
+    <string name="text_amount_43dc85" formatted="false">"强度"</string>
+    <string name="text_analysis_failed_you_can_still_mix_manually_adb74e" formatted="false">"分析失败。你仍可手动混音。"</string>
+    <string name="text_analysis_reads_the_audio_stream_and_keeps_a_waveform_and_tempo_es_6995bf" formatted="false">"分析会读取音频流，并保留波形和速度估计值。无需已保存的下载。"</string>
+    <string name="text_analysis_uses_network_data_and_takes_time_on_large_libraries_comp_a41cc1" formatted="false">"分析会使用网络流量，音乐库较大时需要一些时间。已完成的曲目会被保存；"</string>
+    <string name="text_analyze_0e524d" formatted="false">"分析"</string>
+    <string name="text_analyze_each_track_to_reveal_its_waveform_here_b126f7" formatted="false">"分析每首曲目，即可在此查看其波形。"</string>
+    <string name="text_analyze_library_afcfa4" formatted="false">"分析音乐库"</string>
+    <string name="text_analyze_new_tracks_across_your_library_including_streams_841790" formatted="false">"分析音乐库中的新曲目，包括流媒体"</string>
+    <string name="text_analyze_the_whole_library_including_streamed_tracks_68593c" formatted="false">"分析整个音乐库，包括流媒体曲目"</string>
+    <string name="text_analyze_waveform_tempo_2c12d4" formatted="false">"分析波形和速度"</string>
+    <string name="text_analyzed_tap_to_scan_new_tracks_5933cd">"已分析 %1$s 首 — 点按以扫描新曲目"</string>
+    <string name="text_analyzing_library_c854a6" formatted="false">"正在分析音乐库…"</string>
+    <string name="text_android_accepted_the_scheduled_time_music_and_the_wake_up_screen_f303a2" formatted="false">"Android 已接受设定的时间。音乐和唤醒屏幕仍取决于播放、通知和锁屏访问权限。"</string>
+    <string name="text_android_auto_beec0a" formatted="false">"Android Auto"</string>
+    <string name="text_android_can_t_grant_a_usb_device_permanently_without_a_per_plug_p_706fd2" formatted="false">"Android 无法在不逐次询问的情况下永久授予 USB 设备权限，因此 DAC "</string>
+    <string name="text_android_capabilities_5df566" formatted="false">"Android 功能"</string>
+    <string name="text_android_output_0a3516" formatted="false">"Android 输出"</string>
+    <string name="text_android_output_hi_res_preferred_aaeb20" formatted="false">"Android 输出 · 优先高解析度"</string>
+    <string name="text_android_system_effects_device_dependent_dafe2f" formatted="false">"Android 系统效果，因设备而异。"</string>
+    <string name="text_android_system_eq_is_separate_and_is_not_copied_enabling_the_rack_15b92e" formatted="false">"Android 系统均衡器是独立的，不会被复制；启用机架会选择“自定义”处理。"</string>
+    <string name="text_android_volume_step_b09bf1">"Android 音量级别：%1$s / %2$s"</string>
+    <string name="text_another_comparison_is_active_48df0f" formatted="false">"另一个对比正在进行。"</string>
+    <string name="text_answered_dc317a">"已回答：%1$s"</string>
+    <string name="text_answers_recorded_no_significance_result_5be219">"已记录 %1$s 个回答。无显著性结果。"</string>
+    <string name="text_any_condition_424666" formatted="false">"任一条件"</string>
+    <string name="text_any_condition_may_match_5c1b6f" formatted="false">"满足任一条件即可。"</string>
+    <string name="text_any_rule_42d727" formatted="false">"任一规则"</string>
+    <string name="text_anywhere_cdf9bb" formatted="false">"任意位置"</string>
+    <string name="text_api_key_cf678c" formatted="false">"API 密钥"</string>
+    <string name="text_app_data_4d9bf9" formatted="false">"应用与数据"</string>
+    <string name="simple_mode">简单模式</string>
+    <string name="simple_mode_description">隐藏高级音频设置</string>
+    <string name="text_app_dsp_and_software_volume_are_bypassed_use_the_dac_s_volume_con_9fb536" formatted="false">"应用 DSP 和软件音量已旁通。请使用 DAC 的音量控制。"</string>
+    <string name="text_app_update_45b5d1" formatted="false">"应用更新"</string>
+    <string name="text_app_updates_16213f" formatted="false">"应用更新"</string>
+    <string name="text_appearance_41def7" formatted="false">"外观"</string>
+    <string name="text_appearance_controls_76f34d" formatted="false">"外观与控制"</string>
+    <string name="text_append_6b3a60" formatted="false">"追加"</string>
+    <string name="text_append_at_the_end_of_the_rack_989ed5" formatted="false">"追加到机架末尾。"</string>
+    <string name="text_append_correction_58f87b" formatted="false">"追加校正"</string>
+    <string name="text_append_stages_b1532d" formatted="false">"追加阶段"</string>
+    <string name="text_append_this_correction_b6edc0" formatted="false">"追加此校正？"</string>
+    <string name="text_appending_correction_7349e5" formatted="false">"正在追加校正…"</string>
+    <string name="text_application_api_key_f3749c" formatted="false">"应用 API 密钥"</string>
+    <string name="text_applied_3d3cce">"已应用 %1$s。"</string>
+    <string name="text_applied_60aafc">"已应用：%1$s"</string>
+    <string name="text_applied_bands_db_preamp_cf3937">"已应用 %1$s · %2$s 个频段，前置放大 %3$s dB"</string>
+    <string name="text_applies_aurora_s_effects_before_sending_audio_a462ad" formatted="false">"在发送音频前应用 Aurora 的效果。"</string>
+    <string name="text_applies_to_this_session_check_signal_path_for_the_active_route_81fa8c" formatted="false">"适用于本次会话。请在“信号路径”中查看当前路由。"</string>
+    <string name="text_applies_when_replaygain_is_set_to_track_or_album_in_equalizer_vol_1cf41c" formatted="false">"当“均衡器 → 音量平衡”中的 ReplayGain 设为“曲目”或“专辑”时生效。"</string>
+    <string name="text_apply_app_processing_and_software_volume_crossfade_speed_pitch_an_1dad19" formatted="false">"应用处理和软件音量会生效。淡入淡出、速度/音高和跳过静音不可用。"</string>
+    <string name="text_apply_cfea41" formatted="false">"应用"</string>
+    <string name="text_apply_output_presets_a03e14" formatted="false">"应用输出预设"</string>
+    <string name="text_apply_preset_rules_16028a" formatted="false">"应用预设规则"</string>
+    <string name="text_apply_profiles_to_confirmed_playback_outputs_038123" formatted="false">"将配置文件应用于已确认的播放输出"</string>
+    <string name="text_approximate_alarm_scheduled_f3c47b" formatted="false">"已设定大致时间的闹钟"</string>
+    <string name="text_arrange_and_tune_your_audio_processing_stages_67b15f" formatted="false">"排列并调校你的音频处理阶段"</string>
+    <string name="text_arrange_effects_with_64_bands_per_equalizer_071bbb" formatted="false">"排列效果，每个均衡器 64 个频段"</string>
+    <string name="text_arrange_your_effects_ded878" formatted="false">"排列你的效果"</string>
+    <string name="text_arrangement_48db54" formatted="false">"编排"</string>
+    <string name="text_artist_6c3f3d" formatted="false">"艺人"</string>
+    <string name="text_artist_from_your_music_10b0e0" formatted="false">"来自你音乐的艺人"</string>
+    <string name="text_artist_indexing_and_scrobbling_file_tags_stay_unchanged_def5b6" formatted="false">"艺人索引和 scrobble。文件标签保持不变。"</string>
+    <string name="text_artist_information_d5c3fc" formatted="false">"艺人信息"</string>
+    <string name="text_artist_names_are_sent_to_the_metadata_providers_only_when_aurora_2f1daa" formatted="false">"只有在 Aurora 需要额外信息时，才会将艺人名称发送给元数据提供方。"</string>
+    <string name="text_artist_replacement_rules_ff8fa3" formatted="false">"艺人替换规则"</string>
+    <string name="text_artist_separators_4a3dc4" formatted="false">"艺人分隔符"</string>
+    <string name="text_artists_1528d8" formatted="false">"艺人"</string>
+    <string name="text_artists_albums_or_songs_d1863c" formatted="false">"艺人、专辑或歌曲"</string>
+    <string name="text_artists_e9cabf">"%1$s 位艺人"</string>
+    <string name="text_artwork_bfbeaf" formatted="false">"封面"</string>
+    <string name="text_artwork_size_6dd0fc" formatted="false">"封面大小"</string>
+    <string name="text_ascending_2b226c" formatted="false">"升序"</string>
+    <string name="text_attack_1b81f2" formatted="false">"启动时间"</string>
+    <string name="text_audio_acdac2" formatted="false">"音频"</string>
+    <string name="text_audio_output_2b89cc" formatted="false">"音频输出"</string>
+    <string name="text_audio_presets_fbf3f8" formatted="false">"音频预设"</string>
+    <string name="text_audio_presets_library_sources_and_metadata_4155ea" formatted="false">"音频预设、音乐库来源和元数据"</string>
+    <string name="text_audiotrack_underruns_6c9f5b">"AudioTrack 欠载：%1$s"</string>
+    <string name="text_aurora_currently_applies_attenuation_only_missing_or_positive_gai_20c829" formatted="false">"Aurora 目前只应用衰减。缺失或为正的增益值不会改变音量。是否可用取决于当前的播放路径。"</string>
+    <string name="text_aurora_eeee9b" formatted="false">"Aurora"</string>
+    <string name="text_aurora_players_373351" formatted="false">"Aurora 播放器"</string>
+    <string name="text_aurora_signal_path_b2764e" formatted="false">"Aurora 信号路径"</string>
+    <string name="text_aurora_software_dsp_works_on_any_device_overrides_bit_perfect_out_c3a42d" formatted="false">"Aurora 软件 DSP，适用于任何设备。会覆盖 bit-perfect 输出。切换引擎后请重新开始播放。"</string>
+    <string name="text_aurora_streams_your_spotify_library_through_youtube_so_it_needs_y_23d0ad" formatted="false">"Aurora 通过 YouTube 播放你的 Spotify 音乐库，因此需要你自己的免费 Spotify 应用："</string>
+    <string name="text_aurora_tuning_5ee0b6" formatted="false">"Aurora 调校"</string>
+    <string name="text_aurora_uses_youtube_music_s_unofficial_web_interface_and_stores_y_28fcb3" formatted="false">"Aurora 使用 YouTube Music 的非官方网页接口，并将你的会话加密存储在此设备上。流媒体为有损音质；上传的曲目和受账号限制的曲目可能无法播放。"</string>
+    <string name="text_aurora_your_recap_a6f4df">"AURORA / 你的%1$s回顾"</string>
+    <string name="text_authorization_is_not_ready_allow_access_then_try_again_99dd5c" formatted="false">"授权尚未就绪。请允许访问，然后重试。"</string>
+    <string name="text_authorize_your_discord_account_a1f52f" formatted="false">"授权你的 Discord 账号"</string>
+    <string name="text_auto_50c3f1" formatted="false">"自动"</string>
+    <string name="text_auto_analyze_on_launch_854335" formatted="false">"启动时自动分析"</string>
+    <string name="text_auto_c614ba" formatted="false">"自动"</string>
+    <string name="text_auto_dj_774a78" formatted="false">"自动 DJ"</string>
+    <string name="text_auto_dj_tracks_key_tempo_matched_83c6cc">"自动 DJ · %1$s 首曲目，调性和速度已匹配"</string>
+    <string name="text_auto_identify_f23ca3" formatted="false">"自动识别"</string>
+    <string name="text_auto_mix_2947fe" formatted="false">"自动混音"</string>
+    <string name="text_auto_switch_per_output_66f8bf" formatted="false">"按输出自动切换"</string>
+    <string name="text_autoeq_json_raw_measurement_984669" formatted="false">"AutoEq JSON · 原始测量"</string>
+    <string name="text_autoeq_json_target_de676c" formatted="false">"AutoEq JSON · 目标"</string>
+    <string name="text_autoeq_snapshots_download_once_then_use_offline_ca6135" formatted="false">"AutoEq 快照。下载一次即可离线使用。"</string>
+    <string name="text_autoeq_target_csv_231f90" formatted="false">"AutoEq 目标 CSV"</string>
+    <string name="text_automatic_ac9041" formatted="false">"自动"</string>
+    <string name="text_automatic_headroom_830667" formatted="false">"自动余量"</string>
+    <string name="text_automation_a15fde" formatted="false">"自动化"</string>
+    <string name="text_autoplay_radio_7fa244" formatted="false">"自动播放电台"</string>
+    <string name="text_avatar_7631b2" formatted="false">"头像"</string>
+    <string name="text_averages_both_measurements_for_a_shared_correction_886d6b" formatted="false">"对两次测量取平均，生成共用的校正。"</string>
+    <string name="text_back_b52b36" formatted="false">"返回"</string>
+    <string name="text_back_to_current_line_d5146a" formatted="false">"回到当前歌词行"</string>
+    <string name="text_backdrop_d4f5e9" formatted="false">"背景"</string>
+    <string name="text_background_64dd60" formatted="false">"背景"</string>
+    <string name="text_backing_only_3b542d" formatted="false">"仅伴奏"</string>
+    <string name="text_backup_exported_with_processing_presets_and_impulse_responses_fa67a8" formatted="false">"备份已导出，包含处理预设和脉冲响应"</string>
+    <string name="text_backup_restore_a16162" formatted="false">"备份与恢复"</string>
+    <string name="text_backups_include_saved_measurement_tuning_projects_and_impulse_res_96c97e" formatted="false">"备份包含已保存的测量调校项目，以及当前处理和已保存预设所使用的脉冲响应。不包含已下载的音乐。恢复会替换设置、设备上的播放列表、喜欢和历史记录。可以使用旧版 JSON 备份，但需要重新选择其中的脉冲响应。"</string>
+    <string name="text_balance_90eef6" formatted="false">"平衡"</string>
+    <string name="text_balance_loud_tracks_during_overlap_to_prevent_volume_peaks_f14f26" formatted="false">"在重叠时平衡响亮的曲目，防止音量峰值"</string>
+    <string name="text_balances_overlapping_levels_to_prevent_overload_each_track_also_h_e99ff4" formatted="false">"平衡重叠部分的电平以防止过载。每条音轨还有一个安全限制器。"</string>
+    <string name="text_band_56a2c1">"%1$s 段"</string>
+    <string name="text_band_895f49" formatted="false">"频段"</string>
+    <string name="text_band_a5870f">"%1$s%2$s 个频段"</string>
+    <string name="text_band_c6bf38">"频段 %1$s"</string>
+    <string name="text_band_graphic_eq_036641">"%1$s 段图示均衡器"</string>
+    <string name="text_band_reduction_f99df5" formatted="false">"频段衰减量"</string>
+    <string name="text_bands_256_across_rack_39ea04">"%1$s/%2$s 个频段 · 整个机架 %3$s/256"</string>
+    <string name="text_bands_2bc0aa" formatted="false">"频段"</string>
+    <string name="text_banner_c8af83" formatted="false">"横幅"</string>
+    <string name="text_bar_count_faa792" formatted="false">"柱条数量"</string>
+    <string name="text_bar_e496fd" formatted="false">"小节"</string>
+    <string name="text_bars_94d0e3">"%1$s 小节"</string>
+    <string name="text_bass_99cb7d" formatted="false">"低音"</string>
+    <string name="text_bass_boost_c946c9" formatted="false">"低音增强"</string>
+    <string name="text_bass_corner_hz_9bf7fa" formatted="false">"低音转折频率 · Hz"</string>
+    <string name="text_bass_db_765749" formatted="false">"低音 · dB"</string>
+    <string name="text_bass_limit_956ae9" formatted="false">"低音上限"</string>
+    <string name="text_before_74f396" formatted="false">"处理前"</string>
+    <string name="text_before_app_processing_fb479a" formatted="false">"应用处理之前"</string>
+    <string name="text_behaviour_171ca0" formatted="false">"行为"</string>
+    <string name="text_best_source_playback_8c92cb" formatted="false">"最佳来源播放"</string>
+    <string name="text_bind_and_apply_d9c71d" formatted="false">"绑定并应用"</string>
+    <string name="text_bind_saved_preset_ee9b6b" formatted="false">"绑定已保存的预设"</string>
+    <string name="text_bind_to_75e438">"将“%1$s”绑定到%2$s"</string>
+    <string name="text_bind_to_9fa6ec">"绑定到%1$s"</string>
+    <string name="text_bit_fd7850">"%1$s 位"</string>
+    <string name="text_bit_pcm_692bdd">"%1$s 位 PCM"</string>
+    <string name="text_bitrate_d153e7" formatted="false">"比特率"</string>
+    <string name="text_bitrate_kbps_cee82c" formatted="false">"比特率 (kbps)"</string>
+    <string name="text_black_b406fb" formatted="false">"纯黑"</string>
+    <string name="text_blend_after_last_68db27" formatted="false">"在最后一首之后衔接"</string>
+    <string name="text_blend_transitions_or_layer_tracks_shape_every_entrance_exit_and_s_022092" formatted="false">"衔接过渡或叠加曲目。塑造每一次进入、退出和声音。"</string>
+    <string name="text_blind_abx_16_trials_eab67b" formatted="false">"盲听 ABX · 16 次试验"</string>
+    <string name="text_bloom_3ef84d" formatted="false">"光晕"</string>
+    <string name="text_blue_7d44bc" formatted="false">"蓝色"</string>
+    <string name="text_bluetooth_output_2215ca" formatted="false">"蓝牙输出"</string>
+    <string name="text_boost_below_threshold_b552a1" formatted="false">"提升阈值以下部分"</string>
+    <string name="text_both_1f4698" formatted="false">"两者"</string>
+    <string name="text_bottom_utilities_8b97ef" formatted="false">"底部工具"</string>
+    <string name="text_bpm_tempo_estimate_db_rms_652fe5">"≈ %1$s BPM · 速度估计%2$s · %3$s dB RMS"</string>
+    <string name="text_brightness_e1a2b6" formatted="false">"亮度"</string>
+    <string name="text_bring_your_playlists_and_saved_music_into_aurora_df697e" formatted="false">"将你的播放列表和收藏的音乐带到 Aurora。"</string>
+    <string name="text_browse_files_524932" formatted="false">"浏览文件"</string>
+    <string name="text_build_007156">"版本号 %1$s%2$s"</string>
+    <string name="text_built_with_jetpack_compose_material_3_6a2228" formatted="false">"使用 Jetpack Compose 和 Material 3 构建。"</string>
+    <string name="text_busiest_day_min_per_active_day_8cd6fd">"最活跃的一天：%1$s · 每个活跃日 %2$s 分钟"</string>
+    <string name="text_business_d6663d" formatted="false">"商业"</string>
+    <string name="text_bypass_497852" formatted="false">"旁通"</string>
+    <string name="text_bypass_stage_2c4421" formatted="false">"旁通此阶段"</string>
+    <string name="text_bypassed_4b6893" formatted="false">" · 已旁通"</string>
+    <string name="text_bypassed_7a944b" formatted="false">"已旁通"</string>
+    <string name="text_bypassed_c5c251" formatted="false">" （已旁通）"</string>
+    <string name="text_calculated_eq_response_6dd321">"计算得出的均衡器响应。%1$s"</string>
+    <string name="text_calculated_response_a4a732" formatted="false">"计算响应"</string>
+    <string name="text_calculated_stage_response_afc25a" formatted="false">"计算得出的阶段响应"</string>
+    <string name="text_calibration_source_50c2e0" formatted="false">"校准来源"</string>
+    <string name="text_can_t_reach_the_server_1371a9" formatted="false">"无法连接到服务器。"</string>
+    <string name="text_can_t_write_this_file_b1889c" formatted="false">"无法写入此文件"</string>
+    <string name="text_cancel_77dfd2" formatted="false">"取消"</string>
+    <string name="text_cancel_download_67bb11" formatted="false">"取消下载"</string>
+    <string name="text_cancel_fitting_492826" formatted="false">"取消拟合"</string>
+    <string name="text_cancel_keep_current_mix_d10ab9" formatted="false">"取消 · 保留当前混音"</string>
+    <string name="text_cancel_separation_d3a810" formatted="false">"取消分离"</string>
+    <string name="text_cannot_read_this_image_9a45ce" formatted="false">"无法读取此图片。"</string>
+    <string name="text_cap_streaming_to_96_kbps_on_mobile_data_4a7eaa" formatted="false">"使用移动数据时将流媒体限制在约 96 kbps"</string>
+    <string name="text_cast_60745a" formatted="false">"投放"</string>
+    <string name="text_cast_dlna_and_paired_aurora_devices_364cee" formatted="false">"Cast、DLNA 和已配对的 Aurora 设备"</string>
+    <string name="text_cast_to_a_device_1c0bd6" formatted="false">"投放到设备"</string>
+    <string name="text_ceiling_e29db9" formatted="false">"上限"</string>
+    <string name="text_ceiling_ef2e49">"上限 %1$s"</string>
+    <string name="text_center_a23911" formatted="false">"居中"</string>
+    <string name="text_chance_probability_4f_3166a5" formatted="false">"随机概率：%.4f"</string>
+    <string name="text_change_coefficient_sign_8ad3f7" formatted="false">"更改系数符号"</string>
+    <string name="text_change_sign_d00c6c" formatted="false">"更改符号"</string>
+    <string name="text_changes_are_disabled_restore_a_backup_to_recover_the_library_8962a5" formatted="false">"更改已停用。请恢复备份以找回音乐库。"</string>
+    <string name="text_changes_are_disabled_restore_a_backup_to_recover_the_saved_librar_ceffca" formatted="false">"更改已停用。请恢复备份以找回已保存的库。"</string>
+    <string name="text_changes_save_automatically_b3fdb8" formatted="false">"更改会自动保存。"</string>
+    <string name="text_channel_alignment_7c33be" formatted="false">"声道对齐"</string>
+    <string name="text_channel_delay_209025" formatted="false">"声道延迟"</string>
+    <string name="text_channel_intent_e006ec" formatted="false">"声道用途"</string>
+    <string name="text_channel_limits_e045d3" formatted="false">"声道限制"</string>
+    <string name="text_channel_overrides_l_db_r_db_59779e">"声道单独设置：L +%1$s/−%2$s dB · R +%3$s/−%4$s dB"</string>
+    <string name="text_channel_utility_8a147b" formatted="false">"声道工具"</string>
+    <string name="text_channels_18e03e" formatted="false">"声道"</string>
+    <string name="text_channels_f248dd">"%1$s 声道"</string>
+    <string name="text_channels_unknown_b12d18" formatted="false">"声道数未知"</string>
+    <string name="text_check_alarm_permissions_and_try_enabling_it_again_764ff9" formatted="false">"请检查闹钟权限，然后再次尝试启用。"</string>
+    <string name="text_check_for_updates_736b90" formatted="false">"检查更新"</string>
+    <string name="text_check_the_calibration_values_c16359" formatted="false">"请检查校准值。"</string>
+    <string name="text_check_the_fitting_limits_5de573" formatted="false">"请检查拟合限制。"</string>
+    <string name="text_check_the_project_name_44cbe0" formatted="false">"请检查项目名称。"</string>
+    <string name="text_check_whether_volume_leveling_is_active_or_bypassed_05e612" formatted="false">"查看音量平衡是已启用还是已旁通"</string>
+    <string name="text_checking_alarm_e06c5c" formatted="false">"正在检查闹钟…"</string>
+    <string name="text_checking_for_updates_78948b" formatted="false">"正在检查更新"</string>
+    <string name="text_checking_time_d916f1" formatted="false">"正在检查时间"</string>
+    <string name="text_choose_a_device_or_output_mode_72ff69" formatted="false">"选择设备或输出模式"</string>
+    <string name="text_choose_a_song_with_a_known_duration_and_playable_source_ff433d" formatted="false">"请选择时长已知且来源可播放的歌曲。"</string>
+    <string name="text_choose_a_utf_8_text_file_9ed3dc" formatted="false">"请选择 UTF-8 文本文件。"</string>
+    <string name="text_choose_audio_ea6db7" formatted="false">"选择音频"</string>
+    <string name="text_choose_c2c00f">"选择%1$s"</string>
+    <string name="text_choose_date_e7877f" formatted="false">"选择日期"</string>
+    <string name="text_choose_distinct_inputs_00550b" formatted="false">"请选择不同的输入。"</string>
+    <string name="text_choose_engine_dee9e6" formatted="false">"选择引擎"</string>
+    <string name="text_choose_filter_type_6698bc" formatted="false">"选择滤波器类型"</string>
+    <string name="text_choose_preset_005541" formatted="false">"选择预设"</string>
+    <string name="text_choose_saved_or_published_target_d050a2" formatted="false">"选择已保存或已发布的目标"</string>
+    <string name="text_choose_the_current_confirmed_output_ad4813" formatted="false">"请选择当前已确认的输出。"</string>
+    <string name="text_choose_vocals_or_backing_to_download_the_64_mb_uvr_model_once_and_f75596" formatted="false">"选择“人声”或“伴奏”，将一次性下载 64 MB 的 UVR 模型并在此设备上进行分离。音频不会离开设备。"</string>
+    <string name="text_choose_your_profile_then_connect_this_account_dd6fe5" formatted="false">"选择你的个人资料，然后连接此账号。"</string>
+    <string name="text_chorus_6973e1" formatted="false">"合唱"</string>
+    <string name="text_clear_719ea3" formatted="false">"清除"</string>
+    <string name="text_clear_history_53b515" formatted="false">"清除历史记录"</string>
+    <string name="text_clear_listening_history_5076df" formatted="false">"清除聆听历史？"</string>
+    <string name="text_clear_queue_984301" formatted="false">"清空队列"</string>
+    <string name="text_client_id_a766cd" formatted="false">"客户端 ID"</string>
+    <string name="text_close_bbfa77" formatted="false">"关闭"</string>
+    <string name="text_close_mix_studio_bb83bf" formatted="false">"关闭混音工作室"</string>
+    <string name="text_close_search_0906f9" formatted="false">"关闭搜索"</string>
+    <string name="text_codec_a33676" formatted="false">"编解码器"</string>
+    <string name="text_collapse_9cf188" formatted="false">"收起"</string>
+    <string name="text_collection_30c54a" formatted="false">"合集"</string>
+    <string name="text_color_1d0c83" formatted="false">"颜色"</string>
+    <string name="text_colour_f28563" formatted="false">"颜色"</string>
+    <string name="text_colour_source_92c52f" formatted="false">"颜色来源"</string>
+    <string name="text_combine_left_and_right_channels_where_the_active_path_supports_pr_3682b6" formatted="false">"在当前路径支持处理时合并左右声道"</string>
+    <string name="text_combo_dcae58" formatted="false">"组合"</string>
+    <string name="text_comedy_11381a" formatted="false">"喜剧"</string>
+    <string name="text_compact_1df39a" formatted="false">"紧凑"</string>
+    <string name="text_compare_presets_b7d8ea" formatted="false">"对比预设"</string>
+    <string name="text_compatible_maximum_932602" formatted="false">"兼容的最大值"</string>
+    <string name="text_compilation_aad755" formatted="false">"合辑"</string>
+    <string name="text_complete_google_verification_if_the_page_stops_responding_tap_con_a561de" formatted="false">"请完成 Google 验证。如果页面停止响应，请点按“继续前往 YouTube Music”。"</string>
+    <string name="text_completed_pending_bf3cd1">"已完成：%1$s · 待处理：%2$s"</string>
+    <string name="text_compressor_b23f61" formatted="false">"压缩器"</string>
+    <string name="text_condition_2f4979" formatted="false">"条件"</string>
+    <string name="text_confirm_again_after_reconnecting_or_changing_hardware_settings_cac3c5" formatted="false">"重新连接或更改硬件设置后请再次确认。"</string>
+    <string name="text_confirm_hardware_d8779b" formatted="false">"确认硬件"</string>
+    <string name="text_confirm_that_these_measurement_systems_are_compatible_f8e6ca" formatted="false">"请确认这些测量系统相互兼容。"</string>
+    <string name="text_confirmed_output_52a6b9" formatted="false">"已确认的输出"</string>
+    <string name="text_confirmed_output_selected_bfe814" formatted="false">"已选择已确认的输出。"</string>
+    <string name="text_connect_6e2889" formatted="false">"连接"</string>
+    <string name="text_connect_b65463" formatted="false">"连接"</string>
+    <string name="text_connect_discord_8794ce" formatted="false">"连接 Discord"</string>
+    <string name="text_connect_last_fm_406205" formatted="false">"连接 Last.fm"</string>
+    <string name="text_connect_listenbrainz_fd826c" formatted="false">"连接 ListenBrainz"</string>
+    <string name="text_connect_spotify_529d56" formatted="false">"连接 Spotify。"</string>
+    <string name="text_connect_this_account_fd5e5e" formatted="false">"连接此账号"</string>
+    <string name="text_connect_your_server_8989fc" formatted="false">"连接你的服务器。"</string>
+    <string name="text_connect_youtube_music_64e032" formatted="false">"连接 YouTube Music。"</string>
+    <string name="text_connected_as_fc3300">"已连接为 %1$s"</string>
+    <string name="text_connected_c2f9b7" formatted="false">"已连接"</string>
+    <string name="text_connected_device_6ed592" formatted="false">"已连接的设备"</string>
+    <string name="text_connected_headphones_68a2f7" formatted="false">"已连接的耳机"</string>
+    <string name="text_connecting_fd3e79" formatted="false">"正在连接…"</string>
+    <string name="text_connecting_to_the_local_network_4df7c7" formatted="false">"正在连接本地网络…"</string>
+    <string name="text_connecting_your_library_a0430a" formatted="false">"正在连接你的音乐库…"</string>
+    <string name="text_connection_details_ab30a5" formatted="false">"连接详情"</string>
+    <string name="text_connection_timed_out_647bf9" formatted="false">"连接超时。"</string>
+    <string name="text_connections_8f3509" formatted="false">"连接"</string>
+    <string name="text_connections_are_optional_aurora_s_own_library_playback_history_an_d7c6c7" formatted="false">"连接是可选的。Aurora 自带的音乐库、播放历史和回顾无需连接即可使用。"</string>
+    <string name="text_constellation_785bdc" formatted="false">"星座"</string>
+    <string name="text_container_e6443a" formatted="false">"容器"</string>
+    <string name="text_context_cc11b3" formatted="false">"上下文"</string>
+    <string name="text_continue_2e0262" formatted="false">"继续"</string>
+    <string name="text_continue_to_youtube_music_7f9fcb" formatted="false">"继续前往 YouTube Music"</string>
+    <string name="text_continue_with_a_saved_account_a6bc3a">"使用已保存的账号继续 (%1$s)"</string>
+    <string name="text_controls_af1fce">"%1$s · %2$s 个控件"</string>
+    <string name="text_controls_bee75c" formatted="false">"控件"</string>
+    <string name="text_converts_each_matrix_path_independently_be282e" formatted="false">"独立转换矩阵中的每条路径。"</string>
+    <string name="text_convolution_1c746e" formatted="false">"卷积"</string>
+    <string name="text_convolution_206000">"卷积：%1$s"</string>
+    <string name="text_convolution_ir_d15d63" formatted="false">"卷积 (IR)"</string>
+    <string name="text_copies_0ebf61">"%1$s • %2$s 个副本"</string>
+    <string name="text_copies_the_queue_before_playback_up_to_100_tracks_and_512_mb_aae54a" formatted="false">"播放前复制队列。最多 100 首曲目和 512 MB。"</string>
+    <string name="text_copy_37e469">"%1$s 副本"</string>
+    <string name="text_copy_code_6c1069" formatted="false">"复制代码"</string>
+    <string name="text_copy_diagnostic_report_7c8feb" formatted="false">"复制诊断报告"</string>
+    <string name="text_copy_pairing_address_fc506d" formatted="false">"复制配对地址"</string>
+    <string name="text_copy_software_dsp_and_current_channel_settings_7c4573" formatted="false">"复制软件 DSP 和当前声道设置"</string>
+    <string name="text_copy_standard_settings_d03497" formatted="false">"复制标准设置"</string>
+    <string name="text_copy_the_app_s_client_id_and_paste_it_below_d4d070" formatted="false">"复制应用的 Client ID 并粘贴到下方。"</string>
+    <string name="text_copy_the_full_address_from_the_other_device_825ae9" formatted="false">"从另一台设备复制完整地址。"</string>
+    <string name="text_copy_this_from_your_listenbrainz_profile_458b1a" formatted="false">"从你的 ListenBrainz 个人资料中复制"</string>
+    <string name="text_copy_your_standard_software_eq_effects_and_mono_setting_into_an_e_4eccb4" formatted="false">"将你的标准软件均衡器、效果和单声道设置复制到可编辑的机架中，并保持原有的处理顺序。"</string>
+    <string name="text_copy_your_standard_sound_settings_into_separate_stages_and_place_61d4ee" formatted="false">"将你的标准声音设置复制到独立的阶段，并在卷积之后的末尾放置一个已启用的限制器。这会改变处理顺序。"</string>
+    <string name="text_coral_d27ca6" formatted="false">"珊瑚色"</string>
+    <string name="text_corners_f1fb13" formatted="false">"圆角"</string>
+    <string name="text_correct_57cbf9">"正确：%1$s"</string>
+    <string name="text_correct_out_of_763a9d">"%2$s 次中答对 %1$s 次"</string>
+    <string name="text_correction_7f2640" formatted="false">"校正"</string>
+    <string name="text_correction_added_to_the_rack_66be55" formatted="false">"校正已添加到机架。"</string>
+    <string name="text_correction_generated_21f0fd" formatted="false">"校正已生成。"</string>
+    <string name="text_corrections_are_generated_on_device_from_live_squig_link_measurem_eb5940">"校正在设备上根据 squig.link 的实时测量数据生成，以 %1$s 目标为基准。"</string>
+    <string name="text_could_not_append_subchain_b7d429" formatted="false">"无法追加子链。"</string>
+    <string name="text_could_not_append_these_stages_f06d11" formatted="false">"无法追加这些阶段。"</string>
+    <string name="text_could_not_append_these_stages_the_rack_was_not_changed_f1638c" formatted="false">"无法追加这些阶段。机架未更改。"</string>
+    <string name="text_could_not_append_this_correction_the_rack_was_not_changed_9f04fe" formatted="false">"无法追加此校正。机架未更改。"</string>
+    <string name="text_could_not_bind_this_output_15b372" formatted="false">"无法绑定此输出。"</string>
+    <string name="text_could_not_build_this_mix_b76def" formatted="false">"无法生成此混音。"</string>
+    <string name="text_could_not_build_transitions_e78754" formatted="false">"无法生成过渡。"</string>
+    <string name="text_could_not_calculate_this_eq_response_223c17" formatted="false">"无法计算此均衡器响应。"</string>
+    <string name="text_could_not_connect_youtube_music_please_try_again_e327a1" formatted="false">"无法连接 YouTube Music。请重试。"</string>
+    <string name="text_could_not_export_eq_text_27ecd7" formatted="false">"无法导出均衡器文本。"</string>
+    <string name="text_could_not_export_the_result_151bea" formatted="false">"无法导出结果。"</string>
+    <string name="text_could_not_generate_a_correction_for_these_inputs_95156d" formatted="false">"无法根据这些输入生成校正。"</string>
+    <string name="text_could_not_load_more_recommendations_try_again_552ce1" formatted="false">"无法加载更多推荐。请重试。"</string>
+    <string name="text_could_not_load_presets_try_another_search_8452dd" formatted="false">"无法加载预设。请尝试其他搜索。"</string>
+    <string name="text_could_not_load_songs_check_your_library_connection_65bfc8" formatted="false">"无法加载歌曲。请检查音乐库连接。"</string>
+    <string name="text_could_not_load_the_home_feed_try_again_f756b3" formatted="false">"无法加载首页内容。请重试。"</string>
+    <string name="text_could_not_load_the_ir_library_f5856d" formatted="false">"无法加载 IR 库。"</string>
+    <string name="text_could_not_open_the_destination_ff7025" formatted="false">"无法打开目标位置。"</string>
+    <string name="text_could_not_open_the_selected_destination_982a0a" formatted="false">"无法打开所选的目标位置。"</string>
+    <string name="text_could_not_open_the_selected_file_d412e6" formatted="false">"无法打开所选文件。"</string>
+    <string name="text_could_not_open_the_selected_location_988ef0" formatted="false">"无法打开所选位置。"</string>
+    <string name="text_could_not_open_the_selected_location_for_saving_d2bee1" formatted="false">"无法打开所选位置进行保存。"</string>
+    <string name="text_could_not_open_the_selected_preset_file_42fc48" formatted="false">"无法打开所选的预设文件。"</string>
+    <string name="text_could_not_open_the_wav_file_ad86f4" formatted="false">"无法打开 WAV 文件。"</string>
+    <string name="text_could_not_parse_this_measurement_29d1d2" formatted="false">"无法解析此测量数据。"</string>
+    <string name="text_could_not_prepare_this_audio_selection_814b67" formatted="false">"无法准备此音频选段。"</string>
+    <string name="text_could_not_prepare_this_ir_3f250b" formatted="false">"无法准备此 IR。"</string>
+    <string name="text_could_not_read_or_write_the_preset_file_check_access_to_the_selec_56fd44" formatted="false">"无法读取或写入预设文件。请检查对所选位置的访问权限，然后重试。"</string>
+    <string name="text_could_not_read_the_selected_file_ec63f7" formatted="false">"无法读取所选文件。"</string>
+    <string name="text_could_not_read_the_waveform_f99d0d" formatted="false">"无法读取波形。"</string>
+    <string name="text_could_not_read_the_youtube_music_session_reload_and_try_again_49d60c" formatted="false">"无法读取 YouTube Music 会话。请重新加载后重试。"</string>
+    <string name="text_could_not_read_this_eq_text_b560e5" formatted="false">"无法读取此均衡器文本。"</string>
+    <string name="text_could_not_read_this_measurement_301a3c" formatted="false">"无法读取此测量数据。"</string>
+    <string name="text_could_not_reopen_this_mix_check_the_library_connection_956d9c" formatted="false">"无法重新打开此混音。请检查音乐库连接。"</string>
+    <string name="text_could_not_save_listening_settings_22937b" formatted="false">"无法保存聆听设置。"</string>
+    <string name="text_could_not_save_measurement_details_5fd202" formatted="false">"无法保存测量详情。"</string>
+    <string name="text_could_not_save_picture_please_try_again_80043a" formatted="false">"无法保存图片。请重试。"</string>
+    <string name="text_could_not_save_profile_ac7801" formatted="false">"无法保存个人资料。"</string>
+    <string name="text_could_not_save_separators_e5045b" formatted="false">"无法保存分隔符。"</string>
+    <string name="text_could_not_save_subchain_03c16f" formatted="false">"无法保存子链。"</string>
+    <string name="text_could_not_save_the_mix_your_edits_are_still_open_ce467e" formatted="false">"无法保存混音。你的修改仍处于打开状态。"</string>
+    <string name="text_could_not_save_the_rack_5f8b53" formatted="false">"无法保存机架。"</string>
+    <string name="text_could_not_save_the_variant_8badb5" formatted="false">"无法保存变体。"</string>
+    <string name="text_could_not_search_this_source_try_again_a811fe" formatted="false">"无法搜索此来源。请重试。"</string>
+    <string name="text_could_not_switch_processing_mode_a22224" formatted="false">"无法切换处理模式"</string>
+    <string name="text_could_not_turn_off_alarm_a8caac" formatted="false">"无法关闭闹钟"</string>
+    <string name="text_could_not_update_output_rules_c86d7e" formatted="false">"无法更新输出规则。"</string>
+    <string name="text_could_not_update_preset_rules_c56bf9" formatted="false">"无法更新预设规则。"</string>
+    <string name="text_could_not_update_targets_df30a7" formatted="false">"无法更新目标。"</string>
+    <string name="text_could_not_update_the_ir_library_b7593b" formatted="false">"无法更新 IR 库。"</string>
+    <string name="text_could_not_update_the_preset_please_try_again_12c9d8" formatted="false">"无法更新预设。请重试。"</string>
+    <string name="text_could_not_update_the_rack_55efb1" formatted="false">"无法更新机架。"</string>
+    <string name="text_could_not_update_this_project_68b4fe" formatted="false">"无法更新此项目。"</string>
+    <string name="text_couldn_t_check_for_updates_1c6953" formatted="false">"无法检查更新"</string>
+    <string name="text_couldn_t_check_for_updates_try_again_a15f1d" formatted="false">"无法检查更新。请重试。"</string>
+    <string name="text_couldn_t_check_for_updates_try_again_later_e70d9d" formatted="false">"无法检查更新。请稍后重试。"</string>
+    <string name="text_couldn_t_download_the_update_try_again_5d009e" formatted="false">"无法下载更新。请重试。"</string>
+    <string name="text_couldn_t_fingerprint_this_file_ccbec4" formatted="false">"无法为此文件生成指纹"</string>
+    <string name="text_couldn_t_load_8b7b6b" formatted="false">"无法加载"</string>
+    <string name="text_couldn_t_load_a_supported_correction_check_your_connection_or_try_ee72f6" formatted="false">"无法加载受支持的校正，请检查网络连接或尝试其他测量"</string>
+    <string name="text_couldn_t_load_this_feed_d1428a" formatted="false">"无法加载此内容"</string>
+    <string name="text_couldn_t_open_the_installer_you_can_also_download_the_update_from_c2a33f" formatted="false">"无法打开安装程序。你也可以从 GitHub 下载更新。"</string>
+    <string name="text_couldn_t_play_this_search_a68a3a" formatted="false">"无法播放此搜索结果。"</string>
+    <string name="text_couldn_t_reach_github_check_your_connection_and_try_again_47aff9" formatted="false">"无法连接 GitHub。请检查网络连接后重试。"</string>
+    <string name="text_couldn_t_reach_last_fm_check_your_keys_and_connection_e65155" formatted="false">"无法连接 Last.fm。请检查你的密钥和网络连接。"</string>
+    <string name="text_couldn_t_reach_the_directory_f4b567" formatted="false">"无法连接目录"</string>
+    <string name="text_couldn_t_reach_the_radio_directory_c0321f" formatted="false">"无法连接电台目录"</string>
+    <string name="text_couldn_t_read_that_backup_db4478" formatted="false">"无法读取该备份"</string>
+    <string name="text_couldn_t_read_the_github_release_try_again_later_309d84" formatted="false">"无法读取 GitHub 发布信息。请稍后重试。"</string>
+    <string name="text_couldn_t_save_playlist_d7a0f6" formatted="false">"无法保存播放列表"</string>
+    <string name="text_couldn_t_start_the_download_check_available_storage_and_try_again_2afac7" formatted="false">"无法开始下载。请检查可用存储空间后重试。"</string>
+    <string name="text_create_6e157c" formatted="false">"创建"</string>
+    <string name="text_create_a_free_acoustid_key_928b23" formatted="false">"创建免费的 AcoustID 密钥"</string>
+    <string name="text_create_a_smart_playlist_instead_f73978" formatted="false">"改为创建智能播放列表"</string>
+    <string name="text_create_an_api_account_then_link_your_profile_5a93ca" formatted="false">"创建 API 账号，然后关联你的个人资料"</string>
+    <string name="text_create_automatic_transitions_c31cb5" formatted="false">"创建自动过渡"</string>
+    <string name="text_create_playlist_62c988" formatted="false">"创建播放列表"</string>
+    <string name="text_create_smart_playlist_6ea764" formatted="false">"创建智能播放列表"</string>
+    <string name="text_create_transitions_47dcdf" formatted="false">"创建过渡"</string>
+    <string name="text_created_137992">"已创建 %1$s。"</string>
+    <string name="text_creates_a_32_bit_float_copy_d569be" formatted="false">"创建一份 32 位浮点副本。"</string>
+    <string name="text_creates_a_new_project_regenerate_correction_before_applying_it_423e23" formatted="false">"创建一个新项目。应用前请重新生成校正。"</string>
+    <string name="text_creates_a_parametric_fit_project_the_curve_is_not_a_measurement_f425ac" formatted="false">"创建一个参数拟合项目。该曲线不是测量结果。"</string>
+    <string name="text_creating_project_e1bab2" formatted="false">"正在创建项目…"</string>
+    <string name="text_creating_transitions_12f0bd" formatted="false">"正在创建过渡"</string>
+    <string name="text_creator_817b79" formatted="false">"创作者"</string>
+    <string name="text_crossfade_00acfc" formatted="false">"淡入淡出"</string>
+    <string name="text_crossfade_primary_player_only_8e7de0" formatted="false">"淡入淡出：仅限主播放器。"</string>
+    <string name="text_crossfeed_8f1996">"交叉馈送 %1$s%%"</string>
+    <string name="text_crossfeed_e6b7b4" formatted="false">"交叉馈送"</string>
+    <string name="text_cue_in_52bfaa" formatted="false">"切入点"</string>
+    <string name="text_cue_out_d4b49c" formatted="false">"切出点"</string>
+    <string name="text_curl_flow_19ab49" formatted="false">"旋流"</string>
+    <string name="text_current_bass_compensation_15bc46" formatted="false">"当前低音补偿"</string>
+    <string name="text_current_decoder_sample_rate_6f675e">"%1$s · 当前解码器采样率"</string>
+    <string name="text_current_period_so_far_compared_with_the_full_previous_period_473f59" formatted="false">"当前周期截至目前的数据，与上一个完整周期对比。"</string>
+    <string name="text_custom_081ae3" formatted="false">"自定义"</string>
+    <string name="text_custom_dsp_df083c" formatted="false">"自定义 DSP"</string>
+    <string name="text_custom_target_a34c83" formatted="false">"自定义目标"</string>
+    <string name="text_cut_38d13b" formatted="false">"衰减"</string>
+    <string name="text_cut_silent_sections_within_tracks_4306c9" formatted="false">"剪掉曲目中的静音段"</string>
+    <string name="text_cutoff_118de3" formatted="false">"截止频率"</string>
+    <string name="text_cymatics_459c6a" formatted="false">"声波图形"</string>
+    <string name="text_dac_gain_setting_4940ab" formatted="false">"DAC 增益设置"</string>
+    <string name="text_dac_output_v_rms_full_scale_sine_28c8da" formatted="false">"DAC 输出（V RMS，满刻度正弦波）"</string>
+    <string name="text_dac_voltage_e5b76c" formatted="false">"DAC 电压"</string>
+    <string name="text_daily_728298" formatted="false">"每日"</string>
+    <string name="text_daily_wake_up_30bad6" formatted="false">"每日唤醒"</string>
+    <string name="text_damping_cutoff_5e7aff" formatted="false">"阻尼截止频率"</string>
+    <string name="text_dark_ae1ef0" formatted="false">"深色"</string>
+    <string name="text_data_saver_07147b" formatted="false">"流量节省"</string>
+    <string name="text_day_streak_661711">"连续 %1$s 天"</string>
+    <string name="text_db_136a33">"%1$s · ±%2$s dB"</string>
+    <string name="text_db_8bb555">"%1$s ±%2$s dB"</string>
+    <string name="text_db_e44622" formatted="false">"dB"</string>
+    <string name="text_db_oct_29dc5a">"%1$s dB/oct"</string>
+    <string name="text_db_oct_f8e265">" · %1$s dB/oct"</string>
+    <string name="text_dc_blocker_d73679" formatted="false">"直流阻断器"</string>
+    <string name="text_de_esser_1fe14b" formatted="false">"齿音消除器"</string>
+    <string name="text_dec_997f59" formatted="false">"12月"</string>
+    <string name="text_decay_423840" formatted="false">"衰减时间"</string>
+    <string name="text_decode_m_s_0898c4" formatted="false">"M/S 解码"</string>
+    <string name="text_default_808d7d" formatted="false">"默认"</string>
+    <string name="text_default_speed_3297b3">"默认速度 %1$s×"</string>
+    <string name="text_default_speed_c5ae71" formatted="false">"默认速度"</string>
+    <string name="text_delay_b4c200" formatted="false">"延迟"</string>
+    <string name="text_delay_l_ms_r_ms_82e61b">"延迟：L %1$s ms，R %2$s ms"</string>
+    <string name="text_delay_ms_3f4bc4" formatted="false">"延迟 (ms)"</string>
+    <string name="text_delay_reverb_8c8bb6" formatted="false">"延迟与混响"</string>
+    <string name="text_delete_137cdc">"删除%1$s？"</string>
+    <string name="text_delete_48c860">"删除%1$s"</string>
+    <string name="text_delete_f6fdbe" formatted="false">"删除"</string>
+    <string name="text_delete_playlist_b55b18" formatted="false">"删除播放列表"</string>
+    <string name="text_delete_preset_f004e2" formatted="false">"删除预设？"</string>
+    <string name="text_delete_rule_784bef" formatted="false">"删除规则"</string>
+    <string name="text_delete_your_current_audio_settings_will_stay_as_they_are_243d73">"删除“%1$s”？你当前的音频设置将保持不变。"</string>
+    <string name="text_deleted_c338d3">"已删除 %1$s。"</string>
+    <string name="text_deleted_preset_4bf611" formatted="false">"预设已删除"</string>
+    <string name="text_deletes_the_project_and_measurements_existing_rack_stages_stay_un_f93f18" formatted="false">"删除项目和测量数据。机架中已有的阶段保持不变。"</string>
+    <string name="text_deleting_ir_794fb8" formatted="false">"正在删除 IR…"</string>
+    <string name="text_deleting_project_d0e644" formatted="false">"正在删除项目…"</string>
+    <string name="text_depth_df0e29" formatted="false">"深度"</string>
+    <string name="text_depth_unknown_c30135" formatted="false">"位深未知"</string>
+    <string name="text_descending_36377a" formatted="false">"降序"</string>
+    <string name="text_description_55f8eb" formatted="false">"说明"</string>
+    <string name="text_design_sample_rate_hz_bdb79c" formatted="false">"设计采样率 · Hz"</string>
+    <string name="text_details_dc3dec" formatted="false">"详情"</string>
+    <string name="text_details_rig_notes_d17254" formatted="false">"详情与设备备注"</string>
+    <string name="text_detector_8e9b36" formatted="false">"检测器"</string>
+    <string name="text_detector_frequency_7df85c" formatted="false">"检测器频率"</string>
+    <string name="text_detector_q_480b14" formatted="false">"检测器 Q 值"</string>
+    <string name="text_device_library_887a24" formatted="false">"设备库"</string>
+    <string name="text_device_presets_ca72d3" formatted="false">"设备预设"</string>
+    <string name="text_digital_sample_levels_eed86c" formatted="false">"数字采样电平"</string>
+    <string name="text_direct_bc8152" formatted="false">"直通"</string>
+    <string name="text_direct_usb_requested_fe8923" formatted="false">"已请求 USB 直通"</string>
+    <string name="text_discard_36fff6" formatted="false">"放弃"</string>
+    <string name="text_disconnect_discord_0939de" formatted="false">"断开 Discord"</string>
+    <string name="text_disconnect_ed28e0" formatted="false">"断开连接"</string>
+    <string name="text_disconnect_last_fm_e2c81c" formatted="false">"断开 Last.fm"</string>
+    <string name="text_disconnect_listenbrainz_2a6c2c" formatted="false">"断开 ListenBrainz"</string>
+    <string name="text_discord_application_id_2ac458" formatted="false">"Discord 应用 ID"</string>
+    <string name="text_discord_presence_81fe83" formatted="false">"Discord 状态"</string>
+    <string name="text_discord_preview_401388" formatted="false">"DISCORD 预览"</string>
+    <string name="text_discover_d3f02e" formatted="false">"发现"</string>
+    <string name="text_dismiss_70afe9" formatted="false">"关闭"</string>
+    <string name="text_display_574ff9" formatted="false">"显示"</string>
+    <string name="text_display_name_c7874a" formatted="false">"显示名称"</string>
+    <string name="text_displayed_channel_2ae515" formatted="false">"显示的声道"</string>
+    <string name="text_dlna_receivers_61e7ce" formatted="false">"DLNA 接收器"</string>
+    <string name="text_dock_e8b5cb" formatted="false">"停靠栏"</string>
+    <string name="text_does_not_match_current_playback_fb4dfe" formatted="false">"与当前播放不匹配。"</string>
+    <string name="text_doesn_t_contain_688c39" formatted="false">"不包含"</string>
+    <string name="text_don_t_report_plays_to_your_server_or_last_fm_074883" formatted="false">"暂停聆听历史和账号上报"</string>
+    <string name="text_done_e9b450" formatted="false">"完成"</string>
+    <string name="text_dot_matrix_d4d639" formatted="false">"点阵"</string>
+    <string name="text_double_tap_the_player_artwork_9ef287" formatted="false">"双击播放器封面"</string>
+    <string name="text_double_tap_to_play_pause_d5e7e4" formatted="false">"双击播放 / 暂停"</string>
+    <string name="text_down_bf93e5" formatted="false">"下"</string>
+    <string name="text_download_a479c9" formatted="false">"下载"</string>
+    <string name="text_download_complete_95efb3" formatted="false">"下载完成"</string>
+    <string name="text_download_failed_check_your_connection_and_storage_then_try_again_3e9e00" formatted="false">"下载失败。请检查网络连接和存储空间，然后重试。"</string>
+    <string name="text_download_finished_failed_21e6b1">"下载完成 — %1$s 个失败"</string>
+    <string name="text_download_quality_9d14a9" formatted="false">"下载音质"</string>
+    <string name="text_download_quality_and_offline_files_157e78" formatted="false">"下载音质和离线文件"</string>
+    <string name="text_download_target_d5fd60" formatted="false">"下载目标"</string>
+    <string name="text_download_update_870d57" formatted="false">"下载更新"</string>
+    <string name="text_downloaded_a2ae75">"已下载 %1$s%%"</string>
+    <string name="text_downloaded_b7e792">"%1$s • 已下载"</string>
+    <string name="text_downloaded_c61970" formatted="false">"已下载"</string>
+    <string name="text_downloaded_quality_and_offline_files_4bd602">"已下载 %1$s 首 · 音质和离线文件"</string>
+    <string name="text_downloaded_tracks_98effd">"%1$s 首已下载曲目"</string>
+    <string name="text_downloading_1_song_75e402" formatted="false">"正在下载 1 首歌曲"</string>
+    <string name="text_downloading_7f12a1">"正在下载“%1$s”"</string>
+    <string name="text_downloading_songs_f16c02">"正在下载 %1$s 首歌曲"</string>
+    <string name="text_downloading_update_b42347" formatted="false">"正在下载更新"</string>
+    <string name="text_downloads_a862c2" formatted="false">"下载"</string>
+    <string name="text_downloads_are_stored_privately_inside_the_app_and_removed_when_yo_ffbbf6" formatted="false">"下载内容以私密方式存储在应用内，卸载时会被移除。"</string>
+    <string name="text_downloads_storage_f7c580" formatted="false">"下载与存储"</string>
+    <string name="text_drive_7a34a5">"驱动 %1$s%%"</string>
+    <string name="text_drive_a02bb4" formatted="false">"驱动"</string>
+    <string name="text_dsd_files_d4d480" formatted="false">"DSD 文件"</string>
+    <string name="text_dst_decoder_license_1e3fba" formatted="false">"DST 解码器许可"</string>
+    <string name="text_duplicate_972d57" formatted="false">"复制"</string>
+    <string name="text_duplicate_preset_27bc59" formatted="false">"复制预设"</string>
+    <string name="text_duplicates_889a9c" formatted="false">"重复项"</string>
+    <string name="text_duration_137000" formatted="false">"时长"</string>
+    <string name="text_duration_seconds_09b44e" formatted="false">"时长（秒）"</string>
+    <string name="text_dynamic_equalizer_6f01b5" formatted="false">"动态均衡器"</string>
+    <string name="text_dynamics_7d5536" formatted="false">"动态"</string>
+    <string name="text_e_g_4e041c00d85a40d9_b863af" formatted="false">"e.g. 4e041c00d85a40d9…"</string>
+    <string name="text_ear_gain_center_hz_213d07" formatted="false">"耳增益中心 · Hz"</string>
+    <string name="text_ear_gain_db_91d15e" formatted="false">"耳增益 · dB"</string>
+    <string name="text_earbuds_open_ear_9a037e" formatted="false">"耳塞 / 开放式"</string>
+    <string name="text_earpiece_90fd41" formatted="false">"听筒"</string>
+    <string name="text_edit_530164" formatted="false">"编辑"</string>
+    <string name="text_edit_artist_replacement_2b228e" formatted="false">"编辑艺人替换"</string>
+    <string name="text_edit_band_903859">"编辑频段 %1$s"</string>
+    <string name="text_edit_bind_e977d1" formatted="false">"编辑 / 绑定"</string>
+    <string name="text_edit_filter_32d3bd" formatted="false">"编辑滤波器"</string>
+    <string name="text_edit_local_profile_6f9d95" formatted="false">"编辑本地个人资料"</string>
+    <string name="text_edit_mix_in_studio_5e8df8" formatted="false">"在工作室中编辑混音"</string>
+    <string name="text_edit_mix_transitions_76ee01" formatted="false">"编辑混音过渡"</string>
+    <string name="text_edit_playlist_1528d5" formatted="false">"编辑播放列表"</string>
+    <string name="text_edit_preset_rule_21254a" formatted="false">"编辑预设规则"</string>
+    <string name="text_edit_profile_15141e" formatted="false">"编辑个人资料"</string>
+    <string name="text_edit_rules_83bf03" formatted="false">"编辑规则"</string>
+    <string name="text_edit_settings_aea819" formatted="false">"编辑设置"</string>
+    <string name="text_edit_smart_playlist_5fd608" formatted="false">"编辑智能播放列表"</string>
+    <string name="text_edit_source_text_f113e8" formatted="false">"编辑源文本"</string>
+    <string name="text_edit_tags_d8a5fc" formatted="false">"编辑标签"</string>
+    <string name="text_edit_the_active_rack_to_change_your_sound_792bcb" formatted="false">"编辑当前机架以改变你的声音。"</string>
+    <string name="text_effect_720b5d" formatted="false">"效果"</string>
+    <string name="text_electrical_estimate_from_headphone_sensitivity_not_an_acoustic_me_1f4d0c" formatted="false">"根据耳机灵敏度得出的电学估算值，并非声学测量结果。"</string>
+    <string name="text_enable_20063a" formatted="false">"启用"</string>
+    <string name="text_enable_convolution_558c8c" formatted="false">"启用卷积"</string>
+    <string name="text_enable_convolution_in_equalizer_or_processing_rack_a19cc2" formatted="false">"请在“均衡器”或“处理机架”中启用卷积。"</string>
+    <string name="text_enable_this_source_in_advanced_audio_extensions_579558" formatted="false">"请在“高级音频 → 扩展”中启用此来源。"</string>
+    <string name="text_enabled_df174a" formatted="false">"已启用"</string>
+    <string name="text_enables_cover_artwork_40a2d2" formatted="false">"启用封面显示"</string>
+    <string name="text_encode_m_s_3c88d0" formatted="false">"M/S 编码"</string>
+    <string name="text_end_frame_e4064a" formatted="false">"结束帧"</string>
+    <string name="text_end_of_track_9923e9" formatted="false">"曲目结束时"</string>
+    <string name="text_engine_c1f65d" formatted="false">"引擎"</string>
+    <string name="text_enhancers_465e88" formatted="false">"增强器"</string>
+    <string name="text_enter_3ffccb">"请输入%1$s。"</string>
+    <string name="text_enter_a_finite_number_for_every_setting_49042c" formatted="false">"请为每项设置输入有限的数值。"</string>
+    <string name="text_enter_a_number_12f340" formatted="false">"请输入数字。"</string>
+    <string name="text_enter_a_range_within_the_original_frames_8c9532" formatted="false">"请输入原始帧范围内的区间。"</string>
+    <string name="text_enter_a_whole_number_priority_dde963" formatted="false">"请输入整数优先级。"</string>
+    <string name="text_enter_a_whole_number_sample_rate_badff4" formatted="false">"请输入整数采样率。"</string>
+    <string name="text_enter_at_least_two_characters_to_search_squig_link_ca1a71" formatted="false">"至少输入两个字符才能搜索 squig.link。"</string>
+    <string name="text_enter_five_valid_numbers_17625b" formatted="false">"请输入五个有效数字。"</string>
+    <string name="text_enter_the_address_of_your_server_3f01ed">"输入你的 %1$s 服务器地址。"</string>
+    <string name="text_entrance_shape_a03f73" formatted="false">"进入形状"</string>
+    <string name="text_episode_8669aa" formatted="false">"单集"</string>
+    <string name="text_episodes_49d641" formatted="false">"单集"</string>
+    <string name="text_eps_singles_f6feb2" formatted="false">"EP 与单曲"</string>
+    <string name="text_eq_bands_6b80aa">"EQ · %1$s · %2$s 个频段"</string>
+    <string name="text_eq_curve_stays_below_0_db_no_preamp_needed_701882" formatted="false">"均衡器曲线保持在 0 dB 以下，无需前置放大"</string>
+    <string name="text_eq_device_presets_convolution_and_channels_4e2569" formatted="false">"均衡器、设备预设、卷积和声道"</string>
+    <string name="text_eq_peak_1f_db_1f_db_headroom_1db199" formatted="false">"均衡器峰值 +%.1f dB · 余量 %.1f dB"</string>
+    <string name="text_eq_peak_1f_db_clipping_by_1f_db_7e0752" formatted="false">"均衡器峰值 +%.1f dB · 削波 %.1f dB"</string>
+    <string name="text_eq_response_only_preamp_trim_and_delay_are_separate_3441df" formatted="false">"仅均衡器响应。前置放大、微调和延迟是分开的。"</string>
+    <string name="text_eq_text_7e59d7" formatted="false">"均衡器文本"</string>
+    <string name="text_eq_text_must_be_256_kib_or_smaller_7631fb" formatted="false">"均衡器文本不得超过 256 KiB。"</string>
+    <string name="text_equal_power_70e301" formatted="false">"等功率"</string>
+    <string name="text_equalizer_3b64a9" formatted="false">"均衡器"</string>
+    <string name="text_equalizer_effects_e6ad57" formatted="false">"均衡器与效果"</string>
+    <string name="text_estimated_sound_level_3d1a1a" formatted="false">"估算声压级"</string>
+    <string name="text_estimated_uncertainty_db_99228f" formatted="false">"估算不确定度 (±dB)"</string>
+    <string name="text_even_out_loud_quiet_passages_5f8fe4" formatted="false">"拉平响亮和安静的段落"</string>
+    <string name="text_every_30_seconds_up_to_2_880_samples_stored_locally_39373d" formatted="false">"每 30 秒一次。最多在本地存储 2,880 个样本。"</string>
+    <string name="text_exact_alarm_access_is_unavailable_android_may_delay_this_alarm_an_97544e" formatted="false">"无法使用精确闹钟权限。Android 可能会延迟此闹钟，后台播放也可能受到限制。"</string>
+    <string name="text_exact_alarm_scheduled_afe593" formatted="false">"已设定精确闹钟"</string>
+    <string name="text_exact_alarms_cd19fa" formatted="false">"精确闹钟"</string>
+    <string name="text_exact_alarms_notifications_battery_and_lock_screen_access_d38e18" formatted="false">"精确闹钟、通知、电池和锁屏访问权限"</string>
+    <string name="text_example_ye_kanye_west_ded92b" formatted="false">"示例：Ye → Kanye West"</string>
+    <string name="text_exchange_bass_during_fades_dc9e15" formatted="false">"在淡变过程中交换低音"</string>
+    <string name="text_exciter_298dd8" formatted="false">"激励器"</string>
+    <string name="text_exclusive_usb_blends_compatible_local_flac_files_other_formats_ke_f8da1d" formatted="false">"独占 USB 会混合兼容的本地 FLAC 文件。其他格式保持正常的曲目过渡；混音会在重叠期间修改采样。"</string>
+    <string name="text_existing_stages_stay_unchanged_fc1b79" formatted="false">"现有阶段保持不变。"</string>
+    <string name="text_exit_shape_5e1931" formatted="false">"退出形状"</string>
+    <string name="text_expander_c3d792" formatted="false">"扩展器"</string>
+    <string name="text_experimental_dsd_f91f90" formatted="false">"实验性 DSD"</string>
+    <string name="text_expires_in_s_829189">"%1$s 秒后过期。"</string>
+    <string name="text_explain_55cbfd" formatted="false">"说明"</string>
+    <string name="text_export_as_m3u_5189ed" formatted="false">"导出为 M3U"</string>
+    <string name="text_export_backup_6043b4" formatted="false">"导出备份"</string>
+    <string name="text_export_f3e4fa" formatted="false">"导出"</string>
+    <string name="text_export_failed_d6c17e" formatted="false">"导出失败"</string>
+    <string name="text_export_or_import_settings_and_playlists_4ce918" formatted="false">"导出或导入设置和播放列表"</string>
+    <string name="text_export_parametric_eq_text_39190f" formatted="false">"导出参数均衡器文本"</string>
+    <string name="text_export_project_json_57cf46" formatted="false">"导出项目 JSON"</string>
+    <string name="text_export_result_efc657" formatted="false">"导出结果"</string>
+    <string name="text_export_wav_f98f7d" formatted="false">"导出 WAV"</string>
+    <string name="text_exporting_preset_f23e43" formatted="false">"正在导出预设…"</string>
+    <string name="text_exporting_project_89978a" formatted="false">"正在导出项目…"</string>
+    <string name="text_exporting_wav_501d1a" formatted="false">"正在导出 WAV…"</string>
+    <string name="text_exports_aurora_eq_json_for_these_filter_types_368863" formatted="false">"为这些滤波器类型导出 Aurora EQ JSON。"</string>
+    <string name="text_exports_parametric_filters_with_preamp_0_db_0ec77d">"导出 %1$s 个参数滤波器，并附带 Preamp: 0 dB。"</string>
+    <string name="text_extension_659087" formatted="false">"扩展"</string>
+    <string name="text_extension_f88c4d" formatted="false">"扩展"</string>
+    <string name="text_extension_is_unavailable_ad061c" formatted="false">"扩展不可用。"</string>
+    <string name="text_extensions_656bcf" formatted="false">"扩展"</string>
+    <string name="text_external_inputs_become_the_subchain_input_3057fb" formatted="false">"外部输入将成为子链的输入。"</string>
+    <string name="text_fade_curve_7089cd" formatted="false">"淡变曲线"</string>
+    <string name="text_fade_in_6b46f2" formatted="false">"淡入"</string>
+    <string name="text_fade_in_music_from_your_library_every_day_51b4c6" formatted="false">"每天以淡入方式播放你音乐库中的音乐"</string>
+    <string name="text_fade_out_72f7b2" formatted="false">"淡出"</string>
+    <string name="text_fades_6d1e7d" formatted="false">"淡变"</string>
+    <string name="text_falling_caps_on_the_bars_f64a49" formatted="false">"柱条上方的下落顶帽"</string>
+    <string name="text_favorite_6b90b6" formatted="false">"收藏"</string>
+    <string name="text_feedback_c8d767" formatted="false">"反馈"</string>
+    <string name="text_fetch_lyrics_from_the_public_lrclib_service_36057a" formatted="false">"从公共 LRCLIB 服务获取歌词"</string>
+    <string name="text_fft_resolution_839073" formatted="false">"FFT 分辨率"</string>
+    <string name="text_file_exceeds_the_supported_kib_limit_120a5e">"文件超过支持的 %1$s KiB 上限。"</string>
+    <string name="text_filled_wave_5eaa91" formatted="false">"填充波形"</string>
+    <string name="text_filter_4a5de1">"滤波器：%1$s"</string>
+    <string name="text_filter_change_93d9b2" formatted="false">"滤波器变化"</string>
+    <string name="text_filter_frequency_9f283c" formatted="false">"滤波器频率"</string>
+    <string name="text_filter_q_9280eb" formatted="false">"滤波器 Q 值"</string>
+    <string name="text_find_any_artist_album_song_or_playlist_9fcb23" formatted="false">"查找任意艺人、专辑、歌曲或播放列表"</string>
+    <string name="text_find_duplicates_586f31" formatted="false">"查找重复项"</string>
+    <string name="text_fingerprint_ready_chars_add_an_acoustid_api_key_to_fetch_matches_1b57d9">"指纹已就绪（%1$s 个字符）。添加 AcoustID API 密钥以获取匹配结果。"</string>
+    <string name="text_finish_linking_54297c" formatted="false">"完成关联"</string>
+    <string name="text_finish_signing_in_and_wait_for_your_youtube_music_library_then_tr_c7f0dd" formatted="false">"请完成登录并等待 YouTube Music 音乐库加载，然后重试。"</string>
+    <string name="text_fire_the_wake_to_music_alarm_at_the_precise_time_bbac52" formatted="false">"在精确时间触发音乐闹钟"</string>
+    <string name="text_first_match_3faa83">"首个匹配：%1$s"</string>
+    <string name="text_first_order_shaping_uses_tpdf_below_44_1_khz_459cb0" formatted="false">"一阶整形。低于 44.1 kHz 时使用 TPDF。"</string>
+    <string name="text_fit_correction_7446db" formatted="false">"拟合校正"</string>
+    <string name="text_fit_details_generated_filters_e9ff9a" formatted="false">"拟合详情与生成的滤波器"</string>
+    <string name="text_fit_limits_ec1134" formatted="false">"拟合限制"</string>
+    <string name="text_fitted_eq_3bc5ee" formatted="false">"拟合后的均衡器"</string>
+    <string name="text_fitted_response_boost_db_cut_db_fd80a4">"拟合响应：提升 %1$s dB · 衰减 %2$s dB"</string>
+    <string name="text_fitting_both_channels_independently_needs_a_total_budget_of_at_le_ca7670" formatted="false">"独立拟合两个声道需要总共至少两个频段的预算。"</string>
+    <string name="text_fitting_cancelled_4b8e81" formatted="false">"拟合已取消。"</string>
+    <string name="text_fitting_settings_d58cce" formatted="false">"拟合设置"</string>
+    <string name="text_fixed_rate_4869d0" formatted="false">"固定采样率"</string>
+    <string name="text_flanger_dc4066" formatted="false">"镶边"</string>
+    <string name="text_flat_relative_target_0_db_1f020f" formatted="false">"平直相对目标 · 0 dB"</string>
+    <string name="text_fluid_blob_088ed9" formatted="false">"流体团"</string>
+    <string name="text_folders_19adc4" formatted="false">"文件夹"</string>
+    <string name="text_follow_source_e0e6b1" formatted="false">"跟随音源"</string>
+    <string name="text_follows_your_device_s_light_dark_setting_38c955" formatted="false">"跟随设备的浅色/深色设置。"</string>
+    <string name="text_font_size_83ca9e" formatted="false">"字体大小"</string>
+    <string name="text_forget_03d5d8" formatted="false">"忘记"</string>
+    <string name="text_format_041a5d" formatted="false">"格式"</string>
+    <string name="text_format_flac_mp3_467eba" formatted="false">"格式（flac、mp3…）"</string>
+    <string name="text_frame_rate_a245d8" formatted="false">"帧率"</string>
+    <string name="text_frames_fef602">"帧 %1$s–%2$s"</string>
+    <string name="text_frames_ms_753397">"%1$s 帧 · %2$s ms"</string>
+    <string name="text_freq_f5f7de" formatted="false">"频率"</string>
+    <string name="text_frequency_hz_c2281f" formatted="false">"频率 · Hz"</string>
+    <string name="text_frequency_range_6f7ced" formatted="false">"频率范围"</string>
+    <string name="text_from_your_favourites_d39722" formatted="false">"来自你的收藏"</string>
+    <string name="text_full_scale_samples_2918e5">"满刻度采样：%1$s"</string>
+    <string name="text_full_screen_alarm_a37b1c" formatted="false">"全屏闹钟"</string>
+    <string name="text_gain_2d17e8">"增益 · %1$s"</string>
+    <string name="text_gain_96dd91" formatted="false">"增益"</string>
+    <string name="text_gain_db_455951" formatted="false">"增益 · dB"</string>
+    <string name="text_gain_db_cad396">"增益：%1$s (%2$s dB)"</string>
+    <string name="text_gain_headroom_5903cd" formatted="false">"增益与余量"</string>
+    <string name="text_gain_reduction_692931" formatted="false">"增益衰减量"</string>
+    <string name="text_gapless_playback_439221" formatted="false">"无缝播放"</string>
+    <string name="text_gaps_mark_undefined_values_below_db_eb6309">"缺口表示低于 %1$s dB 的未定义值。"</string>
+    <string name="text_gate_5701b5" formatted="false">"噪声门"</string>
+    <string name="text_gate_expander_de_esser_27c036" formatted="false">"噪声门、扩展器和齿音消除器"</string>
+    <string name="text_generate_again_3efce7" formatted="false">"重新生成"</string>
+    <string name="text_generate_correction_3e0605" formatted="false">"生成校正"</string>
+    <string name="text_generated_correction_saved_b3c6de" formatted="false">"已保存生成的校正"</string>
+    <string name="text_generated_filters_5e5075" formatted="false">"生成的滤波器"</string>
+    <string name="text_generated_result_091d15" formatted="false">"生成结果"</string>
+    <string name="text_generating_correction_b3c463" formatted="false">"正在生成校正…"</string>
+    <string name="text_genre_2aa31f" formatted="false">"流派"</string>
+    <string name="text_gestures_behaviour_9d13b8" formatted="false">"手势与行为"</string>
+    <string name="text_get_the_latest_version_from_github_ffde96" formatted="false">"从 GitHub 获取最新版本。"</string>
+    <string name="text_github_is_busy_try_again_later_83f29b" formatted="false">"GitHub 繁忙。请稍后重试。"</string>
+    <string name="text_github_returned_an_empty_response_06f1d4" formatted="false">"GitHub 返回了空响应。"</string>
+    <string name="text_go_to_album_e2d3b3" formatted="false">"前往专辑"</string>
+    <string name="text_go_to_artist_d8f70c" formatted="false">"前往艺人"</string>
+    <string name="text_good_evening_47f6d5" formatted="false">"晚上好"</string>
+    <string name="text_good_listening_takes_time_eac7f9" formatted="false">"好好聆听需要时间"</string>
+    <string name="text_gradient_36463c" formatted="false">"渐变"</string>
+    <string name="text_gradient_intensity_84a1f5" formatted="false">"渐变强度"</string>
+    <string name="text_grant_c02329" formatted="false">"授予"</string>
+    <string name="text_grant_what_you_use_aurora_works_without_any_of_these_but_each_unl_7a03fb" formatted="false">"只授予你会用到的权限。没有这些权限 Aurora 也能使用，但每一项都会解锁一个功能。"</string>
+    <string name="text_granted_43b11e" formatted="false">"已授予"</string>
+    <string name="text_graphic_and_parametric_eq_including_this_stage_s_wet_dry_and_bypa_5f1367" formatted="false">"图示和参数均衡器，包括此阶段的干湿比和旁通设置。"</string>
+    <string name="text_graphic_eq_3df203" formatted="false">"图示均衡器"</string>
+    <string name="text_green_933bf2" formatted="false">"绿色"</string>
+    <string name="text_grid_columns_b0c94c" formatted="false">"网格列数"</string>
+    <string name="text_group_delay_e59469" formatted="false">"群延迟"</string>
+    <string name="text_group_delay_milliseconds_8fe73b" formatted="false">"群延迟（毫秒）"</string>
+    <string name="text_group_tracks_scanned_2a5f60">"%1$s%2$s 组 • %3$s 首曲目 • 已扫描 %4$s"</string>
+    <string name="text_h_m_4dc25f">"%1$sh %2$sm"</string>
+    <string name="text_haptic_feedback_b0baa9" formatted="false">"触感反馈"</string>
+    <string name="text_hardware_attenuation_bd288e" formatted="false">"硬件衰减"</string>
+    <string name="text_hardware_attenuation_db_a52110" formatted="false">"硬件衰减 (dB)"</string>
+    <string name="text_hardware_attenuation_db_f75679">"硬件衰减：%1$s dB"</string>
+    <string name="text_hardware_settings_changed_442104" formatted="false">"硬件设置已更改"</string>
+    <string name="text_harmonics_17ba48" formatted="false">"谐波"</string>
+    <string name="text_harmonograph_225500" formatted="false">"谐振图"</string>
+    <string name="text_hdmi_output_8346ec" formatted="false">"HDMI 输出"</string>
+    <string name="text_headphone_calibration_6fc5b1" formatted="false">"耳机校准"</string>
+    <string name="text_headphone_calibration_and_local_level_history_3c0581" formatted="false">"耳机校准和本地电平历史"</string>
+    <string name="text_headphone_name_3e45cb" formatted="false">"耳机名称"</string>
+    <string name="text_headphones_453cce" formatted="false">"耳机"</string>
+    <string name="text_headphones_earbuds_speakers_675d43" formatted="false">"耳机、耳塞和扬声器"</string>
+    <string name="text_headphones_ecc393">"耳机：%1$s"</string>
+    <string name="text_headphones_empty_for_output_default_cff188" formatted="false">"耳机（留空则使用输出默认值）"</string>
+    <string name="text_headphones_optional_995b8e" formatted="false">"耳机（可选）"</string>
+    <string name="text_headphones_studio_1f6f07" formatted="false">"耳机 / 录音室"</string>
+    <string name="text_headroom_39deaf" formatted="false">"余量"</string>
+    <string name="text_health_3703cd" formatted="false">"健康"</string>
+    <string name="text_hearing_aid_375267" formatted="false">"助听器"</string>
+    <string name="text_hide_connection_details_64711a" formatted="false">"隐藏连接详情"</string>
+    <string name="text_hide_fit_details_1c2734" formatted="false">"隐藏拟合详情"</string>
+    <string name="text_hide_graph_0a1c33" formatted="false">"隐藏图表"</string>
+    <string name="text_hide_measurement_details_a40be4" formatted="false">"隐藏测量详情"</string>
+    <string name="text_hide_password_e40123" formatted="false">"隐藏密码"</string>
+    <string name="text_hide_playback_size_fd99cc" formatted="false">"隐藏播放大小"</string>
+    <string name="text_hide_saved_accounts_d0e9da" formatted="false">"隐藏已保存的账号"</string>
+    <string name="text_hide_setup_instructions_9a08e8" formatted="false">"隐藏设置说明"</string>
+    <string name="text_hide_stage_meters_c123cc" formatted="false">"隐藏阶段电平表"</string>
+    <string name="text_high_b1a595" formatted="false">"高"</string>
+    <string name="text_high_crossover_ade7d1" formatted="false">"高频分频点"</string>
+    <string name="text_high_cut_609ed9" formatted="false">"高切"</string>
+    <string name="text_high_to_low_tilt_db_1ba5c8" formatted="false">"高频到低频倾斜 · dB"</string>
+    <string name="text_higher_priority_wins_ties_use_list_order_previous_sound_returns_w_6bd32e" formatted="false">"优先级高者优先；相同时按列表顺序。规则不再匹配时恢复之前的声音。"</string>
+    <string name="text_history_90ccd6" formatted="false">"历史记录"</string>
+    <string name="text_hold_3bd328" formatted="false">"保持"</string>
+    <string name="text_home_70f8bb" formatted="false">"首页"</string>
+    <string name="text_home_sections_1f24fb" formatted="false">"首页版块"</string>
+    <string name="text_horizon_eda243" formatted="false">"地平线"</string>
+    <string name="text_hue_7e58a6" formatted="false">"色相"</string>
+    <string name="text_hz_40e093">"%1$s–%2$s Hz"</string>
+    <string name="text_hz_648ee5">"%1$s Hz"</string>
+    <string name="text_hz_97aaf5" formatted="false">"Hz"</string>
+    <string name="text_hz_db_text_rew_d34904" formatted="false">"Hz/dB 文本 · REW"</string>
+    <string name="text_identify_tracks_from_their_audio_51a42b" formatted="false">"根据音频识别曲目"</string>
+    <string name="text_identifying_883ba7" formatted="false">"正在识别…"</string>
+    <string name="text_iems_wireless_buds_d69c4c" formatted="false">"入耳式 / 无线耳塞"</string>
+    <string name="text_if_usb_is_unavailable_7d21fd" formatted="false">"USB 不可用时"</string>
+    <string name="text_ignore_battery_optimization_77313f" formatted="false">"忽略电池优化"</string>
+    <string name="text_image_could_not_be_imported_d64587" formatted="false">"无法导入图片。"</string>
+    <string name="text_image_could_not_be_removed_f91668" formatted="false">"无法移除图片。"</string>
+    <string name="text_imgur_client_id_f5e499" formatted="false">"Imgur 客户端 ID"</string>
+    <string name="text_impedance_ohms_3727d3" formatted="false">"阻抗（欧姆）"</string>
+    <string name="text_import_1219ef">"导入%1$s"</string>
+    <string name="text_import_an_m3u_file_3ae427" formatted="false">"导入 M3U 文件"</string>
+    <string name="text_import_as_new_project_d6935b" formatted="false">"作为新项目导入"</string>
+    <string name="text_import_at_least_one_measurement_to_generate_a_correction_1ea427" formatted="false">"至少导入一次测量才能生成校正。"</string>
+    <string name="text_import_both_measurements_for_an_explicit_linked_average_aab3d2" formatted="false">"导入两次测量以明确使用关联平均值。"</string>
+    <string name="text_import_correction_curve_1f6dae" formatted="false">"导入校正曲线"</string>
+    <string name="text_import_custom_target_6450b5" formatted="false">"导入自定义目标"</string>
+    <string name="text_import_eq_text_337ca7" formatted="false">"导入均衡器文本"</string>
+    <string name="text_import_failed_fbae89" formatted="false">"导入失败"</string>
+    <string name="text_import_file_or_paste_3aaac6" formatted="false">"导入文件或粘贴"</string>
+    <string name="text_import_ief_neutral_or_other_targets_from_their_original_author_1ce32b" formatted="false">"请从原作者处导入 IEF Neutral 或其他目标。"</string>
+    <string name="text_import_parametric_eq_658f13" formatted="false">"导入参数均衡器"</string>
+    <string name="text_import_preset_a72e4d" formatted="false">"导入预设"</string>
+    <string name="text_import_preview_fabb5c" formatted="false">"导入预览"</string>
+    <string name="text_import_project_json_4f2253" formatted="false">"导入项目 JSON"</string>
+    <string name="text_import_sacd_image_dd7548" formatted="false">"导入 SACD 镜像"</string>
+    <string name="text_import_the_left_measurement_to_fit_this_channel_99c0c4" formatted="false">"导入左声道测量以拟合此声道。"</string>
+    <string name="text_import_the_right_measurement_to_fit_this_channel_c6c2d4" formatted="false">"导入右声道测量以拟合此声道。"</string>
+    <string name="text_import_tuning_project_2df594" formatted="false">"导入调校项目？"</string>
+    <string name="text_import_wav_962ac2" formatted="false">"导入 WAV"</string>
+    <string name="text_import_wavelet_correction_2fe17e" formatted="false">"导入 Wavelet 校正"</string>
+    <string name="text_imported_eq_1d62f7" formatted="false">"导入的均衡器"</string>
+    <string name="text_imported_magnitude_269bf4" formatted="false">"导入的幅度"</string>
+    <string name="text_imported_playlist_37a186" formatted="false">"导入的播放列表"</string>
+    <string name="text_imported_presets_stay_inactive_until_applied_cdd01b" formatted="false">"导入的预设在应用前保持未启用状态。"</string>
+    <string name="text_imported_tap_apply_when_you_want_to_use_it_b70105">"已导入 %1$s。想使用时请点按“应用”。"</string>
+    <string name="text_imported_tracks_45fc79">"已导入 %1$s 首曲目。"</string>
+    <string name="text_importing_820599" formatted="false">"正在导入…"</string>
+    <string name="text_importing_correction_05d728" formatted="false">"正在导入校正..."</string>
+    <string name="text_importing_preset_21cb3f" formatted="false">"正在导入预设…"</string>
+    <string name="text_importing_project_5b661a" formatted="false">"正在导入项目…"</string>
+    <string name="text_importing_tracks_3abc1a">"正在导入 %1$s 首曲目…"</string>
+    <string name="text_importing_wav_5811f7" formatted="false">"正在导入 WAV…"</string>
+    <string name="text_impulse_9ca8ac" formatted="false">"脉冲"</string>
+    <string name="text_impulse_library_ff955d" formatted="false">"脉冲库"</string>
+    <string name="text_impulse_responses_b2ac6e" formatted="false">"脉冲响应"</string>
+    <string name="text_impulse_waveform_frames_112fd2">"%1$s 脉冲波形，%2$s 帧"</string>
+    <string name="text_in_ear_monitors_and_sealed_wireless_earbuds_match_the_model_and_a_a24f40" formatted="false">"入耳式监听耳机和密闭式无线耳塞。请匹配型号和降噪模式。"</string>
+    <string name="text_in_progress_choose_date_0239bc" formatted="false">"进行中 · 选择日期"</string>
+    <string name="text_in_user_management_add_your_own_spotify_account_email_2a3bd3" formatted="false">"在 User Management 中添加你自己的 Spotify 账号邮箱。"</string>
+    <string name="text_include_the_album_and_artwork_caption_1d812f" formatted="false">"包含专辑和封面说明"</string>
+    <string name="text_included_in_the_unified_library_0ecc5b" formatted="false">"已包含在统一音乐库中："</string>
+    <string name="text_includes_estimated_time_for_older_plays_647a36" formatted="false">"包含对较早播放记录的估算时长。"</string>
+    <string name="text_independent_left_right_d80711" formatted="false">"左 / 右独立"</string>
+    <string name="text_independent_output_8bb01a" formatted="false">"独立输出"</string>
+    <string name="text_independent_output_off_request_audio_focus_ee8c22" formatted="false">"独立输出已关闭 · 请求音频焦点"</string>
+    <string name="text_independent_output_on_other_apps_can_keep_playing_b84f60" formatted="false">"独立输出已开启 · 其他应用可继续播放"</string>
+    <string name="text_ink_bloom_32d8dc" formatted="false">"墨晕"</string>
+    <string name="text_input_b568d4" formatted="false">"输入"</string>
+    <string name="text_input_gain_39981c">"输入 %1$s 增益"</string>
+    <string name="text_inputs_43db9d">"%1$s 个输入"</string>
+    <string name="text_insert_before_the_rack_s_final_limiter_stage_99ab75" formatted="false">"插入到机架末尾的限制器阶段之前。"</string>
+    <string name="text_inspect_playback_94b689" formatted="false">"检查播放"</string>
+    <string name="text_inspect_the_active_processing_after_applying_a_preset_c9b6f4" formatted="false">"应用预设后检查当前生效的处理"</string>
+    <string name="text_inspect_the_current_playback_path_5a0995" formatted="false">"检查当前播放路径"</string>
+    <string name="text_install_a_compatible_extension_app_then_enable_it_here_c7fadc" formatted="false">"安装兼容的扩展应用，然后在此处启用。"</string>
+    <string name="text_install_update_8a3695" formatted="false">"安装更新"</string>
+    <string name="text_integer_dither_bca696" formatted="false">"整数抖动"</string>
+    <string name="text_integrations_a7881c" formatted="false">"集成"</string>
+    <string name="text_interrupted_403186">"已中断：%1$s"</string>
+    <string name="text_invalid_apk_checksum_7208ec" formatted="false">"APK 校验和无效。"</string>
+    <string name="text_invalid_condition_f757ae" formatted="false">"条件无效。"</string>
+    <string name="text_invalid_rule_c35c4d" formatted="false">"规则无效。"</string>
+    <string name="text_invalid_samples_a16776">" · 无效采样：%1$s"</string>
+    <string name="text_invert_left_2baeba" formatted="false">"反转左声道"</string>
+    <string name="text_invert_right_b4bd7d" formatted="false">"反转右声道"</string>
+    <string name="text_ir_imported_08d0ed" formatted="false">"IR 已导入。"</string>
+    <string name="text_ir_library_46a40d" formatted="false">"IR 库"</string>
+    <string name="text_ir_library_unavailable_ba529f" formatted="false">"IR 库不可用"</string>
+    <string name="text_ir_selected_9c0796" formatted="false">"IR 已选择。"</string>
+    <string name="text_is_available_see_github_for_downloads_b3be50">"%1$s 已发布。请前往 GitHub 下载。"</string>
+    <string name="text_is_available_to_download_f68806">"%1$s 可供下载。"</string>
+    <string name="text_is_not_e82fdb" formatted="false">"不是"</string>
+    <string name="text_isolate_the_singer_or_remove_vocals_neural_separation_runs_on_thi_0c5736" formatted="false">"分离人声或去除人声。神经网络分离在此设备上运行，可能需要几分钟。"</string>
+    <string name="text_items_cabff0">"%1$s 项"</string>
+    <string name="text_jan_efed36" formatted="false">"1月"</string>
+    <string name="text_jump_back_in_1d9181" formatted="false">"继续聆听"</string>
+    <string name="text_k_hz_b3d9ce">"%1$sk Hz"</string>
+    <string name="text_kbps_f89f2e">"%1$s kbps"</string>
+    <string name="text_keep_44_1_48_khz_family_aa509c" formatted="false">"保持 44.1/48 kHz 系列"</string>
+    <string name="text_keep_current_sound_6e3bdc" formatted="false">"保持当前声音"</string>
+    <string name="text_keep_editing_d4d9e3" formatted="false">"继续编辑"</string>
+    <string name="text_keep_manual_settings_after_reconnecting_2f0892" formatted="false">"重新连接后保留手动设置。"</string>
+    <string name="text_keep_playing_similar_tracks_when_the_queue_ends_172967" formatted="false">"队列结束后继续播放相似曲目"</string>
+    <string name="text_keep_scanning_playback_running_in_the_background_2e56ee" formatted="false">"让扫描和播放在后台持续运行"</string>
+    <string name="text_keep_the_settings_while_passing_this_stage_unchanged_4d9857" formatted="false">"保留设置，同时让音频原样通过此阶段"</string>
+    <string name="text_keep_your_playlists_and_likes_close_explore_recommendations_along_fc1542" formatted="false">"让你的播放列表和喜欢触手可及。在本地和服务器音乐库旁浏览推荐内容。"</string>
+    <string name="text_key_saved_163134" formatted="false">"密钥已保存"</string>
+    <string name="text_khz_32b265">"%1$s kHz · %2$s"</string>
+    <string name="text_khz_368e33">"%1$s · %2$s kHz"</string>
+    <string name="text_khz_dd177d">"%1$s kHz"</string>
+    <string name="text_knee_116ee8" formatted="false">"拐点"</string>
+    <string name="text_l_08eea2">"L %1$s%%"</string>
+    <string name="text_l_1f_r_1f_ms_00e48f" formatted="false">"L %.1f · R %.1f ms"</string>
+    <string name="text_l_r_db_31102b">"L %1$s · R %2$s · ±%3$s dB"</string>
+    <string name="text_last_played_7201a8" formatted="false">"上次播放"</string>
+    <string name="text_last_played_days_ago_8e3e3b" formatted="false">"上次播放（几天前）"</string>
+    <string name="text_last_stage_58b1e2" formatted="false">"最后一个阶段"</string>
+    <string name="text_latest_100_ms_sample_windows_332ea8" formatted="false">"最近的 100 ms 采样窗口"</string>
+    <string name="text_latest_recap_a17cde">"最新 · %1$s回顾"</string>
+    <string name="text_latest_release_on_github_a3fe9b">"GitHub 上的最新版本：%1$s"</string>
+    <string name="text_layer_from_start_25e830" formatted="false">"从开头叠加"</string>
+    <string name="text_layout_972ad8" formatted="false">"布局"</string>
+    <string name="text_leave_without_saving_634bae" formatted="false">"不保存并离开"</string>
+    <string name="text_led_by_ba943b">"以 %1$s 为首"</string>
+    <string name="text_led_ladder_dc67bb" formatted="false">"LED 阶梯"</string>
+    <string name="text_left_8ae1c3" formatted="false">"左"</string>
+    <string name="text_left_channel_correction_210202" formatted="false">"左声道校正。"</string>
+    <string name="text_left_channel_only_right_passes_unchanged_681627" formatted="false">"仅左声道 · 右声道原样通过"</string>
+    <string name="text_left_delay_c54844" formatted="false">"左声道延迟"</string>
+    <string name="text_left_delay_ms_1f565b" formatted="false">"左声道延迟 - ms"</string>
+    <string name="text_left_left_6c2130" formatted="false">"左 → 左"</string>
+    <string name="text_left_measurement_4f65e1" formatted="false">"左声道测量"</string>
+    <string name="text_left_only_6241b8" formatted="false">"仅左声道"</string>
+    <string name="text_left_right_03b2d1" formatted="false">"左 → 右"</string>
+    <string name="text_left_right_points_a4e1b9">"左 %1$s · 右 %2$s 个点 · %3$s"</string>
+    <string name="text_left_trim_9ad513" formatted="false">"左声道微调"</string>
+    <string name="text_left_trim_db_27818d" formatted="false">"左声道微调 - dB"</string>
+    <string name="text_legacy_dsp_block_cfa47f" formatted="false">"旧版 DSP 模块"</string>
+    <string name="text_legacy_dsp_settings_9a91d5" formatted="false">"旧版 DSP 设置"</string>
+    <string name="text_less_than_6bb2aa" formatted="false">"小于"</string>
+    <string name="text_level_matched_a_b_and_blind_abx_611108" formatted="false">"电平匹配的 A/B 和盲听 ABX"</string>
+    <string name="text_level_normalization_31c168" formatted="false">"电平归一化"</string>
+    <string name="text_library_accounts_e097be" formatted="false">"音乐库与账号"</string>
+    <string name="text_library_analysis_discovery_211d17" formatted="false">"音乐库分析与发现"</string>
+    <string name="text_library_b8100f" formatted="false">"音乐库"</string>
+    <string name="text_library_scans_sonic_radio_and_auto_dj_dbb04a" formatted="false">"音乐库扫描、Sonic 电台和自动 DJ"</string>
+    <string name="text_library_selected_8b0aae" formatted="false">"已选择音乐库。"</string>
+    <string name="text_library_sources_101221" formatted="false">"音乐库与来源"</string>
+    <string name="text_license_1ba7bb">"许可：%1$s"</string>
+    <string name="text_light_a36ef8" formatted="false">"浅色"</string>
+    <string name="text_light_flowing_luminous_6acb9b" formatted="false">"轻盈、流动、明亮"</string>
+    <string name="text_like_c7e02c" formatted="false">"喜欢"</string>
+    <string name="text_liked_8c794f" formatted="false">"已喜欢"</string>
+    <string name="text_liked_songs_58c3a9" formatted="false">"喜欢的歌曲"</string>
+    <string name="text_limit_0_all_451057" formatted="false">"上限（0 = 全部）"</string>
+    <string name="text_limit_treble_correction_280b63" formatted="false">"限制高音校正"</string>
+    <string name="text_limiter_20fee6" formatted="false">"限制器"</string>
+    <string name="text_limiter_ceiling_b7d8bd" formatted="false">"限制器上限"</string>
+    <string name="text_limits_transition_over_one_octave_4ebf05" formatted="false">"在一个倍频程内限制过渡。"</string>
+    <string name="text_line_ea9676" formatted="false">"线条"</string>
+    <string name="text_linear_267343" formatted="false">"线性"</string>
+    <string name="text_linear_af502f" formatted="false">"线性"</string>
+    <string name="text_linear_gains_a_b_0f2e4c">"线性增益：A=%1$s，B=%2$s"</string>
+    <string name="text_link_d05170" formatted="false">"关联"</string>
+    <string name="text_linked_average_both_channels_6de047" formatted="false">"关联平均值 → 两个声道"</string>
+    <string name="text_linked_average_of_left_right_80c6d6" formatted="false">"左 / 右的关联平均值"</string>
+    <string name="text_linked_fit_limits_43f930" formatted="false">"关联的拟合限制"</string>
+    <string name="text_liquid_chrome_af5cd1" formatted="false">"液态铬"</string>
+    <string name="text_liquid_glass_51a330" formatted="false">"液态玻璃"</string>
+    <string name="text_listen_to_detector_ea443f" formatted="false">"监听检测器"</string>
+    <string name="text_listen_today_and_come_back_tomorrow_for_your_first_recap_9a9aec" formatted="false">"今天听听歌，明天回来查看你的第一份回顾。"</string>
+    <string name="text_listener_37ea46" formatted="false">"听众"</string>
+    <string name="text_listening_clock_ec2eb4" formatted="false">"聆听时钟"</string>
+    <string name="text_listening_history_bd9991" formatted="false">"聆听历史"</string>
+    <string name="text_listening_levels_c1db13" formatted="false">"聆听电平"</string>
+    <string name="text_listening_sharing_ecf6a1" formatted="false">"聆听与分享"</string>
+    <string name="text_listening_stats_a760b2" formatted="false">"聆听统计"</string>
+    <string name="text_listening_to_aurora_24a92c" formatted="false">"正在收听 Aurora"</string>
+    <string name="text_listening_to_midnight_drive_35328b" formatted="false">"正在收听 Midnight Drive"</string>
+    <string name="text_live_65c821" formatted="false">"直播"</string>
+    <string name="text_live_6990f0" formatted="false">"直播"</string>
+    <string name="text_live_preview_d44c24" formatted="false">"  实时预览"</string>
+    <string name="text_live_squig_link_308ef5" formatted="false">"squig.link 实时数据"</string>
+    <string name="text_live_stations_f40694" formatted="false">"直播电台"</string>
+    <string name="text_load_audio_preset_1be2c8" formatted="false">"加载音频预设"</string>
+    <string name="text_load_audio_preset_24bd13" formatted="false">"加载音频预设？"</string>
+    <string name="text_load_ddcb77" formatted="false">"加载"</string>
+    <string name="text_load_filters_and_preamp_ae1cab" formatted="false">"加载滤波器和前置放大"</string>
+    <string name="text_loading_complete_tracklist_d6abc4" formatted="false">"正在加载完整曲目列表"</string>
+    <string name="text_loading_ir_library_0a9e58" formatted="false">"正在加载 IR 库…"</string>
+    <string name="text_loading_presets_4c510b" formatted="false">"正在加载预设…"</string>
+    <string name="text_loading_project_d3b8f4" formatted="false">"正在加载项目…"</string>
+    <string name="text_loading_saved_projects_b9d89d" formatted="false">"正在加载已保存的项目…"</string>
+    <string name="text_loading_the_current_rack_24a39a" formatted="false">"正在加载当前机架…"</string>
+    <string name="text_loading_your_rack_cb2909" formatted="false">"正在加载你的机架…"</string>
+    <string name="text_local_9be340" formatted="false">"本地"</string>
+    <string name="text_local_dc99d5" formatted="false">"本地"</string>
+    <string name="text_local_file_576d5a" formatted="false">"本地文件"</string>
+    <string name="text_local_files_f4a889" formatted="false">"本地文件"</string>
+    <string name="text_local_history_8d1ed5" formatted="false">"本地历史"</string>
+    <string name="text_local_library_1c67cd" formatted="false">"本地音乐库"</string>
+    <string name="text_local_library_a4b3e0" formatted="false">"本地音乐库"</string>
+    <string name="text_local_mode_doesn_t_use_this_form_78c2dc" formatted="false">"本地模式不使用此表单"</string>
+    <string name="text_local_network_0a1fc0" formatted="false">"本地网络"</string>
+    <string name="text_local_playback_f3fe4f" formatted="false">"本地播放"</string>
+    <string name="text_log_in_to_discord_below_aurora_reads_your_token_locally_to_set_ri_8ae4f4" formatted="false">"请在下方登录 Discord。Aurora 会在本地读取你的令牌以设置 Rich Presence（只会发送给 Discord）。如果页面一直空白，请改为粘贴令牌。"</string>
+    <string name="text_log_out_6e78c9" formatted="false">"退出登录"</string>
+    <string name="text_login_rejected_3f73ee" formatted="false">"登录被拒绝"</string>
+    <string name="text_longest_day_4ebbeb">"最长：%1$s%2$s 天"</string>
+    <string name="text_look_up_biographies_and_images_9931d4" formatted="false">"查找简介和图片"</string>
+    <string name="text_looking_for_the_latest_release_on_github_d9c6e9" formatted="false">"正在 GitHub 上查找最新版本…"</string>
+    <string name="text_loop_mix_721c7e">"循环混音 %1$s"</string>
+    <string name="text_lossless_32e74a" formatted="false">"无损"</string>
+    <string name="text_lossless_f3b36f" formatted="false">"无损"</string>
+    <string name="text_loudness_59e6cf" formatted="false">"响度"</string>
+    <string name="text_low_a12494" formatted="false">"低"</string>
+    <string name="text_low_crossover_cbf2b7" formatted="false">"低频分频点"</string>
+    <string name="text_low_cut_67dd29" formatted="false">"低切"</string>
+    <string name="text_lrclib_lyrics_d22392" formatted="false">"LRCLIB 歌词"</string>
+    <string name="text_lyrics_8670cb" formatted="false">"歌词"</string>
+    <string name="text_lyrics_metadata_eb9a3c" formatted="false">"歌词与元数据"</string>
+    <string name="text_magenta_ff6912" formatted="false">"洋红"</string>
+    <string name="text_magnitude_correction_only_phase_is_not_fitted_885ea8" formatted="false">"仅校正幅度。不拟合相位。"</string>
+    <string name="text_magnitude_curves_selected_95d402">"幅度曲线。已选择 %1$s。%2$s"</string>
+    <string name="text_magnitude_db_573817" formatted="false">"幅度 (dB)"</string>
+    <string name="text_magnitude_f2c18d" formatted="false">"幅度"</string>
+    <string name="text_magnitude_phase_and_group_delay_for_this_stage_b32404" formatted="false">"此阶段的幅度、相位和群延迟"</string>
+    <string name="text_make_room_for_your_own_mix_7600ed" formatted="false">"为你自己的混音腾出空间"</string>
+    <string name="text_make_up_gain_5dc858" formatted="false">"补偿增益"</string>
+    <string name="text_make_yourself_at_home_3ea2e2" formatted="false">"当成自己家就好。"</string>
+    <string name="text_makeup_21c25b" formatted="false">"补偿"</string>
+    <string name="text_makeup_ae8f55">"补偿 %1$s"</string>
+    <string name="text_makeup_gain_bced0d" formatted="false">"补偿增益"</string>
+    <string name="text_manage_bf58d1" formatted="false">"管理"</string>
+    <string name="text_manual_alignment_no_automatic_phase_correction_f49cec" formatted="false">"手动对齐。不进行自动相位校正。"</string>
+    <string name="text_manual_presets_pause_automatic_switching_76e93a" formatted="false">"手动选择预设会暂停自动切换。"</string>
+    <string name="text_mark_all_read_8958e2" formatted="false">"全部标为已读"</string>
+    <string name="text_master_controls_1c46ae" formatted="false">"主控"</string>
+    <string name="text_master_level_2293c4" formatted="false">"主电平"</string>
+    <string name="text_match_033520" formatted="false">"匹配"</string>
+    <string name="text_match_close_tempos_up_to_6_8b3c61" formatted="false">"匹配相近的速度（最多 6%）"</string>
+    <string name="text_match_mean_200_2000_hz_b8838a" formatted="false">"匹配 200–2000 Hz 均值"</string>
+    <string name="text_match_mean_levels_over_200_2000_hz_31a6ab" formatted="false">"匹配 200–2000 Hz 范围内的平均电平"</string>
+    <string name="text_match_metadata_f9f1d7" formatted="false">"匹配元数据"</string>
+    <string name="text_match_pitch_to_speed_ccd7ca" formatted="false">"音高随速度变化"</string>
+    <string name="text_match_previous_track_s_tempo_70bf60" formatted="false">"匹配上一首曲目的速度"</string>
+    <string name="text_matched_of_tracks_09b8b1">"%2$s 首曲目中已匹配 %1$s 首"</string>
+    <string name="text_matches_current_playback_124000" formatted="false">"与当前播放匹配。"</string>
+    <string name="text_matches_ee2dbd" formatted="false">"匹配项"</string>
+    <string name="text_matching_stereo_rms_over_the_same_selection_within_0_1_db_b1073d" formatted="false">"匹配方式：同一选段的立体声 RMS，误差在 0.1 dB 以内"</string>
+    <string name="text_material_you_needs_android_12_falling_back_to_the_preset_accent_8c9a77" formatted="false">"Material You 需要 Android 12 及以上版本。将改用预设强调色。"</string>
+    <string name="text_matrix_polarity_and_mono_bass_f23368" formatted="false">"矩阵、极性和单声道低音"</string>
+    <string name="text_maximum_a8df2f" formatted="false">"最大值"</string>
+    <string name="text_maximum_boost_db_015774" formatted="false">"最大提升 · dB"</string>
+    <string name="text_maximum_boost_db_520502">"%1$s最大提升 · dB"</string>
+    <string name="text_maximum_change_cd4bd5" formatted="false">"最大变化量"</string>
+    <string name="text_maximum_cut_db_38d770" formatted="false">"最大衰减 · dB"</string>
+    <string name="text_maximum_cut_db_eaff3a">"%1$s最大衰减 · dB"</string>
+    <string name="text_maximum_fitting_frequency_hz_8350af" formatted="false">"最大拟合频率 · Hz"</string>
+    <string name="text_maximum_hz_77f953" formatted="false">"最大 Hz"</string>
+    <string name="text_maximum_q_b3dc54">"%1$s最大 Q 值"</string>
+    <string name="text_maximum_q_b595c7" formatted="false">"最大 Q 值"</string>
+    <string name="text_maximum_treble_boost_db_bfd6e9" formatted="false">"高音最大提升 · dB"</string>
+    <string name="text_maximum_treble_cut_db_384290" formatted="false">"高音最大衰减 · dB"</string>
+    <string name="text_maximum_treble_q_659c12" formatted="false">"高音最大 Q 值"</string>
+    <string name="text_may_re_ask_on_reconnect_aurora_re_requests_automatically_when_bit_23facf" formatted="false">"重新连接时可能会再次询问；开启 bit-perfect 时，Aurora 会自动重新请求。"</string>
+    <string name="text_me_b4d362" formatted="false">"我"</string>
+    <string name="text_measure_loudness_ebu_r128_to_level_playback_volume_30f01c" formatted="false">"测量响度 (EBU R128) 以平衡播放音量"</string>
+    <string name="text_measured_955037" formatted="false">"实测"</string>
+    <string name="text_measured_android_volume_points_e77c92" formatted="false">"实测的 Android 音量点"</string>
+    <string name="text_measured_attenuation_after_the_dac_gain_use_0_for_a_verified_fixe_5ff94a" formatted="false">"DAC 增益之后的实测衰减。对于已验证的固定输出，请填 0。"</string>
+    <string name="text_measured_headphone_spatial_filters_use_true_stereo_wav_impulses_f68789" formatted="false">"实测的耳机空间滤波器使用真立体声 WAV 脉冲。"</string>
+    <string name="text_measured_presets_for_wired_and_bluetooth_headphones_earbuds_and_s_dbd541" formatted="false">"适用于有线和蓝牙耳机、耳塞及扬声器的实测预设。"</string>
+    <string name="text_measured_rms_a_b_difference_db_afeb51">"实测 RMS：A=%1$s，B=%2$s；差值=%3$s dB"</string>
+    <string name="text_measured_speaker_correction_from_spinorama_including_bluetooth_mo_beaf02" formatted="false">"基于 Spinorama 的实测扬声器校正，包括蓝牙型号。摆位和房间声学仍会影响结果。"</string>
+    <string name="text_measured_target_level_offsets_640c07">"实测 / 目标电平偏移：%1$s / %2$s"</string>
+    <string name="text_measurement_details_edeee9" formatted="false">"测量详情"</string>
+    <string name="text_measurement_name_18f280" formatted="false">"测量名称"</string>
+    <string name="text_measurement_text_must_be_512_kib_or_smaller_36d9de" formatted="false">"测量文本不得超过 512 KiB。"</string>
+    <string name="text_measurement_tuning_815052" formatted="false">"测量调校"</string>
+    <string name="text_measurements_target_b6da10" formatted="false">"测量与目标"</string>
+    <string name="text_measurements_targets_and_saved_correction_projects_d6f94e" formatted="false">"测量、目标和已保存的校正项目"</string>
+    <string name="text_merge_all_sources_004b13" formatted="false">"合并所有来源"</string>
+    <string name="text_metadata_lookups_af4cbd" formatted="false">"元数据查询"</string>
+    <string name="text_metadata_updated_38fc70" formatted="false">"元数据已更新"</string>
+    <string name="text_mid_9a6af7" formatted="false">"中频"</string>
+    <string name="text_min_5c8f84">"%1$s 分钟"</string>
+    <string name="text_min_listened_plays_e46cc3">"已听 %1$s 分钟 · 播放 %2$s 次"</string>
+    <string name="text_min_plays_a8ae99">"%1$s 分钟 · 播放 %2$s 次"</string>
+    <string name="text_minimum_fitting_frequency_hz_357d9e" formatted="false">"最小拟合频率 · Hz"</string>
+    <string name="text_minimum_hz_c8ccab" formatted="false">"最小 Hz"</string>
+    <string name="text_minimum_phase_500a84" formatted="false">"最小相位"</string>
+    <string name="text_minimum_q_270623">"%1$s最小 Q 值"</string>
+    <string name="text_minimum_q_e71a56" formatted="false">"最小 Q 值"</string>
+    <string name="text_miniplayer_4adff2" formatted="false">"迷你播放器"</string>
+    <string name="text_minutes_092f99" formatted="false">"分钟"</string>
+    <string name="text_minutes_listened_c66ef9" formatted="false">"已听分钟数"</string>
+    <string name="text_minutes_of_your_listening_time_3f3db1">"%1$s 分钟 · 占你聆听时间的 %2$s%%"</string>
+    <string name="text_minutes_overall_than_the_previous_6ad2de">"总计比上一个%3$s%2$s %1$s 分钟。"</string>
+    <string name="text_mirror_74adc5" formatted="false">"镜像"</string>
+    <string name="text_mirror_bars_b4cfbc" formatted="false">"镜像柱条"</string>
+    <string name="text_missing_impulse_7f47dc" formatted="false">"缺少脉冲"</string>
+    <string name="text_mix_ba4dbe">"%1$s 混音"</string>
+    <string name="text_mix_eq_and_pitch_controls_use_processed_audio_through_your_select_253b70" formatted="false">"混音的均衡器和音高控制使用经过处理的音频，并通过你选择的 Android 输出播放。"</string>
+    <string name="text_mix_fd7391" formatted="false">"混音"</string>
+    <string name="text_mix_name_dff04e" formatted="false">"混音名称"</string>
+    <string name="text_mix_playhead_dc2dd4" formatted="false">"混音播放头"</string>
+    <string name="text_mix_ready_tracks_use_gentle_fades_retry_auto_mix_to_analyze_them_b474b2">"混音已就绪；%1$s 首曲目使用柔和淡变。重试自动混音以分析它们。"</string>
+    <string name="text_mix_saved_afa087" formatted="false">"混音已保存"</string>
+    <string name="text_mix_studio_668363" formatted="false">"混音工作室"</string>
+    <string name="text_mix_studio_cdc446" formatted="false">"混音工作室"</string>
+    <string name="text_mix_tracklist_a8a9ff" formatted="false">"混音曲目列表"</string>
+    <string name="text_mode_a7b93d" formatted="false">"模式"</string>
+    <string name="text_modulation_f3c1a2" formatted="false">"调制"</string>
+    <string name="text_mono_audio_b977b4" formatted="false">"单声道音频"</string>
+    <string name="text_mono_audio_channel_processing_and_tone_6a5bfe" formatted="false">"单声道音频、声道处理和音色"</string>
+    <string name="text_mono_bass_b1ddea" formatted="false">"单声道低音"</string>
+    <string name="text_mono_bass_cutoff_605472" formatted="false">"单声道低音截止频率"</string>
+    <string name="text_mono_c5c553" formatted="false">"单声道"</string>
+    <string name="text_monthly_d31edb" formatted="false">"每月"</string>
+    <string name="text_more_4bab2d" formatted="false">"更多"</string>
+    <string name="text_more_music_same_aurora_3ae62e" formatted="false">"更多音乐。同一个 Aurora。"</string>
+    <string name="text_more_recommendations_5fd054" formatted="false">"更多推荐"</string>
+    <string name="text_more_than_f9c07b" formatted="false">"大于"</string>
+    <string name="text_most_minutes_0d8b47" formatted="false">"分钟数最多"</string>
+    <string name="text_most_played_14202e" formatted="false">"播放最多"</string>
+    <string name="text_motion_quality_364852" formatted="false">"动效与画质"</string>
+    <string name="text_move_down_260ff8" formatted="false">"下移"</string>
+    <string name="text_move_down_533269">"下移 %1$s"</string>
+    <string name="text_move_up_a55bd8">"上移 %1$s"</string>
+    <string name="text_move_up_b4f57c" formatted="false">"上移"</string>
+    <string name="text_ms_1191ce">"%1$s ms"</string>
+    <string name="text_ms_delay_3db8d0">"延迟 %1$s ms"</string>
+    <string name="text_multiband_compressor_07d886" formatted="false">"多段压缩器"</string>
+    <string name="text_music_131260" formatted="false">"音乐"</string>
+    <string name="text_music_on_this_device_21b6e9" formatted="false">"此设备上的音乐"</string>
+    <string name="text_music_source_cb3c75" formatted="false">"音乐来源"</string>
+    <string name="text_musicbrainz_and_wikipedia_biographies_73227e" formatted="false">"MusicBrainz 和维基百科简介"</string>
+    <string name="text_mute_0f0973" formatted="false">"静音"</string>
+    <string name="text_muted_b6a778" formatted="false">" · 已静音"</string>
+    <string name="text_name_709a23" formatted="false">"名称"</string>
+    <string name="text_name_for_new_stages_1e46f9" formatted="false">"新阶段的名称"</string>
+    <string name="text_name_optional_9c9f03" formatted="false">"名称（可选）"</string>
+    <string name="text_name_your_mix_039c07" formatted="false">"为你的混音命名"</string>
+    <string name="text_native_4fc6e7" formatted="false">"原生"</string>
+    <string name="text_nebula_drift_4aee62" formatted="false">"星云漂移"</string>
+    <string name="text_neon_line_af89a0" formatted="false">"霓虹线"</string>
+    <string name="text_network_audio_3f82b9" formatted="false">"网络音频"</string>
+    <string name="text_network_playback_5d5a8a" formatted="false">"网络播放"</string>
+    <string name="text_new_6403f2" formatted="false">"新建"</string>
+    <string name="text_new_code_6499c7" formatted="false">"新代码"</string>
+    <string name="text_new_cover_staged_ac4238" formatted="false">"新封面已暂存"</string>
+    <string name="text_new_mix_48ef4a" formatted="false">"新建混音"</string>
+    <string name="text_new_parametric_band_0bc727" formatted="false">"新建参数频段"</string>
+    <string name="text_new_playlist_a5474a" formatted="false">"新建播放列表"</string>
+    <string name="text_new_ready_for_you_40a13e">"%1$s 个新%2$s已为你准备好。"</string>
+    <string name="text_new_release_f0ec22" formatted="false">"新发行"</string>
+    <string name="text_new_release_hero_c354b3" formatted="false">"新发行精选"</string>
+    <string name="text_new_releases_3cdd02" formatted="false">"新发行"</string>
+    <string name="text_new_releases_recommendations_02976f" formatted="false">"新发行与推荐"</string>
+    <string name="text_new_smart_playlist_ee2a2d" formatted="false">"新建智能播放列表"</string>
+    <string name="text_new_tuning_project_97a69f" formatted="false">"新建调校项目"</string>
+    <string name="text_news_34c808" formatted="false">"新闻"</string>
+    <string name="text_next_15c20d">"下一首：%1$s"</string>
+    <string name="text_next_bc9819" formatted="false">"下一首"</string>
+    <string name="text_no_acoustid_match_a72740" formatted="false">"AcoustID 无匹配"</string>
+    <string name="text_no_active_audio_3c1032">"%1$s · 无活动音频"</string>
+    <string name="text_no_active_streak_7f1a27" formatted="false">"当前没有连续记录"</string>
+    <string name="text_no_browser_available_to_open_github_7ec2eb" formatted="false">"没有可用于打开 GitHub 的浏览器。"</string>
+    <string name="text_no_correction_needed_within_these_limits_0fdcba" formatted="false">"在这些限制范围内无需校正。"</string>
+    <string name="text_no_document_picker_is_available_a8fedf" formatted="false">"没有可用的文档选择器。"</string>
+    <string name="text_no_downloads_yet_9647c1" formatted="false">"还没有下载内容"</string>
+    <string name="text_no_duplicates_found_across_tracks_8af6bb">"在 %1$s 首曲目中未发现重复项"</string>
+    <string name="text_no_episodes_38e050" formatted="false">"没有单集"</string>
+    <string name="text_no_extensions_installed_83afbc" formatted="false">"未安装扩展。"</string>
+    <string name="text_no_file_picker_is_available_enable_a_files_app_and_try_again_3fdf0a" formatted="false">"没有可用的文件选择器。请启用文件应用后重试。"</string>
+    <string name="text_no_file_picker_is_available_fb12a4" formatted="false">"没有可用的文件选择器。"</string>
+    <string name="text_no_generated_correction_1d3dac" formatted="false">"没有生成的校正"</string>
+    <string name="text_no_impulse_response_selected_a643d4" formatted="false">"未选择脉冲响应"</string>
+    <string name="text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2" formatted="false">"此期间没有聆听记录。请选择其他日期或播放一些音乐。"</string>
+    <string name="text_no_lyrics_found_75127a" formatted="false">"未找到歌词"</string>
+    <string name="text_no_match_3518df" formatted="false">"无匹配"</string>
+    <string name="text_no_matches_found_a68d28" formatted="false">"未找到匹配项"</string>
+    <string name="text_no_matching_rule_6426f8" formatted="false">"没有匹配的规则"</string>
+    <string name="text_no_measured_presets_found_try_another_model_name_or_device_catego_06b64c" formatted="false">"未找到实测预设。请尝试其他型号名称或设备类别。"</string>
+    <string name="text_no_measurement_imported_1dca9a" formatted="false">"未导入测量数据"</string>
+    <string name="text_no_output_8ffd4d" formatted="false">"无输出"</string>
+    <string name="text_no_public_release_is_available_yet_54a115" formatted="false">"目前还没有公开发布的版本。"</string>
+    <string name="text_no_receivers_found_ec71c6" formatted="false">"未找到接收器。"</string>
+    <string name="text_no_replacement_rules_b1f9fb" formatted="false">"没有替换规则"</string>
+    <string name="text_no_results_b993b0" formatted="false">"无结果"</string>
+    <string name="text_no_saved_impulse_responses_5d3fa1" formatted="false">"没有已保存的脉冲响应。"</string>
+    <string name="text_no_saved_presets_yet_a819ff" formatted="false">"还没有已保存的预设"</string>
+    <string name="text_no_saved_projects_7102b1" formatted="false">"没有已保存的项目。"</string>
+    <string name="text_no_saved_subchains_27969b" formatted="false">"没有已保存的子链。"</string>
+    <string name="text_no_saved_targets_dd2df6" formatted="false">"没有已保存的目标。"</string>
+    <string name="text_no_shows_found_2f293b" formatted="false">"未找到节目"</string>
+    <string name="text_no_songs_e6bbe2" formatted="false">"没有歌曲"</string>
+    <string name="text_no_songs_found_try_another_search_or_check_your_library_connectio_b6d0ed" formatted="false">"未找到歌曲。请尝试其他搜索或检查音乐库连接。"</string>
+    <string name="text_no_stable_release_available_b2aba2" formatted="false">"没有可用的稳定版本。"</string>
+    <string name="text_no_stations_found_173164" formatted="false">"未找到电台"</string>
+    <string name="text_no_tracks_found_in_that_file_754434" formatted="false">"该文件中未找到曲目"</string>
+    <string name="text_no_usb_dac_connected_446f5b" formatted="false">"未连接 USB DAC"</string>
+    <string name="text_noise_shaped_c7a434" formatted="false">"噪声整形"</string>
+    <string name="text_none_6eef66" formatted="false">"无"</string>
+    <string name="text_normalization_off_3e378d" formatted="false">"归一化已关闭"</string>
+    <string name="text_normalize_peak_to_1_db_06fc92" formatted="false">"将峰值归一化到 −1 dB"</string>
+    <string name="text_normalized_coefficients_a0_1_values_stay_fixed_when_the_sample_ra_d8bac7" formatted="false">"归一化系数；a0 = 1。采样率改变时数值保持不变。"</string>
+    <string name="text_normalized_coefficients_eb7bc6" formatted="false">"归一化系数"</string>
+    <string name="text_not_connected_8b02f3" formatted="false">"未连接"</string>
+    <string name="text_not_enough_analyzed_tracks_run_sonic_analysis_in_settings_007d98" formatted="false">"已分析的曲目不足，请在设置中运行 Sonic 分析"</string>
+    <string name="text_not_set_93039e" formatted="false">"未设置"</string>
+    <string name="text_not_supported_on_this_device_a07536" formatted="false">"此设备不支持"</string>
+    <string name="text_nothing_here_yet_e89225" formatted="false">"这里还没有内容"</string>
+    <string name="text_nothing_in_this_folder_d2a003" formatted="false">"此文件夹中没有内容"</string>
+    <string name="text_nothing_matched_f74d36">"没有与“%1$s”匹配的内容"</string>
+    <string name="text_nothing_played_yet_9503da" formatted="false">"还没有播放过任何内容"</string>
+    <string name="text_nothing_playing_13ae37" formatted="false">"当前没有播放"</string>
+    <string name="text_nothing_to_export_7faf33" formatted="false">"没有可导出的内容"</string>
+    <string name="text_nothing_to_save_a5dbc6" formatted="false">"没有可保存的内容"</string>
+    <string name="text_nothing_up_next_295357" formatted="false">"接下来没有内容"</string>
+    <string name="text_notifications_753a22" formatted="false">"通知"</string>
+    <string name="text_notifications_background_alarms_and_dac_eac2dd" formatted="false">"通知、后台、闹钟和 DAC"</string>
+    <string name="text_now_playing_586fa7" formatted="false">"正在播放"</string>
+    <string name="text_now_playing_controls_downloads_alarms_1b631c" formatted="false">"正在播放控件、下载和闹钟"</string>
+    <string name="text_number_b1c1ba" formatted="false">"数字…"</string>
+    <string name="text_off_e3de5a" formatted="false">"关闭"</string>
+    <string name="text_off_leaves_replaygain_disabled_56fb0f" formatted="false">"“关闭”会停用 ReplayGain。"</string>
+    <string name="text_offline_e01fa7" formatted="false">"离线"</string>
+    <string name="text_offline_mode_66cf31" formatted="false">"离线模式"</string>
+    <string name="text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0" formatted="false">"较早的播放记录使用根据曲目时长估算的聆听时间。"</string>
+    <string name="text_on_cellular_188845" formatted="false">"使用移动网络时"</string>
+    <string name="text_on_device_file_7d2f79" formatted="false">"设备上的文件"</string>
+    <string name="text_on_device_music_bac4c1" formatted="false">"设备上的音乐"</string>
+    <string name="text_on_e0049a" formatted="false">"开启"</string>
+    <string name="text_on_this_device_a7f962" formatted="false">"在此设备上"</string>
+    <string name="text_on_wi_fi_bb6180" formatted="false">"使用 Wi-Fi 时"</string>
+    <string name="text_on_your_device_streams_are_read_from_your_server_without_adding_d_4dfc77" formatted="false">"流媒体会直接从你的服务器读取，不会增加下载内容。"</string>
+    <string name="text_one_gain_for_all_paths_f4bd76" formatted="false">"所有路径使用同一增益。"</string>
+    <string name="text_one_index_db_pair_per_line_0_relative_to_full_output_unlisted_ste_64e7c8">"每行一组“索引=dB”（0–%1$s），相对于满输出。未列出的级别保持不可用。"</string>
+    <string name="text_one_sided_chance_probability_56287c">"单侧随机概率：%1$s"</string>
+    <string name="text_only_an_exact_artist_match_is_replaced_capitalization_does_not_ma_0fa2cb" formatted="false">"只替换完全匹配的艺人名称。不区分大小写。"</string>
+    <string name="text_only_show_play_downloaded_music_c36019" formatted="false">"仅显示和播放已下载的音乐"</string>
+    <string name="text_open_a_project_with_measurements_first_5f1e78" formatted="false">"请先打开一个包含测量数据的项目。"</string>
+    <string name="text_open_eq_text_file_33f801" formatted="false">"打开均衡器文本文件"</string>
+    <string name="text_open_equalizer_apo_text_autoeq_peq_json_or_aurora_eq_json_9a6150" formatted="false">"打开 Equalizer APO 文本、AutoEq PEQ JSON 或 Aurora EQ JSON。"</string>
+    <string name="text_open_full_processing_presets_8abd2a" formatted="false">"打开完整的处理预设"</string>
+    <string name="text_open_measurement_file_30741a" formatted="false">"打开测量文件"</string>
+    <string name="text_open_mix_studio_9ddf16" formatted="false">"打开混音工作室"</string>
+    <string name="text_open_processing_rack_728e5d" formatted="false">"打开处理机架"</string>
+    <string name="text_open_signal_path_29e042" formatted="false">"打开信号路径"</string>
+    <string name="text_open_spotify_dashboard_7a23e4" formatted="false">"打开 Spotify Dashboard"</string>
+    <string name="text_open_the_spotify_developer_dashboard_and_create_an_app_20577c" formatted="false">"打开 Spotify Developer Dashboard 并创建一个应用。"</string>
+    <string name="text_open_your_recap_fc027d" formatted="false">"打开你的回顾"</string>
+    <string name="text_opens_acoustid_org_in_your_browser_6e6b1f" formatted="false">"在浏览器中打开 acoustid.org"</string>
+    <string name="text_optional_publishes_local_and_private_server_covers_563e93" formatted="false">"可选：发布本地和私有服务器的封面"</string>
+    <string name="text_orb_980143" formatted="false">"光球"</string>
+    <string name="text_original_c0a806" formatted="false">"原始"</string>
+    <string name="text_original_effect_order_949d7d" formatted="false">"原始效果顺序"</string>
+    <string name="text_original_frames_26e777">"原始：%1$s 帧 · %2$s"</string>
+    <string name="text_original_selected_634e39" formatted="false">"已选择原始版本"</string>
+    <string name="text_other_branches_align_automatically_at_each_mix_e6de43" formatted="false">"其他分支会在每次混合时自动对齐。"</string>
+    <string name="text_other_dacs_and_rates_up_to_dsd1024_untested_hardware_support_disc_800807" formatted="false">"其他 DAC 以及最高 DSD1024 的速率。硬件支持未经测试。确认 DSD 模式前请先断开耳机。"</string>
+    <string name="text_other_rack_stages_may_need_extra_headroom_8776c9" formatted="false">"机架中的其他阶段可能需要额外的余量。"</string>
+    <string name="text_output_4bed33" formatted="false">"输出"</string>
+    <string name="text_output_default_f4c103" formatted="false">"输出默认值"</string>
+    <string name="text_output_device_709178" formatted="false">"输出设备"</string>
+    <string name="text_output_device_hi_res_and_usb_modes_58ec99" formatted="false">"输出设备、高解析度和 USB 模式"</string>
+    <string name="text_output_hz_float_pcm_same_route_and_volume_e7768a">"输出：%1$s Hz 浮点 PCM；相同的路由和音量"</string>
+    <string name="text_output_mix_a04a0e" formatted="false">"输出混合"</string>
+    <string name="text_output_mode_ba6e71" formatted="false">"输出模式"</string>
+    <string name="text_output_not_bound_dbaf18" formatted="false">"输出未绑定"</string>
+    <string name="text_output_presets_8523fd" formatted="false">"输出预设"</string>
+    <string name="text_output_rules_unavailable_e638bb" formatted="false">"输出规则不可用。"</string>
+    <string name="text_output_unknown_ef4fdb" formatted="false">"输出未知"</string>
+    <string name="text_over_ear_and_on_ear_headphones_including_studio_and_bluetooth_mod_d79653" formatted="false">"头戴式和贴耳式耳机，包括录音室和蓝牙型号。"</string>
+    <string name="text_overlap_headroom_c1a0a1" formatted="false">"重叠余量"</string>
+    <string name="text_overlay_249450" formatted="false">"叠加"</string>
+    <string name="text_oversampling_75358a" formatted="false">"过采样"</string>
+    <string name="text_overwrites_current_settings_playlists_40eadc" formatted="false">"覆盖当前的设置和播放列表"</string>
+    <string name="text_packet_errors_timeouts_e3e49f">"数据包错误：%1$s · 超时：%2$s"</string>
+    <string name="text_pair_2537f8" formatted="false">"配对"</string>
+    <string name="text_pair_an_aurora_player_de78d4" formatted="false">"配对 Aurora 播放器"</string>
+    <string name="text_paired_devices_can_control_playback_86f484" formatted="false">"已配对的设备可以控制播放。"</string>
+    <string name="text_pairing_address_0a7563" formatted="false">"配对地址"</string>
+    <string name="text_pairing_code_309e30" formatted="false">"配对码"</string>
+    <string name="text_pan_left_right_ef4fc7" formatted="false">"声像 · 左 / 右"</string>
+    <string name="text_parametric_bands_68b3db">"%1$s 个参数频段 · %2$s"</string>
+    <string name="text_parametric_bands_only_use_a_processing_preset_for_routing_and_the_64f11f" formatted="false">"仅参数频段。如需路由和完整机架，请使用处理预设。"</string>
+    <string name="text_parametric_bands_preamp_6cb314">"%1$s 个参数频段 · 前置放大 %2$s"</string>
+    <string name="text_parametric_eq_02ed4c">"参数均衡器 · %1$s %2$s"</string>
+    <string name="text_parametric_eq_6e40f9" formatted="false">"参数均衡器"</string>
+    <string name="text_parametric_eq_text_exported_257cfa" formatted="false">"参数均衡器文本已导出。"</string>
+    <string name="text_particles_07cdbc" formatted="false">"粒子"</string>
+    <string name="text_password_8be3c9" formatted="false">"密码"</string>
+    <string name="text_paste_measurement_text_f87e1b" formatted="false">"粘贴测量文本"</string>
+    <string name="text_paste_token_3c9cd3" formatted="false">"粘贴令牌"</string>
+    <string name="text_paste_your_spotify_app_s_client_id_first_f2d13e" formatted="false">"请先粘贴你的 Spotify 应用的 Client ID。"</string>
+    <string name="text_pause_781961" formatted="false">"暂停"</string>
+    <string name="text_pause_mix_cf2e8e" formatted="false">"暂停混音"</string>
+    <string name="text_pause_playback_after_a_set_time_ef485a" formatted="false">"在设定的时间后暂停播放"</string>
+    <string name="text_paused_c7dfb6" formatted="false">"已暂停"</string>
+    <string name="text_paused_last_measured_sample_windows_0c768c" formatted="false">"已暂停 · 最近测得的采样窗口"</string>
+    <string name="text_pausing_at_the_end_of_this_track_d79c45" formatted="false">"将在本曲目结束时暂停"</string>
+    <string name="text_pausing_in_min_fades_out_741f18">"%1$s 分钟后暂停 · 淡出"</string>
+    <string name="text_peak_1_db_472a8a" formatted="false">"峰值 −1 dB"</string>
+    <string name="text_peak_1f_dbfs_change_1f_db_e16aea" formatted="false">"峰值 %.1f dBFS · 变化 %.1f dB"</string>
+    <string name="text_peak_6a5678">"%1$s · 峰值 %2$s"</string>
+    <string name="text_peak_932437">"峰值：%1$s"</string>
+    <string name="text_peak_c83dbb" formatted="false">"峰值"</string>
+    <string name="text_peak_dots_3fb145" formatted="false">"峰值点"</string>
+    <string name="text_peak_hold_f1bbb5" formatted="false">"峰值保持"</string>
+    <string name="text_peak_rms_dbfs_95c5fb">"%1$s   峰值 %2$s · RMS %3$s dBFS"</string>
+    <string name="text_peaking_filters_coverage_550db0">"%1$s 个峰值滤波器 · 覆盖范围 %2$s–%3$s"</string>
+    <string name="text_pearlescent_surfaces_spacious_curves_soft_light_b4c29d" formatted="false">"珠光表面 · 舒展曲线 · 柔和光线"</string>
+    <string name="text_permissions_d06d55" formatted="false">"权限"</string>
+    <string name="text_phase_f6371a" formatted="false">"相位"</string>
+    <string name="text_phase_is_saved_but_not_fitted_3bc04a" formatted="false">"相位会被保存，但不参与拟合。"</string>
+    <string name="text_phaser_1a55bd" formatted="false">"移相"</string>
+    <string name="text_phone_speaker_ae9329" formatted="false">"手机扬声器"</string>
+    <string name="text_picture_saved_32803b" formatted="false">"图片已保存"</string>
+    <string name="text_pill_38ea5b" formatted="false">"胶囊"</string>
+    <string name="text_pin_to_library_7b01e2" formatted="false">"固定到音乐库"</string>
+    <string name="text_ping_pong_delay_3982a4" formatted="false">"乒乓延迟"</string>
+    <string name="text_pinned_f93121" formatted="false">"已固定"</string>
+    <string name="text_pitch_a6c2d0" formatted="false">"音高"</string>
+    <string name="text_pitch_follows_speed_like_a_turntable_c2a28f" formatted="false">"音高随速度变化，就像唱片机一样"</string>
+    <string name="text_place_a_limiter_last_to_protect_the_final_output_b017dd" formatted="false">"请在最后放置一个限制器以保护最终输出。"</string>
+    <string name="text_play_5d12bd" formatted="false">"播放"</string>
+    <string name="text_play_a_matching_on_device_or_downloaded_file_instead_of_streaming_6f069e" formatted="false">"播放设备上或已下载的匹配文件，而不是流式播放"</string>
+    <string name="text_play_all_ebb2ff" formatted="false">"播放全部"</string>
+    <string name="text_play_count_50a957" formatted="false">"播放次数"</string>
+    <string name="text_play_fe036e">"播放 %1$s%2$s 次"</string>
+    <string name="text_play_folder_3f9fd7" formatted="false">"播放文件夹"</string>
+    <string name="text_play_here_49df29" formatted="false">"在此播放"</string>
+    <string name="text_play_mix_7ae7ed" formatted="false">"播放混音"</string>
+    <string name="text_play_next_40d33c" formatted="false">"下一首播放"</string>
+    <string name="text_play_on_4bd6fc" formatted="false">"播放设备"</string>
+    <string name="text_play_on_a_device_d66db5" formatted="false">"在设备上播放"</string>
+    <string name="text_play_pause_14a1d0" formatted="false">"播放/暂停"</string>
+    <string name="text_play_something_to_see_it_react_a6b517" formatted="false">"播放点什么，看看它的反应"</string>
+    <string name="text_play_through_an_identifiable_headphone_output_to_bind_a_calibrati_2c66fd" formatted="false">"请通过可识别的耳机输出进行播放，以绑定校准。"</string>
+    <string name="text_play_tracks_back_to_back_with_no_gap_e1d3d9" formatted="false">"曲目之间不留间隙地连续播放"</string>
+    <string name="text_playback_c8e308" formatted="false">"播放"</string>
+    <string name="text_playback_changed_the_comparison_stopped_2af425" formatted="false">"播放已变化。对比已停止。"</string>
+    <string name="text_playback_context_35175d" formatted="false">"播放上下文"</string>
+    <string name="text_playback_controls_5ee1ab" formatted="false">"播放控件"</string>
+    <string name="text_playback_engine_0255b8" formatted="false">"播放引擎"</string>
+    <string name="text_playback_formats_and_processing_no_account_credentials_9d08c4" formatted="false">"播放格式和处理信息；不含账号凭据"</string>
+    <string name="text_playback_may_continue_through_the_speaker_7f06f2" formatted="false">"播放可能会通过扬声器继续。"</string>
+    <string name="text_playback_output_or_volume_changed_prepare_the_comparison_again_f65441" formatted="false">"播放、输出或音量已变化。请重新准备对比。"</string>
+    <string name="text_playback_quality_144407" formatted="false">"播放与音质"</string>
+    <string name="text_playback_size_aeb4ca" formatted="false">"播放大小"</string>
+    <string name="text_playback_speed_6ff42b" formatted="false">"播放速度"</string>
+    <string name="text_player_e53407" formatted="false">"播放器"</string>
+    <string name="text_player_gestures_1c6f88" formatted="false">"播放器手势"</string>
+    <string name="text_playing_298c39" formatted="false">"正在播放"</string>
+    <string name="text_playing_from_5f4dc3" formatted="false">"播放来源"</string>
+    <string name="text_playing_next_b23445" formatted="false">"即将播放"</string>
+    <string name="text_playlist_cd95b4" formatted="false">"播放列表"</string>
+    <string name="text_playlist_exported_0efbda" formatted="false">"播放列表已导出"</string>
+    <string name="text_playlist_id_3e9a53" formatted="false">"播放列表 ID"</string>
+    <string name="text_playlist_name_544f75" formatted="false">"播放列表名称"</string>
+    <string name="text_playlist_songs_82c76a">"播放列表 • %1$s 首歌曲"</string>
+    <string name="text_playlists_77b69f" formatted="false">"播放列表"</string>
+    <string name="text_playlists_dfa62e">"%1$s 个播放列表"</string>
+    <string name="text_plays_a6bc73" formatted="false">"播放次数"</string>
+    <string name="text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b" formatted="false">"播放满 30 秒，或较短歌曲播放过半后计为一次播放。私密会话不计入。"</string>
+    <string name="text_plays_songs_active_day_24b41c">"播放 %1$s 次  ·  %2$s 首歌曲  ·  活跃 %3$s%4$s 天"</string>
+    <string name="text_plays_your_liked_music_or_downloaded_songs_when_liked_music_is_un_58abcb" formatted="false">"播放你喜欢的音乐；喜欢的音乐不可用时则播放已下载的歌曲。音量会在 30 秒内逐渐淡入。请确保此设备上或已连接的音乐库中有可用的音乐。"</string>
+    <string name="text_podcast_bafb6e" formatted="false">"播客"</string>
+    <string name="text_podcasts_fd52b4" formatted="false">"播客"</string>
+    <string name="text_points_d46e78">"%1$s 个点 · %2$s–%3$s"</string>
+    <string name="text_points_ee82a2">"%1$s · %2$s 个点\n%3$s–%4$s"</string>
+    <string name="text_policy_bb9cf1" formatted="false">"策略"</string>
+    <string name="text_popular_9bc2c5" formatted="false">"热门"</string>
+    <string name="text_popular_worldwide_b0f24f" formatted="false">"全球热门"</string>
+    <string name="text_position_calibration_notes_57c1cf" formatted="false">"位置、校准和备注"</string>
+    <string name="text_power_c2b6b5" formatted="false">"电源"</string>
+    <string name="text_powers_sonic_radio_auto_dj_and_mix_transitions_4e309b" formatted="false">"为 Sonic 电台、自动 DJ 和混音过渡提供支持"</string>
+    <string name="text_pre_amp_7b79c8" formatted="false">"前置放大"</string>
+    <string name="text_pre_amp_db_84974b">"前置放大 %1$s dB"</string>
+    <string name="text_pre_delay_966730" formatted="false">"预延迟"</string>
+    <string name="text_preamp_covers_this_fit_only_other_stages_may_add_gain_7864ec" formatted="false">"前置放大仅针对此次拟合。其他阶段可能会增加增益。"</string>
+    <string name="text_preamp_fa89ca" formatted="false">"前置放大"</string>
+    <string name="text_preamp_limiter_and_other_effect_gain_controls_32ddcd" formatted="false">"前置放大、限制器和其他效果的增益控制"</string>
+    <string name="text_precision_android_and_processed_usb_applies_when_output_reopens_bf3f55" formatted="false">"精确 Android 输出和处理后的 USB。在输出重新打开时生效。"</string>
+    <string name="text_predicted_a49225" formatted="false">"预测"</string>
+    <string name="text_prefer_hi_res_android_output_e20fb4" formatted="false">"优先使用高解析度 Android 输出"</string>
+    <string name="text_prefer_local_copies_a74911" formatted="false">"优先使用本地副本"</string>
+    <string name="text_preferred_output_device_7cecb0" formatted="false">"首选输出设备"</string>
+    <string name="text_prepare_impulse_828a45" formatted="false">"准备脉冲"</string>
+    <string name="text_prepared_19d34e" formatted="false">" · 已准备"</string>
+    <string name="text_preparing_and_validating_backup_d53752" formatted="false">"正在准备并验证备份…"</string>
+    <string name="text_preparing_audio_63cde6" formatted="false">"正在准备音频…"</string>
+    <string name="text_preparing_both_presets_04bd1f" formatted="false">"正在准备两个预设…"</string>
+    <string name="text_preparing_mix_83b489" formatted="false">"正在准备混音"</string>
+    <string name="text_preparing_the_comparison_timed_out_fe2312" formatted="false">"准备对比超时。"</string>
+    <string name="text_preparing_update_4a0bb6" formatted="false">"正在准备更新"</string>
+    <string name="text_preparing_vocals_f38a5a" formatted="false">"正在准备人声"</string>
+    <string name="text_presence_89a8a3" formatted="false">"临场感"</string>
+    <string name="text_preset_bca788" formatted="false">"预设"</string>
+    <string name="text_preset_exported_with_its_saved_settings_and_any_impulse_response_58728a" formatted="false">"预设已导出，包含其保存的设置和所有脉冲响应。"</string>
+    <string name="text_preset_name_eb39e1" formatted="false">"预设名称"</string>
+    <string name="text_preset_rules_c9d4d1" formatted="false">"预设规则"</string>
+    <string name="text_preset_rules_unavailable_2c7cba" formatted="false">"预设规则不可用。"</string>
+    <string name="text_presets_e709e7" formatted="false">"预设"</string>
+    <string name="text_presets_showing_72ab09">"%1$s 个预设 · 显示 %2$s 个"</string>
+    <string name="text_presets_unavailable_d18129" formatted="false">"预设不可用"</string>
+    <string name="text_preview_artist_tag_ed9b03" formatted="false">"预览艺人标签"</string>
+    <string name="text_preview_f1fbb2" formatted="false">"预览"</string>
+    <string name="text_previous_50f942" formatted="false">"上一首"</string>
+    <string name="text_previous_stage_252786" formatted="false">"上一个阶段"</string>
+    <string name="text_previously_played_bf618e">"之前播放  •  %1$s"</string>
+    <string name="text_primary_a9a96e" formatted="false">"主要"</string>
+    <string name="text_primary_player_since_creation_a2795e" formatted="false">"主播放器，自创建以来。"</string>
+    <string name="text_priority_0168ee">"优先级 %1$s · %2$s"</string>
+    <string name="text_priority_1000_to_1000_eb6c32" formatted="false">"优先级（-1000 至 1000）"</string>
+    <string name="text_private_session_ec7cef" formatted="false">"私密会话"</string>
+    <string name="text_processed_8291b2" formatted="false">"处理后"</string>
+    <string name="text_processed_playback_uses_the_current_effects_when_each_track_start_23b137" formatted="false">"处理后播放会在每首曲目开始时使用当前效果。无法更改速度或使用淡入淡出。"</string>
+    <string name="text_processing_e63451" formatted="false">"处理"</string>
+    <string name="text_processing_mode_7f4d30" formatted="false">"处理模式"</string>
+    <string name="text_processing_rack_f7dff1" formatted="false">"处理机架"</string>
+    <string name="text_processing_tuning_and_extensions_d9a2fc" formatted="false">"处理、调校和扩展"</string>
+    <string name="text_profile_ff4fc0" formatted="false">"个人资料"</string>
+    <string name="text_progress_1b9027" formatted="false">"进度"</string>
+    <string name="text_project_exported_4c0502" formatted="false">"项目已导出。"</string>
+    <string name="text_project_files_playback_3c21f3" formatted="false">"项目文件与播放"</string>
+    <string name="text_project_name_ab9773" formatted="false">"项目名称"</string>
+    <string name="text_project_notes_7b2dc5" formatted="false">"项目备注"</string>
+    <string name="text_project_saved_3a58a0" formatted="false">"项目已保存"</string>
+    <string name="text_project_saved_bebad7" formatted="false">"项目已保存。"</string>
+    <string name="text_projects_keep_their_saved_target_copy_f1d9a0" formatted="false">"项目会保留其保存的目标副本。"</string>
+    <string name="text_prominent_4b3579" formatted="false">"醒目"</string>
+    <string name="text_proposed_preamp_3473b1">"建议的前置放大：%1$s"</string>
+    <string name="text_protocol_fixed_trials_independent_random_x_per_trial_8b5cae">"方案：%1$s 次固定试验；每次试验独立随机选取 X"</string>
+    <string name="text_provider_7ceee3" formatted="false">"提供方"</string>
+    <string name="text_published_483bf2" formatted="false">"已发布"</string>
+    <string name="text_pull_down_on_the_player_sheets_to_close_them_36e776" formatted="false">"在播放器和面板上向下拉即可关闭"</string>
+    <string name="text_pulse_rings_0a7012" formatted="false">"脉冲环"</string>
+    <string name="text_purpose_listening_setup_observations_16e335" formatted="false">"用途、聆听配置和观察记录"</string>
+    <string name="text_push_notifications_03be2f" formatted="false">"推送通知"</string>
+    <string name="text_queue_d325fc" formatted="false">"队列"</string>
+    <string name="text_r_6b99ea">"R %1$s%%"</string>
+    <string name="text_r_peak_rms_dbfs_885a75">"R   峰值 %1$s · RMS %2$s dBFS"</string>
+    <string name="text_rack_f93caa" formatted="false">"机架"</string>
+    <string name="text_rack_inactive_preview_only_41e71b" formatted="false">"机架未启用 · 仅预览"</string>
+    <string name="text_rack_mode_stays_active_this_changes_playback_5703ec" formatted="false">"机架模式保持启用；这会改变播放。"</string>
+    <string name="text_rack_restored_64ad64" formatted="false">"机架已恢复。"</string>
+    <string name="text_radial_spectrum_477a35" formatted="false">"环形频谱"</string>
+    <string name="text_radial_wave_03beca" formatted="false">"环形波形"</string>
+    <string name="text_radio_b11bf1" formatted="false">"电台"</string>
+    <string name="text_radio_started_31fe2c" formatted="false">"电台已开始"</string>
+    <string name="text_random_58d888" formatted="false">"随机"</string>
+    <string name="text_rate_3a9c73" formatted="false">"采样率"</string>
+    <string name="text_rate_unknown_7e2d67" formatted="false">"采样率未知"</string>
+    <string name="text_ratio_794f65" formatted="false">"比率"</string>
+    <string name="text_raw_dsd_requires_a_supported_dac_and_stops_if_unavailable_c1bf89" formatted="false">"原始 DSD 需要受支持的 DAC，不可用时会停止播放。"</string>
+    <string name="text_read_local_audio_for_the_library_playback_sonic_analysis_5d975b" formatted="false">"读取本地音频，用于音乐库、播放和声音分析"</string>
+    <string name="text_read_only_library_ac6b49" formatted="false">"只读音乐库"</string>
+    <string name="text_reading_audio_0b406f">"正在读取音频 · %1$s%%"</string>
+    <string name="text_reading_project_68617b" formatted="false">"正在读取项目…"</string>
+    <string name="text_ready_20c7c5" formatted="false">"就绪"</string>
+    <string name="text_ready_to_install_0bd33d" formatted="false">"可以安装"</string>
+    <string name="text_ready_to_open_3b5015" formatted="false">"可以打开"</string>
+    <string name="text_rebuild_timing_and_fades_from_sonic_analysis_keeping_track_order_bb56e7" formatted="false">"根据 Sonic 分析重建时间和淡变，并保持曲目顺序。你可以撤销此修改。"</string>
+    <string name="text_recap_69354b">"%1$s回顾"</string>
+    <string name="text_recap_picture_preview_with_top_five_artists_and_songs_30bda2" formatted="false">"回顾图片预览，包含排名前五的艺人和歌曲"</string>
+    <string name="text_receives_title_artist_and_album_when_you_request_a_tag_lookup_dd0b6a" formatted="false">"当你请求查找标签时，会收到标题、艺人和专辑信息。"</string>
+    <string name="text_recent_76eec7" formatted="false">"最近"</string>
+    <string name="text_recently_added_536963" formatted="false">"最近添加"</string>
+    <string name="text_recommended_albums_36271e" formatted="false">"推荐专辑"</string>
+    <string name="text_recommended_order_642c4b" formatted="false">"推荐顺序"</string>
+    <string name="text_record_the_sensitivity_source_and_voltage_measurements_including_71bc84" formatted="false">"记录灵敏度的来源和电压测量值，包括负载。"</string>
+    <string name="text_recover_the_saved_project_library_before_writing_changes_816728" formatted="false">"写入更改前请先恢复已保存的项目库。"</string>
+    <string name="text_redo_edit_15178f" formatted="false">"重做修改"</string>
+    <string name="text_reduce_input_gain_when_the_rack_boosts_the_signal_2a95ae" formatted="false">"当机架提升信号时降低输入增益。"</string>
+    <string name="text_reference_volume_38aeb3" formatted="false">"参考音量"</string>
+    <string name="text_reflect_the_spectrum_612298" formatted="false">"镜像频谱"</string>
+    <string name="text_refresh_56e3ba" formatted="false">"刷新"</string>
+    <string name="text_related_settings_661f04" formatted="false">"相关设置"</string>
+    <string name="text_relative_to_media_volume_this_is_not_an_spl_estimate_8959bd" formatted="false">"相对于媒体音量。这不是声压级估算值。"</string>
+    <string name="text_relative_volume_compensation_119ef9" formatted="false">"相对音量补偿"</string>
+    <string name="text_release_d41f56" formatted="false">"释放时间"</string>
+    <string name="text_release_notes_cd5af7" formatted="false">"版本说明"</string>
+    <string name="text_reload_cce715" formatted="false">"重新加载"</string>
+    <string name="text_remove_436e1a">"移除%1$s？"</string>
+    <string name="text_remove_4d28b5">"移除%1$s"</string>
+    <string name="text_remove_all_downloads_7bd406" formatted="false">"移除所有下载"</string>
+    <string name="text_remove_band_fb769d" formatted="false">"移除频段"</string>
+    <string name="text_remove_download_147742" formatted="false">"移除下载"</string>
+    <string name="text_remove_downloads_cbe8be" formatted="false">"移除下载"</string>
+    <string name="text_remove_e96390" formatted="false">"移除"</string>
+    <string name="text_remove_from_liked_9d1568" formatted="false">"从喜欢中移除"</string>
+    <string name="text_remove_from_mix_a1651c">"从混音中移除 %1$s"</string>
+    <string name="text_remove_input_d3f475" formatted="false">"移除输入"</string>
+    <string name="text_remove_rule_e0d4ff" formatted="false">"移除规则"</string>
+    <string name="text_remove_separator_8580c6" formatted="false">"移除分隔符"</string>
+    <string name="text_removed_download_8ad8f9" formatted="false">"已移除下载"</string>
+    <string name="text_removes_this_library_entry_selected_irs_and_saved_presets_stay_un_0fb84e" formatted="false">"移除此库条目。已选择的 IR 和已保存的预设保持不变。"</string>
+    <string name="text_rename_d3f4cb" formatted="false">"重命名"</string>
+    <string name="text_rename_ir_350160" formatted="false">"重命名 IR"</string>
+    <string name="text_rename_preset_52abbe" formatted="false">"重命名预设"</string>
+    <string name="text_rename_project_633018" formatted="false">"重命名项目"</string>
+    <string name="text_rename_rack_519beb" formatted="false">"重命名机架"</string>
+    <string name="text_rename_stage_1df1d4" formatted="false">"重命名阶段"</string>
+    <string name="text_renamed_preset_to_5dc3bd">"预设已重命名为 %1$s。"</string>
+    <string name="text_renaming_ir_4c7642" formatted="false">"正在重命名 IR…"</string>
+    <string name="text_renaming_project_8cfc7a" formatted="false">"正在重命名项目…"</string>
+    <string name="text_reorder_33d997" formatted="false">"重新排序"</string>
+    <string name="text_repeat_659eba" formatted="false">"循环"</string>
+    <string name="text_replace_a7cf7b" formatted="false">"替换"</string>
+    <string name="text_replace_an_exact_artist_credit_before_last_fm_receives_it_matchin_99a847" formatted="false">"在 Last.fm 收到之前替换完全匹配的艺人署名。匹配时不区分大小写。"</string>
+    <string name="text_replace_measurement_1a74ba" formatted="false">"替换测量"</string>
+    <string name="text_replace_rack_d12c1a" formatted="false">"替换机架"</string>
+    <string name="text_replace_this_rack_957859" formatted="false">"替换此机架？"</string>
+    <string name="text_replace_unsaved_edits_8ff8f2" formatted="false">"替换未保存的修改？"</string>
+    <string name="text_replacement_rules_will_be_kept_6ce6ce" formatted="false">"替换规则将被保留"</string>
+    <string name="text_replaces_and_clears_the_generated_correction_a7baba">"替换 %1$s 并清除已生成的校正。"</string>
+    <string name="text_replaygain_and_volume_leveling_39af19" formatted="false">"ReplayGain 和音量平衡"</string>
+    <string name="text_replaygain_off_d67cdc" formatted="false">"ReplayGain 已关闭"</string>
+    <string name="text_report_plays_to_your_server_262da5" formatted="false">"将历史记录和正在播放的内容同步到你的音乐来源"</string>
+    <string name="text_required_for_audio_identification_e2b915" formatted="false">"音频识别所必需"</string>
+    <string name="text_reset_defaults_7871b3" formatted="false">"恢复默认设置"</string>
+    <string name="text_reset_graphic_eq_ace461" formatted="false">"重置图示均衡器"</string>
+    <string name="text_reset_to_default_39c90e" formatted="false">"恢复为默认值"</string>
+    <string name="text_response_6e617e" formatted="false">"响应"</string>
+    <string name="text_restart_aurora_to_activate_the_changed_output_or_engine_settings_b7046b" formatted="false">" 重启 Aurora 以使更改后的输出或引擎设置生效。"</string>
+    <string name="text_restart_aurora_to_apply_usb_settings_2757a4" formatted="false">"重启 Aurora 以应用 USB 设置。"</string>
+    <string name="text_restore_backup_a65eaa" formatted="false">"恢复备份"</string>
+    <string name="text_result_exported_771e11" formatted="false">"结果已导出。"</string>
+    <string name="text_results_612e12" formatted="false">"结果"</string>
+    <string name="text_retro_hi_fi_a68d38" formatted="false">"复古 Hi-Fi"</string>
+    <string name="text_reverb_052ba8" formatted="false">"混响"</string>
+    <string name="text_reverting_correction_6de6e2" formatted="false">"正在撤销校正..."</string>
+    <string name="text_review_append_to_rack_8cbb43" formatted="false">"检查并追加到机架"</string>
+    <string name="text_review_what_the_text_file_includes_before_saving_feb089" formatted="false">"保存前检查文本文件包含的内容"</string>
+    <string name="text_revoke_0be720" formatted="false">"撤销"</string>
+    <string name="text_rig_404b11">"设备：%1$s"</string>
+    <string name="text_rig_microphone_coupler_ccd9a6" formatted="false">"测量设备 / 麦克风 / 耦合器"</string>
+    <string name="text_rig_unspecified_6f488f" formatted="false">"未指定测量设备"</string>
+    <string name="text_right_954daa" formatted="false">"右"</string>
+    <string name="text_right_channel_correction_e4ef15" formatted="false">"右声道校正。"</string>
+    <string name="text_right_channel_only_left_passes_unchanged_6e2bfe" formatted="false">"仅右声道 · 左声道原样通过"</string>
+    <string name="text_right_delay_ca7838" formatted="false">"右声道延迟"</string>
+    <string name="text_right_delay_ms_ffbffc" formatted="false">"右声道延迟 - ms"</string>
+    <string name="text_right_left_0aa851" formatted="false">"右 → 左"</string>
+    <string name="text_right_measurement_fbacf6" formatted="false">"右声道测量"</string>
+    <string name="text_right_only_ef29b6" formatted="false">"仅右声道"</string>
+    <string name="text_right_right_ebb708" formatted="false">"右 → 右"</string>
+    <string name="text_right_trim_cadffb" formatted="false">"右声道微调"</string>
+    <string name="text_right_trim_db_ba0e33" formatted="false">"右声道微调 - dB"</string>
+    <string name="text_rms_difference_3f_db_288abf" formatted="false">"RMS 差值：%.3f dB"</string>
+    <string name="text_rms_fitting_error_db_fc001a">"拟合 RMS 误差：%1$s → %2$s dB"</string>
+    <string name="text_rose_51ad0e" formatted="false">"玫瑰色"</string>
+    <string name="text_rotate_radial_styles_72016a" formatted="false">"旋转环形样式"</string>
+    <string name="text_rounded_c5aa34" formatted="false">"圆润"</string>
+    <string name="text_routing_7d15dd" formatted="false">"路由"</string>
+    <string name="text_rule_condition_c6d62b" formatted="false">"规则条件"</string>
+    <string name="text_rules_bb11a8" formatted="false">"规则"</string>
+    <string name="text_rules_unavailable_4feedc" formatted="false">"规则不可用。"</string>
+    <string name="text_s_3eb314">"%1$ss"</string>
+    <string name="text_s_crossfade_0fa271">"%1$s 秒淡入淡出"</string>
+    <string name="text_sample_peak_and_rms_before_output_volume_and_android_effects_leve_08e2a4" formatted="false">"采样峰值和 RMS，取自输出音量和 Android 效果之前。电平窗口相互独立；成对的频谱与 PCM 时间戳对应。满刻度计数会在跳转或格式变化时重置。这些并非真峰值、响度或声学测量。"</string>
+    <string name="text_sample_peak_control_with_attack_and_release_936da5" formatted="false">"带启动和释放时间的采样峰值控制"</string>
+    <string name="text_sample_preservation_unknown_7de2de" formatted="false">"采样保真情况未知"</string>
+    <string name="text_sample_rate_7a0316" formatted="false">"采样率"</string>
+    <string name="text_samples_modified_d04e9f" formatted="false">"采样已被修改"</string>
+    <string name="text_samples_preserved_091001" formatted="false">"采样保持不变"</string>
+    <string name="text_saturation_20a32b" formatted="false">"饱和"</string>
+    <string name="text_save_a_processing_preset_first_6dd1cf" formatted="false">"请先保存一个处理预设。"</string>
+    <string name="text_save_and_restore_your_audio_settings_6ec6de" formatted="false">"保存和恢复你的音频设置"</string>
+    <string name="text_save_as_reusable_target_8c3b0f" formatted="false">"保存为可重复使用的目标"</string>
+    <string name="text_save_calibration_a1068b" formatted="false">"保存校准"</string>
+    <string name="text_save_changes_179359" formatted="false">"保存更改"</string>
+    <string name="text_save_current_settings_0eaab9" formatted="false">"保存当前设置"</string>
+    <string name="text_save_details_470658" formatted="false">"保存详情"</string>
+    <string name="text_save_e7ced9">"保存%1$s"</string>
+    <string name="text_save_efc007" formatted="false">"保存"</string>
+    <string name="text_save_eq_effects_loudness_and_output_settings_cfa9ad" formatted="false">"保存均衡器、效果、响度和输出设置。"</string>
+    <string name="text_save_export_project_json_9f2b2c" formatted="false">"保存并导出项目 JSON"</string>
+    <string name="text_save_failed_0a4444" formatted="false">"保存失败"</string>
+    <string name="text_save_inspect_3831d9" formatted="false">"保存并检查"</string>
+    <string name="text_save_leave_fc9cb3" formatted="false">"保存并离开"</string>
+    <string name="text_save_level_samples_c79a47" formatted="false">"保存电平采样"</string>
+    <string name="text_save_mix_bba953" formatted="false">"保存混音"</string>
+    <string name="text_save_or_append_stages_5f0cc3" formatted="false">"保存或追加阶段"</string>
+    <string name="text_save_picture_ccdb19" formatted="false">"保存图片"</string>
+    <string name="text_save_project_2dd802" formatted="false">"保存项目"</string>
+    <string name="text_save_project_changes_026247" formatted="false">"保存对项目的更改？"</string>
+    <string name="text_save_queue_as_playlist_7f09d8" formatted="false">"将队列保存为播放列表"</string>
+    <string name="text_save_stages_a0f22f" formatted="false">"保存阶段"</string>
+    <string name="text_save_subchain_d43195" formatted="false">"保存子链"</string>
+    <string name="text_save_tags_842d99" formatted="false">"保存标签"</string>
+    <string name="text_save_target_fa5df1" formatted="false">"保存目标"</string>
+    <string name="text_save_text_file_5aabc3" formatted="false">"保存文本文件"</string>
+    <string name="text_save_this_mix_first_if_you_want_to_keep_your_changes_655e48" formatted="false">"如果想保留修改，请先保存此混音。"</string>
+    <string name="text_save_variant_35fac3" formatted="false">"保存变体"</string>
+    <string name="text_save_your_first_mix_to_find_it_here_9d6680" formatted="false">"保存你的第一个混音后，即可在这里找到它。"</string>
+    <string name="text_saved_290e9d">"已保存 %1$s。"</string>
+    <string name="text_saved_bac2cc">"已保存“%1$s”"</string>
+    <string name="text_saved_c0ae8f" formatted="false">"已保存"</string>
+    <string name="text_saved_mixes_could_not_be_read_7eab0e" formatted="false">"无法读取已保存的混音。"</string>
+    <string name="text_saved_mixes_fe1986" formatted="false">"已保存的混音"</string>
+    <string name="text_saved_processing_presets_f22d4b" formatted="false">"已保存的处理预设"</string>
+    <string name="text_saved_projects_could_not_be_loaded_14d15f" formatted="false">"无法加载已保存的项目"</string>
+    <string name="text_saved_subchains_46c948" formatted="false">"已保存的子链"</string>
+    <string name="text_saved_tuning_projects_could_not_be_decoded_a1167f" formatted="false">"无法解码已保存的调校项目。"</string>
+    <string name="text_saved_wavs_trimming_and_normalization_732c0c" formatted="false">"已保存的 WAV、裁剪和归一化"</string>
+    <string name="text_saving_56a228" formatted="false">"正在保存…"</string>
+    <string name="text_saving_changes_804053" formatted="false">"正在保存更改…"</string>
+    <string name="text_saving_project_69e697" formatted="false">"正在保存项目…"</string>
+    <string name="text_saving_project_for_export_cf6162" formatted="false">"正在保存项目以便导出…"</string>
+    <string name="text_saving_selected_ir_1e5b57" formatted="false">"正在保存所选 IR…"</string>
+    <string name="text_saving_target_0672fd" formatted="false">"正在保存目标..."</string>
+    <string name="text_scan_replaygain_d09e86" formatted="false">"扫描 ReplayGain"</string>
+    <string name="text_scanning_replaygain_c527cc" formatted="false">"正在扫描 ReplayGain…"</string>
+    <string name="text_schedule_0a8ada" formatted="false">"定时"</string>
+    <string name="text_science_d2d066" formatted="false">"科学"</string>
+    <string name="text_scrobble_3d49e2" formatted="false">"聆听历史同步"</string>
+    <string name="text_scrobble_as_29e5f2">"Scrobble 署名为 %1$s"</string>
+    <string name="text_scrobble_as_f81cff" formatted="false">"Scrobble 署名为"</string>
+    <string name="text_scrobble_your_listening_history_e444aa" formatted="false">"Scrobble 你的聆听历史"</string>
+    <string name="text_scrobbling_772be3" formatted="false">"Scrobble"</string>
+    <string name="text_scrobbling_presence_lyrics_and_metadata_687ea0" formatted="false">"Scrobble、状态、歌词和元数据"</string>
+    <string name="text_search_bce064" formatted="false">"搜索"</string>
+    <string name="text_search_brand_or_model_673f49" formatted="false">"搜索品牌或型号"</string>
+    <string name="text_search_for_a_show_or_pick_a_topic_above_to_get_started_681552" formatted="false">"搜索节目或在上方选择一个主题即可开始。"</string>
+    <string name="text_search_in_0dcb13">"在 %1$s 中搜索"</string>
+    <string name="text_search_live_iem_measurements_24a92f" formatted="false">"搜索实时入耳式耳机测量数据"</string>
+    <string name="text_search_podcasts_758c3a" formatted="false">"搜索播客"</string>
+    <string name="text_search_radio_stations_be278b" formatted="false">"搜索电台"</string>
+    <string name="text_search_shows_topics_da6b61" formatted="false">"搜索节目和主题"</string>
+    <string name="text_search_stations_3b38bf" formatted="false">"搜索电台"</string>
+    <string name="text_search_tracks_8bc43d" formatted="false">"搜索曲目"</string>
+    <string name="text_search_unavailable_c32b9f" formatted="false">"搜索不可用"</string>
+    <string name="text_search_your_library_d9fa3f" formatted="false">"搜索你的音乐库"</string>
+    <string name="text_searching_1a6a5b" formatted="false">"正在搜索…"</string>
+    <string name="text_searching_for_chromecast_devices_13fdbb" formatted="false">"正在搜索 Chromecast 设备…"</string>
+    <string name="text_secondary_025de5" formatted="false">"次要"</string>
+    <string name="text_see_all_2941c5" formatted="false">"查看全部"</string>
+    <string name="text_seek_bar_0030d0" formatted="false">"进度条"</string>
+    <string name="text_select_0fc8ec">"选择%1$s"</string>
+    <string name="text_select_a_wav_779ee2" formatted="false">"选择一个 WAV"</string>
+    <string name="text_select_rack_to_use_these_stages_e161dd" formatted="false">"选择“机架”以使用这些阶段。"</string>
+    <string name="text_selected_9a976f" formatted="false">"已选择"</string>
+    <string name="text_selected_audio_file_fd51b5" formatted="false">"所选音频文件"</string>
+    <string name="text_selected_device_disconnected_c2d1b1" formatted="false">"所选设备已断开连接"</string>
+    <string name="text_selected_ir_6a167c" formatted="false">"所选 IR"</string>
+    <string name="text_selected_measurement_frequency_c5919f">"所选测量频率：%1$s"</string>
+    <string name="text_selected_response_frequency_0f1ae3">"所选响应频率。%1$s：%2$s"</string>
+    <string name="text_selecting_ir_cac365" formatted="false">"正在选择 IR…"</string>
+    <string name="text_selection_frames_b3c1b7">"选段：%1$s 帧"</string>
+    <string name="text_send_listens_to_your_open_music_profile_5a7b48" formatted="false">"将聆听记录发送到你的开放音乐档案"</string>
+    <string name="text_sensitivity_031cfc" formatted="false">"灵敏度"</string>
+    <string name="text_sensitivity_is_usually_specified_at_1_khz_fit_frequency_response_d5a30d" formatted="false">"灵敏度通常以 1 kHz 为基准标注。佩戴贴合度、频率响应和负载都会影响估算结果。"</string>
+    <string name="text_sensitivity_unit_e9d12c" formatted="false">"灵敏度单位"</string>
+    <string name="text_separate_correction_per_channel_shares_the_band_budget_acace8" formatted="false">"每个声道单独校正。共用频段预算。"</string>
+    <string name="text_separate_limits_require_independent_channels_60e8b3" formatted="false">"单独的限制需要独立的声道。"</string>
+    <string name="text_separate_stages_with_a_final_limiter_after_convolution_32ae6f" formatted="false">"独立的阶段，卷积之后带有末级限制器"</string>
+    <string name="text_separated_audio_ready_switch_between_vocals_backing_and_original_3658bb" formatted="false">"分离后的音频已就绪。可在人声、伴奏和原曲之间切换。"</string>
+    <string name="text_separator_b4b289" formatted="false">"分隔符"</string>
+    <string name="text_serial_83f8c3" formatted="false">"串行"</string>
+    <string name="text_server_address_b06792" formatted="false">"服务器地址"</string>
+    <string name="text_server_cb0cb1" formatted="false">"服务器"</string>
+    <string name="text_server_error_c28ed6">"服务器错误 (%1$s)。"</string>
+    <string name="text_server_not_found_check_the_address_24bc0a" formatted="false">"未找到服务器，请检查地址。"</string>
+    <string name="text_servers_accounts_59e105" formatted="false">"服务器与账号"</string>
+    <string name="text_set_the_redirect_uri_to_exactly_aurora_spotify_407b7c" formatted="false">"将 Redirect URI 精确设置为：  aurora://spotify"</string>
+    <string name="text_set_up_your_spotify_app_de4e3c" formatted="false">"设置你的 Spotify 应用"</string>
+    <string name="text_setting_saved_ac1563" formatted="false">"设置已保存。"</string>
+    <string name="text_settings_c7f73b" formatted="false">"设置"</string>
+    <string name="text_settings_racks_presets_impulse_responses_playlists_and_history_22c4f0" formatted="false">"设置、机架、预设、脉冲响应、播放列表和历史记录"</string>
+    <string name="text_shape_your_sound_with_aurora_s_eq_and_audio_effects_0b9ed1" formatted="false">"使用 Aurora 的均衡器和音频效果塑造你的声音。"</string>
+    <string name="text_share_your_current_track_and_artwork_11d20a" formatted="false">"分享你当前播放的曲目和封面"</string>
+    <string name="text_shared_secret_4e19fd" formatted="false">"共享密钥"</string>
+    <string name="text_sharp_cf3e9a" formatted="false">"锐利"</string>
+    <string name="text_show_20_more_3b05ec" formatted="false">"再显示 20 个"</string>
+    <string name="text_show_album_b04b79" formatted="false">"显示专辑"</string>
+    <string name="text_show_albums_artists_playlists_from_your_local_files_and_every_inc_4ea040" formatted="false">"将本地文件和所有已包含来源中的专辑、艺人和播放列表显示为一个音乐库"</string>
+    <string name="text_show_artwork_in_radial_styles_100355" formatted="false">"在环形样式中显示封面"</string>
+    <string name="text_show_less_4c852b" formatted="false">"显示更少"</string>
+    <string name="text_show_more_25911d" formatted="false">"显示更多"</string>
+    <string name="text_show_pairing_code_921392" formatted="false">"显示配对码"</string>
+    <string name="text_show_password_044b85" formatted="false">"显示密码"</string>
+    <string name="text_show_the_alarm_full_screen_over_the_lock_screen_1d1cfb" formatted="false">"在锁屏上方全屏显示闹钟"</string>
+    <string name="text_showing_the_latest_60_samples_596144" formatted="false">"正在显示最近 60 个采样。"</string>
+    <string name="text_shows_episodes_526d46" formatted="false">"节目与单集"</string>
+    <string name="text_shuffle_5b772b" formatted="false">"随机播放"</string>
+    <string name="text_shuffle_all_7e388b" formatted="false">"全部随机播放"</string>
+    <string name="text_shuffle_folder_681a21" formatted="false">"随机播放文件夹"</string>
+    <string name="text_sibilance_cutoff_6da1b4" formatted="false">"齿音截止频率"</string>
+    <string name="text_side_265283" formatted="false">"侧声道"</string>
+    <string name="text_sign_in_failed_49b78c" formatted="false">"登录失败。"</string>
+    <string name="text_sign_in_on_google_s_page_then_choose_your_youtube_music_profile_n_0b2a03" formatted="false">"在 Google 页面上登录，然后选择你的 YouTube Music 个人资料。无需开发者设置。"</string>
+    <string name="text_sign_in_with_google_4a0b72" formatted="false">"使用 Google 登录"</string>
+    <string name="text_sign_into_navidrome_jellyfin_or_youtube_music_settings_accounts_t_7337d3" formatted="false">"登录 Navidrome、Jellyfin 或 YouTube Music（设置 → 账号）即可合并来源。你的本地文件始终包含在内。"</string>
+    <string name="text_signal_path_c3e29b" formatted="false">"信号路径"</string>
+    <string name="text_signal_path_report_copied_ecc24d" formatted="false">"信号路径报告已复制"</string>
+    <string name="text_signed_in_as_a02107" formatted="false">"登录身份"</string>
+    <string name="text_silent_aa9330" formatted="false">"静音"</string>
+    <string name="text_silk_veil_fa6add" formatted="false">"丝绸薄纱"</string>
+    <string name="text_single_dd1186" formatted="false">"单曲"</string>
+    <string name="text_skip_silence_3d4da2" formatted="false">"跳过静音"</string>
+    <string name="text_skip_silences_015ea3" formatted="false">"跳过静音"</string>
+    <string name="text_sky_b3d97f" formatted="false">"天空"</string>
+    <string name="text_sleep_timer_e90613" formatted="false">"睡眠定时器"</string>
+    <string name="text_slope_638d02" formatted="false">"斜率"</string>
+    <string name="text_slow_spin_for_radial_combo_be2e95" formatted="false">"环形 / 组合样式缓慢旋转"</string>
+    <string name="text_smart_playlist_f77ad7" formatted="false">"智能播放列表"</string>
+    <string name="text_smart_playlist_rule_60c810">"智能播放列表 • %1$s%2$s 条规则"</string>
+    <string name="text_smooth_2b083f" formatted="false">"平滑"</string>
+    <string name="text_smooth_7f93ca" formatted="false">"平滑"</string>
+    <string name="text_smoothing_dcc490" formatted="false">"平滑处理"</string>
+    <string name="text_smoothing_width_octaves_52255d" formatted="false">"平滑宽度 · 倍频程"</string>
+    <string name="text_soft_gradients_custom_accents_rounded_cards_d3f466" formatted="false">"柔和渐变 · 自定义强调色 · 圆角卡片"</string>
+    <string name="text_solo_6d717d" formatted="false">" · 独奏"</string>
+    <string name="text_solo_9fc93a" formatted="false">"独奏"</string>
+    <string name="text_solo_band_3fb8b7" formatted="false">"独奏此频段"</string>
+    <string name="text_some_tracks_are_unavailable_reconnect_to_the_library_and_retry_6b688e" formatted="false">"部分曲目不可用。请重新连接音乐库后重试。"</string>
+    <string name="text_song_bd1189" formatted="false">"歌曲"</string>
+    <string name="text_songs_9b614d">"%1$s 首歌曲"</string>
+    <string name="text_songs_d8fb7b">"%1$s%2$s 首歌曲"</string>
+    <string name="text_songs_e1404b" formatted="false">"歌曲"</string>
+    <string name="text_songs_from_your_server_appear_here_e4db53" formatted="false">"你服务器上的歌曲会显示在这里。"</string>
+    <string name="text_sonic_radio_9b7bff" formatted="false">"Sonic 电台"</string>
+    <string name="text_sonic_radio_compares_the_actual_sound_of_your_tracks_timbre_harmo_001cdd" formatted="false">"Sonic 电台会在你的设备上比较曲目的实际声音（音色、和声、能量、速度）。"</string>
+    <string name="text_sonic_radio_similar_tracks_653156">"Sonic 电台 · %1$s 首相似曲目"</string>
+    <string name="text_sort_by_a2a5bd" formatted="false">"排序方式"</string>
+    <string name="text_sound_b4e3ef" formatted="false">"声音"</string>
+    <string name="text_soundtrack_5ea1bb" formatted="false">"原声带"</string>
+    <string name="text_source_6da13a" formatted="false">"来源"</string>
+    <string name="text_source_author_f7d881" formatted="false">"来源 / 作者"</string>
+    <string name="text_source_below_that_has_it_reorder_to_taste_f0910c" formatted="false">"来源播放。可按喜好调整顺序。"</string>
+    <string name="text_source_ddb023" formatted="false">" · 来源"</string>
+    <string name="text_source_e9f395">"来源：%1$s"</string>
+    <string name="text_source_priority_and_unified_library_5d9b2c" formatted="false">"来源优先级和统一音乐库"</string>
+    <string name="text_source_spectrum_5d8903" formatted="false">"音源频谱"</string>
+    <string name="text_spaced_e2dd97" formatted="false">"宽松"</string>
+    <string name="text_spatial_729ac1" formatted="false">"空间"</string>
+    <string name="text_speak_to_search_91f0aa" formatted="false">"说话即可搜索"</string>
+    <string name="text_speaker_7c23b0" formatted="false">"扬声器"</string>
+    <string name="text_speakers_bluetooth_6dc246" formatted="false">"扬声器 / 蓝牙"</string>
+    <string name="text_spectral_river_b18902" formatted="false">"频谱河流"</string>
+    <string name="text_spectrum_9620cf" formatted="false">"频谱"</string>
+    <string name="text_spectrum_bars_6379ce" formatted="false">"频谱柱条"</string>
+    <string name="text_spectrum_curve_f0b0b0" formatted="false">"频谱曲线"</string>
+    <string name="text_spectrum_waveform_radial_and_particles_145442" formatted="false">"频谱、波形、环形和粒子"</string>
+    <string name="text_speed_2d2cb0" formatted="false">"速度"</string>
+    <string name="text_speed_lyrics_queue_row_814225" formatted="false">"速度 · 歌词 · 队列行"</string>
+    <string name="text_speed_x_72da98">"速度 %1$sx"</string>
+    <string name="text_sports_2fec45" formatted="false">"体育"</string>
+    <string name="text_spotify_sign_in_failed_try_again_dc8110" formatted="false">"Spotify 登录失败，请重试。"</string>
+    <string name="text_spotify_uses_the_connect_button_not_this_form_17d56a" formatted="false">"Spotify 使用连接按钮，而不是此表单"</string>
+    <string name="text_squig_measurement_text_1ab632" formatted="false">"Squig 测量文本"</string>
+    <string name="text_src_delay_ms_165eac">"SRC 延迟：%1$s ms"</string>
+    <string name="text_stage_ca6d0e" formatted="false">"阶段"</string>
+    <string name="text_stage_inputs_c5a9f4" formatted="false">"阶段输入"</string>
+    <string name="text_stage_meters_50fb37" formatted="false">"阶段电平表"</string>
+    <string name="text_stages_8e34a7">"%1$s · %2$s 个阶段"</string>
+    <string name="text_stages_b02622">"%1$s 个阶段"</string>
+    <string name="text_stages_run_from_top_to_bottom_008582" formatted="false">"阶段按从上到下的顺序运行。"</string>
+    <string name="text_standard_2dfa66" formatted="false">"标准"</string>
+    <string name="text_standard_mode_stays_active_select_rack_mode_later_to_use_the_adde_5a9ebc" formatted="false">"标准模式保持启用。稍后选择机架模式即可使用添加的校正。"</string>
+    <string name="text_starred_5f1f99" formatted="false">"已加星标"</string>
+    <string name="text_start_a_b_6348cf" formatted="false">"开始 A/B"</string>
+    <string name="text_start_abx_d3d188" formatted="false">"开始 ABX"</string>
+    <string name="text_start_at_seconds_d4e717" formatted="false">"起始位置（秒）"</string>
+    <string name="text_start_frame_71c6c5" formatted="false">"起始帧"</string>
+    <string name="text_start_from_queue_237018" formatted="false">"从队列开始"</string>
+    <string name="text_start_included_end_excluded_a1dbff" formatted="false">"包含起点。不包含终点。"</string>
+    <string name="text_start_listening_without_an_account_2e734d" formatted="false">"无需账号即可开始聆听"</string>
+    <string name="text_starting_download_43a6a6" formatted="false">"正在开始下载…"</string>
+    <string name="text_starting_points_8df66e" formatted="false">"入门推荐"</string>
+    <string name="text_starts_in_mix_0762f2" formatted="false">"在混音中的起点"</string>
+    <string name="text_starts_with_2e2ec9" formatted="false">"开头是"</string>
+    <string name="text_stereo_delay_d3073c" formatted="false">"立体声延迟"</string>
+    <string name="text_stereo_f4f390" formatted="false">"立体声"</string>
+    <string name="text_stereo_linked_6e3759" formatted="false">"立体声关联。"</string>
+    <string name="text_stereo_phase_05d1da" formatted="false">"立体声相位"</string>
+    <string name="text_stereo_trim_63a03b" formatted="false">"立体声与微调"</string>
+    <string name="text_stereo_width_336051" formatted="false">"立体声宽度"</string>
+    <string name="text_stop_9e2534" formatted="false">"停止"</string>
+    <string name="text_stop_casting_1f7a2c" formatted="false">"停止投放"</string>
+    <string name="text_stop_mix_and_return_to_queue_eeb40f" formatted="false">"停止混音并返回队列"</string>
+    <string name="text_strange_attractor_70352b" formatted="false">"奇异吸引子"</string>
+    <string name="text_stream_df0638" formatted="false">"流媒体"</string>
+    <string name="text_stream_from_navidrome_jellyfin_6c07f0" formatted="false">"从 Navidrome / Jellyfin 流式播放"</string>
+    <string name="text_stream_from_server_1f8520" formatted="false">"从服务器流式播放"</string>
+    <string name="text_stream_url_e25c5b" formatted="false">"流地址"</string>
+    <string name="text_streaming_0247ce" formatted="false">"流媒体"</string>
+    <string name="text_streaming_1e8325" formatted="false">"流媒体"</string>
+    <string name="text_streaming_quality_7a2799" formatted="false">"流媒体音质"</string>
+    <string name="text_streaming_quality_crossfade_gapless_and_speed_602d35" formatted="false">"流媒体音质、淡入淡出、无缝播放和速度"</string>
+    <string name="text_strength_24d3e4" formatted="false">"强度"</string>
+    <string name="text_style_99a0ef" formatted="false">"样式"</string>
+    <string name="text_subscribe_d6981f" formatted="false">"订阅"</string>
+    <string name="text_subscribed_dd1242" formatted="false">"已订阅"</string>
+    <string name="text_subsonic_compatible_b4584c" formatted="false">"兼容 Subsonic"</string>
+    <string name="text_subtle_vibration_on_play_skip_navigation_d6940c" formatted="false">"播放、切歌和导航时轻微振动"</string>
+    <string name="text_swipe_artwork_to_change_track_7a762f" formatted="false">"滑动封面切换曲目"</string>
+    <string name="text_swipe_down_to_dismiss_575cb1" formatted="false">"向下滑动关闭"</string>
+    <string name="text_swipe_haptics_and_private_session_19567f" formatted="false">"滑动、触感反馈和私密会话"</string>
+    <string name="text_swipe_the_player_artwork_left_right_fd3460" formatted="false">"向左 / 向右滑动播放器封面"</string>
+    <string name="text_switch_account_a28b02" formatted="false">"切换账号"</string>
+    <string name="text_switch_between_saved_logins_dfa5ef" formatted="false">"在已保存的登录之间切换"</string>
+    <string name="text_switch_gain_between_boost_and_cut_ec1830" formatted="false">"在提升和衰减之间切换增益"</string>
+    <string name="text_switch_presets_by_track_and_output_546392" formatted="false">"根据曲目和输出切换预设"</string>
+    <string name="text_switch_to_home_42c520">"切换到 %1$s 首页"</string>
+    <string name="text_switched_to_c57200">"已切换到 %1$s"</string>
+    <string name="text_switching_servers_stops_playback_from_the_previous_one_cbfa45" formatted="false">"切换服务器会停止上一个服务器的播放。"</string>
+    <string name="text_synced_lyrics_when_your_server_has_none_b4054e" formatted="false">"服务器没有歌词时提供同步歌词"</string>
+    <string name="text_system_bc0792" formatted="false">"系统"</string>
+    <string name="text_system_effects_d5a44a" formatted="false">"系统效果"</string>
+    <string name="text_system_equalizer_be209a" formatted="false">"系统均衡器"</string>
+    <string name="text_tags_saved_521155" formatted="false">"标签已保存"</string>
+    <string name="text_tap_a_value_to_enter_an_exact_time_cue_points_refer_to_the_source_842e53" formatted="false">"点按数值可输入精确时间。切入点和切出点以源歌曲为准。"</string>
+    <string name="text_tap_the_graph_or_adjust_the_frequency_slider_to_inspect_a_point_f_1ff543" formatted="false">"点按图表或调整频率滑块以查看某个点。频率使用对数刻度。"</string>
+    <string name="text_tap_to_allow_bit_perfect_access_to_c08d14">"点按以允许对 %1$s 的 bit-perfect 访问"</string>
+    <string name="text_tape_c51c55" formatted="false">"磁带"</string>
+    <string name="text_taps_estimated_memory_mib_88d38b">"%1$s 个抽头 · 预计内存 %2$s MiB"</string>
+    <string name="text_target_61ad50" formatted="false">"目标"</string>
+    <string name="text_target_library_45e3b8" formatted="false">"目标库"</string>
+    <string name="text_target_rig_6556f6">"目标测量设备：%1$s"</string>
+    <string name="text_target_saved_79a16c" formatted="false">"目标已保存。"</string>
+    <string name="text_target_shape_57174c" formatted="false">"目标形状"</string>
+    <string name="text_teal_df0ad3" formatted="false">"青色"</string>
+    <string name="text_technology_d018b0" formatted="false">"科技"</string>
+    <string name="text_tempo_899658" formatted="false">"速度"</string>
+    <string name="text_tempo_preserves_pitch_eq_boosts_reserve_headroom_before_processin_2b088a" formatted="false">"调整速度时保持音高不变。均衡器提升会在处理前预留余量。"</string>
+    <string name="text_terrain_flyover_ba8ceb" formatted="false">"地形飞越"</string>
+    <string name="text_test_interrupted_ae8398" formatted="false">"测试已中断"</string>
+    <string name="text_text_61e2d5">"%1$s · 文本"</string>
+    <string name="text_text_6fc726" formatted="false">"文本…"</string>
+    <string name="text_that_token_could_not_be_verified_check_it_and_try_again_6668f1" formatted="false">"无法验证该令牌。请检查后重试。"</string>
+    <string name="text_the_android_volume_range_is_unavailable_577138" formatted="false">"Android 音量范围不可用。"</string>
+    <string name="text_the_apk_is_not_from_aurora_s_releases_d728ee" formatted="false">"该 APK 不是来自 Aurora 的发布版本。"</string>
+    <string name="text_the_download_could_not_be_verified_please_try_again_95c71d" formatted="false">"无法验证下载内容。请重试。"</string>
+    <string name="text_the_download_is_incomplete_please_try_again_96c9cd" formatted="false">"下载不完整。请重试。"</string>
+    <string name="text_the_download_isn_t_a_valid_app_update_d50721" formatted="false">"下载的内容不是有效的应用更新。"</string>
+    <string name="text_the_download_was_removed_try_again_867dcc" formatted="false">"下载内容已被移除。请重试。"</string>
+    <string name="text_the_downloaded_update_is_missing_download_it_again_8a84fc" formatted="false">"找不到已下载的更新。请重新下载。"</string>
+    <string name="text_the_line_in_the_arrangement_shows_this_track_s_volume_envelope_ma_689eda" formatted="false">"编排中的线条显示此曲目的音量包络。主余量用于平衡重叠的曲目。"</string>
+    <string name="text_the_next_track_prepares_in_advance_fades_pause_with_playback_and_ed5667" formatted="false">"下一首曲目会提前准备。淡变会随播放暂停，并等待缓冲。关闭余量时，等功率曲线可能更响。"</string>
+    <string name="text_the_player_is_still_connecting_e52aa9" formatted="false">"播放器仍在连接。"</string>
+    <string name="text_the_rack_does_not_have_enough_space_reduce_the_fit_s_band_budget_f8764d" formatted="false">"机架空间不足。请先减少拟合的频段预算或移除机架阶段。"</string>
+    <string name="text_the_rack_is_still_loading_0720e5" formatted="false">"机架仍在加载。"</string>
+    <string name="text_the_rack_stays_inactive_until_you_select_rack_mode_44737b" formatted="false">"在你选择机架模式之前，机架保持未启用状态。"</string>
+    <string name="text_the_receiver_plays_the_source_aurora_s_effects_are_bypassed_e273f5" formatted="false">"由接收器播放音源。Aurora 的效果已旁通。"</string>
+    <string name="text_the_release_apk_is_empty_38a3c2" formatted="false">"发布的 APK 为空。"</string>
+    <string name="text_the_release_has_no_version_745070" formatted="false">"该发布没有版本号。"</string>
+    <string name="text_the_release_version_is_not_supported_0ce4b4" formatted="false">"不支持该发布版本。"</string>
+    <string name="text_the_same_total_as_the_previous_5949c2">"与上一个%1$s总量相同。"</string>
+    <string name="text_the_selected_output_changed_the_comparison_stopped_602724" formatted="false">"所选输出已变化。对比已停止。"</string>
+    <string name="text_the_sign_in_page_could_not_load_check_your_connection_and_reload_a45e09" formatted="false">"无法加载登录页面。请检查网络连接后重新加载。"</string>
+    <string name="text_the_songs_artists_and_moments_that_made_your_days_641b13" formatted="false">"那些陪伴你每一天的歌曲、艺人和瞬间。"</string>
+    <string name="text_the_sound_of_your_b28338">"你的%1$s之声"</string>
+    <string name="text_theme_a797e3" formatted="false">"主题"</string>
+    <string name="text_theme_accent_and_layout_cb0657" formatted="false">"主题、强调色和布局"</string>
+    <string name="text_these_filters_cannot_be_represented_in_the_eq_text_format_025451" formatted="false">"这些滤波器无法用均衡器文本格式表示。"</string>
+    <string name="text_these_settings_belong_to_this_stage_the_original_eq_gain_saturati_989a35" formatted="false">"这些设置属于此阶段。保留原有的 均衡器 → 增益 → 饱和 → 立体声 → 动态 → 延迟 顺序。"</string>
+    <string name="text_these_settings_match_4e8e86" formatted="false">"这些设置一致"</string>
+    <string name="text_third_column_is_phase_bf98b7" formatted="false">"第三列为相位"</string>
+    <string name="text_this_collection_exceeds_the_10_000_track_mix_limit_b8885f" formatted="false">"此合集超过了 10,000 首曲目的混音上限。"</string>
+    <string name="text_this_collection_needs_at_least_two_tracks_to_mix_142509" formatted="false">"此合集至少需要两首曲目才能混音。"</string>
+    <string name="text_this_device_fa5a6d" formatted="false">"此设备"</string>
+    <string name="text_this_file_is_not_a_valid_preset_archive_or_it_is_damaged_choose_a_fc090e" formatted="false">"此文件不是有效的预设存档，或已损坏。请选择 Aurora 导出的预设。"</string>
+    <string name="text_this_ir_is_no_longer_in_the_library_7118f3" formatted="false">"此 IR 已不在库中。"</string>
+    <string name="text_this_is_the_eq_s_group_delay_it_does_not_measure_device_or_playba_31e689" formatted="false">"这是均衡器的群延迟；并不衡量设备或播放的延迟。"</string>
+    <string name="text_this_link_cannot_open_here_finish_verification_using_another_meth_0d1c6a" formatted="false">"此链接无法在这里打开。请使用其他方式完成验证，然后点按“继续前往 YouTube Music”。"</string>
+    <string name="text_this_mix_has_reached_10_000_tracks_115af4" formatted="false">"此混音已达到 10,000 首曲目。"</string>
+    <string name="text_this_project_940087" formatted="false">"此项目"</string>
+    <string name="text_this_project_is_no_longer_saved_33a1db" formatted="false">"此项目已不再保存。"</string>
+    <string name="text_this_rack_is_active_appended_stages_will_affect_playback_92bdc8" formatted="false">"此机架已启用；追加的阶段会影响播放。"</string>
+    <string name="text_this_rack_is_currently_inactive_f790d2" formatted="false">"此机架当前未启用"</string>
+    <string name="text_this_release_s_apk_has_incompatible_version_information_please_ch_71cb07" formatted="false">"此发布的 APK 包含不兼容的版本信息。请查看 GitHub 上的发布。"</string>
+    <string name="text_this_removes_the_saved_mix_your_songs_stay_in_your_library_1951d2" formatted="false">"这会移除已保存的混音。你的歌曲仍保留在音乐库中。"</string>
+    <string name="text_this_removes_the_stage_and_its_settings_from_this_rack_03575f" formatted="false">"这会从此机架中移除该阶段及其设置。"</string>
+    <string name="text_this_replaces_the_current_rack_saved_presets_stay_available_19c825" formatted="false">"这会替换当前机架。已保存的预设仍然可用。"</string>
+    <string name="text_this_stage_has_nonzero_graphic_eq_settings_that_the_text_file_wil_878b50" formatted="false">"此阶段包含非零的图示均衡器设置，文本文件会将其省略。"</string>
+    <string name="text_this_style_includes_its_own_colors_and_corners_your_aurora_custom_9b4b82" formatted="false">"此样式自带颜色和圆角。你对 Aurora 的自定义设置会被保存。"</string>
+    <string name="text_this_update_doesn_t_match_the_installed_app_s_signing_key_install_5af2e9" formatted="false">"此更新与已安装应用的签名密钥不匹配。请从同一来源安装更新。"</string>
+    <string name="text_three_linked_stereo_bands_8f36e9" formatted="false">"三个关联的立体声频段"</string>
+    <string name="text_threshold_c51f7b" formatted="false">"阈值"</string>
+    <string name="text_tilt_db_octave_9349c9" formatted="false">"倾斜 · dB/倍频程"</string>
+    <string name="text_time_to_wake_up_0b1ade" formatted="false">"该起床了"</string>
+    <string name="text_timers_841cd0" formatted="false">"定时器"</string>
+    <string name="text_timing_098024" formatted="false">"时序"</string>
+    <string name="text_title_768e0c" formatted="false">"标题"</string>
+    <string name="text_title_artist_over_the_visual_ff75a3" formatted="false">"在视觉效果上方显示标题和艺人"</string>
+    <string name="text_to_e8d7f8">"%1$s 至 %2$s"</string>
+    <string name="text_today_24345a" formatted="false">"今天"</string>
+    <string name="text_toggle_layout_6169e7" formatted="false">"切换布局"</string>
+    <string name="text_tone_376990" formatted="false">"音色"</string>
+    <string name="text_tone_engine_79c7e5" formatted="false">"音色引擎"</string>
+    <string name="text_tone_shaping_is_bypassed_choose_system_or_custom_above_to_enable_1cdd7c" formatted="false">"音色塑造已旁通。在上方选择“系统”或“自定义”以启用均衡器。"</string>
+    <string name="text_tone_shaping_off_37d5aa" formatted="false">"音色塑造已关闭"</string>
+    <string name="text_too_long_at_khz_trim_first_79c65a">"在 %1$s kHz 下过长。请先裁剪。"</string>
+    <string name="text_top_albums_4dfdc0" formatted="false">"热门专辑"</string>
+    <string name="text_top_artists_4920f8" formatted="false">"热门艺人"</string>
+    <string name="text_top_artists_by_plays_a34fe4" formatted="false">"热门艺人 · 按播放次数"</string>
+    <string name="text_top_songs_ad7864" formatted="false">"热门歌曲"</string>
+    <string name="text_top_songs_by_plays_6be796" formatted="false">"热门歌曲 · 按播放次数"</string>
+    <string name="text_total_bands_boost_db_cut_db_2d77f8">"共 %1$s 个频段 · %2$s\n%3$s–%4$s · 提升 ≤ %5$s dB · 衰减 ≤ %6$s dB"</string>
+    <string name="text_total_listening_all_artists_a37e88" formatted="false">"总聆听量 · 所有艺人"</string>
+    <string name="text_total_parametric_band_budget_6a6f38" formatted="false">"参数频段总预算"</string>
+    <string name="text_track_4c2135" formatted="false">"曲目编号"</string>
+    <string name="text_track_b1c5a7" formatted="false">"曲目"</string>
+    <string name="text_track_info_2bad97" formatted="false">"曲目信息"</string>
+    <string name="text_track_level_d1a7fd" formatted="false">"曲目电平"</string>
+    <string name="text_track_mode_uses_each_track_s_gain_tag_to_reduce_volume_difference_c08f12" formatted="false">"曲目模式使用每首曲目的增益标签来减小歌曲之间的音量差异。"</string>
+    <string name="text_track_replaygain_ddc5fd" formatted="false">"曲目 ReplayGain"</string>
+    <string name="text_track_starts_length_7f84c5">"曲目 %1$s：起点 %2$s，长度 %3$s"</string>
+    <string name="text_track_title_artist_album_and_duration_may_be_sent_to_lrclib_to_fi_c268c3" formatted="false">"曲目的标题、艺人、专辑和时长可能会被发送到 LRCLIB 以查找匹配。"</string>
+    <string name="text_tracks_3dd1a4" formatted="false">"曲目"</string>
+    <string name="text_tracks_7bac8f">"%1$s 首曲目 · %2$s"</string>
+    <string name="text_tracks_analysed_tap_to_rescan_7fa1f5">"已分析 %1$s 首曲目 — 点按以重新扫描"</string>
+    <string name="text_tracks_analyzed_3d39e3">"已分析 %1$s 首曲目"</string>
+    <string name="text_tracks_unavailable_tap_analyze_library_to_retry_dc5b2d">"%1$s 首曲目不可用。点按“分析音乐库”重试。"</string>
+    <string name="text_transition_around_track_choose_a_track_from_all_tracks_f3487f">"曲目 %1$s 附近的过渡 · 请从“所有曲目”中选择一首"</string>
+    <string name="text_transition_envelope_from_to_dc4235">"%1$s，从 %2$s 到 %3$s 的过渡包络"</string>
+    <string name="text_transition_f70dd0">"过渡 · %1$s — %2$s"</string>
+    <string name="text_transition_from_previous_track_80635a" formatted="false">"从上一首曲目过渡"</string>
+    <string name="text_transitions_ready_every_transition_is_editable_a2170c">"%1$s 个过渡已就绪。每个过渡都可以编辑。"</string>
+    <string name="text_treble_f66bec" formatted="false">"高音"</string>
+    <string name="text_treble_limit_abf8ab" formatted="false">"高音上限"</string>
+    <string name="text_treble_start_hz_614974" formatted="false">"高音起始 · Hz"</string>
+    <string name="text_tremolo_cd439d" formatted="false">"震音"</string>
+    <string name="text_trial_guess_x_e02d03">"第 %1$s 次试验：猜测=%2$s，X=%3$s"</string>
+    <string name="text_trial_of_1d28cf">"第 %1$s 次试验，共 %2$s 次"</string>
+    <string name="text_tried_the_server_lrclib_aeac0e" formatted="false">"已尝试服务器和 LRCLIB"</string>
+    <string name="text_trim_and_delay_d38388" formatted="false">"微调和延迟"</string>
+    <string name="text_trim_l_r_d8c438">"微调：L %1$s，R %2$s"</string>
+    <string name="text_trim_range_in_source_frames_d2159a" formatted="false">"裁剪范围（按源帧计）"</string>
+    <string name="text_trim_this_response_before_selecting_it_c65802" formatted="false">"选择前请先裁剪此响应。"</string>
+    <string name="text_true_black_surfaces_saves_power_on_oled_screens_2481a8" formatted="false">"纯黑表面，在 OLED 屏幕上更省电。"</string>
+    <string name="text_true_crime_7a3f06" formatted="false">"真实罪案"</string>
+    <string name="text_try_again_042c86" formatted="false">"重试"</string>
+    <string name="text_tube_419868">"电子管 %1$s%%"</string>
+    <string name="text_tube_8315d0" formatted="false">"电子管"</string>
+    <string name="text_tube_saturation_8c63f8" formatted="false">"电子管饱和"</string>
+    <string name="text_tuning_listening_b4bf76" formatted="false">"调校与聆听"</string>
+    <string name="text_tuning_project_fe107d" formatted="false">"调校项目"</string>
+    <string name="text_tuning_projects_e28bb7" formatted="false">"调校项目"</string>
+    <string name="text_turn_off_daily_alarm_6c0180" formatted="false">"关闭每日闹钟"</string>
+    <string name="text_unbind_e40303" formatted="false">"解除绑定"</string>
+    <string name="text_undefined_0646f4" formatted="false">"未定义"</string>
+    <string name="text_undefined_at_response_null_7b5427" formatted="false">"在响应零点处未定义"</string>
+    <string name="text_under_apis_tick_web_api_and_android_61207d" formatted="false">"在 APIs 下勾选 Web API（和 Android）。"</string>
+    <string name="text_undo_39fc72" formatted="false">"撤销"</string>
+    <string name="text_undo_edit_7e5f02" formatted="false">"撤销修改"</string>
+    <string name="text_undo_last_rack_append_babadf" formatted="false">"撤销上次追加到机架的内容"</string>
+    <string name="text_unfavorite_de9bba" formatted="false">"取消收藏"</string>
+    <string name="text_unified_library_f888ae" formatted="false">"统一音乐库"</string>
+    <string name="text_unique_songs_5af512" formatted="false">"不重复的歌曲"</string>
+    <string name="text_unknown_album_feeeda" formatted="false">"未知专辑"</string>
+    <string name="text_unknown_bc7819" formatted="false">"未知"</string>
+    <string name="text_unknown_format_13526e" formatted="false">"未知格式"</string>
+    <string name="text_unknown_means_the_active_playback_path_cannot_report_that_detail_c0b60e" formatted="false">"“未知”表示当前播放路径无法报告该项信息。受支持或已请求的格式并不能确认实际到达设备的内容。"</string>
+    <string name="text_unknown_title_bceca3" formatted="false">"未知标题"</string>
+    <string name="text_unlabeled_phase_values_must_be_in_degrees_3b36ee" formatted="false">"未标注单位的相位值必须以度为单位。"</string>
+    <string name="text_unlike_e4fc40" formatted="false">"取消喜欢"</string>
+    <string name="text_unpin_from_library_5b3f2e" formatted="false">"从音乐库取消固定"</string>
+    <string name="text_unsaved_changes_292672" formatted="false">"未保存的更改"</string>
+    <string name="text_unsealed_earbuds_and_measured_open_ear_models_including_shokz_c45724" formatted="false">"非密闭式耳塞和实测的开放式型号，包括 Shokz。"</string>
+    <string name="text_untitled_621521" formatted="false">"未命名"</string>
+    <string name="text_unwrapped_phase_degrees_7f6535" formatted="false">"展开相位（度）"</string>
+    <string name="text_up_2038bd" formatted="false">"上"</string>
+    <string name="text_up_next_tracks_6055c6">"即将播放  •  %1$s 首曲目"</string>
+    <string name="text_up_to_15_seconds_rms_matched_within_0_1_db_shorter_at_high_sample_64e480" formatted="false">"最长 15 秒，RMS 匹配误差在 0.1 dB 以内。采样率较高时会更短。"</string>
+    <string name="text_up_to_eight_tracks_can_overlap_at_once_move_this_track_later_in_t_5644e4" formatted="false">"最多可同时重叠八首曲目。请将此曲目在混音中后移。"</string>
+    <string name="text_update_available_21f186" formatted="false">"有可用更新"</string>
+    <string name="text_update_available_6d5dfc">"%1$s 更新可用"</string>
+    <string name="text_update_failed_needs_edit_permission_449ec8" formatted="false">"更新失败，需要编辑权限"</string>
+    <string name="text_updates_this_track_s_metadata_on_the_server_requires_an_account_w_1127e0" formatted="false">"在服务器上更新此曲目的元数据（需要具有编辑权限的账号）。封面不会更改。"</string>
+    <string name="text_updating_alarm_221e61" formatted="false">"正在更新闹钟…"</string>
+    <string name="text_updating_preset_aae445" formatted="false">"正在更新预设…"</string>
+    <string name="text_updating_project_ab05d2" formatted="false">"正在更新项目…"</string>
+    <string name="text_usb_audio_c9b51c" formatted="false">"USB 音频"</string>
+    <string name="text_usb_dac_948bb8" formatted="false">"USB DAC"</string>
+    <string name="text_usb_dac_output_c6adc2" formatted="false">"USB DAC 输出"</string>
+    <string name="text_usb_mode_cce5b7" formatted="false">"USB 模式"</string>
+    <string name="text_usb_transport_39fd7d" formatted="false">"USB 传输"</string>
+    <string name="text_use_0_if_the_dac_voltage_already_includes_this_gain_8fe45f" formatted="false">"如果 DAC 电压已包含此增益，请填 0。"</string>
+    <string name="text_use_1d4d43" formatted="false">"使用"</string>
+    <string name="text_use_5cc455">"使用%1$s"</string>
+    <string name="text_use_9d772b">"使用%1$s？"</string>
+    <string name="text_use_android_audio_output_for_comparison_9b13e7" formatted="false">"请使用 Android 音频输出进行对比。"</string>
+    <string name="text_use_as_target_b5e4c2" formatted="false">"用作目标"</string>
+    <string name="text_use_current_701bc0" formatted="false">"使用当前值"</string>
+    <string name="text_use_current_track_5c31d5" formatted="false">"使用当前曲目"</string>
+    <string name="text_use_flat_ed2b5f" formatted="false">"使用平直响应"</string>
+    <string name="text_use_float32_when_supported_restart_aurora_to_apply_79edcd" formatted="false">"在支持时使用 float32。重启 Aurora 后生效。"</string>
+    <string name="text_use_lrclib_1d1cb5" formatted="false">"使用 LRCLIB"</string>
+    <string name="text_use_notes_415641" formatted="false">"使用备注"</string>
+    <string name="text_use_settings_39966a" formatted="false">"使用设置"</string>
+    <string name="text_use_standard_impulse_289fd1" formatted="false">"使用标准脉冲"</string>
+    <string name="text_use_standard_settings_4e6ed9" formatted="false">"使用标准设置"</string>
+    <string name="text_use_target_69136c" formatted="false">"使用目标"</string>
+    <string name="text_use_the_replacement_only_for_an_exact_artist_match_da4cc7" formatted="false">"仅在艺人完全匹配时使用替换"</string>
+    <string name="text_use_the_stage_mix_to_blend_with_the_original_audio_ff5a7b" formatted="false">"使用阶段的混合比例与原始音频混合。"</string>
+    <string name="text_use_this_library_742704" formatted="false">"使用此音乐库"</string>
+    <string name="text_use_whole_numbers_for_sample_rate_and_band_budget_c979ce" formatted="false">"采样率和频段预算请使用整数。"</string>
+    <string name="text_use_your_server_account_to_open_your_library_800ff2" formatted="false">"使用你的服务器账号打开音乐库。"</string>
+    <string name="text_used_4eb2a7" formatted="false">" 已使用"</string>
+    <string name="text_user_token_a21883" formatted="false">"用户令牌"</string>
+    <string name="text_username_84c290" formatted="false">"用户名"</string>
+    <string name="text_uses_the_previous_track_s_tempo_estimate_falls_back_to_8_seconds_70019c" formatted="false">"使用上一首曲目的速度估计值；分析完成前使用 8 秒。假定每小节 4 拍。"</string>
+    <string name="text_using_your_wallpaper_colors_material_you_33e00d" formatted="false">"正在使用你的壁纸颜色 (Material You)。"</string>
+    <string name="text_uvr_anjok07_aufr33_cached_stems_may_contain_separation_artifacts_1cd68b" formatted="false">"UVR · Anjok07 和 aufr33 · 缓存的分离音轨可能包含分离瑕疵"</string>
+    <string name="text_validating_c07434" formatted="false">"正在验证…"</string>
+    <string name="text_value_8dce17" formatted="false">"值"</string>
+    <string name="text_values_separated_by_8db2e6" formatted="false">"多个值，用 | 分隔"</string>
+    <string name="text_variant_cc91b1" formatted="false">"变体"</string>
+    <string name="text_variant_saved_f3c476" formatted="false">"变体已保存。"</string>
+    <string name="text_variant_selected_b06527" formatted="false">"已选择变体"</string>
+    <string name="text_verifying_the_download_1e833e" formatted="false">"正在验证下载内容…"</string>
+    <string name="text_version_and_app_information_9c9a82" formatted="false">"版本和应用信息"</string>
+    <string name="text_version_app_updates_ebf387">"版本 %1$s · 应用更新"</string>
+    <string name="text_version_d2f210">"版本 %1$s"</string>
+    <string name="text_vibrato_e4de40" formatted="false">"颤音"</string>
+    <string name="text_video_bc17c1" formatted="false">"视频"</string>
+    <string name="text_view_on_github_0c7799" formatted="false">"在 GitHub 上查看"</string>
+    <string name="text_view_profile_b98795" formatted="false">"查看个人资料"</string>
+    <string name="text_view_queue_827a90" formatted="false">"查看队列"</string>
+    <string name="text_violet_ddcd2f" formatted="false">"紫罗兰"</string>
+    <string name="text_virtualizer_headphone_widening_fc230c" formatted="false">"虚拟器（耳机声场扩展）"</string>
+    <string name="text_visualizer_7177c7" formatted="false">"可视化效果"</string>
+    <string name="text_vocal_separation_failed_please_retry_d89efc" formatted="false">"人声分离失败。请重试。"</string>
+    <string name="text_vocals_backing_d8ce42" formatted="false">"人声和伴奏"</string>
+    <string name="text_vocals_only_337845" formatted="false">"仅人声"</string>
+    <string name="text_voice_search_9df53f" formatted="false">"语音搜索"</string>
+    <string name="text_volume_changed_the_comparison_stopped_09aa40" formatted="false">"音量已变化。对比已停止。"</string>
+    <string name="text_volume_leveling_a9df98" formatted="false">"音量平衡"</string>
+    <string name="text_volume_loudness_0e8ee1" formatted="false">"音量与响度"</string>
+    <string name="text_wait_for_the_playback_output_to_be_confirmed_b517cb" formatted="false">"请等待播放输出确认。"</string>
+    <string name="text_waiting_for_a_complete_mono_or_stereo_pcm_window_c07259" formatted="false">"正在等待完整的单声道或立体声 PCM 窗口"</string>
+    <string name="text_waiting_for_a_connection_128662" formatted="false">"正在等待连接…"</string>
+    <string name="text_waiting_for_audio_samples_e18779" formatted="false">"正在等待音频采样。"</string>
+    <string name="text_wake_to_music_alarm_40ab13" formatted="false">"音乐唤醒闹钟"</string>
+    <string name="text_wake_to_your_liked_music_e4d8ed" formatted="false">"在你喜欢的音乐中醒来"</string>
+    <string name="text_wav_exported_78ffe9" formatted="false">"WAV 已导出。"</string>
+    <string name="text_waveform_200f14" formatted="false">"波形"</string>
+    <string name="text_waveform_bars_c215c9" formatted="false">"波形柱条"</string>
+    <string name="text_waveform_ready_tempo_uncertain_df52c4" formatted="false">"波形已就绪 · 速度不确定"</string>
+    <string name="text_wavelet_graphiceq_correction_230cc2" formatted="false">"Wavelet GraphicEQ · 校正"</string>
+    <string name="text_weekly_158f3d" formatted="false">"每周"</string>
+    <string name="text_wet_1df0cd">"%1$s · 湿声 %2$s%%"</string>
+    <string name="text_wet_76d013">"湿声 %1$s%%"</string>
+    <string name="text_wet_dry_6769a1" formatted="false">"干 / 湿"</string>
+    <string name="text_when_a_track_is_available_from_more_than_one_place_aurora_plays_i_99eef3" formatted="false">"当一首曲目可从多个位置获取时，Aurora 会从下方第一个拥有它的"</string>
+    <string name="text_whole_word_6171b6" formatted="false">"全词匹配"</string>
+    <string name="text_width_2f_276839" formatted="false">"宽度 %.2f×"</string>
+    <string name="text_windows_7_inspired_blue_glass_glossy_panels_27d09a" formatted="false">"灵感来自 Windows 7 · 蓝色玻璃 · 光泽面板"</string>
+    <string name="text_wired_headphones_56e99c" formatted="false">"有线耳机"</string>
+    <string name="text_wormhole_18880e" formatted="false">"虫洞"</string>
+    <string name="text_write_permission_denied_ad9ca7" formatted="false">"写入权限被拒绝"</string>
+    <string name="text_writing_tags_edits_the_file_on_your_device_android_may_ask_you_to_a56f12" formatted="false">"写入标签会修改设备上的文件。Android 可能会请你允许此更改。"</string>
+    <string name="text_wrong_username_or_password_85b465" formatted="false">"用户名或密码错误。"</string>
+    <string name="text_x_is_a_4e9e48" formatted="false">"X 是 A"</string>
+    <string name="text_x_is_b_76d9a9" formatted="false">"X 是 B"</string>
+    <string name="text_year_879e32" formatted="false">"年份"</string>
+    <string name="text_yearly_7622eb" formatted="false">"每年"</string>
+    <string name="text_yesterday_da2483" formatted="false">"昨天"</string>
+    <string name="text_you_can_cancel_and_resume_unavailable_tracks_are_retried_on_the_n_af1eea" formatted="false">"你可以取消并稍后继续。不可用的曲目会在下次扫描时重试。"</string>
+    <string name="text_you_can_combine_local_files_server_libraries_and_youtube_music_la_8c6471" formatted="false">"之后你可以在设置中合并本地文件、服务器音乐库和 YouTube Music。"</string>
+    <string name="text_you_re_up_to_date_5fc157" formatted="false">"已是最新版本"</string>
+    <string name="text_your_archive_3a5ad5" formatted="false">"你的存档"</string>
+    <string name="text_your_collection_and_your_discoveries_together_in_one_player_093361" formatted="false">"你的收藏和你的新发现，汇聚在一个播放器中。"</string>
+    <string name="text_your_complete_history_990be7" formatted="false">"你的完整历史"</string>
+    <string name="text_your_complete_processing_settings_ready_to_recall_a6fd9f" formatted="false">"你的完整处理设置，随时可以调用"</string>
+    <string name="text_your_familiar_music_space_fab491" formatted="false">"你熟悉的音乐空间"</string>
+    <string name="text_your_favourites_mixes_and_new_discoveries_6c2fa1" formatted="false">"你的收藏、混音和新发现。"</string>
+    <string name="text_your_google_account_playlists_and_mixes_120c0f" formatted="false">"你的 Google 账号、播放列表和混音"</string>
+    <string name="text_your_library_fd740f" formatted="false">"你的音乐库"</string>
+    <string name="text_your_library_played_through_youtube_a53b5e" formatted="false">"你的音乐库，通过 YouTube 播放"</string>
+    <string name="text_your_listening_days_bf7f7d" formatted="false">"你的聆听天数"</string>
+    <string name="text_your_listening_recap_2d4efe" formatted="false">"你的聆听回顾"</string>
+    <string name="text_your_listening_revisited_9ea31f" formatted="false">"你的聆听，\n再次回味。"</string>
+    <string name="text_your_media_library_77d854" formatted="false">"你的媒体库"</string>
+    <string name="text_your_mixes_7e74f6" formatted="false">"你的混音"</string>
+    <string name="text_your_music_and_settings_stay_in_place_f17937">"%1$s · 你的音乐和设置保持不变。"</string>
+    <string name="text_your_music_your_listening_story_2b5397" formatted="false">"你的音乐。你的聆听故事。"</string>
+    <string name="text_your_music_your_way_db5743" formatted="false">"你的音乐，由你做主"</string>
+    <string name="text_your_playlists_df03eb" formatted="false">"你的播放列表"</string>
+    <string name="text_your_recap_all_together_933de3" formatted="false">"你的回顾，一览无余"</string>
+    <string name="text_your_recap_will_appear_here_once_the_period_ends_and_has_some_lis_3906ab">"你的%1$s回顾会在该周期结束并且有聆听记录可供回顾后显示在这里。"</string>
+    <string name="text_your_recently_played_tracks_will_appear_here_0bdf0b" formatted="false">"你最近播放的曲目会显示在这里"</string>
+    <string name="text_your_saved_time_is_d52817">"你保存的时间是 %1$s。"</string>
+    <string name="text_your_server_d2f076" formatted="false">"你的服务器"</string>
+    <string name="text_your_stations_d1f54b" formatted="false">"你的电台"</string>
+    <string name="text_your_tracks_226210" formatted="false">"你的曲目"</string>
+    <string name="text_your_will_show_up_once_the_server_has_some_ced31f">"服务器上有内容后，你的%1$s就会显示出来。"</string>
+    <string name="text_your_year_month_by_month_e19b5f" formatted="false">"你的一年，逐月回顾"</string>
+    <string name="text_youtube_music_adds_catalogue_search_and_a_separate_home_feed_matc_b8a69c" formatted="false">"YouTube Music 增加了曲库搜索和独立的首页内容。匹配的录音会使用你首选的本地、已下载或服务器副本。Spotify 保持独立。"</string>
+    <string name="text_youtube_music_uses_google_sign_in_0ba1e7" formatted="false">"YouTube Music 使用 Google 登录。"</string>
+    <string name="video_quality">画质</string>
+    <string name="video_quality_auto">自动</string>
+    <string name="video_fullscreen_enter">全屏</string>
+    <string name="video_fullscreen_exit">退出全屏</string>
+    <string name="video_match_not_found">这首歌曲没有匹配的 YouTube 视频。</string>
+</resources>

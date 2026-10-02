@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">播放列表</string>
+    <string name="track_playlists_title">添加到播放列表或从中移除</string>
+    <string name="track_playlists_hint">点按以添加或移除此曲目。</string>
+    <string name="track_playlists_empty">还没有播放列表。请先在音乐库中创建一个。</string>
+    <string name="track_playlists_unavailable">请连接此曲目的音乐来源以编辑其播放列表。</string>
+    <string name="track_playlists_load_error">无法加载播放列表。请重试。</string>
+    <string name="track_playlists_save_error">无法更新此播放列表。请检查网络连接和编辑权限。</string>
+    <string name="track_swipe_retry">重试</string>
+    <string name="track_swipe_done">完成</string>
+    <string name="track_playlists_in_playlist">已在播放列表中</string>
+    <string name="track_playlists_add">添加到播放列表</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">封面</string>
+    <string name="artwork_lookup">查找缺失的封面</string>
+    <string name="artwork_description">为没有封面的歌曲和专辑匹配封面。</string>
+    <string name="artwork_provider">使用艺人、专辑和曲目名称在 MusicBrainz 和 Cover Art Archive 上查找封面。已有的封面仍然优先。</string>
+    <string name="artwork_cache_usage">封面缓存：%.1f MB / 64 MB。已缓存的封面离线时仍可使用。</string>
+    <string name="artwork_clear">清除封面缓存</string>
+    <string name="artwork_clear_failed">无法清除封面缓存。请重试。</string>
+</resources>

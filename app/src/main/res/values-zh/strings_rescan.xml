@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">重新扫描本地音乐库</string>
+    <string name="rescan_summary">查找此设备上新增、移动或删除的音乐</string>
+    <string name="rescan_running">正在扫描此设备…</string>
+    <string name="rescan_result">新增 %1$d 首，移除 %2$d 首</string>
+    <string name="rescan_unchanged">已是最新 · %1$d 首歌曲</string>
+    <string name="rescan_failed">扫描未能完成。请重试。</string>
+    <string name="rescan_permission">请允许访问此设备上的音乐以进行扫描。</string>
+</resources>

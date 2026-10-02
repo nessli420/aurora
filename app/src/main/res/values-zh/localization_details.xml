@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"包含"</string>
+    <string name="rule_is">"是"</string>
+    <string name="rule_exactly">"完全等于"</string>
+    <string name="answer_yes">"是"</string>
+    <string name="answer_no">"否"</string>
+    <string name="recap_sound">"你听得最多的艺人"</string>
+    <string name="recap_equal">"聆听时间与上一个周期相同"</string>
+    <string name="recap_more">"比上一个周期多 %1$s 分钟"</string>
+    <string name="recap_less">"比上一个周期少 %1$s 分钟"</string>
+    <string name="recap_pending">"此周期结束并且有聆听历史后，你的回顾就会显示出来。"</string>
+    <string name="recap_new_count">"新回顾已就绪：%1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"回顾 · %1$s"</string>
+    <string name="recap_latest_title">"最新回顾 · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"午夜"</string>
+    <string name="recap_paper">"纸张"</string>
+    <string name="longest_streak">"最长：%1$s"</string>
+    <string name="downloading_tracks">"正在下载：%1$s"</string>
+    <string name="playlist_track_count">"播放列表 · %1$s"</string>
+    <string name="smart_rule_count">"智能播放列表 · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"即将播放 · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · 已扫描：%3$s"</string>
+    <string name="track_count_more">"%1$s+ 首曲目"</string>
+    <string name="search_collection">"在此合集中搜索"</string>
+    <string name="downloaded_collection">"已下载"</string>
+    <string name="signal_start_playback">"开始播放以检查其信号路径。"</string>
+    <string name="text_source_rate_cf5128">"音源采样率"</string>
+    <string name="text_current_playback_27f5a5">"当前播放"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"真立体声 · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"任意"</string>
+    <string name="text_saved_impulse_response_a5fc40">"已保存的脉冲响应"</string>
+    <string name="text_hide_34d8b6">"隐藏"</string>
+    <string name="text_show_d97d1e">"显示"</string>
+    <string name="text_flat_target_7a50d3">"平直目标"</string>
+    <string name="text_unspecified_a6e7eb">"未指定"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d 首曲目</item>
+        <item quantity="other">%1$d 首曲目</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d 张专辑</item>
+        <item quantity="other">%1$d 张专辑</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d 位艺人</item>
+        <item quantity="other">%1$d 位艺人</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d 个播放列表</item>
+        <item quantity="other">%1$d 个播放列表</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d 项</item>
+        <item quantity="other">%1$d 项</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">播放 %1$d 次</item>
+        <item quantity="other">播放 %1$d 次</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d 天</item>
+        <item quantity="other">%1$d 天</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">活跃 %1$d 天</item>
+        <item quantity="other">活跃 %1$d 天</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d 条规则</item>
+        <item quantity="other">%1$d 条规则</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d 组</item>
+        <item quantity="other">%1$d 组</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d 个频段</item>
+        <item quantity="other">%1$d 个频段</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d 小节</item>
+        <item quantity="other">%1$d 小节</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"请先保存一个预设"</string>
+    <string name="text_the_dac_05159b">"DAC"</string>
+    <string name="text_active_945637">" · 已启用"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome 或 Subsonic"</string>
+</resources>

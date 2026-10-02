@@ -31,19 +31,21 @@ class LocalizationResourcesTest {
         }
     }
 
-    @Test fun turkishResourcesAreCompleteAndKeepFormatArguments() {
+    @Test fun translatedResourcesAreCompleteAndKeepFormatArguments() {
         fun strings(directory: String) = File("src/main/res/$directory").listFiles()!!.filter { it.extension == "xml" }.flatMap { file ->
             val nodes = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(file).getElementsByTagName("string")
             (0 until nodes.length).map { nodes.item(it) as Element }.filter { it.getAttribute("translatable") != "false" }
                 .map { it.getAttribute("name") to it.textContent }
         }.toMap()
         val english = strings("values")
-        val turkish = strings("values-tr")
-        assertEquals(english.keys - "app_name", turkish.keys)
         val format = Regex("%%|%(?:[0-9]+\\$)?[-+0-9.]*[sdf]")
-        turkish.forEach { (name, text) ->
-            assertEquals(name, format.findAll(english.getValue(name)).map { it.value }.sorted().toList(),
-                format.findAll(text).map { it.value }.sorted().toList())
+        for (directory in listOf("values-tr", "values-es", "values-fr", "values-zh", "values-pt", "values-hi", "values-ur")) {
+            val translated = strings(directory)
+            assertEquals(directory, english.keys - "app_name", translated.keys)
+            translated.forEach { (name, text) ->
+                assertEquals("$directory/$name", format.findAll(english.getValue(name)).map { it.value }.sorted().toList(),
+                    format.findAll(text).map { it.value }.sorted().toList())
+            }
         }
     }
 }

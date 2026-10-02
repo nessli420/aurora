@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">No se pudo sincronizar el historial de escucha. Revisa tu conexión y tu cuenta.</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">\u2067پلے لسٹس\u2069</string>
+    <string name="track_playlists_title">\u2067پلے لسٹس میں شامل کریں یا ہٹائیں\u2069</string>
+    <string name="track_playlists_hint">\u2067اس ٹریک کو شامل کرنے یا ہٹانے کے لیے تھپتھپائیں۔\u2069</string>
+    <string name="track_playlists_empty">\u2067ابھی کوئی پلے لسٹ نہیں۔ پہلے اپنی لائبریری میں ایک بنائیں۔\u2069</string>
+    <string name="track_playlists_unavailable">\u2067اس ٹریک کی پلے لسٹس میں ترمیم کے لیے اس کے موسیقی کے سورس سے جڑیں۔\u2069</string>
+    <string name="track_playlists_load_error">\u2067پلے لسٹس لوڈ نہیں ہو سکیں۔ دوبارہ کوشش کریں۔\u2069</string>
+    <string name="track_playlists_save_error">\u2067یہ پلے لسٹ اپ ڈیٹ نہیں ہو سکی۔ اپنا کنکشن اور ترمیم کی اجازتیں چیک کریں۔\u2069</string>
+    <string name="track_swipe_retry">\u2067دوبارہ کوشش کریں\u2069</string>
+    <string name="track_swipe_done">\u2067ہو گیا\u2069</string>
+    <string name="track_playlists_in_playlist">\u2067پلے لسٹ میں ہے\u2069</string>
+    <string name="track_playlists_add">\u2067پلے لسٹ میں شامل کریں\u2069</string>
+</resources>

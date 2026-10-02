@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">应用图标</string>
+    <string name="app_icon_pending">离开 Aurora 后，新图标会出现在主屏幕上。</string>
+    <string name="app_icon_note">有些启动器会在图标更改时从主屏幕移除旧图标，因此你可能需要重新添加 Aurora。</string>
+</resources>

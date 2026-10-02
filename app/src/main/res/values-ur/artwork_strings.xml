@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">\u2067کور آرٹ\u2069</string>
+    <string name="artwork_lookup">\u2067غائب کور تلاش کریں\u2069</string>
+    <string name="artwork_description">\u2067جن گانوں اور البمز کا کور آرٹ نہیں ہے، ان کے لیے کور تلاش کریں۔\u2069</string>
+    <string name="artwork_provider">\u2067MusicBrainz اور Cover Art Archive پر کور تلاش کرنے کے لیے فنکار، البم اور ٹریک کے نام استعمال کرتا ہے۔ موجودہ آرٹ ورک کو ترجیح ملتی ہے۔\u2069</string>
+    <string name="artwork_cache_usage">\u2067آرٹ ورک کیش: 64 MB میں سے %.1f MB۔ کیش شدہ کور آف لائن بھی دستیاب رہتے ہیں۔\u2069</string>
+    <string name="artwork_clear">\u2067آرٹ ورک کیش صاف کریں\u2069</string>
+    <string name="artwork_clear_failed">\u2067آرٹ ورک کیش صاف نہیں ہو سکا۔ دوبارہ کوشش کریں۔\u2069</string>
+</resources>

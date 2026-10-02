@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">\u2067پلے لسٹ نہیں بن سکی۔ اپنا کنکشن اور پلے لسٹ کی اجازتیں چیک کریں، پھر دوبارہ کوشش کریں۔\u2069</string>
+    <string name="playlist_update_failed">\u2067پلے لسٹ محفوظ نہیں ہو سکی۔ اپنا کنکشن اور پلے لسٹ کی اجازتیں چیک کریں، پھر دوبارہ کوشش کریں۔\u2069</string>
+    <string name="playlist_delete_failed">\u2067پلے لسٹ حذف نہیں ہو سکی۔ اپنا کنکشن اور پلے لسٹ کی اجازتیں چیک کریں، پھر دوبارہ کوشش کریں۔\u2069</string>
+    <string name="playlist_creating">\u2067بن رہا ہے…\u2069</string>
+    <string name="playlist_saving">\u2067محفوظ ہو رہا ہے…\u2069</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Pochettes</string>
+    <string name="artwork_lookup">Trouver les pochettes manquantes</string>
+    <string name="artwork_description">Recherche des pochettes pour les titres et albums qui n\'en ont pas.</string>
+    <string name="artwork_provider">Utilise les noms de l\'artiste, de l\'album et de la piste pour trouver des pochettes sur MusicBrainz et Cover Art Archive. Les pochettes existantes restent prioritaires.</string>
+    <string name="artwork_cache_usage">Cache des pochettes : %.1f Mo sur 64 Mo. Les pochettes en cache restent disponibles hors connexion.</string>
+    <string name="artwork_clear">Vider le cache des pochettes</string>
+    <string name="artwork_clear_failed">Impossible de vider le cache des pochettes. Réessayez.</string>
+</resources>

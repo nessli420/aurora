@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">应用语言</string>
+    <string name="language_system">系统默认</string>
+    <string name="language_description">选择 Aurora 使用的语言。音乐标题和艺人名称保持原样。</string>
+</resources>

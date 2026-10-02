@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">\u2067خودکار آف لائن کیش\u2069</string>
+    <string name="cache_description">\u2067سنتے وقت آڈیو محفوظ رکھتا ہے۔ مکمل کیش شدہ ٹریک آف لائن ہونے پر آپ کی لائبریری میں نظر آتے ہیں۔\u2069</string>
+    <string name="cache_limit">\u2067کیش کی حد\u2069</string>
+    <string name="cache_used">\u2067%2$s میں سے %1$s استعمال میں\u2069</string>
+    <string name="cache_policy">\u2067پرانا کیش خود بخود ہٹ جاتا ہے۔ ڈاؤن لوڈ تب تک رہتے ہیں جب تک آپ انہیں نہ ہٹائیں۔\u2069</string>
+    <string name="cache_clear">\u2067آڈیو کیش صاف کریں\u2069</string>
+    <string name="cache_clear_title">\u2067کیش شدہ آڈیو صاف کریں؟\u2069</string>
+    <string name="cache_clear_message">\u2067کیش شدہ ٹریک دوبارہ چلانے کے لیے کنکشن درکار ہوگا۔ آپ کے ڈاؤن لوڈ، لائبریری اور ترتیبات برقرار رہیں گی۔ سنتے وقت کیش دوبارہ بھر جاتا ہے۔\u2069</string>
+    <string name="cache_clearing">\u2067کیش صاف ہو رہا ہے…\u2069</string>
+    <string name="cache_cleared">\u2067آڈیو کیش صاف ہو گیا\u2069</string>
+    <string name="cache_clear_failed">\u2067آڈیو کیش صاف نہیں ہو سکا۔ دوبارہ کوشش کریں۔\u2069</string>
+    <string name="cache_unavailable">\u2067آڈیو کیش دستیاب نہیں ہے۔ پلے بیک معمول کے مطابق اسٹریم ہو سکتا ہے۔\u2069</string>
+    <string name="cache_loading">\u2067کیش چیک ہو رہا ہے…\u2069</string>
+    <string name="cache_offline_summary">\u2067ڈاؤن لوڈ شدہ اور مکمل کیش شدہ موسیقی چلائیں\u2069</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">\u2067%1$d ٹریک آف لائن تیار\u2069</item>
+        <item quantity="other">\u2067%1$d ٹریک آف لائن تیار\u2069</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">\u2067%1$d ڈاؤن لوڈ شدہ ٹریک\u2069</item>
+        <item quantity="other">\u2067%1$d ڈاؤن لوڈ شدہ ٹریک\u2069</item>
+    </plurals>
+</resources>

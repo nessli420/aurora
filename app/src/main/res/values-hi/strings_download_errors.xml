@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_start_failed">यह डाउनलोड शुरू नहीं हो सका। कोई मौजूदा डाउनलोड किसी और स्रोत का हो सकता है।</string>
+</resources>

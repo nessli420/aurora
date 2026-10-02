@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"\u2067شامل ہے\u2069"</string>
+    <string name="rule_is">"\u2067ہے\u2069"</string>
+    <string name="rule_exactly">"\u2067بالکل\u2069"</string>
+    <string name="answer_yes">"\u2067ہاں\u2069"</string>
+    <string name="answer_no">"\u2067نہیں\u2069"</string>
+    <string name="recap_sound">"\u2067آپ کا سب سے زیادہ سنا گیا فنکار\u2069"</string>
+    <string name="recap_equal">"\u2067پچھلی مدت جتنا ہی سننے کا وقت\u2069"</string>
+    <string name="recap_more">"\u2067پچھلی مدت سے %1$s منٹ زیادہ\u2069"</string>
+    <string name="recap_less">"\u2067پچھلی مدت سے %1$s منٹ کم\u2069"</string>
+    <string name="recap_pending">"\u2067یہ مدت ختم ہونے اور سننے کی ہسٹری ہونے پر آپ کا ری کیپ نظر آئے گا۔\u2069"</string>
+    <string name="recap_new_count">"\u2067نئے ری کیپس تیار: %1$s\u2069"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"\u2067ری کیپ · %1$s\u2069"</string>
+    <string name="recap_latest_title">"\u2067تازہ ترین ری کیپ · %1$s\u2069"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"\u2067آدھی رات\u2069"</string>
+    <string name="recap_paper">"\u2067کاغذ\u2069"</string>
+    <string name="longest_streak">"\u2067طویل ترین: %1$s\u2069"</string>
+    <string name="downloading_tracks">"\u2067ڈاؤن لوڈ ہو رہا ہے: %1$s\u2069"</string>
+    <string name="playlist_track_count">"\u2067پلے لسٹ · %1$s\u2069"</string>
+    <string name="smart_rule_count">"\u2067اسمارٹ پلے لسٹ · %1$s\u2069"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"\u2067آگے · %1$s\u2069"</string>
+    <string name="duplicates_counts">"\u2067%1$s · %2$s · اسکین ہوئے: %3$s\u2069"</string>
+    <string name="track_count_more">"\u2067%1$s+ ٹریک\u2069"</string>
+    <string name="search_collection">"\u2067اس مجموعے میں تلاش کریں\u2069"</string>
+    <string name="downloaded_collection">"\u2067ڈاؤن لوڈ شدہ\u2069"</string>
+    <string name="signal_start_playback">"\u2067اس کا سگنل پاتھ دیکھنے کے لیے پلے بیک شروع کریں۔\u2069"</string>
+    <string name="text_source_rate_cf5128">"\u2067سورس ریٹ\u2069"</string>
+    <string name="text_current_playback_27f5a5">"\u2067موجودہ پلے بیک\u2069"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"\u2067ٹرو اسٹیریو · LL/LR/RL/RR\u2069"</string>
+    <string name="text_any_322444">"\u2067کوئی بھی\u2069"</string>
+    <string name="text_saved_impulse_response_a5fc40">"\u2067محفوظ امپلس رسپانس\u2069"</string>
+    <string name="text_hide_34d8b6">"\u2067چھپائیں\u2069"</string>
+    <string name="text_show_d97d1e">"\u2067دکھائیں\u2069"</string>
+    <string name="text_flat_target_7a50d3">"\u2067فلیٹ ٹارگٹ\u2069"</string>
+    <string name="text_unspecified_a6e7eb">"\u2067غیر متعین\u2069"</string>
+    <plurals name="track_count">
+        <item quantity="one">\u2067%1$d ٹریک\u2069</item>
+        <item quantity="other">\u2067%1$d ٹریک\u2069</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">\u2067%1$d البم\u2069</item>
+        <item quantity="other">\u2067%1$d البمز\u2069</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">\u2067%1$d فنکار\u2069</item>
+        <item quantity="other">\u2067%1$d فنکار\u2069</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">\u2067%1$d پلے لسٹ\u2069</item>
+        <item quantity="other">\u2067%1$d پلے لسٹس\u2069</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">\u2067%1$d آئٹم\u2069</item>
+        <item quantity="other">\u2067%1$d آئٹمز\u2069</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">\u2067%1$d پلے\u2069</item>
+        <item quantity="other">\u2067%1$d پلیز\u2069</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">\u2067%1$d دن\u2069</item>
+        <item quantity="other">\u2067%1$d دن\u2069</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">\u2067%1$d فعال دن\u2069</item>
+        <item quantity="other">\u2067%1$d فعال دن\u2069</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">\u2067%1$d قاعدہ\u2069</item>
+        <item quantity="other">\u2067%1$d قواعد\u2069</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">\u2067%1$d گروپ\u2069</item>
+        <item quantity="other">\u2067%1$d گروپس\u2069</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">\u2067%1$d بینڈ\u2069</item>
+        <item quantity="other">\u2067%1$d بینڈز\u2069</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">\u2067%1$d بار\u2069</item>
+        <item quantity="other">\u2067%1$d بارز\u2069</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"\u2067پہلے ایک پری سیٹ محفوظ کریں\u2069"</string>
+    <string name="text_the_dac_05159b">"DAC"</string>
+    <string name="text_active_945637">" \u2067· فعال\u2069"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"\u2067Navidrome یا Subsonic\u2069"</string>
+</resources>

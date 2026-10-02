@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">सुनने का इतिहास सिंक नहीं हो सका। अपना कनेक्शन और खाता जाँचें।</string>
+</resources>

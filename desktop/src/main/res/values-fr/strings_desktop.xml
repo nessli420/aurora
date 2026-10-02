@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="text_add_music_folder_a083d8" formatted="false">"Ajouter un dossier de musique"</string>
+    <string name="text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2" formatted="false">"Décodage audio. Copyright © les développeurs de FFmpeg. LGPL-3.0-or-later, lié dynamiquement via JavaCPP Presets. Licence complète : https://www.gnu.org/licenses/lgpl-3.0.html"</string>
+    <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora prend le contrôle exclusif de l\'appareil et envoie les échantillons à la fréquence et à la profondeur de bits propres à la piste. Les autres applications sont muettes pendant qu\'Aurora joue. La sortie reste bit-perfect lorsque le traitement, le volume et ReplayGain laissent les échantillons inchangés ; si l\'appareil refuse un format, Aurora revient au mode partagé et Chemin du signal en indique la raison."</string>
+    <string name="text_bit_float_012895">"Flottant %1$d bits"</string>
+    <string name="text_bit_integer_72520f">"Entier %1$d bits"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Sortie bit-perfect qui contourne le mélangeur Windows"</string>
+    <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Conçu avec Compose Multiplatform et Material 3."</string>
+    <string name="text_cache_50338b" formatted="false">"Cache"</string>
+    <string name="text_cannot_resize_this_image_be7b26" formatted="false">"Impossible de redimensionner cette image."</string>
+    <string name="text_ch_282ab4">"%1$d canaux"</string>
+    <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"Choisissez une image prise en charge de moins de 100 mégapixels."</string>
+    <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"Choisissez une image de moins de 20 Mo."</string>
+    <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Choisissez où se trouve votre musique sur ce PC"</string>
+    <string name="text_clear_image_cache_ff7b31" formatted="false">"Vider le cache des images"</string>
+    <string name="text_close_to_tray_f91cc6" formatted="false">"Fermer dans la zone de notification"</string>
+    <string name="text_date_added_56ab7a" formatted="false">"Date d\'ajout"</string>
+    <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Appareil, mode exclusif et tampon"</string>
+    <string name="text_exclusive_mode_01d9b2" formatted="false">"Mode exclusif"</string>
+    <string name="text_exclusive_mode_is_unavailable_0de552">"Le mode exclusif est indisponible : %1$s"</string>
+    <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Le mode exclusif est indisponible sur cet appareil"</string>
+    <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Suivre la pochette en cours"</string>
+    <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz est indisponible ; utilisation de %2$d Hz."</string>
+    <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Laisse Aurora jouer dans la zone de notification lorsque la fenêtre se ferme"</string>
+    <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Les tampons plus grands résistent aux fortes charges système ; les plus petits réagissent plus vite aux déplacements et au volume. S\'applique à la réouverture de la sortie."</string>
+    <string name="text_logs_126dd3" formatted="false">"Journaux"</string>
+    <string name="text_open_in_full_page_0ec923" formatted="false">"Ouvrir en pleine page"</string>
+    <string name="text_output_buffer_61b372" formatted="false">"Tampon de sortie"</string>
+    <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Format de mixage du mode partagé"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Le mode partagé mélange Aurora avec les autres applications via le moteur audio de Windows, au format de mixage de l\'appareil. Activez le mode exclusif pour une lecture bit-perfect."</string>
+    <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"La valeur par défaut du système suit l\'appareil de sortie de Windows, même s\'il change pendant la lecture."</string>
+    <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"La sortie audio n\'a pas pu être utilisée"</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"La politique de fréquence d\'échantillonnage et le dither s\'appliquent en mode exclusif. Le mode partagé lit toujours au format de mixage de Windows."</string>
+    <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"L\'appareil de sortie sélectionné a été déconnecté"</string>
+    <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"La piste n\'a pas pu être décodée"</string>
+    <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"La piste n\'a pas pu être ouverte"</string>
+    <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"La fréquence d\'échantillonnage de la piste n\'est pas prise en charge"</string>
+    <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Teinte toute l\'application avec la couleur du titre en cours de lecture"</string>
+    <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Utilise votre couleur d\'accentuation Windows."</string>
+    <string name="text_volume_3b18e8" formatted="false">"Volume"</string>
+    <string name="text_windows_capabilities_0f1fa0" formatted="false">"Fonctionnalités Windows"</string>
+    <string name="text_windows_java_2566af">"Windows · Java %1$d"</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">प्लेलिस्ट नहीं बन सकी। अपना कनेक्शन और प्लेलिस्ट अनुमतियाँ जाँचें, फिर दोबारा कोशिश करें।</string>
+    <string name="playlist_update_failed">प्लेलिस्ट सहेजी नहीं जा सकी। अपना कनेक्शन और प्लेलिस्ट अनुमतियाँ जाँचें, फिर दोबारा कोशिश करें।</string>
+    <string name="playlist_delete_failed">प्लेलिस्ट हटाई नहीं जा सकी। अपना कनेक्शन और प्लेलिस्ट अनुमतियाँ जाँचें, फिर दोबारा कोशिश करें।</string>
+    <string name="playlist_creating">बन रहा है…</string>
+    <string name="playlist_saving">सहेजा जा रहा है…</string>
+</resources>

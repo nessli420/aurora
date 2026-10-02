@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">आपके Plex Media Server का संगीत।</string>
+    <string name="plex_connect_title">Plex कनेक्ट करें</string>
+    <string name="plex_token_detail">इस सर्वर के एक्सेस वाला Plex ऑथेंटिकेशन टोकन इस्तेमाल करें।</string>
+    <string name="plex_token_label">Plex टोकन</string>
+    <string name="plex_token_help">अपना Plex टोकन कैसे खोजें</string>
+    <string name="plex_token_show">टोकन दिखाएँ</string>
+    <string name="plex_token_hide">टोकन छिपाएँ</string>
+    <string name="plex_token_rejected">Plex ने यह टोकन अस्वीकार कर दिया। जाँचें कि इसके पास इस सर्वर का एक्सेस है।</string>
+    <string name="plex_server_detail">अपने Plex Media Server का पता इस्तेमाल करें, आमतौर पर पोर्ट 32400 के साथ।</string>
+    <string name="plex_sources_stream_detail">Navidrome, Jellyfin या Plex से स्ट्रीम करें।</string>
+    <string name="plex_sources_empty_detail">यहाँ शामिल करने के लिए सेटिंग → खाते में Navidrome, Jellyfin, Plex या YouTube Music खाता जोड़ें।</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">无法创建播放列表。请检查网络连接和播放列表权限，然后重试。</string>
+    <string name="playlist_update_failed">无法保存播放列表。请检查网络连接和播放列表权限，然后重试。</string>
+    <string name="playlist_delete_failed">无法删除播放列表。请检查网络连接和播放列表权限，然后重试。</string>
+    <string name="playlist_creating">正在创建…</string>
+    <string name="playlist_saving">正在保存…</string>
+</resources>

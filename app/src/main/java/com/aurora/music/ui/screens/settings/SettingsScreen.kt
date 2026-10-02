@@ -213,6 +213,12 @@ fun SettingsScreen(
                         subtitle = when (androidx.appcompat.app.AppCompatDelegate.getApplicationLocales().get(0)?.language) {
                             "ru" -> "Русский"
                             "tr" -> "Türkçe"
+                            "es" -> "Español"
+                            "fr" -> "Français"
+                            "zh" -> "简体中文"
+                            "pt" -> "Português"
+                            "hi" -> "हिन्दी"
+                            "ur" -> "اردو"
                             "en" -> "English"
                             else -> androidx.compose.ui.res.stringResource(com.aurora.music.R.string.language_system)
                         }, onClick = onOpenLanguage)

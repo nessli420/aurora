@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">Playlists</string>
+    <string name="track_playlists_title">Adicionar ou remover de playlists</string>
+    <string name="track_playlists_hint">Toque para adicionar ou remover esta faixa.</string>
+    <string name="track_playlists_empty">Ainda não há playlists. Crie uma na sua biblioteca primeiro.</string>
+    <string name="track_playlists_unavailable">Conecte-se à fonte de música desta faixa para editar as playlists dela.</string>
+    <string name="track_playlists_load_error">Não foi possível carregar as playlists. Tente de novo.</string>
+    <string name="track_playlists_save_error">Não foi possível atualizar esta playlist. Verifique sua conexão e as permissões de edição.</string>
+    <string name="track_swipe_retry">Tentar de novo</string>
+    <string name="track_swipe_done">Concluído</string>
+    <string name="track_playlists_in_playlist">Na playlist</string>
+    <string name="track_playlists_add">Adicionar à playlist</string>
+</resources>

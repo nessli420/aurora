@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">\u2067مقامی لائبریری دوبارہ اسکین کریں\u2069</string>
+    <string name="rescan_summary">\u2067اس آلے پر شامل، منتقل یا حذف کی گئی موسیقی تلاش کریں\u2069</string>
+    <string name="rescan_running">\u2067یہ آلہ اسکین ہو رہا ہے…\u2069</string>
+    <string name="rescan_result">\u2067%1$d شامل ہوئے، %2$d ہٹائے گئے\u2069</string>
+    <string name="rescan_unchanged">\u2067اپ ٹو ڈیٹ · %1$d گانے\u2069</string>
+    <string name="rescan_failed">\u2067اسکین مکمل نہیں ہو سکا۔ دوبارہ کوشش کریں۔\u2069</string>
+    <string name="rescan_permission">\u2067اس آلے کو اسکین کرنے کے لیے اس کی موسیقی تک رسائی کی اجازت دیں۔\u2069</string>
+</resources>

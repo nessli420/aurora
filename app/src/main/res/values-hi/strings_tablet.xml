@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">अभी चल रहा है खोलें</string>
+    <string name="tablet_now_playing">अभी चल रहा है</string>
+    <string name="tablet_seek">सीक करें</string>
+    <string name="tablet_close_panel">पैनल बंद करें</string>
+    <string name="tablet_player_panes">अभी चल रहा है पैनल</string>
+    <string name="tablet_fullscreen_lyrics">फ़ुल-स्क्रीन लिरिक्स</string>
+    <string name="tablet_resize_panels">पैनल का आकार बदलें</string>
+    <string name="tablet_layout_title">टैबलेट लेआउट</string>
+    <string name="tablet_layout_detected">यह इसलिए दिखता है क्योंकि इस डिवाइस की स्क्रीन बड़ी है। हर सेटिंग पोर्ट्रेट और लैंडस्केप दोनों में लागू होती है।</string>
+    <string name="tablet_dock_size">डॉक का आकार</string>
+    <string name="tablet_panel_controls">पैनल कंट्रोल</string>
+    <string name="tablet_panel_spacing">पैनल के बीच की दूरी</string>
+    <string name="tablet_nav_gap">नेविगेशन के बगल का गैप</string>
+    <string name="tablet_page_margins">पेज मार्जिन</string>
+    <string name="tablet_hero_size">फ़ीचर्ड कार्ड का आकार</string>
+    <string name="tablet_favourites_size">पसंदीदा कार्ड का आकार</string>
+    <string name="tablet_player_split">अभी चल रहा है स्प्लिट</string>
+    <string name="tablet_player_split_hint">आप अभी चल रहा है में डिवाइडर को खींच भी सकते हैं।</string>
+    <string name="tablet_reset">टैबलेट लेआउट रीसेट करें</string>
+    <string name="nav_menu_title">नेविगेशन मेन्यू</string>
+    <string name="nav_menu_summary">चुनें कि मुख्य सूची में और अधिक के नीचे क्या दिखे</string>
+    <string name="nav_section_main">मुख्य</string>
+    <string name="nav_section_more">अधिक</string>
+    <string name="nav_section_hidden">नहीं दिखाए गए</string>
+    <string name="nav_menu_hint">आइटम का क्रम बदलने के लिए तीरों का उपयोग करें। किसी आइटम को मुख्य और अधिक के बीच ले जाने या हटाने के लिए उसके मेन्यू पर टैप करें।</string>
+    <string name="nav_move_up">ऊपर ले जाएँ</string>
+    <string name="nav_move_down">नीचे ले जाएँ</string>
+    <string name="nav_move_to_main">मुख्य में ले जाएँ</string>
+    <string name="nav_move_to_more">अधिक में ले जाएँ</string>
+    <string name="nav_add_to_main">मुख्य में जोड़ें</string>
+    <string name="nav_add_to_more">अधिक में जोड़ें</string>
+    <string name="nav_remove">मेन्यू से हटाएँ</string>
+    <string name="nav_locked">हमेशा मुख्य में</string>
+    <string name="nav_simple_mode_hidden">सिंपल मोड चालू होने पर छिपा रहता है</string>
+    <string name="nav_empty_section">अभी यहाँ कुछ नहीं है</string>
+    <string name="nav_reset">नेविगेशन मेन्यू रीसेट करें</string>
+    <string name="nav_placement_options">प्लेसमेंट विकल्प</string>
+    <string name="home_empty_title">अभी कोई संगीत नहीं</string>
+    <string name="home_empty_body">कोई म्यूज़िक सर्वर या स्ट्रीमिंग खाता कनेक्ट करें, या इस डिवाइस पर रखा संगीत जोड़ें।</string>
+    <string name="home_add_source">स्रोत जोड़ें</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Analisar de novo a biblioteca local</string>
+    <string name="rescan_summary">Encontra músicas adicionadas, movidas ou excluídas neste dispositivo</string>
+    <string name="rescan_running">Analisando este dispositivo…</string>
+    <string name="rescan_result">%1$d adicionadas, %2$d removidas</string>
+    <string name="rescan_unchanged">Atualizada · %1$d músicas</string>
+    <string name="rescan_failed">Não foi possível concluir a análise. Tente de novo.</string>
+    <string name="rescan_permission">Permita o acesso às músicas deste dispositivo para analisá-lo.</string>
+</resources>

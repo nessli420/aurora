@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">No se pudo crear la lista. Revisa tu conexión y los permisos de la lista, e inténtalo de nuevo.</string>
+    <string name="playlist_update_failed">No se pudo guardar la lista. Revisa tu conexión y los permisos de la lista, e inténtalo de nuevo.</string>
+    <string name="playlist_delete_failed">No se pudo eliminar la lista. Revisa tu conexión y los permisos de la lista, e inténtalo de nuevo.</string>
+    <string name="playlist_creating">Creando…</string>
+    <string name="playlist_saving">Guardando…</string>
+</resources>

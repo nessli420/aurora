@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">लोकल लाइब्रेरी फिर से स्कैन करें</string>
+    <string name="rescan_summary">इस डिवाइस पर जोड़ा गया, हटाया गया या दूसरी जगह ले जाया गया संगीत खोजें</string>
+    <string name="rescan_running">यह डिवाइस स्कैन हो रहा है…</string>
+    <string name="rescan_result">%1$d जोड़े गए, %2$d हटाए गए</string>
+    <string name="rescan_unchanged">अप-टू-डेट · %1$d गाने</string>
+    <string name="rescan_failed">स्कैन पूरा नहीं हो सका। फिर से कोशिश करें।</string>
+    <string name="rescan_permission">इस डिवाइस को स्कैन करने के लिए इसके संगीत के एक्सेस की अनुमति दें।</string>
+</resources>

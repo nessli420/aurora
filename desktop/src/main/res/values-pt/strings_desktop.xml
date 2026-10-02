@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="text_add_music_folder_a083d8" formatted="false">"Adicionar pasta de músicas"</string>
+    <string name="text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2" formatted="false">"Decodificação de áudio. Copyright © os desenvolvedores do FFmpeg. LGPL-3.0-or-later, vinculado dinamicamente por meio do JavaCPP Presets. Licença completa: https://www.gnu.org/licenses/lgpl-3.0.html"</string>
+    <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"O Aurora assume o controle exclusivo do dispositivo e envia as amostras na taxa e na profundidade de bits da própria faixa. Os outros apps ficam em silêncio enquanto o Aurora toca. A saída continua bit-perfect quando o processamento, o volume e o ReplayGain deixam as amostras inalteradas; se o dispositivo recusar um formato, o Aurora volta ao modo compartilhado e o Caminho do sinal mostra o motivo."</string>
+    <string name="text_bit_float_012895">"Ponto flutuante de %1$d bits"</string>
+    <string name="text_bit_integer_72520f">"Inteiro de %1$d bits"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Saída bit-perfect que ignora o mixer do Windows"</string>
+    <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Feito com Compose Multiplatform e Material 3."</string>
+    <string name="text_cache_50338b" formatted="false">"Cache"</string>
+    <string name="text_cannot_resize_this_image_be7b26" formatted="false">"Não é possível redimensionar esta imagem."</string>
+    <string name="text_ch_282ab4">"%1$d canais"</string>
+    <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"Escolha uma imagem compatível com menos de 100 megapixels."</string>
+    <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"Escolha uma imagem menor que 20 MB."</string>
+    <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Escolha onde sua música fica neste PC"</string>
+    <string name="text_clear_image_cache_ff7b31" formatted="false">"Limpar cache de imagens"</string>
+    <string name="text_close_to_tray_f91cc6" formatted="false">"Fechar para a bandeja"</string>
+    <string name="text_date_added_56ab7a" formatted="false">"Data de adição"</string>
+    <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Dispositivo, modo exclusivo e buffer"</string>
+    <string name="text_exclusive_mode_01d9b2" formatted="false">"Modo exclusivo"</string>
+    <string name="text_exclusive_mode_is_unavailable_0de552">"O modo exclusivo está indisponível: %1$s"</string>
+    <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"O modo exclusivo está indisponível neste dispositivo"</string>
+    <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Seguir a capa em reprodução"</string>
+    <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz está indisponível; usando %2$d Hz."</string>
+    <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Mantém o Aurora tocando na área de notificação quando a janela é fechada"</string>
+    <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Buffers maiores aguentam melhor cargas altas do sistema; os menores reagem mais rápido a saltos e ao volume. Vale quando a saída é reaberta."</string>
+    <string name="text_logs_126dd3" formatted="false">"Logs"</string>
+    <string name="text_open_in_full_page_0ec923" formatted="false">"Abrir em página inteira"</string>
+    <string name="text_output_buffer_61b372" formatted="false">"Buffer de saída"</string>
+    <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Formato de mixagem do modo compartilhado"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"O modo compartilhado mistura o Aurora com outros apps pelo mecanismo de áudio do Windows, no formato de mixagem do dispositivo. Ative o modo exclusivo para reprodução bit-perfect."</string>
+    <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"O padrão do sistema acompanha o dispositivo de saída do Windows, mesmo quando ele muda durante a reprodução."</string>
+    <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"Não foi possível usar a saída de áudio"</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"A política de taxa de amostragem e o dither valem no modo exclusivo. O modo compartilhado sempre toca no formato de mixagem do Windows."</string>
+    <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"O dispositivo de saída selecionado foi desconectado"</string>
+    <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"Não foi possível decodificar a faixa"</string>
+    <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"Não foi possível abrir a faixa"</string>
+    <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"A taxa de amostragem da faixa não é compatível"</string>
+    <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Colore o app inteiro com a cor da música que está tocando"</string>
+    <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Usando sua cor de destaque do Windows."</string>
+    <string name="text_volume_3b18e8" formatted="false">"Volume"</string>
+    <string name="text_windows_capabilities_0f1fa0" formatted="false">"Recursos do Windows"</string>
+    <string name="text_windows_java_2566af">"Windows · Java %1$d"</string>
+</resources>

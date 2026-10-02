@@ -26,7 +26,7 @@ class AppStringsTest {
         val plurals = ids(R.plurals::class.java)
         assertTrue(strings.size > 2000)
         assertTrue(plurals.size > 10)
-        for (tag in listOf("en", "ru", "tr")) {
+        for (tag in listOf("en", "ru", "tr", "es", "fr", "zh", "pt", "hi", "ur")) {
             AppStrings.setLocale(tag)
             strings.forEach { appString(it) }
             plurals.forEach { id -> (0..112).forEach { appPlural(id, it) } }
@@ -121,6 +121,33 @@ class AppStringsTest {
         assertEquals("%50 indirildi", appString(R.string.text_downloaded_a2ae75, "50"))
         listOf(0, 1, 2, 21).forEach { assertEquals("$it parça", appPlural(R.plurals.track_count, it)) }
         assertEquals("KİTAPLIK", appString(R.string.text_library_b8100f).uppercase(Locale.getDefault()))
+    }
+
+    @Test fun spanishFrenchAndChineseStringsAndPlurals() {
+        AppStrings.setLocale("es")
+        assertEquals("Predeterminado del sistema", appString(R.string.language_system))
+        assertEquals("1 pista", appPlural(R.plurals.track_count, 1))
+        assertEquals("2 pistas", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("fr")
+        assertEquals("Langue du système", appString(R.string.language_system))
+        assertEquals("50 % téléchargé", appString(R.string.text_downloaded_a2ae75, "50"))
+        assertEquals("2 pistes", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("zh-CN")
+        assertEquals("系统默认", appString(R.string.language_system))
+        listOf(1, 2).forEach { assertEquals("$it 首曲目", appPlural(R.plurals.track_count, it)) }
+    }
+
+    @Test fun portugueseHindiAndUrduStringsAndPlurals() {
+        AppStrings.setLocale("pt-BR")
+        assertEquals("Padrão do sistema", appString(R.string.language_system))
+        assertEquals("1 faixa", appPlural(R.plurals.track_count, 1))
+        assertEquals("2 faixas", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("hi")
+        assertEquals("सिस्टम डिफ़ॉल्ट", appString(R.string.language_system))
+        assertEquals("2 ट्रैक", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("ur")
+        assertTrue(appString(R.string.language_system).contains("سسٹم ڈیفالٹ"))
+        assertTrue(appPlural(R.plurals.track_count, 2).contains("2 ٹریک"))
     }
 
     @Test fun rejectsIdsOfTheWrongType() {

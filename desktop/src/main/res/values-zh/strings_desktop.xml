@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="text_add_music_folder_a083d8" formatted="false">"添加音乐文件夹"</string>
+    <string name="text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2" formatted="false">"音频解码。版权所有 © FFmpeg 开发者。LGPL-3.0-or-later，通过 JavaCPP Presets 动态链接。完整许可：https://www.gnu.org/licenses/lgpl-3.0.html"</string>
+    <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora 会独占设备，并按曲目自身的采样率和位深发送采样。Aurora 播放时其他应用将静音。当处理、音量和 ReplayGain 都不改变采样时，输出保持 bit-perfect；如果设备拒绝某种格式，Aurora 会回退到共享模式，并在“信号路径”中显示原因。"</string>
+    <string name="text_bit_float_012895">"%1$d 位浮点"</string>
+    <string name="text_bit_integer_72520f">"%1$d 位整数"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"绕过 Windows 混音器的 bit-perfect 输出"</string>
+    <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"使用 Compose Multiplatform 和 Material 3 构建。"</string>
+    <string name="text_cache_50338b" formatted="false">"缓存"</string>
+    <string name="text_cannot_resize_this_image_be7b26" formatted="false">"无法调整此图片的大小。"</string>
+    <string name="text_ch_282ab4">"%1$d 声道"</string>
+    <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"请选择 1 亿像素以下的受支持图片。"</string>
+    <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"请选择小于 20 MB 的图片。"</string>
+    <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"选择你的音乐在这台电脑上的位置"</string>
+    <string name="text_clear_image_cache_ff7b31" formatted="false">"清除图片缓存"</string>
+    <string name="text_close_to_tray_f91cc6" formatted="false">"关闭到托盘"</string>
+    <string name="text_date_added_56ab7a" formatted="false">"添加日期"</string>
+    <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"设备、独占模式和缓冲区"</string>
+    <string name="text_exclusive_mode_01d9b2" formatted="false">"独占模式"</string>
+    <string name="text_exclusive_mode_is_unavailable_0de552">"独占模式不可用：%1$s"</string>
+    <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"此设备不支持独占模式"</string>
+    <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"跟随正在播放的封面"</string>
+    <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz 不可用；正在使用 %2$d Hz。"</string>
+    <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"关闭窗口后让 Aurora 在通知区域继续播放"</string>
+    <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"较大的缓冲区能应对较高的系统负载；较小的缓冲区对跳转和音量变化响应更快。在输出重新打开时生效。"</string>
+    <string name="text_logs_126dd3" formatted="false">"日志"</string>
+    <string name="text_open_in_full_page_0ec923" formatted="false">"在完整页面中打开"</string>
+    <string name="text_output_buffer_61b372" formatted="false">"输出缓冲区"</string>
+    <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"共享模式混音格式"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"共享模式会通过 Windows 音频引擎，以设备的混音格式将 Aurora 与其他应用混合。开启独占模式可实现 bit-perfect 播放。"</string>
+    <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"“系统默认”会跟随 Windows 输出设备，即使它在播放过程中发生变化。"</string>
+    <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"无法使用音频输出"</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"采样率策略和抖动在独占模式下生效。共享模式始终以 Windows 混音格式播放。"</string>
+    <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"所选输出设备已断开连接"</string>
+    <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"无法解码此曲目"</string>
+    <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"无法打开此曲目"</string>
+    <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"不支持此曲目的采样率"</string>
+    <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"用正在播放的歌曲的颜色为整个应用着色"</string>
+    <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"正在使用你的 Windows 强调色。"</string>
+    <string name="text_volume_3b18e8" formatted="false">"音量"</string>
+    <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows 功能"</string>
+    <string name="text_windows_java_2566af">"Windows · Java %1$d"</string>
+</resources>

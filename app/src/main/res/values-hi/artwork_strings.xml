@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">कवर आर्ट</string>
+    <string name="artwork_lookup">गायब कवर खोजें</string>
+    <string name="artwork_description">जिन गानों और एल्बम में कवर आर्ट नहीं है, उनके लिए कवर खोजें।</string>
+    <string name="artwork_provider">MusicBrainz और Cover Art Archive पर कवर खोजने के लिए कलाकार, एल्बम और ट्रैक के नाम का उपयोग करता है। मौजूदा आर्टवर्क को प्राथमिकता मिलती है।</string>
+    <string name="artwork_cache_usage">आर्टवर्क कैश: 64 MB में से %.1f MB। कैश किए गए कवर ऑफ़लाइन भी उपलब्ध रहते हैं।</string>
+    <string name="artwork_clear">आर्टवर्क कैश साफ़ करें</string>
+    <string name="artwork_clear_failed">आर्टवर्क कैश साफ़ नहीं हो सका। फिर से कोशिश करें।</string>
+</resources>

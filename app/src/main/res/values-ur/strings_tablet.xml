@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">\u2067ابھی چل رہا ہے کھولیں\u2069</string>
+    <string name="tablet_now_playing">\u2067ابھی چل رہا ہے\u2069</string>
+    <string name="tablet_seek">\u2067سیک کریں\u2069</string>
+    <string name="tablet_close_panel">\u2067پینل بند کریں\u2069</string>
+    <string name="tablet_player_panes">\u2067ابھی چل رہا ہے پینلز\u2069</string>
+    <string name="tablet_fullscreen_lyrics">\u2067فل اسکرین بول\u2069</string>
+    <string name="tablet_resize_panels">\u2067پینلز کا سائز بدلیں\u2069</string>
+    <string name="tablet_layout_title">\u2067ٹیبلٹ لے آؤٹ\u2069</string>
+    <string name="tablet_layout_detected">\u2067یہ اس لیے دکھایا جا رہا ہے کہ اس آلے کی اسکرین بڑی ہے۔ ہر ترتیب پورٹریٹ اور لینڈ اسکیپ دونوں میں لاگو ہوتی ہے۔\u2069</string>
+    <string name="tablet_dock_size">\u2067ڈاک کا سائز\u2069</string>
+    <string name="tablet_panel_controls">\u2067پینل کنٹرولز\u2069</string>
+    <string name="tablet_panel_spacing">\u2067پینلز کا درمیانی فاصلہ\u2069</string>
+    <string name="tablet_nav_gap">\u2067نیویگیشن کے ساتھ کا وقفہ\u2069</string>
+    <string name="tablet_page_margins">\u2067صفحے کے حاشیے\u2069</string>
+    <string name="tablet_hero_size">\u2067نمایاں کارڈ کا سائز\u2069</string>
+    <string name="tablet_favourites_size">\u2067پسندیدہ کارڈ کا سائز\u2069</string>
+    <string name="tablet_player_split">\u2067ابھی چل رہا ہے اسپلٹ\u2069</string>
+    <string name="tablet_player_split_hint">\u2067آپ ابھی چل رہا ہے میں ڈیوائیڈر کو گھسیٹ بھی سکتے ہیں۔\u2069</string>
+    <string name="tablet_reset">\u2067ٹیبلٹ لے آؤٹ ری سیٹ کریں\u2069</string>
+    <string name="nav_menu_title">\u2067نیویگیشن مینو\u2069</string>
+    <string name="nav_menu_summary">\u2067منتخب کریں کہ مرکزی فہرست میں اور مزید کے تحت کیا نظر آئے\u2069</string>
+    <string name="nav_section_main">\u2067مرکزی\u2069</string>
+    <string name="nav_section_more">\u2067مزید\u2069</string>
+    <string name="nav_section_hidden">\u2067نہیں دکھائے گئے\u2069</string>
+    <string name="nav_menu_hint">\u2067آئٹمز کی ترتیب بدلنے کے لیے تیر استعمال کریں۔ کسی آئٹم کو مرکزی اور مزید کے درمیان منتقل کرنے یا ہٹانے کے لیے اس کے مینو کو تھپتھپائیں۔\u2069</string>
+    <string name="nav_move_up">\u2067اوپر لے جائیں\u2069</string>
+    <string name="nav_move_down">\u2067نیچے لے جائیں\u2069</string>
+    <string name="nav_move_to_main">\u2067مرکزی میں منتقل کریں\u2069</string>
+    <string name="nav_move_to_more">\u2067مزید میں منتقل کریں\u2069</string>
+    <string name="nav_add_to_main">\u2067مرکزی میں شامل کریں\u2069</string>
+    <string name="nav_add_to_more">\u2067مزید میں شامل کریں\u2069</string>
+    <string name="nav_remove">\u2067مینو سے ہٹائیں\u2069</string>
+    <string name="nav_locked">\u2067ہمیشہ مرکزی میں\u2069</string>
+    <string name="nav_simple_mode_hidden">\u2067سادہ موڈ آن ہونے پر چھپا رہتا ہے\u2069</string>
+    <string name="nav_empty_section">\u2067ابھی یہاں کچھ نہیں ہے\u2069</string>
+    <string name="nav_reset">\u2067نیویگیشن مینو ری سیٹ کریں\u2069</string>
+    <string name="nav_placement_options">\u2067جگہ کے اختیارات\u2069</string>
+    <string name="home_empty_title">\u2067ابھی کوئی موسیقی نہیں\u2069</string>
+    <string name="home_empty_body">\u2067کوئی میوزک سرور یا اسٹریمنگ اکاؤنٹ جوڑیں، یا اس آلے پر محفوظ موسیقی شامل کریں۔\u2069</string>
+    <string name="home_add_source">\u2067سورس شامل کریں\u2069</string>
+</resources>

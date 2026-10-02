@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">स्वचालित ऑफ़लाइन कैश</string>
+    <string name="cache_description">सुनते समय ऑडियो सहेजता है। पूरी तरह कैश किए गए ट्रैक ऑफ़लाइन होने पर आपकी लाइब्रेरी में दिखते हैं।</string>
+    <string name="cache_limit">कैश सीमा</string>
+    <string name="cache_used">%2$s में से %1$s उपयोग में</string>
+    <string name="cache_policy">पुराना कैश अपने-आप हट जाता है। डाउनलोड तब तक रहते हैं जब तक आप उन्हें नहीं हटाते।</string>
+    <string name="cache_clear">ऑडियो कैश साफ़ करें</string>
+    <string name="cache_clear_title">कैश किया गया ऑडियो साफ़ करें?</string>
+    <string name="cache_clear_message">कैश किए गए ट्रैक को फिर से चलाने के लिए कनेक्शन चाहिए होगा। आपके डाउनलोड, लाइब्रेरी और सेटिंग बने रहेंगे। सुनते समय कैश फिर से भर जाता है।</string>
+    <string name="cache_clearing">कैश साफ़ हो रहा है…</string>
+    <string name="cache_cleared">ऑडियो कैश साफ़ हो गया</string>
+    <string name="cache_clear_failed">ऑडियो कैश साफ़ नहीं हो सका। फिर से कोशिश करें।</string>
+    <string name="cache_unavailable">ऑडियो कैश उपलब्ध नहीं है। प्लेबैक सामान्य रूप से स्ट्रीम हो सकता है।</string>
+    <string name="cache_loading">कैश जाँचा जा रहा है…</string>
+    <string name="cache_offline_summary">डाउनलोड किया गया और पूरी तरह कैश किया गया संगीत चलाएँ</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d ट्रैक ऑफ़लाइन तैयार</item>
+        <item quantity="other">%1$d ट्रैक ऑफ़लाइन तैयार</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d डाउनलोड किया गया ट्रैक</item>
+        <item quantity="other">%1$d डाउनलोड किए गए ट्रैक</item>
+    </plurals>
+</resources>

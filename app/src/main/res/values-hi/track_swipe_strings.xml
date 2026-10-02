@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">प्लेलिस्ट</string>
+    <string name="track_playlists_title">प्लेलिस्ट में जोड़ें या हटाएँ</string>
+    <string name="track_playlists_hint">इस ट्रैक को जोड़ने या हटाने के लिए टैप करें।</string>
+    <string name="track_playlists_empty">अभी कोई प्लेलिस्ट नहीं है। पहले अपनी लाइब्रेरी में एक बनाएँ।</string>
+    <string name="track_playlists_unavailable">इस ट्रैक की प्लेलिस्ट संपादित करने के लिए इसके संगीत स्रोत से कनेक्ट करें।</string>
+    <string name="track_playlists_load_error">प्लेलिस्ट लोड नहीं हो सकीं। फिर से कोशिश करें।</string>
+    <string name="track_playlists_save_error">यह प्लेलिस्ट अपडेट नहीं हो सकी। अपना कनेक्शन और संपादन अनुमतियाँ जाँचें।</string>
+    <string name="track_swipe_retry">फिर से कोशिश करें</string>
+    <string name="track_swipe_done">हो गया</string>
+    <string name="track_playlists_in_playlist">प्लेलिस्ट में है</string>
+    <string name="track_playlists_add">प्लेलिस्ट में जोड़ें</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">ऐप की भाषा</string>
+    <string name="language_system">सिस्टम डिफ़ॉल्ट</string>
+    <string name="language_description">Aurora में इस्तेमाल होने वाली भाषा चुनें। संगीत के टाइटल और कलाकारों के नाम जैसे हैं वैसे रहते हैं।</string>
+</resources>

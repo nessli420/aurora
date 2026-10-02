@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"\u2067Android آڈیو\u2069"</string>
+    <string name="signal_text_android_audio_mix_f88264">"\u2067Android آڈیو · مکس\u2069"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"\u2067ڈائریکٹ USB ٹرانسپورٹ\u2069"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"\u2067پروسیسڈ USB ٹرانسپورٹ\u2069"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"\u2067کاسٹ ریسیور\u2069"</string>
+    <string name="signal_text_source_6da13a">"\u2067سورس\u2069"</string>
+    <string name="signal_text_decoder_7be2f0">"\u2067ڈیکوڈر\u2069"</string>
+    <string name="signal_text_processing_e63451">"\u2067پروسیسنگ\u2069"</string>
+    <string name="signal_text_resampling_1bf1aa">"\u2067ری سیمپلنگ\u2069"</string>
+    <string name="signal_text_output_4bed33">"\u2067آؤٹ پٹ\u2069"</string>
+    <string name="signal_text_device_a5a74a">"\u2067آلہ\u2069"</string>
+    <string name="signal_text_latency_3e3997">"\u2067لیٹنسی\u2069"</string>
+</resources>

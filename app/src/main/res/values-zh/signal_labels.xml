@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"Android 音频"</string>
+    <string name="signal_text_android_audio_mix_f88264">"Android 音频 · 混音"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"USB 直通传输"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"USB 处理后传输"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"Cast 接收器"</string>
+    <string name="signal_text_source_6da13a">"来源"</string>
+    <string name="signal_text_decoder_7be2f0">"解码器"</string>
+    <string name="signal_text_processing_e63451">"处理"</string>
+    <string name="signal_text_resampling_1bf1aa">"重采样"</string>
+    <string name="signal_text_output_4bed33">"输出"</string>
+    <string name="signal_text_device_a5a74a">"设备"</string>
+    <string name="signal_text_latency_3e3997">"延迟"</string>
+</resources>

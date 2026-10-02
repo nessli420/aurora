@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">La musique de votre Plex Media Server.</string>
+    <string name="plex_connect_title">Connecter Plex</string>
+    <string name="plex_token_detail">Utilisez un jeton d\'authentification Plex ayant accès à ce serveur.</string>
+    <string name="plex_token_label">Jeton Plex</string>
+    <string name="plex_token_help">Comment trouver votre jeton Plex</string>
+    <string name="plex_token_show">Afficher le jeton</string>
+    <string name="plex_token_hide">Masquer le jeton</string>
+    <string name="plex_token_rejected">Plex a refusé ce jeton. Vérifiez qu\'il a accès à ce serveur.</string>
+    <string name="plex_server_detail">Utilisez l\'adresse de votre Plex Media Server, généralement avec le port 32400.</string>
+    <string name="plex_sources_stream_detail">Streaming depuis Navidrome, Jellyfin ou Plex.</string>
+    <string name="plex_sources_empty_detail">Ajoutez un compte Navidrome, Jellyfin, Plex ou YouTube Music dans Réglages → Comptes pour l\'inclure ici.</string>
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_start_failed">Impossible de démarrer ce téléchargement. Un téléchargement existant appartient peut-être à une autre source.</string>
+</resources>
