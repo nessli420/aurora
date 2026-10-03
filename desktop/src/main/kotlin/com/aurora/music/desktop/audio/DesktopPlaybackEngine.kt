@@ -225,6 +225,13 @@ class DesktopPlaybackEngine(
 
     override fun pause() = post {
         pauseInternal()
+        // some drivers never ask for data again when a stopped exclusive stream restarts, so resume like a seek
+        if (output?.exclusive == true) {
+            val now = System.nanoTime()
+            refreshStatus(now)
+            heard(now)
+            restartAtHeard()
+        }
         publish()
     }
 

@@ -32,6 +32,7 @@ import com.aurora.music.desktop.ui.AppTray
 import com.aurora.music.desktop.ui.AuroraRoot
 import com.aurora.music.desktop.ui.Shortcut
 import com.aurora.music.desktop.ui.WindowChrome
+import com.aurora.music.desktop.ui.claimsSpace
 import com.aurora.music.desktop.ui.shortcut
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.ui.AuroraApp
@@ -139,6 +140,7 @@ fun main() {
             visible = visible,
             title = "Aurora",
             icon = icon,
+            onPreviewKeyEvent = { it.claimsSpace() },
             onKeyEvent = { event -> event.shortcut()?.let(shortcuts::tryEmit) == true },
         ) {
             var windowHandle by remember { mutableStateOf(0L) }
