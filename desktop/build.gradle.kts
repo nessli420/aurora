@@ -78,6 +78,31 @@ if (hostWindows) {
 
     tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(syncNative) }
     tasks.test { dependsOn(syncNative) }
+} else {
+    val alsaSource = nativeSource.dir("alsa")
+    val alsaBuildDir = layout.buildDirectory.dir("native-alsa")
+
+    val configureAlsa by tasks.registering(Exec::class) {
+        inputs.file(alsaSource.file("CMakeLists.txt"))
+        outputs.file(alsaBuildDir.map { it.file("CMakeCache.txt") })
+        commandLine("cmake", "-S", alsaSource.asFile.path, "-B", alsaBuildDir.get().asFile.path, "-DCMAKE_BUILD_TYPE=Release")
+    }
+
+    val buildAlsa by tasks.registering(Exec::class) {
+        dependsOn(configureAlsa)
+        inputs.dir(alsaSource)
+        outputs.dir(alsaBuildDir.map { it.dir("bin") })
+        commandLine("cmake", "--build", alsaBuildDir.get().asFile.path, "--parallel")
+    }
+
+    val syncAlsa by tasks.registering(Sync::class) {
+        dependsOn(buildAlsa)
+        from(alsaBuildDir.map { it.dir("bin") }) { include("*.so") }
+        into(appResources.map { it.dir(resourcesTarget) })
+    }
+
+    tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(syncAlsa) }
+    tasks.test { dependsOn(syncAlsa) }
 }
 
 tasks.test {

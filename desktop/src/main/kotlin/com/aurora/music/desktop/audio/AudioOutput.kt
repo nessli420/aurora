@@ -27,6 +27,7 @@ interface OutputBackend {
     fun devices(): List<AudioDevice>
     fun mixRate(deviceId: String?): Int?
     fun supportsExclusive(deviceId: String?, sampleRate: Int, encoding: OutputEncoding): Boolean
+    fun exclusiveUnavailableReason(deviceId: String?): String? = null
     fun open(deviceId: String?, exclusive: Boolean, sampleRate: Int, encoding: OutputEncoding, bufferMs: Int): AudioOutput
     fun listen(listener: (DeviceEvent) -> Unit): AutoCloseable
     fun keepAwake(enabled: Boolean)
@@ -46,9 +47,23 @@ class WasapiAudioOutput(private val output: WasapiOutput) : AudioOutput {
     override fun close() = output.close()
 }
 
-fun defaultOutputBackend(): OutputBackend = if (HostPlatform.isWindows) WasapiBackend else JavaSoundBackend
+fun defaultOutputBackend(): OutputBackend = when {
+    HostPlatform.isWindows -> WasapiBackend
+    HostPlatform.isLinux -> LinuxOutputBackend.instance
+    else -> JavaSoundBackend
+}
 
-val outputApiName: String get() = if (HostPlatform.isWindows) "WASAPI" else "Java Sound"
+fun outputApis(): String = when {
+    HostPlatform.isWindows -> "WASAPI"
+    HostPlatform.isLinux && LinuxOutputBackend.instance.exclusiveAvailable -> "Java Sound · ALSA"
+    else -> "Java Sound"
+}
+
+fun outputApi(exclusive: Boolean): String = when {
+    HostPlatform.isWindows -> "WASAPI"
+    exclusive -> "ALSA"
+    else -> "Java Sound"
+}
 
 object WasapiBackend : OutputBackend {
     override fun devices() = AudioDevices.list()

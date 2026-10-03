@@ -5,6 +5,7 @@
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora получает единоличный доступ к устройству и передаёт сэмплы с частотой и разрядностью самого трека. Другие приложения молчат, пока играет Aurora. Вывод остаётся bit-perfect, если обработка, громкость и ReplayGain не изменяют сэмплы; если устройство не принимает формат, Aurora переходит в общий режим, а «Путь сигнала» показывает причину."</string>
     <string name="text_bit_float_012895">"%1$d-бит float"</string>
     <string name="text_bit_integer_72520f">"%1$d-бит целочисленный"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9" formatted="false">"Вывод bit-perfect в обход звукового сервера"</string>
     <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Вывод bit-perfect в обход микшера Windows"</string>
     <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Создано с Compose Multiplatform и Material 3."</string>
     <string name="text_cache_50338b" formatted="false">"Кэш"</string>
@@ -12,16 +13,20 @@
     <string name="text_ch_282ab4">"%1$d кан."</string>
     <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"Выберите поддерживаемое изображение меньше 100 мегапикселей."</string>
     <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"Выберите изображение меньше 20 МБ."</string>
+    <string name="text_choose_an_output_device_to_use_exclusive_mode_b2a25d" formatted="false">"Выберите устройство вывода, чтобы использовать монопольный режим"</string>
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Укажите, где на этом компьютере хранится ваша музыка"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Очистить кэш изображений"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Сворачивать в трей"</string>
     <string name="text_date_added_56ab7a" formatted="false">"Дата добавления"</string>
+    <string name="text_device_capabilities_4cac01" formatted="false">"Возможности устройства"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Устройство, монопольный режим и буфер"</string>
+    <string name="text_exclusive_formats_3dafa8" formatted="false">"Форматы монопольного режима"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Монопольный режим"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Монопольный режим недоступен: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Монопольный режим недоступен на этом устройстве"</string>
     <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Цвет текущей обложки"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Гц недоступно; используется %2$d Гц."</string>
+    <string name="text_in_use_by_the_sound_server_or_another_app_aa3eaa" formatted="false">"Используется звуковым сервером или другим приложением"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"После закрытия окна Aurora продолжает играть из области уведомлений"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Большой буфер выдерживает высокую нагрузку на систему, маленький быстрее реагирует на перемотку и громкость. Применяется при повторном открытии вывода."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
@@ -29,11 +34,14 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Открыть на всю страницу"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Буфер вывода"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Формат микшера общего режима"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"Общий режим смешивает Aurora с другими приложениями через системный звуковой сервер на частоте 48 кГц. Включите монопольный режим для воспроизведения bit-perfect."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Общий режим смешивает Aurora с другими приложениями через системный звуковой сервер на частоте 48 кГц."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Общий режим смешивает Aurora с другими приложениями через аудиодвижок Windows в формате микшера устройства. Включите монопольный режим для воспроизведения bit-perfect."</string>
     <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"Вариант «Как в системе» следует за устройством вывода по умолчанию, даже если оно меняется во время воспроизведения."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"Вариант «Как в системе» следует за устройством вывода Windows, даже если оно меняется во время воспроизведения."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"Не удалось использовать аудиовыход"</string>
+    <string name="text_the_device_is_in_use_by_the_sound_server_or_another_app_ask_pipew_e1e816" formatted="false">"Устройство используется звуковым сервером или другим приложением. Попросите PipeWire или PulseAudio освободить его, затем выключите и снова включите монопольный режим."</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f" formatted="false">"Политика частоты дискретизации и дизеринг действуют в монопольном режиме. Общий режим всегда играет на частоте 48 кГц через звуковой сервер."</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"Политика частоты дискретизации и дизеринг действуют в монопольном режиме. Общий режим всегда играет в формате микшера Windows."</string>
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"Выбранное устройство вывода отключено"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"Не удалось декодировать трек"</string>

@@ -5,6 +5,7 @@
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora cihazın denetimini tek başına alır ve örnekleri parçanın kendi hızında ve bit derinliğinde gönderir. Aurora çalarken diğer uygulamalar sessiz kalır. İşleme, ses düzeyi ve ReplayGain örnekleri değiştirmediğinde çıkış bit-perfect kalır; cihaz bir biçimi reddederse Aurora paylaşımlı moda döner ve Sinyal yolu nedenini gösterir."</string>
     <string name="text_bit_float_012895">"%1$d bit kayan nokta"</string>
     <string name="text_bit_integer_72520f">"%1$d bit tam sayı"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9" formatted="false">"Ses sunucusunu atlayan bit-perfect çıkış"</string>
     <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Windows mikserini atlayan bit-perfect çıkış"</string>
     <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Compose Multiplatform ve Material 3 ile geliştirildi."</string>
     <string name="text_cache_50338b" formatted="false">"Önbellek"</string>
@@ -12,16 +13,20 @@
     <string name="text_ch_282ab4">"%1$d kanal"</string>
     <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"100 megapikselin altında, desteklenen bir görsel seçin."</string>
     <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"20 MB\'tan küçük bir görsel seçin."</string>
+    <string name="text_choose_an_output_device_to_use_exclusive_mode_b2a25d" formatted="false">"Özel modu kullanmak için bir çıkış cihazı seçin"</string>
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Müziğinizin bu bilgisayarda nerede olduğunu seçin"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Görsel önbelleğini temizle"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Tepsiye kapat"</string>
     <string name="text_date_added_56ab7a" formatted="false">"Eklenme tarihi"</string>
+    <string name="text_device_capabilities_4cac01" formatted="false">"Cihaz yetenekleri"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Cihaz, özel mod ve arabellek"</string>
+    <string name="text_exclusive_formats_3dafa8" formatted="false">"Özel mod biçimleri"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Özel mod"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Özel mod kullanılamıyor: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Özel mod bu cihazda kullanılamıyor"</string>
     <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Çalan kapağı izle"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz kullanılamıyor; %2$d Hz kullanılıyor."</string>
+    <string name="text_in_use_by_the_sound_server_or_another_app_aa3eaa" formatted="false">"Ses sunucusu veya başka bir uygulama tarafından kullanılıyor"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Pencere kapandığında Aurora bildirim alanında çalmaya devam etsin"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Büyük arabellekler ağır sistem yükünü kaldırır; küçükler konum değiştirmeye ve ses düzeyine daha hızlı tepki verir. Çıkış yeniden açıldığında uygulanır."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
@@ -29,11 +34,14 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Tam sayfada aç"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Çıkış arabelleği"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Paylaşımlı mod miks biçimi"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"Paylaşımlı mod, Aurora\'yı sistem ses sunucusu üzerinden 48 kHz\'de diğer uygulamalarla karıştırır. Bit-perfect oynatma için özel modu açın."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Paylaşımlı mod, Aurora\'yı sistem ses sunucusu üzerinden 48 kHz\'de diğer uygulamalarla karıştırır."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Paylaşımlı mod, Aurora\'yı Windows ses motoru üzerinden cihazın miks biçiminde diğer uygulamalarla karıştırır. Bit-perfect oynatma için özel modu açın."</string>
     <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"Sistem varsayılanı, oynatma sırasında değişse bile varsayılan çıkış cihazını izler."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"Sistem varsayılanı, oynatma sırasında değişse bile Windows çıkış cihazını izler."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"Ses çıkışı kullanılamadı"</string>
+    <string name="text_the_device_is_in_use_by_the_sound_server_or_another_app_ask_pipew_e1e816" formatted="false">"Cihaz, ses sunucusu veya başka bir uygulama tarafından kullanılıyor. PipeWire veya PulseAudio\'dan cihazı bırakmasını isteyin, ardından özel modu kapatıp yeniden açın."</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f" formatted="false">"Örnekleme hızı ilkesi ve dither özel modda uygulanır. Paylaşımlı mod her zaman ses sunucusu üzerinden 48 kHz\'de çalar."</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"Örnekleme hızı ilkesi ve dither özel modda uygulanır. Paylaşımlı mod her zaman Windows miks biçiminde çalar."</string>
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"Seçilen çıkış cihazının bağlantısı kesildi"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"Parçanın kodu çözülemedi"</string>

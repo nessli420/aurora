@@ -10,7 +10,7 @@ import com.aurora.music.desktop.natives.AudioDevice
 import com.aurora.music.desktop.natives.DeviceEvent
 import com.aurora.music.desktop.natives.OutputEncoding
 import com.aurora.music.desktop.natives.OutputStatus
-import com.aurora.music.desktop.natives.WasapiException
+import com.aurora.music.desktop.natives.OutputException
 import com.aurora.music.localization.appString
 import com.aurora.music.mix.MixMath
 import com.aurora.music.model.Song
@@ -802,7 +802,7 @@ class DesktopPlaybackEngine(
                 current.resume()
                 running = true
                 lastStatus = null
-            } catch (e: WasapiException) {
+            } catch (e: OutputException) {
                 if (e.deviceInvalidated) reopenAtHeard() else failOutput(e)
                 return false
             } catch (e: Exception) {
@@ -820,7 +820,7 @@ class DesktopPlaybackEngine(
     private fun write(current: AudioOutput): Boolean {
         val written = try {
             current.write(bytes, pendingOffset, pendingLength, WRITE_TIMEOUT_MS)
-        } catch (e: WasapiException) {
+        } catch (e: OutputException) {
             if (e.deviceInvalidated) reopenAtHeard() else failOutput(e)
             return false
         } catch (e: Exception) {

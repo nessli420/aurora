@@ -36,7 +36,7 @@ fun EngineState.signalPath(report: DspChainReport?, before: PcmLevels?, after: P
     val unknown = listOfNotNull(
         out.fallbackReason,
         processing.rateFallbackReason,
-        if (out.exclusive) "Driver and DAC behavior beyond the exclusive WASAPI stream are not verified"
+        if (out.exclusive) "Driver and DAC behavior beyond the exclusive ${outputApi(true)} stream are not verified"
         else if (HostPlatform.isWindows) "Windows mixes shared-mode audio in 32-bit float; system volume, effects and other streams are not observed"
         else "The system sound server mixes shared-mode audio; system volume, effects and other streams are not observed",
     )
@@ -49,7 +49,7 @@ fun EngineState.signalPath(report: DspChainReport?, before: PcmLevels?, after: P
     }.joinToString(". ")
     return SignalPath(
         active = true, codec = info.codec, sampleRateHz = info.sampleRate, bitDepth = format.bits, channels = info.channels,
-        output = if (out.exclusive) "WASAPI exclusive" else "$outputApiName shared", bitPerfect = preserved,
+        output = if (out.exclusive) "${outputApi(true)} exclusive" else "${outputApi(false)} shared", bitPerfect = preserved,
         note = reasons.first(), preservation = when {
             modified.isNotEmpty() -> Preservation.MODIFIED
             preserved -> Preservation.PRESERVED
@@ -69,10 +69,10 @@ fun EngineState.signalPath(report: DspChainReport?, before: PcmLevels?, after: P
         resampling = SignalStage("Resampling", processing.rateFallbackReason
             ?: if (processing.resampling) "${info.sampleRate} → ${out.sampleRate} Hz · Bandlimited SRC" else "Following source rate",
             "Configured chain rates"),
-        outputStage = SignalStage("Output", "${if (out.exclusive) "Exclusive" else "Shared"} $outputApiName stream · ${out.encoding.label}",
-            "Open $outputApiName stream format", SignalFormat(out.sampleRate, out.encoding.validBits, 2, if (out.encoding.isFloat) "float PCM" else "integer PCM")),
+        outputStage = SignalStage("Output", "${if (out.exclusive) "Exclusive" else "Shared"} ${outputApi(out.exclusive)} stream · ${out.encoding.label}",
+            "Open ${outputApi(out.exclusive)} stream format", SignalFormat(out.sampleRate, out.encoding.validBits, 2, if (out.encoding.isFloat) "float PCM" else "integer PCM")),
         device = SignalStage("Device", if (out.followsDefault) "System default output" else "Selected output",
-            "Active $outputApiName endpoint; hardware format and downstream processing unknown"),
+            "Active ${outputApi(out.exclusive)} endpoint; hardware format and downstream processing unknown"),
         latency = if (report == null) SignalStage("Latency", "Processor delay unavailable") else SignalStage("Latency",
             "Rack: ${report.latencyFrames} frames · SRC: ${report.resamplerLookaheadFrames} frames · Tail: ${report.tailFrames} frames",
             "Compiled processor delay; output buffer and hardware latency are not included"),

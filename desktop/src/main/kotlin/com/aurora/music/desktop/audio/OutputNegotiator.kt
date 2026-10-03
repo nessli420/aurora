@@ -37,7 +37,9 @@ class OutputNegotiator(private val backend: OutputBackend) {
     fun negotiate(deviceId: String?, exclusive: Boolean, sourceRate: Int, policy: OutputRatePolicy): NegotiatedOutput {
         if (!exclusive) return shared(deviceId)
         val rates = (RATES + sourceRate).distinct().filter { supported(deviceId, it).isNotEmpty() }.toIntArray()
-        if (rates.isEmpty()) return shared(deviceId, appString(R.string.text_exclusive_mode_is_unavailable_on_this_device_e51016))
+        if (rates.isEmpty()) {
+            return shared(deviceId, backend.exclusiveUnavailableReason(deviceId) ?: appString(R.string.text_exclusive_mode_is_unavailable_on_this_device_e51016))
+        }
         val requested = OutputRateNegotiator.choose(sourceRate, policy, rates)
         val chosen = if (requested.sampleRate in rates) requested else {
             val family = if (sourceRate % 11_025 == 0) 44_100 else 48_000

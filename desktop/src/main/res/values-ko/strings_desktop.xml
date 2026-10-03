@@ -5,6 +5,7 @@
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora가 기기를 단독으로 제어하며 곡 고유의 샘플 레이트와 비트 깊이로 샘플을 보냅니다. Aurora가 재생하는 동안 다른 앱은 소리가 나지 않습니다. 처리, 볼륨, ReplayGain이 샘플을 바꾸지 않으면 출력은 비트 퍼펙트로 유지됩니다. 기기가 형식을 거부하면 Aurora는 공유 모드로 전환하며 신호 경로에 이유가 표시됩니다."</string>
     <string name="text_bit_float_012895">"%1$d비트 부동소수점"</string>
     <string name="text_bit_integer_72520f">"%1$d비트 정수"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9" formatted="false">"사운드 서버를 거치지 않는 비트 퍼펙트 출력"</string>
     <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Windows 믹서를 거치지 않는 비트 퍼펙트 출력"</string>
     <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Compose Multiplatform과 Material 3로 제작했습니다."</string>
     <string name="text_cache_50338b" formatted="false">"캐시"</string>
@@ -12,16 +13,20 @@
     <string name="text_ch_282ab4">"%1$d채널"</string>
     <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"1억 화소 미만의 지원되는 이미지를 선택하세요."</string>
     <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"20 MB보다 작은 이미지를 선택하세요."</string>
+    <string name="text_choose_an_output_device_to_use_exclusive_mode_b2a25d" formatted="false">"독점 모드를 사용하려면 출력 기기를 선택하세요"</string>
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"이 PC에서 음악이 있는 위치 선택"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"이미지 캐시 지우기"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"트레이로 닫기"</string>
     <string name="text_date_added_56ab7a" formatted="false">"추가한 날짜"</string>
+    <string name="text_device_capabilities_4cac01" formatted="false">"기기 기능"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"기기, 독점 모드 및 버퍼"</string>
+    <string name="text_exclusive_formats_3dafa8" formatted="false">"독점 모드 형식"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"독점 모드"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"독점 모드를 사용할 수 없습니다: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"이 기기에서는 독점 모드를 사용할 수 없습니다"</string>
     <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"재생 중인 커버 따르기"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz를 사용할 수 없어 %2$d Hz를 사용합니다."</string>
+    <string name="text_in_use_by_the_sound_server_or_another_app_aa3eaa" formatted="false">"사운드 서버나 다른 앱이 사용 중"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"창을 닫아도 알림 영역에서 Aurora 재생 유지"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"버퍼가 크면 시스템 부하가 높을 때도 안정적이고, 작으면 탐색과 볼륨에 더 빨리 반응합니다. 출력을 다시 열 때 적용됩니다."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
@@ -29,11 +34,14 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"전체 페이지로 열기"</string>
     <string name="text_output_buffer_61b372" formatted="false">"출력 버퍼"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"공유 모드 믹스 형식"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"공유 모드는 시스템 사운드 서버를 통해 48 kHz로 Aurora와 다른 앱을 섞습니다. 비트 퍼펙트 재생을 하려면 독점 모드를 켜세요."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"공유 모드는 시스템 사운드 서버를 통해 48 kHz로 Aurora와 다른 앱을 섞습니다."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"공유 모드는 Windows 오디오 엔진을 통해 기기의 믹스 형식으로 Aurora와 다른 앱을 섞습니다. 비트 퍼펙트 재생을 하려면 독점 모드를 켜세요."</string>
     <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"시스템 기본값은 재생 중에 바뀌더라도 기본 출력 기기를 따릅니다."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"시스템 기본값은 재생 중에 바뀌더라도 Windows 출력 기기를 따릅니다."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"오디오 출력을 사용할 수 없습니다"</string>
+    <string name="text_the_device_is_in_use_by_the_sound_server_or_another_app_ask_pipew_e1e816" formatted="false">"사운드 서버나 다른 앱이 기기를 사용 중입니다. PipeWire 또는 PulseAudio가 기기를 해제하게 한 다음 독점 모드를 껐다가 다시 켜세요."</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f" formatted="false">"샘플 레이트 정책과 디더는 독점 모드에서 적용됩니다. 공유 모드는 항상 사운드 서버를 통해 48 kHz로 재생합니다."</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"샘플 레이트 정책과 디더는 독점 모드에서 적용됩니다. 공유 모드는 항상 Windows 믹스 형식으로 재생합니다."</string>
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"선택한 출력 기기의 연결이 끊어졌습니다"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"곡을 디코딩할 수 없습니다"</string>

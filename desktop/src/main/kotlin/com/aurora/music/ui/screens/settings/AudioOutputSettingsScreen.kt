@@ -46,6 +46,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aurora.music.desktop.audio.ExclusiveFormats
+import com.aurora.music.desktop.audio.LinuxOutputBackend
 import com.aurora.music.desktop.natives.AudioDevices
 import com.aurora.music.desktop.natives.DeviceKind
 import com.aurora.music.desktop.natives.MixFormat
@@ -80,9 +82,16 @@ fun AudioOutputSettingsScreen(
     val scope = rememberCoroutineScope()
     val systemDefault = devices.firstOrNull { it.isDefault }
     val activeId = preferred?.takeIf { id -> devices.any { it.id == id } } ?: systemDefault?.id
-    val wasapi = player.exclusiveAvailable
-    val mix by produceState<MixFormat?>(null, activeId) {
-        if (HostPlatform.isWindows) value = withContext(Dispatchers.IO) { runCatching { AudioDevices.mixFormat(activeId) }.getOrNull() }
+    val capable = player.exclusiveAvailable
+    val windows = HostPlatform.isWindows
+    val capabilities by produceState<String?>(null, activeId, capable) {
+        value = withContext(Dispatchers.IO) {
+            when {
+                !capable -> null
+                windows -> runCatching { AudioDevices.mixFormat(activeId) }.getOrNull()?.describe()
+                else -> runCatching { LinuxOutputBackend.instance.formats(activeId) }.getOrNull()?.describe()
+            }
+        }
     }
 
     Column(Modifier.fillMaxWidth()) {
@@ -108,24 +117,26 @@ fun AudioOutputSettingsScreen(
                 }
             }
             item {
-                Note(appString(if (wasapi) R.string.text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0
+                Note(appString(if (windows) R.string.text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0
                 else R.string.text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98))
             }
 
             item { SettingsSectionTitle(appString(R.string.text_output_mode_ba6e71)) }
-            if (wasapi) item {
+            if (capable) item {
                 SettingsGroup {
                     SettingsSwitchRow(Icons.Filled.HighQuality, appString(R.string.text_exclusive_mode_01d9b2),
-                        appString(R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d), exclusive) {
+                        appString(if (windows) R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d
+                        else R.string.text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9), exclusive) {
                         player.setExclusiveOutput(it)
                     }
                 }
             }
             item {
                 Note(when {
-                    !wasapi -> appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3)
+                    !capable -> appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3)
                     exclusive -> appString(R.string.text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6)
-                    else -> appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865)
+                    windows -> appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865)
+                    else -> appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d)
                 })
             }
             item {
@@ -136,14 +147,17 @@ fun AudioOutputSettingsScreen(
                 }
             }
             item { Note(appString(R.string.text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8)) }
-            if (wasapi) {
+            if (capable) {
                 item { OutputRateSettings(ratePolicy) { change -> scope.launch { store.updateOutputRatePolicy(change) } } }
-                item { Note(appString(R.string.text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d)) }
+                item {
+                    Note(appString(if (windows) R.string.text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d
+                    else R.string.text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f))
+                }
 
-                item { SettingsSectionTitle(appString(R.string.text_windows_capabilities_0f1fa0)) }
+                item { SettingsSectionTitle(appString(if (windows) R.string.text_windows_capabilities_0f1fa0 else R.string.text_device_capabilities_4cac01)) }
                 item {
                     SettingsGroup {
-                        Text(mix?.describe() ?: appString(R.string.text_output_unknown_ef4fdb), Modifier.padding(20.dp),
+                        Text(capabilities ?: appString(R.string.text_output_unknown_ef4fdb), Modifier.padding(20.dp),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                 }
@@ -157,6 +171,18 @@ fun AudioOutputSettingsScreen(
             }
         }
     }
+}
+
+private fun ExclusiveFormats.describe(): String = when (this) {
+    is ExclusiveFormats.Supported -> listOf(
+        appString(R.string.text_exclusive_formats_3dafa8),
+        appString(R.string.text_khz_dd177d, rates.joinToString(", ") { (it / 1000.0).toString().removeSuffix(".0") }),
+        encodings.map { if (it.isFloat) appString(R.string.text_bit_float_012895, it.validBits) else appString(R.string.text_bit_integer_72520f, it.validBits) }
+            .distinct().joinToString(", "),
+    ).joinToString(" · ")
+    ExclusiveFormats.Busy -> appString(R.string.text_in_use_by_the_sound_server_or_another_app_aa3eaa)
+    ExclusiveFormats.NoDevice -> appString(R.string.text_choose_an_output_device_to_use_exclusive_mode_b2a25d)
+    ExclusiveFormats.Unknown -> appString(R.string.text_output_unknown_ef4fdb)
 }
 
 private fun MixFormat.describe(): String = listOf(

@@ -5,6 +5,7 @@
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"\u2067Aurora آلے کا مکمل کنٹرول لے لیتا ہے اور سیمپلز کو ٹریک کے اپنے ریٹ اور بٹ ڈیپتھ پر بھیجتا ہے۔ Aurora کے چلتے وقت دوسری ایپس خاموش رہتی ہیں۔ جب پروسیسنگ، والیوم اور ReplayGain سیمپلز کو تبدیل نہیں کرتے تو آؤٹ پٹ bit-perfect رہتا ہے؛ اگر آلہ کوئی فارمیٹ مسترد کرے تو Aurora شیئرڈ موڈ پر واپس آ جاتا ہے اور سگنل پاتھ وجہ بتاتا ہے۔\u2069"</string>
     <string name="text_bit_float_012895">"\u2067%1$d-بٹ فلوٹ\u2069"</string>
     <string name="text_bit_integer_72520f">"\u2067%1$d-بٹ انٹیجر\u2069"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9" formatted="false">"\u2067bit-perfect آؤٹ پٹ جو ساؤنڈ سرور کو بائی پاس کرتا ہے\u2069"</string>
     <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"\u2067bit-perfect آؤٹ پٹ جو Windows مکسر کو بائی پاس کرتا ہے\u2069"</string>
     <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"\u2067Compose Multiplatform اور Material 3 سے بنایا گیا۔\u2069"</string>
     <string name="text_cache_50338b" formatted="false">"\u2067کیش\u2069"</string>
@@ -12,16 +13,20 @@
     <string name="text_ch_282ab4">"\u2067%1$d چینلز\u2069"</string>
     <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"\u2067100 میگا پکسل سے کم کی کوئی سپورٹ شدہ تصویر منتخب کریں۔\u2069"</string>
     <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"\u206720 MB سے چھوٹی تصویر منتخب کریں۔\u2069"</string>
+    <string name="text_choose_an_output_device_to_use_exclusive_mode_b2a25d" formatted="false">"\u2067ایکسکلوسیو موڈ استعمال کرنے کے لیے کوئی آؤٹ پٹ آلہ منتخب کریں\u2069"</string>
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"\u2067منتخب کریں کہ اس PC پر آپ کی موسیقی کہاں ہے\u2069"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"\u2067تصویری کیش صاف کریں\u2069"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"\u2067ٹرے میں بند کریں\u2069"</string>
     <string name="text_date_added_56ab7a" formatted="false">"\u2067شامل کرنے کی تاریخ\u2069"</string>
+    <string name="text_device_capabilities_4cac01" formatted="false">"\u2067آلے کی صلاحیتیں\u2069"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"\u2067آلہ، ایکسکلوسیو موڈ اور بفر\u2069"</string>
+    <string name="text_exclusive_formats_3dafa8" formatted="false">"\u2067ایکسکلوسیو موڈ فارمیٹس\u2069"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"\u2067ایکسکلوسیو موڈ\u2069"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"\u2067ایکسکلوسیو موڈ دستیاب نہیں: %1$s\u2069"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"\u2067اس آلے پر ایکسکلوسیو موڈ دستیاب نہیں\u2069"</string>
     <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"\u2067چلنے والے کور کی پیروی کریں\u2069"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"\u2067%1$d Hz دستیاب نہیں؛ %2$d Hz استعمال ہو رہا ہے۔\u2069"</string>
+    <string name="text_in_use_by_the_sound_server_or_another_app_aa3eaa" formatted="false">"\u2067ساؤنڈ سرور یا کسی دوسری ایپ کے استعمال میں\u2069"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"\u2067ونڈو بند ہونے پر Aurora کو نوٹیفکیشن ایریا میں چلتا رکھیں\u2069"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"\u2067بڑے بفرز بھاری سسٹم لوڈ برداشت کر لیتے ہیں؛ چھوٹے بفرز سیک اور والیوم پر تیزی سے ردعمل دیتے ہیں۔ آؤٹ پٹ دوبارہ کھلنے پر لاگو ہوتا ہے۔\u2069"</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
@@ -29,11 +34,14 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"\u2067پورے صفحے میں کھولیں\u2069"</string>
     <string name="text_output_buffer_61b372" formatted="false">"\u2067آؤٹ پٹ بفر\u2069"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"\u2067شیئرڈ موڈ مکس فارمیٹ\u2069"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"\u2067شیئرڈ موڈ Aurora کو سسٹم ساؤنڈ سرور کے ذریعے 48 kHz پر دوسری ایپس کے ساتھ ملاتا ہے۔ bit-perfect پلے بیک کے لیے ایکسکلوسیو موڈ آن کریں۔\u2069"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"\u2067شیئرڈ موڈ Aurora کو سسٹم ساؤنڈ سرور کے ذریعے 48 kHz پر دوسری ایپس کے ساتھ ملاتا ہے۔\u2069"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"\u2067شیئرڈ موڈ Aurora کو Windows آڈیو انجن کے ذریعے آلے کے مکس فارمیٹ پر دوسری ایپس کے ساتھ ملاتا ہے۔ bit-perfect پلے بیک کے لیے ایکسکلوسیو موڈ آن کریں۔\u2069"</string>
     <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"\u2067سسٹم ڈیفالٹ، ڈیفالٹ آؤٹ پٹ آلے کی پیروی کرتا ہے، چاہے وہ پلے بیک کے دوران بدل جائے۔\u2069"</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"\u2067سسٹم ڈیفالٹ Windows کے آؤٹ پٹ آلے کی پیروی کرتا ہے، چاہے وہ پلے بیک کے دوران بدل جائے۔\u2069"</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"\u2067آڈیو آؤٹ پٹ استعمال نہیں ہو سکا\u2069"</string>
+    <string name="text_the_device_is_in_use_by_the_sound_server_or_another_app_ask_pipew_e1e816" formatted="false">"\u2067یہ آلہ ساؤنڈ سرور یا کسی دوسری ایپ کے استعمال میں ہے۔ PipeWire یا PulseAudio سے اسے چھوڑنے کو کہیں، پھر ایکسکلوسیو موڈ بند کر کے دوبارہ آن کریں۔\u2069"</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f" formatted="false">"\u2067سیمپل ریٹ پالیسی اور ڈِدر ایکسکلوسیو موڈ میں لاگو ہوتے ہیں۔ شیئرڈ موڈ ہمیشہ ساؤنڈ سرور کے ذریعے 48 kHz پر چلتا ہے۔\u2069"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"\u2067سیمپل ریٹ پالیسی اور ڈِدر ایکسکلوسیو موڈ میں لاگو ہوتے ہیں۔ شیئرڈ موڈ ہمیشہ Windows مکس فارمیٹ پر چلتا ہے۔\u2069"</string>
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"\u2067منتخب آؤٹ پٹ آلہ منقطع ہو گیا\u2069"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"\u2067ٹریک ڈیکوڈ نہیں ہو سکا\u2069"</string>

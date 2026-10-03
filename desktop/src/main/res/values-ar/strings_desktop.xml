@@ -5,6 +5,7 @@
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"\u2067يتولى Aurora التحكم الكامل في الجهاز ويرسل العينات بمعدل المقطع وعمق البت الخاصين به. تصمت التطبيقات الأخرى أثناء تشغيل Aurora. يبقى الإخراج مطابقًا بت ببت عندما لا تغيّر المعالجة ومستوى الصوت وReplayGain العينات؛ وإذا رفض الجهاز صيغة ما، يعود Aurora إلى الوضع المشترك ويوضح مسار الإشارة السبب.\u2069"</string>
     <string name="text_bit_float_012895">"\u2067عدد عشري %1$d بت\u2069"</string>
     <string name="text_bit_integer_72520f">"\u2067عدد صحيح %1$d بت\u2069"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9" formatted="false">"\u2067إخراج مطابق بت ببت يتجاوز خادم الصوت\u2069"</string>
     <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"\u2067إخراج مطابق بت ببت يتجاوز خلّاط Windows\u2069"</string>
     <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"\u2067مبني باستخدام Compose Multiplatform وMaterial 3.\u2069"</string>
     <string name="text_cache_50338b" formatted="false">"\u2067ذاكرة التخزين المؤقت\u2069"</string>
@@ -12,16 +13,20 @@
     <string name="text_ch_282ab4">"\u2067%1$d قناة\u2069"</string>
     <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"\u2067اختر صورة مدعومة أقل من 100 ميغابكسل.\u2069"</string>
     <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"\u2067اختر صورة أصغر من 20 ميغابايت.\u2069"</string>
+    <string name="text_choose_an_output_device_to_use_exclusive_mode_b2a25d" formatted="false">"\u2067اختر جهاز إخراج لاستخدام الوضع الحصري\u2069"</string>
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"\u2067اختر مكان موسيقاك على هذا الكمبيوتر\u2069"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"\u2067مسح ذاكرة الصور المؤقتة\u2069"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"\u2067الإغلاق إلى علبة النظام\u2069"</string>
     <string name="text_date_added_56ab7a" formatted="false">"\u2067تاريخ الإضافة\u2069"</string>
+    <string name="text_device_capabilities_4cac01" formatted="false">"\u2067إمكانات الجهاز\u2069"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"\u2067الجهاز والوضع الحصري والمخزن المؤقت\u2069"</string>
+    <string name="text_exclusive_formats_3dafa8" formatted="false">"\u2067الصيغ في الوضع الحصري\u2069"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"\u2067الوضع الحصري\u2069"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"\u2067الوضع الحصري غير متاح: %1$s\u2069"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"\u2067الوضع الحصري غير متاح على هذا الجهاز\u2069"</string>
     <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"\u2067اتباع غلاف المقطع قيد التشغيل\u2069"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"\u2067%1$d Hz غير متاح؛ يتم استخدام %2$d Hz.\u2069"</string>
+    <string name="text_in_use_by_the_sound_server_or_another_app_aa3eaa" formatted="false">"\u2067قيد الاستخدام من خادم الصوت أو تطبيق آخر\u2069"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"\u2067إبقاء Aurora قيد التشغيل في منطقة الإشعارات عند إغلاق النافذة\u2069"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"\u2067المخازن الأكبر تتحمل الحمل الثقيل على النظام؛ والأصغر تستجيب أسرع للتنقل ومستوى الصوت. يُطبَّق عند إعادة فتح المخرج.\u2069"</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
@@ -29,11 +34,14 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"\u2067الفتح في صفحة كاملة\u2069"</string>
     <string name="text_output_buffer_61b372" formatted="false">"\u2067المخزن المؤقت للإخراج\u2069"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"\u2067صيغة المزج في الوضع المشترك\u2069"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"\u2067يمزج الوضع المشترك Aurora مع التطبيقات الأخرى عبر خادم الصوت في النظام بتردد 48 kHz. فعّل الوضع الحصري للتشغيل المطابق بت ببت.\u2069"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"\u2067يمزج الوضع المشترك Aurora مع التطبيقات الأخرى عبر خادم الصوت في النظام بتردد 48 kHz.\u2069"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"\u2067يمزج الوضع المشترك Aurora مع التطبيقات الأخرى عبر محرك الصوت في Windows بصيغة المزج الخاصة بالجهاز. فعّل الوضع الحصري للتشغيل المطابق بت ببت.\u2069"</string>
     <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"\u2067يتبع افتراضي النظام جهاز الإخراج الافتراضي، حتى لو تغيّر أثناء التشغيل.\u2069"</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"\u2067يتبع افتراضي النظام جهاز الإخراج في Windows، حتى لو تغيّر أثناء التشغيل.\u2069"</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"\u2067تعذّر استخدام مخرج الصوت\u2069"</string>
+    <string name="text_the_device_is_in_use_by_the_sound_server_or_another_app_ask_pipew_e1e816" formatted="false">"\u2067الجهاز قيد الاستخدام من خادم الصوت أو تطبيق آخر. اطلب من PipeWire أو PulseAudio تحريره، ثم أوقف الوضع الحصري وشغّله مجددًا.\u2069"</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f" formatted="false">"\u2067تنطبق سياسة معدل العينات والتشويش في الوضع الحصري. يشغّل الوضع المشترك دائمًا بتردد 48 kHz عبر خادم الصوت.\u2069"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"\u2067تنطبق سياسة معدل العينات والتشويش في الوضع الحصري. يشغّل الوضع المشترك دائمًا بصيغة مزج Windows.\u2069"</string>
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"\u2067انفصل جهاز الإخراج المحدد\u2069"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"\u2067تعذّر فك ترميز المقطع\u2069"</string>

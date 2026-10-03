@@ -2,9 +2,9 @@ package com.aurora.music.desktop.natives
 
 import java.io.IOException
 
-class WasapiException(val hresult: Int) : IOException("WASAPI error 0x%08X".format(hresult)) {
-    val deviceInvalidated: Boolean get() = hresult == DEVICE_INVALIDATED
+open class OutputException(message: String, val deviceInvalidated: Boolean) : IOException(message)
 
+class WasapiException(val hresult: Int) : OutputException("WASAPI error 0x%08X".format(hresult), hresult == DEVICE_INVALIDATED) {
     companion object {
         const val DEVICE_INVALIDATED = 0x88890004.toInt()
         const val DEVICE_IN_USE = 0x8889000A.toInt()

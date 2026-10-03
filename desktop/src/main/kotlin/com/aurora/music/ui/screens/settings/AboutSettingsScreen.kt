@@ -42,7 +42,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.ServerType
-import com.aurora.music.desktop.audio.outputApiName
+import com.aurora.music.desktop.audio.outputApis
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.ui.LocalDesktopContainer
@@ -131,7 +131,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     InfoRow(appString(R.string.text_signed_in_as_a02107), session?.username ?: "—")
                 }
                 SettingsRowDivider(20.dp)
-                InfoRow(appString(R.string.text_playback_engine_0255b8), "FFmpeg ${ffmpegVersion()} · $outputApiName")
+                InfoRow(appString(R.string.text_playback_engine_0255b8), "FFmpeg ${ffmpegVersion()} · ${outputApis()}")
                 SettingsRowDivider(20.dp)
                 InfoRow("Compose Multiplatform", BuildInfo.COMPOSE_VERSION)
             }

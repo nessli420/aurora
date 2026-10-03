@@ -5,6 +5,7 @@
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora takes sole control of the device and sends samples at the track\'s own rate and bit depth. Other apps are silent while Aurora plays. Output stays bit-perfect when processing, volume and ReplayGain leave the samples unchanged; if the device refuses a format Aurora falls back to shared mode and Signal Path shows why."</string>
     <string name="text_bit_float_012895">"%1$d-bit float"</string>
     <string name="text_bit_integer_72520f">"%1$d-bit integer"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9" formatted="false">"Bit-perfect output that bypasses the sound server"</string>
     <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Bit-perfect output that bypasses the Windows mixer"</string>
     <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Built with Compose Multiplatform &amp; Material 3."</string>
     <string name="text_cache_50338b" formatted="false">"Cache"</string>
@@ -12,16 +13,20 @@
     <string name="text_ch_282ab4">"%1$d ch"</string>
     <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"Choose a supported image under 100 megapixels."</string>
     <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"Choose an image smaller than 20 MB."</string>
+    <string name="text_choose_an_output_device_to_use_exclusive_mode_b2a25d" formatted="false">"Choose an output device to use exclusive mode"</string>
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Choose where your music lives on this PC"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Clear image cache"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Close to tray"</string>
     <string name="text_date_added_56ab7a" formatted="false">"Date added"</string>
+    <string name="text_device_capabilities_4cac01" formatted="false">"Device Capabilities"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Device, exclusive mode and buffer"</string>
+    <string name="text_exclusive_formats_3dafa8" formatted="false">"Exclusive formats"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Exclusive mode"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"Exclusive mode is unavailable: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Exclusive mode is unavailable on this device"</string>
     <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Follow the playing cover"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz is unavailable; using %2$d Hz."</string>
+    <string name="text_in_use_by_the_sound_server_or_another_app_aa3eaa" formatted="false">"In use by the sound server or another app"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Keep Aurora playing in the notification area when the window closes"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Larger buffers ride out heavy system load; smaller ones react faster to seeking and volume. Applies when the output reopens."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
@@ -29,11 +34,14 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Open in full page"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Output buffer"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Shared mode mix format"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"Shared mode mixes Aurora with other apps through the system sound server at 48 kHz. Turn on exclusive mode for bit-perfect playback."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Shared mode mixes Aurora with other apps through the system sound server at 48 kHz."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Shared mode mixes Aurora with other apps through the Windows audio engine at the device\'s mix format. Turn on exclusive mode for bit-perfect playback."</string>
     <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"System default follows the default output device, even when it changes during playback."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"System default follows the Windows output device, even when it changes during playback."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"The audio output could not be used"</string>
+    <string name="text_the_device_is_in_use_by_the_sound_server_or_another_app_ask_pipew_e1e816" formatted="false">"The device is in use by the sound server or another app. Ask PipeWire or PulseAudio to release it, then turn exclusive mode off and on again."</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f" formatted="false">"The sample-rate policy and dither apply in exclusive mode. Shared mode always plays at 48 kHz through the sound server."</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"The sample-rate policy and dither apply in exclusive mode. Shared mode always plays at the Windows mix format."</string>
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"The selected output device was disconnected"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"The track could not be decoded"</string>

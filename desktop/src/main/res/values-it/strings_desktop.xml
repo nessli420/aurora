@@ -5,6 +5,7 @@
     <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora prende il controllo esclusivo del dispositivo e invia i campioni alla frequenza e profondità di bit originali del brano. Le altre app restano mute mentre Aurora suona. L\'uscita resta bit-perfect quando elaborazione, volume e ReplayGain lasciano invariati i campioni; se il dispositivo rifiuta un formato, Aurora torna alla modalità condivisa e il Percorso del segnale ne mostra il motivo."</string>
     <string name="text_bit_float_012895">"Virgola mobile a %1$d bit"</string>
     <string name="text_bit_integer_72520f">"Intero a %1$d bit"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9" formatted="false">"Uscita bit-perfect che esclude il server audio"</string>
     <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Uscita bit-perfect che esclude il mixer di Windows"</string>
     <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Realizzato con Compose Multiplatform e Material 3."</string>
     <string name="text_cache_50338b" formatted="false">"Cache"</string>
@@ -12,16 +13,20 @@
     <string name="text_ch_282ab4">"%1$d can."</string>
     <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"Scegli un\'immagine supportata sotto i 100 megapixel."</string>
     <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"Scegli un\'immagine più piccola di 20 MB."</string>
+    <string name="text_choose_an_output_device_to_use_exclusive_mode_b2a25d" formatted="false">"Scegli un dispositivo di uscita per usare la modalità esclusiva"</string>
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Scegli dove si trova la tua musica su questo PC"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Svuota cache immagini"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Chiudi nell\'area di notifica"</string>
     <string name="text_date_added_56ab7a" formatted="false">"Data di aggiunta"</string>
+    <string name="text_device_capabilities_4cac01" formatted="false">"Funzionalità del dispositivo"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Dispositivo, modalità esclusiva e buffer"</string>
+    <string name="text_exclusive_formats_3dafa8" formatted="false">"Formati della modalità esclusiva"</string>
     <string name="text_exclusive_mode_01d9b2" formatted="false">"Modalità esclusiva"</string>
     <string name="text_exclusive_mode_is_unavailable_0de552">"La modalità esclusiva non è disponibile: %1$s"</string>
     <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"La modalità esclusiva non è disponibile su questo dispositivo"</string>
     <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Segui la copertina in riproduzione"</string>
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz non è disponibile; viene usato %2$d Hz."</string>
+    <string name="text_in_use_by_the_sound_server_or_another_app_aa3eaa" formatted="false">"In uso dal server audio o da un\'altra app"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Continua a riprodurre Aurora nell\'area di notifica quando la finestra si chiude"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Buffer più grandi reggono meglio un carico di sistema elevato; quelli più piccoli reagiscono più rapidamente a salti e volume. Si applica quando l\'uscita viene riaperta."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
@@ -29,11 +34,14 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Apri a pagina intera"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Buffer di uscita"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Formato di mix in modalità condivisa"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"La modalità condivisa mixa Aurora con le altre app tramite il server audio di sistema a 48 kHz. Attiva la modalità esclusiva per la riproduzione bit-perfect."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"La modalità condivisa mixa Aurora con le altre app tramite il server audio di sistema a 48 kHz."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"La modalità condivisa mixa Aurora con le altre app tramite il motore audio di Windows nel formato di mix del dispositivo. Attiva la modalità esclusiva per la riproduzione bit-perfect."</string>
     <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"Il predefinito di sistema segue il dispositivo di uscita predefinito, anche se cambia durante la riproduzione."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"Il predefinito di sistema segue il dispositivo di uscita di Windows, anche se cambia durante la riproduzione."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"Impossibile usare l\'uscita audio"</string>
+    <string name="text_the_device_is_in_use_by_the_sound_server_or_another_app_ask_pipew_e1e816" formatted="false">"Il dispositivo è in uso dal server audio o da un\'altra app. Chiedi a PipeWire o PulseAudio di rilasciarlo, poi disattiva e riattiva la modalità esclusiva."</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_219b9f" formatted="false">"Il criterio della frequenza di campionamento e il dither si applicano in modalità esclusiva. La modalità condivisa riproduce sempre a 48 kHz tramite il server audio."</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"Il criterio della frequenza di campionamento e il dither si applicano in modalità esclusiva. La modalità condivisa riproduce sempre nel formato di mix di Windows."</string>
     <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"Il dispositivo di uscita selezionato è stato scollegato"</string>
     <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"Impossibile decodificare il brano"</string>

@@ -62,6 +62,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.desktop.natives.AudioDevice
 import com.aurora.music.desktop.natives.DeviceKind
+import com.aurora.music.desktop.platform.HostPlatform
 import kotlin.math.roundToInt
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -104,7 +105,8 @@ fun OutputDeviceSheet(
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
                         Text(appString(R.string.text_exclusive_mode_01d9b2), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = colors.onSurface)
-                        Text(appString(R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                        Text(appString(if (HostPlatform.isWindows) R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d
+                            else R.string.text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                     }
                     Switch(
                         checked = exclusive,

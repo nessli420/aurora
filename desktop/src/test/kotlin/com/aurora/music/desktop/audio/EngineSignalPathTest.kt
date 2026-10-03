@@ -22,9 +22,9 @@ class EngineSignalPathTest {
         val path = state(output, ProcessingFacts(bitPerfect = true)).signalPath(null, null, null, emptyList())
         assertEquals(Preservation.PRESERVED, path.preservation)
         assertTrue(path.bitPerfect)
-        assertEquals("WASAPI exclusive", path.output)
+        assertEquals("${outputApi(true)} exclusive", path.output)
         assertEquals(24, path.outputStage.format?.bitDepth)
-        assertEquals(listOf("Driver and DAC behavior beyond the exclusive WASAPI stream are not verified"), path.reasons)
+        assertEquals(listOf("Driver and DAC behavior beyond the exclusive ${outputApi(true)} stream are not verified"), path.reasons)
     }
 
     @Test fun sharedResampledPlaybackIsModifiedWithReasons() {
