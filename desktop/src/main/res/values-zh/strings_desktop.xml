@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"在完整页面中打开"</string>
     <string name="text_output_buffer_61b372" formatted="false">"输出缓冲区"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"共享模式混音格式"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"共享模式会通过系统声音服务器，以 48 kHz 将 Aurora 与其他应用混合。"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"共享模式会通过 Windows 音频引擎，以设备的混音格式将 Aurora 与其他应用混合。开启独占模式可实现 bit-perfect 播放。"</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"“系统默认”会跟随默认输出设备，即使它在播放过程中发生变化。"</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"“系统默认”会跟随 Windows 输出设备，即使它在播放过程中发生变化。"</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"无法使用音频输出"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"采样率策略和抖动在独占模式下生效。共享模式始终以 Windows 混音格式播放。"</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"无法打开此曲目"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"不支持此曲目的采样率"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"用正在播放的歌曲的颜色为整个应用着色"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"正在使用你的系统强调色。"</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"正在使用你的 Windows 强调色。"</string>
     <string name="text_volume_3b18e8" formatted="false">"音量"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows 功能"</string>

@@ -70,6 +70,7 @@ fun OutputDeviceSheet(
     devices: List<AudioDevice>,
     currentId: String?,
     exclusive: Boolean,
+    exclusiveAvailable: Boolean,
     volume: Float,
     onSelect: (String?) -> Unit,
     onExclusiveChange: (Boolean) -> Unit,
@@ -90,25 +91,27 @@ fun OutputDeviceSheet(
                 OutputRow(Icons.Filled.LinkOff, appString(R.string.text_selected_device_disconnected_c2d1b1), systemDefault?.name, selected = true) {}
             }
             HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = colors.outlineVariant.copy(alpha = 0.5f))
-            Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
-                    .clickable(role = Role.Switch) { onExclusiveChange(!exclusive) }.pointerHoverIcon(PointerIcon.Hand)
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Box(Modifier.size(40.dp).clip(CircleShape).background(colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-                    Icon(Icons.Filled.HighQuality, null, tint = if (exclusive) colors.primary else colors.onSurface, modifier = Modifier.size(20.dp))
+            if (exclusiveAvailable) {
+                Row(
+                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                        .clickable(role = Role.Switch) { onExclusiveChange(!exclusive) }.pointerHoverIcon(PointerIcon.Hand)
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.size(40.dp).clip(CircleShape).background(colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Filled.HighQuality, null, tint = if (exclusive) colors.primary else colors.onSurface, modifier = Modifier.size(20.dp))
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(appString(R.string.text_exclusive_mode_01d9b2), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = colors.onSurface)
+                        Text(appString(R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                    }
+                    Switch(
+                        checked = exclusive,
+                        onCheckedChange = onExclusiveChange,
+                        colors = SwitchDefaults.colors(checkedThumbColor = colors.onPrimary, checkedTrackColor = colors.primary),
+                    )
                 }
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(appString(R.string.text_exclusive_mode_01d9b2), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = colors.onSurface)
-                    Text(appString(R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
-                }
-                Switch(
-                    checked = exclusive,
-                    onCheckedChange = onExclusiveChange,
-                    colors = SwitchDefaults.colors(checkedThumbColor = colors.onPrimary, checkedTrackColor = colors.primary),
-                )
             }
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 20.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                 IconButton(onClick = onToggleMute, modifier = Modifier.size(40.dp)) {

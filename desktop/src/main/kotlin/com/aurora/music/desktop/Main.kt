@@ -20,11 +20,10 @@ import androidx.compose.ui.window.application
 import androidx.compose.ui.window.rememberWindowState
 import coil3.SingletonImageLoader
 import com.aurora.music.desktop.audio.DesktopPlaybackEngine
-import com.aurora.music.desktop.natives.WindowNative
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.platform.DesktopPaths
 import com.aurora.music.desktop.platform.DesktopRuntime
-import com.aurora.music.desktop.platform.HostPlatform
+import com.aurora.music.desktop.platform.SystemAccent
 import com.aurora.music.desktop.player.DesktopPlayer
 import com.aurora.music.desktop.player.playerDependencies
 import com.aurora.music.desktop.resources.AuroraLogo
@@ -81,11 +80,9 @@ fun main() {
         val closeToTray by settings.closeToTray.collectAsState(false)
         val trayAvailable = remember { runCatching { SystemTray.isSupported() }.getOrDefault(false) }
         val icon = rememberVectorPainter(AuroraLogo)
-        var systemAccent by remember {
-            mutableStateOf(if (HostPlatform.isWindows) runCatching { WindowNative.accentColor() }.getOrNull()?.let { Color(it) } else null)
-        }
+        var systemAccent by remember { mutableStateOf(SystemAccent.current()?.let { Color(it) }) }
         DisposableEffect(Unit) {
-            val watch = if (HostPlatform.isWindows) runCatching { WindowNative.addAccentListener { systemAccent = Color(it) } }.getOrNull() else null
+            val watch = SystemAccent.listen { systemAccent = Color(it) }
             onDispose { watch?.close() }
         }
 

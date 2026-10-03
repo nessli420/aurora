@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Ganzseitig öffnen"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Ausgabepuffer"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Mix-Format im gemeinsamen Modus"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Der gemeinsame Modus mischt Aurora über den Soundserver des Systems mit 48 kHz mit anderen Apps."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Der gemeinsame Modus mischt Aurora über die Windows-Audio-Engine im Mix-Format des Geräts mit anderen Apps. Aktiviere den exklusiven Modus für bitgenaue Wiedergabe."</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"Der Systemstandard folgt dem Standard-Ausgabegerät, auch wenn es sich während der Wiedergabe ändert."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"Der Systemstandard folgt dem Windows-Ausgabegerät, auch wenn es sich während der Wiedergabe ändert."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"Die Audioausgabe konnte nicht verwendet werden"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"Abtastratenrichtlinie und Dither gelten im exklusiven Modus. Der gemeinsame Modus spielt immer im Windows-Mix-Format."</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"Der Titel konnte nicht geöffnet werden"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"Die Abtastrate des Titels wird nicht unterstützt"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Die ganze App in der Farbe des laufenden Titels einfärben"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"Es wird deine System-Akzentfarbe verwendet."</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Es wird deine Windows-Akzentfarbe verwendet."</string>
     <string name="text_volume_3b18e8" formatted="false">"Lautstärke"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows-Funktionen"</string>

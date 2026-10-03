@@ -80,6 +80,7 @@ fun AudioOutputSettingsScreen(
     val scope = rememberCoroutineScope()
     val systemDefault = devices.firstOrNull { it.isDefault }
     val activeId = preferred?.takeIf { id -> devices.any { it.id == id } } ?: systemDefault?.id
+    val wasapi = player.exclusiveAvailable
     val mix by produceState<MixFormat?>(null, activeId) {
         if (HostPlatform.isWindows) value = withContext(Dispatchers.IO) { runCatching { AudioDevices.mixFormat(activeId) }.getOrNull() }
     }
@@ -106,10 +107,13 @@ fun AudioOutputSettingsScreen(
                     }
                 }
             }
-            item { Note(appString(R.string.text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0)) }
+            item {
+                Note(appString(if (wasapi) R.string.text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0
+                else R.string.text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98))
+            }
 
             item { SettingsSectionTitle(appString(R.string.text_output_mode_ba6e71)) }
-            item {
+            if (wasapi) item {
                 SettingsGroup {
                     SettingsSwitchRow(Icons.Filled.HighQuality, appString(R.string.text_exclusive_mode_01d9b2),
                         appString(R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d), exclusive) {
@@ -118,8 +122,11 @@ fun AudioOutputSettingsScreen(
                 }
             }
             item {
-                Note(if (exclusive) appString(R.string.text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6)
-                else appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865))
+                Note(when {
+                    !wasapi -> appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3)
+                    exclusive -> appString(R.string.text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6)
+                    else -> appString(R.string.text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865)
+                })
             }
             item {
                 SettingsGroup {
@@ -129,14 +136,16 @@ fun AudioOutputSettingsScreen(
                 }
             }
             item { Note(appString(R.string.text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8)) }
-            item { OutputRateSettings(ratePolicy) { change -> scope.launch { store.updateOutputRatePolicy(change) } } }
-            item { Note(appString(R.string.text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d)) }
+            if (wasapi) {
+                item { OutputRateSettings(ratePolicy) { change -> scope.launch { store.updateOutputRatePolicy(change) } } }
+                item { Note(appString(R.string.text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d)) }
 
-            item { SettingsSectionTitle(appString(R.string.text_windows_capabilities_0f1fa0)) }
-            item {
-                SettingsGroup {
-                    Text(mix?.describe() ?: appString(R.string.text_output_unknown_ef4fdb), Modifier.padding(20.dp),
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                item { SettingsSectionTitle(appString(R.string.text_windows_capabilities_0f1fa0)) }
+                item {
+                    SettingsGroup {
+                        Text(mix?.describe() ?: appString(R.string.text_output_unknown_ef4fdb), Modifier.padding(20.dp),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
 

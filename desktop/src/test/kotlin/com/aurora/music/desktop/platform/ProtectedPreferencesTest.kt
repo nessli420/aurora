@@ -70,17 +70,17 @@ class ProtectedPreferencesTest {
     }
 
     @Test fun aFileThisUserCannotDecryptStartsEmpty() {
-        val sealed = ProtectedPreferencesSerializer(protect = { it.reversedArray() }, unprotect = { it.reversedArray() })
+        val sealed = ProtectedPreferencesSerializer(protect = { it.reversedArray() }, unprotect = { it.reversedArray() }, vault = null)
         withStore(sealed) { store -> store.edit { it[token] = "moved-token" } }
         assertFalse(stored("moved-token"))
         assertEquals("moved-token", withStore(sealed) { it.data.first()[token] })
-        assertNull(withStore(ProtectedPreferencesSerializer(protect = { it.reversedArray() }, unprotect = { null })) { it.data.first()[token] })
+        assertNull(withStore(ProtectedPreferencesSerializer(protect = { it.reversedArray() }, unprotect = { null }, vault = null)) { it.data.first()[token] })
     }
 
     @Test fun credentialsStayInMemoryWhenNothingCanSealThem() {
         val theme = stringPreferencesKey("ui_theme")
         listOf<((ByteArray) -> ByteArray?)?>(null, { null }).forEach { protect ->
-            val running = ProtectedPreferencesSerializer(protect = protect)
+            val running = ProtectedPreferencesSerializer(protect = protect, vault = null)
             val current = withStore(running) { store ->
                 store.edit { it[token] = "secret-token-42"; it[theme] = "dark" }
                 store.edit { it[theme] = "light" }
@@ -88,7 +88,7 @@ class ProtectedPreferencesTest {
             }
             assertEquals("secret-token-42", current[token])
             assertFalse(stored("secret-token-42"))
-            val restarted = withStore(ProtectedPreferencesSerializer(protect = protect)) { it.data.first() }
+            val restarted = withStore(ProtectedPreferencesSerializer(protect = protect, vault = null)) { it.data.first() }
             assertNull(restarted[token])
             assertEquals("light", restarted[theme])
         }
@@ -98,7 +98,7 @@ class ProtectedPreferencesTest {
         val type = stringPreferencesKey("server_type")
         val saved = stringPreferencesKey("saved_sessions")
         val remote = Session("https://music.example.com", "mara", "pepper-salt-9", "remote-token-7")
-        withStore(ProtectedPreferencesSerializer(protect = null)) { store ->
+        withStore(ProtectedPreferencesSerializer(protect = null, vault = null)) { store ->
             store.edit {
                 it[type] = ServerType.LOCAL.name
                 it[token] = "local"
@@ -106,7 +106,7 @@ class ProtectedPreferencesTest {
             }
         }
         assertFalse(stored("remote-token-7"))
-        val reopened = withStore(ProtectedPreferencesSerializer(protect = null)) { it.data.first() }
+        val reopened = withStore(ProtectedPreferencesSerializer(protect = null, vault = null)) { it.data.first() }
         assertEquals("local", reopened[token])
         assertEquals(Gson().toJson(listOf(AccountAuthenticator.LOCAL_SESSION)), reopened[saved])
     }
@@ -118,7 +118,65 @@ class ProtectedPreferencesTest {
             scope.coroutineContext.job.cancelAndJoin()
         }
         assertTrue(stored("legacy-token-7"))
-        assertNull(withStore(ProtectedPreferencesSerializer(protect = null)) { it.data.first()[token] })
+        assertNull(withStore(ProtectedPreferencesSerializer(protect = null, vault = null)) { it.data.first()[token] })
+        assertFalse(stored("legacy-token-7"))
+    }
+
+    private class Keyring : SecretStore {
+        @Volatile var secret: ByteArray? = null
+        @Volatile var reads = 0
+
+        override fun read(): ByteArray? = secret.also { reads++ }
+
+        override fun write(secret: ByteArray): Boolean {
+            this.secret = secret
+            return true
+        }
+    }
+
+    @Test fun credentialsSurviveARestartThroughTheKeyring() {
+        val theme = stringPreferencesKey("ui_theme")
+        val keyring = Keyring()
+        withStore(ProtectedPreferencesSerializer(protect = null, vault = CredentialVault(keyring))) { store ->
+            store.edit { it[token] = "secret-token-42"; it[theme] = "dark" }
+        }
+        assertFalse(stored("secret-token-42"))
+        assertTrue(stored("vaulted_credentials_v1"))
+        val restarted = withStore(ProtectedPreferencesSerializer(protect = null, vault = CredentialVault(keyring))) { it.data.first() }
+        assertEquals("secret-token-42", restarted[token])
+        assertEquals("dark", restarted[theme])
+        assertNull(restarted[stringPreferencesKey("vaulted_credentials_v1")])
+    }
+
+    @Test fun losingTheKeyringSignsOutButKeepsSettings() {
+        val theme = stringPreferencesKey("ui_theme")
+        withStore(ProtectedPreferencesSerializer(protect = null, vault = CredentialVault(Keyring()))) { store ->
+            store.edit { it[token] = "secret-token-42"; it[theme] = "dark" }
+        }
+        val restarted = withStore(ProtectedPreferencesSerializer(protect = null, vault = CredentialVault(Keyring()))) { it.data.first() }
+        assertNull(restarted[token])
+        assertEquals("dark", restarted[theme])
+        assertNull(restarted[stringPreferencesKey("vaulted_credentials_v1")])
+    }
+
+    @Test fun settingsWithoutCredentialsNeverTouchTheKeyring() {
+        val keyring = Keyring()
+        withStore(ProtectedPreferencesSerializer(protect = null, vault = CredentialVault(keyring))) { store ->
+            store.edit { it[stringPreferencesKey("ui_theme")] = "dark" }
+        }
+        withStore(ProtectedPreferencesSerializer(protect = null, vault = CredentialVault(keyring))) { it.data.first() }
+        assertEquals(0, keyring.reads)
+        assertNull(keyring.secret)
+    }
+
+    @Test fun aPlaintextFileMovesItsCredentialsIntoTheKeyring() {
+        runBlocking {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            PreferenceDataStoreFactory.create(scope = scope) { file }.edit { it[token] = "legacy-token-7" }
+            scope.coroutineContext.job.cancelAndJoin()
+        }
+        val keyring = Keyring()
+        assertEquals("legacy-token-7", withStore(ProtectedPreferencesSerializer(protect = null, vault = CredentialVault(keyring))) { it.data.first()[token] })
         assertFalse(stored("legacy-token-7"))
     }
 

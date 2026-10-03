@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.random.Random
 
-internal class FakeEngine(random: Random = Random(7)) : PlaybackEngine {
+internal class FakeEngine(random: Random = Random(7), override val exclusiveAvailable: Boolean = true) : PlaybackEngine {
     private val queue = PlaybackQueue(random)
     override val state = MutableStateFlow(EngineState())
     override val events = MutableSharedFlow<EngineEvent>(extraBufferCapacity = 64)

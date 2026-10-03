@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"全画面ページで開く"</string>
     <string name="text_output_buffer_61b372" formatted="false">"出力バッファ"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"共有モードのミックス形式"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"共有モードでは、システムのサウンドサーバーを通じて 48 kHz で Aurora と他のアプリをミックスします。"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"共有モードでは、Windows オーディオエンジンを通じてデバイスのミックス形式で Aurora と他のアプリをミックスします。ビットパーフェクト再生には排他モードをオンにしてください。"</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"システムのデフォルトは、再生中に変わった場合も含めて既定の出力デバイスに従います。"</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"システムのデフォルトは、再生中に変わった場合も含めて Windows の出力デバイスに従います。"</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"オーディオ出力を使用できませんでした"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"サンプルレートのポリシーとディザは排他モードで適用されます。共有モードでは常に Windows のミックス形式で再生されます。"</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"曲を開けませんでした"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"曲のサンプルレートには対応していません"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"再生中の曲の色でアプリ全体を色付け"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"システムのアクセントカラーを使用しています。"</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Windows のアクセントカラーを使用しています。"</string>
     <string name="text_volume_3b18e8" formatted="false">"音量"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows の機能"</string>

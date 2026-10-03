@@ -41,6 +41,13 @@ dependencies {
     implementation(libs.ffmpeg)
     runtimeOnly(variantOf(libs.javacpp) { classifier(nativeClassifier) })
     runtimeOnly(variantOf(libs.ffmpeg) { classifier(nativeClassifier) })
+    if (hostWindows) {
+        compileOnly(libs.dbus.java.core)
+        testImplementation(libs.dbus.java.core)
+    } else {
+        implementation(libs.dbus.java.core)
+        runtimeOnly(libs.dbus.java.transport.unixsocket)
+    }
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
 }
@@ -75,7 +82,10 @@ if (hostWindows) {
 
 tasks.test {
     systemProperty("compose.application.resources.dir", appResources.get().dir(resourcesTarget).asFile.path)
-    if (!hostWindows) environment("LC_ALL", "C.UTF-8")
+    if (!hostWindows) {
+        environment("LC_ALL", "C.UTF-8")
+        environment("DBUS_SESSION_BUS_ADDRESS", "unix:path=/nonexistent/aurora-test-bus")
+    }
 }
 
 compose.desktop {
@@ -90,6 +100,7 @@ compose.desktop {
             vendor = "Aurora"
             appResourcesRootDir.set(appResources)
             modules("java.management", "java.naming", "java.sql", "jdk.crypto.ec", "jdk.unsupported")
+            if (!hostWindows) modules("jdk.security.auth")
             windows {
                 menuGroup = "Aurora"
                 upgradeUuid = "67dc3d5a-e732-4a4a-b9a6-d1126d48bca5"
@@ -100,6 +111,7 @@ compose.desktop {
             }
             linux {
                 packageName = "aurora"
+                iconFile.set(project.file("packaging/aurora.png"))
                 menuGroup = "AudioVideo;Audio;Player"
                 appCategory = "sound"
                 shortcut = true

@@ -6,34 +6,29 @@ enum class SmtcStatus { CLOSED, CHANGING, STOPPED, PLAYING, PAUSED }
 
 enum class SmtcRepeat { NONE, TRACK, LIST }
 
-class SmtcSession private constructor(private val handle: Long) : AutoCloseable {
-    interface Callbacks {
-        fun onButton(button: SmtcButton) {}
-        fun onSeek(positionMs: Long) {}
-        fun onShuffle(enabled: Boolean) {}
-        fun onRepeat(mode: SmtcRepeat) {}
-    }
-
+class SmtcSession private constructor(private val handle: Long) : MediaSession {
     @Volatile
     private var closed = false
 
-    fun metadata(title: String?, artist: String?, album: String? = null, albumArtist: String? = null, thumbnail: ByteArray? = null) =
+    override fun metadata(title: String?, artist: String?, album: String?, albumArtist: String?, thumbnail: ByteArray?) =
         update { SmtcNative.metadata(handle, title, artist, album, albumArtist, thumbnail) }
 
-    fun status(status: SmtcStatus) = update { SmtcNative.playbackStatus(handle, status.ordinal) }
+    override fun status(status: SmtcStatus) = update { SmtcNative.playbackStatus(handle, status.ordinal) }
 
-    fun timeline(positionMs: Long, durationMs: Long, minSeekMs: Long = 0, maxSeekMs: Long = durationMs) =
-        update { SmtcNative.timeline(handle, positionMs, durationMs, minSeekMs, maxSeekMs) }
+    override fun timeline(positionMs: Long, durationMs: Long) =
+        update { SmtcNative.timeline(handle, positionMs, durationMs, 0, durationMs) }
 
-    fun buttons(play: Boolean = true, pause: Boolean = true, next: Boolean = true, previous: Boolean = true, stop: Boolean = false) =
+    override fun buttons() = buttons(play = true, pause = true, next = true, previous = true, stop = false)
+
+    fun buttons(play: Boolean, pause: Boolean, next: Boolean, previous: Boolean, stop: Boolean) =
         update {
             val mask = listOf(play, pause, next, previous, stop).foldIndexed(0) { bit, mask, on -> if (on) mask or (1 shl bit) else mask }
             SmtcNative.buttons(handle, mask)
         }
 
-    fun shuffle(enabled: Boolean) = update { SmtcNative.shuffle(handle, enabled) }
+    override fun shuffle(enabled: Boolean) = update { SmtcNative.shuffle(handle, enabled) }
 
-    fun repeat(mode: SmtcRepeat) = update { SmtcNative.repeat(handle, mode.ordinal) }
+    override fun repeat(mode: SmtcRepeat) = update { SmtcNative.repeat(handle, mode.ordinal) }
 
     @Synchronized
     override fun close() {
@@ -45,7 +40,7 @@ class SmtcSession private constructor(private val handle: Long) : AutoCloseable 
     private inline fun update(call: () -> Int): Boolean = !closed && call() == 0
 
     companion object {
-        fun create(hwnd: Long, callbacks: Callbacks): SmtcSession {
+        fun create(hwnd: Long, callbacks: MediaSession.Callbacks): SmtcSession {
             val handle = SmtcNative.create(hwnd, object : SmtcListener {
                 override fun onButton(button: Int) { SmtcButton.entries.getOrNull(button)?.let(callbacks::onButton) }
                 override fun onSeek(positionMs: Long) = callbacks.onSeek(positionMs)

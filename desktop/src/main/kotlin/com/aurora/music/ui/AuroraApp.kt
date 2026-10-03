@@ -1316,6 +1316,7 @@ private fun Shell(
             devices = outputs,
             currentId = preferred,
             exclusive = exclusive,
+            exclusiveAvailable = player.exclusiveAvailable,
             volume = volume,
             onSelect = { player.setPreferredDevice(it) },
             onExclusiveChange = { player.setExclusiveOutput(it) },

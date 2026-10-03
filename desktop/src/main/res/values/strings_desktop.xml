@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Open in full page"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Output buffer"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Shared mode mix format"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Shared mode mixes Aurora with other apps through the system sound server at 48 kHz."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Shared mode mixes Aurora with other apps through the Windows audio engine at the device\'s mix format. Turn on exclusive mode for bit-perfect playback."</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"System default follows the default output device, even when it changes during playback."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"System default follows the Windows output device, even when it changes during playback."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"The audio output could not be used"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"The sample-rate policy and dither apply in exclusive mode. Shared mode always plays at the Windows mix format."</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"The track could not be opened"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"The track\'s sample rate is not supported"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Tint the whole app with the colour of the song that's playing"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"Using your system accent colour."</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Using your Windows accent colour."</string>
     <string name="text_volume_3b18e8" formatted="false">"Volume"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows capabilities"</string>

@@ -96,7 +96,7 @@ class NowPlayingSurfacesTest {
     @Test fun outputSheetListsEndpointsWithExclusiveAndVolume() {
         val events = mutableListOf<String>()
         PlayerScene("sheet-output", 1440, 900) {
-            OutputDeviceSheet(devices, currentId = devices[1].id, exclusive = true, volume = 0.72f,
+            OutputDeviceSheet(devices, currentId = devices[1].id, exclusive = true, exclusiveAvailable = true, volume = 0.72f,
                 onSelect = { events += "select:$it" }, onExclusiveChange = { events += "exclusive:$it" },
                 onVolumeChange = { events += "volume" }, onToggleMute = { events += "mute" }, onDismiss = { events += "dismiss" })
         }.use { scene ->
@@ -110,7 +110,7 @@ class NowPlayingSurfacesTest {
     @Test fun outputSheetKeepsADisconnectedPreferenceSelected() {
         val events = mutableListOf<String>()
         PlayerScene("sheet-output-disconnected", 1440, 900) {
-            OutputDeviceSheet(devices, currentId = "{0.0.0.00000000}.{unplugged}", exclusive = false, volume = 0.5f,
+            OutputDeviceSheet(devices, currentId = "{0.0.0.00000000}.{unplugged}", exclusive = false, exclusiveAvailable = true, volume = 0.5f,
                 onSelect = { events += "select:$it" }, onExclusiveChange = {}, onVolumeChange = {}, onToggleMute = {}, onDismiss = {})
         }.use { scene ->
             val image = scene.shot()

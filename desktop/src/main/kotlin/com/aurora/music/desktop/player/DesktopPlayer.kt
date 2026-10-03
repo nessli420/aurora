@@ -102,6 +102,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override val preferredOutput: StateFlow<String?> = _preferredOutput.asStateFlow()
     private val _exclusiveOutput = MutableStateFlow(false)
     override val exclusiveOutput: StateFlow<Boolean> = _exclusiveOutput.asStateFlow()
+    override val exclusiveAvailable: Boolean get() = engine.exclusiveAvailable
     private val _volume = MutableStateFlow(1f)
     override val volume: StateFlow<Float> = _volume.asStateFlow()
     private val _messages = MutableSharedFlow<String>(extraBufferCapacity = 8)
@@ -165,9 +166,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             var applied: Pair<String?, Boolean>? = null
             deps.desktopSettings.output.collect { prefs ->
                 _preferredOutput.value = prefs.deviceId
-                _exclusiveOutput.value = prefs.exclusive
-                val target = prefs.deviceId to prefs.exclusive
-                if (target != applied) engine.setOutput(prefs.deviceId, prefs.exclusive)
+                val exclusive = prefs.exclusive && engine.exclusiveAvailable
+                _exclusiveOutput.value = exclusive
+                val target = prefs.deviceId to exclusive
+                if (target != applied) engine.setOutput(prefs.deviceId, exclusive)
                 applied = target
                 if (engine.config.bufferMs != prefs.bufferMs) engine.configure(engine.config.copy(bufferMs = prefs.bufferMs))
             }
@@ -420,6 +422,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     }
 
     override fun setExclusiveOutput(enabled: Boolean) {
+        if (enabled && !engine.exclusiveAvailable) return
         _exclusiveOutput.value = enabled
         scope.launch { deps.desktopSettings.setExclusiveMode(enabled) }
     }

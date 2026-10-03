@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"전체 페이지로 열기"</string>
     <string name="text_output_buffer_61b372" formatted="false">"출력 버퍼"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"공유 모드 믹스 형식"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"공유 모드는 시스템 사운드 서버를 통해 48 kHz로 Aurora와 다른 앱을 섞습니다."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"공유 모드는 Windows 오디오 엔진을 통해 기기의 믹스 형식으로 Aurora와 다른 앱을 섞습니다. 비트 퍼펙트 재생을 하려면 독점 모드를 켜세요."</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"시스템 기본값은 재생 중에 바뀌더라도 기본 출력 기기를 따릅니다."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"시스템 기본값은 재생 중에 바뀌더라도 Windows 출력 기기를 따릅니다."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"오디오 출력을 사용할 수 없습니다"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"샘플 레이트 정책과 디더는 독점 모드에서 적용됩니다. 공유 모드는 항상 Windows 믹스 형식으로 재생합니다."</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"곡을 열 수 없습니다"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"곡의 샘플 레이트가 지원되지 않습니다"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"재생 중인 곡의 색상으로 앱 전체에 색 입히기"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"시스템 강조 색상을 사용 중입니다."</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Windows 강조 색상을 사용 중입니다."</string>
     <string name="text_volume_3b18e8" formatted="false">"볼륨"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows 기능"</string>

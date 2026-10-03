@@ -355,6 +355,18 @@ class DesktopPlayerTest {
         assertEquals(400, engine.config.bufferMs)
     }
 
+    @Test fun exclusiveModeStaysOffWhenTheEngineCannotUseIt() {
+        runBlocking { container.desktopSettings.setExclusiveMode(true) }
+        val engine = FakeEngine(exclusiveAvailable = false)
+        val player = player(engine)
+        waitFor { "setOutput(null, false)" in engine.calls }
+        assertFalse(on { player.exclusiveAvailable })
+        assertFalse(on { player.exclusiveOutput.value })
+        on { player.setExclusiveOutput(true) }
+        assertFalse(on { player.exclusiveOutput.value })
+        assertTrue(runBlocking { container.desktopSettings.exclusiveMode.first() })
+    }
+
     @Test fun unmuteRestoresTheLastAudibleVolumeAfterARestart() {
         val engine = FakeEngine()
         val player = player(engine)

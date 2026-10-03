@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"पूरे पेज में खोलें"</string>
     <string name="text_output_buffer_61b372" formatted="false">"आउटपुट बफ़र"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"शेयर्ड मोड मिक्स फ़ॉर्मैट"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"शेयर्ड मोड Aurora को सिस्टम साउंड सर्वर के ज़रिए 48 kHz पर दूसरे ऐप के साथ मिलाता है।"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"शेयर्ड मोड Aurora को Windows ऑडियो इंजन के ज़रिए डिवाइस के मिक्स फ़ॉर्मैट पर दूसरे ऐप के साथ मिलाता है। bit-perfect प्लेबैक के लिए एक्सक्लूसिव मोड चालू करें।"</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"सिस्टम डिफ़ॉल्ट, डिफ़ॉल्ट आउटपुट डिवाइस के साथ चलता है, भले ही वह प्लेबैक के दौरान बदल जाए।"</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"सिस्टम डिफ़ॉल्ट Windows के आउटपुट डिवाइस के साथ चलता है, भले ही वह प्लेबैक के दौरान बदल जाए।"</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"ऑडियो आउटपुट इस्तेमाल नहीं हो सका"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"सैंपल-रेट नीति और डिदर एक्सक्लूसिव मोड में लागू होते हैं। शेयर्ड मोड हमेशा Windows मिक्स फ़ॉर्मैट पर चलता है।"</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"ट्रैक नहीं खुल सका"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"ट्रैक की सैंपल रेट समर्थित नहीं है"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"पूरे ऐप को चल रहे गाने के रंग में रंगें"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"आपका सिस्टम एक्सेंट रंग इस्तेमाल हो रहा है।"</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"आपका Windows एक्सेंट रंग इस्तेमाल हो रहा है।"</string>
     <string name="text_volume_3b18e8" formatted="false">"वॉल्यूम"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows क्षमताएँ"</string>

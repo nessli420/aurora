@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Ouvrir en pleine page"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Tampon de sortie"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Format de mixage du mode partagé"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Le mode partagé mélange Aurora avec les autres applications via le serveur audio du système, à 48 kHz."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Le mode partagé mélange Aurora avec les autres applications via le moteur audio de Windows, au format de mixage de l\'appareil. Activez le mode exclusif pour une lecture bit-perfect."</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"La valeur par défaut du système suit l\'appareil de sortie par défaut, même s\'il change pendant la lecture."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"La valeur par défaut du système suit l\'appareil de sortie de Windows, même s\'il change pendant la lecture."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"La sortie audio n\'a pas pu être utilisée"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"La politique de fréquence d\'échantillonnage et le dither s\'appliquent en mode exclusif. Le mode partagé lit toujours au format de mixage de Windows."</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"La piste n\'a pas pu être ouverte"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"La fréquence d\'échantillonnage de la piste n\'est pas prise en charge"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Teinte toute l\'application avec la couleur du titre en cours de lecture"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"Utilise votre couleur d\'accentuation système."</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Utilise votre couleur d\'accentuation Windows."</string>
     <string name="text_volume_3b18e8" formatted="false">"Volume"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Fonctionnalités Windows"</string>

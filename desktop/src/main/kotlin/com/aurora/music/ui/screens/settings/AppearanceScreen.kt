@@ -56,6 +56,7 @@ import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.TabletSetting
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.ui.theme.AccentPresets
 import com.aurora.music.ui.theme.LocalUiPrefs
@@ -129,7 +130,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 }
                 else -> item {
                     Text(
-                        appString(R.string.text_using_your_windows_accent_colour_7d4b4a),
+                        appString(if (HostPlatform.isWindows) R.string.text_using_your_windows_accent_colour_7d4b4a else R.string.text_using_your_system_accent_colour_89502e),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),

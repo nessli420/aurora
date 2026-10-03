@@ -29,7 +29,9 @@
     <string name="text_open_in_full_page_0ec923" formatted="false">"Открыть на всю страницу"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Буфер вывода"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Формат микшера общего режима"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Общий режим смешивает Aurora с другими приложениями через системный звуковой сервер на частоте 48 кГц."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Общий режим смешивает Aurora с другими приложениями через аудиодвижок Windows в формате микшера устройства. Включите монопольный режим для воспроизведения bit-perfect."</string>
+    <string name="text_system_default_follows_the_default_output_device_even_when_it_cha_2bff98" formatted="false">"Вариант «Как в системе» следует за устройством вывода по умолчанию, даже если оно меняется во время воспроизведения."</string>
     <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"Вариант «Как в системе» следует за устройством вывода Windows, даже если оно меняется во время воспроизведения."</string>
     <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"Не удалось использовать аудиовыход"</string>
     <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"Политика частоты дискретизации и дизеринг действуют в монопольном режиме. Общий режим всегда играет в формате микшера Windows."</string>
@@ -38,6 +40,7 @@
     <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"Не удалось открыть трек"</string>
     <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"Частота дискретизации трека не поддерживается"</string>
     <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Окрашивать всё приложение в цвет обложки играющего трека"</string>
+    <string name="text_using_your_system_accent_colour_89502e" formatted="false">"Используется системный акцентный цвет."</string>
     <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Используется акцентный цвет Windows."</string>
     <string name="text_volume_3b18e8" formatted="false">"Громкость"</string>
     <string name="text_windows_capabilities_0f1fa0" formatted="false">"Возможности Windows"</string>

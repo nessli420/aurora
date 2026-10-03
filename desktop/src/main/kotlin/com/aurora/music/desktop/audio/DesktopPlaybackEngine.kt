@@ -63,6 +63,7 @@ class DesktopPlaybackEngine(
     override val events: SharedFlow<EngineEvent> = mutableEvents.asSharedFlow()
     private val mutableOutputs = MutableStateFlow<List<AudioDevice>>(emptyList())
     override val outputs: StateFlow<List<AudioDevice>> = mutableOutputs.asStateFlow()
+    override val exclusiveAvailable: Boolean get() = backend.exclusiveAvailable
     override val beforeMeter = PcmLevelMeter()
     override val afterMeter = PcmLevelMeter()
     @Volatile override var visualizer: VisualizerController? = null

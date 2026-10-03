@@ -15,6 +15,7 @@ interface PlaybackEngine : AutoCloseable {
     val state: StateFlow<EngineState>
     val events: SharedFlow<EngineEvent>
     val outputs: StateFlow<List<AudioDevice>>
+    val exclusiveAvailable: Boolean get() = true
     val config: EngineConfig
     val beforeMeter: PcmLevelMeter
     val afterMeter: PcmLevelMeter

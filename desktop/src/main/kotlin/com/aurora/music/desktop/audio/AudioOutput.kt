@@ -23,6 +23,7 @@ interface AudioOutput : AutoCloseable {
 }
 
 interface OutputBackend {
+    val exclusiveAvailable: Boolean get() = true
     fun devices(): List<AudioDevice>
     fun mixRate(deviceId: String?): Int?
     fun supportsExclusive(deviceId: String?, sampleRate: Int, encoding: OutputEncoding): Boolean

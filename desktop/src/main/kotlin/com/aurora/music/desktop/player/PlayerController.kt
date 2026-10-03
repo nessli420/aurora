@@ -49,6 +49,7 @@ interface PlayerController {
     val outputs: StateFlow<List<AudioDevice>>
     val preferredOutput: StateFlow<String?>
     val exclusiveOutput: StateFlow<Boolean>
+    val exclusiveAvailable: Boolean get() = true
     val volume: StateFlow<Float>
     val signalPath: StateFlow<SignalPath> get() = IdleSignalPath
     val messages: Flow<String> get() = emptyFlow()
