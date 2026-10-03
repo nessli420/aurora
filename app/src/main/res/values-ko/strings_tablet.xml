@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">지금 재생 중 열기</string>
+    <string name="tablet_now_playing">지금 재생 중</string>
+    <string name="tablet_seek">탐색</string>
+    <string name="tablet_close_panel">패널 닫기</string>
+    <string name="tablet_player_panes">지금 재생 중 패널</string>
+    <string name="tablet_fullscreen_lyrics">전체 화면 가사</string>
+    <string name="tablet_resize_panels">패널 크기 조정</string>
+    <string name="tablet_layout_title">태블릿 레이아웃</string>
+    <string name="tablet_layout_detected">이 기기의 화면이 커서 표시됩니다. 각 설정은 세로와 가로 모드 모두에 적용됩니다.</string>
+    <string name="tablet_dock_size">독 크기</string>
+    <string name="tablet_panel_controls">패널 컨트롤</string>
+    <string name="tablet_panel_spacing">패널 간격</string>
+    <string name="tablet_nav_gap">탐색 옆 여백</string>
+    <string name="tablet_page_margins">페이지 여백</string>
+    <string name="tablet_hero_size">추천 카드 크기</string>
+    <string name="tablet_favourites_size">즐겨찾기 카드 크기</string>
+    <string name="tablet_player_split">지금 재생 중 분할</string>
+    <string name="tablet_player_split_hint">지금 재생 중 화면에서 구분선을 끌 수도 있습니다.</string>
+    <string name="tablet_reset">태블릿 레이아웃 초기화</string>
+    <string name="nav_menu_title">탐색 메뉴</string>
+    <string name="nav_menu_summary">기본 목록과 더보기에 표시할 항목 선택</string>
+    <string name="nav_section_main">기본</string>
+    <string name="nav_section_more">더보기</string>
+    <string name="nav_section_hidden">표시 안 함</string>
+    <string name="nav_menu_hint">화살표로 항목 순서를 바꾸세요. 항목의 메뉴를 탭하면 기본과 더보기 사이로 옮기거나 제거할 수 있습니다.</string>
+    <string name="nav_move_up">위로 이동</string>
+    <string name="nav_move_down">아래로 이동</string>
+    <string name="nav_move_to_main">기본으로 이동</string>
+    <string name="nav_move_to_more">더보기로 이동</string>
+    <string name="nav_add_to_main">기본에 추가</string>
+    <string name="nav_add_to_more">더보기에 추가</string>
+    <string name="nav_remove">메뉴에서 제거</string>
+    <string name="nav_locked">항상 기본에 표시</string>
+    <string name="nav_simple_mode_hidden">간편 모드가 켜져 있는 동안 숨김</string>
+    <string name="nav_empty_section">아직 아무것도 없습니다</string>
+    <string name="nav_reset">탐색 메뉴 초기화</string>
+    <string name="nav_placement_options">배치 옵션</string>
+    <string name="home_empty_title">아직 음악이 없습니다</string>
+    <string name="home_empty_body">음악 서버나 스트리밍 계정을 연결하거나, 이 기기에 저장된 음악을 추가하세요.</string>
+    <string name="home_add_source">소스 추가</string>
+</resources>

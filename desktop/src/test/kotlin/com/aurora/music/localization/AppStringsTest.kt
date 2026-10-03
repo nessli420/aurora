@@ -26,7 +26,7 @@ class AppStringsTest {
         val plurals = ids(R.plurals::class.java)
         assertTrue(strings.size > 2000)
         assertTrue(plurals.size > 10)
-        for (tag in listOf("en", "ru", "tr", "es", "fr", "zh", "pt", "hi", "ur")) {
+        for (tag in listOf("en", "ru", "tr", "es", "fr", "zh", "pt", "hi", "ur", "de", "it", "nl", "pl", "id", "ja", "ko", "ar")) {
             AppStrings.setLocale(tag)
             strings.forEach { appString(it) }
             plurals.forEach { id -> (0..112).forEach { appPlural(id, it) } }
@@ -45,7 +45,7 @@ class AppStringsTest {
     @Test fun regionalTagFallsBackToLanguage() {
         AppStrings.setLocale("ru-RU")
         assertEquals("Как в системе", appString(R.string.language_system))
-        AppStrings.setLocale("de")
+        AppStrings.setLocale("sv")
         assertEquals("System default", appString(R.string.language_system))
     }
 
@@ -148,6 +148,38 @@ class AppStringsTest {
         AppStrings.setLocale("ur")
         assertTrue(appString(R.string.language_system).contains("سسٹم ڈیفالٹ"))
         assertTrue(appPlural(R.plurals.track_count, 2).contains("2 ٹریک"))
+    }
+
+    @Test fun europeanStringsAndPlurals() {
+        AppStrings.setLocale("de")
+        assertEquals("Systemstandard", appString(R.string.language_system))
+        assertEquals("50% heruntergeladen", appString(R.string.text_downloaded_a2ae75, "50"))
+        listOf(1, 2).forEach { assertEquals("$it Titel", appPlural(R.plurals.track_count, it)) }
+        AppStrings.setLocale("it")
+        assertEquals("1 brano", appPlural(R.plurals.track_count, 1))
+        assertEquals("2 brani", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("nl")
+        assertEquals("1 nummer", appPlural(R.plurals.track_count, 1))
+        assertEquals("2 nummers", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("pl")
+        assertEquals("1 utwór", appPlural(R.plurals.track_count, 1))
+        listOf(2, 4, 22).forEach { assertEquals("$it utwory", appPlural(R.plurals.track_count, it)) }
+        listOf(5, 12, 13, 25).forEach { assertEquals("$it utworów", appPlural(R.plurals.track_count, it)) }
+    }
+
+    @Test fun asianAndArabicStringsAndPlurals() {
+        AppStrings.setLocale("id")
+        assertEquals("Default sistem", appString(R.string.language_system))
+        assertEquals("2 lagu", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("ja")
+        assertEquals("システムのデフォルト", appString(R.string.language_system))
+        assertEquals("2 曲", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("ko")
+        assertEquals("시스템 기본값", appString(R.string.language_system))
+        assertEquals("2곡", appPlural(R.plurals.track_count, 2))
+        AppStrings.setLocale("ar")
+        assertTrue(appString(R.string.language_system).contains("افتراضي النظام"))
+        assertTrue(appPlural(R.plurals.track_count, 2).contains("المقاطع"))
     }
 
     @Test fun rejectsIdsOfTheWrongType() {

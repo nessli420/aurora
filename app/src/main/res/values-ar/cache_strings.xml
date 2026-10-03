@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">\u2067التخزين المؤقت التلقائي دون اتصال\u2069</string>
+    <string name="cache_description">\u2067يحتفظ بالصوت أثناء الاستماع. تظهر المقاطع المخزّنة بالكامل في مكتبتك عند عدم الاتصال.\u2069</string>
+    <string name="cache_limit">\u2067حد التخزين المؤقت\u2069</string>
+    <string name="cache_used">\u2067المستخدم %1$s من %2$s\u2069</string>
+    <string name="cache_policy">\u2067تُزال البيانات المؤقتة الأقدم تلقائيًا. تبقى التنزيلات حتى تزيلها.\u2069</string>
+    <string name="cache_clear">\u2067مسح ذاكرة الصوت المؤقتة\u2069</string>
+    <string name="cache_clear_title">\u2067مسح الصوت المخزّن مؤقتًا؟\u2069</string>
+    <string name="cache_clear_message">\u2067ستحتاج المقاطع المخزّنة مؤقتًا إلى اتصال لتشغيلها مجددًا. ستبقى تنزيلاتك ومكتبتك وإعداداتك كما هي. تمتلئ الذاكرة المؤقتة مجددًا أثناء الاستماع.\u2069</string>
+    <string name="cache_clearing">\u2067جارٍ مسح الذاكرة المؤقتة…\u2069</string>
+    <string name="cache_cleared">\u2067تم مسح ذاكرة الصوت المؤقتة\u2069</string>
+    <string name="cache_clear_failed">\u2067تعذّر مسح ذاكرة الصوت المؤقتة. حاول مرة أخرى.\u2069</string>
+    <string name="cache_unavailable">\u2067ذاكرة الصوت المؤقتة غير متاحة. لا يزال البث يعمل بشكل طبيعي.\u2069</string>
+    <string name="cache_loading">\u2067جارٍ فحص الذاكرة المؤقتة…\u2069</string>
+    <string name="cache_offline_summary">\u2067تشغيل الموسيقى المنزّلة والمخزّنة مؤقتًا بالكامل\u2069</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">\u2067مقاطع جاهزة دون اتصال: %1$d\u2069</item>
+        <item quantity="other">\u2067مقاطع جاهزة دون اتصال: %1$d\u2069</item>
+        <item quantity="zero">\u2067مقاطع جاهزة دون اتصال: %1$d\u2069</item>
+        <item quantity="two">\u2067مقاطع جاهزة دون اتصال: %1$d\u2069</item>
+        <item quantity="few">\u2067مقاطع جاهزة دون اتصال: %1$d\u2069</item>
+        <item quantity="many">\u2067مقاطع جاهزة دون اتصال: %1$d\u2069</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">\u2067المقاطع المنزّلة: %1$d\u2069</item>
+        <item quantity="other">\u2067المقاطع المنزّلة: %1$d\u2069</item>
+        <item quantity="zero">\u2067المقاطع المنزّلة: %1$d\u2069</item>
+        <item quantity="two">\u2067المقاطع المنزّلة: %1$d\u2069</item>
+        <item quantity="few">\u2067المقاطع المنزّلة: %1$d\u2069</item>
+        <item quantity="many">\u2067المقاطع المنزّلة: %1$d\u2069</item>
+    </plurals>
+</resources>

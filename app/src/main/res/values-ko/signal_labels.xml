@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"Android 오디오"</string>
+    <string name="signal_text_android_audio_mix_f88264">"Android 오디오 · 믹스"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"다이렉트 USB 전송"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"처리된 USB 전송"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"Cast 수신기"</string>
+    <string name="signal_text_source_6da13a">"소스"</string>
+    <string name="signal_text_decoder_7be2f0">"디코더"</string>
+    <string name="signal_text_processing_e63451">"처리"</string>
+    <string name="signal_text_resampling_1bf1aa">"리샘플링"</string>
+    <string name="signal_text_output_4bed33">"출력"</string>
+    <string name="signal_text_device_a5a74a">"기기"</string>
+    <string name="signal_text_latency_3e3997">"지연 시간"</string>
+</resources>

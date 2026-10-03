@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"mengandung"</string>
+    <string name="rule_is">"adalah"</string>
+    <string name="rule_exactly">"persis"</string>
+    <string name="answer_yes">"ya"</string>
+    <string name="answer_no">"tidak"</string>
+    <string name="recap_sound">"Artis yang paling sering kamu dengarkan"</string>
+    <string name="recap_equal">"Waktu mendengarkan sama dengan periode sebelumnya"</string>
+    <string name="recap_more">"%1$s menit lebih banyak dari periode sebelumnya"</string>
+    <string name="recap_less">"%1$s menit lebih sedikit dari periode sebelumnya"</string>
+    <string name="recap_pending">"Rekapmu akan muncul saat periode ini berakhir dan memiliki riwayat mendengarkan."</string>
+    <string name="recap_new_count">"Rekap baru siap: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"Rekap · %1$s"</string>
+    <string name="recap_latest_title">"Rekap terbaru · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"Tengah Malam"</string>
+    <string name="recap_paper">"Kertas"</string>
+    <string name="longest_streak">"Terpanjang: %1$s"</string>
+    <string name="downloading_tracks">"Mengunduh: %1$s"</string>
+    <string name="playlist_track_count">"Playlist · %1$s"</string>
+    <string name="smart_rule_count">"Playlist pintar · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"BERIKUTNYA · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · dipindai: %3$s"</string>
+    <string name="track_count_more">"%1$s+ lagu"</string>
+    <string name="search_collection">"Cari di koleksi ini"</string>
+    <string name="downloaded_collection">"Diunduh"</string>
+    <string name="signal_start_playback">"Mulai pemutaran untuk memeriksa jalur sinyalnya."</string>
+    <string name="text_source_rate_cf5128">"Laju sumber"</string>
+    <string name="text_current_playback_27f5a5">"Pemutaran saat ini"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"True stereo · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"Apa saja"</string>
+    <string name="text_saved_impulse_response_a5fc40">"Respons impuls tersimpan"</string>
+    <string name="text_hide_34d8b6">"Sembunyikan"</string>
+    <string name="text_show_d97d1e">"Tampilkan"</string>
+    <string name="text_flat_target_7a50d3">"Target datar"</string>
+    <string name="text_unspecified_a6e7eb">"Tidak ditentukan"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d lagu</item>
+        <item quantity="other">%1$d lagu</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d album</item>
+        <item quantity="other">%1$d album</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d artis</item>
+        <item quantity="other">%1$d artis</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d playlist</item>
+        <item quantity="other">%1$d playlist</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d item</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d kali diputar</item>
+        <item quantity="other">%1$d kali diputar</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d hari</item>
+        <item quantity="other">%1$d hari</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">%1$d hari aktif</item>
+        <item quantity="other">%1$d hari aktif</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d aturan</item>
+        <item quantity="other">%1$d aturan</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d grup</item>
+        <item quantity="other">%1$d grup</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d band</item>
+        <item quantity="other">%1$d band</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d batang</item>
+        <item quantity="other">%1$d batang</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"Simpan preset terlebih dahulu"</string>
+    <string name="text_the_dac_05159b">"DAC"</string>
+    <string name="text_active_945637">" · aktif"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome atau Subsonic"</string>
+</resources>

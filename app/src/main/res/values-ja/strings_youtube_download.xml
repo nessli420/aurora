@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">YouTube からダウンロード</string>
+    <string name="youtube_download_tile_detail">曲をこのデバイスに保存</string>
+    <string name="youtube_download_search_hint">YouTube Music で曲を検索</string>
+    <string name="youtube_download_intro">曲を検索してファイルとして保存します。ダウンロードは Music/Aurora に保存され、ローカルライブラリに表示されます。</string>
+    <string name="youtube_download_no_results">曲が見つかりません。別の検索をお試しください。</string>
+    <string name="youtube_download_search_failed">検索に失敗しました。接続を確認して、もう一度お試しください。</string>
+    <string name="youtube_download_action">ダウンロード</string>
+    <string name="youtube_download_saved">Music/Aurora に保存しました</string>
+    <string name="youtube_download_failed">ダウンロードに失敗しました。タップして再試行してください。</string>
+    <string name="youtube_download_saving">保存中…</string>
+    <string name="youtube_download_settings">YouTube ダウンロード</string>
+    <string name="youtube_download_open_detail">YouTube Music を検索して曲をファイルとして保存</string>
+    <string name="youtube_download_format">形式</string>
+    <string name="youtube_download_quality">音質</string>
+    <string name="youtube_download_quality_best">最高</string>
+    <string name="youtube_download_quality_note">Opus は YouTube の最高音質を保ちます。M4A はより多くのデバイスで再生できます。音声は再エンコードせずに保存され、最も近い利用可能な音質が使われます。</string>
+    <string name="youtube_download_anonymous">匿名でダウンロード</string>
+    <string name="youtube_download_anonymous_detail">YouTube アカウントを使わずゲストとして曲を取得します。サインインが必要な曲の場合のみオフにしてください。</string>
+    <string name="youtube_download_artwork">カバーアートを埋め込む</string>
+    <string name="youtube_download_artwork_detail">カバーをファイル内に保存</string>
+</resources>

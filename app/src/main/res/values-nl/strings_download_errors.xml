@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_start_failed">Kan deze download niet starten. Een bestaande download hoort mogelijk bij een andere bron.</string>
+</resources>

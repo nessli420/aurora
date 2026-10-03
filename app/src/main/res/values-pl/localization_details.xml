@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"zawiera"</string>
+    <string name="rule_is">"to"</string>
+    <string name="rule_exactly">"dokładnie"</string>
+    <string name="answer_yes">"tak"</string>
+    <string name="answer_no">"nie"</string>
+    <string name="recap_sound">"Twój najczęściej słuchany wykonawca"</string>
+    <string name="recap_equal">"Taki sam czas słuchania jak w poprzednim okresie"</string>
+    <string name="recap_more">"O %1$s min więcej niż w poprzednim okresie"</string>
+    <string name="recap_less">"O %1$s min mniej niż w poprzednim okresie"</string>
+    <string name="recap_pending">"Twoje podsumowanie pojawi się, gdy ten okres się zakończy i będzie mieć historię słuchania."</string>
+    <string name="recap_new_count">"Nowe podsumowania gotowe: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"Podsumowanie · %1$s"</string>
+    <string name="recap_latest_title">"Najnowsze podsumowanie · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"Północ"</string>
+    <string name="recap_paper">"Papier"</string>
+    <string name="longest_streak">"Najdłuższa: %1$s"</string>
+    <string name="downloading_tracks">"Pobieranie: %1$s"</string>
+    <string name="playlist_track_count">"Playlista · %1$s"</string>
+    <string name="smart_rule_count">"Inteligentna playlista · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"NASTĘPNE · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · przeskanowano: %3$s"</string>
+    <string name="track_count_more">"Utwory: %1$s+"</string>
+    <string name="search_collection">"Szukaj w tej kolekcji"</string>
+    <string name="downloaded_collection">"Pobrane"</string>
+    <string name="signal_start_playback">"Rozpocznij odtwarzanie, aby sprawdzić ścieżkę sygnału."</string>
+    <string name="text_source_rate_cf5128">"Częstotliwość źródła"</string>
+    <string name="text_current_playback_27f5a5">"Bieżące odtwarzanie"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"True stereo · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"Dowolne"</string>
+    <string name="text_saved_impulse_response_a5fc40">"Zapisana odpowiedź impulsowa"</string>
+    <string name="text_hide_34d8b6">"Ukryj"</string>
+    <string name="text_show_d97d1e">"Pokaż"</string>
+    <string name="text_flat_target_7a50d3">"Płaski cel"</string>
+    <string name="text_unspecified_a6e7eb">"Nieokreślone"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d utwór</item>
+        <item quantity="few">%1$d utwory</item>
+        <item quantity="other">%1$d utworów</item>
+        <item quantity="many">%1$d utworów</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d album</item>
+        <item quantity="few">%1$d albumy</item>
+        <item quantity="other">%1$d albumów</item>
+        <item quantity="many">%1$d albumów</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d wykonawca</item>
+        <item quantity="few">%1$d wykonawcy</item>
+        <item quantity="other">%1$d wykonawców</item>
+        <item quantity="many">%1$d wykonawców</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d playlista</item>
+        <item quantity="few">%1$d playlisty</item>
+        <item quantity="other">%1$d playlist</item>
+        <item quantity="many">%1$d playlist</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d element</item>
+        <item quantity="few">%1$d elementy</item>
+        <item quantity="other">%1$d elementów</item>
+        <item quantity="many">%1$d elementów</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d odtworzenie</item>
+        <item quantity="few">%1$d odtworzenia</item>
+        <item quantity="other">%1$d odtworzeń</item>
+        <item quantity="many">%1$d odtworzeń</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d dzień</item>
+        <item quantity="few">%1$d dni</item>
+        <item quantity="other">%1$d dni</item>
+        <item quantity="many">%1$d dni</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">%1$d aktywny dzień</item>
+        <item quantity="few">%1$d aktywne dni</item>
+        <item quantity="other">%1$d aktywnych dni</item>
+        <item quantity="many">%1$d aktywnych dni</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d reguła</item>
+        <item quantity="few">%1$d reguły</item>
+        <item quantity="other">%1$d reguł</item>
+        <item quantity="many">%1$d reguł</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d grupa</item>
+        <item quantity="few">%1$d grupy</item>
+        <item quantity="other">%1$d grup</item>
+        <item quantity="many">%1$d grup</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d pasmo</item>
+        <item quantity="few">%1$d pasma</item>
+        <item quantity="other">%1$d pasm</item>
+        <item quantity="many">%1$d pasm</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d słupek</item>
+        <item quantity="few">%1$d słupki</item>
+        <item quantity="other">%1$d słupków</item>
+        <item quantity="many">%1$d słupków</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"Najpierw zapisz preset"</string>
+    <string name="text_the_dac_05159b">"przetwornika DAC"</string>
+    <string name="text_active_945637">" · aktywny"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome lub Subsonic"</string>
+</resources>

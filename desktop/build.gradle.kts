@@ -150,7 +150,8 @@ abstract class GenerateAndroidStrings : DefaultTask() {
     private fun localeTag(dir: String): String? =
         if (dir == "values") "default"
         else Regex("values-([a-z]{2,3})(?:-r([A-Z]{2}))?").matchEntire(dir)?.groupValues?.let { (_, language, region) ->
-            if (region.isEmpty()) language else "$language-$region"
+            val tag = if (language == "in") "id" else language
+            if (region.isEmpty()) tag else "$tag-$region"
         }
 
     private fun read(file: java.io.File, values: Values) {

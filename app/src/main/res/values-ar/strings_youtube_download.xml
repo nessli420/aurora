@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">\u2067التنزيل من YouTube\u2069</string>
+    <string name="youtube_download_tile_detail">\u2067حفظ الأغاني على هذا الجهاز\u2069</string>
+    <string name="youtube_download_search_hint">\u2067البحث عن أغانٍ في YouTube Music\u2069</string>
+    <string name="youtube_download_intro">\u2067ابحث عن أغنية واحفظها كملف. تُحفظ التنزيلات في Music/Aurora وتظهر في مكتبتك المحلية.\u2069</string>
+    <string name="youtube_download_no_results">\u2067لم يُعثر على أغانٍ. جرّب بحثًا آخر.\u2069</string>
+    <string name="youtube_download_search_failed">\u2067فشل البحث. تحقق من اتصالك وحاول مرة أخرى.\u2069</string>
+    <string name="youtube_download_action">\u2067تنزيل\u2069</string>
+    <string name="youtube_download_saved">\u2067تم الحفظ في Music/Aurora\u2069</string>
+    <string name="youtube_download_failed">\u2067فشل التنزيل. انقر لإعادة المحاولة.\u2069</string>
+    <string name="youtube_download_saving">\u2067جارٍ الحفظ…\u2069</string>
+    <string name="youtube_download_settings">\u2067تنزيلات YouTube\u2069</string>
+    <string name="youtube_download_open_detail">\u2067البحث في YouTube Music وحفظ الأغاني كملفات\u2069</string>
+    <string name="youtube_download_format">\u2067الصيغة\u2069</string>
+    <string name="youtube_download_quality">\u2067الجودة\u2069</string>
+    <string name="youtube_download_quality_best">\u2067الأفضل\u2069</string>
+    <string name="youtube_download_quality_note">\u2067تحافظ Opus على أفضل جودة في YouTube. وتعمل M4A على أجهزة أكثر. يُحفظ الصوت دون إعادة ترميز، وتُستخدم أقرب جودة متاحة.\u2069</string>
+    <string name="youtube_download_anonymous">\u2067التنزيل دون الكشف عن الهوية\u2069</string>
+    <string name="youtube_download_anonymous_detail">\u2067جلب المقاطع كزائر دون حسابك على YouTube. أوقفه فقط للمقاطع التي تتطلب تسجيل الدخول.\u2069</string>
+    <string name="youtube_download_artwork">\u2067تضمين صورة الغلاف\u2069</string>
+    <string name="youtube_download_artwork_detail">\u2067حفظ الغلاف داخل الملف\u2069</string>
+</resources>

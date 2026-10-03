@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">プレイリスト</string>
+    <string name="track_playlists_title">プレイリストに追加・削除</string>
+    <string name="track_playlists_hint">タップしてこの曲を追加または削除します。</string>
+    <string name="track_playlists_empty">プレイリストはまだありません。先にライブラリで作成してください。</string>
+    <string name="track_playlists_unavailable">プレイリストを編集するには、この曲の音楽ソースに接続してください。</string>
+    <string name="track_playlists_load_error">プレイリストを読み込めませんでした。もう一度お試しください。</string>
+    <string name="track_playlists_save_error">このプレイリストを更新できませんでした。接続と編集権限を確認してください。</string>
+    <string name="track_swipe_retry">再試行</string>
+    <string name="track_swipe_done">完了</string>
+    <string name="track_playlists_in_playlist">プレイリスト内</string>
+    <string name="track_playlists_add">プレイリストに追加</string>
+</resources>

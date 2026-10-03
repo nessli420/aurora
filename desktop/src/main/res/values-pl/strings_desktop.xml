@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="text_add_music_folder_a083d8" formatted="false">"Dodaj folder z muzyką"</string>
+    <string name="text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2" formatted="false">"Dekodowanie dźwięku. Copyright © twórcy FFmpeg. LGPL-3.0-or-later, linkowane dynamicznie przez JavaCPP Presets. Pełna licencja: https://www.gnu.org/licenses/lgpl-3.0.html"</string>
+    <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora przejmuje wyłączną kontrolę nad urządzeniem i wysyła próbki z własną częstotliwością i głębią bitową utworu. Inne aplikacje są wyciszone, gdy gra Aurora. Wyjście pozostaje bit-perfect, gdy przetwarzanie, głośność i ReplayGain nie zmieniają próbek; jeśli urządzenie odrzuci format, Aurora przełącza się na tryb współdzielony, a Ścieżka sygnału pokazuje powód."</string>
+    <string name="text_bit_float_012895">"%1$d-bitowy zmiennoprzecinkowy"</string>
+    <string name="text_bit_integer_72520f">"%1$d-bitowy całkowity"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Wyjście bit-perfect z pominięciem miksera Windows"</string>
+    <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Zbudowano z Compose Multiplatform i Material 3."</string>
+    <string name="text_cache_50338b" formatted="false">"Pamięć podręczna"</string>
+    <string name="text_cannot_resize_this_image_be7b26" formatted="false">"Nie można zmienić rozmiaru tego obrazu."</string>
+    <string name="text_ch_282ab4">"%1$d kan."</string>
+    <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"Wybierz obsługiwany obraz poniżej 100 megapikseli."</string>
+    <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"Wybierz obraz mniejszy niż 20 MB."</string>
+    <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Wybierz, gdzie na tym komputerze jest twoja muzyka"</string>
+    <string name="text_clear_image_cache_ff7b31" formatted="false">"Wyczyść pamięć obrazów"</string>
+    <string name="text_close_to_tray_f91cc6" formatted="false">"Zamykaj do zasobnika"</string>
+    <string name="text_date_added_56ab7a" formatted="false">"Data dodania"</string>
+    <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Urządzenie, tryb wyłączny i bufor"</string>
+    <string name="text_exclusive_mode_01d9b2" formatted="false">"Tryb wyłączny"</string>
+    <string name="text_exclusive_mode_is_unavailable_0de552">"Tryb wyłączny jest niedostępny: %1$s"</string>
+    <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"Tryb wyłączny jest niedostępny na tym urządzeniu"</string>
+    <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"Podążaj za okładką odtwarzanego utworu"</string>
+    <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz jest niedostępne; używane jest %2$d Hz."</string>
+    <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Odtwarzaj Aurora w obszarze powiadomień po zamknięciu okna"</string>
+    <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Większe bufory lepiej znoszą duże obciążenie systemu; mniejsze szybciej reagują na przewijanie i głośność. Działa po ponownym otwarciu wyjścia."</string>
+    <string name="text_logs_126dd3" formatted="false">"Dzienniki"</string>
+    <string name="text_open_in_full_page_0ec923" formatted="false">"Otwórz na pełnej stronie"</string>
+    <string name="text_output_buffer_61b372" formatted="false">"Bufor wyjścia"</string>
+    <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Format miksu w trybie współdzielonym"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"Tryb współdzielony miksuje Aurora z innymi aplikacjami przez silnik audio Windows w formacie miksu urządzenia. Włącz tryb wyłączny, aby odtwarzać bit-perfect."</string>
+    <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"Domyślne systemowe podąża za urządzeniem wyjściowym Windows, nawet jeśli zmieni się ono podczas odtwarzania."</string>
+    <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"Nie udało się użyć wyjścia audio"</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"Zasady częstotliwości próbkowania i dither działają w trybie wyłącznym. Tryb współdzielony zawsze gra w formacie miksu Windows."</string>
+    <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"Wybrane urządzenie wyjściowe zostało odłączone"</string>
+    <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"Nie udało się zdekodować utworu"</string>
+    <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"Nie udało się otworzyć utworu"</string>
+    <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"Częstotliwość próbkowania utworu nie jest obsługiwana"</string>
+    <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"Barw całą aplikację kolorem odtwarzanego utworu"</string>
+    <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Używany jest kolor akcentu Windows."</string>
+    <string name="text_volume_3b18e8" formatted="false">"Głośność"</string>
+    <string name="text_windows_capabilities_0f1fa0" formatted="false">"Możliwości Windows"</string>
+    <string name="text_windows_java_2566af">"Windows · Java %1$d"</string>
+</resources>

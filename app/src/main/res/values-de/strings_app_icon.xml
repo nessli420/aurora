@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">App-Symbol</string>
+    <string name="app_icon_pending">Dein neues Symbol erscheint auf dem Startbildschirm, nachdem du Aurora verlassen hast.</string>
+    <string name="app_icon_note">Manche Launcher entfernen das alte Symbol beim Wechsel vom Startbildschirm, daher musst du Aurora eventuell erneut hinzufügen.</string>
+</resources>

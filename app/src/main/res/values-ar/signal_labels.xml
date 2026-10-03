@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"\u2067صوت Android\u2069"</string>
+    <string name="signal_text_android_audio_mix_f88264">"\u2067صوت Android · مزج\u2069"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"\u2067نقل USB مباشر\u2069"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"\u2067نقل USB معالَج\u2069"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"\u2067مستقبل Cast\u2069"</string>
+    <string name="signal_text_source_6da13a">"\u2067المصدر\u2069"</string>
+    <string name="signal_text_decoder_7be2f0">"\u2067المفكّك\u2069"</string>
+    <string name="signal_text_processing_e63451">"\u2067المعالجة\u2069"</string>
+    <string name="signal_text_resampling_1bf1aa">"\u2067إعادة أخذ العينات\u2069"</string>
+    <string name="signal_text_output_4bed33">"\u2067المخرج\u2069"</string>
+    <string name="signal_text_device_a5a74a">"\u2067الجهاز\u2069"</string>
+    <string name="signal_text_latency_3e3997">"\u2067زمن الاستجابة\u2069"</string>
+</resources>

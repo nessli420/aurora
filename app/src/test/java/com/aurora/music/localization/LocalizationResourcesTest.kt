@@ -39,7 +39,8 @@ class LocalizationResourcesTest {
         }.toMap()
         val english = strings("values")
         val format = Regex("%%|%(?:[0-9]+\\$)?[-+0-9.]*[sdf]")
-        for (directory in listOf("values-tr", "values-es", "values-fr", "values-zh", "values-pt", "values-hi", "values-ur")) {
+        for (directory in listOf("values-tr", "values-es", "values-fr", "values-zh", "values-pt", "values-hi", "values-ur",
+            "values-de", "values-it", "values-nl", "values-pl", "values-in", "values-ja", "values-ko", "values-ar")) {
             val translated = strings(directory)
             assertEquals(directory, english.keys - "app_name", translated.keys)
             translated.forEach { (name, text) ->

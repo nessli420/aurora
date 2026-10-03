@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">Musik dari Plex Media Server-mu.</string>
+    <string name="plex_connect_title">Sambungkan Plex</string>
+    <string name="plex_token_detail">Gunakan token autentikasi Plex yang punya akses ke server ini.</string>
+    <string name="plex_token_label">Token Plex</string>
+    <string name="plex_token_help">Cara menemukan token Plex-mu</string>
+    <string name="plex_token_show">Tampilkan token</string>
+    <string name="plex_token_hide">Sembunyikan token</string>
+    <string name="plex_token_rejected">Plex menolak token ini. Pastikan token punya akses ke server ini.</string>
+    <string name="plex_server_detail">Gunakan alamat Plex Media Server-mu, biasanya dengan port 32400.</string>
+    <string name="plex_sources_stream_detail">Stream dari Navidrome, Jellyfin, atau Plex.</string>
+    <string name="plex_sources_empty_detail">Tambahkan akun Navidrome, Jellyfin, Plex, atau YouTube Music di Setelan → Akun untuk menyertakannya di sini.</string>
+</resources>

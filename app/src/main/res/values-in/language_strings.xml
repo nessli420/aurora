@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">Bahasa Aplikasi</string>
+    <string name="language_system">Default sistem</string>
+    <string name="language_description">Pilih bahasa yang dipakai di Aurora. Judul musik dan nama artis tetap seperti aslinya.</string>
+</resources>

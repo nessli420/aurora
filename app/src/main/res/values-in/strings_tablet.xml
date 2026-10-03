@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Buka Sedang Diputar</string>
+    <string name="tablet_now_playing">Sedang Diputar</string>
+    <string name="tablet_seek">Geser</string>
+    <string name="tablet_close_panel">Tutup panel</string>
+    <string name="tablet_player_panes">Panel Sedang Diputar</string>
+    <string name="tablet_fullscreen_lyrics">Lirik Layar Penuh</string>
+    <string name="tablet_resize_panels">Ubah ukuran panel</string>
+    <string name="tablet_layout_title">Tata Letak Tablet</string>
+    <string name="tablet_layout_detected">Ditampilkan karena perangkat ini berlayar besar. Setiap setelan berlaku dalam mode potret dan lanskap.</string>
+    <string name="tablet_dock_size">Ukuran Dok</string>
+    <string name="tablet_panel_controls">Kontrol Panel</string>
+    <string name="tablet_panel_spacing">Jarak Panel</string>
+    <string name="tablet_nav_gap">Celah di Samping Navigasi</string>
+    <string name="tablet_page_margins">Margin Halaman</string>
+    <string name="tablet_hero_size">Ukuran Kartu Unggulan</string>
+    <string name="tablet_favourites_size">Ukuran Kartu Favorit</string>
+    <string name="tablet_player_split">Pembagian Sedang Diputar</string>
+    <string name="tablet_player_split_hint">Kamu juga bisa menyeret pembatas di Sedang Diputar.</string>
+    <string name="tablet_reset">Setel Ulang Tata Letak Tablet</string>
+    <string name="nav_menu_title">Menu Navigasi</string>
+    <string name="nav_menu_summary">Pilih apa yang muncul di daftar utama dan di Lainnya</string>
+    <string name="nav_section_main">Utama</string>
+    <string name="nav_section_more">Lainnya</string>
+    <string name="nav_section_hidden">Tidak Ditampilkan</string>
+    <string name="nav_menu_hint">Gunakan panah untuk mengurutkan ulang item. Ketuk menu item untuk memindahkannya antara Utama dan Lainnya, atau untuk menghapusnya.</string>
+    <string name="nav_move_up">Pindahkan ke atas</string>
+    <string name="nav_move_down">Pindahkan ke bawah</string>
+    <string name="nav_move_to_main">Pindahkan ke Utama</string>
+    <string name="nav_move_to_more">Pindahkan ke Lainnya</string>
+    <string name="nav_add_to_main">Tambahkan ke Utama</string>
+    <string name="nav_add_to_more">Tambahkan ke Lainnya</string>
+    <string name="nav_remove">Hapus dari menu</string>
+    <string name="nav_locked">Selalu di Utama</string>
+    <string name="nav_simple_mode_hidden">Disembunyikan saat Mode Sederhana aktif</string>
+    <string name="nav_empty_section">Belum ada apa-apa</string>
+    <string name="nav_reset">Setel Ulang Menu Navigasi</string>
+    <string name="nav_placement_options">Opsi penempatan</string>
+    <string name="home_empty_title">Belum Ada Musik</string>
+    <string name="home_empty_body">Sambungkan server musik atau akun streaming, atau tambahkan musik yang tersimpan di perangkat ini.</string>
+    <string name="home_add_source">Tambah Sumber</string>
+</resources>

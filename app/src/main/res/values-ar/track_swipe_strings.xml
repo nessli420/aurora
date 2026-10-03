@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">\u2067قوائم التشغيل\u2069</string>
+    <string name="track_playlists_title">\u2067الإضافة إلى قوائم التشغيل أو الإزالة منها\u2069</string>
+    <string name="track_playlists_hint">\u2067انقر لإضافة هذا المقطع أو إزالته.\u2069</string>
+    <string name="track_playlists_empty">\u2067لا توجد قوائم تشغيل بعد. أنشئ واحدة في مكتبتك أولًا.\u2069</string>
+    <string name="track_playlists_unavailable">\u2067اتصل بمصدر موسيقى هذا المقطع لتعديل قوائم تشغيله.\u2069</string>
+    <string name="track_playlists_load_error">\u2067تعذّر تحميل قوائم التشغيل. حاول مرة أخرى.\u2069</string>
+    <string name="track_playlists_save_error">\u2067تعذّر تحديث قائمة التشغيل هذه. تحقق من اتصالك وأذونات التعديل.\u2069</string>
+    <string name="track_swipe_retry">\u2067إعادة المحاولة\u2069</string>
+    <string name="track_swipe_done">\u2067تم\u2069</string>
+    <string name="track_playlists_in_playlist">\u2067في قائمة التشغيل\u2069</string>
+    <string name="track_playlists_add">\u2067إضافة إلى قائمة تشغيل\u2069</string>
+</resources>

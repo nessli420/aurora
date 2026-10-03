@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Pobierz z YouTube</string>
+    <string name="youtube_download_tile_detail">Zapisuj utwory na tym urządzeniu</string>
+    <string name="youtube_download_search_hint">Szukaj utworów w YouTube Music</string>
+    <string name="youtube_download_intro">Wyszukaj utwór i zapisz go jako plik. Pobrane pliki trafiają do Music/Aurora i pojawiają się w bibliotece lokalnej.</string>
+    <string name="youtube_download_no_results">Nie znaleziono utworów. Spróbuj innego wyszukiwania.</string>
+    <string name="youtube_download_search_failed">Wyszukiwanie nie powiodło się. Sprawdź połączenie i spróbuj ponownie.</string>
+    <string name="youtube_download_action">Pobierz</string>
+    <string name="youtube_download_saved">Zapisano w Music/Aurora</string>
+    <string name="youtube_download_failed">Pobieranie nie powiodło się. Dotknij, aby spróbować ponownie.</string>
+    <string name="youtube_download_saving">Zapisywanie…</string>
+    <string name="youtube_download_settings">Pobieranie z YouTube</string>
+    <string name="youtube_download_open_detail">Przeszukuj YouTube Music i zapisuj utwory jako pliki</string>
+    <string name="youtube_download_format">Format</string>
+    <string name="youtube_download_quality">Jakość</string>
+    <string name="youtube_download_quality_best">Najlepsza</string>
+    <string name="youtube_download_quality_note">Opus zachowuje najlepszą jakość YouTube. M4A działa na większej liczbie urządzeń. Dźwięk jest zapisywany bez ponownego kodowania, w najbliższej dostępnej jakości.</string>
+    <string name="youtube_download_anonymous">Pobieraj anonimowo</string>
+    <string name="youtube_download_anonymous_detail">Pobieraj utwory jako gość, bez konta YouTube. Wyłącz tylko dla utworów, które wymagają zalogowania.</string>
+    <string name="youtube_download_artwork">Osadzaj okładkę</string>
+    <string name="youtube_download_artwork_detail">Zapisuj okładkę wewnątrz pliku</string>
+</resources>

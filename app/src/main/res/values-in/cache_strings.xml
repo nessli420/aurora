@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Cache Offline Otomatis</string>
+    <string name="cache_description">Menyimpan audio saat kamu mendengarkan. Lagu yang tersimpan penuh muncul di pustaka saat offline.</string>
+    <string name="cache_limit">Batas cache</string>
+    <string name="cache_used">%1$s dari %2$s terpakai</string>
+    <string name="cache_policy">Cache lama dihapus otomatis. Unduhan tetap ada sampai kamu menghapusnya.</string>
+    <string name="cache_clear">Hapus cache audio</string>
+    <string name="cache_clear_title">Hapus audio dalam cache?</string>
+    <string name="cache_clear_message">Lagu dalam cache akan memerlukan koneksi untuk diputar lagi. Unduhan, pustaka, dan pengaturanmu tetap ada. Cache akan terisi lagi saat kamu mendengarkan.</string>
+    <string name="cache_clearing">Menghapus cache…</string>
+    <string name="cache_cleared">Cache audio dihapus</string>
+    <string name="cache_clear_failed">Tidak dapat menghapus cache audio. Coba lagi.</string>
+    <string name="cache_unavailable">Cache audio tidak tersedia. Streaming tetap berjalan normal.</string>
+    <string name="cache_loading">Memeriksa cache…</string>
+    <string name="cache_offline_summary">Putar musik yang diunduh dan tersimpan penuh</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d lagu siap offline</item>
+        <item quantity="other">%1$d lagu siap offline</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d lagu diunduh</item>
+        <item quantity="other">%1$d lagu diunduh</item>
+    </plurals>
+</resources>

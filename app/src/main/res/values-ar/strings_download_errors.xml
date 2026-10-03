@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_start_failed">\u2067تعذّر بدء هذا التنزيل. قد يكون تنزيل موجود تابعًا لمصدر آخر.\u2069</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Pindai Ulang Pustaka Lokal</string>
+    <string name="rescan_summary">Temukan musik yang ditambahkan, dipindahkan, atau dihapus di perangkat ini</string>
+    <string name="rescan_running">Memindai perangkat ini…</string>
+    <string name="rescan_result">%1$d ditambahkan, %2$d dihapus</string>
+    <string name="rescan_unchanged">Terbaru · %1$d lagu</string>
+    <string name="rescan_failed">Pemindaian tidak dapat diselesaikan. Coba lagi.</string>
+    <string name="rescan_permission">Izinkan akses ke musik di perangkat ini untuk memindainya.</string>
+</resources>

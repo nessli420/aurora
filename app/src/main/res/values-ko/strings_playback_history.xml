@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">청취 기록을 동기화할 수 없습니다. 연결과 계정을 확인하세요.</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Okładki</string>
+    <string name="artwork_lookup">Znajdź brakujące okładki</string>
+    <string name="artwork_description">Wyszukuje okładki dla utworów i albumów, które ich nie mają.</string>
+    <string name="artwork_provider">Używa nazw wykonawców, albumów i utworów, aby szukać okładek w MusicBrainz i Cover Art Archive. Istniejące okładki mają pierwszeństwo.</string>
+    <string name="artwork_cache_usage">Pamięć okładek: %.1f MB z 64 MB. Zapisane okładki pozostają dostępne offline.</string>
+    <string name="artwork_clear">Wyczyść pamięć okładek</string>
+    <string name="artwork_clear_failed">Nie udało się wyczyścić pamięci okładek. Spróbuj ponownie.</string>
+</resources>

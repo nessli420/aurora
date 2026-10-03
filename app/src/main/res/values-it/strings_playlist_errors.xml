@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">Impossibile creare la playlist. Controlla la connessione e i permessi della playlist, poi riprova.</string>
+    <string name="playlist_update_failed">Impossibile salvare la playlist. Controlla la connessione e i permessi della playlist, poi riprova.</string>
+    <string name="playlist_delete_failed">Impossibile eliminare la playlist. Controlla la connessione e i permessi della playlist, poi riprova.</string>
+    <string name="playlist_creating">Creazione…</string>
+    <string name="playlist_saving">Salvataggio…</string>
+</resources>

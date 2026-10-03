@@ -25,10 +25,12 @@ import com.aurora.music.R
 
 @Composable
 fun LanguageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
-    val selected = AppCompatDelegate.getApplicationLocales().get(0)?.language.orEmpty()
+    val selected = AppCompatDelegate.getApplicationLocales().get(0)?.language.orEmpty().let { if (it == "id") "in" else it }
     val languages = listOf("" to stringResource(R.string.language_system), "en" to "English", "ru" to "Русский", "tr" to "Türkçe",
         "es" to "Español", "fr" to "Français", "zh" to "简体中文",
-        "pt" to "Português", "hi" to "हिन्दी", "ur" to "اردو")
+        "pt" to "Português", "hi" to "हिन्दी", "ur" to "اردو",
+        "de" to "Deutsch", "it" to "Italiano", "nl" to "Nederlands", "pl" to "Polski",
+        "in" to "Bahasa Indonesia", "ja" to "日本語", "ko" to "한국어", "ar" to "العربية")
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(stringResource(R.string.language_title), onBack)
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState())

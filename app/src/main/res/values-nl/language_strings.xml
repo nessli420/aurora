@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">App-taal</string>
+    <string name="language_system">Systeemstandaard</string>
+    <string name="language_description">Kies de taal van Aurora. Titels van muziek en artiestnamen blijven zoals ze zijn.</string>
+</resources>

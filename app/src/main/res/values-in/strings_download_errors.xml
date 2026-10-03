@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="download_start_failed">Tidak dapat memulai unduhan ini. Unduhan yang ada mungkin milik sumber lain.</string>
+</resources>

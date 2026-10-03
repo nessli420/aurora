@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">\u2067إعادة فحص المكتبة المحلية\u2069</string>
+    <string name="rescan_summary">\u2067العثور على الموسيقى المضافة أو المنقولة أو المحذوفة على هذا الجهاز\u2069</string>
+    <string name="rescan_running">\u2067جارٍ فحص هذا الجهاز…\u2069</string>
+    <string name="rescan_result">\u2067المضاف: %1$d، المُزال: %2$d\u2069</string>
+    <string name="rescan_unchanged">\u2067محدّث · الأغاني: %1$d\u2069</string>
+    <string name="rescan_failed">\u2067تعذّر إكمال الفحص. حاول مرة أخرى.\u2069</string>
+    <string name="rescan_permission">\u2067اسمح بالوصول إلى الموسيقى على هذا الجهاز لفحصها.\u2069</string>
+</resources>

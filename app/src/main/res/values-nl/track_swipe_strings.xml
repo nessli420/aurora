@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">Playlists</string>
+    <string name="track_playlists_title">Toevoegen aan of verwijderen uit playlists</string>
+    <string name="track_playlists_hint">Tik om dit nummer toe te voegen of te verwijderen.</string>
+    <string name="track_playlists_empty">Nog geen playlists. Maak er eerst een in je bibliotheek.</string>
+    <string name="track_playlists_unavailable">Verbind met de muziekbron van dit nummer om de playlists ervan te bewerken.</string>
+    <string name="track_playlists_load_error">Kan playlists niet laden. Probeer het opnieuw.</string>
+    <string name="track_playlists_save_error">Kan deze playlist niet bijwerken. Controleer je verbinding en bewerkingsrechten.</string>
+    <string name="track_swipe_retry">Opnieuw proberen</string>
+    <string name="track_swipe_done">Klaar</string>
+    <string name="track_playlists_in_playlist">In playlist</string>
+    <string name="track_playlists_add">Toevoegen aan playlist</string>
+</resources>

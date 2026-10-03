@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Aktuelle Wiedergabe öffnen</string>
+    <string name="tablet_now_playing">Aktuelle Wiedergabe</string>
+    <string name="tablet_seek">Spulen</string>
+    <string name="tablet_close_panel">Bereich schließen</string>
+    <string name="tablet_player_panes">Bereiche der aktuellen Wiedergabe</string>
+    <string name="tablet_fullscreen_lyrics">Songtext im Vollbild</string>
+    <string name="tablet_resize_panels">Bereichsgröße ändern</string>
+    <string name="tablet_layout_title">Tablet-Layout</string>
+    <string name="tablet_layout_detected">Wird angezeigt, weil dieses Gerät einen großen Bildschirm hat. Jede Einstellung gilt im Hoch- und im Querformat.</string>
+    <string name="tablet_dock_size">Dock-Größe</string>
+    <string name="tablet_panel_controls">Bereichssteuerung</string>
+    <string name="tablet_panel_spacing">Abstand zwischen Bereichen</string>
+    <string name="tablet_nav_gap">Abstand neben der Navigation</string>
+    <string name="tablet_page_margins">Seitenränder</string>
+    <string name="tablet_hero_size">Größe der Hervorgehoben-Karte</string>
+    <string name="tablet_favourites_size">Größe der Favoriten-Karte</string>
+    <string name="tablet_player_split">Aufteilung der aktuellen Wiedergabe</string>
+    <string name="tablet_player_split_hint">Du kannst auch den Trenner in der aktuellen Wiedergabe ziehen.</string>
+    <string name="tablet_reset">Tablet-Layout zurücksetzen</string>
+    <string name="nav_menu_title">Navigationsmenü</string>
+    <string name="nav_menu_summary">Wähle, was in der Hauptliste und unter „Mehr“ erscheint</string>
+    <string name="nav_section_main">Hauptliste</string>
+    <string name="nav_section_more">Mehr</string>
+    <string name="nav_section_hidden">Nicht angezeigt</string>
+    <string name="nav_menu_hint">Ordne Einträge mit den Pfeilen neu an. Tippe auf das Menü eines Eintrags, um ihn zwischen Hauptliste und „Mehr“ zu verschieben oder zu entfernen.</string>
+    <string name="nav_move_up">Nach oben</string>
+    <string name="nav_move_down">Nach unten</string>
+    <string name="nav_move_to_main">In Hauptliste verschieben</string>
+    <string name="nav_move_to_more">Zu „Mehr“ verschieben</string>
+    <string name="nav_add_to_main">Zur Hauptliste hinzufügen</string>
+    <string name="nav_add_to_more">Zu „Mehr“ hinzufügen</string>
+    <string name="nav_remove">Aus dem Menü entfernen</string>
+    <string name="nav_locked">Immer in der Hauptliste</string>
+    <string name="nav_simple_mode_hidden">Ausgeblendet, solange der einfache Modus aktiv ist</string>
+    <string name="nav_empty_section">Hier ist noch nichts</string>
+    <string name="nav_reset">Navigationsmenü zurücksetzen</string>
+    <string name="nav_placement_options">Platzierungsoptionen</string>
+    <string name="home_empty_title">Noch keine Musik</string>
+    <string name="home_empty_body">Verbinde einen Musikserver oder ein Streaming-Konto oder füge Musik hinzu, die auf diesem Gerät gespeichert ist.</string>
+    <string name="home_add_source">Quelle hinzufügen</string>
+</resources>

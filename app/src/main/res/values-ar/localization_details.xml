@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"\u2067يحتوي على\u2069"</string>
+    <string name="rule_is">"\u2067هو\u2069"</string>
+    <string name="rule_exactly">"\u2067تمامًا\u2069"</string>
+    <string name="answer_yes">"\u2067نعم\u2069"</string>
+    <string name="answer_no">"\u2067لا\u2069"</string>
+    <string name="recap_sound">"\u2067الفنان الأكثر استماعًا لديك\u2069"</string>
+    <string name="recap_equal">"\u2067وقت الاستماع نفسه كما في الفترة السابقة\u2069"</string>
+    <string name="recap_more">"\u2067%1$s دقيقة أكثر من الفترة السابقة\u2069"</string>
+    <string name="recap_less">"\u2067%1$s دقيقة أقل من الفترة السابقة\u2069"</string>
+    <string name="recap_pending">"\u2067سيظهر ملخّصك عندما تنتهي هذه الفترة ويكون لها سجل استماع.\u2069"</string>
+    <string name="recap_new_count">"\u2067ملخصات جديدة جاهزة: %1$s\u2069"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"\u2067الملخّص · %1$s\u2069"</string>
+    <string name="recap_latest_title">"\u2067أحدث ملخّص · %1$s\u2069"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"\u2067منتصف الليل\u2069"</string>
+    <string name="recap_paper">"\u2067ورقي\u2069"</string>
+    <string name="longest_streak">"\u2067الأطول: %1$s\u2069"</string>
+    <string name="downloading_tracks">"\u2067جارٍ التنزيل: %1$s\u2069"</string>
+    <string name="playlist_track_count">"\u2067قائمة تشغيل · %1$s\u2069"</string>
+    <string name="smart_rule_count">"\u2067قائمة تشغيل ذكية · %1$s\u2069"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"\u2067التالي · %1$s\u2069"</string>
+    <string name="duplicates_counts">"\u2067%1$s · %2$s · تم الفحص: %3$s\u2069"</string>
+    <string name="track_count_more">"\u2067المقاطع: %1$s+\u2069"</string>
+    <string name="search_collection">"\u2067البحث في هذه المجموعة\u2069"</string>
+    <string name="downloaded_collection">"\u2067تم التنزيل\u2069"</string>
+    <string name="signal_start_playback">"\u2067ابدأ التشغيل لفحص مسار الإشارة.\u2069"</string>
+    <string name="text_source_rate_cf5128">"\u2067معدل المصدر\u2069"</string>
+    <string name="text_current_playback_27f5a5">"\u2067التشغيل الحالي\u2069"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"\u2067ستيريو حقيقي · LL/LR/RL/RR\u2069"</string>
+    <string name="text_any_322444">"\u2067أي\u2069"</string>
+    <string name="text_saved_impulse_response_a5fc40">"\u2067استجابة نبضية محفوظة\u2069"</string>
+    <string name="text_hide_34d8b6">"\u2067إخفاء\u2069"</string>
+    <string name="text_show_d97d1e">"\u2067عرض\u2069"</string>
+    <string name="text_flat_target_7a50d3">"\u2067هدف مستوٍ\u2069"</string>
+    <string name="text_unspecified_a6e7eb">"\u2067غير محدد\u2069"</string>
+    <plurals name="track_count">
+        <item quantity="one">\u2067المقاطع: %1$d\u2069</item>
+        <item quantity="other">\u2067المقاطع: %1$d\u2069</item>
+        <item quantity="zero">\u2067المقاطع: %1$d\u2069</item>
+        <item quantity="two">\u2067المقاطع: %1$d\u2069</item>
+        <item quantity="few">\u2067المقاطع: %1$d\u2069</item>
+        <item quantity="many">\u2067المقاطع: %1$d\u2069</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">\u2067الألبومات: %1$d\u2069</item>
+        <item quantity="other">\u2067الألبومات: %1$d\u2069</item>
+        <item quantity="zero">\u2067الألبومات: %1$d\u2069</item>
+        <item quantity="two">\u2067الألبومات: %1$d\u2069</item>
+        <item quantity="few">\u2067الألبومات: %1$d\u2069</item>
+        <item quantity="many">\u2067الألبومات: %1$d\u2069</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">\u2067الفنانون: %1$d\u2069</item>
+        <item quantity="other">\u2067الفنانون: %1$d\u2069</item>
+        <item quantity="zero">\u2067الفنانون: %1$d\u2069</item>
+        <item quantity="two">\u2067الفنانون: %1$d\u2069</item>
+        <item quantity="few">\u2067الفنانون: %1$d\u2069</item>
+        <item quantity="many">\u2067الفنانون: %1$d\u2069</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">\u2067قوائم التشغيل: %1$d\u2069</item>
+        <item quantity="other">\u2067قوائم التشغيل: %1$d\u2069</item>
+        <item quantity="zero">\u2067قوائم التشغيل: %1$d\u2069</item>
+        <item quantity="two">\u2067قوائم التشغيل: %1$d\u2069</item>
+        <item quantity="few">\u2067قوائم التشغيل: %1$d\u2069</item>
+        <item quantity="many">\u2067قوائم التشغيل: %1$d\u2069</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">\u2067العناصر: %1$d\u2069</item>
+        <item quantity="other">\u2067العناصر: %1$d\u2069</item>
+        <item quantity="zero">\u2067العناصر: %1$d\u2069</item>
+        <item quantity="two">\u2067العناصر: %1$d\u2069</item>
+        <item quantity="few">\u2067العناصر: %1$d\u2069</item>
+        <item quantity="many">\u2067العناصر: %1$d\u2069</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">\u2067مرات التشغيل: %1$d\u2069</item>
+        <item quantity="other">\u2067مرات التشغيل: %1$d\u2069</item>
+        <item quantity="zero">\u2067مرات التشغيل: %1$d\u2069</item>
+        <item quantity="two">\u2067مرات التشغيل: %1$d\u2069</item>
+        <item quantity="few">\u2067مرات التشغيل: %1$d\u2069</item>
+        <item quantity="many">\u2067مرات التشغيل: %1$d\u2069</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">\u2067الأيام: %1$d\u2069</item>
+        <item quantity="other">\u2067الأيام: %1$d\u2069</item>
+        <item quantity="zero">\u2067الأيام: %1$d\u2069</item>
+        <item quantity="two">\u2067الأيام: %1$d\u2069</item>
+        <item quantity="few">\u2067الأيام: %1$d\u2069</item>
+        <item quantity="many">\u2067الأيام: %1$d\u2069</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">\u2067أيام النشاط: %1$d\u2069</item>
+        <item quantity="other">\u2067أيام النشاط: %1$d\u2069</item>
+        <item quantity="zero">\u2067أيام النشاط: %1$d\u2069</item>
+        <item quantity="two">\u2067أيام النشاط: %1$d\u2069</item>
+        <item quantity="few">\u2067أيام النشاط: %1$d\u2069</item>
+        <item quantity="many">\u2067أيام النشاط: %1$d\u2069</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">\u2067القواعد: %1$d\u2069</item>
+        <item quantity="other">\u2067القواعد: %1$d\u2069</item>
+        <item quantity="zero">\u2067القواعد: %1$d\u2069</item>
+        <item quantity="two">\u2067القواعد: %1$d\u2069</item>
+        <item quantity="few">\u2067القواعد: %1$d\u2069</item>
+        <item quantity="many">\u2067القواعد: %1$d\u2069</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">\u2067المجموعات: %1$d\u2069</item>
+        <item quantity="other">\u2067المجموعات: %1$d\u2069</item>
+        <item quantity="zero">\u2067المجموعات: %1$d\u2069</item>
+        <item quantity="two">\u2067المجموعات: %1$d\u2069</item>
+        <item quantity="few">\u2067المجموعات: %1$d\u2069</item>
+        <item quantity="many">\u2067المجموعات: %1$d\u2069</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">\u2067النطاقات: %1$d\u2069</item>
+        <item quantity="other">\u2067النطاقات: %1$d\u2069</item>
+        <item quantity="zero">\u2067النطاقات: %1$d\u2069</item>
+        <item quantity="two">\u2067النطاقات: %1$d\u2069</item>
+        <item quantity="few">\u2067النطاقات: %1$d\u2069</item>
+        <item quantity="many">\u2067النطاقات: %1$d\u2069</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">\u2067الأشرطة: %1$d\u2069</item>
+        <item quantity="other">\u2067الأشرطة: %1$d\u2069</item>
+        <item quantity="zero">\u2067الأشرطة: %1$d\u2069</item>
+        <item quantity="two">\u2067الأشرطة: %1$d\u2069</item>
+        <item quantity="few">\u2067الأشرطة: %1$d\u2069</item>
+        <item quantity="many">\u2067الأشرطة: %1$d\u2069</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"\u2067احفظ إعدادًا مسبقًا أولًا\u2069"</string>
+    <string name="text_the_dac_05159b">"DAC"</string>
+    <string name="text_active_945637">" \u2067· نشط\u2069"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"\u2067Navidrome أو Subsonic\u2069"</string>
+</resources>

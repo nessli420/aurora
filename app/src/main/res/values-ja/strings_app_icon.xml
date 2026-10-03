@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">アプリアイコン</string>
+    <string name="app_icon_pending">新しいアイコンは、Aurora を閉じた後にホーム画面に表示されます。</string>
+    <string name="app_icon_note">ランチャーによってはアイコン変更時に古いアイコンがホーム画面から消えるため、Aurora を追加し直す必要がある場合があります。</string>
+</resources>

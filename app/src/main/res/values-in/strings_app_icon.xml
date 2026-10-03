@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">Ikon Aplikasi</string>
+    <string name="app_icon_pending">Ikon barumu muncul di layar utama setelah kamu keluar dari Aurora.</string>
+    <string name="app_icon_note">Beberapa launcher menghapus ikon lama dari layar utama saat berganti, jadi kamu mungkin perlu menambahkan Aurora lagi.</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">Kan de playlist niet maken. Controleer je verbinding en playlistrechten en probeer het opnieuw.</string>
+    <string name="playlist_update_failed">Kan de playlist niet opslaan. Controleer je verbinding en playlistrechten en probeer het opnieuw.</string>
+    <string name="playlist_delete_failed">Kan de playlist niet verwijderen. Controleer je verbinding en playlistrechten en probeer het opnieuw.</string>
+    <string name="playlist_creating">Maken…</string>
+    <string name="playlist_saving">Opslaan…</string>
+</resources>

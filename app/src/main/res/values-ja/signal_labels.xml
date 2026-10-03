@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="signal_text_android_audio_87dd9e">"Android オーディオ"</string>
+    <string name="signal_text_android_audio_mix_f88264">"Android オーディオ · ミックス"</string>
+    <string name="signal_text_direct_usb_transport_ef9881">"ダイレクト USB 転送"</string>
+    <string name="signal_text_processed_usb_transport_a93c89">"処理済み USB 転送"</string>
+    <string name="signal_text_cast_receiver_61ab9a">"Cast レシーバー"</string>
+    <string name="signal_text_source_6da13a">"ソース"</string>
+    <string name="signal_text_decoder_7be2f0">"デコーダー"</string>
+    <string name="signal_text_processing_e63451">"処理"</string>
+    <string name="signal_text_resampling_1bf1aa">"リサンプリング"</string>
+    <string name="signal_text_output_4bed33">"出力"</string>
+    <string name="signal_text_device_a5a74a">"デバイス"</string>
+    <string name="signal_text_latency_3e3997">"レイテンシー"</string>
+</resources>

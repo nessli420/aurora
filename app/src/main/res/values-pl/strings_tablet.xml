@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Otwórz Teraz odtwarzane</string>
+    <string name="tablet_now_playing">Teraz odtwarzane</string>
+    <string name="tablet_seek">Przewiń</string>
+    <string name="tablet_close_panel">Zamknij panel</string>
+    <string name="tablet_player_panes">Panele Teraz odtwarzane</string>
+    <string name="tablet_fullscreen_lyrics">Tekst na pełnym ekranie</string>
+    <string name="tablet_resize_panels">Zmień rozmiar paneli</string>
+    <string name="tablet_layout_title">Układ tabletu</string>
+    <string name="tablet_layout_detected">Wyświetlane, ponieważ to urządzenie ma duży ekran. Każde ustawienie działa w orientacji pionowej i poziomej.</string>
+    <string name="tablet_dock_size">Rozmiar doku</string>
+    <string name="tablet_panel_controls">Sterowanie panelami</string>
+    <string name="tablet_panel_spacing">Odstępy między panelami</string>
+    <string name="tablet_nav_gap">Odstęp obok nawigacji</string>
+    <string name="tablet_page_margins">Marginesy strony</string>
+    <string name="tablet_hero_size">Rozmiar karty Wyróżnione</string>
+    <string name="tablet_favourites_size">Rozmiar karty Ulubione</string>
+    <string name="tablet_player_split">Podział Teraz odtwarzane</string>
+    <string name="tablet_player_split_hint">Możesz też przeciągnąć separator w widoku Teraz odtwarzane.</string>
+    <string name="tablet_reset">Resetuj układ tabletu</string>
+    <string name="nav_menu_title">Menu nawigacji</string>
+    <string name="nav_menu_summary">Wybierz, co pojawia się na liście głównej i w sekcji Więcej</string>
+    <string name="nav_section_main">Główne</string>
+    <string name="nav_section_more">Więcej</string>
+    <string name="nav_section_hidden">Niewyświetlane</string>
+    <string name="nav_menu_hint">Użyj strzałek, aby zmienić kolejność. Dotknij menu elementu, aby przenieść go między Głównymi a Więcej lub go usunąć.</string>
+    <string name="nav_move_up">Przenieś w górę</string>
+    <string name="nav_move_down">Przenieś w dół</string>
+    <string name="nav_move_to_main">Przenieś do Głównych</string>
+    <string name="nav_move_to_more">Przenieś do Więcej</string>
+    <string name="nav_add_to_main">Dodaj do Głównych</string>
+    <string name="nav_add_to_more">Dodaj do Więcej</string>
+    <string name="nav_remove">Usuń z menu</string>
+    <string name="nav_locked">Zawsze w Głównych</string>
+    <string name="nav_simple_mode_hidden">Ukryte, gdy włączony jest Tryb prosty</string>
+    <string name="nav_empty_section">Nic tu jeszcze nie ma</string>
+    <string name="nav_reset">Resetuj menu nawigacji</string>
+    <string name="nav_placement_options">Opcje rozmieszczenia</string>
+    <string name="home_empty_title">Brak muzyki</string>
+    <string name="home_empty_body">Połącz serwer muzyczny lub konto streamingowe albo dodaj muzykę zapisaną na tym urządzeniu.</string>
+    <string name="home_add_source">Dodaj źródło</string>
+</resources>

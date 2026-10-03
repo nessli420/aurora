@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">Impossibile sincronizzare la cronologia di ascolto. Controlla la connessione e l\'account.</string>
+</resources>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Automatische offline cache</string>
+    <string name="cache_description">Bewaart audio terwijl je luistert. Volledig gecachte nummers verschijnen in je bibliotheek wanneer je offline bent.</string>
+    <string name="cache_limit">Cachelimiet</string>
+    <string name="cache_used">%1$s van %2$s gebruikt</string>
+    <string name="cache_policy">Oudere cache wordt automatisch verwijderd. Downloads blijven tot je ze verwijdert.</string>
+    <string name="cache_clear">Audiocache wissen</string>
+    <string name="cache_clear_title">Gecachte audio wissen?</string>
+    <string name="cache_clear_message">Gecachte nummers hebben een verbinding nodig om opnieuw te spelen. Je downloads, bibliotheek en instellingen blijven behouden. De cache vult zich weer terwijl je luistert.</string>
+    <string name="cache_clearing">Cache wissen…</string>
+    <string name="cache_cleared">Audiocache gewist</string>
+    <string name="cache_clear_failed">De audiocache kon niet worden gewist. Probeer het opnieuw.</string>
+    <string name="cache_unavailable">De audiocache is niet beschikbaar. Streamen werkt nog steeds normaal.</string>
+    <string name="cache_loading">Cache controleren…</string>
+    <string name="cache_offline_summary">Gedownloade en volledig gecachte muziek afspelen</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d nummer klaar voor offline</item>
+        <item quantity="other">%1$d nummers klaar voor offline</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d gedownload nummer</item>
+        <item quantity="other">%1$d gedownloade nummers</item>
+    </plurals>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Cover</string>
+    <string name="artwork_lookup">Fehlende Cover suchen</string>
+    <string name="artwork_description">Sucht Cover für Titel und Alben, die keines haben.</string>
+    <string name="artwork_provider">Sucht anhand von Künstler-, Album- und Titelnamen nach Covern bei MusicBrainz und im Cover Art Archive. Vorhandene Cover haben weiterhin Vorrang.</string>
+    <string name="artwork_cache_usage">Cover-Cache: %.1f MB von 64 MB. Zwischengespeicherte Cover bleiben offline verfügbar.</string>
+    <string name="artwork_clear">Cover-Cache leeren</string>
+    <string name="artwork_clear_failed">Der Cover-Cache konnte nicht geleert werden. Versuch es noch einmal.</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="typeface_title">서체</string>
+    <string name="typeface_theme_default">테마 기본값</string>
+    <string name="typeface_preview">모든 분위기를 위한 음악 · 01:23</string>
+</resources>

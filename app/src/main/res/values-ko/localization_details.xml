@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"포함"</string>
+    <string name="rule_is">"일치"</string>
+    <string name="rule_exactly">"정확히"</string>
+    <string name="answer_yes">"예"</string>
+    <string name="answer_no">"아니요"</string>
+    <string name="recap_sound">"가장 많이 들은 아티스트"</string>
+    <string name="recap_equal">"이전 기간과 같은 청취 시간"</string>
+    <string name="recap_more">"이전 기간보다 %1$s분 더 많음"</string>
+    <string name="recap_less">"이전 기간보다 %1$s분 더 적음"</string>
+    <string name="recap_pending">"이 기간이 끝나고 청취 기록이 있으면 요약이 표시됩니다."</string>
+    <string name="recap_new_count">"새 요약 준비됨: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"요약 · %1$s"</string>
+    <string name="recap_latest_title">"최신 요약 · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"미드나이트"</string>
+    <string name="recap_paper">"페이퍼"</string>
+    <string name="longest_streak">"최장: %1$s"</string>
+    <string name="downloading_tracks">"다운로드 중: %1$s"</string>
+    <string name="playlist_track_count">"플레이리스트 · %1$s"</string>
+    <string name="smart_rule_count">"스마트 플레이리스트 · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"다음 곡 · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · 스캔됨: %3$s"</string>
+    <string name="track_count_more">"%1$s곡 이상"</string>
+    <string name="search_collection">"이 컬렉션 검색"</string>
+    <string name="downloaded_collection">"다운로드됨"</string>
+    <string name="signal_start_playback">"신호 경로를 확인하려면 재생을 시작하세요."</string>
+    <string name="text_source_rate_cf5128">"소스 레이트"</string>
+    <string name="text_current_playback_27f5a5">"현재 재생"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"트루 스테레오 · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"모두"</string>
+    <string name="text_saved_impulse_response_a5fc40">"저장된 임펄스 응답"</string>
+    <string name="text_hide_34d8b6">"숨기기"</string>
+    <string name="text_show_d97d1e">"표시"</string>
+    <string name="text_flat_target_7a50d3">"평탄한 목표"</string>
+    <string name="text_unspecified_a6e7eb">"지정 안 됨"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d곡</item>
+        <item quantity="other">%1$d곡</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">앨범 %1$d개</item>
+        <item quantity="other">앨범 %1$d개</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">아티스트 %1$d명</item>
+        <item quantity="other">아티스트 %1$d명</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">플레이리스트 %1$d개</item>
+        <item quantity="other">플레이리스트 %1$d개</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">항목 %1$d개</item>
+        <item quantity="other">항목 %1$d개</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d회 재생</item>
+        <item quantity="other">%1$d회 재생</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d일</item>
+        <item quantity="other">%1$d일</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">활동 %1$d일</item>
+        <item quantity="other">활동 %1$d일</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">규칙 %1$d개</item>
+        <item quantity="other">규칙 %1$d개</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">그룹 %1$d개</item>
+        <item quantity="other">그룹 %1$d개</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">밴드 %1$d개</item>
+        <item quantity="other">밴드 %1$d개</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">막대 %1$d개</item>
+        <item quantity="other">막대 %1$d개</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"먼저 프리셋을 저장하세요"</string>
+    <string name="text_the_dac_05159b">"DAC"</string>
+    <string name="text_active_945637">" · 활성"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome 또는 Subsonic"</string>
+</resources>

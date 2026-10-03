@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">\u2067موسيقى من Plex Media Server الخاص بك.\u2069</string>
+    <string name="plex_connect_title">\u2067ربط Plex\u2069</string>
+    <string name="plex_token_detail">\u2067استخدم رمز مصادقة Plex لديه وصول إلى هذا الخادم.\u2069</string>
+    <string name="plex_token_label">\u2067رمز Plex\u2069</string>
+    <string name="plex_token_help">\u2067كيفية العثور على رمز Plex\u2069</string>
+    <string name="plex_token_show">\u2067عرض الرمز\u2069</string>
+    <string name="plex_token_hide">\u2067إخفاء الرمز\u2069</string>
+    <string name="plex_token_rejected">\u2067رفض Plex هذا الرمز. تأكد من أن لديه وصولًا إلى هذا الخادم.\u2069</string>
+    <string name="plex_server_detail">\u2067استخدم عنوان Plex Media Server، وغالبًا يكون مع المنفذ 32400.\u2069</string>
+    <string name="plex_sources_stream_detail">\u2067البث من Navidrome أو Jellyfin أو Plex.\u2069</string>
+    <string name="plex_sources_empty_detail">\u2067أضف حساب Navidrome أو Jellyfin أو Plex أو YouTube Music من الإعدادات ← الحسابات لتضمينه هنا.\u2069</string>
+</resources>

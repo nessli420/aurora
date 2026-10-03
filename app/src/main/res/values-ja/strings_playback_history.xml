@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">再生履歴を同期できませんでした。接続とアカウントを確認してください。</string>
+</resources>

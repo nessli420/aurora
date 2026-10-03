@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">로컬 보관함 다시 스캔</string>
+    <string name="rescan_summary">이 기기에서 추가, 이동 또는 삭제된 음악 찾기</string>
+    <string name="rescan_running">이 기기 스캔 중…</string>
+    <string name="rescan_result">%1$d개 추가됨, %2$d개 제거됨</string>
+    <string name="rescan_unchanged">최신 상태 · %1$d곡</string>
+    <string name="rescan_failed">스캔을 완료할 수 없습니다. 다시 시도하세요.</string>
+    <string name="rescan_permission">스캔하려면 이 기기의 음악에 대한 액세스를 허용하세요.</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_swipe_playlists">Playlist</string>
+    <string name="track_playlists_title">Tambahkan ke atau hapus dari playlist</string>
+    <string name="track_playlists_hint">Ketuk untuk menambahkan atau menghapus lagu ini.</string>
+    <string name="track_playlists_empty">Belum ada playlist. Buat dulu di pustakamu.</string>
+    <string name="track_playlists_unavailable">Sambungkan ke sumber musik lagu ini untuk mengedit playlist-nya.</string>
+    <string name="track_playlists_load_error">Tidak dapat memuat playlist. Coba lagi.</string>
+    <string name="track_playlists_save_error">Tidak dapat memperbarui playlist ini. Periksa koneksi dan izin edit.</string>
+    <string name="track_swipe_retry">Coba lagi</string>
+    <string name="track_swipe_done">Selesai</string>
+    <string name="track_playlists_in_playlist">Di playlist</string>
+    <string name="track_playlists_add">Tambahkan ke playlist</string>
+</resources>

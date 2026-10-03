@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Copertine</string>
+    <string name="artwork_lookup">Trova copertine mancanti</string>
+    <string name="artwork_description">Cerca le copertine per brani e album che non ne hanno.</string>
+    <string name="artwork_provider">Usa i nomi di artista, album e brano per cercare copertine su MusicBrainz e Cover Art Archive. Le copertine esistenti restano prioritarie.</string>
+    <string name="artwork_cache_usage">Cache copertine: %.1f MB su 64 MB. Le copertine in cache restano disponibili offline.</string>
+    <string name="artwork_clear">Svuota cache copertine</string>
+    <string name="artwork_clear_failed">Impossibile svuotare la cache delle copertine. Riprova.</string>
+</resources>

@@ -182,6 +182,14 @@ fun SettingsScreen(
                                 "pt" -> "Português"
                                 "hi" -> "हिन्दी"
                                 "ur" -> "اردو"
+                                "de" -> "Deutsch"
+                                "it" -> "Italiano"
+                                "nl" -> "Nederlands"
+                                "pl" -> "Polski"
+                                "id", "in" -> "Bahasa Indonesia"
+                                "ja" -> "日本語"
+                                "ko" -> "한국어"
+                                "ar" -> "العربية"
                                 "en" -> "English"
                                 else -> appString(R.string.language_system)
                             }, selected = LocalSelectedSettingsRoute.current == Routes.SETTINGS_LANGUAGE, onClick = onOpenLanguage)

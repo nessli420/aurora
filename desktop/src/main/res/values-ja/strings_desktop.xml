@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="text_add_music_folder_a083d8" formatted="false">"音楽フォルダを追加"</string>
+    <string name="text_audio_decoding_copyright_the_ffmpeg_developers_lgpl_3_0_or_later_6338f2" formatted="false">"音声デコード。Copyright © FFmpeg developers。LGPL-3.0-or-later、JavaCPP Presets を通じて動的リンク。ライセンス全文：https://www.gnu.org/licenses/lgpl-3.0.html"</string>
+    <string name="text_aurora_takes_sole_control_of_the_device_and_sends_samples_at_the_cfbce6" formatted="false">"Aurora はデバイスを占有し、曲本来のサンプルレートとビット深度でサンプルを送信します。Aurora の再生中、他のアプリは無音になります。処理、音量、ReplayGain がサンプルを変更しない場合、出力はビットパーフェクトのままです。デバイスが形式を拒否した場合、Aurora は共有モードに戻り、信号経路に理由が表示されます。"</string>
+    <string name="text_bit_float_012895">"%1$d ビット浮動小数点"</string>
+    <string name="text_bit_integer_72520f">"%1$d ビット整数"</string>
+    <string name="text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d" formatted="false">"Windows ミキサーをバイパスするビットパーフェクト出力"</string>
+    <string name="text_built_with_compose_multiplatform_material_3_389c3a" formatted="false">"Compose Multiplatform と Material 3 で開発。"</string>
+    <string name="text_cache_50338b" formatted="false">"キャッシュ"</string>
+    <string name="text_cannot_resize_this_image_be7b26" formatted="false">"この画像のサイズを変更できません。"</string>
+    <string name="text_ch_282ab4">"%1$d ch"</string>
+    <string name="text_choose_a_supported_image_under_100_megapixels_af6c16" formatted="false">"1 億画素未満の対応画像を選んでください。"</string>
+    <string name="text_choose_an_image_smaller_than_20_mb_cc7669" formatted="false">"20 MB 未満の画像を選んでください。"</string>
+    <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"この PC で音楽を保存している場所を選択"</string>
+    <string name="text_clear_image_cache_ff7b31" formatted="false">"画像キャッシュを消去"</string>
+    <string name="text_close_to_tray_f91cc6" formatted="false">"閉じるときにトレイに格納"</string>
+    <string name="text_date_added_56ab7a" formatted="false">"追加日"</string>
+    <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"デバイス、排他モード、バッファ"</string>
+    <string name="text_exclusive_mode_01d9b2" formatted="false">"排他モード"</string>
+    <string name="text_exclusive_mode_is_unavailable_0de552">"排他モードを利用できません：%1$s"</string>
+    <string name="text_exclusive_mode_is_unavailable_on_this_device_e51016" formatted="false">"このデバイスでは排他モードを利用できません"</string>
+    <string name="text_follow_the_playing_cover_5d2e91" formatted="false">"再生中のカバーに合わせる"</string>
+    <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz は利用できないため、%2$d Hz を使用します。"</string>
+    <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"ウィンドウを閉じても通知領域で Aurora の再生を続ける"</string>
+    <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"大きいバッファはシステム負荷が高いときに強く、小さいバッファはシークや音量の操作に素早く反応します。出力を開き直したときに適用されます。"</string>
+    <string name="text_logs_126dd3" formatted="false">"ログ"</string>
+    <string name="text_open_in_full_page_0ec923" formatted="false">"全画面ページで開く"</string>
+    <string name="text_output_buffer_61b372" formatted="false">"出力バッファ"</string>
+    <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"共有モードのミックス形式"</string>
+    <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_windows_audi_a3c865" formatted="false">"共有モードでは、Windows オーディオエンジンを通じてデバイスのミックス形式で Aurora と他のアプリをミックスします。ビットパーフェクト再生には排他モードをオンにしてください。"</string>
+    <string name="text_system_default_follows_the_windows_output_device_even_when_it_cha_5703e0" formatted="false">"システムのデフォルトは、再生中に変わった場合も含めて Windows の出力デバイスに従います。"</string>
+    <string name="text_the_audio_output_could_not_be_used_2b7767" formatted="false">"オーディオ出力を使用できませんでした"</string>
+    <string name="text_the_sample_rate_policy_and_dither_apply_in_exclusive_mode_shared_caca2d" formatted="false">"サンプルレートのポリシーとディザは排他モードで適用されます。共有モードでは常に Windows のミックス形式で再生されます。"</string>
+    <string name="text_the_selected_output_device_was_disconnected_00e44e" formatted="false">"選択した出力デバイスの接続が切れました"</string>
+    <string name="text_the_track_could_not_be_decoded_3a23e8" formatted="false">"曲をデコードできませんでした"</string>
+    <string name="text_the_track_could_not_be_opened_5719af" formatted="false">"曲を開けませんでした"</string>
+    <string name="text_the_track_s_sample_rate_is_not_supported_5c8629" formatted="false">"曲のサンプルレートには対応していません"</string>
+    <string name="text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17" formatted="false">"再生中の曲の色でアプリ全体を色付け"</string>
+    <string name="text_using_your_windows_accent_colour_7d4b4a" formatted="false">"Windows のアクセントカラーを使用しています。"</string>
+    <string name="text_volume_3b18e8" formatted="false">"音量"</string>
+    <string name="text_windows_capabilities_0f1fa0" formatted="false">"Windows の機能"</string>
+    <string name="text_windows_java_2566af">"Windows · Java %1$d"</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">커버 아트</string>
+    <string name="artwork_lookup">없는 커버 찾기</string>
+    <string name="artwork_description">커버 아트가 없는 곡과 앨범을 찾아 맞춥니다.</string>
+    <string name="artwork_provider">아티스트, 앨범, 곡 이름으로 MusicBrainz와 Cover Art Archive에서 커버를 찾습니다. 기존 아트워크가 우선입니다.</string>
+    <string name="artwork_cache_usage">아트워크 캐시: %.1f MB / 64 MB. 캐시된 커버는 오프라인에서도 볼 수 있습니다.</string>
+    <string name="artwork_clear">아트워크 캐시 지우기</string>
+    <string name="artwork_clear_failed">아트워크 캐시를 지우지 못했습니다. 다시 시도하세요.</string>
+</resources>

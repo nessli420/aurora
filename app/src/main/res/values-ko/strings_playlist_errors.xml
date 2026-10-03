@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">플레이리스트를 만들 수 없습니다. 연결과 플레이리스트 권한을 확인한 뒤 다시 시도하세요.</string>
+    <string name="playlist_update_failed">플레이리스트를 저장할 수 없습니다. 연결과 플레이리스트 권한을 확인한 뒤 다시 시도하세요.</string>
+    <string name="playlist_delete_failed">플레이리스트를 삭제할 수 없습니다. 연결과 플레이리스트 권한을 확인한 뒤 다시 시도하세요.</string>
+    <string name="playlist_creating">만드는 중…</string>
+    <string name="playlist_saving">저장 중…</string>
+</resources>

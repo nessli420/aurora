@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">\u2067لغة التطبيق\u2069</string>
+    <string name="language_system">\u2067افتراضي النظام\u2069</string>
+    <string name="language_description">\u2067اختر اللغة المستخدمة في Aurora. تبقى عناوين الموسيقى وأسماء الفنانين كما هي.\u2069</string>
+</resources>

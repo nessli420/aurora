@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Sampul Album</string>
+    <string name="artwork_lookup">Cari Sampul yang Hilang</string>
+    <string name="artwork_description">Mencocokkan lagu dan album yang belum punya sampul.</string>
+    <string name="artwork_provider">Memakai nama artis, album, dan lagu untuk mencari sampul di MusicBrainz dan Cover Art Archive. Sampul yang sudah ada tetap diutamakan.</string>
+    <string name="artwork_cache_usage">Cache sampul: %.1f MB dari 64 MB. Sampul yang tersimpan tetap tersedia secara offline.</string>
+    <string name="artwork_clear">Hapus cache sampul</string>
+    <string name="artwork_clear_failed">Tidak dapat menghapus cache sampul. Coba lagi.</string>
+</resources>

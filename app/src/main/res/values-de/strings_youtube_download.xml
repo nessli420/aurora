@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Von YouTube herunterladen</string>
+    <string name="youtube_download_tile_detail">Titel auf diesem Gerät speichern</string>
+    <string name="youtube_download_search_hint">Titel auf YouTube Music suchen</string>
+    <string name="youtube_download_intro">Suche nach einem Titel und speichere ihn als Datei. Downloads landen in Music/Aurora und erscheinen in deiner lokalen Bibliothek.</string>
+    <string name="youtube_download_no_results">Keine Titel gefunden. Versuch eine andere Suche.</string>
+    <string name="youtube_download_search_failed">Suche fehlgeschlagen. Prüfe deine Verbindung und versuch es noch einmal.</string>
+    <string name="youtube_download_action">Herunterladen</string>
+    <string name="youtube_download_saved">In Music/Aurora gespeichert</string>
+    <string name="youtube_download_failed">Download fehlgeschlagen. Tippe, um es erneut zu versuchen.</string>
+    <string name="youtube_download_saving">Wird gespeichert…</string>
+    <string name="youtube_download_settings">YouTube-Downloads</string>
+    <string name="youtube_download_open_detail">YouTube Music durchsuchen und Titel als Dateien speichern</string>
+    <string name="youtube_download_format">Format</string>
+    <string name="youtube_download_quality">Qualität</string>
+    <string name="youtube_download_quality_best">Beste</string>
+    <string name="youtube_download_quality_note">Opus behält die beste Qualität von YouTube. M4A läuft auf mehr Geräten. Audio wird ohne Neukodierung gespeichert, und es wird die nächstliegende verfügbare Qualität verwendet.</string>
+    <string name="youtube_download_anonymous">Anonym herunterladen</string>
+    <string name="youtube_download_anonymous_detail">Titel als Gast ohne dein YouTube-Konto abrufen. Schalte das nur für Titel aus, bei denen du angemeldet sein musst.</string>
+    <string name="youtube_download_artwork">Cover einbetten</string>
+    <string name="youtube_download_artwork_detail">Das Cover in der Datei speichern</string>
+</resources>

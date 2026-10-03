@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Przeskanuj ponownie bibliotekę lokalną</string>
+    <string name="rescan_summary">Znajdź muzykę dodaną, przeniesioną lub usuniętą na tym urządzeniu</string>
+    <string name="rescan_running">Skanowanie tego urządzenia…</string>
+    <string name="rescan_result">Dodano: %1$d, usunięto: %2$d</string>
+    <string name="rescan_unchanged">Aktualne · utwory: %1$d</string>
+    <string name="rescan_failed">Nie udało się dokończyć skanowania. Spróbuj ponownie.</string>
+    <string name="rescan_permission">Zezwól na dostęp do muzyki na tym urządzeniu, aby ją przeskanować.</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">\u2067أيقونة التطبيق\u2069</string>
+    <string name="app_icon_pending">\u2067تظهر أيقونتك الجديدة على الشاشة الرئيسية بعد مغادرة Aurora.\u2069</string>
+    <string name="app_icon_note">\u2067تزيل بعض المشغّلات الأيقونة القديمة من الشاشة الرئيسية عند تغييرها، لذا قد تحتاج إلى إضافة Aurora مجددًا.\u2069</string>
+</resources>

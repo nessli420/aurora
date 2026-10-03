@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Apri In riproduzione</string>
+    <string name="tablet_now_playing">In riproduzione</string>
+    <string name="tablet_seek">Avanzamento</string>
+    <string name="tablet_close_panel">Chiudi pannello</string>
+    <string name="tablet_player_panes">Pannelli di In riproduzione</string>
+    <string name="tablet_fullscreen_lyrics">Testi a schermo intero</string>
+    <string name="tablet_resize_panels">Ridimensiona pannelli</string>
+    <string name="tablet_layout_title">Layout tablet</string>
+    <string name="tablet_layout_detected">Mostrato perché questo dispositivo ha uno schermo grande. Ogni impostazione vale sia in verticale sia in orizzontale.</string>
+    <string name="tablet_dock_size">Dimensione del dock</string>
+    <string name="tablet_panel_controls">Controlli dei pannelli</string>
+    <string name="tablet_panel_spacing">Spaziatura dei pannelli</string>
+    <string name="tablet_nav_gap">Spazio accanto alla navigazione</string>
+    <string name="tablet_page_margins">Margini della pagina</string>
+    <string name="tablet_hero_size">Dimensione della scheda In evidenza</string>
+    <string name="tablet_favourites_size">Dimensione della scheda Preferiti</string>
+    <string name="tablet_player_split">Divisione di In riproduzione</string>
+    <string name="tablet_player_split_hint">Puoi anche trascinare il divisore in In riproduzione.</string>
+    <string name="tablet_reset">Reimposta layout tablet</string>
+    <string name="nav_menu_title">Menu di navigazione</string>
+    <string name="nav_menu_summary">Scegli cosa compare nell\'elenco principale e in Altro</string>
+    <string name="nav_section_main">Principale</string>
+    <string name="nav_section_more">Altro</string>
+    <string name="nav_section_hidden">Non mostrato</string>
+    <string name="nav_menu_hint">Usa le frecce per riordinare le voci. Tocca il menu di una voce per spostarla tra Principale e Altro, o per rimuoverla.</string>
+    <string name="nav_move_up">Sposta su</string>
+    <string name="nav_move_down">Sposta giù</string>
+    <string name="nav_move_to_main">Sposta in Principale</string>
+    <string name="nav_move_to_more">Sposta in Altro</string>
+    <string name="nav_add_to_main">Aggiungi a Principale</string>
+    <string name="nav_add_to_more">Aggiungi ad Altro</string>
+    <string name="nav_remove">Rimuovi dal menu</string>
+    <string name="nav_locked">Sempre in Principale</string>
+    <string name="nav_simple_mode_hidden">Nascosto quando la Modalità semplice è attiva</string>
+    <string name="nav_empty_section">Ancora niente qui</string>
+    <string name="nav_reset">Reimposta menu di navigazione</string>
+    <string name="nav_placement_options">Opzioni di posizionamento</string>
+    <string name="home_empty_title">Ancora nessuna musica</string>
+    <string name="home_empty_body">Collega un server musicale o un account di streaming, oppure aggiungi la musica salvata su questo dispositivo.</string>
+    <string name="home_add_source">Aggiungi sorgente</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Lokale Bibliothek neu scannen</string>
+    <string name="rescan_summary">Auf diesem Gerät hinzugefügte, verschobene oder gelöschte Musik finden</string>
+    <string name="rescan_running">Dieses Gerät wird gescannt…</string>
+    <string name="rescan_result">%1$d hinzugefügt, %2$d entfernt</string>
+    <string name="rescan_unchanged">Aktuell · %1$d Titel</string>
+    <string name="rescan_failed">Der Scan konnte nicht abgeschlossen werden. Versuch es noch einmal.</string>
+    <string name="rescan_permission">Erlaube den Zugriff auf Musik auf diesem Gerät, um sie zu scannen.</string>
+</resources>

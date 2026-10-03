@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">Automatischer Offline-Cache</string>
+    <string name="cache_description">Speichert Audio beim Hören. Vollständig zwischengespeicherte Titel erscheinen offline in deiner Bibliothek.</string>
+    <string name="cache_limit">Cache-Limit</string>
+    <string name="cache_used">%1$s von %2$s belegt</string>
+    <string name="cache_policy">Ältere Cache-Daten werden automatisch entfernt. Downloads bleiben, bis du sie entfernst.</string>
+    <string name="cache_clear">Audio-Cache leeren</string>
+    <string name="cache_clear_title">Zwischengespeichertes Audio löschen?</string>
+    <string name="cache_clear_message">Zwischengespeicherte Titel brauchen zum erneuten Abspielen eine Verbindung. Deine Downloads, deine Bibliothek und deine Einstellungen bleiben erhalten. Der Cache füllt sich beim Hören wieder.</string>
+    <string name="cache_clearing">Cache wird geleert…</string>
+    <string name="cache_cleared">Audio-Cache geleert</string>
+    <string name="cache_clear_failed">Der Audio-Cache konnte nicht geleert werden. Versuch es noch einmal.</string>
+    <string name="cache_unavailable">Der Audio-Cache ist nicht verfügbar. Streaming funktioniert weiterhin normal.</string>
+    <string name="cache_loading">Cache wird geprüft…</string>
+    <string name="cache_offline_summary">Heruntergeladene und vollständig zwischengespeicherte Musik abspielen</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">%1$d Titel offline bereit</item>
+        <item quantity="other">%1$d Titel offline bereit</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">%1$d heruntergeladener Titel</item>
+        <item quantity="other">%1$d heruntergeladene Titel</item>
+    </plurals>
+</resources>

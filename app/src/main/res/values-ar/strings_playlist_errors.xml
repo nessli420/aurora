@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">\u2067تعذّر إنشاء قائمة التشغيل. تحقق من الاتصال وأذونات قوائم التشغيل، ثم حاول مرة أخرى.\u2069</string>
+    <string name="playlist_update_failed">\u2067تعذّر حفظ قائمة التشغيل. تحقق من الاتصال وأذونات قوائم التشغيل، ثم حاول مرة أخرى.\u2069</string>
+    <string name="playlist_delete_failed">\u2067تعذّر حذف قائمة التشغيل. تحقق من الاتصال وأذونات قوائم التشغيل، ثم حاول مرة أخرى.\u2069</string>
+    <string name="playlist_creating">\u2067جارٍ الإنشاء…\u2069</string>
+    <string name="playlist_saving">\u2067جارٍ الحفظ…\u2069</string>
+</resources>

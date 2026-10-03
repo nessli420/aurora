@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">Albumhoezen</string>
+    <string name="artwork_lookup">Ontbrekende hoezen zoeken</string>
+    <string name="artwork_description">Zoekt hoezen voor nummers en albums die er geen hebben.</string>
+    <string name="artwork_provider">Gebruikt artiest-, album- en nummernamen om hoezen te zoeken op MusicBrainz en Cover Art Archive. Bestaande hoezen blijven voorrang houden.</string>
+    <string name="artwork_cache_usage">Hoezencache: %.1f MB van 64 MB. Opgeslagen hoezen blijven offline beschikbaar.</string>
+    <string name="artwork_clear">Hoezencache wissen</string>
+    <string name="artwork_clear_failed">De hoezencache kon niet worden gewist. Probeer het opnieuw.</string>
+</resources>

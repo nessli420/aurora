@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rule_contains">"bevat"</string>
+    <string name="rule_is">"is"</string>
+    <string name="rule_exactly">"exact"</string>
+    <string name="answer_yes">"ja"</string>
+    <string name="answer_no">"nee"</string>
+    <string name="recap_sound">"Je meest beluisterde artiest"</string>
+    <string name="recap_equal">"Dezelfde luistertijd als de vorige periode"</string>
+    <string name="recap_more">"%1$s minuten meer dan de vorige periode"</string>
+    <string name="recap_less">"%1$s minuten minder dan de vorige periode"</string>
+    <string name="recap_pending">"Je overzicht verschijnt zodra deze periode voorbij is en er luistergeschiedenis is."</string>
+    <string name="recap_new_count">"Nieuwe overzichten klaar: %1$s"</string>
+    <string name="recap_counts">"%1$s · %2$s · %3$s"</string>
+    <string name="recap_title">"Overzicht · %1$s"</string>
+    <string name="recap_latest_title">"Nieuwste overzicht · %1$s"</string>
+    <string name="recap_share_title">"AURORA · %1$s"</string>
+    <string name="recap_midnight">"Middernacht"</string>
+    <string name="recap_paper">"Papier"</string>
+    <string name="longest_streak">"Langste: %1$s"</string>
+    <string name="downloading_tracks">"Downloaden: %1$s"</string>
+    <string name="playlist_track_count">"Playlist · %1$s"</string>
+    <string name="smart_rule_count">"Slimme playlist · %1$s"</string>
+    <string name="tracks_duration">"%1$s · %2$s"</string>
+    <string name="queue_track_count">"HIERNA · %1$s"</string>
+    <string name="duplicates_counts">"%1$s · %2$s · gescand: %3$s"</string>
+    <string name="track_count_more">"%1$s+ nummers"</string>
+    <string name="search_collection">"Deze collectie doorzoeken"</string>
+    <string name="downloaded_collection">"Gedownload"</string>
+    <string name="signal_start_playback">"Start het afspelen om het signaalpad te inspecteren."</string>
+    <string name="text_source_rate_cf5128">"Bronfrequentie"</string>
+    <string name="text_current_playback_27f5a5">"Huidig afspelen"</string>
+    <string name="text_true_stereo_ll_lr_rl_rr_f8b7db">"True stereo · LL/LR/RL/RR"</string>
+    <string name="text_any_322444">"Elk"</string>
+    <string name="text_saved_impulse_response_a5fc40">"Opgeslagen impulsrespons"</string>
+    <string name="text_hide_34d8b6">"Verbergen"</string>
+    <string name="text_show_d97d1e">"Tonen"</string>
+    <string name="text_flat_target_7a50d3">"Vlak doel"</string>
+    <string name="text_unspecified_a6e7eb">"Niet opgegeven"</string>
+    <plurals name="track_count">
+        <item quantity="one">%1$d nummer</item>
+        <item quantity="other">%1$d nummers</item>
+    </plurals>
+    <plurals name="album_count">
+        <item quantity="one">%1$d album</item>
+        <item quantity="other">%1$d albums</item>
+    </plurals>
+    <plurals name="artist_count">
+        <item quantity="one">%1$d artiest</item>
+        <item quantity="other">%1$d artiesten</item>
+    </plurals>
+    <plurals name="playlist_count">
+        <item quantity="one">%1$d playlist</item>
+        <item quantity="other">%1$d playlists</item>
+    </plurals>
+    <plurals name="item_count">
+        <item quantity="one">%1$d item</item>
+        <item quantity="other">%1$d items</item>
+    </plurals>
+    <plurals name="play_count">
+        <item quantity="one">%1$d keer afgespeeld</item>
+        <item quantity="other">%1$d keer afgespeeld</item>
+    </plurals>
+    <plurals name="day_count">
+        <item quantity="one">%1$d dag</item>
+        <item quantity="other">%1$d dagen</item>
+    </plurals>
+    <plurals name="active_day_count">
+        <item quantity="one">%1$d actieve dag</item>
+        <item quantity="other">%1$d actieve dagen</item>
+    </plurals>
+    <plurals name="rule_count">
+        <item quantity="one">%1$d regel</item>
+        <item quantity="other">%1$d regels</item>
+    </plurals>
+    <plurals name="group_count">
+        <item quantity="one">%1$d groep</item>
+        <item quantity="other">%1$d groepen</item>
+    </plurals>
+    <plurals name="band_count">
+        <item quantity="one">%1$d band</item>
+        <item quantity="other">%1$d banden</item>
+    </plurals>
+    <plurals name="bar_count">
+        <item quantity="one">%1$d balk</item>
+        <item quantity="other">%1$d balken</item>
+    </plurals>
+    <string name="text_save_a_preset_first_0d40db">"Sla eerst een preset op"</string>
+    <string name="text_the_dac_05159b">"de DAC"</string>
+    <string name="text_active_945637">" · actief"</string>
+    <string name="text_navidrome_or_subsonic_4e1c18">"Navidrome of Subsonic"</string>
+</resources>

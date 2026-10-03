@@ -111,7 +111,7 @@
     <string name="text_album_blur_1a1f3b" formatted="false">"\u2067البم بلر\u2069"</string>
     <string name="text_album_dfb4c9" formatted="false">"\u2067البم\u2069"</string>
     <string name="text_album_id_f7b6dc" formatted="false">"\u2067البم ID\u2069"</string>
-    <string name="text_album_mode_uses_album_gain_tags_to_preserve_relative_levels_withi_99c44e" formatted="false">"\u2067البم موڈ کسی البم کے اندر نسبتی سطحیں برقرار رکھنے کے لیے البم گین ٹیگز استعمال کرتا ہے۔\u2069"</string>
+    <string name="text_album_mode_uses_album_gain_tags_to_preserve_relative_levels_withi_99c44e" formatted="false">"\u2067البم موڈ کسی البم کے اندر نسبتی سطحیں برقرار رکھنے کے لیے البم گین ٹیگز استعمال کرتا ہے۔"</string>
     <string name="text_album_replaygain_23ed6d" formatted="false">"\u2067البم ReplayGain\u2069"</string>
     <string name="text_albums_3d822b">"\u2067%1$s البمز\u2069"</string>
     <string name="text_albums_4c45e7" formatted="false">"\u2067البمز\u2069"</string>
@@ -140,7 +140,7 @@
     <string name="text_amount_43dc85" formatted="false">"\u2067مقدار\u2069"</string>
     <string name="text_analysis_failed_you_can_still_mix_manually_adb74e" formatted="false">"\u2067تجزیہ ناکام رہا۔ آپ پھر بھی دستی طور پر مکس کر سکتے ہیں۔\u2069"</string>
     <string name="text_analysis_reads_the_audio_stream_and_keeps_a_waveform_and_tempo_es_6995bf" formatted="false">"\u2067تجزیہ آڈیو اسٹریم پڑھتا ہے اور ویو فارم اور ٹیمپو کا اندازہ محفوظ رکھتا ہے۔ محفوظ ڈاؤن لوڈ کی ضرورت نہیں۔\u2069"</string>
-    <string name="text_analysis_uses_network_data_and_takes_time_on_large_libraries_comp_a41cc1" formatted="false">"\u2067تجزیہ نیٹ ورک ڈیٹا استعمال کرتا ہے اور بڑی لائبریریوں میں وقت لیتا ہے۔ مکمل شدہ ٹریک محفوظ ہو جاتے ہیں؛\u2069 "</string>
+    <string name="text_analysis_uses_network_data_and_takes_time_on_large_libraries_comp_a41cc1" formatted="false">"تجزیہ نیٹ ورک ڈیٹا استعمال کرتا ہے اور بڑی لائبریریوں میں وقت لیتا ہے۔ مکمل شدہ ٹریک محفوظ ہو جاتے ہیں؛ "</string>
     <string name="text_analyze_0e524d" formatted="false">"\u2067تجزیہ کریں\u2069"</string>
     <string name="text_analyze_each_track_to_reveal_its_waveform_here_b126f7" formatted="false">"\u2067ہر ٹریک کا ویو فارم یہاں دیکھنے کے لیے اس کا تجزیہ کریں۔\u2069"</string>
     <string name="text_analyze_library_afcfa4" formatted="false">"\u2067لائبریری کا تجزیہ کریں\u2069"</string>
@@ -151,12 +151,12 @@
     <string name="text_analyzing_library_c854a6" formatted="false">"\u2067لائبریری کا تجزیہ ہو رہا ہے…\u2069"</string>
     <string name="text_android_accepted_the_scheduled_time_music_and_the_wake_up_screen_f303a2" formatted="false">"\u2067Android نے شیڈول کردہ وقت قبول کر لیا۔ موسیقی اور بیداری کی اسکرین اب بھی پلے بیک، اطلاعات اور لاک اسکرین رسائی پر منحصر ہیں۔\u2069"</string>
     <string name="text_android_auto_beec0a" formatted="false">"Android Auto"</string>
-    <string name="text_android_can_t_grant_a_usb_device_permanently_without_a_per_plug_p_706fd2" formatted="false">"\u2067Android ہر بار لگانے پر پوچھے بغیر کسی USB آلے کو مستقل اجازت نہیں دے سکتا، اس لیے DAC\u2069 "</string>
+    <string name="text_android_can_t_grant_a_usb_device_permanently_without_a_per_plug_p_706fd2" formatted="false">"\u2067Android ہر بار لگانے پر پوچھے بغیر کسی USB آلے کو مستقل اجازت نہیں دے سکتا، اس لیے DAC "</string>
     <string name="text_android_capabilities_5df566" formatted="false">"\u2067Android کی صلاحیتیں\u2069"</string>
     <string name="text_android_output_0a3516" formatted="false">"\u2067Android آؤٹ پٹ\u2069"</string>
     <string name="text_android_output_hi_res_preferred_aaeb20" formatted="false">"\u2067Android آؤٹ پٹ · ہائی ریز کو ترجیح\u2069"</string>
     <string name="text_android_system_effects_device_dependent_dafe2f" formatted="false">"\u2067Android سسٹم ایفیکٹس — آلے پر منحصر۔\u2069"</string>
-    <string name="text_android_system_eq_is_separate_and_is_not_copied_enabling_the_rack_15b92e" formatted="false">" \u2067Android سسٹم EQ الگ ہے اور کاپی نہیں ہوتا؛ ریک فعال کرنے پر حسب ضرورت پروسیسنگ منتخب ہوتی ہے۔\u2069"</string>
+    <string name="text_android_system_eq_is_separate_and_is_not_copied_enabling_the_rack_15b92e" formatted="false">" Android سسٹم EQ الگ ہے اور کاپی نہیں ہوتا؛ ریک فعال کرنے پر حسب ضرورت پروسیسنگ منتخب ہوتی ہے۔\u2069"</string>
     <string name="text_android_volume_step_b09bf1">"\u2067Android والیوم اسٹیپ: %1$s / %2$s\u2069"</string>
     <string name="text_another_comparison_is_active_48df0f" formatted="false">"\u2067ایک اور موازنہ فعال ہے۔\u2069"</string>
     <string name="text_answered_dc317a">"\u2067جواب دیے: %1$s\u2069"</string>
@@ -216,7 +216,7 @@
     <string name="text_audio_presets_fbf3f8" formatted="false">"\u2067آڈیو پری سیٹس\u2069"</string>
     <string name="text_audio_presets_library_sources_and_metadata_4155ea" formatted="false">"\u2067آڈیو پری سیٹس، لائبریری سورسز اور میٹا ڈیٹا\u2069"</string>
     <string name="text_audiotrack_underruns_6c9f5b">"\u2067AudioTrack انڈر رنز: %1$s\u2069"</string>
-    <string name="text_aurora_currently_applies_attenuation_only_missing_or_positive_gai_20c829" formatted="false">" \u2067Aurora فی الحال صرف ایٹینیوایشن لاگو کرتا ہے۔ غائب یا مثبت گین قدریں والیوم تبدیل نہیں کرتیں۔ دستیابی فعال پلے بیک پاتھ پر منحصر ہے۔\u2069"</string>
+    <string name="text_aurora_currently_applies_attenuation_only_missing_or_positive_gai_20c829" formatted="false">" Aurora فی الحال صرف ایٹینیوایشن لاگو کرتا ہے۔ غائب یا مثبت گین قدریں والیوم تبدیل نہیں کرتیں۔ دستیابی فعال پلے بیک پاتھ پر منحصر ہے۔\u2069"</string>
     <string name="text_aurora_eeee9b" formatted="false">"Aurora"</string>
     <string name="text_aurora_players_373351" formatted="false">"\u2067Aurora پلیئرز\u2069"</string>
     <string name="text_aurora_signal_path_b2764e" formatted="false">"\u2067Aurora سگنل پاتھ\u2069"</string>
@@ -439,7 +439,7 @@
     <string name="text_copy_the_app_s_client_id_and_paste_it_below_d4d070" formatted="false">"\u2067ایپ کی Client ID کاپی کریں اور نیچے پیسٹ کریں۔\u2069"</string>
     <string name="text_copy_the_full_address_from_the_other_device_825ae9" formatted="false">"\u2067دوسرے آلے سے پورا پتہ کاپی کریں۔\u2069"</string>
     <string name="text_copy_this_from_your_listenbrainz_profile_458b1a" formatted="false">"\u2067اسے اپنے ListenBrainz پروفائل سے کاپی کریں\u2069"</string>
-    <string name="text_copy_your_standard_software_eq_effects_and_mono_setting_into_an_e_4eccb4" formatted="false">"\u2067اپنے معیاری سافٹ ویئر EQ، ایفیکٹس اور مونو ترتیب کو اصل پروسیسنگ ترتیب کے ساتھ قابل ترمیم ریک میں کاپی کریں۔\u2069"</string>
+    <string name="text_copy_your_standard_software_eq_effects_and_mono_setting_into_an_e_4eccb4" formatted="false">"\u2067اپنے معیاری سافٹ ویئر EQ، ایفیکٹس اور مونو ترتیب کو اصل پروسیسنگ ترتیب کے ساتھ قابل ترمیم ریک میں کاپی کریں۔"</string>
     <string name="text_copy_your_standard_sound_settings_into_separate_stages_and_place_61d4ee" formatted="false">"\u2067اپنی معیاری ساؤنڈ ترتیبات کو الگ اسٹیجز میں کاپی کریں اور کنوولیوشن کے بعد سب سے آخر میں ایک فعال لمیٹر رکھیں۔ اس سے پروسیسنگ کی ترتیب بدل جاتی ہے۔\u2069"</string>
     <string name="text_coral_d27ca6" formatted="false">"\u2067مرجانی\u2069"</string>
     <string name="text_corners_f1fb13" formatted="false">"\u2067کونے\u2069"</string>
@@ -1144,7 +1144,7 @@
     <string name="text_maximum_treble_boost_db_bfd6e9" formatted="false">"\u2067زیادہ سے زیادہ ٹریبل بوسٹ · dB\u2069"</string>
     <string name="text_maximum_treble_cut_db_384290" formatted="false">"\u2067زیادہ سے زیادہ ٹریبل کٹ · dB\u2069"</string>
     <string name="text_maximum_treble_q_659c12" formatted="false">"\u2067زیادہ سے زیادہ ٹریبل Q\u2069"</string>
-    <string name="text_may_re_ask_on_reconnect_aurora_re_requests_automatically_when_bit_23facf" formatted="false">"\u2067دوبارہ جڑنے پر پھر پوچھ سکتا ہے — bit-perfect آن ہونے پر Aurora خود بخود دوبارہ درخواست کرتا ہے۔\u2069"</string>
+    <string name="text_may_re_ask_on_reconnect_aurora_re_requests_automatically_when_bit_23facf" formatted="false">"دوبارہ جڑنے پر پھر پوچھ سکتا ہے — bit-perfect آن ہونے پر Aurora خود بخود دوبارہ درخواست کرتا ہے۔\u2069"</string>
     <string name="text_me_b4d362" formatted="false">"\u2067میں\u2069"</string>
     <string name="text_measure_loudness_ebu_r128_to_level_playback_volume_30f01c" formatted="false">"\u2067پلے بیک والیوم برابر کرنے کے لیے لاؤڈنیس (EBU R128) کی پیمائش کریں\u2069"</string>
     <string name="text_measured_955037" formatted="false">"\u2067پیمائش شدہ\u2069"</string>
@@ -1306,7 +1306,7 @@
     <string name="text_now_playing_controls_downloads_alarms_1b631c" formatted="false">"\u2067پلے بیک کنٹرولز، ڈاؤن لوڈز اور الارمز\u2069"</string>
     <string name="text_number_b1c1ba" formatted="false">"\u2067عدد…\u2069"</string>
     <string name="text_off_e3de5a" formatted="false">"\u2067بند\u2069"</string>
-    <string name="text_off_leaves_replaygain_disabled_56fb0f" formatted="false">"\u2067بند رکھنے پر ReplayGain غیر فعال رہتا ہے۔\u2069"</string>
+    <string name="text_off_leaves_replaygain_disabled_56fb0f" formatted="false">"\u2067بند رکھنے پر ReplayGain غیر فعال رہتا ہے۔"</string>
     <string name="text_offline_e01fa7" formatted="false">"\u2067آف لائن\u2069"</string>
     <string name="text_offline_mode_66cf31" formatted="false">"\u2067آف لائن موڈ\u2069"</string>
     <string name="text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0" formatted="false">"\u2067پرانے پلیز میں ٹریک کی لمبائی سے تخمینی سننے کا وقت استعمال ہوتا ہے۔\u2069"</string>
@@ -1316,7 +1316,7 @@
     <string name="text_on_e0049a" formatted="false">"\u2067آن\u2069"</string>
     <string name="text_on_this_device_a7f962" formatted="false">"\u2067اس آلے پر\u2069"</string>
     <string name="text_on_wi_fi_bb6180" formatted="false">"\u2067Wi-Fi پر\u2069"</string>
-    <string name="text_on_your_device_streams_are_read_from_your_server_without_adding_d_4dfc77" formatted="false">"\u2067اسٹریمز ڈاؤن لوڈز شامل کیے بغیر آپ کے سرور سے پڑھی جاتی ہیں۔\u2069 "</string>
+    <string name="text_on_your_device_streams_are_read_from_your_server_without_adding_d_4dfc77" formatted="false">"اسٹریمز ڈاؤن لوڈز شامل کیے بغیر آپ کے سرور سے پڑھی جاتی ہیں۔ "</string>
     <string name="text_one_gain_for_all_paths_f4bd76" formatted="false">"\u2067تمام پاتھس کے لیے ایک ہی گین۔\u2069"</string>
     <string name="text_one_index_db_pair_per_line_0_relative_to_full_output_unlisted_ste_64e7c8">"\u2067ہر سطر میں ایک index=dB جوڑا (0–%1$s)، مکمل آؤٹ پٹ کے لحاظ سے۔ فہرست میں نہ دیے گئے اسٹیپس غیر دستیاب رہتے ہیں۔\u2069"</string>
     <string name="text_one_sided_chance_probability_56287c">"\u2067یک طرفہ اتفاق کا امکان: %1$s\u2069"</string>
@@ -1806,14 +1806,14 @@
     <string name="text_songs_e1404b" formatted="false">"\u2067گانے\u2069"</string>
     <string name="text_songs_from_your_server_appear_here_e4db53" formatted="false">"\u2067آپ کے سرور کے گانے یہاں نظر آتے ہیں۔\u2069"</string>
     <string name="text_sonic_radio_9b7bff" formatted="false">"\u2067Sonic ریڈیو\u2069"</string>
-    <string name="text_sonic_radio_compares_the_actual_sound_of_your_tracks_timbre_harmo_001cdd" formatted="false">"\u2067Sonic ریڈیو آپ کے آلے پر آپ کے ٹریکس کی اصل آواز (ٹمبر، ہارمنی، انرجی، ٹیمپو) کا موازنہ کرتا ہے۔\u2069 "</string>
+    <string name="text_sonic_radio_compares_the_actual_sound_of_your_tracks_timbre_harmo_001cdd" formatted="false">"\u2067Sonic ریڈیو آپ کے آلے پر آپ کے ٹریکس کی اصل آواز (ٹمبر، ہارمنی، انرجی، ٹیمپو) کا موازنہ کرتا ہے۔ "</string>
     <string name="text_sonic_radio_similar_tracks_653156">"\u2067Sonic ریڈیو · %1$s ملتے جلتے ٹریک\u2069"</string>
     <string name="text_sort_by_a2a5bd" formatted="false">"\u2067ترتیب بلحاظ\u2069"</string>
     <string name="text_sound_b4e3ef" formatted="false">"\u2067آواز\u2069"</string>
     <string name="text_soundtrack_5ea1bb" formatted="false">"\u2067ساؤنڈ ٹریک\u2069"</string>
     <string name="text_source_6da13a" formatted="false">"\u2067سورس\u2069"</string>
     <string name="text_source_author_f7d881" formatted="false">"\u2067سورس / مصنف\u2069"</string>
-    <string name="text_source_below_that_has_it_reorder_to_taste_f0910c" formatted="false">"\u2067سورس سے چلاتا ہے جس میں وہ موجود ہو۔ ترتیب اپنی پسند سے بدلیں۔\u2069"</string>
+    <string name="text_source_below_that_has_it_reorder_to_taste_f0910c" formatted="false">"سورس سے چلاتا ہے جس میں وہ موجود ہو۔ ترتیب اپنی پسند سے بدلیں۔\u2069"</string>
     <string name="text_source_ddb023" formatted="false">" \u2067· سورس\u2069"</string>
     <string name="text_source_e9f395">"\u2067سورس: %1$s\u2069"</string>
     <string name="text_source_priority_and_unified_library_5d9b2c" formatted="false">"\u2067سورس کی ترجیح اور متحد لائبریری\u2069"</string>
@@ -1990,7 +1990,7 @@
     <string name="text_track_b1c5a7" formatted="false">"\u2067ٹریک\u2069"</string>
     <string name="text_track_info_2bad97" formatted="false">"\u2067ٹریک کی معلومات\u2069"</string>
     <string name="text_track_level_d1a7fd" formatted="false">"\u2067ٹریک لیول\u2069"</string>
-    <string name="text_track_mode_uses_each_track_s_gain_tag_to_reduce_volume_difference_c08f12" formatted="false">"\u2067ٹریک موڈ گانوں کے درمیان والیوم کا فرق کم کرنے کے لیے ہر ٹریک کا گین ٹیگ استعمال کرتا ہے۔\u2069"</string>
+    <string name="text_track_mode_uses_each_track_s_gain_tag_to_reduce_volume_difference_c08f12" formatted="false">"\u2067ٹریک موڈ گانوں کے درمیان والیوم کا فرق کم کرنے کے لیے ہر ٹریک کا گین ٹیگ استعمال کرتا ہے۔"</string>
     <string name="text_track_replaygain_ddc5fd" formatted="false">"\u2067ٹریک ReplayGain\u2069"</string>
     <string name="text_track_starts_length_7f84c5">"\u2067ٹریک %1$s: آغاز %2$s، لمبائی %3$s\u2069"</string>
     <string name="text_track_title_artist_album_and_duration_may_be_sent_to_lrclib_to_fi_c268c3" formatted="false">"\u2067مماثلت تلاش کرنے کے لیے ٹریک کا عنوان، فنکار، البم اور دورانیہ LRCLIB کو بھیجا جا سکتا ہے۔\u2069"</string>
@@ -2130,7 +2130,7 @@
     <string name="text_wet_1df0cd">"\u2067%1$s · %2$s%% ویٹ\u2069"</string>
     <string name="text_wet_76d013">"\u2067%1$s%% ویٹ\u2069"</string>
     <string name="text_wet_dry_6769a1" formatted="false">"\u2067ویٹ / ڈرائی\u2069"</string>
-    <string name="text_when_a_track_is_available_from_more_than_one_place_aurora_plays_i_99eef3" formatted="false">"\u2067جب کوئی ٹریک ایک سے زیادہ جگہ دستیاب ہو تو Aurora اسے نیچے دیے گئے اس پہلے\u2069 "</string>
+    <string name="text_when_a_track_is_available_from_more_than_one_place_aurora_plays_i_99eef3" formatted="false">"\u2067جب کوئی ٹریک ایک سے زیادہ جگہ دستیاب ہو تو Aurora اسے نیچے دیے گئے اس پہلے "</string>
     <string name="text_whole_word_6171b6" formatted="false">"\u2067پورا لفظ\u2069"</string>
     <string name="text_width_2f_276839" formatted="false">"\u2067چوڑائی %.2f×\u2069"</string>
     <string name="text_windows_7_inspired_blue_glass_glossy_panels_27d09a" formatted="false">"\u2067Windows 7 سے متاثر · نیلا شیشہ · چمکدار پینلز\u2069"</string>
@@ -2144,7 +2144,7 @@
     <string name="text_year_879e32" formatted="false">"\u2067سال\u2069"</string>
     <string name="text_yearly_7622eb" formatted="false">"\u2067سالانہ\u2069"</string>
     <string name="text_yesterday_da2483" formatted="false">"\u2067گزشتہ کل\u2069"</string>
-    <string name="text_you_can_cancel_and_resume_unavailable_tracks_are_retried_on_the_n_af1eea" formatted="false">"\u2067آپ منسوخ کر کے دوبارہ شروع کر سکتے ہیں۔ غیر دستیاب ٹریک اگلے اسکین میں دوبارہ آزمائے جاتے ہیں۔\u2069"</string>
+    <string name="text_you_can_cancel_and_resume_unavailable_tracks_are_retried_on_the_n_af1eea" formatted="false">"آپ منسوخ کر کے دوبارہ شروع کر سکتے ہیں۔ غیر دستیاب ٹریک اگلے اسکین میں دوبارہ آزمائے جاتے ہیں۔\u2069"</string>
     <string name="text_you_can_combine_local_files_server_libraries_and_youtube_music_la_8c6471" formatted="false">"\u2067آپ بعد میں ترتیبات میں مقامی فائلیں، سرور لائبریریاں اور YouTube Music ملا سکتے ہیں۔\u2069"</string>
     <string name="text_you_re_up_to_date_5fc157" formatted="false">"\u2067آپ اپ ٹو ڈیٹ ہیں\u2069"</string>
     <string name="text_your_archive_3a5ad5" formatted="false">"\u2067آپ کا آرکائیو\u2069"</string>

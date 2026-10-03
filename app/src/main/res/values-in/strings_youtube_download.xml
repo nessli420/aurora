@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Unduh dari YouTube</string>
+    <string name="youtube_download_tile_detail">Simpan lagu ke perangkat ini</string>
+    <string name="youtube_download_search_hint">Cari lagu di YouTube Music</string>
+    <string name="youtube_download_intro">Cari lagu dan simpan sebagai file. Unduhan masuk ke Music/Aurora dan muncul di pustaka lokalmu.</string>
+    <string name="youtube_download_no_results">Lagu tidak ditemukan. Coba pencarian lain.</string>
+    <string name="youtube_download_search_failed">Pencarian gagal. Periksa koneksimu lalu coba lagi.</string>
+    <string name="youtube_download_action">Unduh</string>
+    <string name="youtube_download_saved">Disimpan ke Music/Aurora</string>
+    <string name="youtube_download_failed">Unduhan gagal. Ketuk untuk mencoba lagi.</string>
+    <string name="youtube_download_saving">Menyimpan…</string>
+    <string name="youtube_download_settings">Unduhan YouTube</string>
+    <string name="youtube_download_open_detail">Cari di YouTube Music dan simpan lagu sebagai file</string>
+    <string name="youtube_download_format">Format</string>
+    <string name="youtube_download_quality">Kualitas</string>
+    <string name="youtube_download_quality_best">Terbaik</string>
+    <string name="youtube_download_quality_note">Opus mempertahankan kualitas terbaik YouTube. M4A dapat diputar di lebih banyak perangkat. Audio disimpan tanpa enkode ulang, dengan kualitas tersedia yang paling mendekati.</string>
+    <string name="youtube_download_anonymous">Unduh secara Anonim</string>
+    <string name="youtube_download_anonymous_detail">Ambil lagu sebagai tamu tanpa akun YouTube-mu. Matikan hanya untuk lagu yang mengharuskanmu masuk.</string>
+    <string name="youtube_download_artwork">Sematkan Sampul</string>
+    <string name="youtube_download_artwork_detail">Simpan sampul di dalam file</string>
+</resources>

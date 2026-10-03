@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">Luistergeschiedenis kon niet worden gesynchroniseerd. Controleer je verbinding en account.</string>
+</resources>

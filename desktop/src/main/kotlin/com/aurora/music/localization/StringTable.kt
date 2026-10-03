@@ -33,6 +33,11 @@ internal class StringTable(val locale: Locale) {
                 n % 10 in 2..4 && n % 100 !in 12..14 -> FEW
                 else -> MANY
             }
+            "pl" -> when {
+                n == 1 -> ONE
+                n % 10 in 2..4 && n % 100 !in 12..14 -> FEW
+                else -> MANY
+            }
             else -> if (n == 1) ONE else OTHER
         }
     }

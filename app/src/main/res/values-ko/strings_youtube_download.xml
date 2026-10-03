@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">YouTube에서 다운로드</string>
+    <string name="youtube_download_tile_detail">이 기기에 곡 저장</string>
+    <string name="youtube_download_search_hint">YouTube Music에서 곡 검색</string>
+    <string name="youtube_download_intro">곡을 검색해 파일로 저장하세요. 다운로드는 Music/Aurora에 저장되며 로컬 보관함에 표시됩니다.</string>
+    <string name="youtube_download_no_results">곡을 찾을 수 없습니다. 다른 검색어를 사용해 보세요.</string>
+    <string name="youtube_download_search_failed">검색에 실패했습니다. 연결을 확인하고 다시 시도하세요.</string>
+    <string name="youtube_download_action">다운로드</string>
+    <string name="youtube_download_saved">Music/Aurora에 저장됨</string>
+    <string name="youtube_download_failed">다운로드에 실패했습니다. 탭하여 다시 시도하세요.</string>
+    <string name="youtube_download_saving">저장 중…</string>
+    <string name="youtube_download_settings">YouTube 다운로드</string>
+    <string name="youtube_download_open_detail">YouTube Music을 검색해 곡을 파일로 저장</string>
+    <string name="youtube_download_format">형식</string>
+    <string name="youtube_download_quality">음질</string>
+    <string name="youtube_download_quality_best">최고</string>
+    <string name="youtube_download_quality_note">Opus는 YouTube의 최고 음질을 유지합니다. M4A는 더 많은 기기에서 재생됩니다. 오디오는 재인코딩 없이 저장되며, 가장 가까운 사용 가능한 음질이 사용됩니다.</string>
+    <string name="youtube_download_anonymous">익명으로 다운로드</string>
+    <string name="youtube_download_anonymous_detail">YouTube 계정 없이 게스트로 곡을 가져옵니다. 로그인이 필요한 곡에서만 끄세요.</string>
+    <string name="youtube_download_artwork">커버 아트 포함</string>
+    <string name="youtube_download_artwork_detail">파일 안에 커버 저장</string>
+</resources>

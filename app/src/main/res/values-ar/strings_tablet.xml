@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">\u2067فتح قيد التشغيل الآن\u2069</string>
+    <string name="tablet_now_playing">\u2067قيد التشغيل الآن\u2069</string>
+    <string name="tablet_seek">\u2067التنقل\u2069</string>
+    <string name="tablet_close_panel">\u2067إغلاق اللوحة\u2069</string>
+    <string name="tablet_player_panes">\u2067لوحات قيد التشغيل الآن\u2069</string>
+    <string name="tablet_fullscreen_lyrics">\u2067كلمات بملء الشاشة\u2069</string>
+    <string name="tablet_resize_panels">\u2067تغيير حجم اللوحات\u2069</string>
+    <string name="tablet_layout_title">\u2067تخطيط الجهاز اللوحي\u2069</string>
+    <string name="tablet_layout_detected">\u2067معروض لأن هذا الجهاز ذو شاشة كبيرة. ينطبق كل إعداد في الوضعين الطولي والعرضي.\u2069</string>
+    <string name="tablet_dock_size">\u2067حجم الشريط السفلي\u2069</string>
+    <string name="tablet_panel_controls">\u2067عناصر التحكم في اللوحات\u2069</string>
+    <string name="tablet_panel_spacing">\u2067المسافة بين اللوحات\u2069</string>
+    <string name="tablet_nav_gap">\u2067الفراغ بجانب التنقل\u2069</string>
+    <string name="tablet_page_margins">\u2067هوامش الصفحة\u2069</string>
+    <string name="tablet_hero_size">\u2067حجم البطاقة المميزة\u2069</string>
+    <string name="tablet_favourites_size">\u2067حجم بطاقة المفضلة\u2069</string>
+    <string name="tablet_player_split">\u2067تقسيم قيد التشغيل الآن\u2069</string>
+    <string name="tablet_player_split_hint">\u2067يمكنك أيضًا سحب الفاصل في قيد التشغيل الآن.\u2069</string>
+    <string name="tablet_reset">\u2067إعادة ضبط تخطيط الجهاز اللوحي\u2069</string>
+    <string name="nav_menu_title">\u2067قائمة التنقل\u2069</string>
+    <string name="nav_menu_summary">\u2067اختر ما يظهر في القائمة الرئيسية وتحت المزيد\u2069</string>
+    <string name="nav_section_main">\u2067الرئيسية\u2069</string>
+    <string name="nav_section_more">\u2067المزيد\u2069</string>
+    <string name="nav_section_hidden">\u2067غير معروض\u2069</string>
+    <string name="nav_menu_hint">\u2067استخدم الأسهم لإعادة ترتيب العناصر. انقر على قائمة العنصر لنقله بين الرئيسية والمزيد أو لإزالته.\u2069</string>
+    <string name="nav_move_up">\u2067نقل لأعلى\u2069</string>
+    <string name="nav_move_down">\u2067نقل لأسفل\u2069</string>
+    <string name="nav_move_to_main">\u2067النقل إلى الرئيسية\u2069</string>
+    <string name="nav_move_to_more">\u2067النقل إلى المزيد\u2069</string>
+    <string name="nav_add_to_main">\u2067الإضافة إلى الرئيسية\u2069</string>
+    <string name="nav_add_to_more">\u2067الإضافة إلى المزيد\u2069</string>
+    <string name="nav_remove">\u2067الإزالة من القائمة\u2069</string>
+    <string name="nav_locked">\u2067دائمًا في الرئيسية\u2069</string>
+    <string name="nav_simple_mode_hidden">\u2067مخفي أثناء تفعيل الوضع البسيط\u2069</string>
+    <string name="nav_empty_section">\u2067لا شيء هنا بعد\u2069</string>
+    <string name="nav_reset">\u2067إعادة ضبط قائمة التنقل\u2069</string>
+    <string name="nav_placement_options">\u2067خيارات الموضع\u2069</string>
+    <string name="home_empty_title">\u2067لا توجد موسيقى بعد\u2069</string>
+    <string name="home_empty_body">\u2067اربط خادم موسيقى أو حساب بث، أو أضف موسيقى مخزّنة على هذا الجهاز.\u2069</string>
+    <string name="home_add_source">\u2067إضافة مصدر\u2069</string>
+</resources>

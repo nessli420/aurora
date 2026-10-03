@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="artwork_title">\u2067صور الغلاف\u2069</string>
+    <string name="artwork_lookup">\u2067البحث عن الأغلفة الناقصة\u2069</string>
+    <string name="artwork_description">\u2067مطابقة الأغاني والألبومات التي ليس لها غلاف.\u2069</string>
+    <string name="artwork_provider">\u2067يستخدم أسماء الفنانين والألبومات والمقاطع للبحث عن الأغلفة في MusicBrainz وCover Art Archive. تبقى الأغلفة الموجودة مفضّلة.\u2069</string>
+    <string name="artwork_cache_usage">\u2067ذاكرة الأغلفة المؤقتة: %.1f ميغابايت من 64 ميغابايت. تبقى الأغلفة المخزّنة متاحة دون اتصال.\u2069</string>
+    <string name="artwork_clear">\u2067مسح ذاكرة الأغلفة المؤقتة\u2069</string>
+    <string name="artwork_clear_failed">\u2067تعذّر مسح ذاكرة الأغلفة المؤقتة. حاول مرة أخرى.\u2069</string>
+</resources>

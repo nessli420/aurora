@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">자동 오프라인 캐시</string>
+    <string name="cache_description">듣는 동안 오디오를 저장합니다. 완전히 캐시된 곡은 오프라인일 때 보관함에 표시됩니다.</string>
+    <string name="cache_limit">캐시 한도</string>
+    <string name="cache_used">%1$s / %2$s 사용 중</string>
+    <string name="cache_policy">오래된 캐시는 자동으로 삭제됩니다. 다운로드는 직접 삭제할 때까지 유지됩니다.</string>
+    <string name="cache_clear">오디오 캐시 지우기</string>
+    <string name="cache_clear_title">캐시된 오디오를 지울까요?</string>
+    <string name="cache_clear_message">캐시된 곡을 다시 재생하려면 연결이 필요합니다. 다운로드, 보관함, 설정은 그대로 유지됩니다. 듣는 동안 캐시가 다시 채워집니다.</string>
+    <string name="cache_clearing">캐시 지우는 중…</string>
+    <string name="cache_cleared">오디오 캐시를 지웠습니다</string>
+    <string name="cache_clear_failed">오디오 캐시를 지우지 못했습니다. 다시 시도하세요.</string>
+    <string name="cache_unavailable">오디오 캐시를 사용할 수 없습니다. 스트리밍 재생은 정상적으로 됩니다.</string>
+    <string name="cache_loading">캐시 확인 중…</string>
+    <string name="cache_offline_summary">다운로드했거나 완전히 캐시된 음악 재생</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">오프라인 재생 가능 %1$d곡</item>
+        <item quantity="other">오프라인 재생 가능 %1$d곡</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">다운로드한 곡 %1$d개</item>
+        <item quantity="other">다운로드한 곡 %1$d개</item>
+    </plurals>
+</resources>

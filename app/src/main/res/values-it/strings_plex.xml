@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="setup_source_plex">Plex</string>
+    <string name="setup_source_plex_detail">Musica dal tuo Plex Media Server.</string>
+    <string name="plex_connect_title">Collega Plex</string>
+    <string name="plex_token_detail">Usa un token di autenticazione Plex con accesso a questo server.</string>
+    <string name="plex_token_label">Token Plex</string>
+    <string name="plex_token_help">Come trovare il tuo token Plex</string>
+    <string name="plex_token_show">Mostra token</string>
+    <string name="plex_token_hide">Nascondi token</string>
+    <string name="plex_token_rejected">Plex ha rifiutato questo token. Verifica che abbia accesso a questo server.</string>
+    <string name="plex_server_detail">Usa l\'indirizzo del tuo Plex Media Server, di solito con la porta 32400.</string>
+    <string name="plex_sources_stream_detail">Streaming da Navidrome, Jellyfin o Plex.</string>
+    <string name="plex_sources_empty_detail">Aggiungi un account Navidrome, Jellyfin, Plex o YouTube Music in Impostazioni → Account per includerlo qui.</string>
+</resources>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="tablet_open_now_playing">Nu aan het afspelen openen</string>
+    <string name="tablet_now_playing">Nu aan het afspelen</string>
+    <string name="tablet_seek">Spoelen</string>
+    <string name="tablet_close_panel">Paneel sluiten</string>
+    <string name="tablet_player_panes">Panelen van Nu aan het afspelen</string>
+    <string name="tablet_fullscreen_lyrics">Songtekst op volledig scherm</string>
+    <string name="tablet_resize_panels">Formaat van panelen wijzigen</string>
+    <string name="tablet_layout_title">Tabletindeling</string>
+    <string name="tablet_layout_detected">Getoond omdat dit apparaat een groot scherm heeft. Elke instelling geldt zowel staand als liggend.</string>
+    <string name="tablet_dock_size">Dockgrootte</string>
+    <string name="tablet_panel_controls">Paneelbediening</string>
+    <string name="tablet_panel_spacing">Ruimte tussen panelen</string>
+    <string name="tablet_nav_gap">Ruimte naast navigatie</string>
+    <string name="tablet_page_margins">Paginamarges</string>
+    <string name="tablet_hero_size">Grootte van uitgelichte kaart</string>
+    <string name="tablet_favourites_size">Grootte van favorietenkaart</string>
+    <string name="tablet_player_split">Verdeling van Nu aan het afspelen</string>
+    <string name="tablet_player_split_hint">Je kunt ook de scheidingslijn in Nu aan het afspelen verslepen.</string>
+    <string name="tablet_reset">Tabletindeling resetten</string>
+    <string name="nav_menu_title">Navigatiemenu</string>
+    <string name="nav_menu_summary">Kies wat er in de hoofdlijst en onder Meer staat</string>
+    <string name="nav_section_main">Hoofdlijst</string>
+    <string name="nav_section_more">Meer</string>
+    <string name="nav_section_hidden">Niet getoond</string>
+    <string name="nav_menu_hint">Gebruik de pijlen om items te herschikken. Tik op het menu van een item om het tussen Hoofdlijst en Meer te verplaatsen of te verwijderen.</string>
+    <string name="nav_move_up">Omhoog verplaatsen</string>
+    <string name="nav_move_down">Omlaag verplaatsen</string>
+    <string name="nav_move_to_main">Naar Hoofdlijst verplaatsen</string>
+    <string name="nav_move_to_more">Naar Meer verplaatsen</string>
+    <string name="nav_add_to_main">Toevoegen aan Hoofdlijst</string>
+    <string name="nav_add_to_more">Toevoegen aan Meer</string>
+    <string name="nav_remove">Uit menu verwijderen</string>
+    <string name="nav_locked">Altijd in Hoofdlijst</string>
+    <string name="nav_simple_mode_hidden">Verborgen zolang Eenvoudige modus aan staat</string>
+    <string name="nav_empty_section">Hier is nog niets</string>
+    <string name="nav_reset">Navigatiemenu resetten</string>
+    <string name="nav_placement_options">Plaatsingsopties</string>
+    <string name="home_empty_title">Nog geen muziek</string>
+    <string name="home_empty_body">Verbind een muziekserver of streamingaccount, of voeg muziek toe die op dit apparaat staat.</string>
+    <string name="home_add_source">Bron toevoegen</string>
+</resources>

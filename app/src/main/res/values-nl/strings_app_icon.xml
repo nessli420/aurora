@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">App-pictogram</string>
+    <string name="app_icon_pending">Je nieuwe pictogram verschijnt op het startscherm nadat je Aurora verlaat.</string>
+    <string name="app_icon_note">Sommige launchers verwijderen het oude pictogram van het startscherm als het verandert, dus mogelijk moet je Aurora opnieuw toevoegen.</string>
+</resources>

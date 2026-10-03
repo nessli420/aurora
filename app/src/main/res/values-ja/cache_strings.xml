@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="cache_title">自動オフラインキャッシュ</string>
+    <string name="cache_description">再生中の音声を保存します。完全にキャッシュされた曲はオフライン時にライブラリに表示されます。</string>
+    <string name="cache_limit">キャッシュの上限</string>
+    <string name="cache_used">%1$s / %2$s 使用中</string>
+    <string name="cache_policy">古いキャッシュは自動的に削除されます。ダウンロードは削除するまで残ります。</string>
+    <string name="cache_clear">音声キャッシュを消去</string>
+    <string name="cache_clear_title">キャッシュされた音声を消去しますか？</string>
+    <string name="cache_clear_message">キャッシュされた曲を再び再生するには接続が必要になります。ダウンロード、ライブラリ、設定はそのまま残ります。キャッシュは再生するにつれて再び貯まります。</string>
+    <string name="cache_clearing">キャッシュを消去中…</string>
+    <string name="cache_cleared">音声キャッシュを消去しました</string>
+    <string name="cache_clear_failed">音声キャッシュを消去できませんでした。もう一度お試しください。</string>
+    <string name="cache_unavailable">音声キャッシュを利用できません。ストリーミング再生は通常どおり行えます。</string>
+    <string name="cache_loading">キャッシュを確認中…</string>
+    <string name="cache_offline_summary">ダウンロード済みと完全キャッシュ済みの音楽を再生</string>
+    <plurals name="cache_ready_tracks">
+        <item quantity="one">オフラインで再生できる曲：%1$d 曲</item>
+        <item quantity="other">オフラインで再生できる曲：%1$d 曲</item>
+    </plurals>
+    <plurals name="storage_downloaded_tracks">
+        <item quantity="one">ダウンロード済み：%1$d 曲</item>
+        <item quantity="other">ダウンロード済み：%1$d 曲</item>
+    </plurals>
+</resources>

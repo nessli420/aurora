@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_icon_title">Icona dell\'app</string>
+    <string name="app_icon_pending">La nuova icona compare nella schermata Home dopo che esci da Aurora.</string>
+    <string name="app_icon_note">Alcuni launcher rimuovono la vecchia icona dalla schermata Home quando cambia, quindi potresti dover aggiungere di nuovo Aurora.</string>
+</resources>

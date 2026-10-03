@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rescan_title">Lokale bibliotheek opnieuw scannen</string>
+    <string name="rescan_summary">Muziek vinden die op dit apparaat is toegevoegd, verplaatst of verwijderd</string>
+    <string name="rescan_running">Dit apparaat scannen…</string>
+    <string name="rescan_result">%1$d toegevoegd, %2$d verwijderd</string>
+    <string name="rescan_unchanged">Bijgewerkt · %1$d nummers</string>
+    <string name="rescan_failed">De scan kon niet worden voltooid. Probeer het opnieuw.</string>
+    <string name="rescan_permission">Sta toegang tot muziek op dit apparaat toe om die te scannen.</string>
+</resources>

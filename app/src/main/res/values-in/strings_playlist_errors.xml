@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_create_failed">Tidak dapat membuat playlist. Periksa koneksi dan izin playlist, lalu coba lagi.</string>
+    <string name="playlist_update_failed">Tidak dapat menyimpan playlist. Periksa koneksi dan izin playlist, lalu coba lagi.</string>
+    <string name="playlist_delete_failed">Tidak dapat menghapus playlist. Periksa koneksi dan izin playlist, lalu coba lagi.</string>
+    <string name="playlist_creating">Membuat…</string>
+    <string name="playlist_saving">Menyimpan…</string>
+</resources>

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playback_history_sync_failed">\u2067تعذّرت مزامنة سجل الاستماع. تحقق من اتصالك وحسابك.\u2069</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="language_title">Lingua dell\'app</string>
+    <string name="language_system">Predefinita di sistema</string>
+    <string name="language_description">Scegli la lingua usata in Aurora. Titoli dei brani e nomi degli artisti restano invariati.</string>
+</resources>
