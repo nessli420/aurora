@@ -5,9 +5,12 @@ import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
 import com.aurora.music.desktop.ui.Shortcut
+import com.aurora.music.desktop.ui.claimsSpace
 import com.aurora.music.desktop.ui.shortcut
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 
 @OptIn(InternalComposeUiApi::class)
@@ -40,5 +43,15 @@ class ShortcutsTest {
         assertNull(down(Key.DirectionLeft, ctrl = true, alt = true).shortcut())
         assertNull(KeyEvent(Key.F, KeyEventType.KeyUp, isCtrlPressed = true).shortcut())
         assertNull(KeyEvent(Key.Escape, KeyEventType.KeyUp).shortcut())
+    }
+
+    @Test fun theWindowKeepsSpaceKeyPressesFromFocusedControls() {
+        assertTrue(down(Key.Spacebar).claimsSpace())
+        assertTrue(KeyEvent(Key.Spacebar, KeyEventType.KeyUp).claimsSpace())
+        assertTrue(down(Key.Spacebar, shift = true).claimsSpace())
+        assertFalse(typed(' ').claimsSpace())
+        assertFalse(down(Key.Spacebar, ctrl = true).claimsSpace())
+        assertFalse(down(Key.Spacebar, alt = true).claimsSpace())
+        assertFalse(down(Key.Enter).claimsSpace())
     }
 }

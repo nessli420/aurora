@@ -348,6 +348,32 @@ class DesktopPlaybackEngineTest {
         assertArrayEquals(shorts(high), backend.opened[1].heardBytes())
     }
 
+    @Test fun pausedExclusiveStreamsResumeWithAFreshStartAtTheHeardFrame() {
+        val frames = 96_000
+        val (file, samples) = tone("held", 48_000, 16, frames) { frame, channel -> frame % 30_000 - channel }
+        val backend = FakeBackend(exclusive = setOf(48_000 to OutputEncoding.S16), speed = 1.0, ringFrames = 9_600)
+        val engine = engine(backend)
+        engine.setOutput(null, exclusive = true)
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(file)))
+            engine.await { it.isPlaying && it.positionMs >= 300 }
+            val output = backend.last
+            val flushes = output.flushes
+            engine.pause()
+            val paused = engine.await { !it.playWhenReady && it.phase == EnginePhase.READY }
+            assertTrue(output.flushes > flushes)
+            val heardAtPause = output.heardFrames()
+            assertTrue(abs(paused.positionMs - heardAtPause * 1_000 / 48_000) <= 2)
+            engine.play()
+            log.await { EngineEvent.Ended in it }
+            assertEquals(listOf(output), backend.opened.toList())
+        }
+        val heard = backend.last.heardBytes()
+        val expected = shorts(samples)
+        assertTrue(abs(heard.size / 4 - frames) <= 48)
+        assertArrayEquals(expected.copyOfRange(expected.size - 4_000, expected.size), heard.copyOfRange(heard.size - 4_000, heard.size))
+    }
+
     @Test fun exclusiveFailureFallsBackToSharedWithAReason() {
         val (file, _) = tone("fallback", 48_000, 16, 600) { frame, _ -> frame }
         val backend = FakeBackend(exclusive = setOf(48_000 to OutputEncoding.S16), refuseExclusive = true)

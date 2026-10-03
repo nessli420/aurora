@@ -15,6 +15,10 @@ import androidx.compose.ui.input.key.utf16CodePoint
 
 enum class Shortcut { PLAY_PAUSE, PREVIOUS, NEXT, SEARCH, LIKE, QUEUE, FULLSCREEN, BACK }
 
+// a focused button would also click on space, so the window keeps the key presses and lets only the typed space through
+fun KeyEvent.claimsSpace(): Boolean =
+    key == Key.Spacebar && type != KeyEventType.Unknown && !isCtrlPressed && !isAltPressed && !isMetaPressed
+
 fun KeyEvent.shortcut(): Shortcut? {
     if (isMetaPressed) return null
     // text fields consume typed characters so an unconsumed typed space means nothing editable has focus
