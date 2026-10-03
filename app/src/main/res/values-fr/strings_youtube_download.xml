@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Télécharger depuis YouTube</string>
+    <string name="youtube_download_tile_detail">Enregistrez des titres sur cet appareil</string>
+    <string name="youtube_download_search_hint">Rechercher des titres sur YouTube Music</string>
+    <string name="youtube_download_intro">Recherchez un titre et enregistrez-le sous forme de fichier. Les téléchargements vont dans Music/Aurora et apparaissent dans votre bibliothèque locale.</string>
+    <string name="youtube_download_no_results">Aucun titre trouvé. Essayez une autre recherche.</string>
+    <string name="youtube_download_search_failed">La recherche a échoué. Vérifiez votre connexion et réessayez.</string>
+    <string name="youtube_download_action">Télécharger</string>
+    <string name="youtube_download_saved">Enregistré dans Music/Aurora</string>
+    <string name="youtube_download_failed">Échec du téléchargement. Touchez pour réessayer.</string>
+    <string name="youtube_download_saving">Enregistrement…</string>
+    <string name="youtube_download_settings">Téléchargements YouTube</string>
+    <string name="youtube_download_open_detail">Recherchez sur YouTube Music et enregistrez des titres en fichiers</string>
+    <string name="youtube_download_format">Format</string>
+    <string name="youtube_download_quality">Qualité</string>
+    <string name="youtube_download_quality_best">Meilleure</string>
+    <string name="youtube_download_quality_note">Opus conserve la meilleure qualité de YouTube. M4A est lu sur davantage d\'appareils. L\'audio est enregistré sans réencodage et la qualité disponible la plus proche est utilisée.</string>
+    <string name="youtube_download_anonymous">Télécharger anonymement</string>
+    <string name="youtube_download_anonymous_detail">Récupère les pistes en tant qu\'invité, sans votre compte YouTube. Ne désactivez que pour les pistes qui exigent d\'être connecté.</string>
+    <string name="youtube_download_artwork">Intégrer la pochette</string>
+    <string name="youtube_download_artwork_detail">Enregistre la pochette dans le fichier</string>
+</resources>

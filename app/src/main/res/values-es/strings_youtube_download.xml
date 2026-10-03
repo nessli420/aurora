@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Descargar de YouTube</string>
+    <string name="youtube_download_tile_detail">Guarda canciones en este dispositivo</string>
+    <string name="youtube_download_search_hint">Buscar canciones en YouTube Music</string>
+    <string name="youtube_download_intro">Busca una canción y guárdala como archivo. Las descargas van a Music/Aurora y aparecen en tu biblioteca local.</string>
+    <string name="youtube_download_no_results">No se encontraron canciones. Prueba otra búsqueda.</string>
+    <string name="youtube_download_search_failed">La búsqueda falló. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="youtube_download_action">Descargar</string>
+    <string name="youtube_download_saved">Guardado en Music/Aurora</string>
+    <string name="youtube_download_failed">La descarga falló. Toca para reintentar.</string>
+    <string name="youtube_download_saving">Guardando…</string>
+    <string name="youtube_download_settings">Descargas de YouTube</string>
+    <string name="youtube_download_open_detail">Busca en YouTube Music y guarda canciones como archivos</string>
+    <string name="youtube_download_format">Formato</string>
+    <string name="youtube_download_quality">Calidad</string>
+    <string name="youtube_download_quality_best">La mejor</string>
+    <string name="youtube_download_quality_note">Opus conserva la mejor calidad de YouTube. M4A funciona en más dispositivos. El audio se guarda sin recodificar y se usa la calidad disponible más cercana.</string>
+    <string name="youtube_download_anonymous">Descargar de forma anónima</string>
+    <string name="youtube_download_anonymous_detail">Obtiene las pistas como invitado, sin tu cuenta de YouTube. Desactívalo solo para pistas que requieran iniciar sesión.</string>
+    <string name="youtube_download_artwork">Incrustar carátula</string>
+    <string name="youtube_download_artwork_detail">Guarda la carátula dentro del archivo</string>
+</resources>

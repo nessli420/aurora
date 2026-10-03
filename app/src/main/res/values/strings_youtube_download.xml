@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Download from YouTube</string>
+    <string name="youtube_download_tile_detail">Save songs to this device</string>
+    <string name="youtube_download_search_hint">Search songs on YouTube Music</string>
+    <string name="youtube_download_intro">Search for a song and save it as a file. Downloads go to Music/Aurora and appear in your local library.</string>
+    <string name="youtube_download_no_results">No songs found. Try another search.</string>
+    <string name="youtube_download_search_failed">Search failed. Check your connection and try again.</string>
+    <string name="youtube_download_action">Download</string>
+    <string name="youtube_download_saved">Saved to Music/Aurora</string>
+    <string name="youtube_download_failed">Download failed. Tap to try again.</string>
+    <string name="youtube_download_saving">Saving…</string>
+    <string name="youtube_download_settings">YouTube Downloads</string>
+    <string name="youtube_download_open_detail">Search YouTube Music and save songs as files</string>
+    <string name="youtube_download_format">Format</string>
+    <string name="youtube_download_quality">Quality</string>
+    <string name="youtube_download_quality_best">Best</string>
+    <string name="youtube_download_quality_note">Opus keeps YouTube\'s best quality. M4A plays on more devices. Audio is saved without re-encoding, and the closest available quality is used.</string>
+    <string name="youtube_download_anonymous">Download Anonymously</string>
+    <string name="youtube_download_anonymous_detail">Fetch tracks as a guest without your YouTube account. Turn off only for tracks that need you to be signed in.</string>
+    <string name="youtube_download_artwork">Embed Cover Art</string>
+    <string name="youtube_download_artwork_detail">Save the cover inside the file</string>
+</resources>

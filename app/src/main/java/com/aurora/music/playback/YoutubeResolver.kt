@@ -1,14 +1,21 @@
 package com.aurora.music.playback
 
 import android.util.Log
+import com.aurora.music.data.YouTubeAudioOption
+import com.aurora.music.data.YouTubeDownloadFormat
+import com.aurora.music.data.YouTubeDownloads
+import com.aurora.music.data.YouTubeTrackTags
+import com.aurora.music.data.remote.YouTubeMusicWebSession
 import okhttp3.OkHttpClient
 import okhttp3.RequestBody.Companion.toRequestBody
+import org.schabi.newpipe.extractor.MediaFormat
 import org.schabi.newpipe.extractor.NewPipe
 import org.schabi.newpipe.extractor.ServiceList
 import org.schabi.newpipe.extractor.downloader.Downloader
 import org.schabi.newpipe.extractor.stream.StreamInfo
 import org.schabi.newpipe.extractor.stream.StreamInfoItem
 import org.schabi.newpipe.extractor.stream.DeliveryMethod
+import org.schabi.newpipe.extractor.stream.Description
 import org.schabi.newpipe.extractor.stream.StreamType
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.math.abs
@@ -68,6 +75,52 @@ class YoutubeResolver {
             }
             url
         }.getOrElse { Log.d(TAG, "resolve failed '$query': ${it.message}"); null }
+    }
+
+    data class SearchResult(val videoId: String, val title: String, val artist: String, val durationSec: Int, val thumbnailUrl: String)
+    data class DownloadInfo(val tags: YouTubeTrackTags, val thumbnailUrl: String, val options: List<YouTubeAudioOption>)
+
+    fun searchSongs(query: String): List<SearchResult> {
+        ensureInit()
+        val yt = ServiceList.YouTube
+        fun search(filter: List<String>) = yt.getSearchExtractor(query, filter, "").apply { fetchPage() }
+            .initialPage.items.filterIsInstance<StreamInfoItem>()
+        return search(listOf("music_songs")).ifEmpty { search(listOf("videos")) }.mapNotNull { item ->
+            val id = item.url.substringAfter("v=", "").take(11)
+            if (!id.matches(VIDEO_ID) || item.duration <= 0) null
+            else SearchResult(id, item.name, item.uploaderName.orEmpty(), item.duration.toInt(),
+                item.thumbnails.maxByOrNull { it.height }?.url.orEmpty())
+        }.distinctBy { it.videoId }
+    }
+
+    fun downloadInfo(videoId: String, account: YouTubeMusicWebSession? = null): DownloadInfo {
+        require(videoId.matches(VIDEO_ID))
+        ensureInit()
+        OkHttpDownloader.account.set(account)
+        val info = try {
+            StreamInfo.getInfo(ServiceList.YouTube, "https://www.youtube.com/watch?v=$videoId")
+        } finally {
+            OkHttpDownloader.account.remove()
+        }
+        val options = info.audioStreams
+            .filter { it.isUrl && it.content.isNotBlank() && it.deliveryMethod == DeliveryMethod.PROGRESSIVE_HTTP }
+            .mapNotNull { stream ->
+                val format = when {
+                    stream.format == MediaFormat.M4A -> YouTubeDownloadFormat.M4A
+                    stream.format == MediaFormat.WEBMA_OPUS || stream.format == MediaFormat.OPUS ||
+                        stream.codec.orEmpty().contains("opus", ignoreCase = true) -> YouTubeDownloadFormat.OPUS
+                    else -> null
+                }
+                format?.let { YouTubeAudioOption(stream.content, it, stream.averageBitrate) }
+            }
+        val year = runCatching { info.uploadDate?.offsetDateTime()?.year }.getOrNull()
+        val description = info.description?.let {
+            if (it.type == Description.HTML) androidx.core.text.HtmlCompat.fromHtml(it.content.orEmpty(), androidx.core.text.HtmlCompat.FROM_HTML_MODE_LEGACY).toString()
+            else it.content.orEmpty()
+        }.orEmpty()
+        return DownloadInfo(
+            YouTubeDownloads.tags(info.name.orEmpty(), info.uploaderName.orEmpty(), description, year),
+            info.thumbnails.maxByOrNull { it.height }?.url.orEmpty(), options)
     }
 
     fun resolveVideo(videoId: String, maxHeight: Int? = null): String? {
@@ -234,6 +287,13 @@ class YoutubeResolver {
                 values.forEach { builder.addHeader(name, it) }
             }
             if (request.headers()["User-Agent"].isNullOrEmpty()) builder.header("User-Agent", USER_AGENT)
+            val session = account.get()
+            val url = builder.build().url
+            if (session != null && url.isHttps && url.host == "www.youtube.com") {
+                builder.header("Cookie", session.cookie)
+                    .header("Authorization", session.authorization(System.currentTimeMillis() / 1000, "https://www.youtube.com"))
+                    .header("X-Goog-AuthUser", session.authUser)
+            }
             val data = request.dataToSend()
             val body = data?.toRequestBody(null, 0, data.size)
             builder.method(request.httpMethod(), body)
@@ -249,9 +309,13 @@ class YoutubeResolver {
         }
 
         companion object {
+            val account = ThreadLocal<YouTubeMusicWebSession?>()
             const val USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
         }
     }
 
-    private companion object { const val TAG = "YtResolver" }
+    private companion object {
+        const val TAG = "YtResolver"
+        val VIDEO_ID = Regex("[A-Za-z0-9_-]{11}")
+    }
 }

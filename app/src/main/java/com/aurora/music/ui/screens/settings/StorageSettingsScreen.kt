@@ -19,10 +19,13 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Image
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -41,7 +44,7 @@ import com.aurora.music.AuroraApplication
 import kotlinx.coroutines.launch
 
 @Composable
-fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
+fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenYouTubeDownload: () -> Unit = {}) {
     val container = LocalContextApp()
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val offline by container.settingsStore.offlineMode.collectAsStateWithLifecycle(initialValue = false)
@@ -75,6 +78,39 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             }
 
             AudioCacheSettings(container)
+
+            val youTube by container.settingsStore.youTubeDownloadPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.YouTubeDownloadPrefs())
+            val formats = com.aurora.music.data.YouTubeDownloadFormat.entries
+            val bitrates = com.aurora.music.data.YouTubeDownloadPrefs.bitrates
+            SettingsSectionTitle(appString(R.string.youtube_download_settings))
+            SettingsGroup {
+                SettingsNavRow(Icons.Filled.CloudDownload, appString(R.string.youtube_download_title),
+                    subtitle = appString(R.string.youtube_download_open_detail), onClick = onOpenYouTubeDownload)
+            }
+            SegmentedRow(appString(R.string.youtube_download_format), listOf("Opus", "M4A"), formats.indexOf(youTube.format)) { i ->
+                scope.launch { container.settingsStore.setYouTubeDownloadFormat(formats[i]) }
+            }
+            SegmentedRow(appString(R.string.youtube_download_quality),
+                bitrates.map { if (it == 0) appString(R.string.youtube_download_quality_best) else it.toString() },
+                bitrates.indexOf(youTube.maxBitrateKbps).coerceAtLeast(0)) { i ->
+                scope.launch { container.settingsStore.setYouTubeDownloadBitrate(bitrates[i]) }
+            }
+            Text(
+                appString(R.string.youtube_download_quality_note),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
+            )
+            SettingsGroup {
+                SettingsSwitchRow(Icons.Filled.VisibilityOff, appString(R.string.youtube_download_anonymous),
+                    appString(R.string.youtube_download_anonymous_detail), youTube.anonymous) { v ->
+                    scope.launch { container.settingsStore.setYouTubeDownloadAnonymous(v) }
+                }
+                SettingsRowDivider()
+                SettingsSwitchRow(Icons.Filled.Image, appString(R.string.youtube_download_artwork),
+                    appString(R.string.youtube_download_artwork_detail), youTube.embedArtwork) { v ->
+                    scope.launch { container.settingsStore.setYouTubeDownloadArtwork(v) }
+                }
+            }
 
             SettingsSectionTitle(appString(R.string.text_offline_e01fa7))
             SettingsGroup {

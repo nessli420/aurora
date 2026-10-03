@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">YouTube से डाउनलोड करें</string>
+    <string name="youtube_download_tile_detail">गाने इस डिवाइस पर सहेजें</string>
+    <string name="youtube_download_search_hint">YouTube Music पर गाने खोजें</string>
+    <string name="youtube_download_intro">कोई गाना खोजें और उसे फ़ाइल के रूप में सहेजें। डाउनलोड Music/Aurora में जाते हैं और आपकी लोकल लाइब्रेरी में दिखते हैं।</string>
+    <string name="youtube_download_no_results">कोई गाना नहीं मिला। कोई और खोज आज़माएँ।</string>
+    <string name="youtube_download_search_failed">खोज विफल रही। अपना कनेक्शन जाँचें और फिर से कोशिश करें।</string>
+    <string name="youtube_download_action">डाउनलोड करें</string>
+    <string name="youtube_download_saved">Music/Aurora में सहेजा गया</string>
+    <string name="youtube_download_failed">डाउनलोड विफल रहा। फिर से कोशिश के लिए टैप करें।</string>
+    <string name="youtube_download_saving">सहेजा जा रहा है…</string>
+    <string name="youtube_download_settings">YouTube डाउनलोड</string>
+    <string name="youtube_download_open_detail">YouTube Music पर खोजें और गाने फ़ाइलों के रूप में सहेजें</string>
+    <string name="youtube_download_format">फ़ॉर्मैट</string>
+    <string name="youtube_download_quality">क्वालिटी</string>
+    <string name="youtube_download_quality_best">सर्वश्रेष्ठ</string>
+    <string name="youtube_download_quality_note">Opus, YouTube की सबसे अच्छी क्वालिटी बनाए रखता है। M4A ज़्यादा डिवाइस पर चलता है। ऑडियो दोबारा एन्कोड किए बिना सहेजा जाता है और सबसे नज़दीकी उपलब्ध क्वालिटी इस्तेमाल होती है।</string>
+    <string name="youtube_download_anonymous">गुमनाम रूप से डाउनलोड करें</string>
+    <string name="youtube_download_anonymous_detail">ट्रैक आपके YouTube खाते के बिना, मेहमान के रूप में लाए जाते हैं। केवल उन ट्रैक के लिए बंद करें जिनके लिए साइन इन ज़रूरी है।</string>
+    <string name="youtube_download_artwork">कवर आर्ट एम्बेड करें</string>
+    <string name="youtube_download_artwork_detail">कवर को फ़ाइल के अंदर सहेजें</string>
+</resources>

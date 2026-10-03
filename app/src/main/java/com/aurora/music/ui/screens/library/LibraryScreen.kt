@@ -55,6 +55,7 @@ import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.CloudDownload
 import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.PushPin
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
@@ -169,6 +170,7 @@ fun LibraryScreen(
     onOpenFolders: () -> Unit,
     onOpenRadio: () -> Unit = {},
     onOpenPodcasts: () -> Unit = {},
+    onOpenYouTubeDownload: () -> Unit = {},
     onPlayCollection: (String, String) -> Unit,
     onShuffleCollection: (String, String) -> Unit,
     onQueueCollection: (String, String) -> Unit,
@@ -309,6 +311,7 @@ fun LibraryScreen(
                 state = state, pins = pins, canDownload = canDownload, bottom = bottom,
                 onFilter = onFilter, onOpenDetail = onOpenDetail,
                 onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts,
+                onOpenYouTubeDownload = onOpenYouTubeDownload,
             )
             LibraryFilter.SONGS -> SongsTab(
                 state = state, sort = sort, likedIds = likedIds, currentSongId = currentSongId, isPlaying = isPlaying,
@@ -397,6 +400,7 @@ private fun AllOverview(
     onOpenFolders: () -> Unit,
     onOpenRadio: () -> Unit,
     onOpenPodcasts: () -> Unit,
+    onOpenYouTubeDownload: () -> Unit,
 ) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
         // quick access tiles
@@ -407,6 +411,7 @@ private fun AllOverview(
                 if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
                 add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
                 add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
+                add(QuickTile(appString(R.string.youtube_download_title), appString(R.string.youtube_download_tile_detail), Icons.Filled.CloudDownload, "") { onOpenYouTubeDownload() })
             }
             Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 tiles.chunked(2).forEach { pair ->

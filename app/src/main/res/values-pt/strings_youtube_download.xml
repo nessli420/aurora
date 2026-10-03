@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Baixar do YouTube</string>
+    <string name="youtube_download_tile_detail">Salve músicas neste dispositivo</string>
+    <string name="youtube_download_search_hint">Buscar músicas no YouTube Music</string>
+    <string name="youtube_download_intro">Busque uma música e salve-a como arquivo. Os downloads vão para Music/Aurora e aparecem na sua biblioteca local.</string>
+    <string name="youtube_download_no_results">Nenhuma música encontrada. Tente outra busca.</string>
+    <string name="youtube_download_search_failed">A busca falhou. Verifique sua conexão e tente de novo.</string>
+    <string name="youtube_download_action">Baixar</string>
+    <string name="youtube_download_saved">Salvo em Music/Aurora</string>
+    <string name="youtube_download_failed">O download falhou. Toque para tentar de novo.</string>
+    <string name="youtube_download_saving">Salvando…</string>
+    <string name="youtube_download_settings">Downloads do YouTube</string>
+    <string name="youtube_download_open_detail">Busque no YouTube Music e salve músicas como arquivos</string>
+    <string name="youtube_download_format">Formato</string>
+    <string name="youtube_download_quality">Qualidade</string>
+    <string name="youtube_download_quality_best">Melhor</string>
+    <string name="youtube_download_quality_note">Opus mantém a melhor qualidade do YouTube. M4A toca em mais dispositivos. O áudio é salvo sem recodificação, e a qualidade disponível mais próxima é usada.</string>
+    <string name="youtube_download_anonymous">Baixar anonimamente</string>
+    <string name="youtube_download_anonymous_detail">Obtém as faixas como visitante, sem sua conta do YouTube. Desative só para faixas que exigem login.</string>
+    <string name="youtube_download_artwork">Incorporar capa</string>
+    <string name="youtube_download_artwork_detail">Salva a capa dentro do arquivo</string>
+</resources>

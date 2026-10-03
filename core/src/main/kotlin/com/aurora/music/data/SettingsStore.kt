@@ -1206,6 +1206,23 @@ class SettingsStore(private val dataStore: DataStore<Preferences>, private val f
     suspend fun setStreamWifi(v: Int) = dataStore.edit { it[Keys.STREAM_WIFI] = v }
     suspend fun setStreamCellular(v: Int) = dataStore.edit { it[Keys.STREAM_CELLULAR] = v }
     suspend fun setDownloadBitrate(v: Int) = dataStore.edit { it[Keys.DOWNLOAD_BITRATE] = v }
+
+    val youTubeDownloadPrefs: Flow<YouTubeDownloadPrefs> = dataStore.data.map { p ->
+        YouTubeDownloadPrefs(
+            format = YouTubeDownloadFormat.entries.firstOrNull { it.name == p[Keys.YOUTUBE_DOWNLOAD_FORMAT] } ?: YouTubeDownloadFormat.OPUS,
+            maxBitrateKbps = (p[Keys.YOUTUBE_DOWNLOAD_BITRATE] ?: 0).takeIf { it in YouTubeDownloadPrefs.bitrates } ?: 0,
+            anonymous = p[Keys.YOUTUBE_DOWNLOAD_ANONYMOUS] ?: true,
+            embedArtwork = p[Keys.YOUTUBE_DOWNLOAD_ARTWORK] ?: true,
+        )
+    }.distinctUntilChanged()
+
+    suspend fun setYouTubeDownloadFormat(format: YouTubeDownloadFormat) = dataStore.edit { it[Keys.YOUTUBE_DOWNLOAD_FORMAT] = format.name }
+    suspend fun setYouTubeDownloadBitrate(kbps: Int) {
+        require(kbps in YouTubeDownloadPrefs.bitrates)
+        dataStore.edit { it[Keys.YOUTUBE_DOWNLOAD_BITRATE] = kbps }
+    }
+    suspend fun setYouTubeDownloadAnonymous(enabled: Boolean) = dataStore.edit { it[Keys.YOUTUBE_DOWNLOAD_ANONYMOUS] = enabled }
+    suspend fun setYouTubeDownloadArtwork(enabled: Boolean) = dataStore.edit { it[Keys.YOUTUBE_DOWNLOAD_ARTWORK] = enabled }
     suspend fun setPreferHighRes(v: Boolean) = editManualProcessing { it[Keys.PREFER_HIRES] = v }
     suspend fun setBitPerfectUsb(v: Boolean) = editManualProcessing { it[Keys.BIT_PERFECT_USB] = v }
     suspend fun setUsbOutputMode(v: UsbOutputMode) = editManualProcessing { it[Keys.USB_OUTPUT_MODE] = v.name }

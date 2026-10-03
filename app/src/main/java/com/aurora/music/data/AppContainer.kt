@@ -244,6 +244,11 @@ class AppContainer(context: Context) {
 
     val youtubeResolver = com.aurora.music.playback.YoutubeResolver()
     val youtubeMusicCredentials = YouTubeMusicCredentials(appContext)
+    val youTubeDownloader = YouTubeDownloader(appContext, youtubeResolver, { settingsStore.youTubeDownloadPrefs.first() }) {
+        settingsStore.savedSessions.first().firstOrNull { it.type == ServerType.YOUTUBE_MUSIC }?.let { session ->
+            runCatching { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }.getOrNull()
+        }
+    }
 
     @Volatile
     private var lrclibEnabled: Boolean = true

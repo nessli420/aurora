@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">\u2067YouTube سے ڈاؤن لوڈ کریں\u2069</string>
+    <string name="youtube_download_tile_detail">\u2067گانے اس آلے پر محفوظ کریں\u2069</string>
+    <string name="youtube_download_search_hint">\u2067YouTube Music پر گانے تلاش کریں\u2069</string>
+    <string name="youtube_download_intro">\u2067کوئی گانا تلاش کریں اور اسے فائل کے طور پر محفوظ کریں۔ ڈاؤن لوڈز Music/Aurora میں جاتے ہیں اور آپ کی مقامی لائبریری میں نظر آتے ہیں۔\u2069</string>
+    <string name="youtube_download_no_results">\u2067کوئی گانا نہیں ملا۔ کوئی اور تلاش آزمائیں۔\u2069</string>
+    <string name="youtube_download_search_failed">\u2067تلاش ناکام رہی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔\u2069</string>
+    <string name="youtube_download_action">\u2067ڈاؤن لوڈ کریں\u2069</string>
+    <string name="youtube_download_saved">\u2067Music/Aurora میں محفوظ ہو گیا\u2069</string>
+    <string name="youtube_download_failed">\u2067ڈاؤن لوڈ ناکام رہا۔ دوبارہ کوشش کے لیے تھپتھپائیں۔\u2069</string>
+    <string name="youtube_download_saving">\u2067محفوظ ہو رہا ہے…\u2069</string>
+    <string name="youtube_download_settings">\u2067YouTube ڈاؤن لوڈز\u2069</string>
+    <string name="youtube_download_open_detail">\u2067YouTube Music پر تلاش کریں اور گانے فائلوں کے طور پر محفوظ کریں\u2069</string>
+    <string name="youtube_download_format">\u2067فارمیٹ\u2069</string>
+    <string name="youtube_download_quality">\u2067کوالٹی\u2069</string>
+    <string name="youtube_download_quality_best">\u2067بہترین\u2069</string>
+    <string name="youtube_download_quality_note">\u2067Opus، YouTube کی بہترین کوالٹی برقرار رکھتا ہے۔ M4A زیادہ آلات پر چلتا ہے۔ آڈیو دوبارہ انکوڈ کیے بغیر محفوظ ہوتی ہے اور قریب ترین دستیاب کوالٹی استعمال ہوتی ہے۔\u2069</string>
+    <string name="youtube_download_anonymous">\u2067گمنام طور پر ڈاؤن لوڈ کریں\u2069</string>
+    <string name="youtube_download_anonymous_detail">\u2067ٹریکس آپ کے YouTube اکاؤنٹ کے بغیر، مہمان کے طور پر حاصل کیے جاتے ہیں۔ صرف ان ٹریکس کے لیے بند کریں جن کے لیے سائن ان ضروری ہے۔\u2069</string>
+    <string name="youtube_download_artwork">\u2067کور آرٹ ایمبیڈ کریں\u2069</string>
+    <string name="youtube_download_artwork_detail">\u2067کور کو فائل کے اندر محفوظ کریں\u2069</string>
+</resources>

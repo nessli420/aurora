@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">从 YouTube 下载</string>
+    <string name="youtube_download_tile_detail">将歌曲保存到此设备</string>
+    <string name="youtube_download_search_hint">在 YouTube Music 上搜索歌曲</string>
+    <string name="youtube_download_intro">搜索歌曲并将其保存为文件。下载内容会存入 Music/Aurora，并显示在你的本地音乐库中。</string>
+    <string name="youtube_download_no_results">未找到歌曲。请尝试其他搜索。</string>
+    <string name="youtube_download_search_failed">搜索失败。请检查网络连接后重试。</string>
+    <string name="youtube_download_action">下载</string>
+    <string name="youtube_download_saved">已保存到 Music/Aurora</string>
+    <string name="youtube_download_failed">下载失败。点按重试。</string>
+    <string name="youtube_download_saving">正在保存…</string>
+    <string name="youtube_download_settings">YouTube 下载</string>
+    <string name="youtube_download_open_detail">搜索 YouTube Music 并将歌曲保存为文件</string>
+    <string name="youtube_download_format">格式</string>
+    <string name="youtube_download_quality">音质</string>
+    <string name="youtube_download_quality_best">最佳</string>
+    <string name="youtube_download_quality_note">Opus 保留 YouTube 的最佳音质。M4A 可在更多设备上播放。音频保存时不会重新编码，并使用最接近的可用音质。</string>
+    <string name="youtube_download_anonymous">匿名下载</string>
+    <string name="youtube_download_anonymous_detail">以访客身份获取曲目，不使用你的 YouTube 账号。仅在曲目需要登录时关闭。</string>
+    <string name="youtube_download_artwork">嵌入封面</string>
+    <string name="youtube_download_artwork_detail">将封面保存在文件内</string>
+</resources>

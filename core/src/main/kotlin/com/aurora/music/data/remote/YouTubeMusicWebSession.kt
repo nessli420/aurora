@@ -28,10 +28,10 @@ class YouTubeMusicWebSession(
         return this
     }
 
-    fun authorization(timestamp: Long): String {
+    fun authorization(timestamp: Long, origin: String = YouTubeMusicClient.ORIGIN): String {
         validate()
         val digest = MessageDigest.getInstance("SHA-1")
-            .digest("$timestamp ${sapisid()} ${YouTubeMusicClient.ORIGIN}".toByteArray(Charsets.UTF_8))
+            .digest("$timestamp ${sapisid()} $origin".toByteArray(Charsets.UTF_8))
             .joinToString("") { "%02x".format(it) }
         return "SAPISIDHASH ${timestamp}_$digest"
     }

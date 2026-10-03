@@ -749,7 +749,12 @@ fun AuroraApp() {
                     com.aurora.music.ui.screens.settings.PermissionsScreen(contentPadding = padding, onBack = { nav.popBackStack() })
                 }
                 composable(Routes.SETTINGS_STORAGE) {
-                    com.aurora.music.ui.screens.settings.StorageSettingsScreen(contentPadding = padding, onBack = { nav.popBackStack() })
+                    com.aurora.music.ui.screens.settings.StorageSettingsScreen(contentPadding = padding, onBack = { nav.popBackStack() },
+                        onOpenYouTubeDownload = { nav.navigate(Routes.YOUTUBE_DOWNLOAD) })
+                }
+                composable(Routes.YOUTUBE_DOWNLOAD) {
+                    com.aurora.music.ui.screens.youtube.YouTubeDownloadScreen(contentPadding = padding, onBack = { nav.popBackStack() },
+                        onOpenSettings = { nav.navigate(Routes.SETTINGS_STORAGE) { launchSingleTop = true } })
                 }
                 composable(Routes.SETTINGS_ABOUT) {
                     com.aurora.music.ui.screens.settings.AboutSettingsScreen(contentPadding = padding, onBack = { nav.popBackStack() })
@@ -1048,6 +1053,7 @@ fun AuroraApp() {
                                 } },
                                 onOpenFolders = { navController.navigate(Routes.folders()) },
                                 onOpenRadio = { navController.navigate(Routes.RADIO) },
+                                onOpenYouTubeDownload = { navController.navigate(Routes.YOUTUBE_DOWNLOAD) },
                                 onOpenPodcasts = { navController.navigate(Routes.PODCASTS) },
                                 onPlayCollection = { id, kind -> scope.launch { container.repository.detail(kind, id)?.let { d -> if (d.tracks.isNotEmpty()) playerVM.playCollection(kind, id, d.tracks, 0, d.info.songCount) } } },
                                 onShuffleCollection = { id, kind -> scope.launch { container.repository.detail(kind, id)?.let { d -> if (d.tracks.isNotEmpty()) playerVM.shuffleCollection(kind, id, d.tracks, d.info.songCount) } } },

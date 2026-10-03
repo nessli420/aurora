@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">Скачать с YouTube</string>
+    <string name="youtube_download_tile_detail">Сохранить треки на устройство</string>
+    <string name="youtube_download_search_hint">Поиск треков в YouTube Music</string>
+    <string name="youtube_download_intro">Найдите трек и сохраните его как файл. Загрузки попадают в Music/Aurora и появляются в локальной медиатеке.</string>
+    <string name="youtube_download_no_results">Треки не найдены. Попробуйте другой запрос.</string>
+    <string name="youtube_download_search_failed">Поиск не удался. Проверьте подключение и повторите попытку.</string>
+    <string name="youtube_download_action">Скачать</string>
+    <string name="youtube_download_saved">Сохранено в Music/Aurora</string>
+    <string name="youtube_download_failed">Не удалось скачать. Нажмите, чтобы повторить.</string>
+    <string name="youtube_download_saving">Сохранение…</string>
+    <string name="youtube_download_settings">Загрузки с YouTube</string>
+    <string name="youtube_download_open_detail">Поиск в YouTube Music и сохранение треков в файлы</string>
+    <string name="youtube_download_format">Формат</string>
+    <string name="youtube_download_quality">Качество</string>
+    <string name="youtube_download_quality_best">Лучшее</string>
+    <string name="youtube_download_quality_note">Opus сохраняет лучшее качество YouTube. M4A воспроизводится на большем числе устройств. Звук сохраняется без перекодирования; используется ближайшее доступное качество.</string>
+    <string name="youtube_download_anonymous">Скачивать анонимно</string>
+    <string name="youtube_download_anonymous_detail">Получать треки как гость, без аккаунта YouTube. Отключайте только для треков, которым нужен вход в аккаунт.</string>
+    <string name="youtube_download_artwork">Встраивать обложку</string>
+    <string name="youtube_download_artwork_detail">Сохранять обложку внутри файла</string>
+</resources>

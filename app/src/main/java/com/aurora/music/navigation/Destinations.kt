@@ -40,6 +40,7 @@ object Routes {
     const val SETTINGS_COMPARISON = "settings_comparison"
     const val SETTINGS_PRESET_RULES = "settings_preset_rules"
     const val SETTINGS_STORAGE = "settings_storage"
+    const val YOUTUBE_DOWNLOAD = "youtube_download"
     const val SETTINGS_GESTURES = "settings_gestures"
     const val SETTINGS_INTEGRATIONS = "settings_integrations"
     const val SETTINGS_INTEGRATION_LYRICS = "settings_integration_lyrics"

@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="youtube_download_title">YouTube\'dan indir</string>
+    <string name="youtube_download_tile_detail">Şarkıları bu cihaza kaydet</string>
+    <string name="youtube_download_search_hint">YouTube Music\'te şarkı ara</string>
+    <string name="youtube_download_intro">Bir şarkı arayın ve dosya olarak kaydedin. İndirilenler Music/Aurora klasörüne gider ve yerel kitaplığınızda görünür.</string>
+    <string name="youtube_download_no_results">Şarkı bulunamadı. Başka bir arama deneyin.</string>
+    <string name="youtube_download_search_failed">Arama başarısız oldu. Bağlantınızı denetleyip tekrar deneyin.</string>
+    <string name="youtube_download_action">İndir</string>
+    <string name="youtube_download_saved">Music/Aurora klasörüne kaydedildi</string>
+    <string name="youtube_download_failed">İndirme başarısız oldu. Tekrar denemek için dokunun.</string>
+    <string name="youtube_download_saving">Kaydediliyor…</string>
+    <string name="youtube_download_settings">YouTube indirmeleri</string>
+    <string name="youtube_download_open_detail">YouTube Music\'te arayın ve şarkıları dosya olarak kaydedin</string>
+    <string name="youtube_download_format">Biçim</string>
+    <string name="youtube_download_quality">Kalite</string>
+    <string name="youtube_download_quality_best">En iyi</string>
+    <string name="youtube_download_quality_note">Opus, YouTube\'un en iyi kalitesini korur. M4A daha fazla cihazda çalışır. Ses yeniden kodlanmadan kaydedilir ve mevcut en yakın kalite kullanılır.</string>
+    <string name="youtube_download_anonymous">Anonim olarak indir</string>
+    <string name="youtube_download_anonymous_detail">Parçaları YouTube hesabınız olmadan, misafir olarak alır. Yalnızca oturum açmanızı gerektiren parçalar için kapatın.</string>
+    <string name="youtube_download_artwork">Kapak resmini göm</string>
+    <string name="youtube_download_artwork_detail">Kapağı dosyanın içine kaydet</string>
+</resources>
