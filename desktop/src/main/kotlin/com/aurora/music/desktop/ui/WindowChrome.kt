@@ -6,6 +6,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import com.aurora.music.desktop.natives.WindowNative
+import com.aurora.music.desktop.platform.HostPlatform
 
 @Composable
 fun WindowChrome(windowHandle: Long) {
@@ -15,7 +16,7 @@ fun WindowChrome(windowHandle: Long) {
     val text = colors.onBackground.toArgb()
     val border = colors.outline.toArgb()
     LaunchedEffect(windowHandle, dark, caption, text, border) {
-        if (windowHandle == 0L) return@LaunchedEffect
+        if (windowHandle == 0L || !HostPlatform.isWindows) return@LaunchedEffect
         WindowNative.setDarkMode(windowHandle, dark)
         WindowNative.setCaptionColor(windowHandle, caption)
         WindowNative.setTextColor(windowHandle, text)

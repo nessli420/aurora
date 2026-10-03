@@ -4,6 +4,7 @@ import androidx.compose.ui.awt.ComposeWindow
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.desktop.closeAndJoin
 import com.aurora.music.desktop.platform.DesktopPaths
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.util.AppLog
 import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
@@ -24,6 +25,7 @@ import javax.swing.SwingUtilities
 
 class MediaControlsSmokeTest {
     @Test fun publishesTheCurrentTrackToWindowsMediaControls() {
+        assumeTrue(HostPlatform.isWindows)
         assumeTrue("set AURORA_LIVE_SMTC=1 to talk to the Windows media controls", System.getenv("AURORA_LIVE_SMTC") == "1")
         val root = Files.createTempDirectory("aurora-smtc").toFile()
         val cover = File(root, "cover.png").also { ImageIO.write(BufferedImage(64, 64, BufferedImage.TYPE_INT_RGB), "png", it) }

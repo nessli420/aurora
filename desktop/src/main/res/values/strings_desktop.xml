@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz is unavailable; using %2$d Hz."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Keep Aurora playing in the notification area when the window closes"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Larger buffers ride out heavy system load; smaller ones react faster to seeking and volume. Applies when the output reopens."</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Logs"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Open in full page"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Output buffer"</string>

@@ -7,6 +7,7 @@ import com.aurora.music.desktop.natives.OutputEncoding
 import com.aurora.music.desktop.natives.OutputStatus
 import com.aurora.music.desktop.natives.SystemNative
 import com.aurora.music.desktop.natives.WasapiOutput
+import com.aurora.music.desktop.platform.HostPlatform
 
 interface AudioOutput : AutoCloseable {
     val id: Long
@@ -43,6 +44,10 @@ class WasapiAudioOutput(private val output: WasapiOutput) : AudioOutput {
     override fun status() = output.status()
     override fun close() = output.close()
 }
+
+fun defaultOutputBackend(): OutputBackend = if (HostPlatform.isWindows) WasapiBackend else JavaSoundBackend
+
+val outputApiName: String get() = if (HostPlatform.isWindows) "WASAPI" else "Java Sound"
 
 object WasapiBackend : OutputBackend {
     override fun devices() = AudioDevices.list()

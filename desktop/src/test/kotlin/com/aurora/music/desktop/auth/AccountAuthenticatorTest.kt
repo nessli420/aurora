@@ -3,6 +3,7 @@ package com.aurora.music.desktop.auth
 import com.aurora.music.R
 import com.aurora.music.data.ServerType
 import com.aurora.music.desktop.platform.BuildInfo
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.platform.desktopClientInfo
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appString
@@ -66,7 +67,7 @@ class AccountAuthenticatorTest {
         assertEquals(appString(R.string.text_server_error_c28ed6, 503), failure { authenticator.subsonic(base, "alice", "bad") })
     }
 
-    @Test fun jellyfinAuthenticatesAsTheWindowsClient() = runBlocking {
+    @Test fun jellyfinAuthenticatesAsTheHostClient() = runBlocking {
         json("""{"AccessToken":"token-1","User":{"Id":"user-1","Name":"Alice"}}""")
         val session = authenticator.jellyfin(base, "alice", "secret")
         assertEquals(ServerType.JELLYFIN, session.type)
@@ -79,7 +80,7 @@ class AccountAuthenticatorTest {
         assertEquals("/Users/AuthenticateByName", request.path)
         val header = request.getHeader("X-Emby-Authorization").orEmpty()
         assertTrue(header, header.contains("Client=\"Aurora\""))
-        assertTrue(header, header.contains("Device=\"Windows\""))
+        assertTrue(header, header.contains("Device=\"${HostPlatform.name}\""))
         assertTrue(header, header.contains("Version=\"${BuildInfo.VERSION_NAME}\""))
         assertTrue(header, header.contains("DeviceId=\"${session.clientToken}\""))
         assertTrue(request.body.readUtf8().contains("\"Username\":\"alice\""))

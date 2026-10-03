@@ -1,8 +1,10 @@
 package com.aurora.music.desktop.audio.decode
 
+import com.aurora.music.desktop.platform.HostPlatform
 import org.junit.Assert.assertArrayEquals
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -89,9 +91,19 @@ class FfmpegProbeTest {
     }
 
     @Test fun fileUrisBecomeNativePaths() {
+        assumeTrue(HostPlatform.isWindows)
         assertEquals("C:\\Music\\My Album\\01 ü 音.flac", localPath("file:///C:/Music/My%20Album/01%20%C3%BC%20%E9%9F%B3.flac"))
         assertEquals("\\\\server\\share\\Music\\a b.flac", localPath("file://server/share/Music/a%20b.flac"))
         assertEquals("file:C:\\Music\\a b.flac", ffmpegUrl("file:///C:/Music/a%20b.flac"))
+    }
+
+    @Test fun fileUrisBecomePosixPaths() {
+        assumeTrue(HostPlatform.isLinux)
+        assertEquals("/home/me/My Album/01 ü 音.flac", localPath("file:///home/me/My%20Album/01%20%C3%BC%20%E9%9F%B3.flac"))
+        assertEquals("file:/home/me/a b.flac", ffmpegUrl("file:///home/me/a%20b.flac"))
+    }
+
+    @Test fun remoteSourcesStayUrls() {
         assertEquals("https://host/a.mp3?x=1", ffmpegUrl("https://host/a.mp3?x=1"))
         assertEquals("https://host/rest/stream.view", describe("https://user:pw@host/rest/stream.view?t=secret"))
     }

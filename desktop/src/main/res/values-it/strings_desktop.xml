@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz non è disponibile; viene usato %2$d Hz."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Continua a riprodurre Aurora nell\'area di notifica quando la finestra si chiude"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Buffer più grandi reggono meglio un carico di sistema elevato; quelli più piccoli reagiscono più rapidamente a salti e volume. Si applica quando l\'uscita viene riaperta."</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Log"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Apri a pagina intera"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Buffer di uscita"</string>

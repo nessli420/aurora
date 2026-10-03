@@ -1,11 +1,13 @@
 package com.aurora.music.desktop.natives
 
+import com.aurora.music.desktop.platform.HostPlatform
 import org.junit.Assert.*
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 
 class WasapiOutputLiveTest {
     @Test fun aPausedStreamStaysValidAcrossIdleProbesAndResumes() {
+        assumeTrue(HostPlatform.isWindows)
         assumeTrue("set AURORA_LIVE_AUDIO=1 to use the real audio device", System.getenv("AURORA_LIVE_AUDIO") == "1")
         val rate = AudioDevices.mixFormat()?.sampleRate ?: 48_000
         WasapiOutput.open(sampleRate = rate, bufferMs = 200).use { output ->

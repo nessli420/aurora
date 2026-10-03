@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz 不可用；正在使用 %2$d Hz。"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"关闭窗口后让 Aurora 在通知区域继续播放"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"较大的缓冲区能应对较高的系统负载；较小的缓冲区对跳转和音量变化响应更快。在输出重新打开时生效。"</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"日志"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"在完整页面中打开"</string>
     <string name="text_output_buffer_61b372" formatted="false">"输出缓冲区"</string>

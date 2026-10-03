@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz kullanılamıyor; %2$d Hz kullanılıyor."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Pencere kapandığında Aurora bildirim alanında çalmaya devam etsin"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Büyük arabellekler ağır sistem yükünü kaldırır; küçükler konum değiştirmeye ve ses düzeyine daha hızlı tepki verir. Çıkış yeniden açıldığında uygulanır."</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Günlükler"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Tam sayfada aç"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Çıkış arabelleği"</string>

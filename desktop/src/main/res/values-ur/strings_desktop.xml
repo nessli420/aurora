@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"\u2067%1$d Hz دستیاب نہیں؛ %2$d Hz استعمال ہو رہا ہے۔\u2069"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"\u2067ونڈو بند ہونے پر Aurora کو نوٹیفکیشن ایریا میں چلتا رکھیں\u2069"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"\u2067بڑے بفرز بھاری سسٹم لوڈ برداشت کر لیتے ہیں؛ چھوٹے بفرز سیک اور والیوم پر تیزی سے ردعمل دیتے ہیں۔ آؤٹ پٹ دوبارہ کھلنے پر لاگو ہوتا ہے۔\u2069"</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"\u2067لاگز\u2069"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"\u2067پورے صفحے میں کھولیں\u2069"</string>
     <string name="text_output_buffer_61b372" formatted="false">"\u2067آؤٹ پٹ بفر\u2069"</string>

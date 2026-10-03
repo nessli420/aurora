@@ -6,6 +6,7 @@ import com.aurora.music.desktop.natives.SmtcButton
 import com.aurora.music.desktop.natives.SmtcRepeat
 import com.aurora.music.desktop.natives.SmtcSession
 import com.aurora.music.desktop.natives.SmtcStatus
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.util.AppLog
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -34,7 +35,7 @@ class MediaControls internal constructor(
     private var job: Job? = null
 
     fun attach(hwnd: Long) {
-        if (session != null) return
+        if (session != null || !HostPlatform.isWindows) return
         val created = runCatching { SmtcSession.create(hwnd, Callbacks()) }
             .onFailure { AppLog.w(TAG, "Windows media controls are unavailable", it) }
             .getOrNull() ?: return

@@ -13,8 +13,10 @@ object DesktopRuntime {
         val instance = InstanceLock.acquire(paths.local) ?: return null
         AppLog.sink = FileLog(paths.logs)::write
         Thread.setDefaultUncaughtExceptionHandler { thread, error -> AppLog.e(TAG, "Uncaught exception on ${thread.name}", error) }
-        runCatching { check(SystemNative.setAppUserModelId(APP_USER_MODEL_ID)) }
-            .onFailure { AppLog.w(TAG, "Could not set the app user model id", it) }
+        if (HostPlatform.isWindows) {
+            runCatching { check(SystemNative.setAppUserModelId(APP_USER_MODEL_ID)) }
+                .onFailure { AppLog.w(TAG, "Could not set the app user model id", it) }
+        }
         thread(isDaemon = true, name = "ffmpeg-init") {
             runCatching { FfmpegRuntime.init(paths.javacpp) }.onFailure { AppLog.e(TAG, "FFmpeg failed to load", it) }
         }

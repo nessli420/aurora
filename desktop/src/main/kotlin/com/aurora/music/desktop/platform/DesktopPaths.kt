@@ -31,6 +31,7 @@ class DesktopPaths(val roaming: File, val local: File) {
             val home = File(System.getProperty("user.home"))
             fun root(variable: String, fallback: String) =
                 File(System.getenv(variable)?.takeIf(String::isNotBlank)?.let(::File) ?: File(home, fallback), "Aurora")
+            if (!HostPlatform.isWindows) return DesktopPaths(root("XDG_CONFIG_HOME", ".config"), root("XDG_DATA_HOME", ".local/share"))
             return DesktopPaths(root("APPDATA", "AppData/Roaming"), root("LOCALAPPDATA", "AppData/Local"))
         }
     }

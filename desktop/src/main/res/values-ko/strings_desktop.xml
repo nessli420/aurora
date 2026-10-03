@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz를 사용할 수 없어 %2$d Hz를 사용합니다."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"창을 닫아도 알림 영역에서 Aurora 재생 유지"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"버퍼가 크면 시스템 부하가 높을 때도 안정적이고, 작으면 탐색과 볼륨에 더 빨리 반응합니다. 출력을 다시 열 때 적용됩니다."</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"로그"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"전체 페이지로 열기"</string>
     <string name="text_output_buffer_61b372" formatted="false">"출력 버퍼"</string>

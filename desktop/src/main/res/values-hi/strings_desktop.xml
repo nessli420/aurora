@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz उपलब्ध नहीं है; %2$d Hz इस्तेमाल हो रहा है।"</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"विंडो बंद होने पर Aurora को नोटिफ़िकेशन एरिया में चलता रखें"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"बड़े बफ़र भारी सिस्टम लोड को झेल लेते हैं; छोटे बफ़र सीक और वॉल्यूम पर तेज़ी से प्रतिक्रिया देते हैं। आउटपुट दोबारा खुलने पर लागू होता है।"</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"लॉग"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"पूरे पेज में खोलें"</string>
     <string name="text_output_buffer_61b372" formatted="false">"आउटपुट बफ़र"</string>

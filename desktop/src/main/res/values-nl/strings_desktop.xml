@@ -24,6 +24,7 @@
     <string name="text_hz_is_unavailable_using_hz_14de1c">"%1$d Hz is niet beschikbaar; %2$d Hz wordt gebruikt."</string>
     <string name="text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5" formatted="false">"Aurora laten doorspelen in het systeemvak wanneer het venster sluit"</string>
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Grotere buffers vangen zware systeembelasting op; kleinere reageren sneller op spoelen en volume. Geldt zodra de uitvoer opnieuw wordt geopend."</string>
+    <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Logboeken"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Openen op volledige pagina"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Uitvoerbuffer"</string>

@@ -5,6 +5,10 @@ import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.stringPreferencesKey
+import com.aurora.music.data.ServerType
+import com.aurora.music.data.Session
+import com.aurora.music.desktop.auth.AccountAuthenticator
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +21,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertThrows
 import org.junit.Assert.assertTrue
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -45,6 +50,7 @@ class ProtectedPreferencesTest {
     private fun stored(text: String): Boolean = text in file.readBytes().toString(Charsets.ISO_8859_1)
 
     @Test fun settingsAreSealedWithDpapiAndReadBack() {
+        assumeTrue(HostPlatform.isWindows)
         withStore { store -> store.edit { it[token] = "secret-token-42" } }
         assertTrue(file.isFile)
         assertFalse(stored("secret-token-42"))
@@ -52,6 +58,7 @@ class ProtectedPreferencesTest {
     }
 
     @Test fun aPlaintextFileIsSealedWhenItIsOpened() {
+        assumeTrue(HostPlatform.isWindows)
         runBlocking {
             val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
             PreferenceDataStoreFactory.create(scope = scope) { file }.edit { it[token] = "legacy-token-7" }
@@ -68,6 +75,51 @@ class ProtectedPreferencesTest {
         assertFalse(stored("moved-token"))
         assertEquals("moved-token", withStore(sealed) { it.data.first()[token] })
         assertNull(withStore(ProtectedPreferencesSerializer(protect = { it.reversedArray() }, unprotect = { null })) { it.data.first()[token] })
+    }
+
+    @Test fun credentialsStayInMemoryWhenNothingCanSealThem() {
+        val theme = stringPreferencesKey("ui_theme")
+        listOf<((ByteArray) -> ByteArray?)?>(null, { null }).forEach { protect ->
+            val running = ProtectedPreferencesSerializer(protect = protect)
+            val current = withStore(running) { store ->
+                store.edit { it[token] = "secret-token-42"; it[theme] = "dark" }
+                store.edit { it[theme] = "light" }
+                store.data.first()
+            }
+            assertEquals("secret-token-42", current[token])
+            assertFalse(stored("secret-token-42"))
+            val restarted = withStore(ProtectedPreferencesSerializer(protect = protect)) { it.data.first() }
+            assertNull(restarted[token])
+            assertEquals("light", restarted[theme])
+        }
+    }
+
+    @Test fun theLocalLibrarySessionIsKeptWithoutASecureStore() {
+        val type = stringPreferencesKey("server_type")
+        val saved = stringPreferencesKey("saved_sessions")
+        val remote = Session("https://music.example.com", "mara", "pepper-salt-9", "remote-token-7")
+        withStore(ProtectedPreferencesSerializer(protect = null)) { store ->
+            store.edit {
+                it[type] = ServerType.LOCAL.name
+                it[token] = "local"
+                it[saved] = Gson().toJson(listOf(remote, AccountAuthenticator.LOCAL_SESSION))
+            }
+        }
+        assertFalse(stored("remote-token-7"))
+        val reopened = withStore(ProtectedPreferencesSerializer(protect = null)) { it.data.first() }
+        assertEquals("local", reopened[token])
+        assertEquals(Gson().toJson(listOf(AccountAuthenticator.LOCAL_SESSION)), reopened[saved])
+    }
+
+    @Test fun aPlaintextFileLosesItsCredentialsWithoutASecureStore() {
+        runBlocking {
+            val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+            PreferenceDataStoreFactory.create(scope = scope) { file }.edit { it[token] = "legacy-token-7" }
+            scope.coroutineContext.job.cancelAndJoin()
+        }
+        assertTrue(stored("legacy-token-7"))
+        assertNull(withStore(ProtectedPreferencesSerializer(protect = null)) { it.data.first()[token] })
+        assertFalse(stored("legacy-token-7"))
     }
 
     @Test fun lockedRenamesAreRetriedUntilTheyGoThrough() {

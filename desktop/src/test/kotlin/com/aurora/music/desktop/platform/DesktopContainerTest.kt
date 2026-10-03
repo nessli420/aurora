@@ -116,7 +116,7 @@ class DesktopContainerTest {
         assertFalse("pepper-salt-9" in settings)
         assertFalse(File(paths.roaming, "queue_state.json").exists())
         assertTrue(File(paths.local, "queue_state.json").isFile)
-        container { assertEquals(secret, settingsStore.session.first()) }
+        container { assertEquals(secret.takeIf { HostPlatform.isWindows }, settingsStore.session.first()) }
     }
 
     @Test fun switchingAccountsRebuildsTheBackendAndBumpsTheEpoch() = container {

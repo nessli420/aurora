@@ -12,6 +12,10 @@ val appVersion = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
 
+val hostWindows = System.getProperty("os.name").startsWith("Windows")
+val nativeClassifier = if (hostWindows) "windows-x86_64" else "linux-x86_64"
+val resourcesTarget = if (hostWindows) "windows-x64" else "linux-x64"
+
 java {
     sourceCompatibility = JavaVersion.VERSION_21
     targetCompatibility = JavaVersion.VERSION_21
@@ -23,7 +27,7 @@ kotlin {
 
 dependencies {
     implementation(project(":core"))
-    implementation(compose.desktop.windows_x64)
+    implementation(if (hostWindows) compose.desktop.windows_x64 else compose.desktop.linux_x64)
     implementation(compose.material3)
     implementation(compose.materialIconsExtended)
     implementation(libs.compose.ui.backhandler)
@@ -35,8 +39,8 @@ dependencies {
     implementation(libs.coil3.network.okhttp)
     implementation(libs.javacpp)
     implementation(libs.ffmpeg)
-    runtimeOnly(variantOf(libs.javacpp) { classifier("windows-x86_64") })
-    runtimeOnly(variantOf(libs.ffmpeg) { classifier("windows-x86_64") })
+    runtimeOnly(variantOf(libs.javacpp) { classifier(nativeClassifier) })
+    runtimeOnly(variantOf(libs.ffmpeg) { classifier(nativeClassifier) })
     testImplementation(libs.junit)
     testImplementation(libs.okhttp.mockwebserver)
 }
@@ -45,30 +49,33 @@ val nativeSource = rootProject.layout.projectDirectory.dir("native")
 val nativeBuildDir = layout.buildDirectory.dir("native")
 val appResources = layout.buildDirectory.dir("appResources")
 
-val configureNative by tasks.registering(Exec::class) {
-    inputs.file(nativeSource.file("CMakeLists.txt"))
-    outputs.file(nativeBuildDir.map { it.file("CMakeCache.txt") })
-    commandLine("cmake", "-S", nativeSource.asFile.path, "-B", nativeBuildDir.get().asFile.path, "-A", "x64")
-}
+if (hostWindows) {
+    val configureNative by tasks.registering(Exec::class) {
+        inputs.file(nativeSource.file("CMakeLists.txt"))
+        outputs.file(nativeBuildDir.map { it.file("CMakeCache.txt") })
+        commandLine("cmake", "-S", nativeSource.asFile.path, "-B", nativeBuildDir.get().asFile.path, "-A", "x64")
+    }
 
-val buildNative by tasks.registering(Exec::class) {
-    dependsOn(configureNative)
-    inputs.dir(nativeSource)
-    outputs.dir(nativeBuildDir.map { it.dir("bin") })
-    commandLine("cmake", "--build", nativeBuildDir.get().asFile.path, "--config", "Release", "--parallel")
-}
+    val buildNative by tasks.registering(Exec::class) {
+        dependsOn(configureNative)
+        inputs.dir(nativeSource)
+        outputs.dir(nativeBuildDir.map { it.dir("bin") })
+        commandLine("cmake", "--build", nativeBuildDir.get().asFile.path, "--config", "Release", "--parallel")
+    }
 
-val syncNative by tasks.registering(Sync::class) {
-    dependsOn(buildNative)
-    from(nativeBuildDir.map { it.dir("bin") }) { include("*.dll") }
-    into(appResources.map { it.dir("windows-x64") })
-}
+    val syncNative by tasks.registering(Sync::class) {
+        dependsOn(buildNative)
+        from(nativeBuildDir.map { it.dir("bin") }) { include("*.dll") }
+        into(appResources.map { it.dir(resourcesTarget) })
+    }
 
-tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(syncNative) }
+    tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(syncNative) }
+    tasks.test { dependsOn(syncNative) }
+}
 
 tasks.test {
-    dependsOn(syncNative)
-    systemProperty("compose.application.resources.dir", appResources.get().dir("windows-x64").asFile.path)
+    systemProperty("compose.application.resources.dir", appResources.get().dir(resourcesTarget).asFile.path)
+    if (!hostWindows) environment("LC_ALL", "C.UTF-8")
 }
 
 compose.desktop {
@@ -76,7 +83,7 @@ compose.desktop {
         mainClass = "com.aurora.music.desktop.MainKt"
         jvmArgs += listOf("-XX:+UseZGC", "-XX:+ZGenerational", "-Dfile.encoding=UTF-8")
         nativeDistributions {
-            targetFormats(TargetFormat.Msi, TargetFormat.Exe)
+            if (hostWindows) targetFormats(TargetFormat.Msi, TargetFormat.Exe) else targetFormats(TargetFormat.Deb)
             packageName = "Aurora"
             packageVersion = appVersion.getProperty("versionName")
             description = "Aurora music player"
@@ -90,6 +97,12 @@ compose.desktop {
                 dirChooser = true
                 shortcut = true
                 menu = true
+            }
+            linux {
+                packageName = "aurora"
+                menuGroup = "AudioVideo;Audio;Player"
+                appCategory = "sound"
+                shortcut = true
             }
         }
     }

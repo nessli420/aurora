@@ -9,6 +9,7 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
@@ -33,6 +34,7 @@ class InstanceLockTest {
     }
 
     @Test fun theForegroundGrantLinksAgainstTheNativeLibrary() {
+        assumeTrue(HostPlatform.isWindows)
         SystemNative.allowForeground(ProcessHandle.current().pid())
     }
 }

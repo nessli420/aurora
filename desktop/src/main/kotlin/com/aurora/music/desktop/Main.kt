@@ -24,6 +24,7 @@ import com.aurora.music.desktop.natives.WindowNative
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.platform.DesktopPaths
 import com.aurora.music.desktop.platform.DesktopRuntime
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.player.DesktopPlayer
 import com.aurora.music.desktop.player.playerDependencies
 import com.aurora.music.desktop.resources.AuroraLogo
@@ -45,6 +46,7 @@ import java.awt.Dimension
 import java.awt.Frame
 import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
+import java.awt.SystemTray
 import kotlin.math.roundToInt
 import com.aurora.music.desktop.platform.WindowPlacement as SavedWindow
 
@@ -76,10 +78,13 @@ fun main() {
         var visible by remember { mutableStateOf(true) }
         var quitting by remember { mutableStateOf(false) }
         val closeToTray by settings.closeToTray.collectAsState(false)
+        val trayAvailable = remember { runCatching { SystemTray.isSupported() }.getOrDefault(false) }
         val icon = rememberVectorPainter(AuroraLogo)
-        var systemAccent by remember { mutableStateOf(runCatching { WindowNative.accentColor() }.getOrNull()?.let { Color(it) }) }
+        var systemAccent by remember {
+            mutableStateOf(if (HostPlatform.isWindows) runCatching { WindowNative.accentColor() }.getOrNull()?.let { Color(it) } else null)
+        }
         DisposableEffect(Unit) {
-            val watch = runCatching { WindowNative.addAccentListener { systemAccent = Color(it) } }.getOrNull()
+            val watch = if (HostPlatform.isWindows) runCatching { WindowNative.addAccentListener { systemAccent = Color(it) } }.getOrNull() else null
             onDispose { watch?.close() }
         }
 
@@ -129,7 +134,7 @@ fun main() {
         AppTray(icon, player, onShow = ::show, onQuit = ::quit)
 
         Window(
-            onCloseRequest = { if (closeToTray) visible = false else quit() },
+            onCloseRequest = { if (closeToTray && trayAvailable) visible = false else quit() },
             state = windowState,
             visible = visible,
             title = "Aurora",

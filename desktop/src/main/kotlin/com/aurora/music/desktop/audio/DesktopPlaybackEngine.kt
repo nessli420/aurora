@@ -50,7 +50,7 @@ import java.util.concurrent.locks.LockSupport
 import kotlin.random.Random
 
 class DesktopPlaybackEngine(
-    private val backend: OutputBackend = WasapiBackend,
+    private val backend: OutputBackend = defaultOutputBackend(),
     private val resolver: StreamResolver = StreamResolver.Default,
     config: EngineConfig = EngineConfig(),
     random: Random = Random.Default,

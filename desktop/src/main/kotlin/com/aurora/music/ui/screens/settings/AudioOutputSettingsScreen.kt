@@ -50,6 +50,7 @@ import com.aurora.music.desktop.natives.AudioDevices
 import com.aurora.music.desktop.natives.DeviceKind
 import com.aurora.music.desktop.natives.MixFormat
 import com.aurora.music.desktop.platform.DesktopSettings
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.desktop.ui.LocalPlayer
 import com.aurora.music.playback.engine.OutputRatePolicy
@@ -80,7 +81,7 @@ fun AudioOutputSettingsScreen(
     val systemDefault = devices.firstOrNull { it.isDefault }
     val activeId = preferred?.takeIf { id -> devices.any { it.id == id } } ?: systemDefault?.id
     val mix by produceState<MixFormat?>(null, activeId) {
-        value = withContext(Dispatchers.IO) { runCatching { AudioDevices.mixFormat(activeId) }.getOrNull() }
+        if (HostPlatform.isWindows) value = withContext(Dispatchers.IO) { runCatching { AudioDevices.mixFormat(activeId) }.getOrNull() }
     }
 
     Column(Modifier.fillMaxWidth()) {

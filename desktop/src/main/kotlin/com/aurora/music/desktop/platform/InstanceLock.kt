@@ -71,7 +71,7 @@ class InstanceLock private constructor(
         }.isSuccess
 
         private fun grantForeground(pid: Long) {
-            runCatching { SystemNative.allowForeground(pid) }
+            if (HostPlatform.isWindows) runCatching { SystemNative.allowForeground(pid) }
         }
     }
 }

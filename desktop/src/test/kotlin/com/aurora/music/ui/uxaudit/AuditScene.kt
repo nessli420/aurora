@@ -182,12 +182,14 @@ internal class AuditScene(
         )
     }
 
-    fun settle(realMillis: Long = 900): Image {
+    fun settle(realMillis: Long = 900, minFrames: Int = 16): Image {
         val until = System.currentTimeMillis() + realMillis
         var image = ui.frame(32)
-        while (System.currentTimeMillis() < until) {
+        var frames = 1
+        while (System.currentTimeMillis() < until || frames < minFrames) {
             Thread.sleep(15)
             image = ui.frame(32)
+            frames++
         }
         return image
     }

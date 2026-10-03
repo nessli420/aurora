@@ -42,7 +42,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.ServerType
+import com.aurora.music.desktop.audio.outputApiName
 import com.aurora.music.desktop.platform.BuildInfo
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 
 private class Notice(val name: String, val licenseName: String, val detail: String, val source: String)
@@ -109,7 +111,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 Column {
                     Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                     Text(appString(R.string.text_version_d2f210, (BuildInfo.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(appString(R.string.text_windows_java_2566af, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appString(if (HostPlatform.isWindows) R.string.text_windows_java_2566af else R.string.text_linux_java_b7923f, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             SettingsGroup {
@@ -129,7 +131,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     InfoRow(appString(R.string.text_signed_in_as_a02107), session?.username ?: "—")
                 }
                 SettingsRowDivider(20.dp)
-                InfoRow(appString(R.string.text_playback_engine_0255b8), "FFmpeg ${ffmpegVersion()} · WASAPI")
+                InfoRow(appString(R.string.text_playback_engine_0255b8), "FFmpeg ${ffmpegVersion()} · $outputApiName")
                 SettingsRowDivider(20.dp)
                 InfoRow("Compose Multiplatform", BuildInfo.COMPOSE_VERSION)
             }
