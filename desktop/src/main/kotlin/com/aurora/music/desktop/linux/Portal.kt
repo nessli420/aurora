@@ -1,5 +1,7 @@
 package com.aurora.music.desktop.linux
 
+import com.aurora.music.R
+import com.aurora.music.localization.appString
 import org.freedesktop.dbus.Struct
 import org.freedesktop.dbus.connections.impl.DBusConnection
 import org.freedesktop.dbus.types.UInt32
@@ -54,7 +56,7 @@ class SleepInhibitor(private val connection: () -> DBusConnection? = SessionBus:
         val bus = connection() ?: return
         release = runCatching {
             val handle = bus.getRemoteObject(PORTAL_BUS, PORTAL_PATH, PortalInhibit::class.java)
-                .Inhibit("", UInt32(SUSPEND), mapOf("reason" to Variant("Playing music")))
+                .Inhibit("", UInt32(SUSPEND), mapOf("reason" to Variant(appString(R.string.text_playing_music_af9695))))
             val close: () -> Unit = { runCatching { bus.getRemoteObject(PORTAL_BUS, handle.path, PortalRequest::class.java).Close() } }
             close
         }.getOrNull()

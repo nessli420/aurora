@@ -33,6 +33,7 @@
     <string name="text_logs_126dd3" formatted="false">"Dzienniki"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Otwórz na pełnej stronie"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Bufor wyjścia"</string>
+    <string name="text_playing_music_af9695" formatted="false">"Odtwarzanie muzyki"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Format miksu w trybie współdzielonym"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"Tryb współdzielony miksuje Aurora z innymi aplikacjami przez systemowy serwer dźwięku z częstotliwością 48 kHz. Włącz tryb wyłączny, aby odtwarzać bit-perfect."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Tryb współdzielony miksuje Aurora z innymi aplikacjami przez systemowy serwer dźwięku z częstotliwością 48 kHz."</string>

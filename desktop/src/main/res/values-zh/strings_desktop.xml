@@ -33,6 +33,7 @@
     <string name="text_logs_126dd3" formatted="false">"日志"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"在完整页面中打开"</string>
     <string name="text_output_buffer_61b372" formatted="false">"输出缓冲区"</string>
+    <string name="text_playing_music_af9695" formatted="false">"正在播放音乐"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"共享模式混音格式"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"共享模式会通过系统声音服务器，以 48 kHz 将 Aurora 与其他应用混合。开启独占模式可实现 bit-perfect 播放。"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"共享模式会通过系统声音服务器，以 48 kHz 将 Aurora 与其他应用混合。"</string>

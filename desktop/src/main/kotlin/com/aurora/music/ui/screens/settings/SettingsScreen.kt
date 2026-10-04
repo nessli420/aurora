@@ -65,6 +65,7 @@ import com.aurora.music.data.SignalPath
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.desktop.ui.LocalPlayer
+import com.aurora.music.desktop.ui.LocalTrayAvailable
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.localizedSignalLabel
 import com.aurora.music.navigation.Routes
@@ -214,10 +215,12 @@ fun SettingsScreen(
                             appString(R.string.simple_mode_description), simpleMode) { enabled ->
                             scope.launch { container.settingsStore.setSimpleMode(enabled) }
                         }
-                        SettingsRowDivider()
-                        SettingsSwitchRow(Icons.Filled.Minimize, appString(R.string.text_close_to_tray_f91cc6),
-                            appString(R.string.text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5), closeToTray) { enabled ->
-                            scope.launch { container.desktopSettings.setCloseToTray(enabled) }
+                        if (LocalTrayAvailable.current) {
+                            SettingsRowDivider()
+                            SettingsSwitchRow(Icons.Filled.Minimize, appString(R.string.text_close_to_tray_f91cc6),
+                                appString(R.string.text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5), closeToTray) { enabled ->
+                                scope.launch { container.desktopSettings.setCloseToTray(enabled) }
+                            }
                         }
                         if (onReplayTour != null) {
                             SettingsRowDivider()

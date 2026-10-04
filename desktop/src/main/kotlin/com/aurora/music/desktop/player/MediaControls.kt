@@ -35,9 +35,11 @@ class MediaControls internal constructor(
     @Volatile private var session: MediaSession? = null
     private val metadataLock = Any()
     private var job: Job? = null
+    @Volatile private var raise: () -> Unit = {}
 
-    fun attach(hwnd: Long) {
+    fun attach(hwnd: Long, onRaise: () -> Unit = {}) {
         if (session != null) return
+        raise = onRaise
         val created = runCatching {
             when {
                 HostPlatform.isWindows -> SmtcSession.create(hwnd, Callbacks())
@@ -150,6 +152,8 @@ class MediaControls internal constructor(
                 })
             }
         }
+
+        override fun onRaise() = raise()
     }
 
     private companion object {

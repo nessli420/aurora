@@ -1,6 +1,7 @@
 package com.aurora.music.ui.settings.general
 
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.remember
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.AccentMode
@@ -16,6 +17,7 @@ import com.aurora.music.data.UiPrefs
 import com.aurora.music.data.accountKey
 import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.ui.LocalDesktopContainer
+import com.aurora.music.desktop.ui.LocalTrayAvailable
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.ui.screens.settings.AboutSettingsScreen
 import com.aurora.music.ui.screens.settings.AccountsScreen
@@ -51,20 +53,22 @@ class GeneralSettingsTest {
     private val jellyfin = Session("http://192.168.1.20:8096", "mara", "", "jf", ServerType.JELLYFIN, userId = "u1")
     private val local = AccountAuthenticator.LOCAL_SESSION
 
-    private fun root(name: String, simpleMode: Boolean = false, backup: Boolean = true, opened: MutableList<String>) =
-        GeneralSettingsScene(name, width = 380, height = 1800, seed = {
+    private fun root(name: String, simpleMode: Boolean = false, backup: Boolean = true, tray: Boolean = true, height: Int = 1800, opened: MutableList<String>) =
+        GeneralSettingsScene(name, width = 380, height = height, seed = {
             settingsStore.saveSession(navidrome)
             settingsStore.setSimpleMode(simpleMode)
         }) {
-            SettingsScreen(
-                contentPadding = padding, username = "Mara", server = navidrome.server, onBack = {},
-                onOpenPlayback = { opened += "playback" }, onOpenOutput = { opened += "output" }, onOpenLoudness = { opened += "loudness" },
-                onOpenAdvancedAudio = { opened += "advanced" }, onOpenSignalPath = { opened += "signal" }, onOpenEq = { opened += "eq" },
-                onOpenVisualizer = { opened += "visualizer" }, onOpenSonic = { opened += "sonic" }, onOpenSources = { opened += "sources" },
-                onOpenDownloads = { opened += "storage" }, onOpenAppearance = { opened += "appearance" }, onOpenLanguage = { opened += "language" },
-                onOpenIntegrations = { opened += "integrations" }, onOpenAbout = { opened += "about" }, onOpenProfile = { opened += "profile" },
-                onOpenAccounts = { opened += "accounts" }, onOpenBackup = if (backup) ({ opened += "backup" }) else null, onLogout = { opened += "logout" },
-            )
+            CompositionLocalProvider(LocalTrayAvailable provides tray) {
+                SettingsScreen(
+                    contentPadding = padding, username = "Mara", server = navidrome.server, onBack = {},
+                    onOpenPlayback = { opened += "playback" }, onOpenOutput = { opened += "output" }, onOpenLoudness = { opened += "loudness" },
+                    onOpenAdvancedAudio = { opened += "advanced" }, onOpenSignalPath = { opened += "signal" }, onOpenEq = { opened += "eq" },
+                    onOpenVisualizer = { opened += "visualizer" }, onOpenSonic = { opened += "sonic" }, onOpenSources = { opened += "sources" },
+                    onOpenDownloads = { opened += "storage" }, onOpenAppearance = { opened += "appearance" }, onOpenLanguage = { opened += "language" },
+                    onOpenIntegrations = { opened += "integrations" }, onOpenAbout = { opened += "about" }, onOpenProfile = { opened += "profile" },
+                    onOpenAccounts = { opened += "accounts" }, onOpenBackup = if (backup) ({ opened += "backup" }) else null, onLogout = { opened += "logout" },
+                )
+            }
         }
 
     @Test fun settingsRootOpensDesktopDestinations() {
@@ -88,6 +92,12 @@ class GeneralSettingsTest {
         }
         val withoutBackup = root("root-no-backup", backup = false, opened = mutableListOf()).use { it.shot() }
         assertTrue(withoutBackup.differsFrom(full))
+    }
+
+    @Test fun closeToTrayIsOnlyOfferedWhenThereIsATray() {
+        val withTray = root("root-tray", height = 2600, opened = mutableListOf()).use { it.shot() }
+        val withoutTray = root("root-no-tray", tray = false, height = 2600, opened = mutableListOf()).use { it.shot() }
+        assertTrue(withoutTray.inkRows() < withTray.inkRows())
     }
 
     @Test fun signalPathRowSummarisesTheLivePath() {

@@ -1,0 +1,46 @@
+name: Linux packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+          cache: gradle
+
+      - name: Install packaging tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends cmake g++ libasound2-dev dpkg-dev rpm desktop-file-utils
+
+      - name: Build packages
+        run: bash ./gradlew --no-daemon :desktop:packageDeb :desktop:packageRpm :desktop:packageAppImage
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aurora-deb
+          path: desktop/build/compose/binaries/main/deb/*.deb
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aurora-rpm
+          path: desktop/build/compose/binaries/main/rpm/*.rpm
+          if-no-files-found: error
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: aurora-appimage
+          path: desktop/build/compose/binaries/main/appimage/*.AppImage
+          if-no-files-found: error

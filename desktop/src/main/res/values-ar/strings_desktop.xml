@@ -33,6 +33,7 @@
     <string name="text_logs_126dd3" formatted="false">"\u2067السجلات\u2069"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"\u2067الفتح في صفحة كاملة\u2069"</string>
     <string name="text_output_buffer_61b372" formatted="false">"\u2067المخزن المؤقت للإخراج\u2069"</string>
+    <string name="text_playing_music_af9695" formatted="false">"\u2067تشغيل الموسيقى\u2069"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"\u2067صيغة المزج في الوضع المشترك\u2069"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"\u2067يمزج الوضع المشترك Aurora مع التطبيقات الأخرى عبر خادم الصوت في النظام بتردد 48 kHz. فعّل الوضع الحصري للتشغيل المطابق بت ببت.\u2069"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"\u2067يمزج الوضع المشترك Aurora مع التطبيقات الأخرى عبر خادم الصوت في النظام بتردد 48 kHz.\u2069"</string>

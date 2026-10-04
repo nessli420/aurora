@@ -33,6 +33,7 @@
     <string name="text_logs_126dd3" formatted="false">"로그"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"전체 페이지로 열기"</string>
     <string name="text_output_buffer_61b372" formatted="false">"출력 버퍼"</string>
+    <string name="text_playing_music_af9695" formatted="false">"음악 재생 중"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"공유 모드 믹스 형식"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"공유 모드는 시스템 사운드 서버를 통해 48 kHz로 Aurora와 다른 앱을 섞습니다. 비트 퍼펙트 재생을 하려면 독점 모드를 켜세요."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"공유 모드는 시스템 사운드 서버를 통해 48 kHz로 Aurora와 다른 앱을 섞습니다."</string>

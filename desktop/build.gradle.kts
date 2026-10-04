@@ -12,7 +12,17 @@ val appVersion = Properties().apply {
     rootProject.file("version.properties").inputStream().use { load(it) }
 }
 
-val hostWindows = System.getProperty("os.name").startsWith("Windows")
+val hostOs: String = System.getProperty("os.name")
+val hostWindows = hostOs.startsWith("Windows")
+val hostLinux = hostOs.startsWith("Linux")
+
+if (!hostWindows && !hostLinux) {
+    gradle.taskGraph.whenReady {
+        if (allTasks.any { it.project == project }) {
+            throw GradleException("The Aurora desktop app builds on Windows and Linux only; $hostOs is not supported yet.")
+        }
+    }
+}
 val nativeClassifier = if (hostWindows) "windows-x86_64" else "linux-x86_64"
 val resourcesTarget = if (hostWindows) "windows-x64" else "linux-x64"
 
@@ -78,7 +88,7 @@ if (hostWindows) {
 
     tasks.matching { it.name == "prepareAppResources" }.configureEach { dependsOn(syncNative) }
     tasks.test { dependsOn(syncNative) }
-} else {
+} else if (hostLinux) {
     val alsaSource = nativeSource.dir("alsa")
     val alsaBuildDir = layout.buildDirectory.dir("native-alsa")
 
@@ -107,7 +117,7 @@ if (hostWindows) {
 
 tasks.test {
     systemProperty("compose.application.resources.dir", appResources.get().dir(resourcesTarget).asFile.path)
-    if (!hostWindows) {
+    if (hostLinux) {
         environment("LC_ALL", "C.UTF-8")
         environment("DBUS_SESSION_BUS_ADDRESS", "unix:path=/nonexistent/aurora-test-bus")
     }
@@ -117,15 +127,16 @@ compose.desktop {
     application {
         mainClass = "com.aurora.music.desktop.MainKt"
         jvmArgs += listOf("-XX:+UseZGC", "-XX:+ZGenerational", "-Dfile.encoding=UTF-8")
+        if (hostLinux) jvmArgs += "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED"
         nativeDistributions {
-            if (hostWindows) targetFormats(TargetFormat.Msi, TargetFormat.Exe) else targetFormats(TargetFormat.Deb)
+            if (hostWindows) targetFormats(TargetFormat.Msi, TargetFormat.Exe)
             packageName = "Aurora"
             packageVersion = appVersion.getProperty("versionName")
             description = "Aurora music player"
             vendor = "Aurora"
             appResourcesRootDir.set(appResources)
             modules("java.management", "java.naming", "java.sql", "jdk.crypto.ec", "jdk.unsupported")
-            if (!hostWindows) modules("jdk.security.auth")
+            if (hostLinux) modules("jdk.security.auth")
             windows {
                 menuGroup = "Aurora"
                 upgradeUuid = "67dc3d5a-e732-4a4a-b9a6-d1126d48bca5"
@@ -135,15 +146,13 @@ compose.desktop {
                 menu = true
             }
             linux {
-                packageName = "aurora"
                 iconFile.set(project.file("packaging/aurora.png"))
-                menuGroup = "AudioVideo;Audio;Player"
-                appCategory = "sound"
-                shortcut = true
             }
         }
     }
 }
+
+if (hostLinux) apply(from = "linux-packaging.gradle.kts")
 
 val androidRes = rootProject.layout.projectDirectory.dir("app/src/main/res")
 val desktopRes = layout.projectDirectory.dir("src/main/res")

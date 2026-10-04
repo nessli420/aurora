@@ -23,6 +23,7 @@ class MprisSessionTest {
         override fun onSeek(positionMs: Long) { events += "seek:$positionMs" }
         override fun onShuffle(enabled: Boolean) { events += "shuffle:$enabled" }
         override fun onRepeat(mode: SmtcRepeat) { events += "repeat:$mode" }
+        override fun onRaise() { events += "raise" }
     }
 
     private fun MediaSession.playing() {
@@ -55,7 +56,10 @@ class MprisSessionTest {
                 assertEquals(200_000_000L, metadata["mpris:length"])
                 val art = File(URI(metadata["mpris:artUrl"] as String))
                 assertTrue(art.readBytes().contentEquals(byteArrayOf(1, 2, 3)))
-                assertEquals("Aurora", properties.GetAll(ROOT)["Identity"]?.value)
+                val root = properties.GetAll(ROOT).mapValues { it.value.value }
+                assertEquals("Aurora", root["Identity"])
+                assertEquals(true, root["CanRaise"])
+                assertEquals(LinuxDesktop.ID, root["DesktopEntry"])
 
                 val remote = client.getRemoteObject(NAME, PATH, MediaPlayer2Player::class.java)
                 remote.Next()
@@ -72,6 +76,8 @@ class MprisSessionTest {
                 assertEquals("Paused", changed.get(5, TimeUnit.SECONDS).propertiesChanged["PlaybackStatus"]?.value)
                 remote.PlayPause()
                 assertEquals("button:PLAY", recorder.events.last())
+                client.getRemoteObject(NAME, PATH, MediaPlayer2::class.java).Raise()
+                assertEquals("raise", recorder.events.last())
             }
         }
     }

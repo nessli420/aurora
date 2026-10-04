@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Aurora
+GenericName=Music Player
+Comment=Play your music library and home music servers
+Exec=aurora
+Icon=aurora-Aurora
+Terminal=false
+Categories=AudioVideo;Audio;Player;
+Keywords=music;player;audio;library;navidrome;subsonic;jellyfin;plex;
+StartupNotify=true
+StartupWMClass=aurora-Aurora

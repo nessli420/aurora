@@ -33,6 +33,7 @@
     <string name="text_logs_126dd3" formatted="false">"Günlükler"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Tam sayfada aç"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Çıkış arabelleği"</string>
+    <string name="text_playing_music_af9695" formatted="false">"Müzik çalınıyor"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Paylaşımlı mod miks biçimi"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"Paylaşımlı mod, Aurora\'yı sistem ses sunucusu üzerinden 48 kHz\'de diğer uygulamalarla karıştırır. Bit-perfect oynatma için özel modu açın."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Paylaşımlı mod, Aurora\'yı sistem ses sunucusu üzerinden 48 kHz\'de diğer uygulamalarla karıştırır."</string>

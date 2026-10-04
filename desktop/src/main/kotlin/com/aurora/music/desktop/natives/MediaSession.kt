@@ -6,6 +6,7 @@ interface MediaSession : AutoCloseable {
         fun onSeek(positionMs: Long) {}
         fun onShuffle(enabled: Boolean) {}
         fun onRepeat(mode: SmtcRepeat) {}
+        fun onRaise() {}
     }
 
     fun metadata(title: String?, artist: String?, album: String? = null, albumArtist: String? = null, thumbnail: ByteArray? = null): Boolean

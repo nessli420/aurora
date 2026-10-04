@@ -139,10 +139,10 @@ class MprisSession private constructor(
         when (iface) {
             ROOT -> mapOf(
                 "CanQuit" to Variant(false),
-                "CanRaise" to Variant(false),
+                "CanRaise" to Variant(true),
                 "HasTrackList" to Variant(false),
                 "Identity" to Variant("Aurora"),
-                "DesktopEntry" to Variant("aurora-Aurora"),
+                "DesktopEntry" to Variant(LinuxDesktop.ID),
                 "SupportedUriSchemes" to Variant(emptyList<String>(), "as"),
                 "SupportedMimeTypes" to Variant(emptyList<String>(), "as"),
             )
@@ -170,7 +170,7 @@ class MprisSession private constructor(
     private inner class Player : MediaPlayer2, MediaPlayer2Player, Properties {
         override fun getObjectPath() = PATH
 
-        override fun Raise() {}
+        override fun Raise() = callbacks.onRaise()
         override fun Quit() {}
 
         override fun Next() = callbacks.onButton(SmtcButton.NEXT)

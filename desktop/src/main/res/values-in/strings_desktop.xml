@@ -33,6 +33,7 @@
     <string name="text_logs_126dd3" formatted="false">"Log"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Buka di halaman penuh"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Buffer output"</string>
+    <string name="text_playing_music_af9695" formatted="false">"Memutar musik"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Format mix mode bersama"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"Mode bersama mencampur Aurora dengan aplikasi lain melalui server suara sistem pada 48 kHz. Aktifkan mode eksklusif untuk pemutaran bit-perfect."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"Mode bersama mencampur Aurora dengan aplikasi lain melalui server suara sistem pada 48 kHz."</string>

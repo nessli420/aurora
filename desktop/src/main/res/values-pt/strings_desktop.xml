@@ -33,6 +33,7 @@
     <string name="text_logs_126dd3" formatted="false">"Logs"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Abrir em página inteira"</string>
     <string name="text_output_buffer_61b372" formatted="false">"Buffer de saída"</string>
+    <string name="text_playing_music_af9695" formatted="false">"Reproduzindo música"</string>
     <string name="text_shared_mode_mix_format_4a5bc8" formatted="false">"Formato de mixagem do modo compartilhado"</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_0c8e9d" formatted="false">"O modo compartilhado mistura o Aurora com outros apps pelo servidor de som do sistema, a 48 kHz. Ative o modo exclusivo para reprodução bit-perfect."</string>
     <string name="text_shared_mode_mixes_aurora_with_other_apps_through_the_system_sound_ad2dd3" formatted="false">"O modo compartilhado mistura o Aurora com outros apps pelo servidor de som do sistema, a 48 kHz."</string>
