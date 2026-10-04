@@ -24,6 +24,14 @@ class UsbAudioDescriptorsTest {
         assertNotNull(raw.copy(interval = 2).rawUnsupportedReason(true))
     }
 
+    @Test fun highSpeedPcmAcceptsAFullSingleTransactionPacket() {
+        val pcm = UsbAudioDescriptors.parse(uac2()).formats.single()
+        assertNull(pcm.copy(maxPacketSize = 776).unsupportedReason)
+        assertTrue(pcm.copy(maxPacketSize = 776).fits(384000))
+        assertNull(pcm.copy(maxPacketSize = 1024).unsupportedReason)
+        assertNotNull(pcm.copy(maxPacketSize = 1025).unsupportedReason)
+    }
+
     @Test fun highBandwidthDescriptorsRejectReservedTransactionCountsAndOversizedPayloads() {
         fun endpoint(packet: Int): UsbDescriptorReport {
             val bytes = uac2()
@@ -138,7 +146,8 @@ class UsbAudioDescriptorsTest {
         assertNotNull(format.copy(endpointFeedback = -1).unsupportedReason)
         assertNotNull(format.copy(descriptorRates = emptyList()).unsupportedReason)
         assertNotNull(format.copy(maxPacketSize = 1024).unsupportedReason)
-        assertNotNull(format.copy(fullSpeed = false).unsupportedReason)
+        assertNull(format.copy(fullSpeed = false).unsupportedReason)
+        assertNotNull(format.copy(fullSpeed = false, maxPacketSize = 1025).unsupportedReason)
     }
 
     @Test fun clockRangesValidateLengthsAndRespectDiscreteSteps() {

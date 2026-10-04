@@ -50,7 +50,7 @@ data class UsbAudioFormat(
         formatType != 1 -> "The USB format is not Type I."
         channels !in 1..2 -> "Direct output supports mono or stereo."
         interval != 1 -> "The USB endpoint interval is unsupported."
-        maxPacketSize !in 1..(if (experimentalDsd) 3072 else if (fullSpeed) 1023 else 512) -> "The USB packet size exceeds the driver budget."
+        maxPacketSize !in 1..(if (experimentalDsd) 3072 else if (fullSpeed) 1023 else 1024) -> "The USB packet size exceeds the driver budget."
         protocol == 0x20 && (clockSourceId <= 0 || clockControls and 1 == 0) -> "The active USB clock cannot be verified."
         protocol == 0 && descriptorRates.isEmpty() -> "The USB sample rates are not declared."
         protocol == 0 && !frequencyControl && descriptorRates.singleOrNull()?.let { it.minimum == it.maximum } != true ->

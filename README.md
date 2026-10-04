@@ -84,7 +84,7 @@ Starting with 2.7.0, Aurora also runs on Windows 10 and 11 (64-bit) as a native 
 - **Bit-perfect output.** Play through the shared Windows mixer, or switch to exclusive mode so Aurora sets the device's sample rate and bit depth itself. With processing off and volume at 100%, the audio reaches your DAC unchanged, and **Signal Path** shows every stage along the way.
 - **Fits into Windows.** Media keys and the Windows media overlay control playback, the title bar follows your theme and accent colour, and Aurora can stay in the system tray when you close the window. Press Space to play or pause, Ctrl+←/→ to skip, Ctrl+F to search and F11 for a full-screen player.
 
-Download `Aurora-2.7.0.msi` or the `.exe` installer from the [latest release](https://github.com/nessli420/aurora/releases/latest). Java is included, so nothing else needs installing. The installer is not code-signed yet, so Windows SmartScreen may ask you to confirm the first launch.
+Download `Aurora-2.8.0.msi` or the `.exe` installer from the [latest release](https://github.com/nessli420/aurora/releases/latest). Java is included, so nothing else needs installing. The installer is not code-signed yet, so Windows SmartScreen may ask you to confirm the first launch.
 
 The desktop app is new, and some Android features are not available there yet: YouTube Music, Green Music App, internet radio, podcasts, the tag editor, Cast and network output, DSD output, alarms and extensions. Playback speed also changes pitch for now.
 
@@ -94,10 +94,10 @@ The same desktop app runs on 64-bit (x86_64) Linux distributions with glibc 2.35
 
 | Package | Install |
 | --- | --- |
-| Debian, Ubuntu and derivatives | `sudo apt install ./aurora_2.7.0_amd64.deb` |
-| Fedora | `sudo dnf install ./aurora-2.7.0-1.x86_64.rpm` |
-| openSUSE | `sudo zypper install ./aurora-2.7.0-1.x86_64.rpm` |
-| Any distribution (AppImage) | `chmod +x Aurora-2.7.0-x86_64.AppImage`, then run it. If it does not start, install your distribution's FUSE package or run it with `--appimage-extract-and-run`. |
+| Debian, Ubuntu and derivatives | `sudo apt install ./aurora_2.8.0_amd64.deb` |
+| Fedora | `sudo dnf install ./aurora-2.8.0-1.x86_64.rpm` |
+| openSUSE | `sudo zypper install ./aurora-2.8.0-1.x86_64.rpm` |
+| Any distribution (AppImage) | `chmod +x Aurora-2.8.0-x86_64.AppImage`, then run it. If it does not start, install your distribution's FUSE package or run it with `--appimage-extract-and-run`. |
 
 The packages add Aurora to your app menu. Media keys and the desktop's media widget control playback through MPRIS, and Aurora keeps the computer awake while music plays. Server passwords are protected by your keyring (GNOME Keyring, KWallet or another Secret Service provider); without one, they are only remembered until Aurora closes. **Close to tray** appears only on desktops with a system tray, which on GNOME needs the AppIndicator extension.
 

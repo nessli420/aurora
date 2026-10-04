@@ -678,8 +678,9 @@ class PlaybackService : MediaLibraryService() {
         },
     )
 
-    private fun requestBitPerfect(device: android.media.AudioDeviceInfo?, track: AudioSink.AudioTrackConfig?, on: Boolean) {
-        val key = "${device?.id}:${track?.sampleRate}:${track?.encoding}:${track?.channelConfig}:$on"
+    private fun requestBitPerfect(device: android.media.AudioDeviceInfo?, track: AudioSink.AudioTrackConfig?, on: Boolean,
+        exactOnly: Boolean = true) {
+        val key = "${device?.id}:${track?.sampleRate}:${track?.encoding}:${track?.channelConfig}:$on:$exactOnly"
         if (key == mixerRequestKey) return
         mixerRequestKey = key
         grantedBitPerfect = false
@@ -699,17 +700,19 @@ class PlaybackService : MediaLibraryService() {
             deviceSupportsBitPerfect = supported.isNotEmpty()
             mixerRequestDetail = if (supported.isEmpty()) "Device exposes no bit-perfect mixer attributes"
                 else "No bit-perfect mixer attribute matches this AudioTrack format"
-            // A grant for a different rate/depth/channel layout is not useful to this AudioTrack.
-            val exact = supported.firstOrNull {
-                it.format.sampleRate == track.sampleRate && it.format.encoding == track.encoding &&
-                    it.format.channelMask == track.channelConfig
-            } ?: return@runCatching
-            grantedBitPerfect = am.setPreferredMixerAttributes(attrs, device, exact)
-            mixerRequestDetail = if (grantedBitPerfect) "Matching mixer preference accepted; actual route and HAL behavior remain unverified"
-                else "Matching mixer preference was not accepted"
+            val wanted = MixerFormat(track.sampleRate, track.encoding, track.channelConfig)
+            val chosen = BitPerfectMixerChoice.choose(supported.map { MixerFormat(it.format.sampleRate, it.format.encoding, it.format.channelMask) },
+                wanted, exactOnly) ?: return@runCatching
+            val attribute = supported.first { MixerFormat(it.format.sampleRate, it.format.encoding, it.format.channelMask) == chosen }
+            grantedBitPerfect = am.setPreferredMixerAttributes(attrs, device, attribute)
+            mixerRequestDetail = when {
+                !grantedBitPerfect -> "Matching mixer preference was not accepted"
+                chosen == wanted -> "Matching mixer preference accepted; actual route and HAL behavior remain unverified"
+                else -> "Bit-perfect mixer preference accepted at the track rate in the device's sample format; Android's conversion is not observed"
+            }
             if (grantedBitPerfect) {
                 mixerRequestedDevice = device
-                grantedMixerFormat = pcmFormat(track.sampleRate, track.encoding, Integer.bitCount(track.channelConfig))
+                grantedMixerFormat = pcmFormat(chosen.sampleRate, chosen.encoding, Integer.bitCount(chosen.channelMask))
             }
         }
     }
@@ -985,13 +988,17 @@ class PlaybackService : MediaLibraryService() {
         val device = requestedOutputDevice()
         // Preserve the existing opportunistic mixer request for Automatic output. An attached USB
         // device is only a request candidate here; it is never reported as the observed audio route.
+        val opportunisticMixer = !usb && !bitPerfect && useFloatOut && !usePrecisionProcessing
+        // Exclusive USB that fell back to Android asks for the bit-perfect mixer at the track rate, as 1.x did.
+        val exclusiveFallback = !usb && bitPerfect
         val automaticMixerCandidate = if (device == null && container.preferredAudioDeviceId.value == 0 &&
-            !usb && !bitPerfect && useFloatOut && !usePrecisionProcessing) {
+            (opportunisticMixer || exclusiveFallback)) {
             (getSystemService(AUDIO_SERVICE) as android.media.AudioManager)
                 .getDevices(android.media.AudioManager.GET_DEVICES_OUTPUTS).firstOrNull { isUsb(it.type) }
         } else null
         val mixerDevice = device ?: automaticMixerCandidate
-        requestBitPerfect(mixerDevice, track, !usb && !bitPerfect && useFloatOut && !usePrecisionProcessing && mixerDevice != null && isUsb(mixerDevice.type))
+        requestBitPerfect(mixerDevice, track, (opportunisticMixer || exclusiveFallback) && mixerDevice != null && isUsb(mixerDevice.type),
+            exactOnly = !exclusiveFallback)
         if (state != null && (!usb || processedUsb) && raw != null && !state.spectrumBusy &&
             (player.isPlaying || state.spectrum == null || state.spectrumGeneration != state.beforeMeter.spectrum.generation) &&
             System.nanoTime() - state.spectrumRequestedAt > 450_000_000L) {

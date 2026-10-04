@@ -303,7 +303,7 @@ JNIEXPORT jlong JNICALL Java_com_decent_usbaudio_UsbAudioStream_nativeUsbAudioCr
     const int packetsPerSecond = speed == 2 ? 1000 : 8000;
     if ((speed != 3 && !(speed == 2 && wireFormat == 0)) || iface < 0 || out <= 0 || out >= 0x80 ||
         (feedback > 0 && (feedback < 0x80 || feedback > 255)) || rate < 8000 || rate > (wireFormat == 0 ? 384000 : wireFormat == 1 ? 2822400 : 1411200) ||
-        channels < 1 || channels > 2 || (bits != 16 && bits != 24 && bits != 32) || validBits < 16 || validBits > bits || maxPacket <= 0 || maxPacket > (wireFormat != 0 ? 3072 : speed == 2 ? 1023 : 512) ||
+        channels < 1 || channels > 2 || (bits != 16 && bits != 24 && bits != 32) || validBits < 16 || validBits > bits || maxPacket <= 0 || maxPacket > (wireFormat != 0 ? 3072 : speed == 2 ? 1023 : 1024) ||
         std::ceil(rate * (feedback > 0 ? 1.01 : 1.0) / packetsPerSecond) * channels * (bits / 8) > maxPacket ||
         wireFormat < 0 || wireFormat > 2 || (wireFormat == 1 && (bits < 24 || validBits < 24)) ||
         (wireFormat == 2 && (bits != 32 || validBits != 32)) ||
