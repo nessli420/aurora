@@ -88,7 +88,7 @@ Download `Aurora-2.8.0.msi` or the `.exe` installer from the [latest release](ht
 
 The desktop app is new, and some Android features are not available there yet: YouTube Music, Green Music App, internet radio, podcasts, the tag editor, Cast and network output, DSD output, alarms and extensions. Playback speed also changes pitch for now.
 
-## Linux desktop
+## Linux desktop (BETA)
 
 The same desktop app runs on 64-bit (x86_64) Linux distributions with glibc 2.35 or newer, such as Ubuntu 22.04 and Debian 12 or later. Java is included in every package.
 
