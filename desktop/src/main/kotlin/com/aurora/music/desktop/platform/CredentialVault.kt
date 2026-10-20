@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.platform
 
+import com.aurora.music.desktop.linux.SecretServiceStore
 import com.aurora.music.util.AppLog
 import java.security.SecureRandom
 import javax.crypto.Cipher
@@ -57,11 +58,14 @@ class CredentialVault(private val store: SecretStore, private val random: Secure
         }
         .getOrNull()
 
-    private companion object {
-        const val TAG = "CredentialVault"
-        const val TRANSFORMATION = "AES/GCM/NoPadding"
-        const val KEY_BYTES = 32
-        const val IV_BYTES = 12
-        const val TAG_BITS = 128
+    companion object {
+        // one keyring key for everything aurora seals on linux, so two vaults never race to create different keys
+        val system: CredentialVault? by lazy { if (HostPlatform.isLinux) CredentialVault(SecretServiceStore()) else null }
+
+        private const val TAG = "CredentialVault"
+        private const val TRANSFORMATION = "AES/GCM/NoPadding"
+        private const val KEY_BYTES = 32
+        private const val IV_BYTES = 12
+        private const val TAG_BITS = 128
     }
 }

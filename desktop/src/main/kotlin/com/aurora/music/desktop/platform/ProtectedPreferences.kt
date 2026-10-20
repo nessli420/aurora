@@ -9,7 +9,6 @@ import androidx.datastore.preferences.core.PreferencesSerializer
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.stringPreferencesKey
 import com.aurora.music.data.withoutCredentials
-import com.aurora.music.desktop.linux.SecretServiceStore
 import com.aurora.music.desktop.natives.SystemNative
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.runBlocking
@@ -30,7 +29,7 @@ class ProtectedPreferencesSerializer(
     private val protect: ((ByteArray) -> ByteArray?)? = if (HostPlatform.isWindows) { { SystemNative.protect(it, null) } } else null,
     private val unprotect: (ByteArray) -> ByteArray? = if (HostPlatform.isWindows) { { SystemNative.unprotect(it, null) } } else { { null } },
     private val scrub: (Preferences) -> Preferences = Preferences::withoutCredentials,
-    private val vault: CredentialVault? = if (HostPlatform.isLinux) CredentialVault(SecretServiceStore()) else null,
+    private val vault: CredentialVault? = if (HostPlatform.isLinux) CredentialVault.system else null,
 ) : OkioSerializer<Preferences> {
     @Volatile
     private var unsealed: Pair<Preferences, Preferences>? = null

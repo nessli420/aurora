@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"Masukkan 0=dB: volume perangkat keras DAC saat ini relatif terhadap keluaran penuh."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"Atenuasi volume perangkat keras"</string>
     <string name="levels_desktop_volume" formatted="false">"Volume Aurora diukur langsung. Kalibrasi pada volume perangkat keras DAC saat ini."</string>
+    <string name="location_linux_off" formatted="false">"Akses lokasi untuk Aurora nonaktif. Aktifkan layanan lokasi di pengaturan privasi desktop Anda dan izinkan Aurora, lalu coba lagi."</string>
     <string name="location_open_windows_settings" formatted="false">"Buka pengaturan lokasi"</string>
     <string name="location_unsupported" formatted="false">"Lokasi tidak tersedia di sistem ini."</string>
     <string name="location_windows_off" formatted="false">"Windows memblokir lokasi untuk aplikasi desktop. Aktifkan akses lokasi, termasuk untuk aplikasi desktop, lalu coba lagi."</string>

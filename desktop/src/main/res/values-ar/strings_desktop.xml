@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"\u2067أدخل 0=dB: مستوى صوت DAC الحالي مقارنة بالحد الأقصى.\u2069"</string>
     <string name="levels_desktop_hardware_points" formatted="false">"\u2067توهين مستوى صوت الجهاز\u2069"</string>
     <string name="levels_desktop_volume" formatted="false">"\u2067يُقاس مستوى صوت Aurora مباشرة. عايِر عند مستوى صوت DAC الحالي.\u2069"</string>
+    <string name="location_linux_off" formatted="false">"\u2067الوصول إلى الموقع متوقف لـ Aurora. فعّل خدمات الموقع في إعدادات الخصوصية لسطح المكتب واسمح لـ Aurora، ثم حاول مرة أخرى.\u2069"</string>
     <string name="location_open_windows_settings" formatted="false">"\u2067فتح إعدادات الموقع\u2069"</string>
     <string name="location_unsupported" formatted="false">"\u2067الموقع غير متاح على هذا النظام.\u2069"</string>
     <string name="location_windows_off" formatted="false">"\u2067يمنع Windows الموقع عن تطبيقات سطح المكتب. فعّل الوصول إلى الموقع، بما في ذلك لتطبيقات سطح المكتب، ثم حاول مرة أخرى.\u2069"</string>

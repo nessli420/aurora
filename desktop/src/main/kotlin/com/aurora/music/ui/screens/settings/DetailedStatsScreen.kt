@@ -186,6 +186,7 @@ private fun LocationAccess() {
     val uri = androidx.compose.ui.platform.LocalUriHandler.current
     when {
         !placesStore.supported -> Note(appString(R.string.location_unsupported))
+        denied && !com.aurora.music.desktop.platform.HostPlatform.isWindows -> Note(appString(R.string.location_linux_off))
         denied -> {
             Note(appString(R.string.location_windows_off))
             TextButton(onClick = { runCatching { uri.openUri("ms-settings:privacy-location") } }, modifier = Modifier.padding(horizontal = 8.dp)) {

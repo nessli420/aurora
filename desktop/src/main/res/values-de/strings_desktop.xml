@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"Gib 0=dB ein: die aktuelle Hardware-Lautstärke des DAC relativ zur vollen Ausgabe."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"Dämpfung der Hardware-Lautstärke"</string>
     <string name="levels_desktop_volume" formatted="false">"Auroras eigene Lautstärke wird direkt gemessen. Kalibriere bei der aktuellen Hardware-Lautstärke des DAC."</string>
+    <string name="location_linux_off" formatted="false">"Der Standortzugriff ist für Aurora deaktiviert. Aktiviere die Ortungsdienste in den Datenschutzeinstellungen deines Desktops, erlaube Aurora den Zugriff und versuche es erneut."</string>
     <string name="location_open_windows_settings" formatted="false">"Standorteinstellungen öffnen"</string>
     <string name="location_unsupported" formatted="false">"Standort ist auf diesem System nicht verfügbar."</string>
     <string name="location_windows_off" formatted="false">"Windows blockiert den Standort für Desktop-Apps. Aktiviere den Standortzugriff, auch für Desktop-Apps, und versuche es erneut."</string>

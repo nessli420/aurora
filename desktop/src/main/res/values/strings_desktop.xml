@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"Enter 0=dB: the DAC\'s current hardware volume relative to full output."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"Hardware volume attenuation"</string>
     <string name="levels_desktop_volume" formatted="false">"Aurora\'s own volume is measured directly. Calibrate at the DAC\'s current hardware volume."</string>
+    <string name="location_linux_off" formatted="false">"Location access is off for Aurora. Turn on location services in your desktop\'s privacy settings and allow Aurora, then try again."</string>
     <string name="location_open_windows_settings" formatted="false">"Open location settings"</string>
     <string name="location_unsupported" formatted="false">"Location isn\'t available on this system."</string>
     <string name="location_windows_off" formatted="false">"Windows is blocking location for desktop apps. Turn on location access, including for desktop apps, then try again."</string>

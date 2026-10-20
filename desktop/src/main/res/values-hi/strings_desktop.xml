@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"0=dB दर्ज करें: पूरे आउटपुट की तुलना में DAC का मौजूदा हार्डवेयर वॉल्यूम।"</string>
     <string name="levels_desktop_hardware_points" formatted="false">"हार्डवेयर वॉल्यूम क्षीणन"</string>
     <string name="levels_desktop_volume" formatted="false">"Aurora का अपना वॉल्यूम सीधे मापा जाता है। DAC के मौजूदा हार्डवेयर वॉल्यूम पर कैलिब्रेट करें।"</string>
+    <string name="location_linux_off" formatted="false">"Aurora के लिए स्थान एक्सेस बंद है। अपने डेस्कटॉप की गोपनीयता सेटिंग में स्थान सेवाएँ चालू करें और Aurora को अनुमति दें, फिर दोबारा कोशिश करें।"</string>
     <string name="location_open_windows_settings" formatted="false">"स्थान सेटिंग खोलें"</string>
     <string name="location_unsupported" formatted="false">"इस सिस्टम पर स्थान उपलब्ध नहीं है।"</string>
     <string name="location_windows_off" formatted="false">"Windows डेस्कटॉप ऐप्स के लिए स्थान रोक रहा है। डेस्कटॉप ऐप्स सहित स्थान एक्सेस चालू करें, फिर दोबारा कोशिश करें।"</string>

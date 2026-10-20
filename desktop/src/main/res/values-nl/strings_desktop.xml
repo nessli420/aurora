@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"Voer 0=dB in: het huidige hardwarevolume van de DAC ten opzichte van volledige uitvoer."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"Demping hardwarevolume"</string>
     <string name="levels_desktop_volume" formatted="false">"Het eigen volume van Aurora wordt direct gemeten. Kalibreer bij het huidige hardwarevolume van de DAC."</string>
+    <string name="location_linux_off" formatted="false">"Locatietoegang staat uit voor Aurora. Zet locatievoorzieningen aan in de privacyinstellingen van je bureaublad, sta Aurora toe en probeer het opnieuw."</string>
     <string name="location_open_windows_settings" formatted="false">"Locatie-instellingen openen"</string>
     <string name="location_unsupported" formatted="false">"Locatie is niet beschikbaar op dit systeem."</string>
     <string name="location_windows_off" formatted="false">"Windows blokkeert locatie voor desktop-apps. Zet locatietoegang aan, ook voor desktop-apps, en probeer het opnieuw."</string>

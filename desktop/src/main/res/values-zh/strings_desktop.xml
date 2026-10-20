@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"输入 0=dB：DAC 当前硬件音量相对满输出的数值。"</string>
     <string name="levels_desktop_hardware_points" formatted="false">"硬件音量衰减"</string>
     <string name="levels_desktop_volume" formatted="false">"Aurora 自身的音量会被直接测量。请在 DAC 当前的硬件音量下校准。"</string>
+    <string name="location_linux_off" formatted="false">"Aurora 的位置访问已关闭。请在桌面的隐私设置中开启定位服务并允许 Aurora，然后重试。"</string>
     <string name="location_open_windows_settings" formatted="false">"打开位置设置"</string>
     <string name="location_unsupported" formatted="false">"此系统不支持位置功能。"</string>
     <string name="location_windows_off" formatted="false">"Windows 正在阻止桌面应用获取位置。请开启位置访问（包括桌面应用），然后重试。"</string>

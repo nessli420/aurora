@@ -24,7 +24,7 @@ val iconSizes = listOf(48, 64, 128, 256, 512)
 
 data class Download(val name: String, val url: String, val sha256: String)
 
-val unloadedNatives = Regex("lib(jni)?(avdevice|avfilter|swscale)[.-].*")
+val unloadedNatives = Regex("lib(jni)?(avdevice|avfilter|swscale)[.-].*|lib(newt|nativewindow)_drm\\.so|libnewt_head\\.so|libjogl_mobile\\.so")
 
 val appimagetool = Download(
     "appimagetool-1.9.1-x86_64.AppImage",
@@ -69,20 +69,28 @@ fun isElf(file: File): Boolean = file.isFile && !Files.isSymbolicLink(file.toPat
 fun isX64Elf(bytes: ByteArray): Boolean = bytes.size > 19 && bytes[0] == 0x7f.toByte() && bytes[1] == 'E'.code.toByte() &&
     bytes[2] == 'L'.code.toByte() && bytes[3] == 'F'.code.toByte() && bytes[4] == 2.toByte() && bytes[18] == 0x3e.toByte()
 
-fun needed(file: File): List<String> = command(file.parentFile, "readelf", "-d", file.path).lines()
-    .mapNotNull { Regex("""\(NEEDED\).*\[(.+)]""").find(it)?.groupValues?.get(1) }
+fun dynamic(file: File, tag: String): List<String> = command(file.parentFile, "readelf", "-d", file.path).lines()
+    .mapNotNull { Regex("""\($tag\).*\[(.+)]""").find(it)?.groupValues?.get(1) }
 
-class NativeCode(val image: List<File>, val jars: List<File>) {
-    val bundled: Set<String> = (image + jars).map { it.name }.toSet()
-    val loaded: List<File> = image + jars.filterNot { unloadedNatives.matches(it.name) }
-    val jarRequirements: List<String> by lazy {
-        jars.filterNot { unloadedNatives.matches(it.name) }.flatMap(::needed).distinct().filterNot { it in bundled }.sorted()
-    }
+fun needed(file: File): List<String> = dynamic(file, "NEEDED")
+
+fun soname(file: File): String? = dynamic(file, "SONAME").firstOrNull()
+
+// image: the files the package installs; jars: natives unpacked from its jars at run time;
+// chromium: the embedded browser jcef downloads on first sign-in, which still needs the system's libraries
+class NativeCode(val image: List<File>, val jars: List<File>, val chromium: List<File>) {
+    private val all = image + jars + chromium
+    val sonames: Map<String, File> = all.mapNotNull { file -> soname(file)?.takeIf { it != file.name }?.let { it to file } }.toMap()
+    val bundled: Set<String> = all.map { it.name }.toSet() + sonames.keys
+    private val unpacked = (jars + chromium).filterNot { unloadedNatives.matches(it.name) }
+    val loaded: List<File> = image + unpacked
+    val unpackedRequirements: List<String> by lazy { unpacked.flatMap(::needed).distinct().filterNot { it in bundled }.sorted() }
 }
 
 fun nativeCode(): NativeCode = NativeCode(
     stageRoot.get().dir("opt/aurora").asFile.walkTopDown().filter(::isElf).sortedBy { it.path }.toList(),
-    work.get().dir("jar-natives").asFile.listFiles().orEmpty().sortedBy { it.name },
+    work.get().dir("jar-natives").asFile.listFiles().orEmpty().filter(::isElf).sortedBy { it.name },
+    work.get().dir("chromium-natives").asFile.listFiles().orEmpty().filter(::isElf).sortedBy { it.name },
 )
 
 val linuxIcons by tasks.registering {
@@ -122,6 +130,31 @@ val linuxJarNatives by tasks.registering {
     }
 }
 
+// the same build jcefmaven fetches for this jcef-api version, read only for the libraries it links
+val linuxChromiumNatives by tasks.registering {
+    val output = work.map { it.dir("chromium-natives") }
+    outputs.dir(output)
+    doLast {
+        val version = configurations.getByName("runtimeClasspath").incoming.resolutionResult.allComponents
+            .mapNotNull { it.moduleVersion }.first { it.group == "me.friwi" && it.name == "jcef-api" }.version
+        val dir = output.get().asFile
+        val marker = File(dir, ".version")
+        if (marker.isFile && marker.readText() == version) return@doLast
+        dir.deleteRecursively()
+        dir.mkdirs()
+        val jar = configurations.detachedConfiguration(dependencies.create("me.friwi:jcef-natives-linux-amd64:$version"))
+            .apply { isTransitive = false }.singleFile
+        val archive = File(dir, "natives.tar.gz")
+        ZipFile(jar).use { zip ->
+            val entry = zip.entries().asSequence().first { it.name.endsWith(".tar.gz") }
+            zip.getInputStream(entry).use { input -> archive.outputStream().use { input.copyTo(it) } }
+        }
+        command(dir, "tar", "-xzf", archive.path, "-C", dir.path)
+        archive.delete()
+        marker.writeText(version)
+    }
+}
+
 val linuxRoot by tasks.registering(Sync::class) {
     dependsOn(createDistributable)
     into(stageRoot)
@@ -139,7 +172,7 @@ val linuxRoot by tasks.registering(Sync::class) {
 tasks.register("packageDeb") {
     group = "compose desktop"
     description = "Builds the Debian/Ubuntu package."
-    dependsOn(linuxRoot, linuxJarNatives)
+    dependsOn(linuxRoot, linuxJarNatives, linuxChromiumNatives)
     val output = binaries.map { it.file("deb/aurora_${appVersion}_amd64.deb") }
     outputs.file(output)
     doLast {
@@ -153,10 +186,12 @@ tasks.register("packageDeb") {
             command(dir, "dpkg-query", "-S", "*/$soname", allowFailure = true).lines().filter { ": /" in it }
                 .flatMap { it.substringBefore(": /").split(", ") }.map { it.substringBefore(':') }
         }.distinct()
+        val links = File(dir, "sonames").apply { mkdirs() }
+        natives.sonames.forEach { (name, file) -> Files.createSymbolicLink(File(links, name).toPath(), file.toPath()) }
         File(dir, "debian").mkdirs()
         File(dir, "debian/control").writeText("Source: aurora\n\nPackage: aurora\nArchitecture: amd64\n")
         val shlibs = command(dir, "dpkg-shlibdeps", "-O", "--ignore-missing-info", *excluded.map { "-x$it" }.toTypedArray(),
-            *natives.loaded.map { "-l${it.parent}" }.distinct().toTypedArray(), *natives.loaded.map { it.path }.toTypedArray())
+            *(natives.loaded.map { it.parent } + links.path).distinct().map { "-l$it" }.toTypedArray(), *natives.loaded.map { it.path }.toTypedArray())
         val depends = shlibs.lines().first { it.startsWith("shlibs:Depends=") }.substringAfter('=').split(", ").map { clause ->
             Regex("""^(\S+)t64(\s.*)?$""").find(clause)?.let { "$clause | ${it.groupValues[1]}${it.groupValues[2]}" } ?: clause
         }
@@ -185,7 +220,7 @@ tasks.register("packageDeb") {
 tasks.register("packageRpm") {
     group = "compose desktop"
     description = "Builds the Fedora/openSUSE package."
-    dependsOn(linuxRoot, linuxJarNatives)
+    dependsOn(linuxRoot, linuxJarNatives, linuxChromiumNatives)
     val output = binaries.map { it.file("rpm/aurora-$appVersion-1.x86_64.rpm") }
     outputs.file(output)
     doLast {
@@ -209,7 +244,7 @@ tasks.register("packageRpm") {
             appendLine("URL: $homepage")
             appendLine("Packager: $maintainer")
             appendLine("ExclusiveArch: x86_64")
-            natives.jarRequirements.forEach { appendLine("Requires: $it()(64bit)") }
+            natives.unpackedRequirements.forEach { appendLine("Requires: $it()(64bit)") }
             appendLine("Recommends: xdg-desktop-portal")
             appendLine()
             appendLine("%description")

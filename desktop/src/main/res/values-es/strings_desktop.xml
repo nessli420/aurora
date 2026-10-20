@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"Introduce 0=dB: el volumen de hardware actual del DAC respecto a la salida completa."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"Atenuación del volumen de hardware"</string>
     <string name="levels_desktop_volume" formatted="false">"El volumen propio de Aurora se mide directamente. Calibra con el volumen de hardware actual del DAC."</string>
+    <string name="location_linux_off" formatted="false">"El acceso a la ubicación está desactivado para Aurora. Activa los servicios de ubicación en la configuración de privacidad de tu escritorio, permite el acceso a Aurora y vuelve a intentarlo."</string>
     <string name="location_open_windows_settings" formatted="false">"Abrir ajustes de ubicación"</string>
     <string name="location_unsupported" formatted="false">"La ubicación no está disponible en este sistema."</string>
     <string name="location_windows_off" formatted="false">"Windows está bloqueando la ubicación para las apps de escritorio. Activa el acceso a la ubicación, también para apps de escritorio, y vuelve a intentarlo."</string>

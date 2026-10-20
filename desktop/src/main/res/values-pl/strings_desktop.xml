@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"Wpisz 0=dB: obecna głośność sprzętowa DAC względem pełnego wyjścia."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"Tłumienie głośności sprzętowej"</string>
     <string name="levels_desktop_volume" formatted="false">"Głośność Aurora jest mierzona bezpośrednio. Kalibruj przy obecnej głośności sprzętowej DAC."</string>
+    <string name="location_linux_off" formatted="false">"Dostęp do lokalizacji jest wyłączony dla Aurory. Włącz usługi lokalizacji w ustawieniach prywatności pulpitu, zezwól Aurorze na dostęp i spróbuj ponownie."</string>
     <string name="location_open_windows_settings" formatted="false">"Otwórz ustawienia lokalizacji"</string>
     <string name="location_unsupported" formatted="false">"Lokalizacja nie jest dostępna w tym systemie."</string>
     <string name="location_windows_off" formatted="false">"Windows blokuje lokalizację dla aplikacji klasycznych. Włącz dostęp do lokalizacji, również dla aplikacji klasycznych, i spróbuj ponownie."</string>

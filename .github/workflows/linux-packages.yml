@@ -22,7 +22,9 @@ jobs:
       - name: Install packaging tools
         run: |
           sudo apt-get update
-          sudo apt-get install -y --no-install-recommends cmake g++ libasound2-dev dpkg-dev rpm desktop-file-utils
+          sudo apt-get install -y --no-install-recommends cmake g++ libasound2-dev dpkg-dev rpm desktop-file-utils \
+            libnss3 libgbm1 libxkbcommon0 libcups2t64 libatk1.0-0t64 libatk-bridge2.0-0t64 libatspi2.0-0t64 libpango-1.0-0 \
+            libcairo2 libxcomposite1 libxdamage1 libxrandr2 libxxf86vm1
 
       - name: Build packages
         run: bash ./gradlew --no-daemon :desktop:packageDeb :desktop:packageRpm :desktop:packageAppImage

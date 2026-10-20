@@ -57,9 +57,12 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.components.formatTime
 import kotlinx.coroutines.delay
 
+// a headless toolkit can't make cursors, so the pointer just stays visible there
 private val HiddenCursor by lazy {
-    PointerIcon(java.awt.Toolkit.getDefaultToolkit().createCustomCursor(
-        java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB), java.awt.Point(0, 0), "hidden"))
+    runCatching {
+        PointerIcon(java.awt.Toolkit.getDefaultToolkit().createCustomCursor(
+            java.awt.image.BufferedImage(1, 1, java.awt.image.BufferedImage.TYPE_INT_ARGB), java.awt.Point(0, 0), "hidden"))
+    }.getOrDefault(PointerIcon.Default)
 }
 
 // controls and cursor fade after a few idle seconds; a click plays or pauses and a double click leaves full screen

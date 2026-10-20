@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.web
 
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.util.AppLog
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -40,6 +41,8 @@ import java.io.File
 import java.net.URI
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
+import kotlin.math.roundToInt
+import kotlin.math.sign
 
 // one embedded chromium for sign-in pages and the hidden service pages; downloaded the first time it's needed
 object Chromium {
@@ -88,7 +91,9 @@ object Chromium {
                     cefSettings.log_severity = CefSettings.LogSeverity.LOGSEVERITY_DISABLE
                 }.build()
             }
-            val created = withContext(Dispatchers.Swing) { app.createClient().also(::install) }
+            val created = withContext(Dispatchers.Swing) {
+                (if (HostPlatform.isLinux) org.cef.FocusSafeClient.create(app) else app.createClient()).also(::install)
+            }
             client = created
             mutableStatus.value = Status.Ready
             created
@@ -152,10 +157,25 @@ object Chromium {
         val client = client()
         return withContext(Dispatchers.Swing) {
             val browser = client.createBrowser(url, true, false)
+            if (HostPlatform.isLinux) correctWheel(browser.uiComponent)
             WebPage(browser, origins, hidden).also { page ->
                 pages[browser] = page
                 if (hidden) browser.createImmediately()
             }
+        }
+    }
+
+    // jcef passes java's wheel units straight to cef, which reads them as pixels the other way: three pixels up per notch
+    // down. they go through again as block scrolls, which jcef hands over as they are, at chromium's 53 pixels a notch
+    private fun correctWheel(component: java.awt.Component) {
+        val forward = component.mouseWheelListeners.toList()
+        forward.forEach(component::removeMouseWheelListener)
+        component.addMouseWheelListener { e ->
+            val precise = -e.preciseWheelRotation * WHEEL_PIXELS
+            val pixels = precise.roundToInt().takeIf { it != 0 } ?: precise.sign.toInt()
+            val corrected = java.awt.event.MouseWheelEvent(e.component, e.id, e.`when`, e.modifiersEx, e.x, e.y, e.xOnScreen, e.yOnScreen,
+                e.clickCount, e.isPopupTrigger, java.awt.event.MouseWheelEvent.WHEEL_BLOCK_SCROLL, 1, pixels, pixels.toDouble())
+            forward.forEach { it.mouseWheelMoved(corrected) }
         }
     }
 
@@ -196,6 +216,7 @@ object Chromium {
     }
 
     private const val TAG = "Chromium"
+    private const val WHEEL_PIXELS = 53.0
 }
 
 class WebPage internal constructor(val browser: CefBrowser, private val origins: Set<String>, internal val hidden: Boolean = false) {

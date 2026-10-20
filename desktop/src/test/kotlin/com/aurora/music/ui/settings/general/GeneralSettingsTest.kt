@@ -67,7 +67,7 @@ class GeneralSettingsTest {
                     onOpenAdvancedAudio = { opened += "advanced" }, onOpenSignalPath = { opened += "signal" }, onOpenEq = { opened += "eq" },
                     onOpenVisualizer = { opened += "visualizer" }, onOpenSonic = { opened += "sonic" }, onOpenSources = { opened += "sources" },
                     onOpenDownloads = { opened += "storage" }, onOpenAppearance = { opened += "appearance" }, onOpenLyricsSettings = { opened += "lyrics" }, onOpenMerge = { opened += "merge" }, onOpenLanguage = { opened += "language" },
-                    onOpenIntegrations = { opened += "integrations" }, onOpenAbout = { opened += "about" }, onOpenProfile = { opened += "profile" },
+                    onOpenIntegrations = { opened += "integrations" }, onOpenConnect = { opened += "connect" }, onOpenAbout = { opened += "about" }, onOpenProfile = { opened += "profile" },
                     onOpenAccounts = { opened += "accounts" }, onOpenBackup = if (backup) ({ opened += "backup" }) else null, onLogout = { opened += "logout" },
                 )
             }
@@ -83,7 +83,8 @@ class GeneralSettingsTest {
             scene.click(190f, 843f)
             scene.click(190f, 1221f)
             scene.click(190f, 1416f)
-            assertEquals(listOf("accounts", "merge", "output", "loudness", "lyrics", "integrations"), opened)
+            scene.click(190f, 1493f)
+            assertEquals(listOf("accounts", "merge", "output", "loudness", "lyrics", "connect", "integrations"), opened)
             image
         }
         assertTrue(full.distinctColors() > 20)

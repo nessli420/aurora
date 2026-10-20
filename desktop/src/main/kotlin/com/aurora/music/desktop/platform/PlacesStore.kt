@@ -3,6 +3,7 @@ package com.aurora.music.desktop.platform
 import com.aurora.music.data.PlaceZones
 import com.aurora.music.data.Places
 import com.aurora.music.data.persistBackupFileAtomically
+import com.aurora.music.desktop.linux.PortalLocation
 import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -63,7 +64,11 @@ object WindowsLocation : LocationSource {
 }
 
 // home and work stay out of settings and every backup; only this computer ever holds them
-class PlacesStore(directory: File, private val source: LocationSource? = if (HostPlatform.isWindows) WindowsLocation else null) {
+class PlacesStore(directory: File, private val source: LocationSource? = when {
+    HostPlatform.isWindows -> WindowsLocation
+    HostPlatform.isLinux -> PortalLocation()
+    else -> null
+}) {
     private val file = File(directory, "places.json")
     private val gson = Gson()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)

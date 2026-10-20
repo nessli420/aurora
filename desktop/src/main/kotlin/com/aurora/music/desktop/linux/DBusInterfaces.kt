@@ -78,6 +78,24 @@ interface PortalInhibit : DBusInterface {
 @DBusInterfaceName("org.freedesktop.portal.Request")
 interface PortalRequest : DBusInterface {
     fun Close()
+
+    @JvmSuppressWildcards
+    class Response(path: String, val response: UInt32, val results: Map<String, Variant<*>>) : DBusSignal(path, response, results)
+}
+
+@DBusInterfaceName("org.freedesktop.portal.Session")
+interface PortalSession : DBusInterface {
+    fun Close()
+}
+
+@JvmSuppressWildcards
+@DBusInterfaceName("org.freedesktop.portal.Location")
+interface PortalLocationService : DBusInterface {
+    fun CreateSession(options: Map<String, Variant<*>>): DBusPath
+    fun Start(session: DBusPath, parentWindow: String, options: Map<String, Variant<*>>): DBusPath
+
+    @JvmSuppressWildcards
+    class LocationUpdated(path: String, val session: DBusPath, val location: Map<String, Variant<*>>) : DBusSignal(path, session, location)
 }
 
 @DBusInterfaceName("org.mpris.MediaPlayer2")

@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"Saisis 0=dB : le volume matériel actuel du DAC par rapport à la sortie maximale."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"Atténuation du volume matériel"</string>
     <string name="levels_desktop_volume" formatted="false">"Le volume propre d\'Aurora est mesuré directement. Calibre au volume matériel actuel du DAC."</string>
+    <string name="location_linux_off" formatted="false">"L\'accès à la position est désactivé pour Aurora. Active les services de localisation dans les paramètres de confidentialité de ton bureau, autorise Aurora, puis réessaie."</string>
     <string name="location_open_windows_settings" formatted="false">"Ouvrir les paramètres de localisation"</string>
     <string name="location_unsupported" formatted="false">"La localisation n\'est pas disponible sur ce système."</string>
     <string name="location_windows_off" formatted="false">"Windows bloque la localisation pour les applis de bureau. Active l\'accès à la localisation, y compris pour les applis de bureau, puis réessaie."</string>

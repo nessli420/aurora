@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"0=dB を入力：最大出力に対する DAC の現在のハードウェア音量。"</string>
     <string name="levels_desktop_hardware_points" formatted="false">"ハードウェア音量の減衰"</string>
     <string name="levels_desktop_volume" formatted="false">"Aurora 自体の音量は直接測定されます。DAC の現在のハードウェア音量でキャリブレーションしてください。"</string>
+    <string name="location_linux_off" formatted="false">"Aurora の位置情報へのアクセスがオフになっています。デスクトップのプライバシー設定で位置情報サービスをオンにして Aurora を許可してから、もう一度お試しください。"</string>
     <string name="location_open_windows_settings" formatted="false">"位置情報の設定を開く"</string>
     <string name="location_unsupported" formatted="false">"このシステムでは位置情報を利用できません。"</string>
     <string name="location_windows_off" formatted="false">"Windows がデスクトップアプリの位置情報をブロックしています。デスクトップアプリを含めて位置情報へのアクセスをオンにしてから、もう一度お試しください。"</string>

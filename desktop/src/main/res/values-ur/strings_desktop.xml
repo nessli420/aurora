@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"\u20670=dB درج کریں: مکمل آؤٹ پٹ کے مقابلے میں DAC کا موجودہ ہارڈویئر والیوم۔\u2069"</string>
     <string name="levels_desktop_hardware_points" formatted="false">"\u2067ہارڈویئر والیوم کی کمی\u2069"</string>
     <string name="levels_desktop_volume" formatted="false">"\u2067Aurora کا اپنا والیوم براہ راست ناپا جاتا ہے۔ DAC کے موجودہ ہارڈویئر والیوم پر کیلیبریٹ کریں۔\u2069"</string>
+    <string name="location_linux_off" formatted="false">"\u2067Aurora کے لیے مقام تک رسائی بند ہے۔ اپنے ڈیسک ٹاپ کی رازداری کی ترتیبات میں مقام کی خدمات آن کریں اور Aurora کو اجازت دیں، پھر دوبارہ کوشش کریں۔\u2069"</string>
     <string name="location_open_windows_settings" formatted="false">"\u2067مقام کی ترتیبات کھولیں\u2069"</string>
     <string name="location_unsupported" formatted="false">"\u2067اس سسٹم پر مقام دستیاب نہیں ہے۔\u2069"</string>
     <string name="location_windows_off" formatted="false">"\u2067Windows ڈیسک ٹاپ ایپس کے لیے مقام کو روک رہا ہے۔ ڈیسک ٹاپ ایپس سمیت مقام تک رسائی آن کریں، پھر دوبارہ کوشش کریں۔\u2069"</string>

@@ -10,6 +10,7 @@
     <string name="levels_desktop_hardware_help" formatted="false">"0=dB 입력: 최대 출력 대비 DAC의 현재 하드웨어 볼륨."</string>
     <string name="levels_desktop_hardware_points" formatted="false">"하드웨어 볼륨 감쇠"</string>
     <string name="levels_desktop_volume" formatted="false">"Aurora 자체 볼륨은 직접 측정됩니다. DAC의 현재 하드웨어 볼륨에서 보정하세요."</string>
+    <string name="location_linux_off" formatted="false">"Aurora의 위치 접근이 꺼져 있습니다. 데스크톱의 개인정보 보호 설정에서 위치 서비스를 켜고 Aurora를 허용한 다음 다시 시도하세요."</string>
     <string name="location_open_windows_settings" formatted="false">"위치 설정 열기"</string>
     <string name="location_unsupported" formatted="false">"이 시스템에서는 위치를 사용할 수 없습니다."</string>
     <string name="location_windows_off" formatted="false">"Windows가 데스크톱 앱의 위치 접근을 차단하고 있습니다. 데스크톱 앱을 포함해 위치 접근을 켠 다음 다시 시도하세요."</string>
