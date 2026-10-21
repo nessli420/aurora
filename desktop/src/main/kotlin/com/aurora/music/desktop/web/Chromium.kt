@@ -157,7 +157,7 @@ object Chromium {
         val client = client()
         return withContext(Dispatchers.Swing) {
             val browser = client.createBrowser(url, true, false)
-            if (HostPlatform.isLinux) correctWheel(browser.uiComponent)
+            correctWheel(browser.uiComponent)
             WebPage(browser, origins, hidden).also { page ->
                 pages[browser] = page
                 if (hidden) browser.createImmediately()
@@ -166,12 +166,12 @@ object Chromium {
     }
 
     // jcef passes java's wheel units straight to cef, which reads them as pixels the other way: three pixels up per notch
-    // down. they go through again as block scrolls, which jcef hands over as they are, at chromium's 53 pixels a notch
+    // down. they go through again as block scrolls, which jcef hands over as they are, at chrome's own step per notch
     private fun correctWheel(component: java.awt.Component) {
         val forward = component.mouseWheelListeners.toList()
         forward.forEach(component::removeMouseWheelListener)
         component.addMouseWheelListener { e ->
-            val precise = -e.preciseWheelRotation * WHEEL_PIXELS
+            val precise = -e.preciseWheelRotation * wheelPixels
             val pixels = precise.roundToInt().takeIf { it != 0 } ?: precise.sign.toInt()
             val corrected = java.awt.event.MouseWheelEvent(e.component, e.id, e.`when`, e.modifiersEx, e.x, e.y, e.xOnScreen, e.yOnScreen,
                 e.clickCount, e.isPopupTrigger, java.awt.event.MouseWheelEvent.WHEEL_BLOCK_SCROLL, 1, pixels, pixels.toDouble())
@@ -216,7 +216,7 @@ object Chromium {
     }
 
     private const val TAG = "Chromium"
-    private const val WHEEL_PIXELS = 53.0
+    private val wheelPixels = if (HostPlatform.isWindows) 100.0 else 53.0
 }
 
 class WebPage internal constructor(val browser: CefBrowser, private val origins: Set<String>, internal val hidden: Boolean = false) {
