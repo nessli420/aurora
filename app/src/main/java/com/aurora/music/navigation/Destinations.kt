@@ -29,6 +29,7 @@ object Routes {
     const val SETTINGS_PLAYBACK = "settings_playback"
     const val SETTINGS_OUTPUT = "settings_output"
     const val SETTINGS_NETWORK = "settings_network"
+    const val SETTINGS_CONNECT = "settings_connect"
     const val SETTINGS_LOUDNESS = "settings_loudness"
     const val SETTINGS_ALARM = "settings_alarm"
     const val SIGNAL_PATH = "signal_path"

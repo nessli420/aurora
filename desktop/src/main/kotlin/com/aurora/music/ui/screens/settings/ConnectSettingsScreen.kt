@@ -32,6 +32,7 @@ import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.localization.appString
 import com.aurora.music.playback.network.endpoint.ConnectSwitch
 import com.aurora.music.playback.network.endpoint.EndpointTls
+import com.aurora.music.ui.screens.player.ConnectDevicesSection
 import com.aurora.music.ui.screens.player.ConnectPairDialog
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -55,11 +56,13 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.connect_settings_title), onBack)
         SettingsList(contentPadding) {
+            item { SettingsSectionTitle(appString(R.string.connect_guide_title)) }
+            item { SettingsGroup { ConnectGuide() } }
             item { SettingsSectionTitle(appString(R.string.text_this_device_fa5a6d)) }
             item {
                 SettingsGroup {
                     SettingsSwitchRow(Icons.Filled.Devices, appString(R.string.text_allow_remote_control_0f0d85),
-                        appString(R.string.text_paired_devices_can_control_playback_86f484), state.enabled, connect::setEnabled)
+                        appString(if (state.enabled) R.string.connect_host_on else R.string.connect_host_off), state.enabled, connect::setEnabled)
                     state.address?.let { address ->
                         Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(appString(R.string.connect_this_key, EndpointTls.shortKey(address.fingerprint)), style = MaterialTheme.typography.titleSmall)
@@ -86,9 +89,15 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     }
                 }
             }
-            item { SettingsSectionTitle(appString(R.string.connect_section)) }
+            item { SettingsSectionTitle(appString(R.string.connect_devices)) }
             item {
                 SettingsGroup {
+                    Column(Modifier.padding(vertical = 8.dp)) {
+                        ConnectDevicesSection(onDismiss = {})
+                        TextButton(onClick = connect::scan, enabled = !state.scanning, modifier = Modifier.padding(start = 8.dp)) {
+                            Text(appString(R.string.text_search_bce064))
+                        }
+                    }
                     SegmentedRow(appString(R.string.connect_switch_title), listOf(appString(R.string.connect_switch_keep),
                         appString(R.string.connect_switch_pause), appString(R.string.connect_switch_move)), switch) {
                         scope.launch { store.setConnectSwitch(it) }
@@ -113,5 +122,18 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     }
     state.probed?.takeIf { !it.known }?.let { probed ->
         ConnectPairDialog(probed.address.removePrefix("https://"), EndpointTls.shortKey(probed.fingerprint), connect::pairProbed, connect::dismissError)
+    }
+}
+
+@Composable
+private fun ConnectGuide() {
+    Column(Modifier.padding(horizontal = 20.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        listOf(R.string.connect_guide_host, R.string.connect_guide_pick, R.string.connect_guide_network).forEachIndexed { i, step ->
+            Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text("${i + 1}", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary)
+                Text(appString(step), style = MaterialTheme.typography.bodyMedium)
+            }
+        }
+        Text(appString(R.string.connect_guide_sources), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

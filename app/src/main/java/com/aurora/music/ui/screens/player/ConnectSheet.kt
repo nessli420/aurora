@@ -46,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.R
 import com.aurora.music.localization.appString
+import com.aurora.music.playback.network.problem
 import com.aurora.music.playback.network.endpoint.ConnectCommand
 import com.aurora.music.playback.network.endpoint.ConnectStatus
 import com.aurora.music.playback.network.endpoint.DiscoveredRenderer
@@ -84,7 +85,7 @@ internal fun ConnectDevicesSection(onDismiss: () -> Unit) {
         Text(appString(R.string.connect_none_found), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    (session?.error?.collectAsStateWithLifecycle()?.value ?: state.error)?.let {
+    (session?.error?.collectAsStateWithLifecycle()?.value?.let { session?.problem() } ?: state.error)?.let {
         Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }
     val current = remote

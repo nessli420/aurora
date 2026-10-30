@@ -3,6 +3,8 @@ package com.aurora.music.playback.network
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.ContextCompat
+import com.aurora.music.R
+import com.aurora.music.localization.appString
 import com.aurora.music.playback.network.endpoint.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +32,18 @@ data class NetworkOutputState(
 )
 
 data class ProbedDevice(val address: String, val fingerprint: String, val known: Boolean)
+
+// hosts answer in generic english, so the problems a user can fix get local text that names the device
+fun ConnectSession.problem(): String? {
+    val message = error.value ?: return null
+    return when (errorCode) {
+        "not_available" -> appString(R.string.connect_error_unavailable, name)
+        "connect_disabled" -> appString(R.string.connect_error_disabled, name)
+        "unauthorized", "certificate_mismatch" -> appString(R.string.connect_error_unpaired, name)
+        "renderer_unreachable" -> appString(R.string.connect_error_unreachable, name)
+        else -> message
+    }
+}
 
 sealed interface NetworkTarget {
     data class Dlna(val renderer: DlnaRenderer) : NetworkTarget
@@ -160,7 +174,7 @@ class NetworkOutputManager(private val context: Context) {
             scope.launch {
                 session.lost.first { it }
                 if (mutableSession.value !== session) return@launch
-                val message = session.error.value ?: "Lost connection to ${fresh.name}."
+                val message = session.problem() ?: appString(R.string.connect_error_lost, session.name)
                 control(null)
                 update { it.copy(error = message) }
                 android.widget.Toast.makeText(context, message, android.widget.Toast.LENGTH_LONG).show()
@@ -170,6 +184,13 @@ class NetworkOutputManager(private val context: Context) {
 
     fun closeSession() {
         mutableSession.value?.close()
+        mutableSession.value = null
+        update { it.copy(controlling = null) }
+    }
+
+    // the device is free to pick again at once, even while the old session still moves playback back
+    fun release(session: ConnectSession?) {
+        if (session == null || mutableSession.value !== session) return
         mutableSession.value = null
         update { it.copy(controlling = null) }
     }

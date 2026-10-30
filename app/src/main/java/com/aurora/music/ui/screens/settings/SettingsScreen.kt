@@ -76,6 +76,7 @@ fun SettingsScreen(
     onOpenPlayback: () -> Unit,
     onOpenOutput: () -> Unit,
     onOpenNetwork: () -> Unit,
+    onOpenConnect: () -> Unit,
     onOpenLoudness: () -> Unit,
     onOpenAdvancedAudio: () -> Unit,
     onOpenAlarm: () -> Unit,
@@ -190,6 +191,8 @@ fun SettingsScreen(
                     SettingsDestinationRow(Icons.Filled.Devices, SettingsDestinations.output, onClick = onOpenOutput)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Devices, SettingsDestinations.network, onClick = onOpenNetwork)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Devices, SettingsDestinations.connect, onClick = onOpenConnect)
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
                     AnimatedVisibility(

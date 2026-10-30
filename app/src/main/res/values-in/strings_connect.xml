@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"Kontrol perangkat Aurora lain atau biarkan mereka mengontrol perangkat ini"</string>
     <string name="connect_continue">"Lanjut"</string>
     <string name="connect_this_key">"Kunci perangkat ini: %1$s"</string>
+    <string name="connect_settings_link">"Kode penyandingan, alamat, dan perangkat"</string>
+    <string name="connect_devices">"Perangkat"</string>
+    <string name="connect_guide_title">"Cara menghubungkan"</string>
+    <string name="connect_guide_host">"Di perangkat yang akan memutar musik, aktifkan Izinkan Kontrol Jarak Jauh lalu ketuk Tampilkan kode penyandingan."</string>
+    <string name="connect_guide_pick">"Di perangkat yang Anda pakai untuk mengontrol, buka Putar di pada pemutar, pilih perangkat itu, lalu masukkan kodenya. Penyandingan cukup sekali."</string>
+    <string name="connect_guide_network">"Hubungkan keduanya ke Wi-Fi yang sama. Di jaringan lain, seperti Tailscale, gunakan Tambahkan lewat alamat."</string>
+    <string name="connect_guide_sources">"Musik diputar dari sumber milik perangkat itu sendiri, jadi masuklah ke layanan yang sama di sana. YouTube Music dan SoundCloud juga bisa sebagai tamu."</string>
+    <string name="connect_host_on">"Aktif. Perangkat yang disandingkan dapat menemukan dan mengontrol perangkat ini."</string>
+    <string name="connect_host_off">"Nonaktif. Aktifkan agar perangkat lain dapat memutar musik di sini."</string>
+    <string name="connect_idle_connecting">"Menghubungkan…"</string>
+    <string name="connect_idle_empty">"Tidak ada yang diputar di sana. Pilih lagu untuk memulai."</string>
+    <string name="connect_error_unavailable">"%1$s tidak dapat memutar lagu ini. Masuk ke layanan musik yang sama di sana."</string>
+    <string name="connect_error_disabled">"Kontrol jarak jauh nonaktif di %1$s. Aktifkan di sana."</string>
+    <string name="connect_error_unpaired">"%1$s tidak lagi menerima perangkat ini. Sandingkan lagi."</string>
+    <string name="connect_error_unreachable">"Tidak dapat menjangkau %1$s. Pastikan keduanya di jaringan yang sama dan Aurora terbuka di sana."</string>
+    <string name="connect_error_lost">"Koneksi ke %1$s terputus."</string>
 </resources>

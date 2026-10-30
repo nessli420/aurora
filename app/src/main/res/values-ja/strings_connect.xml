@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"他の Aurora デバイスを操作したり、このデバイスを操作させたりします"</string>
     <string name="connect_continue">"続行"</string>
     <string name="connect_this_key">"このデバイスのキー: %1$s"</string>
+    <string name="connect_settings_link">"ペアリングコード・アドレス・デバイス"</string>
+    <string name="connect_devices">"デバイス"</string>
+    <string name="connect_guide_title">"接続のしかた"</string>
+    <string name="connect_guide_host">"音楽を再生する側のデバイスで「リモート操作を許可」をオンにし、「ペアリングコードを表示」をタップします。"</string>
+    <string name="connect_guide_pick">"操作する側のデバイスでプレーヤーの「再生先」を開き、そのデバイスを選んでコードを入力します。ペアリングは最初の1回だけです。"</string>
+    <string name="connect_guide_network">"両方を同じWi-Fiにつないでください。Tailscaleなど別のネットワークでは「アドレスで追加」を使います。"</string>
+    <string name="connect_guide_sources">"音楽はそのデバイス自身のソースから再生されます。そちらでも同じサービスにサインインしてください。YouTube MusicとSoundCloudはゲストでも使えます。"</string>
+    <string name="connect_host_on">"オン。ペアリング済みのデバイスがこのデバイスを見つけて操作できます。"</string>
+    <string name="connect_host_off">"オフ。オンにすると、別のデバイスからここで音楽を再生できます。"</string>
+    <string name="connect_idle_connecting">"接続中…"</string>
+    <string name="connect_idle_empty">"何も再生されていません。曲を選ぶと再生が始まります。"</string>
+    <string name="connect_error_unavailable">"%1$sではこの曲を再生できません。そちらで同じ音楽サービスにサインインしてください。"</string>
+    <string name="connect_error_disabled">"%1$sのリモート操作がオフです。そちらでオンにしてください。"</string>
+    <string name="connect_error_unpaired">"%1$sはこのデバイスを受け付けなくなりました。もう一度ペアリングしてください。"</string>
+    <string name="connect_error_unreachable">"%1$sに接続できません。両方が同じネットワークにあり、そちらでAuroraが開いているか確認してください。"</string>
+    <string name="connect_error_lost">"%1$sとの接続が切れました。"</string>
 </resources>

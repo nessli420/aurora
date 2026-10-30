@@ -47,6 +47,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.desktop.connect.LocalConnect
+import com.aurora.music.desktop.connect.problem
 import com.aurora.music.localization.appString
 import com.aurora.music.playback.network.endpoint.ConnectCommand
 import com.aurora.music.playback.network.endpoint.DiscoveredRenderer
@@ -82,7 +83,7 @@ fun ConnectDevicesSection(onDismiss: () -> Unit) {
         Text(appString(R.string.connect_none_found), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
     }
-    (remote?.session?.error?.collectAsState()?.value ?: state.error)?.let {
+    (remote?.session?.error?.collectAsState()?.value?.let { remote.session.problem() } ?: state.error)?.let {
         Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = colors.error)
     }
     if (status != null && status.presets.isNotEmpty()) {

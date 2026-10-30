@@ -382,7 +382,7 @@ class MusicRepository(
         supportsReposts(id) && backend?.setReposted(backendSongId(id) ?: id, reposted) == true
 
     // guest sources hide likes, playlist edits and their personal library
-    fun canLike(id: String): Boolean = backend?.signedIn(backendSongId(id) ?: id) != false
+    fun canLike(id: String): Boolean = id.isNotEmpty() && backend?.signedIn(backendSongId(id) ?: id) != false
     fun signedIn(view: String? = null): Boolean = viewOf(view)?.signedIn != false
     fun sourceType(song: Song): ServerType? = backend?.sourceType(song)
     suspend fun comments(song: Song): List<com.aurora.music.model.TrackComment>? = if (offline) null else backend?.comments(song)

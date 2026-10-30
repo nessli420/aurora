@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"⁧تحكم في أجهزة Aurora الأخرى أو اسمح لها بالتحكم في هذا الجهاز⁩"</string>
     <string name="connect_continue">"⁧متابعة⁩"</string>
     <string name="connect_this_key">"⁧مفتاح هذا الجهاز: %1$s⁩"</string>
+    <string name="connect_settings_link">"⁧رمز الاقتران والعناوين والأجهزة⁩"</string>
+    <string name="connect_devices">"⁧الأجهزة⁩"</string>
+    <string name="connect_guide_title">"⁧طريقة الاتصال⁩"</string>
+    <string name="connect_guide_host">"⁧على الجهاز الذي سيشغّل الموسيقى، فعّل السماح بالتحكم عن بُعد ثم اضغط عرض رمز الاقتران.⁩"</string>
+    <string name="connect_guide_pick">"⁧على الجهاز الذي تتحكم منه، افتح التشغيل على في المشغّل، واختر ذلك الجهاز وأدخل الرمز. يكفي الاقتران مرة واحدة.⁩"</string>
+    <string name="connect_guide_network">"⁧اجعل الجهازين على شبكة Wi-Fi نفسها. على شبكة أخرى مثل Tailscale، استخدم الإضافة بالعنوان.⁩"</string>
+    <string name="connect_guide_sources">"⁧تُشغَّل الموسيقى من مصادر ذلك الجهاز نفسه، لذا سجّل الدخول هناك إلى الخدمة نفسها. يعمل YouTube Music وSoundCloud أيضًا كضيف.⁩"</string>
+    <string name="connect_host_on">"⁧مفعّل. يمكن للأجهزة المقترنة العثور على هذا الجهاز والتحكم فيه.⁩"</string>
+    <string name="connect_host_off">"⁧متوقف. فعّله ليتمكن جهاز آخر من تشغيل الموسيقى هنا.⁩"</string>
+    <string name="connect_idle_connecting">"⁧جارٍ الاتصال…⁩"</string>
+    <string name="connect_idle_empty">"⁧لا شيء قيد التشغيل هناك. اختر أغنية لبدء التشغيل.⁩"</string>
+    <string name="connect_error_unavailable">"⁧لا يمكن لـ %1$s تشغيل هذه الأغاني. سجّل الدخول هناك إلى خدمة الموسيقى نفسها.⁩"</string>
+    <string name="connect_error_disabled">"⁧التحكم عن بُعد متوقف على %1$s. فعّله هناك.⁩"</string>
+    <string name="connect_error_unpaired">"⁧لم يعد %1$s يقبل هذا الجهاز. أعد الاقتران.⁩"</string>
+    <string name="connect_error_unreachable">"⁧تعذّر الوصول إلى %1$s. تحقق من أن الجهازين على الشبكة نفسها وأن Aurora مفتوح هناك.⁩"</string>
+    <string name="connect_error_lost">"⁧انقطع الاتصال بـ %1$s.⁩"</string>
 </resources>

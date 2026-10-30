@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"Contrôlez d'autres appareils Aurora ou laissez-les contrôler celui-ci"</string>
     <string name="connect_continue">"Continuer"</string>
     <string name="connect_this_key">"Clé de cet appareil : %1$s"</string>
+    <string name="connect_settings_link">"Code d'association, adresses et appareils"</string>
+    <string name="connect_devices">"Appareils"</string>
+    <string name="connect_guide_title">"Comment se connecter"</string>
+    <string name="connect_guide_host">"Sur l'appareil qui doit lire la musique, activez Autoriser le contrôle à distance puis touchez Afficher le code d'association."</string>
+    <string name="connect_guide_pick">"Sur l'appareil qui sert de télécommande, ouvrez Lire sur dans le lecteur, choisissez cet appareil et saisissez le code. L'association ne se fait qu'une fois."</string>
+    <string name="connect_guide_network">"Gardez les deux sur le même Wi-Fi. Sur un autre réseau, comme Tailscale, utilisez Ajouter par adresse."</string>
+    <string name="connect_guide_sources">"La musique vient des propres sources de cet appareil : connectez-vous-y au même service. YouTube Music et SoundCloud fonctionnent aussi en invité."</string>
+    <string name="connect_host_on">"Activé. Les appareils associés peuvent trouver et contrôler celui-ci."</string>
+    <string name="connect_host_off">"Désactivé. Activez-le pour qu'un autre appareil lise de la musique ici."</string>
+    <string name="connect_idle_connecting">"Connexion…"</string>
+    <string name="connect_idle_empty">"Rien n'est en lecture là-bas. Choisissez un titre pour le lancer."</string>
+    <string name="connect_error_unavailable">"%1$s ne peut pas lire ces titres. Connectez-vous-y au même service de musique."</string>
+    <string name="connect_error_disabled">"Le contrôle à distance est désactivé sur %1$s. Activez-le là-bas."</string>
+    <string name="connect_error_unpaired">"%1$s n'accepte plus cet appareil. Associez-les à nouveau."</string>
+    <string name="connect_error_unreachable">"Impossible de joindre %1$s. Vérifiez que les deux sont sur le même réseau et qu'Aurora y est ouvert."</string>
+    <string name="connect_error_lost">"Connexion à %1$s perdue."</string>
 </resources>

@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"Diğer Aurora cihazlarını kontrol edin veya onların bu cihazı kontrol etmesine izin verin"</string>
     <string name="connect_continue">"Devam"</string>
     <string name="connect_this_key">"Bu cihazın anahtarı: %1$s"</string>
+    <string name="connect_settings_link">"Eşleştirme kodu, adresler ve cihazlar"</string>
+    <string name="connect_devices">"Cihazlar"</string>
+    <string name="connect_guide_title">"Nasıl bağlanılır"</string>
+    <string name="connect_guide_host">"Müziği çalacak cihazda Uzaktan kumandaya izin ver'i açın ve Eşleştirme kodunu göster'e dokunun."</string>
+    <string name="connect_guide_pick">"Kontrol ettiğiniz cihazda oynatıcıdaki Şurada çal'ı açın, o cihazı seçin ve kodu girin. Eşleştirme yalnızca bir kez yapılır."</string>
+    <string name="connect_guide_network">"İkisini de aynı Wi-Fi ağında tutun. Tailscale gibi başka bir ağda Adresle ekle'yi kullanın."</string>
+    <string name="connect_guide_sources">"Müzik o cihazın kendi kaynaklarından çalınır, bu yüzden orada aynı hizmette oturum açın. YouTube Music ve SoundCloud misafir olarak da çalışır."</string>
+    <string name="connect_host_on">"Açık. Eşleştirilmiş cihazlar bu cihazı bulup kontrol edebilir."</string>
+    <string name="connect_host_off">"Kapalı. Başka bir cihazın burada müzik çalması için açın."</string>
+    <string name="connect_idle_connecting">"Bağlanıyor…"</string>
+    <string name="connect_idle_empty">"Orada çalan bir şey yok. Başlatmak için bir şarkı seçin."</string>
+    <string name="connect_error_unavailable">"%1$s bu şarkıları çalamıyor. Orada aynı müzik hizmetinde oturum açın."</string>
+    <string name="connect_error_disabled">"%1$s cihazında uzaktan kumanda kapalı. Orada açın."</string>
+    <string name="connect_error_unpaired">"%1$s artık bu cihazı kabul etmiyor. Yeniden eşleştirin."</string>
+    <string name="connect_error_unreachable">"%1$s cihazına ulaşılamıyor. İkisinin aynı ağda olduğunu ve Aurora'nın orada açık olduğunu kontrol edin."</string>
+    <string name="connect_error_lost">"%1$s ile bağlantı kesildi."</string>
 </resources>

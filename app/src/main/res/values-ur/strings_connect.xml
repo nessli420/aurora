@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"⁧دوسرے Aurora آلات کو کنٹرول کریں یا انہیں اس آلے کو کنٹرول کرنے دیں⁩"</string>
     <string name="connect_continue">"⁧جاری رکھیں⁩"</string>
     <string name="connect_this_key">"⁧اس آلے کی کلید: %1$s⁩"</string>
+    <string name="connect_settings_link">"⁧جوڑنے کا کوڈ، پتے اور آلات⁩"</string>
+    <string name="connect_devices">"⁧آلات⁩"</string>
+    <string name="connect_guide_title">"⁧کیسے جوڑیں⁩"</string>
+    <string name="connect_guide_host">"⁧جس آلے پر موسیقی چلانی ہے، اس پر ریموٹ کنٹرول کی اجازت دیں آن کریں اور جوڑنے کا کوڈ دکھائیں پر ٹیپ کریں۔⁩"</string>
+    <string name="connect_guide_pick">"⁧جس آلے سے آپ کنٹرول کرتے ہیں، اس کے پلیئر میں یہاں چلائیں کھولیں، وہ آلہ منتخب کریں اور کوڈ درج کریں۔ جوڑنا صرف ایک بار ہوتا ہے۔⁩"</string>
+    <string name="connect_guide_network">"⁧دونوں کو ایک ہی Wi-Fi پر رکھیں۔ کسی دوسرے نیٹ ورک، جیسے Tailscale، پر پتے سے شامل کریں استعمال کریں۔⁩"</string>
+    <string name="connect_guide_sources">"⁧موسیقی اسی آلے کے اپنے ذرائع سے چلتی ہے، اس لیے وہاں اسی سروس میں سائن ان کریں۔ YouTube Music اور SoundCloud مہمان کے طور پر بھی چلتے ہیں۔⁩"</string>
+    <string name="connect_host_on">"⁧آن۔ جوڑے گئے آلات اسے تلاش اور کنٹرول کر سکتے ہیں۔⁩"</string>
+    <string name="connect_host_off">"⁧آف۔ کسی دوسرے آلے سے یہاں موسیقی چلانے کے لیے آن کریں۔⁩"</string>
+    <string name="connect_idle_connecting">"⁧جڑ رہا ہے…⁩"</string>
+    <string name="connect_idle_empty">"⁧وہاں کچھ نہیں چل رہا۔ شروع کرنے کے لیے کوئی گانا منتخب کریں۔⁩"</string>
+    <string name="connect_error_unavailable">"⁧%1$s یہ گانے نہیں چلا سکتا۔ وہاں اسی موسیقی سروس میں سائن ان کریں۔⁩"</string>
+    <string name="connect_error_disabled">"⁧%1$s پر ریموٹ کنٹرول بند ہے۔ اسے وہاں آن کریں۔⁩"</string>
+    <string name="connect_error_unpaired">"⁧%1$s اب اس آلے کو قبول نہیں کرتا۔ دوبارہ جوڑیں۔⁩"</string>
+    <string name="connect_error_unreachable">"⁧%1$s تک رسائی نہیں ہو رہی۔ دیکھیں کہ دونوں ایک ہی نیٹ ورک پر ہوں اور وہاں Aurora کھلا ہو۔⁩"</string>
+    <string name="connect_error_lost">"⁧%1$s سے رابطہ ٹوٹ گیا۔⁩"</string>
 </resources>

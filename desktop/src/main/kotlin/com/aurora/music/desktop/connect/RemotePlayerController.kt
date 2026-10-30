@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.connect
 
+import com.aurora.music.R
 import com.aurora.music.data.PlaybackCollectionIdentity
 import com.aurora.music.desktop.natives.AudioDevice
 import com.aurora.music.desktop.natives.DeviceKind
@@ -7,6 +8,7 @@ import com.aurora.music.desktop.player.EMPTY_SONG
 import com.aurora.music.desktop.player.PlayerController
 import com.aurora.music.desktop.player.PlayerUiState
 import com.aurora.music.desktop.player.RepeatMode
+import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
 import com.aurora.music.playback.network.endpoint.ConnectCommand
 import com.aurora.music.playback.network.endpoint.ConnectSession
@@ -21,6 +23,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.conflate
 import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -34,7 +37,7 @@ internal class RemotePlayerController(
     private val artDir: File,
     private val onDisconnect: () -> Unit,
 ) : PlayerController, AutoCloseable {
-    private val mutableState = MutableStateFlow(PlayerUiState())
+    private val mutableState = MutableStateFlow(PlayerUiState(current = idle(), remote = true))
     private val mutableOutputs = MutableStateFlow<List<AudioDevice>>(emptyList())
     private val mutablePreferred = MutableStateFlow<String?>(null)
     private val mutableVolume = MutableStateFlow(1f)
@@ -48,11 +51,12 @@ internal class RemotePlayerController(
     override val exclusiveOutput: StateFlow<Boolean> = MutableStateFlow(false)
     override val exclusiveAvailable: Boolean get() = false
     override val volume: StateFlow<Float> = mutableVolume.asStateFlow()
-    override val messages: Flow<String> = session.error.filterNotNull()
+    override val messages: Flow<String> = session.error.filterNotNull().map { session.problem() ?: it }
     private val offset: Int get() = session.status.value?.offset ?: 0
     private val jobs = listOf(
         scope.launch { session.status.collect { it?.let(::apply) } },
-        scope.launch { session.connected.collect { session.status.value?.let(::apply) } },
+        scope.launch { session.connected.collect { session.status.value?.let(::apply) ?: mutableState.update { it.copy(current = idle()) } } },
+        scope.launch { session.error.collect { session.status.value?.let(::apply) ?: mutableState.update { it.copy(current = idle()) } } },
         scope.launch { volumeRequests.filterNotNull().conflate().collect { session.send(ConnectCommand.Volume(it)) } },
         scope.launch {
             while (true) {
@@ -62,12 +66,15 @@ internal class RemotePlayerController(
         },
     )
 
-    val name: String get() = session.status.value?.name?.ifBlank { null } ?: session.peer.name
+    val name: String get() = session.name
+
+    private fun idle() = EMPTY_SONG.copy(title = session.name, artist = session.problem()
+        ?: appString(if (session.connected.value) R.string.connect_idle_empty else R.string.connect_idle_connecting))
 
     private fun apply(status: ConnectStatus) {
         val local = status.index - status.offset
         val queue = status.queue.map(ConnectTrack::toSong)
-        val current = queue.getOrNull(local)?.let { if (artFor == it.id) it.copy(artworkUrl = artUrl) else it } ?: EMPTY_SONG
+        val current = queue.getOrNull(local)?.let { if (artFor == it.id) it.copy(artworkUrl = artUrl) else it } ?: idle()
         mutableState.update {
             it.copy(current = current, queue = queue.mapIndexed { i, song -> if (i == local) current else song },
                 isPlaying = status.playing && session.connected.value, positionSec = session.positionMs() / 1000f, shuffle = status.shuffle,

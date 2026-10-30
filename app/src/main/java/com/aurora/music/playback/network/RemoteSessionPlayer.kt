@@ -25,7 +25,7 @@ import kotlin.math.roundToInt
 
 // mirrors another aurora device's own session; the queue lives there, this only renders and forwards
 @UnstableApi
-class RemoteSessionPlayer(context: Context, val session: ConnectSession) : SimpleBasePlayer(Looper.getMainLooper()) {
+class RemoteSessionPlayer(private val context: Context, val session: ConnectSession) : SimpleBasePlayer(Looper.getMainLooper()) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
     private val artDir = File(context.cacheDir, ART_DIR)
     private var status: ConnectStatus? = session.status.value
@@ -37,7 +37,7 @@ class RemoteSessionPlayer(context: Context, val session: ConnectSession) : Simpl
         scope.launch { session.connected.collect { invalidateState() } }
     }
 
-    val name: String get() = status?.name?.ifBlank { null } ?: session.peer.name
+    val name: String get() = session.name
 
     fun setShuffle(target: Int) {
         val value = when (target) { 1 -> true; 0 -> false; else -> status?.shuffle != true }
@@ -119,7 +119,12 @@ class RemoteSessionPlayer(context: Context, val session: ConnectSession) : Simpl
 
     private fun send(command: ConnectCommand): ListenableFuture<*> {
         val done = SettableFuture.create<Any?>()
-        scope.launch { session.send(command); done.set(null) }
+        scope.launch {
+            // a song the other device can't find would otherwise change nothing without a word
+            if (!session.send(command) && (command is ConnectCommand.Play || command is ConnectCommand.Add))
+                session.problem()?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show() }
+            done.set(null)
+        }
         return done
     }
 

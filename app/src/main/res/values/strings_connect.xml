@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"Control other Aurora devices or let them control this one"</string>
     <string name="connect_continue">"Continue"</string>
     <string name="connect_this_key">"This device's key: %1$s"</string>
+    <string name="connect_settings_link">"Pairing code, addresses and devices"</string>
+    <string name="connect_devices">"Devices"</string>
+    <string name="connect_guide_title">"How to connect"</string>
+    <string name="connect_guide_host">"On the device that should play the music, turn on Allow Remote Control and tap Show pairing code."</string>
+    <string name="connect_guide_pick">"On the device you control from, open Play on in the player, choose that device and enter the code. You only pair once."</string>
+    <string name="connect_guide_network">"Keep both on the same Wi-Fi. On another network, such as Tailscale, use Add by address."</string>
+    <string name="connect_guide_sources">"Music plays from that device's own sources, so sign in to the same service there. YouTube Music and SoundCloud also work as a guest."</string>
+    <string name="connect_host_on">"On. Paired devices can find and control this one."</string>
+    <string name="connect_host_off">"Off. Turn on to let another device play music here."</string>
+    <string name="connect_idle_connecting">"Connecting…"</string>
+    <string name="connect_idle_empty">"Nothing playing there. Pick a song to start it."</string>
+    <string name="connect_error_unavailable">"%1$s can't play these songs. Sign in to the same music service there."</string>
+    <string name="connect_error_disabled">"Remote control is off on %1$s. Turn it on there."</string>
+    <string name="connect_error_unpaired">"%1$s no longer accepts this device. Pair again."</string>
+    <string name="connect_error_unreachable">"Can't reach %1$s. Check that both are on the same network and Aurora is open there."</string>
+    <string name="connect_error_lost">"Lost the connection to %1$s."</string>
 </resources>

@@ -1,11 +1,13 @@
 package com.aurora.music.desktop.connect
 
 import androidx.compose.runtime.staticCompositionLocalOf
+import com.aurora.music.R
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.platform.WebCredentials
 import com.aurora.music.desktop.player.DesktopPlayer
 import com.aurora.music.desktop.player.PlayerController
+import com.aurora.music.localization.appString
 import com.aurora.music.playback.network.endpoint.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,6 +20,18 @@ import java.io.File
 val LocalConnect = staticCompositionLocalOf<DesktopConnect?> { null }
 
 data class ProbedDevice(val address: String, val fingerprint: String, val known: Boolean)
+
+// hosts answer in generic english, so the problems a user can fix get local text that names the device
+fun ConnectSession.problem(): String? {
+    val message = error.value ?: return null
+    return when (errorCode) {
+        "not_available" -> appString(R.string.connect_error_unavailable, name)
+        "connect_disabled" -> appString(R.string.connect_error_disabled, name)
+        "unauthorized", "certificate_mismatch" -> appString(R.string.connect_error_unpaired, name)
+        "renderer_unreachable" -> appString(R.string.connect_error_unreachable, name)
+        else -> message
+    }
+}
 
 data class DesktopConnectState(
     val enabled: Boolean = false,
@@ -153,23 +167,7 @@ class DesktopConnect(private val container: DesktopContainer, private val local:
             val old = remote
             if (peer?.id == old?.session?.peer?.id) return@launch
             if (peer == null) {
-                old ?: return@launch
-                remote = null
-                mutableActive.value = local
-                mutable.update { it.copy(controlling = null) }
-                val status = old.session.status.value
-                if (behaviour == ConnectSwitch.MOVE && status != null && status.queue.isNotEmpty()) {
-                    val position = old.session.positionMs()
-                    val songs = container.repository.resolveConnectTracks(status.queue)
-                    val start = songs.indexOfFirst { it.id == status.current?.id }.coerceAtLeast(0)
-                    if (songs.isNotEmpty()) {
-                        local.playAll(songs, start)
-                        if (songs[start].id == status.current?.id && songs[start].durationSec > 0) local.seekTo(position / (songs[start].durationSec * 1000f))
-                        if (!status.playing && local.state.value.isPlaying) local.togglePlay()
-                        old.session.send(ConnectCommand.Playing(false))
-                    }
-                }
-                old.close(); old.session.close()
+                old?.let { leave(it, behaviour == ConnectSwitch.MOVE) }
                 return@launch
             }
             old?.let { it.close(); it.session.close() }
@@ -177,11 +175,11 @@ class DesktopConnect(private val container: DesktopContainer, private val local:
             val session = ConnectSession(fresh, scope)
             val controller = RemotePlayerController(session, scope, File(container.paths.cache, "connect-art")) { control(null) }
             val here = local.state.value
-            if (behaviour == ConnectSwitch.MOVE && here.hasTrack && here.queue.isNotEmpty()) {
+            val play = if (!here.hasTrack || here.queue.isEmpty()) null else {
                 val from = (here.currentIndex - 100).coerceIn(0, (here.queue.size - 500).coerceAtLeast(0))
                 val window = here.queue.subList(from, minOf(here.queue.size, from + 500))
-                session.post(ConnectCommand.Play(window.map(ConnectTrack::of), (here.currentIndex - from).coerceIn(0, window.lastIndex),
-                    (here.positionSec * 1000).toLong(), here.isPlaying))
+                ConnectCommand.Play(window.map(ConnectTrack::of), (here.currentIndex - from).coerceIn(0, window.lastIndex),
+                    (here.positionSec * 1000).toLong(), here.isPlaying)
             }
             if (behaviour != ConnectSwitch.KEEP && here.isPlaying) local.togglePlay()
             remote = controller
@@ -190,12 +188,38 @@ class DesktopConnect(private val container: DesktopContainer, private val local:
             scope.launch {
                 session.lost.first { it }
                 if (remote !== controller) return@launch
-                val message = session.error.value ?: "Lost connection to ${fresh.name}."
+                val message = session.problem() ?: appString(R.string.connect_error_lost, session.name)
                 control(null)
                 mutable.update { it.copy(error = message) }
                 mutableMessages.tryEmit(message)
             }
+            // a queue the other device can't play comes straight back here instead of leaving both silent
+            if (session.handOff(behaviour, play) || remote !== controller) return@launch
+            val message = session.problem() ?: appString(R.string.connect_error_lost, session.name)
+            leave(controller, moveBack = false)
+            if (here.isPlaying && !local.state.value.isPlaying) local.togglePlay()
+            mutable.update { it.copy(error = message) }
+            mutableMessages.tryEmit(message)
         }
+    }
+
+    private suspend fun leave(old: RemotePlayerController, moveBack: Boolean) {
+        remote = null
+        mutableActive.value = local
+        mutable.update { it.copy(controlling = null) }
+        val status = old.session.status.value
+        if (moveBack && status != null && status.queue.isNotEmpty()) {
+            val position = old.session.positionMs()
+            val songs = container.repository.resolveConnectTracks(status.queue)
+            val start = songs.indexOfFirst { it.id == status.current?.id }.coerceAtLeast(0)
+            if (songs.isNotEmpty() && remote == null) {
+                local.playAll(songs, start)
+                if (songs[start].id == status.current?.id && songs[start].durationSec > 0) local.seekTo(position / (songs[start].durationSec * 1000f))
+                if (!status.playing && local.state.value.isPlaying) local.togglePlay()
+                old.session.send(ConnectCommand.Playing(false))
+            }
+        }
+        old.close(); old.session.close()
     }
 
     override fun close() {

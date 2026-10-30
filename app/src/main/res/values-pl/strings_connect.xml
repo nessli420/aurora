@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"Steruj innymi urządzeniami Aurora lub pozwól im sterować tym"</string>
     <string name="connect_continue">"Dalej"</string>
     <string name="connect_this_key">"Klucz tego urządzenia: %1$s"</string>
+    <string name="connect_settings_link">"Kod parowania, adresy i urządzenia"</string>
+    <string name="connect_devices">"Urządzenia"</string>
+    <string name="connect_guide_title">"Jak połączyć"</string>
+    <string name="connect_guide_host">"Na urządzeniu, które ma odtwarzać muzykę, włącz Zezwól na zdalne sterowanie i dotknij Pokaż kod parowania."</string>
+    <string name="connect_guide_pick">"Na urządzeniu, którym sterujesz, otwórz w odtwarzaczu Odtwarzaj na, wybierz to urządzenie i wpisz kod. Parowanie wystarczy raz."</string>
+    <string name="connect_guide_network">"Oba urządzenia muszą być w tej samej sieci Wi-Fi. W innej sieci, np. Tailscale, użyj Dodaj przez adres."</string>
+    <string name="connect_guide_sources">"Muzyka gra z własnych źródeł tamtego urządzenia, więc zaloguj się tam do tej samej usługi. YouTube Music i SoundCloud działają też jako gość."</string>
+    <string name="connect_host_on">"Włączone. Sparowane urządzenia mogą znaleźć to urządzenie i nim sterować."</string>
+    <string name="connect_host_off">"Wyłączone. Włącz, aby inne urządzenie mogło tu odtwarzać muzykę."</string>
+    <string name="connect_idle_connecting">"Łączenie…"</string>
+    <string name="connect_idle_empty">"Nic tam nie gra. Wybierz utwór, aby go uruchomić."</string>
+    <string name="connect_error_unavailable">"%1$s nie może odtworzyć tych utworów. Zaloguj się tam do tej samej usługi muzycznej."</string>
+    <string name="connect_error_disabled">"Zdalne sterowanie jest wyłączone na %1$s. Włącz je tam."</string>
+    <string name="connect_error_unpaired">"%1$s nie akceptuje już tego urządzenia. Sparuj je ponownie."</string>
+    <string name="connect_error_unreachable">"Nie można połączyć się z %1$s. Sprawdź, czy oba urządzenia są w tej samej sieci i czy Aurora jest tam otwarta."</string>
+    <string name="connect_error_lost">"Utracono połączenie z %1$s."</string>
 </resources>

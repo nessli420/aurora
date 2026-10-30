@@ -46,6 +46,7 @@ data class PlayerUiState(
     val supportsCanvas: Boolean = false,
     val supportsMusicVideo: Boolean = false,
     val longFormSkipButtons: Boolean = true,
+    val remote: Boolean = false,
 ) {
     val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec
     val skipButtons: Boolean get() = longFormSkipButtons && !isMix && !isLive &&
@@ -53,6 +54,8 @@ data class PlayerUiState(
     val progress: Float get() = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
     val isCurrentLiked: Boolean get() = likedIds.contains(current.id)
     val hasTrack: Boolean get() = current.id.isNotEmpty()
+    // controlling another device keeps the bar, so there is always a way back
+    val showsBar: Boolean get() = hasTrack || remote
 
     fun settled(): PlayerUiState = copy(positionSec = 0f)
 }

@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"Andere Aurora-Geräte steuern oder sie dieses steuern lassen"</string>
     <string name="connect_continue">"Weiter"</string>
     <string name="connect_this_key">"Schlüssel dieses Geräts: %1$s"</string>
+    <string name="connect_settings_link">"Kopplungscode, Adressen und Geräte"</string>
+    <string name="connect_devices">"Geräte"</string>
+    <string name="connect_guide_title">"So verbindest du"</string>
+    <string name="connect_guide_host">"Schalte auf dem Gerät, das die Musik abspielen soll, Fernsteuerung erlauben ein und tippe auf Kopplungscode anzeigen."</string>
+    <string name="connect_guide_pick">"Öffne auf dem Gerät, mit dem du steuerst, im Player Abspielen auf, wähle das Gerät und gib den Code ein. Gekoppelt wird nur einmal."</string>
+    <string name="connect_guide_network">"Beide müssen im selben WLAN sein. In einem anderen Netzwerk wie Tailscale nutze Per Adresse hinzufügen."</string>
+    <string name="connect_guide_sources">"Die Musik kommt aus den eigenen Quellen des Geräts. Melde dich dort beim selben Dienst an. YouTube Music und SoundCloud gehen auch als Gast."</string>
+    <string name="connect_host_on">"An. Gekoppelte Geräte können dieses Gerät finden und steuern."</string>
+    <string name="connect_host_off">"Aus. Einschalten, damit ein anderes Gerät hier Musik abspielen kann."</string>
+    <string name="connect_idle_connecting">"Verbinde…"</string>
+    <string name="connect_idle_empty">"Dort läuft nichts. Wähle einen Song, um ihn zu starten."</string>
+    <string name="connect_error_unavailable">"%1$s kann diese Songs nicht abspielen. Melde dich dort beim selben Musikdienst an."</string>
+    <string name="connect_error_disabled">"Die Fernsteuerung ist auf %1$s aus. Schalte sie dort ein."</string>
+    <string name="connect_error_unpaired">"%1$s akzeptiert dieses Gerät nicht mehr. Kopple es erneut."</string>
+    <string name="connect_error_unreachable">"%1$s ist nicht erreichbar. Prüfe, ob beide im selben Netzwerk sind und Aurora dort geöffnet ist."</string>
+    <string name="connect_error_lost">"Verbindung zu %1$s verloren."</string>
 </resources>

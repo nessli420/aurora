@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"दूसरे Aurora डिवाइस नियंत्रित करें या उन्हें इसे नियंत्रित करने दें"</string>
     <string name="connect_continue">"जारी रखें"</string>
     <string name="connect_this_key">"इस डिवाइस की कुंजी: %1$s"</string>
+    <string name="connect_settings_link">"पेयरिंग कोड, पते और डिवाइस"</string>
+    <string name="connect_devices">"डिवाइस"</string>
+    <string name="connect_guide_title">"कैसे कनेक्ट करें"</string>
+    <string name="connect_guide_host">"जिस डिवाइस पर संगीत चलाना है, उस पर रिमोट कंट्रोल की अनुमति दें चालू करें और पेयरिंग कोड दिखाएँ पर टैप करें।"</string>
+    <string name="connect_guide_pick">"जिस डिवाइस से आप नियंत्रित करते हैं, उसके प्लेयर में यहाँ चलाएँ खोलें, वह डिवाइस चुनें और कोड डालें। पेयरिंग सिर्फ़ एक बार करनी होती है।"</string>
+    <string name="connect_guide_network">"दोनों को एक ही Wi-Fi पर रखें। किसी दूसरे नेटवर्क, जैसे Tailscale, पर पते से जोड़ें इस्तेमाल करें।"</string>
+    <string name="connect_guide_sources">"संगीत उस डिवाइस के अपने स्रोतों से चलता है, इसलिए वहाँ उसी सेवा में साइन इन करें। YouTube Music और SoundCloud मेहमान के रूप में भी चलते हैं।"</string>
+    <string name="connect_host_on">"चालू। पेयर किए गए डिवाइस इसे ढूँढकर नियंत्रित कर सकते हैं।"</string>
+    <string name="connect_host_off">"बंद। किसी दूसरे डिवाइस से यहाँ संगीत चलाने के लिए चालू करें।"</string>
+    <string name="connect_idle_connecting">"कनेक्ट हो रहा है…"</string>
+    <string name="connect_idle_empty">"वहाँ कुछ नहीं चल रहा। शुरू करने के लिए कोई गाना चुनें।"</string>
+    <string name="connect_error_unavailable">"%1$s ये गाने नहीं चला सकता। वहाँ उसी संगीत सेवा में साइन इन करें।"</string>
+    <string name="connect_error_disabled">"%1$s पर रिमोट कंट्रोल बंद है। उसे वहाँ चालू करें।"</string>
+    <string name="connect_error_unpaired">"%1$s अब इस डिवाइस को स्वीकार नहीं करता। फिर से पेयर करें।"</string>
+    <string name="connect_error_unreachable">"%1$s तक नहीं पहुँच पा रहे। जाँचें कि दोनों एक ही नेटवर्क पर हैं और वहाँ Aurora खुला है।"</string>
+    <string name="connect_error_lost">"%1$s से कनेक्शन टूट गया।"</string>
 </resources>

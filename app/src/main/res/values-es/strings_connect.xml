@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"Controla otros dispositivos Aurora o deja que controlen este"</string>
     <string name="connect_continue">"Continuar"</string>
     <string name="connect_this_key">"Clave de este dispositivo: %1$s"</string>
+    <string name="connect_settings_link">"Código de emparejamiento, direcciones y dispositivos"</string>
+    <string name="connect_devices">"Dispositivos"</string>
+    <string name="connect_guide_title">"Cómo conectar"</string>
+    <string name="connect_guide_host">"En el dispositivo que debe reproducir la música, activa Permitir control remoto y toca Mostrar código de emparejamiento."</string>
+    <string name="connect_guide_pick">"En el dispositivo desde el que controlas, abre Reproducir en en el reproductor, elige ese dispositivo e introduce el código. Solo hay que emparejar una vez."</string>
+    <string name="connect_guide_network">"Mantén ambos en la misma red Wi-Fi. En otra red, como Tailscale, usa Añadir por dirección."</string>
+    <string name="connect_guide_sources">"La música se reproduce desde las fuentes de ese dispositivo, así que inicia sesión allí en el mismo servicio. YouTube Music y SoundCloud también funcionan como invitado."</string>
+    <string name="connect_host_on">"Activado. Los dispositivos emparejados pueden encontrar y controlar este."</string>
+    <string name="connect_host_off">"Desactivado. Actívalo para que otro dispositivo reproduzca música aquí."</string>
+    <string name="connect_idle_connecting">"Conectando…"</string>
+    <string name="connect_idle_empty">"No se reproduce nada allí. Elige una canción para empezar."</string>
+    <string name="connect_error_unavailable">"%1$s no puede reproducir estas canciones. Inicia sesión allí en el mismo servicio de música."</string>
+    <string name="connect_error_disabled">"El control remoto está desactivado en %1$s. Actívalo allí."</string>
+    <string name="connect_error_unpaired">"%1$s ya no acepta este dispositivo. Vuelve a emparejarlo."</string>
+    <string name="connect_error_unreachable">"No se puede conectar con %1$s. Comprueba que ambos estén en la misma red y que Aurora esté abierto allí."</string>
+    <string name="connect_error_lost">"Se perdió la conexión con %1$s."</string>
 </resources>

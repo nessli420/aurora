@@ -34,6 +34,7 @@ import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.ensureActive
+import com.aurora.music.playback.network.problem
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -86,6 +87,7 @@ data class PlayerUiState(
     val comments: List<com.aurora.music.model.TrackComment> = emptyList(),
     val supportsMusicVideo: Boolean = true,
     val longFormSkipButtons: Boolean = true,
+    val remote: Boolean = false,
 ) {
     val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec
     val skipButtons: Boolean get() = longFormSkipButtons && !isMix && !isLive &&
@@ -93,6 +95,8 @@ data class PlayerUiState(
     fun progressAt(positionSec: Float): Float = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
     val isCurrentLiked: Boolean get() = likedIds.contains(current.id)
     val hasTrack: Boolean get() = current.id.isNotEmpty()
+    // controlling another device keeps the bar, so there is always a way back
+    val showsBar: Boolean get() = hasTrack || remote
 }
 
 @OptIn(UnstableApi::class)
@@ -238,7 +242,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }, ContextCompat.getMainExecutor(app))
 
         viewModelScope.launch {
-            container.networkOutput.session.collectLatest { session -> session?.status?.collect { it?.let(::syncRemote) } }
+            container.networkOutput.session.collectLatest { session ->
+                if (session == null) { syncFromController(); return@collectLatest }
+                kotlinx.coroutines.flow.combine(session.status, session.error, session.connected) { status, _, _ -> status }.collect { status ->
+                    status?.let(::syncRemote)
+                    if (status?.current == null) syncFromController()
+                }
+            }
         }
 
         // restore a saved queue only if the service came up empty otherwise keep its queue
@@ -422,6 +432,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         )
     }
 
+    private fun remoteIdle(session: com.aurora.music.playback.network.endpoint.ConnectSession) = EMPTY_SONG.copy(title = session.name,
+        artist = session.problem()
+            ?: appString(if (session.connected.value) R.string.connect_idle_empty else R.string.connect_idle_connecting))
+
     private fun syncRemote(remote: com.aurora.music.playback.network.endpoint.ConnectStatus) {
         val id = remote.current?.id ?: return
         _state.update { it.copy(speed = remote.speed, sleepTimerMinutes = remote.sleepMinutes, sleepEndOfTrack = remote.sleepEndOfTrack) }
@@ -496,7 +510,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             val metadata = c.currentMediaItem!!.mediaMetadata
             Song(mediaId!!, metadata.title?.toString().orEmpty(), metadata.artist?.toString().orEmpty(), "",
                 metadata.artworkUri?.toString().orEmpty(), (c.duration.coerceAtLeast(0) / 1000).toInt())
-        } else mediaId?.let { songById[it] } ?: if (remoteSession != null) EMPTY_SONG else _state.value.current
+        } else mediaId?.let { songById[it] } ?: remoteSession?.let(::remoteIdle) ?: _state.value.current
         val cur = com.aurora.music.playback.PreferredPlayback.applyTo(queued, c.currentMediaItem)
         companionVideo.clearIfSongChanged(cur.id)
         val sourceType = container.repository.sourceType(cur)
@@ -528,6 +542,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                     else -> RepeatMode.OFF
                 },
                 queue = if (q.isNotEmpty() || remoteSession != null) q else it.queue,
+                remote = remoteSession != null,
                 currentIndex = c.currentMediaItemIndex.coerceAtLeast(0),
                 bpm = ki?.bpm ?: 0,
                 camelot = ki?.camelot ?: "",

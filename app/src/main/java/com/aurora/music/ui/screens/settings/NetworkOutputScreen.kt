@@ -5,135 +5,38 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.AnnotatedString
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.playback.network.NetworkOutputManager
 import com.aurora.music.playback.network.NetworkTarget
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
 @Composable
-fun NetworkOutputScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
+fun NetworkOutputScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenConnect: () -> Unit) {
     val manager = (LocalContext.current.applicationContext as AuroraApplication).container.networkOutput
-    val state by manager.state.collectAsStateWithLifecycle()
-    val clipboard = LocalClipboardManager.current
-    var address by remember { mutableStateOf("") }
-    var code by remember { mutableStateOf("") }
-    var host by remember { mutableStateOf("") }
-    val store = (LocalContext.current.applicationContext as AuroraApplication).container.settingsStore
-    val switch by store.connectSwitch.collectAsStateWithLifecycle(initialValue = com.aurora.music.playback.network.endpoint.ConnectSwitch.PAUSE)
-    val scope = rememberCoroutineScope()
-    var now by remember { mutableLongStateOf(System.currentTimeMillis()) }
-    LaunchedEffect(state.pairing) {
-        while (state.pairing != null && System.currentTimeMillis() < state.pairing!!.expiresAtMs) {
-            now = System.currentTimeMillis()
-            delay(1_000)
-        }
-        now = System.currentTimeMillis()
-    }
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.text_network_playback_5d5a8a), onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
-            item {
-                SettingsSectionTitle(appString(R.string.connect_settings_title))
-                SettingsGroup {
-                    SegmentedRow(appString(R.string.connect_switch_title), listOf(appString(R.string.connect_switch_keep),
-                        appString(R.string.connect_switch_pause), appString(R.string.connect_switch_move)), switch) {
-                        scope.launch { store.setConnectSwitch(it) }
-                    }
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        OutlinedTextField(host, { host = it.take(256) }, label = { Text(appString(R.string.connect_add_by_address)) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri), modifier = Modifier.fillMaxWidth(), singleLine = true)
-                        Text(appString(R.string.connect_address_help), style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        if (state.probed?.known == true) Text(appString(R.string.connect_already_paired), style = MaterialTheme.typography.bodySmall)
-                        Button(onClick = { manager.probe(host) }, enabled = host.isNotBlank() && !state.preparing) { Text(appString(R.string.connect_continue)) }
-                    }
-                }
-            }
             item { NetworkOutputControls(manager, showForget = true) }
-            item {
-                SettingsSectionTitle(appString(R.string.text_pair_an_aurora_player_de78d4))
-                SettingsGroup {
-                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                        state.discovered.filter { found -> state.paired.none { it.id == found.id } }.forEach { found ->
-                            Text("${found.name} · ${found.address}", style = MaterialTheme.typography.bodySmall)
-                        }
-                        OutlinedTextField(
-                            address, { address = it.take(512) }, label = { Text(appString(R.string.text_pairing_address_0a7563)) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
-                            modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        )
-                        OutlinedTextField(
-                            code, { code = it.take(32) }, label = { Text(appString(R.string.text_pairing_code_309e30)) },
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Ascii),
-                            modifier = Modifier.fillMaxWidth(), singleLine = true,
-                        )
-                        Text(appString(R.string.text_copy_the_full_address_from_the_other_device_825ae9), style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        Button(onClick = { manager.pair(address.trim(), code.trim()) },
-                            enabled = address.isNotBlank() && code.isNotBlank() && !state.preparing) { Text(appString(R.string.text_pair_2537f8)) }
-                    }
-                }
-            }
             item {
                 SettingsSectionTitle(appString(R.string.text_this_device_fa5a6d))
                 SettingsGroup {
-                    SettingsSwitchRow(title = appString(R.string.text_allow_remote_control_0f0d85), subtitle = appString(R.string.text_paired_devices_can_control_playback_86f484),
-                        checked = state.receiverEnabled, onCheckedChange = manager::enableReceiver)
-                    if (state.receiverEnabled) {
-                        Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            state.receiverAddress?.let { endpoint ->
-                                Text(appString(R.string.connect_this_key, com.aurora.music.playback.network.endpoint.EndpointTls.shortKey(endpoint.fingerprint)),
-                                    style = MaterialTheme.typography.titleSmall)
-                                Text(appString(R.string.connect_reachable_at), style = MaterialTheme.typography.labelMedium,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                state.receiverAddresses.ifEmpty { listOf(endpoint.address) }.forEach {
-                                    Text(it.removePrefix("https://"), style = MaterialTheme.typography.bodyMedium)
-                                }
-                                TextButton(onClick = { clipboard.setText(AnnotatedString(endpoint.pairingAddress)) }) {
-                                    Text(appString(R.string.text_copy_pairing_address_fc506d))
-                                }
-                            } ?: Text(appString(R.string.text_connecting_to_the_local_network_4df7c7), style = MaterialTheme.typography.bodySmall)
-                            val pairing = state.pairing
-                            if (pairing != null && pairing.expiresAtMs > now) {
-                                Text(pairing.code, style = MaterialTheme.typography.headlineSmall)
-                                Text(appString(R.string.text_expires_in_s_829189, (((pairing.expiresAtMs - now + 999) / 1_000))),
-                                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                TextButton(onClick = { clipboard.setText(AnnotatedString(pairing.code)) }) { Text(appString(R.string.text_copy_code_6c1069)) }
-                            }
-                            TextButton(onClick = manager::beginPairing, enabled = state.receiverAddress != null) {
-                                Text(if (pairing == null || pairing.expiresAtMs <= now) appString(R.string.text_show_pairing_code_921392) else appString(R.string.text_new_code_6499c7))
-                            }
-                        }
-                    }
-                    state.controllers.forEach { controller ->
-                        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(controller.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
-                            TextButton(onClick = { manager.revokeController(controller.id) }) { Text(appString(R.string.text_revoke_0be720)) }
-                        }
-                    }
+                    RemoteControlSwitch(manager)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.Devices, SettingsDestinations.connect, appString(R.string.connect_settings_link), onClick = onOpenConnect)
                 }
             }
         }
-    }
-    state.probed?.takeIf { !it.known }?.let { probed ->
-        com.aurora.music.ui.screens.player.ConnectPairDialog(probed.address.removePrefix("https://"),
-            com.aurora.music.playback.network.endpoint.EndpointTls.shortKey(probed.fingerprint),
-            onPair = manager::pairProbed, onDismiss = manager::dismissProbe)
     }
 }
 

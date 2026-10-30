@@ -7,9 +7,12 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withTimeoutOrNull
 
 class ConnectSession(
     val peer: PairedRenderer,
@@ -26,6 +29,9 @@ class ConnectSession(
     val error: StateFlow<String?> = mutableError.asStateFlow()
     val connected: StateFlow<Boolean> = mutableConnected.asStateFlow()
     val lost: StateFlow<Boolean> = mutableLost.asStateFlow()
+    @Volatile var errorCode: String? = null
+        private set
+    val name: String get() = mutableStatus.value?.name?.ifBlank { null } ?: peer.name
     @Volatile private var receivedAt = 0L
     @Volatile private var tag: String? = null
     @Volatile private var commands = 0L
@@ -60,7 +66,7 @@ class ConnectSession(
                 val code = (e as? RendererException)?.code
                 val fatal = code in FATAL
                 if (!fatal && clients.size > 1) client = clients[(clients.indexOf(client) + 1) % clients.size]
-                if (fatal || failures >= clients.size) mutableError.value = e.message ?: "Lost the connection."
+                if (fatal || failures >= clients.size) fail(e, "Lost the connection.")
                 if (fatal || System.currentTimeMillis() - failingSince >= lostAfterMs) {
                     mutableLost.value = true
                     return
@@ -76,7 +82,15 @@ class ConnectSession(
         apply(status, next)
         true
     } catch (e: CancellationException) { throw e }
-    catch (e: Exception) { mutableError.value = e.message ?: "The command didn't reach the device."; false }
+    catch (e: Exception) { fail(e, "The command didn't reach the device."); false }
+
+    // move hands the queue over, pause only when the other device has nothing of its own queued
+    suspend fun handOff(behaviour: Int, play: ConnectCommand.Play?): Boolean {
+        if (play == null || behaviour == ConnectSwitch.KEEP) return true
+        val remote = withTimeoutOrNull(lostAfterMs) { status.filterNotNull().first() } ?: return true
+        if (behaviour == ConnectSwitch.PAUSE && remote.queue.isNotEmpty()) return true
+        return send(play)
+    }
 
     fun post(command: ConnectCommand) { scope.launch { send(command) } }
 
@@ -84,9 +98,15 @@ class ConnectSession(
 
     fun clearError() { mutableError.value = null }
 
+    private fun fail(e: Exception, fallback: String) {
+        errorCode = (e as? RendererException)?.code ?: "renderer_unreachable"
+        mutableError.value = e.message ?: fallback
+    }
+
     private fun apply(status: ConnectStatus, next: String) {
         receivedAt = System.nanoTime()
         tag = next
+        errorCode = null
         mutableError.value = null
         mutableStatus.value = status
         mutableConnected.value = true

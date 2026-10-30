@@ -399,7 +399,7 @@ private fun Shell(
     val panelSpacing = uiPrefs.tabletPanelSpacing.dp.coerceAtLeast(4.dp)
     val density = LocalDensity.current
     var dockHeight by remember { mutableStateOf(0.dp) }
-    val dockVisible = rail && playerState.hasTrack
+    val dockVisible = rail && playerState.showsBar
     val detailId = if (currentRoute == Routes.DETAIL) backStackEntry?.arg("id") else null
     var playlistsVersion by remember { mutableStateOf(0) }
     val sidebarPlaylists by produceState(emptyList<Playlist>(), sessionReady, session?.server, accountEpoch, libraryReload, offlineMode, playlistsVersion) {
@@ -1441,7 +1441,7 @@ private fun Shell(
                     state = live,
                     openPane = if (shell.sidePanel) sidePane else null,
                     volume = volume,
-                    onExpand = { player.setExpanded(true) },
+                    onExpand = { if (live.hasTrack) player.setExpanded(true) else showOutput = true },
                     onTogglePlay = { player.togglePlay() },
                     onPrevious = { player.previous() },
                     onNext = { player.next() },

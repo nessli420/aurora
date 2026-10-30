@@ -305,7 +305,7 @@ fun AuroraApp() {
     val panelSpacing = uiPrefs.tabletPanelSpacing.dp.coerceAtLeast(4.dp)
     val density = androidx.compose.ui.platform.LocalDensity.current
     var dockHeight by remember { mutableStateOf(0.dp) }
-    val dockVisible = showChrome && rail && playerState.hasTrack && !imeVisible
+    val dockVisible = showChrome && rail && playerState.showsBar && !imeVisible
     val pageWidth = when {
         currentRoute == Routes.SIGN_IN || currentRoute == Routes.SETUP -> androidx.compose.ui.unit.Dp.Unspecified
         currentRoute in topLevelDestinations.map { it.route } -> 1280.dp
@@ -675,7 +675,11 @@ fun AuroraApp() {
                     )
                 }
                 composable(Routes.SETTINGS_NETWORK) {
-                    com.aurora.music.ui.screens.settings.NetworkOutputScreen(padding) { nav.popBackStack() }
+                    com.aurora.music.ui.screens.settings.NetworkOutputScreen(padding, onBack = { nav.popBackStack() },
+                        onOpenConnect = { nav.navigate(Routes.SETTINGS_CONNECT) })
+                }
+                composable(Routes.SETTINGS_CONNECT) {
+                    com.aurora.music.ui.screens.settings.ConnectSettingsScreen(padding) { nav.popBackStack() }
                 }
                 composable(Routes.SETTINGS_OUTPUT) {
                     com.aurora.music.ui.screens.settings.AudioOutputSettingsScreen(
@@ -950,11 +954,11 @@ fun AuroraApp() {
                                 }
                                 Spacer(Modifier.height(8.dp))
                             }
-                            if (playerState.hasTrack && !rail) {
+                            if (playerState.showsBar && !rail) {
                                 // The mini player belongs to the app chrome, so it uses the app palette.
                                 MiniPlayer(
                                     state = playerState,
-                                    onExpand = { if (playerState.current.id.startsWith("aurora-mix:")) showMix = true else playerVM.setExpanded(true) },
+                                    onExpand = { if (!playerState.hasTrack) showOutput = true else if (playerState.current.id.startsWith("aurora-mix:")) showMix = true else playerVM.setExpanded(true) },
                                     onTogglePlay = { playerVM.togglePlay() },
                                     onToggleLike = { playerVM.toggleLikeCurrent() },
                                     onNext = { playerVM.next() },
@@ -1372,6 +1376,7 @@ fun AuroraApp() {
                                     onOpenPlayback = { open(Routes.SETTINGS_PLAYBACK) },
                                     onOpenOutput = { open(Routes.SETTINGS_OUTPUT) },
                                     onOpenNetwork = { open(Routes.SETTINGS_NETWORK) },
+                                    onOpenConnect = { open(Routes.SETTINGS_CONNECT) },
                                     onOpenLoudness = { open(Routes.SETTINGS_LOUDNESS) },
                                     onOpenAdvancedAudio = { open(Routes.SETTINGS_ADVANCED_AUDIO) },
                                     onOpenAlarm = { open(Routes.SETTINGS_ALARM) },
@@ -1533,7 +1538,7 @@ fun AuroraApp() {
                 PlaybackDock(
                     state = playerState,
                     openPane = if (shell.sidePanel) sidePane else null,
-                    onExpand = { if (playerState.current.id.startsWith("aurora-mix:")) showMix = true else playerVM.setExpanded(true) },
+                    onExpand = { if (!playerState.hasTrack) showOutput = true else if (playerState.current.id.startsWith("aurora-mix:")) showMix = true else playerVM.setExpanded(true) },
                     onTogglePlay = { playerVM.togglePlay() },
                     onPrevious = { playerVM.previous() },
                     onNext = { playerVM.next() },

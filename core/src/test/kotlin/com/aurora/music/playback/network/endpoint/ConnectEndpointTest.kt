@@ -30,8 +30,10 @@ class ConnectEndpointTest {
         @Volatile var state = ConnectStatus(queue = listOf(ConnectTrack("a", "One"), ConnectTrack("b", "Two")), durationMs = 200_000,
             outputs = listOf(ConnectOption("spk", "Speakers")), presets = listOf(ConnectOption("p1", "Warm")))
         val executed = mutableListOf<ConnectCommand>()
+        @Volatile var playable = true
         override fun status() = state
         override fun execute(command: ConnectCommand) {
+            if (command is ConnectCommand.Play && !playable) throw RendererException("not_available", "Those songs aren't available on that device.", 409)
             executed += command
             state = when (command) {
                 is ConnectCommand.Playing -> state.copy(playing = command.value)
@@ -124,6 +126,45 @@ class ConnectEndpointTest {
                 val frozen = session.positionMs()
                 delay(300)
                 assertEquals(frozen, session.positionMs())
+            }
+        } finally { scope.cancel(); server.stop() }
+    }
+
+    @Test fun handOffSendsTheQueueOnlyWhereItIsNeededAndSessionsRepeat() = runBlocking {
+        val host = FakeHost()
+        val server = EndpointServer("Phone", { identity }, emptyList(), {}, noAds, { "127.0.0.1" }, "android", connect = host)
+        val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+        val play = ConnectCommand.Play(listOf(ConnectTrack("yt1", "Song")), 0, 5_000, true)
+        try {
+            val paired = RendererClient(server.start(port = 0)).use { it.pair("Tablet", server.beginPairing().code) }
+            ConnectSession(paired, scope).use { session ->
+                assertTrue(session.handOff(ConnectSwitch.PAUSE, play))
+                assertTrue(session.handOff(ConnectSwitch.KEEP, play))
+                assertTrue(session.handOff(ConnectSwitch.MOVE, null))
+                assertTrue(host.executed.isEmpty())
+                assertEquals("Phone", session.name)
+            }
+            host.state = host.state.copy(queue = emptyList())
+            host.playable = false
+            ConnectSession(paired, scope).use { session ->
+                assertFalse(session.handOff(ConnectSwitch.PAUSE, play))
+                assertEquals("not_available", session.errorCode)
+                assertTrue(session.status.value!!.queue.isEmpty())
+            }
+            host.playable = true
+            repeat(2) {
+                host.state = host.state.copy(queue = emptyList(), index = 0)
+                ConnectSession(paired, scope).use { session ->
+                    assertTrue(session.handOff(ConnectSwitch.PAUSE, play))
+                    assertEquals("yt1", session.status.value!!.current!!.id)
+                    assertEquals(null, session.errorCode)
+                }
+            }
+            ConnectSession(paired, scope).use { session -> assertTrue(session.handOff(ConnectSwitch.MOVE, play)) }
+            assertEquals(3, host.executed.count { it == play })
+            ConnectSession(paired.copy(address = "https://127.0.0.1:1", addresses = emptyList()), scope).use { session ->
+                assertFalse(session.send(ConnectCommand.Playing(true)))
+                assertEquals("renderer_unreachable", session.errorCode)
             }
         } finally { scope.cancel(); server.stop() }
     }

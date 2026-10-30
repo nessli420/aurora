@@ -22,6 +22,7 @@ object SettingsDestinations {
     val playback = SettingsDestination(Routes.SETTINGS_PLAYBACK, R.string.text_playback_quality_144407, R.string.text_streaming_quality_crossfade_gapless_and_speed_602d35)
     val output = SettingsDestination(Routes.SETTINGS_OUTPUT, R.string.text_audio_output_2b89cc, R.string.text_output_device_hi_res_and_usb_modes_58ec99)
     val network = SettingsDestination(Routes.SETTINGS_NETWORK, R.string.text_network_audio_3f82b9, R.string.text_cast_dlna_and_paired_aurora_devices_364cee)
+    val connect = SettingsDestination(Routes.SETTINGS_CONNECT, R.string.connect_settings_title, R.string.connect_settings_summary)
     val equalizer = SettingsDestination(Routes.SETTINGS_EQ, R.string.text_equalizer_effects_e6ad57, R.string.text_eq_device_presets_convolution_and_channels_4e2569)
     val advancedAudio = SettingsDestination(Routes.SETTINGS_ADVANCED_AUDIO, R.string.text_advanced_audio_decbca, R.string.text_processing_tuning_and_extensions_d9a2fc)
     val processingPresets = SettingsDestination(Routes.SETTINGS_PROCESSING_PRESETS, R.string.text_saved_processing_presets_f22d4b, R.string.text_save_and_restore_your_audio_settings_6ec6de)
@@ -46,7 +47,7 @@ object SettingsDestinations {
     val backup = SettingsDestination(Routes.SETTINGS_BACKUP, R.string.text_backup_restore_a16162, R.string.text_export_or_import_settings_and_playlists_4ce918)
     val about = SettingsDestination(Routes.SETTINGS_ABOUT, R.string.text_about_aurora_b4ed8c, R.string.text_version_and_app_information_9c9a82)
 
-    val all = listOf(accounts, sources, merge, storage, analysis, playback, output, network, equalizer, advancedAudio, processingRack, reverb, tuning, impulses, comparison, presetRules, processingPresets, loudness,
+    val all = listOf(accounts, sources, merge, storage, analysis, playback, output, network, connect, equalizer, advancedAudio, processingRack, reverb, tuning, impulses, comparison, presetRules, processingPresets, loudness,
         listening, extensions, signalPath, alarm, appearance, lyrics, visualizer, gestures, integrations, permissions, insights, backup, about)
 }
 

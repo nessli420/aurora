@@ -22,4 +22,20 @@
     <string name="connect_settings_summary">"다른 Aurora 기기를 제어하거나 이 기기를 제어하도록 허용합니다"</string>
     <string name="connect_continue">"계속"</string>
     <string name="connect_this_key">"이 기기의 키: %1$s"</string>
+    <string name="connect_settings_link">"페어링 코드, 주소 및 기기"</string>
+    <string name="connect_devices">"기기"</string>
+    <string name="connect_guide_title">"연결 방법"</string>
+    <string name="connect_guide_host">"음악을 재생할 기기에서 원격 제어 허용을 켜고 페어링 코드 표시를 탭하세요."</string>
+    <string name="connect_guide_pick">"제어할 기기에서 플레이어의 재생 위치를 열고 그 기기를 선택한 다음 코드를 입력하세요. 페어링은 한 번만 하면 됩니다."</string>
+    <string name="connect_guide_network">"두 기기를 같은 Wi-Fi에 연결하세요. Tailscale 같은 다른 네트워크에서는 주소로 추가를 사용하세요."</string>
+    <string name="connect_guide_sources">"음악은 그 기기의 자체 소스에서 재생되므로 그 기기에서도 같은 서비스에 로그인하세요. YouTube Music과 SoundCloud는 게스트로도 사용할 수 있습니다."</string>
+    <string name="connect_host_on">"켜짐. 페어링된 기기가 이 기기를 찾아 제어할 수 있습니다."</string>
+    <string name="connect_host_off">"꺼짐. 다른 기기에서 여기로 음악을 재생하려면 켜세요."</string>
+    <string name="connect_idle_connecting">"연결 중…"</string>
+    <string name="connect_idle_empty">"재생 중인 항목이 없습니다. 곡을 선택해 시작하세요."</string>
+    <string name="connect_error_unavailable">"%1$s에서 이 곡을 재생할 수 없습니다. 그 기기에서 같은 음악 서비스에 로그인하세요."</string>
+    <string name="connect_error_disabled">"%1$s에서 원격 제어가 꺼져 있습니다. 그 기기에서 켜세요."</string>
+    <string name="connect_error_unpaired">"%1$s이(가) 더 이상 이 기기를 허용하지 않습니다. 다시 페어링하세요."</string>
+    <string name="connect_error_unreachable">"%1$s에 연결할 수 없습니다. 두 기기가 같은 네트워크에 있고 그 기기에서 Aurora가 열려 있는지 확인하세요."</string>
+    <string name="connect_error_lost">"%1$s와(과)의 연결이 끊어졌습니다."</string>
 </resources>

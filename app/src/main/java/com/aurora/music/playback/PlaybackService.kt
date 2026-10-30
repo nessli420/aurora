@@ -1679,27 +1679,7 @@ class PlaybackService : MediaLibraryService() {
         val old = remotePlayer
         val behaviour = kotlinx.coroutines.runBlocking { container.settingsStore.connectSwitch.first() }
         if (peer == null) {
-            if (old == null) return
-            remotePlayer = null
-            attach(player)
-            val remote = old.session.status.value
-            val position = old.session.positionMs()
-            scope.launch {
-                if (behaviour == ConnectSwitch.MOVE && remote != null && remote.queue.isNotEmpty()) {
-                    val songs = container.repository.resolveConnectTracks(remote.queue)
-                    val start = songs.indexOfFirst { it.id == remote.current?.id }.coerceAtLeast(0)
-                    if (songs.isNotEmpty() && remotePlayer == null) {
-                        player.setMediaItems(songs.map { songMediaItem(it, container.repository) }, start,
-                            if (songs[start].id == remote.current?.id) position else 0)
-                        player.prepare()
-                        player.playWhenReady = remote.playing
-                        old.session.send(ConnectCommand.Playing(false))
-                    }
-                }
-                old.release()
-                if (remotePlayer == null) container.networkOutput.closeSession()
-            }
-            updateCustomLayout(); updateSignalPath(); publishNowPlaying()
+            if (old != null) leaveRemote(old, behaviour == ConnectSwitch.MOVE)
             return
         }
         if (networkPlayer != null) {
@@ -1710,7 +1690,7 @@ class PlaybackService : MediaLibraryService() {
         old?.release()
         val session = container.networkOutput.openSession(peer)
         val remote = com.aurora.music.playback.network.RemoteSessionPlayer(this, session)
-        if (behaviour == ConnectSwitch.MOVE && player.mediaItemCount > 0) {
+        val play = if (player.mediaItemCount == 0) null else {
             val tracks = (0 until player.mediaItemCount).map { player.getMediaItemAt(it) }.map { item ->
                 ConnectTrack(item.mediaId, item.mediaMetadata.title?.toString().orEmpty().take(512),
                     item.mediaMetadata.artist?.toString().orEmpty().take(512), item.mediaMetadata.albumTitle?.toString().orEmpty().take(512),
@@ -1718,9 +1698,10 @@ class PlaybackService : MediaLibraryService() {
             }
             val index = player.currentMediaItemIndex.coerceIn(0, tracks.lastIndex)
             val from = (index - 100).coerceIn(0, (tracks.size - 500).coerceAtLeast(0))
-            session.post(ConnectCommand.Play(tracks.subList(from, minOf(tracks.size, from + 500)),
-                index - from, player.currentPosition.coerceAtLeast(0), player.playWhenReady))
+            ConnectCommand.Play(tracks.subList(from, minOf(tracks.size, from + 500)),
+                index - from, player.currentPosition.coerceAtLeast(0), player.playWhenReady)
         }
+        val resume = player.playWhenReady
         if (behaviour != ConnectSwitch.KEEP) player.pause()
         remotePlayer = remote
         attach(remote)
@@ -1731,6 +1712,39 @@ class PlaybackService : MediaLibraryService() {
                 updateSignalPath(); publishNowPlaying()
             }
         })
+        // a queue the other device can't play comes straight back here instead of leaving both silent
+        scope.launch {
+            if (session.handOff(behaviour, play) || remotePlayer !== remote) return@launch
+            val message = session.problem() ?: com.aurora.music.localization.appString(com.aurora.music.R.string.connect_error_lost, session.name)
+            leaveRemote(remote, moveBack = false)
+            if (resume) player.play()
+            container.networkOutput.update { it.copy(error = message) }
+            android.widget.Toast.makeText(this@PlaybackService, message, android.widget.Toast.LENGTH_LONG).show()
+        }
+        updateCustomLayout(); updateSignalPath(); publishNowPlaying()
+    }
+
+    private fun leaveRemote(old: com.aurora.music.playback.network.RemoteSessionPlayer, moveBack: Boolean) {
+        remotePlayer = null
+        attach(player)
+        container.networkOutput.release(old.session)
+        val remote = old.session.status.value
+        val position = old.session.positionMs()
+        scope.launch {
+            if (moveBack && remote != null && remote.queue.isNotEmpty()) {
+                val songs = container.repository.resolveConnectTracks(remote.queue)
+                val start = songs.indexOfFirst { it.id == remote.current?.id }.coerceAtLeast(0)
+                if (songs.isNotEmpty() && remotePlayer == null) {
+                    player.setMediaItems(songs.map { songMediaItem(it, container.repository) }, start,
+                        if (songs[start].id == remote.current?.id) position else 0)
+                    player.prepare()
+                    player.playWhenReady = remote.playing
+                    old.session.send(ConnectCommand.Playing(false))
+                }
+            }
+            old.release()
+            old.session.close()
+        }
         updateCustomLayout(); updateSignalPath(); publishNowPlaying()
     }
 
