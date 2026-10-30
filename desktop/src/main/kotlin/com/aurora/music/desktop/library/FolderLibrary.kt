@@ -122,7 +122,7 @@ class FolderLibrary(
     fun findMatch(artist: String, title: String, durationSec: Int): Song? =
         LocalCatalogIndex.findMatch(matchIndex, artist, title, durationSec)
 
-    override fun browse(path: String): Pair<List<String>, List<Song>> = LocalCatalogIndex.browse(path, folderRoot, songs, dirOf)
+    override fun browse(path: String): Pair<List<String>, List<Song>> = LocalCatalogIndex.browse(path, folderRoot, songs, dirOf, positions)
 
     override fun songsByAlbumId(albumId: String): List<Song> = byAlbum[albumId].orEmpty()
     override fun artist(id: String): Artist? = artistIndex.artist(id)

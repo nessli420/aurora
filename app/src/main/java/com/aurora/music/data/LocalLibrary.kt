@@ -171,7 +171,7 @@ class LocalLibrary(
     fun findMatch(artist: String, title: String, durationSec: Int): Song? =
         LocalCatalogIndex.findMatch(matchIndex, artist, title, durationSec)
 
-    override fun browse(path: String): Pair<List<String>, List<Song>> = LocalCatalogIndex.browse(path, folderRoot, songs, dirOf)
+    override fun browse(path: String): Pair<List<String>, List<Song>> = LocalCatalogIndex.browse(path, folderRoot, songs, dirOf, positions)
 
     fun songsIn(album: Album): List<Song> = songsByAlbumId(album.id)
     override fun songsByAlbumId(albumId: String): List<Song> = songs.filter { it.albumId == albumId }.sortedWith(trackOrder)

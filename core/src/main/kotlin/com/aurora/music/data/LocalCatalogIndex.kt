@@ -16,10 +16,12 @@ object LocalCatalogIndex {
         return candidates.singleOrNull()?.takeIf { durationSec <= 0 || it.durationSec <= 0 }
     }
 
-    fun browse(path: String, root: String, songs: List<Song>, dirOf: Map<String, String>): Pair<List<String>, List<Song>> {
+    // tracks keep tag order per album, untagged ones fall back to filename order
+    fun browse(path: String, root: String, songs: List<Song>, dirOf: Map<String, String>, positions: Map<String, Int>): Pair<List<String>, List<Song>> {
         val base = path.ifBlank { root }
         if (base.isBlank()) return emptyList<String>() to emptyList()
-        val here = songs.filter { dirOf[it.id] == base }.sortedBy { it.title.lowercase() }
+        val here = songs.filter { dirOf[it.id] == base }
+            .sortedWith(compareBy({ it.album.lowercase() }, { positions[it.id] ?: 0 }, { it.path.lowercase() }))
         val subdirs = dirOf.values.asSequence()
             .filter { it != base && it.startsWith("$base/") }
             .map { it.removePrefix("$base/").substringBefore('/') }
