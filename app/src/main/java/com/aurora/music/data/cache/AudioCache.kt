@@ -167,6 +167,18 @@ class AudioCache(context: Context, private val settings: SettingsStore?,
         }
     }
 
+    // a track whose youtube match changed must not keep playing the old video's audio
+    fun forget(songId: String) { scope.launch {
+        val id = com.aurora.music.data.stripMergeNamespace(songId)
+        synchronized(storage) {
+            storage.keys.toList().filter { key ->
+                runCatching { gson.fromJson(storage.getContentMetadata(key).get(TRACK_METADATA, ""), CachedTrack::class.java) }.getOrNull()
+                    ?.id?.let { com.aurora.music.data.stripMergeNamespace(it) } == id
+            }.forEach(storage::removeResource)
+        }
+        refresh()
+    } }
+
     suspend fun clear() = withContext(Dispatchers.IO) {
         generation.incrementAndGet()
         synchronized(storage) { storage.keys.toList().forEach(storage::removeResource) }

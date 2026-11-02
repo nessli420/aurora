@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Alterar fonte associada"</string>
+    <string name="match_hint">"Escolha o vídeo do YouTube que deve tocar para «%1$s». O Aurora lembra-se dele em todos os sítios onde esta faixa aparece."</string>
+    <string name="match_search">"Pesquisar no YouTube"</string>
+    <string name="match_failed">"Não foi possível pesquisar no YouTube. Verifique a ligação e tente novamente."</string>
+    <string name="match_none">"Nenhum vídeo encontrado."</string>
+    <string name="match_chosen">"Escolhido"</string>
+    <string name="match_reset">"Repor associação automática"</string>
+    <string name="match_reset_done">"De volta à associação automática"</string>
+    <string name="match_saved">"Agora toca «%1$s»"</string>
+    <string name="hide_song">"Ocultar música"</string>
+    <string name="hide_song_undo">"Mostrar música"</string>
+    <string name="hide_song_hidden">"Oculta"</string>
+</resources>

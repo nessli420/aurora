@@ -323,6 +323,8 @@ private fun Shell(
             snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
     }
+    var matchSong by remember { mutableStateOf<Song?>(null) }
+    val hiddenSongs by container.trackChoices.hidden.collectAsStateWithLifecycle()
     LaunchedEffect(unsupportedAccount) {
         unsupportedAccount?.let { confirm("${it.typeLabel.localizedMediaType()}: ${appString(R.string.text_not_supported_on_this_device_a07536)}") }
     }
@@ -622,6 +624,8 @@ private fun Shell(
                 onToggleLike = { player.toggleLike(it) },
                 onOpenDetail = onOpen,
                 itemKind = kind,
+                hiddenIds = if (kind == "playlist") hiddenSongs[com.aurora.music.data.TrackChoices.collectionKey(kind, id)].orEmpty() else emptySet(),
+                onToggleHidden = if (kind == "playlist") ({ song -> container.trackChoices.setHidden(kind, id, song.id, !container.trackChoices.isHidden(kind, id, song.id)) }) else null,
                 isItemLiked = playerState.likedIds.contains(id),
                 onToggleItemLike = { player.toggleLike(id, kind) },
                 canLikeItem = container.repository.canLike(id),
@@ -827,9 +831,11 @@ private fun Shell(
         com.aurora.music.ui.components.LocalCanLike provides container.repository::canLike,
         com.aurora.music.ui.components.LocalLikeMenu provides remember(player) { com.aurora.music.ui.components.LikeMenu(player::likeOptions, player::setLikedOn) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
+        com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides
             if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE),
     ) {
+    matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm) { matchSong = null } }
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,

@@ -102,6 +102,16 @@ class AudioCache(
     // a song already on disk, for work like analysis that should neither stream nor fill the cache
     fun local(song: Song): ResolvedStream? = keyFor(song)?.let(::complete)?.let { ResolvedStream(desktopFileUri(it.path)) }
 
+    // a track whose youtube match changed must not keep playing the old video's audio
+    fun forget(songId: String) { scope.launch {
+        val id = com.aurora.music.data.stripMergeNamespace(songId)
+        records().filter { (key, record) -> readers[key] == null && record.id?.let { com.aurora.music.data.stripMergeNamespace(it) } == id }.forEach { (key, _) ->
+            File(root, "$key.$RECORD").delete()
+            File(root, "$key.$AUDIO").delete()
+        }
+        refresh()
+    } }
+
     suspend fun clear() = withContext(Dispatchers.IO) {
         generation.incrementAndGet()
         downloads.values.forEach { it.cancel() }

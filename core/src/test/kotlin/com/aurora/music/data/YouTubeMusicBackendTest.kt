@@ -18,6 +18,23 @@ class YouTubeMusicBackendTest {
     private fun parsed(value: String) = JsonParser.parseString(value).asJsonObject
     private fun track(id: String = "abcdefghijk") = """{"musicResponsiveListItemRenderer":{"playlistItemData":{"videoId":"$id"},"flexColumns":[{"musicResponsiveListItemFlexColumnRenderer":{"text":{"runs":[{"text":"Track"}]}}}],"fixedColumns":[{"musicResponsiveListItemFixedColumnRenderer":{"text":{"simpleText":"3:24"}}}]}}"""
 
+    @Test fun downloadedSongsPlayTheirFileWhereverTheyAreListed() = runBlocking {
+        val downloaded = "file:///music/Track.m4a"
+        val shelf = """{"musicCarouselShelfRenderer":{"header":{"musicCarouselShelfBasicHeaderRenderer":{"title":{"runs":[{"text":"Quick picks"}]}}},"contents":[${track()}]}}"""
+        val backend = YouTubeMusicBackend(session, YouTubeMusicTransport { endpoint, body ->
+            when {
+                endpoint == "search" -> parsed("""{"musicShelfRenderer":{"contents":[${track()}]}}""")
+                body.string("browseId") == "FEmusic_home" -> parsed("""{"sectionListRenderer":{"contents":[$shelf]}}""")
+                else -> parsed("""{"musicPlaylistShelfRenderer":{"contents":[${track()}]}}""")
+            }
+        }, localize = { if (it.id == "abcdefghijk") it.copy(streamUrl = downloaded) else it })
+
+        assertEquals(downloaded, backend.search("Track").songs.single().streamUrl)
+        assertEquals(downloaded, backend.detail("playlist", "PLtest")!!.tracks.single().streamUrl)
+        val home = backend.home().sections.flatMap { it.items }.filterIsInstance<HomeFeedItem.Track>()
+        assertEquals(listOf(downloaded), home.map { it.song.streamUrl })
+    }
+
     @Test fun removalUsesEveryPlaylistOccurrenceAcrossPagesAndIgnoresSuggestions() = runBlocking {
         fun entry(key: String) = track().replace("\"videoId\":", "\"playlistSetVideoId\":\"$key\",\"videoId\":")
         val mutations = mutableListOf<JsonObject>()

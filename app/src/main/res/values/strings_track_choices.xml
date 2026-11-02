@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Change Matched Source"</string>
+    <string name="match_hint">"Pick the YouTube video “%1$s” should play. Aurora remembers it everywhere this track appears."</string>
+    <string name="match_search">"Search YouTube"</string>
+    <string name="match_failed">"Couldn’t search YouTube. Check your connection and try again."</string>
+    <string name="match_none">"No videos found."</string>
+    <string name="match_chosen">"Chosen"</string>
+    <string name="match_reset">"Reset to Automatic Match"</string>
+    <string name="match_reset_done">"Back to the automatic match"</string>
+    <string name="match_saved">"Now plays “%1$s”"</string>
+    <string name="hide_song">"Hide Song"</string>
+    <string name="hide_song_undo">"Unhide Song"</string>
+    <string name="hide_song_hidden">"Hidden"</string>
+</resources>

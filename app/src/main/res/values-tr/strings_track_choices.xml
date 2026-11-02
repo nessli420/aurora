@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Eşleşen Kaynağı Değiştir"</string>
+    <string name="match_hint">"“%1$s” için çalınacak YouTube videosunu seçin. Aurora bu parçanın göründüğü her yerde bunu hatırlar."</string>
+    <string name="match_search">"YouTube’da Ara"</string>
+    <string name="match_failed">"YouTube’da arama yapılamadı. Bağlantınızı kontrol edip yeniden deneyin."</string>
+    <string name="match_none">"Video bulunamadı."</string>
+    <string name="match_chosen">"Seçildi"</string>
+    <string name="match_reset">"Otomatik Eşleşmeye Sıfırla"</string>
+    <string name="match_reset_done">"Otomatik eşleşmeye dönüldü"</string>
+    <string name="match_saved">"Artık “%1$s” çalıyor"</string>
+    <string name="hide_song">"Şarkıyı Gizle"</string>
+    <string name="hide_song_undo">"Şarkıyı Göster"</string>
+    <string name="hide_song_hidden">"Gizli"</string>
+</resources>

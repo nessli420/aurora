@@ -4,6 +4,7 @@ import com.aurora.music.data.remote.*
 import com.aurora.music.model.*
 import com.aurora.music.util.accentArgbFor
 import com.google.gson.JsonArray
+import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
@@ -16,6 +17,7 @@ class YouTubeMusicBackend(
     override val session: Session,
     private val api: YouTubeMusicTransport,
     signatureTimestamp: (String) -> Int? = { null },
+    private val localize: (Song) -> Song = { it },
 ) : MediaBackend {
     private val songs = ConcurrentHashMap<String, Song>()
     private val pageCache = ConcurrentHashMap<String, Pair<Long, SearchResults>>()
@@ -23,6 +25,13 @@ class YouTubeMusicBackend(
     private val albumLookups = ConcurrentHashMap.newKeySet<String>()
     private val playbackTracker = YouTubeMusicPlaybackTracker(api, signatureTimestamp)
     private fun remember(result: SearchResults): SearchResults = result.also { it.songs.forEach { song -> songs[song.id] = song } }
+    // a downloaded or on-device copy plays instead of the stream, as it does for every other source
+    private fun parse(root: JsonElement): SearchResults = YouTubeMusicParser.results(root).let { it.copy(songs = it.songs.map(localize)) }
+    private fun shelves(root: JsonObject): HomeData = YouTubeMusicParser.home(root).let { home ->
+        home.copy(sections = home.sections.map { section ->
+            section.copy(items = section.items.map { if (it is HomeFeedItem.Track) HomeFeedItem.Track(localize(it.song)) else it })
+        })
+    }
     private suspend fun browse(id: String) = api.request("browse", json("browseId" to id))
 
     override val signedIn: Boolean get() = !session.isGuest
@@ -47,7 +56,7 @@ class YouTubeMusicBackend(
         val seen = hashSetOf<String>()
         while (true) {
             val content = if (id.startsWith("VL")) YouTubeMusicParser.trackShelf(response) else response
-            val result = remember(YouTubeMusicParser.results(content))
+            val result = remember(parse(content))
             tracks += result.songs; albums += result.albums; artists += result.artists; playlists += result.playlists
             val token = YouTubeMusicParser.continuation(content) ?: break
             if (!seen.add(token) || seen.size > 500) throw IOException("YouTube Music returned an incomplete library. Please retry.")
@@ -61,8 +70,8 @@ class YouTubeMusicBackend(
     }
     override suspend fun homePage(continuation: String): HomeData = homeData(api.request("browse", json("continuation" to continuation)))
     private fun homeData(response: JsonObject): HomeData {
-        remember(YouTubeMusicParser.results(response))
-        return YouTubeMusicParser.home(response)
+        remember(parse(response))
+        return shelves(response)
     }
     override suspend fun allAlbums() = library("FEmusic_liked_albums").albums
     override suspend fun allArtists() = library("FEmusic_library_corpus_track_artists").artists
@@ -80,14 +89,14 @@ class YouTubeMusicBackend(
     }
     override suspend fun likedSongIds(ids: List<String>) = starredSongs().map { it.id }.toSet().intersect(ids.toSet())
     override suspend fun search(query: String): SearchResults = if (query.isBlank()) SearchResults() else
-        remember(YouTubeMusicParser.results(api.request("search", json("query" to query.trim()))))
+        remember(parse(api.request("search", json("query" to query.trim()))))
 
     override suspend fun songFor(id: String): Song? {
         val cached = songs[id]
         cached?.takeIf { it.durationSec > 0 && (it.album.isNotBlank() || id in albumLookups) }?.let { return it }
         if (!id.matches(Regex("[A-Za-z0-9_-]{11}"))) return null
         albumLookups.add(id)
-        val fetched = remember(YouTubeMusicParser.results(api.request("next", json("videoId" to id))))
+        val fetched = remember(parse(api.request("next", json("videoId" to id))))
             .songs.firstOrNull { it.id == id } ?: return cached
         // card/home rows carry no album run; the up-next panel does
         val merged = cached?.let { it.copy(album = it.album.ifBlank { fetched.album }, albumId = it.albumId.ifBlank { fetched.albumId },
@@ -104,8 +113,8 @@ class YouTubeMusicBackend(
         val explore = async { page("FEmusic_explore") }
         val moods = async { page("FEmusic_moods_and_genres") }
         val pages = listOfNotNull(releases.await(), charts.await(), explore.await())
-        pages.forEach { remember(YouTubeMusicParser.results(it)) }
-        val sections = pages.flatMap { YouTubeMusicParser.home(it).sections }.distinctBy { it.id }
+        pages.forEach { remember(parse(it)) }
+        val sections = pages.flatMap { shelves(it).sections }.distinctBy { it.id }
         ExploreData(moods.await()?.let(YouTubeMusicParser::categories).orEmpty(), sections)
     }
 
@@ -120,7 +129,7 @@ class YouTubeMusicBackend(
         return homeData(browse(page)).copy(continuation = null)
     }
 
-    override suspend fun radio(seedId: String): List<Song> = remember(YouTubeMusicParser.results(
+    override suspend fun radio(seedId: String): List<Song> = remember(parse(
         api.request("next", json("videoId" to seedId, "playlistId" to "RDAMVM$seedId"))))
         .songs.distinctBy { it.id }.filter { it.id != seedId }
 
@@ -137,7 +146,7 @@ class YouTubeMusicBackend(
         val content = if (kind == "playlist" || kind == "album") YouTubeMusicParser.trackShelf(response) else response
         // Album shelves can substitute one music video for several different recordings.
         val audioPlaylist = if (kind == "album") YouTubeMusicParser.albumPlaylistId(response) else null
-        val initial = if (audioPlaylist != null) pages("VL$audioPlaylist") else remember(YouTubeMusicParser.results(content))
+        val initial = if (audioPlaylist != null) pages("VL$audioPlaylist") else remember(parse(content))
         val tracks = initial.songs.toMutableList()
         // Generated mixes are changing radio queues, not finite saved playlists.
         var token = if (audioPlaylist != null || (kind == "playlist" && id.removePrefix("VL").startsWith("RD"))) null
@@ -146,7 +155,7 @@ class YouTubeMusicBackend(
         while (token != null && kind != "artist") {
             if (!seen.add(token) || seen.size > 500) throw IOException("YouTube Music returned an incomplete tracklist. Please retry.")
             val page = api.request("browse", json("continuation" to token))
-            tracks += remember(YouTubeMusicParser.results(page)).songs
+            tracks += remember(parse(page)).songs
             token = YouTubeMusicParser.continuation(page)
         }
         val title = header?.obj("title")?.label().orEmpty().ifBlank { kind.replaceFirstChar { it.uppercase() } }

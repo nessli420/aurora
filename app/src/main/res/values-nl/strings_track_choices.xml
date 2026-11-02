@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Gekoppelde bron wijzigen"</string>
+    <string name="match_hint">"Kies de YouTube-video die voor ‘%1$s’ moet spelen. Aurora onthoudt het overal waar dit nummer staat."</string>
+    <string name="match_search">"YouTube doorzoeken"</string>
+    <string name="match_failed">"Kan YouTube niet doorzoeken. Controleer je verbinding en probeer het opnieuw."</string>
+    <string name="match_none">"Geen video’s gevonden."</string>
+    <string name="match_chosen">"Gekozen"</string>
+    <string name="match_reset">"Automatische koppeling herstellen"</string>
+    <string name="match_reset_done">"Terug naar de automatische koppeling"</string>
+    <string name="match_saved">"Speelt nu ‘%1$s’"</string>
+    <string name="hide_song">"Nummer verbergen"</string>
+    <string name="hide_song_undo">"Nummer tonen"</string>
+    <string name="hide_song_hidden">"Verborgen"</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Ubah Sumber yang Dicocokkan"</string>
+    <string name="match_hint">"Pilih video YouTube yang diputar untuk “%1$s”. Aurora mengingatnya di mana pun lagu ini muncul."</string>
+    <string name="match_search">"Cari di YouTube"</string>
+    <string name="match_failed">"Tidak dapat mencari di YouTube. Periksa koneksi Anda dan coba lagi."</string>
+    <string name="match_none">"Tidak ada video yang ditemukan."</string>
+    <string name="match_chosen">"Dipilih"</string>
+    <string name="match_reset">"Atur Ulang ke Pencocokan Otomatis"</string>
+    <string name="match_reset_done">"Kembali ke pencocokan otomatis"</string>
+    <string name="match_saved">"Sekarang memutar “%1$s”"</string>
+    <string name="hide_song">"Sembunyikan Lagu"</string>
+    <string name="hide_song_undo">"Tampilkan Lagu"</string>
+    <string name="hide_song_hidden">"Tersembunyi"</string>
+</resources>

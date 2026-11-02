@@ -615,13 +615,15 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) {
         val collection = deps.repository.playbackCollectionIdentity(kind, id)
-        playAll(loaded, startIndex, collection)
+        val picked = loaded.getOrNull(startIndex)
+        val songs = deps.repository.playable(kind, id, loaded, picked)
+        playAll(songs, songs.indexOfFirst { it === picked }.coerceAtLeast(0), collection)
         fillQueue(kind, id, loaded, total, shuffle = false, collection = collection)
     }
 
     override fun shuffleCollection(kind: String, id: String, loaded: List<Song>, total: Int) {
         val collection = deps.repository.playbackCollectionIdentity(kind, id)
-        shufflePlay(loaded, collection)
+        shufflePlay(deps.repository.playable(kind, id, loaded), collection)
         fillQueue(kind, id, loaded, total, shuffle = true, collection = collection)
     }
 
@@ -641,7 +643,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 val page = runCatching { deps.repository.detailPage(kind, id, offset) }.getOrDefault(emptyList())
                 ensureActive()
                 if (page.isEmpty() || generation != queueGeneration) break
-                val fresh = page.filter { it.id.isNotEmpty() && have.add(it.id) }
+                val fresh = deps.repository.playable(kind, id, page.filter { it.id.isNotEmpty() && have.add(it.id) })
                 if (fresh.isNotEmpty()) engine.append((if (shuffle) fresh.shuffled() else fresh).map { it.copy(playbackCollection = collection) })
                 offset += page.size
                 delay(180)

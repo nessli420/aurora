@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Changer la source associée"</string>
+    <string name="match_hint">"Choisissez la vidéo YouTube à lire pour « %1$s ». Aurora s’en souvient partout où ce titre apparaît."</string>
+    <string name="match_search">"Rechercher sur YouTube"</string>
+    <string name="match_failed">"Impossible de rechercher sur YouTube. Vérifiez votre connexion et réessayez."</string>
+    <string name="match_none">"Aucune vidéo trouvée."</string>
+    <string name="match_chosen">"Choisie"</string>
+    <string name="match_reset">"Rétablir l’association automatique"</string>
+    <string name="match_reset_done">"Retour à l’association automatique"</string>
+    <string name="match_saved">"Lit maintenant « %1$s »"</string>
+    <string name="hide_song">"Masquer le titre"</string>
+    <string name="hide_song_undo">"Afficher le titre"</string>
+    <string name="hide_song_hidden">"Masqué"</string>
+</resources>

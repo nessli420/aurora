@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Cambia fonte associata"</string>
+    <string name="match_hint">"Scegli il video di YouTube da riprodurre per «%1$s». Aurora lo ricorda ovunque compaia questo brano."</string>
+    <string name="match_search">"Cerca su YouTube"</string>
+    <string name="match_failed">"Impossibile cercare su YouTube. Controlla la connessione e riprova."</string>
+    <string name="match_none">"Nessun video trovato."</string>
+    <string name="match_chosen">"Scelto"</string>
+    <string name="match_reset">"Ripristina associazione automatica"</string>
+    <string name="match_reset_done">"Tornato all’associazione automatica"</string>
+    <string name="match_saved">"Ora riproduce «%1$s»"</string>
+    <string name="hide_song">"Nascondi brano"</string>
+    <string name="hide_song_undo">"Mostra brano"</string>
+    <string name="hide_song_hidden">"Nascosto"</string>
+</resources>

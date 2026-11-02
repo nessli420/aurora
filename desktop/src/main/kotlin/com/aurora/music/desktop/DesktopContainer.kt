@@ -138,7 +138,8 @@ class DesktopContainer(
     val soundcloudWriter = com.aurora.music.desktop.web.SoundCloudWebWriter()
     private val soundcloudPendingLikes = com.aurora.music.data.SoundCloudPendingLikes(paths.local)
     val spotifyWeb = com.aurora.music.desktop.web.SpotifyWebBridge(java.io.File(paths.local, "web"))
-    val youtubeResolver by lazy { com.aurora.music.desktop.youtube.YoutubeResolver(http) }
+    val trackChoices = com.aurora.music.data.TrackChoices(paths.local)
+    val youtubeResolver by lazy { com.aurora.music.desktop.youtube.YoutubeResolver(http) { trackChoices.matchFor(it)?.videoId } }
 
     // one client per login: soundcloud rotates the refresh token, so two clients refreshing it would sign each other out
     init {
@@ -173,7 +174,9 @@ class DesktopContainer(
     private val audioCacheDelegate = lazy { com.aurora.music.desktop.audio.AudioCache(java.io.File(paths.cache, "audio-streams"), http, settingsStore, offline = { offlineFlag }) }
     val audioCache by audioCacheDelegate
 
-    val streamResolver = com.aurora.music.desktop.audio.StreamResolver { song -> audioCache.resolve(song) { resolveUpstream(song) } }
+    val streamResolver = com.aurora.music.desktop.audio.StreamResolver { song ->
+        localCopy(song)?.let { com.aurora.music.desktop.audio.StreamResolver.Default.resolve(it) } ?: audioCache.resolve(song) { resolveUpstream(song) }
+    }
 
     // a song's audio for offline work like analysis or comparison: the cached file when there is one, never filling the cache
     fun sourceFor(song: Song): com.aurora.music.desktop.audio.ResolvedStream = audioCache.local(song) ?: resolveUpstream(song)
@@ -299,6 +302,7 @@ class DesktopContainer(
         coverUrl = ArtworkUrls::cover,
         cachedSongsProvider = { audioCache.songs.value },
         likeSourcesProvider = { likeAccounts.of(backend, settingsStore.savedSessions.first()) },
+        trackChoices = trackChoices,
     )
 
     private val likeAccounts = com.aurora.music.data.LikeAccounts { if (AccountAuthenticator.supports(it)) buildBackend(it) else null }
@@ -327,6 +331,9 @@ class DesktopContainer(
 
     fun currentAccountKey(): String = backend?.session?.accountKey().orEmpty()
 
+    // the downloaded or on-device copy of a song, when it should play instead of the stream
+    fun localCopy(song: Song): Song? = sourceLocalizer.localize(song).takeIf { it.streamUrl != song.streamUrl }
+
     private fun buildBackend(session: Session): MediaBackend? {
         val localize: (Song) -> Song = { song ->
             sourceLocalizer.localize(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
@@ -345,7 +352,7 @@ class DesktopContainer(
             ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(com.aurora.music.data.YouTubeMusicBackend(session,
                 com.aurora.music.data.remote.YouTubeMusicClient(
                     session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }.takeUnless { session.isGuest }, http = http),
-                youtubeResolver::signatureTimestamp)) { message ->
+                youtubeResolver::signatureTimestamp, localize)) { message ->
                 if (lastSession?.accountKey() == session.accountKey() ||
                     (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
                         (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)

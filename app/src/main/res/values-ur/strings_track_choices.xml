@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"مماثل ماخذ تبدیل کریں"</string>
+    <string name="match_hint">"“%1$s” کے لیے چلنے والی YouTube ویڈیو منتخب کریں۔ Aurora اسے ہر جگہ یاد رکھتا ہے جہاں یہ ٹریک آتا ہے۔"</string>
+    <string name="match_search">"YouTube پر تلاش کریں"</string>
+    <string name="match_failed">"YouTube پر تلاش نہیں ہو سکی۔ اپنا کنکشن چیک کریں اور دوبارہ کوشش کریں۔"</string>
+    <string name="match_none">"کوئی ویڈیو نہیں ملی۔"</string>
+    <string name="match_chosen">"منتخب"</string>
+    <string name="match_reset">"خودکار مماثلت پر واپس جائیں"</string>
+    <string name="match_reset_done">"خودکار مماثلت پر واپس"</string>
+    <string name="match_saved">"اب “%1$s” چل رہا ہے"</string>
+    <string name="hide_song">"گانا چھپائیں"</string>
+    <string name="hide_song_undo">"گانا دکھائیں"</string>
+    <string name="hide_song_hidden">"چھپا ہوا"</string>
+</resources>

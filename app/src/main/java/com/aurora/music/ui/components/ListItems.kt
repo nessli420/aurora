@@ -1,5 +1,8 @@
 package com.aurora.music.ui.components
 
+import androidx.compose.ui.draw.alpha
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Visibility
 import com.aurora.music.localization.localizedMediaType
 
 import com.aurora.music.localization.appString
@@ -85,6 +88,8 @@ fun SongRow(
     onEditTags: (() -> Unit)? = null,
     serverTagEditing: Boolean = false,
     showAlbum: Boolean = true,
+    hidden: Boolean = false,
+    onToggleHidden: (() -> Unit)? = null,
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
@@ -106,7 +111,7 @@ fun SongRow(
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.alpha(if (hidden) 0.4f else 1f)) {
             Artwork(song.artworkUrl, song.accent, Modifier.size(52.dp), corner = 10.dp)
             if (isPlaying) {
                 Box(
@@ -119,7 +124,7 @@ fun SongRow(
             }
         }
         Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
+        Column(Modifier.weight(1f).alpha(if (hidden) 0.45f else 1f)) {
             Text(
                 song.title,
                 style = MaterialTheme.typography.titleSmall,
@@ -158,6 +163,10 @@ fun SongRow(
             )
         }
         Spacer(Modifier.width(8.dp))
+        if (hidden) {
+            Icon(Icons.Filled.VisibilityOff, appString(R.string.hide_song_hidden), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+        }
         if (isDownloaded) {
             Icon(Icons.Filled.DownloadDone, appString(R.string.text_downloaded_c61970), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
@@ -206,6 +215,12 @@ fun SongRow(
                     leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
                 )
                 RepostMenuItem(song) { menuOpen = false }
+                if (onToggleHidden != null) DropdownMenuItem(
+                    text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
+                    onClick = { menuOpen = false; onToggleHidden() },
+                    leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
+                )
+                MatchMenuItem(song) { menuOpen = false }
                 DropdownMenuItem(
                     text = { Text(appString(R.string.track_swipe_playlists)) },
                     onClick = { menuOpen = false; showPlaylists = true },

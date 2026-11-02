@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Zmień dopasowane źródło"</string>
+    <string name="match_hint">"Wybierz film z YouTube, który ma grać dla „%1$s”. Aurora zapamięta go wszędzie, gdzie pojawia się ten utwór."</string>
+    <string name="match_search">"Szukaj w YouTube"</string>
+    <string name="match_failed">"Nie udało się przeszukać YouTube. Sprawdź połączenie i spróbuj ponownie."</string>
+    <string name="match_none">"Nie znaleziono filmów."</string>
+    <string name="match_chosen">"Wybrany"</string>
+    <string name="match_reset">"Przywróć automatyczne dopasowanie"</string>
+    <string name="match_reset_done">"Przywrócono automatyczne dopasowanie"</string>
+    <string name="match_saved">"Teraz gra „%1$s”"</string>
+    <string name="hide_song">"Ukryj utwór"</string>
+    <string name="hide_song_undo">"Pokaż utwór"</string>
+    <string name="hide_song_hidden">"Ukryty"</string>
+</resources>

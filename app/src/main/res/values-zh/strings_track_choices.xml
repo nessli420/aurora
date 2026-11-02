@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"更改匹配来源"</string>
+    <string name="match_hint">"选择“%1$s”要播放的 YouTube 视频。Aurora 会在这首歌出现的所有地方记住它。"</string>
+    <string name="match_search">"搜索 YouTube"</string>
+    <string name="match_failed">"无法搜索 YouTube。请检查网络连接后重试。"</string>
+    <string name="match_none">"未找到视频。"</string>
+    <string name="match_chosen">"已选择"</string>
+    <string name="match_reset">"恢复自动匹配"</string>
+    <string name="match_reset_done">"已恢复自动匹配"</string>
+    <string name="match_saved">"现在播放“%1$s”"</string>
+    <string name="hide_song">"隐藏歌曲"</string>
+    <string name="hide_song_undo">"取消隐藏歌曲"</string>
+    <string name="hide_song_hidden">"已隐藏"</string>
+</resources>

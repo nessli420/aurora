@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"मिलान किया गया स्रोत बदलें"</string>
+    <string name="match_hint">"“%1$s” के लिए चलने वाला YouTube वीडियो चुनें। Aurora इसे हर जगह याद रखता है जहाँ यह ट्रैक दिखता है।"</string>
+    <string name="match_search">"YouTube पर खोजें"</string>
+    <string name="match_failed">"YouTube पर खोज नहीं हो सकी। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"</string>
+    <string name="match_none">"कोई वीडियो नहीं मिला।"</string>
+    <string name="match_chosen">"चुना गया"</string>
+    <string name="match_reset">"स्वचालित मिलान पर रीसेट करें"</string>
+    <string name="match_reset_done">"स्वचालित मिलान पर वापस"</string>
+    <string name="match_saved">"अब “%1$s” चल रहा है"</string>
+    <string name="hide_song">"गाना छिपाएँ"</string>
+    <string name="hide_song_undo">"गाना दिखाएँ"</string>
+    <string name="hide_song_hidden">"छिपा हुआ"</string>
+</resources>

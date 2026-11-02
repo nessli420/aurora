@@ -54,7 +54,7 @@ class YouTubeMusicPlaybackReportingTest {
 
     @Test fun thePlayerRequestCarriesTheSignatureTimestamp() = runBlocking {
         val api = Fixture()
-        YouTubeMusicBackend(session, api) { 20739 }.reportPlayback(report())
+        YouTubeMusicBackend(session, api, signatureTimestamp = { 20739 }).reportPlayback(report())
         assertEquals(20739, api.lastBody!!.getAsJsonObject("playbackContext")
             .getAsJsonObject("contentPlaybackContext").get("signatureTimestamp").asInt)
         assertEquals(1, api.pings.size)

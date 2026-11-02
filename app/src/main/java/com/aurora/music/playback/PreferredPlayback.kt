@@ -19,7 +19,7 @@ object PreferredPlayback {
     private const val URI = "aurora.preferred.uri"
     private val gson = Gson()
 
-    suspend fun resolve(context: Context, repository: MusicRepository, item: MediaItem): MediaItem {
+    suspend fun resolve(context: Context, repository: MusicRepository, item: MediaItem, localCopy: (Song) -> Song? = { null }): MediaItem {
         val metadata = item.mediaMetadata
         val extras = metadata.extras
         val song = Song(extras?.getString("aurora.songId") ?: item.mediaId,
@@ -27,9 +27,11 @@ object PreferredPlayback {
             metadata.albumTitle?.toString().orEmpty(), metadata.artworkUri?.toString().orEmpty(),
             extras?.getInt("aurora.durationSec") ?: 0, explicit = extras?.getBoolean("aurora.explicit") ?: false,
             streamUrl = item.localConfiguration?.uri.toString())
-        val candidates = try { repository.playbackCandidates(song) }
+        // a copy downloaded after the list was loaded still wins over the stream
+        val own = listOfNotNull(localCopy(song))
+        val candidates = own + try { repository.playbackCandidates(song) }
             catch (e: CancellationException) { throw e }
-            catch (_: Exception) { return item }
+            catch (_: Exception) { if (own.isEmpty()) return item else emptyList() }
         val deadline = System.nanoTime() + 6_000_000_000L
         for (candidate in candidates.take(6)) {
             coroutineContext.ensureActive()

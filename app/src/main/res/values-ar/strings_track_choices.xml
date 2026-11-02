@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"تغيير المصدر المطابق"</string>
+    <string name="match_hint">"اختر فيديو YouTube الذي يجب أن يُشغَّل لـ «%1$s». يتذكره Aurora في كل مكان يظهر فيه هذا المقطع."</string>
+    <string name="match_search">"البحث في YouTube"</string>
+    <string name="match_failed">"تعذر البحث في YouTube. تحقق من الاتصال وحاول مرة أخرى."</string>
+    <string name="match_none">"لم يتم العثور على فيديوهات."</string>
+    <string name="match_chosen">"مختار"</string>
+    <string name="match_reset">"العودة إلى المطابقة التلقائية"</string>
+    <string name="match_reset_done">"تمت العودة إلى المطابقة التلقائية"</string>
+    <string name="match_saved">"يُشغَّل الآن «%1$s»"</string>
+    <string name="hide_song">"إخفاء الأغنية"</string>
+    <string name="hide_song_undo">"إظهار الأغنية"</string>
+    <string name="hide_song_hidden">"مخفية"</string>
+</resources>

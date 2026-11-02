@@ -24,7 +24,7 @@ import org.schabi.newpipe.extractor.downloader.Request as NpRequest
 import org.schabi.newpipe.extractor.downloader.Response as NpResponse
 
 // blocks on network must run off main thread
-class YoutubeResolver(private val http: OkHttpClient = OkHttpClient()) {
+class YoutubeResolver(private val http: OkHttpClient = OkHttpClient(), private val chosenVideo: (String) -> String? = { null }) {
 
     private data class CachedStream(val url: String, val expiresAt: Long)
     private val cache = ConcurrentHashMap<String, CachedStream>()
@@ -271,11 +271,12 @@ class YoutubeResolver(private val http: OkHttpClient = OkHttpClient()) {
             uri.lastPathSegment.orEmpty(),
             uri.getQueryParameter("quality")?.toIntOrNull(),
         )
-        else resolve(uri.host.orEmpty(), uri.getQueryParameter("q").orEmpty(), uri.getQueryParameter("dur")?.toIntOrNull() ?: 0)
+        else chosenVideo(uri.host.orEmpty())?.let { resolveVideo(it) }
+            ?: resolve(uri.host.orEmpty(), uri.getQueryParameter("q").orEmpty(), uri.getQueryParameter("dur")?.toIntOrNull() ?: 0)
     }
 
     fun streamBitrateKbps(uri: android.net.Uri): Int? =
-        bitrates[if (uri.host == "video") "video:${uri.lastPathSegment}" else "spotify:${uri.host}"]
+        bitrates[if (uri.host == "video") "video:${uri.lastPathSegment}" else chosenVideo(uri.host.orEmpty())?.let { "video:$it" } ?: "spotify:${uri.host}"]
 
     private fun rememberBitrate(key: String, kbps: Int) {
         if (kbps <= 0) { bitrates.remove(key); return }

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Zugeordnete Quelle ändern"</string>
+    <string name="match_hint">"Wähle das YouTube-Video, das für „%1$s“ abgespielt werden soll. Aurora merkt es sich überall, wo dieser Titel vorkommt."</string>
+    <string name="match_search">"YouTube durchsuchen"</string>
+    <string name="match_failed">"YouTube konnte nicht durchsucht werden. Prüfe deine Verbindung und versuche es erneut."</string>
+    <string name="match_none">"Keine Videos gefunden."</string>
+    <string name="match_chosen">"Ausgewählt"</string>
+    <string name="match_reset">"Automatische Zuordnung wiederherstellen"</string>
+    <string name="match_reset_done">"Zurück zur automatischen Zuordnung"</string>
+    <string name="match_saved">"Spielt jetzt „%1$s“"</string>
+    <string name="hide_song">"Song ausblenden"</string>
+    <string name="hide_song_undo">"Song einblenden"</string>
+    <string name="hide_song_hidden">"Ausgeblendet"</string>
+</resources>

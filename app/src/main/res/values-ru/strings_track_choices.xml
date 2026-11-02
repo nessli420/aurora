@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"Изменить найденный источник"</string>
+    <string name="match_hint">"Выберите видео с YouTube, которое будет играть для «%1$s». Aurora запомнит его везде, где встречается этот трек."</string>
+    <string name="match_search">"Поиск на YouTube"</string>
+    <string name="match_failed">"Не удалось выполнить поиск на YouTube. Проверьте подключение и попробуйте снова."</string>
+    <string name="match_none">"Видео не найдены."</string>
+    <string name="match_chosen">"Выбрано"</string>
+    <string name="match_reset">"Вернуть автоматический подбор"</string>
+    <string name="match_reset_done">"Возвращён автоматический подбор"</string>
+    <string name="match_saved">"Теперь играет «%1$s»"</string>
+    <string name="hide_song">"Скрыть трек"</string>
+    <string name="hide_song_undo">"Показать трек"</string>
+    <string name="hide_song_hidden">"Скрыт"</string>
+</resources>

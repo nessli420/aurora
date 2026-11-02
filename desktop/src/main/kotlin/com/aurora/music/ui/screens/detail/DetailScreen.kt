@@ -151,6 +151,8 @@ fun DetailScreen(
     serverTagEditing: Boolean = false,
     artistInfo: ArtistInfo? = null,
     onExpand: (() -> Unit)? = null,
+    hiddenIds: Set<String> = emptySet(),
+    onToggleHidden: ((Song) -> Unit)? = null,
 ) {
     var headerMenu by remember { mutableStateOf(false) }
     var showEdit by remember { mutableStateOf(false) }
@@ -320,6 +322,8 @@ fun DetailScreen(
             serverTagEditing = serverTagEditing,
             showAlbum = !isAlbum,
             showArt = !isAlbum,
+            hidden = com.aurora.music.data.stripMergeNamespace(s.id) in hiddenIds,
+            onToggleHidden = onToggleHidden?.let { cb -> { cb(s) } },
         )
     }
 

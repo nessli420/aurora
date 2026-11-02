@@ -84,6 +84,7 @@ class MusicRepository(
     private val coverUrl: (String, String, String, String, Int) -> String = { original, _, _, _, _ -> original },
     // every account a song can be liked on; the app adds signed-in accounts outside the library
     private val likeSourcesProvider: suspend () -> List<MediaBackend> = { backendProvider()?.let { (it as? MergedBackend)?.sources ?: listOf(it) }.orEmpty() },
+    private val trackChoices: TrackChoices? = null,
 ) {
     private val backend: MediaBackend? get() = backendProvider()
     private val offline: Boolean get() = offlineProvider() && backend?.supportsOfflineBrowsing != true
@@ -614,9 +615,13 @@ class MusicRepository(
     suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> =
         if (offline) emptyList() else sourceSongs { it.detailPage(kind, id, offset) }
 
-    suspend fun collectionTracks(kind: String, id: String): List<Song> =
+    suspend fun collectionTracks(kind: String, id: String): List<Song> = playable(kind, id,
         if (offline || kind == "smart") detail(kind, id)?.tracks.orEmpty()
-        else sourceSongs { it.collectionTracks(kind, id) }
+        else sourceSongs { it.collectionTracks(kind, id) })
+
+    // songs hidden in a playlist stay listed but are left out when it plays
+    fun playable(kind: String, id: String, songs: List<Song>, picked: Song? = null): List<Song> =
+        trackChoices?.visible(kind, id, songs, picked) ?: songs
 
     val supportsFolders: Boolean get() = !offline && backend?.supportsFolders == true
 

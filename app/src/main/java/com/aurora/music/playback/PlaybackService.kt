@@ -348,7 +348,7 @@ class PlaybackService : MediaLibraryService() {
         networkDataSource = dataSourceFactory
         val mediaSourceFactory = YoutubeMediaSourceFactory(
             androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory(rawOutput = dsdWire != null)), resolver,
-            preferred = { PreferredPlayback.resolve(this, container.repository, it) }, prepare = { container.audioCache.prepare(cueClipped(it)) },
+            preferred = { PreferredPlayback.resolve(this, container.repository, it, container::localCopy) }, prepare = { container.audioCache.prepare(cueClipped(it)) },
             soundcloud = container::resolveSoundCloud)
 
         musicSourceFactory = mediaSourceFactory

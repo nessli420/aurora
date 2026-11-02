@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="match_change">"일치한 소스 변경"</string>
+    <string name="match_hint">"“%1$s”에서 재생할 YouTube 동영상을 선택하세요. Aurora는 이 트랙이 나오는 모든 곳에서 이를 기억합니다."</string>
+    <string name="match_search">"YouTube 검색"</string>
+    <string name="match_failed">"YouTube를 검색할 수 없습니다. 연결을 확인하고 다시 시도하세요."</string>
+    <string name="match_none">"동영상을 찾을 수 없습니다."</string>
+    <string name="match_chosen">"선택됨"</string>
+    <string name="match_reset">"자동 일치로 재설정"</string>
+    <string name="match_reset_done">"자동 일치로 돌아갔습니다"</string>
+    <string name="match_saved">"이제 “%1$s” 재생"</string>
+    <string name="hide_song">"곡 숨기기"</string>
+    <string name="hide_song_undo">"곡 숨기기 해제"</string>
+    <string name="hide_song_hidden">"숨겨짐"</string>
+</resources>

@@ -347,6 +347,7 @@ fun PlayerScreen(
                         leadingIcon = { Icon(Icons.Filled.Explore, null) },
                     )
                     if (state.hasTrack) com.aurora.music.ui.components.RepostMenuItem(song) { showMenu = false }
+                    if (state.hasTrack) com.aurora.music.ui.components.MatchMenuItem(song) { showMenu = false }
                     if (state.supportsComments) DropdownMenuItem(
                         text = { Text(appString(R.string.player_comments)) },
                         onClick = { showMenu = false; showComments = true },

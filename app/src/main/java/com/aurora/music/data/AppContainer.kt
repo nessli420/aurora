@@ -216,6 +216,9 @@ class AppContainer(context: Context) {
         return youtubeResolver.resolveSentinel(uri)
     }
 
+    // the downloaded or on-device copy of a song, when it should play instead of the stream
+    fun localCopy(song: Song): Song? = sourceLocalizer.localize(song).takeIf { it.streamUrl != song.streamUrl }
+
     private fun buildBackend(session: Session): MediaBackend {
         val localize: (Song) -> Song = { song ->
             sourceLocalizer.localize(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
@@ -240,7 +243,7 @@ class AppContainer(context: Context) {
             ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
                 com.aurora.music.data.remote.YouTubeMusicClient(
                     session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }.takeUnless { session.isGuest }),
-                youtubeResolver::signatureTimestamp)) { message ->
+                youtubeResolver::signatureTimestamp, localize)) { message ->
                 if (lastSession?.accountKey() == session.accountKey() ||
                     (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
                         (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
@@ -310,7 +313,8 @@ class AppContainer(context: Context) {
 
     val discord = DiscordRpc(appContext, settingsStore, scope)
 
-    val youtubeResolver by lazy { com.aurora.music.playback.YoutubeResolver(http) }
+    val trackChoices = TrackChoices(appContext.filesDir)
+    val youtubeResolver by lazy { com.aurora.music.playback.YoutubeResolver(http) { trackChoices.matchFor(it)?.videoId } }
     val youtubeMusicCredentials = WebCredentials.youtubeMusic(appContext)
     val spotifyCredentials = WebCredentials.spotify(appContext)
     val soundcloudCredentials = WebCredentials.soundcloud(appContext)
@@ -434,6 +438,7 @@ class AppContainer(context: Context) {
         cachedSongsProvider = { audioCache.songs.value },
         coverUrl = com.aurora.music.data.artwork.ArtworkUrls::cover,
         likeSourcesProvider = { likeAccounts.of(backend, settingsStore.savedSessions.first()) },
+        trackChoices = trackChoices,
     )
 
     // an oauth spotify login refreshes the active session's token, so only the web player one joins as a second account

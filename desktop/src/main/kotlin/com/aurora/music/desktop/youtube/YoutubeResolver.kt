@@ -23,7 +23,7 @@ import org.schabi.newpipe.extractor.downloader.Response as NpResponse
 // youtube audio for spotify, youtube music and soundcloud fallbacks; every call blocks on the network
 data class MusicVideo(val videoId: String, val streamUrl: String)
 
-class YoutubeResolver(http: OkHttpClient) {
+class YoutubeResolver(http: OkHttpClient, private val chosenVideo: (String) -> String? = { null }) {
     private val http = http.newBuilder().connectTimeout(8, TimeUnit.SECONDS).readTimeout(12, TimeUnit.SECONDS).build()
     private data class Cached(val url: String, val expiresAt: Long)
     private val cache = ConcurrentHashMap<String, Cached>()
@@ -53,7 +53,8 @@ class YoutubeResolver(http: OkHttpClient) {
             name to URLDecoder.decode(part.substringAfter('='), "UTF-8")
         }.toMap()
         return if (uri.host == "video") resolveVideo(uri.path.orEmpty().trim('/').substringAfterLast('/'))
-        else resolveSearch(uri.host.orEmpty(), query["q"].orEmpty(), query["dur"]?.toIntOrNull() ?: 0)
+        else chosenVideo(uri.host.orEmpty())?.let { resolveVideo(it) }
+            ?: resolveSearch(uri.host.orEmpty(), query["q"].orEmpty(), query["dur"]?.toIntOrNull() ?: 0)
     }
 
     fun resolveSearch(key: String, query: String, durationSec: Int): String? {

@@ -114,6 +114,8 @@ fun DetailScreen(
     onEditTags: ((Song) -> Unit)? = null,
     serverTagEditing: Boolean = false,
     artistInfo: com.aurora.music.data.remote.ArtistInfo? = null,
+    hiddenIds: Set<String> = emptySet(),
+    onToggleHidden: ((Song) -> Unit)? = null,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var headerMenu by remember { mutableStateOf(false) }
@@ -494,6 +496,8 @@ fun DetailScreen(
                 onEditTags = onEditTags?.let { cb -> { cb(s) } },
                 serverTagEditing = serverTagEditing,
                 showAlbum = itemKind != "album",
+                hidden = com.aurora.music.data.stripMergeNamespace(s.id) in hiddenIds,
+                onToggleHidden = onToggleHidden?.let { cb -> { cb(s) } },
             )
         }
 

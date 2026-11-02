@@ -682,7 +682,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         cancelMediaSearch()
         if (leaveMixThen { playCollection(kind, id, loaded, startIndex, total) }) return
         val collection = container.repository.playbackCollectionIdentity(kind, id)
-        playAll(loaded, startIndex, collection)
+        val picked = loaded.getOrNull(startIndex)
+        val songs = container.repository.playable(kind, id, loaded, picked)
+        playAll(songs, songs.indexOfFirst { it === picked }.coerceAtLeast(0), collection)
         fillQueue(kind, id, loaded, total, shuffle = false, collection = collection)
     }
 
@@ -690,7 +692,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         cancelMediaSearch()
         if (leaveMixThen { shuffleCollection(kind, id, loaded, total) }) return
         val collection = container.repository.playbackCollectionIdentity(kind, id)
-        shufflePlay(loaded, collection)
+        shufflePlay(container.repository.playable(kind, id, loaded), collection)
         fillQueue(kind, id, loaded, total, shuffle = true, collection = collection)
     }
 
@@ -798,7 +800,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 val page = runCatching { container.repository.detailPage(kind, id, offset) }.getOrDefault(emptyList())
                 ensureActive()
                 if (page.isEmpty()) break
-                val fresh = page.filter { it.id.isNotEmpty() && have.add(it.id) }
+                val fresh = container.repository.playable(kind, id, page.filter { it.id.isNotEmpty() && have.add(it.id) })
                 if (fresh.isNotEmpty()) {
                     val toAdd = (if (shuffle) fresh.shuffled() else fresh).map { it.copy(playbackCollection = collection) }
                     for (chunk in toAdd.chunked(QUEUE_BATCH)) {

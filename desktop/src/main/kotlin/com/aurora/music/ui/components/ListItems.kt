@@ -1,5 +1,7 @@
 package com.aurora.music.ui.components
 
+import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -126,6 +128,8 @@ fun SongRow(
     showAlbum: Boolean = true,
     showArt: Boolean = true,
     showDateAdded: Boolean = false,
+    hidden: Boolean = false,
+    onToggleHidden: (() -> Unit)? = null,
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var contextAt by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Offset?>(null) }
@@ -156,6 +160,12 @@ fun SongRow(
             leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
         )
         RepostMenuItem(song, close)
+        if (onToggleHidden != null) DropdownMenuItem(
+            text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
+            onClick = { close(); onToggleHidden() },
+            leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
+        )
+        MatchMenuItem(song, close)
         DropdownMenuItem(
             text = { Text(appString(R.string.track_swipe_playlists)) },
             onClick = { close(); showPlaylists = true },
@@ -217,6 +227,7 @@ fun SongRow(
             .clip(shape)
             .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
+            .alpha(if (hidden) 0.45f else 1f)
             .padding(horizontal = RowInset, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -254,6 +265,10 @@ fun SongRow(
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (song.explicit) {
                     Icon(Icons.Outlined.Explicit, null, tint = muted, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                }
+                if (hidden) {
+                    Icon(Icons.Filled.VisibilityOff, appString(R.string.hide_song_hidden), tint = muted, modifier = Modifier.size(14.dp))
                     Spacer(Modifier.width(4.dp))
                 }
                 if (isDownloaded) {
