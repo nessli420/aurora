@@ -41,6 +41,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Apps
@@ -173,6 +174,8 @@ fun LibraryScreen(
     onDeleteSmart: (String) -> Unit,
     onImportM3u: () -> Unit,
     onCreateWithAi: (() -> Unit)? = null,
+    onAiDj: (() -> Unit)? = null,
+    aiDjDetail: String = "",
     onExportPlaylist: (String, String, String) -> Unit,
     onOpenFolders: () -> Unit,
     onOpenRadio: () -> Unit = {},
@@ -339,7 +342,7 @@ fun LibraryScreen(
                 state = state, pins = pins, canDownload = canDownload, bottom = bottom,
                 onFilter = onFilter, onOpenDetail = onOpenDetail,
                 onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts,
-                onOpenYouTubeDownload = onOpenYouTubeDownload, onOpenAllLiked = openAllLiked,
+                onOpenYouTubeDownload = onOpenYouTubeDownload, onOpenAllLiked = openAllLiked, onAiDj = onAiDj, aiDjDetail = aiDjDetail,
             )
             LibraryFilter.SONGS -> SongsTab(
                 state = state, sort = sort, likedIds = likedIds, currentSongId = currentSongId, isPlaying = isPlaying,
@@ -439,6 +442,8 @@ private fun AllOverview(
     onOpenPodcasts: () -> Unit,
     onOpenYouTubeDownload: () -> Unit,
     onOpenAllLiked: (() -> Unit)?,
+    onAiDj: (() -> Unit)?,
+    aiDjDetail: String,
 ) {
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
         // quick access tiles
@@ -446,6 +451,7 @@ private fun AllOverview(
             val tiles = buildList {
                 if (state.signedIn) add(QuickTile(appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), Icons.Filled.Favorite, state.likedCover,
                     onLongClick = onOpenAllLiked) { onOpenDetail("liked", state.likedId) })
+                if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
                 if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
                 if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
                 add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })

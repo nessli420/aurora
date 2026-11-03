@@ -167,7 +167,7 @@ internal fun CreatePlaylistSheet(
                 ShortcutCard(Icons.Outlined.FileOpen, appString(R.string.import_title), appString(R.string.import_card_hint),
                     enabled = !saving, onClick = onImportM3u, modifier = Modifier.weight(1f))
             }
-            if (onCreateWithAi != null) ShortcutCard(Icons.Outlined.AutoAwesome, appString(R.string.ai_dj_title), appString(R.string.ai_dj_card_hint),
+            if (onCreateWithAi != null) ShortcutCard(Icons.Outlined.AutoAwesome, appString(R.string.ai_playlist_title), appString(R.string.ai_dj_card_hint),
                 enabled = !saving, onClick = onCreateWithAi, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
         }
     }

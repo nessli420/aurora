@@ -50,6 +50,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Album
@@ -251,6 +252,8 @@ fun LibraryScreen(
     onOpenRadio: (() -> Unit)? = null,
     onOpenPodcasts: (() -> Unit)? = null,
     onOpenYouTubeDownload: (() -> Unit)? = null,
+    onAiDj: (() -> Unit)? = null,
+    aiDjDetail: String = "",
     onPlayCollection: (String, String) -> Unit,
     onShuffleCollection: (String, String) -> Unit,
     onQueueCollection: (String, String) -> Unit,
@@ -339,6 +342,7 @@ fun LibraryScreen(
                 state = state, pins = pins, canDownload = canDownload, compact = compact, bottom = bottom, cardMin = cardMin, actions = actions,
                 onFilter = onFilter, onOpen = open,
                 onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts, onOpenYouTubeDownload = onOpenYouTubeDownload,
+                onAiDj = onAiDj, aiDjDetail = aiDjDetail,
             )
             LibraryFilter.SONGS -> SongsTab(
                 state = state, sort = sort, likedIds = likedIds, currentSongId = currentSongId, isPlaying = isPlaying,
@@ -563,6 +567,8 @@ private fun AllOverview(
     onOpenRadio: (() -> Unit)?,
     onOpenPodcasts: (() -> Unit)?,
     onOpenYouTubeDownload: (() -> Unit)?,
+    onAiDj: (() -> Unit)?,
+    aiDjDetail: String,
 ) {
     val insets = LocalLibInsets.current
     val listState = rememberLazyListState()
@@ -589,6 +595,7 @@ private fun AllOverview(
             )
             val tiles = buildList {
                 if (state.signedIn) add(QuickTile(liked.title, liked.subtitle, Icons.Filled.Favorite, state.likedCover, row = liked) { onOpen(liked) })
+                if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
                 if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
                 if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
                 if (onOpenRadio != null) add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })

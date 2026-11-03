@@ -345,6 +345,7 @@ Aurora is licensed under [Apache 2.0](LICENSE). Third-party code and assets keep
 - [NewPipeExtractor](https://github.com/TeamNewPipe/NewPipeExtractor) resolves YouTube audio, video and live streams. [JSch](https://github.com/mwiede/jsch) provides SFTP support in the bundled USB libraries.
 - [MusicBrainz](https://musicbrainz.org) and the [Cover Art Archive](https://coverartarchive.org) provide music information and artwork.
 - Vocal separation uses Ultimate Vocal Remover's model and ONNX Runtime. See [model credits and attribution](docs/vocal-separation-attribution.md).
+- AI playlists and DJ steering run on [llama.cpp](https://github.com/ggml-org/llama.cpp) (MIT) with the optional Qwen3.5 0.8B model (Apache 2.0). See [model credits and attribution](docs/ai-dj-attribution.md).
 - The Liquid Glass theme renders with Kyant's [backdrop and shapes libraries](https://github.com/Kyant0/AndroidLiquidGlass) (Apache 2.0); its tab bar, toggle and press motion adapt that project's catalog components.
 - Built with Jetpack Compose and Media3, alongside Glance, DataStore, Palette, Retrofit, OkHttp, Gson, Coil, Lottie, and the Google Cast SDK.
 - The Windows app is built with [Compose Multiplatform](https://github.com/JetBrains/compose-multiplatform) and decodes audio with [FFmpeg](https://ffmpeg.org) (LGPL) through [JavaCPP](https://github.com/bytedeco/javacpp-presets).

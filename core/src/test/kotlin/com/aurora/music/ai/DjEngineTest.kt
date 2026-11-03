@@ -32,15 +32,15 @@ class DjEngineTest {
     private val library = (1..30).map { song("lib$it", "Artist ${it % 10}", if (it % 3 == 0) "Ambient" else if (it % 3 == 1) "Rock" else "Pop") }
     private val catalogue = (1..10).map { song("cat$it", "Portishead", "Trip Hop") }
 
-    private inner class Source : MediaBackend {
+    private inner class Source(val songs: List<Song> = library) : MediaBackend {
         override val session = Session("https://dj.invalid", "dj", "salt", "token", ServerType.SUBSONIC, "user")
         override suspend fun ping() = true
         override suspend fun home() = HomeData()
         override suspend fun allAlbums() = emptyList<Album>()
         override suspend fun allArtists() = emptyList<Artist>()
         override suspend fun allPlaylists() = emptyList<Playlist>()
-        override suspend fun allSongs() = library
-        override suspend fun starredSongs() = library.take(2)
+        override suspend fun allSongs() = songs
+        override suspend fun starredSongs() = songs.take(2)
         override suspend fun starredCount() = 2
         override suspend fun starredIds() = library.take(2).map { it.id }.toSet()
         override suspend fun songFor(id: String) = (library + catalogue).firstOrNull { it.id == id }
@@ -73,28 +73,67 @@ class DjEngineTest {
         assertTrue("Ambient" in engine.vocabulary().genres)
     }
 
-    @Test fun djModeRefillsAndSteers() = runBlocking {
+    private val history = PlayHistoryStore(dir)
+    private val auto = DjEngine(MusicRepository({ source }, DownloadManager(dir, { "file://$it" }, { null })), history, null, { false })
+
+    private class FakeQueue : DjMode.Queue {
+        val items = mutableListOf<Song>()
+        var index = 0
+        override val current get() = items.getOrNull(index)
+        override val upcoming get() = items.drop(index + 1)
+        override fun append(songs: List<Song>) { items += songs }
+        override fun replaceUpcoming(songs: List<Song>) { while (items.size > index + 1) items.removeAt(items.size - 1); items += songs }
+        override fun skipToNext() { index++ }
+    }
+
+    private suspend fun DjMode.settle() = withTimeout(10_000) { do delay(20) while (state.value.busy) }
+
+    @Test fun djDecidesFromHistoryWithoutAPrompt() = runBlocking {
+        val day = 86_400_000L
+        val now = System.currentTimeMillis()
+        (3 downTo 1).forEach { n -> (1..6).forEach { i -> history.record(library[i], now - n * day + i * 60_000) } }
+        val session = DjSession(listOf(DjSegment.REPEAT))
+        val set = auto.nextSet(session, null)!!
+        assertEquals(DjSegment.REPEAT, set.segment)
+        assertEquals((1..6).map { library[it].id }.toSet(), set.songs.map { it.id }.toSet())
+        val mix = auto.nextSet(session, null)!!
+        assertEquals(DjSegment.MIX, mix.segment)
+        assertTrue(mix.songs.none { it.id in set.songs.map { s -> s.id } })
+    }
+
+    @Test fun djModeStartsRefillsSwitchesAndSteers() = runBlocking {
         val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default))
-        val queue = object : DjMode.Queue {
-            val items = mutableListOf<Song>()
-            var index = 0
-            override val current get() = items.getOrNull(index)
-            override val upcoming get() = items.drop(index + 1)
-            override fun append(songs: List<Song>) { items += songs }
-            override fun replaceUpcoming(songs: List<Song>) { while (items.size > index + 1) items.removeAt(items.size - 1); items += songs }
-        }
-        val start = engine.pick(DjIntent(genres = listOf("pop")), 3)
-        queue.items += start
-        dj.start("pop", DjIntent(genres = listOf("pop")), false, start)
+        val queue = FakeQueue()
+        var started: Boolean? = null
+        dj.start(queue, { queue.items += it }, { started = it })
+        withTimeout(10_000) { while (started == null) delay(20) }
+        assertEquals(true, started)
+        assertEquals(DjMode.BATCH, queue.items.size)
+        queue.index = queue.items.size - 2
         dj.onQueueChanged(queue)
-        withTimeout(10_000) { while (queue.items.size == 3 || dj.state.value.busy) delay(20) }
-        assertEquals(3 + DjMode.BATCH, queue.items.size)
+        dj.settle()
+        assertEquals(DjMode.BATCH * 2, queue.items.size)
         assertEquals(queue.items.size, queue.items.map { it.id }.toSet().size)
+        val before = queue.index
+        dj.switchUp(queue)
+        dj.settle()
+        assertEquals(before + 1, queue.index)
         dj.steer("switch to ambient", queue)
         withTimeout(10_000) { while (dj.state.value.intent?.genres?.firstOrNull() != "Ambient" || dj.state.value.busy) delay(20) }
         assertTrue(queue.upcoming.take(4).all { it.genre == "Ambient" })
-        queue.items.clear(); queue.items += song("other", "Someone", "Jazz")
+        queue.items.clear(); queue.index = 0; queue.items += song("other", "Someone", "Jazz")
         dj.onQueueChanged(queue)
+        assertFalse(dj.state.value.active)
+    }
+
+    @Test fun djWithNothingToPlayStaysOff() = runBlocking {
+        val empty = Source(emptyList())
+        val none = DjEngine(MusicRepository({ empty }, DownloadManager(dir, { "file://$it" }, { null })), PlayHistoryStore(Files.createTempDirectory("aurora-dj-none").toFile()), null, { false })
+        val dj = DjMode(none, CoroutineScope(SupervisorJob() + Dispatchers.Default))
+        var started: Boolean? = null
+        dj.start(FakeQueue(), {}, { started = it })
+        withTimeout(10_000) { while (started == null) delay(20) }
+        assertEquals(false, started)
         assertFalse(dj.state.value.active)
     }
 }

@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"집중용 차분한 음악, 대부분 연주곡"</string>
     <string name="ai_dj_example_new">"아직 안 들어 본 새로운 곡"</string>
     <string name="ai_dj_create">"플레이리스트 만들기"</string>
-    <string name="ai_dj_start">"DJ 시작"</string>
     <string name="ai_dj_thinking">"요청을 이해하는 중…"</string>
     <string name="ai_dj_picking">"곡을 고르는 중…"</string>
     <string name="ai_dj_play">"지금 재생"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"다음 곡을 고르는 중…"</string>
     <string name="ai_dj_failed">"이 분위기의 곡을 더 찾지 못했습니다."</string>
     <string name="ai_dj_started">"AI DJ 시작됨"</string>
-    <string name="ai_dj_from_current">"비워 두면 지금 재생 중인 곡에서 시작합니다."</string>
-    <string name="storage_ai_dj_model">"AI DJ 모델"</string>
+    <string name="ai_playlist_title">"AI 플레이리스트"</string>
+    <string name="ai_dj_tile_detail">"나를 위한 선곡"</string>
+    <string name="ai_dj_home_detail">"듣는 음악을 바탕으로 대기열을 시작해요"</string>
+    <string name="ai_dj_switch">"바꾸기"</string>
+    <string name="ai_dj_segment_repeat">"자주 듣는 곡"</string>
+    <string name="ai_dj_segment_hour">"이 시간대에 어울리는 곡"</string>
+    <string name="ai_dj_segment_past">"다시 듣는 곡"</string>
+    <string name="ai_dj_segment_new">"새로운 곡"</string>
+    <string name="ai_dj_segment_liked">"잊고 있던 최애곡"</string>
+    <string name="ai_dj_segment_artist">"%1$s 더 듣기"</string>
+    <string name="ai_dj_segment_mix">"나의 믹스"</string>
+    <string name="ai_dj_nothing">"아직 재생할 곡이 없어요. 먼저 몇 곡을 들어 보세요."</string>
 </resources>

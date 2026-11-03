@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"Música calma para foco, quase toda instrumental"</string>
     <string name="ai_dj_example_new">"Algo novo que eu ainda não ouvi"</string>
     <string name="ai_dj_create">"Criar playlist"</string>
-    <string name="ai_dj_start">"Iniciar DJ"</string>
     <string name="ai_dj_thinking">"Entendendo seu pedido…"</string>
     <string name="ai_dj_picking">"Escolhendo faixas…"</string>
     <string name="ai_dj_play">"Tocar agora"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"Escolhendo as próximas faixas…"</string>
     <string name="ai_dj_failed">"Não encontrei mais faixas nesse clima."</string>
     <string name="ai_dj_started">"DJ com IA iniciado"</string>
-    <string name="ai_dj_from_current">"Sem texto, o DJ começa pela música que está tocando."</string>
-    <string name="storage_ai_dj_model">"Modelo do DJ com IA"</string>
+    <string name="ai_playlist_title">"Playlist com IA"</string>
+    <string name="ai_dj_tile_detail">"Escolhas para você"</string>
+    <string name="ai_dj_home_detail">"Começa uma fila com base no que você ouve"</string>
+    <string name="ai_dj_switch">"Mudar"</string>
+    <string name="ai_dj_segment_repeat">"No repeat"</string>
+    <string name="ai_dj_segment_hour">"Para esta hora do dia"</string>
+    <string name="ai_dj_segment_past">"De volta à rotação"</string>
+    <string name="ai_dj_segment_new">"Algo novo"</string>
+    <string name="ai_dj_segment_liked">"Favoritas esquecidas"</string>
+    <string name="ai_dj_segment_artist">"Mais de %1$s"</string>
+    <string name="ai_dj_segment_mix">"Seu mix"</string>
+    <string name="ai_dj_nothing">"Ainda não há o que tocar. Ouça algumas músicas primeiro."</string>
 </resources>

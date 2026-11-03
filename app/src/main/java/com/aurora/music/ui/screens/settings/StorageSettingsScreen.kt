@@ -349,7 +349,7 @@ private fun AiDjModelRow(
 ) {
     val container = LocalContextApp()
     val model by container.aiDjModels.state.collectAsStateWithLifecycle()
-    val title = appString(R.string.storage_ai_dj_model)
+    val title = appString(R.string.ai_dj_model)
     when {
         container.aiDjUnsupported != null -> StorageRow(Icons.Filled.AutoAwesome, title, appString(R.string.ai_dj_model_unsupported), null)
         model == com.aurora.music.ai.DjModelState.Ready -> {

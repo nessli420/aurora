@@ -269,7 +269,7 @@ private fun YouTubeDownloadSettings(onOpen: () -> Unit, onOpenFolder: () -> Unit
 private fun AiDjModelRow(usage: StorageUsage, working: Set<String>, perform: Perform, ask: Ask) {
     val container = LocalDesktopContainer.current
     val model by container.aiDjModels.state.collectAsStateWithLifecycle()
-    val title = appString(R.string.storage_ai_dj_model)
+    val title = appString(R.string.ai_dj_model)
     when {
         model == com.aurora.music.ai.DjModelState.Ready -> {
             val delete = appString(R.string.storage_delete)

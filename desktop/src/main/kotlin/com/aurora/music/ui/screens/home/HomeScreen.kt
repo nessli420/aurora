@@ -120,6 +120,8 @@ fun HomeScreen(
     onSelectFeed: (String) -> Unit = {},
     onOpenNotifications: () -> Unit = {},
     onAddSource: () -> Unit = {},
+    aiDj: com.aurora.music.ai.DjMode.State = com.aurora.music.ai.DjMode.State(),
+    onAiDj: (() -> Unit)? = null,
 ) {
     val data = state.data
     val ui = LocalUiPrefs.current
@@ -188,6 +190,10 @@ fun HomeScreen(
                 }
             }
             return@LazyColumn
+        }
+
+        if (onAiDj != null && HomeSection.AI_DJ !in hidden) {
+            item(key = "ai-dj") { com.aurora.music.ui.screens.aidj.AiDjHomeCard(aiDj, onAiDj) }
         }
 
         data.sections.forEach { section ->

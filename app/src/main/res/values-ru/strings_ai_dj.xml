@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"Спокойная музыка для концентрации, в основном без слов"</string>
     <string name="ai_dj_example_new">"Что-нибудь новое, чего я не слышал"</string>
     <string name="ai_dj_create">"Создать плейлист"</string>
-    <string name="ai_dj_start">"Запустить диджея"</string>
     <string name="ai_dj_thinking">"Разбираю ваш запрос…"</string>
     <string name="ai_dj_picking">"Подбираю треки…"</string>
     <string name="ai_dj_play">"Слушать"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"Подбираю следующие треки…"</string>
     <string name="ai_dj_failed">"Не удалось найти ещё треков в этом духе."</string>
     <string name="ai_dj_started">"ИИ-диджей запущен"</string>
-    <string name="ai_dj_from_current">"При пустом запросе диджей начнёт с текущей песни."</string>
-    <string name="storage_ai_dj_model">"Модель ИИ-диджея"</string>
+    <string name="ai_playlist_title">"ИИ-плейлист"</string>
+    <string name="ai_dj_tile_detail">"Подборка для вас"</string>
+    <string name="ai_dj_home_detail">"Запускает очередь по вашим прослушиваниям"</string>
+    <string name="ai_dj_switch">"Сменить"</string>
+    <string name="ai_dj_segment_repeat">"На повторе"</string>
+    <string name="ai_dj_segment_hour">"Для этого времени суток"</string>
+    <string name="ai_dj_segment_past">"Снова в ротации"</string>
+    <string name="ai_dj_segment_new">"Что-то новое"</string>
+    <string name="ai_dj_segment_liked">"Забытые любимые"</string>
+    <string name="ai_dj_segment_artist">"Ещё: %1$s"</string>
+    <string name="ai_dj_segment_mix">"Ваш микс"</string>
+    <string name="ai_dj_nothing">"Пока нечего играть. Сначала послушайте несколько песен."</string>
 </resources>

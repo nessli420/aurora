@@ -21,7 +21,6 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
-import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
@@ -33,7 +32,6 @@ import androidx.compose.material3.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
@@ -60,35 +58,31 @@ import com.aurora.music.ai.DjVocals
 import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
+import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.model.accent
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.screens.settings.SettingsTopBar
 import com.aurora.music.ui.screens.settings.storageSize
-import com.aurora.music.viewmodel.AiDjViewModel
+import com.aurora.music.viewmodel.AiPlaylistViewModel
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
-fun AiDjScreen(
+fun AiPlaylistScreen(
     contentPadding: PaddingValues,
     current: Song?,
     onBack: () -> Unit,
     onPlay: (List<Song>, Int) -> Unit,
-    onStartDj: (String, DjIntent, Boolean, List<Song>) -> Unit,
     onMessage: (String) -> Unit,
 ) {
-    val vm: AiDjViewModel = viewModel()
+    val container = LocalDesktopContainer.current
+    val vm = viewModel { AiPlaylistViewModel(container) }
     val state by vm.state.collectAsStateWithLifecycle()
-    val busy = state.phase == AiDjViewModel.Phase.THINKING || state.phase == AiDjViewModel.Phase.PICKING
+    val busy = state.phase == AiPlaylistViewModel.Phase.THINKING || state.phase == AiPlaylistViewModel.Phase.PICKING
     var saving by remember { mutableStateOf(false) }
     val examples = listOf(R.string.ai_dj_example_night, R.string.ai_dj_example_party, R.string.ai_dj_example_focus, R.string.ai_dj_example_new)
-    val startDj = {
-        vm.generate(seed = current.takeIf { state.prompt.isBlank() }, count = 16) { done ->
-            done.intent?.let { if (done.songs.isNotEmpty()) onStartDj(done.prompt, it, done.usedModel, done.songs) }
-        }
-    }
 
     Column(Modifier.fillMaxSize()) {
-        SettingsTopBar(title = appString(R.string.ai_dj_title), onBack = onBack)
+        SettingsTopBar(title = appString(R.string.ai_playlist_title), onBack = onBack)
         LazyColumn(
             Modifier.fillMaxWidth(),
             contentPadding = PaddingValues(start = 16.dp, end = 16.dp, bottom = contentPadding.calculateBottomPadding() + 24.dp),
@@ -118,30 +112,21 @@ fun AiDjScreen(
                 }
             }
             item {
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Button(onClick = { vm.generate() }, enabled = !busy && state.prompt.isNotBlank()) {
-                        Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(appString(R.string.ai_dj_create))
-                    }
-                    OutlinedButton(onClick = startDj, enabled = !busy && (state.prompt.isNotBlank() || current != null)) {
-                        Icon(Icons.Filled.AutoAwesome, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(6.dp))
-                        Text(appString(R.string.ai_dj_start))
-                    }
+                Button(onClick = { vm.generate() }, enabled = !busy && state.prompt.isNotBlank()) {
+                    Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null, Modifier.size(18.dp))
+                    Spacer(Modifier.width(6.dp))
+                    Text(appString(R.string.ai_dj_create))
                 }
-                if (state.prompt.isBlank() && current != null) Text(appString(R.string.ai_dj_from_current),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 6.dp))
             }
             if (busy) item {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     Spacer(Modifier.width(10.dp))
-                    Text(appString(if (state.phase == AiDjViewModel.Phase.THINKING) R.string.ai_dj_thinking else R.string.ai_dj_picking))
+                    Text(appString(if (state.phase == AiPlaylistViewModel.Phase.THINKING) R.string.ai_dj_thinking else R.string.ai_dj_picking))
                 }
             }
             val intent = state.intent
-            if (state.phase == AiDjViewModel.Phase.DONE && intent != null) {
+            if (state.phase == AiPlaylistViewModel.Phase.DONE && intent != null) {
                 item { IntentSummary(intent, state.usedModel, state.thinkingMs, state.songs.size) }
                 if (state.songs.isEmpty()) item {
                     Text(appString(R.string.ai_dj_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -154,7 +139,6 @@ fun AiDjScreen(
                                 Text(appString(R.string.ai_dj_play))
                             }
                             FilledTonalButton(onClick = { saving = true }) { Text(appString(R.string.ai_dj_save)) }
-                            TextButton(onClick = { onStartDj(state.prompt, intent, state.usedModel, state.songs) }) { Text(appString(R.string.ai_dj_start)) }
                         }
                     }
                     itemsIndexed(state.songs, key = { _, s -> s.id }) { i, song -> TrackRow(song, song.id == current?.id) { onPlay(state.songs, i) } }
@@ -213,7 +197,7 @@ private fun TrackRow(song: Song, playing: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun AiDjModelCard(vm: AiDjViewModel) {
+private fun AiDjModelCard(vm: AiPlaylistViewModel) {
     val model by vm.model.collectAsStateWithLifecycle()
     val unsupported = vm.unsupported
     Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
@@ -256,42 +240,3 @@ fun aiDjFailure(reason: String): String = appString(when (reason) {
     DjModelStore.FAIL_CHECKSUM -> R.string.ai_dj_model_checksum
     else -> R.string.ai_dj_model_network
 })
-
-@Composable
-fun AiDjQueueBanner(state: com.aurora.music.ai.DjMode.State, onSteer: (String) -> Unit, onStop: () -> Unit) {
-    var steer by remember { mutableStateOf("") }
-    val send = { if (steer.isNotBlank() && !state.busy) { onSteer(steer); steer = "" } }
-    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(10.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(appString(R.string.ai_dj_title), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-                    Text(state.intent?.title?.ifBlank { null } ?: state.prompt, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-                TextButton(onClick = onStop) { Text(appString(R.string.ai_dj_stop)) }
-            }
-            OutlinedTextField(
-                value = steer,
-                onValueChange = { steer = it },
-                modifier = Modifier.fillMaxWidth(),
-                singleLine = true,
-                placeholder = { Text(appString(R.string.ai_dj_steer_hint), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                trailingIcon = { TextButton(onClick = send, enabled = steer.isNotBlank() && !state.busy) { Text(appString(R.string.ai_dj_steer)) } },
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
-                keyboardActions = KeyboardActions(onSend = { send() }),
-            )
-            when {
-                state.busy -> Row(verticalAlignment = Alignment.CenterVertically) {
-                    CircularProgressIndicator(Modifier.size(14.dp), strokeWidth = 2.dp)
-                    Spacer(Modifier.width(8.dp))
-                    Text(appString(R.string.ai_dj_busy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                state.failed -> Text(appString(R.string.ai_dj_failed), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
-            }
-        }
-    }
-}

@@ -565,8 +565,12 @@ private fun Shell(
 
     val aiDjState = player.aiDj?.state?.collectAsStateWithLifecycle()?.value
     val aiDjBanner: (@Composable () -> Unit)? = if (aiDjState?.active == true) ({
-        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, player::steerAiDj, player::stopAiDj)
+        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, player::steerAiDj, player::switchAiDj, player::stopAiDj)
     }) else null
+    val openAiDj: () -> Unit = {
+        if (aiDjState?.active != true) player.startAiDj { confirm(it) }
+        else if (playerState.expanded) playerPaneRequest = PlayerPane.QUEUE else showPane(PlayerPane.QUEUE)
+    }
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
             PlayerPane.LYRICS -> LivePlayer(player) { live -> LyricsPane(live, onSeek = { player.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(themedCorner(20.dp)))) }
@@ -1008,6 +1012,8 @@ private fun Shell(
                                     onSelectFeed = homeVM::selectFeed,
                                     onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                                     onAddSource = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
+                                    aiDj = aiDjState ?: com.aurora.music.ai.DjMode.State(),
+                                    onAiDj = openAiDj.takeIf { player.aiDj != null },
                                 )
                             }
                             composable(Routes.EXPLORE) {
@@ -1027,16 +1033,12 @@ private fun Shell(
                                     onApplyMatch = tagVM::applyMatch, onIdentify = if (container.acoustId.available && tagState.localFile) ({ tagVM.identify() }) else null,
                                     identifying = tagState.identifying, onBack = { navController.popBackStack() }, confirm = { confirm(it) })
                             }
-                            composable(Routes.AI_DJ) {
-                                com.aurora.music.ui.screens.aidj.AiDjScreen(
+                            composable(Routes.AI_PLAYLIST) {
+                                com.aurora.music.ui.screens.aidj.AiPlaylistScreen(
                                     contentPadding = inner,
                                     current = playerState.current.takeIf { it.id.isNotEmpty() },
                                     onBack = { navController.popBackStack() },
                                     onPlay = { songs, index -> player.playAll(songs, index) },
-                                    onStartDj = { prompt, intent, usedModel, songs ->
-                                        player.startAiDj(prompt, intent, usedModel, songs)
-                                        confirm(appString(R.string.ai_dj_started))
-                                    },
                                     onMessage = { confirm(it) },
                                 )
                             }
@@ -1166,6 +1168,8 @@ private fun Shell(
                                                 },
                                                 onOpenFolders = { navController.navigate(Routes.folders()) },
                                                 onOpenRadio = { navController.navigate(Routes.RADIO) },
+                                                onAiDj = openAiDj.takeIf { player.aiDj != null },
+                                                aiDjDetail = aiDjState?.takeIf { it.active }?.let { com.aurora.music.ui.screens.aidj.aiDjLabel(it) } ?: appString(R.string.ai_dj_tile_detail),
                                                 onOpenPodcasts = { navController.navigate(Routes.PODCASTS) },
                                                 onOpenYouTubeDownload = { navController.navigate(Routes.YOUTUBE_DOWNLOAD) },
                                                 onPlayCollection = { id, kind ->
@@ -1522,7 +1526,7 @@ private fun Shell(
                         },
                         onSonicRadio = { player.startSonicRadio(onResult = { confirm(it) }) },
                         onAutoDj = { player.startAutoDj(onResult = { confirm(it) }) },
-                        onAiDj = { player.setExpanded(false); navController.navigate(Routes.AI_DJ) { launchSingleTop = true } },
+                        onAiDj = openAiDj,
                         paneContent = nowPlayingPane,
                         gestures = mouseGestures,
                         requestedPane = playerPaneRequest,

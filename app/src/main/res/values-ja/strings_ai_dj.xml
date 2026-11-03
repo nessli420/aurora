@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"集中できる静かな曲、ほぼインスト"</string>
     <string name="ai_dj_example_new">"まだ聴いたことのない新しい曲"</string>
     <string name="ai_dj_create">"プレイリストを作成"</string>
-    <string name="ai_dj_start">"DJ を開始"</string>
     <string name="ai_dj_thinking">"リクエストを解析中…"</string>
     <string name="ai_dj_picking">"曲を選んでいます…"</string>
     <string name="ai_dj_play">"今すぐ再生"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"次の曲を選んでいます…"</string>
     <string name="ai_dj_failed">"この雰囲気の曲がこれ以上見つかりません。"</string>
     <string name="ai_dj_started">"AI DJ を開始しました"</string>
-    <string name="ai_dj_from_current">"空欄なら、再生中の曲から DJ を始めます。"</string>
-    <string name="storage_ai_dj_model">"AI DJ モデル"</string>
+    <string name="ai_playlist_title">"AI プレイリスト"</string>
+    <string name="ai_dj_tile_detail">"あなたへのセレクト"</string>
+    <string name="ai_dj_home_detail">"聴いた曲をもとにキューを開始します"</string>
+    <string name="ai_dj_switch">"変える"</string>
+    <string name="ai_dj_segment_repeat">"よく聴く曲"</string>
+    <string name="ai_dj_segment_hour">"この時間帯に"</string>
+    <string name="ai_dj_segment_past">"久しぶりの曲"</string>
+    <string name="ai_dj_segment_new">"新しい曲"</string>
+    <string name="ai_dj_segment_liked">"忘れていたお気に入り"</string>
+    <string name="ai_dj_segment_artist">"%1$s をもっと"</string>
+    <string name="ai_dj_segment_mix">"あなたのミックス"</string>
+    <string name="ai_dj_nothing">"まだ再生できる曲がありません。先に何曲か聴いてください。"</string>
 </resources>

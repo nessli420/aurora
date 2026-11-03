@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"Rustige focusmuziek, vooral instrumentaal"</string>
     <string name="ai_dj_example_new">"Iets nieuws dat ik nog niet ken"</string>
     <string name="ai_dj_create">"Afspeellijst maken"</string>
-    <string name="ai_dj_start">"DJ starten"</string>
     <string name="ai_dj_thinking">"Je verzoek wordt begrepen…"</string>
     <string name="ai_dj_picking">"Nummers kiezen…"</string>
     <string name="ai_dj_play">"Nu afspelen"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"Volgende nummers kiezen…"</string>
     <string name="ai_dj_failed">"Geen nummers meer gevonden voor deze sfeer."</string>
     <string name="ai_dj_started">"AI-dj gestart"</string>
-    <string name="ai_dj_from_current">"Zonder tekst begint de dj bij het nummer dat nu speelt."</string>
-    <string name="storage_ai_dj_model">"AI-dj-model"</string>
+    <string name="ai_playlist_title">"AI-afspeellijst"</string>
+    <string name="ai_dj_tile_detail">"Voor jou gekozen"</string>
+    <string name="ai_dj_home_detail">"Start een wachtrij op basis van wat je luistert"</string>
+    <string name="ai_dj_switch">"Wisselen"</string>
+    <string name="ai_dj_segment_repeat">"Op herhaling"</string>
+    <string name="ai_dj_segment_hour">"Voor dit moment van de dag"</string>
+    <string name="ai_dj_segment_past">"Weer in rotatie"</string>
+    <string name="ai_dj_segment_new">"Iets nieuws"</string>
+    <string name="ai_dj_segment_liked">"Vergeten favorieten"</string>
+    <string name="ai_dj_segment_artist">"Meer van %1$s"</string>
+    <string name="ai_dj_segment_mix">"Jouw mix"</string>
+    <string name="ai_dj_nothing">"Nog niets om af te spelen. Luister eerst een paar nummers."</string>
 </resources>

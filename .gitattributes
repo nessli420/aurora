@@ -27,3 +27,6 @@ gradlew text eol=lf
 *.so    binary
 *.aar   binary
 *.json  text
+
+# keeps vendored source out of the language bar
+native/llama.cpp/** linguist-vendored

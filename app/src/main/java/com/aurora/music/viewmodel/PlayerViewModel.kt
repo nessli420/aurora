@@ -181,6 +181,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             if (from < c.mediaItemCount) c.removeMediaItems(from, c.mediaItemCount)
             append(songs)
         }
+        override fun skipToNext() { controller?.seekToNextMediaItem() }
     }
 
     private val listener = object : Player.Listener {
@@ -909,11 +910,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun startAiDj(prompt: String, intent: com.aurora.music.ai.DjIntent, usedModel: Boolean, songs: List<Song>) {
-        if (songs.isEmpty()) return
-        playAll(songs, 0)
-        aiDj.start(prompt, intent, usedModel, songs)
+    fun startAiDj(onResult: (String) -> Unit = {}) = aiDj.start(djQueue, { playAll(it, 0) }) { ok ->
+        onResult(appString(if (ok) R.string.ai_dj_started else R.string.ai_dj_nothing))
     }
+
+    fun switchAiDj() = aiDj.switchUp(djQueue)
 
     fun steerAiDj(text: String) = aiDj.steer(text, djQueue)
 

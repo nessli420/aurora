@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"موسيقى هادئة للتركيز، معظمها بلا غناء"</string>
     <string name="ai_dj_example_new">"شيء جديد لم أسمعه"</string>
     <string name="ai_dj_create">"إنشاء قائمة تشغيل"</string>
-    <string name="ai_dj_start">"بدء المنسق"</string>
     <string name="ai_dj_thinking">"جارٍ فهم طلبك…"</string>
     <string name="ai_dj_picking">"جارٍ اختيار المقاطع…"</string>
     <string name="ai_dj_play">"تشغيل الآن"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"جارٍ اختيار المقاطع التالية…"</string>
     <string name="ai_dj_failed">"تعذر العثور على مزيد من المقاطع بهذا الطابع."</string>
     <string name="ai_dj_started">"بدأ منسق الذكاء الاصطناعي"</string>
-    <string name="ai_dj_from_current">"عند ترك الطلب فارغًا، يبدأ المنسق من الأغنية الحالية."</string>
-    <string name="storage_ai_dj_model">"نموذج منسق الذكاء الاصطناعي"</string>
+    <string name="ai_playlist_title">"قائمة تشغيل بالذكاء الاصطناعي"</string>
+    <string name="ai_dj_tile_detail">"مختارات لك"</string>
+    <string name="ai_dj_home_detail">"يبدأ قائمة انتظار بناءً على ما تستمع إليه"</string>
+    <string name="ai_dj_switch">"تغيير"</string>
+    <string name="ai_dj_segment_repeat">"قيد التكرار"</string>
+    <string name="ai_dj_segment_hour">"لهذا الوقت من اليوم"</string>
+    <string name="ai_dj_segment_past">"عودة إلى التشغيل"</string>
+    <string name="ai_dj_segment_new">"شيء جديد"</string>
+    <string name="ai_dj_segment_liked">"مفضلات منسية"</string>
+    <string name="ai_dj_segment_artist">"المزيد من %1$s"</string>
+    <string name="ai_dj_segment_mix">"مزيجك"</string>
+    <string name="ai_dj_nothing">"لا يوجد ما يمكن تشغيله بعد. استمع إلى بعض الأغاني أولًا."</string>
 </resources>

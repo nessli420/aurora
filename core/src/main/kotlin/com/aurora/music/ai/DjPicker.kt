@@ -116,6 +116,7 @@ object DjPicker {
         exclude: Set<String> = emptySet(),
         previous: DjCandidate? = null,
         random: Random = Random.Default,
+        flow: Boolean = false,
     ): List<Song> {
         if (count <= 0) return emptyList()
         val wants = Wants(intent)
@@ -135,7 +136,8 @@ object DjPicker {
         var last = previous
         while (out.size < count && scored.isNotEmpty()) {
             val slot = out.size
-            val target = if (count == 1) intent.energyEnd / 10f
+            // flow follows the last track's energy instead of an arc the request asked for
+            val target = if (flow) last?.let(::energyOf) else if (count == 1) intent.energyEnd / 10f
                 else (intent.energyStart + (intent.energyEnd - intent.energyStart) * slot / (count - 1f)) / 10f
             val recent = (listOfNotNull(previous) + out).takeLast(3).map { DjKeywords.norm(it.song.artist) }
             var best = 0
@@ -143,7 +145,8 @@ object DjPicker {
             for ((i, pair) in scored.withIndex()) {
                 val (c, base) = pair
                 var v = base
-                energyOf(c)?.let { v += 2.0 * (1 - abs(it - target)) } ?: run { v += 1.0 }
+                val energy = energyOf(c)
+                v += if (energy != null && target != null) 2.0 * (1 - abs(energy - target)) else 1.0
                 last?.let { v += transition(it, c) }
                 if (DjKeywords.norm(c.song.artist) in recent) v -= 3.0
                 if (last != null && c.song.albumId.isNotEmpty() && c.song.albumId == last.song.albumId) v -= 1.0

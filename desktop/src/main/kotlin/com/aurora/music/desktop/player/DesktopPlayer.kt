@@ -630,13 +630,16 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             if (count - 1 > current) engine.remove(current + 1, count)
             engine.append(songs)
         }
+        override fun skipToNext() = engine.next()
     }
 
-    override fun startAiDj(prompt: String, intent: com.aurora.music.ai.DjIntent, usedModel: Boolean, songs: List<Song>) {
-        if (songs.isEmpty()) return
-        playAll(songs, 0, null)
-        aiDj?.start(prompt, intent, usedModel, songs)
+    override fun startAiDj(onResult: (String) -> Unit) {
+        aiDj?.start(djQueue, { playAll(it, 0, null) }) { ok ->
+            onResult(appString(if (ok) R.string.ai_dj_started else R.string.ai_dj_nothing))
+        }
     }
+
+    override fun switchAiDj() { aiDj?.switchUp(djQueue) }
 
     override fun steerAiDj(text: String) { aiDj?.steer(text, djQueue) }
 

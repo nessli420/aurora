@@ -273,6 +273,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
 
             item { SettingsSectionTitle(appString(R.string.text_home_sections_1f24fb)) }
             val homeSections = listOf(
+                HomeSection.AI_DJ to appString(R.string.ai_dj_title),
                 HomeSection.HERO to appString(R.string.text_new_release_hero_c354b3),
                 HomeSection.RECENT to appString(R.string.text_jump_back_in_1d9181),
                 HomeSection.PLAYLISTS to appString(R.string.text_your_playlists_df03eb),

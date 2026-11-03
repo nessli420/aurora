@@ -89,8 +89,9 @@ interface PlayerController {
     fun startSonicRadio(seed: Song = state.value.current, onResult: (String) -> Unit = {})
     fun startAutoDj(seed: Song = state.value.current, onResult: (String) -> Unit = {})
     val aiDj: com.aurora.music.ai.DjMode? get() = null
-    fun startAiDj(prompt: String, intent: com.aurora.music.ai.DjIntent, usedModel: Boolean, songs: List<Song>) = playAll(songs, 0, null)
+    fun startAiDj(onResult: (String) -> Unit = {}) {}
     fun steerAiDj(text: String) {}
+    fun switchAiDj() {}
     fun stopAiDj() {}
     fun addToQueue(song: Song)
     fun playNext(song: Song)

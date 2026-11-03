@@ -507,8 +507,9 @@ fun AuroraApp() {
 
     val aiDjState by playerVM.aiDj.state.collectAsStateWithLifecycle()
     val aiDjBanner: (@Composable () -> Unit)? = if (aiDjState.active) ({
-        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, playerVM::steerAiDj, playerVM::stopAiDj)
+        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, playerVM::steerAiDj, playerVM::switchAiDj, playerVM::stopAiDj)
     }) else null
+    val openAiDj: () -> Unit = { if (aiDjState.active) showQueue = true else playerVM.startAiDj { confirm(it) } }
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
             PlayerPane.LYRICS -> LyricsPane(playerState, onSeek = { playerVM.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(20.dp)))
@@ -1071,6 +1072,8 @@ fun AuroraApp() {
                             onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                             onRetry = { homeVM.load() },
                             onAddSource = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
+                            aiDj = aiDjState,
+                            onAiDj = openAiDj,
                         )
                     }
                     composable(Routes.SEARCH) {
@@ -1169,7 +1172,9 @@ fun AuroraApp() {
                                 onEditSmart = { id -> navController.navigate(Routes.smartEdit(id)) },
                                 onDeleteSmart = { id -> scope.launch { container.settingsStore.deleteSmartPlaylist(id) } },
                                 onImportM3u = { showImport = true },
-                                onCreateWithAi = { navController.navigate(Routes.AI_DJ) { launchSingleTop = true } },
+                                onCreateWithAi = { navController.navigate(Routes.AI_PLAYLIST) { launchSingleTop = true } },
+                                onAiDj = openAiDj,
+                                aiDjDetail = if (aiDjState.active) com.aurora.music.ui.screens.aidj.aiDjLabel(aiDjState) else com.aurora.music.localization.appString(R.string.ai_dj_tile_detail),
                                 onExportPlaylist = { id, kind, title -> scope.launch {
                                     val text = container.repository.exportPlaylist(kind, id)
                                     if (text == null) confirm(appString(R.string.text_nothing_to_export_7faf33)) else {
@@ -1439,16 +1444,12 @@ fun AuroraApp() {
                         com.aurora.music.ui.screens.stats.ListeningHistoryScreen(contentPadding = inner, onBack = { navController.popBackStack() }, onPlay = { playById(it) },
                             onShowOnMap = { id, at -> navController.navigate("${Routes.LISTENING_MAP}/${android.net.Uri.encode(id)}/$at") })
                     }
-                    composable(Routes.AI_DJ) {
-                        com.aurora.music.ui.screens.aidj.AiDjScreen(
+                    composable(Routes.AI_PLAYLIST) {
+                        com.aurora.music.ui.screens.aidj.AiPlaylistScreen(
                             contentPadding = inner,
                             current = playerState.current.takeIf { it.id.isNotEmpty() },
                             onBack = { navController.popBackStack() },
                             onPlay = { songs, index -> playerVM.playAll(songs, index) },
-                            onStartDj = { prompt, intent, usedModel, songs ->
-                                playerVM.startAiDj(prompt, intent, usedModel, songs)
-                                confirm(com.aurora.music.localization.appString(R.string.ai_dj_started))
-                            },
                             onMessage = { confirm(it) },
                         )
                     }
@@ -1616,7 +1617,7 @@ fun AuroraApp() {
                     },
                     onSonicRadio = { playerVM.startSonicRadio(onResult = { confirm(it) }) },
                     onAutoDj = { playerVM.startAutoDj(onResult = { confirm(it) }) },
-                    onAiDj = { playerVM.setExpanded(false); showQueue = false; navController.navigate(Routes.AI_DJ) { launchSingleTop = true } },
+                    onAiDj = openAiDj,
                     onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showMix = true },
                     onPostComment = playerVM::postComment,
                     onToggleComments = playerVM::setCommentsEnabled,

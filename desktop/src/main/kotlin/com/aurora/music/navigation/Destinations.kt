@@ -55,7 +55,7 @@ object Routes {
     const val STATS = "stats"
     const val NOTIFICATIONS = "notifications"
     const val DUPLICATES = "duplicates"
-    const val AI_DJ = "ai_dj"
+    const val AI_PLAYLIST = "ai_playlist"
     const val RADIO = "radio"
     const val PODCASTS = "podcasts"
     const val YOUTUBE_DOWNLOAD = "youtube_download"

@@ -3,7 +3,6 @@ package com.aurora.music.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.aurora.music.R
-import com.aurora.music.ai.DjEngine
 import com.aurora.music.ai.DjIntent
 import com.aurora.music.desktop.DesktopContainer
 import com.aurora.music.localization.appString
@@ -17,7 +16,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-class AiDjViewModel(private val container: DesktopContainer) : ViewModel() {
+class AiPlaylistViewModel(private val container: DesktopContainer) : ViewModel() {
 
     enum class Phase { IDLE, THINKING, PICKING, DONE }
 
@@ -44,25 +43,21 @@ class AiDjViewModel(private val container: DesktopContainer) : ViewModel() {
 
     fun cancelDownload() = container.aiDjModels.cancel()
 
-    // an empty prompt with a seed keeps going from the song that's playing
-    fun generate(seed: Song? = null, count: Int? = null, then: (UiState) -> Unit = {}) {
+    fun generate() {
         val text = _state.value.prompt.trim()
-        if (text.isEmpty() && seed == null) return
+        if (text.isEmpty()) return
         job?.cancel()
         job = viewModelScope.launch {
             val start = System.currentTimeMillis()
             _state.update { it.copy(phase = Phase.THINKING, songs = emptyList(), intent = null) }
             try {
                 val engine = container.aiDj
-                val read = if (text.isNotEmpty()) engine.interpret(text)
-                    else DjEngine.Interpretation(DjIntent(title = seed!!.artist, artists = listOf(seed.artist), genres = listOf(seed.genre).filter { it.isNotBlank() }), false)
+                val read = engine.interpret(text)
                 val thinking = System.currentTimeMillis() - start
                 _state.update { it.copy(phase = Phase.PICKING, intent = read.intent, usedModel = read.usedModel, thinkingMs = thinking) }
-                val songs = engine.pick(read.intent, count ?: read.intent.count, after = seed)
+                val songs = engine.pick(read.intent)
                 AppLog.d("AiDj", "model=${read.usedModel} think=${thinking}ms pick=${System.currentTimeMillis() - start - thinking}ms songs=${songs.size} ${read.timings ?: ""}")
-                val done = _state.value.copy(phase = Phase.DONE, songs = songs)
-                _state.value = done
-                then(done)
+                _state.update { it.copy(phase = Phase.DONE, songs = songs) }
             } catch (e: CancellationException) { throw e } catch (e: Exception) {
                 AppLog.w("AiDj", "generate failed: ${e.message}")
                 _state.update { it.copy(phase = Phase.DONE, songs = emptyList()) }

@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"Musik tenang untuk fokus, kebanyakan instrumental"</string>
     <string name="ai_dj_example_new">"Sesuatu yang baru dan belum pernah saya dengar"</string>
     <string name="ai_dj_create">"Buat playlist"</string>
-    <string name="ai_dj_start">"Mulai DJ"</string>
     <string name="ai_dj_thinking">"Memahami permintaan Anda…"</string>
     <string name="ai_dj_picking">"Memilih lagu…"</string>
     <string name="ai_dj_play">"Putar sekarang"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"Memilih lagu berikutnya…"</string>
     <string name="ai_dj_failed">"Tidak menemukan lagu lain untuk suasana ini."</string>
     <string name="ai_dj_started">"DJ AI dimulai"</string>
-    <string name="ai_dj_from_current">"Jika kosong, DJ mulai dari lagu yang sedang diputar."</string>
-    <string name="storage_ai_dj_model">"Model DJ AI"</string>
+    <string name="ai_playlist_title">"Playlist AI"</string>
+    <string name="ai_dj_tile_detail">"Pilihan untuk Anda"</string>
+    <string name="ai_dj_home_detail">"Memulai antrean dari riwayat dengar Anda"</string>
+    <string name="ai_dj_switch">"Ganti"</string>
+    <string name="ai_dj_segment_repeat">"Diputar berulang"</string>
+    <string name="ai_dj_segment_hour">"Untuk waktu ini"</string>
+    <string name="ai_dj_segment_past">"Kembali diputar"</string>
+    <string name="ai_dj_segment_new">"Sesuatu yang baru"</string>
+    <string name="ai_dj_segment_liked">"Favorit yang terlupakan"</string>
+    <string name="ai_dj_segment_artist">"Lagu lain dari %1$s"</string>
+    <string name="ai_dj_segment_mix">"Mix Anda"</string>
+    <string name="ai_dj_nothing">"Belum ada yang bisa diputar. Dengarkan beberapa lagu dulu."</string>
 </resources>

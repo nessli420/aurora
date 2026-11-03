@@ -11,11 +11,13 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import kotlin.random.Random
 
 class DjEngine(
     private val repository: MusicRepository,
@@ -26,6 +28,8 @@ class DjEngine(
     private val similar: suspend (Song, Int) -> List<Song> = { _, _ -> emptyList() },
 ) {
     data class Interpretation(val intent: DjIntent, val usedModel: Boolean, val timings: LlmTimings? = null)
+
+    private companion object { val FLOW = DjIntent(energyStart = 0, energyEnd = 10) }
 
     private class Library(val key: String, val at: Long, val songs: List<Song>, val vocabulary: DjVocabulary)
 
@@ -91,8 +95,8 @@ class DjEngine(
         fun era(d: Int) = if (d < 2000) "${d % 100}s" else "${d}s"
         val mood = intent.moods.firstOrNull()?.let { "$it " }.orEmpty()
         val eras = intent.decades.take(2).flatMap { d -> intent.genres.take(2).map { "${era(d)} $mood$it" } }
-        val queries = (intent.artists.take(3) + eras + intent.search + intent.genres).map { it.trim() }.filter { it.length >= 2 }
-            .distinctBy { it.lowercase() }.take(6)
+        val queries = (intent.artists.take(3) + eras + intent.search + intent.genres).ifEmpty { listOf(intent.moods.take(2).joinToString(" ")) }
+            .map { it.trim() }.filter { it.length >= 2 }.distinctBy { it.lowercase() }.take(6)
         val searches = queries.map { q -> async { quietly(8_000, emptyList()) { repository.search(q).songs.take(25) } } }
         val seeded = after?.let { seed ->
             async { quietly(8_000, emptyList()) { repository.radio(seed.id) } + quietly(8_000, emptyList()) { similar(seed, 30) } }
@@ -124,6 +128,52 @@ class DjEngine(
         DjPicker.pick(intent, candidates, count, exclude + listOfNotNull(after?.id), previous).also {
             AppLog.d("AiDj", "pool ${candidates.size} (library ${cached.songs.size}, liked ${likedSongs.size}, searches ${queries.size}) in ${ready - start}ms, pick ${System.currentTimeMillis() - ready}ms")
         }
+    }
+
+    // the dj's own next set, taken from listening history and likes with no prompt
+    suspend fun nextSet(session: DjSession, after: Song?, count: Int = DjMode.BATCH, random: Random = Random.Default): DjSet? = withContext(Dispatchers.Default) {
+        val cached = library()
+        val taste = DjTaste(history.snapshot(), System.currentTimeMillis())
+        val liked = likedNow()
+        val likedIds = liked.mapTo(HashSet()) { it.id }
+        val known = LinkedHashMap<String, Song>()
+        for (s in liked + cached.songs) if (s.id.isNotEmpty()) known.putIfAbsent(s.id, s)
+        val signals = DjSonic.signals(quietly(10_000, emptyMap()) { vectors() })
+        val skip = session.placed + taste.justHeard + listOfNotNull(after?.id)
+        fun candidate(s: Song) = signals[s.id].let { DjCandidate(s, taste.plays[s.id] ?: 0, s.liked || s.id in likedIds, 0, it?.energy, it?.bpm ?: 0, it?.vector) }
+        fun build(segment: DjSegment, artist: String?, songs: List<Song>): DjSet? {
+            val fresh = songs.filterNot { it.id in skip || session.heard(it) }
+            val picked = DjPicker.pick(FLOW, fresh.map(::candidate), count, previous = after?.let(::candidate), random = random, flow = true)
+            return if (picked.size >= minOf(3, count)) DjSet(segment, artist, picked).also { session.mark(picked) } else null
+        }
+        for (step in session.plan.indices) {
+            val segment = session.plan[session.next++ % session.plan.size]
+            val want = count * 2
+            val set = when (segment) {
+                DjSegment.REPEAT -> build(segment, null, hydrate(DjTaste.sample(taste.repeat.filterKeys { it !in skip }, want, random), known))
+                DjSegment.HOUR -> build(segment, null, hydrate(DjTaste.sample(taste.hour.filterKeys { it !in skip }, want, random), known))
+                DjSegment.PAST -> build(segment, null, hydrate(DjTaste.sample(taste.past.filterKeys { it !in skip }, want, random), known))
+                DjSegment.LIKED -> build(segment, null, known.values.filter { (it.liked || it.id in likedIds) && it.id !in taste.repeat }.shuffled(random).take(want))
+                DjSegment.ARTIST -> taste.artists.take(12).firstOrNull { it !in session.artists }?.let { artist ->
+                    session.artists += artist
+                    val name = DjKeywords.norm(artist)
+                    val found = quietly(8_000, emptyList()) { repository.search(artist).songs.take(25) }
+                    build(segment, artist, (known.values + found).filter { " ${DjKeywords.norm(it.artist)} ".contains(" $name ") }.shuffled(random).take(want))
+                }
+                DjSegment.NEW -> {
+                    val seeds = hydrate(DjTaste.sample(taste.repeat.ifEmpty { taste.plays }, 2, random), known)
+                    val related = seeds.flatMap { seed -> quietly(8_000, emptyList()) { repository.radio(seed.id) } + quietly(8_000, emptyList()) { similar(seed, 20) } }
+                    build(segment, null, related.filter { it.id !in taste.plays && !it.liked && it.id !in likedIds }.shuffled(random).take(want))
+                }
+                DjSegment.MIX -> null
+            }
+            if (set != null) return@withContext set
+        }
+        build(DjSegment.MIX, null, known.values.shuffled(random).take(count * 4))
+    }
+
+    private suspend fun hydrate(ids: List<String>, known: Map<String, Song>): List<Song> = coroutineScope {
+        ids.map { id -> async { known[id] ?: quietly(5_000, null) { repository.songFor(id) } } }.awaitAll().filterNotNull()
     }
 
     private suspend fun years(): Map<String, Int> {

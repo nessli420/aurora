@@ -9,7 +9,6 @@
     <string name="ai_dj_example_focus">"专注用的安静音乐，以纯音乐为主"</string>
     <string name="ai_dj_example_new">"我没听过的新歌"</string>
     <string name="ai_dj_create">"生成歌单"</string>
-    <string name="ai_dj_start">"开始 DJ"</string>
     <string name="ai_dj_thinking">"正在理解你的需求…"</string>
     <string name="ai_dj_picking">"正在挑选曲目…"</string>
     <string name="ai_dj_play">"立即播放"</string>
@@ -43,6 +42,16 @@
     <string name="ai_dj_busy">"正在挑选接下来的曲目…"</string>
     <string name="ai_dj_failed">"找不到更多符合这种氛围的曲目。"</string>
     <string name="ai_dj_started">"AI DJ 已开始"</string>
-    <string name="ai_dj_from_current">"不输入内容时，DJ 会从正在播放的歌曲开始。"</string>
-    <string name="storage_ai_dj_model">"AI DJ 模型"</string>
+    <string name="ai_playlist_title">"AI 歌单"</string>
+    <string name="ai_dj_tile_detail">"为你挑选"</string>
+    <string name="ai_dj_home_detail">"根据你的收听记录开始播放队列"</string>
+    <string name="ai_dj_switch">"换一换"</string>
+    <string name="ai_dj_segment_repeat">"常听"</string>
+    <string name="ai_dj_segment_hour">"适合此刻"</string>
+    <string name="ai_dj_segment_past">"重温旧爱"</string>
+    <string name="ai_dj_segment_new">"新发现"</string>
+    <string name="ai_dj_segment_liked">"被遗忘的最爱"</string>
+    <string name="ai_dj_segment_artist">"更多 %1$s"</string>
+    <string name="ai_dj_segment_mix">"你的歌单"</string>
+    <string name="ai_dj_nothing">"暂时没有可播放的内容，请先听几首歌。"</string>
 </resources>
