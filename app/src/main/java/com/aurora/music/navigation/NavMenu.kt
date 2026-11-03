@@ -1,6 +1,7 @@
 package com.aurora.music.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
@@ -122,6 +123,7 @@ object NavMenu {
         NavMenuItem("search", Routes.SEARCH, Icons.Outlined.Search, R.string.text_search_bce064, locked = true, selectedIcon = Icons.Filled.Search),
         NavMenuItem("library", Routes.LIBRARY, Icons.Outlined.LibraryMusic, R.string.text_your_library_fd740f, locked = true, selectedIcon = Icons.Filled.LibraryMusic),
         NavMenuItem("explore", Routes.EXPLORE, Icons.Outlined.Explore, R.string.discovery_explore, discovery = true, selectedIcon = Icons.Filled.Explore),
+        NavMenuItem("ai_dj", Routes.AI_DJ, Icons.Filled.AutoAwesome, R.string.ai_dj_title),
         NavMenuItem("radio", Routes.RADIO, Icons.Filled.Radio, R.string.text_radio_b11bf1),
         NavMenuItem("podcasts", Routes.PODCASTS, Icons.Filled.Podcasts, R.string.text_podcasts_fd52b4),
         NavMenuItem("history", Routes.HISTORY, Icons.Filled.History, R.string.text_listening_history_bd9991),
@@ -137,7 +139,7 @@ object NavMenu {
     )
 
     private val defaultMain = listOf("home", "search", "library", "explore")
-    private val defaultMore = listOf("radio", "podcasts", "history", "stats", "duplicates")
+    private val defaultMore = listOf("ai_dj", "radio", "podcasts", "history", "stats", "duplicates")
     private val defaultTabs = listOf("home", "search", "library")
     const val MAX_TABS = 5
     const val MIN_TABS = 2

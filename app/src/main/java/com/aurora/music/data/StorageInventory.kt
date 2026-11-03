@@ -30,13 +30,14 @@ data class StorageUsage(
     val artistInfo: Long = 0,
     val sonic: Long = 0,
     val stemModel: Long = 0,
+    val aiDjModel: Long = 0,
     val languagePacks: List<String> = emptyList(),
     val languagePackBytes: Long = 0,
     val insightsPlays: Int = 0,
     val locatedPlays: Int = 0,
 ) {
     val caches: Long get() = audioCache + artwork + images + mapTiles + vocals + stems + temporary + artistInfo
-    val analysis: Long get() = sonic + stemModel + languagePackBytes
+    val analysis: Long get() = sonic + stemModel + aiDjModel + languagePackBytes
     val other: Long get() = (total - downloads - caches - analysis).coerceAtLeast(0)
 }
 
@@ -75,6 +76,7 @@ class StorageInventory(private val context: Context, private val container: AppC
             artistInfo = container.artistInfoStore.bytes(),
             sonic = container.sonicStore.bytes() + container.mixAnalyzer.bytes(),
             stemModel = container.stemSeparator.modelBytes(),
+            aiDjModel = container.aiDjModels.bytes(),
             languagePacks = packs,
             languagePackBytes = if (packs.isEmpty()) 0L else languagePackDirs().sumOf { it.diskBytes() },
             insightsPlays = insights,

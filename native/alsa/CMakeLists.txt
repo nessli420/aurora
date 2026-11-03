@@ -22,3 +22,5 @@ target_include_directories(aurora_alsa PRIVATE src ${JNI_INCLUDE_DIRS})
 target_compile_options(aurora_alsa PRIVATE -Wall -Wextra -O2)
 target_link_libraries(aurora_alsa PRIVATE ALSA::ALSA Threads::Threads)
 target_link_options(aurora_alsa PRIVATE -Wl,--no-undefined -Wl,--as-needed)
+
+add_subdirectory(../llm llm)

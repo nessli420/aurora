@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.22.1)
 project(aurora_fp)
 
+add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/../../../../native/llm ${CMAKE_CURRENT_BINARY_DIR}/llm)
+
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 

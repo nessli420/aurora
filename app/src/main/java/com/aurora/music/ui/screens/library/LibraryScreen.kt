@@ -172,6 +172,7 @@ fun LibraryScreen(
     onEditSmart: (String) -> Unit,
     onDeleteSmart: (String) -> Unit,
     onImportM3u: () -> Unit,
+    onCreateWithAi: (() -> Unit)? = null,
     onExportPlaylist: (String, String, String) -> Unit,
     onOpenFolders: () -> Unit,
     onOpenRadio: () -> Unit = {},
@@ -263,6 +264,7 @@ fun LibraryScreen(
                 onCreateSmart = { showCreate = false; onCreateSmart() },
                 onImportM3u = { showCreate = false; onImportM3u() },
                 onDismiss = { showCreate = false },
+                onCreateWithAi = onCreateWithAi?.let { open -> { showCreate = false; open() } },
             )
         }
 

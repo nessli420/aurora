@@ -505,6 +505,10 @@ fun AuroraApp() {
         )
     }
 
+    val aiDjState by playerVM.aiDj.state.collectAsStateWithLifecycle()
+    val aiDjBanner: (@Composable () -> Unit)? = if (aiDjState.active) ({
+        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, playerVM::steerAiDj, playerVM::stopAiDj)
+    }) else null
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
             PlayerPane.LYRICS -> LyricsPane(playerState, onSeek = { playerVM.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(20.dp)))
@@ -522,6 +526,7 @@ fun AuroraApp() {
                 showTitle = false,
                 showActions = false,
                 modifier = modifier.padding(horizontal = 4.dp),
+                dj = aiDjBanner,
             )
             PlayerPane.RELATED -> com.aurora.music.ui.screens.player.RelatedPane(
                 playerState.current,
@@ -1164,6 +1169,7 @@ fun AuroraApp() {
                                 onEditSmart = { id -> navController.navigate(Routes.smartEdit(id)) },
                                 onDeleteSmart = { id -> scope.launch { container.settingsStore.deleteSmartPlaylist(id) } },
                                 onImportM3u = { showImport = true },
+                                onCreateWithAi = { navController.navigate(Routes.AI_DJ) { launchSingleTop = true } },
                                 onExportPlaylist = { id, kind, title -> scope.launch {
                                     val text = container.repository.exportPlaylist(kind, id)
                                     if (text == null) confirm(appString(R.string.text_nothing_to_export_7faf33)) else {
@@ -1433,6 +1439,19 @@ fun AuroraApp() {
                         com.aurora.music.ui.screens.stats.ListeningHistoryScreen(contentPadding = inner, onBack = { navController.popBackStack() }, onPlay = { playById(it) },
                             onShowOnMap = { id, at -> navController.navigate("${Routes.LISTENING_MAP}/${android.net.Uri.encode(id)}/$at") })
                     }
+                    composable(Routes.AI_DJ) {
+                        com.aurora.music.ui.screens.aidj.AiDjScreen(
+                            contentPadding = inner,
+                            current = playerState.current.takeIf { it.id.isNotEmpty() },
+                            onBack = { navController.popBackStack() },
+                            onPlay = { songs, index -> playerVM.playAll(songs, index) },
+                            onStartDj = { prompt, intent, usedModel, songs ->
+                                playerVM.startAiDj(prompt, intent, usedModel, songs)
+                                confirm(com.aurora.music.localization.appString(R.string.ai_dj_started))
+                            },
+                            onMessage = { confirm(it) },
+                        )
+                    }
                     composable(Routes.DUPLICATES) {
                         val dupVM: com.aurora.music.viewmodel.DuplicatesViewModel = viewModel()
                         val dupState by dupVM.state.collectAsStateWithLifecycle()
@@ -1597,6 +1616,7 @@ fun AuroraApp() {
                     },
                     onSonicRadio = { playerVM.startSonicRadio(onResult = { confirm(it) }) },
                     onAutoDj = { playerVM.startAutoDj(onResult = { confirm(it) }) },
+                    onAiDj = { playerVM.setExpanded(false); showQueue = false; navController.navigate(Routes.AI_DJ) { launchSingleTop = true } },
                     onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showMix = true },
                     onPostComment = playerVM::postComment,
                     onToggleComments = playerVM::setCommentsEnabled,
@@ -1630,6 +1650,7 @@ fun AuroraApp() {
                     onClose = { showQueue = false },
                     onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showQueue = false; showMix = true },
                     shown = showQueue,
+                    dj = aiDjBanner,
                 )
             }
             }

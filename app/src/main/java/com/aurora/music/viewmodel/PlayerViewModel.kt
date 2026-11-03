@@ -164,11 +164,31 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
     @Volatile private var loadingRadio = false
 
+    val aiDj = com.aurora.music.ai.DjMode(container.aiDj, viewModelScope)
+    private val djQueue = object : com.aurora.music.ai.DjMode.Queue {
+        override val current: Song? get() = _state.value.current.takeIf { it.id.isNotEmpty() }
+        override val upcoming: List<Song> get() = _state.value.let { it.queue.drop(it.currentIndex + 1) }
+        override fun append(songs: List<Song>) {
+            val c = controller ?: return
+            songById = songById + songs.associateBy { it.id }
+            c.addMediaItems(songs.map { toMediaItem(it) })
+            if (c.playbackState == Player.STATE_IDLE) c.prepare()
+            syncFromController()
+        }
+        override fun replaceUpcoming(songs: List<Song>) {
+            val c = controller ?: return
+            val from = c.currentMediaItemIndex + 1
+            if (from < c.mediaItemCount) c.removeMediaItems(from, c.mediaItemCount)
+            append(songs)
+        }
+    }
+
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             if (events.contains(Player.EVENT_TIMELINE_CHANGED)) savedTracksDirty = true
             if (events.contains(Player.EVENT_TIMELINE_CHANGED) || events.contains(Player.EVENT_MEDIA_METADATA_CHANGED)) fillFromController()
             syncFromController()
+            if (events.contains(Player.EVENT_TIMELINE_CHANGED) || events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) aiDj.onQueueChanged(djQueue)
             if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)) companionVideo.sync(forceSeek = true)
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) && player.playbackState == Player.STATE_ENDED) {
                 maybeAutoplay()
@@ -211,7 +231,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun maybeAutoplay() {
-        if (!autoplayEnabled || loadingRadio || remoteSession != null) return
+        if (!autoplayEnabled || loadingRadio || remoteSession != null || aiDj.state.value.active) return
         val c = controller ?: return
         val seed = _state.value.current.id.ifEmpty { return }
         if (seed.startsWith("aurora-mix:")) return
@@ -888,6 +908,16 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             loadingRadio = false
         }
     }
+
+    fun startAiDj(prompt: String, intent: com.aurora.music.ai.DjIntent, usedModel: Boolean, songs: List<Song>) {
+        if (songs.isEmpty()) return
+        playAll(songs, 0)
+        aiDj.start(prompt, intent, usedModel, songs)
+    }
+
+    fun steerAiDj(text: String) = aiDj.steer(text, djQueue)
+
+    fun stopAiDj() = aiDj.stop()
 
     fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity? = null) {
         cancelMediaSearch()

@@ -82,6 +82,7 @@ data class PlayerDependencies(
     val listeningLevels: com.aurora.music.data.listening.ListeningLevelStore? = null,
     val companion: com.aurora.music.desktop.video.CompanionVideo? = null,
     val resumePoints: com.aurora.music.data.ResumePoints? = null,
+    val aiDj: com.aurora.music.ai.DjEngine? = null,
 )
 
 fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependencies(
@@ -109,6 +110,7 @@ fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependenci
     listeningLevels = listeningLevels,
     companion = companionVideo,
     resumePoints = resumePoints,
+    aiDj = aiDj,
 )
 
 class DesktopPlayer(private val engine: PlaybackEngine, private val deps: PlayerDependencies) : PlayerController, AutoCloseable {
@@ -287,6 +289,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             syncedQueue = s.entries.map { it.song }
         }
         val cur = s.current?.song ?: EMPTY_SONG
+        if (s.entries !== djEntries || s.index != djIndex) { djEntries = s.entries; djIndex = s.index; aiDj?.onQueueChanged(djQueue) }
         rules.publish(s)
         deps.companion?.let { video ->
             video.clearIfSongChanged(cur.id)
@@ -452,7 +455,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     }
 
     private fun maybeAutoplay() {
-        if (!autoplayEnabled || loadingRadio) return
+        if (!autoplayEnabled || loadingRadio || aiDj?.state?.value?.active == true) return
         val seed = _state.value.current.id.ifEmpty { return }
         loadingRadio = true
         scope.launch {
@@ -612,6 +615,32 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     }
 
     override fun play(song: Song) = playAll(listOf(song), 0)
+
+    override val aiDj = deps.aiDj?.let { com.aurora.music.ai.DjMode(it, scope) }
+    private var djEntries: Any? = null
+    private var djIndex = -1
+    private val djQueue = object : com.aurora.music.ai.DjMode.Queue {
+        override val current: Song? get() = engine.state.value.current?.song
+        override val upcoming: List<Song> get() = engine.state.value.let { s -> s.entries.drop(s.index + 1).map { it.song } }
+        override fun append(songs: List<Song>) { queueGeneration++; engine.append(songs) }
+        override fun replaceUpcoming(songs: List<Song>) {
+            val count = queueSize()
+            val current = currentIndex()
+            queueGeneration++
+            if (count - 1 > current) engine.remove(current + 1, count)
+            engine.append(songs)
+        }
+    }
+
+    override fun startAiDj(prompt: String, intent: com.aurora.music.ai.DjIntent, usedModel: Boolean, songs: List<Song>) {
+        if (songs.isEmpty()) return
+        playAll(songs, 0, null)
+        aiDj?.start(prompt, intent, usedModel, songs)
+    }
+
+    override fun steerAiDj(text: String) { aiDj?.steer(text, djQueue) }
+
+    override fun stopAiDj() { aiDj?.stop() }
 
     override fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) {
         val collection = deps.repository.playbackCollectionIdentity(kind, id)

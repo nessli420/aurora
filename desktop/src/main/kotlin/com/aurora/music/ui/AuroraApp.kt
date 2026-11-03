@@ -563,6 +563,10 @@ private fun Shell(
         if (!fullscreen) lyricsFullscreen = false
     }
 
+    val aiDjState = player.aiDj?.state?.collectAsStateWithLifecycle()?.value
+    val aiDjBanner: (@Composable () -> Unit)? = if (aiDjState?.active == true) ({
+        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, player::steerAiDj, player::stopAiDj)
+    }) else null
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
             PlayerPane.LYRICS -> LivePlayer(player) { live -> LyricsPane(live, onSeek = { player.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(themedCorner(20.dp)))) }
@@ -575,6 +579,7 @@ private fun Shell(
                 onMove = { from, to -> player.moveQueueItem(from, to) },
                 editable = !playerState.isMix,
                 modifier = modifier.padding(horizontal = 4.dp),
+                dj = aiDjBanner,
             )
             PlayerPane.RELATED -> com.aurora.music.ui.screens.player.RelatedPane(
                 playerState.current,
@@ -1021,6 +1026,19 @@ private fun Shell(
                                 com.aurora.music.ui.screens.detail.TagEditScreen(contentPadding = inner, state = tagState, onEdit = tagVM::edit, onMatch = tagVM::matchOnline,
                                     onApplyMatch = tagVM::applyMatch, onIdentify = if (container.acoustId.available && tagState.localFile) ({ tagVM.identify() }) else null,
                                     identifying = tagState.identifying, onBack = { navController.popBackStack() }, confirm = { confirm(it) })
+                            }
+                            composable(Routes.AI_DJ) {
+                                com.aurora.music.ui.screens.aidj.AiDjScreen(
+                                    contentPadding = inner,
+                                    current = playerState.current.takeIf { it.id.isNotEmpty() },
+                                    onBack = { navController.popBackStack() },
+                                    onPlay = { songs, index -> player.playAll(songs, index) },
+                                    onStartDj = { prompt, intent, usedModel, songs ->
+                                        player.startAiDj(prompt, intent, usedModel, songs)
+                                        confirm(appString(R.string.ai_dj_started))
+                                    },
+                                    onMessage = { confirm(it) },
+                                )
                             }
                             composable(Routes.RADIO) {
                                 com.aurora.music.ui.screens.radio.RadioScreen(contentPadding = inner, onBack = { navController.popBackStack() }, onPlay = { player.play(it) })
@@ -1504,6 +1522,7 @@ private fun Shell(
                         },
                         onSonicRadio = { player.startSonicRadio(onResult = { confirm(it) }) },
                         onAutoDj = { player.startAutoDj(onResult = { confirm(it) }) },
+                        onAiDj = { player.setExpanded(false); navController.navigate(Routes.AI_DJ) { launchSingleTop = true } },
                         paneContent = nowPlayingPane,
                         gestures = mouseGestures,
                         requestedPane = playerPaneRequest,

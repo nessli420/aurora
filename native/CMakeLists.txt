@@ -29,3 +29,5 @@ target_include_directories(aurora_native PRIVATE src)
 target_compile_definitions(aurora_native PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00)
 target_compile_options(aurora_native PRIVATE /W4 /permissive- /EHsc /Zc:__cplusplus)
 target_link_libraries(aurora_native PRIVATE JNI::JNI ole32 avrt ksuser dwmapi crypt32 shell32 runtimeobject)
+
+add_subdirectory(llm)

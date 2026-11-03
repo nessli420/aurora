@@ -266,6 +266,34 @@ private fun YouTubeDownloadSettings(onOpen: () -> Unit, onOpenFolder: () -> Unit
 }
 
 @Composable
+private fun AiDjModelRow(usage: StorageUsage, working: Set<String>, perform: Perform, ask: Ask) {
+    val container = LocalDesktopContainer.current
+    val model by container.aiDjModels.state.collectAsStateWithLifecycle()
+    val title = appString(R.string.storage_ai_dj_model)
+    when {
+        model == com.aurora.music.ai.DjModelState.Ready -> {
+            val delete = appString(R.string.storage_delete)
+            StorageRow(Icons.Filled.AutoAwesome, title, storageDetail(usage.aiDjModel, com.aurora.music.ai.DjModelStore.NAME), delete,
+                working = "ai_dj" in working, destructive = true) {
+                ask(appString(R.string.storage_model_delete_title), appString(R.string.storage_model_delete_message), delete) {
+                    perform("ai_dj", R.string.storage_cleared) { container.deleteAiDjModel(); true }
+                }
+            }
+        }
+        model is com.aurora.music.ai.DjModelState.Downloading -> {
+            val d = model as com.aurora.music.ai.DjModelState.Downloading
+            StorageRow(Icons.Filled.AutoAwesome, title, appString(R.string.ai_dj_model_downloading, storageSize(d.bytes), storageSize(d.total)),
+                appString(R.string.ai_dj_model_cancel)) { container.aiDjModels.cancel() }
+        }
+        model == com.aurora.music.ai.DjModelState.Verifying -> StorageRow(Icons.Filled.AutoAwesome, title, appString(R.string.ai_dj_model_verifying), null, working = true)
+        else -> StorageRow(Icons.Filled.AutoAwesome, title,
+            (model as? com.aurora.music.ai.DjModelState.Failed)?.let { com.aurora.music.ui.screens.aidj.aiDjFailure(it.reason) }
+                ?: appString(R.string.ai_dj_model_missing, storageSize(com.aurora.music.ai.DjModelStore.BYTES)),
+            appString(R.string.ai_dj_model_download)) { container.downloadAiDjModel() }
+    }
+}
+
+@Composable
 private fun AnalysisSettings(usage: StorageUsage, working: Set<String>, perform: Perform, ask: Ask) {
     val container = LocalDesktopContainer.current
     val scope = rememberCoroutineScope()
@@ -304,6 +332,8 @@ private fun AnalysisSettings(usage: StorageUsage, working: Set<String>, perform:
                 perform("model", R.string.storage_cleared) { container.stemSeparator.deleteModel() }
             }
         }
+        SettingsRowDivider()
+        AiDjModelRow(usage, working, perform, ask)
         val measured = container.replayGainStore.size
         if (measured > 0) {
             SettingsRowDivider()

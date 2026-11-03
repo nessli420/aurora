@@ -94,6 +94,7 @@ class DesktopContainer(
     init {
         paths.createDirectories()
         paths.moveLegacyQueue()
+        com.aurora.music.util.NativeLibraries.loader = com.aurora.music.desktop.natives.NativeLoader::load
     }
 
     val settingsStore = SettingsStore(protectedPreferencesStore(paths.settingsFile, storageScope), paths.roaming, paths.staging)
@@ -274,6 +275,14 @@ class DesktopContainer(
         com.aurora.music.data.SonicEngine(sonicStore, { repository.allLibrarySongs(cap = Int.MAX_VALUE) },
             { settingsStore.session.first()?.accountKey().orEmpty() }, mixAnalyzer)
     }
+    val aiDjModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(paths.local, "ai-dj-model"), http) }
+    private val aiDjLlm by lazy { com.aurora.music.ai.LocalLlm({ aiDjModels.model() }, (Runtime.getRuntime().availableProcessors() / 2).coerceIn(2, 8)) }
+    val aiDj by lazy {
+        com.aurora.music.ai.DjEngine(repository, playHistory, aiDjLlm, { aiDjModels.state.value == com.aurora.music.ai.DjModelState.Ready },
+            { sonicStore.snapshot() }, { seed, count -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count) else emptyList() })
+    }
+    fun downloadAiDjModel() = aiDjModels.download()
+    suspend fun deleteAiDjModel() = aiDjModels.delete { aiDjLlm.release() }
     val mapTiles by lazy { com.aurora.music.ui.components.MapTiles(java.io.File(paths.cache, "map-tiles"), http) }
     // the local discord account, null while the discord app isn't running
     val discordUser = MutableStateFlow<String?>(null)

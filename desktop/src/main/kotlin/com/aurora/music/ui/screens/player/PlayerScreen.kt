@@ -189,6 +189,7 @@ fun PlayerScreen(
     onOpenSignalPath: () -> Unit,
     onSonicRadio: () -> Unit,
     onAutoDj: () -> Unit,
+    onAiDj: () -> Unit = {},
     paneContent: @Composable (PlayerPane, Modifier) -> Unit,
     gestures: GesturePrefs = GesturePrefs(),
     requestedPane: PlayerPane? = null,
@@ -301,6 +302,11 @@ fun PlayerScreen(
                     DropdownMenuItem(
                         text = { Text(appString(R.string.text_auto_dj_774a78)) },
                         onClick = { showMenu = false; onAutoDj() },
+                        leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(appString(R.string.ai_dj_title)) },
+                        onClick = { showMenu = false; onAiDj() },
                         leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
                     )
                     DropdownMenuItem(
