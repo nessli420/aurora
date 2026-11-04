@@ -179,6 +179,22 @@ class DesktopPlaybackEngineTest {
         assertTrue(left.copyOfRange(end, left.size).all { it == 0.25f })
     }
 
+    @Test fun djSpeechPlaysWholeWithoutACrossfade() {
+        val (first, _) = tone("line1", 48_000, 16, 96_000) { _, _ -> 16_384 }
+        val (song, _) = tone("song", 48_000, 16, 96_000) { _, _ -> 8_192 }
+        val (second, _) = tone("line2", 48_000, 16, 96_000) { _, _ -> 16_384 }
+        val backend = FakeBackend(speed = 8.0)
+        val engine = engine(backend, EngineConfig(crossfadeMs = 1_000))
+        EventLog(engine).use { log ->
+            val prefix = com.aurora.music.ai.DJ_SPEECH_PREFIX
+            engine.setQueue(listOf(tracks.song(first, "${prefix}1"), tracks.song(song), tracks.song(second, "${prefix}2")))
+            log.await(20_000) { EngineEvent.Ended in it }
+        }
+        val heard = backend.last.heardFloats()
+        assertEquals(288_000 * 2, heard.size)
+        assertTrue(heard.all { it == 0.5f || it == 0.25f })
+    }
+
     @Test fun seeksLandOnTheExactFrameAndReportTheirPosition() {
         val (file, _) = tone("ramp", 48_000, 24, 144_000) { frame, channel -> if (channel == 0) frame else -frame }
         val backend = FakeBackend()

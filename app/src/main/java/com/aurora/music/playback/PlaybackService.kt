@@ -1273,6 +1273,9 @@ class PlaybackService : MediaLibraryService() {
         val repeatOne = player.repeatMode == Player.REPEAT_MODE_ONE
         val next = if (repeatOne) player.currentMediaItemIndex else player.nextMediaItemIndex
         if (next == C.INDEX_UNSET) { clearPrepared(); return }
+        // dj speech plays whole and alone, a fade would cut its end or bury its start
+        if (player.currentMediaItem?.mediaId.orEmpty().startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX) ||
+            player.getMediaItemAt(next).mediaId.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)) { clearPrepared(); return }
         val duration = player.duration
         if (duration == C.TIME_UNSET || duration <= 0) return
         val speed = player.playbackParameters.speed.coerceAtLeast(0.1f)

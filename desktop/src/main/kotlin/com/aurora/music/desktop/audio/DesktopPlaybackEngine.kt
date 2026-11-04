@@ -1,5 +1,6 @@
 package com.aurora.music.desktop.audio
 
+import com.aurora.music.ai.isDjSpeech
 import com.aurora.music.R
 import com.aurora.music.desktop.audio.decode.DecoderException
 import com.aurora.music.desktop.audio.decode.DecoderInterruptedException
@@ -982,6 +983,8 @@ class DesktopPlaybackEngine(
         val fade = minOf(framesFor(settings.crossfadeMs), lead.outputFrames(track.durationFrames) / 2)
         if (remaining > fade || remaining < framesFor(MIN_CROSSFADE_MS)) return
         val next = successorOf(track.entry) ?: return
+        // dj speech plays whole and alone, a fade would cut its end or bury its start
+        if (track.entry.song.isDjSpeech() || next.song.isDjSpeech()) return
         val slot = prepared?.takeIf { it.entry.uid == next.uid } ?: return
         val incomingTrack = slot.result?.getOrNull() ?: return
         if (!compatibleOutput(incomingTrack)) return
