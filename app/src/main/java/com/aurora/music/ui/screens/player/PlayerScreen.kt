@@ -140,6 +140,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.aurora.music.data.MockData
 import com.aurora.music.data.isPodcast
+import com.aurora.music.ai.isDjSpeech
 import com.aurora.music.data.isRadio
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
@@ -182,7 +183,8 @@ fun PlayerScreen(
     onOpenSignalPath: () -> Unit,
     onSonicRadio: () -> Unit,
     onAutoDj: () -> Unit,
-    onAiDj: () -> Unit = {},
+    djControl: (@Composable () -> Unit)? = null,
+    djStage: (@Composable (Modifier) -> Unit)? = null,
     onOpenMix: () -> Unit = {},
     onPostComment: (String) -> Unit = {},
     onToggleComments: (Boolean) -> Unit = {},
@@ -338,11 +340,6 @@ fun PlayerScreen(
                         leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
                     )
                     DropdownMenuItem(
-                        text = { Text(appString(R.string.ai_dj_title)) },
-                        onClick = { showMenu = false; onAiDj() },
-                        leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
-                    )
-                    DropdownMenuItem(
                         text = { Text(appString(R.string.text_visualizer_7177c7)) },
                         onClick = { showMenu = false; onOpenVisualizer() },
                         leadingIcon = { Icon(Icons.Filled.GraphicEq, null) },
@@ -462,7 +459,10 @@ fun PlayerScreen(
                         modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
                     if (tablet) {
-                        Spacer(Modifier.width(if (showVideoModeControl) 120.dp else 80.dp))
+                        Spacer(Modifier.width((if (showVideoModeControl) 120.dp else 80.dp) + if (djControl != null) 40.dp else 0.dp))
+                    } else if (djControl != null) {
+                        if (showVideoModeControl) videoToggle() else Spacer(Modifier.width(40.dp))
+                        djControl()
                     } else if (showVideoModeControl) {
                         Spacer(Modifier.width(20.dp))
                         videoToggle()
@@ -476,6 +476,7 @@ fun PlayerScreen(
                         MarqueeTitle(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) })
                     }
                     if (tablet && showVideoModeControl) videoToggle()
+                    if (tablet) djControl?.invoke()
                     // cast route picker tvs/chromecast show here not in the local-output sheet
                     PlayerCastButton(Modifier.size(40.dp))
                     Icon(
@@ -489,7 +490,7 @@ fun PlayerScreen(
             Spacer(Modifier.height(8.dp))
 
         }
-        val artwork: @Composable (Modifier) -> Unit = { modifier ->
+        val coverArt: @Composable (Modifier) -> Unit = { modifier ->
             BoxWithConstraints(
                 modifier
                     .then(
@@ -571,6 +572,9 @@ fun PlayerScreen(
                 }
             }
         }
+        val artwork: @Composable (Modifier) -> Unit = { modifier ->
+            if (djStage != null) djStage(modifier) else coverArt(modifier)
+        }
         val controls: @Composable () -> Unit = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (state.isPlaying) {
@@ -621,6 +625,7 @@ fun PlayerScreen(
                     sampleRateHz = it.sampleRateHz, bitDepth = it.bitDepth, bitrateKbps = it.bitrateKbps)) }.orEmpty()
             }
             val source = sourceLabel(song)
+            if (!song.isDjSpeech()) {
             Spacer(Modifier.height(10.dp))
             FlowRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
@@ -671,6 +676,7 @@ fun PlayerScreen(
                 comments = state.comments,
                 onOpenComment = { focusComment = it; showComments = true },
             )
+            }
 
             Spacer(Modifier.height(8.dp))
 

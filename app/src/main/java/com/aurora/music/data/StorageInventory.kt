@@ -31,13 +31,15 @@ data class StorageUsage(
     val sonic: Long = 0,
     val stemModel: Long = 0,
     val aiDjModel: Long = 0,
+    val aiDjVoiceModel: Long = 0,
+    val aiDjSpeakerModel: Long = 0,
     val languagePacks: List<String> = emptyList(),
     val languagePackBytes: Long = 0,
     val insightsPlays: Int = 0,
     val locatedPlays: Int = 0,
 ) {
     val caches: Long get() = audioCache + artwork + images + mapTiles + vocals + stems + temporary + artistInfo
-    val analysis: Long get() = sonic + stemModel + aiDjModel + languagePackBytes
+    val analysis: Long get() = sonic + stemModel + aiDjModel + aiDjVoiceModel + aiDjSpeakerModel + languagePackBytes
     val other: Long get() = (total - downloads - caches - analysis).coerceAtLeast(0)
 }
 
@@ -77,6 +79,8 @@ class StorageInventory(private val context: Context, private val container: AppC
             sonic = container.sonicStore.bytes() + container.mixAnalyzer.bytes(),
             stemModel = container.stemSeparator.modelBytes(),
             aiDjModel = container.aiDjModels.bytes(),
+            aiDjVoiceModel = container.aiDjVoiceModels.bytes(),
+            aiDjSpeakerModel = container.aiDjSpeakerModels.bytes(),
             languagePacks = packs,
             languagePackBytes = if (packs.isEmpty()) 0L else languagePackDirs().sumOf { it.diskBytes() },
             insightsPlays = insights,
@@ -146,6 +150,6 @@ class StorageInventory(private val context: Context, private val container: AppC
         const val MAP_TILES = "osmdroid"
         // these have their own rows or are in use by playback and clean themselves up
         val MANAGED_CACHE = setOf("audio-streams", "metadata-artwork", "image_cache", "vocal-activity", "separated-stems-v1",
-            "network-audio", "renderer-media", "local-profile", "connect-art", MAP_TILES)
+            "network-audio", "renderer-media", "local-profile", "connect-art", "dj-speech", MAP_TILES)
     }
 }

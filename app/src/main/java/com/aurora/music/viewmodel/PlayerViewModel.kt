@@ -22,6 +22,7 @@ import androidx.media3.session.SessionToken
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.SavedQueue
 import com.aurora.music.data.isPodcast
+import com.aurora.music.ai.isDjSpeech
 import com.aurora.music.data.isRadio
 import com.aurora.music.data.toSavedTrack
 import com.aurora.music.model.Song
@@ -164,10 +165,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
     @Volatile private var loadingRadio = false
 
-    val aiDj = com.aurora.music.ai.DjMode(container.aiDj, viewModelScope)
+    val aiDj = com.aurora.music.ai.DjMode(container.aiDj, viewModelScope, container.aiDjVoice, container.aiDjEars)
     private val djQueue = object : com.aurora.music.ai.DjMode.Queue {
         override val current: Song? get() = _state.value.current.takeIf { it.id.isNotEmpty() }
         override val upcoming: List<Song> get() = _state.value.let { it.queue.drop(it.currentIndex + 1) }
+        override val playing: Boolean get() = controller?.isPlaying == true
+        override fun pause() { controller?.pause() }
+        override fun play() { controller?.play() }
         override fun append(songs: List<Song>) {
             val c = controller ?: return
             songById = songById + songs.associateBy { it.id }
@@ -544,7 +548,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             it.copy(
                 current = cur,
                 timelineDurationSec = (c.duration.coerceAtLeast(0) / 1000).toInt(),
-                isLive = c.isCurrentMediaItemLive || cur.isRadio(),
+                isLive = c.isCurrentMediaItemLive || (cur.isRadio() && !cur.isDjSpeech()),
                 hasVideo = (c.currentTracks.isTypeSupported(C.TRACK_TYPE_VIDEO) &&
                     c.isCommandAvailable(Player.COMMAND_SET_VIDEO_SURFACE)) || companionVideo.isReady,
                 canSelectVideoQuality = if (companionVideo.isReady) !companionVideo.isCanvas
@@ -919,6 +923,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     fun steerAiDj(text: String) = aiDj.steer(text, djQueue)
 
     fun stopAiDj() = aiDj.stop()
+
+    fun listenAiDj(): Boolean = aiDj.startListening(djQueue)
+
+    fun hearAiDj() = aiDj.stopListening(djQueue)
 
     fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity? = null) {
         cancelMediaSearch()

@@ -510,6 +510,42 @@ fun AuroraApp() {
         com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, playerVM::steerAiDj, playerVM::switchAiDj, playerVM::stopAiDj)
     }) else null
     val openAiDj: () -> Unit = { if (aiDjState.active) showQueue = true else playerVM.startAiDj { confirm(it) } }
+    var showAiDjSheet by remember { mutableStateOf(false) }
+    val aiDjSpoken by container.settingsStore.aiDjSpoken.collectAsStateWithLifecycle(true)
+    val aiDjMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (!granted) confirm(com.aurora.music.localization.appString(R.string.ai_dj_mic_denied))
+    }
+    val holdAiDj: () -> Unit = {
+        when {
+            container.aiDjUnsupported != null -> confirm(com.aurora.music.localization.appString(R.string.ai_dj_model_unsupported))
+            container.aiDjVoiceModels.model() == null -> showAiDjSheet = true
+            androidx.core.content.ContextCompat.checkSelfPermission(context, android.Manifest.permission.RECORD_AUDIO) != android.content.pm.PackageManager.PERMISSION_GRANTED ->
+                aiDjMic.launch(android.Manifest.permission.RECORD_AUDIO)
+            !playerVM.listenAiDj() -> confirm(com.aurora.music.localization.appString(R.string.ai_dj_mic_denied))
+        }
+    }
+    val aiDjControl: (@Composable () -> Unit)? = if (aiDjState.active) ({
+        com.aurora.music.ui.screens.aidj.AiDjPlayerButton(aiDjState, { showAiDjSheet = true }, holdAiDj, playerVM::hearAiDj)
+    }) else null
+    val aiDjStage: (@Composable (Modifier) -> Unit)? = if (aiDjState.speech != null || aiDjState.listening || aiDjState.thinking) ({ modifier ->
+        com.aurora.music.ui.screens.aidj.AiDjStage(aiDjState, modifier)
+    }) else null
+    androidx.compose.runtime.LaunchedEffect(aiDjState.missed) { if (aiDjState.missed) confirm(com.aurora.music.localization.appString(R.string.ai_dj_missed)) }
+    if (showAiDjSheet && aiDjState.active) com.aurora.music.ui.screens.aidj.AiDjSheet(
+        state = aiDjState,
+        spoken = aiDjSpoken,
+        speakerModels = container.aiDjSpeakerModels.takeIf {
+            container.aiDjUnsupported == null && com.aurora.music.ai.speakerLanguage(com.aurora.music.localization.AppStrings.context.resources.configuration.locales[0].language) != null
+        },
+        voiceModels = container.aiDjVoiceModels.takeIf { container.aiDjUnsupported == null },
+        onSteer = playerVM::steerAiDj,
+        onSwitch = playerVM::switchAiDj,
+        onStop = playerVM::stopAiDj,
+        onSpoken = { scope.launch { container.settingsStore.setAiDjSpoken(it) } },
+        onDownloadSpeaker = container::downloadAiDjSpeakerModel,
+        onDownloadVoice = container::downloadAiDjVoiceModel,
+        onDismiss = { showAiDjSheet = false },
+    )
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
             PlayerPane.LYRICS -> LyricsPane(playerState, onSeek = { playerVM.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(20.dp)))
@@ -1072,8 +1108,6 @@ fun AuroraApp() {
                             onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                             onRetry = { homeVM.load() },
                             onAddSource = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
-                            aiDj = aiDjState,
-                            onAiDj = openAiDj,
                         )
                     }
                     composable(Routes.SEARCH) {
@@ -1617,7 +1651,8 @@ fun AuroraApp() {
                     },
                     onSonicRadio = { playerVM.startSonicRadio(onResult = { confirm(it) }) },
                     onAutoDj = { playerVM.startAutoDj(onResult = { confirm(it) }) },
-                    onAiDj = openAiDj,
+                    djControl = aiDjControl,
+                    djStage = aiDjStage,
                     onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showMix = true },
                     onPostComment = playerVM::postComment,
                     onToggleComments = playerVM::setCommentsEnabled,

@@ -186,6 +186,18 @@ class AppContainer(context: Context) {
     }
     fun downloadAiDjModel() = aiDjModels.download { !offlineToggle && networkUp && onWifi }
     suspend fun deleteAiDjModel() = aiDjModels.delete { aiDjLlm.release() }
+    val aiDjVoiceModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(appContext.filesDir, "ai-dj-voice"), http, com.aurora.music.ai.DjModelStore.WHISPER) }
+    private val aiDjWhisper by lazy { com.aurora.music.ai.LocalWhisper({ aiDjVoiceModels.model() }, AiDjDevice.threads()) }
+    val aiDjSpeakerModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(appContext.filesDir, "ai-dj-speaker"), http, com.aurora.music.ai.DjModelStore.SPEAKER) }
+    private val aiDjSpeaker by lazy { com.aurora.music.ai.DjSpeaker({ aiDjSpeakerModels.model().takeIf { aiDjUnsupported == null } }, AiDjDevice.threads()) }
+    val aiDjVoice by lazy { AiDjSystemVoice(appContext, aiDjSpeaker) { settingsStore.aiDjSpoken.first() } }
+    fun downloadAiDjSpeakerModel() = aiDjSpeakerModels.download { !offlineToggle && networkUp && onWifi }
+    suspend fun deleteAiDjSpeakerModel() = aiDjSpeakerModels.delete { aiDjSpeaker.release() }
+    val aiDjEars by lazy {
+        com.aurora.music.ai.WhisperEars(AiDjMicrophone(), aiDjWhisper) { com.aurora.music.localization.AppStrings.context.resources.configuration.locales[0].language }
+    }
+    fun downloadAiDjVoiceModel() = aiDjVoiceModels.download { !offlineToggle && networkUp && onWifi }
+    suspend fun deleteAiDjVoiceModel() = aiDjVoiceModels.delete { aiDjWhisper.release() }
 
     val radioBrowser by lazy { com.aurora.music.data.remote.RadioBrowserClient(http) }
     val podcastClient by lazy { com.aurora.music.data.remote.PodcastClient(http) }
