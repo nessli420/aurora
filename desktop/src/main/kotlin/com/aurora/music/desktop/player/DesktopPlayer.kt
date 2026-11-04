@@ -629,7 +629,13 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         override val playing: Boolean get() = engine.state.value.playWhenReady
         override fun pause() = engine.pause()
         override fun play() = engine.play()
-        override fun append(songs: List<Song>) { queueGeneration++; engine.append(songs) }
+        override fun append(songs: List<Song>) {
+            // the last set ran out before this one was ready
+            val ended = engine.state.value.phase == com.aurora.music.desktop.audio.EnginePhase.ENDED
+            queueGeneration++
+            engine.append(songs)
+            if (ended) engine.next()
+        }
         override fun replaceUpcoming(songs: List<Song>) {
             val count = queueSize()
             val current = currentIndex()
@@ -638,6 +644,27 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             engine.append(songs)
         }
         override fun skipToNext() = engine.next()
+    }
+
+    // the dj's queue only moves forward, looping it would replay its lines
+    private val djActive get() = aiDj?.state?.value?.active == true
+
+    init {
+        aiDj?.let { dj ->
+            scope.launch {
+                var repeatBefore: RepeatMode? = null
+                dj.state.map { it.active }.distinctUntilChanged().collect { active ->
+                    if (active) {
+                        repeatBefore = _state.value.repeat
+                        setRepeat(RepeatMode.OFF)
+                        engine.setShuffle(ShuffleTarget.OFF)
+                    } else {
+                        repeatBefore?.let(::setRepeat)
+                        repeatBefore = null
+                    }
+                }
+            }
+        }
     }
 
     override fun startAiDj(onResult: (String) -> Unit) {
@@ -838,13 +865,15 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         if (engine.state.value.positionMs > 4000) engine.seekTo(0) else engine.previousItem()
     }
 
-    override fun toggleShuffle() = engine.setShuffle(ShuffleTarget.TOGGLE)
+    override fun toggleShuffle() { if (!djActive) engine.setShuffle(ShuffleTarget.TOGGLE) }
 
-    override fun cycleRepeat() = setRepeat(when (_state.value.repeat) {
-        RepeatMode.OFF -> RepeatMode.ALL
-        RepeatMode.ALL -> RepeatMode.ONE
-        RepeatMode.ONE -> RepeatMode.OFF
-    })
+    override fun cycleRepeat() {
+        if (!djActive) setRepeat(when (_state.value.repeat) {
+            RepeatMode.OFF -> RepeatMode.ALL
+            RepeatMode.ALL -> RepeatMode.ONE
+            RepeatMode.ONE -> RepeatMode.OFF
+        })
+    }
 
     fun setRepeat(mode: RepeatMode) {
         engine.setRepeat(EngineRepeat.valueOf(mode.name))
