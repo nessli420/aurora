@@ -80,8 +80,6 @@ fun HomeScreen(
     onSelectFeed: (String) -> Unit = {},
     onOpenNotifications: () -> Unit = {},
     onAddSource: () -> Unit = {},
-    aiDj: com.aurora.music.ai.DjMode.State = com.aurora.music.ai.DjMode.State(),
-    onAiDj: (() -> Unit)? = null,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val data = state.data
@@ -178,9 +176,6 @@ fun HomeScreen(
             return@LazyColumn
         }
 
-        if (onAiDj != null && HomeSection.AI_DJ !in hidden) {
-            item(key = "ai-dj") { com.aurora.music.ui.screens.aidj.AiDjHomeCard(aiDj, onAiDj, Modifier.padding(horizontal = 16.dp)) }
-        }
 
         data.sections.forEach { section ->
             item(key = "feed:${section.id}") { com.aurora.music.ui.components.FeedSection(section, onOpenDetail, onPlayAll) }

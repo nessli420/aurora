@@ -248,7 +248,7 @@ object LyricsSync { const val LINE = 0; const val WORD = 1; const val VOCALS = 2
 object HomeSection {
     const val HERO = "hero"; const val RECENT = "recent"; const val PLAYLISTS = "playlists"
     const val FAVOURITE = "favourite"; const val MOST = "most"; const val ARTISTS = "artists"; const val NEW = "new"
-    const val RECOMMENDED = "recommended"; const val AI_DJ = "ai_dj"
+    const val RECOMMENDED = "recommended"
 }
 
 data class UiPrefs(
