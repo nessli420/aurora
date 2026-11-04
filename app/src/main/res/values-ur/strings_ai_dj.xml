@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"AI DJ شروع ہو گیا"</string>
     <string name="ai_playlist_title">"AI پلے لسٹ"</string>
     <string name="ai_dj_tile_detail">"آپ کے لیے چنا"</string>
-    <string name="ai_dj_home_detail">"آپ کی سنی ہوئی موسیقی سے قطار شروع کرتا ہے"</string>
     <string name="ai_dj_switch">"بدلیں"</string>
     <string name="ai_dj_segment_repeat">"بار بار سنے"</string>
     <string name="ai_dj_segment_hour">"دن کے اس وقت کے لیے"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"%1$s کے مزید گانے"</string>
     <string name="ai_dj_segment_mix">"آپ کا مکس"</string>
     <string name="ai_dj_nothing">"ابھی چلانے کے لیے کچھ نہیں۔ پہلے چند گانے سنیں۔"</string>
+    <string name="ai_dj_greeting">"سلام، میں آپ کا AI DJ ہوں۔"</string>
+    <string name="ai_dj_line_hours">"اس ہفتے تقریباً %1$d گھنٹے موسیقی، زیادہ تر %2$s۔"</string>
+    <string name="ai_dj_line_track">"اس مہینے آپ نے %1$s کو %2$d بار سنا۔"</string>
+    <string name="ai_dj_line_repeat">"یہ ہیں وہ گانے جو آپ بار بار سن رہے ہیں۔"</string>
+    <string name="ai_dj_line_hour">"یہ وہ گانے ہیں جو آپ عموماً اس وقت سنتے ہیں۔"</string>
+    <string name="ai_dj_line_past">"چلیے ان گانوں کی طرف لوٹتے ہیں جو آپ نے کافی عرصے سے نہیں سنے۔"</string>
+    <string name="ai_dj_line_new">"یہ رہا کچھ نیا جو آپ کو پسند آ سکتا ہے۔"</string>
+    <string name="ai_dj_line_liked">"چند پسندیدہ گانے جنہیں آپ شاید بھول گئے ہوں۔"</string>
+    <string name="ai_dj_line_artist">"چلیے %1$s کے مزید گانے سنتے ہیں۔"</string>
+    <string name="ai_dj_line_mix">"یہ رہا آپ کے لیے ایک مکس۔"</string>
+    <string name="ai_dj_line_switch">"ٹھیک ہے، کچھ بدلتے ہیں۔"</string>
+    <string name="ai_dj_line_steer">"ٹھیک ہے: %1$s۔"</string>
+    <string name="ai_dj_stat_hours">"اس ہفتے کے گھنٹے"</string>
+    <string name="ai_dj_stat_artist">"سرِفہرست فنکار"</string>
+    <string name="ai_dj_listening">"سن رہا ہے…"</string>
+    <string name="ai_dj_missed">"سمجھ نہیں آیا۔ دبا کر رکھیں اور دوبارہ کوشش کریں۔"</string>
+    <string name="ai_dj_spoken">"بولے گئے تعارف"</string>
+    <string name="ai_dj_hold_hint">"بولنے کے لیے پلیئر میں AI بٹن دبا کر رکھیں۔"</string>
+    <string name="ai_dj_voice_model">"وائس ان پٹ ماڈل"</string>
+    <string name="ai_dj_voice_missing">"DJ سے بات کرنے کے لیے اختیاری %1$s ڈاؤن لوڈ (Whisper base, MIT)۔ اسی ڈیوائس پر چلتا ہے۔ صرف Wi-Fi۔"</string>
+    <string name="ai_dj_mic_denied">"آپ کی درخواست سننے کے لیے Aurora کو مائیکروفون چاہیے۔"</string>
+    <string name="ai_dj_control">"AI DJ کنٹرولز۔ لکھنے کے لیے دبائیں، بولنے کے لیے دبا کر رکھیں۔"</string>
+    <string name="ai_dj_speaker_model">"DJ کی قدرتی آواز"</string>
+    <string name="ai_dj_speaker_missing">"اختیاری %1$s ڈاؤن لوڈ (Supertonic 3): سسٹم کی آواز کی جگہ DJ کو قدرتی آواز دیتا ہے۔ اسی ڈیوائس پر چلتا ہے۔ صرف Wi-Fi۔"</string>
+    <string name="ai_dj_speaker_ready">"DJ اپنی قدرتی آواز استعمال کر رہا ہے۔"</string>
 </resources>

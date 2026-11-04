@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"بدأ منسق الذكاء الاصطناعي"</string>
     <string name="ai_playlist_title">"قائمة تشغيل بالذكاء الاصطناعي"</string>
     <string name="ai_dj_tile_detail">"مختارات لك"</string>
-    <string name="ai_dj_home_detail">"يبدأ قائمة انتظار بناءً على ما تستمع إليه"</string>
     <string name="ai_dj_switch">"تغيير"</string>
     <string name="ai_dj_segment_repeat">"قيد التكرار"</string>
     <string name="ai_dj_segment_hour">"لهذا الوقت من اليوم"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"المزيد من %1$s"</string>
     <string name="ai_dj_segment_mix">"مزيجك"</string>
     <string name="ai_dj_nothing">"لا يوجد ما يمكن تشغيله بعد. استمع إلى بعض الأغاني أولًا."</string>
+    <string name="ai_dj_greeting">"مرحبًا، أنا منسق الموسيقى الذكي الخاص بك."</string>
+    <string name="ai_dj_line_hours">"عدد الساعات هذا الأسبوع: %1$d تقريبًا، ومعظمها من %2$s."</string>
+    <string name="ai_dj_line_track">"عدد مرات تشغيل %1$s هذا الشهر: %2$d."</string>
+    <string name="ai_dj_line_repeat">"إليك ما تكرر الاستماع إليه."</string>
+    <string name="ai_dj_line_hour">"إليك ما تستمع إليه عادةً في هذا الوقت."</string>
+    <string name="ai_dj_line_past">"لنعد إلى بعض الأغاني التي لم تستمع إليها منذ فترة."</string>
+    <string name="ai_dj_line_new">"إليك شيئًا جديدًا قد يعجبك."</string>
+    <string name="ai_dj_line_liked">"بعض الأغاني المفضلة التي ربما نسيتها."</string>
+    <string name="ai_dj_line_artist">"لنستمع إلى المزيد من %1$s."</string>
+    <string name="ai_dj_line_mix">"إليك مزيجًا من أجلك."</string>
+    <string name="ai_dj_line_switch">"حسنًا، لنغيّر الأجواء."</string>
+    <string name="ai_dj_line_steer">"حسنًا: %1$s."</string>
+    <string name="ai_dj_stat_hours">"ساعات هذا الأسبوع"</string>
+    <string name="ai_dj_stat_artist">"الفنان الأول"</string>
+    <string name="ai_dj_listening">"جارٍ الاستماع…"</string>
+    <string name="ai_dj_missed">"لم أفهم ذلك. اضغط مطولًا وحاول مرة أخرى."</string>
+    <string name="ai_dj_spoken">"مقدمات صوتية"</string>
+    <string name="ai_dj_hold_hint">"اضغط مطولًا على زر الذكاء الاصطناعي في المشغّل للتحدث."</string>
+    <string name="ai_dj_voice_model">"نموذج الإدخال الصوتي"</string>
+    <string name="ai_dj_voice_missing">"تنزيل اختياري بحجم %1$s (Whisper base، MIT) للتحدث إلى منسق الموسيقى. يعمل على هذا الجهاز. عبر Wi-Fi فقط."</string>
+    <string name="ai_dj_mic_denied">"يحتاج Aurora إلى الميكروفون لسماع طلبك."</string>
+    <string name="ai_dj_control">"عناصر تحكم منسق الموسيقى الذكي. اضغط للكتابة واضغط مطولًا للتحدث."</string>
+    <string name="ai_dj_speaker_model">"صوت طبيعي لمنسق الموسيقى"</string>
+    <string name="ai_dj_speaker_missing">"تنزيل اختياري بحجم %1$s (Supertonic 3) يمنح منسق الموسيقى صوتًا طبيعيًا بدلًا من صوت النظام. يعمل على هذا الجهاز. عبر Wi-Fi فقط."</string>
+    <string name="ai_dj_speaker_ready">"يستخدم منسق الموسيقى صوته الطبيعي."</string>
 </resources>

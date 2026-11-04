@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"ИИ-диджей запущен"</string>
     <string name="ai_playlist_title">"ИИ-плейлист"</string>
     <string name="ai_dj_tile_detail">"Подборка для вас"</string>
-    <string name="ai_dj_home_detail">"Запускает очередь по вашим прослушиваниям"</string>
     <string name="ai_dj_switch">"Сменить"</string>
     <string name="ai_dj_segment_repeat">"На повторе"</string>
     <string name="ai_dj_segment_hour">"Для этого времени суток"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"Ещё: %1$s"</string>
     <string name="ai_dj_segment_mix">"Ваш микс"</string>
     <string name="ai_dj_nothing">"Пока нечего играть. Сначала послушайте несколько песен."</string>
+    <string name="ai_dj_greeting">"Привет, это ваш ИИ-диджей."</string>
+    <string name="ai_dj_line_hours">"Часов музыки на этой неделе: около %1$d, в основном %2$s."</string>
+    <string name="ai_dj_line_track">"«%1$s»: прослушиваний за месяц — %2$d."</string>
+    <string name="ai_dj_line_repeat">"Вот что у вас сейчас на повторе."</string>
+    <string name="ai_dj_line_hour">"Вот что вы обычно слушаете в это время."</string>
+    <string name="ai_dj_line_past">"Вернёмся к песням, которые вы давно не слушали."</string>
+    <string name="ai_dj_line_new">"Вот кое-что новое, что может вам понравиться."</string>
+    <string name="ai_dj_line_liked">"Несколько любимых песен, о которых вы могли забыть."</string>
+    <string name="ai_dj_line_artist">"Послушаем ещё: %1$s."</string>
+    <string name="ai_dj_line_mix">"Вот микс для вас."</string>
+    <string name="ai_dj_line_switch">"Хорошо, давайте что-нибудь другое."</string>
+    <string name="ai_dj_line_steer">"Хорошо: %1$s."</string>
+    <string name="ai_dj_stat_hours">"часов за неделю"</string>
+    <string name="ai_dj_stat_artist">"главный исполнитель"</string>
+    <string name="ai_dj_listening">"Слушаю…"</string>
+    <string name="ai_dj_missed">"Не удалось разобрать. Удерживайте и повторите."</string>
+    <string name="ai_dj_spoken">"Голосовые вступления"</string>
+    <string name="ai_dj_hold_hint">"Удерживайте кнопку ИИ в плеере, чтобы говорить."</string>
+    <string name="ai_dj_voice_model">"Модель голосового ввода"</string>
+    <string name="ai_dj_voice_missing">"Необязательная загрузка %1$s (Whisper base, MIT), чтобы говорить с диджеем. Работает на устройстве. Только по Wi-Fi."</string>
+    <string name="ai_dj_mic_denied">"Aurora нужен микрофон, чтобы услышать ваш запрос."</string>
+    <string name="ai_dj_control">"Управление ИИ-диджеем. Нажмите, чтобы ввести текст, удерживайте, чтобы говорить."</string>
+    <string name="ai_dj_speaker_model">"Естественный голос диджея"</string>
+    <string name="ai_dj_speaker_missing">"Необязательная загрузка %1$s (Supertonic 3): естественный голос диджея вместо системного. Работает на устройстве. Только по Wi-Fi."</string>
+    <string name="ai_dj_speaker_ready">"Диджей использует естественный голос."</string>
 </resources>

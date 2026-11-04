@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"AI DJ を開始しました"</string>
     <string name="ai_playlist_title">"AI プレイリスト"</string>
     <string name="ai_dj_tile_detail">"あなたへのセレクト"</string>
-    <string name="ai_dj_home_detail">"聴いた曲をもとにキューを開始します"</string>
     <string name="ai_dj_switch">"変える"</string>
     <string name="ai_dj_segment_repeat">"よく聴く曲"</string>
     <string name="ai_dj_segment_hour">"この時間帯に"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"%1$s をもっと"</string>
     <string name="ai_dj_segment_mix">"あなたのミックス"</string>
     <string name="ai_dj_nothing">"まだ再生できる曲がありません。先に何曲か聴いてください。"</string>
+    <string name="ai_dj_greeting">"こんにちは、AI DJ です。"</string>
+    <string name="ai_dj_line_hours">"今週は約 %1$d 時間聴きました。特に %2$s をよく聴いています。"</string>
+    <string name="ai_dj_line_track">"今月は %1$s を %2$d 回再生しました。"</string>
+    <string name="ai_dj_line_repeat">"最近よく聴いている曲です。"</string>
+    <string name="ai_dj_line_hour">"いつもこの時間に聴いている曲です。"</string>
+    <string name="ai_dj_line_past">"しばらく聴いていなかった曲に戻りましょう。"</string>
+    <string name="ai_dj_line_new">"気に入りそうな新しい曲です。"</string>
+    <string name="ai_dj_line_liked">"忘れていたかもしれないお気に入りです。"</string>
+    <string name="ai_dj_line_artist">"%1$s をもっと聴きましょう。"</string>
+    <string name="ai_dj_line_mix">"あなたのためのミックスです。"</string>
+    <string name="ai_dj_line_switch">"では、雰囲気を変えましょう。"</string>
+    <string name="ai_dj_line_steer">"了解です：%1$s。"</string>
+    <string name="ai_dj_stat_hours">"今週の時間"</string>
+    <string name="ai_dj_stat_artist">"トップアーティスト"</string>
+    <string name="ai_dj_listening">"聞き取り中…"</string>
+    <string name="ai_dj_missed">"聞き取れませんでした。長押ししてもう一度お試しください。"</string>
+    <string name="ai_dj_spoken">"音声イントロ"</string>
+    <string name="ai_dj_hold_hint">"プレーヤーの AI ボタンを長押しして話しかけます。"</string>
+    <string name="ai_dj_voice_model">"音声入力モデル"</string>
+    <string name="ai_dj_voice_missing">"DJ に話しかけるためのオプションのダウンロード %1$s（Whisper base、MIT）。この端末で動作します。Wi-Fi のみ。"</string>
+    <string name="ai_dj_mic_denied">"リクエストを聞き取るには Aurora にマイクの許可が必要です。"</string>
+    <string name="ai_dj_control">"AI DJ コントロール。押すと入力、長押しで音声入力。"</string>
+    <string name="ai_dj_speaker_model">"自然な DJ ボイス"</string>
+    <string name="ai_dj_speaker_missing">"オプションのダウンロード %1$s（Supertonic 3）。システム音声の代わりに自然な DJ ボイスを使います。この端末で動作します。Wi-Fi のみ。"</string>
+    <string name="ai_dj_speaker_ready">"DJ は自然なボイスを使っています。"</string>
 </resources>

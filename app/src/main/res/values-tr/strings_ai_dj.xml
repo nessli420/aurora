@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"Yapay zekâ DJ başladı"</string>
     <string name="ai_playlist_title">"Yapay zekâ çalma listesi"</string>
     <string name="ai_dj_tile_detail">"Sizin için seçimler"</string>
-    <string name="ai_dj_home_detail">"Dinlediklerinize göre bir sıra başlatır"</string>
     <string name="ai_dj_switch">"Değiştir"</string>
     <string name="ai_dj_segment_repeat">"Sürekli dinlediklerin"</string>
     <string name="ai_dj_segment_hour">"Günün bu saati için"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"Daha fazla %1$s"</string>
     <string name="ai_dj_segment_mix">"Karışımınız"</string>
     <string name="ai_dj_nothing">"Henüz çalınacak bir şey yok. Önce birkaç şarkı dinleyin."</string>
+    <string name="ai_dj_greeting">"Selam, ben yapay zekâ DJ'in."</string>
+    <string name="ai_dj_line_hours">"Bu hafta yaklaşık %1$d saat müzik, çoğunlukla %2$s."</string>
+    <string name="ai_dj_line_track">"Bu ay %1$s parçasını %2$d kez dinledin."</string>
+    <string name="ai_dj_line_repeat">"İşte sürekli dinlediklerin."</string>
+    <string name="ai_dj_line_hour">"İşte bu saatlerde genelde dinlediklerin."</string>
+    <string name="ai_dj_line_past">"Uzun süredir dinlemediğin şarkılara dönelim."</string>
+    <string name="ai_dj_line_new">"İşte hoşuna gidebilecek yeni bir şey."</string>
+    <string name="ai_dj_line_liked">"Unutmuş olabileceğin birkaç favori."</string>
+    <string name="ai_dj_line_artist">"Biraz daha %1$s dinleyelim."</string>
+    <string name="ai_dj_line_mix">"İşte sana özel bir karışım."</string>
+    <string name="ai_dj_line_switch">"Tamam, biraz değiştirelim."</string>
+    <string name="ai_dj_line_steer">"Tamamdır: %1$s."</string>
+    <string name="ai_dj_stat_hours">"bu haftaki saat"</string>
+    <string name="ai_dj_stat_artist">"en çok dinlenen sanatçı"</string>
+    <string name="ai_dj_listening">"Dinliyorum…"</string>
+    <string name="ai_dj_missed">"Anlaşılamadı. Basılı tutup tekrar deneyin."</string>
+    <string name="ai_dj_spoken">"Sesli girişler"</string>
+    <string name="ai_dj_hold_hint">"Konuşmak için oynatıcıdaki yapay zekâ düğmesini basılı tutun."</string>
+    <string name="ai_dj_voice_model">"Ses girişi modeli"</string>
+    <string name="ai_dj_voice_missing">"DJ ile konuşabilmeniz için isteğe bağlı %1$s indirme (Whisper base, MIT). Bu cihazda çalışır. Yalnızca Wi-Fi."</string>
+    <string name="ai_dj_mic_denied">"Aurora'nın isteğinizi duyması için mikrofon gerekiyor."</string>
+    <string name="ai_dj_control">"Yapay zekâ DJ denetimleri. Yazmak için dokunun, konuşmak için basılı tutun."</string>
+    <string name="ai_dj_speaker_model">"Doğal DJ sesi"</string>
+    <string name="ai_dj_speaker_missing">"İsteğe bağlı %1$s indirme (Supertonic 3): DJ'e sistem sesi yerine doğal bir ses verir. Bu cihazda çalışır. Yalnızca Wi-Fi."</string>
+    <string name="ai_dj_speaker_ready">"DJ doğal sesini kullanıyor."</string>
 </resources>

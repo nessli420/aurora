@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"AI-dj gestart"</string>
     <string name="ai_playlist_title">"AI-afspeellijst"</string>
     <string name="ai_dj_tile_detail">"Voor jou gekozen"</string>
-    <string name="ai_dj_home_detail">"Start een wachtrij op basis van wat je luistert"</string>
     <string name="ai_dj_switch">"Wisselen"</string>
     <string name="ai_dj_segment_repeat">"Op herhaling"</string>
     <string name="ai_dj_segment_hour">"Voor dit moment van de dag"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"Meer van %1$s"</string>
     <string name="ai_dj_segment_mix">"Jouw mix"</string>
     <string name="ai_dj_nothing">"Nog niets om af te spelen. Luister eerst een paar nummers."</string>
+    <string name="ai_dj_greeting">"Hé, dit is je AI-dj."</string>
+    <string name="ai_dj_line_hours">"Ongeveer %1$d uur muziek deze week, vooral %2$s."</string>
+    <string name="ai_dj_line_track">"Je hebt %1$s deze maand %2$d keer gedraaid."</string>
+    <string name="ai_dj_line_repeat">"Dit heb je de laatste tijd op herhaling staan."</string>
+    <string name="ai_dj_line_hour">"Dit luister je meestal rond deze tijd."</string>
+    <string name="ai_dj_line_past">"Terug naar een paar nummers die je al een tijd niet hebt gehoord."</string>
+    <string name="ai_dj_line_new">"Hier is iets nieuws dat je misschien leuk vindt."</string>
+    <string name="ai_dj_line_liked">"Een paar favorieten die je misschien vergeten bent."</string>
+    <string name="ai_dj_line_artist">"Laten we meer van %1$s horen."</string>
+    <string name="ai_dj_line_mix">"Hier is een mix voor je."</string>
+    <string name="ai_dj_line_switch">"Oké, we doen iets anders."</string>
+    <string name="ai_dj_line_steer">"Komt eraan: %1$s."</string>
+    <string name="ai_dj_stat_hours">"uur deze week"</string>
+    <string name="ai_dj_stat_artist">"topartiest"</string>
+    <string name="ai_dj_listening">"Aan het luisteren…"</string>
+    <string name="ai_dj_missed">"Dat verstond ik niet. Houd ingedrukt en probeer het opnieuw."</string>
+    <string name="ai_dj_spoken">"Gesproken intro's"</string>
+    <string name="ai_dj_hold_hint">"Houd de AI-knop in de speler ingedrukt om te praten."</string>
+    <string name="ai_dj_voice_model">"Spraakinvoermodel"</string>
+    <string name="ai_dj_voice_missing">"Optionele download van %1$s (Whisper base, MIT) om met de dj te praten. Draait op dit apparaat. Alleen via wifi."</string>
+    <string name="ai_dj_mic_denied">"Aurora heeft de microfoon nodig om je verzoek te horen."</string>
+    <string name="ai_dj_control">"AI-dj-bediening. Tik om te typen, houd ingedrukt om te praten."</string>
+    <string name="ai_dj_speaker_model">"Natuurlijke dj-stem"</string>
+    <string name="ai_dj_speaker_missing">"Optionele download van %1$s (Supertonic 3): geeft de dj een natuurlijke stem in plaats van de systeemstem. Draait op dit apparaat. Alleen via wifi."</string>
+    <string name="ai_dj_speaker_ready">"De dj gebruikt de natuurlijke stem."</string>
 </resources>

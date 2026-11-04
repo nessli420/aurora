@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"AI DJ 已开始"</string>
     <string name="ai_playlist_title">"AI 歌单"</string>
     <string name="ai_dj_tile_detail">"为你挑选"</string>
-    <string name="ai_dj_home_detail">"根据你的收听记录开始播放队列"</string>
     <string name="ai_dj_switch">"换一换"</string>
     <string name="ai_dj_segment_repeat">"常听"</string>
     <string name="ai_dj_segment_hour">"适合此刻"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"更多 %1$s"</string>
     <string name="ai_dj_segment_mix">"你的歌单"</string>
     <string name="ai_dj_nothing">"暂时没有可播放的内容，请先听几首歌。"</string>
+    <string name="ai_dj_greeting">"嗨，我是你的 AI DJ。"</string>
+    <string name="ai_dj_line_hours">"本周听了大约 %1$d 小时音乐，主要是 %2$s。"</string>
+    <string name="ai_dj_line_track">"这个月你听了 %1$s %2$d 次。"</string>
+    <string name="ai_dj_line_repeat">"这些是你最近常听的歌。"</string>
+    <string name="ai_dj_line_hour">"这些是你平时这个时间爱听的歌。"</string>
+    <string name="ai_dj_line_past">"来听听一些你很久没放的歌吧。"</string>
+    <string name="ai_dj_line_new">"这些新歌你可能会喜欢。"</string>
+    <string name="ai_dj_line_liked">"几首你可能已经忘记的最爱。"</string>
+    <string name="ai_dj_line_artist">"再来听听 %1$s 吧。"</string>
+    <string name="ai_dj_line_mix">"为你准备了一组混合歌单。"</string>
+    <string name="ai_dj_line_switch">"好，换点别的。"</string>
+    <string name="ai_dj_line_steer">"好的：%1$s。"</string>
+    <string name="ai_dj_stat_hours">"本周小时数"</string>
+    <string name="ai_dj_stat_artist">"最常听的艺人"</string>
+    <string name="ai_dj_listening">"正在聆听…"</string>
+    <string name="ai_dj_missed">"没听清。请按住后再试一次。"</string>
+    <string name="ai_dj_spoken">"语音开场"</string>
+    <string name="ai_dj_hold_hint">"在播放器中按住 AI 按钮即可说话。"</string>
+    <string name="ai_dj_voice_model">"语音输入模型"</string>
+    <string name="ai_dj_voice_missing">"可选下载 %1$s（Whisper base，MIT），即可与 DJ 对话。在此设备上运行。仅限 Wi-Fi。"</string>
+    <string name="ai_dj_mic_denied">"Aurora 需要麦克风才能听到你的请求。"</string>
+    <string name="ai_dj_control">"AI DJ 控制。点按输入文字，按住说话。"</string>
+    <string name="ai_dj_speaker_model">"自然 DJ 语音"</string>
+    <string name="ai_dj_speaker_missing">"可选下载 %1$s（Supertonic 3），让 DJ 使用自然语音，而不是系统语音。在此设备上运行。仅限 Wi-Fi。"</string>
+    <string name="ai_dj_speaker_ready">"DJ 正在使用自然语音。"</string>
 </resources>

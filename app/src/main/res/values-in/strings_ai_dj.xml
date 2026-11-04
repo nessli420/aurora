@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"DJ AI dimulai"</string>
     <string name="ai_playlist_title">"Playlist AI"</string>
     <string name="ai_dj_tile_detail">"Pilihan untuk Anda"</string>
-    <string name="ai_dj_home_detail">"Memulai antrean dari riwayat dengar Anda"</string>
     <string name="ai_dj_switch">"Ganti"</string>
     <string name="ai_dj_segment_repeat">"Diputar berulang"</string>
     <string name="ai_dj_segment_hour">"Untuk waktu ini"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"Lagu lain dari %1$s"</string>
     <string name="ai_dj_segment_mix">"Mix Anda"</string>
     <string name="ai_dj_nothing">"Belum ada yang bisa diputar. Dengarkan beberapa lagu dulu."</string>
+    <string name="ai_dj_greeting">"Hai, ini DJ AI Anda."</string>
+    <string name="ai_dj_line_hours">"Sekitar %1$d jam musik minggu ini, terutama %2$s."</string>
+    <string name="ai_dj_line_track">"Anda memutar %1$s %2$d kali bulan ini."</string>
+    <string name="ai_dj_line_repeat">"Ini lagu yang sering Anda putar berulang."</string>
+    <string name="ai_dj_line_hour">"Ini yang biasanya Anda putar pada jam segini."</string>
+    <string name="ai_dj_line_past">"Mari kembali ke beberapa lagu yang sudah lama tidak Anda putar."</string>
+    <string name="ai_dj_line_new">"Ini sesuatu yang baru yang mungkin Anda suka."</string>
+    <string name="ai_dj_line_liked">"Beberapa favorit yang mungkin sudah Anda lupakan."</string>
+    <string name="ai_dj_line_artist">"Mari dengarkan lagu lain dari %1$s."</string>
+    <string name="ai_dj_line_mix">"Ini mix untuk Anda."</string>
+    <string name="ai_dj_line_switch">"Oke, mari kita ganti."</string>
+    <string name="ai_dj_line_steer">"Baik: %1$s."</string>
+    <string name="ai_dj_stat_hours">"jam minggu ini"</string>
+    <string name="ai_dj_stat_artist">"artis teratas"</string>
+    <string name="ai_dj_listening">"Mendengarkan…"</string>
+    <string name="ai_dj_missed">"Tidak terdengar jelas. Tahan dan coba lagi."</string>
+    <string name="ai_dj_spoken">"Intro lisan"</string>
+    <string name="ai_dj_hold_hint">"Tahan tombol AI di pemutar untuk berbicara."</string>
+    <string name="ai_dj_voice_model">"Model input suara"</string>
+    <string name="ai_dj_voice_missing">"Unduhan opsional %1$s (Whisper base, MIT) agar Anda bisa berbicara dengan DJ. Berjalan di perangkat ini. Hanya Wi-Fi."</string>
+    <string name="ai_dj_mic_denied">"Aurora memerlukan mikrofon untuk mendengar permintaan Anda."</string>
+    <string name="ai_dj_control">"Kontrol DJ AI. Tekan untuk mengetik, tahan untuk berbicara."</string>
+    <string name="ai_dj_speaker_model">"Suara DJ alami"</string>
+    <string name="ai_dj_speaker_missing">"Unduhan opsional %1$s (Supertonic 3): memberi DJ suara alami, bukan suara sistem. Berjalan di perangkat ini. Hanya Wi-Fi."</string>
+    <string name="ai_dj_speaker_ready">"DJ menggunakan suara alami."</string>
 </resources>

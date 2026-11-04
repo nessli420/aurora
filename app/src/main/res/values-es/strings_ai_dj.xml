@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"DJ con IA iniciado"</string>
     <string name="ai_playlist_title">"Lista con IA"</string>
     <string name="ai_dj_tile_detail">"Elegido para ti"</string>
-    <string name="ai_dj_home_detail">"Crea una cola según lo que escuchas"</string>
     <string name="ai_dj_switch">"Cambiar"</string>
     <string name="ai_dj_segment_repeat">"En repetición"</string>
     <string name="ai_dj_segment_hour">"Para esta hora del día"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"Más de %1$s"</string>
     <string name="ai_dj_segment_mix">"Tu mezcla"</string>
     <string name="ai_dj_nothing">"Aún no hay nada que poner. Escucha primero algunas canciones."</string>
+    <string name="ai_dj_greeting">"Hola, soy tu DJ con IA."</string>
+    <string name="ai_dj_line_hours">"Unas %1$d horas de música esta semana, sobre todo %2$s."</string>
+    <string name="ai_dj_line_track">"Has puesto %1$s %2$d veces este mes."</string>
+    <string name="ai_dj_line_repeat">"Aquí va lo que tienes en repetición."</string>
+    <string name="ai_dj_line_hour">"Esto es lo que sueles poner a esta hora."</string>
+    <string name="ai_dj_line_past">"Volvamos a algunas canciones que hace tiempo no escuchas."</string>
+    <string name="ai_dj_line_new">"Aquí hay algo nuevo que podría gustarte."</string>
+    <string name="ai_dj_line_liked">"Algunas favoritas que quizá hayas olvidado."</string>
+    <string name="ai_dj_line_artist">"Escuchemos más de %1$s."</string>
+    <string name="ai_dj_line_mix">"Aquí tienes una mezcla para ti."</string>
+    <string name="ai_dj_line_switch">"Vale, cambiemos de aires."</string>
+    <string name="ai_dj_line_steer">"Hecho: %1$s."</string>
+    <string name="ai_dj_stat_hours">"horas esta semana"</string>
+    <string name="ai_dj_stat_artist">"artista principal"</string>
+    <string name="ai_dj_listening">"Escuchando…"</string>
+    <string name="ai_dj_missed">"No se entendió. Mantén pulsado e inténtalo de nuevo."</string>
+    <string name="ai_dj_spoken">"Presentaciones habladas"</string>
+    <string name="ai_dj_hold_hint">"Mantén pulsado el botón de IA en el reproductor para hablar."</string>
+    <string name="ai_dj_voice_model">"Modelo de entrada de voz"</string>
+    <string name="ai_dj_voice_missing">"Descarga opcional de %1$s (Whisper base, MIT) para hablar con el DJ. Funciona en este dispositivo. Solo por Wi-Fi."</string>
+    <string name="ai_dj_mic_denied">"Aurora necesita el micrófono para oír tu petición."</string>
+    <string name="ai_dj_control">"Controles del DJ con IA. Pulsa para escribir, mantén pulsado para hablar."</string>
+    <string name="ai_dj_speaker_model">"Voz natural del DJ"</string>
+    <string name="ai_dj_speaker_missing">"Descarga opcional de %1$s (Supertonic 3): da al DJ una voz natural en lugar de la del sistema. Funciona en este dispositivo. Solo por Wi-Fi."</string>
+    <string name="ai_dj_speaker_ready">"El DJ está usando su voz natural."</string>
 </resources>

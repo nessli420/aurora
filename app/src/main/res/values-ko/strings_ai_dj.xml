@@ -44,7 +44,6 @@
     <string name="ai_dj_started">"AI DJ 시작됨"</string>
     <string name="ai_playlist_title">"AI 플레이리스트"</string>
     <string name="ai_dj_tile_detail">"나를 위한 선곡"</string>
-    <string name="ai_dj_home_detail">"듣는 음악을 바탕으로 대기열을 시작해요"</string>
     <string name="ai_dj_switch">"바꾸기"</string>
     <string name="ai_dj_segment_repeat">"자주 듣는 곡"</string>
     <string name="ai_dj_segment_hour">"이 시간대에 어울리는 곡"</string>
@@ -54,4 +53,29 @@
     <string name="ai_dj_segment_artist">"%1$s 더 듣기"</string>
     <string name="ai_dj_segment_mix">"나의 믹스"</string>
     <string name="ai_dj_nothing">"아직 재생할 곡이 없어요. 먼저 몇 곡을 들어 보세요."</string>
+    <string name="ai_dj_greeting">"안녕하세요, AI DJ예요."</string>
+    <string name="ai_dj_line_hours">"이번 주 약 %1$d시간 감상, 가장 많이 들은 아티스트: %2$s."</string>
+    <string name="ai_dj_line_track">"이번 달 %1$s 재생 횟수: %2$d회."</string>
+    <string name="ai_dj_line_repeat">"요즘 자주 듣는 곡들이에요."</string>
+    <string name="ai_dj_line_hour">"평소 이 시간에 자주 듣는 곡들이에요."</string>
+    <string name="ai_dj_line_past">"한동안 듣지 않았던 곡들로 돌아가 볼게요."</string>
+    <string name="ai_dj_line_new">"마음에 들 만한 새로운 곡들이에요."</string>
+    <string name="ai_dj_line_liked">"잊고 있었을지도 모를 최애곡들이에요."</string>
+    <string name="ai_dj_line_artist">"%1$s 곡을 더 들어 볼게요."</string>
+    <string name="ai_dj_line_mix">"당신을 위한 믹스예요."</string>
+    <string name="ai_dj_line_switch">"좋아요, 분위기를 바꿔 볼게요."</string>
+    <string name="ai_dj_line_steer">"알겠어요: %1$s."</string>
+    <string name="ai_dj_stat_hours">"이번 주 시간"</string>
+    <string name="ai_dj_stat_artist">"최고 아티스트"</string>
+    <string name="ai_dj_listening">"듣고 있어요…"</string>
+    <string name="ai_dj_missed">"잘 듣지 못했어요. 길게 누른 채 다시 말해 보세요."</string>
+    <string name="ai_dj_spoken">"음성 소개"</string>
+    <string name="ai_dj_hold_hint">"플레이어의 AI 버튼을 길게 누른 채 말하세요."</string>
+    <string name="ai_dj_voice_model">"음성 입력 모델"</string>
+    <string name="ai_dj_voice_missing">"DJ와 대화하기 위한 선택 다운로드 %1$s(Whisper base, MIT). 이 기기에서 실행돼요. Wi-Fi 전용."</string>
+    <string name="ai_dj_mic_denied">"요청을 들으려면 Aurora에 마이크 권한이 필요해요."</string>
+    <string name="ai_dj_control">"AI DJ 제어. 누르면 입력, 길게 누르면 말하기."</string>
+    <string name="ai_dj_speaker_model">"자연스러운 DJ 음성"</string>
+    <string name="ai_dj_speaker_missing">"선택 다운로드 %1$s(Supertonic 3): 시스템 음성 대신 자연스러운 DJ 음성을 사용해요. 이 기기에서 실행돼요. Wi-Fi 전용."</string>
+    <string name="ai_dj_speaker_ready">"DJ가 자연스러운 음성을 사용하고 있어요."</string>
 </resources>
