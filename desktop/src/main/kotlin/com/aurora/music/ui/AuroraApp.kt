@@ -384,7 +384,8 @@ private fun Shell(
     val windowLayout = LocalWindowLayout.current
     val rail = windowLayout.useNavigationRail && showChrome
     var sidePaneName by rememberSaveable { mutableStateOf<String?>(null) }
-    val sidePane = sidePaneName?.let { runCatching { PlayerPane.valueOf(it) }.getOrNull() }
+    val aiDjActive = player.aiDj?.state?.collectAsStateWithLifecycle()?.value?.active == true
+    val sidePane = sidePaneName?.let { runCatching { PlayerPane.valueOf(it) }.getOrNull() }?.takeUnless { aiDjActive && it == PlayerPane.QUEUE }
     val panelPane = rememberPaneWidth(savedPanelWidth)
     val panelWidth = panelPane.resolve(TabletMetrics.SidePanelWidth, TabletMetrics.SidePanelMinWidth, windowLayout.maxSidePanelWidth)
     val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack, panelWidth = panelWidth)
@@ -545,7 +546,7 @@ private fun Shell(
                 showVisualizer = false
                 navigateTopLevel(Routes.SEARCH)
             }
-            Shortcut.QUEUE -> if (hasTrack) {
+            Shortcut.QUEUE -> if (hasTrack && !aiDjActive) {
                 if (playerState.expanded) playerPaneRequest = PlayerPane.QUEUE else showPane(PlayerPane.QUEUE)
             }
             Shortcut.FULLSCREEN -> if (fullscreen) onFullscreenChange(false) else if (hasTrack) {
@@ -564,12 +565,8 @@ private fun Shell(
     }
 
     val aiDjState = player.aiDj?.state?.collectAsStateWithLifecycle()?.value
-    val aiDjBanner: (@Composable () -> Unit)? = if (aiDjState?.active == true) ({
-        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, player::steerAiDj, player::switchAiDj, player::stopAiDj)
-    }) else null
     val openAiDj: () -> Unit = {
-        if (aiDjState?.active != true) player.startAiDj { confirm(it) }
-        else if (playerState.expanded) playerPaneRequest = PlayerPane.QUEUE else showPane(PlayerPane.QUEUE)
+        if (aiDjState?.active != true) player.startAiDj { confirm(it) } else player.setExpanded(true)
     }
     var showAiDjSheet by remember { mutableStateOf(false) }
     val aiDjSpoken by store.aiDjSpoken.collectAsStateWithLifecycle(true)
@@ -609,7 +606,6 @@ private fun Shell(
                 onMove = { from, to -> player.moveQueueItem(from, to) },
                 editable = !playerState.isMix,
                 modifier = modifier.padding(horizontal = 4.dp),
-                dj = aiDjBanner,
             )
             PlayerPane.RELATED -> com.aurora.music.ui.screens.player.RelatedPane(
                 playerState.current,
@@ -868,7 +864,7 @@ private fun Shell(
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides
-            if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE),
+            (if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE)).let { if (aiDjActive) it - PlayerPane.QUEUE else it },
     ) {
     matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm) { matchSong = null } }
     ModalNavigationDrawer(
@@ -1484,6 +1480,7 @@ private fun Shell(
             }
             if (dockVisible) LivePlayer(player) { live ->
                 PlaybackDock(
+                    djMode = aiDjActive,
                     state = live,
                     openPane = if (shell.sidePanel) sidePane else null,
                     volume = volume,

@@ -214,7 +214,7 @@ fun PlayerScreen(
     var showCover by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var pickedPane by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var paneOpen by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
-    val sidePane = pickedPane?.let(PlayerPane::valueOf) ?: PlayerPane.LYRICS
+    val sidePane = pickedPane?.let(PlayerPane::valueOf)?.takeIf { it in LocalPlayerPanes.current } ?: PlayerPane.LYRICS
     LaunchedEffect(requestedPane) {
         if (requestedPane == null) return@LaunchedEffect
         pickedPane = requestedPane.name
@@ -353,13 +353,13 @@ fun PlayerScreen(
                     modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
                 )
                 // balances trailing icons so PLAYING FROM stays centered
-                Spacer(Modifier.width((if (canVideo) 200.dp else 160.dp) + if (djControl != null) 40.dp else 0.dp))
+                Spacer(Modifier.width(if (canVideo) 200.dp else 160.dp))
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                     MarqueeTitle(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) })
                 }
                 HeaderButton(Icons.Filled.Lyrics, appString(R.string.text_lyrics_8670cb), active = paneOpen && sidePane == PlayerPane.LYRICS) { togglePane(PlayerPane.LYRICS) }
-                HeaderButton(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), active = paneOpen && sidePane != PlayerPane.LYRICS) { togglePane(PlayerPane.QUEUE) }
+                if (djControl == null) HeaderButton(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), active = paneOpen && sidePane != PlayerPane.LYRICS) { togglePane(PlayerPane.QUEUE) }
                 if (canVideo) {
                     val videoButton = @Composable {
                         HeaderButton(Icons.Filled.VideoLibrary, appString(if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1),
@@ -541,7 +541,7 @@ fun PlayerScreen(
                     Icons.Filled.Replay10, appString(R.string.skip_back_seconds, LongForm.SKIP_SEC),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable { skipBy(-LongForm.SKIP_SEC) }.pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
-                ) else Icon(
+                ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
                     Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b),
                     tint = if (state.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onToggleShuffle).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
@@ -576,7 +576,7 @@ fun PlayerScreen(
                     Icons.Filled.Forward10, appString(R.string.skip_forward_seconds, LongForm.SKIP_SEC),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable { skipBy(LongForm.SKIP_SEC) }.pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
-                ) else Icon(
+                ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
                     imageVector = if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
                     contentDescription = appString(R.string.text_repeat_659eba),
                     tint = if (state.repeat != RepeatMode.OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,

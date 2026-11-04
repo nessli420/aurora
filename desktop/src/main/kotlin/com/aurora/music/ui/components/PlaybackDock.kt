@@ -110,6 +110,7 @@ private const val DockCenterShare = 1.4f / 3.4f
 
 @Composable
 fun PlaybackDock(
+    djMode: Boolean = false,
     state: PlayerUiState,
     openPane: PlayerPane?,
     volume: Float,
@@ -189,7 +190,7 @@ fun PlaybackDock(
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (state.skipButtons) IconButton(onClick = { skipBy(state, -LongForm.SKIP_SEC, onSeek) }) {
                         Icon(Icons.Filled.Replay10, appString(R.string.skip_back_seconds, LongForm.SKIP_SEC), modifier = Modifier.size(22.dp), tint = colors.onSurface)
-                    } else IconButton(onClick = onToggleShuffle) {
+                    } else if (!djMode) IconButton(onClick = onToggleShuffle) {
                         Icon(Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b), modifier = Modifier.size(20.dp),
                             tint = if (state.shuffle) colors.primary else colors.onSurfaceVariant)
                     }
@@ -209,7 +210,7 @@ fun PlaybackDock(
                     }
                     if (state.skipButtons) IconButton(onClick = { skipBy(state, LongForm.SKIP_SEC, onSeek) }) {
                         Icon(Icons.Filled.Forward10, appString(R.string.skip_forward_seconds, LongForm.SKIP_SEC), modifier = Modifier.size(22.dp), tint = colors.onSurface)
-                    } else IconButton(onClick = onCycleRepeat) {
+                    } else if (!djMode) IconButton(onClick = onCycleRepeat) {
                         Icon(if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
                             appString(R.string.text_repeat_659eba), modifier = Modifier.size(20.dp),
                             tint = if (state.repeat != RepeatMode.OFF) colors.primary else colors.onSurfaceVariant)
@@ -220,7 +221,7 @@ fun PlaybackDock(
             Spacer(Modifier.width(8.dp))
             Row(Modifier.width(side), horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
                 PaneToggle(PlayerPane.LYRICS, Icons.Filled.Lyrics, openPane == PlayerPane.LYRICS) { onPane(PlayerPane.LYRICS) }
-                PaneToggle(PlayerPane.QUEUE, Icons.AutoMirrored.Filled.QueueMusic, openPane == PlayerPane.QUEUE) { onPane(PlayerPane.QUEUE) }
+                if (!djMode) PaneToggle(PlayerPane.QUEUE, Icons.AutoMirrored.Filled.QueueMusic, openPane == PlayerPane.QUEUE) { onPane(PlayerPane.QUEUE) }
                 if (roomy) IconButton(onClick = onOpenOutput) {
                     Icon(Icons.Filled.Speaker, appString(R.string.text_output_device_709178), tint = colors.onSurfaceVariant)
                 }

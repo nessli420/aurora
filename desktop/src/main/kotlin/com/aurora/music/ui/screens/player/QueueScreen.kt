@@ -89,7 +89,6 @@ fun QueueContent(
     onMove: (Int, Int) -> Unit,
     editable: Boolean,
     modifier: Modifier = Modifier,
-    dj: (@Composable () -> Unit)? = null,
 ) {
     val current = queue.getOrNull(currentIndex)
     val startIdx = (currentIndex + 1).coerceAtLeast(0)
@@ -105,7 +104,6 @@ fun QueueContent(
     val listState = rememberLazyListState()
 
     Column(modifier) {
-        dj?.invoke()
         if (current != null) {
             Row(
                 Modifier.fillMaxWidth().padding(vertical = 14.dp),
