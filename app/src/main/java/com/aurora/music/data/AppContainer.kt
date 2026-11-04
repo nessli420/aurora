@@ -197,6 +197,9 @@ class AppContainer(context: Context) {
     val aiDjEars by lazy {
         com.aurora.music.ai.WhisperEars(AiDjMicrophone(), aiDjWhisper) { com.aurora.music.localization.AppStrings.context.resources.configuration.locales[0].language }
     }
+    val aiDjMode by lazy { com.aurora.music.ai.DjMode(aiDj, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate), aiDjVoice, aiDjEars) }
+    // set while the playback service runs
+    @Volatile var aiDjQueue: com.aurora.music.ai.DjMode.Queue? = null
     fun downloadAiDjVoiceModel() = aiDjVoiceModels.download { !offlineToggle && networkUp && onWifi }
     suspend fun deleteAiDjVoiceModel() = aiDjVoiceModels.delete { aiDjWhisper.release() }
 

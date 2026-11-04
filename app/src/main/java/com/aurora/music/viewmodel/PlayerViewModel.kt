@@ -165,35 +165,13 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
     @Volatile private var loadingRadio = false
 
-    val aiDj = com.aurora.music.ai.DjMode(container.aiDj, viewModelScope, container.aiDjVoice, container.aiDjEars)
-    private val djQueue = object : com.aurora.music.ai.DjMode.Queue {
-        override val current: Song? get() = _state.value.current.takeIf { it.id.isNotEmpty() }
-        override val upcoming: List<Song> get() = _state.value.let { it.queue.drop(it.currentIndex + 1) }
-        override val playing: Boolean get() = controller?.isPlaying == true
-        override fun pause() { controller?.pause() }
-        override fun play() { controller?.play() }
-        override fun append(songs: List<Song>) {
-            val c = controller ?: return
-            songById = songById + songs.associateBy { it.id }
-            c.addMediaItems(songs.map { toMediaItem(it) })
-            if (c.playbackState == Player.STATE_IDLE) c.prepare()
-            syncFromController()
-        }
-        override fun replaceUpcoming(songs: List<Song>) {
-            val c = controller ?: return
-            val from = c.currentMediaItemIndex + 1
-            if (from < c.mediaItemCount) c.removeMediaItems(from, c.mediaItemCount)
-            append(songs)
-        }
-        override fun skipToNext() { controller?.seekToNextMediaItem() }
-    }
+    val aiDj get() = container.aiDjMode
 
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             if (events.contains(Player.EVENT_TIMELINE_CHANGED)) savedTracksDirty = true
             if (events.contains(Player.EVENT_TIMELINE_CHANGED) || events.contains(Player.EVENT_MEDIA_METADATA_CHANGED)) fillFromController()
             syncFromController()
-            if (events.contains(Player.EVENT_TIMELINE_CHANGED) || events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION)) aiDj.onQueueChanged(djQueue)
             if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)) companionVideo.sync(forceSeek = true)
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) && player.playbackState == Player.STATE_ENDED) {
                 maybeAutoplay()
@@ -436,7 +414,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val c = controller ?: return
         val replace = remoteSession != null
         val missing = (0 until c.mediaItemCount).map(c::getMediaItemAt).filter { replace || it.mediaId !in songById }
-        if (missing.isNotEmpty()) songById = songById + missing.associate { it.mediaId to songOf(it) }
+        if (missing.isNotEmpty()) songById = songById + missing.associate { it.mediaId to (aiDj.known(it.mediaId) ?: songOf(it)) }
     }
 
     private fun songOf(mi: MediaItem): Song {
@@ -914,19 +892,20 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun startAiDj(onResult: (String) -> Unit = {}) = aiDj.start(djQueue, { playAll(it, 0) }) { ok ->
-        onResult(appString(if (ok) R.string.ai_dj_started else R.string.ai_dj_nothing))
+    fun startAiDj(onResult: (String) -> Unit = {}) {
+        val queue = container.aiDjQueue ?: return onResult(appString(R.string.ai_dj_nothing))
+        aiDj.start(queue, { playAll(it, 0) }) { ok -> onResult(appString(if (ok) R.string.ai_dj_started else R.string.ai_dj_nothing)) }
     }
 
-    fun switchAiDj() = aiDj.switchUp(djQueue)
+    fun switchAiDj() { container.aiDjQueue?.let(aiDj::switchUp) }
 
-    fun steerAiDj(text: String) = aiDj.steer(text, djQueue)
+    fun steerAiDj(text: String) { container.aiDjQueue?.let { aiDj.steer(text, it) } }
 
     fun stopAiDj() = aiDj.stop()
 
-    fun listenAiDj(): Boolean = aiDj.startListening(djQueue)
+    fun listenAiDj(): Boolean = container.aiDjQueue?.let(aiDj::startListening) == true
 
-    fun hearAiDj() = aiDj.stopListening(djQueue)
+    fun hearAiDj() { container.aiDjQueue?.let(aiDj::stopListening) }
 
     fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity? = null) {
         cancelMediaSearch()

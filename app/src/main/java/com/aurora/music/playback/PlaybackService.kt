@@ -392,6 +392,10 @@ class PlaybackService : MediaLibraryService() {
             .setCustomLayout(buildCustomLayout())
             .build()
 
+        followDj(player)
+        container.aiDjQueue = djQueue
+        watchDj()
+
         playbackReporting.observe(player)
         resumeTracker.observe(player)
 
@@ -1457,6 +1461,7 @@ class PlaybackService : MediaLibraryService() {
     private fun attach(next: Player, count: Int = next.mediaItemCount) {
         gatePlatformQueue(count)
         mediaSession?.player = next
+        followDj(next)
         connectHost?.follow()
     }
 
@@ -1511,7 +1516,8 @@ class PlaybackService : MediaLibraryService() {
                 }
                 CMD_EXIT_MIX -> stopMix()
                 // target 1=on 0=off -1=toggle order = pre-shuffle order when caller already shuffled
-                CMD_SHUFFLE -> if (remotePlayer != null) remotePlayer!!.setShuffle(customCommand.customExtras.getInt("target", -1))
+                CMD_SHUFFLE -> if (container.aiDjMode.state.value.active && customCommand.customExtras.getInt("target", -1) != 0) Unit
+                else if (remotePlayer != null) remotePlayer!!.setShuffle(customCommand.customExtras.getInt("target", -1))
                 else if (networkPlayer != null) {
                     networkPlayer!!.shuffle(customCommand.customExtras.getInt("target", -1),
                         customCommand.customExtras.getStringArrayList("order"))
@@ -1521,7 +1527,7 @@ class PlaybackService : MediaLibraryService() {
                     customCommand.customExtras.getInt("target", -1),
                     customCommand.customExtras.getStringArrayList("order"),
                 )
-                CMD_REPEAT -> remotePlayer?.cycleRepeat() ?: networkPlayer?.let { remote ->
+                CMD_REPEAT -> if (container.aiDjMode.state.value.active) Unit else remotePlayer?.cycleRepeat() ?: networkPlayer?.let { remote ->
                     remote.repeatMode = when (remote.repeatMode) {
                         Player.REPEAT_MODE_OFF -> Player.REPEAT_MODE_ALL
                         Player.REPEAT_MODE_ALL -> Player.REPEAT_MODE_ONE
@@ -1619,6 +1625,7 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun buildCustomLayout(): List<CommandButton> {
+        if (container.aiDjMode.state.value.active) return emptyList()
         val active = mediaSession?.player ?: player
         val shuffleBtn = CommandButton.Builder(
             if (active.shuffleModeEnabled) CommandButton.ICON_SHUFFLE_ON else CommandButton.ICON_SHUFFLE_OFF
@@ -1640,6 +1647,40 @@ class PlaybackService : MediaLibraryService() {
 
     private fun updateCustomLayout() {
         runCatching { mediaSession?.setCustomLayout(buildCustomLayout()) }
+    }
+
+    private val djQueue by lazy { AiDjPlaybackQueue({ mediaSession?.player ?: player }, container.aiDjMode, container.repository) }
+    private var djOwner: Player? = null
+    private val djListener = object : Player.Listener {
+        override fun onEvents(p: Player, events: Player.Events) {
+            val dj = container.aiDjMode
+            if (events.containsAny(Player.EVENT_TIMELINE_CHANGED, Player.EVENT_MEDIA_ITEM_TRANSITION)) dj.onQueueChanged(djQueue)
+            // the dj's queue only moves forward, looping it would replay its lines
+            if (dj.state.value.active && p.repeatMode != Player.REPEAT_MODE_OFF) p.repeatMode = Player.REPEAT_MODE_OFF
+        }
+    }
+
+    private fun followDj(next: Player) {
+        djOwner?.removeListener(djListener)
+        next.addListener(djListener)
+        djOwner = next
+    }
+
+    private fun watchDj() {
+        var repeatBefore: Int? = null
+        scope.launch {
+            container.aiDjMode.state.map { it.active }.distinctUntilChanged().collect { active ->
+                val live = mediaSession?.player ?: player
+                if (active) {
+                    repeatBefore = live.repeatMode
+                    live.repeatMode = Player.REPEAT_MODE_OFF
+                } else {
+                    repeatBefore?.let { if (live.repeatMode == Player.REPEAT_MODE_OFF) live.repeatMode = it }
+                    repeatBefore = null
+                }
+                updateCustomLayout()
+            }
+        }
     }
 
     private fun cycleRepeat() {
@@ -2098,6 +2139,7 @@ class PlaybackService : MediaLibraryService() {
 
     override fun onTaskRemoved(rootIntent: android.content.Intent?) {
         if (receiverForeground) return
+        container.aiDjMode.stop()
         alarmLoadJob?.cancel()
         alarmLoadJob = null
         stopMix()
@@ -2110,6 +2152,9 @@ class PlaybackService : MediaLibraryService() {
     }
 
     override fun onDestroy() {
+        container.aiDjMode.stop()
+        container.aiDjQueue = null
+        djOwner?.removeListener(djListener)
         musicHaptics.close()
         playbackReporting.close()
         resumeTracker.close()
