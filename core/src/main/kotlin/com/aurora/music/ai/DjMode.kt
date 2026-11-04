@@ -6,6 +6,7 @@ import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +19,8 @@ class DjMode(
     private val scope: CoroutineScope,
     private val voice: DjVoice? = null,
     private val ears: DjEars? = null,
+    private val retryMs: Long = 20_000,
+    private val startGraceMs: Long = 10_000,
 ) {
     data class State(
         val active: Boolean = false,
@@ -57,11 +60,25 @@ class DjMode(
     private var session = DjSession()
     private val sets = HashMap<String, DjSet>()
     private val speeches = HashMap<String, DjSpeech>()
+    private val placed = HashMap<String, Song>()
+    private var retry: Job? = null
+    private var grace: Job? = null
     private var starting = false
     private var resumeAfterListening = false
     private var job: Job? = null
 
-    private fun remember(set: DjSet) = set.songs.forEach { sets[it.id] = set }
+    private fun remember(set: DjSet) = set.songs.forEach { sets[it.id] = set; placed[it.id] = it }
+
+    // a screen opened after these were queued still gets the full track details
+    fun known(id: String): Song? = placed[id]
+
+    private fun forget() {
+        retry?.cancel()
+        grace?.cancel()
+        sets.clear()
+        speeches.clear()
+        placed.clear()
+    }
 
     // no voice or a failed synth just means the music starts without an intro
     private suspend fun speak(moment: DjMoment, set: DjSet? = null, patience: Long = WAITING_MS): Song? {
@@ -76,11 +93,12 @@ class DjMode(
         session.placed += id
         speeches[id] = DjSpeech(script.text, moment.stats)
         set?.let { sets[id] = it }
-        return Song(id, script.title, script.label, script.title, "", audio.seconds, streamUrl = audio.uri, accentArgb = accentArgbFor("aurora-dj"))
+        return Song(id, script.title, script.label, script.title, "", audio.seconds, streamUrl = audio.uri, accentArgb = accentArgbFor("aurora-dj")).also { placed[id] = it }
     }
 
     private fun work(thinking: Boolean = false, block: suspend () -> Boolean) {
         job?.cancel()
+        retry?.cancel()
         _state.update { it.copy(busy = true, failed = false, thinking = thinking, missed = false) }
         job = scope.launch {
             try {
@@ -95,8 +113,7 @@ class DjMode(
     fun start(queue: Queue, play: (List<Song>) -> Unit, onResult: (Boolean) -> Unit) {
         job?.cancel()
         session = engine.newSession()
-        sets.clear()
-        speeches.clear()
+        forget()
         starting = true
         _state.value = State(active = true, busy = true)
         job = scope.launch {
@@ -113,9 +130,10 @@ class DjMode(
             val stats = if (voice == null) null else engine.stats()
             val fact = engine.memory.nextFact(stats)
             val intro = speak(DjMoment.Welcome(set, stats.takeIf { fact != null }, fact, engine.memory.nextTurn()), set)
-            starting = false
             _state.update { it.copy(segment = set.segment, artist = set.artist, busy = false) }
             play(listOfNotNull(intro) + set.songs)
+            // the player can still report on the old queue for a moment, so starting ends when it reports this one
+            grace = scope.launch { delay(startGraceMs); if (starting) stop() }
             // only now, the old queue may still be about to play one of its lines
             voice?.clear(intro?.id)
             onResult(true)
@@ -125,8 +143,7 @@ class DjMode(
     fun stop() {
         job?.cancel()
         starting = false
-        sets.clear()
-        speeches.clear()
+        forget()
         if (_state.value.listening) scope.launch { runCatching { ears?.stop() } }
         _state.value = State()
     }
@@ -157,6 +174,7 @@ class DjMode(
         val next = engine.interpret(text, _state.value.intent ?: DjIntent())
         val songs = engine.pick(next.intent, BATCH, session.placed.toSet(), queue.current)
         session.mark(songs)
+        songs.forEach { placed[it.id] = it }
         _state.update { it.copy(intent = next.intent, prompt = text.trim()) }
         if (songs.isEmpty()) return false
         val line = speak(DjMoment.Steered(text.trim(), engine.memory.nextTurn()))
@@ -199,8 +217,13 @@ class DjMode(
     // call on every queue or track change, refills before the set runs dry
     fun onQueueChanged(queue: Queue) {
         val s = _state.value
-        if (!s.active || starting) return
-        val current = queue.current ?: return
+        if (!s.active) return
+        val current = queue.current ?: run { if (!starting) stop(); return }
+        if (starting) {
+            if (current.id !in session.placed) return
+            starting = false
+            grace?.cancel()
+        }
         val upcoming = queue.upcoming
         if (current.id !in session.placed && upcoming.none { it.id in session.placed }) { stop(); return }
         val speech = speeches[current.id]
@@ -215,6 +238,7 @@ class DjMode(
             val songs = s.intent?.let { intent ->
                 val steady = intent.copy(energyStart = intent.energyEnd)
                 val picked = engine.pick(steady, BATCH, session.placed + upcoming.map { it.id }, last).also(session::mark)
+                picked.forEach { placed[it.id] = it }
                 val line = if (picked.isEmpty() || s.prompt.isBlank()) null else speak(DjMoment.More(s.prompt, engine.memory.nextTurn()), patience = BACKGROUND_MS)
                 listOfNotNull(line) + picked
             } ?: engine.nextSet(session, last)?.let { set ->
@@ -225,6 +249,8 @@ class DjMode(
                 listOfNotNull(line) + set.songs
             }.orEmpty()
             if (songs.isNotEmpty() && _state.value.active) queue.append(songs)
+            // no network right now shouldn't leave the queue to run out, there may be no track change to try again on
+            if (songs.isEmpty()) retry = scope.launch { delay(retryMs); onQueueChanged(queue) }
             songs.isNotEmpty()
         }
     }

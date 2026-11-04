@@ -81,7 +81,8 @@ class DjEngineTest {
         val items = mutableListOf<Song>()
         var index = 0
         override val current get() = items.getOrNull(index)
-        override val upcoming get() = items.drop(index + 1)
+        var looks = 0
+        override val upcoming get() = items.drop(index + 1).also { looks++ }
         override fun append(songs: List<Song>) { items += songs }
         override fun replaceUpcoming(songs: List<Song>) { while (items.size > index + 1) items.removeAt(items.size - 1); items += songs }
         override fun skipToNext() { index++ }
@@ -142,6 +143,57 @@ class DjEngineTest {
             engine.nextSet(engine.newSession(Random(seed)), null, random = Random(seed))!!.segment
         }.toSet()
         assertTrue("openers $openers", openers.size >= 2)
+    }
+
+    @Test fun theOldQueueReportingDuringStartDoesNotEndTheSession() = runBlocking {
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default))
+        val queue = FakeQueue().apply { items += song("old", "Someone", "Jazz") }
+        val waiting = mutableListOf<Song>()
+        var started: Boolean? = null
+        dj.start(queue, { waiting += it }, { started = it })
+        withTimeout(10_000) { while (started == null) delay(20) }
+        dj.onQueueChanged(queue)
+        assertTrue(dj.state.value.active)
+        queue.items.clear(); queue.items += waiting
+        dj.onQueueChanged(queue)
+        assertEquals(waiting.first(), dj.known(waiting.first().id))
+        queue.items.clear(); queue.items += song("other", "Someone", "Jazz")
+        dj.onQueueChanged(queue)
+        assertFalse(dj.state.value.active)
+    }
+
+    @Test fun aStartThePlayerNeverTookEndsTheSession() = runBlocking {
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default), startGraceMs = 50)
+        var started: Boolean? = null
+        dj.start(FakeQueue(), {}, { started = it })
+        withTimeout(10_000) { while (started == null) delay(20) }
+        withTimeout(5_000) { while (dj.state.value.active) delay(10) }
+    }
+
+    @Test fun anEmptiedQueueEndsTheSession() = runBlocking {
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default))
+        val queue = FakeQueue()
+        started(dj, queue)
+        dj.onQueueChanged(queue)
+        queue.items.clear()
+        dj.onQueueChanged(queue)
+        assertFalse(dj.state.value.active)
+    }
+
+    @Test fun aFailedRefillTriesAgainWithoutATrackChange() = runBlocking {
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default), retryMs = 30)
+        val queue = FakeQueue()
+        started(dj, queue)
+        var tries = 0
+        while (!dj.state.value.failed && tries++ < 12) {
+            queue.index = queue.items.size - 1
+            dj.onQueueChanged(queue)
+            dj.settle()
+        }
+        assertTrue(dj.state.value.failed)
+        val before = queue.looks
+        withTimeout(5_000) { while (queue.looks <= before) delay(10) }
+        dj.stop()
     }
 
     @Test fun refillWaitsUntilTheLineHasPlayed() = runBlocking {
