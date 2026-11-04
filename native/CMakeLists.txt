@@ -22,12 +22,13 @@ add_library(aurora_native SHARED
     src/audio/wasapi_jni.cpp
     src/audio/wasapi_volume.cpp
     src/media/smtc_jni.cpp
+    src/media/speech_jni.cpp
     src/system/system_jni.cpp
 )
 set_target_properties(aurora_native PROPERTIES CXX_STANDARD 20 CXX_STANDARD_REQUIRED ON CXX_EXTENSIONS OFF)
 target_include_directories(aurora_native PRIVATE src)
 target_compile_definitions(aurora_native PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN _WIN32_WINNT=0x0A00)
 target_compile_options(aurora_native PRIVATE /W4 /permissive- /EHsc /Zc:__cplusplus)
-target_link_libraries(aurora_native PRIVATE JNI::JNI ole32 avrt ksuser dwmapi crypt32 shell32 runtimeobject)
+target_link_libraries(aurora_native PRIVATE JNI::JNI ole32 avrt ksuser dwmapi crypt32 shell32 runtimeobject sapi)
 
 add_subdirectory(llm)
