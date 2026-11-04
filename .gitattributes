@@ -30,3 +30,4 @@ gradlew text eol=lf
 
 # keeps vendored source out of the language bar
 native/llama.cpp/** linguist-vendored
+native/whisper.cpp/** linguist-vendored
