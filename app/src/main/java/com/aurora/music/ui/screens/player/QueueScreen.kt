@@ -86,7 +86,6 @@ fun QueueScreen(
     onOpenMix: () -> Unit = {},
     editable: Boolean = true,
     shown: Boolean = true,
-    dj: (@Composable () -> Unit)? = null,
 ) {
     val accent = MaterialTheme.colorScheme.primary
     var locked by remember { mutableStateOf(false) }
@@ -108,7 +107,7 @@ fun QueueScreen(
                 queue = queue, currentIndex = currentIndex, isPlaying = isPlaying,
                 onJump = onJump, onRemove = onRemove, onMove = onMove, onClear = onClear,
                 onSaveAsPlaylist = onSaveAsPlaylist, onOpenMix = onOpenMix, editable = editable,
-                onClose = onClose, onLockChange = { locked = it }, dj = dj,
+                onClose = onClose, onLockChange = { locked = it },
                 modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 880.dp).fillMaxSize()
                     .windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
             )
@@ -134,7 +133,6 @@ fun QueueContent(
     showTitle: Boolean = true,
     showActions: Boolean = true,
     onLockChange: (Boolean) -> Unit = {},
-    dj: (@Composable () -> Unit)? = null,
 ) {
     val current = queue.getOrNull(currentIndex)
     val startIdx = (currentIndex + 1).coerceAtLeast(0)
@@ -181,7 +179,6 @@ fun QueueContent(
                     Spacer(Modifier.width(8.dp))
                     Text(if (editable) appString(R.string.text_open_mix_studio_9ddf16) else appString(R.string.text_edit_mix_in_studio_5e8df8))
                 }
-                dj?.invoke()
                 if (current != null) {
                     Row(
                         Modifier.fillMaxWidth().padding(vertical = 14.dp),

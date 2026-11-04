@@ -291,7 +291,8 @@ fun AuroraApp() {
     val rail = windowLayout.useNavigationRail && showChrome
     var sidePaneName by rememberSaveable { mutableStateOf<String?>(null) }
     val exploreAvailable = remember(sessionReady, downloadAccountEpoch) { container.repository.supportsExplore }
-    val playerPanes = if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE)
+    val aiDjActive = playerVM.aiDj.state.collectAsStateWithLifecycle().value.active
+    val playerPanes = (if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE)).let { if (aiDjActive) it - PlayerPane.QUEUE else it }
     val sidePane = sidePaneName?.let { runCatching { PlayerPane.valueOf(it) }.getOrNull() }?.takeIf { it in playerPanes }
     val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack)
     val uiPrefs = com.aurora.music.ui.theme.LocalUiPrefs.current
@@ -506,10 +507,8 @@ fun AuroraApp() {
     }
 
     val aiDjState by playerVM.aiDj.state.collectAsStateWithLifecycle()
-    val aiDjBanner: (@Composable () -> Unit)? = if (aiDjState.active) ({
-        com.aurora.music.ui.screens.aidj.AiDjQueueBanner(aiDjState, playerVM::steerAiDj, playerVM::switchAiDj, playerVM::stopAiDj)
-    }) else null
-    val openAiDj: () -> Unit = { if (aiDjState.active) showQueue = true else playerVM.startAiDj { confirm(it) } }
+    val openAiDj: () -> Unit = { if (aiDjState.active) playerVM.setExpanded(true) else playerVM.startAiDj { confirm(it) } }
+    androidx.compose.runtime.LaunchedEffect(aiDjState.active) { if (aiDjState.active) showQueue = false }
     var showAiDjSheet by remember { mutableStateOf(false) }
     val aiDjSpoken by container.settingsStore.aiDjSpoken.collectAsStateWithLifecycle(true)
     val aiDjMic = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
@@ -563,7 +562,6 @@ fun AuroraApp() {
                 showTitle = false,
                 showActions = false,
                 modifier = modifier.padding(horizontal = 4.dp),
-                dj = aiDjBanner,
             )
             PlayerPane.RELATED -> com.aurora.music.ui.screens.player.RelatedPane(
                 playerState.current,
@@ -1686,7 +1684,6 @@ fun AuroraApp() {
                     onClose = { showQueue = false },
                     onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showQueue = false; showMix = true },
                     shown = showQueue,
-                    dj = aiDjBanner,
                 )
             }
             }

@@ -155,7 +155,8 @@ fun PlaybackDock(
                     Icon(Icons.Filled.Speaker, appString(R.string.text_output_device_709178), tint = colors.onSurfaceVariant)
                 }
                 PaneToggle(PlayerPane.LYRICS, Icons.Filled.Lyrics, openPane == PlayerPane.LYRICS) { onPane(PlayerPane.LYRICS) }
-                PaneToggle(PlayerPane.QUEUE, Icons.AutoMirrored.Filled.QueueMusic, openPane == PlayerPane.QUEUE) { onPane(PlayerPane.QUEUE) }
+                if (PlayerPane.QUEUE in com.aurora.music.ui.screens.player.LocalPlayerPanes.current)
+                    PaneToggle(PlayerPane.QUEUE, Icons.AutoMirrored.Filled.QueueMusic, openPane == PlayerPane.QUEUE) { onPane(PlayerPane.QUEUE) }
                 if (PlayerPane.RELATED in com.aurora.music.ui.screens.player.LocalPlayerPanes.current)
                     PaneToggle(PlayerPane.RELATED, Icons.Filled.Explore, openPane == PlayerPane.RELATED) { onPane(PlayerPane.RELATED) }
                 if (roomy) IconButton(onClick = onExpand) {

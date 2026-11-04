@@ -380,7 +380,7 @@ fun PlayerScreen(
                         onClick = { showMenu = false; onGoToArtist() },
                         leadingIcon = { Icon(Icons.Filled.Person, null) },
                     )
-                    DropdownMenuItem(
+                    if (PlayerPane.QUEUE in panes) DropdownMenuItem(
                         text = { Text(appString(R.string.text_view_queue_827a90)) },
                         onClick = {
                             showMenu = false
@@ -693,7 +693,7 @@ fun PlayerScreen(
                     Icons.Filled.Replay10, appString(R.string.skip_back_seconds, com.aurora.music.data.LongForm.SKIP_SEC),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable { skipBy(-com.aurora.music.data.LongForm.SKIP_SEC) }.padding(8.dp),
-                ) else Icon(
+                ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
                     if (state.isMix) Icons.Filled.GraphicEq else Icons.Filled.Shuffle,
                     if (state.isMix) appString(R.string.text_edit_mix_transitions_76ee01) else appString(R.string.text_shuffle_5b772b),
                     tint = if (state.shuffle || state.isMix) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -733,7 +733,7 @@ fun PlayerScreen(
                     Icons.Filled.Forward10, appString(R.string.skip_forward_seconds, com.aurora.music.data.LongForm.SKIP_SEC),
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(44.dp).clip(CircleShape).clickable { skipBy(com.aurora.music.data.LongForm.SKIP_SEC) }.padding(8.dp),
-                ) else Icon(
+                ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
                     imageVector = if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
                     contentDescription = appString(R.string.text_repeat_659eba),
                     tint = if (state.repeat != RepeatMode.OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
@@ -767,7 +767,7 @@ fun PlayerScreen(
                             { showLyrics = !showLyrics },
                             active = showLyrics,
                         )
-                        BottomUtil(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), onOpenQueue)
+                        if (PlayerPane.QUEUE in panes) BottomUtil(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), onOpenQueue)
                     }
                 }
             } else {
