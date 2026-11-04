@@ -98,7 +98,20 @@ class QueueStore(filesDir: File, private val persist: (File, ByteArray) -> Unit 
 
     fun save(accountKey: String, queue: SavedQueue) {
         if (accountKey.isBlank()) return
-        synchronized(lock) { map[accountKey] = queue; dirty = true; scheduleFlush() }
+        synchronized(lock) { map[accountKey] = queue.withoutSpeech(); dirty = true; scheduleFlush() }
+    }
+
+    // dj speech is a throwaway file, a restored queue carries on from the music around it
+    private fun SavedQueue.withoutSpeech(): SavedQueue {
+        val all = tracks.orEmpty()
+        fun SavedTrack.speech() = id.orEmpty().startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)
+        if (all.none { it.speech() }) return this
+        return copy(
+            tracks = all.filterNot { it.speech() },
+            currentIndex = (currentIndex - all.take(currentIndex).count { it.speech() }).coerceAtLeast(0),
+            positionSec = if (all.getOrNull(currentIndex)?.speech() == true) 0 else positionSec,
+            shuffleOrder = shuffleOrder?.filterNot { it.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX) },
+        )
     }
 
     fun clear(accountKey: String) {

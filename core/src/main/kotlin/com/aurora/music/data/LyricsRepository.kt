@@ -45,6 +45,7 @@ class LyricsRepository(
 
     // sources are asked in the chosen order; synced lyrics win over an earlier plain result
     suspend fun lyricsFor(song: Song): Lyrics? {
+        if (song.id.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)) return null
         // a file's own lyrics beat every lookup
         attempt { withContext(Dispatchers.IO) { FileLyrics.of(song) } }?.let { return it }
         val backend = backendProvider()

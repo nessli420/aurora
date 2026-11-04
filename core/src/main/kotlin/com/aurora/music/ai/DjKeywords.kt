@@ -53,7 +53,8 @@ object DjKeywords {
     private val negators = setOf("no", "without", "not", "except", "skip", "avoid", "less", "minus")
     private val clause = Regex(" (?:but|with|without|no|for|except|from|in|at|that|to|please) ")
     private val stop = setOf("a", "an", "the", "some", "me", "my", "for", "to", "and", "with", "of", "in", "on", "music", "songs", "song", "tracks",
-        "playlist", "mix", "set", "please", "play", "give", "make", "something", "that", "is", "at", "end", "start", "more", "less", "i", "want", "it")
+        "playlist", "mix", "set", "please", "play", "give", "make", "something", "that", "is", "at", "end", "start", "more", "less", "i", "want", "it",
+        "put", "listen", "hear", "lets", "let's", "can", "you", "could", "dj", "us", "this")
 
     private val separators = Regex("[^\\p{L}\\p{N}']+")
 
@@ -150,10 +151,10 @@ object DjKeywords {
         }
         if (artistHits.isNotEmpty()) { found += "artists"; intent = intent.copy(artists = (artistHits + intent.artists).distinctBy(::norm).take(6)) }
         if (likeTerms.isNotEmpty()) { found += "search"; intent = intent.copy(search = (likeTerms + intent.search).distinct().take(4)) }
-        if (base == null && genreHits.isEmpty() && artistHits.isEmpty() && likeTerms.isEmpty()) {
+        if ((base == null || found.isEmpty()) && genreHits.isEmpty() && artistHits.isEmpty() && likeTerms.isEmpty()) {
             val free = if (mood.isNotEmpty()) mood.flatMap { it.first.split(' ') }.distinct().joinToString(" ")
                 else text.split(' ').filter { it !in stop && it.length > 1 && it.toIntOrNull() == null }.take(5).joinToString(" ")
-            if (free.isNotBlank()) intent = intent.copy(search = listOf(free))
+            if (free.isNotBlank()) intent = (if (base == null) intent else DjIntent(title = title(request))).copy(search = listOf(free))
         }
         return DjParse(intent, found)
     }

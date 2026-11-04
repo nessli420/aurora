@@ -46,6 +46,17 @@ class DjTasteTest {
         assertEquals(listOf("New Love", "Old Flame"), t.artists)
     }
 
+    @Test fun statsComeFromTheLastWeek() {
+        val t = taste(play("a", day, "Big Artist", listened = 2 * hour), play("a", 2 * day, "Big Artist", listened = hour), play("a", 3 * day, "Big Artist"),
+            play("old", 20 * day, "Old One", listened = 9 * hour))
+        val stats = t.stats!!
+        assertEquals(3, stats.hoursThisWeek)
+        assertEquals("Big Artist", stats.topArtist)
+        assertEquals("Title a", stats.topTrack)
+        assertEquals(3, stats.topTrackPlays)
+        assertEquals(null, taste(play("x", day)).stats)
+    }
+
     @Test fun sampleFavoursHeavyWeightsWithoutRepeats() {
         val weights = mapOf("heavy" to 200, "light" to 1, "mid" to 3)
         val first = (0 until 200).count { DjTaste.sample(weights, 1, Random(it)).single() == "heavy" }

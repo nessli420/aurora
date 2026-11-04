@@ -78,6 +78,7 @@ internal object SettingsKeys {
     val VIZ_ALBUM_ART = booleanPreferencesKey("viz_album_art")
     val VIZ_TRACK_INFO = booleanPreferencesKey("viz_track_info")
     val SONIC_AUTO_ANALYZE = booleanPreferencesKey("sonic_auto_analyze")
+    val AI_DJ_SPOKEN = booleanPreferencesKey("ai_dj_spoken")
     val SCROBBLE = booleanPreferencesKey("scrobble")
     val AUTOPLAY_RADIO = booleanPreferencesKey("autoplay_radio")
     val RESUME_PODCASTS = booleanPreferencesKey("resume_podcasts")

@@ -43,6 +43,21 @@ class QueueStoreTest {
         assertEquals(1, writes.get())
     }
 
+    @Test fun djSpeechIsNeverSaved() {
+        val line = "radio:aurora-dj:1"
+        val store = QueueStore(root)
+        store.save("alice", queue("a", line, "b", position = 42).copy(currentIndex = 2, shuffleOrder = listOf(line, "b", "a")))
+        val saved = store.get("alice")!!
+        assertEquals(listOf("a", "b"), saved.tracks.orEmpty().map { it.id })
+        assertEquals(1, saved.currentIndex)
+        assertEquals(42, saved.positionSec)
+        assertEquals(listOf("b", "a"), saved.shuffleOrder)
+        store.save("alice", queue("a", line, "b", position = 42).copy(currentIndex = 1))
+        val onLine = store.get("alice")!!
+        assertEquals(1, onLine.currentIndex)
+        assertEquals(0, onLine.positionSec)
+    }
+
     @Test fun failedFlushStaysPendingForTheNextOne() {
         val fail = AtomicBoolean(true)
         val store = QueueStore(root) { target, bytes ->

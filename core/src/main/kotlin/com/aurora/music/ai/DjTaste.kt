@@ -32,8 +32,11 @@ internal class DjTaste(events: List<PlayEvent>, now: Long, offsetMs: Long = Time
     val past = HashMap<String, Int>()
     val justHeard = HashSet<String>()
     val artists: List<String>
+    val stats: DjStats?
 
     init {
+        var weekMs = 0L
+        val titles = HashMap<String, String>()
         val last = HashMap<String, Long>()
         val older = HashMap<String, Int>()
         val recentArtists = HashMap<String, Int>()
@@ -47,6 +50,8 @@ internal class DjTaste(events: List<PlayEvent>, now: Long, offsetMs: Long = Time
             plays.merge(id, 1, Int::plus)
             last.merge(id, e.timestamp, ::maxOf)
             if (age < 4 * HOUR) justHeard += id
+            if (age < 7 * DAY) weekMs += e.listenedMs ?: (e.durationSec * 1000L)
+            titles.putIfAbsent(id, e.title)
             if (age < 30 * DAY) repeat.merge(id, 1, Int::plus)
             if (age >= 60 * DAY) older.merge(id, 1, Int::plus)
             val apart = abs(hourOf(e.timestamp) - nowHour)
@@ -61,6 +66,9 @@ internal class DjTaste(events: List<PlayEvent>, now: Long, offsetMs: Long = Time
         hour.values.removeAll { it < 2 }
         older.forEach { (id, count) -> if (count >= 2 && now - (last[id] ?: now) >= 60 * DAY) past[id] = count }
         artists = (recentArtists.entries.sortedByDescending { it.value } + allArtists.entries.sortedByDescending { it.value }).map { it.key }.distinct()
+        val top = repeat.maxByOrNull { it.value }
+        val hours = (weekMs / HOUR).toInt()
+        stats = if (hours < 2 && (top?.value ?: 0) < 3) null else DjStats(hours, recentArtists.maxByOrNull { it.value }?.key, top?.let { titles[it.key] }, top?.value ?: 0)
     }
 
     // a quick skip says nothing good about a track

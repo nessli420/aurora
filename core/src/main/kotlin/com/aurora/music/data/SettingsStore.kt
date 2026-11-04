@@ -1141,6 +1141,8 @@ class SettingsStore(private val dataStore: DataStore<Preferences>, private val f
 
     val sonicAutoAnalyze: Flow<Boolean> = dataStore.data.map { it[Keys.SONIC_AUTO_ANALYZE] ?: false }.distinctUntilChanged()
     suspend fun setSonicAutoAnalyze(v: Boolean) = dataStore.edit { it[Keys.SONIC_AUTO_ANALYZE] = v }
+    val aiDjSpoken: Flow<Boolean> = dataStore.data.map { it[Keys.AI_DJ_SPOKEN] ?: true }.distinctUntilChanged()
+    suspend fun setAiDjSpoken(v: Boolean) = dataStore.edit { it[Keys.AI_DJ_SPOKEN] = v }
 
     // off keeps artist names from ever leaving the device
     val artistEnrichment: Flow<Boolean> = dataStore.data.map { it[Keys.ARTIST_ENRICHMENT] ?: true }.distinctUntilChanged()

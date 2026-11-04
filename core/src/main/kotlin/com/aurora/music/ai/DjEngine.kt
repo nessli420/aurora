@@ -172,6 +172,8 @@ class DjEngine(
         build(DjSegment.MIX, null, known.values.shuffled(random).take(count * 4))
     }
 
+    suspend fun stats(): DjStats? = withContext(Dispatchers.Default) { DjTaste(history.snapshot(), System.currentTimeMillis()).stats }
+
     private suspend fun hydrate(ids: List<String>, known: Map<String, Song>): List<Song> = coroutineScope {
         ids.map { id -> async { known[id] ?: quietly(5_000, null) { repository.songFor(id) } } }.awaitAll().filterNotNull()
     }

@@ -84,6 +84,9 @@ class DjEngineTest {
         override fun append(songs: List<Song>) { items += songs }
         override fun replaceUpcoming(songs: List<Song>) { while (items.size > index + 1) items.removeAt(items.size - 1); items += songs }
         override fun skipToNext() { index++ }
+        override var playing = true
+        override fun pause() { playing = false }
+        override fun play() { playing = true }
     }
 
     private suspend fun DjMode.settle() = withTimeout(10_000) { do delay(20) while (state.value.busy) }
@@ -120,10 +123,89 @@ class DjEngineTest {
         assertEquals(before + 1, queue.index)
         dj.steer("switch to ambient", queue)
         withTimeout(10_000) { while (dj.state.value.intent?.genres?.firstOrNull() != "Ambient" || dj.state.value.busy) delay(20) }
-        assertTrue(queue.upcoming.take(4).all { it.genre == "Ambient" })
+        assertEquals("Ambient", queue.upcoming.first().genre)
         queue.items.clear(); queue.index = 0; queue.items += song("other", "Someone", "Jazz")
         dj.onQueueChanged(queue)
         assertFalse(dj.state.value.active)
+    }
+
+    private class FakeVoice : DjVoice {
+        val moments = mutableListOf<DjMoment>()
+        override fun script(moment: DjMoment): DjScript { moments += moment; return DjScript("line ${moments.size}", "AI DJ", "label") }
+        override suspend fun synthesize(text: String, id: String) = DjAudio("file:///$id.wav", 3)
+        override fun clear() {}
+    }
+
+    private class FakeEars(val heard: String) : DjEars {
+        var open = false
+        override fun start(): Boolean { open = true; return true }
+        override suspend fun stop(): String { open = false; return heard }
+    }
+
+    @Test fun djSpeaksBeforeEachSetAndTheScreenFollows() = runBlocking {
+        val voice = FakeVoice()
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default), voice)
+        val queue = FakeQueue()
+        var started: Boolean? = null
+        dj.start(queue, { queue.items += it }, { started = it })
+        withTimeout(10_000) { while (started == null) delay(20) }
+        assertTrue(queue.items.first().isDjSpeech())
+        assertTrue(voice.moments.single() is DjMoment.Welcome)
+        assertEquals(DjMode.BATCH + 1, queue.items.size)
+        dj.onQueueChanged(queue)
+        assertEquals("line 1", dj.state.value.speech?.text)
+        queue.index = 1
+        dj.onQueueChanged(queue)
+        assertEquals(null, dj.state.value.speech)
+        dj.switchUp(queue)
+        dj.settle()
+        assertTrue(queue.current!!.isDjSpeech())
+        assertTrue(voice.moments.last() is DjMoment.Switch)
+        assertFalse(queue.upcoming.any { it.isDjSpeech() })
+    }
+
+    private suspend fun started(dj: DjMode, queue: FakeQueue) {
+        var ok: Boolean? = null
+        dj.start(queue, { queue.items += it }, { ok = it })
+        withTimeout(10_000) { while (ok == null) delay(20) }
+    }
+
+    @Test fun holdingPausesMusicAndAVoiceRequestSteers() = runBlocking {
+        val voice = FakeVoice()
+        val ears = FakeEars("play some portishead")
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default), voice, ears)
+        val queue = FakeQueue()
+        started(dj, queue)
+        assertTrue(dj.startListening(queue))
+        assertTrue(ears.open && dj.state.value.listening)
+        assertFalse(queue.playing)
+        dj.stopListening(queue)
+        dj.settle()
+        assertTrue(queue.playing)
+        assertTrue(voice.moments.last() is DjMoment.Steered)
+        assertTrue(queue.current!!.isDjSpeech())
+        assertTrue(queue.upcoming.first().artist == "Portishead")
+    }
+
+    @Test fun switchWordsSwitchAndSilenceJustResumes() = runBlocking {
+        val voice = FakeVoice()
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default), voice, FakeEars("Switch it up."))
+        val queue = FakeQueue()
+        started(dj, queue)
+        dj.startListening(queue)
+        dj.stopListening(queue)
+        dj.settle()
+        assertTrue(voice.moments.last() is DjMoment.Switch)
+        val quiet = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default), FakeVoice(), FakeEars(""))
+        val other = FakeQueue()
+        started(quiet, other)
+        val before = other.items.size
+        quiet.startListening(other)
+        quiet.stopListening(other)
+        quiet.settle()
+        assertTrue(quiet.state.value.missed)
+        assertTrue(other.playing)
+        assertEquals(before, other.items.size)
     }
 
     @Test fun djWithNothingToPlayStaysOff() = runBlocking {
@@ -135,5 +217,16 @@ class DjEngineTest {
         withTimeout(10_000) { while (started == null) delay(20) }
         assertEquals(false, started)
         assertFalse(dj.state.value.active)
+    }
+
+    @Test fun transcriptDropsRepeatsNoiseAndFiller() {
+        assertEquals("Switch it up", cleanTranscript(" Switch it up. Switch it up."))
+        assertEquals("Play some 90s hip hop", cleanTranscript(" [MUSIC] Play some 90s hip hop. "))
+        assertEquals("", cleanTranscript(" You"))
+        assertEquals("", cleanTranscript(" Thank you."))
+        assertEquals("Something for you", cleanTranscript("Something for you"))
+        assertEquals("Slow it down a bit", cleanTranscript(" Slow it down a bit. Slow"))
+        assertEquals("Play some hip hop", cleanTranscript("Play some hip hop Play some hip hop Play"))
+        assertEquals("hip hop and more hip hop", cleanTranscript("hip hop and more hip hop"))
     }
 }
