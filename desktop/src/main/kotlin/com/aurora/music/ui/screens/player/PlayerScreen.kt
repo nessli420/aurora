@@ -189,7 +189,8 @@ fun PlayerScreen(
     onOpenSignalPath: () -> Unit,
     onSonicRadio: () -> Unit,
     onAutoDj: () -> Unit,
-    onAiDj: () -> Unit = {},
+    djControl: (@Composable () -> Unit)? = null,
+    djStage: (@Composable (Modifier) -> Unit)? = null,
     paneContent: @Composable (PlayerPane, Modifier) -> Unit,
     gestures: GesturePrefs = GesturePrefs(),
     requestedPane: PlayerPane? = null,
@@ -305,11 +306,6 @@ fun PlayerScreen(
                         leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
                     )
                     DropdownMenuItem(
-                        text = { Text(appString(R.string.ai_dj_title)) },
-                        onClick = { showMenu = false; onAiDj() },
-                        leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
-                    )
-                    DropdownMenuItem(
                         text = { Text(appString(R.string.text_visualizer_7177c7)) },
                         onClick = { showMenu = false; onOpenVisualizer() },
                         leadingIcon = { Icon(Icons.Filled.GraphicEq, null) },
@@ -357,7 +353,7 @@ fun PlayerScreen(
                     modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
                 )
                 // balances trailing icons so PLAYING FROM stays centered
-                Spacer(Modifier.width(if (canVideo) 200.dp else 160.dp))
+                Spacer(Modifier.width((if (canVideo) 200.dp else 160.dp) + if (djControl != null) 40.dp else 0.dp))
                 Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
                     Text(appString(R.string.text_playing_from_5f4dc3), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f), maxLines = 1)
                     MarqueeTitle(song.album.ifBlank { appString(R.string.text_aurora_eeee9b) })
@@ -374,13 +370,14 @@ fun PlayerScreen(
                     if (state.supportsCanvas) TooltipArea(tooltip = { HoverTooltip(appString(R.string.canvas_double_click)) }, delayMillis = 600) { videoButton() }
                     else videoButton()
                 }
+                djControl?.invoke()
                 HeaderButton(if (fullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
                     appString(if (fullscreen) R.string.player_exit_fullscreen else R.string.player_fullscreen)) { onFullscreenChange(!fullscreen) }
                 HeaderButton(Icons.Filled.Speaker, appString(R.string.text_output_device_709178), onClick = onOpenOutput)
                 moreMenu()
             }
         }
-        val artwork: @Composable (Modifier) -> Unit = { modifier ->
+        val coverArt: @Composable (Modifier) -> Unit = { modifier ->
             Box(
                 modifier
                     .then(
@@ -423,6 +420,9 @@ fun PlayerScreen(
                     }
                 }
             }
+        }
+        val artwork: @Composable (Modifier) -> Unit = { modifier ->
+            if (djStage != null) djStage(modifier) else coverArt(modifier)
         }
         val controls: @Composable (Dp) -> Unit = { volumeWidth ->
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -473,6 +473,7 @@ fun PlayerScreen(
 
             val badge = formatBadge(song)
             val source = sourceLabel(song)
+            if (!song.id.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)) {
             Spacer(Modifier.height(10.dp))
             FlowRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
@@ -525,6 +526,7 @@ fun PlayerScreen(
                 waveBars = ui.playerWaveBars,
                 onSeek = onSeek,
             )
+            }
 
             Spacer(Modifier.height(8.dp))
 

@@ -266,30 +266,39 @@ private fun YouTubeDownloadSettings(onOpen: () -> Unit, onOpenFolder: () -> Unit
 }
 
 @Composable
-private fun AiDjModelRow(usage: StorageUsage, working: Set<String>, perform: Perform, ask: Ask) {
-    val container = LocalDesktopContainer.current
-    val model by container.aiDjModels.state.collectAsStateWithLifecycle()
-    val title = appString(R.string.ai_dj_model)
+private fun AiDjModelRow(
+    store: com.aurora.music.ai.DjModelStore,
+    title: String,
+    key: String,
+    bytes: Long,
+    missing: String,
+    working: Set<String>,
+    perform: Perform,
+    ask: Ask,
+    onDownload: () -> Unit,
+    onDelete: suspend () -> Unit,
+) {
+    val model by store.state.collectAsStateWithLifecycle()
     when {
         model == com.aurora.music.ai.DjModelState.Ready -> {
             val delete = appString(R.string.storage_delete)
-            StorageRow(Icons.Filled.AutoAwesome, title, storageDetail(usage.aiDjModel, com.aurora.music.ai.DjModelStore.NAME), delete,
-                working = "ai_dj" in working, destructive = true) {
+            StorageRow(Icons.Filled.AutoAwesome, title, storageDetail(bytes, store.spec.name), delete,
+                working = key in working, destructive = true) {
                 ask(appString(R.string.storage_model_delete_title), appString(R.string.storage_model_delete_message), delete) {
-                    perform("ai_dj", R.string.storage_cleared) { container.deleteAiDjModel(); true }
+                    perform(key, R.string.storage_cleared) { onDelete(); true }
                 }
             }
         }
         model is com.aurora.music.ai.DjModelState.Downloading -> {
             val d = model as com.aurora.music.ai.DjModelState.Downloading
             StorageRow(Icons.Filled.AutoAwesome, title, appString(R.string.ai_dj_model_downloading, storageSize(d.bytes), storageSize(d.total)),
-                appString(R.string.ai_dj_model_cancel)) { container.aiDjModels.cancel() }
+                appString(R.string.ai_dj_model_cancel)) { store.cancel() }
         }
         model == com.aurora.music.ai.DjModelState.Verifying -> StorageRow(Icons.Filled.AutoAwesome, title, appString(R.string.ai_dj_model_verifying), null, working = true)
         else -> StorageRow(Icons.Filled.AutoAwesome, title,
             (model as? com.aurora.music.ai.DjModelState.Failed)?.let { com.aurora.music.ui.screens.aidj.aiDjFailure(it.reason) }
-                ?: appString(R.string.ai_dj_model_missing, storageSize(com.aurora.music.ai.DjModelStore.BYTES)),
-            appString(R.string.ai_dj_model_download)) { container.downloadAiDjModel() }
+                ?: missing,
+            appString(R.string.ai_dj_model_download)) { onDownload() }
     }
 }
 
@@ -333,7 +342,17 @@ private fun AnalysisSettings(usage: StorageUsage, working: Set<String>, perform:
             }
         }
         SettingsRowDivider()
-        AiDjModelRow(usage, working, perform, ask)
+        AiDjModelRow(container.aiDjModels, appString(R.string.ai_dj_model), "ai_dj", usage.aiDjModel,
+            appString(R.string.ai_dj_model_missing, storageSize(com.aurora.music.ai.DjModelStore.BYTES)), working, perform, ask,
+            container::downloadAiDjModel, container::deleteAiDjModel)
+        SettingsRowDivider()
+        AiDjModelRow(container.aiDjVoiceModels, appString(R.string.ai_dj_voice_model), "ai_dj_voice", usage.aiDjVoiceModel,
+            appString(R.string.ai_dj_voice_missing, storageSize(com.aurora.music.ai.DjModelStore.WHISPER.bytes)), working, perform, ask,
+            container::downloadAiDjVoiceModel, container::deleteAiDjVoiceModel)
+        SettingsRowDivider()
+        AiDjModelRow(container.aiDjSpeakerModels, appString(R.string.ai_dj_speaker_model), "ai_dj_speaker", usage.aiDjSpeakerModel,
+            appString(R.string.ai_dj_speaker_missing, storageSize(com.aurora.music.ai.DjModelStore.SPEAKER.bytes)), working, perform, ask,
+            container::downloadAiDjSpeakerModel, container::deleteAiDjSpeakerModel)
         val measured = container.replayGainStore.size
         if (measured > 0) {
             SettingsRowDivider()

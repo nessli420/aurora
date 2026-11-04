@@ -24,12 +24,14 @@ data class StorageUsage(
     val sonic: Long = 0,
     val stemModel: Long = 0,
     val aiDjModel: Long = 0,
+    val aiDjVoiceModel: Long = 0,
+    val aiDjSpeakerModel: Long = 0,
     val logs: Long = 0,
     val insightsPlays: Int = 0,
     val locatedPlays: Int = 0,
 ) {
     val caches: Long get() = audioCache + artwork + images + mapTiles + stems + temporary + artistInfo
-    val analysis: Long get() = sonic + stemModel + aiDjModel
+    val analysis: Long get() = sonic + stemModel + aiDjModel + aiDjVoiceModel + aiDjSpeakerModel
     val other: Long get() = (total - downloads - caches - analysis).coerceAtLeast(0)
 }
 
@@ -66,6 +68,8 @@ class StorageInventory(private val container: DesktopContainer) {
             sonic = container.sonicStore.bytes() + container.mixAnalyzer.bytes(),
             stemModel = container.stemSeparator.modelBytes(),
             aiDjModel = container.aiDjModels.bytes(),
+            aiDjVoiceModel = container.aiDjVoiceModels.bytes(),
+            aiDjSpeakerModel = container.aiDjSpeakerModels.bytes(),
             logs = paths.logs.diskBytes(),
             insightsPlays = runCatching { container.listeningDetails.summary().plays }.getOrDefault(0),
             locatedPlays = runCatching { container.listeningDetails.locationCount() }.getOrDefault(0),

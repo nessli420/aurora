@@ -83,6 +83,8 @@ data class PlayerDependencies(
     val companion: com.aurora.music.desktop.video.CompanionVideo? = null,
     val resumePoints: com.aurora.music.data.ResumePoints? = null,
     val aiDj: com.aurora.music.ai.DjEngine? = null,
+    val aiDjVoice: com.aurora.music.ai.DjVoice? = null,
+    val aiDjEars: com.aurora.music.ai.DjEars? = null,
 )
 
 fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependencies(
@@ -111,6 +113,8 @@ fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependenci
     companion = companionVideo,
     resumePoints = resumePoints,
     aiDj = aiDj,
+    aiDjVoice = aiDjVoice,
+    aiDjEars = aiDjEars,
 )
 
 class DesktopPlayer(private val engine: PlaybackEngine, private val deps: PlayerDependencies) : PlayerController, AutoCloseable {
@@ -315,7 +319,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 keyName = key?.name ?: "",
                 current = cur,
                 timelineDurationSec = (s.durationMs.coerceAtLeast(0) / 1000).toInt(),
-                isLive = s.live || cur.isRadio(),
+                isLive = s.live || (cur.isRadio() && !cur.id.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)),
                 isPlaying = s.effectivelyPlaying,
                 shuffle = s.shuffle,
                 repeat = RepeatMode.valueOf(s.repeat.name),
@@ -616,12 +620,15 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun play(song: Song) = playAll(listOf(song), 0)
 
-    override val aiDj = deps.aiDj?.let { com.aurora.music.ai.DjMode(it, scope) }
+    override val aiDj = deps.aiDj?.let { com.aurora.music.ai.DjMode(it, scope, deps.aiDjVoice, deps.aiDjEars) }
     private var djEntries: Any? = null
     private var djIndex = -1
     private val djQueue = object : com.aurora.music.ai.DjMode.Queue {
         override val current: Song? get() = engine.state.value.current?.song
         override val upcoming: List<Song> get() = engine.state.value.let { s -> s.entries.drop(s.index + 1).map { it.song } }
+        override val playing: Boolean get() = engine.state.value.playWhenReady
+        override fun pause() = engine.pause()
+        override fun play() = engine.play()
         override fun append(songs: List<Song>) { queueGeneration++; engine.append(songs) }
         override fun replaceUpcoming(songs: List<Song>) {
             val count = queueSize()
@@ -644,6 +651,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override fun steerAiDj(text: String) { aiDj?.steer(text, djQueue) }
 
     override fun stopAiDj() { aiDj?.stop() }
+
+    override fun aiDjListen(): Boolean = aiDj?.startListening(djQueue) == true
+
+    override fun aiDjHear() { aiDj?.stopListening(djQueue) }
 
     override fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) {
         val collection = deps.repository.playbackCollectionIdentity(kind, id)

@@ -185,9 +185,9 @@ class GeneralSettingsTest {
     @Test fun navigationMenuReordersAndPins() {
         GeneralSettingsScene("nav-menu", height = 1300) { NavigationMenuScreen(padding, onBack = {}) }.use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
-            scene.click(691f, 722f)
-            scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.contains("more=radio,podcasts,stats,history,duplicates") }
-            scene.click(697f, 904f)
+            scene.click(691f, 788f)
+            scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.contains("more=ai_playlist,radio,podcasts,stats,history,duplicates") }
+            scene.click(697f, 970f)
             scene.await(read = { settingsStore.uiPrefs.first().navLayout }) { it.startsWith("main=home,search,library,explore,playback;") }
         }
     }

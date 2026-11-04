@@ -283,6 +283,18 @@ class DesktopContainer(
     }
     fun downloadAiDjModel() = aiDjModels.download()
     suspend fun deleteAiDjModel() = aiDjModels.delete { aiDjLlm.release() }
+    val aiDjVoiceModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(paths.local, "ai-dj-voice"), http, com.aurora.music.ai.DjModelStore.WHISPER) }
+    private val aiDjWhisper by lazy { com.aurora.music.ai.LocalWhisper({ aiDjVoiceModels.model() }, (Runtime.getRuntime().availableProcessors() / 2).coerceIn(2, 8)) }
+    val aiDjSpeakerModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(paths.local, "ai-dj-speaker"), http, com.aurora.music.ai.DjModelStore.SPEAKER) }
+    private val aiDjSpeaker by lazy { com.aurora.music.ai.DjSpeaker({ aiDjSpeakerModels.model() }, (Runtime.getRuntime().availableProcessors() / 2).coerceIn(2, 8)) }
+    val aiDjVoice by lazy { com.aurora.music.desktop.platform.DesktopDjVoice(paths.cache, aiDjSpeaker) { settingsStore.aiDjSpoken.first() } }
+    fun downloadAiDjSpeakerModel() = aiDjSpeakerModels.download()
+    suspend fun deleteAiDjSpeakerModel() = aiDjSpeakerModels.delete { aiDjSpeaker.release() }
+    val aiDjEars by lazy {
+        com.aurora.music.ai.WhisperEars(com.aurora.music.desktop.platform.DesktopDjMic(), aiDjWhisper) { com.aurora.music.localization.AppStrings.locale.language }
+    }
+    fun downloadAiDjVoiceModel() = aiDjVoiceModels.download()
+    suspend fun deleteAiDjVoiceModel() = aiDjVoiceModels.delete { aiDjWhisper.release() }
     val mapTiles by lazy { com.aurora.music.ui.components.MapTiles(java.io.File(paths.cache, "map-tiles"), http) }
     // the local discord account, null while the discord app isn't running
     val discordUser = MutableStateFlow<String?>(null)

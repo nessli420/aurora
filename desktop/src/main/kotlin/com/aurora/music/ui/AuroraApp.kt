@@ -571,6 +571,32 @@ private fun Shell(
         if (aiDjState?.active != true) player.startAiDj { confirm(it) }
         else if (playerState.expanded) playerPaneRequest = PlayerPane.QUEUE else showPane(PlayerPane.QUEUE)
     }
+    var showAiDjSheet by remember { mutableStateOf(false) }
+    val aiDjSpoken by store.aiDjSpoken.collectAsStateWithLifecycle(true)
+    val holdAiDj: () -> Unit = {
+        if (container.aiDjVoiceModels.model() == null) showAiDjSheet = true
+        else if (!player.aiDjListen()) confirm(appString(R.string.ai_dj_mic_denied))
+    }
+    val aiDjControl: (@Composable () -> Unit)? = if (aiDjState?.active == true) ({
+        com.aurora.music.ui.screens.aidj.AiDjPlayerButton(aiDjState, { showAiDjSheet = true }, holdAiDj, player::aiDjHear)
+    }) else null
+    val aiDjStage: (@Composable (Modifier) -> Unit)? = if (aiDjState != null && (aiDjState.speech != null || aiDjState.listening || aiDjState.thinking)) ({ modifier ->
+        com.aurora.music.ui.screens.aidj.AiDjStage(aiDjState, modifier)
+    }) else null
+    LaunchedEffect(aiDjState?.missed) { if (aiDjState?.missed == true) confirm(appString(R.string.ai_dj_missed)) }
+    if (showAiDjSheet && aiDjState?.active == true) com.aurora.music.ui.screens.aidj.AiDjSheet(
+        state = aiDjState,
+        spoken = aiDjSpoken,
+        speakerModels = container.aiDjSpeakerModels.takeIf { com.aurora.music.ai.speakerLanguage(com.aurora.music.localization.AppStrings.locale.language) != null },
+        voiceModels = container.aiDjVoiceModels,
+        onSteer = player::steerAiDj,
+        onSwitch = player::switchAiDj,
+        onStop = player::stopAiDj,
+        onSpoken = { scope.launch { store.setAiDjSpoken(it) } },
+        onDownloadSpeaker = container::downloadAiDjSpeakerModel,
+        onDownloadVoice = container::downloadAiDjVoiceModel,
+        onDismiss = { showAiDjSheet = false },
+    )
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
             PlayerPane.LYRICS -> LivePlayer(player) { live -> LyricsPane(live, onSeek = { player.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(themedCorner(20.dp)))) }
@@ -1012,8 +1038,6 @@ private fun Shell(
                                     onSelectFeed = homeVM::selectFeed,
                                     onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                                     onAddSource = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
-                                    aiDj = aiDjState ?: com.aurora.music.ai.DjMode.State(),
-                                    onAiDj = openAiDj.takeIf { player.aiDj != null },
                                 )
                             }
                             composable(Routes.EXPLORE) {
@@ -1526,7 +1550,8 @@ private fun Shell(
                         },
                         onSonicRadio = { player.startSonicRadio(onResult = { confirm(it) }) },
                         onAutoDj = { player.startAutoDj(onResult = { confirm(it) }) },
-                        onAiDj = openAiDj,
+                        djControl = aiDjControl,
+                        djStage = aiDjStage,
                         paneContent = nowPlayingPane,
                         gestures = mouseGestures,
                         requestedPane = playerPaneRequest,

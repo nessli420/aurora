@@ -93,6 +93,8 @@ interface PlayerController {
     fun steerAiDj(text: String) {}
     fun switchAiDj() {}
     fun stopAiDj() {}
+    fun aiDjListen(): Boolean = false
+    fun aiDjHear() {}
     fun addToQueue(song: Song)
     fun playNext(song: Song)
     fun jumpTo(index: Int)
