@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"DJ की स्वाभाविक आवाज़"</string>
     <string name="ai_dj_speaker_missing">"वैकल्पिक %1$s डाउनलोड (Supertonic 3): सिस्टम आवाज़ की जगह DJ को स्वाभाविक आवाज़ देता है। इसी डिवाइस पर चलता है। केवल Wi-Fi।"</string>
     <string name="ai_dj_speaker_ready">"DJ अपनी स्वाभाविक आवाज़ का उपयोग कर रहा है।"</string>
+    <string name="ai_dj_greeting_2">"आपका फिर से स्वागत है।"</string>
+    <string name="ai_dj_greeting_3">"ठीक है, शुरू करते हैं।"</string>
+    <string name="ai_dj_greeting_4">"मैं आपका AI DJ हूँ, चलिए कुछ संगीत सुनते हैं।"</string>
+    <string name="ai_dj_line_switch_2">"ज़रूर, तो कुछ अलग सुनते हैं।"</string>
+    <string name="ai_dj_line_switch_3">"चलिए कहीं और चलते हैं।"</string>
+    <string name="ai_dj_line_repeat_2">"ये गाने आजकल आपके पास खूब बज रहे हैं।"</string>
+    <string name="ai_dj_line_hour_2">"दिन के इस समय आपका यही संगीत चलता है।"</string>
+    <string name="ai_dj_line_past_2">"चलिए आपके कुछ पुराने गाने फिर से सुनते हैं।"</string>
+    <string name="ai_dj_line_new_2">"चलिए कुछ ऐसा सुनते हैं जो आपने अभी तक नहीं सुना।"</string>
+    <string name="ai_dj_line_liked_2">"ये याद हैं? आपने इन्हें यूँ ही पसंद नहीं किया था।"</string>
+    <string name="ai_dj_line_artist_2">"%1$s के कुछ गाने कैसे रहेंगे?"</string>
+    <string name="ai_dj_line_mix_2">"अब सबकुछ थोड़ा-थोड़ा।"</string>
+    <string name="ai_dj_line_because">"आप %1$s सुन रहे थे, इसलिए इन्हें आज़माएँ।"</string>
+    <string name="ai_dj_line_deep">"आपके पसंदीदा कलाकारों के कुछ कम सुने गाने।"</string>
+    <string name="ai_dj_segment_because">"क्योंकि आपने %1$s सुना"</string>
+    <string name="ai_dj_segment_deep">"कम सुने गाने"</string>
+    <string name="ai_dj_line_more">"और %1$s आ रहा है।"</string>
+    <string name="ai_dj_fact_artists">"इस हफ़्ते आपने %1$d अलग-अलग कलाकार सुने।"</string>
+    <string name="ai_dj_fact_streak">"आप लगातार %1$d दिनों से संगीत सुन रहे हैं।"</string>
+    <string name="ai_dj_fact_new_artist">"%1$s इस महीने आपकी सूची में नया है।"</string>
+    <string name="ai_dj_fact_month_artist">"%1$s हाल में आपके सबसे ज़्यादा सुने गए कलाकार हैं।"</string>
 </resources>

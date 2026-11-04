@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"صوت طبيعي لمنسق الموسيقى"</string>
     <string name="ai_dj_speaker_missing">"تنزيل اختياري بحجم %1$s (Supertonic 3) يمنح منسق الموسيقى صوتًا طبيعيًا بدلًا من صوت النظام. يعمل على هذا الجهاز. عبر Wi-Fi فقط."</string>
     <string name="ai_dj_speaker_ready">"يستخدم منسق الموسيقى صوته الطبيعي."</string>
+    <string name="ai_dj_greeting_2">"أهلًا بعودتك."</string>
+    <string name="ai_dj_greeting_3">"حسنًا، لنبدأ."</string>
+    <string name="ai_dj_greeting_4">"معك منسق الموسيقى الذكي، لنستمع إلى بعض الموسيقى."</string>
+    <string name="ai_dj_line_switch_2">"بالتأكيد، إذن شيء مختلف."</string>
+    <string name="ai_dj_line_switch_3">"لننتقل إلى مكان آخر."</string>
+    <string name="ai_dj_line_repeat_2">"هذه الأغاني تتكرر كثيرًا لديك مؤخرًا."</string>
+    <string name="ai_dj_line_hour_2">"هذه موسيقاك المعتادة في هذا الوقت من اليوم."</string>
+    <string name="ai_dj_line_past_2">"حان وقت استعادة بعض ما كنت تستمع إليه قديمًا."</string>
+    <string name="ai_dj_line_new_2">"لنجرب بعض ما لم تسمعه بعد."</string>
+    <string name="ai_dj_line_liked_2">"أتتذكر هذه؟ لقد أعجبتك لسبب ما."</string>
+    <string name="ai_dj_line_artist_2">"ما رأيك في بعض أغاني %1$s؟"</string>
+    <string name="ai_dj_line_mix_2">"قليل من كل شيء قادم الآن."</string>
+    <string name="ai_dj_line_because">"بما أنك تستمع إلى %1$s، جرّب هذه."</string>
+    <string name="ai_dj_line_deep">"بعض الأغاني غير المعروفة لفنانين تحبهم."</string>
+    <string name="ai_dj_segment_because">"لأنك استمعت إلى %1$s"</string>
+    <string name="ai_dj_segment_deep">"أغانٍ غير معروفة"</string>
+    <string name="ai_dj_line_more">"المزيد من %1$s قادم الآن."</string>
+    <string name="ai_dj_fact_artists">"عدد الفنانين المختلفين هذا الأسبوع: %1$d."</string>
+    <string name="ai_dj_fact_streak">"عدد الأيام المتتالية من الاستماع: %1$d."</string>
+    <string name="ai_dj_fact_new_artist">"%1$s جديد في قائمتك هذا الشهر."</string>
+    <string name="ai_dj_fact_month_artist">"%1$s هو الفنان الأكثر استماعًا لديك مؤخرًا."</string>
 </resources>

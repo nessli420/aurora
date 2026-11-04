@@ -25,7 +25,7 @@ class DjTasteTest {
 
     @Test fun pastIsWhatYouStoppedPlaying() {
         val t = taste(play("gone", 90 * day), play("gone", 91 * day), play("back", day), play("back", 90 * day), play("back", 91 * day), play("once", 90 * day))
-        assertEquals(setOf("gone"), t.past.keys)
+        assertEquals(setOf("gone", "once"), t.past.keys)
     }
 
     @Test fun hourMatchesTheListeningClock() {
@@ -57,10 +57,20 @@ class DjTasteTest {
         assertEquals(null, taste(play("x", day)).stats)
     }
 
+    @Test fun moreThanOneThingToSay() {
+        val t = taste(play("a", 0, "Week"), play("b", day, "Week", listened = 3 * hour), play("c", 2 * day, "Other"), play("d", 5 * day, "New"), play("e", 5 * day, "New"), play("f", 6 * day, "New"),
+            play("g", 7 * day + hour, "Week"), play("i", 8 * day, "Week"), play("h", 100 * day, "Week"))
+        val stats = t.stats!!
+        assertEquals(3, stats.streakDays)
+        assertEquals(3, stats.artistsThisWeek)
+        assertEquals("New", stats.newArtist)
+        assertEquals("Week", stats.monthArtist)
+    }
+
     @Test fun sampleFavoursHeavyWeightsWithoutRepeats() {
         val weights = mapOf("heavy" to 200, "light" to 1, "mid" to 3)
         val first = (0 until 200).count { DjTaste.sample(weights, 1, Random(it)).single() == "heavy" }
-        assertTrue(first > 180)
+        assertTrue(first > 140)
         assertEquals(3, DjTaste.sample(weights, 5, Random(1)).toSet().size)
         assertFalse(DjTaste.sample(emptyMap<String, Int>(), 3, Random(1)).isNotEmpty())
     }

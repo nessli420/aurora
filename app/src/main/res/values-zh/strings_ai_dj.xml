@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"自然 DJ 语音"</string>
     <string name="ai_dj_speaker_missing">"可选下载 %1$s（Supertonic 3），让 DJ 使用自然语音，而不是系统语音。在此设备上运行。仅限 Wi-Fi。"</string>
     <string name="ai_dj_speaker_ready">"DJ 正在使用自然语音。"</string>
+    <string name="ai_dj_greeting_2">"欢迎回来。"</string>
+    <string name="ai_dj_greeting_3">"好，我们开始吧。"</string>
+    <string name="ai_dj_greeting_4">"我是你的 AI DJ，来点音乐吧。"</string>
+    <string name="ai_dj_line_switch_2">"好的，那就换点不一样的。"</string>
+    <string name="ai_dj_line_switch_3">"我们换个方向吧。"</string>
+    <string name="ai_dj_line_repeat_2">"这些歌你最近一直在听。"</string>
+    <string name="ai_dj_line_hour_2">"这是你平时这个时段的背景音乐。"</string>
+    <string name="ai_dj_line_past_2">"来翻翻你以前听过的歌。"</string>
+    <string name="ai_dj_line_new_2">"来试试几首你还没听过的歌。"</string>
+    <string name="ai_dj_line_liked_2">"还记得这些吗？你喜欢它们是有原因的。"</string>
+    <string name="ai_dj_line_artist_2">"来点 %1$s 怎么样？"</string>
+    <string name="ai_dj_line_mix_2">"接下来什么都来一点。"</string>
+    <string name="ai_dj_line_because">"因为你最近常听 %1$s，试试这些吧。"</string>
+    <string name="ai_dj_line_deep">"一些你喜爱的艺人的冷门歌曲。"</string>
+    <string name="ai_dj_segment_because">"因为你听过 %1$s"</string>
+    <string name="ai_dj_segment_deep">"冷门歌曲"</string>
+    <string name="ai_dj_line_more">"接下来还有更多 %1$s。"</string>
+    <string name="ai_dj_fact_artists">"这周你听了 %1$d 位不同的艺人。"</string>
+    <string name="ai_dj_fact_streak">"你已经连续听了 %1$d 天。"</string>
+    <string name="ai_dj_fact_new_artist">"%1$s 是你这个月新听的艺人。"</string>
+    <string name="ai_dj_fact_month_artist">"%1$s 是你最近听得最多的艺人。"</string>
 </resources>

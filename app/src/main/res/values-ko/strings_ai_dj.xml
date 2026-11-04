@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"자연스러운 DJ 음성"</string>
     <string name="ai_dj_speaker_missing">"선택 다운로드 %1$s(Supertonic 3): 시스템 음성 대신 자연스러운 DJ 음성을 사용해요. 이 기기에서 실행돼요. Wi-Fi 전용."</string>
     <string name="ai_dj_speaker_ready">"DJ가 자연스러운 음성을 사용하고 있어요."</string>
+    <string name="ai_dj_greeting_2">"다시 오셨네요, 반가워요."</string>
+    <string name="ai_dj_greeting_3">"좋아요, 시작해 볼게요."</string>
+    <string name="ai_dj_greeting_4">"AI DJ예요. 음악을 틀어 볼게요."</string>
+    <string name="ai_dj_line_switch_2">"네, 그럼 다른 걸로 가 볼게요."</string>
+    <string name="ai_dj_line_switch_3">"다른 분위기로 가 볼게요."</string>
+    <string name="ai_dj_line_repeat_2">"요즘 자주 돌려 듣는 곡들이에요."</string>
+    <string name="ai_dj_line_hour_2">"이 시간대에 늘 듣는 곡들이에요."</string>
+    <string name="ai_dj_line_past_2">"예전에 듣던 곡들을 다시 꺼내 볼게요."</string>
+    <string name="ai_dj_line_new_2">"아직 안 들어 본 곡들을 들어 볼게요."</string>
+    <string name="ai_dj_line_liked_2">"이 곡들 기억나세요? 좋아하신 데는 이유가 있죠."</string>
+    <string name="ai_dj_line_artist_2">"%1$s 곡은 어때요?"</string>
+    <string name="ai_dj_line_mix_2">"이것저것 조금씩 들려 드릴게요."</string>
+    <string name="ai_dj_line_because">"%1$s 곡을 즐겨 들으시니 이 곡들도 들어 보세요."</string>
+    <string name="ai_dj_line_deep">"좋아하는 아티스트의 숨은 명곡들이에요."</string>
+    <string name="ai_dj_segment_because">"%1$s 곡을 들으셨으니"</string>
+    <string name="ai_dj_segment_deep">"숨은 명곡"</string>
+    <string name="ai_dj_line_more">"%1$s 더 들려 드릴게요."</string>
+    <string name="ai_dj_fact_artists">"이번 주에 %1$d명의 아티스트를 들으셨어요."</string>
+    <string name="ai_dj_fact_streak">"%1$d일 연속으로 음악을 듣고 계세요."</string>
+    <string name="ai_dj_fact_new_artist">"%1$s 님은 이번 달에 새로 듣기 시작한 아티스트예요."</string>
+    <string name="ai_dj_fact_month_artist">"%1$s 님은 요즘 가장 많이 들으신 아티스트예요."</string>
 </resources>

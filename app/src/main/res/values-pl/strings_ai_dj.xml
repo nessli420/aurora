@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"Naturalny głos DJ-a"</string>
     <string name="ai_dj_speaker_missing">"Opcjonalne pobieranie %1$s (Supertonic 3): naturalny głos DJ-a zamiast systemowego. Działa na tym urządzeniu. Tylko przez Wi-Fi."</string>
     <string name="ai_dj_speaker_ready">"DJ używa naturalnego głosu."</string>
+    <string name="ai_dj_greeting_2">"Dobrze, że znów tu jesteś."</string>
+    <string name="ai_dj_greeting_3">"No to zaczynamy."</string>
+    <string name="ai_dj_greeting_4">"Tu Twój DJ AI, posłuchajmy muzyki."</string>
+    <string name="ai_dj_line_switch_2">"Jasne, w takim razie coś innego."</string>
+    <string name="ai_dj_line_switch_3">"Ruszmy w inną stronę."</string>
+    <string name="ai_dj_line_repeat_2">"Te utwory ostatnio grają u Ciebie najczęściej."</string>
+    <string name="ai_dj_line_hour_2">"To Twoja zwykła ścieżka dźwiękowa o tej porze."</string>
+    <string name="ai_dj_line_past_2">"Czas odkurzyć kilka starszych utworów."</string>
+    <string name="ai_dj_line_new_2">"Spróbujmy czegoś, czego jeszcze nie znasz."</string>
+    <string name="ai_dj_line_liked_2">"Pamiętasz te utwory? Są tu nie bez powodu."</string>
+    <string name="ai_dj_line_artist_2">"Może coś od: %1$s?"</string>
+    <string name="ai_dj_line_mix_2">"Zaraz po trochu wszystkiego."</string>
+    <string name="ai_dj_line_because">"Skoro słuchasz: %1$s, spróbuj tych utworów."</string>
+    <string name="ai_dj_line_deep">"Mniej znane utwory wykonawców, których lubisz."</string>
+    <string name="ai_dj_segment_because">"Bo słuchasz: %1$s"</string>
+    <string name="ai_dj_segment_deep">"Mniej znane utwory"</string>
+    <string name="ai_dj_line_more">"Dalej: %1$s."</string>
+    <string name="ai_dj_fact_artists">"Różnych wykonawców w tym tygodniu: %1$d."</string>
+    <string name="ai_dj_fact_streak">"Dni z muzyką z rzędu: %1$d."</string>
+    <string name="ai_dj_fact_new_artist">"%1$s to nowość w tym miesiącu."</string>
+    <string name="ai_dj_fact_month_artist">"%1$s to ostatnio Twój najczęściej słuchany wykonawca."</string>
 </resources>

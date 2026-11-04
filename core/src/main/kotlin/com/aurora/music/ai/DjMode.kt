@@ -1,6 +1,7 @@
 package com.aurora.music.ai
 
 import com.aurora.music.model.Song
+import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
@@ -45,6 +46,9 @@ class DjMode(
 
     companion object {
         const val BATCH = 8
+        // someone is waiting on these; a refill has minutes before its set is due
+        private const val WAITING_MS = 30_000L
+        private const val BACKGROUND_MS = 150_000L
         private val SWITCH_WORDS = listOf("switch it up", "change it up", "something else", "something different", "next", "skip")
     }
 
@@ -60,12 +64,15 @@ class DjMode(
     private fun remember(set: DjSet) = set.songs.forEach { sets[it.id] = set }
 
     // no voice or a failed synth just means the music starts without an intro
-    private suspend fun speak(moment: DjMoment, set: DjSet? = null): Song? {
+    private suspend fun speak(moment: DjMoment, set: DjSet? = null, patience: Long = WAITING_MS): Song? {
         val voice = voice ?: return null
         val script = voice.script(moment)
         val id = "$DJ_SPEECH_PREFIX${System.nanoTime()}"
-        val audio = try { withTimeoutOrNull(30_000) { voice.synthesize(script.text, id) } }
-            catch (e: CancellationException) { throw e } catch (_: Exception) { null } ?: return null
+        val began = System.currentTimeMillis()
+        val audio = try { withTimeoutOrNull(patience) { voice.synthesize(script.text, id) } }
+            catch (e: CancellationException) { throw e } catch (error: Exception) { AppLog.w("AiDj", "speech failed", error); null }
+        AppLog.d("AiDj", "speech ${moment.javaClass.simpleName} ${System.currentTimeMillis() - began}ms ${audio?.let { "${it.seconds}s" } ?: "none"}")
+        if (audio == null) return null
         session.placed += id
         speeches[id] = DjSpeech(script.text, moment.stats)
         set?.let { sets[id] = it }
@@ -87,14 +94,13 @@ class DjMode(
 
     fun start(queue: Queue, play: (List<Song>) -> Unit, onResult: (Boolean) -> Unit) {
         job?.cancel()
-        session = DjSession()
+        session = engine.newSession()
         sets.clear()
         speeches.clear()
         starting = true
         _state.value = State(active = true, busy = true)
         job = scope.launch {
             val set = try {
-                voice?.clear()
                 engine.nextSet(session, queue.current)
             } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             if (set == null) {
@@ -104,10 +110,14 @@ class DjMode(
                 return@launch
             }
             remember(set)
-            val intro = speak(DjMoment.Welcome(set, engine.stats()), set)
+            val stats = if (voice == null) null else engine.stats()
+            val fact = engine.memory.nextFact(stats)
+            val intro = speak(DjMoment.Welcome(set, stats.takeIf { fact != null }, fact, engine.memory.nextTurn()), set)
             starting = false
             _state.update { it.copy(segment = set.segment, artist = set.artist, busy = false) }
             play(listOfNotNull(intro) + set.songs)
+            // only now, the old queue may still be about to play one of its lines
+            voice?.clear(intro?.id)
             onResult(true)
         }
     }
@@ -131,7 +141,7 @@ class DjMode(
     private suspend fun runSwitch(queue: Queue): Boolean {
         val set = engine.nextSet(session, queue.current) ?: return false
         remember(set)
-        val line = speak(DjMoment.Switch(set), set)
+        val line = speak(DjMoment.Switch(set, engine.memory.nextTurn()), set)
         queue.replaceUpcoming(listOfNotNull(line) + set.songs)
         queue.skipToNext()
         queue.play()
@@ -149,7 +159,7 @@ class DjMode(
         session.mark(songs)
         _state.update { it.copy(intent = next.intent, prompt = text.trim()) }
         if (songs.isEmpty()) return false
-        val line = speak(DjMoment.Steered(text.trim()))
+        val line = speak(DjMoment.Steered(text.trim(), engine.memory.nextTurn()))
         queue.replaceUpcoming(listOfNotNull(line) + songs)
         queue.skipToNext()
         queue.play()
@@ -198,15 +208,20 @@ class DjMode(
         sets[current.id]?.let { set ->
             if (set.segment != s.segment || set.artist != s.artist) _state.update { it.copy(segment = set.segment, artist = set.artist) }
         }
-        if (upcoming.size > 2 || job?.isActive == true) return
+        // generating the next line while this one plays is what makes it stutter, the next track is soon enough
+        if (upcoming.size > 2 || job?.isActive == true || current.isDjSpeech()) return
         val last = upcoming.lastOrNull { !it.isDjSpeech() } ?: current
         work {
             val songs = s.intent?.let { intent ->
                 val steady = intent.copy(energyStart = intent.energyEnd)
-                engine.pick(steady, BATCH, session.placed + upcoming.map { it.id }, last).also(session::mark)
+                val picked = engine.pick(steady, BATCH, session.placed + upcoming.map { it.id }, last).also(session::mark)
+                val line = if (picked.isEmpty() || s.prompt.isBlank()) null else speak(DjMoment.More(s.prompt, engine.memory.nextTurn()), patience = BACKGROUND_MS)
+                listOfNotNull(line) + picked
             } ?: engine.nextSet(session, last)?.let { set ->
                 remember(set)
-                val line = speak(DjMoment.NextSet(set, if (session.next % 3 == 0) engine.stats() else null), set)
+                val stats = if (voice == null) null else engine.stats()
+                val fact = engine.memory.nextFact(stats)
+                val line = speak(DjMoment.NextSet(set, stats.takeIf { fact != null }, fact, engine.memory.nextTurn()), set, BACKGROUND_MS)
                 listOfNotNull(line) + set.songs
             }.orEmpty()
             if (songs.isNotEmpty() && _state.value.active) queue.append(songs)

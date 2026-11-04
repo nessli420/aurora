@@ -25,6 +25,7 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.nio.file.Files
+import kotlin.random.Random
 
 class DjEngineTest {
     private fun song(id: String, artist: String, genre: String) = Song(id, "Track $id", artist, "Album $id", "", 210, genre = genre, albumId = "al$id")
@@ -117,23 +118,52 @@ class DjEngineTest {
         dj.settle()
         assertEquals(DjMode.BATCH * 2, queue.items.size)
         assertEquals(queue.items.size, queue.items.map { it.id }.toSet().size)
+        dj.steer("switch to ambient", queue)
+        withTimeout(10_000) { while (dj.state.value.intent?.genres?.firstOrNull() != "Ambient" || dj.state.value.busy) delay(20) }
+        assertEquals("Ambient", queue.upcoming.first().genre)
         val before = queue.index
         dj.switchUp(queue)
         dj.settle()
         assertEquals(before + 1, queue.index)
-        dj.steer("switch to ambient", queue)
-        withTimeout(10_000) { while (dj.state.value.intent?.genres?.firstOrNull() != "Ambient" || dj.state.value.busy) delay(20) }
-        assertEquals("Ambient", queue.upcoming.first().genre)
         queue.items.clear(); queue.index = 0; queue.items += song("other", "Someone", "Jazz")
         dj.onQueueChanged(queue)
         assertFalse(dj.state.value.active)
+    }
+
+    @Test fun sessionsDoNotRepeatEachOtherOrOpenTheSameWay() = runBlocking {
+        val day = 86_400_000L
+        val now = System.currentTimeMillis()
+        (3 downTo 1).forEach { n -> library.forEachIndexed { i, s -> history.record(s, now - n * day + i * 60_000) } }
+        val first = auto.nextSet(auto.newSession(Random(1)), null, random = Random(1))!!
+        val second = auto.nextSet(auto.newSession(Random(2)), null, random = Random(2))!!
+        assertTrue(first.songs.map { it.id }.intersect(second.songs.map { it.id }.toSet()).isEmpty())
+        val openers = (0 until 40).map { seed ->
+            val engine = DjEngine(MusicRepository({ source }, DownloadManager(dir, { "file://$it" }, { null })), history, null, { false })
+            engine.nextSet(engine.newSession(Random(seed)), null, random = Random(seed))!!.segment
+        }.toSet()
+        assertTrue("openers $openers", openers.size >= 2)
+    }
+
+    @Test fun refillWaitsUntilTheLineHasPlayed() = runBlocking {
+        val voice = FakeVoice()
+        val dj = DjMode(engine, CoroutineScope(SupervisorJob() + Dispatchers.Default), voice)
+        val queue = FakeQueue()
+        started(dj, queue)
+        queue.items.subList(3, queue.items.size).clear()
+        dj.onQueueChanged(queue)
+        assertFalse(dj.state.value.busy)
+        queue.index = 1
+        dj.onQueueChanged(queue)
+        dj.settle()
+        assertTrue(queue.items.size > 3)
+        assertTrue(voice.moments.last() is DjMoment.NextSet)
     }
 
     private class FakeVoice : DjVoice {
         val moments = mutableListOf<DjMoment>()
         override fun script(moment: DjMoment): DjScript { moments += moment; return DjScript("line ${moments.size}", "AI DJ", "label") }
         override suspend fun synthesize(text: String, id: String) = DjAudio("file:///$id.wav", 3)
-        override fun clear() {}
+        override fun clear(keep: String?) {}
     }
 
     private class FakeEars(val heard: String) : DjEars {

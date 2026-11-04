@@ -37,10 +37,12 @@ class DjSpeakerTest {
 
     @Test fun waveIsNormalizedPcm() {
         val wave = ByteBuffer.wrap(waveBytes(floatArrayOf(0f, 0.5f, -0.25f), 44_100)).order(ByteOrder.LITTLE_ENDIAN)
-        assertEquals(50, wave.capacity())
+        assertEquals(56, wave.capacity())
+        assertEquals(2, wave.getShort(22).toInt())
         assertEquals(44_100, wave.getInt(24))
-        assertEquals(88_200, wave.getInt(28))
-        assertEquals((0.89f * 32767).toInt().toShort(), wave.getShort(46))
+        assertEquals(176_400, wave.getInt(28))
+        assertEquals((0.89f * 32767).toInt().toShort(), wave.getShort(48))
+        assertEquals(wave.getShort(48), wave.getShort(50))
     }
 
     private fun part(file: String, body: String, url: String) = DjModelPart(file, body.length.toLong(),

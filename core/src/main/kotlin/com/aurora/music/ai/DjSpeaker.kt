@@ -10,6 +10,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
@@ -22,6 +23,7 @@ import java.nio.FloatBuffer
 import java.nio.LongBuffer
 import java.text.Normalizer
 import java.util.Random
+import java.util.concurrent.Executors
 import kotlin.math.abs
 import kotlin.math.ceil
 
@@ -58,15 +60,19 @@ internal fun speakerChunks(text: String, max: Int): List<String> {
     return chunks
 }
 
+// stereo like the music around it, a mono line makes the sink rebuild itself on both sides of the speech
 internal fun waveBytes(pcm: FloatArray, rate: Int): ByteArray {
     val peak = pcm.maxOfOrNull { abs(it) }?.coerceAtLeast(0.01f) ?: 1f
     val gain = minOf(0.89f / peak, 4f)
-    val data = pcm.size * 2
+    val data = pcm.size * 4
     val out = ByteBuffer.allocate(44 + data).order(ByteOrder.LITTLE_ENDIAN)
     out.put("RIFF".toByteArray()).putInt(36 + data).put("WAVEfmt ".toByteArray()).putInt(16)
-        .putShort(1).putShort(1).putInt(rate).putInt(rate * 2).putShort(2).putShort(16)
+        .putShort(1).putShort(2).putInt(rate).putInt(rate * 4).putShort(4).putShort(16)
         .put("data".toByteArray()).putInt(data)
-    for (x in pcm) out.putShort((x * gain * 32767f).toInt().coerceIn(-32768, 32767).toShort())
+    for (x in pcm) {
+        val sample = (x * gain * 32767f).toInt().coerceIn(-32768, 32767).toShort()
+        out.putShort(sample).putShort(sample)
+    }
     return out.array()
 }
 
@@ -93,6 +99,8 @@ class DjSpeaker(private val model: () -> File?, private val threads: Int, privat
 
     private val lock = Mutex()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    // onnx's workers inherit this thread's low priority, so a line generated mid-song can't starve the audio
+    private val worker = Executors.newSingleThreadExecutor { job -> Thread(job, "dj-speaker").apply { isDaemon = true; priority = Thread.NORM_PRIORITY - 1 } }.asCoroutineDispatcher()
     private val random = Random()
     private var voice: Voice? = null
     private var unload: Job? = null
@@ -101,7 +109,7 @@ class DjSpeaker(private val model: () -> File?, private val threads: Int, privat
     suspend fun speak(text: String, language: String, out: File): Boolean {
         val lang = speakerLanguage(language) ?: return false
         return lock.withLock {
-            withContext(Dispatchers.IO) {
+            withContext(worker) {
                 unload?.cancel()
                 try {
                     val v = voice ?: model()?.parentFile?.let(::load)?.also { voice = it } ?: return@withContext false
@@ -110,7 +118,7 @@ class DjSpeaker(private val model: () -> File?, private val threads: Int, privat
                     if (clips.isEmpty()) return@withContext false
                     val pcm = clips.reduce { all, clip -> all + gap + clip }
                     // room around the words, so a sink starting up or the next song can't touch them
-                    out.writeBytes(waveBytes(FloatArray((v.rate * 0.15f).toInt()) + pcm + FloatArray((v.rate * 0.35f).toInt()), v.rate))
+                    out.writeBytes(waveBytes(FloatArray((v.rate * 0.25f).toInt()) + pcm + FloatArray((v.rate * 0.35f).toInt()), v.rate))
                     true
                 } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
                 finally { unload = scope.launch { delay(idleMs); release() } }
@@ -132,6 +140,8 @@ class DjSpeaker(private val model: () -> File?, private val threads: Int, privat
         val options = OrtSession.SessionOptions().apply {
             setIntraOpNumThreads(threads)
             setInterOpNumThreads(1)
+            // spinning workers would hold the cores between steps while music is playing
+            addConfigEntry("session.intra_op.allow_spinning", "0")
             setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
         }
         return options.use {

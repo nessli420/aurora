@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"Natuurlijke dj-stem"</string>
     <string name="ai_dj_speaker_missing">"Optionele download van %1$s (Supertonic 3): geeft de dj een natuurlijke stem in plaats van de systeemstem. Draait op dit apparaat. Alleen via wifi."</string>
     <string name="ai_dj_speaker_ready">"De dj gebruikt de natuurlijke stem."</string>
+    <string name="ai_dj_greeting_2">"Fijn dat je er weer bent."</string>
+    <string name="ai_dj_greeting_3">"Oké, daar gaan we."</string>
+    <string name="ai_dj_greeting_4">"Hier is je AI-dj, tijd voor muziek."</string>
+    <string name="ai_dj_line_switch_2">"Prima, dan iets anders."</string>
+    <string name="ai_dj_line_switch_3">"Laten we een andere kant op gaan."</string>
+    <string name="ai_dj_line_repeat_2">"Deze draaien bij jou de laatste tijd veel."</string>
+    <string name="ai_dj_line_hour_2">"Dit is je vaste soundtrack voor dit moment van de dag."</string>
+    <string name="ai_dj_line_past_2">"Tijd om een paar oude nummers af te stoffen."</string>
+    <string name="ai_dj_line_new_2">"Laten we een paar dingen proberen die je nog niet kent."</string>
+    <string name="ai_dj_line_liked_2">"Weet je deze nog? Je vond ze niet voor niets leuk."</string>
+    <string name="ai_dj_line_artist_2">"Wat dacht je van wat %1$s?"</string>
+    <string name="ai_dj_line_mix_2">"Zo meteen van alles wat."</string>
+    <string name="ai_dj_line_because">"Omdat je %1$s draait, probeer deze eens."</string>
+    <string name="ai_dj_line_deep">"Wat verborgen parels van artiesten die je geweldig vindt."</string>
+    <string name="ai_dj_segment_because">"Omdat je %1$s hebt gedraaid"</string>
+    <string name="ai_dj_segment_deep">"Verborgen parels"</string>
+    <string name="ai_dj_line_more">"Zo meteen meer %1$s."</string>
+    <string name="ai_dj_fact_artists">"Je hebt deze week %1$d verschillende artiesten geluisterd."</string>
+    <string name="ai_dj_fact_streak">"Dat is %1$d dagen op rij muziek."</string>
+    <string name="ai_dj_fact_new_artist">"%1$s is deze maand nieuw in je rotatie."</string>
+    <string name="ai_dj_fact_month_artist">"%1$s draai je de laatste tijd het meest."</string>
 </resources>

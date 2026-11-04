@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"DJ کی قدرتی آواز"</string>
     <string name="ai_dj_speaker_missing">"اختیاری %1$s ڈاؤن لوڈ (Supertonic 3): سسٹم کی آواز کی جگہ DJ کو قدرتی آواز دیتا ہے۔ اسی ڈیوائس پر چلتا ہے۔ صرف Wi-Fi۔"</string>
     <string name="ai_dj_speaker_ready">"DJ اپنی قدرتی آواز استعمال کر رہا ہے۔"</string>
+    <string name="ai_dj_greeting_2">"دوبارہ خوش آمدید۔"</string>
+    <string name="ai_dj_greeting_3">"ٹھیک ہے، شروع کرتے ہیں۔"</string>
+    <string name="ai_dj_greeting_4">"میں آپ کا AI DJ ہوں، چلیے کچھ موسیقی سنتے ہیں۔"</string>
+    <string name="ai_dj_line_switch_2">"ضرور، تو کچھ مختلف سنتے ہیں۔"</string>
+    <string name="ai_dj_line_switch_3">"چلیے کسی اور طرف چلتے ہیں۔"</string>
+    <string name="ai_dj_line_repeat_2">"یہ گانے آج کل آپ کے پاس بہت چل رہے ہیں۔"</string>
+    <string name="ai_dj_line_hour_2">"دن کے اس وقت آپ کی یہی موسیقی چلتی ہے۔"</string>
+    <string name="ai_dj_line_past_2">"چلیے آپ کے کچھ پرانے گانے پھر سے سنتے ہیں۔"</string>
+    <string name="ai_dj_line_new_2">"چلیے کچھ ایسا سنتے ہیں جو آپ نے ابھی تک نہیں سنا۔"</string>
+    <string name="ai_dj_line_liked_2">"یہ یاد ہیں؟ آپ نے انہیں یوں ہی پسند نہیں کیا تھا۔"</string>
+    <string name="ai_dj_line_artist_2">"%1$s کے کچھ گانے کیسے رہیں گے؟"</string>
+    <string name="ai_dj_line_mix_2">"اب سب کچھ تھوڑا تھوڑا۔"</string>
+    <string name="ai_dj_line_because">"آپ %1$s سن رہے تھے، اس لیے انہیں آزمائیں۔"</string>
+    <string name="ai_dj_line_deep">"آپ کے پسندیدہ فنکاروں کے کچھ کم سنے گانے۔"</string>
+    <string name="ai_dj_segment_because">"کیونکہ آپ نے %1$s سنا"</string>
+    <string name="ai_dj_segment_deep">"کم سنے گانے"</string>
+    <string name="ai_dj_line_more">"مزید %1$s آ رہا ہے۔"</string>
+    <string name="ai_dj_fact_artists">"اس ہفتے آپ نے %1$d مختلف فنکار سنے۔"</string>
+    <string name="ai_dj_fact_streak">"آپ مسلسل %1$d دن سے موسیقی سن رہے ہیں۔"</string>
+    <string name="ai_dj_fact_new_artist">"%1$s اس مہینے آپ کی فہرست میں نیا ہے۔"</string>
+    <string name="ai_dj_fact_month_artist">"%1$s حال ہی میں آپ کے سب سے زیادہ سنے گئے فنکار ہیں۔"</string>
 </resources>

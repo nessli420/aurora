@@ -34,12 +34,14 @@ class AiDjSystemVoice(private val context: Context, private val speaker: DjSpeak
 
     override fun script(moment: DjMoment): DjScript = aiDjScript(moment)
 
-    override fun clear() { dir.listFiles()?.forEach { it.delete() } }
+    private fun fileFor(id: String) = File(dir, "${id.hashCode().toUInt()}.wav")
+
+    override fun clear(keep: String?) { dir.listFiles()?.forEach { if (keep == null || it != fileFor(keep)) it.delete() } }
 
     override suspend fun synthesize(text: String, id: String): DjAudio? = lock.withLock {
         if (!spoken()) return null
         dir.mkdirs()
-        val file = File(dir, "${id.hashCode().toUInt()}.wav")
+        val file = fileFor(id)
         if (speaker.speak(text, AppStrings.context.resources.configuration.locales[0].language, file)) return DjAudio(Uri.fromFile(file).toString(), wavSeconds(file))
         val tts = engine ?: open()?.also { engine = it } ?: return null
         val done = suspendCancellableCoroutine { result ->

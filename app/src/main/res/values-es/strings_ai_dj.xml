@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"Voz natural del DJ"</string>
     <string name="ai_dj_speaker_missing">"Descarga opcional de %1$s (Supertonic 3): da al DJ una voz natural en lugar de la del sistema. Funciona en este dispositivo. Solo por Wi-Fi."</string>
     <string name="ai_dj_speaker_ready">"El DJ está usando su voz natural."</string>
+    <string name="ai_dj_greeting_2">"Qué bueno tenerte de vuelta."</string>
+    <string name="ai_dj_greeting_3">"Muy bien, vamos allá."</string>
+    <string name="ai_dj_greeting_4">"Aquí tu DJ con IA, vamos a poner música."</string>
+    <string name="ai_dj_line_switch_2">"Claro, entonces algo distinto."</string>
+    <string name="ai_dj_line_switch_3">"Llevemos esto a otro lado."</string>
+    <string name="ai_dj_line_repeat_2">"Estas han sonado mucho últimamente."</string>
+    <string name="ai_dj_line_hour_2">"Esta es tu banda sonora habitual a esta hora."</string>
+    <string name="ai_dj_line_past_2">"Hora de desempolvar algunas de tus viejas escuchas."</string>
+    <string name="ai_dj_line_new_2">"Probemos algunas cosas que aún no has escuchado."</string>
+    <string name="ai_dj_line_liked_2">"¿Las recuerdas? Por algo te gustaron."</string>
+    <string name="ai_dj_line_artist_2">"¿Qué tal algo de %1$s?"</string>
+    <string name="ai_dj_line_mix_2">"Un poco de todo, ahora mismo."</string>
+    <string name="ai_dj_line_because">"Como has estado escuchando a %1$s, prueba estas."</string>
+    <string name="ai_dj_line_deep">"Joyas escondidas de artistas que te encantan."</string>
+    <string name="ai_dj_segment_because">"Porque escuchaste a %1$s"</string>
+    <string name="ai_dj_segment_deep">"Joyas escondidas"</string>
+    <string name="ai_dj_line_more">"Más %1$s, ahora mismo."</string>
+    <string name="ai_dj_fact_artists">"Has escuchado a %1$d artistas distintos esta semana."</string>
+    <string name="ai_dj_fact_streak">"Llevas %1$d días seguidos escuchando música."</string>
+    <string name="ai_dj_fact_new_artist">"%1$s es nuevo en lo que escuchas este mes."</string>
+    <string name="ai_dj_fact_month_artist">"%1$s ha sido tu artista más escuchado últimamente."</string>
 </resources>

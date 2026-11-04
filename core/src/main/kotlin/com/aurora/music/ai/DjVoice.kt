@@ -21,14 +21,37 @@ const val DJ_SPEECH_PREFIX = "radio:aurora-dj:"
 
 fun Song.isDjSpeech(): Boolean = id.startsWith(DJ_SPEECH_PREFIX)
 
-data class DjStats(val hoursThisWeek: Int, val topArtist: String?, val topTrack: String?, val topTrackPlays: Int)
+data class DjStats(
+    val hoursThisWeek: Int,
+    val topArtist: String?,
+    val topTrack: String?,
+    val topTrackPlays: Int,
+    val artistsThisWeek: Int = 0,
+    val streakDays: Int = 0,
+    val newArtist: String? = null,
+    val monthArtist: String? = null,
+) {
+    fun facts(): List<DjFact> = listOfNotNull(
+        DjFact.HOURS.takeIf { hoursThisWeek >= 2 && topArtist != null },
+        DjFact.TRACK.takeIf { topTrackPlays >= 3 && topTrack != null },
+        DjFact.ARTISTS.takeIf { artistsThisWeek >= 5 },
+        DjFact.STREAK.takeIf { streakDays >= 3 },
+        DjFact.NEW_ARTIST.takeIf { newArtist != null },
+        DjFact.MONTH_ARTIST.takeIf { monthArtist != null && monthArtist != topArtist },
+    )
+}
+
+enum class DjFact { HOURS, TRACK, ARTISTS, STREAK, NEW_ARTIST, MONTH_ARTIST }
 
 sealed interface DjMoment {
+    val turn: Int
     val stats: DjStats? get() = null
-    data class Welcome(val set: DjSet, override val stats: DjStats?) : DjMoment
-    data class NextSet(val set: DjSet, override val stats: DjStats?) : DjMoment
-    data class Switch(val set: DjSet) : DjMoment
-    data class Steered(val request: String) : DjMoment
+    val fact: DjFact? get() = null
+    data class Welcome(val set: DjSet, override val stats: DjStats?, override val fact: DjFact?, override val turn: Int) : DjMoment
+    data class NextSet(val set: DjSet, override val stats: DjStats?, override val fact: DjFact?, override val turn: Int) : DjMoment
+    data class Switch(val set: DjSet, override val turn: Int) : DjMoment
+    data class Steered(val request: String, override val turn: Int) : DjMoment
+    data class More(val request: String, override val turn: Int) : DjMoment
 }
 
 data class DjScript(val text: String, val title: String, val label: String)
@@ -40,7 +63,7 @@ data class DjSpeech(val text: String, val stats: DjStats?)
 interface DjVoice {
     fun script(moment: DjMoment): DjScript
     suspend fun synthesize(text: String, id: String): DjAudio?
-    fun clear()
+    fun clear(keep: String? = null)
 }
 
 interface DjMic {

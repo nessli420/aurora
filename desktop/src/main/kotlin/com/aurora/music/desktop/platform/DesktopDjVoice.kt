@@ -25,12 +25,14 @@ class DesktopDjVoice(cache: File, private val speaker: DjSpeaker, private val sp
 
     override fun script(moment: DjMoment): DjScript = aiDjScript(moment)
 
-    override fun clear() { dir.listFiles()?.forEach { it.delete() } }
+    private fun fileFor(id: String) = File(dir, "${id.hashCode().toUInt()}.wav")
+
+    override fun clear(keep: String?) { dir.listFiles()?.forEach { if (keep == null || it != fileFor(keep)) it.delete() } }
 
     override suspend fun synthesize(text: String, id: String): DjAudio? = withContext(Dispatchers.IO) {
         if (!spoken()) return@withContext null
         dir.mkdirs()
-        val file = File(dir, "${id.hashCode().toUInt()}.wav")
+        val file = fileFor(id)
         val ok = speaker.speak(text, AppStrings.locale.language, file) ||
             if (HostPlatform.isWindows) SpeechNative.toWave(text, file.path) else espeak(text, file)
         if (ok && file.length() > 44) DjAudio(desktopFileUri(file.path), wavSeconds(file)) else null

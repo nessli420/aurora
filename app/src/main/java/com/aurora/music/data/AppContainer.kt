@@ -179,10 +179,11 @@ class AppContainer(context: Context) {
     val aiDjUnsupported: String? by lazy { AiDjDevice.unsupported(appContext) }
     val aiDjModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(appContext.filesDir, "ai-dj-model"), http) }
     private val aiDjLlm by lazy { com.aurora.music.ai.LocalLlm({ aiDjModels.model() }, AiDjDevice.threads()) }
+    val aiDjMemory by lazy { com.aurora.music.ai.DjMemory(java.io.File(appContext.filesDir, "ai-dj-memory.json")) }
     val aiDj by lazy {
         com.aurora.music.ai.DjEngine(repository, playHistory, aiDjLlm.takeIf { aiDjUnsupported == null },
             { aiDjModels.state.value == com.aurora.music.ai.DjModelState.Ready }, { sonicStore.snapshot() },
-            { seed, count -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count) else emptyList() })
+            { seed, count -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count) else emptyList() }, aiDjMemory)
     }
     fun downloadAiDjModel() = aiDjModels.download { !offlineToggle && networkUp && onWifi }
     suspend fun deleteAiDjModel() = aiDjModels.delete { aiDjLlm.release() }

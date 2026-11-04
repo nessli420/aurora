@@ -78,4 +78,25 @@
     <string name="ai_dj_speaker_model">"Естественный голос диджея"</string>
     <string name="ai_dj_speaker_missing">"Необязательная загрузка %1$s (Supertonic 3): естественный голос диджея вместо системного. Работает на устройстве. Только по Wi-Fi."</string>
     <string name="ai_dj_speaker_ready">"Диджей использует естественный голос."</string>
+    <string name="ai_dj_greeting_2">"С возвращением."</string>
+    <string name="ai_dj_greeting_3">"Итак, начнём."</string>
+    <string name="ai_dj_greeting_4">"На связи ваш ИИ-диджей. Давайте послушаем музыку."</string>
+    <string name="ai_dj_line_switch_2">"Хорошо, тогда что-нибудь другое."</string>
+    <string name="ai_dj_line_switch_3">"Давайте сменим направление."</string>
+    <string name="ai_dj_line_repeat_2">"Вот что у вас постоянно звучит в последнее время."</string>
+    <string name="ai_dj_line_hour_2">"Это ваш обычный саундтрек для этого времени суток."</string>
+    <string name="ai_dj_line_past_2">"Пора вспомнить кое-что из старого."</string>
+    <string name="ai_dj_line_new_2">"Попробуем то, что вы ещё не слышали."</string>
+    <string name="ai_dj_line_liked_2">"Помните эти песни? Вы не зря их отметили."</string>
+    <string name="ai_dj_line_artist_2">"Как насчёт: %1$s?"</string>
+    <string name="ai_dj_line_mix_2">"Сейчас будет всего понемногу."</string>
+    <string name="ai_dj_line_because">"Вы часто слушали: %1$s. Попробуйте это."</string>
+    <string name="ai_dj_line_deep">"Редкие треки исполнителей, которых вы любите."</string>
+    <string name="ai_dj_segment_because">"Потому что вы слушали: %1$s"</string>
+    <string name="ai_dj_segment_deep">"Редкие треки"</string>
+    <string name="ai_dj_line_more">"Продолжаем: %1$s."</string>
+    <string name="ai_dj_fact_artists">"Разных исполнителей за эту неделю: %1$d."</string>
+    <string name="ai_dj_fact_streak">"Дней подряд с музыкой: %1$d."</string>
+    <string name="ai_dj_fact_new_artist">"%1$s — новинка в ваших прослушиваниях в этом месяце."</string>
+    <string name="ai_dj_fact_month_artist">"%1$s — ваш самый популярный исполнитель в последнее время."</string>
 </resources>

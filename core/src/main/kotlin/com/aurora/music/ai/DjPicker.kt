@@ -124,7 +124,7 @@ object DjPicker {
         val rated = candidates.asSequence()
             .filter { it.song.id.isNotEmpty() && it.song.id !in exclude && !it.song.isRadio() && !it.song.isPodcast() }
             .filter { seen.add(it.song.id) && seen.add("${DjKeywords.norm(it.song.artist)}|${DjKeywords.norm(it.song.title)}") }
-            .mapNotNull { c -> rate(intent, c, wants)?.let { Rated(c, it.score + random.nextDouble() * 0.6, it.relevant) } }
+            .mapNotNull { c -> rate(intent, c, wants)?.let { Rated(c, it.score + random.nextDouble() * (if (flow) 2.0 else 0.6), it.relevant) } }
             .sortedByDescending { it.score }
             .toList()
         // untagged catalogue tracks can't prove they fit, so tracks that match the request go first and the rest only fill gaps

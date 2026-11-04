@@ -390,7 +390,7 @@ private fun HistorySettings(usage: StorageUsage, working: Set<String>, perform: 
         StorageRow(Icons.Filled.History, appString(R.string.storage_play_history), appPlural(R.plurals.storage_plays, plays),
             clear, enabled = history.isNotEmpty(), working = "history" in working, destructive = true) {
             ask(appString(R.string.storage_play_history_clear_title), appString(R.string.storage_play_history_clear_message), clear) {
-                perform("history", R.string.storage_cleared) { container.playHistory.clear(); true }
+                perform("history", R.string.storage_cleared) { container.playHistory.clear(); container.aiDjMemory.clear(); true }
             }
         }
         SettingsRowDivider()

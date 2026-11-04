@@ -277,9 +277,10 @@ class DesktopContainer(
     }
     val aiDjModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(paths.local, "ai-dj-model"), http) }
     private val aiDjLlm by lazy { com.aurora.music.ai.LocalLlm({ aiDjModels.model() }, (Runtime.getRuntime().availableProcessors() / 2).coerceIn(2, 8)) }
+    val aiDjMemory by lazy { com.aurora.music.ai.DjMemory(java.io.File(paths.local, "ai-dj-memory.json")) }
     val aiDj by lazy {
         com.aurora.music.ai.DjEngine(repository, playHistory, aiDjLlm, { aiDjModels.state.value == com.aurora.music.ai.DjModelState.Ready },
-            { sonicStore.snapshot() }, { seed, count -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count) else emptyList() })
+            { sonicStore.snapshot() }, { seed, count -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count) else emptyList() }, aiDjMemory)
     }
     fun downloadAiDjModel() = aiDjModels.download()
     suspend fun deleteAiDjModel() = aiDjModels.delete { aiDjLlm.release() }

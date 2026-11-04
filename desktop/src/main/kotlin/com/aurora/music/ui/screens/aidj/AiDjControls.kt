@@ -72,6 +72,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.R
+import com.aurora.music.ai.DjFact
 import com.aurora.music.ai.DjMode
 import com.aurora.music.ai.DjModelState
 import com.aurora.music.ai.DjModelStore
@@ -79,7 +80,6 @@ import com.aurora.music.ai.DjMoment
 import com.aurora.music.ai.DjScript
 import com.aurora.music.ai.DjSegment
 import com.aurora.music.ai.DjSet
-import com.aurora.music.ai.DjStats
 import com.aurora.music.localization.appString
 import com.aurora.music.ui.screens.settings.storageSize
 
@@ -93,6 +93,8 @@ fun aiDjSetLabel(segment: DjSegment, artist: String?): String = when (segment) {
     DjSegment.NEW -> appString(R.string.ai_dj_segment_new)
     DjSegment.LIKED -> appString(R.string.ai_dj_segment_liked)
     DjSegment.ARTIST -> appString(R.string.ai_dj_segment_artist, artist.orEmpty())
+    DjSegment.BECAUSE -> appString(R.string.ai_dj_segment_because, artist.orEmpty())
+    DjSegment.DEEP -> appString(R.string.ai_dj_segment_deep)
     DjSegment.MIX -> appString(R.string.ai_dj_segment_mix)
 }
 
@@ -138,30 +140,43 @@ fun AiDjQueueBanner(state: DjMode.State, onSteer: (String) -> Unit, onSwitch: ()
     }
 }
 
-private fun setLine(set: DjSet): String = when (set.segment) {
-    DjSegment.REPEAT -> appString(R.string.ai_dj_line_repeat)
-    DjSegment.HOUR -> appString(R.string.ai_dj_line_hour)
-    DjSegment.PAST -> appString(R.string.ai_dj_line_past)
-    DjSegment.NEW -> appString(R.string.ai_dj_line_new)
-    DjSegment.LIKED -> appString(R.string.ai_dj_line_liked)
-    DjSegment.ARTIST -> appString(R.string.ai_dj_line_artist, set.artist.orEmpty())
-    DjSegment.MIX -> appString(R.string.ai_dj_line_mix)
+private fun setLine(set: DjSet, turn: Int): String = when (set.segment) {
+    DjSegment.REPEAT -> appString(if (turn % 2 == 0) R.string.ai_dj_line_repeat else R.string.ai_dj_line_repeat_2)
+    DjSegment.HOUR -> appString(if (turn % 2 == 0) R.string.ai_dj_line_hour else R.string.ai_dj_line_hour_2)
+    DjSegment.PAST -> appString(if (turn % 2 == 0) R.string.ai_dj_line_past else R.string.ai_dj_line_past_2)
+    DjSegment.NEW -> appString(if (turn % 2 == 0) R.string.ai_dj_line_new else R.string.ai_dj_line_new_2)
+    DjSegment.LIKED -> appString(if (turn % 2 == 0) R.string.ai_dj_line_liked else R.string.ai_dj_line_liked_2)
+    DjSegment.ARTIST -> appString(if (turn % 2 == 0) R.string.ai_dj_line_artist else R.string.ai_dj_line_artist_2, set.artist.orEmpty())
+    DjSegment.BECAUSE -> appString(R.string.ai_dj_line_because, set.artist.orEmpty())
+    DjSegment.DEEP -> appString(R.string.ai_dj_line_deep)
+    DjSegment.MIX -> appString(if (turn % 2 == 0) R.string.ai_dj_line_mix else R.string.ai_dj_line_mix_2)
 }
 
-private fun statLine(stats: DjStats?): String? = stats?.let { s ->
-    listOfNotNull(
-        if (s.hoursThisWeek >= 2 && s.topArtist != null) appString(R.string.ai_dj_line_hours, s.hoursThisWeek, s.topArtist) else null,
-        if (s.topTrackPlays >= 3 && s.topTrack != null) appString(R.string.ai_dj_line_track, s.topTrack, s.topTrackPlays) else null,
-    ).randomOrNull()
+private fun factLine(moment: DjMoment): String? {
+    val s = moment.stats ?: return null
+    return when (moment.fact) {
+        DjFact.HOURS -> appString(R.string.ai_dj_line_hours, s.hoursThisWeek, s.topArtist.orEmpty())
+        DjFact.TRACK -> appString(R.string.ai_dj_line_track, s.topTrack.orEmpty(), s.topTrackPlays)
+        DjFact.ARTISTS -> appString(R.string.ai_dj_fact_artists, s.artistsThisWeek)
+        DjFact.STREAK -> appString(R.string.ai_dj_fact_streak, s.streakDays)
+        DjFact.NEW_ARTIST -> appString(R.string.ai_dj_fact_new_artist, s.newArtist.orEmpty())
+        DjFact.MONTH_ARTIST -> appString(R.string.ai_dj_fact_month_artist, s.monthArtist.orEmpty())
+        null -> null
+    }
 }
+
+private val GREETINGS = listOf(R.string.ai_dj_greeting, R.string.ai_dj_greeting_2, R.string.ai_dj_greeting_3, R.string.ai_dj_greeting_4)
+private val SWITCHES = listOf(R.string.ai_dj_line_switch, R.string.ai_dj_line_switch_2, R.string.ai_dj_line_switch_3)
 
 fun aiDjScript(moment: DjMoment): DjScript {
     val title = appString(R.string.ai_dj_title)
+    val turn = moment.turn
     return when (moment) {
-        is DjMoment.Welcome -> DjScript(listOfNotNull(appString(R.string.ai_dj_greeting), statLine(moment.stats), setLine(moment.set)).joinToString(" "), title, aiDjSetLabel(moment.set.segment, moment.set.artist))
-        is DjMoment.NextSet -> DjScript(listOfNotNull(statLine(moment.stats), setLine(moment.set)).joinToString(" "), title, aiDjSetLabel(moment.set.segment, moment.set.artist))
-        is DjMoment.Switch -> DjScript("${appString(R.string.ai_dj_line_switch)} ${setLine(moment.set)}", title, aiDjSetLabel(moment.set.segment, moment.set.artist))
+        is DjMoment.Welcome -> DjScript(listOfNotNull(appString(GREETINGS[turn % GREETINGS.size]), factLine(moment), setLine(moment.set, turn)).joinToString(" "), title, aiDjSetLabel(moment.set.segment, moment.set.artist))
+        is DjMoment.NextSet -> DjScript(listOfNotNull(factLine(moment), setLine(moment.set, turn)).joinToString(" "), title, aiDjSetLabel(moment.set.segment, moment.set.artist))
+        is DjMoment.Switch -> DjScript("${appString(SWITCHES[turn % SWITCHES.size])} ${setLine(moment.set, turn)}", title, aiDjSetLabel(moment.set.segment, moment.set.artist))
         is DjMoment.Steered -> DjScript(appString(R.string.ai_dj_line_steer, moment.request), title, moment.request)
+        is DjMoment.More -> DjScript(appString(R.string.ai_dj_line_more, moment.request), title, moment.request)
     }
 }
 
