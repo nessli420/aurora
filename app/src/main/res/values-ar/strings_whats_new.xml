@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"تم تحديث Aurora"</string>
+    <string name="whats_new_title">"ما الجديد"</string>
+    <string name="whats_new_summary">"ميزات جديدة وإصلاحات. يستغرق الأمر دقيقة تقريبًا."</string>
+    <string name="whats_new_more">"+%1$d أخرى"</string>
+    <string name="whats_new_start">"اطّلع على الجديد"</string>
+    <string name="whats_new_skip">"تخطٍّ"</string>
+    <string name="whats_new_dont_show">"لا تعرض بعد التحديثات"</string>
+    <string name="whats_new_badge">"جديد"</string>
+    <string name="whats_new_try">"جرّبها"</string>
+    <string name="whats_new_resume">"العودة إلى ما الجديد"</string>
+    <string name="whats_new_close">"إغلاق ما الجديد"</string>
+    <string name="whats_new_done_title">"أنت على آخر إصدار"</string>
+    <string name="whats_new_fixes">"أيضًا في هذا التحديث"</string>
+    <string name="whats_new_show_setting">"عرض ما الجديد بعد التحديثات"</string>
+    <string name="whats_new_show_setting_detail">"جولة قصيرة في الميزات الجديدة عند تحديث Aurora"</string>
+    <string name="whats_new_finish">"ابدأ الاستماع"</string>
+    <string name="whats_new_progress">"الميزة %1$d من %2$d"</string>
+    <string name="whats_new_settings_summary">"التحديثات السابقة وجولة التحديث"</string>
+    <string name="whats_new_past">"التحديثات السابقة"</string>
+    <string name="whats_new_current">"الأحدث"</string>
+    <string name="whats_new_past_empty">"ستظهر التحديثات هنا بعد تثبيتها."</string>
+    <string name="whats_new_search_title">"اعثر على أي إعداد"</string>
+    <string name="whats_new_search_body">"اكتب كلمة مثل «التلاشي المتقاطع» أو «المعادل» في الإعدادات وانتقل إليها مباشرة."</string>
+    <string name="whats_new_tabs_title">"مكتبتك بترتيبك"</string>
+    <string name="whats_new_tabs_body">"انقل علامات تبويب المكتبة أو أخفها من الزر المجاور لها. تُفتح المكتبة الآن على أول علامة تبويب لديك."</string>
+    <string name="whats_new_dj_title">"منسق الموسيقى الذكي يواصل التشغيل"</string>
+    <string name="whats_new_dj_body">"يواصل منسق الموسيقى الذكي العمل في الخلفية ومع إطفاء الشاشة. يبقى التكرار والخلط متوقفين أثناء تشغيله."</string>
+    <string name="whats_new_downloads_title">"تنزيلات مرتّبة"</string>
+    <string name="whats_new_downloads_body">"الأغاني التي تنزّلها واحدة تلو الأخرى تظهر الآن مع تنزيلاتك، والألبوم المنزّل يعرض المقاطع التي حفظتها فقط."</string>
+    <string name="whats_new_fix_hours">"المقاطع الطويلة تعرض الساعات، مثل 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"أزرار التخطي في الكتب الصوتية والبودكاست بأي طول"</string>
+    <string name="whats_new_fix_genres">"الأغاني ذات الأنواع المتعددة تعرض كل نوع على حدة"</string>
+</resources>

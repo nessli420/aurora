@@ -47,6 +47,8 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.NewReleases
+import com.aurora.music.navigation.Routes
 import androidx.compose.material.icons.filled.SwitchAccount
 import androidx.compose.material.icons.filled.TouchApp
 import androidx.compose.material.icons.filled.Tune
@@ -290,6 +292,9 @@ fun SettingsScreen(
                     SettingsRowDivider()
                     SettingsNavRow(Icons.Filled.PlayCircle, appString(R.string.onboarding_replay_title),
                         subtitle = appString(R.string.onboarding_replay_body), onClick = onReplayTour)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.NewReleases, SettingsDestinations.whatsNew,
+                        onClick = { onOpenRoute(Routes.SETTINGS_WHATS_NEW) })
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Lock, SettingsDestinations.permissions, onClick = onOpenPermissions)
                     SettingsRowDivider()

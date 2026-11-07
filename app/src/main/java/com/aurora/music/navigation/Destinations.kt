@@ -60,6 +60,7 @@ object Routes {
     const val SETTINGS_PERMISSIONS = "settings_permissions"
     const val SETTINGS_ACCOUNTS = "settings_accounts"
     const val SETTINGS_BACKUP = "settings_backup"
+    const val SETTINGS_WHATS_NEW = "settings_whats_new"
     const val SETTINGS_SOURCES = "settings_sources"
     const val SETTINGS_MERGE = "settings_merge"
     const val SETTINGS_LYRICS = "settings_lyrics"

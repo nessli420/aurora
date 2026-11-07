@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora اپ ڈیٹ ہو گیا"</string>
+    <string name="whats_new_title">"نیا کیا ہے"</string>
+    <string name="whats_new_summary">"نئی خصوصیات اور اصلاحات۔ تقریباً ایک منٹ لگے گا۔"</string>
+    <string name="whats_new_more">"+%1$d مزید"</string>
+    <string name="whats_new_start">"نیا دیکھیں"</string>
+    <string name="whats_new_skip">"چھوڑیں"</string>
+    <string name="whats_new_dont_show">"اپ ڈیٹ کے بعد نہ دکھائیں"</string>
+    <string name="whats_new_badge">"نیا"</string>
+    <string name="whats_new_try">"آزمائیں"</string>
+    <string name="whats_new_resume">"نیا کیا ہے پر واپس جائیں"</string>
+    <string name="whats_new_close">"نیا کیا ہے بند کریں"</string>
+    <string name="whats_new_done_title">"آپ تازہ ترین ورژن پر ہیں"</string>
+    <string name="whats_new_fixes">"اس اپ ڈیٹ میں مزید"</string>
+    <string name="whats_new_show_setting">"اپ ڈیٹ کے بعد نیا کیا ہے دکھائیں"</string>
+    <string name="whats_new_show_setting_detail">"Aurora اپ ڈیٹ ہونے پر نئی خصوصیات کا مختصر تعارف"</string>
+    <string name="whats_new_finish">"سننا شروع کریں"</string>
+    <string name="whats_new_progress">"خصوصیت %1$d از %2$d"</string>
+    <string name="whats_new_settings_summary">"پچھلی اپ ڈیٹس اور اپ ڈیٹ کا تعارف"</string>
+    <string name="whats_new_past">"پچھلی اپ ڈیٹس"</string>
+    <string name="whats_new_current">"تازہ ترین"</string>
+    <string name="whats_new_past_empty">"اپ ڈیٹس انسٹال کرنے کے بعد یہاں دکھائی دیں گی۔"</string>
+    <string name="whats_new_search_title">"کوئی بھی ترتیب تلاش کریں"</string>
+    <string name="whats_new_search_body">"ترتیبات میں “کراس فیڈ” یا “ایکولائزر” جیسا لفظ لکھیں اور سیدھے وہاں پہنچیں۔"</string>
+    <string name="whats_new_tabs_title">"آپ کی لائبریری، آپ کی ترتیب"</string>
+    <string name="whats_new_tabs_body">"لائبریری ٹیبز کو ان کے ساتھ والے بٹن سے منتقل کریں یا چھپائیں۔ لائبریری اب آپ کے پہلے ٹیب پر کھلتی ہے۔"</string>
+    <string name="whats_new_dj_title">"AI DJ چلتا رہتا ہے"</string>
+    <string name="whats_new_dj_body">"AI DJ اب پس منظر میں اور اسکرین بند ہونے پر بھی چلتا رہتا ہے۔ اس کے چلنے کے دوران دہرانا اور شفل بند رہتے ہیں۔"</string>
+    <string name="whats_new_downloads_title">"ڈاؤن لوڈز، ترتیب سے"</string>
+    <string name="whats_new_downloads_body">"ایک ایک کر کے ڈاؤن لوڈ کیے گانے اب آپ کے ڈاؤن لوڈز میں دکھتے ہیں، اور ڈاؤن لوڈ کیا گیا البم صرف محفوظ کیے گئے ٹریکس دکھاتا ہے۔"</string>
+    <string name="whats_new_fix_hours">"لمبے ٹریکس گھنٹے بھی دکھاتے ہیں، جیسے 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"کسی بھی لمبائی کی آڈیو بکس اور پوڈکاسٹس پر اسکِپ بٹن"</string>
+    <string name="whats_new_fix_genres">"کئی اصناف والے گانے ہر صنف الگ دکھاتے ہیں"</string>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora güncellendi"</string>
+    <string name="whats_new_title">"Yenilikler"</string>
+    <string name="whats_new_summary">"Yeni özellikler ve düzeltmeler. Yaklaşık bir dakika sürer."</string>
+    <string name="whats_new_more">"+%1$d tane daha"</string>
+    <string name="whats_new_start">"Yenilikleri gör"</string>
+    <string name="whats_new_skip">"Atla"</string>
+    <string name="whats_new_dont_show">"Güncellemelerden sonra gösterme"</string>
+    <string name="whats_new_badge">"Yeni"</string>
+    <string name="whats_new_try">"Dene"</string>
+    <string name="whats_new_resume">"Yeniliklere dön"</string>
+    <string name="whats_new_close">"Yenilikleri kapat"</string>
+    <string name="whats_new_done_title">"Güncelsin"</string>
+    <string name="whats_new_fixes">"Bu güncellemede ayrıca"</string>
+    <string name="whats_new_show_setting">"Güncellemelerden sonra yenilikleri göster"</string>
+    <string name="whats_new_show_setting_detail">"Aurora güncellendiğinde yeni özelliklerin kısa bir turu"</string>
+    <string name="whats_new_finish">"Dinlemeye başla"</string>
+    <string name="whats_new_progress">"Özellik %1$d / %2$d"</string>
+    <string name="whats_new_settings_summary">"Önceki güncellemeler ve yenilik turu"</string>
+    <string name="whats_new_past">"Önceki güncellemeler"</string>
+    <string name="whats_new_current">"En yeni"</string>
+    <string name="whats_new_past_empty">"Güncellemeler yükledikten sonra burada listelenir."</string>
+    <string name="whats_new_search_title">"Her ayarı bul"</string>
+    <string name="whats_new_search_body">"Ayarlar'da “çapraz geçiş” ya da “ekolayzer” gibi bir kelime yaz, doğrudan oraya git."</string>
+    <string name="whats_new_tabs_title">"Kitaplığın, senin sıran"</string>
+    <string name="whats_new_tabs_body">"Kitaplık sekmelerini yanlarındaki düğmeyle taşı ya da gizle. Kitaplık artık ilk sekmende açılıyor."</string>
+    <string name="whats_new_dj_title">"Yapay zekâ DJ çalmaya devam ediyor"</string>
+    <string name="whats_new_dj_body">"Yapay zekâ DJ artık arka planda ve ekran kapalıyken de çalmaya devam ediyor. O çalarken tekrar ve karıştırma kapalı kalır."</string>
+    <string name="whats_new_downloads_title">"İndirmeler, düzenli"</string>
+    <string name="whats_new_downloads_body">"Tek tek indirdiğin şarkılar artık indirmelerinde görünüyor ve indirilen bir albüm yalnızca kaydettiğin parçaları gösteriyor."</string>
+    <string name="whats_new_fix_hours">"Uzun parçalar saati de gösterir, ör. 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"Her uzunlukta sesli kitap ve podcastte atlama düğmeleri"</string>
+    <string name="whats_new_fix_genres">"Birden çok türü olan şarkılar her birini ayrı gösterir"</string>
+</resources>

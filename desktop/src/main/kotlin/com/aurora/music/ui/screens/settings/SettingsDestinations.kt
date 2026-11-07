@@ -40,9 +40,10 @@ object SettingsDestinations {
     val insights = SettingsDestination(Routes.SETTINGS_INSIGHTS, R.string.insights_title, R.string.insights_description)
     val backup = SettingsDestination(Routes.SETTINGS_BACKUP, R.string.text_backup_restore_a16162, R.string.text_export_or_import_settings_and_playlists_4ce918)
     val about = SettingsDestination(Routes.SETTINGS_ABOUT, R.string.text_about_aurora_b4ed8c, R.string.text_version_and_app_information_9c9a82)
+    val whatsNew = SettingsDestination(Routes.SETTINGS_WHATS_NEW, R.string.whats_new_title, R.string.whats_new_settings_summary)
 
     val all = listOf(accounts, sources, merge, storage, analysis, playback, output, equalizer, advancedAudio, processingRack, reverb, tuning, impulses, comparison, presetRules, processingPresets, loudness,
-        listening, signalPath, appearance, lyrics, visualizer, connect, integrations, insights, backup, about)
+        listening, signalPath, appearance, lyrics, visualizer, connect, integrations, insights, backup, whatsNew, about)
 }
 
 @Composable

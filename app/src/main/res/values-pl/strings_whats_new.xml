@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora zaktualizowana"</string>
+    <string name="whats_new_title">"Co nowego"</string>
+    <string name="whats_new_summary">"Nowe funkcje i poprawki. Zajmie to około minuty."</string>
+    <string name="whats_new_more">"+%1$d więcej"</string>
+    <string name="whats_new_start">"Zobacz, co nowego"</string>
+    <string name="whats_new_skip">"Pomiń"</string>
+    <string name="whats_new_dont_show">"Nie pokazuj po aktualizacjach"</string>
+    <string name="whats_new_badge">"Nowość"</string>
+    <string name="whats_new_try">"Wypróbuj"</string>
+    <string name="whats_new_resume">"Wróć do nowości"</string>
+    <string name="whats_new_close">"Zamknij nowości"</string>
+    <string name="whats_new_done_title">"Masz najnowszą wersję"</string>
+    <string name="whats_new_fixes">"Także w tej aktualizacji"</string>
+    <string name="whats_new_show_setting">"Pokazuj nowości po aktualizacjach"</string>
+    <string name="whats_new_show_setting_detail">"Krótki przegląd nowych funkcji po aktualizacji Aurory"</string>
+    <string name="whats_new_finish">"Zacznij słuchać"</string>
+    <string name="whats_new_progress">"Funkcja %1$d z %2$d"</string>
+    <string name="whats_new_settings_summary">"Poprzednie aktualizacje i przegląd nowości"</string>
+    <string name="whats_new_past">"Poprzednie aktualizacje"</string>
+    <string name="whats_new_current">"Najnowsza"</string>
+    <string name="whats_new_past_empty">"Aktualizacje pojawią się tutaj po ich zainstalowaniu."</string>
+    <string name="whats_new_search_title">"Znajdź dowolne ustawienie"</string>
+    <string name="whats_new_search_body">"Wpisz w ustawieniach słowo, np. „przenikanie” albo „korektor”, i przejdź prosto do niego."</string>
+    <string name="whats_new_tabs_title">"Twoja biblioteka, twoja kolejność"</string>
+    <string name="whats_new_tabs_body">"Przenoś lub ukrywaj karty biblioteki przyciskiem obok nich. Biblioteka otwiera się teraz na pierwszej karcie."</string>
+    <string name="whats_new_dj_title">"DJ AI gra dalej"</string>
+    <string name="whats_new_dj_body">"DJ AI działa teraz w tle i przy wyłączonym ekranie. Powtarzanie i losowanie pozostają wyłączone, gdy gra."</string>
+    <string name="whats_new_downloads_title">"Pobrane, uporządkowane"</string>
+    <string name="whats_new_downloads_body">"Utwory pobierane pojedynczo pojawiają się teraz wśród pobranych, a pobrany album pokazuje tylko zapisane utwory."</string>
+    <string name="whats_new_fix_hours">"Długie utwory pokazują godziny, np. 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"Przyciski przewijania w audiobookach i podcastach dowolnej długości"</string>
+    <string name="whats_new_fix_genres">"Utwory z kilkoma gatunkami pokazują każdy z nich"</string>
+</resources>

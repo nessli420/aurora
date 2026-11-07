@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora diperbarui"</string>
+    <string name="whats_new_title">"Yang baru"</string>
+    <string name="whats_new_summary">"Fitur baru dan perbaikan. Sekitar satu menit."</string>
+    <string name="whats_new_more">"+%1$d lainnya"</string>
+    <string name="whats_new_start">"Lihat yang baru"</string>
+    <string name="whats_new_skip">"Lewati"</string>
+    <string name="whats_new_dont_show">"Jangan tampilkan setelah pembaruan"</string>
+    <string name="whats_new_badge">"Baru"</string>
+    <string name="whats_new_try">"Coba"</string>
+    <string name="whats_new_resume">"Kembali ke yang baru"</string>
+    <string name="whats_new_close">"Tutup yang baru"</string>
+    <string name="whats_new_done_title">"Anda sudah terbaru"</string>
+    <string name="whats_new_fixes">"Juga di pembaruan ini"</string>
+    <string name="whats_new_show_setting">"Tampilkan yang baru setelah pembaruan"</string>
+    <string name="whats_new_show_setting_detail">"Tur singkat fitur baru saat Aurora diperbarui"</string>
+    <string name="whats_new_finish">"Mulai mendengarkan"</string>
+    <string name="whats_new_progress">"Fitur %1$d dari %2$d"</string>
+    <string name="whats_new_settings_summary">"Pembaruan sebelumnya dan tur pembaruan"</string>
+    <string name="whats_new_past">"Pembaruan sebelumnya"</string>
+    <string name="whats_new_current">"Terbaru"</string>
+    <string name="whats_new_past_empty">"Pembaruan akan tercantum di sini setelah Anda memasangnya."</string>
+    <string name="whats_new_search_title">"Temukan setelan apa pun"</string>
+    <string name="whats_new_search_body">"Ketik kata seperti “crossfade” atau “equalizer” di Setelan dan langsung menuju ke sana."</string>
+    <string name="whats_new_tabs_title">"Pustaka Anda, urutan Anda"</string>
+    <string name="whats_new_tabs_body">"Pindahkan atau sembunyikan tab pustaka dari tombol di sebelahnya. Pustaka kini terbuka di tab pertama Anda."</string>
+    <string name="whats_new_dj_title">"AI DJ terus diputar"</string>
+    <string name="whats_new_dj_body">"AI DJ kini terus berjalan di latar belakang dan saat layar mati. Ulang dan acak tetap mati selama diputar."</string>
+    <string name="whats_new_downloads_title">"Unduhan, lebih rapi"</string>
+    <string name="whats_new_downloads_body">"Lagu yang Anda unduh satu per satu kini muncul di unduhan Anda, dan album yang diunduh hanya menampilkan lagu yang Anda simpan."</string>
+    <string name="whats_new_fix_hours">"Lagu panjang menampilkan jam, seperti 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"Tombol lewati di buku audio dan podcast dengan durasi berapa pun"</string>
+    <string name="whats_new_fix_genres">"Lagu dengan beberapa genre menampilkan masing-masing"</string>
+</resources>

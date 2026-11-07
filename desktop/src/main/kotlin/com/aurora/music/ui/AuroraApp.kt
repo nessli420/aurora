@@ -54,6 +54,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
+import com.aurora.music.desktop.platform.BuildInfo
+import com.aurora.music.ui.whatsnew.WhatsNewCatalog
+import com.aurora.music.ui.whatsnew.WhatsNewLauncher
+import com.aurora.music.ui.whatsnew.WhatsNewReturnPill
+import com.aurora.music.ui.whatsnew.WhatsNewTour
+import kotlinx.coroutines.flow.first
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -317,6 +323,35 @@ private fun Shell(
         }
     }
     val scope = rememberCoroutineScope()
+    // versions in the open what's new tour, the page it's on, and whether "Try it" has the real screen up
+    var whatsNew by remember { mutableStateOf<List<String>?>(null) }
+    var whatsNewPage by remember { mutableStateOf(0) }
+    var whatsNewTrying by remember { mutableStateOf(false) }
+    LaunchedEffect(container) {
+        if (whatsNew != null) return@LaunchedEffect
+        val current = BuildInfo.VERSION_NAME
+        val lastSeen = store.whatsNewSeen.first()
+        val unseen = com.aurora.music.data.WhatsNew.unseen(WhatsNewCatalog.releases, lastSeen, current) { it.version }
+        // no record and no accounts yet reads as a new install, which gets no tour
+        val fresh = lastSeen == null && store.savedSessions.first().isEmpty()
+        when (com.aurora.music.data.WhatsNew.onLaunch(fresh, store.whatsNewEnabled.first(), lastSeen, current, unseen.isNotEmpty())) {
+            com.aurora.music.data.WhatsNew.Launch.SHOW -> { whatsNew = unseen.map { it.version }; whatsNewPage = 0 }
+            com.aurora.music.data.WhatsNew.Launch.MARK_SEEN -> store.setWhatsNewSeen(current)
+            com.aurora.music.data.WhatsNew.Launch.NOTHING -> Unit
+        }
+    }
+    LaunchedEffect(Unit) {
+        WhatsNewLauncher.opened.collect { version ->
+            whatsNew = listOf(version)
+            whatsNewPage = 0
+            whatsNewTrying = false
+        }
+    }
+    fun closeWhatsNew() {
+        whatsNew = null
+        whatsNewTrying = false
+        scope.launch { store.setWhatsNewSeen(BuildInfo.VERSION_NAME) }
+    }
     fun confirm(message: String) {
         scope.launch {
             snackbarHostState.currentSnackbarData?.dismiss()
@@ -754,6 +789,9 @@ private fun Shell(
         }
         composable(Routes.SETTINGS_BACKUP) {
             BackupScreen(padding, container.backupManager, onBack = pop, confirm = { confirm(it) })
+        }
+        composable(Routes.SETTINGS_WHATS_NEW) {
+            com.aurora.music.ui.screens.settings.WhatsNewSettingsScreen(padding, onBack = pop)
         }
         composable(Routes.SETTINGS_INSIGHTS) {
             com.aurora.music.ui.screens.settings.DetailedStatsScreen(padding, onBack = pop, onOpenInsights = { nav.navigate(Routes.INSIGHTS) },
@@ -1581,6 +1619,32 @@ private fun Shell(
             if (showMix) {
                 Box(Modifier.fillMaxSize().background(com.aurora.music.ui.theme.solidColors().background)) {
                     com.aurora.music.ui.screens.player.MixScreen(mixVM, mixQueue, onClose = { showMix = false })
+                }
+            }
+            val tour = whatsNew?.let { versions -> WhatsNewCatalog.releases.filter { it.version in versions }.reversed() }
+            if (tour != null) {
+                val whatsNewEnabled by store.whatsNewEnabled.collectAsStateWithLifecycle(initialValue = true)
+                when {
+                    tour.isEmpty() -> LaunchedEffect(Unit) { closeWhatsNew() }
+                    whatsNewTrying -> WhatsNewReturnPill(onResume = { whatsNewPage++; whatsNewTrying = false }, onClose = ::closeWhatsNew)
+                    else -> AnimatedVisibility(
+                        visibleState = remember { androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true } },
+                        enter = fadeIn(tween(260)),
+                    ) {
+                        WhatsNewTour(
+                            releases = tour,
+                            page = whatsNewPage,
+                            onPageChange = { whatsNewPage = it },
+                            enabled = whatsNewEnabled,
+                            onEnabledChange = { enabled -> scope.launch { store.setWhatsNewEnabled(enabled) } },
+                            onTry = { route ->
+                                whatsNewTrying = true
+                                player.setExpanded(false)
+                                navController.navigate(route) { launchSingleTop = true }
+                            },
+                            onClose = ::closeWhatsNew,
+                        )
+                    }
                 }
             }
         }

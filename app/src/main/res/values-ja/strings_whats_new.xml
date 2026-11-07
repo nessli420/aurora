@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora がアップデートされました"</string>
+    <string name="whats_new_title">"新機能"</string>
+    <string name="whats_new_summary">"新機能と修正点です。1 分ほどで見終わります。"</string>
+    <string name="whats_new_more">"ほか %1$d 件"</string>
+    <string name="whats_new_start">"新機能を見る"</string>
+    <string name="whats_new_skip">"スキップ"</string>
+    <string name="whats_new_dont_show">"アップデート後に表示しない"</string>
+    <string name="whats_new_badge">"新機能"</string>
+    <string name="whats_new_try">"試す"</string>
+    <string name="whats_new_resume">"新機能に戻る"</string>
+    <string name="whats_new_close">"新機能を閉じる"</string>
+    <string name="whats_new_done_title">"最新の状態です"</string>
+    <string name="whats_new_fixes">"このアップデートのその他の変更"</string>
+    <string name="whats_new_show_setting">"アップデート後に新機能を表示"</string>
+    <string name="whats_new_show_setting_detail">"Aurora のアップデート時に新機能を短く紹介します"</string>
+    <string name="whats_new_finish">"聴き始める"</string>
+    <string name="whats_new_progress">"機能 %1$d / %2$d"</string>
+    <string name="whats_new_settings_summary">"過去のアップデートと新機能ツアー"</string>
+    <string name="whats_new_past">"過去のアップデート"</string>
+    <string name="whats_new_current">"最新"</string>
+    <string name="whats_new_past_empty">"インストールしたアップデートはここに表示されます。"</string>
+    <string name="whats_new_search_title">"どの設定もすぐ見つかる"</string>
+    <string name="whats_new_search_body">"設定で「クロスフェード」や「イコライザー」などと入力すると、その項目へすぐ移動できます。"</string>
+    <string name="whats_new_tabs_title">"ライブラリを好きな順番に"</string>
+    <string name="whats_new_tabs_body">"ライブラリのタブは横のボタンから並べ替えたり非表示にしたりできます。ライブラリは最初のタブで開くようになりました。"</string>
+    <string name="whats_new_dj_title">"AI DJ が再生を続けます"</string>
+    <string name="whats_new_dj_body">"AI DJ はバックグラウンドや画面オフでも再生を続けます。再生中はリピートとシャッフルがオフのままになります。"</string>
+    <string name="whats_new_downloads_title">"ダウンロードを整理"</string>
+    <string name="whats_new_downloads_body">"1 曲ずつダウンロードした曲もダウンロードに表示され、ダウンロード済みのアルバムには保存した曲だけが表示されます。"</string>
+    <string name="whats_new_fix_hours">"長いトラックは 1:02:45 のように時間も表示"</string>
+    <string name="whats_new_fix_spoken">"長さに関係なくオーディオブックとポッドキャストにスキップボタン"</string>
+    <string name="whats_new_fix_genres">"複数のジャンルがある曲はそれぞれを表示"</string>
+</resources>

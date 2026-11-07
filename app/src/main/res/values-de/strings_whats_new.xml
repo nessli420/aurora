@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora aktualisiert"</string>
+    <string name="whats_new_title">"Neuigkeiten"</string>
+    <string name="whats_new_summary">"Neue Funktionen und Korrekturen. Dauert etwa eine Minute."</string>
+    <string name="whats_new_more">"+%1$d weitere"</string>
+    <string name="whats_new_start">"Neuigkeiten ansehen"</string>
+    <string name="whats_new_skip">"Überspringen"</string>
+    <string name="whats_new_dont_show">"Nach Updates nicht anzeigen"</string>
+    <string name="whats_new_badge">"Neu"</string>
+    <string name="whats_new_try">"Ausprobieren"</string>
+    <string name="whats_new_resume">"Zurück zu den Neuigkeiten"</string>
+    <string name="whats_new_close">"Neuigkeiten schließen"</string>
+    <string name="whats_new_done_title">"Du bist auf dem neuesten Stand"</string>
+    <string name="whats_new_fixes">"Außerdem in diesem Update"</string>
+    <string name="whats_new_show_setting">"Neuigkeiten nach Updates zeigen"</string>
+    <string name="whats_new_show_setting_detail">"Eine kurze Tour durch neue Funktionen, wenn Aurora aktualisiert wird"</string>
+    <string name="whats_new_finish">"Jetzt hören"</string>
+    <string name="whats_new_progress">"Funktion %1$d von %2$d"</string>
+    <string name="whats_new_settings_summary">"Frühere Updates und die Update-Tour"</string>
+    <string name="whats_new_past">"Frühere Updates"</string>
+    <string name="whats_new_current">"Neueste"</string>
+    <string name="whats_new_past_empty">"Updates erscheinen hier, sobald du sie installierst."</string>
+    <string name="whats_new_search_title">"Jede Einstellung finden"</string>
+    <string name="whats_new_search_body">"Tippe in den Einstellungen ein Wort wie „Überblendung“ oder „Equalizer“ und spring direkt dorthin."</string>
+    <string name="whats_new_tabs_title">"Deine Mediathek, deine Reihenfolge"</string>
+    <string name="whats_new_tabs_body">"Verschiebe oder verstecke Mediathek-Tabs über die Schaltfläche daneben. Die Mediathek öffnet jetzt mit deinem ersten Tab."</string>
+    <string name="whats_new_dj_title">"KI-DJ spielt weiter"</string>
+    <string name="whats_new_dj_body">"Der KI-DJ läuft jetzt im Hintergrund und bei ausgeschaltetem Bildschirm weiter. Wiederholen und Zufall bleiben aus, solange er spielt."</string>
+    <string name="whats_new_downloads_title">"Downloads, sortiert"</string>
+    <string name="whats_new_downloads_body">"Einzeln heruntergeladene Songs erscheinen jetzt bei deinen Downloads, und ein heruntergeladenes Album zeigt nur die gespeicherten Titel."</string>
+    <string name="whats_new_fix_hours">"Lange Titel zeigen Stunden an, etwa 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"Überspringen-Tasten bei Hörbüchern und Podcasts jeder Länge"</string>
+    <string name="whats_new_fix_genres">"Songs mit mehreren Genres zeigen jedes einzeln"</string>
+</resources>

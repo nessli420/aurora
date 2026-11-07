@@ -15,6 +15,7 @@ internal object SettingsSearchIndex {
         e(R.string.language_title, null, Routes.SETTINGS_LANGUAGE),
         e(R.string.onboarding_replay_title, R.string.onboarding_replay_body, null),
         e(R.string.simple_mode, R.string.simple_mode_description, null),
+        e(R.string.whats_new_show_setting, R.string.whats_new_show_setting_detail, Routes.SETTINGS_WHATS_NEW),
         e(R.string.text_wake_to_music_alarm_40ab13, R.string.text_fade_in_music_from_your_library_every_day_51b4c6, Routes.SETTINGS_ALARM),
         e(R.string.text_alarm_time_d2dd88, null, Routes.SETTINGS_ALARM),
         e(R.string.text_alarm_permissions_c50074, R.string.text_exact_alarms_notifications_battery_and_lock_screen_access_d38e18, Routes.SETTINGS_ALARM),

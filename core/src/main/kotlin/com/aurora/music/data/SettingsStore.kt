@@ -986,6 +986,11 @@ class SettingsStore(private val dataStore: DataStore<Preferences>, private val f
     }.distinctUntilChanged()
     val onboardingSeen: Flow<Boolean?> = dataStore.data.map { it[Keys.ONBOARDING_SEEN] }.distinctUntilChanged()
     suspend fun setOnboardingSeen() = dataStore.edit { it[Keys.ONBOARDING_SEEN] = true }
+    // the last version whose what's new tour was shown or skipped
+    val whatsNewSeen: Flow<String?> = dataStore.data.map { it[Keys.WHATS_NEW_SEEN] }.distinctUntilChanged()
+    suspend fun setWhatsNewSeen(version: String) = dataStore.edit { it[Keys.WHATS_NEW_SEEN] = version }
+    val whatsNewEnabled: Flow<Boolean> = dataStore.data.map { it[Keys.WHATS_NEW_ENABLED] ?: true }.distinctUntilChanged()
+    suspend fun setWhatsNewEnabled(enabled: Boolean) = dataStore.edit { it[Keys.WHATS_NEW_ENABLED] = enabled }
     val privateSession: Flow<Boolean> = dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }.distinctUntilChanged()
 
     val gesturePrefs: Flow<GesturePrefs> = dataStore.data.map { p ->

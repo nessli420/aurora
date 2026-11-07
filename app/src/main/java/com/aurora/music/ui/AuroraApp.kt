@@ -126,6 +126,10 @@ import com.aurora.music.ui.onboarding.SetupPhase
 import com.aurora.music.ui.onboarding.SetupSource
 import com.aurora.music.ui.onboarding.SetupTask
 import com.aurora.music.ui.onboarding.rememberOnboardingState
+import com.aurora.music.ui.whatsnew.WhatsNewCatalog
+import com.aurora.music.ui.whatsnew.WhatsNewLauncher
+import com.aurora.music.ui.whatsnew.WhatsNewReturnPill
+import com.aurora.music.ui.whatsnew.WhatsNewTour
 import com.aurora.music.viewmodel.AuthViewModel
 import com.aurora.music.viewmodel.DetailViewModel
 import com.aurora.music.viewmodel.HomeViewModel
@@ -154,6 +158,10 @@ fun AuroraApp() {
     val sessionReady by container.sessionReady.collectAsStateWithLifecycle()
     com.aurora.music.ui.screens.auth.SoundCloudCaptchaDialog(container.soundcloudWriter)
     val onboarding = rememberOnboardingState()
+    // versions in the open what's new tour, the page it's on, and whether "Try it" has the real screen up
+    var whatsNew by rememberSaveable { mutableStateOf<List<String>?>(null) }
+    var whatsNewPage by rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
+    var whatsNewTrying by rememberSaveable { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(container) {
         if (onboarding.phase == SetupPhase.HIDDEN && container.settingsStore.onboardingSeen.first() == null) {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -162,6 +170,25 @@ fun AuroraApp() {
                 navController.navigate(Routes.SETUP) { launchSingleTop = true }
             }
             else container.settingsStore.setOnboardingSeen()
+        }
+        if (whatsNew == null) {
+            val store = container.settingsStore
+            val current = com.aurora.music.BuildConfig.VERSION_NAME
+            val lastSeen = store.whatsNewSeen.first()
+            val unseen = com.aurora.music.data.WhatsNew.unseen(WhatsNewCatalog.releases, lastSeen, current) { it.version }
+            when (com.aurora.music.data.WhatsNew.onLaunch(onboarding.phase != SetupPhase.HIDDEN, store.whatsNewEnabled.first(),
+                lastSeen, current, unseen.isNotEmpty())) {
+                com.aurora.music.data.WhatsNew.Launch.SHOW -> { whatsNew = unseen.map { it.version }; whatsNewPage = 0 }
+                com.aurora.music.data.WhatsNew.Launch.MARK_SEEN -> store.setWhatsNewSeen(current)
+                com.aurora.music.data.WhatsNew.Launch.NOTHING -> Unit
+            }
+        }
+    }
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        WhatsNewLauncher.opened.collect { version ->
+            whatsNew = listOf(version)
+            whatsNewPage = 0
+            whatsNewTrying = false
         }
     }
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
@@ -740,6 +767,9 @@ fun AuroraApp() {
                         onBack = { nav.popBackStack() },
                         confirm = { confirm(it) },
                     )
+                }
+                composable(Routes.SETTINGS_WHATS_NEW) {
+                    com.aurora.music.ui.screens.settings.WhatsNewSettingsScreen(padding, onBack = { nav.popBackStack() })
                 }
                 composable(Routes.SETTINGS_INSIGHTS) {
                     com.aurora.music.ui.screens.settings.DetailedStatsScreen(contentPadding = padding, onBack = { nav.popBackStack() },
@@ -1782,6 +1812,38 @@ fun AuroraApp() {
         com.aurora.music.ui.screens.player.MixScreen(mixVM, mixQueue, onClose = { showMix = false })
     }
     matchSong?.let { com.aurora.music.ui.components.MatchPickerSheet(it) { matchSong = null } }
+
+    val tour = whatsNew?.let { versions -> WhatsNewCatalog.releases.filter { it.version in versions }.reversed() }
+    if (tour != null) {
+        val whatsNewEnabled by container.settingsStore.whatsNewEnabled.collectAsStateWithLifecycle(initialValue = true)
+        fun closeWhatsNew() {
+            whatsNew = null
+            whatsNewTrying = false
+            scope.launch { container.settingsStore.setWhatsNewSeen(com.aurora.music.BuildConfig.VERSION_NAME) }
+        }
+        when {
+            tour.isEmpty() -> androidx.compose.runtime.LaunchedEffect(Unit) { closeWhatsNew() }
+            whatsNewTrying -> WhatsNewReturnPill(onResume = { whatsNewPage++; whatsNewTrying = false }, onClose = ::closeWhatsNew)
+            else -> AnimatedVisibility(
+                visibleState = remember { androidx.compose.animation.core.MutableTransitionState(false).apply { targetState = true } },
+                enter = fadeIn(tween(260)),
+            ) {
+                WhatsNewTour(
+                    releases = tour,
+                    page = whatsNewPage,
+                    onPageChange = { whatsNewPage = it },
+                    enabled = whatsNewEnabled,
+                    onEnabledChange = { enabled -> scope.launch { container.settingsStore.setWhatsNewEnabled(enabled) } },
+                    onTry = { route ->
+                        whatsNewTrying = true
+                        playerVM.setExpanded(false)
+                        navController.navigate(route) { launchSingleTop = true }
+                    },
+                    onClose = ::closeWhatsNew,
+                )
+            }
+        }
+    }
 }
 
 @Composable

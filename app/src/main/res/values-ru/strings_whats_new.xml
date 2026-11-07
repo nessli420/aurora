@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora обновлена"</string>
+    <string name="whats_new_title">"Что нового"</string>
+    <string name="whats_new_summary">"Новые функции и исправления. Займёт около минуты."</string>
+    <string name="whats_new_more">"ещё %1$d"</string>
+    <string name="whats_new_start">"Посмотреть, что нового"</string>
+    <string name="whats_new_skip">"Пропустить"</string>
+    <string name="whats_new_dont_show">"Не показывать после обновлений"</string>
+    <string name="whats_new_badge">"Новое"</string>
+    <string name="whats_new_try">"Попробовать"</string>
+    <string name="whats_new_resume">"Вернуться к новинкам"</string>
+    <string name="whats_new_close">"Закрыть новинки"</string>
+    <string name="whats_new_done_title">"У вас последняя версия"</string>
+    <string name="whats_new_fixes">"Также в этом обновлении"</string>
+    <string name="whats_new_show_setting">"Показывать новинки после обновлений"</string>
+    <string name="whats_new_show_setting_detail">"Короткий обзор новых функций после обновления Aurora"</string>
+    <string name="whats_new_finish">"Начать слушать"</string>
+    <string name="whats_new_progress">"Функция %1$d из %2$d"</string>
+    <string name="whats_new_settings_summary">"Прошлые обновления и обзор новинок"</string>
+    <string name="whats_new_past">"Прошлые обновления"</string>
+    <string name="whats_new_current">"Последнее"</string>
+    <string name="whats_new_past_empty">"Обновления появятся здесь после установки."</string>
+    <string name="whats_new_search_title">"Найдите любую настройку"</string>
+    <string name="whats_new_search_body">"Введите в настройках слово, например «плавные переходы» или «эквалайзер», и сразу перейдите к нужному пункту."</string>
+    <string name="whats_new_tabs_title">"Ваша медиатека, ваш порядок"</string>
+    <string name="whats_new_tabs_body">"Перемещайте или скрывайте вкладки медиатеки кнопкой рядом с ними. Теперь медиатека открывается на первой вкладке."</string>
+    <string name="whats_new_dj_title">"ИИ-диджей продолжает играть"</string>
+    <string name="whats_new_dj_body">"ИИ-диджей теперь работает в фоне и при выключенном экране. Повтор и перемешивание остаются выключенными, пока он играет."</string>
+    <string name="whats_new_downloads_title">"Загрузки по порядку"</string>
+    <string name="whats_new_downloads_body">"Песни, загруженные по одной, теперь видны среди загрузок, а загруженный альбом показывает только сохранённые треки."</string>
+    <string name="whats_new_fix_hours">"Длинные треки показывают часы, например 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"Кнопки перемотки в аудиокнигах и подкастах любой длины"</string>
+    <string name="whats_new_fix_genres">"Песни с несколькими жанрами показывают каждый из них"</string>
+</resources>

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora bijgewerkt"</string>
+    <string name="whats_new_title">"Wat is er nieuw"</string>
+    <string name="whats_new_summary">"Nieuwe functies en verbeteringen. Het duurt ongeveer een minuut."</string>
+    <string name="whats_new_more">"+%1$d meer"</string>
+    <string name="whats_new_start">"Bekijk wat er nieuw is"</string>
+    <string name="whats_new_skip">"Overslaan"</string>
+    <string name="whats_new_dont_show">"Niet tonen na updates"</string>
+    <string name="whats_new_badge">"Nieuw"</string>
+    <string name="whats_new_try">"Probeer het"</string>
+    <string name="whats_new_resume">"Terug naar wat er nieuw is"</string>
+    <string name="whats_new_close">"Wat er nieuw is sluiten"</string>
+    <string name="whats_new_done_title">"Je bent helemaal bij"</string>
+    <string name="whats_new_fixes">"Ook in deze update"</string>
+    <string name="whats_new_show_setting">"Wat er nieuw is tonen na updates"</string>
+    <string name="whats_new_show_setting_detail">"Een korte rondleiding langs nieuwe functies als Aurora wordt bijgewerkt"</string>
+    <string name="whats_new_finish">"Begin met luisteren"</string>
+    <string name="whats_new_progress">"Functie %1$d van %2$d"</string>
+    <string name="whats_new_settings_summary">"Eerdere updates en de rondleiding"</string>
+    <string name="whats_new_past">"Eerdere updates"</string>
+    <string name="whats_new_current">"Nieuwste"</string>
+    <string name="whats_new_past_empty">"Updates verschijnen hier zodra je ze installeert."</string>
+    <string name="whats_new_search_title">"Vind elke instelling"</string>
+    <string name="whats_new_search_body">"Typ een woord als “crossfade” of “equalizer” in Instellingen en ga er meteen naartoe."</string>
+    <string name="whats_new_tabs_title">"Jouw bibliotheek, jouw volgorde"</string>
+    <string name="whats_new_tabs_body">"Verplaats of verberg bibliotheektabbladen met de knop ernaast. De bibliotheek opent nu op je eerste tabblad."</string>
+    <string name="whats_new_dj_title">"AI-dj blijft spelen"</string>
+    <string name="whats_new_dj_body">"De AI-dj blijft nu doorgaan op de achtergrond en met het scherm uit. Herhalen en shuffle blijven uit zolang hij speelt."</string>
+    <string name="whats_new_downloads_title">"Downloads, op orde"</string>
+    <string name="whats_new_downloads_body">"Nummers die je los downloadt staan nu bij je downloads, en een gedownload album toont alleen de nummers die je hebt opgeslagen."</string>
+    <string name="whats_new_fix_hours">"Lange nummers tonen uren, zoals 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"Overslaanknoppen bij luisterboeken en podcasts van elke lengte"</string>
+    <string name="whats_new_fix_genres">"Nummers met meerdere genres tonen ze allemaal"</string>
+</resources>

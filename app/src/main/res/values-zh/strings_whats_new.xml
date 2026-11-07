@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora 已更新"</string>
+    <string name="whats_new_title">"新功能"</string>
+    <string name="whats_new_summary">"新功能和修复，大约一分钟看完。"</string>
+    <string name="whats_new_more">"另外 %1$d 项"</string>
+    <string name="whats_new_start">"查看新功能"</string>
+    <string name="whats_new_skip">"跳过"</string>
+    <string name="whats_new_dont_show">"更新后不再显示"</string>
+    <string name="whats_new_badge">"新"</string>
+    <string name="whats_new_try">"试一试"</string>
+    <string name="whats_new_resume">"返回新功能"</string>
+    <string name="whats_new_close">"关闭新功能介绍"</string>
+    <string name="whats_new_done_title">"已是最新版本"</string>
+    <string name="whats_new_fixes">"本次更新还包括"</string>
+    <string name="whats_new_show_setting">"更新后显示新功能"</string>
+    <string name="whats_new_show_setting_detail">"Aurora 更新后简短介绍新功能"</string>
+    <string name="whats_new_finish">"开始聆听"</string>
+    <string name="whats_new_progress">"第 %1$d 项，共 %2$d 项"</string>
+    <string name="whats_new_settings_summary">"以往更新和新功能介绍"</string>
+    <string name="whats_new_past">"以往更新"</string>
+    <string name="whats_new_current">"最新"</string>
+    <string name="whats_new_past_empty">"安装更新后会在这里列出。"</string>
+    <string name="whats_new_search_title">"轻松找到任何设置"</string>
+    <string name="whats_new_search_body">"在设置中输入“淡入淡出”或“均衡器”等词，直接跳到对应位置。"</string>
+    <string name="whats_new_tabs_title">"资料库，按你的顺序"</string>
+    <string name="whats_new_tabs_body">"用标签旁边的按钮移动或隐藏资料库标签。资料库现在会打开你的第一个标签。"</string>
+    <string name="whats_new_dj_title">"AI DJ 持续播放"</string>
+    <string name="whats_new_dj_body">"AI DJ 现在可在后台和熄屏时继续播放。播放期间循环和随机保持关闭。"</string>
+    <string name="whats_new_downloads_title">"下载更有条理"</string>
+    <string name="whats_new_downloads_body">"单独下载的歌曲现在会显示在下载中，已下载的专辑只列出你保存的曲目。"</string>
+    <string name="whats_new_fix_hours">"长曲目会显示小时，例如 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"任意时长的有声书和播客都有跳过按钮"</string>
+    <string name="whats_new_fix_genres">"有多个流派的歌曲会分别列出每个流派"</string>
+</resources>

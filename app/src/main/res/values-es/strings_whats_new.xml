@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_kicker">"Aurora actualizado"</string>
+    <string name="whats_new_title">"Novedades"</string>
+    <string name="whats_new_summary">"Funciones nuevas y correcciones. Lleva alrededor de un minuto."</string>
+    <string name="whats_new_more">"+%1$d más"</string>
+    <string name="whats_new_start">"Ver novedades"</string>
+    <string name="whats_new_skip">"Omitir"</string>
+    <string name="whats_new_dont_show">"No mostrar tras actualizar"</string>
+    <string name="whats_new_badge">"Nuevo"</string>
+    <string name="whats_new_try">"Probar"</string>
+    <string name="whats_new_resume">"Volver a las novedades"</string>
+    <string name="whats_new_close">"Cerrar novedades"</string>
+    <string name="whats_new_done_title">"Estás al día"</string>
+    <string name="whats_new_fixes">"También en esta actualización"</string>
+    <string name="whats_new_show_setting">"Mostrar novedades tras actualizar"</string>
+    <string name="whats_new_show_setting_detail">"Un recorrido breve por las funciones nuevas cuando Aurora se actualiza"</string>
+    <string name="whats_new_finish">"Empezar a escuchar"</string>
+    <string name="whats_new_progress">"Función %1$d de %2$d"</string>
+    <string name="whats_new_settings_summary">"Actualizaciones anteriores y el recorrido de novedades"</string>
+    <string name="whats_new_past">"Actualizaciones anteriores"</string>
+    <string name="whats_new_current">"Última"</string>
+    <string name="whats_new_past_empty">"Las actualizaciones aparecerán aquí cuando las instales."</string>
+    <string name="whats_new_search_title">"Encuentra cualquier ajuste"</string>
+    <string name="whats_new_search_body">"Escribe una palabra como «fundido cruzado» o «ecualizador» en Ajustes y ve directo a ella."</string>
+    <string name="whats_new_tabs_title">"Tu biblioteca, a tu manera"</string>
+    <string name="whats_new_tabs_body">"Mueve u oculta las pestañas de la biblioteca con el botón que tienen al lado. La biblioteca ahora abre en tu primera pestaña."</string>
+    <string name="whats_new_dj_title">"El DJ con IA sigue sonando"</string>
+    <string name="whats_new_dj_body">"El DJ con IA sigue funcionando en segundo plano y con la pantalla apagada. Repetir y aleatorio quedan desactivados mientras suena."</string>
+    <string name="whats_new_downloads_title">"Descargas ordenadas"</string>
+    <string name="whats_new_downloads_body">"Las canciones que descargas una a una ahora aparecen con tus descargas, y un álbum descargado muestra solo las pistas que guardaste."</string>
+    <string name="whats_new_fix_hours">"Las pistas largas muestran horas, como 1:02:45"</string>
+    <string name="whats_new_fix_spoken">"Botones de salto en audiolibros y pódcast de cualquier duración"</string>
+    <string name="whats_new_fix_genres">"Las canciones con varios géneros muestran cada uno"</string>
+</resources>

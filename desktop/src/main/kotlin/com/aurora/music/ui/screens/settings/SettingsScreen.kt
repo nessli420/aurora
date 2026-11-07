@@ -42,6 +42,7 @@ import androidx.compose.material.icons.filled.Palette
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.PlayCircle
+import androidx.compose.material.icons.filled.NewReleases
 import androidx.compose.material.icons.filled.SwitchAccount
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.CheckCircle
@@ -268,6 +269,9 @@ fun SettingsScreen(
                             SettingsRowDivider()
                             SettingsDestinationRow(Icons.Filled.Backup, SettingsDestinations.backup, onClick = onOpenBackup)
                         }
+                        SettingsRowDivider()
+                        SettingsDestinationRow(Icons.Filled.NewReleases, SettingsDestinations.whatsNew,
+                            onClick = { onOpenRoute(Routes.SETTINGS_WHATS_NEW) })
                         SettingsRowDivider()
                         SettingsDestinationRow(Icons.Filled.Info, SettingsDestinations.about,
                             appString(R.string.text_version_d2f210, BuildInfo.VERSION_NAME), onClick = onOpenAbout)
