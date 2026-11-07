@@ -947,7 +947,10 @@ fun AuroraApp() {
         gesturesEnabled = drawerState.isOpen || drawerState.targetValue == DrawerValue.Open ||
             (showChrome && onTopLevel && !(rail && shell.expandedSidebar)),
         drawerContent = {
-            ModalDrawerSheet(drawerState = drawerState, drawerContainerColor = MaterialTheme.colorScheme.surface) {
+            // the same themed backdrop as the pages, so the drawer carries the theme's glow, lines or streaks
+            ModalDrawerSheet(drawerState = drawerState, drawerContainerColor = Color.Transparent) {
+                Box(Modifier.fillMaxHeight()) {
+                AmbientBackground(Modifier.matchParentSize())
                 SidebarContent(
                     username = profileAppearance.name,
                     server = session?.server ?: "",
@@ -959,6 +962,7 @@ fun AuroraApp() {
                     onOpen = { item -> closeDrawerThen { openNavItem(item) } },
                     onLogout = { closeDrawerThen { logout() } },
                 )
+                }
             }
         },
     ) {

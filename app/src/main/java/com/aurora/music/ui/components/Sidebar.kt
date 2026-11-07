@@ -64,7 +64,6 @@ fun SidebarContent(
         Modifier
             .fillMaxHeight()
             .width(300.dp)
-            .background(MaterialTheme.colorScheme.surface)
             .windowInsetsPadding(WindowInsets.systemBars)
             .padding(horizontal = 16.dp),
     ) {
