@@ -279,9 +279,10 @@ fun AmbientBackground(modifier: Modifier = Modifier) {
 
 fun formatTime(totalSec: Int): String {
     val safe = totalSec.coerceAtLeast(0)
-    val m = safe / 60
+    val h = safe / 3600
+    val m = safe % 3600 / 60
     val s = safe % 60
-    return "%d:%02d".format(m, s)
+    return if (h > 0) "%d:%02d:%02d".format(h, m, s) else "%d:%02d".format(m, s)
 }
 
 fun formatTime(totalSec: Float): String = formatTime(totalSec.toInt())
