@@ -268,6 +268,7 @@ data class UiPrefs(
     val miniStyle: Int = MiniStyle.STANDARD,
     val miniProgress: Int = MiniProgress.LINE,
     val libraryColumns: Int = 2,
+    val libraryTabs: LibraryTabs = LibraryTabs(),
     val hiddenHomeSections: Set<String> = emptySet(),
     val tabletDockScale: Float = TabletSetting.DOCK.default,
     val tabletPanelScale: Float = TabletSetting.PANEL.default,

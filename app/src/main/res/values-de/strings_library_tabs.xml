@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Tabs anpassen"</string>
+    <string name="library_tabs_hint">"Ordne die Tabs neu und blende ungenutzte aus. Die Mediathek öffnet mit dem ersten Tab."</string>
+    <string name="library_tabs_move_up">"%1$s nach oben"</string>
+    <string name="library_tabs_move_down">"%1$s nach unten"</string>
+</resources>

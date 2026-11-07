@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"टैब अनुकूलित करें"</string>
+    <string name="library_tabs_hint">"टैब का क्रम बदलें और जिनका उपयोग नहीं करते उन्हें छिपाएँ। लाइब्रेरी पहले टैब पर खुलती है।"</string>
+    <string name="library_tabs_move_up">"%1$s ऊपर ले जाएँ"</string>
+    <string name="library_tabs_move_down">"%1$s नीचे ले जाएँ"</string>
+</resources>

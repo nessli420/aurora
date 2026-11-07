@@ -67,6 +67,7 @@ import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -153,6 +154,7 @@ fun LibraryScreen(
     currentSongId: String,
     isPlaying: Boolean,
     onFilter: (LibraryFilter) -> Unit,
+    onTabs: (com.aurora.music.data.LibraryTabs) -> Unit = {},
     onSort: (LibrarySort) -> Unit,
     onToggleLayout: () -> Unit,
     onOpenDrawer: () -> Unit,
@@ -201,7 +203,11 @@ fun LibraryScreen(
     androidx.compose.runtime.CompositionLocalProvider(LocalLibrarySelection provides selectedItem) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     var showCreate by remember { mutableStateOf(false) }
-    val filter = state.filter
+    var showTabs by remember { mutableStateOf(false) }
+    val tabPrefs = com.aurora.music.ui.theme.LocalUiPrefs.current.libraryTabs
+    val visibleTabs = tabPrefs.visible.filter { canDownload || it != LibraryFilter.DOWNLOADED }.ifEmpty { listOf(LibraryFilter.ALL) }
+    // a hidden tab never stays on screen
+    val filter = state.filter.takeIf { it in visibleTabs } ?: visibleTabs.first()
     val sort = state.sort
     val layout = state.layout
     val libColumns = com.aurora.music.ui.theme.LocalUiPrefs.current.libraryColumns.coerceIn(2, 4)
@@ -279,13 +285,21 @@ fun LibraryScreen(
             Spacer(Modifier.width(8.dp))
             Text(appString(R.string.text_mix_studio_668363))
         }
-        val visibleTabs = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
-        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp),
+            verticalAlignment = Alignment.CenterVertically) {
             items(visibleTabs.size) { i ->
                 val f = visibleTabs[i]
-                LibTab(label = f.label, icon = tabIcon(f), selected = f == filter) { onFilter(f) }
+                LibTab(label = f.label, icon = tabIcon(f), selected = f == filter, onLongClick = {
+                    haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                    showTabs = true
+                }) { onFilter(f) }
+            }
+            item {
+                Icon(Icons.Filled.Tune, appString(R.string.library_tabs_customize), tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(36.dp).clip(CircleShape).clickable { showTabs = true }.padding(9.dp))
             }
         }
+        if (showTabs) LibraryTabsSheet(tabPrefs, canDownload, onChange = onTabs, onDismiss = { showTabs = false })
 
         Spacer(Modifier.height(6.dp))
 
@@ -391,7 +405,7 @@ fun LibraryScreen(
     }
 }
 
-private fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
+internal fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
     LibraryFilter.ALL -> Icons.Filled.Apps
     LibraryFilter.PLAYLISTS -> Icons.AutoMirrored.Filled.QueueMusic
     LibraryFilter.ALBUMS -> Icons.Filled.Album
@@ -401,10 +415,10 @@ private fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
 }
 
 @Composable
-private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onClick: () -> Unit) {
+private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
     val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     Column(
-        Modifier.clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp),
+        Modifier.clip(RoundedCornerShape(12.dp)).combinedClickable(onClick = onClick, onLongClick = onLongClick).padding(horizontal = 10.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {

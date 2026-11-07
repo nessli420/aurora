@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Dostosuj karty"</string>
+    <string name="library_tabs_hint">"Zmień kolejność kart i ukryj te, których nie używasz. Biblioteka otwiera się na pierwszej karcie."</string>
+    <string name="library_tabs_move_up">"Przesuń %1$s w górę"</string>
+    <string name="library_tabs_move_down">"Przesuń %1$s w dół"</string>
+</resources>

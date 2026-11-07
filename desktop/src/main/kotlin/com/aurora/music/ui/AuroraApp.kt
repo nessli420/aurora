@@ -1147,6 +1147,7 @@ private fun Shell(
                                                 currentSongId = playerState.current.id,
                                                 isPlaying = playerState.isPlaying,
                                                 onFilter = libraryVM::setFilter,
+                                                onTabs = libraryVM::setTabs,
                                                 onSort = libraryVM::setSort,
                                                 onToggleLayout = libraryVM::toggleLayout,
                                                 onOpenDrawer = { openDrawer() },

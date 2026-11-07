@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Tabbladen aanpassen"</string>
+    <string name="library_tabs_hint">"Wijzig de volgorde van tabbladen en verberg wat je niet gebruikt. De bibliotheek opent op het eerste tabblad."</string>
+    <string name="library_tabs_move_up">"%1$s omhoog"</string>
+    <string name="library_tabs_move_down">"%1$s omlaag"</string>
+</resources>

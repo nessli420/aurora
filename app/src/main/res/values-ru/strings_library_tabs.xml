@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Настроить вкладки"</string>
+    <string name="library_tabs_hint">"Меняйте порядок вкладок и скрывайте ненужные. Медиатека открывается на первой вкладке."</string>
+    <string name="library_tabs_move_up">"Переместить «%1$s» вверх"</string>
+    <string name="library_tabs_move_down">"Переместить «%1$s» вниз"</string>
+</resources>

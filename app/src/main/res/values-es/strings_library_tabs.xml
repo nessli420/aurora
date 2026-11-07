@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Personalizar pestañas"</string>
+    <string name="library_tabs_hint">"Reordena las pestañas y oculta las que no uses. La biblioteca se abre en la primera."</string>
+    <string name="library_tabs_move_up">"Subir %1$s"</string>
+    <string name="library_tabs_move_down">"Bajar %1$s"</string>
+</resources>

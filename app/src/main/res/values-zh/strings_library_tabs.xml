@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"自定义标签页"</string>
+    <string name="library_tabs_hint">"调整标签页顺序并隐藏不用的标签页。资料库会在第一个标签页打开。"</string>
+    <string name="library_tabs_move_up">"上移%1$s"</string>
+    <string name="library_tabs_move_down">"下移%1$s"</string>
+</resources>

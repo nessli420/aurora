@@ -77,6 +77,9 @@ import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material.icons.filled.Tune
+import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -227,6 +230,7 @@ fun LibraryScreen(
     currentSongId: String,
     isPlaying: Boolean,
     onFilter: (LibraryFilter) -> Unit,
+    onTabs: (com.aurora.music.data.LibraryTabs) -> Unit = {},
     onSort: (LibrarySort) -> Unit,
     onToggleLayout: () -> Unit,
     onOpenDrawer: () -> Unit,
@@ -275,7 +279,10 @@ fun LibraryScreen(
     val insets = LibInsets(gutter, if (compact && selectedItem != null) 16.dp else gutter)
     CompositionLocalProvider(LocalLibrarySelection provides selectedItem, LocalLibInsets provides insets) {
     var showCreate by remember { mutableStateOf(false) }
-    val filter = state.filter
+    val tabPrefs = LocalUiPrefs.current.libraryTabs
+    val visibleTabs = tabPrefs.visible.filter { canDownload || it != LibraryFilter.DOWNLOADED }.ifEmpty { listOf(LibraryFilter.ALL) }
+    // a hidden tab never stays on screen
+    val filter = state.filter.takeIf { it in visibleTabs } ?: visibleTabs.first()
     val sort = state.sort
     val layout = state.layout
     val cardMin = cardMinWidth(LocalUiPrefs.current.libraryColumns, compact)
@@ -326,7 +333,7 @@ fun LibraryScreen(
         }
 
         if (state.views.size > 1) LibraryViewTabs(state.views, state.view, onSelectView)
-        LibraryToolbar(filter, sort, layout, canDownload, compact, onFilter, onSort, onToggleLayout)
+        LibraryToolbar(filter, sort, layout, canDownload, compact, onFilter, onSort, onToggleLayout, tabPrefs, visibleTabs, onTabs)
 
         val bottom = contentPadding.calculateBottomPadding() + 24.dp
 
@@ -441,9 +448,11 @@ private fun LibraryToolbar(
     onFilter: (LibraryFilter) -> Unit,
     onSort: (LibrarySort) -> Unit,
     onToggleLayout: () -> Unit,
+    tabs: com.aurora.music.data.LibraryTabs,
+    visibleTabs: List<LibraryFilter>,
+    onTabs: (com.aurora.music.data.LibraryTabs) -> Unit,
 ) {
     val insets = LocalLibInsets.current
-    val visibleTabs = LibraryFilter.entries.filter { canDownload || it != LibraryFilter.DOWNLOADED }
     Row(
         Modifier.fillMaxWidth().height(52.dp).padding(end = insets.end),
         verticalAlignment = Alignment.CenterVertically,
@@ -458,11 +467,55 @@ private fun LibraryToolbar(
                 val f = visibleTabs[i]
                 LibTab(label = f.label, icon = tabIcon(f), selected = f == filter, iconOnly = compact) { onFilter(f) }
             }
+            item { LibraryTabsMenu(tabs, canDownload, onTabs) }
         }
         if (filter != LibraryFilter.ALL) SortButton(sort, iconOnly = compact, onSort = onSort)
         if (filter != LibraryFilter.ALL && filter != LibraryFilter.SONGS) {
             Spacer(Modifier.width(6.dp))
             LayoutToggle(layout, onToggleLayout)
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun LibraryTabsMenu(initial: com.aurora.music.data.LibraryTabs, canDownload: Boolean, onChange: (com.aurora.music.data.LibraryTabs) -> Unit) {
+    var open by remember { mutableStateOf(false) }
+    var tabs by remember(initial) { mutableStateOf(initial) }
+    val label = appString(R.string.library_tabs_customize)
+    val colors = MaterialTheme.colorScheme
+    Box {
+        TooltipArea(tooltip = { HoverTooltip(label) }, delayMillis = 400) {
+            Icon(Icons.Filled.Tune, label, tint = colors.onSurfaceVariant,
+                modifier = Modifier.size(32.dp).clip(CircleShape).clickable(onClickLabel = label) { open = true }
+                    .pointerHoverIcon(PointerIcon.Hand).padding(7.dp))
+        }
+        DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
+            Column(Modifier.width(320.dp).padding(horizontal = 14.dp, vertical = 6.dp)) {
+                Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+                Text(appString(R.string.library_tabs_hint), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
+                Spacer(Modifier.height(6.dp))
+                // downloads stay out of the list where this source cannot download
+                val shown = tabs.order.filter { canDownload || it != LibraryFilter.DOWNLOADED }
+                shown.forEachIndexed { i, tab ->
+                    val visible = tab !in tabs.hidden
+                    fun update(next: com.aurora.music.data.LibraryTabs) { tabs = next; onChange(next) }
+                    Row(Modifier.fillMaxWidth().height(40.dp), verticalAlignment = Alignment.CenterVertically) {
+                        androidx.compose.material3.Checkbox(checked = visible, onCheckedChange = { update(tabs.toggle(tab)) },
+                            enabled = !visible || tabs.visible.count { canDownload || it != LibraryFilter.DOWNLOADED } > 1)
+                        Icon(tabIcon(tab), null, tint = if (visible) colors.primary else colors.onSurfaceVariant, modifier = Modifier.size(16.dp))
+                        Spacer(Modifier.width(8.dp))
+                        Text(tab.label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f),
+                            color = if (visible) colors.onSurface else colors.onSurfaceVariant)
+                        androidx.compose.material3.IconButton(onClick = { update(tabs.move(tab, -1)) }, enabled = i > 0) {
+                            Icon(Icons.Filled.KeyboardArrowUp, appString(R.string.library_tabs_move_up, tab.label), Modifier.size(18.dp))
+                        }
+                        androidx.compose.material3.IconButton(onClick = { update(tabs.move(tab, 1)) }, enabled = i < shown.lastIndex) {
+                            Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.library_tabs_move_down, tab.label), Modifier.size(18.dp))
+                        }
+                    }
+                }
+            }
         }
     }
 }

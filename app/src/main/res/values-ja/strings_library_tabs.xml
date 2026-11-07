@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"タブをカスタマイズ"</string>
+    <string name="library_tabs_hint">"タブの並び替えや、使わないタブの非表示ができます。ライブラリは最初のタブで開きます。"</string>
+    <string name="library_tabs_move_up">"%1$sを上へ移動"</string>
+    <string name="library_tabs_move_down">"%1$sを下へ移動"</string>
+</resources>

@@ -225,6 +225,7 @@ internal object SettingsKeys {
     val UI_MINI_STYLE = intPreferencesKey("ui_mini_style")
     val UI_MINI_PROGRESS = intPreferencesKey("ui_mini_progress")
     val UI_LIBRARY_COLUMNS = intPreferencesKey("ui_library_columns")
+    val UI_LIBRARY_TABS = stringPreferencesKey("ui_library_tabs")
     val UI_HIDDEN_HOME = stringSetPreferencesKey("ui_hidden_home")
     val UI_NAV_LAYOUT = stringPreferencesKey("ui_nav_layout")
     fun tablet(setting: TabletSetting) = floatPreferencesKey("ui_tablet_" + setting.name.lowercase())

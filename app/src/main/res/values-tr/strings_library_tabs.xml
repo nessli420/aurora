@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Sekmeleri Özelleştir"</string>
+    <string name="library_tabs_hint">"Sekmeleri yeniden sıralayın ve kullanmadıklarınızı gizleyin. Kitaplık ilk sekmede açılır."</string>
+    <string name="library_tabs_move_up">"%1$s yukarı taşı"</string>
+    <string name="library_tabs_move_down">"%1$s aşağı taşı"</string>
+</resources>

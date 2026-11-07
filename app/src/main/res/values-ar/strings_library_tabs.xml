@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"تخصيص علامات التبويب"</string>
+    <string name="library_tabs_hint">"أعد ترتيب علامات التبويب وأخفِ ما لا تستخدمه. تفتح المكتبة على أول علامة تبويب."</string>
+    <string name="library_tabs_move_up">"نقل %1$s لأعلى"</string>
+    <string name="library_tabs_move_down">"نقل %1$s لأسفل"</string>
+</resources>

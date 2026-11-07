@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Sesuaikan Tab"</string>
+    <string name="library_tabs_hint">"Atur ulang tab dan sembunyikan yang tidak Anda gunakan. Pustaka terbuka di tab pertama."</string>
+    <string name="library_tabs_move_up">"Pindahkan %1$s ke Atas"</string>
+    <string name="library_tabs_move_down">"Pindahkan %1$s ke Bawah"</string>
+</resources>

@@ -19,6 +19,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
@@ -85,6 +86,11 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             container.downloadManager.collections.collect {
                 _state.update { s -> s.copy(downloadedRows = container.repository.downloadedLibrary()) }
             }
+        }
+        viewModelScope.launch {
+            // the library opens on the first tab in the user's order until they pick one
+            val first = container.settingsStore.uiPrefs.first().libraryTabs.visible.firstOrNull()
+            if (first != null && !filterChosen) _state.update { it.copy(filter = first) }
         }
         viewModelScope.launch {
             container.settingsStore.smartPlaylists.collect { sps ->
@@ -209,7 +215,16 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         return sortLibrarySongs(all, s.sort, s.localPlayCounts)
     }
 
-    fun setFilter(f: LibraryFilter) = _state.update { it.copy(filter = f) }
+    @Volatile private var filterChosen = false
+
+    fun setFilter(f: LibraryFilter) {
+        filterChosen = true
+        _state.update { it.copy(filter = f) }
+    }
+
+    fun setTabs(tabs: com.aurora.music.data.LibraryTabs) {
+        viewModelScope.launch { container.settingsStore.setLibraryTabs(tabs) }
+    }
     fun setSort(s: LibrarySort) = _state.update { it.copy(sort = s) }
     fun toggleLayout() = _state.update {
         it.copy(layout = if (it.layout == LibraryLayout.LIST) LibraryLayout.GRID else LibraryLayout.LIST)

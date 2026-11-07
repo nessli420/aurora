@@ -106,6 +106,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>, private val f
             miniStyle = p[Keys.UI_MINI_STYLE] ?: MiniStyle.STANDARD,
             miniProgress = p[Keys.UI_MINI_PROGRESS] ?: MiniProgress.LINE,
             libraryColumns = p[Keys.UI_LIBRARY_COLUMNS] ?: 2,
+            libraryTabs = LibraryTabs.decode(p[Keys.UI_LIBRARY_TABS]),
             hiddenHomeSections = p[Keys.UI_HIDDEN_HOME] ?: emptySet(),
             tabletDockScale = tabletValue(p, TabletSetting.DOCK),
             tabletPanelScale = tabletValue(p, TabletSetting.PANEL),
@@ -1529,6 +1530,7 @@ class SettingsStore(private val dataStore: DataStore<Preferences>, private val f
     suspend fun setMiniStyle(v: Int) = dataStore.edit { it[Keys.UI_MINI_STYLE] = v }
     suspend fun setMiniProgress(v: Int) = dataStore.edit { it[Keys.UI_MINI_PROGRESS] = v }
     suspend fun setLibraryColumns(v: Int) = dataStore.edit { it[Keys.UI_LIBRARY_COLUMNS] = v }
+    suspend fun setLibraryTabs(v: LibraryTabs) = dataStore.edit { it[Keys.UI_LIBRARY_TABS] = v.encode() }
     suspend fun setTabletSetting(setting: TabletSetting, v: Float) =
         dataStore.edit { it[Keys.tablet(setting)] = v.coerceIn(setting.range) }
     private fun tabletValue(p: Preferences, setting: TabletSetting): Float =

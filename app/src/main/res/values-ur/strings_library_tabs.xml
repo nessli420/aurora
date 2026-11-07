@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"ٹیبز کو حسب ضرورت بنائیں"</string>
+    <string name="library_tabs_hint">"ٹیبز کی ترتیب بدلیں اور جو استعمال نہیں کرتے انہیں چھپائیں۔ لائبریری پہلے ٹیب پر کھلتی ہے۔"</string>
+    <string name="library_tabs_move_up">"%1$s کو اوپر لے جائیں"</string>
+    <string name="library_tabs_move_down">"%1$s کو نیچے لے جائیں"</string>
+</resources>

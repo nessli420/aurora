@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Personalizar abas"</string>
+    <string name="library_tabs_hint">"Reordene as abas e oculte as que não usa. A biblioteca abre na primeira aba."</string>
+    <string name="library_tabs_move_up">"Mover %1$s para cima"</string>
+    <string name="library_tabs_move_down">"Mover %1$s para baixo"</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Personnaliser les onglets"</string>
+    <string name="library_tabs_hint">"Réorganisez les onglets et masquez ceux que vous n'utilisez pas. La bibliothèque s'ouvre sur le premier."</string>
+    <string name="library_tabs_move_up">"Monter %1$s"</string>
+    <string name="library_tabs_move_down">"Descendre %1$s"</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"탭 사용자 지정"</string>
+    <string name="library_tabs_hint">"탭 순서를 바꾸고 사용하지 않는 탭은 숨기세요. 보관함은 첫 번째 탭으로 열립니다."</string>
+    <string name="library_tabs_move_up">"%1$s 위로 이동"</string>
+    <string name="library_tabs_move_down">"%1$s 아래로 이동"</string>
+</resources>

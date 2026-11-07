@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Personalizza schede"</string>
+    <string name="library_tabs_hint">"Riordina le schede e nascondi quelle che non usi. La libreria si apre sulla prima scheda."</string>
+    <string name="library_tabs_move_up">"Sposta %1$s su"</string>
+    <string name="library_tabs_move_down">"Sposta %1$s giù"</string>
+</resources>

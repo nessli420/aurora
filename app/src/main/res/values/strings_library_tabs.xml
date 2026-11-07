@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="library_tabs_customize">"Customize Tabs"</string>
+    <string name="library_tabs_hint">"Reorder tabs and hide the ones you don't use. Library opens on the first tab."</string>
+    <string name="library_tabs_move_up">"Move %1$s Up"</string>
+    <string name="library_tabs_move_down">"Move %1$s Down"</string>
+</resources>
