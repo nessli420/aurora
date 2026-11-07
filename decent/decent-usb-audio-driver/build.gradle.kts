@@ -11,7 +11,7 @@ android {
 
     defaultConfig {
         minSdk = 26
-        externalNativeBuild { cmake { cppFlags("") } }
+        externalNativeBuild { cmake { cppFlags(""); arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON" } }
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
     }
 

@@ -21,6 +21,9 @@ fun signingValue(key: String, env: String): String? = signingProperties.getPrope
 val releaseKeystore = rootProject.file(signingValue("storeFile", "AURORA_KEYSTORE_FILE") ?: "keystore/aurora-release.jks")
 val releaseStorePassword = signingValue("storePassword", "AURORA_KEYSTORE_PASSWORD")
 val canSignRelease = releaseKeystore.exists() && releaseStorePassword != null
+// device tests link against library code r8 strips from the app, so androidTest builds stay unminified
+val minifyRelease = providers.gradleProperty("aurora.minify").orNull?.toBoolean()
+    ?: gradle.startParameter.taskNames.none { "AndroidTest" in it || it.endsWith("connectedCheck") || it.endsWith("deviceCheck") }
 
 android {
     namespace = "com.aurora.music"
@@ -37,6 +40,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // Native AcoustID/Chromaprint fingerprinter (4.4c). arm64 for the phone, x86_64 for emulators.
         ndk { abiFilters += listOf("arm64-v8a", "x86_64") }
+        // 16 KB page devices refuse 4 KB-aligned libraries
+        externalNativeBuild { cmake { arguments += "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON" } }
     }
 
     externalNativeBuild {
@@ -57,7 +62,7 @@ android {
 
     buildTypes {
         release {
-            isMinifyEnabled = false
+            isMinifyEnabled = minifyRelease
             signingConfig = if (canSignRelease) signingConfigs.getByName("release") else null
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
