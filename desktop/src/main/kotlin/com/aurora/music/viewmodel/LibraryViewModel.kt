@@ -10,15 +10,25 @@ import com.aurora.music.model.LibraryLayout
 import com.aurora.music.model.LibrarySort
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
+import kotlinx.coroutines.currentCoroutineContext
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChangedBy
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class LibraryUiState(
     val filter: LibraryFilter = LibraryFilter.ALL,
@@ -59,6 +69,8 @@ fun sortLibrarySongs(songs: List<Song>, sort: LibrarySort, localPlayCounts: Map<
 class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
     private val _state = MutableStateFlow(LibraryUiState())
     val state: StateFlow<LibraryUiState> = _state.asStateFlow()
+    // above init, whose first load stamps it
+    private var loadedAt = 0L
 
     init {
         viewModelScope.launch { container.repository.playlistChanges.collect {
@@ -66,16 +78,14 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
             _state.update { it.copy(playlists = playlists) }
         } }
         viewModelScope.launch { container.offline.collect { load() } }
-        viewModelScope.launch { container.accountEpoch.drop(1).collect { load() } }
-        viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }
+        viewModelScope.launch { container.accountEpoch.drop(1).collect { reload() } }
+        viewModelScope.launch { container.libraryReload.drop(1).collect { reload() } }
         viewModelScope.launch {
-            container.downloadManager.downloads.collect {
-                _state.update { s -> s.copy(downloadedRows = container.repository.downloadedLibrary()) }
-            }
-        }
-        viewModelScope.launch {
-            container.downloadManager.collections.collect {
-                _state.update { s -> s.copy(downloadedRows = container.repository.downloadedLibrary()) }
+            combine(container.downloadManager.downloads, container.downloadManager.collections) { _, _ -> }.collectLatest {
+                val epoch = container.accountEpoch.value
+                val rows = withContext(Dispatchers.Default) { container.repository.downloadedLibrary() }
+                // a switch meanwhile leaves the rows to the reload it starts
+                if (epoch == container.accountEpoch.value) _state.update { s -> s.copy(downloadedRows = rows) }
             }
         }
         viewModelScope.launch {
@@ -89,9 +99,12 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
             }
         }
         viewModelScope.launch {
-            container.playHistory.history.collect { events ->
-                _state.update { s -> s.copy(localPlayCounts = events.groupingBy { it.songId }.eachCount()) }
-            }
+            // listening ticks keep the size and head timestamp, so only new plays regroup
+            container.playHistory.history
+                .distinctUntilChangedBy { it.size to it.firstOrNull()?.timestamp }
+                .map { e -> e.groupingBy { it.songId }.eachCount() }
+                .flowOn(Dispatchers.Default)
+                .collect { counts -> _state.update { s -> s.copy(localPlayCounts = counts) } }
         }
     }
 
@@ -113,25 +126,64 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
     }
 
     private var loadJob: kotlinx.coroutines.Job? = null
+    private var countJob: kotlinx.coroutines.Job? = null
+    private var loadFailed = false
 
-    fun load() {
+    // the model lives all session, so a later visit picks up server changes in the background
+    fun refreshIfStale() {
+        if (loadJob?.isActive != true && (loadFailed || System.nanoTime() - loadedAt > STALE_NS)) load(keepSongs = true)
+    }
+
+    // a new account or merge renames every id, so old rows go first
+    private fun reload() {
+        _state.update { it.copy(playlists = emptyList(), albums = emptyList(), artists = emptyList(), songs = emptyList(),
+            downloadedRows = emptyList(), likedSongCount = 0, likedCover = "", canLoadMoreSongs = false) }
+        load()
+    }
+
+    fun load(keepSongs: Boolean = false) {
+        loadedAt = System.nanoTime()
+        fullSongsJob?.cancel()
         fullSongsJob = null
         loadJob?.cancel()
+        countJob?.cancel()
         loadJob = viewModelScope.launch {
             val views = container.repository.libraryViews
             val view = _state.value.view.takeIf { id -> views.any { it.id == id } } ?: views.firstOrNull()?.id ?: "library"
             _state.update { it.copy(loading = true, views = views, view = view) }
             val scope = scope()
-            val playlists = container.repository.allPlaylists(scope)
-            val albums = container.repository.allAlbums(scope)
-            val artists = container.repository.allArtists(scope)
-            val songs = container.repository.songsPage(0, SONG_PAGE, scope)
-            songsOffset = SONG_PAGE
-            val likedCount = container.repository.starredCount(scope)
+            val repo = container.repository
+            // this number can take every source's whole liked list, so the lists do not wait for it
+            val epoch = container.accountEpoch.value
+            countJob = viewModelScope.launch {
+                val count = try { repo.starredCount(scope) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                if (count != null && scope() == scope && epoch == container.accountEpoch.value) _state.update { it.copy(likedSongCount = count) }
+            }
+            // together, so one slow or unreachable server costs a single timeout rather than one per section
+            val (lists, songs) = try {
+                kotlinx.coroutines.coroutineScope {
+                    val playlists = async { repo.allPlaylists(scope) }
+                    val albums = async { repo.allAlbums(scope) }
+                    val artists = async { repo.allArtists(scope) }
+                    val songs = async { repo.songsPage(0, SONG_PAGE, scope) }
+                    Triple(playlists.await(), albums.await(), artists.await()) to songs.await()
+                }
+            } catch (e: CancellationException) { throw e } catch (_: Exception) {
+                loadFailed = true
+                if (scope() == scope) _state.update { it.copy(loading = false) }
+                return@launch
+            }
+            val (playlists, albums, artists) = lists
+            // an empty answer is retried on the next visit
+            loadFailed = playlists.isEmpty() && albums.isEmpty() && artists.isEmpty() && songs.isEmpty()
+            val rows = withContext(Dispatchers.Default) { repo.downloadedLibrary() }
             // a view switch while this was loading belongs to the newer load
             if (scope() != scope) return@launch
+            // a background refresh keeps the walked list until the new walk lands
+            val keep = keepSongs && _state.value.songs.size > songs.size
+            if (!keep) songsOffset = SONG_PAGE
             _state.update {
-                it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = container.repository.downloadedLibrary(), likedSongCount = likedCount, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders, signedIn = container.repository.signedIn(scope))
+                it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = if (keep) it.songs else songs, songsLoadingMore = false, canLoadMoreSongs = if (keep) it.canLoadMoreSongs else songs.size >= SONG_PAGE, downloadedRows = rows, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders, signedIn = container.repository.signedIn(scope))
             }
             fullSongsAsync()
         }
@@ -164,9 +216,13 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
     }
 
     suspend fun fullSortedSongs(): List<Song> {
-        val all = fullSongsAsync().await().ifEmpty { _state.value.songs }
+        val all = try { fullSongsAsync().await() } catch (_: CancellationException) {
+            // a reload cancelled the walk, not this play; wait for the new one
+            currentCoroutineContext().ensureActive()
+            fullSongsAsync().await()
+        }.ifEmpty { _state.value.songs }
         val s = _state.value
-        return sortLibrarySongs(all, s.sort, s.localPlayCounts)
+        return withContext(Dispatchers.Default) { sortLibrarySongs(all, s.sort, s.localPlayCounts) }
     }
 
     @Volatile private var filterChosen = false
@@ -184,5 +240,8 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
         it.copy(layouts = it.layouts + (it.filter to if (it.layout == LibraryLayout.LIST) LibraryLayout.GRID else LibraryLayout.LIST))
     }
 
-    private companion object { const val SONG_PAGE = 100 }
+    private companion object {
+        const val SONG_PAGE = 100
+        const val STALE_NS = 10 * 60_000_000_000L
+    }
 }

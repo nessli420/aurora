@@ -37,7 +37,7 @@ class UxAuditShotsTest {
         scene.shot("home")
         scene.navigate(Routes.LIBRARY)
         scene.shot("library-all")
-        scene.entryViewModel(LibraryViewModel::class).setFilter(LibraryFilter.ALBUMS)
+        scene.rootViewModel(LibraryViewModel::class).setFilter(LibraryFilter.ALBUMS)
         scene.shot("library-albums")
         scene.navigate(Routes.detail("album", scene.songs.first { it.album == "Nocturne" }.albumId), Routes.DETAIL)
         scene.shot("album")
@@ -69,7 +69,7 @@ class UxAuditShotsTest {
         scene.shot("03-search", 2_000)
 
         scene.navigate(Routes.LIBRARY)
-        val library = scene.entryViewModel(LibraryViewModel::class)
+        val library = scene.rootViewModel(LibraryViewModel::class)
         scene.shot("04-library-all")
         library.setFilter(LibraryFilter.ALBUMS)
         scene.shot("05-library-albums")

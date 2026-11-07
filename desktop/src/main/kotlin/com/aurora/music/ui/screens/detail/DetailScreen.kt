@@ -186,7 +186,9 @@ fun DetailScreen(
     val accent by rememberDominantColor(effectiveArt, info.accent)
     val baseScheme = MaterialTheme.colorScheme
     val accentInk = readableAccent(accent, baseScheme.onBackground.luminance() > 0.5f)
-    val albumScheme = baseScheme.copy(primary = accentInk, onPrimary = if (accentInk.luminance() > 0.5f) Color.Black else Color.White)
+    val albumScheme = remember(baseScheme, accentInk) {
+        baseScheme.copy(primary = accentInk, onPrimary = if (accentInk.luminance() > 0.5f) Color.Black else Color.White)
+    }
 
     val listState = rememberLazyListState()
     LaunchedEffect(listState, state.canLoadMore) {
@@ -355,7 +357,9 @@ fun DetailScreen(
     val popularWidth = (contentWidth - columnGap) * 0.6f
 
     val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
-    val genres = if (isSongMix) tracks.flatMap { com.aurora.music.data.GenreText.split(it.genre) }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() } else emptyList()
+    val genres = remember(tracks, isSongMix) {
+        if (isSongMix) tracks.flatMap { com.aurora.music.data.GenreText.split(it.genre) }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() } else emptyList()
+    }
     val genreShown = genreFilter?.let { g -> tracks.filter { com.aurora.music.data.GenreText.matches(it.genre, g) } } ?: tracks
     val filtering = searchOpen && query.isNotBlank()
     val shown = if (!filtering) genreShown

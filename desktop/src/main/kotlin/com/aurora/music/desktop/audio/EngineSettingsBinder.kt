@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -33,7 +34,7 @@ fun PlaybackEngine.bindSettings(store: SettingsStore, scope: CoroutineScope): Jo
         }
     }
     launch {
-        store.audioPrefs.map { it.dspConvIrPath }.distinctUntilChanged().collectLatest { path ->
+        store.audioPrefs.map { it.dspConvIrPath }.distinctUntilChanged().flowOn(Dispatchers.Default).collectLatest { path ->
             val loaded = withContext(Dispatchers.IO) {
                 if (path.isBlank()) Result.success<ImpulseResponse?>(null) else ImpulseResponse.loadWavResult(File(path))
             }

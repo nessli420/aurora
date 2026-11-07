@@ -38,7 +38,7 @@ class SplitPanesTest {
     private fun AuditScene.openAlbumSplit() {
         awaitRoute(Routes.HOME)
         navigate(Routes.LIBRARY)
-        entryViewModel(LibraryViewModel::class).setFilter(LibraryFilter.ALBUMS)
+        rootViewModel(LibraryViewModel::class).setFilter(LibraryFilter.ALBUMS)
         settle()
         click(contentLeft + 60f, PageMetrics.HeaderTop.value + PageMetrics.HeaderHeight.value + 112f)
         settle(2_000)

@@ -69,7 +69,7 @@ internal class AuditPlayer : PlayerController {
     override fun next() = Unit
     override fun previous() = Unit
     override fun toggleLikeCurrent() = Unit
-    override fun refreshLikes() = Unit
+    override fun refreshLikes(restart: Boolean) = Unit
     override fun playAll(songs: List<Song>, startIndex: Int, collection: PlaybackCollectionIdentity?) = Unit
     override fun play(song: Song) = Unit
     override fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) = Unit

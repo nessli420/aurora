@@ -11,10 +11,11 @@ object WindowsAudioEndpoints {
     private const val RENDER = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\MMDevices\\Audio\\Render"
     private const val ENUMERATOR = "{b3f8fa53-0004-438e-9003-51a46e139bfc},2"
     private val cache = ConcurrentHashMap<String, Bus>()
+    private val ENDPOINT = Regex("""\{0\.0\.0\.[0-9a-fA-F]{8}}\.(\{[0-9a-fA-F-]{36}})""")
 
     fun bus(deviceId: String): Bus? {
         if (!HostPlatform.isWindows) return null
-        val endpoint = Regex("""\{0\.0\.0\.[0-9a-fA-F]{8}}\.(\{[0-9a-fA-F-]{36}})""").matchEntire(deviceId)?.groupValues?.get(1) ?: return null
+        val endpoint = ENDPOINT.matchEntire(deviceId)?.groupValues?.get(1) ?: return null
         return cache.getOrPut(endpoint) {
             runCatching { Advapi32Util.registryGetStringValue(WinReg.HKEY_LOCAL_MACHINE, "$RENDER\\$endpoint\\Properties", ENUMERATOR) }
                 .map(::busOf).getOrDefault(Bus.OTHER)

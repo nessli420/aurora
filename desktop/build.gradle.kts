@@ -93,6 +93,16 @@ if (hostWindows) {
     val syncNative by tasks.registering(Sync::class) {
         dependsOn(buildNative)
         from(nativeBuildDir.map { it.dir("bin") }) { include("*.dll") }
+        // jna loads its dispatch dll from here instead of unpacking a fresh copy to temp each launch
+        from(configurations.runtimeClasspath.map { classpath ->
+            zipTree(classpath.incoming.artifactView {
+                componentFilter { it is org.gradle.api.artifacts.component.ModuleComponentIdentifier && it.module == "jna" }
+            }.files.singleFile)
+        }) {
+            include("com/sun/jna/win32-x86-64/jnidispatch.dll")
+            eachFile { path = name }
+            includeEmptyDirs = false
+        }
         into(appResources.map { it.dir(resourcesTarget) })
     }
 
@@ -139,6 +149,8 @@ compose.desktop {
         jvmArgs += listOf("-XX:+UseZGC", "-XX:+ZGenerational", "-Xms64m", "-XX:SoftMaxHeapSize=512m", "-XX:ZUncommitDelay=30", "-Dfile.encoding=UTF-8")
         // compose draws through skiko; java2d's direct3d pipeline hangs on full-screen focus changes once chromium loads opengl
         jvmArgs += listOf("-Dsun.java2d.d3d=false", "-Dsun.java2d.noddraw=true")
+        // nothing draws with swing's look and feel; the folder picker sets its own
+        jvmArgs += "-Dskiko.rendering.laf.global=false"
         // embedded chromium (sign-in pages and the hidden spotify and soundcloud pages)
         jvmArgs += listOf("--add-opens=java.desktop/sun.awt=ALL-UNNAMED", "--add-opens=java.desktop/java.awt.peer=ALL-UNNAMED",
             "--add-exports=java.base/java.lang=ALL-UNNAMED", "--add-exports=java.desktop/sun.awt=ALL-UNNAMED", "--add-exports=java.desktop/sun.java2d=ALL-UNNAMED")
@@ -170,6 +182,28 @@ compose.desktop {
                 iconFile.set(project.file("packaging/aurora.png"))
             }
         }
+    }
+}
+
+// after the plugin's own afterEvaluate, which registers these tasks and sets launcherJvmArgs from application.jvmArgs
+afterEvaluate {
+    // the jlinked runtime has no cds base archive and no launcher to dump one with, so the jdk's launcher dumps it
+    tasks.withType<org.jetbrains.compose.desktop.application.tasks.AbstractJLinkTask>().configureEach {
+        doLast {
+            val launcher = if (hostWindows) "bin/java.exe" else "bin/java"
+            val dumper = destinationDir.get().file(launcher).asFile
+            File(javaHome.get(), launcher).copyTo(dumper, overwrite = true).setExecutable(true)
+            try {
+                // zgc runs without compressed oops, so it looks for classes_nocoops.jsa
+                check(ProcessBuilder(dumper.path, "-XX:-UseCompressedOops", "-Xshare:dump").inheritIO().start().waitFor() == 0) { "CDS base archive dump failed" }
+            } finally {
+                dumper.delete()
+            }
+        }
+    }
+    // $APPDIR only exists in the packaged launcher, so it never goes in application.jvmArgs; jpackage's args file unescapes one backslash
+    if (hostWindows) tasks.withType<org.jetbrains.compose.desktop.application.tasks.AbstractJPackageTask>().configureEach {
+        launcherJvmArgs.add("-Djna.boot.library.path=\$APPDIR\\\\resources")
     }
 }
 
@@ -336,10 +370,6 @@ val syncAndroidAssets by tasks.registering(Sync::class) {
         include("dm_sans*.ttf", "plus_jakarta_sans*.ttf", "manrope.ttf")
         exclude("circular_*")
         into("font")
-    }
-    from(androidRes.file("drawable/ic_aurora_logo.xml")) {
-        filter { it.replace("@android:color/transparent", "#00000000") }
-        into("drawable")
     }
     from(rootProject.layout.projectDirectory.dir("app/src/main/assets")) { include("font_licenses/*.txt") }
     filteringCharset = "UTF-8"

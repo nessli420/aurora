@@ -142,7 +142,7 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(if (project.clips.isEmpty()) appString(R.string.text_your_tracks_226210) else appString(R.string.text_arrangement_48db54), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        FilledTonalButton(onClick = { picker = true }, enabled = project.clips.size < MixProject.MAX_TRACKS) {
+                        FilledTonalButton(onClick = { picker = true; if (state.songs.isEmpty() && state.query.isBlank()) vm.search("") }, enabled = project.clips.size < MixProject.MAX_TRACKS) {
                             Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(appString(R.string.text_add_track_316cad))
                         }
                     }

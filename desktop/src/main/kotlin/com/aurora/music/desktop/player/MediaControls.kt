@@ -34,7 +34,7 @@ class MediaControls internal constructor(
 ) : AutoCloseable {
     @Volatile private var session: MediaSession? = null
     private val metadataLock = Any()
-    private var job: Job? = null
+    @Volatile private var job: Job? = null
     @Volatile private var raise: () -> Unit = {}
 
     fun attach(hwnd: Long, onRaise: () -> Unit = {}) {

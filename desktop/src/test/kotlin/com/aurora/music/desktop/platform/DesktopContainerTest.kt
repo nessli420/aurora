@@ -142,7 +142,8 @@ class DesktopContainerTest {
         assertEquals(false, sessionReady.value)
         assertEquals(spotify, unsupportedAccount.value)
         signOut()
-        assertNull(unsupportedAccount.value)
+        // the session collector can still be publishing the spotify switch
+        unsupportedAccount.await { it == null }
         assertNull(settingsStore.session.first())
     }
 
@@ -156,6 +157,19 @@ class DesktopContainerTest {
         libraryReload.await { it > 0 }
         switchSession(authenticator.local())
         offline.await { !it }
+    }
+
+    @Test fun storedUnifiedLibraryIsMergedFromTheFirstReadyBackend() {
+        container {
+            sessionReady.await { it != null }
+            applySession(authenticator.local())
+            settingsStore.setUnifiedLibrary(true)
+            awaitBackend { it is MergedBackend }
+        }
+        container {
+            assertEquals(true, sessionReady.await { it != null })
+            assertTrue(backend is MergedBackend)
+        }
     }
 
     @Test fun musicFoldersFeedTheFolderLibrary() = container {

@@ -14,7 +14,7 @@ class LiveAudioSmokeTest {
             val first = tracks.wav("live-a", 44_100, 16, 22_050) { frame, _ -> (sin(frame * 0.06) * 8_000).roundToInt() }
             val second = tracks.wav("live-b", 48_000, 24, 24_000) { frame, _ -> (sin(frame * 0.05) * 2_000_000).roundToInt() }
             DesktopPlaybackEngine().use { engine ->
-                assertTrue(engine.outputs.value.isNotEmpty())
+                eventually(5_000) { engine.outputs.value.isNotEmpty() }
                 engine.setVolume(0f)
                 EventLog(engine).use { log ->
                     engine.setQueue(listOf(tracks.song(first), tracks.song(second)))

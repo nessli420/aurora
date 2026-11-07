@@ -100,7 +100,7 @@ private fun WideLyrics(
     Box(Modifier.fillMaxSize().background(Color(0xFF17191D)).clickable(
         interactionSource = remember { androidx.compose.foundation.interaction.MutableInteractionSource() }, indication = null,
     ) {}) {
-        LyricsBackdrop(song)
+        LyricsBackdrop(song, state.isPlaying)
         Row(Modifier.fillMaxSize().padding(horizontal = 56.dp, vertical = 32.dp)) {
             BoxWithConstraints(Modifier.weight(0.42f).fillMaxHeight(), contentAlignment = Alignment.Center) {
                 val art = minOf(maxWidth, maxHeight * .5f, 420.dp)
@@ -180,7 +180,7 @@ internal fun LyricsPane(
         loading = false
     }
     Box(modifier) {
-        LyricsBackdrop(song)
+        LyricsBackdrop(song, state.isPlaying)
         val content = lyrics
         when {
             loading -> CircularProgressIndicator(Modifier.align(Alignment.Center).size(28.dp),
@@ -213,7 +213,7 @@ internal fun LyricsPane(
 
 // artwork tones only app accents never enter this palette
 @Composable
-internal fun LyricsBackdrop(song: Song) {
+internal fun LyricsBackdrop(song: Song, playing: Boolean) {
     val context = LocalPlatformContext.current
     val neutral = listOf(Color(0xFF39434B), Color(0xFF242B34), Color(0xFF50565A))
     var tones by remember(song.artworkUrl) { mutableStateOf(neutral) }
@@ -240,10 +240,10 @@ internal fun LyricsBackdrop(song: Song) {
     val first by animateColorAsState(tones[0], tween(1100), label = "lyricsPrimary")
     val second by animateColorAsState(tones[1], tween(1100), label = "lyricsSecondary")
     val third by animateColorAsState(tones[2], tween(1100), label = "lyricsGlow")
-    val motion = rememberInfiniteTransition(label = "lyricsAtmosphere")
-    val drift by motion.animateFloat(0f, 1f,
-        infiniteRepeatable(tween(18000, easing = LinearEasing), RepeatMode.Reverse), label = "drift")
+    val seconds = coverDrift(playing)
     Canvas(Modifier.fillMaxSize()) {
+        // an 18 s sweep there and back, read here so it only redraws
+        val drift = (seconds.floatValue / 18f % 2f).let { if (it > 1f) 2f - it else it }
         drawRect(lerp(second, Color.Black, .58f))
         val radius = size.maxDimension * .85f
         drawCircle(Brush.radialGradient(listOf(first.copy(alpha = .72f), first.copy(alpha = 0f)),
@@ -261,9 +261,14 @@ internal fun LyricsBackdrop(song: Song) {
 @Composable
 private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean, durationSec: Int, onSeek: (Float) -> Unit, compact: Boolean = false) {
     val wordByWord = com.aurora.music.ui.theme.LocalUiPrefs.current.lyricsSync != com.aurora.music.data.LyricsSync.LINE
-    val lyrics = remember(source, wordByWord) { if (wordByWord) source.withWordTiming() else source }
+    // off the main thread so a cached fetch doesn't put the timing pass in the slide-in
+    val lyrics by produceState(source, source, wordByWord) {
+        value = if (!wordByWord) source
+            else withContext(Dispatchers.Default) { runCatching { source.withWordTiming() }.getOrDefault(source) }
+    }
     val lines = lyrics.lines
-    val clock = rememberLyricsClock(positionSec, playing)
+    // line sync follows the player ticks; only the word wipe needs the in-between clock
+    val clock = rememberLyricsClock(positionSec, playing && wordByWord)
     val current by remember(lyrics) {
         derivedStateOf { if (lyrics.synced) lines.indexOfLast { it.startMs >= 0 && it.startMs <= clock.longValue } else -1 }
     }
@@ -356,7 +361,7 @@ private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean
     }
 }
 
-// extrapolates between player ticks so the word wipe moves every frame
+// extrapolates between player ticks at about 30 Hz, plenty for the soft word wipe
 @Composable
 private fun rememberLyricsClock(positionSec: Float, playing: Boolean): MutableLongState {
     val clock = remember { mutableLongStateOf((positionSec * 1000).toLong()) }
@@ -367,7 +372,10 @@ private fun rememberLyricsClock(positionSec: Float, playing: Boolean): MutableLo
         clock.longValue = base
         if (!playing) return@LaunchedEffect
         val start = withFrameMillis { it }
-        while (true) withFrameMillis { clock.longValue = base + (it - start) }
+        while (true) {
+            withFrameMillis { clock.longValue = base + (it - start) }
+            delay(33)
+        }
     }
     return clock
 }

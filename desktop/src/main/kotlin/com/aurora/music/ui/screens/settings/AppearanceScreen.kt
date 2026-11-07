@@ -465,7 +465,10 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
     var bri by remember { mutableFloatStateOf(initialHsb[2]) }
 
     fun argb() = java.awt.Color.HSBtoRGB(hue / 360f, sat, bri) or (0xFF shl 24)
-    fun push() = onChange(argb())
+    // the preview follows every move; only the stored accent is throttled, and the release writes at once
+    val live = rememberLiveValue(initialArgb) { onChange(it) }
+    fun push() = live.set(argb())
+    val flush: () -> Unit = { live.pending.value?.let { live.pending.value = null; onChange(it) } }
     val preview = Color(argb())
 
     Column(Modifier.fillMaxWidth()) {
@@ -473,9 +476,9 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
             Box(Modifier.size(56.dp).clip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, CircleShape))
             Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        SettingsSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f) { hue = it; push() }
-        SettingsSliderRow(appString(R.string.text_saturation_20a32b), "${(sat * 100).roundToInt()}%", sat, 0f..1f) { sat = it; push() }
-        SettingsSliderRow(appString(R.string.text_brightness_e1a2b6), "${(bri * 100).roundToInt()}%", bri, 0f..1f) { bri = it; push() }
+        DirectSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f, onValueChangeFinished = flush) { hue = it; push() }
+        DirectSliderRow(appString(R.string.text_saturation_20a32b), "${(sat * 100).roundToInt()}%", sat, 0f..1f, onValueChangeFinished = flush) { sat = it; push() }
+        DirectSliderRow(appString(R.string.text_brightness_e1a2b6), "${(bri * 100).roundToInt()}%", bri, 0f..1f, onValueChangeFinished = flush) { bri = it; push() }
     }
 }
 

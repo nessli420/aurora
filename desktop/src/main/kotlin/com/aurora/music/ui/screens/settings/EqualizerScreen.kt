@@ -89,6 +89,8 @@ import com.aurora.music.playback.DspParams
 import com.aurora.music.ui.components.LottieLoader
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.compose.runtime.collectAsState
@@ -294,7 +296,7 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
                 ) { Text(appString(R.string.text_remove_e96390), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
             }
         }
-        DbSliderRow(appString(R.string.text_make_up_gain_5dc858), prefs.dspConvMakeupDb, -12f..12f) { v -> scope.launch { store.setDspConvMakeup(v) } }
+        DbSliderRow(appString(R.string.text_make_up_gain_5dc858), prefs.dspConvMakeupDb, -12f..12f) { v -> store.setDspConvMakeup(v) }
     }
 }
 
@@ -481,9 +483,21 @@ private class EqDraft(private val store: SettingsStore) {
     val graphic = MutableStateFlow<Pair<Int, List<Float>>?>(null)
     val bands = MutableStateFlow<List<ParamBand>?>(null)
 
-    suspend fun run() = coroutineScope {
-        launch { graphic.collect { g -> if (g != null) { store.setDspGraphicLayout(g.first); store.setDspGraphicBands(g.second); graphic.compareAndSet(g, null) } } }
-        launch { bands.collect { b -> if (b != null) { store.setDspParametric(b); bands.compareAndSet(b, null) } } }
+    private suspend fun writeGraphic(g: Pair<Int, List<Float>>) { store.setDspGraphic(g.first, g.second); graphic.compareAndSet(g, null) }
+    private suspend fun writeBands(b: List<ParamBand>) { store.setDspParametric(b); bands.compareAndSet(b, null) }
+
+    suspend fun run() {
+        try {
+            coroutineScope {
+                launch { graphic.collect { g -> if (g != null) { writeGraphic(g); delay(LIVE_WRITE_MS) } } }
+                launch { bands.collect { b -> if (b != null) { writeBands(b); delay(LIVE_WRITE_MS) } } }
+            }
+        } finally {
+            withContext(NonCancellable) {
+                graphic.value?.let { writeGraphic(it) }
+                bands.value?.let { writeBands(it) }
+            }
+        }
     }
 }
 
@@ -508,42 +522,42 @@ private fun LazyListScope.customDspSection(
     }
 
     collapsible("c_gain", appString(R.string.text_gain_headroom_5903cd), Icons.AutoMirrored.Filled.VolumeUp, appString(R.string.text_pre_amp_db_84974b, ("%+.0f".format(prefs.dspPreampDb))), expanded) {
-        DbSliderRow(appString(R.string.text_pre_amp_7b79c8), prefs.dspPreampDb, -12f..12f) { v -> scope.launch { store.setDspPreamp(v) } }
+        DbSliderRow(appString(R.string.text_pre_amp_7b79c8), prefs.dspPreampDb, -12f..12f) { v -> store.setDspPreamp(v) }
         val peak = remember(prefs.dspGraphicBands, prefs.dspParametric, prefs.dspGraphicLayout) {
             DspCoeffBuilder.eqPeakDb(DspParams(graphic = graphic.toFloatArray(), graphicFreqs = layout.freqs, graphicQ = layout.q, parametric = prefs.dspParametric.map { DspBand.from(it) }))
         }
         HeadroomRow(peak = peak, preamp = prefs.dspPreampDb) { scope.launch { store.setDspPreamp((-peak).coerceIn(-12f, 0f)) } }
-        FloatSliderRow(appString(R.string.text_balance_90eef6), prefs.dspBalance, -1f..1f, valueText = balanceLabel(prefs.dspBalance)) { v -> scope.launch { store.setDspBalance(v) } }
+        FloatSliderRow(appString(R.string.text_balance_90eef6), prefs.dspBalance, -1f..1f, valueText = { balanceLabel(it) }) { v -> store.setDspBalance(v) }
     }
 
     val spatial = buildList { if (prefs.dspWidth != 1f) add(appString(R.string.text_width_2f_276839).format(prefs.dspWidth)); if (prefs.dspCrossfeed > 0f) add(appString(R.string.text_crossfeed_8f1996, ((prefs.dspCrossfeed * 100).roundToInt()))) }.joinToString(" · ").ifBlank { appString(R.string.text_off_e3de5a) }
     collapsible("c_spatial", appString(R.string.text_spatial_729ac1), Icons.Filled.SurroundSound, spatial, expanded) {
-        FloatSliderRow(appString(R.string.text_stereo_width_336051), prefs.dspWidth, 0f..2f, valueText = "%.2f×".format(prefs.dspWidth)) { v -> scope.launch { store.setDspWidth(v) } }
-        FloatSliderRow(appString(R.string.text_crossfeed_e6b7b4), prefs.dspCrossfeed, 0f..1f, valueText = if (prefs.dspCrossfeed <= 0f) appString(R.string.text_off_e3de5a) else "${(prefs.dspCrossfeed * 100).roundToInt()}%") { v -> scope.launch { store.setDspCrossfeed(v) } }
+        FloatSliderRow(appString(R.string.text_stereo_width_336051), prefs.dspWidth, 0f..2f, valueText = { "%.2f×".format(it) }) { v -> store.setDspWidth(v) }
+        FloatSliderRow(appString(R.string.text_crossfeed_e6b7b4), prefs.dspCrossfeed, 0f..1f, valueText = { if (it <= 0f) appString(R.string.text_off_e3de5a) else "${(it * 100).roundToInt()}%" }) { v -> store.setDspCrossfeed(v) }
     }
 
     collapsible("c_harm", appString(R.string.text_harmonics_17ba48), Icons.Filled.Whatshot, if (prefs.dspSaturation > 0f) appString(R.string.text_tube_419868, ((prefs.dspSaturation * 100).roundToInt())) else appString(R.string.text_off_e3de5a), expanded) {
-        FloatSliderRow(appString(R.string.text_tube_saturation_8c63f8), prefs.dspSaturation, 0f..1f, valueText = if (prefs.dspSaturation <= 0f) appString(R.string.text_off_e3de5a) else "${(prefs.dspSaturation * 100).roundToInt()}%") { v -> scope.launch { store.setDspSaturation(v) } }
+        FloatSliderRow(appString(R.string.text_tube_saturation_8c63f8), prefs.dspSaturation, 0f..1f, valueText = { if (it <= 0f) appString(R.string.text_off_e3de5a) else "${(it * 100).roundToInt()}%" }) { v -> store.setDspSaturation(v) }
     }
 
     val aligned = prefs.dspDelayLeftMs > 0f || prefs.dspDelayRightMs > 0f || prefs.dspTrimLeftDb != 0f || prefs.dspTrimRightDb != 0f
     collapsible("c_align", appString(R.string.text_channel_alignment_7c33be), Icons.Filled.SwapHoriz, if (aligned) appString(R.string.text_adjusted_7bba98) else appString(R.string.text_off_e3de5a), expanded) {
-        FloatSliderRow(appString(R.string.text_left_delay_c54844), prefs.dspDelayLeftMs, 0f..20f, valueText = appString(R.string.text_1f_ms_57bb04).format(prefs.dspDelayLeftMs)) { v -> scope.launch { store.setDspDelayLeft(v) } }
-        FloatSliderRow(appString(R.string.text_right_delay_ca7838), prefs.dspDelayRightMs, 0f..20f, valueText = appString(R.string.text_1f_ms_57bb04).format(prefs.dspDelayRightMs)) { v -> scope.launch { store.setDspDelayRight(v) } }
-        DbSliderRow(appString(R.string.text_left_trim_9ad513), prefs.dspTrimLeftDb, -12f..0f) { v -> scope.launch { store.setDspTrimLeft(v) } }
-        DbSliderRow(appString(R.string.text_right_trim_cadffb), prefs.dspTrimRightDb, -12f..0f) { v -> scope.launch { store.setDspTrimRight(v) } }
+        FloatSliderRow(appString(R.string.text_left_delay_c54844), prefs.dspDelayLeftMs, 0f..20f, valueText = { appString(R.string.text_1f_ms_57bb04).format(it) }) { v -> store.setDspDelayLeft(v) }
+        FloatSliderRow(appString(R.string.text_right_delay_ca7838), prefs.dspDelayRightMs, 0f..20f, valueText = { appString(R.string.text_1f_ms_57bb04).format(it) }) { v -> store.setDspDelayRight(v) }
+        DbSliderRow(appString(R.string.text_left_trim_9ad513), prefs.dspTrimLeftDb, -12f..0f) { v -> store.setDspTrimLeft(v) }
+        DbSliderRow(appString(R.string.text_right_trim_cadffb), prefs.dspTrimRightDb, -12f..0f) { v -> store.setDspTrimRight(v) }
     }
 
     val dyn = buildList { if (prefs.dspLimiterEnabled) add(appString(R.string.text_limiter_20fee6)); if (prefs.dspCompEnabled) add(appString(R.string.text_compressor_b23f61)) }.joinToString(" · ").ifBlank { appString(R.string.text_off_e3de5a) }
     collapsible("c_dyn", appString(R.string.text_dynamics_7d5536), Icons.Filled.Compress, dyn, expanded) {
         SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_limiter_20fee6), appString(R.string.text_sample_peak_control_with_attack_and_release_936da5), prefs.dspLimiterEnabled) { v -> scope.launch { store.setDspLimiterEnabled(v) } }
         if (prefs.dspLimiterEnabled) {
-            FloatSliderRow(appString(R.string.text_ceiling_e29db9), prefs.dspLimiterCeilingDb, -6f..0f, valueText = appString(R.string.text_1f_db_02557a).format(prefs.dspLimiterCeilingDb)) { v -> scope.launch { store.setDspCeiling(v) } }
+            FloatSliderRow(appString(R.string.text_ceiling_e29db9), prefs.dspLimiterCeilingDb, -6f..0f, valueText = { appString(R.string.text_1f_db_02557a).format(it) }) { v -> store.setDspCeiling(v) }
         }
         SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_compressor_b23f61), appString(R.string.text_even_out_loud_quiet_passages_5f8fe4), prefs.dspCompEnabled) { v -> scope.launch { store.setDspCompEnabled(v) } }
         if (prefs.dspCompEnabled) {
-            FloatSliderRow(appString(R.string.text_threshold_c51f7b), prefs.dspCompThreshDb, -40f..0f, valueText = appString(R.string.text_0f_db_fd1f4d).format(prefs.dspCompThreshDb)) { v -> scope.launch { store.setDspCompThresh(v) } }
-            FloatSliderRow(appString(R.string.text_ratio_794f65), prefs.dspCompRatio, 1f..10f, valueText = "%.1f:1".format(prefs.dspCompRatio)) { v -> scope.launch { store.setDspCompRatio(v) } }
+            FloatSliderRow(appString(R.string.text_threshold_c51f7b), prefs.dspCompThreshDb, -40f..0f, valueText = { appString(R.string.text_0f_db_fd1f4d).format(it) }) { v -> store.setDspCompThresh(v) }
+            FloatSliderRow(appString(R.string.text_ratio_794f65), prefs.dspCompRatio, 1f..10f, valueText = { "%.1f:1".format(it) }) { v -> store.setDspCompRatio(v) }
         }
     }
 }
@@ -557,32 +571,36 @@ private fun TextLink(text: String, onClick: () -> Unit) {
 }
 
 @Composable
-private fun DbSliderRow(label: String, value: Float, range: ClosedFloatingPointRange<Float>, onChange: (Float) -> Unit) {
+private fun DbSliderRow(label: String, value: Float, range: ClosedFloatingPointRange<Float>, onChange: suspend (Float) -> Unit) {
+    val live = rememberLiveValue(value, onChange)
+    val shown = live.local ?: value
     Column(Modifier.padding(horizontal = 20.dp, vertical = 2.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.width(72.dp))
             Slider(
-                value = value,
-                onValueChange = onChange,
+                value = shown,
+                onValueChange = { live.set(it) },
                 valueRange = range,
                 colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier.weight(1f),
             )
-            Text("%+.1f".format(value), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(52.dp))
+            Text("%+.1f".format(shown), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(52.dp))
         }
     }
 }
 
 @Composable
-private fun FloatSliderRow(title: String, value: Float, range: ClosedFloatingPointRange<Float>, valueText: String, onChange: (Float) -> Unit) {
+private fun FloatSliderRow(title: String, value: Float, range: ClosedFloatingPointRange<Float>, valueText: (Float) -> String, onChange: suspend (Float) -> Unit) {
+    val live = rememberLiveValue(value, onChange)
+    val shown = live.local ?: value
     Column(Modifier.padding(horizontal = 20.dp, vertical = 6.dp)) {
         Row(Modifier.fillMaxWidth()) {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
-            Text(valueText, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(valueText(shown), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Slider(
-            value = value,
-            onValueChange = onChange,
+            value = shown,
+            onValueChange = { live.set(it) },
             valueRange = range,
             colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
         )

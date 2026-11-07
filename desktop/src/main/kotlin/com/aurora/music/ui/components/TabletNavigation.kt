@@ -20,6 +20,8 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.CircleShape
@@ -38,6 +40,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -130,26 +133,29 @@ fun TabletSidebar(
     ) {
         ProfileHeader(username, server, avatarUrl, onProfile)
         Spacer(Modifier.height(20.dp))
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
-            layout.main.forEach { item ->
+        val others = remember(playlists, pins) {
+            val pinnedIds = pins.map { it.id }.toSet()
+            playlists.filter { it.id !in pinnedIds }
+        }
+        // lazy, so only the visible rows compose and fetch covers; no keys, ids can repeat across kinds
+        LazyColumn(Modifier.weight(1f)) {
+            items(layout.main) { item ->
                 SidebarItem(item.label, item.icon, currentRoute == item.route, prominent = true) { onOpen(item) }
             }
-            if (layout.more.isNotEmpty()) {
+            if (layout.more.isNotEmpty()) item {
                 Spacer(Modifier.height(12.dp))
                 FoldableMore(layout.more, currentRoute, onOpen)
             }
             if (pins.isNotEmpty()) {
-                SidebarHeading(appString(R.string.text_pinned_f93121))
-                pins.forEach { pin ->
+                item { SidebarHeading(appString(R.string.text_pinned_f93121)) }
+                items(pins) { pin ->
                     CollectionItem(pin.title, pin.subtitle, pin.coverUrl, accentFor(pin.id), circle = pin.kind == "artist",
                         selected = pin.id == selectedId) { onOpenCollection(pin.kind, pin.id) }
                 }
             }
-            val pinnedIds = pins.map { it.id }.toSet()
-            val others = playlists.filter { it.id !in pinnedIds }
             if (others.isNotEmpty()) {
-                SidebarHeading(appString(R.string.text_playlists_77b69f))
-                others.forEach { playlist ->
+                item { SidebarHeading(appString(R.string.text_playlists_77b69f)) }
+                items(others) { playlist ->
                     CollectionItem(playlist.title, playlist.subtitle, playlist.coverUrl, playlist.accent, circle = false,
                         selected = playlist.id == selectedId) { onOpenCollection("playlist", playlist.id) }
                 }

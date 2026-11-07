@@ -290,8 +290,11 @@ fun SongRow(
             )
         }
         if (dateColumn) {
+            val added = remember(song.dateAddedSec) {
+                song.dateAddedSec.takeIf { it > 0 }?.let { addedFormat.format(Instant.ofEpochSecond(it).atZone(ZoneId.systemDefault())) }.orEmpty()
+            }
             Text(
-                song.dateAddedSec.takeIf { it > 0 }?.let { addedFormat.format(Instant.ofEpochSecond(it).atZone(ZoneId.systemDefault())) }.orEmpty(),
+                added,
                 style = MaterialTheme.typography.bodySmall,
                 color = muted,
                 maxLines = 1,

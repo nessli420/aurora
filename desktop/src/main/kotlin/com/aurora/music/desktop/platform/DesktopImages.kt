@@ -12,6 +12,7 @@ import coil3.fetch.SourceFetchResult
 import coil3.memory.MemoryCache
 import coil3.network.okhttp.OkHttpNetworkFetcherFactory
 import coil3.request.Options
+import coil3.size.pxOrElse
 import com.aurora.music.data.artwork.ArtworkRepository
 import com.aurora.music.data.artwork.ArtworkUrls
 import okhttp3.OkHttpClient
@@ -50,7 +51,9 @@ fun desktopImageLoader(cacheDir: File, http: OkHttpClient, artwork: ArtworkRepos
     ImageLoader.Builder(PlatformContext.INSTANCE)
         .components {
             // upgrading before coil's cache key also replaces small art saved in queues, history and playlists
-            add(coil3.map.Mapper<String, String> { data, _ -> com.aurora.music.data.remote.YouTubeMusicParser.fullSize(data) })
+            add(coil3.map.Mapper<String, String> { data, options ->
+                com.aurora.music.data.remote.YouTubeMusicParser.sized(data, options.size.width.pxOrElse { 0 }, options.size.height.pxOrElse { 0 })
+            })
             add(ArtworkFetcher.Factory(artwork))
             add(LocalFileFetcher.Factory())
             add(OkHttpNetworkFetcherFactory(callFactory = { http.newBuilder().addInterceptor(::youtubeArtworkFallback).build() }))
@@ -60,12 +63,5 @@ fun desktopImageLoader(cacheDir: File, http: OkHttpClient, artwork: ArtworkRepos
         .diskCache { DiskCache.Builder().directory(cacheDir.toOkioPath()).maxSizeBytes(256L * 1024 * 1024).build() }
         .build()
 
-// videos without a max-resolution thumbnail answer 404; the high-quality one always exists
-private fun youtubeArtworkFallback(chain: okhttp3.Interceptor.Chain): okhttp3.Response {
-    val request = chain.request()
-    val response = chain.proceed(request)
-    val url = request.url
-    if (response.code != 404 || url.host != "i.ytimg.com" || !url.encodedPath.endsWith("/maxresdefault.jpg")) return response
-    response.close()
-    return chain.proceed(request.newBuilder().url(url.toString().replace("/maxresdefault.jpg", "/hqdefault.jpg")).build())
-}
+private fun youtubeArtworkFallback(chain: okhttp3.Interceptor.Chain): okhttp3.Response =
+    com.aurora.music.data.remote.YouTubeArtworkFallback.intercept(chain)

@@ -15,7 +15,9 @@ import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -70,7 +72,7 @@ private val LightColors = lightColorScheme(
     error = Color(0xFFD11A4B),
 )
 
-val LocalUiPrefs = staticCompositionLocalOf { UiPrefs() }
+val LocalUiPrefs = compositionLocalOf { UiPrefs() }
 
 fun Color.fade(alpha: Float): Color = copy(alpha = this.alpha * alpha)
 
@@ -141,8 +143,21 @@ fun rememberPlayerColorScheme(artworkUrl: String, fallback: Color): ColorScheme 
     if (prefs.themeStyle != ThemeStyle.AURORA) return appColors
 
     val accent by rememberDominantColor(artworkUrl, fallback)
-    val colors = playerColorScheme(accent, appColors.onBackground.luminance() > 0.5f)
-    return if (prefs.themeMode == ThemeMode.AMOLED) colors.toAmoled() else colors
+    val dark = appColors.onBackground.luminance() > 0.5f
+    val amoled = prefs.themeMode == ThemeMode.AMOLED
+    return remember(accent, dark, amoled) { playerColorScheme(accent, dark).let { if (amoled) it.toAmoled() else it } }
+}
+
+// its own restart scope, so the accent fade recomposes only the player and not the shell around it
+@Composable
+fun PlayerTheme(artworkUrl: String, fallback: Color, content: @Composable () -> Unit) {
+    val glass = LocalGlass.current
+    val glassLook = LocalGlassLook.current
+    val artColors = rememberPlayerColorScheme(artworkUrl, fallback)
+    val playerColors = remember(artColors, glass, glassLook) {
+        if (glass) artColors.glassScheme(artColors.onBackground.luminance() > 0.5f, glassLook) else artColors
+    }
+    MaterialTheme(colorScheme = playerColors, content = content)
 }
 
 fun playerColorScheme(accent: Color, dark: Boolean): ColorScheme {
@@ -185,17 +200,20 @@ fun AuroraTheme(
     }
     val amoled = uiPrefs.themeMode == ThemeMode.AMOLED
 
-    var colors = when {
-        uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
-        else -> {
-            val seed = playingAccent?.let { readableAccent(it, useDark) } ?: uiPrefs.accentSeed(systemAccent)
-            (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
+    // a fresh ColorScheme has no equals, so rebuilding it on every pass would invalidate the whole tree
+    val (colors, solid, tint) = remember(useDark, amoled, uiPrefs.themeStyle, uiPrefs.accentMode, uiPrefs.accentColor,
+        uiPrefs.accentPreset, systemAccent, playingAccent, translucent, glassLook) {
+        var scheme = when {
+            uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
+            else -> {
+                val seed = playingAccent?.let { readableAccent(it, useDark) } ?: uiPrefs.accentSeed(systemAccent)
+                (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
+            }
         }
+        if (amoled) scheme = scheme.toAmoled()
+        val tint = scheme.background.copy(alpha = (0.35f + glassLook.tint * 0.65f + if (amoled) 0.15f else 0f).coerceIn(0f, 1f))
+        Triple(if (translucent) scheme.glassScheme(useDark, glassLook) else scheme, scheme, tint)
     }
-    if (amoled) colors = colors.toAmoled()
-    val tint = colors.background.copy(alpha = (0.35f + glassLook.tint * 0.65f + if (amoled) 0.15f else 0f).coerceIn(0f, 1f))
-    val solid = colors
-    if (translucent) colors = colors.glassScheme(useDark, glassLook)
 
     MaterialTheme(
         colorScheme = colors,

@@ -33,9 +33,9 @@ import java.nio.file.FileVisitResult
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.SimpleFileVisitor
-import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.BasicFileAttributes
 import java.security.MessageDigest
+import java.util.HexFormat
 import java.util.Locale
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -92,7 +92,7 @@ class FolderLibrary(
                     withContext(Dispatchers.IO) { publish(cached.tracks, cached.cues, current) }
                     loaded = true
                     scope.launch {
-                        runCatching { refresh() }.onFailure { if (it !is CancellationException) AppLog.e(TAG, "Library refresh failed", it) }
+                        runCatching { refresh(cached.folders) }.onFailure { if (it !is CancellationException) AppLog.e(TAG, "Library refresh failed", it) }
                     }
                 } else {
                     scan(cached?.tracks.orEmpty(), cached?.cues.orEmpty(), current)
@@ -102,9 +102,10 @@ class FolderLibrary(
         }
     }
 
-    suspend fun refresh() = mutex.withLock {
+    // an unchanged scan of the folders the index was read for skips the rewrite and republish
+    suspend fun refresh(indexedFolders: List<String>? = null) = mutex.withLock {
         val cached = if (loaded) null else withContext(Dispatchers.IO) { index.read() }
-        scan(if (loaded) tracks else cached?.tracks.orEmpty(), if (loaded) cues else cached?.cues.orEmpty(), separatorsProvider())
+        scan(if (loaded) tracks else cached?.tracks.orEmpty(), if (loaded) cues else cached?.cues.orEmpty(), separatorsProvider(), indexedFolders)
         loaded = true
     }
 
@@ -133,7 +134,7 @@ class FolderLibrary(
     private suspend fun configured(): List<String> =
         folders().map { File(it).absoluteFile.normalize().path }.distinctBy { it.lowercase(Locale.ROOT) }
 
-    private suspend fun scan(previous: List<IndexedTrack>, previousCues: List<IndexedCue>, separators: ArtistSeparators) {
+    private suspend fun scan(previous: List<IndexedTrack>, previousCues: List<IndexedCue>, separators: ArtistSeparators, indexedFolders: List<String>? = null) {
         val roots = configured()
         val known = previous.associateBy { key(it.path) }
         _scan.value = LibraryScan(running = true)
@@ -145,10 +146,11 @@ class FolderLibrary(
                 sheets.distinctBy { key(it.path) }.mapNotNull { file -> runCatching { IndexedCue(file.path, CueSheets.decode(file.readBytes())) }.getOrNull() }
             }
             _scan.value = LibraryScan(true, 0, files.size)
+            val present = withContext(Dispatchers.IO) { covers.list()?.toHashSet().orEmpty() }
             val found = coroutineScope {
                 files.map { (file, attributes) ->
                     async(prober) {
-                        entry(file, attributes, known[key(file.path)]).also { _scan.update { it.copy(scanned = it.scanned + 1) } }
+                        entry(file, attributes, known[key(file.path)], present).also { _scan.update { it.copy(scanned = it.scanned + 1) } }
                     }
                 }.awaitAll()
             }.filterNotNull()
@@ -156,6 +158,7 @@ class FolderLibrary(
             val next = found + previous.filter { track -> missing.any { isUnder(track.path, it) } }
             val nextCues = foundCues + previousCues.filter { cue -> missing.any { isUnder(cue.path, it) } }
             val changed = next.toSet() != tracks.toSet() || nextCues.toSet() != cues.toSet()
+            if (!changed && roots == indexedFolders) return
             withContext(Dispatchers.IO) {
                 index.write(roots, next, nextCues)
                 val used = next.mapTo(HashSet()) { it.cover }
@@ -184,11 +187,11 @@ class FolderLibrary(
         return out
     }
 
-    private fun entry(file: File, attributes: BasicFileAttributes, previous: IndexedTrack?): IndexedTrack? {
+    private fun entry(file: File, attributes: BasicFileAttributes, previous: IndexedTrack?, present: Set<String>): IndexedTrack? {
         val size = attributes.size()
         val modified = attributes.lastModifiedTime().toMillis()
         if (previous != null && previous.size == size && previous.modifiedMs == modified &&
-            (previous.cover.isEmpty() || File(covers, previous.cover).isFile)) return previous.copy(path = file.path)
+            (previous.cover.isEmpty() || previous.cover in present)) return previous.copy(path = file.path)
         val result = try { interruptibleProbe(file) } catch (e: Exception) {
             if (closed) throw CancellationException("Library closed")
             AppLog.w(TAG, "Skipping ${file.path}", e)
@@ -244,7 +247,8 @@ class FolderLibrary(
             val temporary = File(covers, ".$name-${UUID.randomUUID()}.tmp")
             try {
                 temporary.writeBytes(bytes)
-                Files.move(temporary.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING)
+                // same name is same bytes; replacing deletes first on windows
+                Files.move(temporary.toPath(), target.toPath())
             } finally {
                 temporary.delete()
             }
@@ -370,7 +374,7 @@ class FolderLibrary(
 
         fun isUnder(path: String, root: String): Boolean = key(path).startsWith(key(root).trimEnd('/') + "/")
 
-        fun sha1(bytes: ByteArray): String = MessageDigest.getInstance("SHA-1").digest(bytes).joinToString("") { "%02x".format(it) }
+        fun sha1(bytes: ByteArray): String = HexFormat.of().formatHex(MessageDigest.getInstance("SHA-1").digest(bytes))
 
         fun String?.clean(): String? = this?.trim()?.takeIf { it.isNotEmpty() }
     }

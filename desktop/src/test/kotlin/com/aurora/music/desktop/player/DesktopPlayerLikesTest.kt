@@ -20,6 +20,7 @@ import java.io.File
 import java.lang.reflect.Proxy
 import java.nio.file.Files
 import java.util.concurrent.Executors
+import kotlin.coroutines.EmptyCoroutineContext
 
 private fun unsupported(): MediaBackend = Proxy.newProxyInstance(MediaBackend::class.java.classLoader, arrayOf(MediaBackend::class.java)) { _, method, _ ->
     throw UnsupportedOperationException(method.name)
@@ -50,7 +51,7 @@ class DesktopPlayerLikesTest {
     private val player = on {
         DesktopPlayer(FakeEngine(), container.playerDependencies().copy(
             scope = scope, sessionReady = MutableStateFlow(null),
-            repository = MusicRepository(backendProvider = { backend }, downloadManager = container.downloadManager),
+            repository = MusicRepository(backendProvider = { backend }, downloadManager = container.downloadManager, mapping = EmptyCoroutineContext),
         ))
     }
 

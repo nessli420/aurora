@@ -47,6 +47,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
@@ -149,6 +150,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     private var sleepJob: Job? = null
     private var queueFillJob: Job? = null
+    private var flushFill: (() -> Unit)? = null
     private var volumeSave: Job? = null
     private var unmuteVolume = DesktopSettings.DEFAULT_UNMUTE_VOLUME
     private var queueGeneration = 0
@@ -221,9 +223,11 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 refreshLikes()
                 if (openRestoreAttempted) return@collect
                 openRestoreAttempted = true
-                playingAccountKey = deps.accountKey()
-                val saved = savedQueue(playingAccountKey)
-                if (queueSize() == 0 && saved != null) restoreQueue(saved)
+                val key = deps.accountKey()
+                playingAccountKey = key
+                val saved = kotlinx.coroutines.withContext(Dispatchers.IO) { savedQueue(key)?.let { it to it.restorableSongs() } }
+                // an account switch during the read must not leave this queue under the new key
+                if (playingAccountKey == key && queueSize() == 0 && saved != null) restoreQueue(saved.first, saved.second)
             }
         }
         // subsonic can't star playlists so locally-liked ones merge into the same set
@@ -300,8 +304,18 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             video.sync(s.positionMs, s.effectivelyPlaying, s.speed)
         }
         if (cur.id != lastKeyInfoId) {
-            lastKeyInfoId = cur.id
-            lastKeyInfo = runCatching { deps.sonic?.keyInfo(cur.id) }.getOrNull()
+            val id = cur.id
+            lastKeyInfoId = id
+            lastKeyInfo = null
+            // the sonic store can block on its first parse
+            deps.sonic?.let { sonic ->
+                scope.launch {
+                    val info = withContext(Dispatchers.IO) { runCatching { sonic.keyInfo(id) }.getOrNull() } ?: return@launch
+                    if (lastKeyInfoId != id) return@launch
+                    lastKeyInfo = info
+                    _state.update { it.copy(bpm = info.bpm, camelot = info.camelot, keyName = info.name) }
+                }
+            }
         }
         val key = lastKeyInfo
         val video = deps.companion?.state?.value
@@ -367,9 +381,9 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private suspend fun observeLevels(levels: com.aurora.music.data.listening.ListeningLevelStore) {
         while (true) {
             val state = engine.state.value
-            val path = runCatching { engine.signalPath() }.getOrNull()
-            val after = path?.measurements?.after
             val output = state.output
+            // the signal path only measures once a source and an output are open
+            val after = if (state.current == null || state.source == null || output == null) null else engine.afterMeter.snapshot()
             levels.observe(com.aurora.music.data.listening.ListeningObservation(
                 route = deps.settingsStore.processingRoutes.current, playing = state.isPlaying, postDsp = after, downstreamGain = 1.0,
                 volumeIndex = 0, volumeMuted = state.volume <= 0f,
@@ -479,7 +493,8 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         val now = uptime()
         val changed = last == null || s.entries !== last.entries || s.index != last.index || s.shuffle != last.shuffle ||
             s.repeat != last.repeat || s.playWhenReady != last.playWhenReady
-        if (!changed && (s.positionMs == last?.positionMs || now - lastPersistMs < 2_000)) return
+        // a paused seek gets no later tick to retry it, so only playback is throttled
+        if (!changed && (s.positionMs == last?.positionMs || (s.playWhenReady && now - lastPersistMs < 15_000))) return
         persisted = s
         lastPersistMs = now
         persistQueue(s)
@@ -517,8 +532,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         return saved
     }
 
-    private fun restoreQueue(sq: SavedQueue) {
-        val songs = sq.tracks.orEmpty().map { it.toSong() }.filter { it.id.isNotEmpty() && it.streamUrl.isNotEmpty() }
+    private fun SavedQueue.restorableSongs(): List<Song> =
+        tracks.orEmpty().map { it.toSong() }.filter { it.id.isNotEmpty() && it.streamUrl.isNotEmpty() }
+
+    private fun restoreQueue(sq: SavedQueue, songs: List<Song> = sq.restorableSongs()) {
         if (songs.isEmpty()) return
         val idx = sq.currentIndex.coerceIn(0, songs.lastIndex)
         val repeat = when (sq.repeat) { 1 -> RepeatMode.ALL; 2 -> RepeatMode.ONE; else -> RepeatMode.OFF }
@@ -700,6 +717,13 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private fun cancelQueueFill() {
         queueFillJob?.cancel()
         queueFillJob = null
+        flushFill = null
+    }
+
+    // an edit stops the fill, so its fetched tracks land first
+    private fun editQueue() {
+        flushFill?.invoke()
+        queueGeneration++
     }
 
     private fun fillQueue(kind: String, id: String, loaded: List<Song>, total: Int, shuffle: Boolean, collection: PlaybackCollectionIdentity?) {
@@ -708,16 +732,26 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         val generation = queueGeneration
         queueFillJob = scope.launch {
             val have = loaded.mapTo(HashSet()) { it.id }
+            val pending = ArrayList<Song>()
+            fun flush() {
+                if (pending.isEmpty() || generation != queueGeneration) return
+                engine.append((if (shuffle) pending.shuffled() else pending).map { it.copy(playbackCollection = collection) })
+                pending.clear()
+            }
+            flushFill = ::flush
             var offset = loaded.size
             while (offset < total) {
                 val page = runCatching { deps.repository.detailPage(kind, id, offset) }.getOrDefault(emptyList())
                 ensureActive()
                 if (page.isEmpty() || generation != queueGeneration) break
-                val fresh = deps.repository.playable(kind, id, page.filter { it.id.isNotEmpty() && have.add(it.id) })
-                if (fresh.isNotEmpty()) engine.append((if (shuffle) fresh.shuffled() else fresh).map { it.copy(playbackCollection = collection) })
+                pending += deps.repository.playable(kind, id, page.filter { it.id.isNotEmpty() && have.add(it.id) })
                 offset += page.size
+                // each append re-maps the whole queue, so batch unless it is about to run out
+                val s = engine.state.value
+                if (pending.size >= FILL_BATCH || s.entries.size - s.index <= FILL_AHEAD) flush()
                 delay(180)
             }
+            flush()
         }
     }
 
@@ -786,14 +820,14 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun addToQueue(song: Song) {
         if (queueSize() == 0) { play(song); return }
-        queueGeneration++
+        editQueue()
         engine.append(listOf(song))
     }
 
     override fun playNext(song: Song) {
         val count = queueSize()
         if (count == 0) { play(song); return }
-        queueGeneration++
+        editQueue()
         engine.insert((currentIndex() + 1).coerceIn(0, count), listOf(song))
     }
 
@@ -806,7 +840,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun removeFromQueue(index: Int) {
         if (index in 0 until queueSize()) {
-            queueGeneration++
+            editQueue()
             engine.remove(index)
         }
     }
@@ -824,7 +858,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override fun moveQueueItem(from: Int, to: Int) {
         val count = queueSize()
         if (from in 0 until count && to in 0 until count && from != to) {
-            queueGeneration++
+            editQueue()
             engine.move(from, to)
         }
     }
@@ -882,7 +916,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun toggleLikeCurrent() = likes.toggle(_state.value.current)
 
-    override fun refreshLikes() = likes.refresh()
+    override fun refreshLikes(restart: Boolean) = likes.refresh(restart)
 
     override fun checkLiked(songs: List<Song>) = likes.check(songs)
 
@@ -923,5 +957,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         const val SLEEP_FADE_MS = 6_000
         const val RESUME_START_MS = 3_000L
         const val RESUME_SAVE_MS = 15_000L
+        const val FILL_BATCH = 500
+        const val FILL_AHEAD = 50
     }
 }

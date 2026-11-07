@@ -1,6 +1,7 @@
 package com.aurora.music.util
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.Easing
 import androidx.compose.animation.core.tween
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -20,6 +21,7 @@ import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.util.PriorityQueue
 import kotlin.math.abs
+import kotlin.math.ceil
 import kotlin.math.roundToInt
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
@@ -182,8 +184,11 @@ fun rememberDominantColor(url: String, fallback: Color): State<Color> {
         if (color != null) dominantColors[url] = color.toArgb()
         resolved.value = color ?: fallback
     }
-    return animateColorAsState(resolved.value, tween(450), label = "dominant")
+    return animateColorAsState(resolved.value, dominantFade, label = "dominant")
 }
+
+// six steps, so a fade recomposes the scheme readers six times rather than every frame
+private val dominantFade = tween<Color>(450, easing = Easing { ceil(it * 6f) / 6f })
 
 private fun boost(c: Color): Color {
     val lum = c.luminance()

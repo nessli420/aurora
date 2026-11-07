@@ -13,7 +13,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.ConcurrentHashMap
@@ -25,7 +24,7 @@ class DiscordRpc(
     private val artwork: suspend (String) -> ByteArray?,
 ) : AutoCloseable {
     private val imgur = ImgurUploader()
-    private val http = OkHttpClient()
+    private val http get() = com.aurora.music.data.remote.AuroraHttp.base
     private val ipc = DiscordIpc(onUser = { name ->
         localUser.value = name
         synchronized(this@DiscordRpc) { reconcile() }

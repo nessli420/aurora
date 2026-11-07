@@ -13,6 +13,7 @@ import com.aurora.music.playback.network.endpoint.ConnectStatus
 import com.aurora.music.playback.network.endpoint.ConnectTrack
 import com.aurora.music.playback.network.endpoint.RendererException
 import com.aurora.music.playback.network.endpoint.resolveConnectTracks
+import com.aurora.music.playback.network.endpoint.windowedFrom
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
@@ -33,7 +34,7 @@ internal class DesktopConnectHost(private val player: DesktopPlayer, private val
             outputs = listOf(ConnectOption("", appString(R.string.text_automatic_ac9041))) + player.outputs.value.map { ConnectOption(it.id.take(256), it.name.take(128)) },
             output = player.preferredOutput.value.orEmpty().take(256),
             presets = presets.map { ConnectOption(it.id, it.name) },
-        ).windowed(if (state.hasTrack) state.queue.map(ConnectTrack::of) else emptyList())
+        ).windowedFrom(if (state.hasTrack) state.queue.size else 0) { ConnectTrack.of(state.queue[it]) }
     }
 
     override fun execute(command: ConnectCommand) {

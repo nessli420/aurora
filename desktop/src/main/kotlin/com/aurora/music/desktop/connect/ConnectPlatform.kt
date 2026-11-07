@@ -132,6 +132,9 @@ private fun discovered(info: ServiceInfo, local: InetAddress): DiscoveredRendere
 }
 
 internal fun deviceName(): String {
-    val host = System.getenv("COMPUTERNAME") ?: System.getenv("HOSTNAME") ?: runCatching { InetAddress.getLocalHost().hostName }.getOrNull()
+    // linux gui sessions rarely export HOSTNAME, and getLocalHost can wait on dns before the window shows
+    val host = System.getenv("COMPUTERNAME") ?: System.getenv("HOSTNAME")
+        ?: runCatching { java.io.File("/proc/sys/kernel/hostname").readText().trim() }.getOrNull()?.takeIf { it.isNotEmpty() }
+        ?: runCatching { InetAddress.getLocalHost().hostName }.getOrNull()
     return "Aurora · ${host?.substringBefore('.')?.takeIf { it.isNotBlank() } ?: com.aurora.music.desktop.platform.HostPlatform.name}".take(64)
 }

@@ -2,6 +2,7 @@ package com.aurora.music.ui.layout
 
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -69,7 +70,8 @@ fun WindowLayout.shell(panelRequested: Boolean, panelWidth: Dp = TabletMetrics.S
     )
 }
 
-val LocalWindowLayout = staticCompositionLocalOf { WindowLayout() }
+// exact size changes on every resize step, so only its readers should recompose
+val LocalWindowLayout = compositionLocalOf { WindowLayout() }
 
 val LocalPageGutter = staticCompositionLocalOf { 24.dp }
 

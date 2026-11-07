@@ -38,7 +38,7 @@ class DesktopSettings(private val dataStore: DataStore<Preferences>) {
         p[UNMUTE_VOLUME] ?: p[VOLUME]?.takeIf { it > MIN_AUDIBLE_VOLUME } ?: DEFAULT_UNMUTE_VOLUME
     }.distinctUntilChanged()
     val languageTag: Flow<String> = dataStore.data.map { it[LANGUAGE] ?: "" }.distinctUntilChanged()
-    val musicFolders: Flow<List<String>> = dataStore.data.map { parseFolders(it[MUSIC_FOLDERS]) }.distinctUntilChanged()
+    val musicFolders: Flow<List<String>> = dataStore.data.map { it[MUSIC_FOLDERS] }.distinctUntilChanged().map { parseFolders(it) }.distinctUntilChanged()
     val closeToTray: Flow<Boolean> = dataStore.data.map { it[CLOSE_TO_TRAY] ?: false }.distinctUntilChanged()
     val allowRemoteControl: Flow<Boolean> = dataStore.data.map { it[REMOTE_CONTROL] ?: false }.distinctUntilChanged()
     val accentFollowsPlaying: Flow<Boolean> = dataStore.data.map { it[ACCENT_FOLLOWS_PLAYING] ?: false }.distinctUntilChanged()

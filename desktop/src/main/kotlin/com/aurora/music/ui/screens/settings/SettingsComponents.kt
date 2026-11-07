@@ -36,6 +36,7 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -73,6 +74,10 @@ import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.themedCorner
+import kotlinx.coroutines.NonCancellable
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.withContext
 
 val LocalSettingsPaneRoots = compositionLocalOf<Set<String>?> { null }
 
@@ -275,15 +280,58 @@ fun SettingsSwitchRow(icon: ImageVector? = null, title: String, subtitle: String
     }
 }
 
+internal const val LIVE_WRITE_MS = 120L
+
+// drags render locally and reach datastore at most every LIVE_WRITE_MS since the engine only hears stored values
+internal class LiveValue<T : Any> {
+    var local by mutableStateOf<T?>(null)
+    val pending = MutableStateFlow<T?>(null)
+    var write: suspend (T) -> Unit = {}
+
+    fun set(v: T) { local = v; pending.value = v }
+
+    suspend fun run() {
+        try {
+            pending.collect { v -> if (v != null) { write(v); pending.compareAndSet(v, null); delay(LIVE_WRITE_MS) } }
+        } finally {
+            pending.value?.let { v -> withContext(NonCancellable) { write(v) } }
+        }
+    }
+}
+
+@Composable
+internal fun <T : Any> rememberLiveValue(stored: T, write: suspend (T) -> Unit): LiveValue<T> {
+    val live = remember { LiveValue<T>() }
+    live.write = write
+    LaunchedEffect(live) { live.run() }
+    val local = live.local
+    LaunchedEffect(stored, local) {
+        if (local == null) return@LaunchedEffect
+        if (local != stored) delay(1_000)
+        live.local = null
+    }
+    return live
+}
+
 @Composable
 fun SettingsSliderRow(title: String, valueLabel: String, value: Float, range: ClosedFloatingPointRange<Float>, steps: Int = 0, onValueChange: (Float) -> Unit) {
+    val live = rememberLiveValue(value) { onValueChange(it) }
+    // the release writes at once, since leaving the screen cancels the callers' scope before a deferred write runs
+    DirectSliderRow(title, valueLabel, live.local ?: value, range, steps,
+        onValueChangeFinished = { live.pending.value?.let { live.pending.value = null; onValueChange(it) } }, onValueChange = live::set)
+}
+
+// unthrottled, for callers that preview every move themselves
+@Composable
+internal fun DirectSliderRow(title: String, valueLabel: String, value: Float, range: ClosedFloatingPointRange<Float>, steps: Int = 0,
+    onValueChangeFinished: () -> Unit = {}, onValueChange: (Float) -> Unit) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
             Text(valueLabel, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Slider(
-            value = value, onValueChange = onValueChange, valueRange = range, steps = steps,
+            value = value, onValueChange = onValueChange, valueRange = range, steps = steps, onValueChangeFinished = onValueChangeFinished,
             modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
             colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
         )

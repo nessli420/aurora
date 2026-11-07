@@ -152,11 +152,15 @@ class DesktopPlaybackEngine(
     private var successorSkips = -1
     private var skipVersion = 0
     private var successorValue: QueueEntry? = null
-    private val listener: AutoCloseable
+    @Volatile private var listener: AutoCloseable = AutoCloseable {}
 
     init {
-        mutableOutputs.value = runCatching { backend.devices() }.getOrDefault(emptyList())
-        listener = runCatching { backend.listen { event -> post { onDevice(event) } } }.getOrElse { AutoCloseable {} }
+        // enumeration can be slow, keep it off the caller's thread; close() queues behind it
+        control.execute {
+            mutableOutputs.value = runCatching { backend.devices() }.getOrDefault(emptyList())
+            post { publish() }
+            listener = runCatching { backend.listen { event -> post { onDevice(event) } } }.getOrElse { AutoCloseable {} }
+        }
         audioThread = Thread(::run, "aurora-audio").apply {
             isDaemon = true
             priority = Thread.MAX_PRIORITY
@@ -362,10 +366,12 @@ class DesktopPlaybackEngine(
             LockSupport.unpark(it)
             it.join(2_000)
         }
-        runCatching { listener.close() }
         loader.shutdownNow()
         hardwareVolume.close()
-        control.execute { runCatching { backend.keepAwake(false) } }
+        control.execute {
+            runCatching { listener.close() }
+            runCatching { backend.keepAwake(false) }
+        }
         control.shutdown()
         control.awaitTermination(1, TimeUnit.SECONDS)
     }

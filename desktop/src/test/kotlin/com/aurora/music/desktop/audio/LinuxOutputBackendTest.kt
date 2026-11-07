@@ -148,6 +148,11 @@ class LinuxOutputBackendTest {
         assertEquals("default [default]", shared.last.deviceId)
     }
 
+    @Test fun sharedPlaybackFindsTheDevicesPlugBeforeTheFirstListing() {
+        LinuxOutputBackend(shared, Hardware(), LinuxOutputBackend.DIRECT).open(analog.id, false, 48_000, OutputEncoding.F32, 200)
+        assertEquals("HDA Intel PCH [plughw:0,0]", shared.last.deviceId)
+    }
+
     @Test fun theSoundServerIsDetectedFromItsSockets() {
         val dir: File = Files.createTempDirectory("aurora-runtime").toFile()
         try {

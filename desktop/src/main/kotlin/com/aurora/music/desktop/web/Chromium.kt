@@ -7,6 +7,7 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
@@ -68,7 +69,20 @@ object Chromium {
 
     val installed: Boolean get() = root?.let { File(it, "runtime/install.lock").isFile } == true
 
-    suspend fun client(): CefClient = lock.withLock {
+    @Volatile private var gate: Job? = null
+
+    // cef initialises on the edt, so the first start waits for the window's first frame
+    fun holdUntil(job: Job) {
+        gate = job
+    }
+
+    suspend fun client(): CefClient {
+        // outside the lock, so a sign-in page never queues behind a held start
+        withTimeoutOrNull(5_000) { gate?.join() }
+        return start()
+    }
+
+    private suspend fun start(): CefClient = lock.withLock {
         client?.let { return it }
         val dir = checkNotNull(root) { "Chromium is not configured" }
         try {
@@ -266,6 +280,7 @@ class WebPage internal constructor(val browser: CefBrowser, private val origins:
     }
 
     internal fun created() {
+        if (hidden) browser.setWindowlessFrameRate(1)
         val script = opener?.script
         val registered = script?.let {
             runCatching {

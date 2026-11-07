@@ -135,6 +135,8 @@ class AuroraShellTest {
             scene.click(44f, 32f)
             val drawer = scene.shot("drawer")
             assertFalse(rail.region(0, 0, 300, 500).contentEquals(drawer.region(0, 0, 300, 500)))
+            // the closing drawer relays out, which hovers the menu button under a resting pointer
+            scene.move(700f, 300f)
             scene.press(Shortcut.BACK)
             assertTrue(scene.shot("drawer-closed").region(0, 0, 300, 500).contentEquals(rail.region(0, 0, 300, 500)))
         }

@@ -51,7 +51,7 @@ class MixViewModel(private val container: DesktopContainer) : ViewModel() {
                 }
             }
         }
-        refreshSaved(); search("")
+        refreshSaved()
         _state.update { it.copy(modelReady = container.stemSeparator.modelReady()) }
     }
     fun dismissMessage() { _state.update { it.copy(message = null) } }

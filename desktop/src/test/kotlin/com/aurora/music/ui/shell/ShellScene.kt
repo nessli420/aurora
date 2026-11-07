@@ -6,6 +6,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerButtons
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.geometry.Offset
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
@@ -80,7 +82,7 @@ internal class ShellPlayer(initial: PlayerUiState = PlayerUiState()) : PlayerCon
     override fun next() { calls += "next" }
     override fun previous() { calls += "previous" }
     override fun toggleLikeCurrent() { calls += "like" }
-    override fun refreshLikes() { calls += "refreshLikes" }
+    override fun refreshLikes(restart: Boolean) { calls += "refreshLikes" }
     override fun playAll(songs: List<Song>, startIndex: Int, collection: PlaybackCollectionIdentity?) { calls += "playAll" }
     override fun play(song: Song) { calls += "play" }
     override fun playCollection(kind: String, id: String, loaded: List<Song>, startIndex: Int, total: Int) { calls += "playCollection" }
@@ -171,6 +173,11 @@ internal class ShellScene(
         val pressed = if (button == PointerButton.Back) PointerButtons(isBackPressed = true) else PointerButtons(isPrimaryPressed = true)
         ui.click(x, y, button, pressed)
         settle(400)
+    }
+
+    fun move(x: Float, y: Float) {
+        ui.input { sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = ui.millis) }
+        settle(100)
     }
 
     fun navigate(route: String) {

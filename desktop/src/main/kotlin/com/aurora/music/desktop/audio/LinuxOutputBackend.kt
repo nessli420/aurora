@@ -144,6 +144,8 @@ class LinuxOutputBackend(
     }
 
     private fun openShared(deviceId: String?, sampleRate: Int, encoding: OutputEncoding, bufferMs: Int): AudioOutput {
+        // the engine can open before its first enumeration lands
+        if (hardwareDevices.isEmpty() && deviceId != null && isHardware(deviceId)) hardwareDevices = runCatching { hardware?.devices() }.getOrNull().orEmpty()
         val plug = hardwareDevices.firstOrNull { it.id == deviceId }?.plug
         val target = when {
             plug == null -> deviceId

@@ -6,10 +6,7 @@ import com.aurora.music.ui.theme.glassEdge
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.animation.core.animateFloatAsState
-import com.aurora.music.ui.theme.glassScheme
-import com.aurora.music.ui.theme.LocalGlassLook
 import com.aurora.music.ui.theme.LocalGlass
-import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandHorizontally
@@ -197,7 +194,7 @@ import com.aurora.music.ui.screens.stats.RecapInboxScreen
 import com.aurora.music.ui.screens.visualizer.VisualizerScreen
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
-import com.aurora.music.ui.theme.rememberPlayerColorScheme
+import com.aurora.music.ui.theme.PlayerTheme
 import com.aurora.music.viewmodel.AuthViewModel
 import com.aurora.music.viewmodel.DetailViewModel
 import com.aurora.music.viewmodel.DuplicatesViewModel
@@ -209,17 +206,24 @@ import com.aurora.music.viewmodel.SmartPlaylistViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.emptyFlow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.merge
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.time.LocalDate
+import kotlin.math.floor
 import com.aurora.music.ui.theme.themedCorner
 
 private val unportedRoutes = emptySet<String>()
 private val splitKinds = listOf("album", "artist", "playlist", "liked", "smart")
 private val mouseGestures = GesturePrefs(swipeArtwork = false)
-private const val LIKES_REFRESH_INTERVAL_NS = 30_000_000_000L
+private const val LIKES_RESUME_INTERVAL_NS = 5 * 60_000_000_000L
+
+internal fun likesResumeDue(pulledAt: Long?, now: Long, sessionReady: Boolean?, offline: Boolean): Boolean =
+    sessionReady == true && !offline && pulledAt?.let { now - it < LIKES_RESUME_INTERVAL_NS } != true
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -281,10 +285,11 @@ private fun Shell(
     val savedSessions by store.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
     val downloadsMap by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val localMode = session?.type == ServerType.LOCAL
-    val profileAppearance = rememberProfileAppearance(session)
+    // equal appearances keep one instance, so the nav graph builder that captures it stays the same
+    val profileAppearance = rememberProfileAppearance(session).let { remember(it) { it } }
     val currentServer = session?.server ?: ""
     val allPins by store.pins.collectAsStateWithLifecycle(initialValue = emptyList())
-    val pins = allPins.filter { it.serverId == currentServer }
+    val pins = remember(allPins, currentServer) { allPins.filter { it.serverId == currentServer } }
     val offlineMode by container.offline.collectAsStateWithLifecycle()
     val accountEpoch by container.accountEpoch.collectAsStateWithLifecycle()
     val serverTagEditing = session?.let { repository.supportsServerTagEdit } ?: false
@@ -305,10 +310,15 @@ private fun Shell(
     }
     val editTags: (Song) -> Unit = { song -> navController.navigate(Routes.tagEdit(song.id)) }
     val libraryReload by container.libraryReload.collectAsStateWithLifecycle()
-    val downloadedIds = remember(downloadsMap, session, sessionReady, offlineMode, accountEpoch, libraryReload) {
-        repository.downloadedIds()
+    val downloadedIds by produceState(emptySet<String>(), downloadsMap, session, sessionReady, offlineMode, accountEpoch, libraryReload) {
+        value = withContext(Dispatchers.Default) { repository.downloadedIds() }
     }
-    val downloadStates by container.downloadManager.states.collectAsStateWithLifecycle()
+    // only the count lives here; per-chunk progress recomposes just the banner
+    val activeDownloads by remember(container) {
+        container.downloadManager.states.map { states ->
+            states.values.count { it is DownloadState.Queued || it is DownloadState.Downloading }
+        }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(initialValue = 0)
     val simpleMode by store.simpleMode.collectAsStateWithLifecycle(initialValue = false)
     val unsupportedAccount by container.unsupportedAccount.collectAsStateWithLifecycle()
     val savedLibraryWidth by desktopSettings.libraryListWidth.collectAsStateWithLifecycle(initialValue = null)
@@ -377,14 +387,25 @@ private fun Shell(
         if (repository.removeDownload(it)) confirm(appString(R.string.text_removed_download_8ad8f9))
     }
 
-    // the window resumes on every focus so likes starred elsewhere refresh at most once per interval
+    // the window resumes on every focus, so stars from elsewhere re-pull at most every 5 min, never offline or before sign-in
+    var likesPulledAt by remember { mutableStateOf<Long?>(null) }
+    // the player pulls on sign-in itself, so that counts as the latest pull
+    LaunchedEffect(sessionReady) {
+        if (sessionReady == true && !container.offline.value) likesPulledAt = System.nanoTime()
+    }
+    // a unified or merge toggle renames every id, so its hearts can't wait for the window
+    LaunchedEffect(container, player) {
+        container.libraryReload.drop(1).collect {
+            likesPulledAt = null
+            if (container.sessionReady.value == true && !container.offline.value) { likesPulledAt = System.nanoTime(); player.refreshLikes(restart = true) }
+        }
+    }
     val lifecycleOwner = LocalLifecycleOwner.current
     DisposableEffect(lifecycleOwner, player) {
-        var refreshedAt: Long? = null
         val observer = LifecycleEventObserver { _, event ->
             val now = System.nanoTime()
-            if (event == Lifecycle.Event.ON_RESUME && refreshedAt?.let { now - it < LIKES_REFRESH_INTERVAL_NS } != true) {
-                refreshedAt = now
+            if (event == Lifecycle.Event.ON_RESUME && likesResumeDue(likesPulledAt, now, container.sessionReady.value, container.offline.value)) {
+                likesPulledAt = now
                 player.refreshLikes()
             }
         }
@@ -392,17 +413,13 @@ private fun Shell(
         onDispose { lifecycleOwner.lifecycle.removeObserver(observer) }
     }
 
-    val activeDownloads = downloadStates.values.count { it is DownloadState.Queued || it is DownloadState.Downloading }
-    val downloadProgress = downloadStates.values
-        .mapNotNull { (it as? DownloadState.Downloading)?.progress }
-        .let { if (it.isEmpty()) 0f else it.sum() / activeDownloads.coerceAtLeast(1) }
     var hadActiveDownloads by remember { mutableStateOf(false) }
     LaunchedEffect(activeDownloads) {
         if (activeDownloads > 0) {
             hadActiveDownloads = true
         } else if (hadActiveDownloads) {
             hadActiveDownloads = false
-            val failed = downloadStates.values.count { it is DownloadState.Failed }
+            val failed = container.downloadManager.states.value.values.count { it is DownloadState.Failed }
             snackbarHostState.showSnackbar(
                 if (failed > 0) appString(R.string.text_download_finished_failed_21e6b1, failed) else appString(R.string.text_download_complete_95efb3),
                 duration = SnackbarDuration.Short,
@@ -439,7 +456,7 @@ private fun Shell(
     val detailId = if (currentRoute == Routes.DETAIL) backStackEntry?.arg("id") else null
     var playlistsVersion by remember { mutableStateOf(0) }
     val sidebarPlaylists by produceState(emptyList<Playlist>(), sessionReady, session?.server, accountEpoch, libraryReload, offlineMode, playlistsVersion) {
-        if (sessionReady == true) value = runCatching { repository.allPlaylists() }.getOrNull() ?: value
+        if (sessionReady == true && session != null) value = runCatching { repository.allPlaylists() }.getOrNull() ?: value
     }
 
     var showSpeedSheet by rememberSaveable { mutableStateOf(false) }
@@ -457,10 +474,9 @@ private fun Shell(
     }
 
     val glass = LocalGlass.current
-    val glassLook = LocalGlassLook.current
-    val artColors = rememberPlayerColorScheme(playerState.current.artworkUrl, playerState.current.accent)
-    val playerColors = if (glass) artColors.glassScheme(artColors.onBackground.luminance() > 0.5f, glassLook) else artColors
-    val shellAlpha by animateFloatAsState(if (glass && playerState.expanded) 0f else 1f, tween(260), label = "shellFade")
+    // the opaque player hides the shell once it has slid in, and shows it again before its exit reveals anything
+    val shellAlpha by animateFloatAsState(if (playerState.expanded) 0f else 1f,
+        if (glass) tween(260) else tween(0, delayMillis = if (playerState.expanded) 340 else 0), label = "shellFade")
 
     fun navigateTopLevel(route: String) {
         if (navController.currentDestination?.route == route) return
@@ -910,6 +926,8 @@ private fun Shell(
         gesturesEnabled = drawerState.isOpen,
         drawerContent = {
             ModalDrawerSheet(drawerState = drawerState, drawerContainerColor = MaterialTheme.colorScheme.surface) {
+                // a closed drawer stays composed for its anchors, so it skips the collection rows until it opens
+                val drawerShown = !drawerState.isClosed || drawerState.isAnimationRunning
                 TabletSidebar(
                     currentRoute = currentRoute,
                     username = profileAppearance.name,
@@ -919,8 +937,8 @@ private fun Shell(
                     onOpen = { item -> closeDrawerThen { openNavItem(item) } },
                     onProfile = { closeDrawerThen { navController.navigate(Routes.PROFILE) { launchSingleTop = true } } },
                     onSettings = { closeDrawerThen { navController.navigate(Routes.SETTINGS) { launchSingleTop = true } } },
-                    playlists = sidebarPlaylists,
-                    pins = pins,
+                    playlists = if (drawerShown) sidebarPlaylists else emptyList(),
+                    pins = if (drawerShown) pins else emptyList(),
                     selectedId = detailId,
                     onOpenCollection = { kind, id -> closeDrawerThen { openDetail(kind, id) } },
                 )
@@ -976,7 +994,7 @@ private fun Shell(
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             if (activeDownloads > 0) {
-                                DownloadProgressBanner(count = activeDownloads, progress = downloadProgress)
+                                DownloadProgressBanner(count = activeDownloads)
                                 Spacer(Modifier.height(8.dp))
                             }
                             if (offlineMode) {
@@ -1055,7 +1073,7 @@ private fun Shell(
                                     onOpenInsights = { w -> navController.navigate("${Routes.INSIGHTS}/${w.period.name}/${w.start}") })
                             }
                             composable(Routes.HOME) {
-                                val homeVM = viewModel { HomeViewModel(container) }
+                                val homeVM = viewModel(viewModelStoreOwner = rootOwner) { HomeViewModel(container) }
                                 val homeState by homeVM.state.collectAsStateWithLifecycle()
                                 HomeScreen(
                                     contentPadding = inner,
@@ -1155,7 +1173,10 @@ private fun Shell(
                                 )
                             }
                             composable(Routes.LIBRARY) {
-                                val libraryVM = viewModel { LibraryViewModel(container) }
+                                val libraryVM = viewModel(viewModelStoreOwner = rootOwner) { LibraryViewModel(container) }
+                                // a fresh tab visit, not a return from a pushed detail, which would reset the scrolled list
+                                var visited by rememberSaveable { mutableStateOf(false) }
+                                LaunchedEffect(libraryVM) { if (!visited) { visited = true; libraryVM.refreshIfStale() } }
                                 val libraryState by libraryVM.state.collectAsStateWithLifecycle()
                                 LaunchedEffect(libraryState.songs.size) { player.checkLiked(libraryState.songs) }
                                 var librarySelection by rememberSaveable { mutableStateOf<String?>(null) }
@@ -1350,7 +1371,8 @@ private fun Shell(
                             composable(Routes.PROFILE) {
                                 var editing by remember { mutableStateOf(false) }
                                 if (editing && localMode) LocalProfileDialog(onDismiss = { editing = false })
-                                val homeVM = viewModel { HomeViewModel(container) }
+                                // its own model, pinned to the library feed
+                                val homeVM = viewModel(viewModelStoreOwner = rootOwner, key = "profile-home") { HomeViewModel(container) }
                                 val homeState by homeVM.state.collectAsStateWithLifecycle()
                                 ProfileScreen(
                                     contentPadding = inner,
@@ -1518,7 +1540,7 @@ private fun Shell(
                     }
                 }
             }
-            if (dockVisible) LivePlayer(player) { live ->
+            if (dockVisible) DockPlayer(player) { live ->
                 PlaybackDock(
                     djMode = aiDjActive,
                     state = live,
@@ -1543,7 +1565,7 @@ private fun Shell(
                 )
             }
 
-            MaterialTheme(colorScheme = playerColors) {
+            PlayerTheme(playerState.current.artworkUrl, playerState.current.accent) {
                 // registered when shown so it outranks the nav hosts yet stays below the player's own lyrics handler
                 if (playerState.expanded) BackHandler { player.setExpanded(false) }
                 AnimatedVisibility(
@@ -1697,9 +1719,12 @@ private fun NavLayout.ported() = NavLayout(main.filterNot { it.route in unported
 private fun NavBackStackEntry.arg(name: String): String = arguments?.read { getStringOrNull(name) }.orEmpty()
 
 @Composable
-private fun DownloadProgressBanner(count: Int, progress: Float) {
+private fun DownloadProgressBanner(count: Int) {
+    val states by LocalDesktopContainer.current.downloadManager.states.collectAsStateWithLifecycle()
+    // chunks land every 250 ms per download, so the bar steps rather than restarting a tween each time
+    val progress = states.values.mapNotNull { (it as? DownloadState.Downloading)?.progress }
+        .let { if (it.isEmpty()) 0f else it.sum() / count.coerceAtLeast(1) }.coerceIn(0f, 1f)
     val classic = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
-    val animated by animateFloatAsState(targetValue = progress.coerceIn(0f, 1f), animationSpec = tween(300), label = "dlProgress")
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -1722,14 +1747,14 @@ private fun DownloadProgressBanner(count: Int, progress: Float) {
             )
             Spacer(Modifier.height(6.dp))
             LinearProgressIndicator(
-                progress = { animated },
+                progress = { progress },
                 modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
             )
         }
         Spacer(Modifier.width(12.dp))
-        Text("${(animated * 100).toInt()}%", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+        Text("${(progress * 100).toInt()}%", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
     }
 }
 
@@ -1752,5 +1777,14 @@ private const val SCRUB_SECONDS_PER_SECOND = 12f
 @Composable
 private fun LivePlayer(player: PlayerController, content: @Composable (PlayerUiState) -> Unit) {
     val state by player.state.collectAsStateWithLifecycle()
+    content(state)
+}
+
+// the dock bar moves under a pixel per tick, so it follows the position in half seconds
+@Composable
+private fun DockPlayer(player: PlayerController, content: @Composable (PlayerUiState) -> Unit) {
+    val state by remember(player) {
+        player.state.map { it.copy(positionSec = floor(it.positionSec * 2) / 2) }.distinctUntilChanged()
+    }.collectAsStateWithLifecycle(player.state.value)
     content(state)
 }

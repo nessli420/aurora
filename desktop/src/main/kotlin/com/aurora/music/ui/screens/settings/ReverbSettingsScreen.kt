@@ -25,7 +25,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -40,7 +39,6 @@ import com.aurora.music.desktop.ui.LocalDesktopContainer
 import java.text.NumberFormat
 import kotlin.math.exp
 import kotlin.math.ln
-import kotlinx.coroutines.launch
 
 internal fun reverbPresetName(id: Int): String = appString(when (id) {
     ReverbPreset.ROOM -> R.string.reverb_preset_room
@@ -65,12 +63,13 @@ internal fun ReverbPresetChips(selected: Int, modifier: Modifier = Modifier, onP
 @Composable
 fun ReverbQuickControls(onOpenSettings: () -> Unit) {
     val store = LocalDesktopContainer.current.settingsStore
-    val prefs by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
-    val scope = rememberCoroutineScope()
-    var dragMix by remember { mutableStateOf<Float?>(null) }
+    val stored by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
+    // the switch goes through the draft too, or the draft would show the old state for up to a second
+    val live = rememberLiveValue(stored) { store.setReverb(it) }
+    val prefs = live.local ?: stored
     val accent = MaterialTheme.colorScheme.primary
     val concert = prefs.concertPrefs
-    fun save(next: ReverbPrefs) { scope.launch { store.setReverb(next) } }
+    fun save(next: ReverbPrefs) = live.set(next)
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.Waves, null, tint = accent)
@@ -84,13 +83,13 @@ fun ReverbQuickControls(onOpenSettings: () -> Unit) {
             }
             Switch(
                 checked = prefs.enabled,
-                onCheckedChange = { on -> scope.launch { store.setReverb(prefs.copy(enabled = on)) } },
+                onCheckedChange = { on -> save(prefs.copy(enabled = on)) },
                 modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
                 colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onPrimary, checkedTrackColor = accent),
             )
         }
         if (prefs.enabled) {
-            val mix = dragMix ?: if (concert.enabled) concert.amount else prefs.mix
+            val mix = if (concert.enabled) concert.amount else prefs.mix
             ReverbModeChips(concert.enabled, Modifier.padding(top = 16.dp)) { on -> save(prefs.copy(concert = concert.copy(enabled = on))) }
             Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(appString(R.string.reverb_amount), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
@@ -99,8 +98,7 @@ fun ReverbQuickControls(onOpenSettings: () -> Unit) {
             }
             Slider(
                 value = mix,
-                onValueChange = { v -> dragMix = v; save(if (concert.enabled) prefs.copy(concert = concert.copy(amount = v)) else prefs.copy(mix = v)) },
-                onValueChangeFinished = { dragMix = null },
+                onValueChange = { v -> save(if (concert.enabled) prefs.copy(concert = concert.copy(amount = v)) else prefs.copy(mix = v)) },
                 modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
                 colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent),
             )
@@ -120,10 +118,12 @@ fun ReverbQuickControls(onOpenSettings: () -> Unit) {
 @Composable
 fun ReverbSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val store = LocalDesktopContainer.current.settingsStore
-    val prefs by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
-    val scope = rememberCoroutineScope()
+    val stored by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
+    // every control edits one draft so drags reach datastore at most every LIVE_WRITE_MS and build on each other
+    val live = rememberLiveValue(stored) { store.setReverb(it) }
+    val prefs = live.local ?: stored
     val percent = remember { NumberFormat.getPercentInstance() }
-    fun save(next: ReverbPrefs) { scope.launch { store.setReverb(next) } }
+    fun save(next: ReverbPrefs) = live.set(next)
     fun shape(edit: (ReverbPrefs) -> ReverbPrefs) = save(edit(prefs).copy(preset = -1))
     val concert = prefs.concertPrefs
     val impulses by store.impulseLibrary.collectAsStateWithLifecycle(initialValue = emptyList())

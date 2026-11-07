@@ -1,18 +1,17 @@
 package com.aurora.music.desktop.resources
 
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.loadXmlImageVector
+import androidx.compose.ui.graphics.vector.addPathNodes
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.platform.Font
-import androidx.compose.ui.unit.Density
-import java.io.InputStream
-import org.xml.sax.InputSource
-
-private fun resource(path: String): InputStream =
-    requireNotNull(Thread.currentThread().contextClassLoader.getResourceAsStream(path)) { "Missing resource $path" }
+import androidx.compose.ui.unit.dp
 
 private fun variableFontFamily(
     regular: String,
@@ -38,5 +37,10 @@ val DmSans: FontFamily = variableFontFamily("dm_sans.ttf", "dm_sans_italic.ttf",
 val PlusJakartaSans: FontFamily = variableFontFamily("plus_jakarta_sans.ttf", "plus_jakarta_sans_italic.ttf", 200..800)
 val Manrope: FontFamily = variableFontFamily("manrope.ttf", weightRange = 200..800)
 
-@Suppress("DEPRECATION")
-val AuroraLogo: ImageVector by lazy { resource("drawable/ic_aurora_logo.xml").use { loadXmlImageVector(InputSource(it), Density(1f)) } }
+// mirrors android's ic_aurora_logo drawable; built in code so startup skips the xml parser
+val AuroraLogo: ImageVector by lazy {
+    ImageVector.Builder("logo", 64.dp, 64.dp, 64f, 64f).addPath(
+        addPathNodes("M9,53 L28.4,11.3 Q32,3.8 35.6,11.3 L55,53 M16,39.5 C27,30 37,49 48,39.5"),
+        stroke = SolidColor(Color(0xFFFF2E7E)), strokeLineWidth = 9f, strokeLineCap = StrokeCap.Round, strokeLineJoin = StrokeJoin.Round,
+    ).build()
+}

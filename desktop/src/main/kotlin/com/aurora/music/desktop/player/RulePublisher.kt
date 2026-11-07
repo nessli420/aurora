@@ -15,8 +15,14 @@ import java.util.Locale
 // the computer's own outputs count as the device route so per-output presets and eq bindings follow them
 internal class RulePublisher(private val store: SettingsStore,
     private val busOf: (String) -> WindowsAudioEndpoints.Bus? = WindowsAudioEndpoints::bus) {
+    // null matches the monitor's initial idle route
+    private var published: OutputInfo? = null
+
     fun publish(state: EngineState) {
-        store.processingRoutes.publish(route(state.output))
+        if (state.output != published) {
+            published = state.output
+            store.processingRoutes.publish(route(state.output))
+        }
         store.presetRuleContext.publish(context(state))
     }
 

@@ -759,7 +759,7 @@ private fun CoverOverlay(
             LaunchedEffect(song.id) { settle.animateTo(1f, tween(1400, easing = androidx.compose.animation.core.FastOutSlowInEasing)) }
             val drift = coverDrift(state.isPlaying)
             BoxWithConstraints(Modifier.fillMaxSize().background(Color(0xFF17191D)).clickable(noRipple, indication = null) {}) {
-                LyricsBackdrop(song)
+                LyricsBackdrop(song, state.isPlaying)
                 val wide = maxWidth > maxHeight
                 val side = if (wide) maxHeight else maxWidth
                 val fade = if (wide) Brush.horizontalGradient(.6f to Color.Black, 1f to Color.Transparent)
@@ -820,7 +820,7 @@ private fun CoverOverlay(
 
 // playing time, stepped like the lyrics glow: the cover moves under a pixel per step so a dozen redraws a second look smooth
 @Composable
-private fun coverDrift(running: Boolean): androidx.compose.runtime.FloatState {
+internal fun coverDrift(running: Boolean): androidx.compose.runtime.FloatState {
     val drift = remember { mutableFloatStateOf(0f) }
     LaunchedEffect(running) {
         if (!running) return@LaunchedEffect
@@ -852,19 +852,23 @@ private fun MarqueeTitle(
     var fullWidth by remember(text) { androidx.compose.runtime.mutableIntStateOf(0) }
     var shownWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val overflowing = fullWidth > shownWidth && shownWidth > 0
-    Text(
-        text, style = style, fontWeight = fontWeight,
-        maxLines = 1, softWrap = false, color = color,
-        onTextLayout = { fullWidth = it.size.width },
-        modifier = Modifier
-            .onSizeChanged { shownWidth = it.width }
-            .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
-                drawContent()
-                drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.08f to Color.Black, 0.92f to Color.Black, 1f to Color.Transparent),
-                    blendMode = BlendMode.DstIn)
-            } else Modifier)
-            .basicMarquee(iterations = Int.MAX_VALUE, initialDelayMillis = 1500, repeatDelayMillis = 2500),
-    )
+    // each new title scrolls twice then rests, so an idle player stops repainting
+    androidx.compose.runtime.key(text) {
+        Text(
+            text, style = style, fontWeight = fontWeight,
+            maxLines = 1, softWrap = false, color = color,
+            onTextLayout = { fullWidth = it.size.width },
+            modifier = Modifier
+                .onSizeChanged { shownWidth = it.width }
+                .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
+                    drawContent()
+                    // the title rests at its start, so only the right edge fades
+                    drawRect(Brush.horizontalGradient(0f to Color.Black, 0.92f to Color.Black, 1f to Color.Transparent),
+                        blendMode = BlendMode.DstIn)
+                } else Modifier)
+                .basicMarquee(iterations = 2, initialDelayMillis = 1500, repeatDelayMillis = 2500),
+        )
+    }
 }
 
 private fun sourceLabel(song: com.aurora.music.model.Song): String? = when {

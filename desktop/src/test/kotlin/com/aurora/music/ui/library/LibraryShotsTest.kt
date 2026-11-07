@@ -29,7 +29,7 @@ class LibraryShotsTest {
         AuditScene(label, w, h, setup = { settingsStore.setThemeStyle(style) }).use { scene ->
             scene.awaitRoute(Routes.HOME)
             scene.navigate(Routes.LIBRARY)
-            val library = scene.entryViewModel(LibraryViewModel::class)
+            val library = scene.rootViewModel(LibraryViewModel::class)
             val left = scene.contentLeft
             val top = PageMetrics.HeaderTop.value + PageMetrics.HeaderHeight.value + 52f
             scene.shot("all", 2_000)

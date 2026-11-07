@@ -37,6 +37,11 @@ class AiPlaylistViewModel(private val container: DesktopContainer) : ViewModel()
 
     init { viewModelScope.launch { runCatching { container.aiDj.vocabulary() } } }
 
+    override fun onCleared() {
+        container.aiDj.scheduleRelease()
+        super.onCleared()
+    }
+
     fun setPrompt(text: String) = _state.update { it.copy(prompt = text) }
 
     fun downloadModel() = container.downloadAiDjModel()

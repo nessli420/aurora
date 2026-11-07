@@ -10,14 +10,10 @@ import kotlin.math.round
 import kotlin.math.sqrt
 
 object SonicFeatures {
-    // bump when algorithm/layout changes so stale vectors are re-analyzed
-    const val VERSION = 2
-
     private const val FFT_SIZE = 2048
     private const val HOP = 2048              // no overlap ~4x fewer ffts than 50% overlap
     private const val N_MELS = 40
     private const val N_MFCC = 13
-    private const val MAX_SECONDS = 30
     private const val MIN_BPM = 60.0
     private const val MAX_BPM = 180.0
 

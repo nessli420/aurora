@@ -9,6 +9,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.rememberVectorPainter
@@ -47,11 +48,14 @@ import com.aurora.music.desktop.ui.shortcut
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.ui.AuroraApp
 import com.aurora.music.util.AppLog
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
 import java.awt.Dimension
@@ -59,17 +63,29 @@ import java.awt.Frame
 import java.awt.GraphicsEnvironment
 import java.awt.Rectangle
 import java.awt.SystemTray
+import java.time.Duration
+import java.time.Instant
+import kotlin.concurrent.thread
 import kotlin.math.roundToInt
 import com.aurora.music.desktop.platform.WindowPlacement as SavedWindow
 
 private const val TAG = "AuroraMain"
 
 fun main() {
+    val start = ProcessHandle.current().info().startInstant().orElse(null)
+    fun since() = start?.let { " +${Duration.between(it, Instant.now()).toMillis()} ms" }.orEmpty()
     val paths = DesktopPaths.default()
     val instance = DesktopRuntime.init(paths) ?: return
     if (HostPlatform.isLinux) LinuxDesktop.applyWindowClass()
-    AppLog.d(TAG, "Starting Aurora ${BuildInfo.VERSION_NAME} on Java ${Runtime.version()}")
+    // skiko's setup on linux needs compose's autodpi property first, and its laf branch would touch swing off the edt
+    if (HostPlatform.isWindows && System.getProperty("skiko.rendering.laf.global") == "false") {
+        thread(isDaemon = true, name = "skiko-warm") { runCatching { org.jetbrains.skiko.Library.load() } }
+    }
+    AppLog.d(TAG, "Starting Aurora ${BuildInfo.VERSION_NAME} on Java ${Runtime.version()}${since()}")
+    val shown = CompletableDeferred<Unit>()
+    com.aurora.music.desktop.web.Chromium.holdUntil(shown)
     val container = DesktopContainer(paths)
+    AppLog.d(TAG, "Container built${since()}")
     SingletonImageLoader.setSafe { container.imageLoader }
     val settings = container.desktopSettings
     val (language, savedWindow, initialPrefs) = runBlocking {
@@ -79,14 +95,17 @@ fun main() {
     val glassAtStart = initialTranslucent && WindowBackdrop.supported
     val customTitleBar = !runBlocking { settings.systemTitleBar.first() }
     AppStrings.setLocale(language)
+    thread(isDaemon = true, name = "strings-warm") { AppStrings.table }
     val player = DesktopPlayer(DesktopPlaybackEngine(resolver = container.streamResolver), container.playerDependencies())
     container.mixService.attach(player, container.scope)
     val connect = com.aurora.music.desktop.connect.DesktopConnect(container, player)
+    AppLog.d(TAG, "Player built${since()}")
     val shortcuts = MutableSharedFlow<Shortcut>(extraBufferCapacity = 8)
     val raises = MutableSharedFlow<Unit>(extraBufferCapacity = 1)
     Runtime.getRuntime().addShutdownHook(Thread { container.folderLibrary.close(); container.queueStore.flushNow(); container.playHistory.flushNow() })
 
     application {
+        remember { AppLog.d(TAG, "Composing${since()}") }
         val windowState = rememberWindowState(
             placement = if (savedWindow?.maximized == true) WindowPlacement.Maximized else WindowPlacement.Floating,
             position = savedWindow?.takeIf(::onScreen)?.let { WindowPosition(it.x.dp, it.y.dp) } ?: WindowPosition(Alignment.Center),
@@ -199,9 +218,14 @@ fun main() {
                     revealed = true
                 }
                 while (!window.isDisplayable) delay(16)
-                windowHandle = window.windowHandle
-                player.mediaControls.attach(windowHandle) { raises.tryEmit(Unit) }
-                AppLog.d(TAG, "Window shown")
+                val handle = window.windowHandle
+                windowHandle = handle
+                // creating the system media session waits on winrt, so it stays off the reveal
+                launch(Dispatchers.IO) { player.mediaControls.attach(handle) { raises.tryEmit(Unit) } }
+                AppLog.d(TAG, "Window shown${since()}")
+                withFrameNanos { }
+                AppLog.d(TAG, "First frame${since()}")
+                shown.complete(Unit)
             }
             val fullscreen = borderless || windowState.placement == WindowPlacement.Fullscreen
             // a window covering the whole screen skips dwm composition whenever it can, so its backdrop blinks in and out

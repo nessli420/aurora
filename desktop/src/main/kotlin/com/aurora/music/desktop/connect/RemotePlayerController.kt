@@ -146,7 +146,7 @@ internal class RemotePlayerController(
         RepeatMode.OFF -> 2; RepeatMode.ALL -> 1; RepeatMode.ONE -> 0
     }))
     override fun toggleLikeCurrent() = send(ConnectCommand.Like(!mutableState.value.isCurrentLiked))
-    override fun refreshLikes() = Unit
+    override fun refreshLikes(restart: Boolean) = Unit
     override fun checkLiked(songs: List<com.aurora.music.model.Song>) = Unit
     override fun toggleLike(id: String, kind: String) { if (kind == "song" && id == mutableState.value.current.id) toggleLikeCurrent() }
     override fun setExpanded(value: Boolean) = mutableState.update { it.copy(expanded = value) }

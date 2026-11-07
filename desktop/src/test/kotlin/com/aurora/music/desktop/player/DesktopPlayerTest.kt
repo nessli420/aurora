@@ -222,6 +222,18 @@ class DesktopPlayerTest {
         assertNull(store.get("subsonic|alice")?.shuffleOrder)
     }
 
+    @Test fun aSeekWhilePausedIsSavedRightAway() {
+        val engine = FakeEngine()
+        val player = player(engine)
+        on { player.playAll(songs(3), 0) }
+        on { engine.at(60_000) }
+        on { player.togglePlay() }
+        settle()
+        on { engine.at(180_000) }
+        settle()
+        assertEquals(180, container.queueStore.get(account)?.positionSec)
+    }
+
     @Test fun legacyShuffleOrderEntriesMigrateIntoTheSavedQueue() {
         val songs = songs(5)
         val physical = listOf(3, 0, 4, 1, 2).map { songs[it].id }

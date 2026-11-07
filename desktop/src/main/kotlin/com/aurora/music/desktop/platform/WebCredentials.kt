@@ -27,20 +27,23 @@ class WebCredentials(private val root: File, name: String, private val vault: Cr
             target.delete()
             return
         }
-        memory.remove(id)
         directory.mkdirs()
         val temp = File(directory, "$id.tmp")
         temp.writeBytes(sealed)
         Files.move(temp.toPath(), target.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)
+        memory[id] = session
     }
 
-    fun read(id: String): String {
-        memory[id]?.let { return it }
-        if (!HostPlatform.isWindows) migrateLegacy(root, vault)
-        return runCatching { open(file(id).readBytes())?.let { String(it, Charsets.UTF_8) } }.getOrNull() ?: ""
+    // memory holds keyring-less logins and caches sealed ones; filled under update's lock so a rotation never reverts
+    fun read(id: String): String = memory[id] ?: synchronized(this) {
+        memory[id] ?: run {
+            if (!HostPlatform.isWindows) migrateLegacy(root, vault)
+            (runCatching { open(file(id).readBytes())?.let { String(it, Charsets.UTF_8) } }.getOrNull() ?: "")
+                .also { if (it.isNotEmpty()) memory[id] = it }
+        }
     }
 
-    fun remove(id: String) {
+    @Synchronized fun remove(id: String) {
         memory.remove(id)
         file(id).delete()
     }

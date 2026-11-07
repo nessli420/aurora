@@ -109,7 +109,7 @@ interface PlayerController {
     fun toggleShuffle()
     fun cycleRepeat()
     fun toggleLikeCurrent()
-    fun refreshLikes()
+    fun refreshLikes(restart: Boolean = false)
     fun checkLiked(songs: List<Song>)
     fun toggleLike(id: String, kind: String = "song")
     suspend fun likeOptions(song: Song): List<com.aurora.music.data.LikeOption> = emptyList()

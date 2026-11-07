@@ -68,8 +68,10 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Density
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.HomeData
 import com.aurora.music.data.HomeFeedItem
 import com.aurora.music.data.HomeSection
+import com.aurora.music.data.starredQueue
 import com.aurora.music.data.TabletSetting
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.model.Album
@@ -149,7 +151,7 @@ fun HomeScreen(
             }
         }
 
-        if (state.loading && data.newReleases.isEmpty()) {
+        if (state.loading && data == HomeData()) {
             item(key = "loading") {
                 Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) {
                     LottieLoader(modifier = Modifier.size(80.dp))
@@ -244,7 +246,7 @@ fun HomeScreen(
                     action = appString(R.string.text_see_all_2941c5),
                     onAction = { onOpenDetail("liked", "liked") },
                 ) {
-                    Favourites(data.starred, ui.tabletFavouriteScale, onPlayAll)
+                    Favourites(data.starred, ui.tabletFavouriteScale) { tapped -> starredQueue(state.allStarred, data.starred, tapped).let { (songs, at) -> onPlayAll(songs, at) } }
                 }
             }
         }
@@ -416,32 +418,32 @@ private fun HeroCard(album: Album, height: Dp, onOpenDetail: (String, String) ->
 }
 
 @Composable
-private fun Favourites(songs: List<Song>, scale: Float, onPlayAll: (List<Song>, Int) -> Unit) {
+private fun Favourites(songs: List<Song>, scale: Float, onPlay: (Song) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
         val rest = songs.drop(1).take(4)
         if (maxWidth >= 1000.dp && rest.isNotEmpty()) {
             val gap = 24.dp
             val cardWidth = ((maxWidth - gap) / 2).coerceAtMost(560.dp)
             Row(Modifier.fillMaxWidth().height(FavouritesHeight), horizontalArrangement = Arrangement.spacedBy(gap)) {
-                FavouriteCard(songs, scale, Modifier.width(cardWidth).fillMaxHeight(), onPlayAll, wave = 64.dp)
+                FavouriteCard(songs, scale, Modifier.width(cardWidth).fillMaxHeight(), onPlay, wave = 64.dp)
                 Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    rest.forEachIndexed { i, song -> LikedRow(song) { onPlayAll(songs, i + 1) } }
+                    rest.forEach { song -> LikedRow(song) { onPlay(song) } }
                 }
             }
         } else {
-            FavouriteCard(songs, scale, Modifier.fillMaxWidth(), onPlayAll)
+            FavouriteCard(songs, scale, Modifier.fillMaxWidth(), onPlay)
         }
     }
 }
 
 @Composable
-private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, onPlayAll: (List<Song>, Int) -> Unit, wave: Dp = 40.dp) {
+private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, onPlay: (Song) -> Unit, wave: Dp = 40.dp) {
     val featured = songs.first()
     BoxWithConstraints(
         modifier
             .clip(RoundedCornerShape(themedCorner(20.dp)))
             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
-            .clickable { onPlayAll(songs, 0) }
+            .clickable { onPlay(featured) }
             .pointerHoverIcon(PointerIcon.Hand)
             .padding(16.dp * scale),
     ) {

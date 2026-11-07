@@ -28,7 +28,6 @@ import com.aurora.music.data.ReportingMediaBackend
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.SettingsStore
-import com.aurora.music.data.SmartPlaylist
 import com.aurora.music.data.SmartPlaylistEngine
 import com.aurora.music.data.SourceLocalizer
 import com.aurora.music.data.SquigEqRepository
@@ -37,6 +36,7 @@ import com.aurora.music.data.accountKey
 import com.aurora.music.data.artwork.ArtworkRepository
 import com.aurora.music.data.artwork.ArtworkUrls
 import com.aurora.music.data.remote.ArtistInfoClient
+import com.aurora.music.data.remote.AuroraHttp
 import com.aurora.music.data.remote.ClientInfo
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.PlexClient
@@ -91,7 +91,11 @@ class DesktopContainer(
     private val _sourceErrors = MutableSharedFlow<String>(extraBufferCapacity = 1)
     val sourceErrors: SharedFlow<String> = _sourceErrors.asSharedFlow()
 
+    val http: OkHttpClient by lazy { AuroraHttp.base.newBuilder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build() }
+
     init {
+        // warms tls off main; must stay below the delegate
+        scope.launch(Dispatchers.IO) { http }
         paths.createDirectories()
         paths.moveLegacyQueue()
         com.aurora.music.util.NativeLibraries.loader = com.aurora.music.desktop.natives.NativeLoader::load
@@ -114,18 +118,16 @@ class DesktopContainer(
     val resumePoints = ResumePoints(paths.local)
     val replayGainStore = ReplayGainStore(paths.roaming)
     val artistInfoStore = ArtistInfoStore(paths.roaming)
-    val artistInfoClient = ArtistInfoClient()
+    val artistInfoClient by lazy { ArtistInfoClient(http) }
     val radioBrowser by lazy { com.aurora.music.data.remote.RadioBrowserClient(http) }
     val podcastClient by lazy { com.aurora.music.data.remote.PodcastClient(http) }
     val tagEditor = com.aurora.music.desktop.library.TagEditor()
     val musicBrainz by lazy { com.aurora.music.data.remote.MusicBrainzClient(http) }
-    @Volatile private var acoustIdKeyValue: String = ""
-    val acoustId by lazy { com.aurora.music.data.remote.AcoustIdClient(apiKeyProvider = { acoustIdKeyValue }, base = http) }
+    private val acoustIdKey = settingsStore.acoustIdKey.stateIn(scope, SharingStarted.Eagerly, "")
+    val acoustId by lazy { com.aurora.music.data.remote.AcoustIdClient(apiKeyProvider = { acoustIdKey.value }, base = http) }
     private val localStore = LocalStore(paths.roaming)
     val listeningLevels = com.aurora.music.data.listening.ListeningLevelStore(java.io.File(paths.local, "listening_levels.json"), settingsStore.processingRoutes)
     val backupManager = BackupManager(settingsStore, localStore, playHistory, paths.roaming, paths.cache, listeningLevels)
-
-    val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).build()
 
     val folderLibrary = FolderLibrary(paths.library, folders = { desktopSettings.musicFolders.first() }, fileUri = ::desktopFileUri,
         scope = scope, gainProvider = replayGainStore::gainsFor, separatorsProvider = { settingsStore.artistSeparators.first() })
@@ -151,7 +153,8 @@ class DesktopContainer(
     private fun soundcloudClient(session: Session) = soundcloudClients.getOrPut(session.token) {
         com.aurora.music.data.remote.SoundCloudClient(
             session = { com.aurora.music.data.remote.SoundCloudWebSession.decode(soundcloudCredentials.read(session.token)) }.takeUnless { session.isGuest },
-            onRefreshed = { soundcloudCredentials.update(session.token, it.encode()) }, http = http, browser = if (session.isGuest) null else soundcloudWriter)
+            onRefreshed = { soundcloudCredentials.update(session.token, it.encode()) }, http = http, browser = if (session.isGuest) null else soundcloudWriter,
+            savedClientId = { settingsStore.soundcloudClientId.first() }, onClientId = { settingsStore.setSoundcloudClientId(it) })
     }
 
     suspend fun verifySoundCloud(session: Session): Boolean = (buildBackend(session) as? com.aurora.music.data.SoundCloudBackend)?.verify() == true
@@ -194,21 +197,21 @@ class DesktopContainer(
         }
     }
 
-    @Volatile private var squigBaseValue: String = DEFAULT_SQUIG_BASE
-    @Volatile private var squigTargetValue: String = DEFAULT_SQUIG_TARGET
-    val squigEq = SquigEqRepository(SquigClient(), baseProvider = { squigBaseValue }, targetProvider = { squigTargetValue })
+    private val squigBase = settingsStore.squigBaseUrl.stateIn(scope, SharingStarted.Eagerly, DEFAULT_SQUIG_BASE)
+    private val squigTarget = settingsStore.squigTarget.stateIn(scope, SharingStarted.Eagerly, DEFAULT_SQUIG_TARGET)
+    val squigEq by lazy { SquigEqRepository(SquigClient(http), baseProvider = { squigBase.value }, targetProvider = { squigTarget.value }) }
 
     @Volatile private var maxBitrate: Int = 0
     @Volatile private var downloadBitrate: Int = 0
     @Volatile private var preferLocalSources: Boolean = true
-    @Volatile private var sourcePriorityValue: List<String> = DEFAULT_SOURCE_PRIORITY
+    private val sourcePriority = settingsStore.sourcePriority.stateIn(scope, SharingStarted.Eagerly, DEFAULT_SOURCE_PRIORITY)
     @Volatile private var unifiedLibraryValue: Boolean = false
     @Volatile private var mergeSourceKeys: Set<String> = emptySet()
     @Volatile private var lastSession: Session? = null
     @Volatile private var offlineToggle: Boolean = false
     @Volatile private var offlineFlag: Boolean = false
-    @Volatile private var lrclibEnabled: Boolean = true
-    @Volatile private var smartPlaylistsValue: List<SmartPlaylist> = emptyList()
+    private val lrclibEnabled = settingsStore.lrclibEnabled.stateIn(scope, SharingStarted.Eagerly, true)
+    private val smartPlaylists = settingsStore.smartPlaylists.stateIn(scope, SharingStarted.Eagerly, emptyList())
     private val localMergeSession = AccountAuthenticator.LOCAL_SESSION
 
     @Volatile
@@ -233,12 +236,12 @@ class DesktopContainer(
         copyCached = { uri, file, progress -> audioCache.copyTo(uri, file, progress) },
     )
 
-    @Volatile private var catalogueMatchValue = com.aurora.music.data.CatalogueMatchPrefs()
+    private val catalogueMatch = settingsStore.catalogueMatch.stateIn(scope, SharingStarted.Eagerly, com.aurora.music.data.CatalogueMatchPrefs())
 
     private val sourceLocalizer = SourceLocalizer(localMergeSession, downloadManager,
-        preferLocal = { preferLocalSources }, priority = { sourcePriorityValue },
+        preferLocal = { preferLocalSources }, priority = { sourcePriority.value },
         isLocalUrl = { it.startsWith("file:") }, findLocal = folderLibrary::findMatch,
-        catalogueMatch = { catalogueMatchValue })
+        catalogueMatch = { catalogueMatch.value })
 
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 
@@ -273,15 +276,16 @@ class DesktopContainer(
     val mixService by lazy { com.aurora.music.desktop.audio.mix.MixService(mixController, settingsStore, { song -> if (song.streamUrl.startsWith("file:")) com.aurora.music.desktop.audio.ResolvedStream(song.streamUrl) else streamResolver.resolve(song) }, scope) }
     val sonicEngine by lazy {
         com.aurora.music.data.SonicEngine(sonicStore, { repository.allLibrarySongs(cap = Int.MAX_VALUE) },
-            { settingsStore.session.first()?.accountKey().orEmpty() }, mixAnalyzer)
+            { settingsStore.session.first()?.accountKey().orEmpty() }, mixAnalyzer, libraryKey = { offline.value to libraryReload.value })
     }
     val aiDjModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(paths.local, "ai-dj-model"), http) }
     private val aiDjLlm by lazy { com.aurora.music.ai.LocalLlm({ aiDjModels.model() }, (Runtime.getRuntime().availableProcessors() / 2).coerceIn(2, 8)) }
     val aiDjMemory by lazy { com.aurora.music.ai.DjMemory(java.io.File(paths.local, "ai-dj-memory.json")) }
-    val aiDj by lazy {
+    private val aiDjDelegate = lazy {
         com.aurora.music.ai.DjEngine(repository, playHistory, aiDjLlm, { aiDjModels.state.value == com.aurora.music.ai.DjModelState.Ready },
-            { sonicStore.snapshot() }, { seed, count -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count) else emptyList() }, aiDjMemory)
+            { sonicStore.snapshot() }, { seed, count, pool -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count, pool) else emptyList() }, aiDjMemory)
     }
+    val aiDj by aiDjDelegate
     fun downloadAiDjModel() = aiDjModels.download()
     suspend fun deleteAiDjModel() = aiDjModels.delete { aiDjLlm.release() }
     val aiDjVoiceModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(paths.local, "ai-dj-voice"), http, com.aurora.music.ai.DjModelStore.WHISPER) }
@@ -302,14 +306,23 @@ class DesktopContainer(
     private val discordDelegate = lazy { com.aurora.music.data.DiscordRpc(settingsStore, scope, discordUser) { url -> com.aurora.music.desktop.player.artworkBytes(url, http, artworkRepository) } }
     val discord by discordDelegate
 
-    val lyricsRepository = LyricsRepository(backendProvider = { backend }, lrclibEnabledProvider = { lrclibEnabled },
-        separatorsProvider = { settingsStore.artistSeparators.first() },
-        orderProvider = { settingsStore.lyricsSources.first() },
-        spotifyAllowed = { type -> settingsStore.mergeFeatures.first().lyricsFor(type) })
+    val lyricsRepository by lazy {
+        LyricsRepository(backendProvider = { backend }, lrclibEnabledProvider = { lrclibEnabled.value },
+            separatorsProvider = { settingsStore.artistSeparators.first() },
+            orderProvider = { settingsStore.lyricsSources.first() },
+            spotifyAllowed = { type -> settingsStore.mergeFeatures.first().lyricsFor(type) },
+            http = http.newBuilder().connectTimeout(8, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS).build())
+    }
 
-    val artworkRepository = ArtworkRepository(paths.artwork, ::openDesktopUri, SkiaArtworkImages,
-        offline = { offlineToggle }, enabled = { settingsStore.artworkLookupEnabled.first() },
-        separators = { settingsStore.artistSeparators.first() })
+    val artworkRepository by lazy {
+        val artworkHttp = http.newBuilder().connectTimeout(8, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build()
+        ArtworkRepository(paths.artwork, ::openDesktopUri, SkiaArtworkImages,
+            offline = { offlineToggle }, enabled = { settingsStore.artworkLookupEnabled.first() },
+            separators = { settingsStore.artistSeparators.first() },
+            client = com.aurora.music.data.artwork.CoverArtClient(artworkHttp), http = artworkHttp)
+    }
+    // keeps the startup trim, the storage page reads its total once
+    init { scope.launch(Dispatchers.IO) { artworkRepository } }
 
     private val imageLoaderDelegate = lazy { desktopImageLoader(paths.images, http, artworkRepository) }
     val imageLoader: ImageLoader by imageLoaderDelegate
@@ -319,7 +332,7 @@ class DesktopContainer(
         downloadManager = downloadManager,
         offlineProvider = { offlineFlag },
         currentServerIdProvider = { currentServerId() },
-        smartPlaylistsProvider = { smartPlaylistsValue },
+        smartPlaylistsProvider = { smartPlaylists.value },
         smartEngine = smartEngine,
         coverUrl = ArtworkUrls::cover,
         cachedSongsProvider = { audioCache.songs.value },
@@ -404,6 +417,8 @@ class DesktopContainer(
         _sessionReady.value = session != null && backend != null
     }
 
+    private fun forgetAiDjLibrary() { if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary() }
+
     private fun recomputeOffline() {
         // local-files mode never needs the network so it's never offline
         offlineFlag = !isLocal && offlineToggle
@@ -415,49 +430,44 @@ class DesktopContainer(
             settingsStore.artistSeparators.drop(1).collect { _libraryReload.value++ }
         }
         scope.launch {
-            settingsStore.acoustIdKey.collect { acoustIdKeyValue = it }
-        }
-        scope.launch {
-            settingsStore.session.distinctUntilChanged().collect { session ->
-                lastSession = session
-                // keep a disk-restored session in the saved list so it shows up for switching
-                session?.let { rememberSession(it) }
-                rebuildBackend()
-                publishSession(session)
-                // ignore the first load so startup doesn't count as an account change
-                val key = session?.accountKey().orEmpty()
-                if (lastAccountKey != null && lastAccountKey != key) _accountEpoch.value++
-                lastAccountKey = key
-                recomputeOffline()
-                sonicEngine.cancel()
-                withContext(Dispatchers.IO) { sonicStore.selectAccount(key) }
-                if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
-            }
-        }
-        scope.launch {
-            var first = true
-            settingsStore.unifiedLibrary.distinctUntilChanged().collect {
-                unifiedLibraryValue = it
-                rebuildBackend()
-                if (!first) _libraryReload.value++
-                first = false
-            }
+            var previous: Triple<Session?, Boolean, Set<String>>? = null
+            // one collector, so launch builds once with the merge settings already known
+            combine(settingsStore.session.distinctUntilChanged(), settingsStore.unifiedLibrary.distinctUntilChanged(),
+                settingsStore.mergeSources.distinctUntilChanged()) { session, unified, merge -> Triple(session, unified, merge) }
+                .distinctUntilChanged().collect { current ->
+                    val (session, unified, merge) = current
+                    val last = previous
+                    previous = current
+                    val sessionChanged = last == null || last.first != session
+                    unifiedLibraryValue = unified
+                    mergeSourceKeys = merge
+                    if (sessionChanged) {
+                        lastSession = session
+                        // keep a disk-restored session in the saved list so it shows up for switching
+                        session?.let { rememberSession(it) }
+                    }
+                    rebuildBackend()
+                    if (sessionChanged) {
+                        publishSession(session)
+                        // ignore the first load so startup doesn't count as an account change
+                        val key = session?.accountKey().orEmpty()
+                        if (lastAccountKey != null && lastAccountKey != key) _accountEpoch.value++
+                        lastAccountKey = key
+                        recomputeOffline()
+                        sonicEngine.cancel()
+                        withContext(Dispatchers.IO) { sonicStore.selectAccount(key) }
+                        if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
+                    }
+                    if (last != null && (last.second != unified || last.third != merge)) { _libraryReload.value++; forgetAiDjLibrary() }
+                }
         }
         scope.launch {
             settingsStore.savedSessions.distinctUntilChanged().drop(1).collect {
                 if (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true) {
                     rebuildBackend()
                     _libraryReload.value++
+                    forgetAiDjLibrary()
                 }
-            }
-        }
-        scope.launch {
-            var first = true
-            settingsStore.mergeSources.distinctUntilChanged().collect {
-                mergeSourceKeys = it
-                rebuildBackend()
-                if (!first) _libraryReload.value++
-                first = false
             }
         }
         scope.launch {
@@ -470,29 +480,11 @@ class DesktopContainer(
             settingsStore.offlineMode.collect { offlineToggle = it; recomputeOffline() }
         }
         scope.launch {
-            settingsStore.lrclibEnabled.collect { lrclibEnabled = it }
-        }
-        scope.launch {
-            settingsStore.squigBaseUrl.collect { squigBaseValue = it }
-        }
-        scope.launch {
-            settingsStore.squigTarget.collect { squigTargetValue = it }
-        }
-        scope.launch {
-            settingsStore.smartPlaylists.collect { smartPlaylistsValue = it }
-        }
-        scope.launch {
             settingsStore.preferLocalSources.collect { on ->
                 preferLocalSources = on
                 // best-source matching needs the folder index so load it once when enabled
                 if (on) runCatching { folderLibrary.ensureLoaded() }
             }
-        }
-        scope.launch {
-            settingsStore.sourcePriority.collect { sourcePriorityValue = it }
-        }
-        scope.launch {
-            settingsStore.catalogueMatch.collect { catalogueMatchValue = it }
         }
         scope.launch {
             desktopSettings.musicFolders.drop(1).collect { runCatching { folderLibrary.refresh() } }
@@ -516,10 +508,12 @@ class DesktopContainer(
     suspend fun switchSession(session: Session) = applySession(session)
 
     private suspend fun rememberSession(session: Session) {
-        if (session.type == ServerType.LOCAL) settingsStore.savedSessions.first()
+        val saved = settingsStore.savedSessions.first()
+        if (session.type == ServerType.LOCAL) saved
             .filter { it.type == ServerType.LOCAL && it.accountKey() != session.accountKey() }
             .forEach { settingsStore.removeSavedSession(it) }
-        settingsStore.addSavedSession(session)
+        // launch skips the write when it is already the newest
+        if (saved.lastOrNull() != session) settingsStore.addSavedSession(session)
     }
 
     suspend fun signOut() {
