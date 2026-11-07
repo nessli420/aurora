@@ -24,6 +24,16 @@ class ResumePointsTest {
         assertFalse(LongForm.applies("aurora-mix:1", 90 * 60))
     }
 
+    @Test fun shortSpokenWordChaptersGetSkipButtonsButShortSongsDoNot() {
+        assertTrue(LongForm.skips("plex-chapter", 12 * 60, "Audiobook"))
+        assertTrue(LongForm.skips("plex-chapter", 8 * 60, "Books & Spoken"))
+        assertTrue(LongForm.skips("local-chapter", 5 * 60, "Fantasy\u0000Hörbuch"))
+        assertTrue(LongForm.skips("plex-book", 45 * 60, ""))
+        assertFalse(LongForm.skips("song", 4 * 60, "Pop"))
+        assertFalse(LongForm.skips("song", 4 * 60, "Spoken Rock Anthems Vol 2"))
+        assertFalse(LongForm.skips("radio:talk", 0, "Podcast"))
+    }
+
     @Test fun eachKindFollowsItsOwnSetting() {
         val podcastsOnly = PlaybackPrefs(resumePodcasts = true, resumeLongTracks = false)
         assertTrue(LongForm.resumes("podcast:ep1", 0, podcastsOnly))

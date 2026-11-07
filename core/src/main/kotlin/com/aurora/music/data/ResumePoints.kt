@@ -18,6 +18,22 @@ object LongForm {
     fun applies(id: String, durationSec: Int): Boolean =
         id.startsWith("podcast:") || (durationSec >= MIN_SEC && !id.startsWith("radio:") && !id.startsWith("aurora-mix:"))
 
+    // chapters split into short files still need scrubbing so spoken word tags count at any length
+    fun skips(id: String, durationSec: Int, genre: String): Boolean =
+        applies(id, durationSec) || (spoken(genre) && !id.startsWith("radio:") && !id.startsWith("aurora-mix:"))
+
+    fun spoken(genre: String): Boolean = GenreText.split(genre).any { g ->
+        val norm = g.lowercase().replace(Regex("[^\\p{L}]+"), " ").trim()
+        SPOKEN.any { norm == it || norm.startsWith("$it ") || norm.endsWith(" $it") }
+    }
+
+    private val SPOKEN = listOf(
+        "audiobook", "audiobooks", "audio book", "audio books", "spoken word", "podcast", "podcasts",
+        "speech", "books spoken", "hörbuch", "hörbücher", "hörspiel", "livre audio", "livres audio", "audiolibro",
+        "audiolibros", "audiolivro", "audiolibri", "luisterboek", "ljudbok", "lydbog", "lydbok", "äänikirja",
+        "аудиокнига", "аудиокниги", "sesli kitap", "kitab audio", "audiobuku",
+    )
+
     fun resumes(id: String, durationSec: Int, prefs: PlaybackPrefs): Boolean = when {
         id.startsWith("podcast:") -> prefs.resumePodcasts
         else -> prefs.resumeLongTracks && applies(id, durationSec)
