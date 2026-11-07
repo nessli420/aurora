@@ -193,7 +193,7 @@ fun SettingsRowDivider(inset: Dp = 72.dp) {
 }
 
 @Composable
-private fun RowScaffold(
+internal fun RowScaffold(
     icon: ImageVector?,
     title: String,
     subtitle: String?,

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"ترتیبات میں تلاش کریں"</string>
+    <string name="settings_search_clear">"تلاش صاف کریں"</string>
+    <string name="settings_search_empty">"“%1$s” سے ملتی کوئی ترتیب نہیں"</string>
+</resources>

@@ -53,6 +53,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -107,7 +108,10 @@ fun SettingsScreen(
     onOpenInsights: (() -> Unit)? = null,
     onLogout: () -> Unit,
     onReplayTour: (() -> Unit)? = null,
+    onOpenRoute: (String) -> Unit = {},
 ) {
+    var query by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val searchHits = rememberSettingsSearchHits()
     val container = LocalDesktopContainer.current
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val simpleMode by container.settingsStore.simpleMode.collectAsStateWithLifecycle(initialValue = false)
@@ -135,7 +139,21 @@ fun SettingsScreen(
                 appString(R.string.text_settings_c7f73b), onBack,
                 showBack = !com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail,
             )
+            SettingsSearchField(query, onQuery = { query = it })
             SettingsList(contentPadding) {
+                if (query.isNotBlank()) {
+                    item {
+                        SettingsSearchResults(query, searchHits) { hit ->
+                            when {
+                                hit.route != null -> onOpenRoute(hit.route)
+                                hit.titleRes == R.string.onboarding_replay_title && onReplayTour != null -> onReplayTour()
+                                // the rest live on this page, so show it
+                                else -> query = ""
+                            }
+                        }
+                    }
+                    return@SettingsList
+                }
                 item { SettingsSectionTitle(appString(R.string.text_library_accounts_e097be)) }
                 item {
                     SettingsGroup {

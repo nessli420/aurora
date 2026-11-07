@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"Buscar en ajustes"</string>
+    <string name="settings_search_clear">"Borrar búsqueda"</string>
+    <string name="settings_search_empty">"Ningún ajuste coincide con «%1$s»"</string>
+</resources>

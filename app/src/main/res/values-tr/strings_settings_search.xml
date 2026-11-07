@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"Ayarlarda Ara"</string>
+    <string name="settings_search_clear">"Aramayı Temizle"</string>
+    <string name="settings_search_empty">"“%1$s” ile eşleşen ayar yok"</string>
+</resources>

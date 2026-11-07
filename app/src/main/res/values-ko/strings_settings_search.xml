@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"설정 검색"</string>
+    <string name="settings_search_clear">"검색 지우기"</string>
+    <string name="settings_search_empty">"“%1$s”와(과) 일치하는 설정이 없습니다"</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"सेटिंग खोजें"</string>
+    <string name="settings_search_clear">"खोज साफ़ करें"</string>
+    <string name="settings_search_empty">"“%1$s” से मेल खाती कोई सेटिंग नहीं"</string>
+</resources>

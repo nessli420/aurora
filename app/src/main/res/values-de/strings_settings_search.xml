@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"Einstellungen durchsuchen"</string>
+    <string name="settings_search_clear">"Suche löschen"</string>
+    <string name="settings_search_empty">"Keine Einstellungen passen zu „%1$s“"</string>
+</resources>

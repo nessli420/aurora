@@ -27,3 +27,10 @@ dependencies {
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.okhttp.tls)
 }
+
+// SettingsSearchIndexTest reads both apps' settings screens and english strings
+tasks.test {
+    inputs.dir(rootProject.file("app/src/main/java/com/aurora/music/ui/screens/settings")).withPropertyName("androidSettings")
+    inputs.dir(rootProject.file("desktop/src/main/kotlin/com/aurora/music/ui/screens/settings")).withPropertyName("desktopSettings")
+    inputs.dir(rootProject.file("app/src/main/res/values")).withPropertyName("englishStrings")
+}

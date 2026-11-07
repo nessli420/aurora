@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"Cari Setelan"</string>
+    <string name="settings_search_clear">"Hapus Pencarian"</string>
+    <string name="settings_search_empty">"Tidak ada setelan yang cocok dengan “%1$s”"</string>
+</resources>

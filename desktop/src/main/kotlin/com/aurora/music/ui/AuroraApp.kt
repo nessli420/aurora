@@ -1403,6 +1403,7 @@ private fun Shell(
                                                     onOpenBackup = { open(Routes.SETTINGS_BACKUP) },
                                                     onOpenInsights = { open(Routes.SETTINGS_INSIGHTS) },
                                                     onLogout = { logout() },
+                                                    onOpenRoute = { open(it) },
                                                 )
                                             }
                                         }

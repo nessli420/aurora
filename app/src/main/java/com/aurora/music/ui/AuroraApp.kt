@@ -1444,6 +1444,7 @@ fun AuroraApp() {
                                     onOpenBackup = { open(Routes.SETTINGS_BACKUP) },
                                     onLogout = { logout() },
                                     onReplayTour = { onboarding.restart(); navController.navigate(Routes.SETUP) },
+                                    onOpenRoute = { open(it) },
                                 )
                                 }
                             }

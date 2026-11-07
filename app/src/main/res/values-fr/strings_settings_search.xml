@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"Rechercher dans les réglages"</string>
+    <string name="settings_search_clear">"Effacer la recherche"</string>
+    <string name="settings_search_empty">"Aucun réglage ne correspond à « %1$s »"</string>
+</resources>

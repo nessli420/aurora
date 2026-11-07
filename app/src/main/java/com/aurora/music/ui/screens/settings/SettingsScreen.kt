@@ -56,6 +56,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -100,7 +101,10 @@ fun SettingsScreen(
     onOpenBackup: () -> Unit,
     onLogout: () -> Unit,
     onReplayTour: () -> Unit = {},
+    onOpenRoute: (String) -> Unit = {},
 ) {
+    var query by androidx.compose.runtime.saveable.rememberSaveable { androidx.compose.runtime.mutableStateOf("") }
+    val searchHits = rememberSettingsSearchHits()
     val container = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication).container
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val simpleMode by container.settingsStore.simpleMode.collectAsStateWithLifecycle(initialValue = false)
@@ -133,11 +137,25 @@ fun SettingsScreen(
             appString(R.string.text_settings_c7f73b), onBack,
             showBack = !com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail,
         )
+        SettingsSearchField(query, onQuery = { query = it })
         LazyColumn(
             Modifier.fillMaxWidth(),
             state = listState,
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
         ) {
+            if (query.isNotBlank()) {
+                item {
+                    SettingsSearchResults(query, searchHits) { hit ->
+                        when {
+                            hit.route != null -> onOpenRoute(hit.route)
+                            hit.titleRes == R.string.onboarding_replay_title -> onReplayTour()
+                            // the rest live on this page, so show it
+                            else -> query = ""
+                        }
+                    }
+                }
+                return@LazyColumn
+            }
             item {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)

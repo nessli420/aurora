@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_search_hint">"搜索设置"</string>
+    <string name="settings_search_clear">"清除搜索"</string>
+    <string name="settings_search_empty">"没有与“%1$s”匹配的设置"</string>
+</resources>
