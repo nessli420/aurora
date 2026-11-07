@@ -252,6 +252,15 @@ class BackupArchiveTest {
         ).forEach { assertFails { parse(it) } }
     }
 
+    @Test fun localPlaylistsWithSongsFromOtherSourcesRestore() {
+        val store = LocalStore(directory)
+        val id = store.createPlaylist("Mixed")
+        store.addTracks(id, listOf("local:1"), listOf(SavedTrack(id = "jellyfin:2", title = "Elsewhere")))
+        val local = store.exportJson()
+        assertEquals(local, BackupArchive.decodeJson(Gson().toJson(AuroraBackup(localStore = local))).localStore)
+        assertFails { BackupArchive.decodeJson(Gson().toJson(AuroraBackup(localStore = """{"playlists":[{"id":"a","foreign":["x"]}]}"""))) }
+    }
+
     @Test fun sixtyFourBandRackSurvivesTheAppBackupEnvelope() {
         val bands = List(64) { ParamBand(30f + it * 200f, (it % 3 - 1).toFloat(), 1f, it % 3) }
         val rack = ProcessingRack(enabled = true, name = "64 bands", nodes = listOf(ProcessingRackNode(

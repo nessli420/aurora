@@ -327,7 +327,7 @@ object BackupArchive {
             val identifiers = mutableSetOf<String>()
             list.asJsonArray.forEach { p ->
                 require(p.isJsonObject)
-                require(p.asJsonObject.keySet().all { it in setOf("id", "title", "subtitle", "trackIds") })
+                require(p.asJsonObject.keySet().all { it in setOf("id", "title", "subtitle", "trackIds", "foreign") })
                 val id = p.asJsonObject.get("id")
                 require(id != null && id.isJsonPrimitive && id.asJsonPrimitive.isString && id.asString.isNotBlank())
                 require(identifiers.add(id.asString)) { "Duplicate local playlist identifier." }
@@ -336,6 +336,10 @@ object BackupArchive {
                 } }
                 p.asJsonObject.get("trackIds")?.takeUnless { it.isJsonNull }?.let { tracks ->
                     require(tracks.isJsonArray && tracks.asJsonArray.all { it.isJsonPrimitive && it.asJsonPrimitive.isString })
+                }
+                // songs from other sources that a merged library put in this playlist
+                p.asJsonObject.get("foreign")?.takeUnless { it.isJsonNull }?.let { tracks ->
+                    require(tracks.isJsonArray && tracks.asJsonArray.size() <= 10_000 && tracks.asJsonArray.all { it.isJsonObject })
                 }
             }
         }
