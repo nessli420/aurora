@@ -21,7 +21,7 @@ class YouTubeMusicBackend(
 ) : MediaBackend {
     private val songs = ConcurrentHashMap<String, Song>()
     private val pageCache = ConcurrentHashMap<String, Pair<Long, SearchResults>>()
-    private val pageLock = Mutex()
+    private val pageLocks = Array(16) { Mutex() }
     private val albumLookups = ConcurrentHashMap.newKeySet<String>()
     private val playbackTracker = YouTubeMusicPlaybackTracker(api, signatureTimestamp)
     private fun remember(result: SearchResults): SearchResults = result.also { it.songs.forEach { song -> songs[song.id] = song } }
@@ -42,9 +42,12 @@ class YouTubeMusicBackend(
     // a guest has no library, and youtube answers its library pages with a sign-in prompt
     private suspend fun library(id: String): SearchResults = if (signedIn) pages(id) else SearchResults()
 
-    private suspend fun pages(id: String): SearchResults = pageLock.withLock {
+    private suspend fun pages(id: String): SearchResults = pageLocks[(id.hashCode() and Int.MAX_VALUE) % pageLocks.size].withLock {
         pageCache[id]?.takeIf { System.nanoTime() - it.first < 60_000_000_000L }?.let { return@withLock it.second }
-        loadPages(id).also { pageCache[id] = System.nanoTime() to it }
+        loadPages(id).also {
+            pageCache[id] = System.nanoTime() to it
+            pageCache.entries.removeIf { entry -> System.nanoTime() - entry.value.first >= 60_000_000_000L }
+        }
     }
 
     private suspend fun loadPages(id: String): SearchResults {

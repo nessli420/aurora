@@ -4,6 +4,16 @@ import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import com.aurora.music.data.SettingsKeys as Keys
 
+// values are shared between collectors, so they must stay immutable
+internal class RawMemo<T>(private val decode: (String?) -> T) {
+    @Volatile private var last: Pair<String?, T>? = null
+
+    operator fun invoke(raw: String?): T {
+        last?.let { if (it.first == raw) return it.second }
+        return decode(raw).also { last = raw to it }
+    }
+}
+
 internal fun readAudioPrefs(p: Preferences): AudioPrefs =
     AudioPrefs(
         eqEnabled = p[Keys.EQ_ENABLED] ?: false,
@@ -85,7 +95,8 @@ internal fun writeProcessingPlayback(p: MutablePreferences, a: ProcessingPlaybac
     p[Keys.INDEPENDENT_OUTPUT] = a.independentOutput
 }
 
-private fun parseParametric(s: String?): List<ParamBand> = ParamBandCodec.decodePreference(s)
+private val parseParametric = RawMemo(ParamBandCodec::decodePreference)
+private val decodeOutputPolicy = RawMemo(OutputRatePolicyCodec::decode)
 
 internal fun readPlaybackPrefs(p: Preferences): PlaybackPrefs =
     PlaybackPrefs(
@@ -112,7 +123,7 @@ internal fun readPlaybackPrefs(p: Preferences): PlaybackPrefs =
         usbDsdExperimental = p[Keys.USB_DSD_EXPERIMENTAL] ?: false,
         usbHardwareVolume = p[Keys.USB_HARDWARE_VOLUME] ?: true,
         independentOutput = p[Keys.INDEPENDENT_OUTPUT] ?: false,
-        outputRatePolicy = OutputRatePolicyCodec.decode(p[Keys.OUTPUT_RATE_POLICY]).getOrThrow(),
+        outputRatePolicy = decodeOutputPolicy(p[Keys.OUTPUT_RATE_POLICY]).getOrThrow(),
     )
 
 internal fun readVisualizerPrefs(p: Preferences): VisualizerPrefs {

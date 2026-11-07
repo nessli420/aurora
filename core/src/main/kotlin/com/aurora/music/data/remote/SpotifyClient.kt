@@ -57,7 +57,7 @@ class SpotifyClient(
         resp
     }
 
-    private val okhttp: OkHttpClient = OkHttpClient.Builder()
+    private val okhttp: OkHttpClient = AuroraHttp.base.newBuilder()
         .addInterceptor(rateLimitInterceptor)
         .addInterceptor(authInterceptor)
         .connectTimeout(15, TimeUnit.SECONDS)
@@ -77,7 +77,7 @@ class SpotifyClient(
             .create(SpotifyApi::class.java)
 
         private fun apiFor(token: String): SpotifyApi {
-            val ok = OkHttpClient.Builder()
+            val ok = AuroraHttp.base.newBuilder()
                 .addInterceptor { chain -> chain.proceed(chain.request().newBuilder().header("Authorization", "Bearer $token").build()) }
                 .build()
             return buildApi(ok)

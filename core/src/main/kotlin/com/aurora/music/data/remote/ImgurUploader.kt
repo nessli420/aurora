@@ -5,14 +5,13 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.util.Base64
 
 // private server art is unreachable by discord so upload to imgur for a proxyable public link
 class ImgurUploader {
 
-    private val http = OkHttpClient()
+    private val http get() = AuroraHttp.base
     private val gson = Gson()
 
     suspend fun uploadFromUrl(imageUrl: String, clientId: String): String? = withContext(Dispatchers.IO) {

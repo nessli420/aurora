@@ -14,6 +14,8 @@ import com.aurora.music.model.inferReleaseType
 import com.aurora.music.model.releaseTypeLabel
 import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
+import kotlinx.coroutines.async
+import kotlinx.coroutines.coroutineScope
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import retrofit2.HttpException
 
@@ -94,7 +96,7 @@ class JellyfinBackend(
     )
 
     private suspend fun items(params: Map<String, String>): List<BaseItemDto> =
-        runCatching { client.api.items(uid, params).Items }.getOrDefault(emptyList())
+        runCatching { client.api.items(uid, params + ("EnableTotalRecordCount" to "false")).Items }.getOrDefault(emptyList())
 
     private fun albumParams(sortBy: String, order: String, limit: Int, extra: Map<String, String> = emptyMap()) =
         mapOf("IncludeItemTypes" to "MusicAlbum", "Recursive" to "true", "SortBy" to sortBy, "SortOrder" to order, "Limit" to "$limit") + extra
@@ -102,21 +104,20 @@ class JellyfinBackend(
     override suspend fun ping(): Boolean =
         runCatching { client.api.publicInfo().isSuccessful }.getOrDefault(false)
 
-    override suspend fun home(): HomeData {
-        val newReleases = items(albumParams("DateCreated", "Descending", 12)).map { it.toAlbum() }
-        val recent = items(albumParams("DatePlayed", "Descending", 12, mapOf("Filters" to "IsPlayed"))).map { it.toAlbum() }
-        val frequent = items(albumParams("PlayCount", "Descending", 12, mapOf("Filters" to "IsPlayed"))).map { it.toAlbum() }
-        val random = items(albumParams("Random", "Ascending", 12)).map { it.toAlbum() }
-        val playlists = items(mapOf("IncludeItemTypes" to "Playlist", "Recursive" to "true", "SortBy" to "SortName")).map { it.toPlaylist() }
-        val artists = runCatching {
-            client.api.artists(mapOf("UserId" to uid, "Recursive" to "true", "SortBy" to "SortName", "Limit" to "20")).Items
-        }.getOrDefault(emptyList()).map { it.toArtist() }
-        val starred = items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "Filters" to "IsFavorite", "Limit" to "50", "Fields" to "MediaSources")).map { it.toSong() }
-        return HomeData(newReleases, recent, frequent, random, playlists, artists, starred)
+    override suspend fun home(): HomeData = coroutineScope {
+        val newReleases = shelf { items(albumParams("DateCreated", "Descending", 12)).map { it.toAlbum() } }
+        val recent = shelf { items(albumParams("DatePlayed", "Descending", 12, mapOf("Filters" to "IsPlayed"))).map { it.toAlbum() } }
+        val frequent = shelf { items(albumParams("PlayCount", "Descending", 12, mapOf("Filters" to "IsPlayed"))).map { it.toAlbum() } }
+        val random = shelf { items(albumParams("Random", "Ascending", 12)).map { it.toAlbum() } }
+        val playlists = shelf { items(mapOf("IncludeItemTypes" to "Playlist", "Recursive" to "true", "SortBy" to "SortName")).map { it.toPlaylist() } }
+        val artists = shelf { client.api.artists(mapOf("UserId" to uid, "Recursive" to "true", "SortBy" to "SortName", "Limit" to "20")).Items.map { it.toArtist() } }
+        val starred = shelf { items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "Filters" to "IsFavorite", "Limit" to "50", "Fields" to "MediaSources")).map { it.toSong() } }
+        HomeData(newReleases.await(), recent.await(), frequent.await(), random.await(), playlists.await(), artists.await(), starred.await())
     }
 
-    override suspend fun allAlbums(): List<Album> =
-        items(mapOf("IncludeItemTypes" to "MusicAlbum", "Recursive" to "true", "SortBy" to "SortName", "Limit" to "500")).map { it.toAlbum() }
+    override suspend fun allAlbums(): List<Album> = pagedAlbums { offset, size ->
+        items(mapOf("IncludeItemTypes" to "MusicAlbum", "Recursive" to "true", "SortBy" to "SortName", "StartIndex" to "$offset", "Limit" to "$size")).map { it.toAlbum() }
+    }
 
     override suspend fun allArtists(): List<Artist> = runCatching {
         client.api.artists(mapOf("UserId" to uid, "Recursive" to "true", "SortBy" to "SortName")).Items
@@ -137,7 +138,10 @@ class JellyfinBackend(
     override suspend fun starredSongs(): List<Song> =
         items(mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "Filters" to "IsFavorite", "Fields" to "MediaSources,Genres,DateCreated")).map { it.toSong() }
 
-    override suspend fun starredCount(): Int = runCatching { starredSongs().size }.getOrDefault(0)
+    // straight to the api: items() turns the total off
+    override suspend fun starredCount(): Int = runCatching {
+        client.api.items(uid, mapOf("IncludeItemTypes" to "Audio", "Recursive" to "true", "Filters" to "IsFavorite", "Limit" to "0")).TotalRecordCount
+    }.getOrDefault(0)
 
     override suspend fun starredIds(): Set<String> =
         items(mapOf("IncludeItemTypes" to "Audio,MusicAlbum,MusicArtist", "Recursive" to "true", "Filters" to "IsFavorite")).map { it.Id }.toSet()
@@ -244,10 +248,13 @@ class JellyfinBackend(
                     tracks,
                 )
             }
-            "artist" -> {
-                val ar = client.api.item(uid, id)
-                val albums = items(mapOf("IncludeItemTypes" to "MusicAlbum", "ArtistIds" to id, "Recursive" to "true", "SortBy" to "ProductionYear,SortName", "SortOrder" to "Descending")).map { it.toAlbum() }
-                val tracks = items(mapOf("IncludeItemTypes" to "Audio", "ArtistIds" to id, "Recursive" to "true", "Limit" to "60", "Fields" to "MediaSources,DateCreated")).map { it.toSong() }
+            "artist" -> coroutineScope {
+                val artist = async { client.api.item(uid, id) }
+                val albumList = async { items(mapOf("IncludeItemTypes" to "MusicAlbum", "ArtistIds" to id, "Recursive" to "true", "SortBy" to "ProductionYear,SortName", "SortOrder" to "Descending")).map { it.toAlbum() } }
+                val trackList = async { items(mapOf("IncludeItemTypes" to "Audio", "ArtistIds" to id, "Recursive" to "true", "Limit" to "60", "Fields" to "MediaSources,DateCreated")).map { it.toSong() } }
+                val ar = artist.await()
+                val albums = albumList.await()
+                val tracks = trackList.await()
                 DetailData(
                     DetailInfo(ar.Name ?: "Artist", "${albums.size} albums · ${tracks.size} tracks", client.coverArtUrl(ar.imageId()), accentArgbFor(ar.Id), true, tracks.size, "Artist"),
                     tracks,

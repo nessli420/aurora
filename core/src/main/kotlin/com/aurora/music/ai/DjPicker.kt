@@ -33,18 +33,28 @@ object DjPicker {
     // catalogue searches return dj mixes and episodes, often without a duration to catch them by
     private val longForm = listOf("party mix", "hip hop mix", "hiphop mix", "dj mix", "megamix", "mega mix", "mix vol", "mixtape vol", "full album",
         "full vinyl", "dj set", "playlist", "compilation", "nonstop", "non stop", "1 hour", "2 hours", "3 hours", "hour mix", "episode", "podcast",
-        "the ultimate", "best of", "greatest hits", "throwback mix", "old school mix", "classics mix")
+        "the ultimate", "best of", "greatest hits", "throwback mix", "old school mix", "classics mix").map { " $it " }
 
-    private fun longForm(song: Song): Boolean {
-        val title = " ${DjKeywords.norm(song.title)} "
-        return DjKeywords.norm(song.artist) == "episode" || '|' in song.title || song.title.count { it == ',' } >= 2 ||
-            longForm.any { title.contains(" $it ") }
+    private fun longForm(song: Song, title: String, artist: String): Boolean {
+        val spaced = " $title "
+        return artist == "episode" || '|' in song.title || song.title.count { it == ',' } >= 2 ||
+            longForm.any { spaced.contains(it) }
     }
 
     private val instrumental = listOf("ambient", "classical", "piano", "soundtrack", "score", "instrumental", "post rock", "lo fi",
         "new age", "orchestral", "drone", "chillhop", "beats")
 
-    fun energyOf(c: DjCandidate): Float? = c.energy ?: DjKeywords.norm(c.song.genre).let { g -> genreEnergy.firstOrNull { g.contains(it.first) }?.second }
+    private fun genreEnergyOf(genre: String): Float? = genreEnergy.firstOrNull { genre.contains(it.first) }?.second
+
+    fun energyOf(c: DjCandidate): Float? = c.energy ?: genreEnergyOf(DjKeywords.norm(c.song.genre))
+
+    // norm is a regex, and a pick looks at each of these many times
+    private class Named(val c: DjCandidate) {
+        val artist = DjKeywords.norm(c.song.artist)
+        val title = DjKeywords.norm(c.song.title)
+        val genre = DjKeywords.norm(c.song.genre)
+        val energy = c.energy ?: genreEnergyOf(genre)
+    }
 
     private class Wants(intent: DjIntent) {
         val genres = intent.genres.map(DjKeywords::norm)
@@ -58,17 +68,18 @@ object DjPicker {
         return " $field ".contains(" $w ") || field.replace(" ", "").contains(w.replace(" ", "")) && w.length >= 4
     }
 
-    private class Rated(val c: DjCandidate, val score: Double, val relevant: Boolean)
+    private class Rated(val c: Named, val score: Double, val relevant: Boolean)
 
     // null means the track breaks a hard rule of the request
-    fun score(intent: DjIntent, c: DjCandidate): Double? = rate(intent, c, Wants(intent))?.score
+    fun score(intent: DjIntent, c: DjCandidate): Double? = rate(intent, Named(c), Wants(intent))?.score
 
-    private fun rate(intent: DjIntent, c: DjCandidate, wants: Wants): Rated? {
-        val genre = DjKeywords.norm(c.song.genre)
-        val artist = DjKeywords.norm(c.song.artist)
-        val title = DjKeywords.norm(c.song.title)
+    private fun rate(intent: DjIntent, named: Named, wants: Wants): Rated? {
+        val c = named.c
+        val genre = named.genre
+        val artist = named.artist
+        val title = named.title
         if (wants.avoid.any { matches(genre, it) || matches(artist, it) }) return null
-        if (c.song.durationSec in 1..59 || c.song.durationSec > 1200 || longForm(c.song)) return null
+        if (c.song.durationSec in 1..59 || c.song.durationSec > 1200 || longForm(c.song, title, artist)) return null
         var s = 0.0
         val genreHit = wants.genres.any { matches(genre, it) }
         val moodHit = !genreHit && wants.moods.any { matches(genre, it) }
@@ -100,13 +111,13 @@ object DjPicker {
             DjTempo.MID -> if (c.bpm in 95..125) 1.0 else 0.0
             DjTempo.ANY -> 0.0
         }
-        energyOf(c)?.let { e ->
+        named.energy?.let { e ->
             val lo = minOf(intent.energyStart, intent.energyEnd) / 10f - 0.15f
             val hi = maxOf(intent.energyStart, intent.energyEnd) / 10f + 0.15f
             if (e < lo) s -= (lo - e) * 6 else if (e > hi) s -= (e - hi) * 6
         }
         val wrongEra = intent.decades.isNotEmpty() && c.year > 0 && !eraHit
-        return Rated(c, s, !wrongEra && (genreHit || artistHit || c.hits > 0 || (wants.genres.isEmpty() && (eraHit || moodHit))))
+        return Rated(named, s, !wrongEra && (genreHit || artistHit || c.hits > 0 || (wants.genres.isEmpty() && (eraHit || moodHit))))
     }
 
     fun pick(
@@ -122,9 +133,10 @@ object DjPicker {
         val wants = Wants(intent)
         val seen = HashSet<String>()
         val rated = candidates.asSequence()
-            .filter { it.song.id.isNotEmpty() && it.song.id !in exclude && !it.song.isRadio() && !it.song.isPodcast() }
-            .filter { seen.add(it.song.id) && seen.add("${DjKeywords.norm(it.song.artist)}|${DjKeywords.norm(it.song.title)}") }
-            .mapNotNull { c -> rate(intent, c, wants)?.let { Rated(c, it.score + random.nextDouble() * (if (flow) 2.0 else 0.6), it.relevant) } }
+            .filter { it.song.id.isNotEmpty() && it.song.id !in exclude && !it.song.isRadio() && !it.song.isPodcast() && seen.add(it.song.id) }
+            .map { Named(it) }
+            .filter { seen.add("${it.artist}|${it.title}") }
+            .mapNotNull { n -> rate(intent, n, wants)?.let { Rated(n, it.score + random.nextDouble() * (if (flow) 2.0 else 0.6), it.relevant) } }
             .sortedByDescending { it.score }
             .toList()
         // untagged catalogue tracks can't prove they fit, so tracks that match the request go first and the rest only fill gaps
@@ -132,31 +144,32 @@ object DjPicker {
         val (fits, rest) = if (asked) rated.partition { it.relevant } else rated to emptyList()
         val scored = (fits.take(maxOf(count * 3, 30)) + rest.take((count - fits.size).coerceAtLeast(0)))
             .map { it.c to it.score + if (it.relevant || !asked) 10.0 else 0.0 }.toMutableList()
-        val out = ArrayList<DjCandidate>(count)
-        var last = previous
+        val out = ArrayList<Named>(count)
+        val before = previous?.let { Named(it) }
+        var last = before
         while (out.size < count && scored.isNotEmpty()) {
             val slot = out.size
             // flow follows the last track's energy instead of an arc the request asked for
-            val target = if (flow) last?.let(::energyOf) else if (count == 1) intent.energyEnd / 10f
+            val target = if (flow) last?.energy else if (count == 1) intent.energyEnd / 10f
                 else (intent.energyStart + (intent.energyEnd - intent.energyStart) * slot / (count - 1f)) / 10f
-            val recent = (listOfNotNull(previous) + out).takeLast(3).map { DjKeywords.norm(it.song.artist) }
+            val recent = (listOfNotNull(before) + out).takeLast(3).map { it.artist }
             var best = 0
             var bestValue = Double.NEGATIVE_INFINITY
             for ((i, pair) in scored.withIndex()) {
-                val (c, base) = pair
+                val (n, base) = pair
                 var v = base
-                val energy = energyOf(c)
+                val energy = n.energy
                 v += if (energy != null && target != null) 2.0 * (1 - abs(energy - target)) else 1.0
-                last?.let { v += transition(it, c) }
-                if (DjKeywords.norm(c.song.artist) in recent) v -= 3.0
-                if (last != null && c.song.albumId.isNotEmpty() && c.song.albumId == last.song.albumId) v -= 1.0
+                last?.let { v += transition(it.c, n.c) }
+                if (n.artist in recent) v -= 3.0
+                if (last != null && n.c.song.albumId.isNotEmpty() && n.c.song.albumId == last.c.song.albumId) v -= 1.0
                 if (v > bestValue) { bestValue = v; best = i }
             }
             val chosen = scored.removeAt(best).first
             out += chosen
             last = chosen
         }
-        return out.map { it.song }
+        return out.map { it.c.song }
     }
 
     private fun transition(a: DjCandidate, b: DjCandidate): Double {

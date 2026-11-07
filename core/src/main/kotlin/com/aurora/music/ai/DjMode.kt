@@ -5,6 +5,7 @@ import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -12,6 +13,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 class DjMode(
@@ -52,6 +54,8 @@ class DjMode(
         // someone is waiting on these; a refill has minutes before its set is due
         private const val WAITING_MS = 30_000L
         private const val BACKGROUND_MS = 150_000L
+        private const val WAITING_SET_MS = 12_000L
+        private const val MAX_RETRY_MS = 300_000L
         private val SWITCH_WORDS = listOf("switch it up", "change it up", "something else", "something different", "next", "skip")
     }
 
@@ -62,6 +66,7 @@ class DjMode(
     private val speeches = HashMap<String, DjSpeech>()
     private val placed = HashMap<String, Song>()
     private var retry: Job? = null
+    private var failures = 0
     private var grace: Job? = null
     private var starting = false
     private var resumeAfterListening = false
@@ -74,6 +79,7 @@ class DjMode(
 
     private fun forget() {
         retry?.cancel()
+        failures = 0
         grace?.cancel()
         sets.clear()
         speeches.clear()
@@ -112,17 +118,19 @@ class DjMode(
 
     fun start(queue: Queue, play: (List<Song>) -> Unit, onResult: (Boolean) -> Unit) {
         job?.cancel()
-        session = engine.newSession()
+        // set now: the old session's tracks could match the old queue and end starting early
+        session = DjSession()
         forget()
         starting = true
+        engine.djRunning(true)
         _state.value = State(active = true, busy = true)
         job = scope.launch {
             val set = try {
-                engine.nextSet(session, queue.current)
+                session = withContext(Dispatchers.IO) { engine.newSession() }
+                engine.nextSet(session, queue.current, budgetMs = WAITING_SET_MS)
             } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             if (set == null) {
-                starting = false
-                _state.value = State()
+                stop()
                 onResult(false)
                 return@launch
             }
@@ -135,7 +143,7 @@ class DjMode(
             // the player can still report on the old queue for a moment, so starting ends when it reports this one
             grace = scope.launch { delay(startGraceMs); if (starting) stop() }
             // only now, the old queue may still be about to play one of its lines
-            voice?.clear(intro?.id)
+            scope.launch(Dispatchers.IO) { voice?.clear(intro?.id) }
             onResult(true)
         }
     }
@@ -144,6 +152,7 @@ class DjMode(
         job?.cancel()
         starting = false
         forget()
+        engine.djRunning(false)
         if (_state.value.listening) scope.launch { runCatching { ears?.stop() } }
         _state.value = State()
     }
@@ -156,7 +165,7 @@ class DjMode(
     }
 
     private suspend fun runSwitch(queue: Queue): Boolean {
-        val set = engine.nextSet(session, queue.current) ?: return false
+        val set = engine.nextSet(session, queue.current, budgetMs = WAITING_SET_MS) ?: return false
         remember(set)
         val line = speak(DjMoment.Switch(set, engine.memory.nextTurn()), set)
         queue.replaceUpcoming(listOfNotNull(line) + set.songs)
@@ -250,7 +259,10 @@ class DjMode(
             }.orEmpty()
             if (songs.isNotEmpty() && _state.value.active) queue.append(songs)
             // no network right now shouldn't leave the queue to run out, there may be no track change to try again on
-            if (songs.isEmpty()) retry = scope.launch { delay(retryMs); onQueueChanged(queue) }
+            if (songs.isEmpty()) {
+                val wait = minOf(retryMs shl minOf(failures++, 10), MAX_RETRY_MS)
+                retry = scope.launch { delay(wait); onQueueChanged(queue) }
+            } else failures = 0
             songs.isNotEmpty()
         }
     }

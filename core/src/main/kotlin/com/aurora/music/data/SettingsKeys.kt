@@ -175,6 +175,7 @@ internal object SettingsKeys {
     val CONNECT_SWITCH = intPreferencesKey("connect_switch")
     val SAVED_SESSIONS = stringPreferencesKey("saved_sessions")
     val SPOTIFY_CLIENT_ID = stringPreferencesKey("spotify_client_id")
+    val SOUNDCLOUD_CLIENT_ID = stringPreferencesKey("soundcloud_client_id")
     val ACOUSTID_KEY = stringPreferencesKey("acoustid_key")
     val EQ_BINDINGS = stringPreferencesKey("eq_bindings")
     val AUTOEQ_SWITCH = booleanPreferencesKey("autoeq_autoswitch")
@@ -230,7 +231,8 @@ internal object SettingsKeys {
     val UI_LIBRARY_TABS = stringPreferencesKey("ui_library_tabs")
     val UI_HIDDEN_HOME = stringSetPreferencesKey("ui_hidden_home")
     val UI_NAV_LAYOUT = stringPreferencesKey("ui_nav_layout")
-    fun tablet(setting: TabletSetting) = floatPreferencesKey("ui_tablet_" + setting.name.lowercase())
+    private val TABLET = TabletSetting.entries.associateWith { floatPreferencesKey("ui_tablet_" + it.name.lowercase()) }
+    fun tablet(setting: TabletSetting) = TABLET.getValue(setting)
     val LASTFM_SK = stringPreferencesKey("lastfm_sk")
     val LASTFM_USER = stringPreferencesKey("lastfm_user")
     val LASTFM_IMAGE = stringPreferencesKey("lastfm_image")

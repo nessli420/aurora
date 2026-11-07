@@ -1,13 +1,20 @@
 package com.aurora.music.data
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.withContext
+import kotlin.coroutines.CoroutineContext
 
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import com.aurora.music.util.TrackMatch
 import com.aurora.music.util.accentArgbFor
 
 private const val LOOSE_DOWNLOADS = "songs"
@@ -24,6 +31,25 @@ data class HomeData(
     val sections: List<HomeFeedSection> = emptyList(),
     val continuation: String? = null,
 )
+
+// a partial home fills only what the screen lacks, so a reload never shrinks it
+fun HomeData.filledFrom(partial: HomeData) = copy(
+    newReleases = newReleases.ifEmpty { partial.newReleases },
+    recentlyPlayed = recentlyPlayed.ifEmpty { partial.recentlyPlayed },
+    mostPlayed = mostPlayed.ifEmpty { partial.mostPlayed },
+    random = random.ifEmpty { partial.random },
+    playlists = playlists.ifEmpty { partial.playlists },
+    artists = artists.ifEmpty { partial.artists },
+    starred = starred.ifEmpty { partial.starred },
+    sections = sections.ifEmpty { partial.sections },
+)
+
+// a favourites tap plays the whole list from the same recording once it has landed, else the capped row
+fun starredQueue(all: List<Song>, shown: List<Song>, tapped: Song): Pair<List<Song>, Int> {
+    val key = TrackMatch.key(tapped.artist, tapped.title)
+    val at = all.indexOfFirst { it.id == tapped.id }.takeIf { it >= 0 } ?: all.indexOfFirst { TrackMatch.key(it.artist, it.title) == key }
+    return if (at >= 0) all to at else shown to shown.indexOf(tapped).coerceAtLeast(0)
+}
 
 data class HomeFeedSection(val id: String, val title: String, val subtitle: String = "", val items: List<HomeFeedItem>)
 
@@ -86,9 +112,12 @@ class MusicRepository(
     // every account a song can be liked on; the app adds signed-in accounts outside the library
     private val likeSourcesProvider: suspend () -> List<MediaBackend> = { backendProvider()?.let { (it as? MergedBackend)?.sources ?: listOf(it) }.orEmpty() },
     private val trackChoices: TrackChoices? = null,
+    // reads map and dedup here, one at a time, so callers can stay on the main thread
+    private val mapping: CoroutineContext = Dispatchers.Default.limitedParallelism(1),
 ) {
     private val backend: MediaBackend? get() = backendProvider()
     private val offline: Boolean get() = offlineProvider() && backend?.supportsOfflineBrowsing != true
+    val isOffline: Boolean get() = offline
     private data class CollectionKey(val source: MediaBackend, val kind: String, val id: String)
     private val collectionIdentities = LinkedHashMap<CollectionKey, PlaybackCollectionIdentity>()
     private var identityDownloads: Map<String, DownloadedSong>? = null
@@ -129,7 +158,7 @@ class MusicRepository(
 
     private suspend fun sourceSongs(view: String? = null, block: suspend (MediaBackend) -> List<Song>): List<Song> {
         val source = viewOf(view) ?: return emptyList()
-        return block(source).map { tag(it, source) }
+        return withContext(mapping) { block(source).map { tag(it, source) } }
     }
 
     val libraryViews: List<LibraryViewChoice> get() = if (offline) offlineSources().map { LibraryViewChoice(it.viewId, it.label) }
@@ -165,14 +194,13 @@ class MusicRepository(
         return downloadManager.collections.value.filter(::ownsCollection)
     }
 
-    private fun sourceOwner(id: String, albumId: String = ""): DownloadOwner? {
+    private fun sourceOwner(id: String): DownloadOwner? {
         val source = backend ?: return null
-        val song = Song(id, "", "", "", "", 0, albumId = albumId)
-        return DownloadOwner(source.playbackSourceIdentity(song)?.providerId, source.session.server)
+        return DownloadOwner(source.playbackSourceIdentity(Song(id, "", "", "", "", 0))?.providerId, source.session.server)
     }
 
     private fun ownsDownload(download: DownloadedSong): Boolean = offline ||
-        sourceOwner(download.id, download.albumId)?.matches(
+        sourceOwner(download.id)?.matches(
             DownloadOwner(download.playbackSource?.providerId, download.serverId.orEmpty())) == true
 
     private fun ownsCollection(collection: DownloadedCollection): Boolean {
@@ -213,9 +241,17 @@ class MusicRepository(
     private fun inView(download: DownloadedSong, view: String?): Boolean =
         DownloadSource.forView(view)?.let { it == DownloadSource.of(download) } ?: true
 
+    // every download, so only right while offline; every caller checks that first
+    @Volatile private var offlineRows: Pair<Map<String, DownloadedSong>, List<Pair<DownloadedSong, Song>>>? = null
+
     // offline lists only what was downloaded; fully cached tracks still play when something asks for them by id
-    private fun offlineSongs(view: String? = null): List<Song> = visibleDownloads().filter { inView(it, view) }
-        .map { artwork(it.toSong(downloadManager.fileUri)) }.sortedBy { it.title }
+    private fun offlineSongs(view: String? = null): List<Song> {
+        val latest = downloadManager.downloads.value
+        val rows = offlineRows?.takeIf { it.first === latest }?.second
+            ?: latest.values.map { it to artwork(it.toSong(downloadManager.fileUri)) }.sortedBy { it.second.title }
+                .also { offlineRows = latest to it }
+        return rows.filter { inView(it.first, view) }.map { it.second }
+    }
 
     private fun cachedSongs(): List<Song> = cachedSongsProvider().map { it.copy(id = "cached:${it.streamUrl.substringAfter("://")}") }
 
@@ -246,7 +282,8 @@ class MusicRepository(
         val colRows = collections.map { DownloadRow(it.id, it.kind, it.title, it.subtitle, fileUri(it.coverPath), accentArgbFor(it.id)) }
         val recordedTracks = collections.flatMap { it.trackIds }.toSet()
         val colIds = collections.map { it.id }.toSet()
-        val inferred = visibleDownloads()
+        val visible = visibleDownloads()
+        val inferred = visible
             .filter { it.id !in recordedTracks && it.albumId.isNotBlank() && it.albumId !in colIds }
             .groupBy { it.albumId }
             .map { (aid, songs) ->
@@ -254,15 +291,15 @@ class MusicRepository(
                 // opens only the tracks that were downloaded rather than the whole album
                 DownloadRow(aid, DOWNLOADED_ALBUM, f.album.ifBlank { "Album" }, f.artist, fileUri(f.coverPath), accentArgbFor(aid))
             }
-        val loose = looseDownloads(collections)
+        val loose = looseDownloads(collections, visible)
         val looseRow = loose.firstOrNull()?.let { listOf(DownloadRow(LOOSE_DOWNLOADS, "downloaded", "Downloaded songs", "${loose.size} tracks", fileUri(it.coverPath), accentArgbFor(LOOSE_DOWNLOADS))) }.orEmpty()
         return looseRow + (colRows + inferred).sortedBy { it.title }
     }
 
     // every track downloaded on its own, also reachable through its album row
-    private fun looseDownloads(collections: List<DownloadedCollection> = visibleCollections()): List<DownloadedSong> {
+    private fun looseDownloads(collections: List<DownloadedCollection> = visibleCollections(), visible: List<DownloadedSong> = visibleDownloads()): List<DownloadedSong> {
         val recorded = collections.flatMap { it.trackIds }.toSet()
-        return visibleDownloads().filter { it.id !in recorded }
+        return visible.filter { it.id !in recorded }
     }
 
     private fun downloadedAlbumTracks(albumId: String, collections: List<DownloadedCollection> = visibleCollections()): List<DownloadedSong> =
@@ -282,37 +319,48 @@ class MusicRepository(
 
     suspend fun playbackCandidates(song: Song): List<Song> = if (offline) emptyList() else backend?.playbackCandidates(song).orEmpty().map { artwork(it) }
 
-    suspend fun home(feed: String = "library"): HomeData {
+    suspend fun home(feed: String = "library"): HomeData = withContext(mapping) {
         if (offline) {
             val albums = offlineAlbums(feed)
-            return HomeData(newReleases = albums, recentlyPlayed = albums, starred = offlineSongs(feed))
+            return@withContext HomeData(newReleases = albums, recentlyPlayed = albums, starred = offlineSongs(feed))
         }
-        val source = backend ?: return HomeData()
-        return tagHome(source.home(feed), source)
+        val source = backend ?: return@withContext HomeData()
+        tagHome(source.home(feed), source)
     }
+
+    // home as its sources answer; the last emission is what home() returns
+    fun homeUpdates(feed: String = "library"): Flow<HomeData> = flow {
+        val source = backend
+        if (offline || source !is MergedBackend) emit(home(feed))
+        else source.homeUpdates(feed).collect { emit(tagHome(it, source)) }
+    }.flowOn(mapping)
+
+    // home's starred row is capped for display; playing it asks for the whole list
+    suspend fun homeStarred(feed: String = "library"): List<Song> =
+        if (offline) withContext(mapping) { offlineSongs(feed) } else sourceSongs(feed) { it.starredSongs() }
 
     val supportsExplore: Boolean get() = !offline && backend?.supportsExplore == true
 
-    suspend fun explore(): ExploreData {
-        val source = backend?.takeIf { !offline } ?: return ExploreData()
+    suspend fun explore(): ExploreData = withContext(mapping) {
+        val source = backend?.takeIf { !offline } ?: return@withContext ExploreData()
         val data = source.explore()
-        return data.copy(sections = tagHome(HomeData(sections = data.sections), source).sections)
+        data.copy(sections = tagHome(HomeData(sections = data.sections), source).sections)
     }
 
-    suspend fun exploreCategory(params: String): HomeData {
-        val source = backend?.takeIf { !offline } ?: return HomeData()
-        return tagHome(source.exploreCategory(params), source)
+    suspend fun exploreCategory(params: String): HomeData = withContext(mapping) {
+        val source = backend?.takeIf { !offline } ?: return@withContext HomeData()
+        tagHome(source.exploreCategory(params), source)
     }
 
-    suspend fun related(song: Song): HomeData {
-        val source = backend?.takeIf { !offline && song.id.isNotEmpty() } ?: return HomeData()
-        return tagHome(source.related(song), source)
+    suspend fun related(song: Song): HomeData = withContext(mapping) {
+        val source = backend?.takeIf { !offline && song.id.isNotEmpty() } ?: return@withContext HomeData()
+        tagHome(source.related(song), source)
     }
 
-    suspend fun homePage(continuation: String, feed: String = "library"): HomeData {
-        if (offline) return HomeData()
-        val source = backend ?: return HomeData()
-        return tagHome(source.homePage(feed, continuation), source)
+    suspend fun homePage(continuation: String, feed: String = "library"): HomeData = withContext(mapping) {
+        if (offline) return@withContext HomeData()
+        val source = backend ?: return@withContext HomeData()
+        tagHome(source.homePage(feed, continuation), source)
     }
 
     private fun tagHome(data: HomeData, source: MediaBackend) = data.copy(
@@ -330,29 +378,35 @@ class MusicRepository(
         }) },
     )
 
-    suspend fun allAlbums(view: String? = null): List<Album> =
+    suspend fun allAlbums(view: String? = null): List<Album> = withContext(mapping) {
         if (offline) offlineAlbums(view) else viewOf(view)?.allAlbums().orEmpty().map { artwork(it) }
+    }
 
-    suspend fun allArtists(view: String? = null): List<Artist> =
+    suspend fun allArtists(view: String? = null): List<Artist> = withContext(mapping) {
         if (offline) offlineArtists(view) else viewOf(view)?.allArtists().orEmpty()
+    }
 
-    suspend fun allPlaylists(view: String? = null): List<Playlist> =
+    suspend fun allPlaylists(view: String? = null): List<Playlist> = withContext(mapping) {
         if (offline) offlinePlaylists(view) else viewOf(view)?.allPlaylists().orEmpty()
+    }
 
-    suspend fun allSongs(): List<Song> =
+    suspend fun allSongs(): List<Song> = withContext(mapping) {
         if (offline) offlineSongs() else sourceSongs { it.allSongs() }
+    }
 
-    suspend fun librarySongs(limit: Int = 2000): List<Song> =
+    suspend fun librarySongs(limit: Int = 2000): List<Song> = withContext(mapping) {
         if (offline) offlineSongs() else sourceSongs { it.librarySongs(limit) }
+    }
 
-    suspend fun songsPage(offset: Int, count: Int = 100, view: String? = null): List<Song> =
+    suspend fun songsPage(offset: Int, count: Int = 100, view: String? = null): List<Song> = withContext(mapping) {
         if (offline) offlineSongs(view).drop(offset).take(count) else sourceSongs(view) { it.songsPage(offset, count) }
+    }
 
     // walks the whole library via the paging path (guaranteed to traverse every source, unlike a
     // one-shot request which some servers cap). deduped, capped so a pathological library can't run away.
-    suspend fun allLibrarySongs(cap: Int = 10000, pageSize: Int = 200, view: String? = null): List<Song> {
-        if (offline) return offlineSongs(view)
-        val b = viewOf(view) ?: return emptyList()
+    suspend fun allLibrarySongs(cap: Int = 10000, pageSize: Int = 200, view: String? = null): List<Song> = withContext(mapping) {
+        if (offline) return@withContext offlineSongs(view)
+        val b = viewOf(view) ?: return@withContext emptyList()
         val out = LinkedHashMap<String, Song>()
         var offset = 0
         while (out.size < cap) {
@@ -363,14 +417,16 @@ class MusicRepository(
             if (out.size == before) break // malformed servers that ignore paging must not loop forever
             offset += pageSize
         }
-        return out.values.toList()
+        out.values.toList()
     }
 
     suspend fun starredSongs(): List<Song> = sourceSongs { it.starredSongs() }
 
-    suspend fun starredCount(view: String? = null): Int = if (offline) offlineLiked(view).size else (viewOf(view)?.starredCount() ?: 0)
+    suspend fun starredCount(view: String? = null): Int = withContext(mapping) {
+        if (offline) offlineLiked(view).size else (viewOf(view)?.starredCount() ?: 0)
+    }
 
-    suspend fun starredIds(): Set<String> = backend?.starredIds() ?: emptySet()
+    suspend fun starredIds(): Set<String> = withContext(mapping) { backend?.starredIds() ?: emptySet() }
 
     suspend fun likeSources(): List<MediaBackend> = if (offline) emptyList() else likeSourcesProvider()
     val activeSession: Session? get() = backend?.session
@@ -395,11 +451,11 @@ class MusicRepository(
         if (offline || body.isBlank()) null else backend?.postComment(song, body.trim(), timestampMs)
 
     suspend fun likedSongIds(ids: List<String>): Set<String> =
-        if (offline) emptySet() else backend?.likedSongIds(ids).orEmpty()
+        if (offline) emptySet() else withContext(mapping) { backend?.likedSongIds(ids).orEmpty() }
 
     suspend fun profileImageUrl(): String = if (offline) "" else backend?.profileImageUrl().orEmpty()
 
-    suspend fun songFor(id: String): Song? {
+    suspend fun songFor(id: String): Song? = withContext(mapping) {
         val source = backend
         downloadManager.get(id)?.let { download ->
             val song = download.toSong(downloadManager.fileUri)
@@ -407,11 +463,11 @@ class MusicRepository(
             val requestedProvider = source?.playbackSourceIdentity(song.copy(playbackSource = null, streamUrl = ""))?.providerId
             val sameSource = if (storedProvider != null) storedProvider == requestedProvider
                 else !download.serverId.isNullOrBlank() && download.serverId == source?.session?.server
-            if (offline || sameSource) return artwork(song)
+            if (offline || sameSource) return@withContext artwork(song)
         }
-        if (offline) return (offlineSongs() + cachedSongs()).firstOrNull { it.id == id }
-        if (source == null) return null
-        return source.songFor(id)?.let { tag(it, source) }
+        if (offline) return@withContext (offlineSongs() + cachedSongs()).firstOrNull { it.id == id }
+        if (source == null) return@withContext null
+        source.songFor(id)?.let { tag(it, source) }
     }
 
     val searchSources: List<SearchSourceChoice> get() = if (offline) emptyList() else backend?.searchSources.orEmpty()
@@ -438,15 +494,15 @@ class MusicRepository(
 
     suspend fun search(query: String): SearchResults = search(query, "discovery")
 
-    suspend fun search(query: String, sourceId: String): SearchResults {
+    suspend fun search(query: String, sourceId: String): SearchResults = withContext(mapping) {
         if (offline) {
             val q = query.trim()
             val songs = offlineSongs().filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }
             val albums = downloadedAlbums().filter { it.title.contains(q, true) || it.artist.contains(q, true) }
-            return SearchResults(songs = songs, albums = albums, artists = emptyList())
+            return@withContext SearchResults(songs = songs, albums = albums, artists = emptyList())
         }
-        val source = backend ?: return SearchResults()
-        return source.search(query, sourceId).let { it.copy(songs = it.songs.map { song -> tag(song, source) }, albums = it.albums.map { album -> artwork(album) }) }
+        val source = backend ?: return@withContext SearchResults()
+        source.search(query, sourceId).let { it.copy(songs = it.songs.map { song -> tag(song, source) }, albums = it.albums.map { album -> artwork(album) }) }
     }
 
     suspend fun scrobble(id: String) {
@@ -569,7 +625,9 @@ class MusicRepository(
         return backend?.setStarred(backendSongId(id) ?: return false, starred, kind) ?: false
     }
 
-    suspend fun detail(kind: String, id: String): DetailData? {
+    suspend fun detail(kind: String, id: String): DetailData? = withContext(mapping) { loadDetail(kind, id) }
+
+    private suspend fun loadDetail(kind: String, id: String): DetailData? {
         if (kind == "downloaded") {
             val tracks = looseDownloads().map { artwork(it.toSong(downloadManager.fileUri)) }
             return DetailData(DetailInfo("Downloaded songs", "Downloaded", tracks.firstOrNull()?.artworkUrl.orEmpty(), accentArgbFor(id), false, tracks.size, "Downloaded"), tracks)
@@ -625,9 +683,10 @@ class MusicRepository(
     suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> =
         if (offline) emptyList() else sourceSongs { it.detailPage(kind, id, offset) }
 
-    suspend fun collectionTracks(kind: String, id: String): List<Song> = playable(kind, id,
-        if (offline || kind == "smart") detail(kind, id)?.tracks.orEmpty()
-        else sourceSongs { it.collectionTracks(kind, id) })
+    suspend fun collectionTracks(kind: String, id: String): List<Song> = withContext(mapping) {
+        playable(kind, id, if (offline || kind == "smart") detail(kind, id)?.tracks.orEmpty()
+            else sourceSongs { it.collectionTracks(kind, id) })
+    }
 
     // songs hidden in a playlist stay listed but are left out when it plays
     fun playable(kind: String, id: String, songs: List<Song>, picked: Song? = null): List<Song> =
@@ -643,9 +702,9 @@ class MusicRepository(
     suspend fun updateMetadata(songId: String, tags: AudioTags): Boolean =
         if (offline) false else backend?.updateMetadata(songId, tags) ?: false
 
-    suspend fun browseFolder(folderId: String): FolderContent? {
-        if (offline) return null
-        val source = backend ?: return null
-        return source.browseFolder(folderId)?.let { it.copy(songs = it.songs.map { song -> tag(song, source) }) }
+    suspend fun browseFolder(folderId: String): FolderContent? = withContext(mapping) {
+        if (offline) return@withContext null
+        val source = backend ?: return@withContext null
+        source.browseFolder(folderId)?.let { it.copy(songs = it.songs.map { song -> tag(song, source) }) }
     }
 }

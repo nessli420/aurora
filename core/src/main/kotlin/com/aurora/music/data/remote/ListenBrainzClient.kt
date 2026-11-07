@@ -27,16 +27,18 @@ interface ListenBrainzApi {
     suspend fun submit(@Header("Authorization") auth: String, @Body body: LbSubmit): Response<Unit>
 }
 
-class ListenBrainzClient(http: OkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .build()) {
-    private val api: ListenBrainzApi = Retrofit.Builder()
-        .baseUrl("https://api.listenbrainz.org/")
-        .client(http)
-        .addConverterFactory(GsonConverterFactory.create())
-        .build()
-        .create(ListenBrainzApi::class.java)
+class ListenBrainzClient(http: OkHttpClient? = null) {
+    private val api: ListenBrainzApi by lazy {
+        Retrofit.Builder()
+            .baseUrl("https://api.listenbrainz.org/")
+            .client(http ?: AuroraHttp.base.newBuilder()
+                .connectTimeout(15, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .build())
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
+            .create(ListenBrainzApi::class.java)
+    }
 
     private fun auth(token: String) = "Token $token"
 

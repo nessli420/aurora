@@ -7,7 +7,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.FormBody
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.security.MessageDigest
 import java.security.SecureRandom
@@ -27,7 +26,7 @@ object SpotifyAuth {
         "user-top-read", "user-read-recently-played",
     ).joinToString(" ")
 
-    private val http = OkHttpClient()
+    private val http get() = AuroraHttp.base
     private val gson = Gson()
     private val UNRESERVED = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~"
 

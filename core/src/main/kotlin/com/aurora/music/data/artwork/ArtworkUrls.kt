@@ -2,12 +2,14 @@ package com.aurora.music.data.artwork
 
 import com.aurora.music.model.Album
 import com.aurora.music.model.Song
+import com.aurora.music.util.markFreeKey
 import com.google.gson.Gson
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.text.Normalizer
 import java.util.Base64
-import java.util.Locale
+
+private val MEDIA_STORE_ART = Regex("content://media/(external|internal|external_primary)/audio/(albumart/[0-9]+|media/[0-9]+/albumart)$")
 
 data class ArtworkRequest(
     val artist: String? = null, val album: String? = null, val title: String? = null,
@@ -58,16 +60,25 @@ object ArtworkUrls {
         request
     }.getOrNull()
 
-    private fun isMediaStoreArt(uri: String): Boolean =
-        Regex("content://media/(external|internal|external_primary)/audio/(albumart/[0-9]+|media/[0-9]+/albumart)$").matches(uri)
+    private fun isMediaStoreArt(uri: String): Boolean = uri.startsWith("content://media/") && MEDIA_STORE_ART.matches(uri)
 
-    internal fun isServerArt(uri: String): Boolean = runCatching {
-        val parsed = java.net.URI(uri)
-        parsed.scheme in setOf("http", "https") && !parsed.host.isNullOrBlank() &&
-            parsed.userInfo == null && parsed.path.endsWith("/rest/getCoverArt.view")
-    }.getOrDefault(false)
+    // everything before the query, from the last url the parser accepted
+    @Volatile private var serverArtPrefix = ""
+
+    internal fun isServerArt(uri: String): Boolean {
+        val prefix = serverArtPrefix
+        if (prefix.isNotEmpty() && uri.startsWith(prefix) && isPlainQuery(uri.substring(prefix.length))) return true
+        val accepted = runCatching {
+            val parsed = java.net.URI(uri)
+            parsed.scheme in setOf("http", "https") && !parsed.host.isNullOrBlank() &&
+                parsed.userInfo == null && parsed.path.endsWith("/rest/getCoverArt.view")
+        }.getOrDefault(false)
+        if (accepted) serverArtPrefix = uri.substringBefore('?') + "?"
+        return accepted
+    }
+
+    // these can't change how the parser reads what precedes them; anything else gets a full parse
+    private fun isPlainQuery(query: String) = query.all { it in 'a'..'z' || it in 'A'..'Z' || it in '0'..'9' || it in "&=-._+*" }
 }
 
-internal fun artworkKey(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKD)
-    .replace(Regex("\\p{M}+"), "").lowercase(Locale.ROOT)
-    .replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim()
+internal fun artworkKey(value: String): String = markFreeKey(value, Normalizer.Form.NFKD)

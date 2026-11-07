@@ -157,6 +157,17 @@ class MergedSpotifyTest {
         assertFalse(alone.supportsCanvas(alone.search("x", "library").songs.single()))
     }
 
+    @Test fun aSpotifySearchThatFoundNothingIsAskedAgain() = runBlocking {
+        val found = mutableListOf<Song>()
+        val spotifyCalls = Calls()
+        val merged = MergedBackend(listOf(source(server, listOf(serverSong)), source(spotify, found, spotifyCalls)), spotify)
+        val hosted = merged.search("never", "library").songs.single()
+        assertNull(merged.canvasUrl(hosted))
+        found += spotifySong
+        assertEquals("https://canvaz.scdn.co/loop.mp4", merged.canvasUrl(hosted))
+        assertEquals(2, spotifyCalls.searches.size)
+    }
+
     @Test fun aServerSongBorrowsItsSpotifyTwinsLyrics() = runBlocking {
         val merged = MergedBackend(listOf(source(server, listOf(serverSong)), source(spotify, listOf(spotifySong))), spotify)
         val hosted = merged.search("never", "library").songs.single()

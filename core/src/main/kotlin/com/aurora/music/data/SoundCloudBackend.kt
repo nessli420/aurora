@@ -12,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
@@ -34,14 +35,16 @@ class SoundCloudBackend(
     private val songs = ConcurrentHashMap<String, Song>()
     private val pageCache = ConcurrentHashMap<String, Pair<Long, List<JsonObject>>>()
     private val pageLock = Mutex()
+    // tagged with its cache entry's time so clearing the cache invalidates it; it must not hold the raw json
+    @Volatile private var mappedLikes: Pair<Long, List<Song>>? = null
     private val covers = ConcurrentHashMap<String, String>()
     private val user get() = session.userId
 
     private fun remember(list: List<Song>) = list.map(localize).onEach { songs[it.id] = it }
 
     // every page of a listing, cached for a minute like the youtube music library
-    private suspend fun pages(path: String, max: Int = 5000): List<JsonObject> = pageLock.withLock {
-        pageCache[path]?.takeIf { System.nanoTime() - it.first < 60_000_000_000L }?.let { return@withLock it.second }
+    private suspend fun pageEntry(path: String, max: Int = 5000): Pair<Long, List<JsonObject>> = pageLock.withLock {
+        pageCache[path]?.takeIf { System.nanoTime() - it.first < 60_000_000_000L }?.let { return@withLock it }
         val items = mutableListOf<JsonObject>()
         val seen = hashSetOf<String>()
         var next: String? = path
@@ -51,8 +54,12 @@ class SoundCloudBackend(
             next = page.string("next_href").takeIf { it.isNotBlank() }
             if (next != null && (!seen.add(next) || seen.size > 200)) throw IOException("SoundCloud returned an incomplete list. Please retry.")
         }
-        items.also { pageCache[path] = System.nanoTime() to it }
+        val entry: Pair<Long, List<JsonObject>> = System.nanoTime() to items
+        pageCache[path] = entry
+        background.launch { delay(60_000); pageCache.remove(path, entry) }
+        entry
     }
+    private suspend fun pages(path: String) = pageEntry(path).second
     private suspend fun list(path: String) = api.get(path).asJsonObject.items("collection")
 
     override val signedIn: Boolean get() = !session.isGuest
@@ -123,12 +130,18 @@ class SoundCloudBackend(
     }
     override suspend fun allSongs(): List<Song> {
         if (!signedIn) return emptyList()
-        val liked = remember(pages("/users/$user/track_likes?limit=200").mapNotNull { song(it.obj("track")) }).distinctBy { it.id }
+        val liked = likes()
         val ids = liked.mapTo(HashSet()) { it.id }
         val waiting = waiting(TRACK_LIKE, ids)
         if (waiting.isEmpty()) return liked
         val added = tracks(waiting.filterValues { it.liked }.keys.filter { it !in ids }.reversed())
         return added + liked.filter { waiting[it.id]?.liked != false }
+    }
+
+    private suspend fun likes(): List<Song> {
+        val (time, entries) = pageEntry("/users/$user/track_likes?limit=200")
+        mappedLikes?.takeIf { it.first == time }?.let { return it.second }
+        return remember(entries.mapNotNull { song(it.obj("track")) }).distinctBy { it.id }.also { mappedLikes = time to it }
     }
 
     // likes soundcloud's own list now agrees with are done; ones it took a while ago but still doesn't list are left to it

@@ -17,7 +17,6 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
 import okhttp3.WebSocket
@@ -29,7 +28,7 @@ class DiscordGateway(
     private val onConnected: (Boolean) -> Unit,
     private val gatewayUrl: String = "wss://gateway.discord.gg/?v=10&encoding=json",
 ) {
-    private val http = OkHttpClient.Builder().build()
+    private val http get() = AuroraHttp.base
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private var ready = false

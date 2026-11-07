@@ -18,6 +18,9 @@ import java.io.File
 import java.io.FileNotFoundException
 import java.io.IOException
 import java.io.InputStream
+import java.nio.file.AtomicMoveNotSupportedException
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import java.util.concurrent.TimeUnit
 
 interface ArtworkImages {
@@ -36,10 +39,13 @@ class ArtworkRepository(
     private val http: OkHttpClient = OkHttpClient.Builder().connectTimeout(8, TimeUnit.SECONDS).readTimeout(10, TimeUnit.SECONDS).build(),
 ) {
     private val gate = Semaphore(3)
+    // lookups hold gate through the 1.1 s musicbrainz limit, server covers must not queue behind them
+    private val serverGate = Semaphore(6)
     private val locks = Array(64) { Mutex() }
     private val matchLocks = Array(64) { Mutex() }
     private val storage = Any()
     private var generation = 0
+    private var savesSinceTrim = 0
     private val _bytes = MutableStateFlow(0L)
     val bytes = _bytes.asStateFlow()
     init { CoroutineScope(SupervisorJob() + Dispatchers.IO).launch { synchronized(storage) { trim() } } }
@@ -66,11 +72,13 @@ class ArtworkRepository(
                 }
                 if (image.isFile && (serverArt == null || offline() || freshUntil > System.currentTimeMillis())) {
                     image.setLastModified(System.currentTimeMillis())
+                    // trim goes oldest first, an evicted sidecar would force a re-download of a cover in use
+                    File(root, "$key.fresh").setLastModified(System.currentTimeMillis())
                     return@withLock read(image)
                 }
             }
             val supplied = if (serverArt != null && !offline()) {
-                try { gate.withPermit { fetchImage(serverArt) } }
+                try { serverGate.withPermit { fetchImage(serverArt) } }
                 catch (error: IOException) {
                     synchronized(storage) {
                         if (image.isFile) return@withLock read(image)
@@ -78,7 +86,7 @@ class ArtworkRepository(
                     throw error
                 }
             } else null
-            if (supplied != null && !images.isPlaceholder(supplied)) return@withLock saveAndOpen(image, supplied, version, read)
+            if (supplied != null && !images.isPlaceholder(supplied)) return@withLock saveAndOpen(image, supplied, version, read, SERVER_ART_TTL)
             synchronized(storage) {
                 if (match.isFile) return@withLock saveAndOpen(image, match.readBytes(), version, read)
             }
@@ -146,15 +154,23 @@ class ArtworkRepository(
         if (version != generation) throw FileNotFoundException("Artwork cache cleared")
         root.mkdirs()
         val temporary = File(root, file.name + ".tmp")
+        val replaced = file.length()
         try {
             temporary.writeBytes(data)
-            if (!temporary.renameTo(file)) throw IOException("Cannot save cover")
+            // renameTo can't replace an existing file on windows
+            try { Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE) }
+            catch (_: AtomicMoveNotSupportedException) { Files.move(temporary.toPath(), file.toPath(), StandardCopyOption.REPLACE_EXISTING) }
         } finally { temporary.delete() }
+        _bytes.value += data.size - replaced
         File(root, file.nameWithoutExtension + ".miss").delete()
         File(root, file.nameWithoutExtension + ".fresh").writeText((System.currentTimeMillis() + ttl).toString())
         File(root, file.nameWithoutExtension + ".placeholder").let { if (placeholder) it.writeText("") else it.delete() }
         val opened = read(file)
-        trim(keep = file)
+        // a full trim stats the whole folder under this lock, so not on every save
+        if (_bytes.value > LIMIT_BYTES || ++savesSinceTrim >= SAVES_PER_TRIM) {
+            savesSinceTrim = 0
+            trim(keep = file)
+        }
         opened
     }
 
@@ -167,12 +183,14 @@ class ArtworkRepository(
     }
 
     private fun trim(keep: File? = null) {
-        val files = root.listFiles()?.filter { it.isFile }?.sortedBy { it.lastModified() }.orEmpty()
+        val files = root.listFiles()?.filter { it.isFile }?.map { it to it.lastModified() }?.sortedBy { it.second }?.map { it.first }.orEmpty()
         var bytes = files.sumOf { it.length() }
         var count = files.size
+        // going below the limit keeps a full cache from trimming again on the very next save
+        val target = if (bytes > LIMIT_BYTES) LIMIT_BYTES / 8 * 7 else LIMIT_BYTES
         for (file in files) {
             if (file == keep) continue
-            if (bytes <= LIMIT_BYTES && count <= 2500) break
+            if (bytes <= target && count <= 2500) break
             val size = file.length()
             if (file.delete()) { bytes -= size; count-- }
         }
@@ -184,6 +202,8 @@ class ArtworkRepository(
         private const val MAX_IMAGE_BYTES = 8 * 1024 * 1024
         private const val MISS_TTL = 24L * 60 * 60 * 1000
         private const val RETRY_TTL = 60L * 1000
+        private const val SERVER_ART_TTL = 30L * 24 * 60 * 60 * 1000
+        private const val SAVES_PER_TRIM = 32
     }
 }
 

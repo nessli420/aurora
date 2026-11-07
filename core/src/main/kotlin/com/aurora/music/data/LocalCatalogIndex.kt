@@ -9,7 +9,7 @@ object LocalCatalogIndex {
 
     // only substitute on a single unambiguous match so a different version is never swapped in
     fun findMatch(index: Map<String, List<Song>>, artist: String, title: String, durationSec: Int): Song? {
-        if (title.isBlank()) return null
+        if (title.isBlank() || index.isEmpty()) return null
         val candidates = index[TrackMatch.key(artist, title)] ?: return null
         val byDuration = candidates.filter { durationSec > 0 && it.durationSec > 0 && abs(it.durationSec - durationSec) <= TrackMatch.DURATION_TOLERANCE_SEC }
         if (byDuration.isNotEmpty()) return byDuration.minByOrNull { abs(it.durationSec - durationSec) }
@@ -22,9 +22,10 @@ object LocalCatalogIndex {
         if (base.isBlank()) return emptyList<String>() to emptyList()
         val here = songs.filter { dirOf[it.id] == base }
             .sortedWith(compareBy({ it.album.lowercase() }, { positions[it.id] ?: 0 }, { it.path.lowercase() }))
+        val prefix = "$base/"
         val subdirs = dirOf.values.asSequence()
-            .filter { it != base && it.startsWith("$base/") }
-            .map { it.removePrefix("$base/").substringBefore('/') }
+            .filter { it != base && it.startsWith(prefix) }
+            .map { it.removePrefix(prefix).substringBefore('/') }
             .distinct().sortedBy { it.lowercase() }.toList()
         return subdirs to here
     }

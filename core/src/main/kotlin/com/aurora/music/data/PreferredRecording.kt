@@ -1,6 +1,7 @@
 package com.aurora.music.data
 
 import com.aurora.music.model.Song
+import com.aurora.music.util.markFreeKey
 import java.text.Normalizer
 import java.util.Locale
 
@@ -9,9 +10,15 @@ fun recordingMatches(a: Song, b: Song): Boolean = a.artist.isNotBlank() && recor
 fun recordingTitlesMatch(a: Song, b: Song): Boolean =
     a.title.isNotBlank() && normalized(recordingTitle(a.title)) == normalized(recordingTitle(b.title))
 
-fun recordingTitle(title: String): String = title
-    .replace(Regex("\\s*[\\[(](?:feat\\.?|ft\\.?|featuring)\\s+[^)\\]]*[)\\]]", RegexOption.IGNORE_CASE), "")
-    .replace(Regex("\\s+(?:feat\\.?|ft\\.?|featuring)\\s+.*$", RegexOption.IGNORE_CASE), "").trim()
+private val BRACKETED_FEATURE = Regex("\\s*[\\[(](?:feat\\.?|ft\\.?|featuring)\\s+[^)\\]]*[)\\]]", RegexOption.IGNORE_CASE)
+private val TRAILING_FEATURE = Regex("\\s+(?:feat\\.?|ft\\.?|featuring)\\s+.*$", RegexOption.IGNORE_CASE)
+private val CREDIT_SEPARATOR = Regex("\\s+(?:&|and)\\s+|\\s*[,;]\\s*")
+
+fun recordingTitle(title: String): String {
+    // neither pattern can match without one of these words
+    val plain = !title.contains("ft", ignoreCase = true) && !title.contains("feat", ignoreCase = true)
+    return (if (plain) title else title.replace(BRACKETED_FEATURE, "").replace(TRAILING_FEATURE, "")).trim()
+}
 
 // the title a recording is filed under, for finding it among another source's songs
 fun recordingKey(title: String): String = normalized(recordingTitle(title))
@@ -31,13 +38,11 @@ fun twinMatches(song: Song, candidate: Song): Boolean = recordingVariants(candid
 private const val RELAXED_DURATION_SEC = 2
 
 // services disagree on accents and on a leading "the", so "The Soft Walls" is still "Soft Walls"
-private fun normalized(value: String) = Normalizer.normalize(value, Normalizer.Form.NFD)
-    .replace(Regex("\\p{M}+"), "").lowercase(Locale.ROOT)
-    .replace(Regex("[^\\p{L}\\p{N}]+"), " ").trim()
+private fun normalized(value: String) = markFreeKey(value, Normalizer.Form.NFD)
 
 private fun artistsMatch(a: String, b: String): Boolean {
     fun credits(value: String) = recordingTitle(value).lowercase(Locale.ROOT)
-        .split(Regex("\\s+(?:&|and)\\s+|\\s*[,;]\\s*"))
+        .split(CREDIT_SEPARATOR)
         .map { normalized(it).removePrefix("the ") }.filter { it.isNotBlank() }.toSet()
     return credits(a).intersect(credits(b)).isNotEmpty()
 }

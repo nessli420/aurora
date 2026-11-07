@@ -1,6 +1,6 @@
 package com.aurora.music.data.routes
 
-import java.security.MessageDigest
+import com.aurora.music.data.sha256Hex
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
@@ -58,9 +58,7 @@ object RouteIdentity {
             address.isBlank() || address.trim().lowercase() in setOf("02:00:00:00:00:00", "00:00:00:00:00:00") -> return null
             else -> address.trim().lowercase()
         }
-        val digest = MessageDigest.getInstance("SHA-256").digest(identity.toByteArray(Charsets.UTF_8))
-            .joinToString("") { "%02x".format(it) }
-        return "android:$type:$digest"
+        return "android:$type:${sha256Hex(identity)}"
     }
 }
 

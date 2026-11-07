@@ -6,6 +6,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -14,6 +15,8 @@ import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.RandomAccessFile
+import java.util.concurrent.CountDownLatch
+import java.util.concurrent.TimeUnit
 import kotlin.math.sqrt
 
 // speech uses the radio prefix so history, scrobbling and resume points already skip it
@@ -137,11 +140,19 @@ internal fun cleanTranscript(raw: String): String {
 }
 
 class WhisperEars(private val mic: DjMic, private val whisper: LocalWhisper, private val language: () -> String) : DjEars {
-    override fun start() = mic.start()
+    @Volatile private var closing: CountDownLatch? = null
+
+    // a press right after a release must not swap the recorder out from under the stop
+    override fun start() = closing?.await(2, TimeUnit.SECONDS) != false && mic.start()
 
     override suspend fun stop(): String {
-        val pcm = mic.stop()
-        if (pcm.size < 8_000 || rms(pcm) < 0.002f) return ""
+        val closed = CountDownLatch(1).also { closing = it }
+        // not cancellable: a job cancelled before the switch would leave the mic open
+        val (pcm, level) = withContext(NonCancellable + Dispatchers.IO) {
+            val pcm = try { mic.stop() } finally { closed.countDown() }
+            pcm to rms(pcm)
+        }
+        if (pcm.size < 8_000 || level < 0.002f) return ""
         val code = language()
         // short clips can fool language detection, so english keeps its fixed model path
         val text = try { whisper.transcribe(pcm, if (code == "en") "en" else "auto") }

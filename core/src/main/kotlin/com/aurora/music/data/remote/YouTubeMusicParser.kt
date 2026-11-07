@@ -116,7 +116,7 @@ object YouTubeMusicParser {
                     }
                     if (title.isBlank()) return@forEach
                     when {
-                        !browseId.startsWith("MPRE") && !browseId.startsWith("UC") && !browseId.startsWith("VL") && videoId.matches(Regex("[A-Za-z0-9_-]{11}")) -> {
+                        !browseId.startsWith("MPRE") && !browseId.startsWith("UC") && !browseId.startsWith("VL") && videoId.matches(VIDEO_ID) -> {
                             if (item.string("musicItemRendererDisplayPolicy") == "MUSIC_ITEM_RENDERER_DISPLAY_POLICY_GREY_OUT" ||
                                 item.get("isPlayable")?.takeIf { it.isJsonPrimitive }?.asBoolean == false) return@forEach
                             val durations = item.objects("musicResponsiveListItemFixedColumnRenderer").map { it.obj("text").label() } +
@@ -155,21 +155,34 @@ object YouTubeMusicParser {
         ?.asJsonObject?.string("url").orEmpty().let(::fullSize)
 
     // list rows only list 60-120px art, but google's image urls serve any size the url asks for
-    fun fullSize(url: String): String {
+    fun fullSize(url: String): String = resized(url, "maxresdefault.jpg", 1200)
+
+    // for a view of known size; a dimension of 0 means unknown and keeps full size
+    fun sized(url: String, width: Int, height: Int): String {
+        val side = maxOf(width, height)
+        return when {
+            width <= 0 || height <= 0 || side > 544 -> fullSize(url)
+            // mqdefault is 180px tall so it blurs in anything bigger, and hqdefault has black bars in a square crop
+            side <= 240 -> resized(url, "mqdefault.jpg", 240)
+            else -> resized(url, "maxresdefault.jpg", 544)
+        }
+    }
+
+    private fun resized(url: String, videoFile: String, side: Int): String {
         val host = runCatching { java.net.URI(url).host }.getOrNull().orEmpty()
-        if (host == "i.ytimg.com") return Regex("""^https://i\.ytimg\.com/vi(?:_webp)?/([A-Za-z0-9_-]{11})/""").find(url)
-            ?.let { "https://i.ytimg.com/vi/${it.groupValues[1]}/maxresdefault.jpg" } ?: url
+        if (host == "i.ytimg.com") return VIDEO_THUMBNAIL.find(url)
+            ?.let { "https://i.ytimg.com/vi/${it.groupValues[1]}/$videoFile" } ?: url
         if (!host.endsWith("googleusercontent.com") && !host.endsWith("ggpht.com")) return url
-        return url.replace(Regex("""=w\d+-h\d+"""), "=w1200-h1200").replace(Regex("""=s\d+(?=-|$)"""), "=s1200")
+        return url.replace(WIDTH_HEIGHT, "=w$side-h$side").replace(SQUARE, "=s$side")
     }
 
     fun duration(value: String): Int? {
-        if (!value.matches(Regex("\\d{1,3}:[0-5]\\d(?::[0-5]\\d)?"))) return null
+        if (!value.matches(DURATION)) return null
         return value.split(':').fold(0) { total, part -> total * 60 + part.toInt() }
     }
 
     fun sentinel(videoId: String): String {
-        require(videoId.matches(Regex("[A-Za-z0-9_-]{11}")))
+        require(videoId.matches(VIDEO_ID))
         return "aurora-yt://video/$videoId"
     }
 
@@ -195,4 +208,9 @@ object YouTubeMusicParser {
     }
 
     private val ITEM_RENDERERS = setOf("musicResponsiveListItemRenderer", "musicTwoRowItemRenderer", "playlistPanelVideoRenderer", "musicCardShelfRenderer")
+    private val VIDEO_THUMBNAIL = Regex("""^https://i\.ytimg\.com/vi(?:_webp)?/([A-Za-z0-9_-]{11})/""")
+    private val VIDEO_ID = Regex("[A-Za-z0-9_-]{11}")
+    private val DURATION = Regex("\\d{1,3}:[0-5]\\d(?::[0-5]\\d)?")
+    private val WIDTH_HEIGHT = Regex("""=w\d+-h\d+""")
+    private val SQUARE = Regex("""=s\d+(?=-|$)""")
 }

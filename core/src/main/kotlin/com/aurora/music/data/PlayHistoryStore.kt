@@ -2,7 +2,11 @@ package com.aurora.music.data
 
 import com.aurora.music.model.Song
 import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.TypeAdapter
 import com.google.gson.reflect.TypeToken
+import com.google.gson.stream.JsonReader
+import com.google.gson.stream.JsonWriter
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -219,12 +223,24 @@ class PlayHistoryStore(filesDir: File) {
 
     private fun load(): List<PlayEvent> = runCatching {
         if (!file.exists()) return@runCatching emptyList<PlayEvent>()
-        gson.fromJson<List<PlayEvent>>(file.readText(), EVENTS_TYPE)?.map(::withoutBrowsePrefix) ?: emptyList()
+        // pooled while parsing because copy() throws on a gson null, and a failed load wipes the history
+        val strings = gson.getAdapter(String::class.java)
+        val pool = HashMap<String, String>()
+        val pooling = GsonBuilder().registerTypeAdapter(String::class.java, object : TypeAdapter<String>() {
+            override fun read(reader: JsonReader): String? = strings.read(reader)?.let { value -> pool.getOrPut(value) { value } }
+            override fun write(out: JsonWriter, value: String?) = strings.write(out, value)
+        }).create()
+        pooling.fromJson<List<PlayEvent>>(file.readText(), EVENTS_TYPE)?.map(::withoutBrowsePrefix) ?: emptyList()
     }.getOrDefault(emptyList())
 
     // android auto and the library browser used to record their "song_" media ids instead of the song id
+    // every string is passed in because copy() throws on a gson null
     private fun withoutBrowsePrefix(event: PlayEvent): PlayEvent =
-        if ((event.songId as String?)?.startsWith(BROWSE_PREFIX) == true) event.copy(songId = event.songId.removePrefix(BROWSE_PREFIX)) else event
+        if ((event.songId as String?)?.startsWith(BROWSE_PREFIX) == true) event.copy(songId = event.songId.removePrefix(BROWSE_PREFIX),
+            title = (event.title as String?).orEmpty(), artist = (event.artist as String?).orEmpty(), album = (event.album as String?).orEmpty(),
+            albumId = (event.albumId as String?).orEmpty(), artistId = (event.artistId as String?).orEmpty(),
+            artworkUrl = (event.artworkUrl as String?).orEmpty())
+        else event
 
     fun flushNow() {
         synchronized(lock) {

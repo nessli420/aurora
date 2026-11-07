@@ -212,15 +212,14 @@ class PlexBackend(
 
     override suspend fun songFor(id: String): Song? = client.metadata(id)?.takeIf { it.type == "track" }?.toSong()
 
-    override suspend fun search(query: String): SearchResults {
-        if (query.isBlank()) return SearchResults()
+    override suspend fun search(query: String): SearchResults = coroutineScope {
+        if (query.isBlank()) return@coroutineScope SearchResults()
         val filter = mapOf("title" to query.trim())
-        return SearchResults(
-            songs = library(TRACK, filter, limit = 60).map { it.toSong() },
-            albums = library(ALBUM, filter, limit = 40).map { it.toAlbum() },
-            artists = library(ARTIST, filter, limit = 40).map { it.toArtist() },
-            playlists = allPlaylists().filter { it.title.contains(query.trim(), ignoreCase = true) }.take(40),
-        )
+        val songs = async { library(TRACK, filter, limit = 60).map { it.toSong() } }
+        val albums = async { library(ALBUM, filter, limit = 40).map { it.toAlbum() } }
+        val artists = async { library(ARTIST, filter, limit = 40).map { it.toArtist() } }
+        val playlists = async { allPlaylists().filter { it.title.contains(query.trim(), ignoreCase = true) }.take(40) }
+        SearchResults(songs = songs.await(), albums = albums.await(), artists = artists.await(), playlists = playlists.await())
     }
 
     override suspend fun matchingSongs(song: Song): List<Song> =

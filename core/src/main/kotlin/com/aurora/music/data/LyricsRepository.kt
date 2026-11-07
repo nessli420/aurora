@@ -10,6 +10,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
+import java.io.IOException
 import java.net.URLEncoder
 import java.util.concurrent.TimeUnit
 import java.text.Normalizer
@@ -40,68 +41,95 @@ class LyricsRepository(
     private val orderProvider: suspend () -> List<String> = { DEFAULT_LYRICS_SOURCES },
     // whether spotify may supply lyrics for songs of this kind of source, its own songs included
     private val spotifyAllowed: suspend (ServerType?) -> Boolean = { true },
+    private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val gson = Gson()
+    private val cache = object : LinkedHashMap<List<Any?>, CachedLyrics>(32, 0.75f, true) {
+        override fun removeEldestEntry(eldest: MutableMap.MutableEntry<List<Any?>, CachedLyrics>?) = size > 32
+    }
+    private var cacheBackend: MediaBackend? = null
+
+    suspend fun lyricsFor(song: Song): Lyrics? = withContext(Dispatchers.IO) { lookup(song) }
 
     // sources are asked in the chosen order; synced lyrics win over an earlier plain result
-    suspend fun lyricsFor(song: Song): Lyrics? {
+    private suspend fun lookup(song: Song): Lyrics? {
         if (song.id.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)) return null
         // a file's own lyrics beat every lookup
         attempt { withContext(Dispatchers.IO) { FileLyrics.of(song) } }?.let { return it }
         val backend = backendProvider()
         val type = backend?.sourceType(song)
         val spotify = spotifyAllowed(type)
-        var plain: Lyrics? = null
-        for (source in orderProvider()) {
+        val order = orderProvider()
+        val lrclib = lrclibEnabledProvider()
+        val key: List<Any?> = listOf(song.id, song.playbackSource?.providerId, order, lrclib, spotify)
+        synchronized(cache) {
+            if (cacheBackend !== backend) { cache.clear(); cacheBackend = backend }
+            cache[key]?.takeIf { it.lasting || clock() - it.at < MISS_TTL_MS }
+        }?.let { return it.lyrics }
+        var failed = false
+        val onError: (Exception) -> Unit = { failed = true }
+        var result: Lyrics? = null
+        // servers swallow errors, so a result after an empty source expires like a miss
+        var emptied = false
+        for (source in order) {
             val found = when (source) {
-                "server" -> if (type == ServerType.SPOTIFY && !spotify) null else attempt { backend?.serverLyrics(song) }
-                "spotify" -> if (spotify) attempt { backend?.catalogueLyrics(song) } else null
-                "lrclib" -> if (lrclibEnabledProvider()) fetchLrcLib(song) else null
+                "server" -> if (type == ServerType.SPOTIFY && !spotify) null else attempt(onError) { backend?.serverLyrics(song) }
+                "spotify" -> if (spotify) attempt(onError) { backend?.catalogueLyrics(song) } else null
+                "lrclib" -> if (lrclib) fetchLrcLib(song, onError) else null
                 else -> null
-            } ?: continue
-            if (found.synced) return found
-            if (plain == null) plain = found
+            }
+            if (found == null) { emptied = true; continue }
+            if (found.synced) { result = found; break }
+            if (result == null) result = found
         }
-        return plain
+        // some backends swallow cancellation, which would look like a miss
+        currentCoroutineContext().ensureActive()
+        if (!failed) synchronized(cache) { if (cacheBackend === backend) cache[key] = CachedLyrics(result, clock(), result != null && !emptied) }
+        return result
     }
 
-    private suspend fun fetchLrcLib(song: Song): Lyrics? = withContext(Dispatchers.IO) {
+    private suspend fun fetchLrcLib(song: Song, onError: (Exception) -> Unit): Lyrics? = withContext(Dispatchers.IO) {
         val cTitle = cleanTitle(song.title)
         val separators = separatorsProvider()
         val artists = artistNames(song.artist, separators)
         val credits = (listOf(song.artist.trim()) + artists).distinctBy(::artistNameKey)
         val titles = listOf(song.title, cTitle).distinct()
         var plain: Lyrics? = null
+        val stopOnIo: (Exception) -> Unit = { e -> onError(e); if (e is IOException) throw e }
 
         // Exhaust the full credit first, then each artist in credited order.
-        for (artist in credits) {
-            currentCoroutineContext().ensureActive()
-            val candidates = linkedSetOf<LrcLibDto>()
-            for (title in titles) {
-                attempt { lrcGet(artist, title, song.album, song.durationSec) }?.let { dto ->
-                    if (plausible(dto, song, cTitle, artists, separators)) {
-                        syncedFrom(dto)?.let { return@withContext it }
-                        candidates += dto
+        try {
+            for (artist in credits) {
+                currentCoroutineContext().ensureActive()
+                val candidates = linkedSetOf<LrcLibDto>()
+                for (title in titles) {
+                    attempt(stopOnIo) { lrcGet(artist, title, song.album, song.durationSec) }?.let { dto ->
+                        if (plausible(dto, song, cTitle, artists, separators)) {
+                            syncedFrom(dto)?.let { return@withContext it }
+                            candidates += dto
+                        }
                     }
                 }
+                for (title in titles) {
+                    attempt(stopOnIo) { lrcSearch(title, artist) }?.let { candidates += it }
+                }
+                attempt(stopOnIo) { lrcSearchQ("$artist $cTitle") }?.let { candidates += it }
+                val plausible = candidates.filter { plausible(it, song, cTitle, artists, separators) }
+                    .sortedByDescending { score(it, song) }
+                plausible.firstNotNullOfOrNull(::syncedFrom)?.let { return@withContext it }
+                if (plain == null) plain = plausible.firstNotNullOfOrNull(::lyricsFrom)
             }
-            for (title in titles) {
-                attempt { lrcSearch(title, artist) }?.let { candidates += it }
-            }
-            attempt { lrcSearchQ("$artist $cTitle") }?.let { candidates += it }
-            val plausible = candidates.filter { plausible(it, song, cTitle, artists, separators) }
-                .sortedByDescending { score(it, song) }
-            plausible.firstNotNullOfOrNull(::syncedFrom)?.let { return@withContext it }
-            if (plain == null) plain = plausible.firstNotNullOfOrNull(::lyricsFrom)
+        } catch (_: IOException) {
+            // a dead host would stall every remaining call
         }
         plain
     }
 
-    private suspend fun <T> attempt(block: suspend () -> T): T? {
+    private suspend fun <T> attempt(onError: (Exception) -> Unit = {}, block: suspend () -> T): T? {
         currentCoroutineContext().ensureActive()
         return try { block() }
         catch (e: CancellationException) { throw e }
-        catch (_: Exception) { null }
+        catch (e: Exception) { onError(e); null }
     }
 
     private fun artistNames(credit: String, separators: ArtistSeparators): List<String> {
@@ -126,7 +154,7 @@ class LyricsRepository(
         var s = PAREN_NOISE.replace(t, " ")
         s = DASH_NOISE.replace(s, " ")
         s = TRAIL_FEAT.replace(s, " ")
-        return s.replace(Regex("\\s+"), " ").trim().ifBlank { t }
+        return s.replace(SPACES, " ").trim().ifBlank { t }
     }
 
     private fun plausible(dto: LrcLibDto, song: Song, cTitle: String, artists: List<String>, separators: ArtistSeparators): Boolean {
@@ -140,8 +168,8 @@ class LyricsRepository(
     }
 
     private fun matchKey(value: String): String = Normalizer.normalize(value, Normalizer.Form.NFKD)
-        .replace(Regex("""\p{M}+"""), "").lowercase(Locale.ROOT)
-        .replace(Regex("""[^\p{L}\p{N}]+"""), " ").trim()
+        .replace(MARKS, "").lowercase(Locale.ROOT)
+        .replace(NON_WORD, " ").trim()
 
     private fun score(dto: LrcLibDto, song: Song): Int {
         var s = 0
@@ -209,7 +237,14 @@ class LyricsRepository(
         val plainLyrics: String? = null,
     )
 
+    private class CachedLyrics(val lyrics: Lyrics?, val at: Long, val lasting: Boolean)
+
     companion object {
+        private const val MISS_TTL_MS = 10 * 60_000L
+        private val SPACES = Regex("\\s+")
+        private val MARKS = Regex("""\p{M}+""")
+        private val NON_WORD = Regex("""[^\p{L}\p{N}]+""")
+
         private fun enc(s: String): String = URLEncoder.encode(s, "UTF-8")
 
         private const val VERSIONS =

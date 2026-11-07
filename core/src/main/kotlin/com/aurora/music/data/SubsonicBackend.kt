@@ -5,6 +5,7 @@ import com.aurora.music.data.remote.AlbumDto
 import com.aurora.music.data.remote.ArtistDto
 import com.aurora.music.data.remote.PlaylistDto
 import com.aurora.music.data.remote.SongDto
+import com.aurora.music.data.remote.SubsonicEnvelope
 import com.aurora.music.util.TrackMatch
 import kotlin.math.abs
 import com.aurora.music.data.remote.SubsonicClient
@@ -17,6 +18,13 @@ import com.aurora.music.model.Song
 import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import retrofit2.HttpException
@@ -32,6 +40,17 @@ class SubsonicBackend(
     private val c: SubsonicClient get() = client
     private val playbackCapabilitiesLock = Mutex()
     private var playbackReportSupported: Boolean? = null
+    private val starredScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private var starredCall: Pair<Long, Deferred<SubsonicEnvelope>>? = null
+
+    // home, likes and counts ask within seconds of each other at launch; share one getStarred2
+    private suspend fun starred2(): SubsonicEnvelope {
+        val call = synchronized(this) {
+            starredCall?.takeIf { (at, call) -> !call.isCancelled && (!call.isCompleted || System.nanoTime() - at < STARRED_REUSE_NS) }
+                ?: (System.nanoTime() to starredScope.async { c.api.getStarred2() }).also { starredCall = it }
+        }
+        return call.second.await()
+    }
 
     private fun SongDto.toModel(): Song {
         val bitrate = maxBitrateProvider()
@@ -95,28 +114,22 @@ class SubsonicBackend(
     override suspend fun ping(): Boolean =
         runCatching { c.api.ping().response.isOk }.getOrDefault(false)
 
-    private suspend fun albumList(type: String, size: Int = 20): List<Album> = runCatching {
-        c.api.getAlbumList2(type, size).response.albumList2?.album?.map { it.toModel() }.orEmpty()
+    private suspend fun albumList(type: String, size: Int = 20, offset: Int = 0): List<Album> = runCatching {
+        c.api.getAlbumList2(type, size, offset).response.albumList2?.album?.map { it.toModel() }.orEmpty()
     }.getOrDefault(emptyList())
 
-    override suspend fun home(): HomeData {
-        val newReleases = albumList("newest", 12)
-        val recent = albumList("recent", 12)
-        val frequent = albumList("frequent", 12)
-        val random = albumList("random", 12)
-        val playlists = runCatching {
-            c.api.getPlaylists().response.playlists?.playlist?.map { it.toModel() }.orEmpty()
-        }.getOrDefault(emptyList())
-        val artists = runCatching {
-            c.api.getArtists().response.artists?.index?.flatMap { it.artist }?.map { it.toModel() }?.take(20).orEmpty()
-        }.getOrDefault(emptyList())
-        val starred = runCatching {
-            c.api.getStarred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
-        }.getOrDefault(emptyList())
-        return HomeData(newReleases, recent, frequent, random, playlists, artists, starred)
+    override suspend fun home(): HomeData = coroutineScope {
+        val newReleases = shelf { albumList("newest", 12) }
+        val recent = shelf { albumList("recent", 12) }
+        val frequent = shelf { albumList("frequent", 12) }
+        val random = shelf { albumList("random", 12) }
+        val playlists = shelf { c.api.getPlaylists().response.playlists?.playlist?.map { it.toModel() }.orEmpty() }
+        val artists = shelf { c.api.getArtists().response.artists?.index?.flatMap { it.artist }?.take(20)?.map { it.toModel() }.orEmpty() }
+        val starred = shelf { starred2().response.starred2?.song?.take(50)?.map { it.toModel() }.orEmpty() }
+        HomeData(newReleases.await(), recent.await(), frequent.await(), random.await(), playlists.await(), artists.await(), starred.await())
     }
 
-    override suspend fun allAlbums(): List<Album> = albumList("alphabeticalByName", 500)
+    override suspend fun allAlbums(): List<Album> = pagedAlbums { offset, size -> albumList("alphabeticalByName", size, offset) }
 
     override suspend fun allArtists(): List<Artist> = runCatching {
         c.api.getArtists().response.artists?.index?.flatMap { it.artist }?.map { it.toModel() }.orEmpty()
@@ -142,13 +155,13 @@ class SubsonicBackend(
     }.getOrDefault(emptyList()).ifEmpty { if (offset == 0) allSongs() else emptyList() }
 
     override suspend fun starredSongs(): List<Song> = runCatching {
-        c.api.getStarred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
+        starred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
     }.getOrDefault(emptyList())
 
-    override suspend fun starredCount(): Int = runCatching { starredSongs().size }.getOrDefault(0)
+    override suspend fun starredCount(): Int = runCatching { starred2().response.starred2?.song?.size ?: 0 }.getOrDefault(0)
 
     override suspend fun starredIds(): Set<String> = runCatching {
-        val s = c.api.getStarred2().response.starred2 ?: return emptySet()
+        val s = starred2().response.starred2 ?: return emptySet()
         (s.song.map { it.id } + s.album.map { it.id } + s.artist.map { it.id }).toSet()
     }.getOrDefault(emptySet())
 
@@ -275,6 +288,7 @@ class SubsonicBackend(
             "artist" -> if (starred) c.api.star(artistId = id) else c.api.unstar(artistId = id)
             else -> if (starred) c.api.star(id = id) else c.api.unstar(id = id)
         }
+        synchronized(this) { starredCall = null }
         resp.response.isOk
     }.getOrDefault(false)
 
@@ -291,9 +305,11 @@ class SubsonicBackend(
             "artist" -> {
                 val ar = c.api.getArtist(id).response.artist ?: return null
                 val albumModels = ar.album.map { it.toModel() }
-                val tracks = ar.album.take(6).flatMap { alb ->
-                    runCatching { distinctAlbumTracks(c.api.getAlbum(alb.id).response.album?.song.orEmpty()) }.getOrDefault(emptyList())
-                }.map { it.toModel() }
+                val tracks = coroutineScope {
+                    ar.album.take(6).map { alb ->
+                        async { runCatching { distinctAlbumTracks(c.api.getAlbum(alb.id).response.album?.song.orEmpty()) }.getOrDefault(emptyList()) }
+                    }.awaitAll()
+                }.flatten().map { it.toModel() }
                 DetailData(
                     DetailInfo(ar.name, "${ar.albumCount} albums · ${ar.album.sumOf { it.songCount }} tracks", ar.coverArt?.takeIf { it.isNotBlank() }?.let { c.coverArtUrl(it) }.orEmpty(), accentArgbFor(ar.id), true, tracks.size, "Artist"),
                     tracks,
@@ -309,7 +325,7 @@ class SubsonicBackend(
                 )
             }
             "liked" -> {
-                val songs = c.api.getStarred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
+                val songs = starred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
                 DetailData(
                     DetailInfo("Liked Songs", "${songs.size} songs you love", songs.firstOrNull()?.artworkUrl ?: "", accentArgbFor("liked"), false, songs.size, "Liked"),
                     songs,
@@ -383,3 +399,5 @@ internal fun distinctAlbumTracks(songs: List<SongDto>): List<SongDto> {
 
 private fun rank(song: SongDto): Long =
     (if (song.starred != null) 1L shl 60 else 0L) + song.bitDepth.toLong().shl(40) + song.samplingRate.toLong().shl(16) + song.bitRate
+
+private const val STARRED_REUSE_NS = 10_000_000_000L

@@ -55,7 +55,7 @@ fun interface YouTubeMusicTransport {
 // a null session is a signed-out guest on the public web api
 class YouTubeMusicClient(
     private val session: (() -> YouTubeMusicWebSession)?,
-    http: OkHttpClient = OkHttpClient(),
+    http: OkHttpClient = AuroraHttp.base,
 ) : YouTubeMusicTransport {
     private val http = http.newBuilder().followRedirects(false).followSslRedirects(false)
         .callTimeout(30, TimeUnit.SECONDS).build()
@@ -80,7 +80,7 @@ class YouTubeMusicClient(
         val request = authenticated(auth, version).url("$ORIGIN/youtubei/v1/$endpoint?prettyPrint=false")
             .post(payload.toString().toRequestBody("application/json".toMediaType())).build()
         execute(request) { response ->
-            val result = runCatching { JsonParser.parseString(response.body?.string()).asJsonObject }
+            val result = runCatching { JsonParser.parseReader(response.body?.charStream()).asJsonObject }
                 .getOrElse { throw IOException("YouTube Music returned an unreadable response.") }
             if (result.has("error")) throw IOException("YouTube Music could not complete this request.")
             result

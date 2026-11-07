@@ -51,7 +51,7 @@ data class PlaybackCollectionIdentity(val id: String? = null, val name: String? 
 private val HEX_DIGITS = "0123456789abcdef".toCharArray()
 private val sha256 = ThreadLocal.withInitial { MessageDigest.getInstance("SHA-256") }
 
-internal fun sha256Hex(value: String): String {
+fun sha256Hex(value: String): String {
     val bytes = sha256.get().digest(value.toByteArray(Charsets.UTF_8))
     val out = CharArray(bytes.size * 2)
     for (i in bytes.indices) {

@@ -8,7 +8,6 @@ object TrackMatch {
     const val DURATION_TOLERANCE_SEC = 4
 
     private val FEATURE = Regex("\\((feat|ft)\\.?[^)]*\\)")
-    private val SEPARATORS = Regex("[^\\p{L}\\p{N}]+")
 
     // accents fold only on latin letters; other scripts keep every letter and mark so different titles stay apart
     fun norm(s: String): String {
@@ -17,7 +16,7 @@ object TrackMatch {
         val folded = if (lower.all { it.code < 0x80 }) lower else buildString(lower.length) {
             for (c in Normalizer.normalize(lower, Normalizer.Form.NFKC)) append(fold(c))
         }
-        return folded.replace(FEATURE, " ").replace(SEPARATORS, " ").trim()
+        return lettersAndNumbers(if ("(f" in folded) folded.replace(FEATURE, " ") else folded)
     }
 
     private val folds = CharArray(0x250)
@@ -34,4 +33,38 @@ object TrackMatch {
     fun identity(s: String): String = norm(s).ifEmpty { s.trim().lowercase(Locale.ROOT) }
 
     fun key(artist: String, title: String): String = identity(artist) + "|" + identity(title)
+}
+
+private val MARKS = Regex("\\p{M}+")
+
+// ascii has no marks and every normal form leaves it alone
+internal fun markFreeKey(value: String, form: Normalizer.Form): String {
+    val text = if (value.all { it.code < 0x80 }) value else Normalizer.normalize(value, form).replace(MARKS, "")
+    return lettersAndNumbers(text.lowercase(Locale.ROOT))
+}
+
+// same as replacing [^\p{L}\p{N}]+ with a space and trimming, without a native matcher per call
+internal fun lettersAndNumbers(s: String): String {
+    val out = StringBuilder(s.length)
+    var gap = false
+    var i = 0
+    while (i < s.length) {
+        val cp = s.codePointAt(i)
+        if (isLetterOrNumber(cp)) {
+            if (gap && out.isNotEmpty()) out.append(' ')
+            gap = false
+            out.appendCodePoint(cp)
+        } else gap = true
+        i += Character.charCount(cp)
+    }
+    return out.toString()
+}
+
+private fun isLetterOrNumber(cp: Int): Boolean {
+    if (cp < 0x80) return cp in 'a'.code..'z'.code || cp in 'A'.code..'Z'.code || cp in '0'.code..'9'.code
+    return when (Character.getType(cp).toByte()) {
+        Character.UPPERCASE_LETTER, Character.LOWERCASE_LETTER, Character.TITLECASE_LETTER, Character.MODIFIER_LETTER, Character.OTHER_LETTER,
+        Character.DECIMAL_DIGIT_NUMBER, Character.LETTER_NUMBER, Character.OTHER_NUMBER -> true
+        else -> false
+    }
 }

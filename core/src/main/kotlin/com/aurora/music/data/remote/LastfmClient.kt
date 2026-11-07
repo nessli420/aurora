@@ -17,7 +17,7 @@ data class LastfmUser(val name: String, val imageUrl: String, val playcount: Lon
 class LastfmException(val code: Int, message: String) : Exception(message)
 
 // authenticated calls signed: api_sig = md5(params sorted by name as key+value + secret) excluding format
-class LastfmClient(private val apiKey: String, private val secret: String, private val http: OkHttpClient = sharedHttp) {
+class LastfmClient(private val apiKey: String, private val secret: String, private val http: OkHttpClient = AuroraHttp.base) {
     private val gson = Gson()
 
     val configured: Boolean get() = apiKey.isNotBlank() && !apiKey.startsWith("YOUR_")
@@ -130,7 +130,5 @@ class LastfmClient(private val apiKey: String, private val secret: String, priva
 
     private companion object {
         const val BASE = "https://ws.audioscrobbler.com/2.0/"
-        // one connection pool for every key rebuild
-        val sharedHttp by lazy { OkHttpClient() }
     }
 }

@@ -5,11 +5,14 @@ import com.aurora.music.data.Session
 import com.google.gson.Gson
 import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
+import com.google.gson.stream.MalformedJsonException
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import okhttp3.Call
 import okhttp3.Callback
@@ -19,6 +22,7 @@ import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import okhttp3.Response
+import java.io.EOFException
 import java.io.IOException
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
@@ -37,11 +41,18 @@ class PlexClient(
     private val clientIdentifier = session.clientToken.ifBlank { "aurora-${UUID.randomUUID()}" }
     private val originals = ConcurrentHashMap<String, String>()
     private val artwork = ConcurrentHashMap<String, String>()
+    private val sectionsLock = Mutex()
+    private var sections: Pair<Long, List<PlexDirectory>>? = null
 
     suspend fun serverInfo(): PlexContainer = get("/")
 
-    suspend fun musicSections(): List<PlexDirectory> = get("/library/sections").directories.orEmpty()
-        .filter { it.type == "artist" && !it.key.isNullOrBlank() }
+    // held across the fetch so one home load asks once; a failure is not kept and reaches the caller
+    suspend fun musicSections(): List<PlexDirectory> = sectionsLock.withLock {
+        sections?.takeIf { System.nanoTime() - it.first < SECTIONS_TTL_NS }?.second
+            ?: get("/library/sections").directories.orEmpty()
+                .filter { it.type == "artist" && !it.key.isNullOrBlank() }
+                .also { sections = System.nanoTime() to it }
+    }
 
     suspend fun get(
         path: String,
@@ -255,9 +266,12 @@ class PlexClient(
                         val container = response.use(read)
                         if (continuation.isActive) continuation.resume(container)
                     } catch (e: Exception) {
-                        if (continuation.isActive) continuation.resumeWithException(when (e) {
-                            is PlexException -> e
-                            is IOException -> PlexException(null, "Could not read the Plex response. Please retry.")
+                        val cause = e.cause
+                        if (continuation.isActive) continuation.resumeWithException(when {
+                            e is PlexException -> e
+                            // gson wraps a stream that breaks off; its own eof and syntax errors still mean not json
+                            e is IOException || cause is IOException && cause !is EOFException && cause !is MalformedJsonException ->
+                                PlexException(null, "Could not read the Plex response. Please retry.")
                             else -> IllegalStateException("The server did not return Plex JSON. Use the Plex Media Server address, not the Plex web app.")
                         })
                     }
@@ -278,7 +292,7 @@ class PlexClient(
     private fun readResponse(response: Response, expectJson: Boolean): PlexContainer {
         checkResponse(response)
         if (!expectJson) return PlexContainer()
-        val container = checkNotNull(gson.fromJson(response.body?.string().orEmpty(), PlexResponse::class.java)?.container)
+        val container = checkNotNull(response.body?.let { gson.fromJson(it.charStream(), PlexResponse::class.java) }?.container)
         return container.copy(
             offset = container.offset ?: response.header("X-Plex-Container-Start")?.toIntOrNull(),
             totalSize = container.totalSize ?: response.header("X-Plex-Container-Total-Size")?.toIntOrNull(),
@@ -287,13 +301,14 @@ class PlexClient(
 
     companion object {
         const val PAGE_SIZE = 200
+        private const val SECTIONS_TTL_NS = 60_000_000_000L
         private val ID = Regex("[A-Za-z0-9_-]+")
 
         fun validId(id: String): String = id.also {
             require(ID.matches(it)) { "Invalid Plex item identifier." }
         }
 
-        private fun defaultHttpClient(): OkHttpClient = OkHttpClient.Builder()
+        private fun defaultHttpClient(): OkHttpClient = AuroraHttp.base.newBuilder()
             .connectTimeout(15, TimeUnit.SECONDS).readTimeout(30, TimeUnit.SECONDS).build()
 
         fun normalizeServer(raw: String): String {

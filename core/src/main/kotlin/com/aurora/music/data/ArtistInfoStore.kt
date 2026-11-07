@@ -14,7 +14,9 @@ class ArtistInfoStore(filesDir: File, private val clock: () -> Long = { System.c
     private class Entry(val info: ArtistInfo = ArtistInfo(), val fetchedAtMs: Long = 0)
     private class Persisted(val version: Int = 0, val entries: MutableMap<String, Entry> = mutableMapOf())
 
-    @Volatile private var data: Persisted = load()
+    @Volatile private var loaded: Persisted? = null
+    // parsed on first use since the feature may never run; get and put belong off main
+    private val data: Persisted get() = loaded ?: synchronized(lock) { loaded ?: load().also { loaded = it } }
 
     private fun load(): Persisted = runCatching {
         if (!file.exists()) return@runCatching Persisted(VERSION)
@@ -25,16 +27,21 @@ class ArtistInfoStore(filesDir: File, private val clock: () -> Long = { System.c
 
     private fun key(name: String) = name.trim().lowercase()
 
+    private fun Entry.expired(): Boolean {
+        val ttl = if (info.found) FRESH_MS else MISS_MS
+        return clock() - fetchedAtMs > ttl
+    }
+
     fun get(name: String): ArtistInfo? = synchronized(lock) {
         val e = data.entries[key(name)] ?: return null
-        val ttl = if (e.info.found) FRESH_MS else MISS_MS
-        if (clock() - e.fetchedAtMs > ttl) null else e.info
+        if (e.expired()) null else e.info
     }
 
     fun put(name: String, info: ArtistInfo) {
         synchronized(lock) {
+            data.entries.values.removeAll { it.expired() }
             data.entries[key(name)] = Entry(info, clock())
-            runCatching { file.writeText(gson.toJson(data)) }
+            runCatching { persistBackupFileAtomically(file, gson.toJson(data).toByteArray(Charsets.UTF_8)) }
         }
     }
 
@@ -43,7 +50,7 @@ class ArtistInfoStore(filesDir: File, private val clock: () -> Long = { System.c
     fun bytes(): Long = file.length()
 
     fun clear() = synchronized(lock) {
-        data = Persisted(VERSION)
+        loaded = Persisted(VERSION)
         file.delete()
         Unit
     }

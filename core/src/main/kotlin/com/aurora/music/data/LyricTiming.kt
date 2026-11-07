@@ -37,7 +37,7 @@ private val ENGLISH = setOf("the", "you", "i", "and", "to", "my", "me", "a", "it
 fun Lyrics.withWordTiming(vocals: VocalActivity? = null): Lyrics {
     if (!synced) return this
     val next = lines.mapIndexed { i, line ->
-        (i + 1 until lines.size).map { lines[it].startMs }.firstOrNull { it > line.startMs }
+        (i + 1 until lines.size).firstOrNull { lines[it].startMs > line.startMs }?.let { lines[it].startMs }
     }
     val tokens = lines.map { line ->
         when {
@@ -369,7 +369,8 @@ internal fun syllables(token: String, english: Boolean): Int {
         letters++
         when (val script = UnicodeScript.of(c.code)) {
             UnicodeScript.LATIN, UnicodeScript.GREEK, UnicodeScript.CYRILLIC -> {
-                val base = if (script == UnicodeScript.CYRILLIC) c.lowercaseChar()
+                // ascii has no decomposition, so it skips the nfd pass
+                val base = if (script == UnicodeScript.CYRILLIC || c.code < 128) c.lowercaseChar()
                     else Normalizer.normalize(c.toString(), Normalizer.Form.NFD)[0].lowercaseChar()
                 val vowel = when (script) {
                     UnicodeScript.LATIN -> { latin.append(base); base in "aeiouyæøœ" }

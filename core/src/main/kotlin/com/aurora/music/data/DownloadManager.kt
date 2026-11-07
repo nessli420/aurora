@@ -1,5 +1,6 @@
 package com.aurora.music.data
 
+import com.aurora.music.data.remote.AuroraHttp
 import com.aurora.music.model.Song
 import com.aurora.music.util.accentArgbFor
 import com.google.gson.Gson
@@ -14,7 +15,6 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.io.File
 import java.io.IOException
@@ -112,17 +112,18 @@ class DownloadManager(
     private val indexFile = File(dir, "index.json")
     private val collectionsFile = File(dir, "collections.json")
     private val gson = Gson()
-    private val http = OkHttpClient()
+    private val http get() = AuroraHttp.base
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val pendingSongs = mutableMapOf<String, DownloadOwner>()
     private val pendingCollections = mutableMapOf<String, DownloadOwner>()
     private val downloadGate = Semaphore(PARALLEL_DOWNLOADS)
 
-    private val _downloads = MutableStateFlow(loadIndex())
-    val downloads: StateFlow<Map<String, DownloadedSong>> = _downloads.asStateFlow()
+    // parsed off main, every reader and writer waits on the lazy so nothing sees an empty index
+    private val _downloads by lazy { MutableStateFlow(loadIndex()) }
+    val downloads: StateFlow<Map<String, DownloadedSong>> get() = _downloads
 
-    private val _collections = MutableStateFlow(loadCollections())
-    val collections: StateFlow<List<DownloadedCollection>> = _collections.asStateFlow()
+    private val _collections by lazy { MutableStateFlow(loadCollections()) }
+    val collections: StateFlow<List<DownloadedCollection>> get() = _collections
 
     private val indexWriter = ConflatedWrite(indexFile) { _downloads.value.values.toList() }
     private val collectionsWriter = ConflatedWrite(collectionsFile) { _collections.value }
@@ -206,7 +207,7 @@ class DownloadManager(
     val states: StateFlow<Map<String, DownloadState>> = _states.asStateFlow()
 
     init {
-        scope.launch { moveIntoFolders(); dropMissingFiles() }
+        scope.launch { _downloads.value; _collections.value; moveIntoFolders(); dropMissingFiles() }
     }
 
     // downloads saved before per-source folders move into theirs once; an entry only changes after its file moved

@@ -4,6 +4,7 @@ import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -22,7 +23,8 @@ import java.nio.file.Files
 import java.util.concurrent.Executors
 
 class LikesTest {
-    private class Account(name: String, type: ServerType, val catalogue: List<Song>, liked: List<String>, guest: Boolean = false) : MediaBackend {
+    private class Account(name: String, type: ServerType, val catalogue: List<Song>, liked: List<String>, guest: Boolean = false,
+        val gate: CompletableDeferred<Unit>? = null) : MediaBackend {
         override val session = if (guest) Session.guest(type, name) else Session("https://$name.invalid", name, "salt", "token", type, "user-$name")
         override val signedIn = !guest
         val liked = liked.toMutableSet()
@@ -36,7 +38,7 @@ class LikesTest {
         override suspend fun allSongs() = catalogue
         override suspend fun starredSongs() = catalogue.filter { it.id in liked }
         override suspend fun starredCount() = liked.size
-        override suspend fun starredIds() = liked.toSet()
+        override suspend fun starredIds(): Set<String> { gate?.let { calls += "starredIds"; it.await() }; return liked.toSet() }
         override suspend fun songFor(id: String) = catalogue.firstOrNull { it.id == id }
         override suspend fun search(query: String) = SearchResults(songs = catalogue.filter { query.contains(it.title, ignoreCase = true) })
         override suspend fun scrobble(id: String) = Unit
@@ -89,6 +91,21 @@ class LikesTest {
         likes.refresh()
         likes.check(listOf(blue, red))
         until { accounts.all { likes.ledger.likedOn(mergeNamespace(it.session), blue) != null } }
+    }
+
+    @Test fun aRestartedRefreshDropsTheFetchStillRunningOnTheOldLibrary() = test {
+        val gate = CompletableDeferred<Unit>()
+        val old = Account("old", ServerType.SUBSONIC, emptyList(), listOf("o1"), gate = gate)
+        var active: MediaBackend = old
+        val switching = Likes(scope, MusicRepository({ active }, DownloadManager(dir, { "file://$it" }, { null }))) { _, _ -> }
+        switching.refresh()
+        until { "starredIds" in old.calls }
+        active = Account("new", ServerType.SUBSONIC, emptyList(), listOf("n1"))
+        switching.refresh(restart = true)
+        until { "n1" in switching.likedIds.value }
+        gate.complete(Unit)
+        delay(50)
+        assertEquals(setOf("n1"), switching.likedIds.value)
     }
 
     @Test fun aSongLikedOnAnotherAccountIsLikedEverywhereItShows() = test {

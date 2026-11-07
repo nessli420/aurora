@@ -3,6 +3,9 @@ package com.aurora.music.data
 import com.aurora.music.model.Song
 import com.google.gson.Gson
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import okhttp3.HttpUrl
 import okhttp3.OkHttpClient
@@ -12,6 +15,7 @@ import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.*
 import org.junit.Test
 import java.lang.reflect.Proxy
+import java.net.UnknownHostException
 
 class LyricsRepositoryTest {
     private val song = Song("song", "FRIDAY", "First, Second & Third", "Album", "", 180)
@@ -24,6 +28,7 @@ class LyricsRepositoryTest {
     private fun repository(
         calls: MutableList<HttpUrl>, separators: ArtistSeparators = ArtistSeparators(),
         backend: MediaBackend? = null, enabled: Boolean = true,
+        clock: () -> Long = System::currentTimeMillis,
         respond: (HttpUrl) -> String? = { null },
     ): LyricsRepository {
         val http = OkHttpClient.Builder().addInterceptor { chain ->
@@ -34,7 +39,7 @@ class LyricsRepositoryTest {
                 .code(if (body != null || request.url.encodedPath.endsWith("search")) 200 else 404).message("Fixture")
                 .body((body ?: if (request.url.encodedPath.endsWith("search")) "[]" else "{}").toResponseBody()).build()
         }.build()
-        return LyricsRepository({ backend }, { enabled }, { separators }, http)
+        return LyricsRepository({ backend }, { enabled }, { separators }, http, clock = clock)
     }
     private fun List<HttpUrl>.getArtists() = filter { it.encodedPath.endsWith("get") }.map { it.queryParameter("artist_name") }
 
@@ -176,5 +181,93 @@ class LyricsRepositoryTest {
             fail("Cancellation swallowed")
         } catch (_: CancellationException) { }
         assertEquals(1, calls.size)
+    }
+
+    private val serverLyrics = Lyrics(listOf(LyricLine(0, "Server lyrics")), true, "Server")
+    private fun serverBackend(answer: () -> Lyrics?) =
+        Proxy.newProxyInstance(MediaBackend::class.java.classLoader, arrayOf(MediaBackend::class.java)) { _, method, _ ->
+            if (method.name == "sourceType") ServerType.SUBSONIC else answer()
+        } as MediaBackend
+    private fun serverOnly(backend: () -> MediaBackend) =
+        LyricsRepository(backend, { false }, orderProvider = { listOf("server") })
+
+    @Test fun hitsAreRememberedPerProviderUntilTheBackendChanges() = runBlocking {
+        var asks = 0
+        var backend = serverBackend { asks++; serverLyrics }
+        val repo = serverOnly { backend }
+        assertEquals(serverLyrics, repo.lyricsFor(song))
+        assertEquals(serverLyrics, repo.lyricsFor(song))
+        assertEquals(1, asks)
+        repo.lyricsFor(song.copy(playbackSource = PlaybackSourceIdentity(providerId = "other")))
+        assertEquals(2, asks)
+        backend = serverBackend { asks++; serverLyrics }
+        repo.lyricsFor(song)
+        assertEquals(3, asks)
+    }
+
+    @Test fun missesAreRememberedForTenMinutes() = runBlocking {
+        val calls = mutableListOf<HttpUrl>()
+        var now = 0L
+        val repo = repository(calls, clock = { now })
+        assertNull(repo.lyricsFor(song))
+        val lookup = calls.size
+        now = 10 * 60_000L - 1
+        assertNull(repo.lyricsFor(song))
+        assertEquals(lookup, calls.size)
+        now = 10 * 60_000L
+        assertNull(repo.lyricsFor(song))
+        assertEquals(lookup * 2, calls.size)
+    }
+
+    @Test fun aFailedSourceIsNotRememberedAsAMiss() = runBlocking {
+        var down = true
+        val backend = serverBackend { if (down) error("Server down"); serverLyrics }
+        val repo = serverOnly { backend }
+        assertNull(repo.lyricsFor(song))
+        down = false
+        assertEquals(serverLyrics, repo.lyricsFor(song))
+    }
+
+    @Test fun ioFailureStopsLrcLibAndIsNotRemembered() = runBlocking {
+        val calls = mutableListOf<HttpUrl>()
+        val repo = repository(calls) { throw UnknownHostException("lrclib.net") }
+        assertNull(repo.lyricsFor(song))
+        assertEquals(1, calls.size)
+        assertNull(repo.lyricsFor(song))
+        assertEquals(2, calls.size)
+    }
+
+    @Test fun aCancelledLookupIsNotRememberedAsAMiss() = runBlocking {
+        var asks = 0
+        lateinit var job: Job
+        val backend = serverBackend { if (++asks == 1) job.cancel(); null }
+        val repo = serverOnly { backend }
+        job = launch(start = CoroutineStart.LAZY) { repo.lyricsFor(song) }
+        job.join()
+        assertNull(repo.lyricsFor(song))
+        assertEquals(2, asks)
+    }
+
+    @Test fun aResultAfterAnEmptySourceExpiresLikeAMiss() = runBlocking {
+        var now = 0L
+        var serverUp = false
+        var asks = 0
+        val plain = Lyrics(listOf(LyricLine(-1, "Plain")), false, "Spotify")
+        val backend = Proxy.newProxyInstance(MediaBackend::class.java.classLoader, arrayOf(MediaBackend::class.java)) { _, method, _ ->
+            when (method.name) {
+                "sourceType" -> ServerType.SUBSONIC
+                "serverLyrics" -> { asks++; if (serverUp) serverLyrics else null }
+                "catalogueLyrics" -> plain
+                else -> null
+            }
+        } as MediaBackend
+        val repo = LyricsRepository({ backend }, { false }, orderProvider = { listOf("server", "spotify") }, clock = { now })
+        assertEquals(plain, repo.lyricsFor(song))
+        assertEquals(plain, repo.lyricsFor(song))
+        assertEquals(1, asks)
+        serverUp = true
+        now = 10 * 60_000L
+        assertEquals(serverLyrics, repo.lyricsFor(song))
+        assertEquals(2, asks)
     }
 }

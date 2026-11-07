@@ -121,6 +121,19 @@ class PlexBackendTest {
         }
     }
 
+    @Test fun aBodyCutOffMidStreamAsksForARetryWhileBrokenJsonIsNotPlex() = runBlocking {
+        Fixture().use { fixture ->
+            val client = PlexClient(session(fixture), testClientInfo, OkHttpClient())
+            val body = """{"MediaContainer":{"friendlyName":"${"x".repeat(64 * 1024)}"}}"""
+            fixture.respond = { json(body).setSocketPolicy(SocketPolicy.DISCONNECT_DURING_RESPONSE_BODY) }
+            val cut = runCatching { client.serverInfo() }.exceptionOrNull()
+            assertTrue(cut is PlexException)
+            assertEquals("Could not read the Plex response. Please retry.", cut?.message)
+            fixture.respond = { json("""{"MediaContainer":""") }
+            assertTrue(runCatching { client.serverInfo() }.exceptionOrNull() is IllegalStateException)
+        }
+    }
+
     @Test fun reportingPlexReadFailuresReturnsUiFallbacksAndPublishesErrors() = runBlocking {
         Fixture().use { fixture ->
             fixture.respond = { MockResponse().setResponseCode(503) }

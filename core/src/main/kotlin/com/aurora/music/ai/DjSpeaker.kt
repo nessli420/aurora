@@ -11,7 +11,9 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -145,10 +147,18 @@ class DjSpeaker(private val model: () -> File?, private val threads: Int, privat
             setOptimizationLevel(OrtSession.SessionOptions.OptLevel.ALL_OPT)
         }
         return options.use {
-            fun session(name: String) = env.createSession(File(dir, name).absolutePath, it)
-            Voice(env, session("duration_predictor.onnx"), session("text_encoder.onnx"), session("vector_estimator.onnx"), session("vocoder.onnx"),
-                indexer, config["ae"].asJsonObject["sample_rate"].asInt, base * compress, config["ttl"].asJsonObject["latent_dim"].asInt * compress,
-                styleTensor(env, styles["style_ttl"]), styleTensor(env, styles["style_dp"]))
+            val opened = ArrayList<AutoCloseable>()
+            fun session(name: String) = env.createSession(File(dir, name).absolutePath, it).also { s -> opened += s }
+            fun tensor(key: String) = styleTensor(env, styles[key]).also { t -> opened += t }
+            try {
+                Voice(env, session("duration_predictor.onnx"), session("text_encoder.onnx"), session("vector_estimator.onnx"), session("vocoder.onnx"),
+                    indexer, config["ae"].asJsonObject["sample_rate"].asInt, base * compress, config["ttl"].asJsonObject["latent_dim"].asInt * compress,
+                    tensor("style_ttl"), tensor("style_dp"))
+            } catch (e: Throwable) {
+                // the next line tries again, each failure would strand these otherwise
+                opened.forEach { o -> runCatching { o.close() } }
+                throw e
+            }
         }
     }
 
@@ -160,7 +170,8 @@ class DjSpeaker(private val model: () -> File?, private val threads: Int, privat
         return OnnxTensor.createTensor(env, FloatBuffer.wrap(values.toFloatArray()), dims)
     }
 
-    private fun infer(v: Voice, text: String, language: String): FloatArray {
+    private suspend fun infer(v: Voice, text: String, language: String): FloatArray {
+        currentCoroutineContext().ensureActive()
         val ids = speakerText(text, language).map { v.indexer[it.code].toLong() }.filter { it >= 0 }.toLongArray()
         val textShape = longArrayOf(1, ids.size.toLong())
         return OnnxTensor.createTensor(v.env, LongBuffer.wrap(ids), textShape).use { textIds ->
@@ -177,12 +188,13 @@ class DjSpeaker(private val model: () -> File?, private val threads: Int, privat
         }
     }
 
-    private fun denoise(v: Voice, text: OnnxTensor, textMask: OnnxTensor, frames: Int): FloatArray {
+    private suspend fun denoise(v: Voice, text: OnnxTensor, textMask: OnnxTensor, frames: Int): FloatArray {
         val shape = longArrayOf(1, v.latent.toLong(), frames.toLong())
         var latent = FloatArray(v.latent * frames) { random.nextGaussian().toFloat() }
         OnnxTensor.createTensor(v.env, FloatBuffer.wrap(FloatArray(frames) { 1f }), longArrayOf(1, 1, frames.toLong())).use { latentMask ->
             OnnxTensor.createTensor(v.env, FloatBuffer.wrap(floatArrayOf(STEPS.toFloat())), longArrayOf(1)).use { total ->
                 repeat(STEPS) { step ->
+                    currentCoroutineContext().ensureActive()
                     OnnxTensor.createTensor(v.env, FloatBuffer.wrap(latent), shape).use { noisy ->
                         OnnxTensor.createTensor(v.env, FloatBuffer.wrap(floatArrayOf(step.toFloat())), longArrayOf(1)).use { current ->
                             latent = v.estimator.run(mapOf("noisy_latent" to noisy, "text_emb" to text, "style_ttl" to v.styleText, "text_mask" to textMask,

@@ -54,8 +54,11 @@ class DjMemory(private val file: File?, private val now: () -> Long = System::cu
 
     private fun save() {
         val target = file ?: return
-        val bytes = gson.toJson(Saved(HashMap(tracks), HashMap(artists), HashMap(facts), ArrayList(openings), turn)).toByteArray()
-        scope.launch { runCatching { persistBackupFileAtomically(target, bytes) } }
+        // callers are on the main thread, and it shouldn't wait on this monitor for the json either
+        scope.launch {
+            val saved = synchronized(this@DjMemory) { Saved(HashMap(tracks), HashMap(artists), HashMap(facts), ArrayList(openings), turn) }
+            runCatching { persistBackupFileAtomically(target, gson.toJson(saved).toByteArray()) }
+        }
     }
 
     @Synchronized fun resting(key: String): Boolean {

@@ -29,21 +29,38 @@ class Likes(
 
     private var serverLikedIds: Set<String> = emptySet()
     private var playlistIds: Set<String> = emptySet()
-    private val checked = HashSet<String>()
+    // replaced, never mutated, so a lookup can read it off this thread
+    private var checked: Set<String> = emptySet()
+    private var lastAsked: List<Song>? = null
     private var edits = 0
+    private var resets = 0
     private val inFlight = mutableListOf<String>()
     private var ledgerLoad: Job? = null
+    private var starredLoad: Job? = null
+    private var elsewhere: Set<String> = emptySet()
+    private var recountJob: Job? = null
     private val seen = object : LinkedHashMap<String, Pair<Song, String>>(256, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<Song, String>>?) = size > SEEN_CAP
     }
 
     init {
-        scope.launch { ledger.revision.collect { publish() } }
+        scope.launch { ledger.revision.collect { recount() } }
     }
 
     private fun publish() {
-        val elsewhere = seen.entries.mapNotNullTo(HashSet()) { (id, entry) -> id.takeIf { ledger.likedAnywhere(entry.first, entry.second) } }
         _likedIds.value = serverLikedIds + elsewhere + playlistIds
+    }
+
+    // only the matching leaves this thread; seen stays here, where even a get reorders it
+    private fun recount() {
+        val snapshot = seen.entries.map { it.key to it.value }
+        recountJob?.cancel()
+        recountJob = scope.launch {
+            elsewhere = withContext(Dispatchers.Default) {
+                snapshot.mapNotNullTo(HashSet<String>()) { (id, entry) -> id.takeIf { ledger.likedAnywhere(entry.first, entry.second) } }
+            }
+            publish()
+        }
     }
 
     fun setLikedPlaylists(ids: Set<String>) {
@@ -53,16 +70,23 @@ class Likes(
 
     // likes belong to the account, so the incoming one starts from its own
     fun reset() {
+        resets++
         ledgerLoad?.cancel()
+        starredLoad?.cancel()
+        recountJob?.cancel()
         serverLikedIds = emptySet()
-        checked.clear()
+        elsewhere = emptySet()
+        checked = emptySet()
+        lastAsked = null
         seen.clear()
         publish()
         refresh()
     }
 
-    fun refresh() {
-        scope.launch {
+    // a library change renames ids, so restart drops a fetch still answering for the old ones
+    fun refresh(restart: Boolean = false) {
+        if (restart) { starredLoad?.cancel(); ledgerLoad?.cancel() }
+        if (starredLoad?.isActive != true) starredLoad = scope.launch {
             val before = edits
             val fetched = attempt(null) { repository.starredIds() } ?: return@launch
             // a like toggled mid-fetch makes the fetched set stale
@@ -75,20 +99,47 @@ class Likes(
         if (ledgerLoad?.isActive != true) ledgerLoad = scope.launch { ledger.refresh() }
     }
 
-    // the songs on screen; a starred set can be partial, so ones it doesn't have are asked about one by one
+    // a short list on screen, keyed and asked about together
     fun check(songs: List<Song>) {
+        checkVisible(songs)
+        checkList(songs)
+    }
+
+    // the rows near the scroll position; keying them is what lets another account's like show
+    fun checkVisible(songs: List<Song>) {
         val fresh = songs.filter { s -> s.id.isNotEmpty() && seen[s.id]?.first?.let { it.title != s.title || it.artist != s.artist } ?: true }.distinctBy { it.id }
-        val toCheck = songs.map { it.id }.filter { it.isNotEmpty() && it !in serverLikedIds && it !in checked }.distinct()
-        if (fresh.isEmpty() && toCheck.isEmpty()) return
+        if (fresh.isEmpty()) return
         scope.launch {
-            if (fresh.isNotEmpty()) {
-                val keyed = withContext(Dispatchers.Default) { fresh.map { it to recordingKey(it.title) } }
-                keyed.forEach { seen[it.first.id] = it }
-                publish()
+            val keyed = withContext(Dispatchers.Default) { fresh.map { it to recordingKey(it.title) } }
+            keyed.forEach { seen[it.first.id] = it }
+            recount()
+        }
+    }
+
+    // a starred set can be partial, so ones it doesn't have are asked about, once per list
+    fun checkList(songs: List<Song>) {
+        if (songs === lastAsked) return
+        lastAsked = songs
+        val known = serverLikedIds
+        val done = checked
+        val before = edits
+        val account = resets
+        scope.launch {
+            val toCheck = withContext(Dispatchers.Default) {
+                songs.mapNotNull { s -> s.id.takeIf { it.isNotEmpty() && it !in known && it !in done } }.distinct()
             }
             if (toCheck.isEmpty()) return@launch
-            val liked = attempt(null) { repository.likedSongIds(toCheck) } ?: return@launch
-            checked.addAll(toCheck)
+            val answer = attempt(null) {
+                try { repository.likedSongIds(toCheck) to emptySet<String>() } catch (e: PartialLikes) { e.liked to e.unanswered }
+            }
+            // the old account's answer means nothing now
+            if (account != resets) return@launch
+            // a like toggled meanwhile or a silent source gets the list asked again
+            val stale = before != edits
+            if ((answer == null || answer.second.isNotEmpty() || stale) && lastAsked === songs) lastAsked = null
+            if (stale) return@launch
+            val (liked, unanswered) = answer ?: return@launch
+            checked = checked + toCheck.filterNot { it in unanswered }
             attempt(Unit) { repository.markDownloadsLiked(liked, true) }
             if (liked.isNotEmpty()) {
                 serverLikedIds = serverLikedIds + liked
@@ -169,4 +220,13 @@ class Likes(
     private companion object {
         const val SEEN_CAP = 5000
     }
+}
+
+// scroll moves in buckets of this many rows, so hearts resolve per bucket, not per frame
+const val LIKE_BUCKET = 50
+
+// the bucket plus one before and two after, enough for any screen
+fun likeWindow(songs: List<Song>, bucket: Int): List<Song> {
+    val from = ((bucket - 1) * LIKE_BUCKET).coerceIn(0, songs.size)
+    return songs.subList(from, ((bucket + 3) * LIKE_BUCKET).coerceIn(from, songs.size))
 }

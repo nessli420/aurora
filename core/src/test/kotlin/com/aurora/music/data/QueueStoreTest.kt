@@ -43,6 +43,57 @@ class QueueStoreTest {
         assertEquals(1, writes.get())
     }
 
+    @Test fun aMovedPositionWritesOnlyTheSmallFileUntilTheQueueChanges() {
+        val writes = mutableListOf<String>()
+        val store = QueueStore(root) { target, bytes -> synchronized(writes) { writes += target.name }; persistBackupFileAtomically(target, bytes) }
+        val alice = queue("a", "b", "c")
+        store.save("alice", alice)
+        store.save("bob", queue("x"))
+        store.flushNow()
+        store.save("alice", alice.copy(currentIndex = 2, positionSec = 30))
+        store.flushNow()
+        assertEquals(listOf("queue_state.json", "queue_positions.json"), synchronized(writes) { writes.toList() })
+        val reloaded = QueueStore(root)
+        assertEquals(alice.copy(currentIndex = 2, positionSec = 30), reloaded.get("alice"))
+        assertEquals(queue("x"), reloaded.get("bob"))
+
+        val reordered = alice.copy(currentIndex = 1, positionSec = 5, shuffleOrder = listOf("c", "b", "a"))
+        store.save("alice", reordered)
+        store.flushNow()
+        assertEquals("queue_state.json", synchronized(writes) { writes.last() })
+        assertEquals(listOf(file.name), root.list()!!.toList())
+        assertEquals(reordered, QueueStore(root).get("alice"))
+    }
+
+    @Test fun aFullWriteThatNeverLandsKeepsTheLastSavedPosition() {
+        val fail = AtomicBoolean(false)
+        val store = QueueStore(root) { target, bytes -> if (fail.get()) throw IOException("killed"); persistBackupFileAtomically(target, bytes) }
+        val alice = queue("a", "b", "c")
+        store.save("alice", alice)
+        store.flushNow()
+        store.save("alice", alice.copy(currentIndex = 2, positionSec = 30))
+        store.flushNow()
+        fail.set(true)
+        store.save("alice", queue("a", "b", "c", "d"))
+        store.flushNow()
+        assertEquals(alice.copy(currentIndex = 2, positionSec = 30), QueueStore(root).get("alice"))
+        fail.set(false)
+        store.flushNow()
+    }
+
+    @Test fun positionsLeftBehindByAnotherWriterAreIgnored() {
+        val store = QueueStore(root)
+        val alice = queue("a", "b", "c")
+        store.save("alice", alice)
+        store.flushNow()
+        store.save("alice", alice.copy(currentIndex = 2, positionSec = 30))
+        store.flushNow()
+        file.writeText("""{"alice":{"tracks":[{"id":"x","streamUrl":"u"}],"currentIndex":0,"positionSec":0}}""")
+        val reloaded = QueueStore(root).get("alice")!!
+        assertEquals(0, reloaded.currentIndex)
+        assertEquals(0, reloaded.positionSec)
+    }
+
     @Test fun djSpeechIsNeverSaved() {
         val line = "radio:aurora-dj:1"
         val store = QueueStore(root)

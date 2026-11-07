@@ -21,8 +21,10 @@ import com.google.gson.JsonPrimitive
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withTimeoutOrNull
 import java.net.URLEncoder
 import java.time.Instant
 import java.util.TimeZone
@@ -107,20 +109,27 @@ class SpotifyWebBackend(
     }.onFailure { AppLog.d(TAG, "library playlists failed: ${it.message}") }.getOrDefault(emptyList())
 
     // the library listing carries no track counts, so each playlist's header is read once per revision
-    private suspend fun withCounts(entries: List<Pair<Playlist, String>>): List<Playlist> = coroutineScope {
+    private suspend fun withCounts(entries: List<Pair<Playlist, String>>): List<Playlist> {
         val gate = Semaphore(COUNT_PARALLEL)
-        entries.map { (playlist, revision) ->
-            async {
-                val known = playlistCounts[playlist.id]?.takeIf { revision.isNotBlank() && it.first == revision }?.second
-                val count = known ?: gate.withPermit {
-                    runCatching {
-                        q("fetchPlaylistMetadata", "uri" to PLAYLIST + playlist.id, "offset" to 0, "limit" to 0,
-                            "enableWatchFeedEntrypoint" to false).obj("playlistV2").obj("content").int("totalCount")
-                    }.getOrNull()
-                }?.also { playlistCounts[playlist.id] = revision to it }
-                if (count != null) playlist.copy(songCount = count) else playlist
+        // rows don't wait for a slow header: counts that land stay for the next open
+        withTimeoutOrNull(COUNT_BUDGET_MS) {
+            coroutineScope {
+                entries.filter { (playlist, revision) -> playlistCounts[playlist.id]?.first != revision }.forEach { (playlist, revision) ->
+                    launch {
+                        gate.withPermit {
+                            runCatching {
+                                q("fetchPlaylistMetadata", "uri" to PLAYLIST + playlist.id, "offset" to 0, "limit" to 0,
+                                    "enableWatchFeedEntrypoint" to false).obj("playlistV2").obj("content").int("totalCount")
+                            }.getOrNull()?.let { playlistCounts[playlist.id] = revision to it }
+                        }
+                    }
+                }
             }
-        }.awaitAll()
+        }
+        // a count still unknown is -1, so rows leave it out rather than show 0
+        return entries.map { (playlist, revision) ->
+            playlist.copy(songCount = playlistCounts[playlist.id]?.takeIf { it.first == revision }?.second ?: -1)
+        }
     }
 
     override suspend fun playlistsForSong(songId: String): List<Playlist> {
@@ -543,6 +552,7 @@ class SpotifyWebBackend(
         private const val LIKED_CAP = 10_000
         private const val PARALLEL = 4
         private const val COUNT_PARALLEL = 8
+        private const val COUNT_BUDGET_MS = 3_000L
         private const val LOOKUP_PAGE = 100
         private const val CURSOR_CAP = 2000
 

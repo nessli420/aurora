@@ -9,6 +9,7 @@ import kotlin.math.sqrt
 // one audio writer; bounded analysis buffers and lock-free snapshots
 class PcmLevelMeter {
     val spectrum = PcmSpectrumTap()
+    @Volatile var spectrumEnabled = true
     private var encoding = 0
     private var channels = 0
     private var rate = 0
@@ -66,6 +67,7 @@ class PcmLevelMeter {
         if ((end - start) % stride != 0) return
         var position = start
         var offsetFrames = 0
+        val withSpectrum = spectrumEnabled
         val positiveMax = when (encoding) {
             PcmConstants.ENCODING_PCM_16BIT -> 32767.0 / 32768.0
             PcmConstants.ENCODING_PCM_24BIT -> 8388607.0 / 8388608.0
@@ -78,7 +80,7 @@ class PcmLevelMeter {
             if (!left.isFinite()) { invalid++; left = 0.0 }
             if (channels == 2 && !right.isFinite()) { invalid++; right = 0.0 }
             if (channels == 1) right = left
-            spectrum.observe(left, right, rate, if (presentationTimeUs == PcmConstants.TIME_UNSET) PcmConstants.TIME_UNSET
+            if (withSpectrum) spectrum.observe(left, right, rate, if (presentationTimeUs == PcmConstants.TIME_UNSET) PcmConstants.TIME_UNSET
                 else presentationTimeUs + offsetFrames * 1_000_000L / rate)
             if (left >= positiveMax || left <= -1.0) fullScale++
             if (channels == 2 && (right >= positiveMax || right <= -1.0)) fullScale++

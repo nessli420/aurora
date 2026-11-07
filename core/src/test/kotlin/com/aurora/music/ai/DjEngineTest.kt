@@ -74,6 +74,16 @@ class DjEngineTest {
         assertTrue("Ambient" in engine.vocabulary().genres)
     }
 
+    @Test fun aSourceChangeIsSeenOnceTheLibraryIsForgotten() = runBlocking {
+        var current: MediaBackend = source
+        val dj = DjEngine(MusicRepository({ current }, DownloadManager(dir, { "file://$it" }, { null })), PlayHistoryStore(dir), null, { false })
+        assertTrue("Ambient" in dj.vocabulary().genres)
+        current = Source(emptyList())
+        assertTrue("Ambient" in dj.vocabulary().genres)
+        dj.forgetLibrary()
+        assertTrue(dj.vocabulary().genres.isEmpty())
+    }
+
     private val history = PlayHistoryStore(dir)
     private val auto = DjEngine(MusicRepository({ source }, DownloadManager(dir, { "file://$it" }, { null })), history, null, { false })
 

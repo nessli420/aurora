@@ -32,7 +32,7 @@ class SubsonicClient(val session: Session) {
         chain.proceed(original.newBuilder().url(builder.build()).build())
     }
 
-    private val okhttp: OkHttpClient = OkHttpClient.Builder()
+    private val okhttp: OkHttpClient = AuroraHttp.base.newBuilder()
         .addInterceptor(authInterceptor)
         .connectTimeout(15, TimeUnit.SECONDS)
         .readTimeout(30, TimeUnit.SECONDS)
@@ -45,12 +45,14 @@ class SubsonicClient(val session: Session) {
         .build()
         .create(SubsonicApi::class.java)
 
-    private fun authQuery(): String =
+    // lazy because gson can leave session fields null, and this must not throw in the constructor
+    private val authQuery: String by lazy {
         authParams.entries.joinToString("&") { "${it.key}=${enc(it.value)}" }
+    }
 
     fun coverArtUrl(coverArt: String?, size: Int = 600): String {
         if (coverArt.isNullOrBlank()) return ""
-        return "$baseUrl/rest/getCoverArt.view?id=${enc(coverArt)}&size=$size&${authQuery()}"
+        return "$baseUrl/rest/getCoverArt.view?id=${enc(coverArt)}&size=$size&$authQuery"
     }
 
     // format "raw" serves the original untouched file true lossless
@@ -59,7 +61,7 @@ class SubsonicClient(val session: Session) {
             if (maxBitrate > 0) add("maxBitRate=$maxBitrate")
             if (!format.isNullOrBlank()) add("format=$format")
         }.joinToString("") { "&$it" }
-        return "$baseUrl/rest/stream.view?id=${enc(songId)}$params&${authQuery()}"
+        return "$baseUrl/rest/stream.view?id=${enc(songId)}$params&$authQuery"
     }
 
     suspend fun songInfo(songId: String): SongDto? = runCatching {

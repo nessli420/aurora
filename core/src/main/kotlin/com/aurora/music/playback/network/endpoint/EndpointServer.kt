@@ -17,6 +17,12 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.locks.ReentrantLock
 import javax.net.ssl.SSLContext
 
+// same window as ConnectStatus.windowed, but only the visible tracks get built
+fun ConnectStatus.windowedFrom(total: Int, track: (Int) -> ConnectTrack): ConnectStatus {
+    val start = (index - CONNECT_QUEUE_WINDOW / 3).coerceIn(0, (total - CONNECT_QUEUE_WINDOW).coerceAtLeast(0))
+    return copy(offset = start, total = total, queue = List(minOf(total - start, CONNECT_QUEUE_WINDOW)) { track(start + it) })
+}
+
 interface EndpointAdvertiser {
     fun start(name: String, id: String, port: Int, connect: Boolean)
     fun stop()

@@ -1,6 +1,7 @@
 package com.aurora.music.data
 
 import com.aurora.music.data.remote.AddTracksBody
+import com.aurora.music.data.remote.AuroraHttp
 import com.aurora.music.data.remote.ChangeDetailsBody
 import com.aurora.music.data.remote.CreatePlaylistBody
 import com.aurora.music.data.remote.RemoveTracksBody
@@ -30,9 +31,9 @@ import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.Dispatchers
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import java.net.URLEncoder
+import java.util.concurrent.ConcurrentHashMap
 
 // stream urls are sentinel aurora-yt:// uris resolved to a youtube stream at play time
 class SpotifyBackend(
@@ -48,7 +49,7 @@ class SpotifyBackend(
     @Volatile private var likedCache: List<Song>? = null
 
     // no-auth client for scraping the public embed page when the web api forbids non-owned playlists
-    private val embedHttp = OkHttpClient()
+    private val embedHttp get() = AuroraHttp.base
 
     // iso country required by several endpoints; none or wrong yields empty results
     @Volatile private var marketCache: String? = null
@@ -60,7 +61,7 @@ class SpotifyBackend(
     }
 
     // paginated album tracks carry no album object so cache header art/name for the cover
-    private val albumMeta = HashMap<String, Pair<String, String>>() // albumId -> (artUrl, name)
+    private val albumMeta = ConcurrentHashMap<String, Pair<String, String>>() // albumId -> (artUrl, name)
 
     // fallback for non-owned playlists whose tracks the api 403s for new apps; embed has no per-track art
     private suspend fun fetchEmbedTracks(id: String): List<Song> = withContext(Dispatchers.IO) {

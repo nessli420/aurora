@@ -37,6 +37,7 @@ data class CueClip(val source: String, val startMs: Long, val endMs: Long?) {
         private val FRAGMENT = Regex("#t=(\\d+(?:\\.\\d+)?)(?:,(\\d+(?:\\.\\d+)?))?$")
 
         fun of(url: String): CueClip? {
+            if ('#' !in url) return null
             val match = FRAGMENT.find(url) ?: return null
             val end = match.groupValues[2].takeIf { it.isNotEmpty() }?.let(::millis)
             return CueClip(url.substring(0, match.range.first), millis(match.groupValues[1]), end)

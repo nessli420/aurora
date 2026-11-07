@@ -4,6 +4,10 @@ import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.async
+import kotlinx.coroutines.withTimeoutOrNull
 
 // returns app domain models so callers are server-agnostic backend owns dto mapping auth and urls
 interface MediaBackend {
@@ -178,6 +182,31 @@ interface MediaBackend {
     }
 
     fun coverArtUrl(id: String, size: Int = 600): String
+}
+
+// one home shelf; a failure leaves it empty and its siblings running
+internal fun <T> CoroutineScope.shelf(load: suspend () -> List<T>): Deferred<List<T>> =
+    async { runCatching { load() }.getOrDefault(emptyList()) }
+
+private const val ALBUM_PAGE = 500
+private const val ALBUM_CAP = 10_000
+// under the ai dj's 15 s and the merged fan-out's 20 s, either of which would lose every album
+private const val ALBUM_BUDGET_MS = 12_000L
+
+// the whole album list a page at a time; a server that ignores offsets adds nothing new, which ends the walk
+internal suspend fun pagedAlbums(budgetMs: Long = ALBUM_BUDGET_MS, page: suspend (offset: Int, size: Int) -> List<Album>): List<Album> {
+    val out = LinkedHashMap<String, Album>()
+    val started = System.currentTimeMillis()
+    var offset = 0
+    while (out.size < ALBUM_CAP) {
+        val left = budgetMs - (System.currentTimeMillis() - started)
+        val albums = if (offset == 0) page(0, ALBUM_PAGE) else withTimeoutOrNull(left) { page(offset, ALBUM_PAGE) } ?: break
+        val before = out.size
+        for (album in albums) out.putIfAbsent(album.id, album)
+        if (albums.size < ALBUM_PAGE || out.size == before) break
+        offset += ALBUM_PAGE
+    }
+    return out.values.toList()
 }
 
 data class HomeFeedChoice(val id: String, val label: String)

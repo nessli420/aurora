@@ -4,7 +4,6 @@ import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
-import okhttp3.OkHttpClient
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import java.net.URLEncoder
@@ -53,7 +52,7 @@ class JellyfinClient(val session: Session, clientInfo: ClientInfo) {
                     .build()
                 chain.proceed(req)
             }
-            val ok = OkHttpClient.Builder()
+            val ok = AuroraHttp.base.newBuilder()
                 .addInterceptor(interceptor)
                 .connectTimeout(15, TimeUnit.SECONDS)
                 .readTimeout(30, TimeUnit.SECONDS)

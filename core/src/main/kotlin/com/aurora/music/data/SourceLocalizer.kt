@@ -80,6 +80,9 @@ class SourceLocalizer(
         return MergedBackend(sources, session,
             priority = { if (preferLocal()) priority() else listOf("stream", "local", "downloaded") },
             catalogueMatch = catalogueMatch,
-            downloads = { downloads.downloads.value.values.filter { File(it.audioPath).isFile }.map { it.toSong(downloads.fileUri) } })
+            downloads = { song ->
+                val title = recordingKey(song.title)
+                downloads.downloads.value.values.filter { recordingKey(it.title) == title && File(it.audioPath).isFile }.map { it.toSong(downloads.fileUri) }
+            })
     }
 }

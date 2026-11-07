@@ -44,7 +44,8 @@ class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private 
         companion object {
             fun of(songs: List<Song>): Account {
                 val titles = HashMap<String, List<Pair<Song, Song>>>()
-                val ids = songs.associateBy { it.id }
+                // matching reads only these; whole songs would hold a second copy of every liked library
+                val ids = songs.map { Song(it.id, it.title, it.artist, "", "", it.durationSec) }.associateBy { it.id }
                 ids.values.forEach { index(titles, it) }
                 return Account(ids, titles)
             }
@@ -82,7 +83,7 @@ class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private 
     fun likedOn(key: String, song: Song): Boolean? = accounts[key]?.let { likes(key, it, song, recordingKey(song.title), owner(song.id)) }
 
     suspend fun refresh() = coroutineScope {
-        val all = sources()
+        val all = withContext(Dispatchers.IO) { sources() }
         if (accounts.keys.retainAll(all.map { mergeNamespace(it.session) }.toSet())) bump()
         // callers sit on the ui thread; whole liked libraries are mapped here
         all.map { async(Dispatchers.IO) { load(it) } }.awaitAll()

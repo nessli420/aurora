@@ -3,7 +3,6 @@ package com.aurora.music.data
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
 import com.google.gson.Gson
-import java.security.MessageDigest
 import java.text.Normalizer
 import java.util.Locale
 
@@ -60,8 +59,10 @@ object ArtistSeparatorsCodec {
     }
 }
 
+private val SPACES = Regex("\\s+")
+
 internal fun artistNameKey(name: String): String = Normalizer.normalize(name.trim(), Normalizer.Form.NFC)
-    .replace(Regex("\\s+"), " ").lowercase(Locale.ROOT)
+    .replace(SPACES, " ").lowercase(Locale.ROOT)
 
 class LocalArtistIndex(rawSongs: List<Song>, separators: ArtistSeparators) {
     private val names = linkedMapOf<String, String>()
@@ -72,10 +73,7 @@ class LocalArtistIndex(rawSongs: List<Song>, separators: ArtistSeparators) {
     val songs: List<Song> = rawSongs.map { song ->
         val ids = split(song.artist).map { name ->
             val key = artistNameKey(name)
-            val id = idsByName.getOrPut(key) {
-                "local-artist-" + MessageDigest.getInstance("SHA-256").digest(key.toByteArray(Charsets.UTF_8))
-                    .joinToString("") { "%02x".format(it) }
-            }
+            val id = idsByName.getOrPut(key) { "local-artist-" + sha256Hex(key) }
             names.putIfAbsent(id, name)
             id
         }.distinct()
@@ -86,7 +84,7 @@ class LocalArtistIndex(rawSongs: List<Song>, separators: ArtistSeparators) {
     }
     val artists: List<Artist> = names.map { (id, name) ->
         Artist(id, name, memberships[id].orEmpty().firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl.orEmpty(), 0)
-    }.sortedBy { artistNameKey(it.name) }
+    }.map { artistNameKey(it.name) to it }.sortedBy { it.first }.map { it.second }
     private val artistsById = artists.associateBy { it.id }
     fun artist(id: String): Artist? = artistsById[legacyIds[id] ?: id]
     fun songsBy(id: String): List<Song> = memberships[legacyIds[id] ?: id].orEmpty().distinctBy { it.id }

@@ -4,7 +4,11 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import java.io.File
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicBoolean
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 // fields nullable-safe for gson forward compat
@@ -26,6 +30,8 @@ class LocalStore(filesDir: File) {
     private val gson = Gson()
     private val lock = Any()
     private var revision = 0L
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val writeQueued = AtomicBoolean(false)
 
     class BackupRollback internal constructor(internal val previous: String, internal val revision: Long)
 
@@ -38,7 +44,14 @@ class LocalStore(filesDir: File) {
 
     private fun persist() {
         revision++
-        runCatching { file.writeText(gson.toJson(state)) }
+        if (!writeQueued.compareAndSet(false, true)) return
+        scope.launch {
+            // reads state under the lock when it runs, so a queued write can't undo a backup restore
+            synchronized(lock) {
+                writeQueued.set(false)
+                runCatching { persistBackupFileAtomically(file, gson.toJson(state).toByteArray(Charsets.UTF_8)) }
+            }
+        }
     }
 
     fun playlists(): List<LocalPlaylist> = state.playlists.orEmpty()

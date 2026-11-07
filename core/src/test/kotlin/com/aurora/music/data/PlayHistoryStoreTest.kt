@@ -70,4 +70,12 @@ class PlayHistoryStoreTest {
             {"songId":"42","title":"t","artist":"a","album":"b","albumId":"c","artistId":"d","artworkUrl":"","durationSec":1,"timestamp":1}]""")
         assertEquals(listOf("42", "42"), PlayHistoryStore(root).snapshot().map { it.songId })
     }
+
+    @Test fun aBrowseIdEventWithMissingFieldsDoesNotEmptyTheHistory() {
+        file.writeText("""[{"songId":"song_42","title":"t","durationSec":1,"timestamp":2},
+            {"songId":"7","title":"t","artist":"a","album":"b","albumId":"c","artistId":"d","artworkUrl":"","durationSec":1,"timestamp":1}]""")
+        val events = PlayHistoryStore(root).snapshot()
+        assertEquals(listOf("42", "7"), events.map { it.songId })
+        assertEquals("", events.first().artworkUrl)
+    }
 }

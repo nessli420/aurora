@@ -78,16 +78,22 @@ class LocalBackend(
         val q = query.trim()
         if (q.isBlank()) return SearchResults()
         return SearchResults(
-            songs = library.songs.filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }.take(60),
+            songs = library.songs.asSequence().filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }.take(60).toList(),
             albums = library.albums.filter { it.title.contains(q, true) || it.artist.contains(q, true) }.take(30),
             artists = library.artists.filter { it.name.contains(q, true) }.take(30),
             playlists = store.playlists().map { it.toPlaylist() }.filter { it.title.contains(q, true) }.take(20),
         )
     }
 
+    // a rescan replaces the list, which is what rebuilds this
+    @Volatile private var titleIndex: Pair<List<Song>, Map<String, List<Song>>>? = null
+
     override suspend fun matchingSongs(song: Song): List<Song> {
         library.ensureLoaded()
-        return library.songs.filter { recordingTitlesMatch(song, it) }
+        if (song.title.isBlank()) return emptyList()
+        val songs = library.songs
+        val index = titleIndex?.takeIf { it.first === songs } ?: (songs to songs.groupBy { recordingKey(it.title) }).also { titleIndex = it }
+        return index.second[recordingKey(song.title)].orEmpty()
     }
 
     override suspend fun scrobble(id: String) { /* last.fm handled separately */ }
@@ -96,7 +102,8 @@ class LocalBackend(
         library.ensureLoaded()
         val seed = library.song(seedId)
         val sameArtist = seed?.let { s -> library.songsByArtistId(s.artistId).filter { it.id != seedId } }.orEmpty()
-        val rest = library.songs.filter { it.id != seedId && it !in sameArtist }.shuffled()
+        val taken = sameArtist.mapTo(HashSet()) { it.id }
+        val rest = library.songs.filter { it.id != seedId && it.id !in taken }.shuffled()
         return (sameArtist.shuffled() + rest).take(40)
     }
 

@@ -44,6 +44,8 @@ class SoundCloudClient(
     private val onRefreshed: (SoundCloudWebSession) -> Unit = {},
     http: OkHttpClient = OkHttpClient(),
     private val browser: SoundCloudBrowser? = null,
+    private val savedClientId: suspend () -> String = { "" },
+    private val onClientId: suspend (String) -> Unit = {},
 ) : SoundCloudTransport {
     private val http = http.newBuilder().callTimeout(30, TimeUnit.SECONDS).build()
     private val idLock = Mutex()
@@ -52,9 +54,9 @@ class SoundCloudClient(
     @Volatile private var current: SoundCloudWebSession? = null
     private fun auth() = session?.let { (current ?: it()).validate() }
 
-    // shortcut: the id is scraped once per process, persist it if cold starts feel slow
     private suspend fun clientId(refresh: Boolean): String = idLock.withLock {
-        if (refresh || clientId.isBlank()) clientId = scrapeClientId()
+        if (!refresh && clientId.isBlank()) clientId = savedClientId()
+        if (refresh || clientId.isBlank()) clientId = scrapeClientId().also { onClientId(it) }
         clientId
     }
 

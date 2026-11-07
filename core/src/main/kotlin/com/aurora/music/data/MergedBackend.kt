@@ -9,21 +9,28 @@ import com.aurora.music.util.TrackMatch
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withTimeoutOrNull
 import kotlinx.coroutines.CancellationException
-import kotlinx.coroutines.sync.Mutex
-import kotlinx.coroutines.sync.withLock
+import java.util.concurrent.ConcurrentHashMap
 
 // composite backend merging several live backends ids namespaced per source so calls route back
 class MergedBackend(
     val sources: List<MediaBackend>,
     override val session: Session,
     private val priority: () -> List<String> = { DEFAULT_SOURCE_PRIORITY },
-    private val downloads: () -> List<Song> = { emptyList() },
+    // the downloads that could be this song, so a play doesn't walk all of them
+    private val downloads: (Song) -> List<Song> = { emptyList() },
     private val catalogueMatch: () -> CatalogueMatchPrefs = { CatalogueMatchPrefs() },
     // a library view over some of the sources; it offers no further views or catalogue feeds
     private val nested: Boolean = false,
+    // a source found down in one view stays skipped in the others; keyed by namespace because view indices differ
+    private val downUntil: ConcurrentHashMap<String, Long> = ConcurrentHashMap(),
 ) : MediaBackend {
 
     private fun catalogueOf(type: ServerType) = sources.indexOfFirst { it.session.type == type && it.session.accountKey() == session.accountKey() }
@@ -64,7 +71,7 @@ class MergedBackend(
                     "library" -> sources.filterNot(::isCatalogue)
                     else -> listOfNotNull(sources.getOrNull(catalogueFor(view)))
                 }
-                if (picked.isEmpty()) this else MergedBackend(picked, session, priority, downloads, catalogueMatch, nested = true)
+                if (picked.isEmpty()) this else MergedBackend(picked, session, priority, downloads, catalogueMatch, nested = true, downUntil = downUntil)
             }
         }
     }
@@ -83,16 +90,19 @@ class MergedBackend(
         newReleases = newReleases.map { it.wrap(i) }, recentlyPlayed = recentlyPlayed.map { it.wrap(i) },
         mostPlayed = mostPlayed.map { it.wrap(i) }, random = random.map { it.wrap(i) },
         playlists = playlists.map { it.wrap(i) }, artists = artists.map { it.wrap(i) }, starred = starred.map { it.wrap(i) },
-        sections = sections.map { section -> section.copy(id = wrapId(i, section.id), items = section.items.map { entry -> when (entry) {
-            is HomeFeedItem.Track -> HomeFeedItem.Track(entry.song.wrap(i))
-            is HomeFeedItem.Record -> HomeFeedItem.Record(entry.album.wrap(i))
-            is HomeFeedItem.Performer -> HomeFeedItem.Performer(entry.artist.wrap(i))
-            is HomeFeedItem.Collection -> HomeFeedItem.Collection(entry.playlist.wrap(i))
-        } }) },
+        sections = wrapSections(sections, i),
     )
 
-    private val matchMutex = Mutex()
+    private fun wrapSections(sections: List<HomeFeedSection>, i: Int) = sections.map { section -> section.copy(id = wrapId(i, section.id), items = section.items.map { entry -> when (entry) {
+        is HomeFeedItem.Track -> HomeFeedItem.Track(entry.song.wrap(i))
+        is HomeFeedItem.Record -> HomeFeedItem.Record(entry.album.wrap(i))
+        is HomeFeedItem.Performer -> HomeFeedItem.Performer(entry.artist.wrap(i))
+        is HomeFeedItem.Collection -> HomeFeedItem.Collection(entry.playlist.wrap(i))
+    } }) }
+
     private val matchCache = LinkedHashMap<String, Pair<Long, List<Song>>>()
+    // apart from downUntil: running out of this short budget says nothing about browsing that server
+    private val matchDownUntil = ConcurrentHashMap<Int, Long>()
 
     override suspend fun playbackCandidates(song: Song): List<Song> {
         if (SEP in song.id && unwrap(song.id) == null) return emptyList()
@@ -102,21 +112,23 @@ class MergedBackend(
         val rules = catalogueMatch()
         if (!rules.useLibrary) return emptyList()
         val order = priority()
-        val copies = matchMutex.withLock {
-            val title = recordingTitle(song.title)
-            val key = order.joinToString(",") + "\u0000" + title + "\u0000" + song.artist
-            val cached = matchCache[key]?.takeIf { System.nanoTime() - it.first < 60_000_000_000L }
-            cached?.second ?: coroutineScope {
-                sources.mapIndexedNotNull { i, source ->
-                    if (isCatalogue(source)) null else async<List<Song>> {
-                        try {
-                            withTimeoutOrNull(3_000) { source.matchingSongs(song).map { it.wrap(i) } }.orEmpty()
-                        } catch (e: CancellationException) { throw e }
-                        catch (_: Exception) { emptyList<Song>() }
-                    }
-                }.awaitAll().flatten()
-            }.also {
-                matchCache[key] = System.nanoTime() to it
+        val key = order.joinToString(",") + "\u0000" + recordingTitle(song.title) + "\u0000" + song.artist
+        // the lock never spans the search, so a tap doesn't queue behind a prefetch
+        val copies = synchronized(matchCache) { matchCache[key]?.takeIf { System.nanoTime() - it.first < 60_000_000_000L }?.second } ?: coroutineScope {
+            sources.mapIndexedNotNull { i, source ->
+                if (isCatalogue(source) || isDown(i) || (matchDownUntil[i] ?: 0L) > System.currentTimeMillis()) null else async<List<Song>> {
+                    try {
+                        val found = withTimeoutOrNull(3_000) { source.matchingSongs(song).map { it.wrap(i) } }
+                        // the device's library can't be unreachable, only busy with its first scan or index
+                        if (found == null && source.session.type != ServerType.LOCAL) matchDownUntil[i] = System.currentTimeMillis() + DOWN_MS
+                        found.orEmpty()
+                    } catch (e: CancellationException) { throw e }
+                    catch (_: Exception) { emptyList<Song>() }
+                }
+            }.awaitAll().flatten()
+        }.also { fresh ->
+            synchronized(matchCache) {
+                matchCache[key] = System.nanoTime() to fresh
                 while (matchCache.size > 128) matchCache.remove(matchCache.keys.first())
             }
         }
@@ -125,7 +137,7 @@ class MergedBackend(
             copy.streamUrl.startsWith("file:") || copy.streamUrl.startsWith("content:") -> "local"
             else -> "stream"
         }
-        return (copies + downloads()).filter { copy ->
+        return (copies + downloads(song)).filter { copy ->
             copy.streamUrl.isNotBlank() && (recordingMatches(song, copy) || rules.relaxed && sameLength(song, copy)) &&
                 (!rules.losslessOnly || copy.suffix.lowercase() in LOSSLESS)
         }
@@ -172,17 +184,18 @@ class MergedBackend(
         return sources[index].playbackCollectionIdentity(kind, original, name)
     }
 
-    private suspend fun <T> fanOut(timeoutMs: (MediaBackend) -> Long = { SOURCE_TIMEOUT_MS }, block: suspend (MediaBackend) -> List<T>): List<List<T>> = coroutineScope {
+    // a catalogue's own view pages in its whole library, so it gets the liked songs' budget
+    private suspend fun <T> fanOut(timeoutMs: (MediaBackend) -> Long = { if (nested && isCatalogue(it)) LIKED_TIMEOUT_MS else SOURCE_TIMEOUT_MS }, block: suspend (MediaBackend) -> List<T>): List<List<T>> = coroutineScope {
         sources.mapIndexed { i, src -> async { reach(i) { withTimeoutOrNull(timeoutMs(src)) { block(src) } } ?: emptyList() } }
             .awaitAll()
     }
 
     // a source that just failed, timed out or answered empty only after a connect timeout is skipped for a while
     // instead of stalling every call; servers swallow connection errors into empty lists, hence the slow-empty rule
-    private val downUntil = java.util.concurrent.ConcurrentHashMap<Int, Long>()
+    private fun isDown(index: Int) = (downUntil[namespaces[index]] ?: 0L) > System.currentTimeMillis()
 
     private suspend fun <R> reach(index: Int, call: suspend () -> R?): R? {
-        if ((downUntil[index] ?: 0L) > System.currentTimeMillis()) return null
+        if (isDown(index)) return null
         val started = System.currentTimeMillis()
         val result = try {
             call()
@@ -191,8 +204,10 @@ class MergedBackend(
         } catch (_: Exception) {
             null
         }
-        val slowEmpty = (result as? Collection<*>)?.isEmpty() == true && System.currentTimeMillis() - started >= SLOW_EMPTY_MS
-        if (result == null || slowEmpty) downUntil[index] = System.currentTimeMillis() + DOWN_MS else downUntil.remove(index)
+        // a search that finds nothing slowly is a normal answer, not a dead source
+        val empty = (result as? Collection<*>)?.isEmpty() == true || result == HomeData()
+        val slowEmpty = empty && System.currentTimeMillis() - started >= SLOW_EMPTY_MS
+        if (result == null || slowEmpty) downUntil[namespaces[index]] = System.currentTimeMillis() + DOWN_MS else downUntil.remove(namespaces[index])
         return result
     }
 
@@ -227,15 +242,35 @@ class MergedBackend(
 
     override suspend fun ping(): Boolean = fanOut { listOf(it.ping()) }.any { it.firstOrNull() == true }
 
-    override suspend fun home(): HomeData {
-        val homes = coroutineScope {
-            sources.mapIndexed { idx, src -> async { idx to if (isCatalogue(src)) null
-                else reach(idx) { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { src.home() } } } }.awaitAll()
+    private suspend fun sourceHome(idx: Int): HomeData? = if (isCatalogue(sources[idx])) null
+        else reach(idx) { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { sources[idx].home() } }
+
+    override suspend fun home(): HomeData = mergeHomes(coroutineScope { sources.indices.map { async { sourceHome(it) } }.awaitAll() })
+
+    // what home(feed) returns, built up as each source answers; the last emission is the whole of it
+    fun homeUpdates(feed: String): Flow<HomeData> = flow {
+        if (catalogueFor(feed) >= 0) {
+            emit(home(feed))
+            return@flow
         }
+        coroutineScope {
+            val landed = Channel<Pair<Int, HomeData?>>(sources.size)
+            sources.indices.forEach { idx -> launch { landed.send(idx to sourceHome(idx)) } }
+            val homes = arrayOfNulls<HomeData>(sources.size)
+            repeat(sources.size) { count ->
+                val (idx, data) = landed.receive()
+                homes[idx] = data
+                if (data != null && count < sources.lastIndex) emit(mergeHomes(homes.asList()))
+            }
+            emit(mergeHomes(homes.asList()))
+        }
+    }
+
+    private fun mergeHomes(homes: List<HomeData?>): HomeData {
         val albums = ArrayList<Album>(); val recent = ArrayList<Album>(); val most = ArrayList<Album>(); val random = ArrayList<Album>()
         val playlists = ArrayList<Playlist>(); val artists = ArrayList<Artist>(); val starred = ArrayList<Song>()
         val sections = ArrayList<HomeFeedSection>()
-        for ((idx, h) in homes) {
+        for ((idx, h) in homes.withIndex()) {
             if (h == null) continue
             albums += h.newReleases.map { it.wrap(idx) }
             recent += h.recentlyPlayed.map { it.wrap(idx) }
@@ -244,7 +279,7 @@ class MergedBackend(
             playlists += h.playlists.map { it.wrap(idx) }
             artists += h.artists.map { it.wrap(idx) }
             starred += h.starred.map { it.wrap(idx) }
-            sections += h.wrapHome(idx).sections
+            sections += wrapSections(h.sections, idx)
         }
         return HomeData(
             newReleases = dedupAlbums(albums),
@@ -265,14 +300,15 @@ class MergedBackend(
     override suspend fun librarySongs(limit: Int): List<Song> = dedupSongs(wrapAll(fanOut { it.librarySongs(limit) }) { s, i -> s.wrap(i) })
     // each source pages independently so a page is only locally deduped; cross-page dupes are rare and harmless
     override suspend fun songsPage(offset: Int, count: Int): List<Song> =
-        dedupSongs(wrapAll(fanOut { it.songsPage(offset, count) }) { s, i -> s.wrap(i) }).sortedBy { it.title.lowercase() }
+        dedupSongs(wrapAll(fanOut { it.songsPage(offset, count) }) { s, i -> s.wrap(i) }).sortedWith(compareBy(String.CASE_INSENSITIVE_ORDER) { it.title })
     // a whole streaming library of likes takes a while to page in; servers keep the usual limit
+    private fun likedTimeout(source: MediaBackend) = if (isCatalogue(source)) LIKED_TIMEOUT_MS else SOURCE_TIMEOUT_MS
     override suspend fun starredSongs(): List<Song> =
-        dedupSongs(wrapAll(fanOut({ if (isCatalogue(it)) LIKED_TIMEOUT_MS else SOURCE_TIMEOUT_MS }) { it.starredSongs() }) { s, i -> s.wrap(i) })
+        dedupSongs(wrapAll(fanOut(::likedTimeout) { it.starredSongs() }) { s, i -> s.wrap(i) })
     // the count matches the deduped liked list; a single-source view asks its source directly
     override suspend fun starredCount(): Int = sources.singleOrNull()?.starredCount() ?: starredSongs().size
     override suspend fun starredIds(): Set<String> =
-        sources.indices.zip(fanOut { it.starredIds().toList() }).flatMap { (i, ids) -> ids.map { wrapId(i, it) } }.toSet()
+        sources.indices.zip(fanOut(::likedTimeout) { it.starredIds().toList() }).flatMap { (i, ids) -> ids.map { wrapId(i, it) } }.toSet()
 
     override suspend fun search(query: String): SearchResults = search(query, "discovery")
 
@@ -305,14 +341,16 @@ class MergedBackend(
         return SearchResults(dedupSongs(songs), dedupAlbums(albums), dedupArtists(artists), playlists)
     }
 
-    override suspend fun likedSongIds(ids: List<String>): Set<String> {
-        val bySource = ids.mapNotNull { unwrap(it) }.groupBy({ it.first }, { it.second })
-        val liked = HashSet<String>()
-        for ((idx, origIds) in bySource) {
-            val src = sources.getOrNull(idx) ?: continue
-            runCatching { src.likedSongIds(origIds) }.getOrNull()?.forEach { liked += wrapId(idx, it) }
+    // a failed source reaches the caller with the others' answers, so only its songs are asked about again
+    override suspend fun likedSongIds(ids: List<String>): Set<String> = supervisorScope {
+        val groups = ids.mapNotNull { id -> unwrap(id)?.let { (idx, original) -> idx to (id to original) } }.groupBy({ it.first }, { it.second })
+        val answers = groups.map { (idx, pairs) -> async { sources[idx].likedSongIds(pairs.map { it.second }).map { wrapId(idx, it) } } }
+        val liked = HashSet<String>(); val unanswered = HashSet<String>()
+        groups.values.zip(answers).forEach { (pairs, answer) ->
+            try { liked += answer.await() } catch (e: CancellationException) { throw e } catch (_: Exception) { pairs.mapTo(unanswered) { it.first } }
         }
-        return liked
+        if (unanswered.isNotEmpty()) throw PartialLikes(liked, unanswered)
+        liked
     }
 
     override val supportsFolders: Boolean get() = sources.any { it.supportsFolders }
@@ -441,6 +479,7 @@ class MergedBackend(
         // a failed search isn't remembered, so the next try asks again
         val results = try { source.search("${recordingTitle(song.title)} ${song.artist}".trim()).songs }
             catch (e: CancellationException) { throw e } catch (_: Exception) { return null }
+        if (results.isEmpty()) return null
         val twin = results.firstOrNull { twinMatches(song, it) }
         synchronized(twins) { twins[key] = twin }
         return twin
@@ -643,6 +682,9 @@ fun Song.inNamespace(session: Session): Song = if (MERGE_NAMESPACE_SEP in id) th
 
 // liked songs id for every source's likes together, beside the per-view ids
 const val ALL_LIKED_ID = "all"
+
+// some sources answered a likes check; the unanswered ids are worth asking again
+class PartialLikes(val liked: Set<String>, val unanswered: Set<String>) : Exception("some sources did not answer")
 
 private val MERGE_NAMESPACE_PATTERN = Regex("s[0-9a-f]{64}")
 

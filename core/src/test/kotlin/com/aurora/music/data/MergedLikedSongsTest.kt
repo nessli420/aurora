@@ -11,7 +11,7 @@ import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class MergedLikedSongsTest {
-    private class Source(override val session: Session, private val liked: List<Song>, private val extraIds: Set<String>) : MediaBackend {
+    private class Source(override val session: Session, private val liked: List<Song>, private val extraIds: Set<String>, private val down: Boolean = false) : MediaBackend {
         override suspend fun ping() = true
         override suspend fun home() = HomeData(starred = liked)
         override suspend fun allAlbums() = emptyList<Album>()
@@ -21,6 +21,7 @@ class MergedLikedSongsTest {
         override suspend fun starredSongs() = liked
         override suspend fun starredCount() = liked.size
         override suspend fun starredIds() = liked.map { it.id }.toSet() + extraIds
+        override suspend fun likedSongIds(ids: List<String>): Set<String> = if (down) throw java.io.IOException("down") else ids.filter { id -> liked.any { it.id == id } }.toSet()
         override suspend fun songFor(id: String) = liked.firstOrNull { it.id == id }
         override suspend fun search(query: String) = SearchResults()
         override suspend fun scrobble(id: String) = Unit
@@ -37,8 +38,20 @@ class MergedLikedSongsTest {
 
     private fun song(id: String, title: String, artist: String, seconds: Int) = Song(id, title, artist, "Album", "", seconds)
 
-    private fun source(name: String, liked: List<Song>, extra: Set<String> = emptySet()) =
-        Source(Session("https://$name.invalid", name, "salt", "token", ServerType.SUBSONIC, "user-$name"), liked, extra)
+    private fun source(name: String, liked: List<Song>, extra: Set<String> = emptySet(), down: Boolean = false) =
+        Source(Session("https://$name.invalid", name, "salt", "token", ServerType.SUBSONIC, "user-$name"), liked, extra, down)
+
+    @Test fun aFailedSourceKeepsTheOthersAnswersAndLeavesOnlyItsSongsUnanswered() = runBlocking {
+        val up = source("up", listOf(song("1", "One", "Tester", 200)))
+        val down = source("down", emptyList(), down = true)
+        val merged = MergedBackend(listOf(up, down), up.session)
+        val upIds = listOf("1", "2").map { "${mergeNamespace(up.session)}$MERGE_NAMESPACE_SEP$it" }
+        val downId = "${mergeNamespace(down.session)}${MERGE_NAMESPACE_SEP}x"
+        val partial = try { merged.likedSongIds(upIds + downId); null } catch (e: PartialLikes) { e }
+        assertEquals(setOf(upIds[0]), partial?.liked)
+        assertEquals(setOf(downId), partial?.unanswered)
+        assertEquals(setOf(upIds[0]), merged.likedSongIds(upIds))
+    }
 
     @Test fun likedCountMatchesTheMergedSongListNotEveryStarredId() = runBlocking {
         val first = source("first", listOf(song("1", "Café Lights", "Tester", 200), song("2", "夏の雨", "テスト", 240), song("3", "冬の星", "テスト", 241)),
