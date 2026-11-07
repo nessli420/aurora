@@ -77,13 +77,13 @@ class GeneralSettingsTest {
         val opened = mutableListOf<String>()
         val full = root("root", opened = opened).use { scene ->
             val image = scene.shot()
-            scene.click(190f, 220f)
-            scene.click(190f, 368f)
-            scene.click(190f, 697f)
-            scene.click(190f, 843f)
-            scene.click(190f, 1221f)
-            scene.click(190f, 1416f)
-            scene.click(190f, 1493f)
+            scene.click(190f, 280f)
+            scene.click(190f, 428f)
+            scene.click(190f, 757f)
+            scene.click(190f, 903f)
+            scene.click(190f, 1281f)
+            scene.click(190f, 1476f)
+            scene.click(190f, 1553f)
             assertEquals(listOf("accounts", "merge", "output", "loudness", "lyrics", "connect", "integrations"), opened)
             image
         }
@@ -92,11 +92,13 @@ class GeneralSettingsTest {
         opened.clear()
         root("root-simple", simpleMode = true, opened = opened).use { scene ->
             assertTrue(scene.shot().differsFrom(full))
-            scene.click(190f, 843f)
+            scene.click(190f, 903f)
             assertFalse("loudness" in opened)
         }
-        val withoutBackup = root("root-no-backup", backup = false, opened = mutableListOf()).use { it.shot() }
-        assertTrue(withoutBackup.differsFrom(full))
+        // the backup row sits below the default height since the search bar
+        val tall = root("root-tall", height = 2600, opened = mutableListOf()).use { it.shot() }
+        val withoutBackup = root("root-no-backup", backup = false, height = 2600, opened = mutableListOf()).use { it.shot() }
+        assertTrue(withoutBackup.differsFrom(tall))
     }
 
     @Test fun closeToTrayIsOnlyOfferedWhenThereIsATray() {

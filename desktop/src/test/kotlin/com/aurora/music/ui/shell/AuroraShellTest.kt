@@ -44,7 +44,7 @@ class AuroraShellTest {
             scene.click(89f, 767f)
             scene.awaitRoute(Routes.SETTINGS)
             val playback = scene.shot("settings")
-            scene.click(450f, 677f)
+            scene.click(450f, 736f)
             val output = scene.shot("settings-output")
             assertEquals(Routes.SETTINGS, scene.route)
             assertFalse(playback.region(660, 0, 1400, 700).contentEquals(output.region(660, 0, 1400, 700)))
