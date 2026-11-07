@@ -124,7 +124,7 @@ class YoutubeResolver(http: OkHttpClient, private val chosenVideo: (String) -> S
             }
         val year = runCatching { info.uploadDate?.offsetDateTime()?.year }.getOrNull()
         val description = info.description?.let {
-            if (it.type == org.schabi.newpipe.extractor.stream.Description.HTML) htmlText(it.content.orEmpty()) else it.content.orEmpty()
+            if (it.type() == org.schabi.newpipe.extractor.stream.Description.Type.HTML) htmlText(it.content().orEmpty()) else it.content().orEmpty()
         }.orEmpty()
         return DownloadInfo(com.aurora.music.data.YouTubeDownloads.tags(info.name.orEmpty(), info.uploaderName.orEmpty(), description, year),
             info.thumbnails.maxByOrNull { it.height }?.url.orEmpty(), options)
