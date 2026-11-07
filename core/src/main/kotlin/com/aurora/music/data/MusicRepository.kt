@@ -11,6 +11,7 @@ import com.aurora.music.model.Song
 import com.aurora.music.util.accentArgbFor
 
 private const val LOOSE_DOWNLOADS = "songs"
+const val DOWNLOADED_ALBUM = "downloaded-album"
 
 data class HomeData(
     val newReleases: List<Album> = emptyList(),
@@ -250,18 +251,22 @@ class MusicRepository(
             .groupBy { it.albumId }
             .map { (aid, songs) ->
                 val f = songs.first()
-                DownloadRow(aid, "album", f.album.ifBlank { "Album" }, f.artist, fileUri(f.coverPath), accentArgbFor(aid))
+                // opens only the tracks that were downloaded rather than the whole album
+                DownloadRow(aid, DOWNLOADED_ALBUM, f.album.ifBlank { "Album" }, f.artist, fileUri(f.coverPath), accentArgbFor(aid))
             }
         val loose = looseDownloads(collections)
         val looseRow = loose.firstOrNull()?.let { listOf(DownloadRow(LOOSE_DOWNLOADS, "downloaded", "Downloaded songs", "${loose.size} tracks", fileUri(it.coverPath), accentArgbFor(LOOSE_DOWNLOADS))) }.orEmpty()
         return looseRow + (colRows + inferred).sortedBy { it.title }
     }
 
-    // single tracks with no album or saved collection would otherwise have no row of their own
+    // every track downloaded on its own, also reachable through its album row
     private fun looseDownloads(collections: List<DownloadedCollection> = visibleCollections()): List<DownloadedSong> {
         val recorded = collections.flatMap { it.trackIds }.toSet()
-        return visibleDownloads().filter { it.id !in recorded && it.albumId.isBlank() }
+        return visibleDownloads().filter { it.id !in recorded }
     }
+
+    private fun downloadedAlbumTracks(albumId: String, collections: List<DownloadedCollection> = visibleCollections()): List<DownloadedSong> =
+        looseDownloads(collections).filter { it.albumId == albumId }
 
     private fun downloadedAlbums(): List<Album> = visibleDownloads()
         .filter { it.albumId.isNotBlank() }
@@ -568,6 +573,11 @@ class MusicRepository(
         if (kind == "downloaded") {
             val tracks = looseDownloads().map { artwork(it.toSong(downloadManager.fileUri)) }
             return DetailData(DetailInfo("Downloaded songs", "Downloaded", tracks.firstOrNull()?.artworkUrl.orEmpty(), accentArgbFor(id), false, tracks.size, "Downloaded"), tracks)
+        }
+        if (kind == DOWNLOADED_ALBUM) {
+            val tracks = downloadedAlbumTracks(id).map { artwork(it.toSong(downloadManager.fileUri)) }
+            val first = tracks.firstOrNull() ?: return null
+            return DetailData(DetailInfo(first.album.ifBlank { "Album" }, "${first.artist} • Downloaded", first.artworkUrl, accentArgbFor(id), false, tracks.size, "Downloaded"), tracks)
         }
         if (kind == "smart") {
             val sp = smartPlaylistsProvider().firstOrNull { it.id == id } ?: return null
