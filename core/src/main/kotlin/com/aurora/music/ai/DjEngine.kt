@@ -62,7 +62,7 @@ class DjEngine(
         likedNow()
         val songs = quietly(30_000, emptyList()) { repository.librarySongs(5000) }
         val plays = history.snapshot().groupingBy { it.artist }.eachCount()
-        val genres = songs.asSequence().map { it.genre.trim() }
+        val genres = songs.asSequence().flatMap { com.aurora.music.data.GenreText.split(it.genre) }
             .filter { it.length in 2..30 && DjKeywords.norm(it) !in setOf("unknown", "other", "misc", "none") }
             .groupingBy { it }.eachCount().entries.sortedByDescending { it.value }.take(30).map { it.key }
         val artists = songs.groupingBy { it.artist.trim() }.eachCount().filterKeys { it.length in 2..40 }

@@ -154,11 +154,11 @@ fun DetailScreen(
     // the header accent animates on open so list derivations stay out of the per-frame path
     val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
     val genres = remember(tracks, isSongMix) {
-        if (isSongMix) tracks.mapNotNull { t -> t.genre.trim().takeIf { it.isNotBlank() } }
+        if (isSongMix) tracks.flatMap { com.aurora.music.data.GenreText.split(it.genre) }
             .distinctBy { it.lowercase() }.sortedWith(String.CASE_INSENSITIVE_ORDER) else emptyList()
     }
     val shown = remember(tracks, genreFilter, query, searchOpen) {
-        val genreShown = genreFilter?.let { g -> tracks.filter { it.genre.equals(g, true) } } ?: tracks
+        val genreShown = genreFilter?.let { g -> tracks.filter { com.aurora.music.data.GenreText.matches(it.genre, g) } } ?: tracks
         if (query.isBlank() || !searchOpen) genreShown
         else genreShown.filter { it.title.contains(query, true) || it.artist.contains(query, true) }
     }

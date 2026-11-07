@@ -67,7 +67,8 @@ object Insights {
 
     fun artistKey(name: String?): String = name.orEmpty().trim().lowercase(Locale.ROOT)
 
-    fun genreOf(play: DetailedPlay): String? = play.context.genre?.split(';', ',', '/')?.firstOrNull()?.trim()?.takeIf(String::isNotEmpty)
+    fun genreOf(play: DetailedPlay): String? = play.context.genre?.let(GenreText::split)?.firstOrNull()
+        ?.split(';', ',', '/')?.firstOrNull()?.trim()?.takeIf(String::isNotEmpty)
 
     fun dayAndHour(millis: Long, zone: ZoneId): Pair<Int, Int> {
         val time = Instant.ofEpochMilli(millis).atZone(zone)
