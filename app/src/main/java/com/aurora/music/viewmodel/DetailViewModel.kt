@@ -6,12 +6,14 @@ import androidx.lifecycle.viewModelScope
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.DetailData
 import com.aurora.music.data.remote.ArtistInfo
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 data class DetailUiState(
     val loading: Boolean = true,
@@ -63,9 +65,9 @@ class DetailViewModel(app: Application) : AndroidViewModel(app) {
         if (name.isBlank()) return
         viewModelScope.launch {
             if (!container.settingsStore.artistEnrichment.first()) return@launch
-            val info = container.artistInfoStore.get(name)
+            val info = withContext(Dispatchers.IO) { container.artistInfoStore.get(name) }
                 ?: runCatching { container.artistInfoClient.lookup(name) }.getOrNull()?.also {
-                    container.artistInfoStore.put(name, it)
+                    withContext(Dispatchers.IO) { container.artistInfoStore.put(name, it) }
                 }
             // only apply if this artist is still on screen
             if (info != null && info.found && _state.value.data?.info?.title == name) {

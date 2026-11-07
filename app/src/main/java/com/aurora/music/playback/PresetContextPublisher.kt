@@ -12,6 +12,8 @@ import java.util.Locale
 object PresetContextPublisher {
     private const val PREFIX = "aurora.rules."
     private val providerPattern = Regex("provider:[0-9a-f]{64}")
+    private val containerPattern = Regex("[A-Za-z0-9]{1,16}")
+    private val formatPattern = Regex("[a-z0-9._+-]{1,40}")
     private val albumPattern = Regex("album:[0-9a-f]{64}")
     private val playlistPattern = Regex("playlist:[0-9a-f]{64}")
 
@@ -28,7 +30,7 @@ object PresetContextPublisher {
         source?.source?.let { putString(PREFIX + "source", it.name) }
         source?.albumId?.takeIf(albumPattern::matches)?.let { putString(PREFIX + "album", it) }
         song.genre.takeIf { it.isNotBlank() }?.let { putStringArrayList(PREFIX + "genres", arrayListOf(it.take(512))) }
-        song.suffix.takeIf { it.matches(Regex("[A-Za-z0-9]{1,16}")) }?.let { putString(PREFIX + "container", it) }
+        song.suffix.takeIf(containerPattern::matches)?.let { putString(PREFIX + "container", it) }
         song.playbackCollection?.id?.takeIf(playlistPattern::matches)?.let { putString(PREFIX + "playlist", it) }
         song.playbackCollection?.name?.takeIf { it.isNotBlank() }?.let { putString(PREFIX + "playlistName", it.take(512)) }
     }
@@ -56,7 +58,7 @@ object PresetContextPublisher {
         "audio/mpeg" -> "mp3"
         "audio/mp4a-latm" -> "aac"
         "audio/x-flac" -> "flac"
-        else -> value.substringAfter('/').takeIf { it.matches(Regex("[a-z0-9._+-]{1,40}")) }
+        else -> value.substringAfter('/').takeIf(formatPattern::matches)
     }
 
     private fun container(mimeOrExtension: String): String? = when (val value = mimeOrExtension.lowercase(Locale.ROOT).substringAfter('/')) {
@@ -65,6 +67,6 @@ object PresetContextPublisher {
         "mpeg" -> "mp3"
         "m4a", "m4b", "m4p", "mp4a-latm" -> "mp4"
         "x-matroska" -> "matroska"
-        else -> value.takeIf { it.matches(Regex("[a-z0-9._+-]{1,40}")) }
+        else -> value.takeIf(formatPattern::matches)
     }
 }

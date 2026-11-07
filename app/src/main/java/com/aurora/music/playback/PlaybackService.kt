@@ -54,6 +54,7 @@ import com.google.common.util.concurrent.ListenableFuture
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asExecutor
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.first
@@ -162,6 +163,10 @@ class PlaybackService : MediaLibraryService() {
         var decoder: String? = null
         var underruns: Long = 0L
         val sources = mutableMapOf<String, Format>()
+        // spectra are only read while the signal path is watched
+        fun spectrumTaps(on: Boolean) {
+            beforeMeter.spectrumEnabled = on; afterMeter.spectrumEnabled = on; precisionAfterMeter.spectrumEnabled = on
+        }
     }
     private val sinkEvidence = java.util.IdentityHashMap<ExoPlayer, SinkEvidence>()
     private var mixerRequestKey: String? = null
@@ -226,7 +231,7 @@ class PlaybackService : MediaLibraryService() {
 
         val initialPrefs = runBlocking { container.settingsStore.playbackPrefs.first() }
         val highRes = initialPrefs.preferHighRes
-        outputRatePolicy = runBlocking { container.settingsStore.outputRatePolicy.first() }
+        outputRatePolicy = initialPrefs.outputRatePolicy
         val bitPerfectUsb = initialPrefs.bitPerfectUsb
         usbMode = initialPrefs.usbOutputMode
         usbFallback = initialPrefs.usbFallbackPolicy
@@ -359,14 +364,13 @@ class PlaybackService : MediaLibraryService() {
             // Hold CPU + Wi-Fi while playing or buffering: resolving the next YouTube stream happens in a
             // silent gap, and a backgrounded device would otherwise sleep mid-resolve.
             .setWakeMode(C.WAKE_MODE_NETWORK)
-        if (bitPerfectUsb) {
+        // later media3 defaults: start after 1 s of audio, resume after 2 s (1.5.1 waits 2.5 s and 5 s)
+        val loadControl = androidx.media3.exoplayer.DefaultLoadControl.Builder()
+            .setBufferDurationsMs(50_000, 50_000, 1_000, 2_000).build()
+        playerBuilder.setLoadControl(if (bitPerfectUsb) {
             // stop exoplayer reading the file while the native flac engine handles decode + usb
-            playerBuilder.setLoadControl(
-                com.decent.usbaudio.media3.UsbAudioSink.wrapLoadControl(
-                    androidx.media3.exoplayer.DefaultLoadControl.Builder().build()
-                ) { usbSink?.isNativeEngineActive == true }
-            )
-        }
+            com.decent.usbaudio.media3.UsbAudioSink.wrapLoadControl(loadControl) { usbSink?.isNativeEngineActive == true }
+        } else loadControl)
         player = playerBuilder.build()
         // Keep paired YouTube video buffered in audio mode so revealing it does not reconfigure playback.
         attachSignalEvidence(player, initialEvidence)
@@ -458,7 +462,9 @@ class PlaybackService : MediaLibraryService() {
                 if (owner === mediaSession?.player) gatePlatformQueue(timeline.windowCount)
             }
             override fun onPlayWhenReadyChanged(playWhenReady: Boolean, reason: Int) {
-                if (owner === player && bitPerfect && playWhenReady && player.playerError != null) player.prepare()
+                // idle also covers a restored queue the view model hasn't prepared yet
+                if (owner === player && playWhenReady && player.playbackState == Player.STATE_IDLE && player.mediaItemCount > 0 &&
+                    (player.playerError == null || bitPerfect)) player.prepare()
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 if (owner === player && isYoutubeStreamFailure(error)) {
@@ -499,7 +505,8 @@ class PlaybackService : MediaLibraryService() {
                     events.contains(Player.EVENT_REPEAT_MODE_CHANGED)
                 ) updateCustomLayout()
                 if (events.contains(Player.EVENT_TIMELINE_CHANGED)) shuffleQueue.maybeNeutralize()
-                if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) || events.contains(Player.EVENT_TIMELINE_CHANGED)) {
+                if (p.playWhenReady && (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) || events.contains(Player.EVENT_TIMELINE_CHANGED) ||
+                        events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED))) {
                     val next = p.nextMediaItemIndex
                     if (next != C.INDEX_UNSET) musicSourceFactory.prefetch(p.getMediaItemAt(next))
                 }
@@ -521,7 +528,7 @@ class PlaybackService : MediaLibraryService() {
                 ) xfadeBpPending = false
                 if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) ||
                     events.contains(Player.EVENT_MEDIA_METADATA_CHANGED) ||
-                    events.contains(Player.EVENT_IS_PLAYING_CHANGED) ||
+                    events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED) ||
                     events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED)
                 ) publishNowPlaying()
             }
@@ -676,6 +683,7 @@ class PlaybackService : MediaLibraryService() {
         }
         scope.launch {
             container.signalPath.subscriptionCount.map { it > 0 }.distinctUntilChanged().collectLatest { watched ->
+                sinkEvidence.values.forEach { it.spectrumTaps(watched) }
                 if (watched) while (true) { updateSignalPath(); delay(500) }
             }
         }
@@ -863,18 +871,18 @@ class PlaybackService : MediaLibraryService() {
 
     private fun updateSignalPath() {
         refreshEngaged()
-        try { updateSignalPathSnapshot() }
-        finally { updateListeningLevels() }
+        val audio = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
+        val volumeStep = runCatching { audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) }
+        val maximum = runCatching { audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC) }
+        try { updateSignalPathSnapshot(volumeStep, maximum) }
+        finally { updateListeningLevels(audio, volumeStep.getOrNull(), maximum.getOrNull()) }
     }
 
-    private fun updateListeningLevels() {
+    private fun updateListeningLevels(audio: android.media.AudioManager, volumeStep: Int?, maximum: Int?) {
         val active = if (::player.isInitialized) mediaSession?.player ?: player else null
         val normal = ::player.isInitialized && active === player
         val path = container.signalPath.value
         val measurements = path.measurements
-        val audio = getSystemService(AUDIO_SERVICE) as android.media.AudioManager
-        val volumeStep = runCatching { audio.getStreamVolume(android.media.AudioManager.STREAM_MUSIC) }.getOrNull()
-        val maximum = runCatching { audio.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC) }.getOrNull()
         val muted = runCatching { audio.isStreamMute(android.media.AudioManager.STREAM_MUSIC) }.getOrDefault(true)
         val prefs = lastAudioPrefs
         val supported = normal && path.active && measurements?.afterAvailable == true &&
@@ -888,13 +896,11 @@ class PlaybackService : MediaLibraryService() {
             allowHistory = listeningHistory.allowed, volumeMaximum = maximum))
     }
 
-    private fun updateSignalPathSnapshot() {
+    private fun updateSignalPathSnapshot(volumeStep: Result<Int>, maximum: Result<Int>) {
         if (!::player.isInitialized) return
         val active = mediaSession?.player ?: player
         publishPresetRuleContext(active)
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as android.media.AudioManager
-        val volume = audioManager.getStreamVolume(android.media.AudioManager.STREAM_MUSIC).toDouble() /
-            audioManager.getStreamMaxVolume(android.media.AudioManager.STREAM_MUSIC).coerceAtLeast(1)
+        val volume = volumeStep.getOrThrow().toDouble() / maximum.getOrThrow().coerceAtLeast(1)
         (precisionChains + compatibilityChains).forEach { it.relativeVolume = volume }
         mixPlayer?.applyAudioConfig(mixAudioConfig(volume))
         if (mixPlayer != null && active === mixPlayer) {
@@ -1384,6 +1390,7 @@ class PlaybackService : MediaLibraryService() {
     private fun ensureFadePlayer(): ExoPlayer {
         fadePlayer?.let { return it }
         val fadeEvidence = SinkEvidence()
+        fadeEvidence.spectrumTaps(container.signalPath.subscriptionCount.value > 0)
         compatibilityChains += fadeEvidence.compatibilityProcessor.engine
         if (usePrecisionProcessing) fadeEvidence.precisionProcessor = PrecisionBlockProcessor().also { precisionChains += it }
         applyAudioEngine()
@@ -1568,7 +1575,7 @@ class PlaybackService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = serviceFuture {
-            LibraryResult.ofItemList(libraryBrowser.children(parentId).also { libraryBrowser.grantArtwork(browser, it) }, params)
+            LibraryResult.ofItemList(libraryBrowser.children(parentId, page, pageSize).also { libraryBrowser.grantArtwork(browser, it) }, params)
         }
 
         override fun onGetItem(
@@ -1594,6 +1601,33 @@ class PlaybackService : MediaLibraryService() {
             }
         }
 
+        // a tapped song queues the list it came from, a voice request queues its search
+        override fun onSetMediaItems(
+            mediaSession: MediaSession,
+            controller: MediaSession.ControllerInfo,
+            mediaItems: MutableList<MediaItem>,
+            startIndex: Int,
+            startPositionMs: Long,
+        ): ListenableFuture<MediaSession.MediaItemsWithStartPosition> {
+            val request = mediaItems.singleOrNull()?.takeIf { it.localConfiguration == null }
+                ?: return super.onSetMediaItems(mediaSession, controller, mediaItems, startIndex, startPositionMs)
+            val query = request.requestMetadata.searchQuery
+            val listing = if (query != null) null else libraryBrowser.listingWith(request.mediaId)
+                ?: return super.onSetMediaItems(mediaSession, controller, mediaItems, startIndex, startPositionMs)
+            // a failed future keeps the queue, an empty list would wipe it
+            if (query?.isBlank() == true) {
+                if (mediaSession.player.currentMediaItem != null) mediaSession.player.play()
+                return Futures.immediateFailedFuture(UnsupportedOperationException("blank search"))
+            }
+            return serviceFuture {
+                val queue = listing?.let { libraryBrowser.queue(it, request.mediaId) } ?: MediaSession.MediaItemsWithStartPosition(
+                    libraryBrowser.searchQueue(query.orEmpty()).ifEmpty { throw NoSuchElementException("no songs match the search") },
+                    0, C.TIME_UNSET)
+                if (mediaSession.player === player) { shuffleQueue.originalOrder = null; player.shuffleModeEnabled = false }
+                queue
+            }
+        }
+
         override fun onSearch(
             session: MediaLibrarySession,
             browser: MediaSession.ControllerInfo,
@@ -1613,7 +1647,7 @@ class PlaybackService : MediaLibraryService() {
             pageSize: Int,
             params: LibraryParams?,
         ): ListenableFuture<LibraryResult<ImmutableList<MediaItem>>> = serviceFuture {
-            val items = libraryBrowser.searchResult(query)
+            val items = libraryBrowser.searchResult(query, page, pageSize)
             LibraryResult.ofItemList(items.also { libraryBrowser.grantArtwork(browser, it) }, params)
         }
     }
@@ -1692,31 +1726,38 @@ class PlaybackService : MediaLibraryService() {
     }
 
     private fun setupCast() {
-        val castContext = runCatching {
-            com.google.android.gms.cast.framework.CastContext.getSharedInstance(this)
+        val task = runCatching {
+            com.google.android.gms.cast.framework.CastContext.getSharedInstance(applicationContext, Dispatchers.IO.asExecutor())
         }.getOrNull() ?: return
-        val cp = androidx.media3.cast.CastPlayer(castContext)
-        cp.setSessionAvailabilityListener(object : androidx.media3.cast.SessionAvailabilityListener {
-            override fun onCastSessionAvailable() {
-                if (container.networkOutput.state.value.receiverEnabled) {
-                    container.networkOutput.update { it.copy(error = "Turn off receiver mode before casting.") }
-                    return
+        task.addOnFailureListener { android.util.Log.w("AuroraCast", "Cast is unavailable", it) }
+        task.addOnSuccessListener { castContext ->
+            if (networkDisposed) return@addOnSuccessListener
+            val cp = androidx.media3.cast.CastPlayer(castContext)
+            val availability = object : androidx.media3.cast.SessionAvailabilityListener {
+                override fun onCastSessionAvailable() {
+                    if (container.networkOutput.state.value.receiverEnabled) {
+                        container.networkOutput.update { it.copy(error = "Turn off receiver mode before casting.") }
+                        return
+                    }
+                    selectNetworkOutput(NetworkTarget.Cast)
                 }
-                selectNetworkOutput(NetworkTarget.Cast)
-            }
-            override fun onCastSessionUnavailable() {
-                if (networkPlayer?.receiver?.kind == "Cast") {
-                    selectNetworkOutput(null)
-                    container.networkOutput.update { it.copy(error = "Cast disconnected. Playback is paused.") }
+                override fun onCastSessionUnavailable() {
+                    if (networkPlayer?.receiver?.kind == "Cast") {
+                        selectNetworkOutput(null)
+                        container.networkOutput.update { it.copy(error = "Cast disconnected. Playback is paused.") }
+                    }
                 }
             }
-        })
-        castPlayer = cp
-        cp.addListener(object : Player.Listener {
-            override fun onEvents(player: Player, events: Player.Events) {
-                if (mediaSession?.player === cp) { updateSignalPath(); publishNowPlaying() }
-            }
-        })
+            cp.setSessionAvailabilityListener(availability)
+            castPlayer = cp
+            cp.addListener(object : Player.Listener {
+                override fun onEvents(player: Player, events: Player.Events) {
+                    if (mediaSession?.player === cp) { updateSignalPath(); publishNowPlaying() }
+                }
+            })
+            // a session resumed before this listener existed
+            if (cp.isCastSessionAvailable) availability.onCastSessionAvailable()
+        }
     }
 
     private fun selectRemote(peer: PairedRenderer?) {
@@ -1979,13 +2020,13 @@ class PlaybackService : MediaLibraryService() {
             title = md?.title?.toString().orEmpty(),
             artist = md?.artist?.toString().orEmpty(),
             artUri = md?.artworkUri?.toString().orEmpty(),
-            isPlaying = active.isPlaying,
+            // play intent, so buffering does not flip the widget icon
+            isPlaying = active.playWhenReady && active.playbackState != Player.STATE_IDLE && active.playbackState != Player.STATE_ENDED,
             hasTrack = item != null,
         )
         if (np == lastNowPlaying) return
         lastNowPlaying = np
         nowPlaying.save(np)
-        NowPlayingBus.state.value = np
         WidgetBridge.refresh(this)
     }
 
@@ -2001,7 +2042,9 @@ class PlaybackService : MediaLibraryService() {
             ACTION_ALARM -> startAlarmPlayback()
             ACTION_ALARM_DISMISS -> dismissAlarm()
         }
-        return super.onStartCommand(intent, flags, startId)
+        super.onStartCommand(intent, flags, startId)
+        // queue restore lives in the ui, so a sticky restart would only idle with an empty player
+        return START_NOT_STICKY
     }
 
     private fun startMix() {
@@ -2059,6 +2102,35 @@ class PlaybackService : MediaLibraryService() {
         wakeFadeActive = false
         runCatching { player.pause(); player.stop(); player.clearMediaItems() }
         runCatching { getSystemService(NotificationManager::class.java)?.cancel(ALARM_NOTIF_ID) }
+        releaseAlarmForeground()
+    }
+
+    private var alarmForeground = false
+
+    // startForegroundService needs a notification before the likes arrive; media3 replaces it once playing
+    private fun holdAlarmForeground() {
+        mediaSession?.let { addSession(it) }
+        alarmForeground = false
+        val active = mediaSession?.player ?: player
+        // media3 already holds the foreground while playing or buffering
+        if (receiverForeground || (active.playWhenReady && active.playbackState != Player.STATE_IDLE && active.playbackState != Player.STATE_ENDED)) return
+        val nm = getSystemService(NotificationManager::class.java) ?: return
+        nm.createNotificationChannel(NotificationChannel("aurora_alarm_start", "Alarm loading", NotificationManager.IMPORTANCE_LOW))
+        val notification = androidx.core.app.NotificationCompat.Builder(this, "aurora_alarm_start")
+            .setSmallIcon(com.aurora.music.R.drawable.ic_launcher_monochrome)
+            .setContentTitle("Aurora alarm")
+            .build()
+        alarmForeground = runCatching {
+            if (android.os.Build.VERSION.SDK_INT >= 29) startForeground(ALARM_START_NOTIF_ID, notification,
+                android.content.pm.ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK)
+            else startForeground(ALARM_START_NOTIF_ID, notification)
+        }.isSuccess
+    }
+
+    private fun releaseAlarmForeground() {
+        if (!alarmForeground) return
+        alarmForeground = false
+        if (!receiverForeground) stopForeground(STOP_FOREGROUND_REMOVE)
     }
 
     private fun postAlarmNotification() {
@@ -2091,13 +2163,15 @@ class PlaybackService : MediaLibraryService() {
 
     private fun startAlarmPlayback() {
         alarmLoadJob?.cancel()
+        holdAlarmForeground()
         alarmLoadJob = scope.launch {
             val repo = container.repository
-            val songs = runCatching { repo.starredSongs() }.getOrNull()?.takeIf { it.isNotEmpty() }
+            val songs = runCatching { kotlinx.coroutines.withTimeoutOrNull(ALARM_LIKES_TIMEOUT_MS) { repo.starredSongs() } }.getOrNull()?.takeIf { it.isNotEmpty() }
                 ?: runCatching { repo.downloadedSongs() }.getOrNull()?.takeIf { it.isNotEmpty() }
-                ?: return@launch
             // ignore dismissed or replaced alarms
             if (!isActive) return@launch
+            if (songs == null) { releaseAlarmForeground(); return@launch }
+            val ordered = withContext(Dispatchers.Default) { songs.shuffled().map { libraryBrowser.songItem(it) } }
             networkSwitchJob?.cancel()
             networkPlayer?.let { remote ->
                 withContext(kotlinx.coroutines.NonCancellable) {
@@ -2107,7 +2181,8 @@ class PlaybackService : MediaLibraryService() {
                         handoffPlayWhenReady = null
                     }
                 }
-                if (!isActive || networkDisposed || networkPlayer != null) return@launch
+                if (!isActive || networkDisposed) return@launch
+                if (networkPlayer != null) { releaseAlarmForeground(); return@launch }
                 if (!remote.stopConfirmed) container.networkOutput.update {
                     it.copy(error = "The receiver did not confirm stop. The alarm is playing on this device.")
                 }
@@ -2116,8 +2191,7 @@ class PlaybackService : MediaLibraryService() {
             if (xfadeActive) endXfade() else clearPrepared()
             shuffleQueue.originalOrder = null
             player.shuffleModeEnabled = false
-            val ordered = songs.shuffled()
-            player.setMediaItems(ordered.map { libraryBrowser.songItem(it) }, 0, 0L)
+            player.setMediaItems(ordered, 0, 0L)
             player.repeatMode = Player.REPEAT_MODE_ALL
             player.prepare()
             player.volume = 0f
@@ -2213,6 +2287,8 @@ class PlaybackService : MediaLibraryService() {
         const val ACTION_ALARM = "com.aurora.music.action.ALARM"
         const val ACTION_ALARM_DISMISS = "com.aurora.music.action.ALARM_DISMISS"
         private const val ALARM_NOTIF_ID = 0xA1A
+        private const val ALARM_START_NOTIF_ID = 0xA1B
+        private const val ALARM_LIKES_TIMEOUT_MS = 15_000L
         private const val VOLUME_ACTION = "android.media.VOLUME_CHANGED_ACTION"
         private const val VOLUME_STREAM_EXTRA = "android.media.EXTRA_VOLUME_STREAM_TYPE"
         private val LOCAL_SCHEMES = setOf("file", "content", "android.resource", "aurora-sacd", "aurora-cache")

@@ -51,20 +51,21 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
     private fun refreshSources() {
         val sources = container.repository.searchSources
         // a missing catalogue falls back to the next one, so a spotify-only merge searches spotify
-        _state.update { it.copy(sources = sources, selectedSource = it.selectedSource.takeIf { id -> sources.any { s -> s.id == id } }
+        // another account's results must not stay tappable while the new search runs
+        _state.update { it.copy(sources = sources, results = SearchResults(), selectedSource = it.selectedSource.takeIf { id -> sources.any { s -> s.id == id } }
             ?: sources.firstOrNull { s -> s.id != "library" }?.id ?: "discovery") }
         onQuery(_state.value.query)
     }
 
     fun selectSource(id: String) {
         if (id == _state.value.selectedSource || _state.value.sources.none { it.id == id }) return
-        _state.update { it.copy(selectedSource = id) }
+        _state.update { it.copy(selectedSource = id, results = SearchResults()) }
         onQuery(_state.value.query)
     }
 
     // a spoken search looks in your own library first and lands in recents like a typed one
     fun voiceSearch(query: String) {
-        if (_state.value.sources.any { it.id == "library" }) _state.update { it.copy(selectedSource = "library") }
+        if (_state.value.sources.any { it.id == "library" }) _state.update { it.copy(selectedSource = "library", results = SearchResults()) }
         onQuery(query)
         commit()
     }
@@ -82,7 +83,8 @@ class SearchViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun onQuery(q: String) {
-        _state.update { it.copy(query = q, results = SearchResults(), loading = q.isNotBlank(), error = null) }
+        // old results stay up while typing so the list isn't torn down per keystroke
+        _state.update { it.copy(query = q, loading = q.isNotBlank(), error = null) }
         searchJob?.cancel()
         if (q.isBlank()) {
             _state.update { it.copy(results = SearchResults(), loading = false) }

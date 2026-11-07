@@ -23,6 +23,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.clipRect
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalViewConfiguration
 import androidx.compose.ui.unit.Dp
@@ -72,7 +73,8 @@ fun Waveform(
         if (touching || animatingSeek) return@LaunchedEffect
         pending?.let { if (!it.landed(target)) return@LaunchedEffect }
         pending = null
-        if (animated) shown.animateTo(target, tween(250, easing = LinearEasing)) else shown.snapTo(target)
+        // ordinary 200ms ticks snap so the bars redraw 5 times a second instead of every frame
+        if (animated && abs(target - shown.value) > 0.01f) shown.animateTo(target, tween(250, easing = LinearEasing)) else shown.snapTo(target)
     }
     LaunchedEffect(seed, seekRequest) {
         val request = seekRequest ?: return@LaunchedEffect
@@ -92,6 +94,8 @@ fun Waveform(
         modifier
             .fillMaxWidth()
             .height(height)
+            // own layer so a tick re-records only the bars
+            .graphicsLayer {}
             .pointerInput(seed, barCount, touchSlop) {
                 awaitEachGesture {
                     val down = awaitFirstDown(requireUnconsumed = false)

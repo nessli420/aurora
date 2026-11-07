@@ -102,6 +102,10 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             if (progress.failed > 0 || progress.error != null) Text(
                 progress.error ?: appString(R.string.text_tracks_unavailable_tap_analyze_library_to_retry_dc5b2d, (progress.failed)),
                 modifier = Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.error)
+            progress.notice?.let {
+                Text(it, modifier = Modifier.padding(horizontal = 20.dp), style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+            }
             SettingsSectionTitle(appString(R.string.text_automation_a15fde))
             SettingsGroup {
                 SettingsSwitchRow(

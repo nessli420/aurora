@@ -15,7 +15,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
@@ -26,7 +26,7 @@ import com.aurora.music.data.AccentMode
 import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
-import com.aurora.music.util.rememberDominantColor
+import com.aurora.music.util.rememberDominantTarget
 
 private val DarkColors = darkColorScheme(
     primary = AuroraRose,
@@ -71,7 +71,7 @@ private val LightColors = lightColorScheme(
     error = Color(0xFFD11A4B),
 )
 
-val LocalUiPrefs = staticCompositionLocalOf { UiPrefs() }
+val LocalUiPrefs = compositionLocalOf { UiPrefs() }
 
 private fun onAccent(seed: Color): Color = if (seed.luminance() > 0.5f) Color(0xFF1A1016) else Color.White
 
@@ -106,7 +106,7 @@ fun rememberPlayerColorScheme(artworkUrl: String, fallback: Color): ColorScheme 
     // The alternate styles own their complete palette, including the player.
     if (prefs.themeStyle != ThemeStyle.AURORA) return appColors
 
-    val accent by rememberDominantColor(artworkUrl, fallback)
+    val accent by rememberDominantTarget(artworkUrl, fallback)
     val dark = appColors.background.luminance() < 0.5f
     // a fresh ColorScheme has no equals so rebuilding it every pass defeats skipping under the player
     return remember(accent, dark, prefs.themeMode) { playerColorScheme(accent, dark, prefs.themeMode == ThemeMode.AMOLED) }
@@ -132,32 +132,40 @@ private fun playerColorScheme(accent: Color, dark: Boolean, amoled: Boolean): Co
 }
 
 @Composable
-fun AuroraTheme(
-    uiPrefs: UiPrefs = UiPrefs(),
-    content: @Composable () -> Unit,
-) {
+fun UiPrefs.useDarkTheme(): Boolean {
     val systemDark = isSystemInDarkTheme()
-    val useDark = when (uiPrefs.themeMode) {
+    return when (themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK, ThemeMode.AMOLED -> true
         else -> systemDark
     }
+}
+
+@Composable
+fun AuroraTheme(
+    uiPrefs: UiPrefs = UiPrefs(),
+    content: @Composable () -> Unit,
+) {
+    val useDark = uiPrefs.useDarkTheme()
     val amoled = uiPrefs.themeMode == ThemeMode.AMOLED
     val context = LocalContext.current
 
-    val materialYou = uiPrefs.accentMode == AccentMode.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
-    var colors = when {
-        uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
-        materialYou -> if (useDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        else -> {
-            val seed = when (uiPrefs.accentMode) {
-                AccentMode.CUSTOM -> Color(uiPrefs.accentColor.toInt())
-                else -> AccentPresets.getOrElse(uiPrefs.accentPreset) { AccentPresets[0] }.seed
+    // a fresh ColorScheme has no equals, so rebuilding it on any prefs change would invalidate the whole tree
+    val colors = remember(useDark, amoled, uiPrefs.themeStyle, uiPrefs.accentMode, uiPrefs.accentColor, uiPrefs.accentPreset) {
+        val materialYou = uiPrefs.accentMode == AccentMode.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
+        val scheme = when {
+            uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
+            materialYou -> if (useDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
+            else -> {
+                val seed = when (uiPrefs.accentMode) {
+                    AccentMode.CUSTOM -> Color(uiPrefs.accentColor.toInt())
+                    else -> AccentPresets.getOrElse(uiPrefs.accentPreset) { AccentPresets[0] }.seed
+                }
+                (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
             }
-            (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
         }
+        if (amoled) scheme.toAmoled() else scheme
     }
-    if (amoled) colors = colors.toAmoled()
 
     val view = LocalView.current
     if (!view.isInEditMode) {

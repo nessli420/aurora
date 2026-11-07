@@ -1,8 +1,10 @@
 package com.aurora.music.data
 
+import android.content.Context
 import com.google.android.gms.tasks.Task
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.common.model.RemoteModelManager
+import com.google.mlkit.common.sdkinternal.MlKitContext
 import com.google.mlkit.nl.languageid.LanguageIdentification
 import com.google.mlkit.nl.translate.TranslateLanguage
 import com.google.mlkit.nl.translate.TranslateRemoteModel
@@ -22,9 +24,10 @@ sealed interface LyricsTranslation {
 }
 
 // everything runs on the phone; only the language packs are fetched once, on wi-fi
-class LyricsTranslator(private val canDownload: () -> Boolean) {
-    private val identifier by lazy { LanguageIdentification.getClient() }
-    private val models by lazy { RemoteModelManager.getInstance() }
+class LyricsTranslator(private val context: Context, private val canDownload: () -> Boolean) {
+    // the manifest drops ml kit's init provider; every ml kit call goes through these two first
+    private val identifier by lazy { MlKitContext.initializeIfNeeded(context); LanguageIdentification.getClient() }
+    private val models by lazy { MlKitContext.initializeIfNeeded(context); RemoteModelManager.getInstance() }
     private val recent = object : LinkedHashMap<String, List<String?>>(16, .75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, List<String?>>) = size > 24
     }
@@ -41,7 +44,11 @@ class LyricsTranslator(private val canDownload: () -> Boolean) {
         val sources = distinct.associateWith { line ->
             supported(identifier.identifyLanguage(line).await()).takeIf { it == to || it == TranslateLanguage.ENGLISH } ?: song
         }.filterValues { it != to }
-        if (sources.isEmpty()) return@flow
+        if (sources.isEmpty()) {
+            // already in the target language: remember that so reopening skips language id
+            synchronized(recent) { recent[key] = List(lines.size) { null } }
+            return@flow
+        }
         val needed = sources.values.toSet()
         val missing = (needed + to).filterNot { models.isModelDownloaded(TranslateRemoteModel.Builder(it).build()).await() }
         if (missing.isNotEmpty()) {

@@ -40,6 +40,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.map
@@ -47,7 +48,9 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.coroutines.resume
 import kotlin.math.pow
 
@@ -112,6 +115,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private val _position = MutableStateFlow(0f)
     val position: StateFlow<Float> = _position.asStateFlow()
     private val activelyPlaying = MutableStateFlow(false)
+    private val restoreRush = MutableStateFlow(false)
 
     private var controller: MediaController? = null
     private val companionVideo = CompanionVideoController(
@@ -135,6 +139,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var ticker: Job? = null
     private var sleepJob: Job? = null
     private var queueFillJob: Job? = null
+    private var restoreFill: Job? = null
     private var mediaSearchJob: Job? = null
     private var playbackRequestGeneration = 0L
     private val initialQueueReady = CompletableDeferred<Unit>()
@@ -157,6 +162,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var savedTracksFor: Map<String, Song>? = null
     private var savedTracksCount = -1
     private var savedTracksDirty = true
+    private var queueSongs: List<Song> = emptyList()
+    private var queueSongsTimeline: androidx.media3.common.Timeline? = null
+    private var queueSongsFor: Map<String, Song>? = null
     private var lastSavedQueue: Pair<String, SavedQueue>? = null
     // clearing for account switch must not overwrite the saved queue
     @Volatile private var suppressPersist = false
@@ -170,7 +178,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private val listener = object : Player.Listener {
         override fun onEvents(player: Player, events: Player.Events) {
             if (events.contains(Player.EVENT_TIMELINE_CHANGED)) savedTracksDirty = true
-            if (events.contains(Player.EVENT_TIMELINE_CHANGED) || events.contains(Player.EVENT_MEDIA_METADATA_CHANGED)) fillFromController()
+            // locally new ids only arrive with a timeline change
+            if (events.contains(Player.EVENT_TIMELINE_CHANGED) ||
+                (events.contains(Player.EVENT_MEDIA_METADATA_CHANGED) && remoteSession != null)) fillFromController()
             syncFromController()
             if (events.contains(Player.EVENT_POSITION_DISCONTINUITY)) companionVideo.sync(forceSeek = true)
             if (events.contains(Player.EVENT_PLAYBACK_STATE_CHANGED) && player.playbackState == Player.STATE_ENDED) {
@@ -261,9 +271,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 openRestoreAttempted = true
                 while (controller == null) delay(50)
                 val c = controller ?: return@collect
-                playingAccountKey = container.currentAccountKey()
-                val saved = playingAccountKey.takeIf { it.isNotBlank() }?.let { container.queueStore.get(it) }
-                if (c.mediaItemCount == 0 && saved != null && remoteSession == null) restoreQueue(saved)
+                val key = container.currentAccountKey()
+                playingAccountKey = key
+                val saved = key.takeIf { it.isNotBlank() }?.let { kotlinx.coroutines.withContext(Dispatchers.IO) { container.queueStore.get(it) } }
+                // an account switch during the read must not leave this queue under the new key
+                if (playingAccountKey == key && c.mediaItemCount == 0 && saved != null && remoteSession == null) restoreQueue(saved)
                 initialQueueReady.complete(Unit)
             }
         }
@@ -346,7 +358,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private fun persistQueue(force: Boolean = false) {
         // The editable mix is persisted by MixStore; do not restore it as an ordinary queue.
         if (container.mixController.activeProject != null) return
-        if (suppressPersist || remoteSession != null) return
+        // a restore still filling in holds only a window of the queue the store already has
+        if (suppressPersist || remoteSession != null || restoreFill?.isActive == true) return
         val c = controller ?: return
         val key = playingAccountKey.ifBlank { container.currentAccountKey() }
         if (key.isBlank()) return
@@ -383,10 +396,14 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (songs.isEmpty()) return
         songById = songs.associateBy { it.id }
         val idx = sq.currentIndex.coerceIn(0, songs.lastIndex)
-        val delivery = deliverQueue(songs, idx, sq.positionSec.toLong() * 1000)
+        val delivery = deliverQueue(songs, idx, sq.positionSec.toLong() * 1000, restoring = true)
         c.playbackParameters = currentParams()
         c.repeatMode = when (sq.repeat) { 1 -> Player.REPEAT_MODE_ALL; 2 -> Player.REPEAT_MODE_ONE; else -> Player.REPEAT_MODE_OFF }
-        c.prepare()   // buffer at saved position but stay paused
+        // buffer at the saved position but stay paused, once launch is over; a play tap prepares sooner
+        viewModelScope.launch {
+            delay(RESTORE_DEFER_MS)
+            if (controller === c && c.mediaItemCount > 0 && c.playbackState == Player.STATE_IDLE && c.playerError == null) c.prepare()
+        }
         _state.update {
             it.copy(queue = delivery.songs, current = songs[idx], isPlaying = false, currentIndex = delivery.currentIndex, shuffle = sq.shuffle,
                 repeat = when (sq.repeat) { 1 -> RepeatMode.ALL; 2 -> RepeatMode.ONE; else -> RepeatMode.OFF })
@@ -406,7 +423,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     private fun rehydrateFromController() {
         val c = controller ?: return
-        songById = (0 until c.mediaItemCount).map { songOf(c.getMediaItemAt(it)) }.associateBy { it.id }
+        // the saved copy keeps the format details a media item drops
+        val saved = container.queueStore.get(playingAccountKey.ifBlank { container.currentAccountKey() })?.tracks?.associateBy { it.id }
+        songById = (0 until c.mediaItemCount).map { i ->
+            val item = c.getMediaItemAt(i)
+            aiDj.known(item.mediaId) ?: saved?.get(item.mediaId)?.toSong() ?: songOf(item)
+        }.associateBy { it.id }
     }
 
     // another device's queue arrives as bare media items, so build songs from them
@@ -519,8 +541,23 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val sourceType = container.repository.sourceType(cur)
         loadComments(cur)
         val videoUri = c.currentMediaItem?.localConfiguration?.uri
-        val q = (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
-        if (cur.id != lastKeyInfoId) { lastKeyInfoId = cur.id; lastKeyInfo = runCatching { container.sonicEngine.keyInfo(cur.id) }.getOrNull() }
+        // the queue only gets rebuilt when the timeline or the song map changed
+        val timeline = c.currentTimeline
+        val q = queueSongs.takeIf { timeline === queueSongsTimeline && songById === queueSongsFor }
+            ?: (0 until c.mediaItemCount).mapNotNull { i -> songById[c.getMediaItemAt(i).mediaId] }
+                .also { queueSongs = it; queueSongsTimeline = timeline; queueSongsFor = songById }
+        if (cur.id != lastKeyInfoId) {
+            val id = cur.id
+            lastKeyInfoId = id
+            lastKeyInfo = null
+            // the sonic store can block on its first parse
+            viewModelScope.launch {
+                val info = withContext(Dispatchers.IO) { runCatching { container.sonicEngine.keyInfo(id) }.getOrNull() } ?: return@launch
+                if (lastKeyInfoId != id) return@launch
+                lastKeyInfo = info
+                _state.update { it.copy(bpm = info.bpm, camelot = info.camelot, keyName = info.name) }
+            }
+        }
         val ki = lastKeyInfo
         _state.update {
             it.copy(
@@ -613,6 +650,16 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     private fun toMediaItem(song: Song): MediaItem = com.aurora.music.playback.songMediaItem(song, container.repository)
+
+    // an edit while a restored queue fills in waits for it, else the backfill's count check drops the rest
+    private fun afterRestoreFill(action: (shift: Int) -> Unit): Boolean {
+        val fill = restoreFill?.takeIf { it.isActive } ?: return false
+        val c = controller ?: return false
+        val before = c.currentMediaItemIndex
+        restoreRush.value = true
+        viewModelScope.launch { fill.join(); if (controller === c) action(c.currentMediaItemIndex - before) }
+        return true
+    }
 
     private fun leaveMixThen(action: () -> Unit): Boolean {
         val c = controller ?: return false
@@ -761,7 +808,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     // list in chunks, forward first then the songs before startIndex prepended so skip-back still works.
     // returns whatever was actually included in the synchronous setMediaItems call, and where the
     // "current" song landed within it — the controller resets to a local index for the windowed case.
-    private fun deliverQueue(songs: List<Song>, startIndex: Int, startPositionMs: Long): QueueDelivery {
+    private fun deliverQueue(songs: List<Song>, startIndex: Int, startPositionMs: Long, restoring: Boolean = false): QueueDelivery {
         cancelQueueFill()
         val c = controller ?: return QueueDelivery(emptyList(), 0)
         val token = java.util.UUID.randomUUID().toString().also { queueToken = it }
@@ -772,14 +819,17 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val windowEnd = (startIndex + QUEUE_BATCH).coerceAtMost(songs.size)
         val initial = songs.subList(startIndex, windowEnd)
         c.setMediaItems(initial.map { queueItem(it, token) }, 0, startPositionMs)
+        // each appended chunk's timeline event already syncs the state
+        if (restoring) restoreRush.value = false
         queueFillJob = viewModelScope.launch {
+            // a restored queue nobody plays or edits yet fills in after launch rather than during it
+            if (restoring) withTimeoutOrNull(RESTORE_DEFER_MS) { combine(activelyPlaying, restoreRush) { p, r -> p || r }.first { it } }
             var delivered = initial.size
             var tail = windowEnd
             while (tail < songs.size) {
                 val chunk = songs.subList(tail, (tail + QUEUE_BATCH).coerceAtMost(songs.size))
                 if (!appendQueue(c, token, delivered, chunk, waitForInitialQueue = delivered == initial.size)) return@launch
                 delivered += chunk.size
-                syncFromController()
                 tail += chunk.size
                 delay(40)
             }
@@ -789,11 +839,11 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 val chunk = songs.subList(chunkStart, head)
                 if (!appendQueue(c, token, delivered, chunk, prepend = true, waitForInitialQueue = delivered == initial.size)) return@launch
                 delivered += chunk.size
-                syncFromController()
                 head = chunkStart
                 delay(40)
             }
         }
+        if (restoring) restoreFill = queueFillJob
         return QueueDelivery(initial, 0)
     }
 
@@ -934,6 +984,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun addToQueue(song: Song) {
         if (leaveMixThen { addToQueue(song) }) return
+        if (afterRestoreFill { addToQueue(song) }) return
         val c = controller ?: run { play(song); return }
         if (c.mediaItemCount == 0) { play(song); return }
         songById = songById + (song.id to song)
@@ -944,6 +995,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     fun playNext(song: Song) {
         if (leaveMixThen { playNext(song) }) return
+        if (afterRestoreFill { playNext(song) }) return
         val c = controller ?: run { play(song); return }
         if (c.mediaItemCount == 0) { play(song); return }
         songById = songById + (song.id to song)
@@ -964,6 +1016,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun removeFromQueue(index: Int) {
+        if (afterRestoreFill { removeFromQueue(index + it) }) return
         val c = controller ?: return
         if (index in 0 until c.mediaItemCount) {
             c.removeMediaItem(index)
@@ -972,6 +1025,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun clearQueue() {
+        if (afterRestoreFill { clearQueue() }) return
         val c = controller ?: return
         val current = c.currentMediaItemIndex
         val last = c.mediaItemCount - 1
@@ -1011,7 +1065,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         cancelMediaSearch()
         val c = controller ?: return
         container.haptic()
-        if (c.isPlaying) c.pause() else c.play()
+        if (c.isPlaying) c.pause() else {
+            if (c.playbackState == Player.STATE_IDLE) c.prepare()
+            c.play()
+        }
     }
 
     fun seekTo(fraction: Float) {
@@ -1059,6 +1116,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     // target 1 on 0 off -1 toggle service physically reorders and restores original order on disable
     private fun sendShuffle(target: Int) {
+        if (afterRestoreFill { sendShuffle(target) }) return
         val c = controller ?: return
         c.sendCustomCommand(
             SessionCommand(PlaybackService.CMD_SHUFFLE, android.os.Bundle().apply { putInt("target", target) }),
@@ -1120,9 +1178,17 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
-    fun refreshLikes() = likes.refresh()
+    private var launchLikes: Job? = null
+
+    // the launch resume and session refreshes fold into one that waits past the first home frames
+    fun refreshLikes(restart: Boolean = false) {
+        if (launchLikes == null) launchLikes = viewModelScope.launch { delay(LAUNCH_LIKES_DELAY_MS); likes.refresh() }
+        else if (launchLikes?.isActive != true) likes.refresh(restart)
+    }
 
     fun checkLiked(songs: List<Song>) = likes.check(songs)
+    fun checkVisibleLiked(songs: List<Song>) = likes.checkVisible(songs)
+    fun checkLikedList(songs: List<Song>) = likes.checkList(songs)
 
     // songs toggle on the source they play from; the heart's menu reaches the other accounts
     fun toggleLike(id: String, kind: String = "song") = likes.toggle(id, kind)
@@ -1176,6 +1242,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private companion object {
         const val SLEEP_FADE_MS = 6_000L
         const val POSITION_PERSIST_MS = 15_000L
+        const val RESTORE_DEFER_MS = 5_000L
+        const val LAUNCH_LIKES_DELAY_MS = 3_000L
         // each MediaItem's parcelled metadata (artwork uri, title/artist/album, extras) is a few KB;
         // a binder transaction caps near 1mb, so a few hundred full items can silently get truncated
         // by the session. deliverQueue keeps the initial setMediaItems call well under that.

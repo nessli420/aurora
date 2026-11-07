@@ -78,6 +78,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -106,8 +107,12 @@ import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.LibraryUiState
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import com.aurora.music.data.LIKE_BUCKET
 import com.aurora.music.data.accent
+import com.aurora.music.data.likeWindow
 import com.aurora.music.model.accent
 import com.aurora.music.model.label
 
@@ -196,6 +201,8 @@ fun LibraryScreen(
     // songs-tab playback covers the whole library, not just the scrolled-in rows
     onPlayAllSongs: (shuffle: Boolean) -> Unit = {},
     onPlaySong: (Song) -> Unit = {},
+    // the songs near the scroll position, for hearts liked on other accounts
+    onVisibleSongs: (List<Song>) -> Unit = {},
     selectedItem: String? = null,
     onRefresh: () -> Unit = {},
     onCycleView: () -> Unit = {},
@@ -359,12 +366,12 @@ fun LibraryScreen(
                 onOpenYouTubeDownload = onOpenYouTubeDownload, onOpenAllLiked = openAllLiked, onAiDj = onAiDj, aiDjDetail = aiDjDetail,
             )
             LibraryFilter.SONGS -> SongsTab(
-                state = state, sort = sort, likedIds = likedIds, currentSongId = currentSongId, isPlaying = isPlaying,
+                state = state, likedIds = likedIds, currentSongId = currentSongId, isPlaying = isPlaying,
                 bottom = bottom, canDownload = canDownload, downloadedIds = downloadedIds,
                 onAddToQueue = onAddToQueue, onPlayNext = onPlayNext, onToggleLike = onToggleLike,
                 onOpenDetail = onOpenDetail, onDownload = onDownload, onRemoveDownload = onRemoveDownload,
                 onEditTags = onEditTags, serverTagEditing = serverTagEditing, onLoadMoreSongs = onLoadMoreSongs,
-                onPlayAllSongs = onPlayAllSongs, onPlaySong = onPlaySong,
+                onPlayAllSongs = onPlayAllSongs, onPlaySong = onPlaySong, onVisibleSongs = onVisibleSongs,
             )
             LibraryFilter.DOWNLOADED -> {
                 val dlRows = remember(state.downloadedRows) {
@@ -378,16 +385,28 @@ fun LibraryScreen(
                 }
             }
             else -> {
+                // large merged libraries build rows off the main thread; small ones stay synchronous so a tab tap never flashes empty
+                val heavy = when (filter) {
+                    LibraryFilter.ALBUMS -> state.albums.size
+                    LibraryFilter.ARTISTS -> state.artists.size + state.songs.size
+                    else -> state.playlists.size
+                } > 400
                 // artists aggregate over the whole song list so only rebuild when an input really changed
-                val rows = remember(filter, sort, pins, state.playlists, state.smartPlaylists, state.albums, state.artists,
+                val inputs = arrayOf<Any?>(sort, pins, state.playlists, state.smartPlaylists, state.albums, state.artists,
                     state.likedSongCount, state.likedCover,
                     if (filter == LibraryFilter.ARTISTS) state.songs else null,
-                    if (filter == LibraryFilter.ARTISTS) state.localPlayCounts else null) {
-                    buildRows(state, filter, sort, pins)
+                    if (filter == LibraryFilter.ARTISTS) state.localPlayCounts else null)
+                // a heavy rebuild keeps the last rows on screen so the list and its scroll survive
+                val built = remember(filter) { mutableStateOf<List<LibRow>?>(null) }
+                val synced = if (heavy) null else remember(filter, *inputs) { buildRows(state, filter, sort, pins) }
+                SideEffect { if (synced != null) built.value = synced }
+                if (heavy) LaunchedEffect(filter, *inputs) {
+                    built.value = withContext(Dispatchers.Default) { buildRows(state, filter, sort, pins) }
                 }
-                if (rows.isEmpty()) {
+                val rows = synced ?: built.value
+                if (rows != null && rows.isEmpty()) {
                     EmptyHint(appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
-                } else {
+                } else if (rows != null) {
                     RowsContent(rows, layout, libColumns, sort, bottom, actions) { r ->
                         when (r.kind) {
                             "folders" -> onOpenFolders()
@@ -463,7 +482,8 @@ private fun AllOverview(
         // quick access tiles
         item {
             val tiles = buildList {
-                if (state.signedIn) add(QuickTile(appString(R.string.text_liked_songs_58c3a9), appPlural(R.plurals.track_count, (state.likedSongCount)), Icons.Filled.Favorite, state.likedCover,
+                // 0 doubles as not counted yet, so no number rather than a wrong 0
+                if (state.signedIn) add(QuickTile(appString(R.string.text_liked_songs_58c3a9), if (state.likedSongCount > 0) appPlural(R.plurals.track_count, (state.likedSongCount)) else "", Icons.Filled.Favorite, state.likedCover,
                     onLongClick = onOpenAllLiked) { onOpenDetail("liked", state.likedId) })
                 if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
                 if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
@@ -511,7 +531,7 @@ private fun AllOverview(
                     }
                     items(state.playlists.size) { i ->
                         val p = state.playlists[i]
-                        ShelfCard(p.title, appPlural(R.plurals.track_count, (p.songCount)), p.coverUrl, p.accent, selectionKey = "playlist:${p.id}") { onOpenDetail("playlist", p.id) }
+                        ShelfCard(p.title, if (p.songCount >= 0) appPlural(R.plurals.track_count, (p.songCount)) else appString(R.string.text_playlist_cd95b4), p.coverUrl, p.accent, selectionKey = "playlist:${p.id}") { onOpenDetail("playlist", p.id) }
                     }
                 }
             }
@@ -668,7 +688,6 @@ private fun ShelfCard(
 @Composable
 private fun SongsTab(
     state: LibraryUiState,
-    sort: LibrarySort,
     likedIds: Set<String>,
     currentSongId: String,
     isPlaying: Boolean,
@@ -686,10 +705,11 @@ private fun SongsTab(
     onLoadMoreSongs: () -> Unit,
     onPlayAllSongs: (shuffle: Boolean) -> Unit,
     onPlaySong: (Song) -> Unit,
+    onVisibleSongs: (List<Song>) -> Unit,
 ) {
-    val playCounts = if (sort == LibrarySort.MOST_PLAYED) state.localPlayCounts else emptyMap()
-    val songs = remember(state.songs, sort, playCounts) { sortedSongs(state.songs, sort, playCounts) }
-    if (songs.isEmpty() && !state.loading) {
+    val songs = state.sortedSongs
+    // a sort still running must not flash the empty hint
+    if (state.songs.isEmpty() && !state.loading) {
         EmptyHint(appString(R.string.text_no_songs_e6bbe2), appString(R.string.text_songs_from_your_server_appear_here_e4db53))
         return
     }
@@ -737,6 +757,9 @@ private fun SongsTab(
             if (state.canLoadMoreSongs && count > 0 && last >= count - 14) onLoadMoreSongs()
         }
     }
+    LaunchedEffect(listState, songs) {
+        snapshotFlow { listState.firstVisibleItemIndex / LIKE_BUCKET }.collect { onVisibleSongs(likeWindow(songs, it)) }
+    }
     val scope = rememberCoroutineScope()
 
     Box(Modifier.fillMaxSize()) {
@@ -764,7 +787,8 @@ private fun SongsTab(
                 }
             }
         }
-        if (sort == LibrarySort.ALPHABETICAL && songs.size > 30) {
+        // a pending sort leaves the old order under the new label, so the rail follows the order on screen
+        if (state.sortedFor == LibrarySort.ALPHABETICAL && songs.size > 30) {
             AlphabetRail(
                 modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(bottom = bottom),
                 onJump = { c ->
@@ -882,15 +906,12 @@ private fun EmptyHint(title: String, message: String) {
     }
 }
 
-private fun sortedSongs(songs: List<Song>, sort: LibrarySort, localPlayCounts: Map<String, Int>): List<Song> =
-    com.aurora.music.viewmodel.sortLibrarySongs(songs, sort, localPlayCounts)
-
 private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>): List<LibRow> {
     val smart = if (filter != LibraryFilter.PLAYLISTS) emptyList() else state.smartPlaylists.map {
         val n = it.rules.orEmpty().size
         LibRow(it.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.smart_rule_count, appPlural(R.plurals.rule_count, (n))), "", accentFor(it.id ?: "smart"), it.id ?: "", "smart", badge = appString(R.string.text_auto_50c3f1))
     }
-    val playlists = if (filter != LibraryFilter.PLAYLISTS) emptyList() else smart + state.playlists.map { LibRow(it.title, appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist") }
+    val playlists = if (filter != LibraryFilter.PLAYLISTS) emptyList() else smart + state.playlists.map { LibRow(it.title, if (it.songCount < 0) appString(R.string.text_playlist_cd95b4) else appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist") }
     val albumLabel = appString(R.string.text_album_dfb4c9)
     val albums = if (filter != LibraryFilter.ALBUMS) emptyList() else state.albums.map {
         val label = it.typeLabel.localizedMediaType()
@@ -932,7 +953,7 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
     // playlists tab keeps liked songs on top pinned entries stay deduped
     val pinned = pins.map { it.kind to it.id }.toSet()
     val deduped = sorted.filterNot { (it.kind to it.id) in pinned }
-    val liked = LibRow(appString(R.string.text_liked_songs_58c3a9), appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (state.likedSongCount))), state.likedCover, accentFor("liked"), state.likedId, "liked")
+    val liked = LibRow(appString(R.string.text_liked_songs_58c3a9), if (state.likedSongCount > 0) appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (state.likedSongCount))) else appString(R.string.text_playlist_cd95b4), state.likedCover, accentFor("liked"), state.likedId, "liked")
     return (listOf(liked) + deduped).distinctBy { "${it.kind}:${it.id}" }
 }
 

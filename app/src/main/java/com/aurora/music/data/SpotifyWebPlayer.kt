@@ -347,10 +347,10 @@ class SpotifyWebBridge(context: Context) {
 
     fun account(cookie: () -> String): SpotifyGraphql = object : SpotifyGraphql {
         override suspend fun query(operation: String, variables: JsonObject): JsonObject =
-            run(cookie()) { it.query(operation, variables) }
+            run(withContext(Dispatchers.IO) { cookie() }) { it.query(operation, variables) }
 
         override suspend fun spclient(path: String, body: JsonObject?): JsonObject =
-            run(cookie()) { it.spclient(path, body) }
+            run(withContext(Dispatchers.IO) { cookie() }) { it.spclient(path, body) }
     }
 
     // spotify rate limits bursts such as a whole liked library; a short back-off keeps pages from going missing

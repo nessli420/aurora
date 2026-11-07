@@ -1,8 +1,6 @@
 package com.aurora.music.ui.widget
 
-import android.content.ComponentName
 import android.content.Context
-import android.service.quicksettings.TileService
 import androidx.glance.GlanceId
 import androidx.glance.appwidget.state.updateAppWidgetState
 import androidx.glance.appwidget.updateAll
@@ -20,9 +18,6 @@ object AuroraWidgetController {
     fun refresh(context: Context) {
         val app = context.applicationContext
         scope.launch { runCatching { AuroraWidget().updateAll(app) } }
-        runCatching {
-            TileService.requestListeningState(app, ComponentName(app, AuroraTileService::class.java))
-        }
     }
 
     // each write takes the newest pick, so taps that land out of order still settle on the last one

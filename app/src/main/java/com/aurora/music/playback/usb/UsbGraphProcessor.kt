@@ -97,8 +97,7 @@ class UsbGraphProcessor(
         }
         val count = minOf(256, buffer.remaining() / stride)
         if (count == 0) return true
-        val snapshot = buffer.duplicate().apply { limit(position() + count * stride) }
-        before?.observe(snapshot, snapshot.position(), snapshot.limit(), timeUs)
+        before?.observe(buffer, buffer.position(), buffer.position() + count * stride, timeUs)
         block.begin(count)
         PcmBoundary.decode(buffer, inputEncoding, block)
         val skip = minOf(headFrames, count)

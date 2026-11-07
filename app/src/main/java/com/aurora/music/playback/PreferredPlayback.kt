@@ -27,39 +27,43 @@ object PreferredPlayback {
             metadata.albumTitle?.toString().orEmpty(), metadata.artworkUri?.toString().orEmpty(),
             extras?.getInt("aurora.durationSec") ?: 0, explicit = extras?.getBoolean("aurora.explicit") ?: false,
             streamUrl = item.localConfiguration?.uri.toString())
+        val deadline = System.nanoTime() + 6_000_000_000L
+        suspend fun probe(list: List<Song>): MediaItem? {
+            for (candidate in list) {
+                coroutineContext.ensureActive()
+                if (System.nanoTime() > deadline) break
+                val source = DefaultDataSource.Factory(context, DefaultHttpDataSource.Factory()
+                    .setConnectTimeoutMs(2_000).setReadTimeoutMs(2_000)).createDataSource()
+                val available = try {
+                    source.open(DataSpec.Builder().setUri(cueSource(Uri.parse(candidate.streamUrl))).setLength(1).build())
+                    source.read(ByteArray(1), 0, 1) == 1
+                } catch (_: Exception) { false }
+                finally { runCatching { source.close() } }
+                coroutineContext.ensureActive()
+                if (!available) continue
+                val updated = Bundle(extras ?: Bundle.EMPTY).apply {
+                    listOf("provider", "providerLabel", "source", "album", "container").forEach { remove("aurora.rules.$it") }
+                    putAll(PresetContextPublisher.extras(candidate))
+                    putString(URI, candidate.streamUrl)
+                    putString("aurora.preferred.original", item.localConfiguration?.uri.toString())
+                    putString("aurora.preferred.suffix", candidate.suffix)
+                    putInt("aurora.preferred.rate", candidate.sampleRateHz)
+                    putInt("aurora.preferred.depth", candidate.bitDepth)
+                    putInt("aurora.preferred.bitrate", candidate.bitrateKbps)
+                    putString("aurora.preferred.source", gson.toJson(candidate.playbackSource))
+                }
+                return item.buildUpon().setUri(candidate.streamUrl).setMimeType(null)
+                    .setMediaMetadata(metadata.buildUpon().setExtras(updated).build()).build()
+            }
+            return null
+        }
         // a copy downloaded after the list was loaded still wins over the stream
         val own = listOfNotNull(localCopy(song))
-        val candidates = own + try { repository.playbackCandidates(song) }
+        probe(own)?.let { return it }
+        val candidates = try { repository.playbackCandidates(song) }
             catch (e: CancellationException) { throw e }
-            catch (_: Exception) { if (own.isEmpty()) return item else emptyList() }
-        val deadline = System.nanoTime() + 6_000_000_000L
-        for (candidate in candidates.take(6)) {
-            coroutineContext.ensureActive()
-            if (System.nanoTime() > deadline) break
-            val source = DefaultDataSource.Factory(context, DefaultHttpDataSource.Factory()
-                .setConnectTimeoutMs(2_000).setReadTimeoutMs(2_000)).createDataSource()
-            val available = try {
-                source.open(DataSpec.Builder().setUri(cueSource(Uri.parse(candidate.streamUrl))).setLength(1).build())
-                source.read(ByteArray(1), 0, 1) == 1
-            } catch (_: Exception) { false }
-            finally { runCatching { source.close() } }
-            coroutineContext.ensureActive()
-            if (!available) continue
-            val updated = Bundle(extras ?: Bundle.EMPTY).apply {
-                listOf("provider", "providerLabel", "source", "album", "container").forEach { remove("aurora.rules.$it") }
-                putAll(PresetContextPublisher.extras(candidate))
-                putString(URI, candidate.streamUrl)
-                putString("aurora.preferred.original", item.localConfiguration?.uri.toString())
-                putString("aurora.preferred.suffix", candidate.suffix)
-                putInt("aurora.preferred.rate", candidate.sampleRateHz)
-                putInt("aurora.preferred.depth", candidate.bitDepth)
-                putInt("aurora.preferred.bitrate", candidate.bitrateKbps)
-                putString("aurora.preferred.source", gson.toJson(candidate.playbackSource))
-            }
-            return item.buildUpon().setUri(candidate.streamUrl).setMimeType(null)
-                .setMediaMetadata(metadata.buildUpon().setExtras(updated).build()).build()
-        }
-        return item
+            catch (_: Exception) { return item }
+        return probe(candidates.take(6 - own.size)) ?: item
     }
 
     fun applyTo(song: Song, item: MediaItem?): Song {

@@ -8,6 +8,8 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.HomeData
+import com.aurora.music.data.filledFrom
+import com.aurora.music.model.Song
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -24,6 +26,8 @@ data class HomeUiState(
     val error: String? = null,
     val feeds: List<com.aurora.music.data.HomeFeedChoice> = emptyList(),
     val selectedFeed: String = "library",
+    // the favourites row is capped; the whole list lands here after home, for a tap to play
+    val allStarred: List<Song> = emptyList(),
 )
 
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
@@ -33,11 +37,15 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private var loadJob: Job? = null
     private var moreJob: Job? = null
     private val seenPages = mutableSetOf<String>()
+    // the full liked list of another library or an offline flip must not back a tap
+    private var starredFor: Triple<String, Int, Boolean>? = null
 
     init {
+        // a recreated screen paints this account's last home at once and load() replaces it
+        lastHome?.takeIf { it.first == homeKey() }?.let { _state.value = it.second.copy(loading = true) }
         viewModelScope.launch { container.repository.playlistChanges.collect { load() } }
         viewModelScope.launch { container.offline.collect { load() } }
-        viewModelScope.launch { container.accountEpoch.drop(1).collect { load(clear = true) } }
+        viewModelScope.launch { container.accountEpoch.drop(1).collect { lastHome = null; load(clear = true) } }
         viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }
         viewModelScope.launch { container.audioCache.songs.collect { if (container.offline.value) load() } }
     }
@@ -47,17 +55,33 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         moreJob?.cancel()
         seenPages.clear()
         loadJob = viewModelScope.launch {
+            val key = homeKey()
             val feeds = container.repository.homeFeeds
             val selected = _state.value.selectedFeed.takeIf { id -> feeds.any { it.id == id } } ?: "library"
             _state.update { it.copy(loading = true, loadingMore = false, error = null, feeds = feeds, selectedFeed = selected,
-                data = if (clear || selected != it.selectedFeed) HomeData() else it.data) }
+                data = if (clear || selected != it.selectedFeed) HomeData() else it.data,
+                allStarred = if (clear || selected != it.selectedFeed || starredFor != key) emptyList() else it.allStarred) }
             try {
-                val data = container.repository.home(selected)
-                _state.update { it.copy(loading = false, data = data) }
+                val shown = _state.value.data
+                var latest = shown
+                container.repository.homeUpdates(selected).collect { update ->
+                    latest = update
+                    _state.update { it.copy(data = shown.filledFrom(update)) }
+                }
+                _state.update { it.copy(loading = false, data = latest) }
+                lastHome = key to _state.value.copy(allStarred = emptyList())
+                if (latest.starred.isNotEmpty()) allStarred(selected).let { all -> starredFor = key; _state.update { it.copy(allStarred = all) } }
             } catch (e: CancellationException) { throw e }
             catch (_: Exception) { _state.update { it.copy(loading = false, error = appString(R.string.text_could_not_load_the_home_feed_try_again_f756b3)) } }
         }
     }
+
+    // any library reload or offline flip since the snapshot may have changed what home holds
+    private fun homeKey() = Triple(container.currentAccountKey(), container.libraryReload.value, container.offline.value)
+
+    private suspend fun allStarred(feed: String): List<Song> = try {
+        container.repository.homeStarred(feed)
+    } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
 
     fun selectFeed(id: String) {
         if (id == _state.value.selectedFeed || _state.value.feeds.none { it.id == id }) return
@@ -85,4 +109,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
             catch (_: Exception) { _state.update { it.copy(loadingMore = false, error = appString(R.string.text_could_not_load_more_recommendations_try_again_552ce1)) } }
         }
     }
+
+    // outlives the activity, not the process
+    private companion object { var lastHome: Pair<Triple<String, Int, Boolean>, HomeUiState>? = null }
 }

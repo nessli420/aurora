@@ -23,7 +23,12 @@ import kotlinx.coroutines.withContext
 private val dominantColors = LruCache<String, Int>(256)
 
 @Composable
-fun rememberDominantColor(url: String, fallback: Color): State<Color> {
+fun rememberDominantColor(url: String, fallback: Color): State<Color> =
+    animateColorAsState(rememberDominantTarget(url, fallback).value, tween(450), label = "dominant")
+
+// the resolved colour without the tween, so palette-driven schemes change once per cover
+@Composable
+fun rememberDominantTarget(url: String, fallback: Color): State<Color> {
     val context = LocalContext.current
     val resolved = remember { mutableStateOf(url.takeIf { it.isNotBlank() }?.let { dominantColors.get(it) }?.let(::Color) ?: fallback) }
 
@@ -57,7 +62,7 @@ fun rememberDominantColor(url: String, fallback: Color): State<Color> {
         if (color != null) dominantColors.put(url, color.toArgb())
         resolved.value = color ?: fallback
     }
-    return animateColorAsState(resolved.value, tween(450), label = "dominant")
+    return resolved
 }
 
 private fun boost(c: Color): Color {

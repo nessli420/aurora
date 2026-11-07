@@ -19,8 +19,10 @@ import java.util.concurrent.locks.LockSupport
 
 // drum hits found in the decoded audio play on the vibration motor at the moment the speaker sounds them
 class MusicHaptics(context: Context) : MusicHapticsAnalyzer.Sink, AutoCloseable {
-    private val output = vibratorOf(context)?.let(::HapticOutput)
-    private val ring = HapticPcmRing()
+    // lazy so a disabled feature skips the vibrator queries and the 256 KB ring
+    private val output by lazy { vibratorOf(context)?.let(::HapticOutput) }
+    private val ringHolder = lazy { HapticPcmRing() }
+    private val ring by ringHolder
     private val clock = HapticClock()
     private val timeline = HapticTimeline()
     private val analyzer = MusicHapticsAnalyzer(this)
@@ -52,7 +54,7 @@ class MusicHaptics(context: Context) : MusicHapticsAnalyzer.Sink, AutoCloseable 
     fun playing(value: Boolean) = clock.playing(value, System.nanoTime())
 
     fun flush() {
-        ring.flush()
+        if (ringHolder.isInitialized()) ring.flush()
         clock.reset()
     }
 
@@ -73,6 +75,8 @@ class MusicHaptics(context: Context) : MusicHapticsAnalyzer.Sink, AutoCloseable 
             // the analyser and timeline belong to one thread at a time
             previous?.join(STOP_WAIT_MS)
             clock.reset()
+            // allocate here, not on the playback thread
+            ringHolder.value
             worker = Worker().also { it.thread.start() }
         } else {
             worker = null

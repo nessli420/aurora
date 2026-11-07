@@ -417,7 +417,7 @@ private fun ReplayGainScanCard() {
             Text(
                 when {
                     rg.running -> "${rg.done} / ${rg.total} • ${rg.current}"
-                    container.replayGainStore.size > 0 -> appString(R.string.text_tracks_analysed_tap_to_rescan_7fa1f5, (container.replayGainStore.size))
+                    container.replayGainStore.size > 0 -> appString(R.string.text_analyzed_tap_to_scan_new_tracks_5933cd, (container.replayGainStore.size))
                     else -> appString(R.string.text_measure_loudness_ebu_r128_to_level_playback_volume_30f01c)
                 },
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,

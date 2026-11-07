@@ -433,7 +433,9 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
     var sat by remember { mutableFloatStateOf(initialHsv[1]) }
     var bri by remember { mutableFloatStateOf(initialHsv[2]) }
 
-    fun push() = onChange(android.graphics.Color.HSVToColor(floatArrayOf(hue, sat, bri)))
+    // the preview follows every move; only the stored accent is throttled
+    val live = rememberLiveValue(initialArgb) { onChange(it) }
+    fun push() = live.set(android.graphics.Color.HSVToColor(floatArrayOf(hue, sat, bri)))
     val preview = Color(android.graphics.Color.HSVToColor(floatArrayOf(hue, sat, bri)))
 
     Column(Modifier.fillMaxWidth()) {
@@ -441,9 +443,9 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
             Box(Modifier.size(56.dp).clip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, CircleShape))
             Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        SettingsSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f) { hue = it; push() }
-        SettingsSliderRow(appString(R.string.text_saturation_20a32b), "${(sat * 100).roundToInt()}%", sat, 0f..1f) { sat = it; push() }
-        SettingsSliderRow(appString(R.string.text_brightness_e1a2b6), "${(bri * 100).roundToInt()}%", bri, 0f..1f) { bri = it; push() }
+        DirectSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f) { hue = it; push() }
+        DirectSliderRow(appString(R.string.text_saturation_20a32b), "${(sat * 100).roundToInt()}%", sat, 0f..1f) { sat = it; push() }
+        DirectSliderRow(appString(R.string.text_brightness_e1a2b6), "${(bri * 100).roundToInt()}%", bri, 0f..1f) { bri = it; push() }
     }
 }
 

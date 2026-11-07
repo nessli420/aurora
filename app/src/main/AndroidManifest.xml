@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <queries>
         <intent><action android:name="com.aurora.extension.SERVICE" /></intent>
         <intent><action android:name="android.intent.action.TTS_SERVICE" /></intent>
@@ -55,6 +56,12 @@
             android:exported="false"
             android:grantUriPermissions="true" />
 
+        <!-- ml kit starts on first lyric translation, see LyricsTranslator -->
+        <provider
+            android:name="com.google.mlkit.common.internal.MlKitInitProvider"
+            android:authorities="${applicationId}.mlkitinitprovider"
+            tools:node="remove" />
+
         <provider
             android:name="androidx.core.content.FileProvider"
             android:authorities="${applicationId}.updates"
@@ -77,7 +84,7 @@
             android:exported="true"
             android:label="@string/app_name"
             android:launchMode="singleTask"
-            android:configChanges="orientation|screenSize|smallestScreenSize"
+            android:configChanges="orientation|screenSize|smallestScreenSize|uiMode|keyboard|keyboardHidden|navigation"
             android:screenOrientation="portrait"
             android:theme="@style/Theme.Aurora"
             android:windowSoftInputMode="adjustResize">

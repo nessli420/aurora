@@ -107,6 +107,8 @@ fun DetailScreen(
     onEditPlaylist: suspend (String, String) -> Boolean,
     onDeletePlaylist: () -> Unit,
     onLoadMore: () -> Unit = {},
+    // the tracks near the scroll position, for hearts liked on other accounts
+    onVisibleSongs: (List<Song>) -> Unit = {},
     onMix: () -> Unit = {},
     canDownload: Boolean = true,
     isPinned: Boolean = false,
@@ -144,9 +146,11 @@ fun DetailScreen(
     // artists often lack a server image fall back to enriched wiki photo
     val effectiveArt = info.artUrl.ifBlank { artistInfo?.imageUrl.orEmpty() }
     val albumCover = if (itemKind == "album") CoverKey(info.title, info.subtitle, tracks.firstOrNull { it.path.isNotBlank() }?.path.orEmpty()) else null
-    val accent by com.aurora.music.util.rememberDominantColor(effectiveArt, info.accent)
+    val accentTarget by com.aurora.music.util.rememberDominantTarget(effectiveArt, info.accent)
+    // only the header and chips read the tween; the scheme and rows take the target once
+    val accent by androidx.compose.animation.animateColorAsState(accentTarget, androidx.compose.animation.core.tween(450), label = "dominant")
     val baseScheme = MaterialTheme.colorScheme
-    val accentInk = com.aurora.music.ui.theme.readableAccent(accent, baseScheme.background.luminance() < 0.5f)
+    val accentInk = com.aurora.music.ui.theme.readableAccent(accentTarget, baseScheme.background.luminance() < 0.5f)
     com.aurora.music.ui.theme.ProvideContextAccent(accentInk)
     val albumScheme = remember(baseScheme, accentInk) {
         baseScheme.copy(primary = accentInk, onPrimary = if (accentInk.luminance() > 0.5f) Color.Black else Color.White)
@@ -176,6 +180,11 @@ fun DetailScreen(
         }.collect { (last, count) ->
             if (state.canLoadMore && count > 0 && last >= count - 6) onLoadMore()
         }
+    }
+    // header rows only shift the index down, which the window's margin absorbs
+    androidx.compose.runtime.LaunchedEffect(listState, shown) {
+        androidx.compose.runtime.snapshotFlow { listState.firstVisibleItemIndex / com.aurora.music.data.LIKE_BUCKET }
+            .collect { onVisibleSongs(com.aurora.music.data.likeWindow(shown, it)) }
     }
 
     val actionsRow: @Composable (Modifier, Boolean) -> Unit = { rowModifier, wrap ->

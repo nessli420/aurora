@@ -59,7 +59,8 @@ private fun rememberInbox(): InboxState {
     }
     var today by remember { mutableStateOf(LocalDate.now()) }
     LaunchedEffect(Unit) { while (true) { today = LocalDate.now(); delay(60_000) } }
-    val recaps by produceState<List<RecapWindow>?>(null, history, today) {
+    // listening ticks keep the head timestamp and recaps only read timestamps
+    val recaps by produceState<List<RecapWindow>?>(null, history.size, history.firstOrNull()?.timestamp, today) {
         value = withContext(Dispatchers.Default) { ListeningRecaps.available(history, today) }
     }
     return InboxState(recaps.orEmpty(), seen, history, recaps == null) { keys ->

@@ -1,15 +1,18 @@
 package com.aurora.music.data
 
-import com.aurora.music.model.Song
+import android.os.Process
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.util.concurrent.Executors
 import kotlin.math.PI
 import kotlin.math.log10
 import kotlin.math.tan
@@ -25,12 +28,17 @@ class ReplayGainScanner(
     val progress: StateFlow<Progress> = _progress.asStateFlow()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val worker = Executors.newSingleThreadExecutor { task ->
+        Thread({ Process.setThreadPriority(Process.THREAD_PRIORITY_BACKGROUND); task.run() }, "aurora-replaygain")
+    }.asCoroutineDispatcher()
     @Volatile private var job: Job? = null
 
     private companion object {
         const val RG2_REFERENCE_LUFS = -18.0
         const val ABSOLUTE_GATE_LUFS = -70.0
         const val OFFSET = -0.691            // bs.1770 loudness offset
+        const val MAX_ALBUM_TRACKS = 200     // an untagged "album" can hold thousands of tracks
+        const val FLUSH_ALBUMS = 50
     }
 
     fun cancel() { job?.cancel() }
@@ -42,33 +50,46 @@ class ReplayGainScanner(
             val tracks = library.songs.filter { it.path.isNotBlank() }
             _progress.value = Progress(running = true, done = 0, total = tracks.size)
 
-            val albumBlocks = HashMap<String, MutableList<Double>>()
-            val trackGain = HashMap<String, Float>()
-            val pathsByAlbum = HashMap<String, MutableList<String>>()
-            var scanned = 0
+            // album by album so only one album's loudness blocks stay in memory
+            val albums = tracks.groupBy { it.albumId.ifBlank { "album:" + it.album } }.values.flatMap { it.chunked(MAX_ALBUM_TRACKS) }
+            val entries = HashMap<String, RgEntry>()
+            val albumBlocks = ArrayList<Double>()
+            val trackGain = HashMap<String, Float?>()
+            fun closeAlbum() {
+                val albumGain = integrated(albumBlocks)?.let { (RG2_REFERENCE_LUFS - it).toFloat() } ?: 0f
+                for ((p, gain) in trackGain) entries[p] = RgEntry(track = gain ?: albumGain, album = albumGain)
+                albumBlocks.clear(); trackGain.clear()
+            }
+            var done = 0
+            var saved = 0
+            var unsaved = 0
             try {
-                for ((i, song) in tracks.withIndex()) {
+                for (album in albums) {
                     if (!isActive) break
-                    _progress.value = Progress(true, i, tracks.size, song.title)
-                    val blocks = measure(song.path) { isActive }
-                    if (blocks != null && blocks.isNotEmpty()) {
-                        integrated(blocks)?.let { lufs -> trackGain[song.path] = (RG2_REFERENCE_LUFS - lufs).toFloat() }
-                        val key = song.albumId.ifBlank { "album:" + song.album }
-                        albumBlocks.getOrPut(key) { mutableListOf() }.addAll(blocks)
-                        pathsByAlbum.getOrPut(key) { mutableListOf() }.add(song.path)
+                    if (album.all { store.get(it.path) != null }) {
+                        done += album.size
+                        _progress.value = Progress(true, done, tracks.size, album.last().title)
+                        continue
                     }
-                    scanned = i + 1
-                    _progress.value = Progress(true, scanned, tracks.size, song.title)
+                    for (song in album) {
+                        if (!isActive) break
+                        _progress.value = Progress(true, done, tracks.size, song.title)
+                        val blocks = withContext(worker) { measure(song.path) { isActive } }
+                        if (blocks != null && blocks.isNotEmpty()) {
+                            trackGain[song.path] = integrated(blocks)?.let { lufs -> (RG2_REFERENCE_LUFS - lufs).toFloat() }
+                            albumBlocks.addAll(blocks)
+                        }
+                        done++
+                        _progress.value = Progress(true, done, tracks.size, song.title)
+                    }
+                    closeAlbum()
+                    if (++unsaved >= FLUSH_ALBUMS) { store.putAll(entries); saved += entries.size; entries.clear(); unsaved = 0 }
                 }
             } finally {
                 // runs even on cancel so partial results survive
-                val entries = HashMap<String, RgEntry>()
-                for ((key, paths) in pathsByAlbum) {
-                    val albumGain = albumBlocks[key]?.let { integrated(it) }?.let { (RG2_REFERENCE_LUFS - it).toFloat() } ?: 0f
-                    for (p in paths) entries[p] = RgEntry(track = trackGain[p] ?: albumGain, album = albumGain)
-                }
+                closeAlbum()
                 store.putAll(entries)
-                _progress.value = Progress(running = false, done = entries.size, total = tracks.size)
+                _progress.value = Progress(running = false, done = saved + entries.size, total = tracks.size)
             }
             runCatching { library.refresh() }
             onComplete()

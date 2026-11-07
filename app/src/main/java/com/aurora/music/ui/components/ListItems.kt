@@ -45,7 +45,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -96,8 +95,8 @@ fun SongRow(
     val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small
     val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
     val canLike = LocalCanLike.current(song.id)
-    key(song.id, song.playbackSource?.providerId) {
-    TrackSwipeActions(modifier, shape, isLiked, enabled = !menuOpen && !showPlaylists,
+    val itemKey = remember(song.id, song.playbackSource?.providerId) { song.id to song.playbackSource?.providerId }
+    TrackSwipeActions(modifier, shape, isLiked, enabled = !menuOpen && !showPlaylists, itemKey = itemKey,
         onPlayNext = onPlayNext, onQueue = onAddToQueue, onLike = onToggleLike.takeIf { canLike },
         onPlaylists = { showPlaylists = true }) {
     // only tablets need the measured width so phones skip the per-row subcomposition
@@ -265,7 +264,6 @@ fun SongRow(
     if (tablet && showAlbum && song.album.isNotBlank()) {
         androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) { wide(maxWidth >= 680.dp) }
     } else wide(false)
-    }
     }
     if (showPlaylists) TrackPlaylistsSheet(song, onDismiss = { showPlaylists = false })
 }

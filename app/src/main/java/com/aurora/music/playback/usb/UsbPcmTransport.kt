@@ -23,6 +23,8 @@ interface UsbPcmTransport {
 
 internal class UsbPcmQueue(private val transport: UsbPcmTransport, private val encoding: Int, private val stride: Int) {
     private val queue = ArrayBlockingQueue<ByteArray>(8)
+    // written chunks for reuse, room for the queue plus the one being written
+    private val spare = ArrayBlockingQueue<ByteArray>(9)
     private val lock = java.lang.Object()
     private val outstanding = AtomicLong()
     @Volatile private var running = true
@@ -42,6 +44,7 @@ internal class UsbPcmQueue(private val transport: UsbPcmTransport, private val e
                     transport.write(next, encoding)
                     transport.status().error?.let { error(it) }
                     outstanding.addAndGet(-next.size.toLong())
+                    spare.offer(next)
                     writing = false
                 } else if (ending && outstanding.get() == 0L) {
                     writing = true
@@ -61,7 +64,7 @@ internal class UsbPcmQueue(private val transport: UsbPcmTransport, private val e
         if (failure != null || !running || ending || queue.remainingCapacity() == 0) return false
         val size = minOf(input.remaining(), 8192 - 8192 % stride)
         require(size % stride == 0)
-        val bytes = ByteArray(size)
+        val bytes = spare.poll()?.takeIf { it.size == size } ?: ByteArray(size)
         input.duplicate().get(bytes)
         outstanding.addAndGet(size.toLong())
         if (!queue.offer(bytes)) { outstanding.addAndGet(-size.toLong()); return false }
@@ -86,6 +89,7 @@ internal class UsbPcmQueue(private val transport: UsbPcmTransport, private val e
         thread.join(3000)
         check(!thread.isAlive) { "USB output did not stop." }
         queue.clear()
+        spare.clear()
         transport.close()
     }
 }

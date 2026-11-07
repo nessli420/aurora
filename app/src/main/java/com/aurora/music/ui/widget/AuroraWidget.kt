@@ -60,6 +60,8 @@ import com.aurora.music.playback.NowPlaying
 import com.aurora.music.playback.NowPlayingBus
 import com.aurora.music.playback.NowPlayingStore
 import com.aurora.music.playback.PlaybackService
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.glance.color.ColorProvider as DayNight
 
 enum class WidgetLayout { COMPACT, CARD, COVER }
@@ -113,7 +115,7 @@ class AuroraWidget : GlanceAppWidget() {
                 .data(uri).allowHardware(false).size(512).build()
             (context.imageLoader.execute(request).drawable as? BitmapDrawable)?.bitmap
         }.getOrNull()
-        val swatch = bitmap?.let { runCatching { Palette.from(it).generate() }.getOrNull() }
+        val swatch = bitmap?.let { withContext(Dispatchers.Default) { runCatching { Palette.from(it).generate() }.getOrNull() } }
             ?.let { it.darkMutedSwatch ?: it.darkVibrantSwatch ?: it.dominantSwatch }
         return Art(uri, bitmap, swatch?.rgb)
     }

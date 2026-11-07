@@ -3,6 +3,7 @@ package com.aurora.music.data
 import android.content.Context
 import android.os.Process
 import com.aurora.music.model.Song
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.isActive
@@ -29,8 +30,11 @@ class VocalAnalysis(
         if (song.durationSec !in 1..MAX_SECONDS) return null
         val key = keyFor(song)
         synchronized(recent) { recent[key] }?.let { return it }
+        val file = File(dir, "$key.bin")
+        // a cached song must not queue behind a stalled extractor on the worker
+        withContext(Dispatchers.IO) { if (file.exists()) runCatching { VocalActivity.decode(file.readBytes()) }.getOrNull() else null }
+            ?.let { found -> synchronized(recent) { recent[key] = found }; return found }
         return withContext(worker) {
-            val file = File(dir, "$key.bin")
             val cached = if (file.exists()) VocalActivity.decode(file.readBytes()) else null
             val result = cached ?: sourceOf(song)?.let { analyze(it) } ?: return@withContext null
             if (cached == null) runCatching {
@@ -78,8 +82,9 @@ class VocalAnalysis(
     }
 
     private fun trim() {
-        val files = dir.listFiles().orEmpty().sortedByDescending { it.lastModified() }
-        files.drop(MAX_FILES).forEach { it.delete() }
+        val files = dir.listFiles().orEmpty()
+        if (files.size <= MAX_FILES) return
+        files.sortedByDescending { it.lastModified() }.drop(MAX_FILES).forEach { it.delete() }
     }
 
     private companion object {

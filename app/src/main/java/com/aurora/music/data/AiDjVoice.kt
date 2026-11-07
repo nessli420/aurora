@@ -18,6 +18,12 @@ import com.aurora.music.ai.DjVoice
 import com.aurora.music.ai.wavSeconds
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.ui.screens.aidj.aiDjScript
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
@@ -30,7 +36,9 @@ import kotlin.coroutines.resume
 class AiDjSystemVoice(private val context: Context, private val speaker: DjSpeaker, private val spoken: suspend () -> Boolean) : DjVoice {
     private val dir = File(context.cacheDir, "dj-speech")
     private val lock = Mutex()
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var engine: TextToSpeech? = null
+    private var shutdown: Job? = null
 
     override fun script(moment: DjMoment): DjScript = aiDjScript(moment)
 
@@ -39,21 +47,27 @@ class AiDjSystemVoice(private val context: Context, private val speaker: DjSpeak
     override fun clear(keep: String?) { dir.listFiles()?.forEach { if (keep == null || it != fileFor(keep)) it.delete() } }
 
     override suspend fun synthesize(text: String, id: String): DjAudio? = lock.withLock {
-        if (!spoken()) return null
-        dir.mkdirs()
-        val file = fileFor(id)
-        if (speaker.speak(text, AppStrings.context.resources.configuration.locales[0].language, file)) return DjAudio(Uri.fromFile(file).toString(), wavSeconds(file))
-        val tts = engine ?: open()?.also { engine = it } ?: return null
-        val done = suspendCancellableCoroutine { result ->
-            tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
-                override fun onStart(utteranceId: String?) {}
-                override fun onDone(utteranceId: String?) { if (result.isActive) result.resume(true) }
-                @Deprecated("Deprecated in Java")
-                override fun onError(utteranceId: String?) { if (result.isActive) result.resume(false) }
-            })
-            if (tts.synthesizeToFile(text, Bundle(), file, id) != TextToSpeech.SUCCESS && result.isActive) result.resume(false)
+        shutdown?.cancel()
+        try {
+            if (!spoken()) return null
+            dir.mkdirs()
+            val file = fileFor(id)
+            if (speaker.speak(text, AppStrings.context.resources.configuration.locales[0].language, file)) return DjAudio(Uri.fromFile(file).toString(), wavSeconds(file))
+            val tts = engine ?: open()?.also { engine = it } ?: return null
+            val done = suspendCancellableCoroutine { result ->
+                tts.setOnUtteranceProgressListener(object : UtteranceProgressListener() {
+                    override fun onStart(utteranceId: String?) {}
+                    override fun onDone(utteranceId: String?) { if (result.isActive) result.resume(true) }
+                    @Deprecated("Deprecated in Java")
+                    override fun onError(utteranceId: String?) { if (result.isActive) result.resume(false) }
+                })
+                if (tts.synthesizeToFile(text, Bundle(), file, id) != TextToSpeech.SUCCESS && result.isActive) result.resume(false)
+            }
+            if (done && file.length() > 44) DjAudio(Uri.fromFile(file).toString(), wavSeconds(file)) else null
+        } finally {
+            // the binding keeps the tts engine's whole process alive
+            if (engine != null) shutdown = scope.launch { delay(120_000); lock.withLock { engine?.shutdown(); engine = null } }
         }
-        if (done && file.length() > 44) DjAudio(Uri.fromFile(file).toString(), wavSeconds(file)) else null
     }
 
     private suspend fun open(): TextToSpeech? = suspendCancellableCoroutine { result ->

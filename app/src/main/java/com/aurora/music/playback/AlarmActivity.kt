@@ -36,7 +36,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.media3.common.util.UnstableApi
 import com.aurora.music.AuroraApplication
-import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.theme.AuroraTheme
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -61,7 +60,7 @@ class AlarmActivity : ComponentActivity() {
         }
         val container = (application as AuroraApplication).container
         setContent {
-            val uiPrefs by container.settingsStore.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+            val uiPrefs by container.uiPrefs.collectAsStateWithLifecycle()
             AuroraTheme(uiPrefs = uiPrefs) {
                 AlarmDismissScreen(
                     onDismiss = { dismiss(disableDaily = false) },

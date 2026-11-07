@@ -12,7 +12,7 @@ import com.aurora.music.ui.screens.player.USEFUL_OUTPUT_TYPES
 import com.aurora.music.ui.screens.player.outputLabel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
-import okhttp3.OkHttpClient
+import com.aurora.music.data.remote.AuroraHttp
 import okhttp3.Request
 import java.util.concurrent.TimeUnit
 import kotlin.math.ceil
@@ -30,7 +30,7 @@ class AndroidConnectHost(
     private val container = (context.applicationContext as AuroraApplication).container
     private val audio = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
-    private val http by lazy { OkHttpClient.Builder().callTimeout(15, TimeUnit.SECONDS).build() }
+    private val http by lazy { AuroraHttp.base.newBuilder().callTimeout(15, TimeUnit.SECONDS).build() }
     @Volatile private var liked: Pair<String, Boolean>? = null
     private var likeJob: Job? = null
     private var sleepJob: Job? = null
@@ -59,29 +59,28 @@ class AndroidConnectHost(
         val outputs = listOf(ConnectOption("0", com.aurora.music.localization.appString(com.aurora.music.R.string.text_automatic_ac9041))) +
             audio.getDevices(AudioManager.GET_DEVICES_OUTPUTS).filter { it.type in USEFUL_OUTPUT_TYPES }
                 .map { ConnectOption(it.id.toString(), outputLabel(it)) }
+        val streamVolume = audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
         return onMain {
-            val tracks = (0 until player.mediaItemCount).map { index ->
+            val current = player.currentMediaItem?.mediaId.orEmpty()
+            if (current.isNotEmpty() && liked?.first != current) refreshLiked(current)
+            ConnectStatus(
+                playing = player.playWhenReady && player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE,
+                positionMs = player.currentPosition.coerceAtLeast(0), durationMs = player.duration.coerceAtLeast(0),
+                index = player.currentMediaItemIndex.coerceAtLeast(0),
+                shuffle = shuffled(), repeat = player.repeatMode,
+                volume = if (localRoute().id == "usb-direct") -1f else streamVolume,
+                speed = player.playbackParameters.speed, liked = liked?.takeIf { it.first == current }?.second == true,
+                sleepMinutes = if (sleepUntil > System.currentTimeMillis()) ceil((sleepUntil - System.currentTimeMillis()) / 60_000.0).toInt() else 0,
+                sleepEndOfTrack = sleepEndOfTrack,
+                outputs = outputs, output = container.preferredAudioDeviceId.value.toString(), presets = presets,
+                error = player.playerError?.let { "Playback failed on this device." },
+            ).windowedFrom(player.mediaItemCount) { index ->
                 val item = player.getMediaItemAt(index)
                 val metadata = item.mediaMetadata
                 ConnectTrack(item.mediaId, metadata.title?.toString().orEmpty().take(512), metadata.artist?.toString().orEmpty().take(512),
                     metadata.albumTitle?.toString().orEmpty().take(512), metadata.extras?.getInt("aurora.durationSec") ?: 0,
                     metadata.extras?.getString("aurora.albumId").orEmpty(), metadata.extras?.getString("aurora.artistId").orEmpty())
             }
-            val current = player.currentMediaItem?.mediaId.orEmpty()
-            if (current.isNotEmpty() && liked?.first != current) refreshLiked(current)
-            val maxVolume = audio.getStreamMaxVolume(AudioManager.STREAM_MUSIC).coerceAtLeast(1)
-            ConnectStatus(
-                playing = player.playWhenReady && player.playbackState != Player.STATE_ENDED && player.playbackState != Player.STATE_IDLE,
-                positionMs = player.currentPosition.coerceAtLeast(0), durationMs = player.duration.coerceAtLeast(0),
-                index = player.currentMediaItemIndex.coerceAtLeast(0),
-                shuffle = shuffled(), repeat = player.repeatMode,
-                volume = if (localRoute().id == "usb-direct") -1f else audio.getStreamVolume(AudioManager.STREAM_MUSIC).toFloat() / maxVolume,
-                speed = player.playbackParameters.speed, liked = liked?.takeIf { it.first == current }?.second == true,
-                sleepMinutes = if (sleepUntil > System.currentTimeMillis()) ceil((sleepUntil - System.currentTimeMillis()) / 60_000.0).toInt() else 0,
-                sleepEndOfTrack = sleepEndOfTrack,
-                outputs = outputs, output = container.preferredAudioDeviceId.value.toString(), presets = presets,
-                error = player.playerError?.let { "Playback failed on this device." },
-            ).windowed(tracks)
         }
     }
 

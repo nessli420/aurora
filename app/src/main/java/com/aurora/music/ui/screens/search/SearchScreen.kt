@@ -192,9 +192,11 @@ fun SearchScreen(
             ),
         )
 
-        Spacer(Modifier.height(12.dp))
-
         val empty = results.songs.isEmpty() && results.albums.isEmpty() && results.artists.isEmpty() && results.playlists.isEmpty()
+        // the loader below only covers an empty list, so a refresh over old results shows here
+        Box(Modifier.fillMaxWidth().height(12.dp), contentAlignment = Alignment.Center) {
+            if (state.loading && !empty) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp))
+        }
         when {
             state.error != null -> EmptyHint(appString(R.string.text_search_unavailable_c32b9f), state.error)
             state.query.isBlank() ->

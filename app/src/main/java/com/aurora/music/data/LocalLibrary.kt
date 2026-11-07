@@ -8,13 +8,15 @@ import android.media.MediaScannerConnection
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
+import android.os.SystemClock
 import android.provider.MediaStore
+import android.util.AtomicFile
 import androidx.media3.common.util.UnstableApi
 import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Song
-import com.aurora.music.playback.dsd.DsdFileMetadata
 import com.aurora.music.playback.dsd.DsdMetadataReader
+import com.aurora.music.util.AppLog
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.currentCoroutineContext
@@ -24,7 +26,13 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
+import java.io.DataInputStream
+import java.io.DataOutputStream
 import java.io.File
+import java.io.InputStream
+import java.io.OutputStream
 import java.util.UUID
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicInteger
@@ -43,8 +51,12 @@ class LocalLibrary(
     @Volatile private var loaded = false
     private val mutex = Mutex()
     @Volatile private var indexedSignature: List<Long>? = null
-    @androidx.annotation.OptIn(UnstableApi::class)
-    private val dsdCache = ConcurrentHashMap<String, Pair<String, DsdFileMetadata>>()
+    // dsd tags outlive the process so a cold start does not reopen every dsf and dff
+    private val dsdFile by lazy { AtomicFile(File(context.noBackupFilesDir, "dsd_tags.bin")) }
+    private val dsdCache by lazy {
+        ConcurrentHashMap<String, Pair<String, DsdTags>>(runCatching { dsdFile.openRead().use { readDsdTags(it) } }.getOrDefault(emptyMap()))
+    }
+    @Volatile private var dsdChanged = false
 
     @Volatile override var songs: List<Song> = emptyList(); private set
     @Volatile override var albums: List<Album> = emptyList(); private set
@@ -204,15 +216,30 @@ class LocalLibrary(
     }
 
     @androidx.annotation.OptIn(UnstableApi::class)
-    private fun dsdMetadata(song: Song, stamp: String?): DsdFileMetadata? {
+    private fun dsdMetadata(song: Song, stamp: String?): DsdTags? {
         if (stamp != null) dsdCache[song.streamUrl]?.takeIf { it.first == stamp }?.let { return it.second }
-        val read = DsdMetadataReader.read(context, Uri.parse(song.streamUrl))
-        if (stamp != null && read != null) dsdCache[song.streamUrl] = stamp to read
+        val read = DsdMetadataReader.read(context, Uri.parse(song.streamUrl))?.let { file ->
+            val tags = file.metadata
+            DsdTags(tags.title?.toString(), tags.artist?.toString(), tags.albumTitle?.toString(), tags.albumArtist?.toString(),
+                tags.genre?.toString(), tags.trackNumber, tags.discNumber, tags.releaseYear ?: tags.recordingYear,
+                file.durationUs, file.source.bitRate, file.source.channels)
+        }
+        if (stamp != null && read != null) { dsdCache[song.streamUrl] = stamp to read; dsdChanged = true }
         return read
+    }
+
+    private fun saveDsdTags() {
+        val output = runCatching { dsdFile.startWrite() }.getOrNull() ?: return
+        try {
+            writeDsdTags(dsdCache, output)
+            dsdFile.finishWrite(output)
+            dsdChanged = false
+        } catch (_: Exception) { dsdFile.failWrite(output) }
     }
 
     @androidx.annotation.OptIn(UnstableApi::class)
     private suspend fun scan(separators: ArtistSeparators, trackCovers: Boolean) = withContext(Dispatchers.IO) {
+        val started = SystemClock.elapsedRealtime()
         val signature = mediaSignature()
         val (folders, excluded) = foldersProvider()
         val kept = listOf(auroraFolder())
@@ -324,33 +351,35 @@ class LocalLibrary(
             }
         }
         out += visibleDsdFiles(out.mapTo(hashSetOf()) { it.id }, dirs, stamps, keep)
-        dsdCache.keys.retainAll(out.filter { it.suffix == "dsf" || it.suffix == "dff" }.mapTo(HashSet()) { it.streamUrl })
+        val queried = SystemClock.elapsedRealtime()
+        if (dsdCache.keys.retainAll(out.filter { it.suffix == "dsf" || it.suffix == "dff" }.mapTo(HashSet()) { it.streamUrl })) dsdChanged = true
         for (index in out.indices) {
             currentCoroutineContext().ensureActive()
             val song = out[index]
             if (song.suffix != "dsf" && song.suffix != "dff") continue
-            val file = dsdMetadata(song, stamps[song.id]) ?: continue
-            val tags = file.metadata
-            val artist = tags.artist?.toString()?.takeIf(String::isNotBlank) ?: song.artist
-            val album = tags.albumTitle?.toString()?.takeIf(String::isNotBlank) ?: song.album
-            val albumId = if (!tags.albumTitle.isNullOrBlank()) {
+            val tags = dsdMetadata(song, stamps[song.id]) ?: continue
+            val artist = tags.artist?.takeIf(String::isNotBlank) ?: song.artist
+            val album = tags.album?.takeIf(String::isNotBlank) ?: song.album
+            val albumId = if (!tags.album.isNullOrBlank()) {
                 "local-dsd-album-" + UUID.nameUUIDFromBytes("${tags.albumArtist ?: artist}\u0000$album".toByteArray(Charsets.UTF_8))
             } else song.albumId
             out[index] = song.copy(
-                title = tags.title?.toString()?.takeIf(String::isNotBlank) ?: song.title,
+                title = tags.title?.takeIf(String::isNotBlank) ?: song.title,
                 artist = artist,
                 album = album,
                 albumId = albumId,
-                durationSec = (file.durationUs / 1_000_000).toInt(),
-                sampleRateHz = file.source.bitRate,
+                durationSec = (tags.durationUs / 1_000_000).toInt(),
+                sampleRateHz = tags.bitRate,
                 bitDepth = 1,
-                bitrateKbps = file.source.bitRate * file.source.channels / 1000,
-                genre = tags.genre?.toString()?.takeIf(String::isNotBlank) ?: song.genre,
+                bitrateKbps = tags.bitRate * tags.channels / 1000,
+                genre = tags.genre?.takeIf(String::isNotBlank) ?: song.genre,
             )
-            tags.trackNumber?.let { order[song.id] = (tags.discNumber ?: 0) * 10_000 + it }
+            tags.track?.let { order[song.id] = (tags.disc ?: 0) * 10_000 + it }
             albumDateAdded[albumId] = maxOf(albumDateAdded[albumId] ?: 0, song.dateAddedSec)
-            (tags.releaseYear ?: tags.recordingYear)?.takeIf { it > 0 }?.let { albumYear[albumId] = it }
+            tags.year?.takeIf { it > 0 }?.let { albumYear[albumId] = it }
         }
+        if (dsdChanged) saveDsdTags()
+        val tagged = SystemClock.elapsedRealtime()
         val albumFiles = out.filter { it.durationSec >= CUE_MIN_SEC }.mapNotNull { dirs[it.id] }
         val parts = if (albumFiles.isEmpty()) emptyList() else CueSheets.split(out, CueLibrary(context).sheets(albumFiles))
         if (parts.isNotEmpty()) {
@@ -366,7 +395,9 @@ class LocalLibrary(
             }
             wholes.forEach(dirs::remove)
         }
+        val split = SystemClock.elapsedRealtime()
         out += SacdLibrary(context).songs()
+        val imported = SystemClock.elapsedRealtime()
         indexedSignature = signature
         positions = order
         rawSongs = out
@@ -388,6 +419,8 @@ class LocalLibrary(
                 )
             }
             .sortedByDescending { albumDateAdded[it.id] ?: 0L }
+        AppLog.d(TAG, "scanned ${out.size} songs in ${SystemClock.elapsedRealtime() - started} ms: query ${queried - started}, " +
+            "dsd ${tagged - queried}, cue ${split - tagged}, sacd ${imported - split}")
     }
 
     private fun visibleDsdFiles(indexed: Set<String>, dirs: MutableMap<String, String>, stamps: MutableMap<String, String>,
@@ -449,6 +482,7 @@ class LocalLibrary(
         if (AUDIO_ROW.matches(song.streamUrl)) song.copy(artworkUrl = "${song.streamUrl}/albumart") else song
 
     private companion object {
+        const val TAG = "LocalLibrary"
         val ALBUM_ART_BASE: Uri = Uri.parse("content://media/external/audio/albumart")
         // cue parts (#t=) and dsd file rows have no per-row art
         val AUDIO_ROW = Regex("""content://media/external/audio/media/\d+""")
@@ -459,5 +493,43 @@ class LocalLibrary(
         const val CUE_MIN_SEC = 600
         val DSD_SELECTION = "${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ? OR ${MediaStore.MediaColumns.DISPLAY_NAME} LIKE ?"
         val DSD_ARGS = arrayOf("%.dsf", "%.dff")
+    }
+}
+
+internal data class DsdTags(
+    val title: String?, val artist: String?, val album: String?, val albumArtist: String?, val genre: String?,
+    val track: Int?, val disc: Int?, val year: Int?, val durationUs: Long, val bitRate: Int, val channels: Int,
+)
+
+private const val DSD_TAGS_VERSION = 1
+
+internal fun writeDsdTags(entries: Map<String, Pair<String, DsdTags>>, output: OutputStream) {
+    val out = DataOutputStream(BufferedOutputStream(output))
+    fun text(value: String?) { val bytes = value?.toByteArray(); out.writeInt(bytes?.size ?: -1); if (bytes != null) out.write(bytes) }
+    fun number(value: Int?) { out.writeBoolean(value != null); if (value != null) out.writeInt(value) }
+    val rows = entries.toList()
+    out.writeInt(DSD_TAGS_VERSION)
+    out.writeInt(rows.size)
+    for ((url, entry) in rows) {
+        val (stamp, tags) = entry
+        text(url); text(stamp)
+        text(tags.title); text(tags.artist); text(tags.album); text(tags.albumArtist); text(tags.genre)
+        number(tags.track); number(tags.disc); number(tags.year)
+        out.writeLong(tags.durationUs); out.writeInt(tags.bitRate); out.writeInt(tags.channels)
+    }
+    out.flush()
+}
+
+internal fun readDsdTags(input: InputStream): Map<String, Pair<String, DsdTags>> {
+    val data = DataInputStream(BufferedInputStream(input))
+    if (data.readInt() != DSD_TAGS_VERSION) return emptyMap()
+    fun text(): String? = data.readInt().takeIf { it >= 0 }?.let { size -> String(ByteArray(size).also { data.readFully(it) }) }
+    fun number(): Int? = if (data.readBoolean()) data.readInt() else null
+    return HashMap<String, Pair<String, DsdTags>>().apply {
+        repeat(data.readInt()) {
+            val url = text().orEmpty()
+            val stamp = text().orEmpty()
+            put(url, stamp to DsdTags(text(), text(), text(), text(), text(), number(), number(), number(), data.readLong(), data.readInt(), data.readInt()))
+        }
     }
 }

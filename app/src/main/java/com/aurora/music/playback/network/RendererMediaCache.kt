@@ -16,9 +16,12 @@ class RendererMediaCache(context: Context) {
     private val directory = File(context.cacheDir, "renderer-media").apply { mkdirs() }
     private val filesLock = Any()
     private val pending = mutableSetOf<File>()
-    private val client = OkHttpClient.Builder().followRedirects(false).followSslRedirects(false)
-        .proxy(Proxy.NO_PROXY).retryOnConnectionFailure(false)
-        .connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).callTimeout(100, TimeUnit.SECONDS).build()
+    // close() shuts this client down, so it must never derive from the shared one
+    private val clientHolder = lazy {
+        OkHttpClient.Builder().followRedirects(false).followSslRedirects(false)
+            .proxy(Proxy.NO_PROXY).retryOnConnectionFailure(false)
+            .connectTimeout(10, TimeUnit.SECONDS).readTimeout(20, TimeUnit.SECONDS).callTimeout(100, TimeUnit.SECONDS).build()
+    }
 
     @Synchronized
     fun receive(tracks: List<EndpointTrack>, sourceHost: String?, authorized: () -> Boolean = { true }): List<File> {
@@ -42,7 +45,7 @@ class RendererMediaCache(context: Context) {
                 val file = File(directory, "${UUID.randomUUID()}.wav")
                 files += file
                 synchronized(filesLock) { pending += file }
-                val sourceClient = client.newBuilder().dns(object : okhttp3.Dns {
+                val sourceClient = clientHolder.value.newBuilder().dns(object : okhttp3.Dns {
                     override fun lookup(hostname: String): List<InetAddress> {
                         if (hostname != uri.host) throw java.net.UnknownHostException("Unexpected media host.")
                         return listOf(sender)
@@ -93,6 +96,8 @@ class RendererMediaCache(context: Context) {
     }
 
     fun close() {
+        if (!clientHolder.isInitialized()) return
+        val client = clientHolder.value
         client.dispatcher.cancelAll()
         client.connectionPool.evictAll()
         client.dispatcher.executorService.shutdown()

@@ -53,7 +53,7 @@ class SonicStore(context: Context) {
     // vectors load on first radio or analysis use not on every launch
     fun selectAccount(account: String) = synchronized(lock) {
         active = account
-        _count.value = if (accounts.containsKey(account) || legacy(account).exists() || _count.subscriptionCount.value > 0) data(account).size else 0
+        _count.value = if (accounts.containsKey(account) || _count.subscriptionCount.value > 0) data(account).size else 0
     }
     private fun load(account: String) = synchronized(lock) { val size = data(account).size; if (account == active) _count.value = size }
     private fun preload(account: String) {

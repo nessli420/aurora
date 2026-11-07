@@ -63,6 +63,7 @@ object AudioDecoder {
             codec.configure(inFormat, null, null, 0)
             codec.start()
             val info = MediaCodec.BufferInfo()
+            var shorts = ShortArray(0)
             var sawInputEOS = false
             var sawOutputEOS = false
             while (!sawOutputEOS && !isCancelled()) {
@@ -89,14 +90,18 @@ object AudioDecoder {
                             outBuf.position(info.offset)
                             outBuf.limit(info.offset + info.size)
                             outBuf.order(ByteOrder.LITTLE_ENDIAN)
-                            val shorts = if (encoding == android.media.AudioFormat.ENCODING_PCM_FLOAT) {
+                            val n: Int
+                            if (encoding == android.media.AudioFormat.ENCODING_PCM_FLOAT) {
                                 val floats = outBuf.asFloatBuffer()
-                                ShortArray(floats.remaining()) { (floats.get().coerceIn(-1f, 1f) * 32767).toInt().toShort() }
+                                n = floats.remaining()
+                                if (shorts.size < n) shorts = ShortArray(n)
+                                for (k in 0 until n) shorts[k] = (floats.get().coerceIn(-1f, 1f) * 32767).toInt().toShort()
                             } else {
                                 val sb = outBuf.asShortBuffer()
-                                ShortArray(sb.remaining()).also { sb.get(it) }
+                                n = sb.remaining()
+                                if (shorts.size < n) shorts = ShortArray(n)
+                                sb.get(shorts, 0, n)
                             }
-                            val n = shorts.size
                             if (!formatReported) { onFormat.onFormat(sampleRate, channels); formatReported = true }
                             onPcm.onPcm(shorts, n)
                         }

@@ -15,6 +15,8 @@ import javax.crypto.spec.GCMParameterSpec
 /** Saved accounts contain only an opaque reference; browser sessions stay encrypted outside backups. */
 class WebCredentials(context: Context, name: String, private val alias: String) {
     private val directory = File(context.noBackupFilesDir, name)
+    // one keystore decrypt per login; filled under update's lock so a rotated token never reverts
+    private val cache = HashMap<String, String>()
     private fun file(id: String): File {
         require(id.matches(Regex("[0-9a-f-]{36}")))
         return File(directory, id)
@@ -38,16 +40,17 @@ class WebCredentials(context: Context, name: String, private val alias: String) 
             output.write(cipher.iv + cipher.doFinal(session.toByteArray(Charsets.UTF_8)))
             atomic.finishWrite(output)
         } catch (e: Exception) { atomic.failWrite(output); throw e }
+        cache[id] = session
     }
-    fun read(id: String): String = runCatching {
+    @Synchronized fun read(id: String): String = cache[id] ?: runCatching {
         val bytes = AtomicFile(file(id)).readFully()
         require(bytes.size > 28)
         val cipher = Cipher.getInstance("AES/GCM/NoPadding").apply {
             init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, bytes.copyOfRange(0, 12)))
         }
         String(cipher.doFinal(bytes.copyOfRange(12, bytes.size)), Charsets.UTF_8)
-    }.getOrDefault("")
-    fun remove(id: String) { runCatching { AtomicFile(file(id)).delete() } }
+    }.getOrDefault("").also { if (it.isNotEmpty()) cache[id] = it }
+    @Synchronized fun remove(id: String) { cache.remove(id); runCatching { AtomicFile(file(id)).delete() } }
 
     companion object {
         fun youtubeMusic(context: Context) = WebCredentials(context, "youtube-music", "aurora.youtube-music.account")

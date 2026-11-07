@@ -43,7 +43,6 @@ import androidx.glance.appwidget.state.getAppWidgetState
 import androidx.glance.state.PreferencesGlanceStateDefinition
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
-import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.theme.AuroraTheme
 import kotlin.math.roundToInt
 
@@ -63,7 +62,7 @@ class AuroraWidgetConfigActivity : ComponentActivity() {
         val glanceId = GlanceAppWidgetManager(this).getGlanceIdBy(widgetId)
         val container = (application as AuroraApplication).container
         setContent {
-            val uiPrefs by container.settingsStore.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+            val uiPrefs by container.uiPrefs.collectAsStateWithLifecycle()
             val saved by produceState<WidgetStyle?>(null) {
                 value = runCatching { WidgetStyle.of(getAppWidgetState(this@AuroraWidgetConfigActivity, PreferencesGlanceStateDefinition, glanceId)) }
                     .getOrDefault(WidgetStyle())

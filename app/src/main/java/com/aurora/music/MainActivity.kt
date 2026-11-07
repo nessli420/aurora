@@ -20,7 +20,6 @@ import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.WindowLayout
 import com.aurora.music.ui.layout.isLargeDisplay
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.aurora.music.data.UiPrefs
 import com.aurora.music.ui.AuroraApp
 import com.aurora.music.ui.theme.AuroraTheme
 import com.aurora.music.playback.MediaSearchRequest
@@ -46,11 +45,11 @@ class AuroraActivity : AppCompatActivity() {
         } else resources.configuration.smallestScreenWidthDp >= 600
         requestedOrientation = if (largeDisplay) ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         com.aurora.music.localization.AppStrings.useConfiguration(resources.configuration)
-        val container = (application as AuroraApplication).container
         handleAuthRedirect(intent)
         if (savedInstanceState == null) handleMediaSearch(intent)
         setContent {
-            val uiPrefs by container.settingsStore.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+            // first read is here, at first composition, so the container builds while the window comes up
+            val uiPrefs by (application as AuroraApplication).container.uiPrefs.collectAsStateWithLifecycle()
             AuroraTheme(uiPrefs = uiPrefs) {
                 BoxWithConstraints(Modifier.fillMaxSize()) {
                     CompositionLocalProvider(

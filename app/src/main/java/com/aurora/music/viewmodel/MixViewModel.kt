@@ -58,7 +58,7 @@ class MixViewModel(app: Application) : AndroidViewModel(app) {
                 }
             }
         }
-        refreshSaved(); search("")
+        refreshSaved()
         _state.update { it.copy(modelReady = container.stemSeparator.modelReady()) }
     }
     fun dismissMessage() { _state.update { it.copy(message = null) } }

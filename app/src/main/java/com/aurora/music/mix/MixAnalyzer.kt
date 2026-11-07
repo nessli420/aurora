@@ -11,6 +11,7 @@ import kotlinx.coroutines.sync.withLock
 import org.json.JSONArray
 import org.json.JSONObject
 import java.io.File
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.math.*
 
 /** Reads a playable source into bounded waveform/energy bins. No library download or retained audio. */
@@ -19,6 +20,8 @@ class MixAnalyzer(private val context: Context, private val resolve: (String) ->
     // Durable, account-scoped fingerprints are shared by Sonic Discovery and automatic mixes.
     private val directory = File(context.filesDir, "sonic-analysis-v3").apply { mkdirs() }
     private val lock = Mutex() // one decoder/network analysis at a time, leaving playback resources free
+    private val foreground = AtomicInteger()
+    private class Yielded : Exception()
     private fun file(account: String, song: Song) = AtomicFile(File(directory,
         java.security.MessageDigest.getInstance("SHA-256").digest("$account|${song.id}|${song.durationSec}".toByteArray())
             .joinToString("") { "%02x".format(it) } + ".json"))
@@ -29,20 +32,31 @@ class MixAnalyzer(private val context: Context, private val resolve: (String) ->
     private fun read(f: AtomicFile): MixAnalysis? = runCatching {
         val json = JSONObject(String(f.readFully(), Charsets.UTF_8))
         val peaks = json.getJSONArray("peaks")
-        MixAnalysis((0 until peaks.length()).map { peaks.getDouble(it).toFloat() }, json.getDouble("seconds").toFloat(),
+        MixAnalysis(FloatArray(peaks.length()) { peaks.getDouble(it).toFloat() }.asList(), json.getDouble("seconds").toFloat(),
             json.getDouble("bpm").toFloat(), json.getDouble("confidence").toFloat(), json.getDouble("rms").toFloat(),
-            json.getJSONArray("sonic").floats(), json.getJSONArray("energy").floats(),
-            json.optDouble("beatOffset", 0.0).toFloat(), json.optDouble("audibleStart", 0.0).toFloat(),
-            json.getDouble("audibleEnd").toFloat())
+            json.getJSONArray("sonic").floats(), beatOffset = json.optDouble("beatOffset", 0.0).toFloat(),
+            audibleStart = json.optDouble("audibleStart", 0.0).toFloat(), audibleEnd = json.getDouble("audibleEnd").toFloat())
     }.getOrNull()
 
-    suspend fun analyze(account: String, song: Song, onProgress: (Float) -> Unit): MixAnalysis = lock.withLock {
-        withContext(Dispatchers.IO) {
+    // only the scan passes its low-priority dispatcher, and its track gives way to any other caller
+    suspend fun analyze(account: String, song: Song, background: CoroutineDispatcher? = null, onProgress: (Float) -> Unit): MixAnalysis {
+        cached(account, song)?.let { onAnalyzed(account, song.id, it.sonic.toFloatArray()); return it }
+        if (background == null) foreground.incrementAndGet()
+        try { return decode(account, song, background, onProgress) }
+        catch (_: Yielded) {
+            while (foreground.get() > 0) delay(200)
+            return analyze(account, song, background, onProgress)
+        } finally { if (background == null) foreground.decrementAndGet() }
+    }
+
+    private suspend fun decode(account: String, song: Song, background: CoroutineDispatcher?, onProgress: (Float) -> Unit): MixAnalysis = lock.withLock {
+        withContext(background ?: Dispatchers.IO) {
             val cache = file(account, song)
             read(cache)?.let { onAnalyzed(account, song.id, it.sonic.toFloatArray()); return@withContext it }
             val url = song.streamUrl.let { if (it.startsWith("aurora-yt:")) resolve(it).orEmpty() else it }
             require(url.isNotBlank()) { "This song has no playable source. Reconnect to its library and try again." }
             val job = currentCoroutineContext()[Job]!!
+            fun yielding() = background != null && foreground.get() > 0
             val deadline = android.os.SystemClock.elapsedRealtime() + 180_000
             var sr = 44100
             var channels = 2
@@ -81,8 +95,10 @@ class MixAnalyzer(private val context: Context, private val resolve: (String) ->
                 }
                 val percent = ((frames.toDouble() / sr / song.durationSec.coerceAtLeast(1)) * 100).toInt().coerceIn(0, 99)
                 if (percent != lastProgress) { lastProgress = percent; onProgress(percent / 100f) }
-            }, { !job.isActive || peaks.size >= maxBins || android.os.SystemClock.elapsedRealtime() >= deadline }, context)
+            }, { !job.isActive || yielding() || peaks.size >= maxBins || android.os.SystemClock.elapsedRealtime() >= deadline }, context) ||
+                peaks.size >= maxBins
             job.ensureActive()
+            if (!complete && yielding()) throw Yielded()
             check(complete) { "Analysis could not finish this stream. Retry on a stable connection; manual mixing is available." }
             check(samples > sr) { "Not enough decodable audio to analyze." }
             if (binFrames > 0) { peaks.add(binPeak); energy.add(sqrt(binSquare / binFrames).toFloat()) }
@@ -98,13 +114,13 @@ class MixAnalyzer(private val context: Context, private val resolve: (String) ->
             for (i in 1 until energy.size) phases[i % periodBins] += max(0f, energy[i] - energy[i - 1])
             val beatOffset = (phases.indices.maxByOrNull { phases[it] } ?: 0) * binSeconds
             // Persist at 10 waveform points/sec, retaining transient peaks across channels.
-            val waveform = peaks.chunked(5).map { it.maxOrNull() ?: 0f }
+            val waveform = FloatArray((peaks.size + 4) / 5) { c -> (c * 5 until min(peaks.size, c * 5 + 5)).maxOf { peaks[it] } }.asList()
             val result = MixAnalysis(waveform, frames.toFloat() / sr, bpm, confidence,
                 (20 * log10(sqrt(square / samples).coerceAtLeast(1e-8))).toFloat(), sonic.toList(),
-                energy.chunked(5).map { it.average().toFloat() }, beatOffset, firstAudible, lastAudible)
+                beatOffset = beatOffset, audibleStart = firstAudible, audibleEnd = lastAudible)
             val json = JSONObject().put("peaks", JSONArray(waveform)).put("seconds", result.seconds)
                 .put("bpm", bpm).put("confidence", confidence).put("rms", result.rmsDb)
-                .put("sonic", JSONArray(result.sonic)).put("energy", JSONArray(result.energy)).put("beatOffset", beatOffset)
+                .put("sonic", JSONArray(result.sonic)).put("beatOffset", beatOffset)
                 .put("audibleStart", firstAudible).put("audibleEnd", lastAudible)
             val out = cache.startWrite()
             try { out.write(json.toString().toByteArray()); cache.finishWrite(out) }

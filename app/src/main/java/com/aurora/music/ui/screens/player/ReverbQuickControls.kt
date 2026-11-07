@@ -18,10 +18,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -33,8 +30,8 @@ import com.aurora.music.R
 import com.aurora.music.data.ReverbPrefs
 import com.aurora.music.data.ReverbPreset
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.screens.settings.rememberLiveValue
 import java.text.NumberFormat
-import kotlinx.coroutines.launch
 
 internal fun reverbPresetName(id: Int): String = appString(when (id) {
     ReverbPreset.ROOM -> R.string.reverb_preset_room
@@ -54,12 +51,13 @@ internal fun ReverbPresetChips(selected: Int, modifier: Modifier = Modifier, onP
 internal fun ReverbQuickControls(onOpenSettings: () -> Unit) {
     val context = LocalContext.current
     val store = remember { (context.applicationContext as AuroraApplication).container.settingsStore }
-    val prefs by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
-    val scope = rememberCoroutineScope()
-    var dragMix by remember { mutableStateOf<Float?>(null) }
+    val stored by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
+    // the switch goes through the draft too, or the draft would show the old state for up to a second
+    val live = rememberLiveValue(stored) { store.setReverb(it) }
+    val prefs = live.local ?: stored
     val accent = MaterialTheme.colorScheme.secondary
     val concert = prefs.concertPrefs
-    fun save(next: ReverbPrefs) { scope.launch { store.setReverb(next) } }
+    fun save(next: ReverbPrefs) = live.set(next)
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Filled.Waves, null, tint = accent)
@@ -73,12 +71,12 @@ internal fun ReverbQuickControls(onOpenSettings: () -> Unit) {
             }
             Switch(
                 checked = prefs.enabled,
-                onCheckedChange = { on -> scope.launch { store.setReverb(prefs.copy(enabled = on)) } },
+                onCheckedChange = { on -> save(prefs.copy(enabled = on)) },
                 colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onSecondary, checkedTrackColor = accent),
             )
         }
         if (prefs.enabled) {
-            val mix = dragMix ?: if (concert.enabled) concert.amount else prefs.mix
+            val mix = if (concert.enabled) concert.amount else prefs.mix
             ReverbModeChips(concert.enabled, Modifier.padding(top = 16.dp)) { on -> save(prefs.copy(concert = concert.copy(enabled = on))) }
             Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(appString(R.string.reverb_amount), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
@@ -87,8 +85,7 @@ internal fun ReverbQuickControls(onOpenSettings: () -> Unit) {
             }
             Slider(
                 value = mix,
-                onValueChange = { v -> dragMix = v; save(if (concert.enabled) prefs.copy(concert = concert.copy(amount = v)) else prefs.copy(mix = v)) },
-                onValueChangeFinished = { dragMix = null },
+                onValueChange = { v -> save(if (concert.enabled) prefs.copy(concert = concert.copy(amount = v)) else prefs.copy(mix = v)) },
                 colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent),
             )
             if (concert.enabled) Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {

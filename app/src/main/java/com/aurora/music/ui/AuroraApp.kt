@@ -78,6 +78,7 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -140,12 +141,20 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.drop
 import com.aurora.music.model.accent
+
+private const val LIKES_RESUME_INTERVAL_MS = 5 * 60_000L
+
+internal fun likesResumeDue(pulledAt: Long?, now: Long, sessionReady: Boolean?, offline: Boolean): Boolean =
+    sessionReady == true && !offline && pulledAt?.let { now - it < LIKES_RESUME_INTERVAL_MS } != true
 
 @Composable
 fun AuroraApp() {
     val context = LocalContext.current
-    val imeVisible = WindowInsets.ime.asPaddingValues().calculateBottomPadding() > 120.dp
+    val imeInsets = WindowInsets.ime.asPaddingValues()
+    // only the crossing recomposes, not every frame of the keyboard animation
+    val imeVisible by remember(imeInsets) { derivedStateOf { imeInsets.calculateBottomPadding() > 120.dp } }
     val container = (context.applicationContext as AuroraApplication).container
 
     val navController = rememberNavController()
@@ -191,8 +200,8 @@ fun AuroraApp() {
             whatsNewTrying = false
         }
     }
-    val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
-    val savedSessions by container.settingsStore.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
+    val session by container.session.collectAsStateWithLifecycle()
+    val savedSessions by container.savedSessions.collectAsStateWithLifecycle()
     val downloadsMap by container.downloadManager.downloads.collectAsStateWithLifecycle()
     val localMode = session?.type == com.aurora.music.data.ServerType.LOCAL
     val localAppearance by container.localProfileAppearance.collectAsStateWithLifecycle()
@@ -200,14 +209,14 @@ fun AuroraApp() {
     val serverTagEditing = session?.let { container.repository.supportsServerTagEdit } ?: false
     // pins scoped to the active connection
     val currentServer = session?.server ?: ""
-    val allPins by container.settingsStore.pins.collectAsStateWithLifecycle(initialValue = emptyList())
+    val allPins by container.pins.collectAsStateWithLifecycle()
     val pins = remember(allPins, currentServer) { allPins.filter { it.serverId == currentServer } }
-    val gesturePrefs by container.settingsStore.gesturePrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.GesturePrefs())
+    val gesturePrefs by container.gesturePrefs.collectAsStateWithLifecycle()
     val offlineMode by container.offline.collectAsStateWithLifecycle()
     val downloadAccountEpoch by container.accountEpoch.collectAsStateWithLifecycle()
     val downloadLibraryEpoch by container.libraryReload.collectAsStateWithLifecycle()
-    val downloadedIds = remember(downloadsMap, session, sessionReady, offlineMode, downloadAccountEpoch, downloadLibraryEpoch) {
-        container.repository.downloadedIds()
+    val downloadedIds by androidx.compose.runtime.produceState(emptySet<String>(), downloadsMap, session, sessionReady, offlineMode, downloadAccountEpoch, downloadLibraryEpoch) {
+        value = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.Default) { container.repository.downloadedIds() }
     }
 
     // only the count lives at the root; per-chunk progress recomposes just the banner
@@ -246,12 +255,25 @@ fun AuroraApp() {
         if (container.repository.removeDownload(it)) confirm(appString(R.string.text_removed_download_8ad8f9))
     }
 
-    // re-pull likes on foreground so stars from other devices show up
+    // stars from other devices re-pull on foreground at most every 5 min, never offline or before sign-in
+    var likesPulledAt by remember { mutableStateOf<Long?>(null) }
+    fun pullLikes(restart: Boolean = false) { likesPulledAt = android.os.SystemClock.elapsedRealtime(); playerVM.refreshLikes(restart) }
+    // the player pulls on sign-in itself, so that counts as the latest pull
+    androidx.compose.runtime.LaunchedEffect(sessionReady) {
+        if (sessionReady == true && !container.offline.value) likesPulledAt = android.os.SystemClock.elapsedRealtime()
+    }
+    // a unified or merge toggle renames every id, so its hearts can't wait for the window
+    androidx.compose.runtime.LaunchedEffect(container) {
+        container.libraryReload.drop(1).collect {
+            likesPulledAt = null
+            if (container.sessionReady.value == true && !container.offline.value) pullLikes(restart = true)
+        }
+    }
     val lifecycleOwner = androidx.lifecycle.compose.LocalLifecycleOwner.current
     androidx.compose.runtime.DisposableEffect(lifecycleOwner) {
         val observer = androidx.lifecycle.LifecycleEventObserver { _, event ->
             if (event == androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
-                playerVM.refreshLikes()
+                if (likesResumeDue(likesPulledAt, android.os.SystemClock.elapsedRealtime(), container.sessionReady.value, container.offline.value)) pullLikes()
                 container.networkOutput.restoreReceiver()
             }
         }
@@ -323,7 +345,7 @@ fun AuroraApp() {
     val sidePane = sidePaneName?.let { runCatching { PlayerPane.valueOf(it) }.getOrNull() }?.takeIf { it in playerPanes }
     val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack)
     val uiPrefs = com.aurora.music.ui.theme.LocalUiPrefs.current
-    val simpleMode by container.settingsStore.simpleMode.collectAsStateWithLifecycle(initialValue = false)
+    val simpleMode by container.simpleMode.collectAsStateWithLifecycle()
     val navLayout = remember(uiPrefs.navLayout, simpleMode, exploreAvailable) {
         com.aurora.music.navigation.NavMenu.parse(uiPrefs.navLayout).visible(simpleMode, discovery = exploreAvailable)
     }
@@ -363,8 +385,9 @@ fun AuroraApp() {
     }
 
     val mixVM: com.aurora.music.viewmodel.MixViewModel = viewModel(key = "mix-${session?.server}-${session?.username}")
-    val mixUi by mixVM.state.collectAsStateWithLifecycle()
-    val mixPlayback by mixVM.playback.collectAsStateWithLifecycle()
+    // only the message and error reach the root; mix playback publishes every frame
+    val mixMessage by remember(mixVM) { mixVM.state.map { it.message }.distinctUntilChanged() }.collectAsStateWithLifecycle(initialValue = null)
+    val mixError by remember(mixVM) { mixVM.playback.map { it.error }.distinctUntilChanged() }.collectAsStateWithLifecycle(initialValue = null)
     androidx.compose.runtime.LaunchedEffect(mixRequest?.token) {
         mixRequest?.let { request ->
             mixVM.mixCollection(request.kind, request.id, request.name, playInPlayer = true) {
@@ -373,11 +396,11 @@ fun AuroraApp() {
             mixRequest = null
         }
     }
-    androidx.compose.runtime.LaunchedEffect(mixUi.message, showMix) {
-        if (!showMix) mixUi.message?.let { confirm(it); mixVM.dismissMessage() }
+    androidx.compose.runtime.LaunchedEffect(mixMessage, showMix) {
+        if (!showMix) mixMessage?.let { confirm(it); mixVM.dismissMessage() }
     }
-    androidx.compose.runtime.LaunchedEffect(mixPlayback.error) {
-        if (!showMix) mixPlayback.error?.let { confirm(it) }
+    androidx.compose.runtime.LaunchedEffect(mixError) {
+        if (!showMix) mixError?.let { confirm(it) }
     }
 
     val playerColors = rememberPlayerColorScheme(playerState.current.artworkUrl, playerState.current.accent)
@@ -614,7 +637,7 @@ fun AuroraApp() {
             val detailState by detailVM.state.collectAsStateWithLifecycle()
             // resolve liked state for visible tracks so hearts show beyond page 1
             androidx.compose.runtime.LaunchedEffect(detailState.data?.tracks?.size) {
-                detailState.data?.tracks?.let { ts -> playerVM.checkLiked(ts) }
+                detailState.data?.tracks?.let { ts -> playerVM.checkLikedList(ts) }
             }
             DetailScreen(
                 contentPadding = padding,
@@ -673,6 +696,7 @@ fun AuroraApp() {
                     }
                 },
                 onLoadMore = { detailVM.loadMore() },
+                onVisibleSongs = playerVM::checkVisibleLiked,
                 canDownload = !localMode,
                 isPinned = pins.any { it.id == id && it.kind == kind },
                 onTogglePin = {
@@ -1131,7 +1155,6 @@ fun AuroraApp() {
                             avatarUrl = profileAppearance.avatarUrl,
                             onOpenDrawer = { openDrawer() },
                             onOpenSettings = { navController.navigate(Routes.SETTINGS) },
-                            onSettingsBounds = {},
                             onOpenDetail = { kind, id -> openDetail(kind, id) },
                             onPlayAlbum = { playAlbum(it) },
                             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
@@ -1146,7 +1169,7 @@ fun AuroraApp() {
                         val searchVM: SearchViewModel = viewModel(viewModelStoreOwner = activityOwner)
                         val searchState by searchVM.state.collectAsStateWithLifecycle()
                         val recentSearches by searchVM.recentSearches.collectAsStateWithLifecycle()
-                        androidx.compose.runtime.LaunchedEffect(searchState.results.songs.size) {
+                        androidx.compose.runtime.LaunchedEffect(searchState.results.songs) {
                             playerVM.checkLiked(searchState.results.songs)
                         }
                         SearchScreen(
@@ -1178,7 +1201,7 @@ fun AuroraApp() {
                         val libraryVM: LibraryViewModel = viewModel(viewModelStoreOwner = activityOwner)
                         val libraryState by libraryVM.state.collectAsStateWithLifecycle()
                         androidx.compose.runtime.LaunchedEffect(libraryState.songs.size) {
-                            playerVM.checkLiked(libraryState.songs)
+                            playerVM.checkLikedList(libraryState.songs)
                         }
                         // m3u export staged here written once the user picks a file
                         var pendingM3u by remember { mutableStateOf<String?>(null) }
@@ -1285,6 +1308,7 @@ fun AuroraApp() {
                                         if (idx >= 0) playerVM.playAll(all, idx) else playerVM.playAll(listOf(song), 0)
                                     }
                                 },
+                                onVisibleSongs = playerVM::checkVisibleLiked,
                                 selectedItem = if (split) librarySelection else null,
                             )
                             }
@@ -1435,7 +1459,7 @@ fun AuroraApp() {
                             if (twoPane && simpleMode && paneRoute in advanced) open(Routes.SETTINGS_PLAYBACK)
                         }
                         androidx.compose.runtime.LaunchedEffect(twoPane) {
-                            if (!twoPane && paneTouched && currentRoute == Routes.SETTINGS) {
+                            if (!twoPane && paneTouched && navController.currentDestination?.route == Routes.SETTINGS) {
                                 paneTouched = false
                                 navController.navigate(paneRoute)
                             }

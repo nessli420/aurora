@@ -17,6 +17,7 @@ import androidx.media3.datasource.cache.ContentMetadataMutations
 import androidx.media3.datasource.cache.SimpleCache
 import com.aurora.music.data.PlaybackSourceIdentity
 import com.aurora.music.data.SettingsStore
+import com.aurora.music.data.sha256Hex
 import com.aurora.music.data.rules.RuleSource
 import com.aurora.music.model.Song
 import com.google.gson.Gson
@@ -33,7 +34,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.io.File
 import java.io.IOException
-import java.security.MessageDigest
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -65,7 +65,7 @@ class AudioCache(context: Context, private val settings: SettingsStore?,
                 evictor.resize(storage, prefs.limitBytes)
                 refresh()
                 launch {
-                    for (event in updates) { delay(250); refresh() }
+                    for (event in updates) { delay(2_000); refresh() }
                 }
                 settings?.audioCachePrefs?.collect { configure(it) }
             } catch (_: Exception) { mutableStatus.value = AudioCacheStatus(failed = true) }
@@ -91,7 +91,7 @@ class AudioCache(context: Context, private val settings: SettingsStore?,
         pending[key] = CachedTrack.from(item)
         // Queue rebuilding can register many tracks; only opened tracks need persistent metadata.
         if (pending.size > 4096) pending.keys.firstOrNull { it != key }?.let(pending::remove)
-        val cached = if (offline()) mutableSongs.value.firstOrNull { it.streamUrl == "$SCHEME://$key" } else null
+        val cached = if (offline()) "$SCHEME://$key".let { url -> mutableSongs.value.firstOrNull { it.streamUrl == url } } else null
         return item.buildUpon().setCustomCacheKey(key).apply { if (cached != null) setUri(cached.streamUrl) }.build()
     }
 
@@ -229,8 +229,7 @@ class AudioCache(context: Context, private val settings: SettingsStore?,
         const val SCHEME = "aurora-cache"
         private const val TRACK_METADATA = "custom_aurora_track_v1"
         private const val FREE_SPACE_RESERVE = 64 * 1024 * 1024L
-        internal fun keyFor(uri: String, provider: String): String = MessageDigest.getInstance("SHA-256")
-            .digest("$provider\u0000$uri".toByteArray()).joinToString("") { "%02x".format(it) }
+        internal fun keyFor(uri: String, provider: String): String = sha256Hex("$provider\u0000$uri")
     }
 }
 

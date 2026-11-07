@@ -17,7 +17,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -41,15 +40,16 @@ import com.aurora.music.ui.screens.player.ReverbPresetChips
 import java.text.NumberFormat
 import kotlin.math.exp
 import kotlin.math.ln
-import kotlinx.coroutines.launch
 
 @Composable
 fun ReverbSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val store = (LocalContext.current.applicationContext as AuroraApplication).container.settingsStore
-    val prefs by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
-    val scope = rememberCoroutineScope()
+    val stored by store.reverbPrefs.collectAsStateWithLifecycle(initialValue = ReverbPrefs())
+    // every control edits one draft so drags reach datastore at most every LIVE_WRITE_MS and build on each other
+    val live = rememberLiveValue(stored) { store.setReverb(it) }
+    val prefs = live.local ?: stored
     val percent = remember { NumberFormat.getPercentInstance() }
-    fun save(next: ReverbPrefs) { scope.launch { store.setReverb(next) } }
+    fun save(next: ReverbPrefs) = live.set(next)
     fun shape(edit: (ReverbPrefs) -> ReverbPrefs) = save(edit(prefs).copy(preset = -1))
     val concert = prefs.concertPrefs
     val impulses by store.impulseLibrary.collectAsStateWithLifecycle(initialValue = emptyList())

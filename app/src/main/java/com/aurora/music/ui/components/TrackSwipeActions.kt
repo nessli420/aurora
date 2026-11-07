@@ -53,6 +53,7 @@ internal fun TrackSwipeActions(
     shape: Shape,
     liked: Boolean,
     enabled: Boolean,
+    itemKey: Any?,
     onPlayNext: (() -> Unit)?,
     onQueue: (() -> Unit)?,
     onLike: (() -> Unit)?,
@@ -62,9 +63,11 @@ internal fun TrackSwipeActions(
     val scope = rememberCoroutineScope()
     val density = LocalDensity.current
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
-    var width by remember { mutableIntStateOf(0) }
-    var offset by remember { mutableFloatStateOf(0f) }
-    var returning by remember { mutableStateOf(false) }
+    // lazy slots keep the row when the song under it changes, so only the swipe state is per song
+    var width by remember(itemKey) { mutableIntStateOf(0) }
+    var offset by remember(itemKey) { mutableFloatStateOf(0f) }
+    var returning by remember(itemKey) { mutableStateOf(false) }
+    val currentKey by rememberUpdatedState(itemKey)
     val shortDistance = minOf(with(density) { 72.dp.toPx() }, width * .22f).coerceAtLeast(1f)
     val longDistance = minOf(with(density) { 180.dp.toPx() }, width * .55f).coerceAtLeast(shortDistance + 1f)
     val selected = trackSwipeAction(offset, shortDistance, longDistance, onLike != null)
@@ -82,7 +85,7 @@ internal fun TrackSwipeActions(
     val colors = MaterialTheme.colorScheme
 
     // the width is only captured once a drag starts so rows don't compose twice on first layout
-    Box(modifier.fillMaxWidth().clip(shape).pointerInput(enabled) {
+    Box(modifier.fillMaxWidth().clip(shape).pointerInput(enabled, itemKey) {
         if (!enabled) return@pointerInput
         awaitEachGesture {
             val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
@@ -125,7 +128,8 @@ internal fun TrackSwipeActions(
                         try {
                             // Return the row before opening a modal or removing a liked-list item.
                             Animatable(offset).animateTo(0f, spring(dampingRatio = .9f, stiffness = 550f)) { offset = value }
-                            if (chosen != TrackSwipeAction.NONE) commit(chosen)
+                            // the list moved under the spring, so the action would hit another song
+                            if (chosen != TrackSwipeAction.NONE && itemKey == currentKey) commit(chosen)
                         } finally { offset = 0f; returning = false }
                     }
                 }

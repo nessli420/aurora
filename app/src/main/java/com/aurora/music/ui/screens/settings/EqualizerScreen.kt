@@ -573,8 +573,6 @@ private fun LazyListScope.systemEqSection(
     }
 }
 
-private const val LIVE_WRITE_MS = 120L
-
 // slider drags land in a conflated draft so datastore writes never overlap or drop edits
 private class EqDraft(private val store: SettingsStore) {
     val graphic = MutableStateFlow<Pair<Int, List<Float>>?>(null)
@@ -596,37 +594,6 @@ private class EqDraft(private val store: SettingsStore) {
             }
         }
     }
-}
-
-// drags render locally and reach datastore at most every LIVE_WRITE_MS since the engine only hears stored values
-private class LiveValue<T : Any> {
-    var local by mutableStateOf<T?>(null)
-    val pending = MutableStateFlow<T?>(null)
-    var write: suspend (T) -> Unit = {}
-
-    fun set(v: T) { local = v; pending.value = v }
-
-    suspend fun run() {
-        try {
-            pending.collect { v -> if (v != null) { write(v); pending.compareAndSet(v, null); delay(LIVE_WRITE_MS) } }
-        } finally {
-            pending.value?.let { v -> withContext(NonCancellable) { write(v) } }
-        }
-    }
-}
-
-@Composable
-private fun <T : Any> rememberLiveValue(stored: T, write: suspend (T) -> Unit): LiveValue<T> {
-    val live = remember { LiveValue<T>() }
-    live.write = write
-    LaunchedEffect(live) { live.run() }
-    val local = live.local
-    LaunchedEffect(stored, local) {
-        if (local == null) return@LaunchedEffect
-        if (local != stored) delay(1_000)
-        live.local = null
-    }
-    return live
 }
 
 private fun LazyListScope.customDspSection(

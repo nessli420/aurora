@@ -10,47 +10,15 @@ import kotlin.math.round
 import kotlin.math.sqrt
 
 object SonicFeatures {
-    // bump when algorithm/layout changes so stale vectors are re-analyzed
-    const val VERSION = 2
-
     private const val FFT_SIZE = 2048
     private const val HOP = 2048              // no overlap ~4x fewer ffts than 50% overlap
     private const val N_MELS = 40
     private const val N_MFCC = 13
-    private const val MAX_SECONDS = 30
     private const val MIN_BPM = 60.0
     private const val MAX_BPM = 180.0
 
     private const val SCALARS = N_MFCC + 5 + 1
     const val DIMS = SCALARS * 2 + 12 + 1
-
-    fun analyze(path: String, isCancelled: () -> Boolean = { false }): FloatArray? {
-        var sr = 0
-        var ch = 1
-        var mono: FloatArray? = null
-        var n = 0
-
-        AudioDecoder.decode(
-            path,
-            { s, c -> sr = s; ch = max(1, c); mono = FloatArray(MAX_SECONDS * s) },
-            { pcm, len ->
-                val m = mono
-                if (m != null) {
-                    var i = 0
-                    while (i + ch <= len && n < m.size) {
-                        var sum = 0f; var k = 0
-                        while (k < ch) { sum += pcm[i + k] / 32768f; k++ }
-                        m[n++] = sum / ch
-                        i += ch
-                    }
-                }
-            },
-            { isCancelled() || (mono != null && n >= mono!!.size) },
-        )
-
-        val samples = mono ?: return null
-        return analyzeSamples(samples, n, sr, isCancelled)
-    }
 
     /** Shared by streaming analysis: compute Sonic's fingerprint without decoding a second time. */
     fun analyzeSamples(samples: FloatArray, n: Int, sr: Int, isCancelled: () -> Boolean = { false }): FloatArray? {

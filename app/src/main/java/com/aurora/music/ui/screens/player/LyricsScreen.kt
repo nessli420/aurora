@@ -21,7 +21,6 @@ import androidx.compose.runtime.*
 import kotlinx.coroutines.flow.collectLatest
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.blur
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.geometry.Offset
@@ -63,6 +62,7 @@ import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.formatTime
+import com.aurora.music.ui.theme.useDarkTheme
 import com.aurora.music.viewmodel.PlayerUiState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -103,16 +103,16 @@ internal fun LyricsScreen(
     val bars = remember(view) {
         (view.context as? android.app.Activity)?.window?.let { WindowCompat.getInsetsController(it, view) }
     }
+    // the mode can flip while open since uimode doesn't recreate the activity
+    val appDark by rememberUpdatedState(com.aurora.music.ui.theme.LocalUiPrefs.current.useDarkTheme())
     DisposableEffect(view) {
         val originalInsets = ViewCompat.getRootWindowInsets(view)
         val statusVisible = originalInsets?.isVisible(WindowInsetsCompat.Type.statusBars()) != false
         val navigationVisible = originalInsets?.isVisible(WindowInsetsCompat.Type.navigationBars()) != false
         val originalBehavior = bars?.systemBarsBehavior
-        val lightStatus = bars?.isAppearanceLightStatusBars
-        val lightNavigation = bars?.isAppearanceLightNavigationBars
         onDispose {
-            if (lightStatus != null) bars.isAppearanceLightStatusBars = lightStatus
-            if (lightNavigation != null) bars.isAppearanceLightNavigationBars = lightNavigation
+            bars?.isAppearanceLightStatusBars = !appDark
+            bars?.isAppearanceLightNavigationBars = !appDark
             if (originalBehavior != null) bars.systemBarsBehavior = originalBehavior
             if (statusVisible) bars?.show(WindowInsetsCompat.Type.statusBars()) else bars?.hide(WindowInsetsCompat.Type.statusBars())
             if (navigationVisible) bars?.show(WindowInsetsCompat.Type.navigationBars()) else bars?.hide(WindowInsetsCompat.Type.navigationBars())
@@ -414,7 +414,11 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
     onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit, compact: Boolean = false) {
     val mode = com.aurora.music.ui.theme.LocalUiPrefs.current.lyricsSync
     val vocals = rememberVocals(song, source, mode)
-    val estimate = remember(source, mode) { if (mode == LyricsSync.LINE) source else source.withWordTiming() }
+    // off the main thread so a cached fetch doesn't put the timing pass in the slide-in
+    val estimate by produceState(source, source, mode) {
+        value = if (mode == LyricsSync.LINE) source
+            else withContext(Dispatchers.Default) { runCatching { source.withWordTiming() }.getOrDefault(source) }
+    }
     // the vocal fit runs off the main thread; the estimate shows meanwhile
     val heard by produceState<Triple<Lyrics, VocalActivity, Lyrics>?>(null, source, vocals, mode) {
         value = null
@@ -497,18 +501,25 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                         if (karaokeOn) line.charFill(clock.longValue).map { (it * FILL_STEPS).roundToInt() / FILL_STEPS } else null
                     }
                 }
-                val text = fill?.let { remember(line, it, alpha) { karaoke(line.displayText, it, alpha) } }
+                val text = fill?.let { remember(line, it) { karaoke(line.displayText, it) } }
                     ?: AnnotatedString(line.displayText.ifBlank { "•••" })
                 val meaning = translated?.getOrNull(index)
+                // fades live in the layer so a line change doesn't recompose every visible line per frame
                 Column(Modifier.fillMaxWidth().graphicsLayer {
                     scaleX = scale; scaleY = scale; transformOrigin = TransformOrigin(0f, .5f)
-                }.blur(soften.dp).semantics(mergeDescendants = true) {
+                    this.alpha = alpha
+                    val r = soften.dp.toPx()
+                    renderEffect = if (soften > .5f) BlurEffect(r, r, TileMode.Clamp) else null
+                    clip = renderEffect != null
+                    // modulate keeps unblurred dim lines off an offscreen buffer
+                    compositingStrategy = if (renderEffect == null) CompositingStrategy.ModulateAlpha else CompositingStrategy.Auto
+                }.semantics(mergeDescendants = true) {
                     selected = active
                     if (seekable) onClick { seekLine(); true }
                 }) {
                     Text(text,
                         onTextLayout = { textLayout = it },
-                        color = Color.White.copy(alpha = alpha), fontSize = if (compact) 22.sp else 30.sp,
+                        color = Color.White, fontSize = if (compact) 22.sp else 30.sp,
                         lineHeight = if (compact) 29.sp else 38.sp,
                         fontWeight = FontWeight.Bold, letterSpacing = (-.5).sp,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).pointerInput(seekable) {
@@ -523,7 +534,7 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                         },
                     )
                     if (meaning != null) Text(meaning,
-                        color = Color.White.copy(alpha = alpha * .6f), fontSize = if (compact) 14.sp else 17.sp,
+                        color = Color.White.copy(alpha = .6f), fontSize = if (compact) 14.sp else 17.sp,
                         lineHeight = if (compact) 19.sp else 23.sp, fontWeight = FontWeight.Medium,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp).pointerInput(seekable) {
                             detectTapGestures { if (seekable) seekLine() else backgroundTap() }
@@ -575,7 +586,7 @@ private fun rememberVocals(song: Song, lyrics: Lyrics, mode: Int): VocalActivity
     return vocals
 }
 
-// extrapolates between the 200ms player ticks so the word wipe moves every frame
+// extrapolates between the 200ms player ticks at about 30 Hz, plenty for the soft word wipe
 @Composable
 private fun rememberLyricsClock(position: State<Float>, playing: Boolean): MutableLongState {
     val clock = remember { mutableLongStateOf((androidx.compose.runtime.snapshots.Snapshot.withoutReadObservation { position.value } * 1000).toLong()) }
@@ -587,7 +598,10 @@ private fun rememberLyricsClock(position: State<Float>, playing: Boolean): Mutab
             clock.longValue = base
             if (!playing) return@collectLatest
             val start = withFrameMillis { it }
-            while (true) withFrameMillis { clock.longValue = base + (it - start) }
+            while (true) {
+                withFrameMillis { clock.longValue = base + (it - start) }
+                delay(25)
+            }
         }
     }
     return clock
@@ -595,13 +609,13 @@ private fun rememberLyricsClock(position: State<Float>, playing: Boolean): Mutab
 
 private const val FILL_STEPS = 4f
 
-private fun karaoke(text: String, fill: List<Float>, alpha: Float): AnnotatedString = buildAnnotatedString {
+private fun karaoke(text: String, fill: List<Float>): AnnotatedString = buildAnnotatedString {
     append(text)
     var i = 0
     while (i < text.length) {
         var j = i + 1
         while (j < text.length && fill[j] == fill[i]) j++
-        addStyle(SpanStyle(color = Color.White.copy(alpha = alpha * (.4f + .6f * fill[i]))), i, j)
+        addStyle(SpanStyle(color = Color.White.copy(alpha = .4f + .6f * fill[i])), i, j)
         i = j
     }
 }

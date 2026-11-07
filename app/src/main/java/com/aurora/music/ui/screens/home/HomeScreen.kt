@@ -39,16 +39,15 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.boundsInRoot
-import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.HomeData
 import com.aurora.music.data.HomeSection
+import com.aurora.music.data.starredQueue
 import com.aurora.music.model.Album
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.AlbumCard
@@ -71,7 +70,6 @@ fun HomeScreen(
     avatarUrl: String = "",
     onOpenDrawer: () -> Unit,
     onOpenSettings: () -> Unit,
-    onSettingsBounds: (Rect) -> Unit = {},
     onOpenDetail: (String, String) -> Unit,
     onPlayAlbum: (String) -> Unit,
     onPlayAll: (List<Song>, Int) -> Unit,
@@ -130,13 +128,11 @@ fun HomeScreen(
                 }
                 com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenNotifications)
                 Spacer(Modifier.width(8.dp))
-                Box(Modifier.onGloballyPositioned { onSettingsBounds(it.boundsInRoot()) }) {
-                    IconPill(Icons.Outlined.Settings, appString(R.string.text_settings_c7f73b), onClick = onOpenSettings)
-                }
+                IconPill(Icons.Outlined.Settings, appString(R.string.text_settings_c7f73b), onClick = onOpenSettings)
             }
         }
 
-        if (state.loading && data.newReleases.isEmpty()) {
+        if (state.loading && data == HomeData()) {
             item {
                 Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) {
                     com.aurora.music.ui.components.LottieLoader(modifier = Modifier.size(80.dp))
@@ -265,7 +261,7 @@ fun HomeScreen(
                             .fillMaxWidth()
                             .clip(RoundedCornerShape(20.dp))
                             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
-                            .clickable { onPlayAll(data.starred, 0) }
+                            .clickable { starredQueue(state.allStarred, data.starred, featured).let { (songs, at) -> onPlayAll(songs, at) } }
                             .padding(16.dp * favouriteScale),
                     ) {
                         Column {

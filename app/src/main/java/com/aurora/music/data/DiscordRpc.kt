@@ -1,6 +1,7 @@
 package com.aurora.music.data
 
 import android.util.Log
+import com.aurora.music.data.remote.AuroraHttp
 import com.aurora.music.data.remote.DiscordGateway
 import com.aurora.music.data.remote.ImgurUploader
 import com.aurora.music.model.Song
@@ -13,7 +14,6 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.Dispatchers
 import androidx.core.graphics.drawable.toBitmap
 import okhttp3.MediaType.Companion.toMediaType
-import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONArray
@@ -25,12 +25,14 @@ class DiscordRpc(
     private val store: SettingsStore,
     private val scope: CoroutineScope,
 ) {
-    private val imgur = ImgurUploader()
-    private val http = OkHttpClient()
-    private val gateway = DiscordGateway(
-        onUsername = { name -> if (token.isNotBlank()) scope.launch { store.saveDiscord(token, name) } },
-        onConnected = { },
-    )
+    private val imgur by lazy { ImgurUploader() }
+    private val http get() = AuroraHttp.base
+    private val gateway by lazy {
+        DiscordGateway(
+            onUsername = { name -> if (token.isNotBlank()) scope.launch { store.saveDiscord(token, name) } },
+            onConnected = { },
+        )
+    }
 
     @Volatile private var token = ""
     @Volatile private var enabled = true
@@ -39,7 +41,7 @@ class DiscordRpc(
     @Volatile private var connectedToken: String? = null
     @Volatile private var showAlbum = true
     @Volatile private var activityName = "aurora"
-    private val loader = coil.Coil.imageLoader(context)
+    private val loader by lazy { coil.Coil.imageLoader(context) }
     private val inFlight = ConcurrentHashMap.newKeySet<String>()
     private val failedImages = ConcurrentHashMap<String, Long>()
     private var positionAt = 0L

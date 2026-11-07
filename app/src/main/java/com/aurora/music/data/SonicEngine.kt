@@ -1,22 +1,26 @@
 package com.aurora.music.data
 
-import android.net.Uri
+import android.content.Context
+import android.os.BatteryManager
+import android.os.Build
+import android.os.PowerManager
 import com.aurora.music.model.Song
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.coroutineScope
-import kotlinx.coroutines.isActive
+import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.async
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
-import java.util.concurrent.atomic.AtomicInteger
-import kotlin.math.max
-import kotlin.math.min
+import java.lang.ref.SoftReference
+import java.util.concurrent.Executors
 import kotlin.math.sqrt
 
 /** Stream and local analysis share fingerprints, waveforms and transition timing. */
@@ -25,15 +29,42 @@ class SonicEngine(
     private val library: suspend () -> List<Song>,
     private val account: suspend () -> String,
     private val analyzer: com.aurora.music.mix.MixAnalyzer,
+    private val libraryKey: (() -> Any)? = null,
+    private val canStream: () -> Boolean = { true },
+    private val context: Context? = null,
 ) {
     data class Progress(val running: Boolean = false, val done: Int = 0, val total: Int = 0,
-        val current: String = "", val failed: Int = 0, val error: String? = null)
+        val current: String = "", val failed: Int = 0, val error: String? = null, val notice: String? = null)
+    private class Walk(val key: List<Any>, val at: Long, val songs: Deferred<List<Song>>)
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val background = Executors.newSingleThreadExecutor { task ->
+        Thread({ android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_BACKGROUND); task.run() }, "aurora-sonic")
+    }.asCoroutineDispatcher()
     @Volatile private var job: Job? = null
+    @Volatile private var walk: SoftReference<Walk>? = null
     private val _progress = MutableStateFlow(Progress())
     val progress: StateFlow<Progress> = _progress.asStateFlow()
     val analyzedCount: StateFlow<Int> get() = store.count
-    private suspend fun decodable() = library().filter { it.streamUrl.isNotBlank() }.distinctBy { it.id }
+    private suspend fun fresh() = library().filter { it.streamUrl.isNotBlank() }.distinctBy { it.id }
+    // the engine scope owns the walk so a caller's timeout cannot cancel or truncate it
+    private suspend fun decodable(): List<Song> {
+        val keyOf = libraryKey ?: return fresh()
+        val key = listOf(account(), keyOf())
+        val w = synchronized(this) {
+            walk?.get()?.takeIf { it.key == key && !it.songs.isCancelled && System.nanoTime() - it.at < WALK_NANOS }
+                ?: Walk(key, System.nanoTime(), scope.async { fresh() }).also { walk = SoftReference(it) }
+        }
+        return w.songs.await().also { if (it.isEmpty()) synchronized(this) { if (walk?.get() === w) walk = null } }
+    }
+    private fun streamed(url: String) = url.startsWith("http://") || url.startsWith("https://") || url.startsWith("aurora-yt:")
+    private fun strained(): Boolean {
+        val c = context ?: return false
+        val power = c.getSystemService(PowerManager::class.java)
+        if (power?.isPowerSaveMode == true) return true
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q && power != null && power.currentThermalStatus >= PowerManager.THERMAL_STATUS_MODERATE) return true
+        val battery = c.getSystemService(BatteryManager::class.java) ?: return false
+        return !battery.isCharging && battery.getIntProperty(BatteryManager.BATTERY_PROPERTY_CAPACITY) in 0..15
+    }
     fun scan() {
         if (job?.isActive == true) return
         val previous = job
@@ -42,16 +73,32 @@ class SonicEngine(
             _progress.value = Progress(running = true, current = "Reading library")
             try {
                 val owner = account()
-                val todo = decodable().filter { !store.has(it.id, owner) }
+                val key = libraryKey?.let { listOf(owner, it()) }
+                val all = fresh()
+                if (key != null && all.isNotEmpty()) synchronized(this@SonicEngine) {
+                    walk = SoftReference(Walk(key, System.nanoTime(), CompletableDeferred(all)))
+                }
+                val todo = all.filter { !store.has(it.id, owner) }
                 _progress.value = Progress(true, total = todo.size)
+                var waiting = 0
                 for ((i, song) in todo.withIndex()) {
                     kotlinx.coroutines.currentCoroutineContext().ensureActive()
-                    _progress.value = _progress.value.copy(current = song.title)
-                    try { analyzer.analyze(owner, song) { } }
-                    catch (e: kotlinx.coroutines.CancellationException) { throw e }
-                    catch (_: Exception) { _progress.value = _progress.value.copy(failed = _progress.value.failed + 1) }
+                    if (strained()) {
+                        _progress.value = _progress.value.copy(notice = "Paused while the battery is low or the phone is warm. Tap Analyze library to resume.")
+                        break
+                    }
+                    // streams cost a full download, so they wait for wi-fi instead of failing
+                    if (streamed(song.streamUrl) && !canStream()) waiting++
+                    else {
+                        _progress.value = _progress.value.copy(current = song.title)
+                        try { analyzer.analyze(owner, song, background) { } }
+                        catch (e: kotlinx.coroutines.CancellationException) { throw e }
+                        catch (_: Exception) { _progress.value = _progress.value.copy(failed = _progress.value.failed + 1) }
+                    }
                     _progress.value = _progress.value.copy(done = i + 1)
                 }
+                if (waiting > 0 && _progress.value.notice == null)
+                    _progress.value = _progress.value.copy(notice = "$waiting streamed tracks wait for Wi-Fi. Tap Analyze library on Wi-Fi to finish.")
             } catch (e: kotlinx.coroutines.CancellationException) { throw e }
             catch (_: Exception) { _progress.value = _progress.value.copy(error = "Could not read the library. Reconnect and retry.") }
             finally { _progress.value = _progress.value.copy(running = false) }
@@ -59,9 +106,9 @@ class SonicEngine(
     }
     fun cancel() { job?.cancel() }
 
-    suspend fun buildRadio(seed: Song, count: Int = 40): List<Song> = withContext(Dispatchers.Default) {
-        val pool = decodable()
-        val byId = pool.associateBy { it.id }
+    suspend fun buildRadio(seed: Song, count: Int = 40, pool: List<Song>? = null): List<Song> = withContext(Dispatchers.Default) {
+        if (store.snapshot().keys.none { it != seed.id }) return@withContext emptyList()
+        val byId = (pool?.filter { it.streamUrl.isNotBlank() }?.distinctBy { it.id } ?: decodable()).associateBy { it.id }
 
         var seedVec = store.get(seed.id)
         if (seedVec == null) {
@@ -149,6 +196,7 @@ class SonicEngine(
     }
 
     suspend fun buildAutoDj(seed: Song, count: Int = 40): List<Song> = withContext(Dispatchers.Default) {
+        if (store.snapshot().keys.none { it != seed.id }) return@withContext emptyList()
         val pool = decodable()
         val byId = pool.associateBy { it.id }
         var seedVec = store.get(seed.id)
@@ -205,6 +253,7 @@ class SonicEngine(
     }
 
     private companion object {
+        const val WALK_NANOS = 15 * 60 * 1_000_000_000L
         val MAJOR_PROFILE = doubleArrayOf(6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88)
         val MINOR_PROFILE = doubleArrayOf(6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17)
         val MAJOR_CAM = intArrayOf(8, 3, 10, 5, 12, 7, 2, 9, 4, 11, 6, 1)

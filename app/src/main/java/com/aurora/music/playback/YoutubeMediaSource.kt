@@ -69,7 +69,7 @@ class YoutubeMediaSourceFactory(
         prefetched.entries.removeAll { now - it.value.startedAt > PREFETCH_TTL_MS }
         while (prefetched.size >= MAX_PREFETCHED) {
             val oldest = prefetched.entries.minByOrNull { it.value.startedAt } ?: break
-            prefetched.remove(oldest.key, oldest.value)
+            if (prefetched.remove(oldest.key, oldest.value)) oldest.value.result.cancel()
         }
         prefetched.computeIfAbsent(key(prepared)) { Prefetch(prefetchScope.async { resolve(prepared) }, now) }
     }

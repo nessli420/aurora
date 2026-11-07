@@ -122,6 +122,7 @@ import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
@@ -282,14 +283,21 @@ fun PlayerScreen(
         }
     }
     val g = ui.playerGradient
-    val bg = Brush.verticalGradient(
-        listOf(
-            playerAccent.copy(alpha = (0.65f * g).coerceIn(0f, 1f)),
-            playerAccent.copy(alpha = (0.22f * g).coerceIn(0f, 1f)),
-            MaterialTheme.colorScheme.background,
-            MaterialTheme.colorScheme.background,
-        )
-    )
+    val playerBg = MaterialTheme.colorScheme.background
+    // the scheme snaps per track; only this wash fades, read in draw so the player doesn't recompose per frame
+    val fade by animateColorAsState(playerAccent, tween(450), label = "playerWash")
+    // 1 lyrics, 2 cover: once an opaque overlay settles the base stops drawing under it
+    val overlay = androidx.compose.animation.core.updateTransition(
+        when { fullscreenActive -> 0; showLyrics -> 1; showCover -> 2; else -> 0 }, label = "overlay")
+    val lyricsOffset = remember { mutableFloatStateOf(0f) }
+    val coverOffset = remember { mutableFloatStateOf(0f) }
+    val covered = remember {
+        androidx.compose.runtime.derivedStateOf {
+            overlay.currentState != 0 && overlay.currentState == overlay.targetState && !overlay.isRunning &&
+                lyricsOffset.floatValue == 0f && coverOffset.floatValue == 0f
+        }
+    }
+    val underOverlay = remember { Modifier.graphicsLayer { alpha = if (covered.value) 0f else 1f } }
 
     // player is outside the scaffold so LocalContentColor defaults to black provide it explicitly
     CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
@@ -298,7 +306,11 @@ fun PlayerScreen(
         Modifier
             .fillMaxSize()
             .then(
-                if (classic) Modifier.background(MaterialTheme.colorScheme.background).background(bg)
+                if (classic) Modifier.background(playerBg).drawWithCache {
+                    val wash = Brush.verticalGradient(listOf(fade.copy(alpha = (0.65f * g).coerceIn(0f, 1f)),
+                        fade.copy(alpha = (0.22f * g).coerceIn(0f, 1f)), playerBg, playerBg))
+                    onDrawBehind { drawRect(wash) }
+                }
                 else if (glassBackdrop != null) Modifier.background(MaterialTheme.colorScheme.background)
                 else Modifier.auroraBackdrop()
             )
@@ -585,7 +597,7 @@ fun PlayerScreen(
                                 drawContent()
                                 drawRect(playerAccent, blendMode = BlendMode.SrcIn)
                             },
-                        isPlaying = true,
+                        isPlaying = !covered.value,
                     )
                     Spacer(Modifier.width(10.dp))
                 }
@@ -816,7 +828,7 @@ fun PlayerScreen(
                 var split by remember(ui.tabletPlayerSplit) { mutableFloatStateOf(ui.tabletPlayerSplit) }
                 val splitRange = com.aurora.music.data.TabletSetting.PLAYER_SPLIT.range
                 Column(
-                    Modifier.align(Alignment.TopCenter).widthIn(max = 1440.dp).fillMaxSize()
+                    Modifier.align(Alignment.TopCenter).then(underOverlay).widthIn(max = 1440.dp).fillMaxSize()
                         .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility).padding(horizontal = 32.dp),
                 ) {
                     header()
@@ -849,7 +861,7 @@ fun PlayerScreen(
                 }
             } else {
                 Column(
-                    Modifier.align(Alignment.TopCenter).widthIn(max = 720.dp).fillMaxSize()
+                    Modifier.align(Alignment.TopCenter).then(underOverlay).widthIn(max = 720.dp).fillMaxSize()
                         .windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility).padding(horizontal = 32.dp),
                 ) {
                     header()
@@ -875,10 +887,10 @@ fun PlayerScreen(
                     }
                 }
             }
-            LyricsOverlay(showLyrics, landscape, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
+            LyricsOverlay(overlay, lyricsOffset, landscape, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
         } else {
             Column(
-                Modifier.align(Alignment.TopCenter).widthIn(max = if (landscape) 1280.dp else 640.dp)
+                Modifier.align(Alignment.TopCenter).then(underOverlay).widthIn(max = if (landscape) 1280.dp else 640.dp)
                     .fillMaxSize().windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)
                     .padding(horizontal = if (landscape) 32.dp else 20.dp),
             ) {
@@ -895,9 +907,9 @@ fun PlayerScreen(
                     controls()
                 }
             }
-            LyricsOverlay(showLyrics, false, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
+            LyricsOverlay(overlay, lyricsOffset, false, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
         }
-        CoverOverlay(showCover && !showLyrics && !fullscreenActive, state, onClose = { showCover = false }, onTogglePlay, onPrevious, onNext, onSeek, onToggleLike, moreMenu)
+        CoverOverlay(overlay, coverOffset, state, onClose = { showCover = false }, onTogglePlay, onPrevious, onNext, onSeek, onToggleLike, moreMenu)
         }
     }
     }
@@ -917,7 +929,8 @@ private fun CanvasTint(active: Boolean, content: @Composable () -> Unit) {
 
 @Composable
 private fun LyricsOverlay(
-    visible: Boolean,
+    overlay: androidx.compose.animation.core.Transition<Int>,
+    offset: androidx.compose.runtime.MutableFloatState,
     wide: Boolean,
     state: PlayerUiState,
     onClose: () -> Unit,
@@ -926,14 +939,15 @@ private fun LyricsOverlay(
     onNext: () -> Unit,
     onSeek: (Float) -> Unit,
 ) {
-    androidx.compose.animation.AnimatedVisibility(
-        visible = visible,
+    val visible = overlay.targetState == 1
+    overlay.AnimatedVisibility(
+        visible = { it == 1 },
         enter = if (wide) fadeIn(tween(320)) + androidx.compose.animation.scaleIn(tween(380), initialScale = .96f)
             else fadeIn(tween(320)) + androidx.compose.animation.slideInVertically(tween(420)) { it / 10 },
         exit = if (wide) fadeOut(tween(240)) + androidx.compose.animation.scaleOut(tween(260), targetScale = .97f)
             else fadeOut(tween(220)) + androidx.compose.animation.slideOutVertically(tween(280)) { it / 12 },
     ) {
-        DragToDismiss(onDismiss = onClose, enabled = !wide, shown = visible) {
+        DragToDismiss(onDismiss = onClose, enabled = !wide, shown = visible, offsetState = offset) {
             LyricsScreen(state, onClose = onClose, onTogglePlay, onPrevious, onNext, onSeek)
         }
     }
@@ -944,7 +958,8 @@ private fun LyricsOverlay(
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun CoverOverlay(
-    visible: Boolean,
+    overlay: androidx.compose.animation.core.Transition<Int>,
+    offset: androidx.compose.runtime.MutableFloatState,
     state: PlayerUiState,
     onClose: () -> Unit,
     onTogglePlay: () -> Unit,
@@ -954,8 +969,9 @@ private fun CoverOverlay(
     onToggleLike: () -> Unit,
     menu: @Composable () -> Unit,
 ) {
-    androidx.compose.animation.AnimatedVisibility(visible, enter = fadeIn(tween(320)), exit = fadeOut(tween(240))) {
-        DragToDismiss(onDismiss = onClose, shown = visible) {
+    val visible = overlay.targetState == 2
+    overlay.AnimatedVisibility(visible = { it == 2 }, enter = fadeIn(tween(320)), exit = fadeOut(tween(240))) {
+        DragToDismiss(onDismiss = onClose, shown = visible, offsetState = offset) {
             Box(Modifier.fillMaxSize()) {
             CanvasTint(true) {
                 val song = state.current
