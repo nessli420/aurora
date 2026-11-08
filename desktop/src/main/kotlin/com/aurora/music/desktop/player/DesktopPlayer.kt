@@ -179,6 +179,11 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private var playStartMs = 0L
     private var loadingRadio = false
 
+    // sync reads these, and the scope runs it straight away inside init, so they're set up first
+    @Volatile private var mergeFeatures = com.aurora.music.data.MergeFeatures()
+    private var lastKeyInfoId: String? = null
+    private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
+
     init {
         engine.visualizer = deps.visualizer
         engine.bindSettings(deps.settingsStore, scope)
@@ -393,8 +398,6 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         }
     }
 
-    @Volatile private var mergeFeatures = com.aurora.music.data.MergeFeatures()
-
     override val video: StateFlow<com.aurora.music.desktop.video.VideoPlayer?> =
         (deps.companion?.state ?: kotlinx.coroutines.flow.MutableStateFlow(com.aurora.music.desktop.video.CompanionVideoState()))
             .map { it.player?.takeIf { _ -> it.ready } }.stateIn(scope, SharingStarted.Eagerly, null)
@@ -429,9 +432,6 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             if (resume) engine.play()
         }
     }
-
-    private var lastKeyInfoId: String? = null
-    private var lastKeyInfo: com.aurora.music.data.SonicEngine.TrackKey? = null
 
     private fun onEvent(event: EngineEvent) {
         when (event) {
