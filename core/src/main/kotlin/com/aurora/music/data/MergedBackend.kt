@@ -245,8 +245,15 @@ class MergedBackend(
     override val signedIn: Boolean get() = sources.all { it.signedIn }
     override fun signedIn(id: String): Boolean = router.unwrap(id)?.let { (i, oid) -> sources[i].signedIn(oid) } ?: router.primary?.signedIn(id) ?: true
 
-    // liked songs follow the library view they were opened from; any other id is every source together
-    private fun likedScope(id: String): MediaBackend = if (!nested && id in VIEW_IDS) libraryView(id) else this
+    // liked songs follow the library view or the picked sources they were opened from; any other id is every source together
+    private fun likedScope(id: String): MediaBackend {
+        if (nested) return this
+        if (id in VIEW_IDS) return libraryView(id)
+        val keys = id.split(',').takeIf { parts -> parts.all { MERGE_NAMESPACE_PATTERN.matches(it) } }?.toSet() ?: return this
+        return synchronized(views) {
+            views.getOrPut(id) { MergedBackend(sources.filter { mergeNamespace(it.session) in keys }, session, priority, downloads, catalogueMatch, nested = true, downUntil = downUntil) }
+        }
+    }
 
     override suspend fun detail(kind: String, id: String): DetailData? {
         if (kind == "liked") {
@@ -420,6 +427,10 @@ fun Song.inNamespace(session: Session): Song = if (MERGE_NAMESPACE_SEP in id) th
 
 // liked songs id for every source's likes together, beside the per-view ids
 const val ALL_LIKED_ID = "all"
+
+// liked songs id for the picked sources' likes, by merge namespace; all of them is every source
+fun likedSourcesId(picked: Collection<String>, all: Collection<String>): String =
+    if (picked.containsAll(all)) ALL_LIKED_ID else picked.joinToString(",")
 
 // some sources answered a likes check; the unanswered ids are worth asking again
 class PartialLikes(val liked: Set<String>, val unanswered: Set<String>) : Exception("some sources did not answer")

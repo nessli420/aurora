@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"将音乐库切换到 %1$s"</string>
-    <string name="liked_all_sources">"所有来源中喜欢的歌曲"</string>
+    <string name="liked_sources_title">"喜欢的歌曲来源"</string>
+    <string name="liked_sources_open">"打开"</string>
+    <string name="liked_sources_choose">"选择来源"</string>
 </resources>

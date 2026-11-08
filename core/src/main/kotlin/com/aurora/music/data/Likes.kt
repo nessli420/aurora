@@ -181,6 +181,8 @@ class Likes(
 
     suspend fun options(song: Song): List<LikeOption> = ledger.options(song, song.id in serverLikedIds)
 
+    fun likedSources(): List<LikedSource> = ledger.likedSources(repository.mergedSources)
+
     // the menu's choice for one account; the playing one is the heart's own toggle
     suspend fun set(song: Song, option: LikeOption, liked: Boolean): List<LikeOption> {
         if (option.playing) change(song.id, liked) { setOwn(song, liked) }

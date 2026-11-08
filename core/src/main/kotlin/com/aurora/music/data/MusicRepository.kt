@@ -429,6 +429,8 @@ class MusicRepository(
     suspend fun starredIds(): Set<String> = withContext(mapping) { backend?.starredIds() ?: emptySet() }
 
     suspend fun likeSources(): List<MediaBackend> = if (offline) emptyList() else likeSourcesProvider()
+    // the merged library's own sources; a single backend has none to pick between
+    val mergedSources: List<MediaBackend> get() = if (offline) emptyList() else (backend as? MergedBackend)?.sources.orEmpty()
     val activeSession: Session? get() = backend?.session
 
     fun supportsCanvas(song: Song): Boolean = !offline && backend?.supportsCanvas(song) == true

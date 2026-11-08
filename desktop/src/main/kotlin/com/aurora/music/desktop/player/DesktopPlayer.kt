@@ -926,6 +926,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override suspend fun likeOptions(song: Song) = likes.options(song)
 
     override suspend fun setLikedOn(song: Song, option: com.aurora.music.data.LikeOption, liked: Boolean) = likes.set(song, option, liked)
+    override fun likedSources() = likes.likedSources()
 
     override fun setExpanded(value: Boolean) = _state.update { it.copy(expanded = value) }
 

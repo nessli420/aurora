@@ -9,7 +9,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -28,12 +30,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.data.LikeOption
+import com.aurora.music.data.LikedSource
+import com.aurora.music.data.likedSourcesId
+import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
-class LikeMenu(val options: suspend (Song) -> List<LikeOption>, val set: suspend (Song, LikeOption, Boolean) -> List<LikeOption>)
+class LikeMenu(
+    val options: suspend (Song) -> List<LikeOption>,
+    val set: suspend (Song, LikeOption, Boolean) -> List<LikeOption>,
+    val likedSources: () -> List<LikedSource> = { emptyList() },
+)
 
 val LocalLikeMenu = staticCompositionLocalOf<LikeMenu?> { null }
 
@@ -97,5 +106,35 @@ private fun LikeSourcesMenu(song: Song, menu: LikeMenu, onDismiss: () -> Unit) {
                 },
             )
         }
+    }
+}
+
+// which sources a liked songs list holds; all start picked, open hands back the liked id
+@Composable
+fun LikedSourcesMenu(sources: List<LikedSource>, onDismiss: () -> Unit, onOpen: (String) -> Unit) {
+    var picked by remember(sources) { mutableStateOf(sources.map { it.key }.toSet()) }
+    val colors = MaterialTheme.colorScheme
+    DropdownMenu(expanded = true, onDismissRequest = onDismiss) {
+        Text(appString(R.string.liked_sources_title), style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
+        sources.forEach { source ->
+            val on = source.key in picked
+            DropdownMenuItem(
+                text = {
+                    Column {
+                        Text(source.label)
+                        Text(appPlural(R.plurals.track_count, source.count), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+                    }
+                },
+                leadingIcon = { Checkbox(checked = on, onCheckedChange = null) },
+                onClick = { picked = if (on) picked - source.key else picked + source.key },
+            )
+        }
+        HorizontalDivider()
+        DropdownMenuItem(
+            text = { Text(appString(R.string.liked_sources_open), color = if (picked.isEmpty()) colors.onSurfaceVariant else colors.primary) },
+            enabled = picked.isNotEmpty(),
+            onClick = { onOpen(likedSourcesId(sources.map { it.key }.filter { it in picked }, sources.map { it.key })) },
+        )
     }
 }

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"ライブラリを%1$sに切り替え"</string>
-    <string name="liked_all_sources">"すべてのソースのお気に入りの曲"</string>
+    <string name="liked_sources_title">"お気に入りの曲のソース"</string>
+    <string name="liked_sources_open">"開く"</string>
+    <string name="liked_sources_choose">"ソースを選択"</string>
 </resources>

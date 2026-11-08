@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"\u2067تبديل المكتبة إلى %1$s\u2069"</string>
-    <string name="liked_all_sources">"\u2067الأغاني المعجب بها من كل المصادر\u2069"</string>
+    <string name="liked_sources_title">"الأغاني المعجب بها من"</string>
+    <string name="liked_sources_open">"فتح"</string>
+    <string name="liked_sources_choose">"اختيار المصادر"</string>
 </resources>

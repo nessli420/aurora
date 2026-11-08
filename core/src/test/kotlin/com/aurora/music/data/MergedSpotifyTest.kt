@@ -115,6 +115,21 @@ class MergedSpotifyTest {
         assertEquals(setOf(ytSong.id), merged.collectionTracks("liked", "youtube").map { stripMergeNamespace(it.id) }.toSet())
     }
 
+    @Test fun likedSongsNarrowToThePickedSources() = runBlocking {
+        val sessions = listOf(local, server, yt, spotify)
+        val hosted = serverSong.copy(title = "Hosted")
+        val merged = MergedBackend(listOf(source(local, listOf(localSong)), source(server, listOf(hosted)), source(yt, listOf(ytSong)),
+            source(spotify, listOf(spotifySong))), spotify)
+        val keys = sessions.map(::mergeNamespace)
+        val picked = likedSourcesId(listOf(keys[1], keys[3]), keys)
+
+        assertEquals(setOf(hosted.id, spotifySong.id), merged.detail("liked", picked)!!.tracks.map { stripMergeNamespace(it.id) }.toSet())
+        val tracks = merged.collectionTracks("liked", picked)
+        assertEquals(setOf(hosted.id, spotifySong.id), tracks.map { stripMergeNamespace(it.id) }.toSet())
+        assertEquals(spotifySong.streamUrl, merged.songFor(tracks.first { stripMergeNamespace(it.id) == spotifySong.id }.id)!!.streamUrl)
+        assertEquals(ALL_LIKED_ID, likedSourcesId(keys.reversed(), keys))
+    }
+
     @Test fun anUnreachableServerIsAskedOnceThenSkipped() = runBlocking {
         var attempts = 0
         val offline = Proxy.newProxyInstance(MediaBackend::class.java.classLoader, arrayOf(MediaBackend::class.java)) { _, method, _ ->

@@ -962,7 +962,7 @@ fun AuroraApp() {
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides playerPanes,
         com.aurora.music.ui.components.LocalStartRadio provides remember(playerVM) { { song: com.aurora.music.model.Song -> playerVM.startSonicRadio(song) { confirm(it) } } },
         com.aurora.music.ui.components.LocalCanLike provides container.repository::canLike,
-        com.aurora.music.ui.components.LocalLikeMenu provides remember(playerVM) { com.aurora.music.ui.components.LikeMenu(playerVM::likeOptions, playerVM::setLikedOn) },
+        com.aurora.music.ui.components.LocalLikeMenu provides remember(playerVM) { com.aurora.music.ui.components.LikeMenu(playerVM::likeOptions, playerVM::setLikedOn, playerVM::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: com.aurora.music.model.Song -> matchSong = song } },
     ) {

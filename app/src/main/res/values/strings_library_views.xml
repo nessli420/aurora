@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Switch library to %1$s"</string>
-    <string name="liked_all_sources">"Liked songs from every source"</string>
+    <string name="liked_sources_title">"Liked songs from"</string>
+    <string name="liked_sources_open">"Open"</string>
+    <string name="liked_sources_choose">"Choose sources"</string>
 </resources>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Kitaplığı %1$s olarak değiştir"</string>
-    <string name="liked_all_sources">"Tüm kaynaklardan beğenilen şarkılar"</string>
+    <string name="liked_sources_title">"Beğenilen şarkıların kaynakları"</string>
+    <string name="liked_sources_open">"Aç"</string>
+    <string name="liked_sources_choose">"Kaynakları seç"</string>
 </resources>

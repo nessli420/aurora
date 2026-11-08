@@ -21,12 +21,16 @@ data class LikeOption(val key: String, val label: String, val id: String?, val l
     val available: Boolean get() = id != null && !guest
 }
 
+// a merged source the liked songs list can be narrowed to, keyed by its merge namespace
+data class LikedSource(val key: String, val label: String, val count: Int)
+
 // every active account's liked songs, so a song liked on any of them counts wherever it plays
 class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private val activeSession: () -> Session?) {
     private class Edit(val seq: Long, val key: String, val song: Song, val liked: Boolean)
 
     private class Account(private val byId: Map<String, Song>, private val byTitle: Map<String, List<Pair<Song, Song>>>) {
         fun has(id: String) = id in byId
+        val size: Int get() = byId.size
 
         fun matches(song: Song, title: String): List<Song> =
             byTitle[title].orEmpty().filter { sameRecording(song, it.first) }.map { it.second }.distinctBy { it.id }
@@ -114,8 +118,8 @@ class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private 
         val owner = owner(song.id)
         val copy = copyOf(song)
         val title = recordingKey(song.title)
-        val types = all.groupingBy { it.session.type }.eachCount()
-        all.map { source ->
+        val labels = labels(all)
+        all.mapIndexed { index, source ->
             async {
                 val key = mergeNamespace(source.session)
                 val playing = owner?.first == key
@@ -128,10 +132,23 @@ class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private 
                     copy?.first == key -> copy.second
                     else -> twin(source, key, song)?.id
                 }
-                val label = source.session.typeLabel + if ((types[source.session.type] ?: 0) > 1) " · ${source.session.username}" else ""
-                LikeOption(key, label, id, liked, !source.signedIn, playing)
+                LikeOption(key, labels[index], id, liked, !source.signedIn, playing)
             }
         }.awaitAll().sortedByDescending { it.playing }
+    }
+
+    // the given sources whose likes have loaded and hold any
+    fun likedSources(sources: List<MediaBackend>): List<LikedSource> {
+        val labels = labels(sources)
+        return sources.mapIndexedNotNull { i, source ->
+            val key = mergeNamespace(source.session)
+            accounts[key]?.size?.takeIf { it > 0 }?.let { LikedSource(key, labels[i], it) }
+        }
+    }
+
+    private fun labels(sources: List<MediaBackend>): List<String> {
+        val types = sources.groupingBy { it.session.type }.eachCount()
+        return sources.map { it.session.typeLabel + if ((types[it.session.type] ?: 0) > 1) " · ${it.session.username}" else "" }
     }
 
     // null when no active account goes by that key

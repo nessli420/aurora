@@ -210,6 +210,7 @@ private data class LibRow(
 private class TableColumn(val label: String, val weight: Float = 0f, val width: Dp = 0.dp)
 
 private class LibActions(
+    val onOpenLiked: (String) -> Unit,
     val isLiked: (String) -> Boolean,
     val onPlay: (LibRow) -> Unit,
     val onShuffle: (LibRow) -> Unit,
@@ -289,6 +290,7 @@ fun LibraryScreen(
     val actions = remember(likedIds, onPlayCollection, onShuffleCollection, onQueueCollection, onToggleLikeKind,
         onDeletePlaylist, onEditSmart, onDeleteSmart, onExportPlaylist) {
         LibActions(
+            onOpenLiked = { id -> onOpenDetail("liked", id) },
             isLiked = { id -> likedIds.contains(id) },
             onPlay = { r -> onPlayCollection(r.id, r.kind) },
             onShuffle = { r -> onShuffleCollection(r.id, r.kind) },
@@ -791,7 +793,7 @@ private fun QuickTileCard(tile: QuickTile, actions: LibActions, modifier: Modifi
             }
         }
         if (row != null) contextAt?.let { at ->
-            Box(Modifier.offset { at.round() }) { CollectionMenu(row, actions, expanded = true, onDismiss = { contextAt = null }) }
+            Box(Modifier.offset { at.round() }) { ContextMenu(row, actions, onDismiss = { contextAt = null }) }
         }
     }
 }
@@ -1315,7 +1317,7 @@ private fun LibListItem(row: LibRow, columns: List<TableColumn>, actions: LibAct
         }
     }
     if (row.menu) contextAt?.let { at ->
-        Box(Modifier.offset { at.round() }) { CollectionMenu(row, actions, expanded = true, onDismiss = { contextAt = null }) }
+        Box(Modifier.offset { at.round() }) { ContextMenu(row, actions, onDismiss = { contextAt = null }) }
     }
     }
 }
@@ -1378,9 +1380,18 @@ private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
         if (aurora) Spacer(Modifier.height(6.dp))
     }
     if (row.menu) contextAt?.let { at ->
-        Box(Modifier.offset { at.round() }) { CollectionMenu(row, actions, expanded = true, onDismiss = { contextAt = null }) }
+        Box(Modifier.offset { at.round() }) { ContextMenu(row, actions, onDismiss = { contextAt = null }) }
     }
     }
+}
+
+// right-clicking liked songs picks which sources' likes to open when more than one has any
+@Composable
+private fun ContextMenu(row: LibRow, actions: LibActions, onDismiss: () -> Unit) {
+    val likeMenu = com.aurora.music.ui.components.LocalLikeMenu.current
+    val sources = remember { if (row.kind == "liked") likeMenu?.likedSources?.invoke().orEmpty() else emptyList() }
+    if (sources.size > 1) com.aurora.music.ui.components.LikedSourcesMenu(sources, onDismiss) { id -> onDismiss(); actions.onOpenLiked(id) }
+    else CollectionMenu(row, actions, expanded = true, onDismiss = onDismiss)
 }
 
 @Composable

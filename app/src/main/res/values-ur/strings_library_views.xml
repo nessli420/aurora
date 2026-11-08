@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"\u2067لائبریری کو %1$s پر بدلیں\u2069"</string>
-    <string name="liked_all_sources">"\u2067ہر ذریعے سے پسندیدہ گانے\u2069"</string>
+    <string name="liked_sources_title">"ان ذرائع سے پسندیدہ گانے"</string>
+    <string name="liked_sources_open">"کھولیں"</string>
+    <string name="liked_sources_choose">"ذرائع منتخب کریں"</string>
 </resources>

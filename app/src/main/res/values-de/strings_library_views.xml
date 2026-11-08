@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Mediathek wechseln zu %1$s"</string>
-    <string name="liked_all_sources">"Lieblingssongs aus allen Quellen"</string>
+    <string name="liked_sources_title">"Lieblingssongs aus"</string>
+    <string name="liked_sources_open">"Öffnen"</string>
+    <string name="liked_sources_choose">"Quellen auswählen"</string>
 </resources>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"보관함을 %1$s(으)로 전환"</string>
-    <string name="liked_all_sources">"모든 소스의 좋아요 표시한 곡"</string>
+    <string name="liked_sources_title">"좋아요 표시한 곡의 소스"</string>
+    <string name="liked_sources_open">"열기"</string>
+    <string name="liked_sources_choose">"소스 선택"</string>
 </resources>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Przełącz bibliotekę na %1$s"</string>
-    <string name="liked_all_sources">"Polubione utwory ze wszystkich źródeł"</string>
+    <string name="liked_sources_title">"Polubione utwory z"</string>
+    <string name="liked_sources_open">"Otwórz"</string>
+    <string name="liked_sources_choose">"Wybierz źródła"</string>
 </resources>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Basculer la bibliothèque sur %1$s"</string>
-    <string name="liked_all_sources">"Titres likés de toutes les sources"</string>
+    <string name="liked_sources_title">"Titres likés de"</string>
+    <string name="liked_sources_open">"Ouvrir"</string>
+    <string name="liked_sources_choose">"Choisir les sources"</string>
 </resources>

@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Bibliotheek wisselen naar %1$s"</string>
-    <string name="liked_all_sources">"Gelikete nummers uit alle bronnen"</string>
+    <string name="liked_sources_title">"Gelikete nummers uit"</string>
+    <string name="liked_sources_open">"Openen"</string>
+    <string name="liked_sources_choose">"Bronnen kiezen"</string>
 </resources>

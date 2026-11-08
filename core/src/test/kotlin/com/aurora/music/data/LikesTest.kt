@@ -154,6 +154,12 @@ class LikesTest {
         until { red.id in likes.likedIds.value }
     }
 
+    @Test fun theLikedSongsPickerListsTheLibrarySourcesWithLikes() = test {
+        navidrome.liked += "n2"
+        loaded(navidrome, spotify)
+        assertEquals(listOf("Navidrome" to 1, "Spotify" to 1), likes.likedSources().map { it.label to it.count })
+    }
+
     @Test fun aRefusedLikeOnAnotherAccountIsTakenBack() = test {
         loaded(spotify)
         spotify.refuse = true

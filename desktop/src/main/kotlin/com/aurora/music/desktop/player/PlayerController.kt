@@ -114,6 +114,7 @@ interface PlayerController {
     fun toggleLike(id: String, kind: String = "song")
     suspend fun likeOptions(song: Song): List<com.aurora.music.data.LikeOption> = emptyList()
     suspend fun setLikedOn(song: Song, option: com.aurora.music.data.LikeOption, liked: Boolean): List<com.aurora.music.data.LikeOption> = emptyList()
+    fun likedSources(): List<com.aurora.music.data.LikedSource> = emptyList()
     fun setExpanded(value: Boolean)
     fun setSpeed(value: Float)
     fun resetSpeedPitch()

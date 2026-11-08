@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Cambiar biblioteca a %1$s"</string>
-    <string name="liked_all_sources">"Canciones que te gustan de todas las fuentes"</string>
+    <string name="liked_sources_title">"Canciones que te gustan de"</string>
+    <string name="liked_sources_open">"Abrir"</string>
+    <string name="liked_sources_choose">"Elegir fuentes"</string>
 </resources>

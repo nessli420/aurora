@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Ganti koleksi ke %1$s"</string>
-    <string name="liked_all_sources">"Lagu yang disukai dari semua sumber"</string>
+    <string name="liked_sources_title">"Lagu yang disukai dari"</string>
+    <string name="liked_sources_open">"Buka"</string>
+    <string name="liked_sources_choose">"Pilih sumber"</string>
 </resources>

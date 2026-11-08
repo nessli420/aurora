@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="library_switch_view">"Переключить медиатеку на %1$s"</string>
-    <string name="liked_all_sources">"Любимые треки из всех источников"</string>
+    <string name="liked_sources_title">"Любимые треки из"</string>
+    <string name="liked_sources_open">"Открыть"</string>
+    <string name="liked_sources_choose">"Выбрать источники"</string>
 </resources>

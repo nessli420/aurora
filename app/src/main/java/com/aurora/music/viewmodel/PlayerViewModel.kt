@@ -1196,6 +1196,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     // a connected device keeps its own likes, so its songs get no per-account menu
     suspend fun likeOptions(song: Song): List<com.aurora.music.data.LikeOption> = if (remoteSession != null) emptyList() else likes.options(song)
     suspend fun setLikedOn(song: Song, option: com.aurora.music.data.LikeOption, liked: Boolean) = likes.set(song, option, liked)
+    fun likedSources(): List<com.aurora.music.data.LikedSource> = if (remoteSession != null) emptyList() else likes.likedSources()
 
     fun setExpanded(value: Boolean) = _state.update { it.copy(expanded = value) }
 
