@@ -3,6 +3,8 @@ package com.aurora.music.data
 import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import com.aurora.music.data.SettingsKeys as Keys
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 
 // values are shared between collectors, so they must stay immutable
 internal class RawMemo<T>(private val decode: (String?) -> T) {
@@ -13,6 +15,11 @@ internal class RawMemo<T>(private val decode: (String?) -> T) {
         return decode(raw).also { last = raw to it }
     }
 }
+
+internal inline fun <reified T> Gson.parseList(json: String?): List<T> = runCatching {
+    if (json.isNullOrBlank()) emptyList()
+    else fromJson<List<T>>(json, object : TypeToken<List<T>>() {}.type) ?: emptyList()
+}.getOrDefault(emptyList())
 
 internal fun readAudioPrefs(p: Preferences): AudioPrefs =
     AudioPrefs(
