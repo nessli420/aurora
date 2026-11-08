@@ -351,7 +351,7 @@ class PrecisionPlaybackDeviceTest {
                     main { controller.currentMediaItemIndex == hop + 1 && controller.isPlaying &&
                         (field(service, "player") === first) == (hop == 1) }
                 }
-                await("crossfade ${hop + 1} ends", controller) { main { field(service, "xfadeActive") == false } }
+                await("crossfade ${hop + 1} ends", controller) { main { field(requireNotNull(field(service, "fades")), "xfadeActive") == false } }
                 val live = main { field(service, "player") } as ExoPlayer
                 await("reporting observes deck ${hop + 1}") { main { field(reporting, "player") === live } }
                 main { assertSame("Connect listener follows the live deck", live, field(connect, "observed")) }
