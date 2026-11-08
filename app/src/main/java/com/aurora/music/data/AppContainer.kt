@@ -13,7 +13,8 @@ import android.net.Network
 import android.net.NetworkCapabilities
 import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
-import com.aurora.music.data.remote.JellyfinClient
+import com.aurora.music.data.container.BackendFactory
+import com.aurora.music.data.container.SessionCoordinator
 import com.aurora.music.data.remote.appClientInfo
 import com.aurora.music.data.remote.SpotifyClient
 import kotlinx.coroutines.flow.asSharedFlow
@@ -23,7 +24,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.SharingStarted
-import com.aurora.music.data.remote.SubsonicClient
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -121,9 +121,6 @@ class AppContainer(context: Context) {
 
     private val catalogueMatch = settingsStore.catalogueMatch.stateIn(scope, SharingStarted.Eagerly, CatalogueMatchPrefs())
 
-    @Volatile private var unifiedLibraryValue: Boolean = false
-    @Volatile private var mergeSourceKeys: Set<String> = emptySet()
-    @Volatile private var lastSession: Session? = null
     private val localMergeSession = Session(server = "On this device", username = "Local Library", salt = "", token = "local", type = ServerType.LOCAL)
 
     @Volatile
@@ -222,7 +219,7 @@ class AppContainer(context: Context) {
     // soundcloud previews and drm-only tracks play from a youtube match instead
     suspend fun resolveSoundCloud(item: androidx.media3.common.MediaItem): com.aurora.music.playback.YoutubeResolver.PlaybackStream? {
         val id = item.localConfiguration?.uri?.lastPathSegment?.takeIf { it.matches(Regex("[0-9]+")) } ?: return null
-        val source = backend as? SoundCloudBackend ?: catalogue(ServerType.SOUNDCLOUD) as? SoundCloudBackend
+        val source = backend as? SoundCloudBackend ?: backends.catalogue(ServerType.SOUNDCLOUD) as? SoundCloudBackend
         source?.playbackUrl(id)?.let { return com.aurora.music.playback.YoutubeResolver.PlaybackStream(it) }
         val meta = item.mediaMetadata
         val query = java.net.URLEncoder.encode("${meta.title ?: ""} ${meta.artist ?: ""}".trim(), "UTF-8")
@@ -231,23 +228,10 @@ class AppContainer(context: Context) {
             ?.let { com.aurora.music.playback.YoutubeResolver.PlaybackStream(it) }
     }
 
-    // youtube music and soundcloud as you added them, signed out when you have not
-    private suspend fun catalogue(type: ServerType): MediaBackend =
-        buildBackend(settingsStore.savedSessions.first().firstOrNull { it.type == type && !it.isGuest } ?: Session.guest(type, "Guest"))
+    val playlistImporter by lazy { PlaylistImporter(repository, PlaylistLinks(http), backends::catalogue) }
 
-    val playlistImporter by lazy { PlaylistImporter(repository, PlaylistLinks(http), ::catalogue) }
-
-    suspend fun verifySoundCloud(session: Session): Boolean = (buildBackend(session) as? SoundCloudBackend)?.verify() == true
+    suspend fun verifySoundCloud(session: Session): Boolean = (backends.build(session) as? SoundCloudBackend)?.verify() == true
     fun soundCloudWaiting(session: Session): Int = soundcloudPendingLikes.waiting(session.userId)
-
-    // one client per login: soundcloud rotates the refresh token, so two clients refreshing it would sign each other out
-    private val soundcloudClients = java.util.concurrent.ConcurrentHashMap<String, com.aurora.music.data.remote.SoundCloudClient>()
-    private fun soundcloudClient(session: Session) = soundcloudClients.getOrPut(session.token) {
-        com.aurora.music.data.remote.SoundCloudClient(
-            session = { com.aurora.music.data.remote.SoundCloudWebSession.decode(soundcloudCredentials.read(session.token)) }.takeUnless { session.isGuest },
-            onRefreshed = { soundcloudCredentials.update(session.token, it.encode()) }, http = http, browser = if (session.isGuest) null else soundcloudWriter,
-            savedClientId = { settingsStore.soundcloudClientId.first() }, onClientId = { settingsStore.setSoundcloudClientId(it) })
-    }
 
     private fun resolveYtSentinel(sentinel: String): String? {
         val uri = runCatching { android.net.Uri.parse(sentinel) }.getOrNull() ?: return null
@@ -257,56 +241,26 @@ class AppContainer(context: Context) {
     // the downloaded or on-device copy of a song, when it should play instead of the stream
     fun localCopy(song: Song): Song? = sourceLocalizer.localize(song).takeIf { it.streamUrl != song.streamUrl }
 
-    private fun buildBackend(session: Session): MediaBackend {
-        val localize: (Song) -> Song = { song ->
-            sourceLocalizer.localize(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
-        }
-        return when (session.type) {
-            ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session, appClientInfo), { maxBitrate }, localize)
-            ServerType.PLEX -> ReportingMediaBackend(
-                PlexBackend(com.aurora.music.data.remote.PlexClient(session, appClientInfo), { maxBitrate }, localize),
-            ) { message ->
-                if (lastSession?.accountKey() == session.accountKey() ||
-                    (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
-                        (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
-            }
-            ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, localize)
-            ServerType.SPOTIFY -> if (session.salt == SpotifyWebBackend.WEB_PLAYER)
-                SpotifyWebBackend(session, spotifyWeb.account { spotifyCredentials.read(session.token) }, localize)
-            else SpotifyBackend(
-                SpotifyClient(session, spotifyClientIdValue, onTokenRefreshed = { tok -> scope.launch { settingsStore.updateToken(tok) } }),
-                { maxBitrate }, localize,
-            )
-            ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
-            ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
-                com.aurora.music.data.remote.YouTubeMusicClient(
-                    session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }.takeUnless { session.isGuest }, http = http),
-                youtubeResolver::signatureTimestamp, localize)) { message ->
-                if (lastSession?.accountKey() == session.accountKey() ||
-                    (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
-                        (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
-            }
-            ServerType.SOUNDCLOUD -> SoundCloudBackend(session, soundcloudClient(session), localize, soundcloudPendingLikes)
-            ServerType.EXTENSION -> extensions.backend(session) { song ->
-                val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
-                val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
-                    ?.takeIf { java.io.File(it.audioPath).isFile } else null
-                if (downloaded != null) sourceLocalizer.fromDownload(song, downloaded.toSong(downloadManager.fileUri)) else localize(song)
-            }
-        }
-    }
+    private val backends = BackendFactory(appClientInfo, settingsStore, sourceLocalizer, localLibrary, localStore, localMergeSession,
+        soundcloudPendingLikes, http = { http }, maxBitrate = { maxBitrate },
+        youtubeMusicLogin = { youtubeMusicCredentials.read(it) }, signatureTimestamp = { youtubeResolver::signatureTimestamp },
+        spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
+        soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
+        soundcloudBrowser = { soundcloudWriter }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
+        platformBackend = ::platformBackend)
 
-    private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend {
-        if (!unified || !session.type.supportsMergedLibrary) return buildBackend(session)
-        return sourceLocalizer.mergedBackend(session, mergeKeys, saved, LocalBackend(localLibrary, localStore, localMergeSession), build = ::buildBackend)
-    }
-
-    private suspend fun rebuildBackend() {
-        val session = lastSession
-        backend = session?.let {
-            val saved = runCatching { settingsStore.savedSessions.first() }.getOrDefault(emptyList())
-            buildActiveBackend(it, unifiedLibraryValue, mergeSourceKeys, saved)
+    private fun platformBackend(session: Session, localize: (Song) -> Song): MediaBackend? = when (session.type) {
+        ServerType.SPOTIFY -> SpotifyBackend(
+            SpotifyClient(session, spotifyClientIdValue, onTokenRefreshed = { tok -> scope.launch { settingsStore.updateToken(tok) } }),
+            { maxBitrate }, localize,
+        )
+        ServerType.EXTENSION -> extensions.backend(session) { song ->
+            val enabled = extensions.entries.value.any { it.component == session.userId && it.enabled }
+            val downloaded = if (!enabled) downloadManager.getByOriginalId(song.id)
+                ?.takeIf { java.io.File(it.audioPath).isFile } else null
+            if (downloaded != null) sourceLocalizer.fromDownload(song, downloaded.toSong(downloadManager.fileUri)) else localize(song)
         }
+        else -> null
     }
 
     @Volatile private var spotifyClientIdValue: String = ""
@@ -409,16 +363,16 @@ class AppContainer(context: Context) {
     @Volatile
     private var offlineFlag: Boolean = false
 
-    private val _sessionReady = MutableStateFlow<Boolean?>(null)
-    val sessionReady: StateFlow<Boolean?> = _sessionReady.asStateFlow()
+    private val sessions: SessionCoordinator = SessionCoordinator(settingsStore, settingsStore, scope, backends::buildActive,
+        backend = { backend }, setBackend = { backend = it },
+        rememberRestored = { if (runCatching { settingsStore.savedSessions.first().lastOrNull() }.getOrNull() != it) settingsStore.addSavedSession(it) },
+        rememberApplied = { settingsStore.addSavedSession(it) }, onAccountChanged = ::onAccountChanged, forgetLibrary = ::forgetAiDjLibrary,
+        // single build so read the stored spotify client id instead of racing its collector
+        beforeRebuild = { if (it?.type == ServerType.SPOTIFY) spotifyClientIdValue = settingsStore.spotifyClientId.first() })
 
-    // bumped only on a real account change not initial load or token refresh
-    private val _accountEpoch = MutableStateFlow(0)
-    val accountEpoch: StateFlow<Int> = _accountEpoch.asStateFlow()
-
-    // reloads home/library without the playback-stopping semantics of an account change
-    private val _libraryReload = MutableStateFlow(0)
-    val libraryReload: StateFlow<Int> = _libraryReload.asStateFlow()
+    val sessionReady: StateFlow<Boolean?> = sessions.sessionReady
+    val accountEpoch: StateFlow<Int> = sessions.accountEpoch
+    val libraryReload: StateFlow<Int> = sessions.libraryReload
 
     private val mediaStoreChanges = kotlinx.coroutines.flow.MutableSharedFlow<Unit>(
         extraBufferCapacity = 1, onBufferOverflow = kotlinx.coroutines.channels.BufferOverflow.DROP_OLDEST)
@@ -429,7 +383,7 @@ class AppContainer(context: Context) {
     @OptIn(kotlinx.coroutines.FlowPreview::class)
     private suspend fun followMediaStore() {
         mediaStoreChanges.debounce(MEDIA_STORE_SETTLE_MS).collect {
-            if (localLibrary.inUse && runCatching { localLibrary.syncWithMediaStore() }.getOrDefault(false)) _libraryReload.value++
+            if (localLibrary.inUse && runCatching { localLibrary.syncWithMediaStore() }.getOrDefault(false)) sessions.reloadLibrary()
         }
     }
 
@@ -437,10 +391,9 @@ class AppContainer(context: Context) {
         val result = if (force || localLibrary.inUse) try { localLibrary.rescan(full, folder) }
             catch (cancelled: kotlinx.coroutines.CancellationException) { throw cancelled }
             catch (_: Exception) { null } else null
-        _libraryReload.value++
+        sessions.reloadLibrary()
         return result
     }
-    @Volatile private var lastAccountKey: String? = null
     private fun accountKey(s: Session?): String = s?.accountKey() ?: ""
 
     fun currentAccountKey(): String = accountKey(backend?.session)
@@ -479,7 +432,7 @@ class AppContainer(context: Context) {
     )
 
     // an oauth spotify login refreshes the active session's token, so only the web player one joins as a second account
-    private val likeAccounts = LikeAccounts { s -> if (s.type == ServerType.SPOTIFY && s.salt != SpotifyWebBackend.WEB_PLAYER) null else buildBackend(s) }
+    private val likeAccounts = LikeAccounts { s -> if (s.type == ServerType.SPOTIFY && s.salt != SpotifyWebBackend.WEB_PLAYER) null else backends.build(s) }
 
     private fun recomputeOffline() {
         // local-files mode never needs the network so it's never offline
@@ -488,6 +441,16 @@ class AppContainer(context: Context) {
         _offline.value = offlineFlag
         _noNetwork.value = !networkUp
     }
+
+    private suspend fun onAccountChanged(session: Session?) {
+        recomputeOffline()
+        sonicEngine.cancel()
+        withContext(Dispatchers.IO) { sonicStore.selectAccount(session?.accountKey().orEmpty()) }
+        if (session != null) prefetchLocalIndex()
+        if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
+    }
+
+    private fun forgetAiDjLibrary() { if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary() }
 
     private fun recomputeBitrate() {
         maxBitrate = if (onWifi) {
@@ -507,59 +470,12 @@ class AppContainer(context: Context) {
             var first = true
             kotlinx.coroutines.flow.combine(settingsStore.artistSeparators, settingsStore.trackCovers, ::Pair).collect {
                 if (!first) {
-                    _libraryReload.value++
+                    sessions.reloadLibrary()
                 }
                 first = false
             }
         }
-        scope.launch {
-            var previous: Triple<Session?, Boolean, Set<String>>? = null
-            kotlinx.coroutines.flow.combine(settingsStore.session.distinctUntilChanged(),
-                settingsStore.unifiedLibrary.distinctUntilChanged(), settingsStore.mergeSources.distinctUntilChanged()) { session, unified, merge ->
-                Triple(session, unified, merge)
-            }.distinctUntilChanged().collect { current ->
-                val (session, unified, merge) = current
-                val last = previous
-                previous = current
-                val sessionChanged = last == null || last.first != session
-                unifiedLibraryValue = unified
-                mergeSourceKeys = merge
-                if (sessionChanged) {
-                    lastSession = session
-                    // keep a disk-restored session in the saved list so it shows up for switching
-                    if (session != null && runCatching { settingsStore.savedSessions.first().lastOrNull() }.getOrNull() != session)
-                        settingsStore.addSavedSession(session)
-                }
-                // single build so read the stored spotify client id instead of racing its collector
-                if (lastSession?.type == ServerType.SPOTIFY) spotifyClientIdValue = settingsStore.spotifyClientId.first()
-                rebuildBackend()
-                if (sessionChanged) {
-                    _sessionReady.value = session != null
-                    // ignore the first load so startup doesn't count as an account change
-                    val key = accountKey(session)
-                    if (lastAccountKey != null && lastAccountKey != key) _accountEpoch.value++
-                    lastAccountKey = key
-                    recomputeOffline()
-                    sonicEngine.cancel()
-                    kotlinx.coroutines.withContext(Dispatchers.IO) { sonicStore.selectAccount(session?.accountKey().orEmpty()) }
-                    if (session != null) prefetchLocalIndex()
-                    if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
-                }
-                if (last != null && (last.second != unified || last.third != merge)) {
-                    _libraryReload.value++
-                    if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary()
-                }
-            }
-        }
-        scope.launch {
-            settingsStore.savedSessions.distinctUntilChanged().drop(1).collect {
-                if (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true) {
-                    rebuildBackend()
-                    _libraryReload.value++
-                    if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary()
-                }
-            }
-        }
+        sessions.start()
         scope.launch {
             settingsStore.playbackPrefs.collect {
                 streamWifi = it.streamWifi
@@ -586,7 +502,7 @@ class AppContainer(context: Context) {
         }
         scope.launch {
             kotlinx.coroutines.flow.combine(settingsStore.localFolders, settingsStore.localExcludedFolders, ::Pair).drop(1).collect {
-                if (localLibrary.inUse && runCatching { localLibrary.refresh() }.getOrDefault(false)) _libraryReload.value++
+                if (localLibrary.inUse && runCatching { localLibrary.refresh() }.getOrDefault(false)) sessions.reloadLibrary()
             }
         }
         scope.launch {
@@ -597,7 +513,7 @@ class AppContainer(context: Context) {
             settingsStore.spotifyClientId.distinctUntilChanged().collect { id ->
                 spotifyClientIdValue = id
                 // rebuild an active spotify backend so token refresh uses the up-to-date client id
-                if (!first && backend?.session?.type == ServerType.SPOTIFY) rebuildBackend()
+                if (!first && backend?.session?.type == ServerType.SPOTIFY) sessions.rebuildBackend()
                 first = false
             }
         }
@@ -628,27 +544,16 @@ class AppContainer(context: Context) {
         }
     }
 
-    suspend fun applySession(session: Session) {
-        lastSession = session
-        settingsStore.saveSession(session)
-        settingsStore.addSavedSession(session)
-        rebuildBackend()
-        _sessionReady.value = true
-    }
+    suspend fun applySession(session: Session) = sessions.applySession(session)
 
     suspend fun switchSession(session: Session) = applySession(session)
 
-    suspend fun signOut() {
-        lastSession = null
-        backend = null
-        _sessionReady.value = false
-        settingsStore.clearSession()
-    }
+    suspend fun signOut() = sessions.signOut()
 
     suspend fun forgetSavedSession(session: Session) {
         settingsStore.removeSavedSession(session)
         if (session.type == ServerType.YOUTUBE_MUSIC) youtubeMusicCredentials.remove(session.token)
-        if (session.type == ServerType.SOUNDCLOUD) { soundcloudClients.remove(session.token); soundcloudCredentials.remove(session.token) }
+        if (session.type == ServerType.SOUNDCLOUD) { backends.forgetSoundCloud(session.token); soundcloudCredentials.remove(session.token) }
         if (session.type == ServerType.SPOTIFY && session.salt == SpotifyWebBackend.WEB_PLAYER) {
             spotifyCredentials.remove(session.token)
             withContext(Dispatchers.Main) {

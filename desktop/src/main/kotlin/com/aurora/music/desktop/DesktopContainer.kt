@@ -8,10 +8,8 @@ import com.aurora.music.data.DEFAULT_SOURCE_PRIORITY
 import com.aurora.music.data.DEFAULT_SQUIG_BASE
 import com.aurora.music.data.DEFAULT_SQUIG_TARGET
 import com.aurora.music.data.DownloadManager
-import com.aurora.music.data.JellyfinBackend
 import com.aurora.music.data.LastfmScrobbler
 import com.aurora.music.data.ListenBrainzScrobbler
-import com.aurora.music.data.LocalBackend
 import com.aurora.music.data.LocalStore
 import com.aurora.music.data.LyricsRepository
 import com.aurora.music.data.MediaBackend
@@ -19,29 +17,24 @@ import com.aurora.music.data.MergedBackend
 import com.aurora.music.data.MusicRepository
 import com.aurora.music.data.PlayHistoryStore
 import com.aurora.music.data.PlaybackReportDispatcher
-import com.aurora.music.data.PlaybackSourceIdentity
-import com.aurora.music.data.PlexBackend
 import com.aurora.music.data.QueueStore
 import com.aurora.music.data.ResumePoints
 import com.aurora.music.data.ReplayGainStore
-import com.aurora.music.data.ReportingMediaBackend
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.SettingsStore
 import com.aurora.music.data.SmartPlaylistEngine
 import com.aurora.music.data.SourceLocalizer
 import com.aurora.music.data.SquigEqRepository
-import com.aurora.music.data.SubsonicBackend
 import com.aurora.music.data.accountKey
 import com.aurora.music.data.artwork.ArtworkRepository
 import com.aurora.music.data.artwork.ArtworkUrls
+import com.aurora.music.data.container.BackendFactory
+import com.aurora.music.data.container.SessionCoordinator
 import com.aurora.music.data.remote.ArtistInfoClient
 import com.aurora.music.data.remote.AuroraHttp
 import com.aurora.music.data.remote.ClientInfo
-import com.aurora.music.data.remote.JellyfinClient
-import com.aurora.music.data.remote.PlexClient
 import com.aurora.music.data.remote.SquigClient
-import com.aurora.music.data.remote.SubsonicClient
 import com.aurora.music.desktop.auth.AccountAuthenticator
 import com.aurora.music.desktop.library.FolderLibrary
 import com.aurora.music.desktop.platform.DesktopPaths
@@ -70,7 +63,6 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
-import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.stateIn
@@ -144,32 +136,19 @@ class DesktopContainer(
     val trackChoices = com.aurora.music.data.TrackChoices(paths.local)
     val youtubeResolver by lazy { com.aurora.music.desktop.youtube.YoutubeResolver(http) { trackChoices.matchFor(it)?.videoId } }
 
-    // one client per login: soundcloud rotates the refresh token, so two clients refreshing it would sign each other out
     init {
         com.aurora.music.desktop.web.Chromium.configure(java.io.File(paths.local, "chromium"))
     }
 
-    private val soundcloudClients = java.util.concurrent.ConcurrentHashMap<String, com.aurora.music.data.remote.SoundCloudClient>()
-    private fun soundcloudClient(session: Session) = soundcloudClients.getOrPut(session.token) {
-        com.aurora.music.data.remote.SoundCloudClient(
-            session = { com.aurora.music.data.remote.SoundCloudWebSession.decode(soundcloudCredentials.read(session.token)) }.takeUnless { session.isGuest },
-            onRefreshed = { soundcloudCredentials.update(session.token, it.encode()) }, http = http, browser = if (session.isGuest) null else soundcloudWriter,
-            savedClientId = { settingsStore.soundcloudClientId.first() }, onClientId = { settingsStore.setSoundcloudClientId(it) })
-    }
-
-    suspend fun verifySoundCloud(session: Session): Boolean = (buildBackend(session) as? com.aurora.music.data.SoundCloudBackend)?.verify() == true
+    suspend fun verifySoundCloud(session: Session): Boolean = (backends.build(session) as? com.aurora.music.data.SoundCloudBackend)?.verify() == true
     fun soundCloudWaiting(session: Session): Int = soundcloudPendingLikes.waiting(session.userId)
 
+    val playlistImporter by lazy { com.aurora.music.data.PlaylistImporter(repository, com.aurora.music.data.PlaylistLinks(http), backends::catalogue) }
+
     // soundcloud previews and drm-only tracks play from a youtube match instead
-    // youtube music and soundcloud as you added them, signed out when you have not
-    private suspend fun catalogue(type: ServerType): MediaBackend? =
-        buildBackend(settingsStore.savedSessions.first().firstOrNull { it.type == type && !it.isGuest } ?: Session.guest(type, "Guest"))
-
-    val playlistImporter by lazy { com.aurora.music.data.PlaylistImporter(repository, com.aurora.music.data.PlaylistLinks(http), ::catalogue) }
-
     fun resolveSoundCloud(song: Song): String? {
         val id = song.streamUrl.substringAfterLast('/').substringBefore('?').takeIf { it.matches(Regex("[0-9]+")) } ?: return null
-        val source = backend as? com.aurora.music.data.SoundCloudBackend ?: runBlocking { catalogue(ServerType.SOUNDCLOUD) } as? com.aurora.music.data.SoundCloudBackend
+        val source = backend as? com.aurora.music.data.SoundCloudBackend ?: runBlocking { backends.catalogue(ServerType.SOUNDCLOUD) } as? com.aurora.music.data.SoundCloudBackend
         runCatching { runBlocking { source?.playbackUrl(id) } }.getOrNull()?.let { return it }
         val query = java.net.URLEncoder.encode("${song.title} ${song.artist}".trim(), "UTF-8")
         return youtubeResolver.resolveSentinel("aurora-yt://sc$id?q=$query&dur=${song.durationSec}")
@@ -205,9 +184,6 @@ class DesktopContainer(
     @Volatile private var downloadBitrate: Int = 0
     @Volatile private var preferLocalSources: Boolean = true
     private val sourcePriority = settingsStore.sourcePriority.stateIn(scope, SharingStarted.Eagerly, DEFAULT_SOURCE_PRIORITY)
-    @Volatile private var unifiedLibraryValue: Boolean = false
-    @Volatile private var mergeSourceKeys: Set<String> = emptySet()
-    @Volatile private var lastSession: Session? = null
     @Volatile private var offlineToggle: Boolean = false
     @Volatile private var offlineFlag: Boolean = false
     private val lrclibEnabled = settingsStore.lrclibEnabled.stateIn(scope, SharingStarted.Eagerly, true)
@@ -242,6 +218,14 @@ class DesktopContainer(
         preferLocal = { preferLocalSources }, priority = { sourcePriority.value },
         isLocalUrl = { it.startsWith("file:") }, findLocal = folderLibrary::findMatch,
         catalogueMatch = { catalogueMatch.value })
+
+    private val backends = BackendFactory(clientInfo, settingsStore, sourceLocalizer, folderLibrary, localStore, localMergeSession,
+        soundcloudPendingLikes, http = { http }, maxBitrate = { maxBitrate },
+        youtubeMusicLogin = { youtubeMusicCredentials.read(it) }, signatureTimestamp = { youtubeResolver::signatureTimestamp },
+        spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
+        soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
+        soundcloudBrowser = { soundcloudWriter }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
+        eligible = AccountAuthenticator::supports)
 
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 
@@ -340,22 +324,16 @@ class DesktopContainer(
         trackChoices = trackChoices,
     )
 
-    private val likeAccounts = com.aurora.music.data.LikeAccounts { if (AccountAuthenticator.supports(it)) buildBackend(it) else null }
+    private val likeAccounts = com.aurora.music.data.LikeAccounts { if (AccountAuthenticator.supports(it)) backends.build(it) else null }
 
-    private val _sessionReady = MutableStateFlow<Boolean?>(null)
-    val sessionReady: StateFlow<Boolean?> = _sessionReady.asStateFlow()
+    private val sessions: SessionCoordinator = SessionCoordinator(settingsStore, settingsStore, scope, backends::buildActive,
+        backend = { backend }, setBackend = { backend = it }, rememberRestored = ::rememberSession, rememberApplied = ::rememberSession,
+        onAccountChanged = ::onAccountChanged, forgetLibrary = ::forgetAiDjLibrary, supports = AccountAuthenticator::supports)
 
-    private val _unsupportedAccount = MutableStateFlow<Session?>(null)
-    val unsupportedAccount: StateFlow<Session?> = _unsupportedAccount.asStateFlow()
-
-    // bumped only on a real account change not initial load or token refresh
-    private val _accountEpoch = MutableStateFlow(0)
-    val accountEpoch: StateFlow<Int> = _accountEpoch.asStateFlow()
-
-    // reloads home/library without the playback-stopping semantics of an account change
-    private val _libraryReload = MutableStateFlow(0)
-    val libraryReload: StateFlow<Int> = _libraryReload.asStateFlow()
-    @Volatile private var lastAccountKey: String? = null
+    val sessionReady: StateFlow<Boolean?> = sessions.sessionReady
+    val unsupportedAccount: StateFlow<Session?> = sessions.unsupportedAccount
+    val accountEpoch: StateFlow<Int> = sessions.accountEpoch
+    val libraryReload: StateFlow<Int> = sessions.libraryReload
 
     private val _offline = MutableStateFlow(false)
     val offline: StateFlow<Boolean> = _offline.asStateFlow()
@@ -369,54 +347,6 @@ class DesktopContainer(
     // the downloaded or on-device copy of a song, when it should play instead of the stream
     fun localCopy(song: Song): Song? = sourceLocalizer.localize(song).takeIf { it.streamUrl != song.streamUrl }
 
-    private fun buildBackend(session: Session): MediaBackend? {
-        val localize: (Song) -> Song = { song ->
-            sourceLocalizer.localize(song.copy(playbackSource = song.playbackSource ?: PlaybackSourceIdentity.fromSession(session, song.albumId)))
-        }
-        return when (session.type) {
-            ServerType.SUBSONIC -> SubsonicBackend(SubsonicClient(session), { maxBitrate }, localize)
-            ServerType.JELLYFIN -> JellyfinBackend(JellyfinClient(session, clientInfo), { maxBitrate }, localize)
-            ServerType.PLEX -> ReportingMediaBackend(PlexBackend(PlexClient(session, clientInfo), { maxBitrate }, localize)) { message ->
-                if (lastSession?.accountKey() == session.accountKey() ||
-                    (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
-                        (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
-            }
-            ServerType.LOCAL -> LocalBackend(folderLibrary, localStore, session)
-            ServerType.SPOTIFY -> if (session.salt == com.aurora.music.data.SpotifyWebBackend.WEB_PLAYER)
-                com.aurora.music.data.SpotifyWebBackend(session, spotifyWeb.account { spotifyCredentials.read(session.token) }, localize) else null
-            ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(com.aurora.music.data.YouTubeMusicBackend(session,
-                com.aurora.music.data.remote.YouTubeMusicClient(
-                    session = { com.aurora.music.data.remote.YouTubeMusicWebSession.decode(youtubeMusicCredentials.read(session.token)) }.takeUnless { session.isGuest }, http = http),
-                youtubeResolver::signatureTimestamp, localize)) { message ->
-                if (lastSession?.accountKey() == session.accountKey() ||
-                    (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true &&
-                        (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))) _sourceErrors.tryEmit(message)
-            }
-            ServerType.SOUNDCLOUD -> com.aurora.music.data.SoundCloudBackend(session, soundcloudClient(session), localize, soundcloudPendingLikes)
-            ServerType.EXTENSION -> null
-        }
-    }
-
-    private fun buildActiveBackend(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend? {
-        if (!AccountAuthenticator.supports(session)) return null
-        if (!unified || !session.type.supportsMergedLibrary) return buildBackend(session)
-        return sourceLocalizer.mergedBackend(session, mergeKeys, saved, LocalBackend(folderLibrary, localStore, localMergeSession),
-            eligible = AccountAuthenticator::supports, build = ::buildBackend)
-    }
-
-    private suspend fun rebuildBackend() {
-        val session = lastSession
-        backend = session?.let {
-            val saved = runCatching { settingsStore.savedSessions.first() }.getOrDefault(emptyList())
-            buildActiveBackend(it, unifiedLibraryValue, mergeSourceKeys, saved)
-        }
-    }
-
-    private fun publishSession(session: Session?) {
-        _unsupportedAccount.value = session?.takeIf { !AccountAuthenticator.supports(it) }
-        _sessionReady.value = session != null && backend != null
-    }
-
     private fun forgetAiDjLibrary() { if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary() }
 
     private fun recomputeOffline() {
@@ -425,51 +355,18 @@ class DesktopContainer(
         _offline.value = offlineFlag
     }
 
+    private suspend fun onAccountChanged(session: Session?) {
+        recomputeOffline()
+        sonicEngine.cancel()
+        withContext(Dispatchers.IO) { sonicStore.selectAccount(session?.accountKey().orEmpty()) }
+        if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
+    }
+
     init {
         scope.launch {
-            settingsStore.artistSeparators.drop(1).collect { _libraryReload.value++ }
+            settingsStore.artistSeparators.drop(1).collect { sessions.reloadLibrary() }
         }
-        scope.launch {
-            var previous: Triple<Session?, Boolean, Set<String>>? = null
-            // one collector, so launch builds once with the merge settings already known
-            combine(settingsStore.session.distinctUntilChanged(), settingsStore.unifiedLibrary.distinctUntilChanged(),
-                settingsStore.mergeSources.distinctUntilChanged()) { session, unified, merge -> Triple(session, unified, merge) }
-                .distinctUntilChanged().collect { current ->
-                    val (session, unified, merge) = current
-                    val last = previous
-                    previous = current
-                    val sessionChanged = last == null || last.first != session
-                    unifiedLibraryValue = unified
-                    mergeSourceKeys = merge
-                    if (sessionChanged) {
-                        lastSession = session
-                        // keep a disk-restored session in the saved list so it shows up for switching
-                        session?.let { rememberSession(it) }
-                    }
-                    rebuildBackend()
-                    if (sessionChanged) {
-                        publishSession(session)
-                        // ignore the first load so startup doesn't count as an account change
-                        val key = session?.accountKey().orEmpty()
-                        if (lastAccountKey != null && lastAccountKey != key) _accountEpoch.value++
-                        lastAccountKey = key
-                        recomputeOffline()
-                        sonicEngine.cancel()
-                        withContext(Dispatchers.IO) { sonicStore.selectAccount(key) }
-                        if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
-                    }
-                    if (last != null && (last.second != unified || last.third != merge)) { _libraryReload.value++; forgetAiDjLibrary() }
-                }
-        }
-        scope.launch {
-            settingsStore.savedSessions.distinctUntilChanged().drop(1).collect {
-                if (unifiedLibraryValue && lastSession?.type?.supportsMergedLibrary == true) {
-                    rebuildBackend()
-                    _libraryReload.value++
-                    forgetAiDjLibrary()
-                }
-            }
-        }
+        sessions.start()
         scope.launch {
             settingsStore.playbackPrefs.collect {
                 maxBitrate = it.streamWifi
@@ -490,20 +387,14 @@ class DesktopContainer(
             desktopSettings.musicFolders.drop(1).collect { runCatching { folderLibrary.refresh() } }
         }
         scope.launch {
-            folderLibrary.revision.drop(1).collect { if (isLocal || backend is MergedBackend) _libraryReload.value++ }
+            folderLibrary.revision.drop(1).collect { if (isLocal || backend is MergedBackend) sessions.reloadLibrary() }
         }
         scope.launch {
             desktopSettings.languageTag.collect { if (it != AppStrings.languageTag.value) AppStrings.setLocale(it) }
         }
     }
 
-    suspend fun applySession(session: Session) {
-        lastSession = session
-        settingsStore.saveSession(session)
-        rememberSession(session)
-        rebuildBackend()
-        publishSession(session)
-    }
+    suspend fun applySession(session: Session) = sessions.applySession(session)
 
     suspend fun switchSession(session: Session) = applySession(session)
 
@@ -516,18 +407,13 @@ class DesktopContainer(
         if (saved.lastOrNull() != session) settingsStore.addSavedSession(session)
     }
 
-    suspend fun signOut() {
-        lastSession = null
-        backend = null
-        publishSession(null)
-        settingsStore.clearSession()
-    }
+    suspend fun signOut() = sessions.signOut()
 
     suspend fun forgetSavedSession(session: Session) {
         settingsStore.removeSavedSession(session)
         when (session.type) {
             ServerType.YOUTUBE_MUSIC -> if (!session.isGuest) youtubeMusicCredentials.remove(session.token)
-            ServerType.SOUNDCLOUD -> { soundcloudClients.remove(session.token); if (!session.isGuest) soundcloudCredentials.remove(session.token) }
+            ServerType.SOUNDCLOUD -> { backends.forgetSoundCloud(session.token); if (!session.isGuest) soundcloudCredentials.remove(session.token) }
             ServerType.SPOTIFY -> if (session.salt == com.aurora.music.data.SpotifyWebBackend.WEB_PLAYER) {
                 spotifyCredentials.remove(session.token)
                 spotifyWeb.reset()
@@ -535,7 +421,7 @@ class DesktopContainer(
             }
             else -> Unit
         }
-        if (backend?.session?.accountKey() == session.accountKey() || lastSession?.accountKey() == session.accountKey()) signOut()
+        if (backend?.session?.accountKey() == session.accountKey() || sessions.lastSession?.accountKey() == session.accountKey()) signOut()
     }
 
     override fun close() {
