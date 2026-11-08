@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"गाने क्रम में लगाएँ"</string>
+    <string name="track_sort_heading">"इसके अनुसार क्रम"</string>
+    <string name="track_sort_custom">"अपना क्रम"</string>
+    <string name="track_sort_title">"शीर्षक"</string>
+    <string name="track_sort_artist">"कलाकार"</string>
+    <string name="track_sort_album">"एल्बम"</string>
+    <string name="track_sort_recent">"हाल में जोड़े गए"</string>
+    <string name="track_sort_duration">"अवधि"</string>
+    <string name="track_sort_ascending">"बढ़ते क्रम में"</string>
+    <string name="track_sort_descending">"घटते क्रम में"</string>
+    <string name="whats_new_sort_title">"कोई भी प्लेलिस्ट क्रम में लगाएँ"</string>
+    <string name="whats_new_sort_body">"प्लेलिस्ट या पसंदीदा गानों पर फ़नल दबाएँ और शीर्षक, कलाकार, एल्बम, जोड़ने की तारीख या अवधि के अनुसार क्रम लगाएँ। उलटने के लिए वही विकल्प फिर दबाएँ। हर प्लेलिस्ट अपना क्रम याद रखती है।"</string>
+</resources>

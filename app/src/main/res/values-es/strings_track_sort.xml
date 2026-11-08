@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Ordenar canciones"</string>
+    <string name="track_sort_heading">"Ordenar por"</string>
+    <string name="track_sort_custom">"Orden personalizado"</string>
+    <string name="track_sort_title">"Título"</string>
+    <string name="track_sort_artist">"Artista"</string>
+    <string name="track_sort_album">"Álbum"</string>
+    <string name="track_sort_recent">"Añadidas recientemente"</string>
+    <string name="track_sort_duration">"Duración"</string>
+    <string name="track_sort_ascending">"Ascendente"</string>
+    <string name="track_sort_descending">"Descendente"</string>
+    <string name="whats_new_sort_title">"Ordena cualquier lista"</string>
+    <string name="whats_new_sort_body">"Toca el embudo en una lista o en Canciones que te gustan para ordenar por título, artista, álbum, fecha de incorporación o duración. Toca la misma opción otra vez para invertirla. Cada lista recuerda su orden."</string>
+</resources>

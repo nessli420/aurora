@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Şarkıları sırala"</string>
+    <string name="track_sort_heading">"Sıralama ölçütü"</string>
+    <string name="track_sort_custom">"Özel sıra"</string>
+    <string name="track_sort_title">"Başlık"</string>
+    <string name="track_sort_artist">"Sanatçı"</string>
+    <string name="track_sort_album">"Albüm"</string>
+    <string name="track_sort_recent">"Son eklenenler"</string>
+    <string name="track_sort_duration">"Süre"</string>
+    <string name="track_sort_ascending">"Artan"</string>
+    <string name="track_sort_descending">"Azalan"</string>
+    <string name="whats_new_sort_title">"Her çalma listesini sırala"</string>
+    <string name="whats_new_sort_body">"Bir çalma listesinde veya Beğenilen Şarkılar'da huniye dokunup başlık, sanatçı, albüm, eklenme tarihi ya da süreye göre sırala. Ters çevirmek için aynı seçeneğe tekrar dokun. Her çalma listesi kendi sırasını hatırlar."</string>
+</resources>

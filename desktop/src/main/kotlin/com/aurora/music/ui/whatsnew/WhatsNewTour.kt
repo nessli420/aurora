@@ -36,6 +36,10 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragIndicator
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.FilterAlt
+import com.aurora.music.data.TrackSort
+import com.aurora.music.ui.components.label
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -565,6 +569,30 @@ private fun PreviewTab(label: String, lifted: Boolean = false, hidden: Boolean =
         Spacer(Modifier.width(12.dp))
         Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = if (lifted) FontWeight.SemiBold else null)
         Icon(if (hidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null, Modifier.size(20.dp), tint = colors.onSurfaceVariant)
+    }
+}
+
+@Composable
+internal fun TrackSortPreview() {
+    val colors = MaterialTheme.colorScheme
+    Box(Modifier.fillMaxSize().padding(18.dp)) {
+        Text(appString(R.string.text_liked_songs_58c3a9), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
+            modifier = Modifier.padding(start = 4.dp, top = 2.dp))
+        Icon(Icons.Filled.FilterAlt, null, Modifier.align(Alignment.TopEnd).size(26.dp), tint = colors.primary)
+        // the open sort menu, the active choice in the accent with its direction arrow
+        Column(Modifier.align(Alignment.BottomEnd).fillMaxWidth(0.78f).shadow(12.dp, MaterialTheme.shapes.medium)
+            .clip(MaterialTheme.shapes.medium).background(colors.surfaceContainerHighest).padding(vertical = 8.dp)) {
+            Text(appString(R.string.track_sort_heading), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+                color = colors.onSurfaceVariant, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+            listOf(TrackSort.CUSTOM, TrackSort.TITLE, TrackSort.ARTIST, TrackSort.RECENTLY_ADDED, TrackSort.DURATION).forEach { sort ->
+                val active = sort == TrackSort.RECENTLY_ADDED
+                Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(sort.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge,
+                        fontWeight = if (active) FontWeight.SemiBold else null, color = if (active) colors.primary else colors.onSurface)
+                    if (active) Icon(Icons.Filled.ArrowDownward, null, Modifier.size(18.dp), tint = colors.primary)
+                }
+            }
+        }
     }
 }
 

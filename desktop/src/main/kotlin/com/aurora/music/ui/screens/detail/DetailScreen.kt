@@ -108,6 +108,7 @@ import com.aurora.music.ui.theme.readableAccent
 import com.aurora.music.util.rememberDominantColor
 import com.aurora.music.viewmodel.DetailUiState
 import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.ui.theme.themedCorner
 
 private val MetaSeparator = Regex("\\s+[•·]\\s+|\\s*[•·]\\s*$")
@@ -153,7 +154,12 @@ fun DetailScreen(
     onExpand: (() -> Unit)? = null,
     hiddenIds: Set<String> = emptySet(),
     onToggleHidden: ((Song) -> Unit)? = null,
+    // "kind:id"; playlists and liked songs remember their sort under it
+    collectionKey: String? = null,
 ) {
+    val sortStore = com.aurora.music.desktop.ui.LocalDesktopContainer.current.settingsStore
+    val sorts by sortStore.trackSorts.collectAsStateWithLifecycle(initialValue = emptyMap())
+    val sortScope = androidx.compose.runtime.rememberCoroutineScope()
     var headerMenu by remember { mutableStateOf(false) }
     var showEdit by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
@@ -179,7 +185,12 @@ fun DetailScreen(
     }
 
     val info = data.info
-    val tracks = data.tracks
+    // play, shuffle and the list all follow the chosen sort
+    val sortKey = collectionKey?.takeIf {
+        info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
+    }
+    val sortOrder = sortKey?.let { sorts[it] } ?: com.aurora.music.data.TrackSortOrder()
+    val tracks = remember(data.tracks, sortOrder) { sortOrder.apply(data.tracks) }
     val effectiveArt = artistInfo?.imageUrl?.takeIf { info.isArtist && it.isNotBlank() } ?: info.artUrl
     val albumCover = if (itemKind == "album") CoverKey(info.title, info.subtitle,
         tracks.firstNotNullOfOrNull { CoverKey.localPath(it).takeIf(String::isNotBlank) }.orEmpty()) else null
@@ -260,6 +271,9 @@ fun DetailScreen(
                 HeaderIcon(Icons.Filled.GraphicEq, appString(R.string.text_mix_fd7391), MaterialTheme.colorScheme.onSurface, enabled = tracks.size >= 2) { mix() }
             }
             if (!wrap) Spacer(Modifier.weight(1f))
+            if (sortKey != null) com.aurora.music.ui.components.TrackSortButton(sortOrder, accent, enabled = tracks.size > 1) { choice ->
+                sortScope.launch { sortStore.setTrackSort(sortKey, sortOrder.pick(choice)) }
+            }
             if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist")) {
                 HeaderIcon(
                     if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,

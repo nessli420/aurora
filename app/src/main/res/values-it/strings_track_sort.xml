@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Ordina brani"</string>
+    <string name="track_sort_heading">"Ordina per"</string>
+    <string name="track_sort_custom">"Ordine personalizzato"</string>
+    <string name="track_sort_title">"Titolo"</string>
+    <string name="track_sort_artist">"Artista"</string>
+    <string name="track_sort_album">"Album"</string>
+    <string name="track_sort_recent">"Aggiunti di recente"</string>
+    <string name="track_sort_duration">"Durata"</string>
+    <string name="track_sort_ascending">"Crescente"</string>
+    <string name="track_sort_descending">"Decrescente"</string>
+    <string name="whats_new_sort_title">"Ordina qualsiasi playlist"</string>
+    <string name="whats_new_sort_body">"Tocca l'imbuto in una playlist o nei Brani che ti piacciono per ordinare per titolo, artista, album, data di aggiunta o durata. Tocca di nuovo la stessa scelta per invertirla. Ogni playlist ricorda il suo ordine."</string>
+</resources>

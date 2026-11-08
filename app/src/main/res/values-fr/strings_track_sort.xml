@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Trier les titres"</string>
+    <string name="track_sort_heading">"Trier par"</string>
+    <string name="track_sort_custom">"Ordre personnalisé"</string>
+    <string name="track_sort_title">"Titre"</string>
+    <string name="track_sort_artist">"Artiste"</string>
+    <string name="track_sort_album">"Album"</string>
+    <string name="track_sort_recent">"Ajoutés récemment"</string>
+    <string name="track_sort_duration">"Durée"</string>
+    <string name="track_sort_ascending">"Croissant"</string>
+    <string name="track_sort_descending">"Décroissant"</string>
+    <string name="whats_new_sort_title">"Triez n'importe quelle playlist"</string>
+    <string name="whats_new_sort_body">"Touchez l'entonnoir d'une playlist ou des Titres likés pour trier par titre, artiste, album, date d'ajout ou durée. Touchez à nouveau le même choix pour l'inverser. Chaque playlist retient son ordre."</string>
+</resources>

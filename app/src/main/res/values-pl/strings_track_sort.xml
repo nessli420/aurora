@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Sortuj utwory"</string>
+    <string name="track_sort_heading">"Sortuj według"</string>
+    <string name="track_sort_custom">"Własna kolejność"</string>
+    <string name="track_sort_title">"Tytuł"</string>
+    <string name="track_sort_artist">"Wykonawca"</string>
+    <string name="track_sort_album">"Album"</string>
+    <string name="track_sort_recent">"Ostatnio dodane"</string>
+    <string name="track_sort_duration">"Czas trwania"</string>
+    <string name="track_sort_ascending">"Rosnąco"</string>
+    <string name="track_sort_descending">"Malejąco"</string>
+    <string name="whats_new_sort_title">"Sortuj dowolną playlistę"</string>
+    <string name="whats_new_sort_body">"Stuknij lejek na playliście lub w Polubionych utworach, aby sortować według tytułu, wykonawcy, albumu, daty dodania lub długości. Stuknij ten sam wybór ponownie, aby odwrócić kolejność. Każda playlista pamięta swoją kolejność."</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"گانے ترتیب دیں"</string>
+    <string name="track_sort_heading">"اس کے مطابق ترتیب"</string>
+    <string name="track_sort_custom">"اپنی ترتیب"</string>
+    <string name="track_sort_title">"عنوان"</string>
+    <string name="track_sort_artist">"فنکار"</string>
+    <string name="track_sort_album">"البم"</string>
+    <string name="track_sort_recent">"حال ہی میں شامل"</string>
+    <string name="track_sort_duration">"دورانیہ"</string>
+    <string name="track_sort_ascending">"صعودی"</string>
+    <string name="track_sort_descending">"نزولی"</string>
+    <string name="whats_new_sort_title">"کوئی بھی پلے لسٹ ترتیب دیں"</string>
+    <string name="whats_new_sort_body">"پلے لسٹ یا پسندیدہ گانوں میں قیف پر ٹیپ کریں اور عنوان، فنکار، البم، شامل کرنے کی تاریخ یا دورانیے کے مطابق ترتیب دیں۔ الٹنے کے لیے وہی انتخاب دوبارہ ٹیپ کریں۔ ہر پلے لسٹ اپنی ترتیب یاد رکھتی ہے۔"</string>
+</resources>

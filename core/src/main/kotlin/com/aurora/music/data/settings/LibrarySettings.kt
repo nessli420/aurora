@@ -49,6 +49,9 @@ interface LibrarySettings {
     suspend fun setLrclibEnabled(v: Boolean): Preferences
     val artistSeparators: Flow<ArtistSeparators>
     suspend fun setArtistSeparators(separators: ArtistSeparators)
+    // how each playlist or liked list is sorted, keyed by collection
+    val trackSorts: Flow<Map<String, TrackSortOrder>>
+    suspend fun setTrackSort(collection: String, order: TrackSortOrder): Preferences
 }
 
 internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences>) : LibrarySettings {
@@ -60,6 +63,12 @@ internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences
     override val animatedCoversEnabled: Flow<Boolean> = dataStore.data.map { it[Keys.ANIMATED_COVERS] ?: true }.distinctUntilChanged()
     override val animatedCoversFolder: Flow<String> = dataStore.data.map { it[Keys.ANIMATED_COVERS_FOLDER].orEmpty() }.distinctUntilChanged()
     override val lrclibEnabled: Flow<Boolean> = dataStore.data.map { it[Keys.LRCLIB] ?: true }.distinctUntilChanged()
+
+    override val trackSorts: Flow<Map<String, TrackSortOrder>> =
+        dataStore.data.map { TrackSorts.decode(it[Keys.TRACK_SORTS]) }.distinctUntilChanged()
+    override suspend fun setTrackSort(collection: String, order: TrackSortOrder) = dataStore.edit {
+        it[Keys.TRACK_SORTS] = TrackSorts.encode(TrackSorts.decode(it[Keys.TRACK_SORTS]), collection, order)
+    }
 
     override val sonicAutoAnalyze: Flow<Boolean> = dataStore.data.map { it[Keys.SONIC_AUTO_ANALYZE] ?: false }.distinctUntilChanged()
     override suspend fun setSonicAutoAnalyze(v: Boolean) = dataStore.edit { it[Keys.SONIC_AUTO_ANALYZE] = v }

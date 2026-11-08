@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Urutkan lagu"</string>
+    <string name="track_sort_heading">"Urutkan menurut"</string>
+    <string name="track_sort_custom">"Urutan khusus"</string>
+    <string name="track_sort_title">"Judul"</string>
+    <string name="track_sort_artist">"Artis"</string>
+    <string name="track_sort_album">"Album"</string>
+    <string name="track_sort_recent">"Baru ditambahkan"</string>
+    <string name="track_sort_duration">"Durasi"</string>
+    <string name="track_sort_ascending">"Naik"</string>
+    <string name="track_sort_descending">"Turun"</string>
+    <string name="whats_new_sort_title">"Urutkan playlist apa pun"</string>
+    <string name="whats_new_sort_body">"Ketuk corong di playlist atau Lagu yang Disukai untuk mengurutkan menurut judul, artis, album, tanggal ditambahkan, atau durasi. Ketuk pilihan yang sama lagi untuk membaliknya. Setiap playlist mengingat urutannya."</string>
+</resources>

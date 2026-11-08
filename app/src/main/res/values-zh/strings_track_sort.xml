@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"排序歌曲"</string>
+    <string name="track_sort_heading">"排序方式"</string>
+    <string name="track_sort_custom">"自定义顺序"</string>
+    <string name="track_sort_title">"标题"</string>
+    <string name="track_sort_artist">"艺人"</string>
+    <string name="track_sort_album">"专辑"</string>
+    <string name="track_sort_recent">"最近添加"</string>
+    <string name="track_sort_duration">"时长"</string>
+    <string name="track_sort_ascending">"升序"</string>
+    <string name="track_sort_descending">"降序"</string>
+    <string name="whats_new_sort_title">"随意排序任何歌单"</string>
+    <string name="whats_new_sort_body">"在歌单或已点赞的歌曲中点按漏斗图标，即可按标题、艺人、专辑、添加日期或时长排序。再次点按同一选项可反向排序。每个歌单都会记住自己的顺序。"</string>
+</resources>

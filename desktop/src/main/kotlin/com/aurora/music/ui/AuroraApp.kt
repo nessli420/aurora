@@ -705,6 +705,7 @@ private fun Shell(
             }
             DetailScreen(
                 contentPadding = padding,
+                collectionKey = "$kind:$id",
                 onMix = { mixCollection(kind, id, detailState.data?.info?.title ?: appString(R.string.text_collection_30c54a)) },
                 state = detailState,
                 onEditTags = editTags,

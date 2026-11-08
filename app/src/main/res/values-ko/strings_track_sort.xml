@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"곡 정렬"</string>
+    <string name="track_sort_heading">"정렬 기준"</string>
+    <string name="track_sort_custom">"사용자 지정 순서"</string>
+    <string name="track_sort_title">"제목"</string>
+    <string name="track_sort_artist">"아티스트"</string>
+    <string name="track_sort_album">"앨범"</string>
+    <string name="track_sort_recent">"최근 추가"</string>
+    <string name="track_sort_duration">"재생 시간"</string>
+    <string name="track_sort_ascending">"오름차순"</string>
+    <string name="track_sort_descending">"내림차순"</string>
+    <string name="whats_new_sort_title">"모든 플레이리스트 정렬"</string>
+    <string name="whats_new_sort_body">"플레이리스트나 좋아요 표시한 곡에서 깔때기를 탭해 제목, 아티스트, 앨범, 추가한 날짜, 재생 시간순으로 정렬하세요. 같은 항목을 다시 탭하면 순서가 뒤집힙니다. 플레이리스트마다 순서를 기억합니다."</string>
+</resources>

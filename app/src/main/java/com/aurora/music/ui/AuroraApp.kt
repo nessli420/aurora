@@ -657,6 +657,7 @@ fun AuroraApp() {
             DetailScreen(
                 contentPadding = padding,
                 state = detailState,
+                collectionKey = "$kind:$id",
                 likedIds = playerState.likedIds,
                 currentSongId = playerState.current.id,
                 isPlaying = playerState.isPlaying,

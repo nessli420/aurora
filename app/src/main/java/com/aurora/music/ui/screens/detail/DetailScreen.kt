@@ -78,6 +78,7 @@ import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.viewmodel.DetailUiState
 import kotlinx.coroutines.launch
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.model.accent
 
 @OptIn(ExperimentalLayoutApi::class)
@@ -118,8 +119,13 @@ fun DetailScreen(
     artistInfo: com.aurora.music.data.remote.ArtistInfo? = null,
     hiddenIds: Set<String> = emptySet(),
     onToggleHidden: ((Song) -> Unit)? = null,
+    // "kind:id"; playlists and liked songs remember their sort under it
+    collectionKey: String? = null,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val sortStore = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication).container.settingsStore
+    val sorts by sortStore.trackSorts.collectAsStateWithLifecycle(initialValue = emptyMap())
+    val sortScope = androidx.compose.runtime.rememberCoroutineScope()
     var headerMenu by remember { mutableStateOf(false) }
     var showEdit by remember { mutableStateOf(false) }
     var query by remember { mutableStateOf("") }
@@ -142,7 +148,11 @@ fun DetailScreen(
     }
 
     val info = data.info
-    val tracks = data.tracks
+    val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
+    // play, shuffle and the list all follow the chosen sort
+    val sortKey = collectionKey?.takeIf { isSongMix }
+    val sortOrder = sortKey?.let { sorts[it] } ?: com.aurora.music.data.TrackSortOrder()
+    val tracks = remember(data.tracks, sortOrder) { sortOrder.apply(data.tracks) }
     // artists often lack a server image fall back to enriched wiki photo
     val effectiveArt = info.artUrl.ifBlank { artistInfo?.imageUrl.orEmpty() }
     val albumCover = if (itemKind == "album") CoverKey(info.title, info.subtitle, tracks.firstOrNull { it.path.isNotBlank() }?.path.orEmpty()) else null
@@ -156,7 +166,6 @@ fun DetailScreen(
         baseScheme.copy(primary = accentInk, onPrimary = if (accentInk.luminance() > 0.5f) Color.Black else Color.White)
     }
     // the header accent animates on open so list derivations stay out of the per-frame path
-    val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
     val genres = remember(tracks, isSongMix) {
         if (isSongMix) tracks.flatMap { com.aurora.music.data.GenreText.split(it.genre) }
             .distinctBy { it.lowercase() }.sortedWith(String.CASE_INSENSITIVE_ORDER) else emptyList()
@@ -217,6 +226,9 @@ fun DetailScreen(
                     Spacer(Modifier.width(4.dp)); Text(appString(R.string.text_mix_fd7391))
                 }
                 if (!wrap) Spacer(Modifier.weight(1f))
+                if (sortKey != null) com.aurora.music.ui.components.TrackSortButton(sortOrder, accent, enabled = tracks.size > 1) { choice ->
+                    sortScope.launch { sortStore.setTrackSort(sortKey, sortOrder.pick(choice)) }
+                }
                 if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist")) {
                     Icon(
                         if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,

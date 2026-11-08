@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Ordenar músicas"</string>
+    <string name="track_sort_heading">"Ordenar por"</string>
+    <string name="track_sort_custom">"Ordem personalizada"</string>
+    <string name="track_sort_title">"Título"</string>
+    <string name="track_sort_artist">"Artista"</string>
+    <string name="track_sort_album">"Álbum"</string>
+    <string name="track_sort_recent">"Adicionadas recentemente"</string>
+    <string name="track_sort_duration">"Duração"</string>
+    <string name="track_sort_ascending">"Crescente"</string>
+    <string name="track_sort_descending">"Decrescente"</string>
+    <string name="whats_new_sort_title">"Ordene qualquer playlist"</string>
+    <string name="whats_new_sort_body">"Toque no funil de uma playlist ou de Músicas Curtidas para ordenar por título, artista, álbum, data de adição ou duração. Toque na mesma opção de novo para inverter. Cada playlist lembra a sua ordem."</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Сортировать треки"</string>
+    <string name="track_sort_heading">"Сортировать по"</string>
+    <string name="track_sort_custom">"Свой порядок"</string>
+    <string name="track_sort_title">"Название"</string>
+    <string name="track_sort_artist">"Исполнитель"</string>
+    <string name="track_sort_album">"Альбом"</string>
+    <string name="track_sort_recent">"Недавно добавленные"</string>
+    <string name="track_sort_duration">"Длительность"</string>
+    <string name="track_sort_ascending">"По возрастанию"</string>
+    <string name="track_sort_descending">"По убыванию"</string>
+    <string name="whats_new_sort_title">"Сортируйте любой плейлист"</string>
+    <string name="whats_new_sort_body">"Нажмите на воронку в плейлисте или в Любимых треках, чтобы сортировать по названию, исполнителю, альбому, дате добавления или длительности. Нажмите тот же вариант ещё раз, чтобы перевернуть порядок. Каждый плейлист запоминает свой порядок."</string>
+</resources>

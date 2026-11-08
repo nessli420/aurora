@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"曲を並べ替え"</string>
+    <string name="track_sort_heading">"並べ替え"</string>
+    <string name="track_sort_custom">"カスタム順"</string>
+    <string name="track_sort_title">"タイトル"</string>
+    <string name="track_sort_artist">"アーティスト"</string>
+    <string name="track_sort_album">"アルバム"</string>
+    <string name="track_sort_recent">"最近追加した項目"</string>
+    <string name="track_sort_duration">"再生時間"</string>
+    <string name="track_sort_ascending">"昇順"</string>
+    <string name="track_sort_descending">"降順"</string>
+    <string name="whats_new_sort_title">"どのプレイリストも並べ替え"</string>
+    <string name="whats_new_sort_body">"プレイリストやお気に入りの曲でじょうごのアイコンをタップすると、タイトル、アーティスト、アルバム、追加日、再生時間で並べ替えられます。同じ項目をもう一度タップすると逆順になります。並び順はプレイリストごとに記憶されます。"</string>
+</resources>

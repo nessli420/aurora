@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="track_sort_button">"Songs sortieren"</string>
+    <string name="track_sort_heading">"Sortieren nach"</string>
+    <string name="track_sort_custom">"Eigene Reihenfolge"</string>
+    <string name="track_sort_title">"Titel"</string>
+    <string name="track_sort_artist">"Künstler"</string>
+    <string name="track_sort_album">"Album"</string>
+    <string name="track_sort_recent">"Zuletzt hinzugefügt"</string>
+    <string name="track_sort_duration">"Dauer"</string>
+    <string name="track_sort_ascending">"Aufsteigend"</string>
+    <string name="track_sort_descending">"Absteigend"</string>
+    <string name="whats_new_sort_title">"Jede Playlist sortieren"</string>
+    <string name="whats_new_sort_body">"Tippe in einer Playlist oder bei Lieblingssongs auf den Trichter, um nach Titel, Künstler, Album, Hinzufügedatum oder Länge zu sortieren. Tippe dieselbe Option erneut, um sie umzudrehen. Jede Playlist merkt sich ihre Reihenfolge."</string>
+</resources>
