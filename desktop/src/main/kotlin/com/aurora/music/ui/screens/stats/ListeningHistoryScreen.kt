@@ -1,6 +1,8 @@
 package com.aurora.music.ui.screens.stats
 
 import androidx.compose.material.icons.filled.Place
+import com.aurora.music.ui.theme.paperClip
+import androidx.compose.foundation.shape.CircleShape
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
@@ -85,7 +87,7 @@ fun ListeningHistoryScreen(contentPadding: PaddingValues, onBack: () -> Unit, on
                 items(events.size) { i ->
                     val e = events[i]
                     Row(
-                        Modifier.fillMaxWidth().heightIn(min = PageMetrics.SongRowHeight).clip(RoundedCornerShape(themedCorner(12.dp))).clickable { onPlay(e.songId) }
+                        Modifier.fillMaxWidth().heightIn(min = PageMetrics.SongRowHeight).paperClip(RoundedCornerShape(themedCorner(12.dp))).clickable { onPlay(e.songId) }
                             .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 8.dp, vertical = 4.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -97,7 +99,7 @@ fun ListeningHistoryScreen(contentPadding: PaddingValues, onBack: () -> Unit, on
                         }
                         if (onShowOnMap != null && located[e.songId]?.any { e.timestamp in it } == true) {
                             Icon(androidx.compose.material.icons.Icons.Filled.Place, appString(R.string.map_show_on_map), tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp).clip(androidx.compose.foundation.shape.CircleShape).clickable { onShowOnMap(e.songId, e.timestamp) }.padding(8.dp))
+                                modifier = Modifier.size(36.dp).paperClip(CircleShape).clickable { onShowOnMap(e.songId, e.timestamp) }.padding(8.dp))
                         }
                         Text(timeFmt.format(Date(e.timestamp)), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }

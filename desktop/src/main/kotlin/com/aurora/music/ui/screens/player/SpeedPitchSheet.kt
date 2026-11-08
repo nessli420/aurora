@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import androidx.compose.foundation.verticalScroll
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.rememberScrollState
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -26,7 +27,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -116,7 +117,7 @@ private fun QuickPicks(options: List<Float>, selected: Float, onPick: (Float) ->
             Box(
                 Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(50))
+                    .paperClip(RoundedCornerShape(50))
                     .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest)
                     .clickable { onPick(opt) }
                     .pointerHoverIcon(PointerIcon.Hand)

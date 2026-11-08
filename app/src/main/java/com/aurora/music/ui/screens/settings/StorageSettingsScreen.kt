@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.AppStrings
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.localization.appString
 import com.aurora.music.localization.appPlural
 import com.aurora.music.R
@@ -396,7 +397,7 @@ private fun ReplayGainScanCard() {
     SettingsSectionTitle(appString(R.string.text_volume_leveling_a9df98))
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            .clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(enabled = !rg.running) { container.replayGainScanner.scan() }
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -426,7 +427,7 @@ private fun ReplayGainScanCard() {
         }
         if (rg.running) {
             Text(appString(R.string.text_cancel_77dfd2), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clip(RoundedCornerShape(50)).clickable { container.replayGainScanner.cancel() }.padding(horizontal = 10.dp, vertical = 6.dp))
+                modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { container.replayGainScanner.cancel() }.padding(horizontal = 10.dp, vertical = 6.dp))
         }
     }
     Text(

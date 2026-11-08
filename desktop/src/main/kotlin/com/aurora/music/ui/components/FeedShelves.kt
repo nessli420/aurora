@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -103,14 +104,14 @@ private fun TrackGridRow(song: Song, onClick: () -> Unit) {
     val hover = remember { MutableInteractionSource() }
     val hovered by hover.collectIsHoveredAsState()
     Row(
-        Modifier.width(GridCellWidth).height(GridRowHeight).clip(RoundedCornerShape(themedCorner(10.dp)))
+        Modifier.width(GridCellWidth).height(GridRowHeight).paperClip(RoundedCornerShape(themedCorner(10.dp)))
             .background(if (hovered) MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f) else MaterialTheme.colorScheme.surface.copy(alpha = 0f))
             .hoverable(hover).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(contentAlignment = Alignment.Center) {
             Artwork(song.artworkUrl, song.accent, Modifier.size(48.dp), corner = 6.dp)
-            if (hovered) Box(Modifier.size(48.dp).clip(RoundedCornerShape(themedCorner(6.dp)))
+            if (hovered) Box(Modifier.size(48.dp).paperClip(RoundedCornerShape(themedCorner(6.dp)))
                 .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)), contentAlignment = Alignment.Center) {
                 Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = androidx.compose.ui.graphics.Color.White)
             }
@@ -138,7 +139,7 @@ fun FeedTrackCard(song: Song, width: Dp, onClick: () -> Unit) {
     ) {
         Box {
             Artwork(song.artworkUrl, song.accent, Modifier.size(art), corner = 14.dp)
-            Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(34.dp).clip(CircleShape)
+            Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(34.dp).paperClip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
                 Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onSurface)
             }
@@ -160,7 +161,7 @@ fun ChoiceTabs(options: List<Triple<String, String, ImageVector>>, selected: Str
             val (id, label, icon) = options[i]
             val active = id == selected
             Row(
-                Modifier.height(36.dp).clip(RoundedCornerShape(50))
+                Modifier.height(36.dp).paperClip(RoundedCornerShape(50))
                     .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable { onSelect(id) }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,

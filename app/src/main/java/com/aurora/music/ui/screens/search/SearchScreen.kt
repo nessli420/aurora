@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.search
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import android.content.Intent
@@ -152,7 +153,7 @@ fun SearchScreen(
                             else -> Icons.Outlined.MusicNote
                         }
                         Box(
-                            Modifier.size(40.dp).clip(CircleShape)
+                            Modifier.size(40.dp).paperClip(CircleShape)
                                 .background(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .selectable(selected = selected, role = Role.RadioButton) { onSelectSource(source.id) },
                             contentAlignment = Alignment.Center,
@@ -174,13 +175,13 @@ fun SearchScreen(
             trailingIcon = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (state.query.isNotEmpty()) {
-                        Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(36.dp).clip(CircleShape).clickable { onQuery("") }.padding(7.dp))
+                        Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(36.dp).paperClip(CircleShape).clickable { onQuery("") }.padding(7.dp))
                     }
-                    Icon(Icons.Filled.Mic, appString(R.string.text_voice_search_9df53f), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp).clip(CircleShape).clickable { launchVoice() }.padding(8.dp))
+                    Icon(Icons.Filled.Mic, appString(R.string.text_voice_search_9df53f), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { launchVoice() }.padding(8.dp))
                 }
             },
             singleLine = true,
-            shape = RoundedCornerShape(16.dp),
+            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onCommitSearch(); keyboard?.hide() }),
             colors = TextFieldDefaults.colors(
@@ -246,7 +247,7 @@ private fun FilterChips(selected: SearchFilter, results: SearchResults, onSelect
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.clip(RoundedCornerShape(50))
+                modifier = Modifier.paperClip(RoundedCornerShape(50))
                     .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable { onSelect(f) }
                     .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -343,19 +344,19 @@ private fun RecentSearches(
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(appString(R.string.text_recent_76eec7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClear).padding(horizontal = 10.dp, vertical = 6.dp))
+                    modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable(onClick = onClear).padding(horizontal = 10.dp, vertical = 6.dp))
             }
         }
         items(recents.size) { i ->
             val q = recents[i]
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onClick(q) }.padding(horizontal = 16.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable { onClick(q) }.padding(horizontal = 16.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(14.dp))
                 Text(q, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.Close, appString(R.string.text_remove_e96390), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp).clip(CircleShape).clickable { onRemove(q) }.padding(6.dp))
+                Icon(Icons.Filled.Close, appString(R.string.text_remove_e96390), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp).paperClip(CircleShape).clickable { onRemove(q) }.padding(6.dp))
             }
         }
     }

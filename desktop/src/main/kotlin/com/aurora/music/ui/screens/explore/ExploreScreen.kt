@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.explore
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -23,7 +24,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -142,7 +143,7 @@ fun ExploreCategoryScreen(
 private fun CategoryChip(category: ExploreCategory, onClick: () -> Unit) {
     val stripe = if (category.colorArgb != 0L) Color(category.colorArgb.toInt()) else MaterialTheme.colorScheme.primary
     Row(
-        Modifier.width(196.dp).height(48.dp).clip(RoundedCornerShape(themedCorner(10.dp)))
+        Modifier.width(196.dp).height(48.dp).paperClip(RoundedCornerShape(themedCorner(10.dp)))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand),
         verticalAlignment = Alignment.CenterVertically,

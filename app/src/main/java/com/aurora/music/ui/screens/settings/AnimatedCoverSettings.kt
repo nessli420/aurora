@@ -10,7 +10,7 @@ import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope

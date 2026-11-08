@@ -222,6 +222,8 @@ object ThemeStyle {
     const val RETRO = 1
     const val AERO = 2
     const val GLASS = 3
+    // auroraplayer.lol's paper edition: light only
+    const val PAPER = 4
 }
 
 object AppTypeface {

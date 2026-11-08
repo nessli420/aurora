@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.home
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -58,6 +59,11 @@ import com.aurora.music.ui.components.PlaylistCard
 import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.components.Waveform
 import com.aurora.music.ui.components.formatTime
+import com.aurora.music.ui.theme.PaperTokens
+import com.aurora.music.ui.theme.isPaperTheme
+import com.aurora.music.ui.theme.paperFrame
+import com.aurora.music.ui.theme.paperSquare
+import androidx.compose.foundation.border
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.HomeUiState
 import com.aurora.music.model.accent
@@ -103,13 +109,14 @@ fun HomeScreen(
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(
-                    Modifier.size(44.dp).clip(CircleShape)
-                        .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
+                    Modifier.size(44.dp)
+                        .paperFrame(CircleShape, { background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))) },
+                            fill = MaterialTheme.colorScheme.primary)
                         .clickable(onClick = onOpenDrawer),
                     contentAlignment = Alignment.Center,
                 ) {
                     if (avatarUrl.isNotBlank()) {
-                        com.aurora.music.ui.components.Artwork(avatarUrl, MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), corner = 22.dp)
+                        com.aurora.music.ui.components.Artwork(avatarUrl, MaterialTheme.colorScheme.primary, Modifier.matchParentSize(), corner = if (isPaperTheme()) 0.dp else 22.dp)
                     } else {
                         Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
                     }
@@ -148,7 +155,7 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
-                        Modifier.size(88.dp).clip(CircleShape)
+                        Modifier.size(88.dp).paperClip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
                             .clickable(onClickLabel = appString(R.string.home_add_source), onClick = onAddSource),
                         contentAlignment = Alignment.Center,
@@ -162,7 +169,7 @@ fun HomeScreen(
                         color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                         modifier = Modifier.widthIn(max = 420.dp))
                     Spacer(Modifier.height(20.dp))
-                    androidx.compose.material3.Button(onClick = onAddSource) {
+                    com.aurora.music.ui.theme.Button(onClick = onAddSource) {
                         Icon(Icons.Filled.Add, null, Modifier.size(18.dp))
                         Spacer(Modifier.width(8.dp))
                         Text(appString(R.string.home_add_source))
@@ -184,7 +191,7 @@ fun HomeScreen(
                 Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
                     if (state.loadingMore) androidx.compose.material3.CircularProgressIndicator(Modifier.size(28.dp))
-                    else androidx.compose.material3.OutlinedButton(onClick = if (data.continuation != null) onLoadMore else onRetry) {
+                    else com.aurora.music.ui.theme.OutlinedButton(onClick = if (data.continuation != null) onLoadMore else onRetry) {
                         Text(if (state.error != null) appString(R.string.text_try_again_042c86) else appString(R.string.text_more_recommendations_5fd054))
                     }
                 }
@@ -216,7 +223,7 @@ fun HomeScreen(
                             Box(
                                 Modifier.padding(horizontal = 3.dp).height(6.dp)
                                     .width(if (active) 22.dp else 6.dp)
-                                    .clip(RoundedCornerShape(50))
+                                    .clip(paperSquare(RoundedCornerShape(50)))
                                     .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)),
                             )
                         }
@@ -259,8 +266,9 @@ fun HomeScreen(
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .clip(RoundedCornerShape(20.dp))
-                            .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
+                            .paperFrame(RoundedCornerShape(20.dp), {
+                                background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
+                            })
                             .clickable { starredQueue(state.allStarred, data.starred, featured).let { (songs, at) -> onPlayAll(songs, at) } }
                             .padding(16.dp * favouriteScale),
                     ) {
@@ -274,7 +282,8 @@ fun HomeScreen(
                                     Text(featured.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(featured.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                                 }
-                                Box(Modifier.size(46.dp * favouriteScale).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                                Box(Modifier.size(46.dp * favouriteScale).paperFrame(CircleShape, { this }, fill = MaterialTheme.colorScheme.primary)
+                                    .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
                                     Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp * favouriteScale))
                                 }
                             }
@@ -345,43 +354,49 @@ fun HomeScreen(
 @Composable
 private fun HeroCard(album: Album, onOpenDetail: (String, String) -> Unit, onPlayAlbum: (String) -> Unit, height: androidx.compose.ui.unit.Dp = 210.dp) {
     val accent = accentFor(album.id)
+    val paper = isPaperTheme()
     Box(
         Modifier
             .fillMaxWidth()
             .height(height)
-            .clip(RoundedCornerShape(24.dp))
+            .clip(paperSquare(RoundedCornerShape(24.dp)))
             .clickable { onOpenDetail("album", album.id) },
     ) {
-        Artwork(album.artworkUrl, accent, Modifier.matchParentSize(), corner = 24.dp)
+        Artwork(album.artworkUrl, accent, Modifier.matchParentSize(), corner = if (paper) 0.dp else 24.dp)
         Box(
             Modifier.matchParentSize().background(
                 Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.30f), Color.Black.copy(alpha = 0.88f)))
             )
         )
         Column(Modifier.align(Alignment.BottomStart).padding(20.dp)) {
-            Eyebrow(appString(R.string.text_new_release_f0ec22), accent)
+            Eyebrow(appString(R.string.text_new_release_f0ec22), if (paper) Color.White else accent)
             Spacer(Modifier.height(6.dp))
             Text(album.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(album.artist, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(12.dp))
             Row(
-                Modifier.clip(RoundedCornerShape(50)).background(Color.White).clickable { onPlayAlbum(album.id) }.padding(horizontal = 20.dp, vertical = 9.dp),
+                // paper: the site's primary button, rose with ink type and an ink rule
+                Modifier.paperFrame(RoundedCornerShape(50), { background(Color.White) }, fill = PaperTokens.rose)
+                    .clickable { onPlayAlbum(album.id) }.padding(horizontal = 20.dp, vertical = 9.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Filled.PlayArrow, null, tint = Color.Black, modifier = Modifier.size(18.dp))
+                val ink = if (paper) PaperTokens.ink else Color.Black
+                Icon(Icons.Filled.PlayArrow, null, tint = ink, modifier = Modifier.size(18.dp))
                 Spacer(Modifier.width(6.dp))
-                Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = Color.Black)
+                Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = if (paper) null else FontWeight.Black, color = ink)
             }
         }
+        if (paper) Box(Modifier.matchParentSize().border(1.dp, PaperTokens.ink))
     }
 }
 
 @Composable
 private fun OverlayTile(title: String, artUrl: String, accent: Color, onClick: () -> Unit) {
     Box(
-        Modifier.size(160.dp).clip(RoundedCornerShape(18.dp)).clickable(onClick = onClick),
+        Modifier.size(160.dp).clip(paperSquare(RoundedCornerShape(18.dp))).clickable(onClick = onClick),
     ) {
-        Artwork(artUrl, accent, Modifier.matchParentSize(), corner = 18.dp)
+        Artwork(artUrl, accent, Modifier.matchParentSize(), corner = if (isPaperTheme()) 0.dp else 18.dp)
+        if (isPaperTheme()) Box(Modifier.matchParentSize().border(1.dp, PaperTokens.ink))
         Box(
             Modifier.matchParentSize().background(Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f))))
         )
@@ -407,7 +422,7 @@ internal fun IconPill(icon: androidx.compose.ui.graphics.vector.ImageVector, des
         return
     }
     Box(
-        Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh).clickable(onClick = onClick),
+        Modifier.size(40.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) }).clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, desc, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
 }

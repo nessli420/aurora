@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.library
 
 import android.net.Uri
+import com.aurora.music.ui.theme.paperClip
 import android.provider.OpenableColumns
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -27,13 +28,13 @@ import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.PlaylistAddCheck
 import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material.icons.outlined.SmartDisplay
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Text
@@ -113,7 +114,7 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
     ModalBottomSheet(
         onDismissRequest = { if (!busy) onDismiss() }, sheetState = sheet,
         containerColor = colors.surface, tonalElevation = 0.dp,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
     ) {
         Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
             val done = result
@@ -126,7 +127,7 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
                     value = link, onValueChange = { link = it; failure = null },
                     label = { Text(appString(R.string.import_link)) },
                     placeholder = { Text("https://open.spotify.com/playlist/…", maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    singleLine = true, enabled = !busy, shape = RoundedCornerShape(16.dp), modifier = Modifier.fillMaxWidth(),
+                    singleLine = true, enabled = !busy, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)), modifier = Modifier.fillMaxWidth(),
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
                     keyboardActions = KeyboardActions(onGo = { start() }),
                 )
@@ -148,19 +149,19 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = { pickFile.launch(arrayOf("*/*")) }, enabled = !busy, shape = RoundedCornerShape(18.dp),
+                    OutlinedButton(onClick = { pickFile.launch(arrayOf("*/*")) }, enabled = !busy, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
                         modifier = Modifier.weight(1f).height(54.dp)) {
                         Icon(Icons.Outlined.FileOpen, null, modifier = Modifier.size(18.dp))
                         Text(appString(R.string.import_file), modifier = Modifier.padding(start = 8.dp))
                     }
-                    Button(onClick = start, enabled = link.isNotBlank() && !busy, shape = RoundedCornerShape(18.dp),
+                    Button(onClick = start, enabled = link.isNotBlank() && !busy, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
                         modifier = Modifier.weight(1f).height(54.dp)) {
                         Text(appString(R.string.import_start), fontWeight = FontWeight.SemiBold)
                     }
                 }
             } else {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(Modifier.size(56.dp).clip(RoundedCornerShape(16.dp)).background(colors.primary.copy(alpha = .14f)), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(56.dp).paperClip(RoundedCornerShape(16.dp)).background(colors.primary.copy(alpha = .14f)), contentAlignment = Alignment.Center) {
                         Icon(Icons.Outlined.PlaylistAddCheck, null, tint = colors.primary, modifier = Modifier.size(28.dp))
                     }
                     Column(Modifier.weight(1f).padding(start = 14.dp)) {
@@ -182,10 +183,10 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
                 if (done.ownSourceOnly) Note(appString(R.string.import_own_only))
                 if (done.limited) Note(appString(R.string.import_limited))
                 Row(Modifier.fillMaxWidth().padding(top = 22.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                    OutlinedButton(onClick = onDismiss, shape = RoundedCornerShape(18.dp), modifier = Modifier.weight(1f).height(54.dp)) {
+                    OutlinedButton(onClick = onDismiss, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), modifier = Modifier.weight(1f).height(54.dp)) {
                         Text(appString(R.string.import_done))
                     }
-                    Button(onClick = { onDismiss(); onOpen(done.playlistId) }, shape = RoundedCornerShape(18.dp), modifier = Modifier.weight(1f).height(54.dp)) {
+                    Button(onClick = { onDismiss(); onOpen(done.playlistId) }, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), modifier = Modifier.weight(1f).height(54.dp)) {
                         Text(appString(R.string.import_open), fontWeight = FontWeight.SemiBold)
                     }
                 }
@@ -206,7 +207,7 @@ private fun SourceRow(icon: ImageVector, label: String, count: Int) {
 @Composable
 private fun Note(text: String) {
     Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(top = 14.dp).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(12.dp))
+        modifier = Modifier.padding(top = 14.dp).paperClip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(12.dp))
 }
 
 private fun sourceIcon(source: ImportSource): ImageVector = when (source) {

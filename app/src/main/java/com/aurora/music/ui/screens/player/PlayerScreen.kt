@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aurora.music.ui.theme.paperClip
 import kotlinx.coroutines.flow.map
 import android.app.Activity
 import android.content.Context
@@ -88,7 +89,7 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.filled.ChatBubble
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.material3.FilledTonalButton
+import com.aurora.music.ui.theme.FilledTonalButton
 import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.foundation.layout.sizeIn
@@ -337,7 +338,7 @@ fun PlayerScreen(
             Box {
                 Icon(
                     Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
-                    modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showMenu = true }.padding(8.dp),
+                    modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showMenu = true }.padding(8.dp),
                 )
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
                     DropdownMenuItem(text = { Text(appString(R.string.text_mix_studio_668363)) }, onClick = { showMenu = false; onOpenMix() }, leadingIcon = { Icon(Icons.Filled.GraphicEq, null) })
@@ -413,7 +414,7 @@ fun PlayerScreen(
                 Box(
                     Modifier
                         .width(40.dp).height(4.dp)
-                        .clip(CircleShape)
+                        .paperClip(CircleShape)
                         .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f)),
                 )
                 Spacer(Modifier.height(8.dp))
@@ -425,7 +426,7 @@ fun PlayerScreen(
                     val videoToggle: @Composable () -> Unit = {
                         // tap is the youtube music video, long press the service's canvas
                         Box(
-                            modifier = Modifier.size(40.dp).clip(CircleShape).combinedClickable(
+                            modifier = Modifier.size(40.dp).paperClip(CircleShape).combinedClickable(
                                 role = Role.Button,
                                 onClickLabel = appString(if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1),
                                 onLongClickLabel = if (state.supportsCanvas) appString(R.string.canvas_open) else null,
@@ -468,7 +469,7 @@ fun PlayerScreen(
                     }
                     Icon(
                         Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
-                        modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
+                        modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
                     if (tablet) {
                         Spacer(Modifier.width((if (showVideoModeControl) 120.dp else 80.dp) + if (djControl != null) 40.dp else 0.dp))
@@ -493,7 +494,7 @@ fun PlayerScreen(
                     PlayerCastButton(Modifier.size(40.dp))
                     Icon(
                         Icons.Filled.Speaker, appString(R.string.text_output_device_709178),
-                        modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenOutput).padding(8.dp),
+                        modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onOpenOutput).padding(8.dp),
                     )
                     moreMenu()
                 }
@@ -560,7 +561,7 @@ fun PlayerScreen(
                                     )
                                     IconButton(
                                         onClick = { fullscreenVideo = true },
-                                        modifier = Modifier.size(44.dp).clip(CircleShape)
+                                        modifier = Modifier.size(44.dp).paperClip(CircleShape)
                                             .background(Color.Black.copy(alpha = .5f))
                                             .semantics { contentDescription = appString(R.string.video_fullscreen_enter) },
                                     ) { Icon(Icons.Filled.Fullscreen, null, tint = Color.White) }
@@ -618,7 +619,7 @@ fun PlayerScreen(
                     if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, label = "like",
                 )
                 if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
-                    com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).clip(CircleShape)) {
+                    com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
                         Icon(
                             imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = appString(R.string.text_like_c7e02c),
@@ -641,7 +642,7 @@ fun PlayerScreen(
             Spacer(Modifier.height(10.dp))
             FlowRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
-                    .clip(RoundedCornerShape(12.dp))
+                    .paperClip(RoundedCornerShape(12.dp))
                     .clickable(role = Role.Button, onClickLabel = appString(R.string.text_open_signal_path_29e042), onClick = onOpenSignalPath)
                     .padding(vertical = 6.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -655,7 +656,7 @@ fun PlayerScreen(
                 if (source != null) {
                     Box(
                         Modifier.then(
-                            if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                            if (classic) Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
                             else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
                         ).padding(horizontal = 10.dp, vertical = 3.dp),
                     ) { Text(source, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -668,7 +669,7 @@ fun PlayerScreen(
                 if (badge.isNotEmpty()) {
                     Box(
                         Modifier.then(
-                            if (classic) Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                            if (classic) Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
                             else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
                         ).padding(horizontal = 10.dp, vertical = 3.dp),
                     ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
@@ -704,17 +705,17 @@ fun PlayerScreen(
                 if (state.skipButtons) Icon(
                     Icons.Filled.Replay10, appString(R.string.skip_back_seconds, com.aurora.music.data.LongForm.SKIP_SEC),
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).clickable { skipBy(-com.aurora.music.data.LongForm.SKIP_SEC) }.padding(8.dp),
+                    modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable { skipBy(-com.aurora.music.data.LongForm.SKIP_SEC) }.padding(8.dp),
                 ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
                     if (state.isMix) Icons.Filled.GraphicEq else Icons.Filled.Shuffle,
                     if (state.isMix) appString(R.string.text_edit_mix_transitions_76ee01) else appString(R.string.text_shuffle_5b772b),
                     tint = if (state.shuffle || state.isMix) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = if (state.isMix) onOpenMix else onToggleShuffle).padding(8.dp),
+                    modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = if (state.isMix) onOpenMix else onToggleShuffle).padding(8.dp),
                 )
                 Icon(
                     Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942),
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(56.dp).clip(CircleShape).clickable(onClick = onPrevious).padding(6.dp),
+                    modifier = Modifier.size(56.dp).paperClip(CircleShape).clickable(onClick = onPrevious).padding(6.dp),
                 )
                 if (glassStyle) com.aurora.music.ui.components.glass.GlassButton(
                     onClick = onTogglePlay, backdrop = glassBackdrop, modifier = Modifier.size(68.dp), tint = playerAccent,
@@ -739,17 +740,17 @@ fun PlayerScreen(
                 Icon(
                     Icons.Filled.SkipNext, appString(R.string.text_next_bc9819),
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(56.dp).clip(CircleShape).clickable(onClick = onNext).padding(6.dp),
+                    modifier = Modifier.size(56.dp).paperClip(CircleShape).clickable(onClick = onNext).padding(6.dp),
                 )
                 if (state.skipButtons) Icon(
                     Icons.Filled.Forward10, appString(R.string.skip_forward_seconds, com.aurora.music.data.LongForm.SKIP_SEC),
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).clickable { skipBy(com.aurora.music.data.LongForm.SKIP_SEC) }.padding(8.dp),
+                    modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable { skipBy(com.aurora.music.data.LongForm.SKIP_SEC) }.padding(8.dp),
                 ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
                     imageVector = if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
                     contentDescription = appString(R.string.text_repeat_659eba),
                     tint = if (state.repeat != RepeatMode.OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onCycleRepeat).padding(8.dp),
+                    modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onCycleRepeat).padding(8.dp),
                 )
             }
 
@@ -813,7 +814,7 @@ fun PlayerScreen(
                     modifier = modifier,
                 ) { target -> Box(Modifier.fillMaxSize()) { paneContent(target, Modifier.fillMaxSize()) } }
             }
-            val paneSurface = if (classic) Modifier.clip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
+            val paneSurface = if (classic) Modifier.paperClip(RoundedCornerShape(28.dp)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
                 else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge)
             val paneHeaderActions: @Composable (PlayerPane) -> Unit = { pane ->
                 if (pane == PlayerPane.LYRICS) {
@@ -1002,7 +1003,7 @@ private fun CoverOverlay(
                     Icon(
                         Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                         modifier = Modifier.windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility).padding(12.dp)
-                            .size(40.dp).clip(CircleShape).background(Color.Black.copy(alpha = .3f)).clickable(onClick = onClose).padding(6.dp),
+                            .size(40.dp).paperClip(CircleShape).background(Color.Black.copy(alpha = .3f)).clickable(onClick = onClose).padding(6.dp),
                     )
                     Column(
                         Modifier.align(if (wide) Alignment.CenterEnd else Alignment.BottomCenter)
@@ -1016,7 +1017,7 @@ private fun CoverOverlay(
                                 MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null)
                             }
                             if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
-                                com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).clip(CircleShape)) {
+                                com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
                                     Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                                         appString(R.string.text_like_c7e02c), Modifier.size(28.dp))
                                 }
@@ -1027,11 +1028,11 @@ private fun CoverOverlay(
                         Spacer(Modifier.height(12.dp))
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942),
-                                modifier = Modifier.size(64.dp).clip(CircleShape).clickable(onClick = onPrevious).padding(8.dp))
+                                modifier = Modifier.size(64.dp).paperClip(CircleShape).clickable(onClick = onPrevious).padding(8.dp))
                             Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, appString(R.string.text_play_pause_14a1d0),
-                                modifier = Modifier.size(80.dp).clip(CircleShape).clickable(onClick = onTogglePlay).padding(8.dp))
+                                modifier = Modifier.size(80.dp).paperClip(CircleShape).clickable(onClick = onTogglePlay).padding(8.dp))
                             Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819),
-                                modifier = Modifier.size(64.dp).clip(CircleShape).clickable(onClick = onNext).padding(8.dp))
+                                modifier = Modifier.size(64.dp).paperClip(CircleShape).clickable(onClick = onNext).padding(8.dp))
                         }
                     }
                 }
@@ -1039,7 +1040,7 @@ private fun CoverOverlay(
             // outside the white tint so the menu keeps the app's own colours
             CompositionLocalProvider(LocalContentColor provides Color.White) {
                 Box(Modifier.align(Alignment.TopEnd).windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility).padding(12.dp)
-                    .clip(CircleShape).background(Color.Black.copy(alpha = .3f))) { menu() }
+                    .paperClip(CircleShape).background(Color.Black.copy(alpha = .3f))) { menu() }
             }
             }
         }
@@ -1090,7 +1091,7 @@ private fun PaneDivider(onDrag: (Float) -> Unit, onDragEnd: () -> Unit) {
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.width(3.dp).height(length).clip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)))
+        Box(Modifier.width(3.dp).height(length).paperClip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)))
     }
 }
 
@@ -1155,7 +1156,7 @@ private fun PlayerVideoModeButton(
     )
     val content = if (selected) MaterialTheme.colorScheme.onPrimary else Color.White
     Row(
-        Modifier.clip(CircleShape).background(container)
+        Modifier.paperClip(CircleShape).background(container)
             .clickable(role = Role.Tab, onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 9.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1258,7 +1259,7 @@ private fun FullscreenMusicVideo(
                     .padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Row(Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .48f)).padding(4.dp)) {
+                Row(Modifier.paperClip(CircleShape).background(Color.Black.copy(alpha = .48f)).padding(4.dp)) {
                     PlayerVideoModeButton(appString(R.string.text_audio_acdac2), Icons.Filled.MusicNote, false) {
                         registerInteraction()
                         onAudio()
@@ -1277,7 +1278,7 @@ private fun FullscreenMusicVideo(
                 )
                 IconButton(
                     onClick = { registerInteraction(); onExitFullscreen() },
-                    modifier = Modifier.padding(start = 4.dp).size(44.dp).clip(CircleShape)
+                    modifier = Modifier.padding(start = 4.dp).size(44.dp).paperClip(CircleShape)
                         .background(Color.Black.copy(alpha = .48f))
                         .semantics { contentDescription = appString(R.string.video_fullscreen_exit) },
                 ) { Icon(Icons.Filled.FullscreenExit, null, tint = Color.White) }
@@ -1311,7 +1312,7 @@ private fun FullscreenMusicVideo(
                     }
                     IconButton(
                         onClick = { registerInteraction(); onTogglePlay() },
-                        modifier = Modifier.padding(horizontal = 18.dp).size(54.dp).clip(CircleShape).background(accent),
+                        modifier = Modifier.padding(horizontal = 18.dp).size(54.dp).paperClip(CircleShape).background(accent),
                     ) {
                         Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                             appString(R.string.text_play_pause_14a1d0), tint = MaterialTheme.colorScheme.onPrimary)
@@ -1386,7 +1387,7 @@ private tailrec fun Context.findActivity(): Activity? = when (this) {
 private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit, active: Boolean = false) {
     Row(
         Modifier.then(
-            if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) Modifier.clip(RoundedCornerShape(50))
+            if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) Modifier.paperClip(RoundedCornerShape(50))
             else Modifier.auroraPanel(MaterialTheme.shapes.small)
         ).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1434,7 +1435,7 @@ private fun SeekBar(
     Column {
         if (durationSec <= 0) {
             Row(Modifier.fillMaxWidth().padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                if (isLive) Box(Modifier.size(8.dp).clip(CircleShape).background(accent))
+                if (isLive) Box(Modifier.size(8.dp).paperClip(CircleShape).background(accent))
                 Spacer(Modifier.width(8.dp))
                 Text(if (isLive) appString(R.string.text_live_6990f0) else appString(R.string.text_streaming_1e8325), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = accent)
                 Spacer(Modifier.weight(1f))
@@ -1570,7 +1571,7 @@ private fun CommentsSheet(state: PlayerUiState, focusId: String?, onDismiss: () 
                 androidx.compose.material3.OutlinedTextField(draft, { draft = it }, Modifier.weight(1f), singleLine = true,
                     placeholder = { Text(appString(R.string.comment_hint, formatTime(positionSec.toInt()))) })
                 Spacer(Modifier.width(8.dp))
-                androidx.compose.material3.TextButton(onClick = { onPost(draft); draft = "" }, enabled = draft.isNotBlank()) { Text(appString(R.string.comment_post)) }
+                com.aurora.music.ui.theme.TextButton(onClick = { onPost(draft); draft = "" }, enabled = draft.isNotBlank()) { Text(appString(R.string.comment_post)) }
             }
         }
     }

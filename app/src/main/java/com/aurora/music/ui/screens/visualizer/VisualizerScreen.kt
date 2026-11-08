@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.visualizer
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.activity.compose.BackHandler
@@ -165,7 +166,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             if (isRadial && prefs.showAlbumArt && song.artworkUrl.isNotBlank()) {
                 Artwork(
                     song.artworkUrl, accent,
-                    Modifier.align(Alignment.Center).size(120.dp).clip(CircleShape),
+                    Modifier.align(Alignment.Center).size(120.dp).paperClip(CircleShape),
                     corner = 60.dp,
                 )
             }
@@ -184,7 +185,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
                 Icon(
                     Icons.Filled.Close, appString(R.string.text_close_bbfa77),
                     tint = Color.White,
-                    modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onClose).background(Color.White.copy(alpha = 0.12f)).padding(8.dp),
+                    modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onClose).background(Color.White.copy(alpha = 0.12f)).padding(8.dp),
                 )
                 Column(Modifier.weight(1f).padding(start = 12.dp)) {
                     Text(song.title.ifBlank { appString(R.string.text_aurora_eeee9b) }, color = Color.White, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, style = MaterialTheme.typography.titleMedium)
@@ -204,7 +205,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
                     val selected = s == prefs.style
                     Box(
                         Modifier
-                            .clip(RoundedCornerShape(50))
+                            .paperClip(RoundedCornerShape(50))
                             .background(if (selected) colors.primary else Color.White.copy(alpha = 0.14f))
                             .selectable(selected = selected, role = Role.RadioButton) {
                                 controlsInteraction++

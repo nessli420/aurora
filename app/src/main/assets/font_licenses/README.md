@@ -42,3 +42,17 @@ License guidance: https://openfontlicense.org/ofl-faq/#1-20
 - Source: https://raw.githubusercontent.com/google/fonts/296bb4790d3f9bd95547c733708a3666ed35d844/ofl/manrope/Manrope%5Bwght%5D.ttf
 - License: `manrope-OFL.txt`.
 - SHA-256: `3ae11c49db0455a3cc33e37d380f20fdb8c7f8b41dc07625c177e3d87a9d6ae6`.
+
+## archivo.ttf
+
+- Original file: `Archivo[wdth,wght].ttf`.
+- Source: https://raw.githubusercontent.com/google/fonts/296bb4790d3f9bd95547c733708a3666ed35d844/ofl/archivo/Archivo%5Bwdth%2Cwght%5D.ttf
+- License: `archivo-OFL.txt`.
+- SHA-256: `0e094a7d3c7c4c25cf1310c4b30014f1dae9332220b1c2c88f4fa996f0b05053`.
+
+## chivo_mono.ttf
+
+- Original file: `ChivoMono[wght].ttf`.
+- Source: https://raw.githubusercontent.com/google/fonts/296bb4790d3f9bd95547c733708a3666ed35d844/ofl/chivomono/ChivoMono%5Bwght%5D.ttf
+- License: `chivomono-OFL.txt`.
+- SHA-256: `725256f30b7b1b25dd001a96ff8d4a23773197bb886cd847a97ff8eabc9c1d9d`.

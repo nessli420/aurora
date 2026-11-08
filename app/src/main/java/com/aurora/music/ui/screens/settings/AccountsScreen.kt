@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.localizedMediaType
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -171,7 +172,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(40.dp).clip(CircleShape)
+            Modifier.size(40.dp).paperClip(CircleShape)
                 .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
             contentAlignment = Alignment.Center,
         ) { Text(badge, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
@@ -182,7 +183,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
         }
         if (isActive) {
             Row(
-                Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 10.dp, vertical = 5.dp),
+                Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 10.dp, vertical = 5.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
@@ -193,7 +194,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
             Icon(
                 Icons.Filled.Delete, appString(R.string.text_forget_03d5d8),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(34.dp).clip(CircleShape).clickable(onClick = onForget).padding(6.dp),
+                modifier = Modifier.size(34.dp).paperClip(CircleShape).clickable(onClick = onForget).padding(6.dp),
             )
         }
     }

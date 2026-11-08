@@ -12,6 +12,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.TextButton
+import com.aurora.music.ui.theme.OutlinedButton
+import com.aurora.music.ui.theme.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier

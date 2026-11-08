@@ -37,6 +37,15 @@ val DmSans: FontFamily = variableFontFamily("dm_sans.ttf", "dm_sans_italic.ttf",
 val PlusJakartaSans: FontFamily = variableFontFamily("plus_jakarta_sans.ttf", "plus_jakarta_sans_italic.ttf", 200..800)
 val Manrope: FontFamily = variableFontFamily("manrope.ttf", weightRange = 200..800)
 
+// the website's own in-between weights (560, 640, 720) get exact instances of the variable fonts
+private fun exactWeights(file: String, weights: List<Int>, heaviest: Int = 1000): FontFamily = FontFamily(weights.map { weight ->
+    Font("font/$file", FontWeight(weight), FontStyle.Normal, FontVariation.Settings(FontVariation.weight(weight.coerceAtMost(heaviest))))
+})
+// the site never sets type heavier than 720, so screens that ask for extra bold or black get 720 too
+val Archivo: FontFamily = exactWeights("archivo.ttf", (100..900 step 100).toList() + listOf(560, 640, 720), heaviest = 720)
+// and its mono labels are always regular
+val ChivoMono: FontFamily = exactWeights("chivo_mono.ttf", (100..900 step 100).toList(), heaviest = 400)
+
 // mirrors android's ic_aurora_logo drawable; built in code so startup skips the xml parser
 val AuroraLogo: ImageVector by lazy {
     ImageVector.Builder("logo", 64.dp, 64.dp, 64f, 64f).addPath(

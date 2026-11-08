@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import com.aurora.music.localization.appPlural
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -15,6 +16,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.TextButton
+import com.aurora.music.ui.theme.FilledTonalButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -290,7 +294,7 @@ private fun MixTimeline(project: MixProject, analyses: Map<String, MixAnalysis>,
     val primary = MaterialTheme.colorScheme.primary
     val secondary = MaterialTheme.colorScheme.tertiary
     val foreground = MaterialTheme.colorScheme.onSurface
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(12.dp)) {
+    Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainer).padding(12.dp)) {
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(time(start), style = MaterialTheme.typography.labelSmall)
             Text(time(start + duration / 2), style = MaterialTheme.typography.labelSmall)
@@ -302,7 +306,7 @@ private fun MixTimeline(project: MixProject, analyses: Map<String, MixAnalysis>,
             val color = if (index % 2 == 0) primary else secondary
             val analysis = analyses[clip.song.id]
             val audibleClip = remember(clip) { clip.copy(muted = false) }
-            Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(8.dp)).clickable { onSelect(clip.id) }
+            Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(8.dp)).clickable { onSelect(clip.id) }
                 .then(if (clip.id == selected) Modifier.border(1.dp, color, RoundedCornerShape(8.dp)) else Modifier)
                 .padding(horizontal = 8.dp, vertical = 6.dp)) {
                 Text("${index + 1}  ${clip.song.title}${if (clip.muted) appString(R.string.text_muted_b6a778) else if (clip.solo) appString(R.string.text_solo_6d717d) else ""}",
@@ -344,7 +348,7 @@ private fun ClipEditor(clip: MixClip, project: MixProject, analyses: Map<String,
     onChange: (MixClip) -> Unit, onAnalyze: () -> Unit, onCancelAnalysis: () -> Unit, onRemove: () -> Unit,
     onPreview: () -> Unit, onTempoMatch: () -> Unit, onBars: (Int) -> Unit) {
     var tab by remember(clip.id) { mutableIntStateOf(0) }
-    Surface(shape = RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surfaceContainerLow) {
+    Surface(shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp)), color = MaterialTheme.colorScheme.surfaceContainerLow) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Artwork(clip.song.artworkUrl, MaterialTheme.colorScheme.primary, Modifier.size(56.dp), corner = 10.dp)

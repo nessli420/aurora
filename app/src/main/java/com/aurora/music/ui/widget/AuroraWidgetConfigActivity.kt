@@ -20,7 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -86,7 +86,7 @@ private fun WidgetStyleSheet(initial: WidgetStyle, glanceId: GlanceId, onDone: (
     val themes = WidgetTheme.entries.filter { it != WidgetTheme.WALLPAPER || Build.VERSION.SDK_INT >= 31 }
     Column(Modifier.fillMaxSize()) {
         Spacer(Modifier.weight(1f).fillMaxWidth().clickable(interactionSource = null, indication = null, onClick = onDone))
-        Surface(shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp), color = MaterialTheme.colorScheme.surface) {
+        Surface(shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)), color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.fillMaxWidth().navigationBarsPadding().padding(horizontal = 20.dp, vertical = 18.dp)) {
                 Text(appString(R.string.widget_style_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.height(16.dp))

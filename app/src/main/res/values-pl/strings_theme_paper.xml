@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Papier"</string>
+    <string name="theme_paper_description">"auroraplayer.lol jako aplikacja"</string>
+    <string name="theme_paper_detail">"Papier i atrament · różowy akcent · cienkie ramki · proste rogi · krój Archivo"</string>
+    <string name="theme_paper_light_only">"Papier jest dostępny tylko w trybie jasnym, jak strona."</string>
+    <string name="whats_new_paper_title">"Motyw Papier"</string>
+    <string name="whats_new_paper_body">"Nowy motyw prosto z auroraplayer.lol: ciepły papier, atrament, cienkie ramki, proste rogi i czcionki strony. Tylko jasny. Wybierz go w Wyglądzie."</string>
+</resources>

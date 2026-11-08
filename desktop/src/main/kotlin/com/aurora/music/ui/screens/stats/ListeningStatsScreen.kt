@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.stats
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.horizontalScroll
@@ -29,7 +30,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -122,7 +123,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (onOpenInsights != null && insights.enabled) {
-                        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).clip(RoundedCornerShape(themedCorner(18.dp)))
+                        Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).paperClip(RoundedCornerShape(themedCorner(18.dp)))
                             .background(MaterialTheme.colorScheme.primaryContainer)
                             .pointerHoverIcon(androidx.compose.ui.input.pointer.PointerIcon.Hand).clickable { onOpenInsights(window) }.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically) {
@@ -211,7 +212,7 @@ private fun utcDate(millis: Long): LocalDate = Instant.ofEpochMilli(millis).atZo
 private fun ListeningClock(byHour: IntArray, modifier: Modifier) {
     val max = (byHour.maxOrNull() ?: 0).coerceAtLeast(1)
     Column(
-        modifier.clip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
+        modifier.paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
     ) {
         Text(appString(R.string.text_listening_clock_ec2eb4), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(12.dp))
@@ -219,7 +220,7 @@ private fun ListeningClock(byHour: IntArray, modifier: Modifier) {
             for (h in 0 until 24) {
                 val frac = (byHour[h].toFloat() / max).coerceIn(0.03f, 1f)
                 Box(
-                    Modifier.weight(1f).fillMaxHeight(frac).clip(RoundedCornerShape(themedCorner(3.dp)))
+                    Modifier.weight(1f).fillMaxHeight(frac).paperClip(RoundedCornerShape(themedCorner(3.dp)))
                         .background(if (byHour[h] > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
                 )
             }
@@ -235,7 +236,7 @@ private fun ListeningClock(byHour: IntArray, modifier: Modifier) {
 
 @Composable
 private fun StatCard(value: String, label: String, modifier: Modifier) {
-    Column(modifier.clip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier.paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -243,7 +244,7 @@ private fun StatCard(value: String, label: String, modifier: Modifier) {
 
 @Composable
 private fun RankRow(rank: Int, item: RankedItem, circle: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(12.dp))).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(12.dp))).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 8.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("$rank", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(28.dp))
         Artwork(item.artworkUrl, accentFor(item.id.ifBlank { item.name }), Modifier.size(48.dp), corner = if (circle) 48.dp else 10.dp)
         Spacer(Modifier.width(12.dp))
@@ -251,7 +252,7 @@ private fun RankRow(rank: Int, item: RankedItem, circle: Boolean, onClick: () ->
             Text(item.name.ifBlank { appString(R.string.text_unknown_bc7819) }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Box(Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+        Box(Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 4.dp)) {
             Text("${item.count}×", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         }
     }

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.podcasts
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.animation.AnimatedVisibility
@@ -78,14 +79,14 @@ fun PodcastsScreen(
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(appString(R.string.text_podcasts_fd52b4), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Icon(
                 if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
                 if (searchOpen) appString(R.string.text_close_search_0906f9) else appString(R.string.text_search_podcasts_758c3a),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable {
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable {
                     searchOpen = !searchOpen
                     if (!searchOpen) { query = ""; vm.clearSearch() }
                 }.padding(8.dp),
@@ -100,7 +101,7 @@ fun PodcastsScreen(
                 placeholder = { Text(appString(R.string.text_search_shows_topics_da6b61)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                 singleLine = true,
-                shape = RoundedCornerShape(14.dp),
+                shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(14.dp)),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -123,7 +124,7 @@ fun PodcastsScreen(
                             term,
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            modifier = Modifier.clip(RoundedCornerShape(50))
+                            modifier = Modifier.paperClip(RoundedCornerShape(50))
                                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .clickable { searchOpen = true; query = term; vm.search(term) }
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -185,7 +186,7 @@ private fun SectionLabel(text: String) {
 private fun PodcastRow(podcast: Podcast, onClick: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 8.dp),
+            .paperClip(RoundedCornerShape(16.dp)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(56.dp), contentAlignment = Alignment.Center) {

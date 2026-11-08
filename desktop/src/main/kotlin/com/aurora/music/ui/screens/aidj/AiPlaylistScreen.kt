@@ -24,18 +24,18 @@ import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.AssistChip
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.FilledTonalButton
+import com.aurora.music.ui.theme.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SuggestionChip
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -200,7 +200,7 @@ private fun TrackRow(song: Song, playing: Boolean, onClick: () -> Unit) {
 private fun AiDjModelCard(vm: AiPlaylistViewModel) {
     val model by vm.model.collectAsStateWithLifecycle()
     val unsupported = vm.unsupported
-    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(16.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
+    Card(Modifier.fillMaxWidth(), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
         Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(appString(R.string.ai_dj_model), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             val muted = MaterialTheme.colorScheme.onSurfaceVariant

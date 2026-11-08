@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.stats
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -37,7 +38,7 @@ internal fun ListeningRecap.hasDailyChart() = artists.isNotEmpty() &&
 @Composable
 private fun RecapHighlight(recap: ListeningRecap, modifier: Modifier) {
     val artist = recap.artists.maxByOrNull { it.millis } ?: return
-    Column(modifier.clip(RoundedCornerShape(themedCorner(24.dp)))
+    Column(modifier.paperClip(RoundedCornerShape(themedCorner(24.dp)))
         .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer))).padding(22.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(appString(R.string.recap_sound), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -49,7 +50,7 @@ private fun RecapHighlight(recap: ListeningRecap, modifier: Modifier) {
 @Composable
 private fun RecapComparison(recap: ListeningRecap, previous: ListeningRecap, modifier: Modifier) {
     val difference = recap.minutes - previous.minutes
-    Column(modifier.clip(RoundedCornerShape(themedCorner(18.dp)))
+    Column(modifier.paperClip(RoundedCornerShape(themedCorner(18.dp)))
         .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(appString(R.string.text_total_listening_all_artists_a37e88), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(20.dp)) {
@@ -75,11 +76,11 @@ internal fun RecapDays(recap: ListeningRecap, modifier: Modifier) {
         else (0 until java.time.temporal.ChronoUnit.DAYS.between(recap.window.start, recap.window.end)).map { recap.window.start.plusDays(it) }
     val values = dates.map { date -> if (monthly) recap.dailyMillis.filterKeys { it.month == date.month }.values.sum() else recap.dailyMillis[date] ?: 0 }
     val max = values.maxOrNull()?.coerceAtLeast(1) ?: 1
-    Column(modifier.clip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp)) {
+    Column(modifier.paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp)) {
         Text(if (monthly) appString(R.string.text_your_year_month_by_month_e19b5f) else appString(R.string.text_your_listening_days_bf7f7d), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(14.dp))
         Row(Modifier.fillMaxWidth().height(90.dp), horizontalArrangement = Arrangement.spacedBy(3.dp), verticalAlignment = Alignment.Bottom) {
-            values.forEach { ms -> Box(Modifier.weight(1f).fillMaxHeight((ms.toFloat() / max).coerceIn(.025f, 1f)).clip(RoundedCornerShape(themedCorner(3.dp))).background(if (ms > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) }
+            values.forEach { ms -> Box(Modifier.weight(1f).fillMaxHeight((ms.toFloat() / max).coerceIn(.025f, 1f)).paperClip(RoundedCornerShape(themedCorner(3.dp))).background(if (ms > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant)) }
         }
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(if (monthly) appString(R.string.text_jan_efed36) else dates.first().toString(), style = MaterialTheme.typography.labelSmall)

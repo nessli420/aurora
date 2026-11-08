@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.animation.Crossfade
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,6 +15,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.TextButton
+import com.aurora.music.ui.theme.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -68,7 +71,7 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     val maxHeight = (LocalWindowLayout.current.heightDp * .86f).dp
     Dialog(onDismissRequest = { if (busy == null) onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
-        Surface(shape = RoundedCornerShape(themedCorner(28.dp)), color = com.aurora.music.ui.theme.solidColors().surface, tonalElevation = 0.dp,
+        Surface(shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(28.dp))), color = com.aurora.music.ui.theme.solidColors().surface, tonalElevation = 0.dp,
             modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(24.dp)) {
         Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).padding(start = 20.dp, end = 20.dp, top = 24.dp)) {
             Text(appString(R.string.track_swipe_playlists), style = MaterialTheme.typography.headlineMedium,
@@ -76,7 +79,7 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
             Text(appString(R.string.track_playlists_hint), style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 18.dp))
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(20.dp)))
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(20.dp)))
                     .background(Brush.horizontalGradient(listOf(colors.primary.copy(alpha = .13f), colors.surfaceContainerHigh)))
                     .border(1.dp, colors.primary.copy(alpha = .12f), RoundedCornerShape(themedCorner(20.dp)))
                     .padding(14.dp),
@@ -107,7 +110,7 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
                         Text(appString(R.string.text_your_playlists_df03eb), Modifier.weight(1f),
                             style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
                         Text(playlists!!.size.toString(), style = MaterialTheme.typography.labelMedium,
-                            color = colors.onSurfaceVariant, modifier = Modifier.clip(CircleShape)
+                            color = colors.onSurfaceVariant, modifier = Modifier.paperClip(CircleShape)
                                 .background(colors.surfaceContainerHigh).padding(horizontal = 10.dp, vertical = 4.dp))
                     }
                     if (saveFailed) Text(appString(R.string.track_playlists_save_error), color = colors.error,
@@ -161,7 +164,7 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
                                         CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
                                     }
                                     else -> Crossfade(included, label = "playlistSelectionIcon") { checked ->
-                                        Box(Modifier.size(30.dp).clip(CircleShape)
+                                        Box(Modifier.size(30.dp).paperClip(CircleShape)
                                             .background(if (checked) colors.primary else colors.surfaceContainerHigh),
                                             contentAlignment = Alignment.Center) {
                                             Icon(if (checked) Icons.Default.Check else Icons.Default.Add, null, Modifier.size(18.dp),
@@ -174,7 +177,7 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
                     }
                 }
             }
-            Button(onClick = onDismiss, enabled = busy == null, shape = RoundedCornerShape(themedCorner(16.dp)),
+            Button(onClick = onDismiss, enabled = busy == null, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp))),
                 modifier = Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 20.dp).heightIn(min = 50.dp)) {
                 Text(appString(R.string.track_swipe_done), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             }

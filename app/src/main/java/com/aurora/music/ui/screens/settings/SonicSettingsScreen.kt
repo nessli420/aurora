@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -50,7 +51,7 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         Column(Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
             Row(
-                Modifier.fillMaxWidth().padding(16.dp).clip(RoundedCornerShape(18.dp))
+                Modifier.fillMaxWidth().padding(16.dp).paperClip(RoundedCornerShape(18.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(18.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -65,7 +66,7 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             SettingsSectionTitle(appString(R.string.text_analyze_0e524d))
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                    .clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable(enabled = !progress.running) { app.sonicEngine.scan() }
                     .padding(16.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -94,7 +95,7 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 if (progress.running) {
                     Text(
                         appString(R.string.text_cancel_77dfd2), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.clip(RoundedCornerShape(50)).clickable { app.sonicEngine.cancel() }.padding(horizontal = 10.dp, vertical = 6.dp),
+                        modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { app.sonicEngine.cancel() }.padding(horizontal = 10.dp, vertical = 6.dp),
                     )
                 }
             }

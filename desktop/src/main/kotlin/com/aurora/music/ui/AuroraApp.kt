@@ -1,6 +1,7 @@
 package com.aurora.music.ui
 
 import androidx.compose.animation.AnimatedVisibility
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.fade
 import com.aurora.music.ui.theme.glassEdge
 import androidx.compose.animation.EnterTransition
@@ -661,7 +662,7 @@ private fun Shell(
     )
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
-            PlayerPane.LYRICS -> LivePlayer(player) { live -> LyricsPane(live, onSeek = { player.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(themedCorner(20.dp)))) }
+            PlayerPane.LYRICS -> LivePlayer(player) { live -> LyricsPane(live, onSeek = { player.seekTo(it) }, modifier = modifier.paperClip(RoundedCornerShape(themedCorner(20.dp)))) }
             PlayerPane.QUEUE -> QueueContent(
                 queue = playerState.queue,
                 currentIndex = playerState.currentIndex,
@@ -1014,7 +1015,7 @@ private fun Shell(
                             }
                             if (offlineMode) {
                                 Row(
-                                    Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
+                                    Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f))
                                         .padding(horizontal = 14.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
@@ -1317,7 +1318,7 @@ private fun Shell(
                                             PaneDivider(listPane, onSave = { scope.launch { desktopSettings.setLibraryListWidth(it) } })
                                             Box(
                                                 Modifier.weight(1f).fillMaxHeight().padding(end = TabletMetrics.WindowInset)
-                                                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                                                    .paperClip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                                                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                                             ) {
                                                 val paneVM = viewModel(key = "library-detail") { DetailViewModel(container) }
@@ -1486,7 +1487,7 @@ private fun Shell(
                                             PaneDivider(listPane, onSave = { scope.launch { desktopSettings.setSettingsListWidth(it) } })
                                             Box(
                                                 Modifier.weight(1f).fillMaxHeight().padding(end = TabletMetrics.WindowInset)
-                                                    .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                                                    .paperClip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                                                     .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                                             ) {
                                                 CompositionLocalProvider(
@@ -1743,7 +1744,7 @@ private fun DownloadProgressBanner(count: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (classic) Modifier.clip(RoundedCornerShape(themedCorner(18.dp)))
+            .then(if (classic) Modifier.paperClip(RoundedCornerShape(themedCorner(18.dp)))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.96f))
                 .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(themedCorner(18.dp)))
                 .glassEdge(RoundedCornerShape(themedCorner(18.dp)))
@@ -1763,7 +1764,7 @@ private fun DownloadProgressBanner(count: Int) {
             Spacer(Modifier.height(6.dp))
             LinearProgressIndicator(
                 progress = { progress },
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)),
+                modifier = Modifier.fillMaxWidth().paperClip(RoundedCornerShape(50)),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
             )

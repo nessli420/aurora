@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Kertas"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, sebagai aplikasi"</string>
+    <string name="theme_paper_detail">"Kertas dan tinta · aksen merah muda · bingkai tipis · sudut tegas · huruf Archivo"</string>
+    <string name="theme_paper_light_only">"Kertas hanya tersedia dalam mode terang, seperti situsnya."</string>
+    <string name="whats_new_paper_title">"Tema Kertas"</string>
+    <string name="whats_new_paper_body">"Tema baru langsung dari auroraplayer.lol: kertas hangat, tinta, bingkai tipis, sudut tegas, dan font situs itu sendiri. Hanya terang. Pilih di Tampilan."</string>
+</resources>

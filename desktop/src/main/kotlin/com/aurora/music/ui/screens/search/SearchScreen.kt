@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.search
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -202,11 +203,11 @@ fun SearchScreen(
                 placeholder = { Text(appString(R.string.text_artists_albums_or_songs_d1863c)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                 trailingIcon = if (state.query.isEmpty()) null else ({
-                    Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(36.dp).clip(CircleShape)
+                    Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(36.dp).paperClip(CircleShape)
                         .clickable { onQuery("") }.pointerHoverIcon(PointerIcon.Hand).padding(7.dp))
                 }),
                 singleLine = true,
-                shape = RoundedCornerShape(themedCorner(16.dp)),
+                shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp))),
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
                 keyboardActions = KeyboardActions(onSearch = { onCommitSearch() }),
                 colors = TextFieldDefaults.colors(
@@ -264,7 +265,7 @@ private fun SourcePicker(state: SearchUiState, onSelectSource: (String) -> Unit)
                 else -> Icons.Outlined.MusicNote
             }
             Box(
-                Modifier.size(40.dp).clip(CircleShape)
+                Modifier.size(40.dp).paperClip(CircleShape)
                     .background(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
                     .selectable(selected = selected, role = Role.RadioButton) { onSelectSource(source.id) }
                     .pointerHoverIcon(PointerIcon.Hand),
@@ -299,7 +300,7 @@ private fun FilterChips(selected: SearchFilter, results: SearchResults, onSelect
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.clip(RoundedCornerShape(50))
+                modifier = Modifier.paperClip(RoundedCornerShape(50))
                     .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable { onSelect(f) }
                     .pointerHoverIcon(PointerIcon.Hand)
@@ -465,7 +466,7 @@ private fun TopRow(card: @Composable () -> Unit, list: @Composable () -> Unit) {
 
 @Composable
 private fun TopResultCard(hit: TopHit, onOpen: () -> Unit, onPlay: (() -> Unit)?) {
-    val shape = RoundedCornerShape(themedCorner(24.dp))
+    val shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(24.dp)))
     Box(
         Modifier.fillMaxSize().auroraPanel(shape)
             .background(Brush.linearGradient(listOf(Color.Transparent, hit.accent.copy(alpha = 0.18f))))
@@ -481,7 +482,7 @@ private fun TopResultCard(hit: TopHit, onOpen: () -> Unit, onPlay: (() -> Unit)?
             Row(Modifier.padding(end = if (onPlay != null) 68.dp else 0.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(hit.type, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
+                    modifier = Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.10f))
                         .padding(horizontal = 10.dp, vertical = 4.dp))
                 if (hit.subtitle.isNotBlank()) {
                     Spacer(Modifier.width(10.dp))
@@ -492,7 +493,7 @@ private fun TopResultCard(hit: TopHit, onOpen: () -> Unit, onPlay: (() -> Unit)?
         }
         if (onPlay != null) {
             Box(
-                Modifier.align(Alignment.BottomEnd).size(56.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)
+                Modifier.align(Alignment.BottomEnd).size(56.dp).paperClip(CircleShape).background(MaterialTheme.colorScheme.primary)
                     .clickable(onClickLabel = appString(R.string.text_play_5d12bd), onClick = onPlay).pointerHoverIcon(PointerIcon.Hand),
                 contentAlignment = Alignment.Center,
             ) {
@@ -519,14 +520,14 @@ private fun RecentSearches(
             Row(Modifier.fillMaxWidth().padding(start = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(appString(R.string.text_recent_76eec7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onClear).pointerHoverIcon(PointerIcon.Hand)
+                    modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable(onClick = onClear).pointerHoverIcon(PointerIcon.Hand)
                         .padding(horizontal = 10.dp, vertical = 6.dp))
             }
         }
         items(recents.size) { i ->
             val q = recents[i]
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(12.dp))).clickable { onClick(q) }.pointerHoverIcon(PointerIcon.Hand)
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(12.dp))).clickable { onClick(q) }.pointerHoverIcon(PointerIcon.Hand)
                     .padding(horizontal = 12.dp, vertical = 12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -534,7 +535,7 @@ private fun RecentSearches(
                 Spacer(Modifier.width(14.dp))
                 Text(q, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Icon(Icons.Filled.Close, appString(R.string.text_remove_e96390), tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(30.dp).clip(CircleShape).clickable { onRemove(q) }.pointerHoverIcon(PointerIcon.Hand).padding(6.dp))
+                    modifier = Modifier.size(30.dp).paperClip(CircleShape).clickable { onRemove(q) }.pointerHoverIcon(PointerIcon.Hand).padding(6.dp))
             }
         }
     }

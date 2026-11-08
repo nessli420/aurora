@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -219,7 +220,7 @@ private fun DeviceRow(icon: ImageVector, title: String, subtitle: String?, selec
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(38.dp).clip(RoundedCornerShape(themedCorner(10.dp))).background(if (selected) colors.primary else colors.surfaceContainerHigh),
+            Modifier.size(38.dp).paperClip(RoundedCornerShape(themedCorner(10.dp))).background(if (selected) colors.primary else colors.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) { Icon(icon, null, tint = if (selected) colors.onPrimary else colors.onSurface, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.width(14.dp))

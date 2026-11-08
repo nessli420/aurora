@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.detail
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import android.app.Activity
@@ -26,11 +27,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoFixHigh
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -185,7 +186,7 @@ private fun TagField(label: String, value: String, onChange: (String) -> Unit) {
 private fun MatchRow(m: MetadataMatch, onApply: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(vertical = 4.dp)
-            .clip(RoundedCornerShape(12.dp))
+            .paperClip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
             .clickable(onClick = onApply)
             .padding(10.dp),

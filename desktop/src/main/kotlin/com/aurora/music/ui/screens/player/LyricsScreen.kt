@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import androidx.compose.animation.animateColorAsState
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -354,7 +355,7 @@ private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) {
             Text(appString(R.string.text_back_to_current_line_d5146a), color = Color.White,
                 fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .5f))
+                modifier = Modifier.paperClip(CircleShape).background(Color.Black.copy(alpha = .5f))
                     .clickable(role = Role.Button) { browsing = false }.pointerHoverIcon(PointerIcon.Hand)
                     .padding(horizontal = 20.dp, vertical = 14.dp))
         }

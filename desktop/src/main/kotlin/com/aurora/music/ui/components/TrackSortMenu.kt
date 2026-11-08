@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.foundation.clickable
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -50,7 +51,7 @@ fun TrackSortButton(order: TrackSortOrder, accent: Color, enabled: Boolean = tru
             if (order.isDefault) Icons.Outlined.FilterAlt else Icons.Filled.FilterAlt,
             appString(R.string.track_sort_button),
             tint = if (order.isDefault) MaterialTheme.colorScheme.onSurfaceVariant else accent,
-            modifier = Modifier.size(48.dp).clip(CircleShape).clickable(enabled = enabled) { open = true }.pointerHoverIcon(PointerIcon.Hand).padding(12.dp),
+            modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(enabled = enabled) { open = true }.pointerHoverIcon(PointerIcon.Hand).padding(12.dp),
         )
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             Text(appString(R.string.track_sort_heading), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,

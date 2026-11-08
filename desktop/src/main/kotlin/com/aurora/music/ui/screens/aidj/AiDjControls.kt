@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.aidj
 
 import androidx.compose.animation.core.RepeatMode
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -29,7 +30,7 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilledTonalButton
+import com.aurora.music.ui.theme.FilledTonalButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.LocalContentColor
@@ -38,7 +39,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -104,7 +105,7 @@ fun AiDjQueueBanner(state: DjMode.State, onSteer: (String) -> Unit, onSwitch: ()
     val focus = remember { FocusRequester() }
     if (autoFocus) LaunchedEffect(Unit) { focus.requestFocus() }
     val send = { if (steer.isNotBlank() && !state.busy) { onSteer(steer); steer = "" } }
-    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = RoundedCornerShape(16.dp),
+    Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
         Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -195,7 +196,7 @@ fun AiDjStage(state: DjMode.State, modifier: Modifier = Modifier) {
         Box(Modifier.size(150.dp), contentAlignment = Alignment.Center) {
             Box(Modifier.fillMaxSize().graphicsLayer { scaleX = scale.value; scaleY = scale.value; alpha = 0.55f }
                 .background(Brush.radialGradient(listOf(colors.primary, Color.Transparent)), CircleShape))
-            Box(Modifier.size(88.dp).clip(CircleShape).background(Brush.linearGradient(listOf(colors.primary, colors.tertiary))), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(88.dp).paperClip(CircleShape).background(Brush.linearGradient(listOf(colors.primary, colors.tertiary))), contentAlignment = Alignment.Center) {
                 if (state.thinking) CircularProgressIndicator(Modifier.size(34.dp), color = colors.onPrimary, strokeWidth = 3.dp)
                 else Icon(if (state.listening) Icons.Filled.Mic else Icons.Filled.AutoAwesome, null, tint = colors.onPrimary, modifier = Modifier.size(42.dp))
             }
@@ -216,7 +217,7 @@ fun AiDjStage(state: DjMode.State, modifier: Modifier = Modifier) {
 
 @Composable
 private fun AiDjStat(value: String, label: String, modifier: Modifier) {
-    Column(modifier.clip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f)).padding(horizontal = 12.dp, vertical = 10.dp)) {
+    Column(modifier.paperClip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.7f)).padding(horizontal = 12.dp, vertical = 10.dp)) {
         Text(value, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
@@ -232,7 +233,7 @@ fun AiDjPlayerButton(state: DjMode.State, onPress: () -> Unit, onHold: () -> Uni
     val tint = LocalContentColor.current
     val label = appString(R.string.ai_dj_control)
     Box(
-        Modifier.size(40.dp).clip(CircleShape).background(if (state.listening) colors.primary else Color.Transparent).pointerHoverIcon(PointerIcon.Hand)
+        Modifier.size(40.dp).paperClip(CircleShape).background(if (state.listening) colors.primary else Color.Transparent).pointerHoverIcon(PointerIcon.Hand)
             .semantics { contentDescription = label; role = Role.Button; onClick { press(); true } }
             .pointerInput(Unit) {
                 var holding = false

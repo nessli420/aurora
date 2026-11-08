@@ -1,6 +1,8 @@
 package com.aurora.music.ui.screens.library
 
 import androidx.compose.material.icons.outlined.LibraryMusic
+import com.aurora.music.ui.theme.paperClip
+import com.aurora.music.ui.theme.paperFrame
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.PlayCircle
@@ -89,7 +91,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
@@ -494,7 +496,7 @@ private fun LibraryTabsMenu(initial: com.aurora.music.data.LibraryTabs, canDownl
     Box {
         TooltipArea(tooltip = { HoverTooltip(label) }, delayMillis = 400) {
             Icon(Icons.Filled.Tune, label, tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(32.dp).clip(CircleShape).clickable(onClickLabel = label) { open = true }
+                modifier = Modifier.size(32.dp).paperClip(CircleShape).clickable(onClickLabel = label) { open = true }
                     .pointerHoverIcon(PointerIcon.Hand).padding(7.dp))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -533,7 +535,7 @@ private fun SortButton(sort: LibrarySort, iconOnly: Boolean, onSort: (LibrarySor
     val label = appString(R.string.text_sort_by_a2a5bd)
     Box {
         Row(
-            Modifier.height(36.dp).clip(RoundedCornerShape(50))
+            Modifier.height(36.dp).paperClip(RoundedCornerShape(50))
                 .clickable(onClickLabel = label) { open = true }
                 .pointerHoverIcon(PointerIcon.Hand)
                 .padding(horizontal = if (iconOnly) 9.dp else 12.dp),
@@ -584,7 +586,7 @@ private fun LibTab(label: String, icon: ImageVector, selected: Boolean, iconOnly
     val bare = iconOnly && !selected
     val tab: @Composable () -> Unit = {
         Column(
-            Modifier.clip(RoundedCornerShape(themedCorner(12.dp))).clickable(onClickLabel = label, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 10.dp, vertical = 6.dp),
+            Modifier.paperClip(RoundedCornerShape(themedCorner(12.dp))).clickable(onClickLabel = label, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 10.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             Row(Modifier.height(20.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -602,7 +604,7 @@ private fun LibTab(label: String, icon: ImageVector, selected: Boolean, iconOnly
             }
             Spacer(Modifier.height(4.dp))
             Box(
-                Modifier.height(3.dp).width(if (bare) 16.dp else 26.dp).clip(RoundedCornerShape(50)).background(
+                Modifier.height(3.dp).width(if (bare) 16.dp else 26.dp).paperClip(RoundedCornerShape(50)).background(
                     if (selected) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
                     else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
                 )
@@ -755,7 +757,7 @@ private fun QuickTileCard(tile: QuickTile, actions: LibActions, modifier: Modifi
                 Artwork(tile.art, row?.accent ?: MaterialTheme.colorScheme.primary, Modifier.size(TileArt), corner = if (circle) TileArt else 10.dp)
             } else {
                 Box(
-                    Modifier.size(TileArt).clip(RoundedCornerShape(themedCorner(10.dp)))
+                    Modifier.size(TileArt).paperClip(RoundedCornerShape(themedCorner(10.dp)))
                         .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)))),
                     contentAlignment = Alignment.Center,
                 ) { Icon(tile.icon, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(20.dp)) }
@@ -776,14 +778,14 @@ private fun QuickTileCard(tile: QuickTile, actions: LibActions, modifier: Modifi
             }
             if (row != null && (hovered || menuOpen)) {
                 Box(
-                    Modifier.size(32.dp).clip(CircleShape).background(MaterialTheme.colorScheme.primary)
+                    Modifier.size(32.dp).paperClip(CircleShape).background(MaterialTheme.colorScheme.primary)
                         .clickable(onClickLabel = appString(R.string.text_play_5d12bd)) { actions.onPlay(row) }
                         .pointerHoverIcon(PointerIcon.Hand),
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp)) }
                 Box {
                     Box(
-                        Modifier.size(28.dp).clip(CircleShape)
+                        Modifier.size(28.dp).paperClip(CircleShape)
                             .clickable(onClickLabel = appString(R.string.text_more_4bab2d)) { menuOpen = true }
                             .pointerHoverIcon(PointerIcon.Hand),
                         contentAlignment = Alignment.Center,
@@ -836,10 +838,9 @@ private fun SongsTab(
         verticalAlignment = Alignment.CenterVertically,
     ) {
         val accent = MaterialTheme.colorScheme.primary
-        val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
+        val onAccent = if (com.aurora.music.ui.theme.isPaperTheme()) com.aurora.music.ui.theme.PaperTokens.ink else if (accent.luminance() > 0.6f) Color.Black else Color.White
         Row(
-            Modifier.clip(RoundedCornerShape(50))
-                .background(Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.tertiary)))
+            Modifier.paperFrame(RoundedCornerShape(50), { background(Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.tertiary))) }, fill = accent)
                 .clickable(enabled = songs.isNotEmpty()) { onPlayAllSongs(false) }
                 .pointerHoverIcon(PointerIcon.Hand)
                 .padding(horizontal = 18.dp, vertical = 9.dp),
@@ -853,8 +854,7 @@ private fun SongsTab(
         Icon(
             Icons.Filled.Shuffle, appString(R.string.text_shuffle_all_7e388b),
             tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(38.dp).clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            modifier = Modifier.size(38.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) })
                 .clickable(enabled = songs.isNotEmpty()) { onPlayAllSongs(true) }
                 .pointerHoverIcon(PointerIcon.Hand)
                 .padding(9.dp),
@@ -1196,7 +1196,7 @@ private fun CreatePlaylistDialog(
                         modifier = Modifier.padding(top = 14.dp, bottom = 6.dp))
                     targets.forEach { option ->
                         Row(
-                            Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(10.dp)))
+                            Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(10.dp)))
                                 .clickable(enabled = !saving) { target = option.id }.pointerHoverIcon(PointerIcon.Hand)
                                 .padding(vertical = 2.dp),
                             verticalAlignment = Alignment.CenterVertically,
@@ -1258,7 +1258,7 @@ private fun Badge(text: String, modifier: Modifier = Modifier, small: Boolean = 
         fontWeight = FontWeight.Black,
         color = Color.White,
         modifier = modifier.padding(if (small) 3.dp else 8.dp)
-            .clip(RoundedCornerShape(if (small) 5.dp else 6.dp)).background(Color.Black.copy(alpha = 0.55f))
+            .paperClip(RoundedCornerShape(if (small) 5.dp else 6.dp)).background(Color.Black.copy(alpha = 0.55f))
             .padding(horizontal = if (small) 4.dp else 6.dp, vertical = if (small) 1.dp else 2.dp),
     )
 }
@@ -1306,7 +1306,7 @@ private fun LibListItem(row: LibRow, columns: List<TableColumn>, actions: LibAct
         Box(Modifier.size(ActionSize)) {
             if (row.menu) {
                 Box(
-                    Modifier.size(ActionSize).clip(CircleShape)
+                    Modifier.size(ActionSize).paperClip(CircleShape)
                         .then(if (hovered || menuOpen) Modifier.clickable(onClickLabel = appString(R.string.text_more_4bab2d)) { menuOpen = true }.pointerHoverIcon(PointerIcon.Hand) else Modifier),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -1349,14 +1349,14 @@ private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
             if (showActions) {
                 Box(Modifier.align(Alignment.TopEnd).padding(6.dp)) {
                     Box(
-                        Modifier.size(32.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.45f))
+                        Modifier.size(32.dp).paperClip(CircleShape).background(Color.Black.copy(alpha = 0.45f))
                             .clickable(onClickLabel = appString(R.string.text_more_4bab2d)) { menuOpen = true }
                             .pointerHoverIcon(PointerIcon.Hand),
                         contentAlignment = Alignment.Center,
                     ) { Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = Color.White, modifier = Modifier.size(18.dp)) }
                 }
                 Box(
-                    Modifier.align(Alignment.BottomEnd).padding(8.dp).size(40.dp).clip(CircleShape)
+                    Modifier.align(Alignment.BottomEnd).padding(8.dp).size(40.dp).paperClip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
                         .clickable(onClickLabel = appString(R.string.text_play_5d12bd)) { actions.onPlay(row) }
                         .pointerHoverIcon(PointerIcon.Hand),

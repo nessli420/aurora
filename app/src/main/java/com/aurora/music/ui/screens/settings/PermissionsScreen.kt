@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import android.Manifest
@@ -198,13 +199,13 @@ private fun PermRow(
 ) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            .paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(enabled = enabled && !granted, onClick = onGrant)
             .padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+            Modifier.size(38.dp).paperClip(RoundedCornerShape(10.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHighest),
             contentAlignment = Alignment.Center,
         ) { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
@@ -222,7 +223,7 @@ private fun PermRow(
             }
         } else if (enabled) {
             Box(
-                Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
+                Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
                     .clickable(onClick = onGrant).padding(horizontal = 14.dp, vertical = 7.dp),
             ) {
                 Text(appString(R.string.text_grant_c02329), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)

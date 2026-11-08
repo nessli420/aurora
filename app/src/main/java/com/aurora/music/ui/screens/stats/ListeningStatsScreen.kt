@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.stats
 
 import com.aurora.music.localization.appPlural
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -36,7 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.FilterChip
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import com.aurora.music.data.RecapWindow
 import com.aurora.music.data.RecapPeriod
 import com.aurora.music.data.ListeningRecaps
@@ -75,7 +76,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
             Text(appString(R.string.text_your_listening_recap_2d4efe), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
         LazyColumn(contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
@@ -105,7 +106,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                 Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(horizontal = 16.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (onOpenInsights != null && insights.enabled) {
-                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).clip(RoundedCornerShape(18.dp))
+                    Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).paperClip(RoundedCornerShape(18.dp))
                         .background(MaterialTheme.colorScheme.primaryContainer).clickable { onOpenInsights(window) }.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         Text(appString(R.string.insights_open_period), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
@@ -152,7 +153,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
 private fun StreakCard(current: Int, longest: Int) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
+            .paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(Icons.Filled.LocalFireDepartment, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(28.dp))
@@ -169,7 +170,7 @@ private fun ListeningClock(byHour: IntArray) {
     val max = (byHour.maxOrNull() ?: 0).coerceAtLeast(1)
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
+            .paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp),
     ) {
         Text(appString(R.string.text_listening_clock_ec2eb4), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(12.dp))
@@ -177,7 +178,7 @@ private fun ListeningClock(byHour: IntArray) {
             for (h in 0 until 24) {
                 val frac = (byHour[h].toFloat() / max).coerceIn(0.03f, 1f)
                 Box(
-                    Modifier.weight(1f).fillMaxHeight(frac).clip(RoundedCornerShape(3.dp))
+                    Modifier.weight(1f).fillMaxHeight(frac).paperClip(RoundedCornerShape(3.dp))
                         .background(if (byHour[h] > 0) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f)),
                 )
             }
@@ -193,7 +194,7 @@ private fun ListeningClock(byHour: IntArray) {
 
 @Composable
 private fun StatCard(value: String, label: String, modifier: Modifier) {
-    Column(modifier.clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier.paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
         Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
@@ -201,7 +202,7 @@ private fun StatCard(value: String, label: String, modifier: Modifier) {
 
 @Composable
 private fun RankRow(rank: Int, item: RankedItem, circle: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Text("$rank", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.width(28.dp))
         Artwork(item.artworkUrl, accentFor(item.id.ifBlank { item.name }), Modifier.size(48.dp), corner = if (circle) 48.dp else 10.dp)
         Spacer(Modifier.width(12.dp))
@@ -209,7 +210,7 @@ private fun RankRow(rank: Int, item: RankedItem, circle: Boolean, onClick: () ->
             Text(item.name.ifBlank { appString(R.string.text_unknown_bc7819) }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(item.subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        Box(Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+        Box(Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 4.dp)) {
             Text("${item.count}×", style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
         }
     }

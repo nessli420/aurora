@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.podcasts
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -80,7 +81,7 @@ fun PodcastDetailScreen(
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(showTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -99,7 +100,7 @@ fun PodcastDetailScreen(
                         }
                         Spacer(Modifier.height(10.dp))
                         Row(
-                            Modifier.clip(RoundedCornerShape(50))
+                            Modifier.paperClip(RoundedCornerShape(50))
                                 .background(if (subscribed) MaterialTheme.colorScheme.surfaceContainerHighest else accent)
                                 .clickable {
                                     vm.toggleSubscribe(Podcast(feedUrl = feedUrl, title = showTitle, author = author, imageUrl = showImage))
@@ -153,7 +154,7 @@ fun PodcastDetailScreen(
 private fun EpisodeRow(episode: PodcastEpisode, onPlay: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).padding(horizontal = 12.dp, vertical = 10.dp),
+            .paperClip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -168,7 +169,7 @@ private fun EpisodeRow(episode: PodcastEpisode, onPlay: () -> Unit) {
         Icon(
             Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd),
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onPlay).padding(9.dp),
+            modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onPlay).padding(9.dp),
         )
     }
 }

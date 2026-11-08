@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -96,12 +97,12 @@ fun OutputDeviceSheet(
             HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = colors.outlineVariant.copy(alpha = 0.5f))
             if (exclusiveAvailable) {
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(14.dp)))
+                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(14.dp)))
                         .clickable(role = Role.Switch) { onExclusiveChange(!exclusive) }.pointerHoverIcon(PointerIcon.Hand)
                         .padding(horizontal = 16.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.size(40.dp).clip(CircleShape).background(colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(40.dp).paperClip(CircleShape).background(colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
                         Icon(Icons.Filled.HighQuality, null, tint = if (exclusive) colors.primary else colors.onSurface, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(14.dp))
@@ -139,11 +140,11 @@ fun OutputDeviceSheet(
 private fun OutputRow(icon: ImageVector, label: String, detail: String?, selected: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(14.dp))).clickable(role = Role.RadioButton, onClick = onClick)
+        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(14.dp))).clickable(role = Role.RadioButton, onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 16.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(40.dp).clip(CircleShape).background(if (selected) colors.primary else colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) colors.primary else colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
             Icon(icon, null, tint = if (selected) colors.onPrimary else colors.onSurface, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))
@@ -181,7 +182,7 @@ fun SleepTimerSheet(
                 options.forEach { (min, label) ->
                     val selected = !endOfTrack && min == currentMinutes
                     Box(
-                        Modifier.clip(RoundedCornerShape(50))
+                        Modifier.paperClip(RoundedCornerShape(50))
                             .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                             .clickable { onSelect(min); onDismiss() }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 20.dp, vertical = 12.dp),
                     ) {
@@ -189,7 +190,7 @@ fun SleepTimerSheet(
                     }
                 }
                 Box(
-                    Modifier.clip(RoundedCornerShape(50))
+                    Modifier.paperClip(RoundedCornerShape(50))
                         .background(if (endOfTrack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { onEndOfTrack(); onDismiss() }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {

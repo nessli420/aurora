@@ -54,7 +54,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
@@ -265,7 +265,9 @@ private fun TourButton(text: String, modifier: Modifier = Modifier, primary: Boo
 
 @Composable
 private fun ThemedSwitch(checked: Boolean, onChange: (Boolean) -> Unit) {
-    if (isGlassTheme()) GlassToggle(checked, onChange) else Switch(checked = checked, onCheckedChange = null)
+    if (isGlassTheme()) GlassToggle(checked, onChange)
+    else if (LocalUiPrefs.current.themeStyle == ThemeStyle.PAPER) com.aurora.music.ui.theme.PaperSwitch(checked, null)
+    else Switch(checked = checked, onCheckedChange = null)
 }
 
 @Composable
@@ -595,6 +597,51 @@ internal fun TrackSortPreview() {
                     Text(sort.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge,
                         fontWeight = if (active) FontWeight.SemiBold else null, color = if (active) colors.primary else colors.onSurface)
                     if (active) Icon(Icons.Filled.ArrowDownward, null, Modifier.size(18.dp), tint = colors.primary)
+                }
+            }
+        }
+    }
+}
+
+/** A small data-sheet page drawn in the paper theme itself, whatever theme the tour is showing in. */
+@Composable
+internal fun PaperThemePreview() {
+    val prefs = LocalUiPrefs.current
+    androidx.compose.runtime.CompositionLocalProvider(LocalUiPrefs provides prefs.copy(themeStyle = ThemeStyle.PAPER)) {
+        MaterialTheme(
+            colorScheme = com.aurora.music.ui.theme.styleColorScheme(ThemeStyle.PAPER, false),
+            typography = com.aurora.music.ui.theme.auroraTypography(0.92f, ThemeStyle.PAPER),
+            shapes = com.aurora.music.ui.theme.auroraShapes(com.aurora.music.data.CornerStyle.DEFAULT, ThemeStyle.PAPER),
+        ) {
+            val colors = MaterialTheme.colorScheme
+            Column(Modifier.fillMaxSize().background(colors.background).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                Row(Modifier.fillMaxWidth()) {
+                    Text("Aurora, music player", Modifier.weight(1f), style = MaterialTheme.typography.labelSmall, color = colors.onBackground)
+                    Text(appString(R.string.theme_paper_name), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+                }
+                Box(Modifier.fillMaxWidth().height(1.dp).background(colors.onBackground))
+                Text(appString(R.string.text_library_b8100f), style = MaterialTheme.typography.headlineLarge, color = colors.onBackground)
+                // the site's spec table: mono field names, values in archivo, split on hairlines inside an ink frame
+                Column(Modifier.fillMaxWidth().border(1.dp, colors.onBackground)) {
+                    listOf(appString(R.string.track_sort_title) to "Erica Western Teleport", appString(R.string.track_sort_artist) to "Emperor X",
+                        appString(R.string.track_sort_duration) to "3:33").forEachIndexed { i, (field, value) ->
+                        if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(colors.outlineVariant))
+                        Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Text(field, Modifier.width(84.dp), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
+                            Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onBackground, maxLines = 1)
+                        }
+                    }
+                }
+                Spacer(Modifier.weight(1f))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                    Box(Modifier.background(colors.primary).padding(horizontal = 16.dp, vertical = 9.dp)) {
+                        Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, color = colors.onPrimary)
+                    }
+                    Box(Modifier.border(1.dp, colors.onBackground).padding(horizontal = 16.dp, vertical = 9.dp)) {
+                        Text(appString(R.string.text_shuffle_5b772b), style = MaterialTheme.typography.labelLarge, color = colors.onBackground)
+                    }
+                    Spacer(Modifier.weight(1f))
+                    com.aurora.music.ui.theme.PaperSwitch(true, null)
                 }
             }
         }

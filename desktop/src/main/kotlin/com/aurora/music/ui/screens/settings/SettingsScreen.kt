@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import androidx.compose.material.icons.filled.CallMerge
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.Lyrics
 import com.aurora.music.localization.appString
 
@@ -281,7 +282,7 @@ fun SettingsScreen(
                 item {
                     Spacer(Modifier.height(20.dp))
                     Box(
-                        Modifier.fillMaxWidth().padding(horizontal = 12.dp).clip(RoundedCornerShape(50))
+                        Modifier.fillMaxWidth().padding(horizontal = 12.dp).paperClip(RoundedCornerShape(50))
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                             .pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onLogout).padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
@@ -305,7 +306,7 @@ private fun AccountRow(username: String, avatarUrl: String, badge: String, onCli
     SettingsRowScaffold(
         leading = {
             Box(
-                Modifier.size(size).clip(CircleShape).background(Brush.linearGradient(listOf(colors.primary, colors.tertiary))),
+                Modifier.size(size).paperClip(CircleShape).background(Brush.linearGradient(listOf(colors.primary, colors.tertiary))),
                 contentAlignment = Alignment.Center,
             ) {
                 if (avatarUrl.isNotBlank()) Artwork(avatarUrl, colors.primary, Modifier.matchParentSize(), corner = size / 2)
@@ -318,7 +319,7 @@ private fun AccountRow(username: String, avatarUrl: String, badge: String, onCli
         subtitleColor = colors.primary,
         onClick = onClick,
     ) {
-        Box(Modifier.padding(start = 8.dp).clip(RoundedCornerShape(50)).background(colors.primary.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 4.dp)) {
+        Box(Modifier.padding(start = 8.dp).paperClip(RoundedCornerShape(50)).background(colors.primary.copy(alpha = 0.16f)).padding(horizontal = 10.dp, vertical = 4.dp)) {
             Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = colors.primary, maxLines = 1)
         }
     }

@@ -19,14 +19,14 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
@@ -213,7 +213,7 @@ fun YouTubeMusicStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: (
         Text(appString(R.string.text_sign_in_on_google_s_page_then_choose_your_youtube_music_profile_n_0b2a03),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(16.dp)) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.text_sign_in_with_google_4a0b72), style = MaterialTheme.typography.titleSmall)
         }
         GuestOption(!state.loading, onGuest)
@@ -322,7 +322,7 @@ fun SpotifyWebStep(state: AuthUiState, operations: SpotifyOperations, onConnect:
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(appString(R.string.spotify_web_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(16.dp)) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.spotify_web_login), style = MaterialTheme.typography.titleSmall)
         }
         Text(appString(R.string.spotify_web_login_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -371,7 +371,7 @@ fun SoundCloudStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: () 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text(appString(R.string.soundcloud_sign_in_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(16.dp)) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.soundcloud_sign_in), style = MaterialTheme.typography.titleSmall)
         }
         GuestOption(!state.loading, onGuest)
@@ -389,7 +389,7 @@ fun SoundCloudStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: () 
 private fun GuestOption(enabled: Boolean, onClick: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onClick, enabled = enabled,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = RoundedCornerShape(16.dp)) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.guest_continue), style = MaterialTheme.typography.titleSmall)
         }
         Text(appString(R.string.guest_detail), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

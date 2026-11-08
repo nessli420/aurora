@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import com.aurora.music.data.LongForm
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -140,9 +141,9 @@ fun PlaybackDock(
         modifier
             .fillMaxWidth()
             .then(
-                if (classic && LocalGlass.current) Modifier.clip(RoundedCornerShape(themedCorner(22.dp))).background(glassSheen())
+                if (classic && LocalGlass.current) Modifier.paperClip(RoundedCornerShape(themedCorner(22.dp))).background(glassSheen())
                     .glassEdge(RoundedCornerShape(themedCorner(22.dp)))
-                else if (classic) Modifier.clip(RoundedCornerShape(themedCorner(22.dp))).background(
+                else if (classic) Modifier.paperClip(RoundedCornerShape(themedCorner(22.dp))).background(
                     Brush.horizontalGradient(listOf(colors.surfaceContainerHigh, lerp(colors.surfaceContainerHigh, colors.primary, 0.14f)))
                 ) else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true)
             ),
@@ -160,7 +161,7 @@ fun PlaybackDock(
         ) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.weight(1f, fill = false).clip(RoundedCornerShape(themedCorner(14.dp)))
+                    Modifier.weight(1f, fill = false).paperClip(RoundedCornerShape(themedCorner(14.dp)))
                         .clickable(onClickLabel = appString(R.string.tablet_open_now_playing), onClick = onExpand)
                         .pointerHoverIcon(PointerIcon.Hand)
                         .padding(4.dp),
@@ -180,7 +181,7 @@ fun PlaybackDock(
                     }
                 }
                 val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurfaceVariant, label = "dockLike")
-                if (!compact && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(48.dp).clip(CircleShape)) {
+                if (!compact && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
                     Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp))
                 }
@@ -265,7 +266,7 @@ private fun PaneToggle(pane: PlayerPane, icon: ImageVector, checked: Boolean, on
             contentColor = colors.onSurfaceVariant,
             checkedContentColor = colors.primary,
         ),
-        modifier = Modifier.then(if (checked) Modifier.clip(CircleShape).background(colors.primary.copy(alpha = 0.14f)) else Modifier),
+        modifier = Modifier.then(if (checked) Modifier.paperClip(CircleShape).background(colors.primary.copy(alpha = 0.14f)) else Modifier),
     ) { Icon(icon, pane.label) }
 }
 
@@ -307,7 +308,7 @@ fun VolumeControl(
                 colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
                 thumb = { SliderDot(12.dp, colors.onSurface) },
                 track = { slider ->
-                    Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
+                    Box(Modifier.fillMaxWidth().height(4.dp).paperClip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
                         Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(fill))
                     }
                 },
@@ -324,7 +325,7 @@ private fun SliderDot(size: Dp, color: Color) {
         val dot = measurable.measure(constraints.copy(minHeight = 0))
         val height = if (constraints.hasBoundedHeight) maxOf(constraints.maxHeight, dot.height) else dot.height
         layout(dot.width, height) { dot.place(0, (height - dot.height) / 2) }
-    }.size(size).clip(CircleShape).background(color))
+    }.size(size).paperClip(CircleShape).background(color))
 }
 
 @Composable
@@ -346,7 +347,7 @@ private fun VolumeTip(level: Float, width: Dp) {
         Text(
             "${(level * 100).roundToInt()}%",
             style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.SemiBold, color = colors.inverseOnSurface,
-            modifier = Modifier.clip(RoundedCornerShape(themedCorner(8.dp))).background(colors.inverseSurface).padding(horizontal = 8.dp, vertical = 4.dp),
+            modifier = Modifier.paperClip(RoundedCornerShape(themedCorner(8.dp))).background(colors.inverseSurface).padding(horizontal = 8.dp, vertical = 4.dp),
         )
     }
 }
@@ -358,7 +359,7 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
     val duration = state.durationSec
     if (duration <= 0) {
         Row(Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (state.isLive) Box(Modifier.size(8.dp).clip(CircleShape).background(colors.primary))
+            if (state.isLive) Box(Modifier.size(8.dp).paperClip(CircleShape).background(colors.primary))
             Spacer(Modifier.width(6.dp))
             Text(if (state.isLive) appString(R.string.text_live_6990f0) else appString(R.string.text_streaming_1e8325),
                 style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = colors.primary)
@@ -388,7 +389,7 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
             colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
             thumb = { SliderDot(if (thick) 14.dp else 12.dp, thumbColor) },
             track = { slider ->
-                Box(Modifier.fillMaxWidth().height(if (thick) 8.dp else 4.dp).clip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
+                Box(Modifier.fillMaxWidth().height(if (thick) 8.dp else 4.dp).paperClip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
                     Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(seekBrush))
                 }
             },

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.library
 
 import com.aurora.music.localization.appPlural
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -84,7 +85,7 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
         Modifier
             .fillMaxWidth()
             .padding(vertical = 5.dp)
-            .clip(RoundedCornerShape(18.dp))
+            .paperClip(RoundedCornerShape(18.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
             .padding(12.dp),
     ) {
@@ -97,7 +98,7 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
         Spacer(Modifier.height(8.dp))
         group.songs.forEach { s ->
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).clickable { onPlay(s) }.padding(6.dp),
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable { onPlay(s) }.padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Artwork(s.artworkUrl, s.accent, Modifier.size(40.dp), corner = 10.dp)

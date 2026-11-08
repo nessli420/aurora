@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import com.aurora.music.localization.appPlural
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -49,7 +50,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -125,7 +126,7 @@ fun QueueContent(
             if (played.isNotEmpty()) {
                 item {
                     Row(
-                        Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(10.dp)))
+                        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(10.dp)))
                             .clickable { showHistory = !showHistory }.pointerHoverIcon(PointerIcon.Hand)
                             .padding(vertical = 8.dp, horizontal = 2.dp),
                         verticalAlignment = Alignment.CenterVertically,
@@ -264,7 +265,7 @@ private fun QueueTrackRow(
             Modifier
                 .fillMaxWidth()
                 .height(rowHeight)
-                .clip(RoundedCornerShape(themedCorner(12.dp)))
+                .paperClip(RoundedCornerShape(themedCorner(12.dp)))
                 .background(if (dragging) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
                 .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick)
                 .pointerHoverIcon(PointerIcon.Hand)
@@ -291,7 +292,7 @@ private fun QueueTrackRow(
                 Icon(
                     Icons.Filled.Close, appString(R.string.text_remove_e96390),
                     tint = muted,
-                    modifier = Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onRemove).pointerHoverIcon(PointerIcon.Hand).padding(7.dp),
+                    modifier = Modifier.size(32.dp).paperClip(CircleShape).clickable(onClick = onRemove).pointerHoverIcon(PointerIcon.Hand).padding(7.dp),
                 )
             }
             if (actions && dragHandle != null) {

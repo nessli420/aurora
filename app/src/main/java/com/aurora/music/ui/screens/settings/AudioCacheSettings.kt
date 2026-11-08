@@ -5,6 +5,8 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.OfflinePin
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.TextButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext

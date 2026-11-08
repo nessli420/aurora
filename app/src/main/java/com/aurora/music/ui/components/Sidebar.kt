@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -74,7 +75,7 @@ fun SidebarContent(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Box(
-                Modifier.size(56.dp).clip(CircleShape)
+                Modifier.size(56.dp).paperClip(CircleShape)
                     .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
                 contentAlignment = Alignment.Center,
             ) {

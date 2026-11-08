@@ -12,6 +12,8 @@ import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.TextButton
+import com.aurora.music.ui.theme.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -39,7 +41,7 @@ fun YouTubeMusicStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: (
     var browserOpen by remember { mutableStateOf(false) }
     var detailsExpanded by remember { mutableStateOf(false) }
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        Surface(shape = androidx.compose.foundation.shape.RoundedCornerShape(20.dp), color = MaterialTheme.colorScheme.surface) {
+        Surface(shape = com.aurora.music.ui.theme.paperSquare(androidx.compose.foundation.shape.RoundedCornerShape(20.dp)), color = MaterialTheme.colorScheme.surface) {
             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Text(appString(R.string.text_more_music_same_aurora_3ae62e), style = MaterialTheme.typography.titleMedium)
                 Text(appString(R.string.text_keep_your_playlists_and_likes_close_explore_recommendations_along_fc1542),
@@ -51,7 +53,7 @@ fun YouTubeMusicStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: (
         Text(appString(R.string.text_sign_in_on_google_s_page_then_choose_your_youtube_music_profile_n_0b2a03),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp)) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(androidx.compose.foundation.shape.RoundedCornerShape(16.dp))) {
             Text(appString(R.string.text_sign_in_with_google_4a0b72), style = MaterialTheme.typography.titleSmall)
         }
         GuestOption(!state.loading, onGuest)

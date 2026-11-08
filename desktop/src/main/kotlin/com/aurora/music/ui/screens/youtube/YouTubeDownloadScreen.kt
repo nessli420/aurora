@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.youtube
 
 import androidx.compose.foundation.clickable
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -110,7 +111,7 @@ fun YouTubeDownloadScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
             placeholder = { Text(appString(R.string.youtube_download_search_hint)) },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
             singleLine = true,
-            shape = RoundedCornerShape(14.dp),
+            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(14.dp)),
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { search() }),
             colors = TextFieldDefaults.colors(
@@ -143,7 +144,7 @@ fun YouTubeDownloadScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
 
 @Composable
 private fun HeaderAction(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    Icon(icon, label, modifier = Modifier.size(40.dp).clip(CircleShape).pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onClick).padding(8.dp))
+    Icon(icon, label, modifier = Modifier.size(40.dp).paperClip(CircleShape).pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onClick).padding(8.dp))
 }
 
 @Composable

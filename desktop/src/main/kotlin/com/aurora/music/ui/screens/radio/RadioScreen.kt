@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.radio
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.animation.AnimatedVisibility
@@ -39,7 +40,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -93,18 +94,18 @@ fun RadioScreen(
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(appString(R.string.text_radio_b11bf1), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
             Icon(
                 Icons.Filled.Add, appString(R.string.text_add_custom_stream_638147),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showAdd = true }.padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showAdd = true }.padding(8.dp),
             )
             Icon(
                 if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
                 if (searchOpen) appString(R.string.text_close_search_0906f9) else appString(R.string.text_search_stations_3b38bf),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable {
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable {
                     searchOpen = !searchOpen
                     if (!searchOpen) { query = ""; vm.clearSearch() }
                 }.padding(8.dp),
@@ -119,7 +120,7 @@ fun RadioScreen(
                 placeholder = { Text(appString(R.string.text_search_radio_stations_be278b)) },
                 leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                 singleLine = true,
-                shape = RoundedCornerShape(14.dp),
+                shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(14.dp)),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                     unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -144,7 +145,7 @@ fun RadioScreen(
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
                             color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.clip(RoundedCornerShape(50))
+                            modifier = Modifier.paperClip(RoundedCornerShape(50))
                                 .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .clickable { if (selected) vm.loadPopular() else vm.byTag(tag) }
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
@@ -218,7 +219,7 @@ private fun StationRow(
 ) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).padding(horizontal = 8.dp, vertical = 8.dp),
+            .paperClip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -241,12 +242,12 @@ private fun StationRow(
             if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
             if (isFavorite) appString(R.string.text_unfavorite_de9bba) else appString(R.string.text_favorite_6b90b6),
             tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onToggleFavorite).padding(8.dp),
+            modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onToggleFavorite).padding(8.dp),
         )
         Icon(
             Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd),
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onPlay).padding(8.dp),
+            modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onPlay).padding(8.dp),
         )
     }
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Papier"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, als app"</string>
+    <string name="theme_paper_detail">"Papier en inkt · roze accent · dunne kaders · rechte hoeken · Archivo-letter"</string>
+    <string name="theme_paper_light_only">"Papier bestaat alleen in licht, net als de website."</string>
+    <string name="whats_new_paper_title">"Papier-thema"</string>
+    <string name="whats_new_paper_body">"Een nieuw thema rechtstreeks van auroraplayer.lol: warm papier, inkt, dunne kaders, rechte hoeken en de lettertypes van de site. Alleen licht. Kies het bij Weergave."</string>
+</resources>

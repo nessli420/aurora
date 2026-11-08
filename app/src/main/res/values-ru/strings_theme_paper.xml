@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Бумага"</string>
+    <string name="theme_paper_description">"auroraplayer.lol в виде приложения"</string>
+    <string name="theme_paper_detail">"Бумага и чернила · розовый акцент · тонкие рамки · прямые углы · шрифт Archivo"</string>
+    <string name="theme_paper_light_only">"Бумага бывает только светлой, как сайт."</string>
+    <string name="whats_new_paper_title">"Тема «Бумага»"</string>
+    <string name="whats_new_paper_body">"Новая тема прямо с auroraplayer.lol: тёплая бумага, чернила, тонкие рамки, прямые углы и шрифты сайта. Только светлая. Выберите её в разделе «Оформление»."</string>
+</resources>

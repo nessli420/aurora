@@ -5,6 +5,7 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier

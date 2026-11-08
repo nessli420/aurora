@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -103,7 +104,7 @@ fun SettingsTopBar(title: String, onBack: () -> Unit, showBack: Boolean) {
         verticalAlignment = Alignment.CenterVertically,
     ) {
         if (showBack) {
-            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+            Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
             Spacer(Modifier.width(8.dp))
         } else Spacer(Modifier.width(12.dp))
         Text(title, style = MaterialTheme.typography.headlineSmall)
@@ -127,7 +128,7 @@ fun SettingsGroup(content: @Composable androidx.compose.foundation.layout.Column
         Modifier.fillMaxWidth().padding(horizontal = 12.dp)
             .then(
                 if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
-                    Modifier.clip(RoundedCornerShape(18.dp))
+                    Modifier.paperClip(RoundedCornerShape(18.dp))
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f))
                 else Modifier.auroraPanel(MaterialTheme.shapes.medium)
             ),
@@ -170,7 +171,7 @@ internal fun RowScaffold(
             Box(
                 Modifier.size(38.dp).then(
                     if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
-                        Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        Modifier.paperClip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
                 ),
                 contentAlignment = Alignment.Center,
@@ -201,6 +202,7 @@ fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String? = null, v
 fun SettingsSwitchRow(icon: ImageVector? = null, title: String, subtitle: String? = null, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     RowScaffold(icon, title, subtitle, { onCheckedChange(!checked) }) {
         if (isGlassTheme()) GlassToggle(checked, onCheckedChange, Modifier.padding(start = 12.dp))
+        else if (LocalUiPrefs.current.themeStyle == ThemeStyle.PAPER) com.aurora.music.ui.theme.PaperSwitch(checked, onCheckedChange, Modifier.padding(start = 12.dp))
         else Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,

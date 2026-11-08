@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.animation.animateColorAsState
@@ -88,7 +89,7 @@ fun MiniPlayer(
         modifier = modifier
             .fillMaxWidth()
             .then(if (ui.themeStyle != ThemeStyle.AURORA) Modifier.auroraPanel(MaterialTheme.shapes.large, emphasized = true)
-            else Modifier.clip(RoundedCornerShape(20.dp)).background(
+            else Modifier.paperClip(RoundedCornerShape(20.dp)).background(
                 Brush.horizontalGradient(
                     listOf(
                         MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -122,7 +123,7 @@ fun MiniPlayer(
                 )
             }
             if (showLike) {
-                LikeHeart(song, onToggleLike, Modifier.size(40.dp).clip(CircleShape)) {
+                LikeHeart(song, onToggleLike, Modifier.size(40.dp).paperClip(CircleShape)) {
                     Icon(
                         imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = appString(R.string.text_like_c7e02c),
@@ -135,13 +136,13 @@ fun MiniPlayer(
                 imageVector = if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                 contentDescription = appString(R.string.text_play_pause_14a1d0),
                 tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onTogglePlay).padding(6.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onTogglePlay).padding(6.dp),
             )
             if (!isMix) Icon(
                 imageVector = Icons.Filled.SkipNext,
                 contentDescription = appString(R.string.text_next_bc9819),
                 tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onNext).padding(6.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onNext).padding(6.dp),
             )
         }
         if (ui.miniProgress != MiniProgress.NONE) {
@@ -151,7 +152,7 @@ fun MiniPlayer(
                     .fillMaxWidth()
                     .padding(horizontal = 10.dp)
                     .height(barH)
-                    .clip(RoundedCornerShape(barH))
+                    .paperClip(RoundedCornerShape(barH))
                     .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f))
                     .drawBehind {
                         val r = size.height / 2f
@@ -215,7 +216,7 @@ private fun GlassMiniPlayer(
             Text(song.artist, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (ui.miniStyle != MiniStyle.COMPACT && !isMix && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(44.dp).clip(CircleShape)) {
+        if (ui.miniStyle != MiniStyle.COMPACT && !isMix && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(44.dp).paperClip(CircleShape)) {
             Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, appString(R.string.text_like_c7e02c),
                 tint = likeTint, modifier = Modifier.size(24.dp))
         }
@@ -227,7 +228,7 @@ private fun GlassMiniPlayer(
 @Composable
 private fun GlassGlyph(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, tint: androidx.compose.ui.graphics.Color,
     size: androidx.compose.ui.unit.Dp, onClick: () -> Unit) {
-    Box(Modifier.size(44.dp).clip(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
+    Box(Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onClick), contentAlignment = Alignment.Center) {
         Icon(icon, label, tint = tint, modifier = Modifier.size(size))
     }
 }

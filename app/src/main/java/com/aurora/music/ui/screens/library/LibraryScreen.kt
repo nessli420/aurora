@@ -1,6 +1,8 @@
 package com.aurora.music.ui.screens.library
 
 import androidx.compose.foundation.combinedClickable
+import com.aurora.music.ui.theme.paperClip
+import com.aurora.music.ui.theme.paperFrame
 import com.aurora.music.localization.localizedMediaType
 
 import com.aurora.music.localization.appPlural
@@ -75,7 +77,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -255,7 +257,7 @@ fun LibraryScreen(
         // ---- header: identity + stats ----
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(38.dp).clip(CircleShape)
+                Modifier.size(38.dp).paperClip(CircleShape)
                     .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
                     .clickable(onClick = onOpenDrawer),
                 contentAlignment = Alignment.Center,
@@ -276,10 +278,10 @@ fun LibraryScreen(
             if (state.views.size > 1) {
                 val next = state.views[(state.views.indexOfFirst { it.id == state.view } + 1).mod(state.views.size)]
                 Icon(com.aurora.music.ui.components.sourceViewIcon(state.view), appString(R.string.library_switch_view, next.label),
-                    modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onCycleView).padding(8.dp))
+                    modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onCycleView).padding(8.dp))
             }
-            Icon(Icons.Filled.Search, appString(R.string.text_search_bce064), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSearch).padding(8.dp))
-            if (state.signedIn) Icon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988), modifier = Modifier.size(40.dp).clip(CircleShape).clickable { showCreate = true }.padding(8.dp))
+            Icon(Icons.Filled.Search, appString(R.string.text_search_bce064), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onOpenSearch).padding(8.dp))
+            if (state.signedIn) Icon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showCreate = true }.padding(8.dp))
         }
 
         if (showCreate) {
@@ -313,7 +315,7 @@ fun LibraryScreen(
             }
             item {
                 Icon(Icons.Filled.Tune, appString(R.string.library_tabs_customize), tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(36.dp).clip(CircleShape).clickable { showTabs = true }.padding(9.dp))
+                    modifier = Modifier.size(36.dp).paperClip(CircleShape).clickable { showTabs = true }.padding(9.dp))
             }
         }
         if (showTabs) LibraryTabsSheet(tabPrefs, canDownload, onChange = onTabs, onDismiss = { showTabs = false })
@@ -326,7 +328,7 @@ fun LibraryScreen(
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box {
                     Row(
-                        Modifier.clip(RoundedCornerShape(50)).clickable { sortMenu = true }.padding(6.dp),
+                        Modifier.paperClip(RoundedCornerShape(50)).clickable { sortMenu = true }.padding(6.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(Icons.Filled.SwapVert, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
@@ -348,7 +350,7 @@ fun LibraryScreen(
                     Icon(
                         imageVector = if (layout == LibraryLayout.LIST) Icons.Filled.GridView else Icons.AutoMirrored.Filled.List,
                         contentDescription = appString(R.string.text_toggle_layout_6169e7),
-                        modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onToggleLayout).padding(8.dp),
+                        modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onToggleLayout).padding(8.dp),
                     )
                 }
             }
@@ -447,7 +449,7 @@ internal fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
 private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
     val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
     Column(
-        Modifier.clip(RoundedCornerShape(12.dp)).combinedClickable(onClick = onClick, onLongClick = onLongClick).padding(horizontal = 10.dp, vertical = 6.dp),
+        Modifier.paperClip(RoundedCornerShape(12.dp)).combinedClickable(onClick = onClick, onLongClick = onLongClick).padding(horizontal = 10.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -462,7 +464,7 @@ private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onLongCl
         }
         Spacer(Modifier.height(4.dp))
         Box(
-            Modifier.height(3.dp).width(26.dp).clip(RoundedCornerShape(50)).background(
+            Modifier.height(3.dp).width(26.dp).paperClip(RoundedCornerShape(50)).background(
                 if (selected) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
                 else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
             )
@@ -593,7 +595,7 @@ private data class QuickTile(
 private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
     Row(
         modifier
-            .clip(RoundedCornerShape(16.dp))
+            .paperClip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f))
             .combinedClickable(onClick = tile.onClick, onLongClick = tile.onLongClick,
                 onLongClickLabel = if (tile.onLongClick != null) appString(R.string.liked_sources_choose) else null)
@@ -605,7 +607,7 @@ private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
             Artwork(tile.art, MaterialTheme.colorScheme.primary, Modifier.size(38.dp), corner = 10.dp)
         } else {
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp))
+                Modifier.size(38.dp).paperClip(RoundedCornerShape(10.dp))
                     .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary.copy(alpha = 0.85f), MaterialTheme.colorScheme.tertiary.copy(alpha = 0.85f)))),
                 contentAlignment = Alignment.Center,
             ) { Icon(tile.icon, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(19.dp)) }
@@ -632,7 +634,7 @@ private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
                 style = MaterialTheme.typography.labelMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp),
+                modifier = Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp),
             )
         }
         Spacer(Modifier.weight(1f))
@@ -641,7 +643,7 @@ private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
                 appString(R.string.text_see_all_2941c5),
                 style = MaterialTheme.typography.labelLarge,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.clip(RoundedCornerShape(50)).clickable(onClick = onSeeAll).padding(horizontal = 10.dp, vertical = 6.dp),
+                modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable(onClick = onSeeAll).padding(horizontal = 10.dp, vertical = 6.dp),
             )
         }
     }
@@ -661,7 +663,7 @@ private fun ShelfCard(
     onClick: () -> Unit,
 ) {
     Column(
-        Modifier.width(width).clip(RoundedCornerShape(14.dp)).background(selectionTint(selectionKey)).clickable(onClick = onClick).padding(4.dp),
+        Modifier.width(width).paperClip(RoundedCornerShape(14.dp)).background(selectionTint(selectionKey)).clickable(onClick = onClick).padding(4.dp),
         horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
     ) {
         Box {
@@ -673,7 +675,7 @@ private fun ShelfCard(
                     fontWeight = FontWeight.Black,
                     color = Color.White,
                     modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
-                        .clip(RoundedCornerShape(6.dp)).background(Color.Black.copy(alpha = 0.55f))
+                        .paperClip(RoundedCornerShape(6.dp)).background(Color.Black.copy(alpha = 0.55f))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
@@ -738,10 +740,9 @@ private fun SongsTab(
             modifier = Modifier.weight(1f),
         )
         val accent = MaterialTheme.colorScheme.primary
-        val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
+        val onAccent = if (com.aurora.music.ui.theme.isPaperTheme()) com.aurora.music.ui.theme.PaperTokens.ink else if (accent.luminance() > 0.6f) Color.Black else Color.White
         Row(
-            Modifier.clip(RoundedCornerShape(50))
-                .background(Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.tertiary)))
+            Modifier.paperFrame(RoundedCornerShape(50), { background(Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.tertiary))) }, fill = accent)
                 .clickable(enabled = songs.isNotEmpty()) { onPlayAllSongs(false) }
                 .padding(horizontal = 18.dp, vertical = 9.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -754,8 +755,7 @@ private fun SongsTab(
         Icon(
             Icons.Filled.Shuffle, appString(R.string.text_shuffle_all_7e388b),
             tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(38.dp).clip(CircleShape)
-                .background(MaterialTheme.colorScheme.surfaceContainerHigh)
+            modifier = Modifier.size(38.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) })
                 .clickable(enabled = songs.isNotEmpty()) { onPlayAllSongs(true) }
                 .padding(9.dp),
         )
@@ -976,7 +976,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .paperClip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
             .background(selectionTint("${row.kind}:${row.id}"))
             .likedLongPress(row, actions, onClick)
@@ -993,7 +993,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
                     fontWeight = FontWeight.Black,
                     color = Color.White,
                     modifier = Modifier.align(Alignment.BottomStart).padding(3.dp)
-                        .clip(RoundedCornerShape(5.dp)).background(Color.Black.copy(alpha = 0.55f))
+                        .paperClip(RoundedCornerShape(5.dp)).background(Color.Black.copy(alpha = 0.55f))
                         .padding(horizontal = 4.dp, vertical = 1.dp),
                 )
             }
@@ -1010,7 +1010,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
                 Icon(
                     Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(34.dp).clip(CircleShape).clickable { menuOpen = true }.padding(6.dp),
+                    modifier = Modifier.size(34.dp).paperClip(CircleShape).clickable { menuOpen = true }.padding(6.dp),
                 )
                 CollectionMenu(row, actions, expanded = menuOpen, onDismiss = { menuOpen = false })
             }
@@ -1020,7 +1020,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 
 @Composable
 private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
-    Column(Modifier.clip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).likedLongPress(row, actions, onClick).padding(6.dp)) {
+    Column(Modifier.paperClip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).likedLongPress(row, actions, onClick).padding(6.dp)) {
         if (row.kind == "liked") actions.likedPicker()
         Box {
             Artwork(row.art, row.accent, Modifier.fillMaxWidth().aspectRatio(1f), corner = if (row.circle) 200.dp else 12.dp)
@@ -1031,7 +1031,7 @@ private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
                     fontWeight = FontWeight.Black,
                     color = Color.White,
                     modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
-                        .clip(RoundedCornerShape(6.dp)).background(Color.Black.copy(alpha = 0.55f))
+                        .paperClip(RoundedCornerShape(6.dp)).background(Color.Black.copy(alpha = 0.55f))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 )
             }
@@ -1048,7 +1048,7 @@ private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
                     Icon(
                         Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(28.dp).clip(CircleShape).clickable { menuOpen = true }.padding(4.dp),
+                        modifier = Modifier.size(28.dp).paperClip(CircleShape).clickable { menuOpen = true }.padding(4.dp),
                     )
                     CollectionMenu(row, actions, expanded = menuOpen, onDismiss = { menuOpen = false })
                 }

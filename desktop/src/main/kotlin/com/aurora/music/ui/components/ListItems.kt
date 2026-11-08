@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.material.icons.filled.VisibilityOff
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.foundation.LocalIndication
@@ -243,7 +244,7 @@ fun SongRow(
                 Artwork(song.artworkUrl, song.accent, Modifier.size(ArtSize), corner = 8.dp)
                 if (isPlaying && index == null) {
                     Box(
-                        Modifier.size(ArtSize).clip(RoundedCornerShape(themedCorner(8.dp)))
+                        Modifier.size(ArtSize).paperClip(RoundedCornerShape(themedCorner(8.dp)))
                             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -375,7 +376,7 @@ fun SongListHeader(
 @Composable
 private fun RowAction(icon: ImageVector, label: String, tint: Color, visible: Boolean, onClick: () -> Unit) {
     Box(
-        Modifier.size(ActionSize).alpha(if (visible) 1f else 0f).clip(CircleShape)
+        Modifier.size(ActionSize).alpha(if (visible) 1f else 0f).paperClip(CircleShape)
             .clickable(onClickLabel = label, onClick = onClick).pointerHoverIcon(PointerIcon.Hand),
         contentAlignment = Alignment.Center,
     ) {
@@ -439,7 +440,7 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier, 
                     fontWeight = FontWeight.Black,
                     color = Color.White,
                     modifier = Modifier.align(Alignment.TopStart).padding(8.dp)
-                        .clip(RoundedCornerShape(themedCorner(6.dp)))
+                        .paperClip(RoundedCornerShape(themedCorner(6.dp)))
                         .background(Color.Black.copy(alpha = 0.55f))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 )

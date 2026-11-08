@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.explore
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -29,7 +30,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -136,7 +137,7 @@ private fun Page(title: String, contentPadding: PaddingValues, onBack: () -> Uni
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
@@ -174,7 +175,7 @@ private val ChipMinWidth = 170.dp
 private fun CategoryChip(category: ExploreCategory, modifier: Modifier, onClick: () -> Unit) {
     val stripe = if (category.colorArgb != 0L) Color(category.colorArgb.toInt()) else MaterialTheme.colorScheme.primary
     Row(
-        modifier.height(48.dp).clip(RoundedCornerShape(10.dp))
+        modifier.height(48.dp).paperClip(RoundedCornerShape(10.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,

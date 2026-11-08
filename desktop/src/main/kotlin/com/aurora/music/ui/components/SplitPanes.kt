@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.animation.core.animateDpAsState
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -122,7 +123,7 @@ fun PaneDivider(
             .semantics { contentDescription = description },
         contentAlignment = Alignment.Center,
     ) {
-        Box(Modifier.width(3.dp).height(length).clip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)))
+        Box(Modifier.width(3.dp).height(length).paperClip(CircleShape).background(MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)))
     }
 }
 
@@ -133,7 +134,7 @@ fun FullPageButton(onClick: () -> Unit, modifier: Modifier = Modifier, tint: Col
     TooltipArea(tooltip = { HoverTooltip(label) }, modifier = modifier, delayMillis = 400) {
         Icon(
             Icons.Outlined.OpenInFull, label, tint = tint,
-            modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(14.dp),
+            modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(14.dp),
         )
     }
 }
@@ -144,6 +145,6 @@ fun HoverTooltip(label: String) {
         label,
         style = MaterialTheme.typography.labelMedium,
         color = MaterialTheme.colorScheme.inverseOnSurface,
-        modifier = Modifier.clip(RoundedCornerShape(themedCorner(6.dp))).background(MaterialTheme.colorScheme.inverseSurface).padding(horizontal = 8.dp, vertical = 4.dp),
+        modifier = Modifier.paperClip(RoundedCornerShape(themedCorner(6.dp))).background(MaterialTheme.colorScheme.inverseSurface).padding(horizontal = 8.dp, vertical = 4.dp),
     )
 }

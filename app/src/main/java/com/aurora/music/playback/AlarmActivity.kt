@@ -20,13 +20,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Alarm
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -107,7 +107,7 @@ private fun AlarmDismissScreen(onDismiss: () -> Unit, onTurnOff: () -> Unit) {
             Spacer(Modifier.height(40.dp))
             Button(
                 onClick = onDismiss,
-                shape = RoundedCornerShape(50),
+                shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(50)),
                 colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                 modifier = Modifier.size(width = 220.dp, height = 56.dp),
             ) {

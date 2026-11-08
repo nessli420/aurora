@@ -14,7 +14,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,7 +52,7 @@ fun ShortcutsDialog(onDismiss: () -> Unit) {
 @Composable
 private fun KeyCap(keys: String) {
     val accent = MaterialTheme.colorScheme.primary
-    val shape = RoundedCornerShape(themedCorner(6.dp))
+    val shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(6.dp)))
     Text(
         keys,
         style = MaterialTheme.typography.labelMedium,

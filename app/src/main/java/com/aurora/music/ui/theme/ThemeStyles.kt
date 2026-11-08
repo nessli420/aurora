@@ -31,9 +31,47 @@ val ThemeIdentities: List<ThemeIdentity> get() = listOf(
     ThemeIdentity(ThemeStyle.RETRO, appString(R.string.text_retro_hi_fi_a68d38), appString(R.string.text_a_little_analogue_soul_a0d7ac), appString(R.string.text_amber_displays_monospace_type_tactile_frames_27d627)),
     ThemeIdentity(ThemeStyle.AERO, "Aero", appString(R.string.text_a_desktop_classic_reimagined_18633f), appString(R.string.text_windows_7_inspired_blue_glass_glossy_panels_27d09a)),
     ThemeIdentity(ThemeStyle.GLASS, appString(R.string.text_liquid_glass_51a330), appString(R.string.text_light_flowing_luminous_6acb9b), appString(R.string.text_pearlescent_surfaces_spacious_curves_soft_light_b4c29d)),
+    ThemeIdentity(ThemeStyle.PAPER, appString(R.string.theme_paper_name), appString(R.string.theme_paper_description), appString(R.string.theme_paper_detail)),
 )
 
+/** auroraplayer.lol's paper edition, token for token: warm paper, ink, hairline rules and a rose accent. */
+object PaperTokens {
+    val paper = Color(0xFFF1ECE3)
+    val plate = Color(0xFFE9E3D8)
+    val plate2 = Color(0xFFE2DBCE)
+    val ink = Color(0xFF1B1418)
+    val ink2 = Color(0xFF54484D)
+    val ink3 = Color(0xFF6B5F63)
+    val hair = Color(0x3D1B1418)
+    val hair2 = Color(0x1F1B1418)
+    val rose = Color(0xFFFF2E7E)
+    val roseInk = Color(0xFFB5104F)
+    val roseWash = Color(0x21FF2E7E)
+    val lit = Color(0xFFF2C9D3)
+    val amber = Color(0xFFF7B733)
+}
+
+// the website only ships one paper edition, so this ignores dark mode
+private fun paperColorScheme(): ColorScheme = with(PaperTokens) {
+    lightColorScheme(
+        primary = rose, onPrimary = ink, primaryContainer = lit, onPrimaryContainer = ink,
+        secondary = roseInk, onSecondary = paper, secondaryContainer = lit, onSecondaryContainer = ink,
+        // the site keeps amber for its beta tags; tertiary stays rose so the app's primary-to-tertiary gradients read as flat rose
+        tertiary = rose, onTertiary = ink, tertiaryContainer = lit, onTertiaryContainer = ink,
+        background = paper, onBackground = ink,
+        surface = paper, onSurface = ink,
+        surfaceVariant = plate, onSurfaceVariant = ink2,
+        surfaceContainerLowest = paper, surfaceContainerLow = paper,
+        surfaceContainer = plate, surfaceContainerHigh = plate, surfaceContainerHighest = plate2,
+        surfaceBright = paper, surfaceDim = plate2, surfaceTint = Color.Transparent,
+        outline = ink3, outlineVariant = hair,
+        inverseSurface = ink, inverseOnSurface = paper, inversePrimary = rose,
+        error = Color(0xFFB3261E), onError = paper,
+    )
+}
+
 fun styleColorScheme(style: Int, dark: Boolean): ColorScheme {
+    if (style == ThemeStyle.PAPER) return paperColorScheme()
     val base = if (dark) darkColorScheme() else lightColorScheme()
     val palette = when (style) {
         ThemeStyle.RETRO -> if (dark) listOf(
@@ -101,6 +139,10 @@ fun Modifier.auroraPanel(
 ): Modifier {
     val style = LocalUiPrefs.current.themeStyle
     if (style == ThemeStyle.GLASS) return glassPanel(shape, emphasized)
+    // a data-sheet box: a 1px ink frame on paper, plate behind the parts that float; rows inside split on hairlines
+    if (style == ThemeStyle.PAPER) return this.clip(shape)
+        .background(if (emphasized) PaperTokens.plate else PaperTokens.paper)
+        .border(1.dp, PaperTokens.ink, shape)
     val colors = MaterialTheme.colorScheme
     val dark = colors.background.luminance() < 0.3f
     val fill = colors.surfaceContainerHigh
@@ -145,6 +187,8 @@ fun Modifier.auroraBackdrop(): Modifier {
         val lineWidth = 0.5.dp.toPx()
         onDrawBehind {
             when (style) {
+                // flat paper, like the site behind its sections
+                ThemeStyle.PAPER -> Unit
                 ThemeStyle.RETRO -> {
                     var y = 0f
                     while (y < h) {

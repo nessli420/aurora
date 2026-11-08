@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appPlural
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -53,7 +54,7 @@ import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -209,11 +210,11 @@ private fun CollapsibleSection(
 ) {
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp)
-            .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
+            .paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
     ) {
         Row(Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
-                Modifier.size(38.dp).clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest),
+                Modifier.size(38.dp).paperClip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest),
                 contentAlignment = Alignment.Center,
             ) { Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp)) }
             Spacer(Modifier.width(14.dp))
@@ -241,7 +242,7 @@ private fun LazyListScope.collapsible(
 @Composable
 private fun ToneEngineCard(mode: Int, onSelect: (Int) -> Unit) {
     Column(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp).clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)).padding(12.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 12.dp).paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)).padding(12.dp),
     ) {
         EngineDropdown(mode, onSelect)
         Text(
@@ -274,7 +275,7 @@ private fun HeadroomRow(peak: Float, preamp: Float, onAuto: () -> Unit) {
             )
         }
         Box(
-            Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
+            Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
                 .clickable(onClick = onAuto).padding(horizontal = 16.dp, vertical = 8.dp),
             contentAlignment = Alignment.Center,
         ) { Text(appString(R.string.text_auto_c614ba), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary) }
@@ -296,13 +297,13 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
         }
         Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Box(
-                Modifier.weight(1f).clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                Modifier.weight(1f).paperClip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable(onClick = onOpenImpulses).padding(vertical = 12.dp),
                 contentAlignment = Alignment.Center,
             ) { Text(appString(R.string.text_impulse_library_ff955d), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
             if (prefs.dspConvIrName.isNotBlank()) {
                 Box(
-                    Modifier.clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    Modifier.paperClip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { scope.launch { store.setDspConvIr("", ""); store.setDspConvEnabled(false) } }.padding(horizontal = 16.dp, vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) { Text(appString(R.string.text_remove_e96390), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error) }
@@ -315,14 +316,14 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
 @Composable
 private fun PillSelector(options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 6.dp).clip(RoundedCornerShape(50))
+        Modifier.fillMaxWidth().padding(vertical = 6.dp).paperClip(RoundedCornerShape(50))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(4.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         options.forEachIndexed { i, opt ->
             val active = i == selected
             Box(
-                Modifier.weight(1f).clip(RoundedCornerShape(50))
+                Modifier.weight(1f).paperClip(RoundedCornerShape(50))
                     .background(if (active) MaterialTheme.colorScheme.primary else Color.Transparent)
                     .clickable { onSelect(i) }.padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
@@ -412,7 +413,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                 Text(appString(R.string.text_applied_60aafc, (active)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
                 Spacer(Modifier.weight(1f))
                 Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).clickable {
+                    modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable {
                         scope.launch { store.setDspParametric(emptyList()); store.setDspPreamp(0f); store.setActiveEqProfile("") }
                     }.padding(horizontal = 8.dp, vertical = 4.dp))
             }
@@ -423,9 +424,9 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(if (source == 0) appString(R.string.text_search_brand_or_model_673f49) else appString(R.string.text_search_live_iem_measurements_24a92f)) },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
-            trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.clip(RoundedCornerShape(50)).clickable { query = "" }.padding(4.dp)) },
+            trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { query = "" }.padding(4.dp)) },
             singleLine = true,
-            shape = RoundedCornerShape(14.dp),
+            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(14.dp)),
             colors = TextFieldDefaults.colors(
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -452,7 +453,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
         }
         results.take(visibleCount).forEach { p ->
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp)).clickable(enabled = !working) {
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(10.dp)).clickable(enabled = !working) {
                     scope.launch {
                         working = true
                         val eq = if (p.provider == EqProvider.SQUIG) container.squigEq.generate(p) else container.autoEq.fetch(p)
@@ -495,7 +496,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                 modifier = Modifier.padding(vertical = 6.dp))
         } else if (active.isNotBlank() && observedOutput.route.key != null) {
             Box(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable {
                         scope.launch {
                             store.bindEqToCurrentOutput(active, prefs.dspPreampDb, prefs.dspParametric)
@@ -512,7 +513,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                     Text(b.profileName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
                 Icon(Icons.Filled.Close, appString(R.string.text_unbind_e40303), tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).clickable { scope.launch { store.removeEqBinding(b.deviceKey) } }.padding(4.dp))
+                    modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { scope.launch { store.removeEqBinding(b.deviceKey) } }.padding(4.dp))
             }
         }
     }
@@ -661,7 +662,7 @@ private fun LazyListScope.customDspSection(
 private fun TextLink(text: String, onClick: () -> Unit) {
     Text(
         text, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).clip(RoundedCornerShape(50)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
+        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp).paperClip(RoundedCornerShape(50)).clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 6.dp),
     )
 }
 
@@ -674,7 +675,7 @@ private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {
         Spacer(Modifier.height(10.dp))
         Box {
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp))
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp))
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                     .clickable { expanded = true }.padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -700,7 +701,7 @@ private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {
 @Composable
 private fun PresetChip(label: String, selected: Boolean, onClick: () -> Unit) {
     Box(
-        Modifier.clip(RoundedCornerShape(50))
+        Modifier.paperClip(RoundedCornerShape(50))
             .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
             .clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 9.dp),
     ) {

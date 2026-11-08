@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"ペーパー"</string>
+    <string name="theme_paper_description">"auroraplayer.lol をそのままアプリに"</string>
+    <string name="theme_paper_detail">"紙とインク · ローズのアクセント · 細い罫線 · 角ばった形 · Archivo フォント"</string>
+    <string name="theme_paper_light_only">"ペーパーはウェブサイトと同じくライトのみです。"</string>
+    <string name="whats_new_paper_title">"ペーパーテーマ"</string>
+    <string name="whats_new_paper_body">"auroraplayer.lol から生まれた新テーマ。温かみのある紙、インク、細い罫線、角ばった形、サイトと同じフォント。ライトのみ。外観から選べます。"</string>
+</resources>

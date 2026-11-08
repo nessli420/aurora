@@ -1,6 +1,7 @@
 package com.aurora.music.ui
 
 import androidx.compose.material.icons.outlined.Check
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.components.longPressFirst
 import com.aurora.music.localization.localizedMediaType
 
@@ -612,7 +613,7 @@ fun AuroraApp() {
     )
     val nowPlayingPane: @Composable (PlayerPane, Modifier) -> Unit = { pane, modifier ->
         when (pane) {
-            PlayerPane.LYRICS -> LyricsPane(playerState, onSeek = { playerVM.seekTo(it) }, modifier = modifier.clip(RoundedCornerShape(20.dp)))
+            PlayerPane.LYRICS -> LyricsPane(playerState, onSeek = { playerVM.seekTo(it) }, modifier = modifier.paperClip(RoundedCornerShape(20.dp)))
             PlayerPane.QUEUE -> QueueContent(
                 queue = playerState.queue,
                 currentIndex = playerState.currentIndex,
@@ -1059,7 +1060,7 @@ fun AuroraApp() {
                             }
                             if (offlineMode) {
                                 Row(
-                                    Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 14.dp, vertical = 6.dp),
+                                    Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 14.dp, vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
                                     Icon(Icons.Filled.CloudOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
@@ -1084,7 +1085,7 @@ fun AuroraApp() {
                                     onNavigate = { navigateTopLevel(it) }, onMore = { showNavMore = true }, onLongPress = ::onNavLongPress)
                                 Box(Modifier.align(Alignment.TopStart).padding(start = 8.dp)) {
                                     androidx.compose.material3.DropdownMenu(expanded = homeFeedMenu != null, onDismissRequest = { homeFeedMenu = null },
-                                        shape = RoundedCornerShape(18.dp)) {
+                                        shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp))) {
                                         val (feeds, selected) = homeFeedMenu ?: (emptyList<com.aurora.music.data.HomeFeedChoice>() to "")
                                         feeds.forEach { feed ->
                                             androidx.compose.material3.DropdownMenuItem(
@@ -1333,7 +1334,7 @@ fun AuroraApp() {
                                 Spacer(Modifier.width(16.dp))
                                 Box(
                                     Modifier.weight(1.1f).fillMaxHeight().padding(top = 8.dp)
-                                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                                        .paperClip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                                 ) {
                                     val paneVM: DetailViewModel = viewModel(key = "library-detail")
@@ -1526,7 +1527,7 @@ fun AuroraApp() {
                                 Spacer(Modifier.width(16.dp))
                                 Box(
                                     Modifier.weight(1f).fillMaxHeight().padding(top = 8.dp)
-                                        .clip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
+                                        .paperClip(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp))
                                         .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.35f)),
                                 ) {
                                     androidx.compose.runtime.CompositionLocalProvider(
@@ -1906,7 +1907,7 @@ private fun DownloadProgressBanner(count: Int) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (classic) Modifier.clip(RoundedCornerShape(18.dp))
+            .then(if (classic) Modifier.paperClip(RoundedCornerShape(18.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
                 .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
                 else if (com.aurora.music.ui.theme.isGlassTheme()) Modifier.liquidGlass(com.aurora.music.ui.theme.LocalGlassBackdrop.current, com.kyant.shapes.RoundedRectangle(24.dp), refraction = 16.dp)
@@ -1926,7 +1927,7 @@ private fun DownloadProgressBanner(count: Int) {
             Spacer(Modifier.height(6.dp))
             LinearProgressIndicator(
                 progress = { animated },
-                modifier = Modifier.fillMaxWidth().clip(RoundedCornerShape(50)),
+                modifier = Modifier.fillMaxWidth().paperClip(RoundedCornerShape(50)),
                 color = MaterialTheme.colorScheme.primary,
                 trackColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.12f),
             )
@@ -1966,7 +1967,7 @@ private fun FloatingNav(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .then(if (classic) Modifier.clip(RoundedCornerShape(26.dp))
+            .then(if (classic) Modifier.paperClip(RoundedCornerShape(26.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
                 .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(26.dp))
                 else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true))

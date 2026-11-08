@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import androidx.compose.animation.AnimatedVisibility
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -141,7 +142,7 @@ internal fun FullscreenMusicVideo(
                     }
                     IconButton(
                         onClick = { wake(); onTogglePlay() },
-                        modifier = Modifier.padding(horizontal = 18.dp).size(56.dp).clip(CircleShape).background(accent).pointerHoverIcon(PointerIcon.Hand),
+                        modifier = Modifier.padding(horizontal = 18.dp).size(56.dp).paperClip(CircleShape).background(accent).pointerHoverIcon(PointerIcon.Hand),
                     ) {
                         Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
                             appString(R.string.text_play_pause_14a1d0), tint = MaterialTheme.colorScheme.onPrimary)
@@ -158,7 +159,7 @@ internal fun FullscreenMusicVideo(
 
 @Composable
 private fun OverlayButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
-    IconButton(onClick, Modifier.size(44.dp).clip(CircleShape).background(Color.Black.copy(alpha = .48f)).pointerHoverIcon(PointerIcon.Hand)) {
+    IconButton(onClick, Modifier.size(44.dp).paperClip(CircleShape).background(Color.Black.copy(alpha = .48f)).pointerHoverIcon(PointerIcon.Hand)) {
         Icon(icon, label, tint = Color.White)
     }
 }

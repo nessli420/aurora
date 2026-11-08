@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.ui.draw.alpha
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Visibility
 import com.aurora.music.localization.localizedMediaType
@@ -114,7 +115,7 @@ fun SongRow(
             Artwork(song.artworkUrl, song.accent, Modifier.size(52.dp), corner = 10.dp)
             if (isPlaying) {
                 Box(
-                    Modifier.size(52.dp).clip(RoundedCornerShape(10.dp))
+                    Modifier.size(52.dp).paperClip(RoundedCornerShape(10.dp))
                         .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -170,7 +171,7 @@ fun SongRow(
             Icon(Icons.Filled.DownloadDone, appString(R.string.text_downloaded_c61970), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
         }
-        if (canLike) LikeHeart(song, onToggleLike, Modifier.size(target).clip(CircleShape)) {
+        if (canLike) LikeHeart(song, onToggleLike, Modifier.size(target).paperClip(CircleShape)) {
             Icon(
                 imageVector = if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                 contentDescription = appString(if (isLiked) R.string.text_remove_from_liked_9d1568 else R.string.text_add_to_liked_b99f26),
@@ -189,7 +190,7 @@ fun SongRow(
             Icon(
                 Icons.Outlined.MoreVert, appString(R.string.text_more_4bab2d),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(if (tablet) 48.dp else 32.dp).clip(CircleShape).clickable { menuOpen = true }
+                modifier = Modifier.size(if (tablet) 48.dp else 32.dp).paperClip(CircleShape).clickable { menuOpen = true }
                     .padding(if (tablet) 12.dp else 4.dp),
             )
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
@@ -323,7 +324,7 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier) 
                     fontWeight = FontWeight.Black,
                     color = Color.White,
                     modifier = Modifier.align(Alignment.TopStart).padding(6.dp)
-                        .clip(RoundedCornerShape(6.dp))
+                        .paperClip(RoundedCornerShape(6.dp))
                         .background(Color.Black.copy(alpha = 0.55f))
                         .padding(horizontal = 6.dp, vertical = 2.dp),
                 )
@@ -366,7 +367,7 @@ fun RecentTile(playlist: Playlist, onClick: () -> Unit, modifier: Modifier = Mod
             .height(60.dp)
             .then(
                 if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
-                    Modifier.clip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                    Modifier.paperClip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 else Modifier.auroraPanel(MaterialTheme.shapes.small)
             )
             .clickable(onClick = onClick),

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import androidx.compose.foundation.background
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.LocalGlass
 import com.aurora.music.ui.theme.fade
 import com.aurora.music.ui.theme.glassEdge
@@ -180,7 +181,7 @@ fun SettingsGroup(content: @Composable ColumnScope.() -> Unit) {
         Modifier.fillMaxWidth().padding(horizontal = 12.dp)
             .then(
                 if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
-                    Modifier.clip(RoundedCornerShape(themedCorner(18.dp)))
+                    Modifier.paperClip(RoundedCornerShape(themedCorner(18.dp)))
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(if (LocalGlass.current) 1f else 0.5f))
                         .glassEdge(RoundedCornerShape(themedCorner(18.dp)))
                 else Modifier.auroraPanel(MaterialTheme.shapes.medium)
@@ -215,7 +216,7 @@ internal fun SettingsRowIcon(icon: ImageVector) {
     Box(
         Modifier.size(if (LocalSettingsListPane.current) 34.dp else 38.dp).then(
             if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA)
-                Modifier.clip(RoundedCornerShape(themedCorner(10.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                Modifier.paperClip(RoundedCornerShape(themedCorner(10.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh)
             else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
         ),
         contentAlignment = Alignment.Center,
@@ -268,7 +269,9 @@ fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String? = null, v
 @Composable
 fun SettingsSwitchRow(icon: ImageVector? = null, title: String, subtitle: String? = null, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     RowScaffold(icon, title, subtitle, { onCheckedChange(!checked) }) {
-        Switch(
+        if (LocalUiPrefs.current.themeStyle == ThemeStyle.PAPER)
+            com.aurora.music.ui.theme.PaperSwitch(checked, onCheckedChange, Modifier.padding(start = 12.dp).pointerHoverIcon(PointerIcon.Hand))
+        else Switch(
             checked = checked,
             onCheckedChange = onCheckedChange,
             modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),

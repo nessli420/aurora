@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import androidx.compose.foundation.background
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,9 +21,9 @@ import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -93,7 +94,7 @@ internal fun StorageOverview(usage: StorageUsage, clearing: Boolean, notice: Str
                 if (usage.ready) appString(R.string.storage_used, storageSize(usage.total)) else appString(R.string.storage_measuring),
                 style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
             )
-            Row(Modifier.fillMaxWidth().height(10.dp).clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant)) {
+            Row(Modifier.fillMaxWidth().height(10.dp).paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surfaceVariant)) {
                 if (usage.ready) parts.filter { it.second > 0 }.forEach { (_, bytes, color) ->
                     Box(Modifier.weight(bytes.toFloat()).fillMaxHeight().background(color))
                 }
@@ -102,7 +103,7 @@ internal fun StorageOverview(usage: StorageUsage, clearing: Boolean, notice: Str
                 Row(Modifier.fillMaxWidth()) {
                     pair.forEach { (label, bytes, color) ->
                         Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                            Box(Modifier.size(10.dp).clip(CircleShape).background(color))
+                            Box(Modifier.size(10.dp).paperClip(CircleShape).background(color))
                             Spacer(Modifier.width(8.dp))
                             Column {
                                 Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)

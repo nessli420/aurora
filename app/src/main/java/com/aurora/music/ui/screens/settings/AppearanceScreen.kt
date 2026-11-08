@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -93,14 +94,15 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
 
             item { SettingsSectionTitle(appString(R.string.text_theme_a797e3)) }
             item { ThemeStylePicker(prefs) { style -> scope.launch { store.setThemeStyle(style) } } }
-            item {
+            // paper is the website's light edition, so it has no mode to pick
+            if (prefs.themeStyle != ThemeStyle.PAPER) item {
                 SegmentedRow(appString(R.string.text_mode_a7b93d), listOf(appString(R.string.text_system_bc0792), appString(R.string.text_light_a36ef8), appString(R.string.text_dark_ae1ef0), "AMOLED"), prefs.themeMode) { i ->
                     scope.launch { store.setThemeMode(i) }
                 }
             }
             item {
                 Text(
-                    when (prefs.themeMode) {
+                    if (prefs.themeStyle == ThemeStyle.PAPER) appString(R.string.theme_paper_light_only) else when (prefs.themeMode) {
                         ThemeMode.AMOLED -> appString(R.string.text_true_black_surfaces_saves_power_on_oled_screens_2481a8)
                         ThemeMode.SYSTEM -> appString(R.string.text_follows_your_device_s_light_dark_setting_38c955)
                         else -> ""
@@ -243,7 +245,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                         color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
                 }
                 item {
-                    androidx.compose.material3.TextButton(onClick = { scope.launch { store.resetTabletSettings() } },
+                    com.aurora.music.ui.theme.TextButton(onClick = { scope.launch { store.resetTabletSettings() } },
                         modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                         Text(appString(R.string.tablet_reset))
                     }
@@ -405,7 +407,7 @@ private fun AccentPresetGrid(selected: Int, onSelect: (Int) -> Unit) {
                     val index = rowIdx * 5 + colIdx
                     val isSel = index == selected
                     Box(
-                        Modifier.weight(1f).height(56.dp).clip(RoundedCornerShape(16.dp))
+                        Modifier.weight(1f).height(56.dp).paperClip(RoundedCornerShape(16.dp))
                             .background(preset.seed)
                             .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp)) else Modifier)
                             .clickable { onSelect(index) },
@@ -440,7 +442,7 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(56.dp).clip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, CircleShape))
+            Box(Modifier.size(56.dp).paperClip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, CircleShape))
             Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         DirectSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f) { hue = it; push() }

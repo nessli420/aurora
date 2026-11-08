@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -93,7 +94,7 @@ fun PlaybackDock(
         modifier
             .fillMaxWidth()
             .then(
-                if (classic) Modifier.clip(RoundedCornerShape(22.dp)).background(
+                if (classic) Modifier.paperClip(RoundedCornerShape(22.dp)).background(
                     Brush.horizontalGradient(listOf(colors.surfaceContainerHigh, lerp(colors.surfaceContainerHigh, colors.primary, 0.14f)))
                 ) else if (ui.themeStyle == ThemeStyle.GLASS) Modifier.liquidGlass(com.aurora.music.ui.theme.LocalGlassBackdrop.current,
                     com.kyant.shapes.RoundedRectangle(32.dp), refraction = 20.dp, depth = 28.dp)
@@ -107,7 +108,7 @@ fun PlaybackDock(
         ) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
                 Row(
-                    Modifier.weight(1f, fill = false).clip(RoundedCornerShape(14.dp))
+                    Modifier.weight(1f, fill = false).paperClip(RoundedCornerShape(14.dp))
                         .clickable(onClickLabel = appString(R.string.tablet_open_now_playing), onClick = onExpand)
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
@@ -123,7 +124,7 @@ fun PlaybackDock(
                 }
                 if (!isMix && LocalCanLike.current(song.id)) {
                     val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurfaceVariant, label = "dockLike")
-                    LikeHeart(song, onToggleLike, Modifier.size(48.dp).clip(CircleShape)) {
+                    LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
                         Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp))
                     }
@@ -177,7 +178,7 @@ private fun PaneToggle(pane: PlayerPane, icon: androidx.compose.ui.graphics.vect
             contentColor = colors.onSurfaceVariant,
             checkedContentColor = colors.primary,
         ),
-        modifier = Modifier.then(if (checked) Modifier.clip(CircleShape).background(colors.primary.copy(alpha = 0.14f)) else Modifier),
+        modifier = Modifier.then(if (checked) Modifier.paperClip(CircleShape).background(colors.primary.copy(alpha = 0.14f)) else Modifier),
     ) { Icon(icon, pane.label) }
 }
 
@@ -188,7 +189,7 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
     val duration = state.durationSec
     if (duration <= 0) {
         Row(Modifier.height(24.dp), verticalAlignment = Alignment.CenterVertically) {
-            if (state.isLive) Box(Modifier.size(8.dp).clip(CircleShape).background(colors.primary))
+            if (state.isLive) Box(Modifier.size(8.dp).paperClip(CircleShape).background(colors.primary))
             Spacer(Modifier.width(6.dp))
             Text(if (state.isLive) appString(R.string.text_live_6990f0) else appString(R.string.text_streaming_1e8325),
                 style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = colors.primary)
@@ -217,9 +218,9 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
             onValueChangeFinished = { dragging?.let { onSeek(it); pending = it }; dragging = null },
             modifier = Modifier.weight(1f).height(24.dp).semantics { contentDescription = appString(R.string.tablet_seek) },
             colors = SliderDefaults.colors(thumbColor = colors.primary, activeTrackColor = colors.primary),
-            thumb = { Box(Modifier.size(12.dp).clip(CircleShape).background(thumbColor)) },
+            thumb = { Box(Modifier.size(12.dp).paperClip(CircleShape).background(thumbColor)) },
             track = { slider ->
-                Box(Modifier.fillMaxWidth().height(4.dp).clip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
+                Box(Modifier.fillMaxWidth().height(4.dp).paperClip(CircleShape).background(colors.onSurface.copy(alpha = 0.14f))) {
                     Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(seekBrush))
                 }
             },

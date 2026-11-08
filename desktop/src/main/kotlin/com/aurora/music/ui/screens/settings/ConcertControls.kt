@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import androidx.compose.foundation.Canvas
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -123,7 +124,7 @@ internal fun ChoiceChips(labels: List<String>, selected: Int, modifier: Modifier
                 label,
                 style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold,
                 color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.onGloballyPositioned { starts[id] = it.positionInParent().x.toInt() }.clip(RoundedCornerShape(50))
+                modifier = Modifier.onGloballyPositioned { starts[id] = it.positionInParent().x.toInt() }.paperClip(RoundedCornerShape(50))
                     .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest)
                     .clickable { onPick(id) }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 16.dp, vertical = 8.dp),
             )

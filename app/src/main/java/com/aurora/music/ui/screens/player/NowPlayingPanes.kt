@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import androidx.compose.animation.AnimatedContent
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -67,7 +68,7 @@ private fun TabGroup(modifier: Modifier, content: @Composable () -> Unit) {
         modifier
             .semantics { contentDescription = appString(R.string.tablet_player_panes) }
             .selectableGroup()
-            .clip(CircleShape)
+            .paperClip(CircleShape)
             .background(MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f))
             .padding(3.dp * scale),
         horizontalArrangement = Arrangement.spacedBy(2.dp),
@@ -98,7 +99,7 @@ internal fun PaneTab(label: String, icon: ImageVector?, selected: Boolean, onCli
     )
     val content = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
     Row(
-        Modifier.clip(CircleShape).background(container)
+        Modifier.paperClip(CircleShape).background(container)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
             .heightIn(min = 40.dp * scale).padding(horizontal = 12.dp * scale),
         verticalAlignment = Alignment.CenterVertically,

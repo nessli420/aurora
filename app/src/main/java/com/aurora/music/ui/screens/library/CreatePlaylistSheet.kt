@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.library
 
 import androidx.compose.animation.animateColorAsState
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -25,7 +26,7 @@ import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.FileOpen
 import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.PhoneAndroid
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -87,12 +88,12 @@ internal fun CreatePlaylistSheet(
     ModalBottomSheet(
         onDismissRequest = { if (!saving) onDismiss() }, sheetState = sheet,
         containerColor = colors.surface, tonalElevation = 0.dp,
-        shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
     ) {
         Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    Modifier.size(76.dp).clip(RoundedCornerShape(18.dp))
+                    Modifier.size(76.dp).paperClip(RoundedCornerShape(18.dp))
                         .background(Brush.linearGradient(listOf(accent, accent.copy(alpha = .45f), colors.surfaceContainerHigh))),
                     contentAlignment = Alignment.Center,
                 ) {
@@ -126,7 +127,7 @@ internal fun CreatePlaylistSheet(
                 Box {
                     val picked = target ?: targets.first()
                     TargetRow(picked, trailing = Icons.Outlined.KeyboardArrowDown, enabled = !saving, onClick = { picking = true })
-                    DropdownMenu(expanded = picking, onDismissRequest = { picking = false }, shape = RoundedCornerShape(16.dp)) {
+                    DropdownMenu(expanded = picking, onDismissRequest = { picking = false }, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
                         targets.forEach { option ->
                             DropdownMenuItem(
                                 leadingIcon = { Icon(targetIcon(option.type), null) },
@@ -155,7 +156,7 @@ internal fun CreatePlaylistSheet(
                         finally { saving = false }
                     }
                 },
-                enabled = name.isNotBlank() && !saving, shape = RoundedCornerShape(18.dp),
+                enabled = name.isNotBlank() && !saving, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
                 modifier = Modifier.fillMaxWidth().padding(top = 22.dp).height(54.dp),
             ) {
                 if (saving) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = colors.onPrimary)
@@ -178,14 +179,14 @@ private fun targetIcon(type: ServerType): ImageVector = if (type == ServerType.L
 @Composable
 private fun TargetRow(target: PlaylistTarget, trailing: ImageVector, enabled: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(16.dp)
+    val shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))
     Row(
         Modifier.fillMaxWidth().clip(shape).background(colors.surfaceContainerHigh.copy(alpha = .6f))
             .border(1.dp, colors.outlineVariant.copy(alpha = .4f), shape).clickable(enabled = enabled, onClick = onClick)
             .padding(horizontal = 14.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(36.dp).clip(RoundedCornerShape(11.dp)).background(colors.primary.copy(alpha = .14f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(36.dp).paperClip(RoundedCornerShape(11.dp)).background(colors.primary.copy(alpha = .14f)), contentAlignment = Alignment.Center) {
             Icon(targetIcon(target.type), null, tint = colors.primary, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
@@ -200,7 +201,7 @@ private fun TargetRow(target: PlaylistTarget, trailing: ImageVector, enabled: Bo
 @Composable
 private fun ShortcutCard(icon: ImageVector, title: String, hint: String, enabled: Boolean, onClick: () -> Unit, modifier: Modifier) {
     val colors = MaterialTheme.colorScheme
-    val shape = RoundedCornerShape(18.dp)
+    val shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp))
     Column(
         modifier.clip(shape).background(colors.surfaceContainerLow).border(1.dp, colors.outlineVariant.copy(alpha = .3f), shape)
             .clickable(enabled = enabled, onClick = onClick).padding(14.dp),

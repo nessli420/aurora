@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import android.graphics.drawable.BitmapDrawable
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.Canvas
@@ -549,14 +550,14 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                 .getDisplayLanguage(com.aurora.music.localization.AppStrings.context.resources.configuration.locales[0])
             Text(appString(if (pending.needsWifi) R.string.lyrics_translate_wifi else R.string.lyrics_translate_downloading, language),
                 color = Color.White.copy(alpha = .8f), fontSize = 12.sp, fontWeight = FontWeight.Medium,
-                modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).clip(CircleShape)
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 8.dp).paperClip(CircleShape)
                     .background(Color.Black.copy(alpha = .4f)).padding(horizontal = 14.dp, vertical = 7.dp))
         }
         androidx.compose.animation.AnimatedVisibility(browsing && lyrics.synced,
             modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 12.dp)) {
             Text(appString(R.string.text_back_to_current_line_d5146a), color = Color.White,
                 fontSize = 13.sp, fontWeight = FontWeight.SemiBold,
-                modifier = Modifier.clip(CircleShape).background(Color.Black.copy(alpha = .5f))
+                modifier = Modifier.paperClip(CircleShape).background(Color.Black.copy(alpha = .5f))
                     .clickable(role = Role.Button) { browsing = false }
                     .padding(horizontal = 20.dp, vertical = 14.dp))
         }
@@ -645,7 +646,7 @@ private fun LyricsTransport(state: PlayerUiState, source: String?, onTogglePlay:
                 onValueChangeFinished = { seeking?.let(onSeek); seeking = null },
                 thumb = { Box(Modifier.size(width = 3.dp, height = 16.dp).background(Color.White, CircleShape)) },
                 track = { slider ->
-                    Box(Modifier.fillMaxWidth().height(3.dp).clip(CircleShape).background(Color.White.copy(alpha = .2f))) {
+                    Box(Modifier.fillMaxWidth().height(3.dp).paperClip(CircleShape).background(Color.White.copy(alpha = .2f))) {
                         Box(Modifier.fillMaxWidth(slider.value.coerceIn(0f, 1f)).fillMaxHeight().background(Color.White))
                     }
                 },

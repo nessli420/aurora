@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -29,7 +30,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -76,6 +77,8 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 "DM Sans" to "dmsans-OFL.txt",
                 "Plus Jakarta Sans" to "plusjakartasans-OFL.txt",
                 "Manrope" to "manrope-OFL.txt",
+                "Archivo" to "archivo-OFL.txt",
+                "Chivo Mono" to "chivomono-OFL.txt",
             ).map { (name, file) -> name to (resourceText("font_licenses/$file") ?: "SIL Open Font License 1.1") }
         }
         AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
@@ -103,7 +106,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         SettingsScroll(contentPadding) {
             Row(Modifier.padding(horizontal = 12.dp, vertical = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box(
-                    Modifier.size(72.dp).clip(CircleShape)
+                    Modifier.size(72.dp).paperClip(CircleShape)
                         .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
                     contentAlignment = Alignment.Center,
                 ) { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(36.dp)) }

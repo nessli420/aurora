@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -85,7 +86,7 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
                     items((0 until VisualizerStyle.count).toList()) { s ->
                         val selected = s == prefs.style
                         Box(
-                            Modifier.clip(RoundedCornerShape(50))
+                            Modifier.paperClip(RoundedCornerShape(50))
                                 .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .pointerHoverIcon(PointerIcon.Hand)
                                 .clickable { save(prefs.copy(style = s)) }
@@ -186,7 +187,7 @@ private fun VisualizerPreview(prefs: VisualizerPrefs, controller: VisualizerCont
     }
     Box(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).height(160.dp)
-            .clip(RoundedCornerShape(themedCorner(18.dp))).background(Color.Black),
+            .paperClip(RoundedCornerShape(themedCorner(18.dp))).background(Color.Black),
     ) {
         VisualizerCanvas(controller, prefs, colors, Modifier.fillMaxWidth().height(160.dp).padding(8.dp))
         if (controller.frame.level <= 0.001f) {
@@ -211,7 +212,7 @@ private fun Swatches(label: String, selected: Int, onPick: (Int) -> Unit) {
             items(SWATCHES) { c ->
                 val isSel = c == selected
                 Box(
-                    Modifier.size(34.dp).clip(CircleShape).background(Color(c))
+                    Modifier.size(34.dp).paperClip(CircleShape).background(Color(c))
                         .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
                         .pointerHoverIcon(PointerIcon.Hand)
                         .clickable { onPick(c) },

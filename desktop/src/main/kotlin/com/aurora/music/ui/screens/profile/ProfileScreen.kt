@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.profile
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -27,7 +28,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -146,7 +147,7 @@ private fun Banner(bannerUrl: String, height: Dp, gutter: Dp, onBack: () -> Unit
                 layout(constraints.maxWidth, placeable.height) { placeable.place(-extra, 0) }
             }
             .height(height)
-            .clip(RoundedCornerShape(themedCorner(28.dp)))
+            .paperClip(RoundedCornerShape(themedCorner(28.dp)))
             .background(Brush.verticalGradient(listOf(MaterialTheme.colorScheme.secondary, MaterialTheme.colorScheme.secondary.copy(alpha = 0.25f)))),
     ) {
         if (bannerUrl.isNotBlank()) {
@@ -164,7 +165,7 @@ private fun Banner(bannerUrl: String, height: Dp, gutter: Dp, onBack: () -> Unit
 @Composable
 private fun BannerButton(icon: ImageVector, label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(40.dp).clip(CircleShape).background(Color.Black.copy(alpha = 0.28f))
+        Modifier.size(40.dp).paperClip(CircleShape).background(Color.Black.copy(alpha = 0.28f))
             .clickable(onClickLabel = label, onClick = onClick).pointerHoverIcon(PointerIcon.Hand),
         contentAlignment = Alignment.Center,
     ) {
@@ -175,7 +176,7 @@ private fun BannerButton(icon: ImageVector, label: String, onClick: () -> Unit) 
 @Composable
 private fun Avatar(identity: ProfileIdentity, size: Dp) {
     Box(
-        Modifier.size(size).clip(CircleShape)
+        Modifier.size(size).paperClip(CircleShape)
             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
             .border(4.dp, MaterialTheme.colorScheme.background, CircleShape),
         contentAlignment = Alignment.Center,

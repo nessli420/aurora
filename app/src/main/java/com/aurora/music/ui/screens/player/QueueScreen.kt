@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import com.aurora.music.localization.appPlural
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -44,7 +45,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
@@ -153,7 +154,7 @@ fun QueueContent(
             Column(modifier) {
                 if (onClose != null || showTitle || showActions) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (onClose != null) {
-                        Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onClose).padding(10.dp))
+                        Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onClose).padding(10.dp))
                         Spacer(Modifier.weight(1f))
                     }
                     if (showTitle) Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
@@ -162,13 +163,13 @@ fun QueueContent(
                         Icon(
                             Icons.AutoMirrored.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
                             tint = if (queue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(48.dp).clip(CircleShape)
+                            modifier = Modifier.size(48.dp).paperClip(CircleShape)
                                 .clickable(enabled = queue.isNotEmpty()) { showSaveDialog = true }.padding(12.dp),
                         )
                         Icon(
                             Icons.Filled.DeleteSweep, appString(R.string.text_clear_queue_984301),
                             tint = if (upcomingCount == 0 || !editable) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier.size(48.dp).clip(CircleShape)
+                            modifier = Modifier.size(48.dp).paperClip(CircleShape)
                                 .clickable(enabled = upcomingCount > 0 && editable, onClick = onClear).padding(12.dp),
                         )
                     }
@@ -200,7 +201,7 @@ fun QueueContent(
                     if (playedCount > 0) {
                         item {
                             Row(
-                                Modifier.fillMaxWidth().clip(RoundedCornerShape(10.dp))
+                                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(10.dp))
                                     .clickable { showHistory = !showHistory }.padding(vertical = 8.dp, horizontal = 2.dp),
                                 verticalAlignment = Alignment.CenterVertically,
                             ) {
@@ -319,7 +320,7 @@ private fun QueueTrackRow(
                 translationY = dragOffset
                 if (dragging) { shadowElevation = 16f; scaleX = 1.02f; scaleY = 1.02f }
             }
-            .clip(RoundedCornerShape(14.dp))
+            .paperClip(RoundedCornerShape(14.dp))
             .background(if (dragging) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp),
@@ -345,7 +346,7 @@ private fun QueueTrackRow(
             Icon(
                 Icons.Filled.Close, appString(R.string.text_remove_e96390),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onRemove).padding(14.dp),
+                modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onRemove).padding(14.dp),
             )
         }
         if (dragHandle != null) {

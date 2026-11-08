@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.foundation.background
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -85,6 +86,7 @@ fun Artwork(
     val artCorner = when {
         corner == 0.dp -> corner
         ui.themeStyle == ThemeStyle.AURORA -> cornerDp(ui.cornerStyle, corner)
+        ui.themeStyle == ThemeStyle.PAPER -> 0.dp
         corner >= 22.dp -> corner
         ui.themeStyle == ThemeStyle.RETRO -> 2.dp
         ui.themeStyle == ThemeStyle.AERO -> 5.dp
@@ -94,7 +96,7 @@ fun Artwork(
         listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.12f))
     )
     Box(
-        modifier = modifier.clip(RoundedCornerShape(artCorner)).background(placeholder),
+        modifier = modifier.paperClip(RoundedCornerShape(artCorner)).background(placeholder),
         contentAlignment = Alignment.Center,
     ) {
         // the box already paints the placeholder, and a subcomposition per cover is what makes grids scroll heavily
@@ -166,11 +168,13 @@ fun SectionHeader(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(
+        // paper keys a section with a flat rose block instead of the gradient bar
+        if (com.aurora.music.ui.theme.isPaperTheme()) Box(Modifier.size(10.dp).background(MaterialTheme.colorScheme.primary))
+        else Box(
             Modifier
                 .width(4.dp)
                 .height(22.dp)
-                .clip(RoundedCornerShape(50))
+                .paperClip(RoundedCornerShape(50))
                 .background(
                     Brush.verticalGradient(
                         listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)
@@ -195,7 +199,7 @@ fun SectionHeader(
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
-                    .clip(RoundedCornerShape(50))
+                    .paperClip(RoundedCornerShape(50))
                     .clickable(onClick = onAction)
                     .pointerHoverIcon(PointerIcon.Hand)
                     .padding(start = 10.dp, end = 8.dp, top = 6.dp, bottom = 6.dp),
@@ -235,12 +239,14 @@ fun PageSection(
 
 @Composable
 fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
+    // paper's eyebrows are the site's mono labels: regular weight, no extra tracking
+    val paper = com.aurora.music.ui.theme.isPaperTheme()
     Text(
         text = text,
         style = MaterialTheme.typography.labelSmall,
-        fontWeight = FontWeight.Black,
+        fontWeight = if (paper) FontWeight.Normal else FontWeight.Black,
         color = color,
-        letterSpacing = 1.5.sp,
+        letterSpacing = if (paper) MaterialTheme.typography.labelSmall.letterSpacing else 1.5.sp,
         modifier = modifier,
     )
 }

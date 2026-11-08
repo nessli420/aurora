@@ -47,7 +47,7 @@ internal fun LibraryTabsSheet(initial: LibraryTabs, canDownload: Boolean, onChan
     val colors = MaterialTheme.colorScheme
     ModalBottomSheet(
         onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-        containerColor = colors.surface, tonalElevation = 0.dp, shape = RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp),
+        containerColor = colors.surface, tonalElevation = 0.dp, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
     ) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
             Text(appString(R.string.library_tabs_customize), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)

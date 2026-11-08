@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Papier"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, en application"</string>
+    <string name="theme_paper_detail">"Papier et encre · accent rose · filets fins · angles droits · police Archivo"</string>
+    <string name="theme_paper_light_only">"Papier existe uniquement en clair, comme le site."</string>
+    <string name="whats_new_paper_title">"Thème Papier"</string>
+    <string name="whats_new_paper_body">"Un nouveau thème tiré de auroraplayer.lol : papier chaud, encre, filets fins, angles droits et les polices du site. Clair uniquement. Choisissez-le dans Apparence."</string>
+</resources>

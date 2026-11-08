@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"पेपर"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, ऐप के रूप में"</string>
+    <string name="theme_paper_detail">"कागज़ और स्याही · गुलाबी रंग · पतले फ्रेम · सीधे किनारे · Archivo फ़ॉन्ट"</string>
+    <string name="theme_paper_light_only">"पेपर सिर्फ़ लाइट में आता है, वेबसाइट की तरह।"</string>
+    <string name="whats_new_paper_title">"पेपर थीम"</string>
+    <string name="whats_new_paper_body">"auroraplayer.lol से सीधी आई नई थीम: गर्म कागज़, स्याही, पतले फ्रेम, सीधे किनारे और साइट के अपने फ़ॉन्ट। सिर्फ़ लाइट। इसे दिखावट में चुनें।"</string>
+</resources>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Paper"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, as an app"</string>
+    <string name="theme_paper_detail">"Paper and ink · rose accent · hairline frames · square edges · Archivo type"</string>
+    <string name="theme_paper_light_only">"Paper comes in light only, like the website."</string>
+    <string name="whats_new_paper_title">"Paper theme"</string>
+    <string name="whats_new_paper_body">"A new theme straight from auroraplayer.lol: warm paper, ink, hairline frames, square edges and the site's own fonts. Light only. Pick it in Appearance."</string>
+</resources>

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.stats
 
 import android.graphics.drawable.GradientDrawable
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -29,7 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
@@ -118,7 +119,7 @@ fun ListeningMapScreen(contentPadding: PaddingValues, onBack: () -> Unit, songId
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
             Column(Modifier.weight(1f).padding(start = 8.dp)) {
                 Text(highlighted?.track?.title ?: appString(R.string.map_title), style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
@@ -131,10 +132,10 @@ fun ListeningMapScreen(contentPadding: PaddingValues, onBack: () -> Unit, songId
         }
         if (songId == null) PeriodPicker(window) { window = it; selected = null }
         // the map view paints whole tiles past its edges, so it has to be clipped
-        Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 12.dp).clip(RoundedCornerShape(20.dp))) {
+        Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 12.dp).paperClip(RoundedCornerShape(20.dp))) {
             OsmMap(spots, focus?.key, highlighted?.id) { selected = it }
             if (plays != null && spots.isEmpty()) Text(appString(R.string.map_empty),
-                Modifier.align(Alignment.Center).clip(CircleShape).background(MaterialTheme.colorScheme.surface).padding(horizontal = 16.dp, vertical = 10.dp),
+                Modifier.align(Alignment.Center).paperClip(CircleShape).background(MaterialTheme.colorScheme.surface).padding(horizontal = 16.dp, vertical = 10.dp),
                 style = MaterialTheme.typography.bodyMedium)
         }
         val listed = focus?.plays ?: if (songId != null) plays.orEmpty().sortedByDescending { it.startedAt } else emptyList()

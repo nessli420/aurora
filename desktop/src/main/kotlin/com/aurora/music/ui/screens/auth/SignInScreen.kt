@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.auth
 
 import androidx.compose.material.icons.outlined.GraphicEq
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.outlined.MusicNote
 import com.aurora.music.localization.localizedMediaType
 
@@ -43,17 +44,17 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -204,7 +205,7 @@ fun SignInScreen(
                         Text(appString(R.string.text_connecting_your_library_a0430a), color = palette.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                     }
                     AnimatedVisibility(state.error != null) {
-                        Surface(color = palette.errorContainer, shape = RoundedCornerShape(themedCorner(16.dp))) {
+                        Surface(color = palette.errorContainer, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp)))) {
                             Text(state.error.orEmpty(), Modifier.fillMaxWidth().padding(16.dp), color = palette.onErrorContainer, style = MaterialTheme.typography.bodyMedium)
                         }
                     }
@@ -275,7 +276,7 @@ private fun FoldersStep(state: AuthUiState, folders: List<String>, onAdd: (Strin
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SourceLabel(appString(R.string.text_folders_19adc4).uppercase(java.util.Locale.getDefault()))
         folders.forEach { path ->
-            Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(16.dp))).background(MaterialTheme.colorScheme.surface)
+            Row(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(16.dp))).background(MaterialTheme.colorScheme.surface)
                 .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(themedCorner(16.dp))).padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
                 verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Folder, null, tint = AuroraRose, modifier = Modifier.size(22.dp))
@@ -290,7 +291,7 @@ private fun FoldersStep(state: AuthUiState, folders: List<String>, onAdd: (Strin
             }
         }
         OutlinedButton(onClick = ::pick, enabled = !state.loading, modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand),
-            shape = RoundedCornerShape(themedCorner(16.dp))) {
+            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp)))) {
             Icon(Icons.Outlined.CreateNewFolder, null, Modifier.size(20.dp))
             Spacer(Modifier.width(10.dp))
             Text(appString(R.string.text_add_music_folder_a083d8), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
@@ -312,7 +313,7 @@ private fun SourceLabel(label: String) {
 
 @Composable
 private fun ServerTile(title: String, subtitle: String, icon: ImageVector, modifier: Modifier, enabled: Boolean, onClick: () -> Unit) {
-    Column(modifier.clip(RoundedCornerShape(themedCorner(20.dp))).background(MaterialTheme.colorScheme.surface)
+    Column(modifier.paperClip(RoundedCornerShape(themedCorner(20.dp))).background(MaterialTheme.colorScheme.surface)
         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(themedCorner(20.dp)))
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Icon(icon, null, tint = AuroraRose, modifier = Modifier.size(24.dp))
@@ -325,11 +326,11 @@ private fun ServerTile(title: String, subtitle: String, icon: ImageVector, modif
 
 @Composable
 private fun ServerTypeCard(icon: ImageVector, title: String, subtitle: String, enabled: Boolean = true, featured: Boolean = false, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(20.dp)))
+    Row(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(20.dp)))
         .background(if (featured) AuroraRose.copy(alpha = .10f) else MaterialTheme.colorScheme.surface)
         .border(1.dp, if (featured) AuroraRose.copy(alpha = .3f) else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(themedCorner(20.dp)))
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-        Box(Modifier.size(42.dp).clip(RoundedCornerShape(themedCorner(13.dp))).background(AuroraRose.copy(alpha = .10f)), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(42.dp).paperClip(RoundedCornerShape(themedCorner(13.dp))).background(AuroraRose.copy(alpha = .10f)), contentAlignment = Alignment.Center) {
             Icon(icon, null, tint = AuroraRose, modifier = Modifier.size(23.dp))
         }
         Spacer(Modifier.width(14.dp))
@@ -377,7 +378,7 @@ private fun ServerStep(
                 else -> "192.168.1.10:4533"
             }) },
             singleLine = true,
-            shape = RoundedCornerShape(themedCorner(14.dp)),
+            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(14.dp))),
             leadingIcon = { Icon(Icons.Outlined.Dns, null) },
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Next),
             keyboardActions = KeyboardActions(onNext = { if (canContinue) onContinue() }),
@@ -408,7 +409,7 @@ private fun CredentialsStep(
     val uriHandler = LocalUriHandler.current
     val isPlex = state.type == ServerType.PLEX
     Column(Modifier.fillMaxWidth()) {
-        Surface(color = MaterialTheme.colorScheme.surface, shape = RoundedCornerShape(themedCorner(16.dp))) {
+        Surface(color = MaterialTheme.colorScheme.surface, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp)))) {
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Dns, null, tint = AuroraRose)
                 Spacer(Modifier.width(12.dp))
@@ -424,7 +425,7 @@ private fun CredentialsStep(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text(appString(R.string.text_username_84c290)) },
                 singleLine = true,
-                shape = RoundedCornerShape(themedCorner(14.dp)),
+                shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(14.dp))),
                 leadingIcon = { Icon(Icons.Outlined.Person, null) },
                 enabled = !state.loading,
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next),
@@ -439,7 +440,7 @@ private fun CredentialsStep(
             modifier = Modifier.fillMaxWidth(),
             label = { Text(appString(if (isPlex) R.string.plex_token_label else R.string.text_password_8be3c9)) },
             singleLine = true,
-            shape = RoundedCornerShape(themedCorner(14.dp)),
+            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(14.dp))),
             leadingIcon = { Icon(Icons.Outlined.Lock, null) },
             enabled = !state.loading,
             trailingIcon = {
@@ -475,7 +476,7 @@ private fun SchemePill(label: String, selected: Boolean, modifier: Modifier = Mo
     Box(
         modifier
             .height(46.dp)
-            .clip(RoundedCornerShape(themedCorner(12.dp)))
+            .paperClip(RoundedCornerShape(themedCorner(12.dp)))
             .background(if (selected) AuroraRose else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
             .then(if (selected) Modifier else Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(themedCorner(12.dp))))
             .clickable(onClick = onClick)
@@ -493,7 +494,7 @@ private fun SchemePill(label: String, selected: Boolean, modifier: Modifier = Mo
 
 @Composable
 private fun PrimaryButton(label: String, enabled: Boolean, modifier: Modifier = Modifier, loading: Boolean = false, onClick: () -> Unit) {
-    Button(onClick = onClick, enabled = enabled, modifier = modifier.heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand), shape = RoundedCornerShape(themedCorner(16.dp))) {
+    Button(onClick = onClick, enabled = enabled, modifier = modifier.heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp)))) {
         if (loading) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
         else Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
     }

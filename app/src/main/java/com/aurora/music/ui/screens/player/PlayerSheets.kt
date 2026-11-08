@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import android.media.AudioDeviceInfo
@@ -57,7 +58,7 @@ fun PlayerCastButton(modifier: Modifier = Modifier) {
     var show by remember { mutableStateOf(false) }
     Icon(
         Icons.Filled.Cast, appString(R.string.text_cast_60745a),
-        modifier = modifier.clip(CircleShape).clickable { show = true }.padding(8.dp),
+        modifier = modifier.paperClip(CircleShape).clickable { show = true }.padding(8.dp),
     )
     if (show) CastSheet(onDismiss = { show = false })
 }
@@ -66,12 +67,12 @@ fun PlayerCastButton(modifier: Modifier = Modifier) {
 private fun CastRow() {
     var show by remember { mutableStateOf(false) }
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { show = true }
+        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable { show = true }
             .padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh),
+            Modifier.size(40.dp).paperClip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh),
             contentAlignment = Alignment.Center,
         ) { Icon(Icons.Filled.Cast, null, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.width(14.dp))
@@ -128,10 +129,10 @@ private fun CastSheet(onDismiss: () -> Unit) {
             routes.forEach { route ->
                 val selected = route.id == selectedId
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { route.select(); onDismiss() }.padding(horizontal = 16.dp, vertical = 14.dp),
+                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable { route.select(); onDismiss() }.padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.size(40.dp).clip(CircleShape).background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
                         Icon(Icons.Filled.Cast, null, tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(14.dp))
@@ -141,12 +142,12 @@ private fun CastSheet(onDismiss: () -> Unit) {
             }
             if (casting) {
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable {
+                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable {
                         router.unselect(androidx.mediarouter.media.MediaRouter.UNSELECT_REASON_STOPPED); onDismiss()
                     }.padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(40.dp).paperClip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
                         Icon(Icons.Filled.Speaker, null, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(14.dp))
@@ -180,10 +181,10 @@ fun OutputDeviceSheet(currentId: Int, onSelect: (Int) -> Unit, onDismiss: () -> 
             if (!controlling) devices.forEach { d ->
                 val selected = d.id == currentId
                 Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(14.dp)).clickable { onSelect(d.id); onDismiss() }.padding(horizontal = 16.dp, vertical = 14.dp),
+                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable { onSelect(d.id); onDismiss() }.padding(horizontal = 16.dp, vertical = 14.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Box(Modifier.size(40.dp).clip(CircleShape).background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+                    Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
                         Icon(d.icon, null, tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(14.dp))
@@ -219,7 +220,7 @@ fun SleepTimerSheet(
                 options.forEach { (min, label) ->
                     val selected = !endOfTrack && min == currentMinutes
                     Box(
-                        Modifier.clip(RoundedCornerShape(50))
+                        Modifier.paperClip(RoundedCornerShape(50))
                             .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                             .clickable { onSelect(min); onDismiss() }.padding(horizontal = 20.dp, vertical = 12.dp),
                     ) {
@@ -227,7 +228,7 @@ fun SleepTimerSheet(
                     }
                 }
                 Box(
-                    Modifier.clip(RoundedCornerShape(50))
+                    Modifier.paperClip(RoundedCornerShape(50))
                         .background(if (endOfTrack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable { onEndOfTrack(); onDismiss() }.padding(horizontal = 20.dp, vertical = 12.dp),
                 ) {

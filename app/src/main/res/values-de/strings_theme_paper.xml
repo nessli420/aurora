@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Papier"</string>
+    <string name="theme_paper_description">"auroraplayer.lol als App"</string>
+    <string name="theme_paper_detail">"Papier und Tinte · Rosa-Akzent · Haarlinien-Rahmen · eckige Kanten · Archivo-Schrift"</string>
+    <string name="theme_paper_light_only">"Papier gibt es nur hell, wie die Website."</string>
+    <string name="whats_new_paper_title">"Papier-Design"</string>
+    <string name="whats_new_paper_body">"Ein neues Design direkt von auroraplayer.lol: warmes Papier, Tinte, Haarlinien-Rahmen, eckige Kanten und die Schriften der Website. Nur hell. Wähle es unter Darstellung."</string>
+</resources>

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.library
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -27,14 +28,14 @@ import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.ArrowUpward
 import androidx.compose.material.icons.filled.Close
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -150,7 +151,7 @@ fun SmartPlaylistEditScreen(
                         if (desc) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
                         if (desc) appString(R.string.text_descending_36377a) else appString(R.string.text_ascending_2b226c),
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(36.dp).clip(CircleShape)
+                        modifier = Modifier.size(36.dp).paperClip(CircleShape)
                             .clickable { onUpdate { it.copy(descending = !desc) } }.padding(7.dp),
                     )
                 }
@@ -182,7 +183,7 @@ private fun RuleRow(rule: SmartRule, onChange: (SmartRule) -> Unit, onRemove: ()
     val ops = opsFor(spec.type)
     Column(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .paperClip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
             .padding(horizontal = 12.dp, vertical = 10.dp),
     ) {
@@ -206,7 +207,7 @@ private fun RuleRow(rule: SmartRule, onChange: (SmartRule) -> Unit, onRemove: ()
             Icon(
                 Icons.Filled.Close, appString(R.string.text_remove_rule_e0d4ff),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(32.dp).clip(CircleShape).clickable(onClick = onRemove).padding(6.dp),
+                modifier = Modifier.size(32.dp).paperClip(CircleShape).clickable(onClick = onRemove).padding(6.dp),
             )
         }
         if (spec.type != TYPE_BOOL) {
@@ -227,7 +228,7 @@ private fun Dropdown(options: List<String>, selected: Int, onSelect: (Int) -> Un
     var open by remember { mutableStateOf(false) }
     Box(modifier) {
         Row(
-            Modifier.clip(RoundedCornerShape(12.dp))
+            Modifier.paperClip(RoundedCornerShape(12.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 .clickable { open = true }
                 .padding(horizontal = 12.dp, vertical = 8.dp),

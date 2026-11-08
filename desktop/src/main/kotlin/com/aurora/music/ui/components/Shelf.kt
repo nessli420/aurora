@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.fade
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.fadeIn
@@ -167,7 +168,7 @@ fun AdaptiveShelf(
 @Composable
 private fun ShelfChevron(icon: ImageVector, label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(36.dp).clip(CircleShape)
+        Modifier.size(36.dp).paperClip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.9f))
             .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), CircleShape)
             .clickable(onClickLabel = label, onClick = onClick)

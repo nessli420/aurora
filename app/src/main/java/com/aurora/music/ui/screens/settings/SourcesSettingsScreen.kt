@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.localizedMediaType
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -40,7 +41,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.runtime.LaunchedEffect
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
@@ -379,7 +380,7 @@ internal fun List<String>.swapped(a: Int, b: Int): List<String> {
 internal fun PriorityRow(label: String, subtitle: String, enabled: Boolean, canUp: Boolean, canDown: Boolean, onUp: () -> Unit, onDown: () -> Unit) {
     val alpha = if (enabled) 1f else 0.4f
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clip(RoundedCornerShape(14.dp))
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).paperClip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 14.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -390,12 +391,12 @@ internal fun PriorityRow(label: String, subtitle: String, enabled: Boolean, canU
         Icon(
             Icons.Filled.KeyboardArrowUp, appString(R.string.text_move_up_b4f57c),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canUp) 1f else 0.25f),
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50)).clickable(enabled = enabled && canUp, onClick = onUp).padding(8.dp),
+            modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).clickable(enabled = enabled && canUp, onClick = onUp).padding(8.dp),
         )
         Icon(
             Icons.Filled.KeyboardArrowDown, appString(R.string.text_move_down_260ff8),
             tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canDown) 1f else 0.25f),
-            modifier = Modifier.size(40.dp).clip(RoundedCornerShape(50)).clickable(enabled = enabled && canDown, onClick = onDown).padding(8.dp),
+            modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).clickable(enabled = enabled && canDown, onClick = onDown).padding(8.dp),
         )
     }
 }
@@ -403,7 +404,7 @@ internal fun PriorityRow(label: String, subtitle: String, enabled: Boolean, canU
 @Composable
 private fun SourceRow(title: String, subtitle: String, included: Boolean, toggleable: Boolean, onToggle: () -> Unit) {
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).clip(RoundedCornerShape(14.dp))
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).paperClip(RoundedCornerShape(14.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 14.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import androidx.compose.foundation.Canvas
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -32,12 +33,12 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -365,7 +366,7 @@ private fun AdvancedControls(bands: List<ParamBand>, current: Int, maxBands: Int
 @Composable
 private fun BandTab(number: Int, active: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val accent = MaterialTheme.colorScheme.primary
-    Column(Modifier.clip(RoundedCornerShape(8.dp)).clickable(onClick = onClick).semantics { selected = active }
+    Column(Modifier.paperClip(RoundedCornerShape(8.dp)).clickable(onClick = onClick).semantics { selected = active }
         .padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("$number", style = MaterialTheme.typography.titleMedium, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
             color = (if (active) accent else MaterialTheme.colorScheme.onSurface).copy(alpha = if (enabled) 1f else .4f))

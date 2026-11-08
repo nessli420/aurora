@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.library
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -80,7 +81,7 @@ fun FolderScreen(
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(header, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -88,12 +89,12 @@ fun FolderScreen(
             if (songs.isNotEmpty()) {
                 Icon(
                     Icons.Filled.Shuffle, appString(R.string.text_shuffle_folder_681a21),
-                    modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onShufflePlay(songs) }.padding(8.dp),
+                    modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onShufflePlay(songs) }.padding(8.dp),
                 )
                 Icon(
                     Icons.Filled.PlayArrow, appString(R.string.text_play_folder_3f9fd7),
                     tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(44.dp).clip(CircleShape).clickable { onPlayAll(songs, 0) }.padding(8.dp),
+                    modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable { onPlayAll(songs, 0) }.padding(8.dp),
                 )
             }
         }
@@ -148,7 +149,7 @@ private fun FolderRow(name: String, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .clip(RoundedCornerShape(16.dp))
+            .paperClip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
             .clickable(onClick = onClick)
             .padding(horizontal = 12.dp, vertical = 14.dp),

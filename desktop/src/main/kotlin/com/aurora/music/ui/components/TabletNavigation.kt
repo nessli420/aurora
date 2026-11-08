@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import androidx.compose.animation.AnimatedVisibility
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.expandVertically
@@ -209,7 +210,7 @@ private fun ProfileHeader(username: String, server: String, avatarUrl: String, o
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(44.dp).clip(CircleShape)
+            Modifier.size(44.dp).paperClip(CircleShape)
                 .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
             contentAlignment = Alignment.Center,
         ) {
@@ -233,7 +234,7 @@ fun FoldableMore(items: List<NavMenuItem>, currentRoute: String?, onOpen: (NavMe
     var open by rememberSaveable { mutableStateOf(items.any { it.route == currentRoute }) }
     val rotation by animateFloatAsState(if (open) 180f else 0f, label = "moreChevron")
     Row(
-        Modifier.fillMaxWidth().clip(CircleShape).pointerHoverIcon(PointerIcon.Hand).clickable(role = Role.Button) { open = !open }
+        Modifier.fillMaxWidth().paperClip(CircleShape).pointerHoverIcon(PointerIcon.Hand).clickable(role = Role.Button) { open = !open }
             .heightIn(min = 44.dp).padding(start = startPadding, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -254,7 +255,7 @@ private fun SidebarItem(label: String, icon: ImageVector, selected: Boolean, pro
     val container by animateColorAsState(if (selected) colors.primary.copy(alpha = 0.16f) else Color.Transparent, label = "sidebarItem")
     val content = if (selected) colors.primary else if (prominent) colors.onSurface else colors.onSurfaceVariant
     Row(
-        Modifier.fillMaxWidth().padding(vertical = 1.dp).clip(CircleShape).background(container)
+        Modifier.fillMaxWidth().padding(vertical = 1.dp).paperClip(CircleShape).background(container)
             .pointerHoverIcon(PointerIcon.Hand)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
             .heightIn(min = when { prominent -> 52.dp; compact -> 40.dp; else -> 48.dp }).padding(horizontal = 16.dp),

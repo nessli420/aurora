@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"페이퍼"</string>
+    <string name="theme_paper_description">"앱으로 만나는 auroraplayer.lol"</string>
+    <string name="theme_paper_detail">"종이와 잉크 · 로즈 포인트 · 가는 테두리 · 각진 모서리 · Archivo 글꼴"</string>
+    <string name="theme_paper_light_only">"페이퍼는 웹사이트처럼 라이트 모드만 있습니다."</string>
+    <string name="whats_new_paper_title">"페이퍼 테마"</string>
+    <string name="whats_new_paper_body">"auroraplayer.lol에서 그대로 가져온 새 테마: 따뜻한 종이, 잉크, 가는 테두리, 각진 모서리, 사이트와 같은 글꼴. 라이트 전용. 화면 설정에서 고르세요."</string>
+</resources>

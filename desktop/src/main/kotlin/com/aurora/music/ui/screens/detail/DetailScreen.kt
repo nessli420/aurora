@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.detail
 
 import androidx.compose.material.icons.filled.GraphicEq
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
@@ -252,7 +253,7 @@ fun DetailScreen(
             val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
             Row(
                 Modifier
-                    .clip(RoundedCornerShape(50))
+                    .paperClip(RoundedCornerShape(50))
                     .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.78f))))
                     .clickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
                     .pointerHoverIcon(PointerIcon.Hand)
@@ -471,10 +472,10 @@ fun DetailScreen(
                     leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                     trailingIcon = {
                         if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3),
-                            modifier = Modifier.clip(CircleShape).clickable { query = "" }.pointerHoverIcon(PointerIcon.Hand).padding(4.dp))
+                            modifier = Modifier.paperClip(CircleShape).clickable { query = "" }.pointerHoverIcon(PointerIcon.Hand).padding(4.dp))
                     },
                     singleLine = true,
-                    shape = RoundedCornerShape(themedCorner(14.dp)),
+                    shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(14.dp))),
                     colors = TextFieldDefaults.colors(
                         focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                         unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -500,7 +501,7 @@ fun DetailScreen(
                         fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
                         color = if (selected) accent else MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier
-                            .clip(RoundedCornerShape(50))
+                            .paperClip(RoundedCornerShape(50))
                             .background(if (selected) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHigh)
                             .then(if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.6f), RoundedCornerShape(50)) else Modifier)
                             .clickable { genreFilter = genre }
@@ -618,7 +619,7 @@ private fun HeaderIcon(
     onClick: () -> Unit,
 ) {
     Icon(icon, label, tint = tint,
-        modifier = modifier.size(48.dp).clip(CircleShape).clickable(enabled = enabled, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(12.dp))
+        modifier = modifier.size(48.dp).paperClip(CircleShape).clickable(enabled = enabled, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(12.dp))
 }
 
 @Composable
@@ -685,7 +686,7 @@ private fun ArtistAbout(info: ArtistInfo, accent: Color, modifier: Modifier, car
                     appString(if (expanded) R.string.text_show_less_4c852b else R.string.text_show_more_25911d),
                     style = MaterialTheme.typography.labelLarge,
                     color = accent,
-                    modifier = Modifier.clip(RoundedCornerShape(50)).clickable { expanded = !expanded }.pointerHoverIcon(PointerIcon.Hand).padding(vertical = 4.dp),
+                    modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { expanded = !expanded }.pointerHoverIcon(PointerIcon.Hand).padding(vertical = 4.dp),
                 )
             }
             if (info.tags.isNotEmpty()) {
@@ -696,7 +697,7 @@ private fun ArtistAbout(info: ArtistInfo, accent: Color, modifier: Modifier, car
                             tag,
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Medium,
-                            modifier = Modifier.clip(RoundedCornerShape(50))
+                            modifier = Modifier.paperClip(RoundedCornerShape(50))
                                 .background(if (card) MaterialTheme.colorScheme.surfaceContainerHighest else MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .padding(horizontal = 12.dp, vertical = 6.dp),
                         )
@@ -729,7 +730,7 @@ private fun EditPlaylistDialog(initialName: String, initialDesc: String, onSave:
             }
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(onClick = {
+            com.aurora.music.ui.theme.TextButton(onClick = {
                 saving = true
                 failed = false
                 scope.launch {
@@ -743,6 +744,6 @@ private fun EditPlaylistDialog(initialName: String, initialDesc: String, onSave:
                 Text(appString(if (saving) R.string.playlist_saving else R.string.text_save_efc007))
             }
         },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss, enabled = !saving) { Text(appString(R.string.text_cancel_77dfd2)) } },
+        dismissButton = { com.aurora.music.ui.theme.TextButton(onClick = onDismiss, enabled = !saving) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
 }

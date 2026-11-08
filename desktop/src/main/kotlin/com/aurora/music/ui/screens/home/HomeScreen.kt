@@ -1,6 +1,9 @@
 package com.aurora.music.ui.screens.home
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
+import com.aurora.music.ui.theme.paperFrame
+import com.aurora.music.ui.theme.isPaperTheme
 import com.aurora.music.ui.theme.fade
 import com.aurora.music.R
 
@@ -43,11 +46,11 @@ import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.PlayCircle
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -167,7 +170,7 @@ fun HomeScreen(
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
-                        Modifier.size(88.dp).clip(CircleShape)
+                        Modifier.size(88.dp).paperClip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
                             .clickable(onClickLabel = appString(R.string.home_add_source), onClick = onAddSource)
                             .pointerHoverIcon(PointerIcon.Hand),
@@ -330,7 +333,7 @@ private fun HeroPager(albums: List<Album>, scale: Float, onOpenDetail: (String, 
                         Box(
                             Modifier.padding(horizontal = 3.dp).height(6.dp)
                                 .width(if (active) 22.dp else 6.dp)
-                                .clip(RoundedCornerShape(50))
+                                .paperClip(RoundedCornerShape(50))
                                 .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)),
                         )
                     }
@@ -361,7 +364,7 @@ private fun HeroPager(albums: List<Album>, scale: Float, onOpenDetail: (String, 
 @Composable
 private fun HeroArrow(icon: ImageVector, label: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(36.dp).clip(CircleShape)
+        Modifier.size(36.dp).paperClip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.9f))
             .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), CircleShape)
             .clickable(onClickLabel = label, onClick = onClick)
@@ -379,7 +382,7 @@ private fun HeroCard(album: Album, height: Dp, onOpenDetail: (String, String) ->
         Modifier
             .fillMaxWidth()
             .height(height)
-            .clip(RoundedCornerShape(themedCorner(24.dp)))
+            .paperClip(RoundedCornerShape(themedCorner(24.dp)))
             .clickable { onOpenDetail("album", album.id) }
             .pointerHoverIcon(PointerIcon.Hand)
             .coverHover(album.artworkUrl),
@@ -393,7 +396,7 @@ private fun HeroCard(album: Album, height: Dp, onOpenDetail: (String, String) ->
         Eyebrow(
             appString(R.string.text_new_release_f0ec22), Color.White.copy(alpha = 0.92f),
             Modifier.align(Alignment.TopStart).padding(16.dp)
-                .clip(RoundedCornerShape(50))
+                .paperClip(RoundedCornerShape(50))
                 .background(Color.Black.copy(alpha = 0.45f))
                 .padding(horizontal = 10.dp, vertical = 4.dp),
         )
@@ -406,14 +409,16 @@ private fun HeroCard(album: Album, height: Dp, onOpenDetail: (String, String) ->
             }
             Spacer(Modifier.width(12.dp))
             Box(
-                Modifier.size(48.dp).clip(CircleShape).background(Color.White)
+                // paper: the site's primary button, rose with an ink rule
+                Modifier.size(48.dp).paperFrame(CircleShape, { background(Color.White) }, fill = com.aurora.music.ui.theme.PaperTokens.rose)
                     .clickable(onClickLabel = appString(R.string.text_play_5d12bd)) { onPlayAlbum(album.id) }
                     .pointerHoverIcon(PointerIcon.Hand),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = Color.Black, modifier = Modifier.size(28.dp))
+                Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = if (isPaperTheme()) com.aurora.music.ui.theme.PaperTokens.ink else Color.Black, modifier = Modifier.size(28.dp))
             }
         }
+        if (isPaperTheme()) Box(Modifier.matchParentSize().border(1.dp, com.aurora.music.ui.theme.PaperTokens.ink))
     }
 }
 
@@ -441,8 +446,9 @@ private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, o
     val featured = songs.first()
     BoxWithConstraints(
         modifier
-            .clip(RoundedCornerShape(themedCorner(20.dp)))
-            .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
+            .paperFrame(RoundedCornerShape(themedCorner(20.dp)), {
+                background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
+            })
             .clickable { onPlay(featured) }
             .pointerHoverIcon(PointerIcon.Hand)
             .padding(16.dp * scale),
@@ -458,7 +464,8 @@ private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, o
                     Text(featured.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(featured.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
                 }
-                Box(Modifier.size(46.dp * scale).clip(CircleShape).background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                Box(Modifier.size(46.dp * scale).paperFrame(CircleShape, { this }, fill = MaterialTheme.colorScheme.primary)
+                    .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
                     Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp * scale))
                 }
             }
@@ -479,7 +486,7 @@ private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, o
 private fun LikedRow(song: Song, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
-        Modifier.fillMaxWidth().height(LikedRowHeight).clip(RoundedCornerShape(themedCorner(12.dp)))
+        Modifier.fillMaxWidth().height(LikedRowHeight).paperClip(RoundedCornerShape(themedCorner(12.dp)))
             .clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -501,7 +508,7 @@ private fun LikedRow(song: Song, onClick: () -> Unit) {
 @Composable
 private fun OverlayTile(album: Album, width: Dp, onClick: () -> Unit) {
     Box(
-        Modifier.size(width).clip(RoundedCornerShape(themedCorner(18.dp))).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand)
+        Modifier.size(width).paperClip(RoundedCornerShape(themedCorner(18.dp))).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand)
             .coverHover(album.artworkUrl),
     ) {
         Artwork(album.artworkUrl, accentFor(album.id), Modifier.matchParentSize(), corner = 18.dp)
@@ -520,7 +527,7 @@ private fun OverlayTile(album: Album, width: Dp, onClick: () -> Unit) {
 @Composable
 internal fun IconPill(icon: ImageVector, desc: String, onClick: () -> Unit) {
     Box(
-        Modifier.size(40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh).clickable(onClick = onClick)
+        Modifier.size(40.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) }).clickable(onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, desc, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }

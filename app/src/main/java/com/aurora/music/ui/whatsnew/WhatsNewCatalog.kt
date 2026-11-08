@@ -2,6 +2,7 @@ package com.aurora.music.ui.whatsnew
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterAlt
 import androidx.compose.material.icons.filled.Layers
@@ -31,6 +32,13 @@ data class WhatsNewRelease(val version: String, val features: List<WhatsNewFeatu
  */
 object WhatsNewCatalog {
     val releases: List<WhatsNewRelease> = listOf(
+        WhatsNewRelease(
+            "3.4.0",
+            features = listOf(
+                WhatsNewFeature(Icons.Filled.Description, R.string.whats_new_paper_title, R.string.whats_new_paper_body,
+                    Routes.SETTINGS_APPEARANCE) { PaperThemePreview() },
+            ),
+        ),
         WhatsNewRelease(
             "3.3.1",
             features = listOf(

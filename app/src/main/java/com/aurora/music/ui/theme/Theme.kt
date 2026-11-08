@@ -134,6 +134,8 @@ private fun playerColorScheme(accent: Color, dark: Boolean, amoled: Boolean): Co
 @Composable
 fun UiPrefs.useDarkTheme(): Boolean {
     val systemDark = isSystemInDarkTheme()
+    // paper only comes in light, like the website's paper edition
+    if (themeStyle == ThemeStyle.PAPER) return false
     return when (themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK, ThemeMode.AMOLED -> true
@@ -147,7 +149,7 @@ fun AuroraTheme(
     content: @Composable () -> Unit,
 ) {
     val useDark = uiPrefs.useDarkTheme()
-    val amoled = uiPrefs.themeMode == ThemeMode.AMOLED
+    val amoled = uiPrefs.themeMode == ThemeMode.AMOLED && uiPrefs.themeStyle != ThemeStyle.PAPER
     val context = LocalContext.current
 
     // a fresh ColorScheme has no equals, so rebuilding it on any prefs change would invalidate the whole tree

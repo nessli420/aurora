@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import androidx.compose.foundation.background
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -27,7 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -91,7 +92,7 @@ fun ConnectDevicesSection(onDismiss: () -> Unit) {
             modifier = Modifier.padding(start = 16.dp, top = 10.dp, bottom = 6.dp))
         FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             status.presets.forEach { preset ->
-                Box(Modifier.clip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh)
+                Box(Modifier.paperClip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh)
                     .clickable { connect.command(ConnectCommand.Preset(preset.id)) }.pointerHoverIcon(PointerIcon.Hand)
                     .padding(horizontal = 16.dp, vertical = 10.dp)) {
                     Text(preset.name, style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
@@ -109,11 +110,11 @@ fun ConnectDevicesSection(onDismiss: () -> Unit) {
 private fun DeviceRow(icon: ImageVector, label: String, detail: String?, selected: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Row(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(14.dp))).clickable(role = Role.RadioButton, onClick = onClick)
+        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(14.dp))).clickable(role = Role.RadioButton, onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(40.dp).clip(CircleShape).background(if (selected) colors.primary else colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
+        Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) colors.primary else colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
             Icon(icon, null, tint = if (selected) colors.onPrimary else colors.onSurface, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))

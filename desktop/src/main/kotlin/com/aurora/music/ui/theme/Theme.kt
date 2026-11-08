@@ -193,12 +193,14 @@ fun AuroraTheme(
     content: @Composable () -> Unit,
 ) {
     val systemDark = isSystemInDarkTheme()
-    val useDark = when (uiPrefs.themeMode) {
+    // paper only comes in light, like the website's paper edition
+    val paper = uiPrefs.themeStyle == ThemeStyle.PAPER
+    val useDark = !paper && when (uiPrefs.themeMode) {
         ThemeMode.LIGHT -> false
         ThemeMode.DARK, ThemeMode.AMOLED -> true
         else -> systemDark
     }
-    val amoled = uiPrefs.themeMode == ThemeMode.AMOLED
+    val amoled = uiPrefs.themeMode == ThemeMode.AMOLED && !paper
 
     // a fresh ColorScheme has no equals, so rebuilding it on every pass would invalidate the whole tree
     val (colors, solid, tint) = remember(useDark, amoled, uiPrefs.themeStyle, uiPrefs.accentMode, uiPrefs.accentColor,

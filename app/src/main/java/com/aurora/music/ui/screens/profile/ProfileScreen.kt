@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.profile
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -82,16 +83,16 @@ fun ProfileScreen(
                     Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
                     Spacer(Modifier.weight(1f))
-                    Icon(Icons.Filled.MoreVert, appString(R.string.text_settings_c7f73b), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onOpenSettings).padding(8.dp))
+                    Icon(Icons.Filled.MoreVert, appString(R.string.text_settings_c7f73b), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onOpenSettings).padding(8.dp))
                 }
                 Column(
                     Modifier.align(Alignment.BottomCenter).fillMaxWidth(),
                     horizontalAlignment = Alignment.CenterHorizontally,
                 ) {
                     Box(
-                        Modifier.size(110.dp).clip(CircleShape)
+                        Modifier.size(110.dp).paperClip(CircleShape)
                             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -123,7 +124,7 @@ fun ProfileScreen(
         item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
                 Box(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).clickable(onClick = onEditProfile ?: onOpenSettings).padding(vertical = 12.dp),
+                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).clickable(onClick = onEditProfile ?: onOpenSettings).padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {

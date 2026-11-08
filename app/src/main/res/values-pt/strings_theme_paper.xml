@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Papel"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, em forma de app"</string>
+    <string name="theme_paper_detail">"Papel e tinta · destaque rosa · molduras finas · cantos retos · fonte Archivo"</string>
+    <string name="theme_paper_light_only">"O Papel só existe no modo claro, como o site."</string>
+    <string name="whats_new_paper_title">"Tema Papel"</string>
+    <string name="whats_new_paper_body">"Um tema novo tirado do auroraplayer.lol: papel quente, tinta, molduras finas, cantos retos e as fontes do próprio site. Só claro. Escolha em Aparência."</string>
+</resources>

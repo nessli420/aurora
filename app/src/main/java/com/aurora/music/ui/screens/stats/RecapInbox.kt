@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.stats
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import android.content.SharedPreferences
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Headphones
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -111,7 +113,7 @@ fun RecapInboxScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpen: 
             }
             if (inbox.loading) item { Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
             else if (featured == null) item {
-                Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(24.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Icon(Icons.Outlined.Headphones, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
                     Text(appString(R.string.text_good_listening_takes_time_eac7f9), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                     Text(if (filter == "ALL") appString(R.string.text_listen_today_and_come_back_tomorrow_for_your_first_recap_9a9aec) else appString(R.string.recap_pending), color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -141,10 +143,10 @@ private fun RecapNotification(window: RecapWindow, history: List<PlayEvent>, unr
     val palette = MaterialTheme.colorScheme
     val brush = if (featured) Brush.linearGradient(listOf(palette.primaryContainer, palette.tertiaryContainer)) else Brush.linearGradient(listOf(palette.surfaceContainerHigh, palette.surfaceContainerHigh))
     val textColor = if (featured) palette.onPrimaryContainer else palette.onSurface
-    Column(Modifier.fillMaxWidth().clip(RoundedCornerShape(if (featured) 28.dp else 20.dp)).background(brush).clickable(onClick = onOpen).padding(if (featured) 22.dp else 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(if (featured) 28.dp else 20.dp)).background(brush).clickable(onClick = onOpen).padding(if (featured) 22.dp else 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text(if (featured) appString(R.string.recap_latest_title, (window.period.label.uppercase(java.util.Locale.getDefault()))) else appString(R.string.recap_title, (window.period.label)), style = MaterialTheme.typography.labelLarge, color = textColor, modifier = Modifier.weight(1f))
-            if (unread) Box(Modifier.clip(CircleShape).background(palette.primary).padding(horizontal = 10.dp, vertical = 4.dp)) { Text(appString(R.string.text_new_6403f2), style = MaterialTheme.typography.labelSmall, color = palette.onPrimary) }
+            if (unread) Box(Modifier.paperClip(CircleShape).background(palette.primary).padding(horizontal = 10.dp, vertical = 4.dp)) { Text(appString(R.string.text_new_6403f2), style = MaterialTheme.typography.labelSmall, color = palette.onPrimary) }
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Artwork(top?.artwork.orEmpty(), accentFor(top?.id.orEmpty()), Modifier.size(if (featured) 80.dp else 56.dp), corner = 16.dp)

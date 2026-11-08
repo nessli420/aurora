@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.R
 import com.aurora.music.localization.localizedSignalLabel
@@ -161,12 +162,12 @@ fun SettingsScreen(
             item {
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
-                        .clip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
+                        .paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                         .clickable(onClick = onOpenProfile).padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
-                        Modifier.size(56.dp).clip(CircleShape)
+                        Modifier.size(56.dp).paperClip(CircleShape)
                             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -181,7 +182,7 @@ fun SettingsScreen(
                         Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
                         Text(appString(R.string.text_view_profile_b98795), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
                     }
-                    Box(Modifier.clip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).padding(horizontal = 12.dp, vertical = 6.dp)) {
+                    Box(Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).padding(horizontal = 12.dp, vertical = 6.dp)) {
                         Text(serverBadge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
                     }
                 }
@@ -313,7 +314,7 @@ fun SettingsScreen(
             item {
                 Spacer(Modifier.height(20.dp))
                 Box(
-                    Modifier.fillMaxWidth().padding(horizontal = 16.dp).clip(RoundedCornerShape(50))
+                    Modifier.fillMaxWidth().padding(horizontal = 16.dp).paperClip(RoundedCornerShape(50))
                         .background(MaterialTheme.colorScheme.surfaceContainerHigh).clickable(onClick = onLogout).padding(vertical = 14.dp),
                     contentAlignment = Alignment.Center,
                 ) {

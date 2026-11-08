@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.player
 
 import android.view.TextureView
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -75,7 +76,7 @@ fun PlaybackVideo(
         }
     }
     val ratio = if (videoSize.width > 0 && videoSize.height > 0) videoSize.width * videoSize.pixelWidthHeightRatio / videoSize.height else 16f / 9f
-    BoxWithConstraints(modifier.clip(RoundedCornerShape(cornerRadius))) {
+    BoxWithConstraints(modifier.paperClip(RoundedCornerShape(cornerRadius))) {
         Box(Modifier.fillMaxSize().background(Color.Black))
         if (videoSize.width <= 0 || videoSize.height <= 0) {
             Box(Modifier.fillMaxSize().background(

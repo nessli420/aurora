@@ -1,6 +1,7 @@
 package com.aurora.music.ui.components
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -117,7 +118,7 @@ fun FeedTrackCard(song: Song, onClick: () -> Unit) {
     Column(Modifier.width(172.dp).clip(MaterialTheme.shapes.medium).clickable(onClick = onClick).padding(8.dp)) {
         Box {
             Artwork(song.artworkUrl, song.accent, Modifier.size(156.dp), corner = 14.dp)
-            Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(34.dp).clip(CircleShape)
+            Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(34.dp).paperClip(CircleShape)
                 .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.9f)), contentAlignment = Alignment.Center) {
                 Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onSurface)
             }

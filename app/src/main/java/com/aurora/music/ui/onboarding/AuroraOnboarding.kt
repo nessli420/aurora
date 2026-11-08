@@ -21,13 +21,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
+import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -128,7 +128,7 @@ private fun SourcesScreen(state: OnboardingState, connected: Set<ServerType>,
         SetupSource.entries.filter { it in state.sources }.forEach { source ->
             val isConnected = source.type in connected
             val isSkipped = source in state.skippedSources
-            Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            Surface(shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(appString(source.title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(appString(if (isConnected) R.string.setup_connected else if (isSkipped) R.string.setup_skipped else source.detail),
@@ -167,7 +167,7 @@ private fun TasksScreen(state: OnboardingState, connected: Set<ServerType>, hasS
             val skipped = task in state.skippedTasks
             val needsSecondSource = task == SetupTask.MERGE &&
                 state.sources.count { it.type in connected && it.type.supportsMergedLibrary } < 2
-            Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+            Surface(shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
                 Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(appString(task.title), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Text(appString(task.detail), style = MaterialTheme.typography.bodySmall,
@@ -196,7 +196,7 @@ private fun AuthPrompt(source: SetupSource?, onLeave: (Boolean) -> Unit) {
     Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(top = 8.dp),
         contentAlignment = Alignment.TopCenter) {
         Surface(Modifier.padding(horizontal = 16.dp).widthIn(max = 480.dp),
-            shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh,
+            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shadowElevation = 8.dp) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Text(appString(source.title), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
@@ -212,7 +212,7 @@ private fun TaskPrompt(task: SetupTask?, onLeave: (Boolean?) -> Unit) {
     if (task == null) return
     Box(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.systemBars).padding(16.dp),
         contentAlignment = Alignment.BottomCenter) {
-        Surface(Modifier.fillMaxWidth().widthIn(max = 520.dp), shape = RoundedCornerShape(22.dp),
+        Surface(Modifier.fillMaxWidth().widthIn(max = 520.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(22.dp)),
             color = MaterialTheme.colorScheme.surfaceContainerHigh, shadowElevation = 12.dp) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                 Text(appString(task.title), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
@@ -254,7 +254,7 @@ private fun SetupPage(kicker: String, title: String, detail: String,
 
 @Composable
 private fun ChoiceRow(title: String, detail: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(onClick = onClick, shape = RoundedCornerShape(18.dp),
+    Surface(onClick = onClick, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
         color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
         border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -272,7 +272,7 @@ private fun ChoiceRow(title: String, detail: String, selected: Boolean, onClick:
 @Composable
 private fun ToggleRow(title: String, detail: String, checked: Boolean, enabled: Boolean = true,
     onChange: (Boolean) -> Unit) {
-    Surface(shape = RoundedCornerShape(18.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
+    Surface(shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), color = MaterialTheme.colorScheme.surfaceContainerHigh) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)

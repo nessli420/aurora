@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import androidx.compose.foundation.background
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -47,7 +48,7 @@ internal fun SettingsSearchField(query: String, onQuery: (String) -> Unit, modif
     val focus = LocalFocusManager.current
     Row(
         modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
-            .clip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh)
+            .paperClip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh)
             .padding(start = 14.dp, end = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -66,7 +67,7 @@ internal fun SettingsSearchField(query: String, onQuery: (String) -> Unit, modif
         }
         if (query.isNotEmpty()) {
             Icon(Icons.Filled.Close, appString(R.string.settings_search_clear), tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable { onQuery("") }.padding(10.dp))
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onQuery("") }.padding(10.dp))
         }
     }
 }

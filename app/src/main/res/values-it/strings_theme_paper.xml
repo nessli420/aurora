@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Carta"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, come app"</string>
+    <string name="theme_paper_detail">"Carta e inchiostro · accento rosa · cornici sottili · angoli vivi · carattere Archivo"</string>
+    <string name="theme_paper_light_only">"Carta esiste solo in chiaro, come il sito."</string>
+    <string name="whats_new_paper_title">"Tema Carta"</string>
+    <string name="whats_new_paper_body">"Un nuovo tema preso da auroraplayer.lol: carta calda, inchiostro, cornici sottili, angoli vivi e i caratteri del sito. Solo chiaro. Sceglilo in Aspetto."</string>
+</resources>

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.settings
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
@@ -17,6 +18,7 @@ import androidx.compose.material.icons.outlined.Animation
 import androidx.compose.material.icons.outlined.FolderOpen
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
@@ -114,7 +116,7 @@ private fun AnimatedCoverSettings() {
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
                 Text(appString(R.string.animated_covers_help), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (config.folder.isNotBlank()) androidx.compose.material3.TextButton(onClick = { scope.launch { covers.setFolder(null) } }) {
+                if (config.folder.isNotBlank()) com.aurora.music.ui.theme.TextButton(onClick = { scope.launch { covers.setFolder(null) } }) {
                     Text(appString(R.string.animated_covers_remove))
                 }
             }
@@ -417,15 +419,15 @@ fun DiscordIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit, 
 @Composable
 private fun DiscordPreview(acct: DiscordAccount) {
     val activity = when (acct.activityName) { "artist" -> appString(R.string.text_listening_to_aurora_24a92c); "song" -> appString(R.string.text_listening_to_midnight_drive_35328b); else -> appString(R.string.text_aurora_eeee9b) }
-    Surface(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = RoundedCornerShape(20.dp)) {
+    Surface(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp))) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(42.dp).clip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = .18f)), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Forum, null, tint = MaterialTheme.colorScheme.primary) }
+                Box(Modifier.size(42.dp).paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = .18f)), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Forum, null, tint = MaterialTheme.colorScheme.primary) }
                 Spacer(Modifier.width(12.dp))
                 Column { Text(appString(R.string.text_discord_preview_401388), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold); Text(activity, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Box(Modifier.size(78.dp).clip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Album, null, Modifier.size(34.dp), tint = MaterialTheme.colorScheme.onPrimary) }
+                Box(Modifier.size(78.dp).paperClip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Album, null, Modifier.size(34.dp), tint = MaterialTheme.colorScheme.onPrimary) }
                 Spacer(Modifier.width(14.dp))
                 Column(Modifier.weight(1f)) {
                     Text("Midnight Drive", fontWeight = FontWeight.Bold)

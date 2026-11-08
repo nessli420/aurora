@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.stats
 
 import androidx.compose.foundation.Canvas
+import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -25,13 +26,13 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.Button
+import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -101,7 +102,7 @@ fun InsightsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onSetup: (
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
             Text(appString(R.string.insights_screen_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
         }
         if (prefs == null) return@Column
@@ -123,7 +124,7 @@ fun InsightsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onSetup: (
                     item { Overview(report) }
                     if (report.badges.isNotEmpty()) item { Badges(report.badges) }
                     if (onOpenMap != null && prefs?.locationHistory == true) item {
-                        androidx.compose.material3.OutlinedButton(onClick = onOpenMap, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+                        com.aurora.music.ui.theme.OutlinedButton(onClick = onOpenMap, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
                             Text(appString(R.string.insights_open_map))
                         }
                     }
@@ -228,7 +229,7 @@ private fun Badges(badges: List<Badge>) {
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         badges.forEach { badge ->
             val (title, fact) = badgeText(badge)
-            Column(Modifier.width(200.dp).clip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.primaryContainer).padding(14.dp)) {
+            Column(Modifier.width(200.dp).paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.primaryContainer).padding(14.dp)) {
                 Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimaryContainer)
                 Text(fact, Modifier.padding(top = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onPrimaryContainer)
             }
@@ -278,7 +279,7 @@ private fun Heatmap(heat: List<List<Long>>, selection: HeatSelection?, onSelect:
 
 @Composable
 private fun Section(title: String, content: @Composable () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).clip(RoundedCornerShape(themedCorner(18.dp)))
+    Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).paperClip(RoundedCornerShape(themedCorner(18.dp)))
         .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(16.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
@@ -288,7 +289,7 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 
 @Composable
 private fun Stat(value: String, label: String, modifier: Modifier) {
-    Column(modifier.clip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(14.dp)) {
+    Column(modifier.paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(14.dp)) {
         Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1)
         Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
     }
@@ -310,7 +311,7 @@ private fun Bars(shares: List<Share>, name: (String) -> String) {
                 Text(name(share.label), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
                 Text(pct(share.fraction), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
             }
-            LinearProgressIndicator(progress = { share.fraction }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(6.dp).clip(CircleShape))
+            LinearProgressIndicator(progress = { share.fraction }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(6.dp).paperClip(CircleShape))
         }
     }
 }

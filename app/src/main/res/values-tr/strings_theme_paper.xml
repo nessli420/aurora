@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"Kâğıt"</string>
+    <string name="theme_paper_description">"auroraplayer.lol, uygulama olarak"</string>
+    <string name="theme_paper_detail">"Kâğıt ve mürekkep · pembe vurgu · ince çerçeveler · keskin köşeler · Archivo yazı tipi"</string>
+    <string name="theme_paper_light_only">"Kâğıt, web sitesi gibi yalnızca açık temada gelir."</string>
+    <string name="whats_new_paper_title">"Kâğıt teması"</string>
+    <string name="whats_new_paper_body">"Doğrudan auroraplayer.lol'den yeni bir tema: sıcak kâğıt, mürekkep, ince çerçeveler, keskin köşeler ve sitenin kendi yazı tipleri. Yalnızca açık. Görünüm'den seç."</string>
+</resources>

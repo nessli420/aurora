@@ -26,6 +26,11 @@ fun auroraShapes(style: Int, themeStyle: Int = ThemeStyle.AURORA): Shapes = when
         extraSmall = RoundedCornerShape(4.dp), small = RoundedCornerShape(6.dp),
         medium = RoundedCornerShape(8.dp), large = RoundedCornerShape(10.dp), extraLarge = RoundedCornerShape(12.dp),
     )
+    // the website draws every box square
+    ThemeStyle.PAPER -> Shapes(
+        extraSmall = RoundedCornerShape(0.dp), small = RoundedCornerShape(0.dp),
+        medium = RoundedCornerShape(0.dp), large = RoundedCornerShape(0.dp), extraLarge = RoundedCornerShape(0.dp),
+    )
     ThemeStyle.GLASS -> Shapes(
         extraSmall = RoundedCornerShape(12.dp), small = RoundedCornerShape(18.dp),
         medium = RoundedCornerShape(24.dp), large = RoundedCornerShape(30.dp), extraLarge = RoundedCornerShape(36.dp),

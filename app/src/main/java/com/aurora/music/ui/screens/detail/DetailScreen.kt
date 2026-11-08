@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.detail
 
 import com.aurora.music.localization.localizedMediaType
+import com.aurora.music.ui.theme.paperClip
 
 import com.aurora.music.localization.appString
 import com.aurora.music.R
@@ -137,7 +138,7 @@ fun DetailScreen(
     if (data == null) {
         Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
             Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
             }
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 if (state.loading) com.aurora.music.ui.components.LottieLoader(modifier = Modifier.size(72.dp))
@@ -205,7 +206,7 @@ fun DetailScreen(
                 val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
                 Row(
                     Modifier
-                        .clip(RoundedCornerShape(50))
+                        .paperClip(RoundedCornerShape(50))
                         .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.78f))))
                         .clickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
                         .padding(horizontal = 28.dp, vertical = 13.dp),
@@ -219,9 +220,9 @@ fun DetailScreen(
                 Icon(
                     Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b),
                     tint = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.size(48.dp).clip(CircleShape).clickable(enabled = tracks.isNotEmpty()) { onShufflePlay(tracks) }.padding(12.dp),
+                    modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(enabled = tracks.isNotEmpty()) { onShufflePlay(tracks) }.padding(12.dp),
                 )
-                androidx.compose.material3.TextButton(onClick = onMix, enabled = tracks.isNotEmpty()) {
+                com.aurora.music.ui.theme.TextButton(onClick = onMix, enabled = tracks.isNotEmpty()) {
                     Icon(Icons.Filled.GraphicEq, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp)); Text(appString(R.string.text_mix_fd7391))
                 }
@@ -234,7 +235,7 @@ fun DetailScreen(
                         if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                         if (isItemLiked) appString(R.string.text_unlike_e4fc40) else appString(R.string.text_like_c7e02c),
                         tint = if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(48.dp).clip(CircleShape).clickable { onToggleItemLike() }.padding(12.dp),
+                        modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable { onToggleItemLike() }.padding(12.dp),
                     )
                 }
                 if (canDownload) {
@@ -242,7 +243,7 @@ fun DetailScreen(
                         if (allDownloaded) Icons.Filled.DownloadDone else Icons.Filled.Download,
                         if (allDownloaded) appString(R.string.text_remove_downloads_cbe8be) else appString(R.string.text_download_a479c9),
                         tint = if (allDownloaded) accent else MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(48.dp).clip(CircleShape).clickable {
+                        modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable {
                             if (allDownloaded) onRemoveDownloads() else onDownloadAll()
                         }.padding(12.dp),
                     )
@@ -251,7 +252,7 @@ fun DetailScreen(
     }
     val menuButton: @Composable (Color) -> Unit = { tint ->
                     Box {
-                        Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = tint, modifier = Modifier.size(48.dp).clip(CircleShape).clickable { headerMenu = true }.padding(12.dp))
+                        Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = tint, modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable { headerMenu = true }.padding(12.dp))
                         val isPlaylist = info.typeLabel.equals("Playlist", true)
                         DropdownMenu(expanded = headerMenu, onDismissRequest = { headerMenu = false }) {
                             DropdownMenuItem(text = { Text(appString(R.string.text_play_5d12bd)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onPlayAll(tracks, 0) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
@@ -293,7 +294,7 @@ fun DetailScreen(
             ) {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.size(48.dp).clip(CircleShape).clickable(onClick = onBack).padding(12.dp))
+                        modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(12.dp))
                     Spacer(Modifier.weight(1f))
                     menuButton(MaterialTheme.colorScheme.onSurface)
                 }
@@ -357,7 +358,7 @@ fun DetailScreen(
                     Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = headerForeground, modifier = Modifier.size(40.dp).clip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = headerForeground, modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
                     Spacer(Modifier.weight(1f))
                     menuButton(headerForeground)
                 }
@@ -437,7 +438,7 @@ fun DetailScreen(
                         if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
                         if (searchOpen) appString(R.string.text_close_search_0906f9) else appString(R.string.text_search_tracks_8bc43d),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(40.dp).clip(CircleShape)
+                        modifier = Modifier.size(40.dp).paperClip(CircleShape)
                             .clickable { searchOpen = !searchOpen; if (!searchOpen) query = "" }.padding(8.dp),
                     )
                 }
@@ -456,9 +457,9 @@ fun DetailScreen(
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).focusRequester(searchFocus),
                         placeholder = { Text(appString(R.string.search_collection)) },
                         leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
-                        trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.clip(CircleShape).clickable { query = "" }.padding(4.dp)) },
+                        trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.paperClip(CircleShape).clickable { query = "" }.padding(4.dp)) },
                         singleLine = true,
-                        shape = RoundedCornerShape(14.dp),
+                        shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(14.dp)),
                         colors = TextFieldDefaults.colors(
                             focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                             unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -487,7 +488,7 @@ fun DetailScreen(
                             fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
                             color = if (selected) accent else MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
-                                .clip(RoundedCornerShape(50))
+                                .paperClip(RoundedCornerShape(50))
                                 .background(if (selected) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHigh)
                                 .then(if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.6f), RoundedCornerShape(50)) else Modifier)
                                 .clickable { genreFilter = if (i == 0) null else label }
@@ -593,7 +594,7 @@ private fun ArtistAbout(info: com.aurora.music.data.remote.ArtistInfo, accent: C
                 if (expanded) appString(R.string.text_show_less_4c852b) else appString(R.string.text_show_more_25911d),
                 style = MaterialTheme.typography.labelLarge,
                 color = accent,
-                modifier = Modifier.clip(RoundedCornerShape(50)).clickable { expanded = !expanded }.padding(vertical = 4.dp),
+                modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { expanded = !expanded }.padding(vertical = 4.dp),
             )
         }
         if (info.tags.isNotEmpty()) {
@@ -604,7 +605,7 @@ private fun ArtistAbout(info: com.aurora.music.data.remote.ArtistInfo, accent: C
                         tag,
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = FontWeight.Medium,
-                        modifier = Modifier.clip(RoundedCornerShape(50))
+                        modifier = Modifier.paperClip(RoundedCornerShape(50))
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
                             .padding(horizontal = 12.dp, vertical = 6.dp),
                     )
@@ -636,7 +637,7 @@ private fun EditPlaylistDialog(initialName: String, initialDesc: String, onSave:
             }
         },
         confirmButton = {
-            androidx.compose.material3.TextButton(onClick = {
+            com.aurora.music.ui.theme.TextButton(onClick = {
                 saving = true
                 failed = false
                 scope.launch {
@@ -650,6 +651,6 @@ private fun EditPlaylistDialog(initialName: String, initialDesc: String, onSave:
                 Text(appString(if (saving) R.string.playlist_saving else R.string.text_save_efc007))
             }
         },
-        dismissButton = { androidx.compose.material3.TextButton(onClick = onDismiss, enabled = !saving) { Text(appString(R.string.text_cancel_77dfd2)) } },
+        dismissButton = { com.aurora.music.ui.theme.TextButton(onClick = onDismiss, enabled = !saving) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
 }

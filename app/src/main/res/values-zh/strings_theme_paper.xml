@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="theme_paper_name">"纸张"</string>
+    <string name="theme_paper_description">"把 auroraplayer.lol 做成应用"</string>
+    <string name="theme_paper_detail">"纸与墨 · 玫瑰色点缀 · 细线边框 · 直角 · Archivo 字体"</string>
+    <string name="theme_paper_light_only">"纸张主题和网站一样，只有浅色。"</string>
+    <string name="whats_new_paper_title">"纸张主题"</string>
+    <string name="whats_new_paper_body">"直接取自 auroraplayer.lol 的新主题：暖色纸张、墨色、细线边框、直角，以及网站本身的字体。仅限浅色。可在外观中选择。"</string>
+</resources>

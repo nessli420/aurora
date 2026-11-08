@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.library
 
 import com.aurora.music.localization.appPlural
+import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.fade
 
 import com.aurora.music.localization.appString
@@ -108,7 +109,7 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
         Spacer(Modifier.height(8.dp))
         group.songs.forEach { s ->
             Row(
-                Modifier.fillMaxWidth().clip(RoundedCornerShape(themedCorner(12.dp))).clickable { onPlay(s) }.pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(12.dp))).clickable { onPlay(s) }.pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Artwork(s.artworkUrl, s.accent, Modifier.size(40.dp), corner = 10.dp)
