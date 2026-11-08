@@ -117,9 +117,13 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
     // the library view to ask for, null when the backend has only one library
     fun scope(): String? = _state.value.let { s -> s.view.takeIf { s.views.isNotEmpty() } }
 
+    // once the user picks a view it stays, even an empty one
+    @Volatile private var viewChosen = false
+
     fun selectView(id: String) {
         val s = _state.value
         if (id == s.view || s.views.none { it.id == id }) return
+        viewChosen = true
         _state.update { it.copy(view = id, playlists = emptyList(), albums = emptyList(), artists = emptyList(), songs = emptyList(),
             likedSongCount = 0, likedCover = "", canLoadMoreSongs = false) }
         load()
@@ -179,6 +183,13 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
             val rows = withContext(Dispatchers.Default) { repo.downloadedLibrary() }
             // a view switch while this was loading belongs to the newer load
             if (scope() != scope) return@launch
+            // merged streaming accounts with no music on this computer: open their library instead of a blank one
+            val fallback = com.aurora.music.data.EmptyViewFallback.pick(views.map { it.id }, view, viewChosen, loadFailed)
+            if (fallback != null) {
+                _state.update { it.copy(view = fallback) }
+                load()
+                return@launch
+            }
             // a background refresh keeps the walked list until the new walk lands
             val keep = keepSongs && _state.value.songs.size > songs.size
             if (!keep) songsOffset = SONG_PAGE

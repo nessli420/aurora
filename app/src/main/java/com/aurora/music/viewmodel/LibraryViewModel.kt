@@ -151,9 +151,13 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
     // the library view to ask for, null when the backend has only one library
     fun scope(): String? = _state.value.let { s -> s.view.takeIf { s.views.isNotEmpty() } }
 
+    // once the user picks a view it stays, even an empty one
+    @Volatile private var viewChosen = false
+
     fun cycleView() {
         val s = _state.value
         if (s.views.size < 2) return
+        viewChosen = true
         val next = s.views[(s.views.indexOfFirst { it.id == s.view } + 1).mod(s.views.size)].id
         _state.update { it.copy(view = next, playlists = emptyList(), albums = emptyList(), artists = emptyList(), songs = emptyList(),
             likedSongCount = 0, likedCover = "", canLoadMoreSongs = false) }
@@ -202,6 +206,13 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         val rows = withContext(Dispatchers.Default) { repo.downloadedLibrary() }
         // a view switch while this was loading belongs to the newer load
         if (scope() != scope) return
+        // merged streaming accounts with no music on the device: open their library instead of a blank one
+        val empty = playlists.isEmpty() && albums.isEmpty() && artists.isEmpty() && songs.isEmpty()
+        val fallback = com.aurora.music.data.EmptyViewFallback.pick(views.map { it.id }, view, viewChosen, empty)
+        if (fallback != null) {
+            _state.update { it.copy(view = fallback) }
+            return reload(showLoading)
+        }
         _state.update {
             it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = rows, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders, signedIn = repo.signedIn(scope))
         }

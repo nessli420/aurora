@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.HomeData
 import com.aurora.music.data.filledFrom
+import com.aurora.music.data.isBlank
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -68,6 +69,13 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                     latest = update
                     _state.update { it.copy(data = shown.filledFrom(update)) }
                 }
+                // merged streaming accounts with no music on the device: open their feed instead of a blank page
+                val fallback = com.aurora.music.data.EmptyViewFallback.pick(feeds.map { it.id }, selected, feedChosen, latest.isBlank)
+                if (fallback != null) {
+                    _state.update { it.copy(selectedFeed = fallback) }
+                    load(clear = true)
+                    return@launch
+                }
                 _state.update { it.copy(loading = false, data = latest) }
                 lastHome = key to _state.value.copy(allStarred = emptyList())
                 if (latest.starred.isNotEmpty()) allStarred(selected).let { all -> starredFor = key; _state.update { it.copy(allStarred = all) } }
@@ -83,8 +91,12 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         container.repository.homeStarred(feed)
     } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
 
+    // once the user picks a feed it stays, even an empty one
+    @Volatile private var feedChosen = false
+
     fun selectFeed(id: String) {
         if (id == _state.value.selectedFeed || _state.value.feeds.none { it.id == id }) return
+        feedChosen = true
         _state.update { it.copy(selectedFeed = id) }
         load(clear = true)
     }
