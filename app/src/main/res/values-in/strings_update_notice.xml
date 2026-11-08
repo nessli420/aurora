@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="update_available_toast">"Aurora %1$s tersedia. Anda bisa memperbaruinya dari Setelan."</string>
+    <string name="whats_new_fix_update_toast">"Pemberitahuan singkat saat dibuka jika ada versi baru"</string>
+</resources>

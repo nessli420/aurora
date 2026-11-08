@@ -38,7 +38,8 @@ object WhatsNewCatalog {
                 WhatsNewFeature(Icons.Filled.Download, R.string.whats_new_downloads_title, R.string.whats_new_downloads_body,
                     Routes.LIBRARY),
             ),
-            fixes = listOf(R.string.whats_new_fix_hours, R.string.whats_new_fix_spoken, R.string.whats_new_fix_genres),
+            fixes = listOf(R.string.whats_new_fix_hours, R.string.whats_new_fix_spoken, R.string.whats_new_fix_genres,
+                R.string.whats_new_fix_update_toast),
         ),
     )
 }

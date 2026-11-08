@@ -100,6 +100,7 @@ internal object SettingsKeys {
     val ONBOARDING_SEEN = booleanPreferencesKey("onboarding_seen")
     val WHATS_NEW_SEEN = stringPreferencesKey("whats_new_seen")
     val WHATS_NEW_ENABLED = booleanPreferencesKey("whats_new_enabled")
+    val UPDATE_ANNOUNCED = stringPreferencesKey("update_announced")
     val PRIVATE_SESSION = booleanPreferencesKey("private_session")
     val GESTURE_SWIPE_ART = booleanPreferencesKey("gesture_swipe_art")
     val GESTURE_SWIPE_DISMISS = booleanPreferencesKey("gesture_swipe_dismiss")

@@ -22,6 +22,9 @@ interface GeneralSettings {
     suspend fun setWhatsNewSeen(version: String): Preferences
     val whatsNewEnabled: Flow<Boolean>
     suspend fun setWhatsNewEnabled(enabled: Boolean): Preferences
+    // the release tag the launch update toast last named
+    val updateAnnounced: Flow<String?>
+    suspend fun setUpdateAnnounced(tag: String): Preferences
     val privateSession: Flow<Boolean>
     suspend fun setOfflineMode(v: Boolean): Preferences
     suspend fun setDataSaver(v: Boolean): Preferences
@@ -50,6 +53,8 @@ internal class GeneralSettingsStore(private val dataStore: DataStore<Preferences
     override suspend fun setWhatsNewSeen(version: String) = dataStore.edit { it[Keys.WHATS_NEW_SEEN] = version }
     override val whatsNewEnabled: Flow<Boolean> = dataStore.data.map { it[Keys.WHATS_NEW_ENABLED] ?: true }.distinctUntilChanged()
     override suspend fun setWhatsNewEnabled(enabled: Boolean) = dataStore.edit { it[Keys.WHATS_NEW_ENABLED] = enabled }
+    override val updateAnnounced: Flow<String?> = dataStore.data.map { it[Keys.UPDATE_ANNOUNCED] }.distinctUntilChanged()
+    override suspend fun setUpdateAnnounced(tag: String) = dataStore.edit { it[Keys.UPDATE_ANNOUNCED] = tag }
     override val privateSession: Flow<Boolean> = dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }.distinctUntilChanged().flowOn(Dispatchers.Default)
 
     override suspend fun setOfflineMode(v: Boolean) = dataStore.edit { it[Keys.OFFLINE] = v }

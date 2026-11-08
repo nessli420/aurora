@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="update_available_toast">"Aurora %1$s is available. You can update it from Settings."</string>
+    <string name="whats_new_fix_update_toast">"A short notice at launch when a new version is out"</string>
+</resources>

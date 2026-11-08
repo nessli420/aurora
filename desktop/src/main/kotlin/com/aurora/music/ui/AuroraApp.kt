@@ -368,6 +368,20 @@ private fun Shell(
             snackbarHostState.showSnackbar(message, duration = SnackbarDuration.Short)
         }
     }
+    // a newer release on GitHub gets one notice at launch; the same release never comes up again
+    LaunchedEffect(container) {
+        val updater = container.appUpdater
+        updater.checkForUpdate()
+        val checked = kotlinx.coroutines.withTimeoutOrNull(60_000) {
+            updater.state.first { !it.checking && (it.checked || it.error != null) }
+        } ?: return@LaunchedEffect
+        val tag = checked.release?.tag
+        if (com.aurora.music.data.updates.UpdateNotice.shouldAnnounce(checked.updateAvailable, tag, store.updateAnnounced.first()) && tag != null) {
+            store.setUpdateAnnounced(tag)
+            snackbarHostState.showSnackbar(appString(R.string.update_available_toast, com.aurora.music.data.WhatsNew.shortVersion(tag)),
+                duration = SnackbarDuration.Long)
+        }
+    }
     var matchSong by remember { mutableStateOf<Song?>(null) }
     val hiddenSongs by container.trackChoices.hidden.collectAsStateWithLifecycle()
     LaunchedEffect(unsupportedAccount) {

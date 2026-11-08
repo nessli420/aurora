@@ -200,6 +200,21 @@ fun AuroraApp() {
             whatsNewTrying = false
         }
     }
+    // a newer release on GitHub gets one toast at launch; the same release never comes up again
+    androidx.compose.runtime.LaunchedEffect(container) {
+        val updater = container.appUpdater
+        updater.checkForUpdate()
+        val checked = kotlinx.coroutines.withTimeoutOrNull(60_000) {
+            updater.state.first { !it.checking && (it.checked || it.error != null) }
+        } ?: return@LaunchedEffect
+        val tag = checked.release?.tag
+        if (com.aurora.music.data.updates.UpdateNotice.shouldAnnounce(checked.updateAvailable, tag,
+                container.settingsStore.updateAnnounced.first()) && tag != null) {
+            container.settingsStore.setUpdateAnnounced(tag)
+            android.widget.Toast.makeText(context, appString(R.string.update_available_toast,
+                com.aurora.music.data.WhatsNew.shortVersion(tag)), android.widget.Toast.LENGTH_LONG).show()
+        }
+    }
     val session by container.session.collectAsStateWithLifecycle()
     val savedSessions by container.savedSessions.collectAsStateWithLifecycle()
     val downloadsMap by container.downloadManager.downloads.collectAsStateWithLifecycle()
