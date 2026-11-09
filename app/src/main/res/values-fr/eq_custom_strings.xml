@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Personnalisé"</string>
+    <string name="eq_slider_count">"Curseurs"</string>
+    <string name="eq_fewer_sliders">"Moins de curseurs"</string>
+    <string name="eq_more_sliders">"Plus de curseurs"</string>
+    <string name="eq_simple_layers">"%1$s curseurs ici, plus %2$s bandes du mode Avancé par-dessus."</string>
+</resources>

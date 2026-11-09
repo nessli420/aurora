@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"自定义"</string>
+    <string name="eq_slider_count">"滑块"</string>
+    <string name="eq_fewer_sliders">"减少滑块"</string>
+    <string name="eq_more_sliders">"增加滑块"</string>
+    <string name="eq_simple_layers">"此处有 %1$s 个滑块，另外叠加高级模式中的 %2$s 个频段。"</string>
+</resources>

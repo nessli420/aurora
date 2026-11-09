@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Kustom"</string>
+    <string name="eq_slider_count">"Penggeser"</string>
+    <string name="eq_fewer_sliders">"Lebih sedikit penggeser"</string>
+    <string name="eq_more_sliders">"Lebih banyak penggeser"</string>
+    <string name="eq_simple_layers">"%1$s penggeser di sini, ditambah %2$s band dari Lanjutan di atasnya."</string>
+</resources>

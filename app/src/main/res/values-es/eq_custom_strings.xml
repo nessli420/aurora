@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Personalizado"</string>
+    <string name="eq_slider_count">"Deslizadores"</string>
+    <string name="eq_fewer_sliders">"Menos deslizadores"</string>
+    <string name="eq_more_sliders">"Más deslizadores"</string>
+    <string name="eq_simple_layers">"%1$s deslizadores aquí, más %2$s bandas de Avanzado encima."</string>
+</resources>

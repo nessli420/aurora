@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"사용자 지정"</string>
+    <string name="eq_slider_count">"슬라이더"</string>
+    <string name="eq_fewer_sliders">"슬라이더 줄이기"</string>
+    <string name="eq_more_sliders">"슬라이더 늘리기"</string>
+    <string name="eq_simple_layers">"여기 슬라이더 %1$s개, 그 위에 고급 모드 밴드 %2$s개가 더해집니다."</string>
+</resources>

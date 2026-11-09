@@ -220,7 +220,7 @@ object ProcessingPresetCodec {
         fun range(v: Float, low: Float, high: Float) = v.isFinite() && v in low..high
         require(a.eqBands.size <= 128 && a.dspGraphicBands.size <= 128 && a.dspParametric.size <= 128) { "Too many equalizer bands." }
         require(a.dspConvIrPath.length <= 4096 && a.dspConvIrName.length <= 4096) { "Impulse response label or path is too long." }
-        require(a.dspMode in 0..2 && a.replayGain in 0..2 && a.dspGraphicLayout in 0..2) { "Unsupported processing mode." }
+        require(a.dspMode in 0..2 && a.replayGain in 0..2 && a.dspGraphicLayout in 0..com.aurora.music.playback.DspCoeffBuilder.CUSTOM_LAYOUT) { "Unsupported processing mode." }
         require(a.eqPreset >= -1 && a.eqBands.all { it in -2400..2400 } && a.bassBoost in 0..1000 &&
             a.virtualizer in 0..1000 && a.loudnessGain in 0..3000) { "Invalid system effect value." }
         require(a.dspGraphicBands.all { range(it, -24f, 24f) }) { "Invalid equalizer band." }

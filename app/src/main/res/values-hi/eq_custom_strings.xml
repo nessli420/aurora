@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"कस्टम"</string>
+    <string name="eq_slider_count">"स्लाइडर"</string>
+    <string name="eq_fewer_sliders">"कम स्लाइडर"</string>
+    <string name="eq_more_sliders">"ज़्यादा स्लाइडर"</string>
+    <string name="eq_simple_layers">"यहाँ %1$s स्लाइडर, और उनके ऊपर एडवांस्ड के %2$s बैंड।"</string>
+</resources>

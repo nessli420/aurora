@@ -226,7 +226,7 @@ internal class DspSettingsStore(private val dataStore: DataStore<Preferences>, p
 
     override suspend fun applyLegacyEqProfile(name: String, correction: ParsedEq): Result<Unit> = impulseResult {
         require(correction.bands.size <= com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC) {
-            "The standard equalizer supports up to 12 parametric bands."
+            "The standard equalizer supports up to ${com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC} parametric bands."
         }
         require(correction.preampDb.isFinite() && correction.preampDb in -60f..24f) { "Invalid equalizer preamp." }
         val bands = ParamBandCodec.encodePreference(correction.bands)

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"حسبِ منشا"</string>
+    <string name="eq_slider_count">"سلائیڈرز"</string>
+    <string name="eq_fewer_sliders">"کم سلائیڈرز"</string>
+    <string name="eq_more_sliders">"زیادہ سلائیڈرز"</string>
+    <string name="eq_simple_layers">"یہاں %1$s سلائیڈرز، اور ان کے اوپر ایڈوانسڈ کے %2$s بینڈز۔"</string>
+</resources>

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Özel"</string>
+    <string name="eq_slider_count">"Kaydırıcılar"</string>
+    <string name="eq_fewer_sliders">"Daha az kaydırıcı"</string>
+    <string name="eq_more_sliders">"Daha fazla kaydırıcı"</string>
+    <string name="eq_simple_layers">"Burada %1$s kaydırıcı, üstüne Gelişmiş'ten %2$s bant."</string>
+</resources>

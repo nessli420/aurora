@@ -15,7 +15,7 @@ data class DspChainSettings(
 )
 
 fun AudioPrefs.dspParams(mono: Boolean): DspParams {
-    val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS[0] }
+    val layout = DspCoeffBuilder.graphicLayout(dspGraphicLayout, dspGraphicBands)
     return DspParams(
         graphic = FloatArray(layout.freqs.size) { dspGraphicBands.getOrElse(it) { 0f } },
         graphicFreqs = layout.freqs,

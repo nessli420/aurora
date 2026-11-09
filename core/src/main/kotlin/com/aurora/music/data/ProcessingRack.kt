@@ -22,11 +22,11 @@ data class ProcessingRack(
     val output: List<RackInput>? = null,
 ) {
     companion object {
-        /** Match the old engine's effective selection, including its twelve-parametric-band limit. */
+        /** Match the old engine's effective selection, including its parametric band limit. */
         fun legacy(audio: AudioPrefs, mono: Boolean = false): ProcessingRack {
             val custom = audio.dspMode == DspMode.CUSTOM
             val payload = audio.copy(dspConvIrPath = "", dspConvIrName = "",
-                dspGraphicBands = audio.dspGraphicBands.take(31), dspParametric = audio.dspParametric.take(12),
+                dspGraphicBands = audio.dspGraphicBands.take(31), dspParametric = audio.dspParametric.take(com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC),
                 dspWidth = if (custom && mono) 0f else audio.dspWidth)
             val nodes = mutableListOf(node("legacy-dsp", "Legacy DSP", RackNodeKind.LEGACY_DSP, payload, !custom))
             if (!custom && mono) nodes += node("legacy-mono", "Mono", RackNodeKind.STEREO,
@@ -105,7 +105,7 @@ object ProcessingRackCodec {
     const val MAX_PARAMETRIC_BANDS = 64
     const val MAX_TOTAL_PARAMETRIC_BANDS = 256
     const val MAX_BIQUAD_SECTIONS = 512
-    const val MAX_LEGACY_PARAMETRIC_BANDS = 12
+    const val MAX_LEGACY_PARAMETRIC_BANDS = com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC
     private val gson = Gson()
     private val legacyRackKeys = setOf("schemaVersion", "enabled", "name", "nodes")
     private val rackKeys = legacyRackKeys + "autoHeadroom"

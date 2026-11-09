@@ -270,7 +270,7 @@ class ProductionSerialRack private constructor(
             val neutral = DspParams(limiterEnabled = false)
             return when (kind) {
                 RackNodeKind.LEGACY_DSP -> {
-                    val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(a.dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS.first() }
+                    val layout = DspCoeffBuilder.graphicLayout(a.dspGraphicLayout, a.dspGraphicBands)
                     DspParams(graphic = a.dspGraphicBands.toFloatArray(), graphicFreqs = layout.freqs, graphicQ = layout.q,
                         parametric = a.dspParametric.map { DspBand.from(it) },
                         preampDb = a.dspPreampDb, balance = a.dspBalance, width = a.dspWidth,

@@ -1,5 +1,17 @@
 package com.aurora.music.ui.screens.settings
 
+import kotlinx.coroutines.launch
+import androidx.compose.ui.input.pointer.isShiftPressed
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.input.pointer.PointerEventPass
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.foundation.gestures.scrollBy
+import androidx.compose.foundation.rememberScrollbarAdapter
+import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.Canvas
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
@@ -117,7 +129,7 @@ internal fun EqEditor(
     limitHint: String? = null,
     limitAction: Pair<String, () -> Unit>? = null,
 ) {
-    val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(layoutIndex) { DspCoeffBuilder.GRAPHIC_LAYOUTS[0] }
+    val layout = DspCoeffBuilder.graphicLayout(layoutIndex, graphicGains)
     val gains = List(layout.freqs.size) { graphicGains.getOrElse(it) { 0f } }
     var mode by rememberSaveable { mutableIntStateOf(if (bands.isNotEmpty() && gains.all { it == 0f }) ADVANCED else SIMPLE) }
     var selected by rememberSaveable { mutableIntStateOf(0) }
@@ -145,7 +157,9 @@ internal fun EqEditor(
                 selected = (current - 1).coerceAtLeast(0)
             },
             onEditCustom = { editing = true }, limitHint = limitHint, limitAction = limitAction)
-        footer?.let { Hint(it) }
+        // each mode counts its own layer: the band footer belongs to advanced, simple says what stacks on its sliders
+        if (mode == ADVANCED) footer?.let { Hint(it) }
+        else if (bands.isNotEmpty()) Hint(appString(R.string.eq_simple_layers, gains.size, bands.size))
     }
     if (editing) bands.getOrNull(current)?.let { band ->
         RackBandDialog(band, appString(R.string.text_band_c6bf38, current + 1), onDismiss = { editing = false }) {
@@ -284,23 +298,66 @@ private fun EqCurve(layout: GraphicLayout, gains: List<Float>, bands: List<Param
 }
 
 @Composable
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 private fun SimpleControls(layout: GraphicLayout, layoutIndex: Int, gains: List<Float>,
     onGraphic: (Int, List<Float>) -> Unit, onGain: (Int, Float) -> Unit) {
-    SegmentedRow(appString(R.string.text_bands_2bc0aa), DspCoeffBuilder.GRAPHIC_LAYOUTS.map { it.name }, layoutIndex) { target ->
-        if (target != layoutIndex) onGraphic(target, resample(layout, gains, DspCoeffBuilder.GRAPHIC_LAYOUTS[target]))
+    SegmentedRow(appString(R.string.text_bands_2bc0aa), DspCoeffBuilder.GRAPHIC_LAYOUTS.map { it.name } + appString(R.string.eq_custom),
+        layoutIndex.coerceIn(0, DspCoeffBuilder.CUSTOM_LAYOUT)) { target ->
+        if (target == layoutIndex) return@SegmentedRow
+        // custom starts from the current slider count, so switching to it keeps the curve you had
+        val next = if (target == DspCoeffBuilder.CUSTOM_LAYOUT) DspCoeffBuilder.customLayout(layout.freqs.size) else DspCoeffBuilder.GRAPHIC_LAYOUTS[target]
+        onGraphic(target, resample(layout, gains, next))
+    }
+    if (layoutIndex == DspCoeffBuilder.CUSTOM_LAYOUT) SliderCountRow(layout.freqs.size) { count ->
+        onGraphic(DspCoeffBuilder.CUSTOM_LAYOUT, resample(layout, gains, DspCoeffBuilder.customLayout(count)))
     }
     BoxWithConstraints(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)) {
         val fits = maxWidth / layout.freqs.size >= 34.dp
-        Row(if (fits) Modifier.fillMaxWidth() else Modifier.horizontalScroll(rememberScrollState())) {
-            layout.freqs.forEachIndexed { i, hz ->
-                GainSlider(gains[i], shortHz(hz), if (fits) Modifier.weight(1f) else Modifier.width(40.dp)) { onGain(i, it) }
+        if (fits) Row(Modifier.fillMaxWidth()) {
+            layout.freqs.forEachIndexed { i, hz -> GainSlider(gains[i], shortHz(hz), Modifier.weight(1f)) { onGain(i, it) } }
+        } else Column {
+            // a mouse has no swipe: give the overflowing row a scrollbar, and let shift+wheel or a
+            // trackpad's sideways scroll move it while a plain wheel still scrolls the page
+            val scroll = rememberScrollState()
+            val scope = rememberCoroutineScope()
+            val notch = with(LocalDensity.current) { 64.dp.toPx() }
+            Row(Modifier.onPointerEvent(PointerEventType.Scroll, PointerEventPass.Initial) { event ->
+                val delta = event.changes.first().scrollDelta
+                val sideways = when {
+                    delta.x != 0f -> delta.x
+                    event.keyboardModifiers.isShiftPressed -> delta.y
+                    else -> 0f
+                }
+                if (sideways != 0f) {
+                    scope.launch { scroll.scrollBy(sideways * notch) }
+                    event.changes.forEach { it.consume() }
+                }
+            }.horizontalScroll(scroll)) {
+                layout.freqs.forEachIndexed { i, hz -> GainSlider(gains[i], shortHz(hz), Modifier.width(40.dp)) { onGain(i, it) } }
             }
+            HorizontalScrollbar(rememberScrollbarAdapter(scroll), Modifier.fillMaxWidth().padding(top = 6.dp))
         }
     }
     TextButton(onClick = { onGraphic(layoutIndex, List(gains.size) { 0f }) }, modifier = Modifier.padding(start = 8.dp)) {
         Text(appString(R.string.text_reset_graphic_eq_ace461))
     }
     Hint(appString(R.string.eq_simple_hint))
+}
+
+@Composable
+private fun SliderCountRow(count: Int, onCount: (Int) -> Unit) {
+    Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Text(appString(R.string.eq_slider_count), style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+        IconButton(onClick = { onCount(count - 1) }, enabled = count > DspCoeffBuilder.MIN_GRAPHIC,
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+            Icon(Icons.Filled.Remove, appString(R.string.eq_fewer_sliders))
+        }
+        Text("$count", style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(32.dp), textAlign = TextAlign.Center)
+        IconButton(onClick = { onCount(count + 1) }, enabled = count < DspCoeffBuilder.MAX_GRAPHIC,
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+            Icon(Icons.Filled.Add, appString(R.string.eq_more_sliders))
+        }
+    }
 }
 
 // starts dragging only from the thumb so the page can still scroll over the sliders

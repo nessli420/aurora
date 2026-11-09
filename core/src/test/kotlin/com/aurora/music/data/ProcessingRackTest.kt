@@ -79,7 +79,7 @@ class ProcessingRackTest {
         assertTrue(runCatching { ProcessingRackCodec.validate(graph.copy(nodes = graph.nodes +
             node(RackNodeKind.EQ, AudioPrefs(dspParametric = listOf(band))))) }.isFailure)
         assertTrue(runCatching { ProcessingRackCodec.validate(ProcessingRack(nodes = listOf(
-            node(RackNodeKind.LEGACY_DSP, AudioPrefs(dspParametric = List(13) { band }))))) }.isFailure)
+            node(RackNodeKind.LEGACY_DSP, AudioPrefs(dspParametric = List(com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC + 1) { band }))))) }.isFailure)
         assertTrue(runCatching { ProcessingRackCodec.validate(ProcessingRack(nodes = listOf(
             node(RackNodeKind.EQ, AudioPrefs(dspGraphicBands = List(32) { 0f }))))) }.isFailure)
     }
@@ -106,14 +106,14 @@ class ProcessingRackTest {
     @Test fun legacyMigrationPreservesEffectiveModeMonoAndConvolutionOrder() {
         val audio = AudioPrefs(dspMode = DspMode.CUSTOM, dspWidth = 1.6f, dspPreampDb = -7f, dspConvEnabled = true,
             dspConvIrPath = "/private/room.wav", dspConvMakeupDb = -2f,
-            dspParametric = List(20) { ParamBand(100f + it, 1f, 1f) }, dspGraphicBands = List(40) { 1f })
+            dspParametric = List(com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC + 8) { ParamBand(100f + it, 1f, 1f) }, dspGraphicBands = List(40) { 1f })
         val graph = ProcessingRack.legacy(audio, mono = true)
         assertFalse(graph.enabled)
         assertEquals(listOf(RackNodeKind.LEGACY_DSP, RackNodeKind.CONVOLUTION), graph.nodes.map { it.kind })
         assertFalse(graph.nodes[0].bypass); assertFalse(graph.nodes[1].bypass)
         assertEquals(0f, graph.nodes[0].audio.dspWidth, 0f)
         assertEquals(-7f, graph.nodes[0].audio.dspPreampDb, 0f)
-        assertEquals(12, graph.nodes[0].audio.dspParametric.size)
+        assertEquals(com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC, graph.nodes[0].audio.dspParametric.size)
         assertEquals(31, graph.nodes[0].audio.dspGraphicBands.size)
         assertTrue(graph.nodes.all { it.audio.dspConvIrPath.isEmpty() })
         for (mode in listOf(DspMode.OFF, DspMode.SYSTEM)) {

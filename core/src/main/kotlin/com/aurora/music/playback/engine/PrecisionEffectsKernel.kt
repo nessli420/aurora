@@ -105,7 +105,10 @@ class PrecisionEffectsKernel(val format: AudioStreamFormat) {
         var i = 0
         while (i < n) {
             val b = c.filter(i)
-            val output = b.b0 * sample + b.b1 * x1[i] + b.b2 * x2[i] - b.a1 * y1[i] - b.a2 * y2[i]
+            // unused slots pass the sample straight through; their history still advances so a band
+            // switched on later starts from the same state it always did
+            val output = if (b === BiquadCoefficients.IDENTITY) sample
+                else b.b0 * sample + b.b1 * x1[i] + b.b2 * x2[i] - b.a1 * y1[i] - b.a2 * y2[i]
             x2[i] = x1[i]; x1[i] = sample; y2[i] = y1[i]; y1[i] = output
             sample = output
             i++

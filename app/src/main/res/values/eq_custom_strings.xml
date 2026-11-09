@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Custom"</string>
+    <string name="eq_slider_count">"Sliders"</string>
+    <string name="eq_fewer_sliders">"Fewer sliders"</string>
+    <string name="eq_more_sliders">"More sliders"</string>
+    <string name="eq_simple_layers">"%1$s sliders here, plus %2$s bands from Advanced on top."</string>
+</resources>

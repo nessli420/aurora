@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Своё"</string>
+    <string name="eq_slider_count">"Ползунки"</string>
+    <string name="eq_fewer_sliders">"Меньше ползунков"</string>
+    <string name="eq_more_sliders">"Больше ползунков"</string>
+    <string name="eq_simple_layers">"Ползунков здесь: %1$s, и поверх них полос из «Расширенного»: %2$s."</string>
+</resources>

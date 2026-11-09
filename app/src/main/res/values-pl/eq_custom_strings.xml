@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Własne"</string>
+    <string name="eq_slider_count">"Suwaki"</string>
+    <string name="eq_fewer_sliders">"Mniej suwaków"</string>
+    <string name="eq_more_sliders">"Więcej suwaków"</string>
+    <string name="eq_simple_layers">"Suwaki tutaj: %1$s, a do tego %2$s pasm z trybu zaawansowanego."</string>
+</resources>

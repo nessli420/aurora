@@ -5,15 +5,20 @@ import com.aurora.music.playback.engine.PrecisionDspCoeffBuilder
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.exp
+import kotlin.math.floor
 import kotlin.math.log10
+import kotlin.math.log2
+import kotlin.math.pow
 import kotlin.math.sin
+import kotlin.math.sqrt
 
 // fixed bank size means filter state never needs remapping or zeroing when bands change no clicks
 object DspCoeffBuilder {
 
     const val GRAPHIC_BANDS = 10
     const val MAX_GRAPHIC = 31
-    const val MAX_PARAMETRIC = 12
+    // matches the graphic layer so advanced mode can hold as many bands as the 31-slider layout
+    const val MAX_PARAMETRIC = 31
     const val MAX_SECTIONS_PER_BAND = 4
     const val TOTAL_BIQUADS = MAX_GRAPHIC + MAX_PARAMETRIC * MAX_SECTIONS_PER_BAND
 
@@ -33,6 +38,33 @@ object DspCoeffBuilder {
             4.32f,
         ),
     )
+
+    /** Layout index for a slider count the user picks; its band count is however many gains are saved. */
+    const val CUSTOM_LAYOUT = 3
+    const val MIN_GRAPHIC = 5
+
+    /** The slider layout for [index]; custom layouts take their size from [gains]. */
+    fun graphicLayout(index: Int, gains: List<Float>): GraphicLayout =
+        if (index == CUSTOM_LAYOUT) customLayout(gains.size.takeIf { it > 0 } ?: GRAPHIC_BANDS)
+        else GRAPHIC_LAYOUTS.getOrElse(index) { GRAPHIC_LAYOUTS[0] }
+
+    /**
+     * [count] sliders spread evenly in log frequency from 20 Hz to 20 kHz, each one's Q set so neighbours
+     * meet at their half-gain points, the way the fixed ISO layouts are tuned.
+     */
+    fun customLayout(count: Int): GraphicLayout {
+        val n = count.coerceIn(MIN_GRAPHIC, MAX_GRAPHIC)
+        val octaves = log2(20_000.0 / 20.0) / (n - 1)
+        val freqs = FloatArray(n) { i -> niceFrequency(20.0 * 2.0.pow(octaves * i)) }
+        val width = 2.0.pow(octaves)
+        return GraphicLayout("$n-band", freqs, (sqrt(width) / (width - 1.0)).toFloat())
+    }
+
+    // two significant figures, so custom sliders read like the ISO ones (63, 1.6K) instead of 63.49
+    private fun niceFrequency(hz: Double): Float {
+        val scale = 10.0.pow(floor(log10(hz)) - 1)
+        return (Math.round(hz / scale) * scale).toFloat()
+    }
 
     fun build(p: DspParams, sampleRate: Int): Coeffs {
         val fs = sampleRate.coerceAtLeast(8000)

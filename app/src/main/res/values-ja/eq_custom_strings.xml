@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"カスタム"</string>
+    <string name="eq_slider_count">"スライダー"</string>
+    <string name="eq_fewer_sliders">"スライダーを減らす"</string>
+    <string name="eq_more_sliders">"スライダーを増やす"</string>
+    <string name="eq_simple_layers">"ここに%1$s本のスライダー、その上に詳細モードの%2$s個のバンドが重なります。"</string>
+</resources>

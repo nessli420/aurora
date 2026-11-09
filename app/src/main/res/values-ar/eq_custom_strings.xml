@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"مخصص"</string>
+    <string name="eq_slider_count">"المنزلقات"</string>
+    <string name="eq_fewer_sliders">"منزلقات أقل"</string>
+    <string name="eq_more_sliders">"منزلقات أكثر"</string>
+    <string name="eq_simple_layers">"%1$s منزلقات هنا، تُضاف إليها %2$s نطاقات من الوضع المتقدم."</string>
+</resources>

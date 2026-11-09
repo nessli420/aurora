@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Aangepast"</string>
+    <string name="eq_slider_count">"Schuifregelaars"</string>
+    <string name="eq_fewer_sliders">"Minder schuifregelaars"</string>
+    <string name="eq_more_sliders">"Meer schuifregelaars"</string>
+    <string name="eq_simple_layers">"%1$s schuifregelaars hier, plus %2$s banden uit Geavanceerd erbovenop."</string>
+</resources>

@@ -510,7 +510,7 @@ private fun LazyListScope.customDspSection(
     draft: EqDraft,
     onOpenRack: () -> Unit,
 ) {
-    val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(prefs.dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS[0] }
+    val layout = DspCoeffBuilder.graphicLayout(prefs.dspGraphicLayout, prefs.dspGraphicBands)
     val graphic = layout.freqs.indices.map { prefs.dspGraphicBands.getOrElse(it) { 0f } }
 
     collapsible("c_eq", appString(R.string.text_equalizer_3b64a9), Icons.Filled.Tune,

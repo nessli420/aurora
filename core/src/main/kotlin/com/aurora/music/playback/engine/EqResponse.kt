@@ -42,7 +42,7 @@ internal object ProductionEqCoefficients {
     fun build(audio: AudioPrefs, sampleRate: Int): Array<BiquadCoefficients> {
         require(sampleRate in 8_000..768_000)
         require(audio.dspGraphicBands.size <= 31 && audio.dspParametric.size <= 64)
-        val layout = DspCoeffBuilder.GRAPHIC_LAYOUTS.getOrElse(audio.dspGraphicLayout) { DspCoeffBuilder.GRAPHIC_LAYOUTS.first() }
+        val layout = DspCoeffBuilder.graphicLayout(audio.dspGraphicLayout, audio.dspGraphicBands)
         val graphic = audio.dspGraphicBands.mapIndexed { index, gain ->
             PrecisionDspCoeffBuilder.band(0, layout.freqs.getOrElse(index) { 0f }.toDouble(),
                 gain.toDouble(), layout.q.toDouble(), sampleRate)

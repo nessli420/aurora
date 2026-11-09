@@ -15,7 +15,7 @@ class AutoEqParserTest {
     }
 
     @Test fun rejectsCorrectionsThatStandardEngineWouldTruncate() {
-        assertNull(EqTextParser.parse((1..13).joinToString("\n") { filter(it) }))
+        assertNull(EqTextParser.parse((1..com.aurora.music.playback.DspCoeffBuilder.MAX_PARAMETRIC + 1).joinToString("\n") { filter(it) }))
     }
 
     @Test fun rejectsValuesThatCannotBeStoredOrPlayed() {

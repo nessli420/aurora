@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eq_custom">"Eigene"</string>
+    <string name="eq_slider_count">"Regler"</string>
+    <string name="eq_fewer_sliders">"Weniger Regler"</string>
+    <string name="eq_more_sliders">"Mehr Regler"</string>
+    <string name="eq_simple_layers">"%1$s Regler hier, dazu %2$s Bänder aus „Erweitert“ obendrauf."</string>
+</resources>

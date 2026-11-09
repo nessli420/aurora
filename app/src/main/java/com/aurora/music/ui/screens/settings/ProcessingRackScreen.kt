@@ -437,7 +437,7 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                     }
                     if (showResponse) item { RackEqResponseCard(node, decoderRate, rackEnabled) }
                 }
-                val stageLimit = if (legacy) 12 else 64
+                val stageLimit = if (legacy) DspCoeffBuilder.MAX_PARAMETRIC else ProcessingRackCodec.MAX_PARAMETRIC_BANDS
                 item {
                     SettingsGroup {
                         EqEditor(audio.dspGraphicLayout, audio.dspGraphicBands, audio.dspParametric,
