@@ -629,6 +629,9 @@ class MusicRepository(
 
     suspend fun detail(kind: String, id: String): DetailData? = withContext(mapping) { loadDetail(kind, id) }
 
+    /** The art the Liked Songs page opens on, for the tile that leads to it. [likedId] is the id that page is opened with. */
+    suspend fun likedCover(likedId: String): String = detail("liked", likedId)?.info?.artUrl.orEmpty()
+
     private suspend fun loadDetail(kind: String, id: String): DetailData? {
         if (kind == "downloaded") {
             val tracks = looseDownloads().map { artwork(it.toSong(downloadManager.fileUri)) }

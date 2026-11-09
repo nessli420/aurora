@@ -190,6 +190,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         // this number can take every source's whole liked list, so the lists do not wait for it
         val epoch = container.accountEpoch.value
         countJob = viewModelScope.launch {
+            // the Liked Songs tile shows the art its page opens on, so it reads the liked list, not the library's first song
+            launch {
+                val likedId = if (views.isEmpty()) "liked" else view
+                val cover = try { repo.likedCover(likedId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                if (cover != null && scope() == scope && epoch == container.accountEpoch.value) _state.update { it.copy(likedCover = cover) }
+            }
             val count = try { repo.starredCount(scope) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
             if (count != null && scope() == scope && epoch == container.accountEpoch.value) _state.update { it.copy(likedSongCount = count) }
         }
@@ -214,7 +220,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             return reload(showLoading)
         }
         _state.update {
-            it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = rows, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders, signedIn = repo.signedIn(scope))
+            it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = rows, supportsFolders = container.repository.supportsFolders, signedIn = repo.signedIn(scope))
         }
         // warm the full-library cache in the background so the first Play is instant
         fullSongsAsync()

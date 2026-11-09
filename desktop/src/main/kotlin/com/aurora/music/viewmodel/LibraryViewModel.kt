@@ -160,6 +160,12 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
             // this number can take every source's whole liked list, so the lists do not wait for it
             val epoch = container.accountEpoch.value
             countJob = viewModelScope.launch {
+                // the Liked Songs tile shows the art its page opens on, so it reads the liked list, not the library's first song
+                launch {
+                    val likedId = if (views.isEmpty()) "liked" else view
+                    val cover = try { repo.likedCover(likedId) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
+                    if (cover != null && scope() == scope && epoch == container.accountEpoch.value) _state.update { it.copy(likedCover = cover) }
+                }
                 val count = try { repo.starredCount(scope) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
                 if (count != null && scope() == scope && epoch == container.accountEpoch.value) _state.update { it.copy(likedSongCount = count) }
             }
@@ -194,7 +200,7 @@ class LibraryViewModel(private val container: DesktopContainer) : ViewModel() {
             val keep = keepSongs && _state.value.songs.size > songs.size
             if (!keep) songsOffset = SONG_PAGE
             _state.update {
-                it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = if (keep) it.songs else songs, songsLoadingMore = false, canLoadMoreSongs = if (keep) it.canLoadMoreSongs else songs.size >= SONG_PAGE, downloadedRows = rows, likedCover = songs.firstOrNull()?.artworkUrl ?: "", supportsFolders = container.repository.supportsFolders, signedIn = container.repository.signedIn(scope))
+                it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = if (keep) it.songs else songs, songsLoadingMore = false, canLoadMoreSongs = if (keep) it.canLoadMoreSongs else songs.size >= SONG_PAGE, downloadedRows = rows, supportsFolders = container.repository.supportsFolders, signedIn = container.repository.signedIn(scope))
             }
             fullSongsAsync()
         }

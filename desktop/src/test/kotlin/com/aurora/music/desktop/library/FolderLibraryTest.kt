@@ -145,6 +145,24 @@ class FolderLibraryTest {
         assertEquals(listOf("First", "Second"), backend.detail("album", precision.id)!!.tracks.map { it.title })
     }
 
+    // issue #36: the Liked Songs tile in Your Library shows the art the Liked Songs page opens on, not the library's first song
+    @Test fun theLikedSongsTileShowsWhatTheLikedSongsPageShows() = runBlocking {
+        val library = library(music)
+        library.ensureLoaded()
+        val backend = LocalBackend(library, LocalStore(temp.newFolder("likes")), Session("On this device", "Local Library", "", "local", ServerType.LOCAL))
+        val repository = com.aurora.music.data.MusicRepository({ backend },
+            com.aurora.music.data.DownloadManager(temp.newFolder("downloads"), { "file://$it" }, { null }), mapping = kotlin.coroutines.EmptyCoroutineContext)
+        val firstInLibrary = repository.songsPage(0, 50).first()
+        val liked = library.songs.first { it.artworkUrl.isNotBlank() && it.artworkUrl != firstInLibrary.artworkUrl }
+        repository.setStarred(liked.id, true)
+
+        val page = repository.detail("liked", "liked")!!.info.artUrl
+        assertEquals(liked.artworkUrl, page)
+        assertEquals(page, repository.likedCover("liked"))
+        // what the tile used until now: the first song in the whole library, which isn't liked
+        assertTrue(firstInLibrary.artworkUrl != page)
+    }
+
     @Test fun aCueSheetSplitsItsAlbumFileIntoTracks() = runBlocking {
         val album = write("Concertos/Romantic Piano Concerto.wav", wav(seconds = 30))
         write("Concertos/Romantic Piano Concerto.cue", """
