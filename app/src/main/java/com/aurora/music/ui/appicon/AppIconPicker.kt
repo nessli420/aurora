@@ -3,11 +3,12 @@ package com.aurora.music.ui.appicon
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.sizeIn
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material3.MaterialTheme
@@ -79,7 +80,8 @@ fun AppIconPicker() {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    if (bitmap != null) Image(bitmap, contentDescription = null, modifier = Modifier.size(56.dp))
+                    // five icons don't fit at a fixed 56dp on a narrow phone, so they shrink to their tile
+                    if (bitmap != null) Image(bitmap, contentDescription = null, modifier = Modifier.sizeIn(maxWidth = 56.dp).fillMaxWidth().aspectRatio(1f))
                     Text(
                         name,
                         style = MaterialTheme.typography.labelMedium,

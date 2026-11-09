@@ -13,6 +13,7 @@ enum class AppIcon(val alias: String, @DrawableRes val icon: Int, val themeStyle
     RETRO("IconRetro", R.mipmap.ic_launcher_retro, ThemeStyle.RETRO, false),
     AERO("IconAero", R.mipmap.ic_launcher_aero, ThemeStyle.AERO, false),
     GLASS("IconGlass", R.mipmap.ic_launcher_glass, ThemeStyle.GLASS, false),
+    PAPER("IconPaper", R.mipmap.ic_launcher_paper, ThemeStyle.PAPER, false),
 }
 
 object AppIcons {

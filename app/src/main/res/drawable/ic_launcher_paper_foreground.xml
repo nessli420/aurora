@@ -1,0 +1,18 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- the Aurora A with Paper's square ends and a sharp tip. Its drawn extent (miter tip to butt corners)
+         is 4.9..59.1 x -5.4..55.0, so this centres it on 54,54 and keeps it inside a circular mask -->
+    <group android:translateX="28.4" android:translateY="34.16" android:scaleX="0.8" android:scaleY="0.8">
+        <path
+            android:fillColor="#00000000"
+            android:strokeColor="#FFF1ECE3"
+            android:strokeWidth="9"
+            android:strokeLineCap="butt"
+            android:strokeLineJoin="miter"
+            android:strokeMiterLimit="10"
+            android:pathData="M9,53 L32,5 L55,53 M16,39.5 C27,30 37,49 48,39.5" />
+    </group>
+</vector>
