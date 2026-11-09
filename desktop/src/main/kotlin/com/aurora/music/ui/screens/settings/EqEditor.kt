@@ -1,17 +1,13 @@
 package com.aurora.music.ui.screens.settings
 
 import kotlinx.coroutines.launch
-import androidx.compose.ui.input.pointer.isShiftPressed
+import com.aurora.music.ui.components.wheelScrollsHorizontally
+import androidx.compose.foundation.gestures.animateScrollBy
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.PointerIcon
-import androidx.compose.ui.input.pointer.onPointerEvent
-import androidx.compose.ui.input.pointer.PointerEventPass
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.foundation.gestures.scrollBy
-import androidx.compose.foundation.rememberScrollbarAdapter
-import androidx.compose.foundation.HorizontalScrollbar
 import androidx.compose.foundation.Canvas
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
@@ -298,7 +294,6 @@ private fun EqCurve(layout: GraphicLayout, gains: List<Float>, bands: List<Param
 }
 
 @Composable
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 private fun SimpleControls(layout: GraphicLayout, layoutIndex: Int, gains: List<Float>,
     onGraphic: (Int, List<Float>) -> Unit, onGain: (Int, Float) -> Unit) {
     SegmentedRow(appString(R.string.text_bands_2bc0aa), DspCoeffBuilder.GRAPHIC_LAYOUTS.map { it.name } + appString(R.string.eq_custom),
@@ -315,27 +310,17 @@ private fun SimpleControls(layout: GraphicLayout, layoutIndex: Int, gains: List<
         val fits = maxWidth / layout.freqs.size >= 34.dp
         if (fits) Row(Modifier.fillMaxWidth()) {
             layout.freqs.forEachIndexed { i, hz -> GainSlider(gains[i], shortHz(hz), Modifier.weight(1f)) { onGain(i, it) } }
-        } else Column {
-            // a mouse has no swipe: give the overflowing row a scrollbar, and let shift+wheel or a
-            // trackpad's sideways scroll move it while a plain wheel still scrolls the page
+        } else Row(verticalAlignment = Alignment.CenterVertically) {
+            // a mouse has no swipe: the wheel moves the overflowing row until it runs out and then
+            // hands back to the page, and arrows either side page through it
             val scroll = rememberScrollState()
             val scope = rememberCoroutineScope()
-            val notch = with(LocalDensity.current) { 64.dp.toPx() }
-            Row(Modifier.onPointerEvent(PointerEventType.Scroll, PointerEventPass.Initial) { event ->
-                val delta = event.changes.first().scrollDelta
-                val sideways = when {
-                    delta.x != 0f -> delta.x
-                    event.keyboardModifiers.isShiftPressed -> delta.y
-                    else -> 0f
-                }
-                if (sideways != 0f) {
-                    scope.launch { scroll.scrollBy(sideways * notch) }
-                    event.changes.forEach { it.consume() }
-                }
-            }.horizontalScroll(scroll)) {
+            fun page(direction: Int) = scope.launch { scroll.animateScrollBy(direction * scroll.viewportSize * 0.8f) }
+            RowArrow(Icons.AutoMirrored.Filled.KeyboardArrowLeft, appString(R.string.text_previous_50f942), scroll.canScrollBackward) { page(-1) }
+            Row(Modifier.weight(1f).wheelScrollsHorizontally(scroll).horizontalScroll(scroll)) {
                 layout.freqs.forEachIndexed { i, hz -> GainSlider(gains[i], shortHz(hz), Modifier.width(40.dp)) { onGain(i, it) } }
             }
-            HorizontalScrollbar(rememberScrollbarAdapter(scroll), Modifier.fillMaxWidth().padding(top = 6.dp))
+            RowArrow(Icons.AutoMirrored.Filled.KeyboardArrowRight, appString(R.string.text_next_bc9819), scroll.canScrollForward) { page(1) }
         }
     }
     TextButton(onClick = { onGraphic(layoutIndex, List(gains.size) { 0f }) }, modifier = Modifier.padding(start = 8.dp)) {
@@ -361,6 +346,13 @@ private fun SliderCountRow(count: Int, onCount: (Int) -> Unit) {
 }
 
 // starts dragging only from the thumb so the page can still scroll over the sliders
+@Composable
+private fun RowArrow(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, enabled: Boolean, onClick: () -> Unit) {
+    IconButton(onClick, Modifier.size(40.dp).pointerHoverIcon(if (enabled) PointerIcon.Hand else PointerIcon.Default), enabled = enabled) {
+        Icon(icon, label)
+    }
+}
+
 @Composable
 private fun GainSlider(value: Float, label: String, modifier: Modifier, onChange: (Float) -> Unit) {
     val accent = MaterialTheme.colorScheme.primary

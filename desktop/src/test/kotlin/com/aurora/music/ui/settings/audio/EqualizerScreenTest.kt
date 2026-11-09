@@ -60,7 +60,7 @@ class EqualizerScreenTest {
             store.setDspPreamp(-3f)
         }).use { scene ->
             assertTrue(scene.shot().distinctColors() > 20)
-            scene.click(420f, 1104f)
+            scene.click(321f, 1104f)
             val audio = scene.await(read = { it.audioPrefs.first() }) { it.dspGraphicLayout == 1 }
             assertEquals(15, audio.dspGraphicBands.size)
             assertEquals(3f, audio.dspGraphicBands.first())
