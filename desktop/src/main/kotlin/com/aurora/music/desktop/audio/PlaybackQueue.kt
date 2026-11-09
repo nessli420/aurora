@@ -90,6 +90,13 @@ class PlaybackQueue(private val random: Random = Random.Default) {
         changed()
     }
 
+    // the same song as a new entry, so nothing already opened for it is reused and its stream is looked up again
+    fun renew(at: Int) {
+        require(at in items.indices) { "Queue index out of range" }
+        items[at] = entry(items[at].song)
+        changed()
+    }
+
     fun clear() {
         items.clear()
         index = -1

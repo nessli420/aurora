@@ -98,6 +98,8 @@ interface PlayerController {
     fun addToQueue(song: Song)
     fun playNext(song: Song)
     fun jumpTo(index: Int)
+    /** Starts [songId] over with its stream looked up again if it is the song playing now, as after its match changed. */
+    fun reloadIfPlaying(songId: String) {}
     fun removeFromQueue(index: Int)
     fun clearQueue()
     fun moveQueueItem(from: Int, to: Int)

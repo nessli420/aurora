@@ -102,15 +102,20 @@ class AudioCache(
     // a song already on disk, for work like analysis that should neither stream nor fill the cache
     fun local(song: Song): ResolvedStream? = keyFor(song)?.let(::complete)?.let { ResolvedStream(desktopFileUri(it.path)) }
 
-    // a track whose youtube match changed must not keep playing the old video's audio
-    fun forget(songId: String) { scope.launch {
+    // a track whose youtube match changed must not keep playing the old video's audio. The change usually comes while
+    // the wrong song is still streaming in, so its download is stopped before it can finish into the cache, and the
+    // record goes even when a player holds the audio open: without it the entry no longer counts as cached, and the
+    // orphaned audio is swept on the next start
+    fun forget(songId: String): kotlinx.coroutines.Job = scope.launch {
         val id = com.aurora.music.data.stripMergeNamespace(songId)
-        records().filter { (key, record) -> readers[key] == null && record.id?.let { com.aurora.music.data.stripMergeNamespace(it) } == id }.forEach { (key, _) ->
+        fun same(recordId: String?) = recordId?.let { com.aurora.music.data.stripMergeNamespace(it) } == id
+        downloads.values.filter { same(it.songId) }.forEach { it.cancel() }
+        records().filter { (_, record) -> same(record.id) }.forEach { (key, _) ->
             File(root, "$key.$RECORD").delete()
-            File(root, "$key.$AUDIO").delete()
+            if (readers[key] == null) File(root, "$key.$AUDIO").delete()
         }
         refresh()
-    } }
+    }
 
     suspend fun clear() = withContext(Dispatchers.IO) {
         generation.incrementAndGet()
@@ -249,6 +254,7 @@ class AudioCache(
     private inner class Download(val key: String, private val stream: ResolvedStream, private val record: Record) {
         val token: String = UUID.randomUUID().toString()
         val file = File(root, "$key.$AUDIO")
+        val songId: String? get() = record.id
         private val lock = Object()
         private val epoch = generation.get()
         @Volatile var length = -1L

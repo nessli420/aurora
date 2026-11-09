@@ -69,7 +69,7 @@ fun MatchMenuItem(song: Song, close: () -> Unit) {
 }
 
 @Composable
-fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onDismiss: () -> Unit) {
+fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onChanged: (Song) -> Unit = {}, onDismiss: () -> Unit) {
     val container = LocalDesktopContainer.current
     val key = TrackChoices.matchKey(song.streamUrl) ?: return
     val matches by container.trackChoices.matches.collectAsStateWithLifecycle()
@@ -90,7 +90,9 @@ fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onDismiss: () -> Uni
     }
     fun choose(choice: MatchChoice?) {
         container.trackChoices.setMatch(key, choice)
-        container.audioCache.forget(song.id)
+        // the old audio has to be out of the cache before the song plays again, or it comes straight back
+        // (chained on the cache's own job: the dialog, and its scope, close straight after this)
+        container.audioCache.forget(song.id).invokeOnCompletion { cause -> if (cause == null) onChanged(song) }
         notify(if (choice == null) appString(R.string.match_reset_done) else appString(R.string.match_saved, choice.title))
         onDismiss()
     }

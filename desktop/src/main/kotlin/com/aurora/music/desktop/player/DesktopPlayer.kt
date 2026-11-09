@@ -831,6 +831,14 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         engine.insert((currentIndex() + 1).coerceIn(0, count), listOf(song))
     }
 
+    // the song playing now starts over with its stream looked up again, as after its youtube match changed
+    override fun reloadIfPlaying(songId: String) {
+        val id = com.aurora.music.data.stripMergeNamespace(songId)
+        val index = currentIndex()
+        val current = engine.state.value.current?.song ?: return
+        if (com.aurora.music.data.stripMergeNamespace(current.id) == id && index in 0 until queueSize()) engine.reload(index)
+    }
+
     override fun jumpTo(index: Int) {
         if (index in 0 until queueSize()) {
             engine.seekTo(index, 0)

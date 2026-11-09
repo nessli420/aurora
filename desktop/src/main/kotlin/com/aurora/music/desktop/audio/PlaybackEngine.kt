@@ -30,6 +30,8 @@ interface PlaybackEngine : AutoCloseable {
     fun clear()
     fun seekTo(index: Int, positionMs: Long)
     fun seekTo(positionMs: Long)
+    /** Plays [index] again from the start with its stream looked up afresh, for when what it resolves to has changed. */
+    fun reload(index: Int) = seekTo(index, 0)
     fun next()
     fun previousItem()
     fun play()

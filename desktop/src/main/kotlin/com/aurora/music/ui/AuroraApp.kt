@@ -936,7 +936,7 @@ private fun Shell(
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides
             (if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE)).let { if (aiDjActive) it - PlayerPane.QUEUE else it },
     ) {
-    matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm) { matchSong = null } }
+    matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onChanged = { changed -> player.reloadIfPlaying(changed.id) }) { matchSong = null } }
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,

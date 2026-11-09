@@ -58,6 +58,29 @@ class DesktopPlaybackEngineTest {
         assertEquals(1, backend.opened.size)
     }
 
+    // after a youtube match changes, the playing song starts over from a fresh lookup instead of its open stream,
+    // and reads as the same song carrying on rather than a new track
+    @Test fun reloadLooksTheCurrentSongUpAgainInPlace() {
+        val (a, _) = tone("long", 48_000, 16, 48_000 * 20) { frame, channel -> (frame * 3 + channel) % 8_000 - 4_000 }
+        val (b, _) = tone("next", 48_000, 16, 4_800) { frame, _ -> frame % 100 }
+        val lookups = java.util.concurrent.ConcurrentHashMap<String, Int>()
+        val engine = DesktopPlaybackEngine(FakeBackend(), { song -> lookups.merge(song.id, 1, Int::plus); StreamResolver.Default.resolve(song) },
+            random = Random(11)).also { engines += it }
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(a), tracks.song(b)))
+            engine.await { it.phase == EnginePhase.READY && it.index == 0 }
+            assertEquals(1, lookups["long"])
+            engine.reload(0)
+            val deadline = System.currentTimeMillis() + 10_000
+            while (lookups["long"] != 2 && System.currentTimeMillis() < deadline) Thread.sleep(20)
+            assertEquals(2, lookups["long"])
+            val state = engine.await { it.phase == EnginePhase.READY }
+            assertEquals(0, state.index)
+            assertEquals("long", state.current?.song?.id)
+            assertEquals(listOf(TransitionReason.QUEUE_CHANGED), log.transitions().map { it.reason })
+        }
+    }
+
     @Test fun twentyFourBitSourceIsBitPerfectIntoExclusiveTwentyFourInThirtyTwo() {
         val (file, samples) = hiResTone()
         val backend = FakeBackend(exclusive = hiRes)

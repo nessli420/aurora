@@ -159,6 +159,30 @@ class AudioCacheTest {
         cache.close()
     }
 
+    // a youtube match is usually corrected while the wrong song is still streaming in: that audio must not finish into
+    // the cache and come back on the next play
+    @Test fun forgettingASongMidStreamKeepsItsOldAudioOut() {
+        files["/wrong.bin"] = ByteArray(2 * 1024 * 1024) { (it % 249).toByte() }
+        val slow = server.dispatcher
+        server.dispatcher = object : Dispatcher() {
+            override fun dispatch(request: RecordedRequest): MockResponse =
+                slow.dispatch(request).throttleBody(64 * 1024, 40, java.util.concurrent.TimeUnit.MILLISECONDS)
+        }
+        val cache = cache()
+        val song = song("m1", "/wrong.bin")
+        val url = cache.resolve(song, upstream(song)).url
+        val player = Thread { runCatching { fetch(url) } }.apply { start() }
+        Thread.sleep(300)
+        runBlocking { cache.forget(song.id).join() }
+        player.join(15_000)
+        Thread.sleep(300)
+        assertTrue(cache.songs.value.isEmpty())
+        var upstreamAgain = false
+        cache.resolve(song) { upstreamAgain = true; ResolvedStream(song.streamUrl) }
+        assertTrue("the corrected song is looked up again", upstreamAgain)
+        cache.close()
+    }
+
     @Test fun clearingRemovesEverything() {
         files["/c.bin"] = ByteArray(5000) { it.toByte() }
         val cache = cache()

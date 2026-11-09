@@ -211,6 +211,22 @@ class DesktopPlaybackEngine(
         seekInternal(index, positionMs)
     }
 
+    // a seek would reuse the open stream, so the entry is renewed first; restarting it straight away, before any
+    // reconcile, keeps the swap from reading as the current track being removed, and without a transition event
+    // history and scrobbling see the same song carrying on
+    override fun reload(index: Int) = post {
+        if (index !in 0 until queue.size) return@post
+        val current = heardMarker?.entry?.uid == queue[index].uid
+        queue.renew(index)
+        if (!current) {
+            reconcile()
+            publish()
+            return@post
+        }
+        resetFailures()
+        restart(index, 0, null)
+    }
+
     override fun seekTo(positionMs: Long) = post {
         val index = heardMarker?.let { queue.indexOf(it.entry.uid) } ?: -1
         if (index < 0) return@post
