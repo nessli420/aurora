@@ -44,7 +44,7 @@ class GeneratedAssetsTest {
     @Test fun bundlesTheLicenceTexts() {
         assertNull(loader.getResource("licenses/aurora-dst-LGPL-2.1.txt"))
         val fonts = File(loader.getResource("font_licenses/manrope-OFL.txt")!!.toURI()).parentFile.list()!!.toSet()
-        assertEquals(setOf("dmsans-OFL.txt", "manrope-OFL.txt", "plusjakartasans-OFL.txt"), fonts)
+        assertEquals(setOf("archivo-OFL.txt", "chivomono-OFL.txt", "dmsans-OFL.txt", "manrope-OFL.txt", "plusjakartasans-OFL.txt"), fonts)
     }
 
     @Test fun buildInfoCarriesTheCatalogComposeVersion() {

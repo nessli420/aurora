@@ -137,7 +137,7 @@ class GeneralSettingsTest {
         GeneralSettingsScene("appearance", height = 1600) { AppearanceScreen(padding, onBack = {}) }.use { scene ->
             val aurora = scene.shot()
             assertTrue(aurora.distinctColors() > 20)
-            scene.click(419f, 827f)
+            scene.click(419f, 1005f)
             assertEquals(AccentMode.CUSTOM, scene.await(read = { settingsStore.uiPrefs.first().accentMode }) { it == AccentMode.CUSTOM })
             scene.shot("-custom")
             scene.click(617f, 220f)
