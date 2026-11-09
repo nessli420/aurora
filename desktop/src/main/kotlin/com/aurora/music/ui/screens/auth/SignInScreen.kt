@@ -135,7 +135,19 @@ fun SignInScreen(
         background = Color(0xFF111216), surface = Color(0xFF1B1D23), surfaceContainerHigh = Color(0xFF24262D),
         onBackground = Color(0xFFF6F2F3), onSurface = Color(0xFFF6F2F3), onSurfaceVariant = Color(0xFFB5B0BA),
         outline = Color(0xFF45434C), outlineVariant = Color(0xFF303139))
-    MaterialTheme(colorScheme = palette) {
+    // this page is always its own dark design: it brings its own text colour, and in paper it drops paper's square
+    // corners and type, which would otherwise leak in from the app theme around it
+    val appPrefs = com.aurora.music.ui.theme.LocalUiPrefs.current
+    val paper = appPrefs.themeStyle == com.aurora.music.data.ThemeStyle.PAPER
+    val pagePrefs = if (paper) appPrefs.copy(themeStyle = com.aurora.music.data.ThemeStyle.AURORA) else appPrefs
+    MaterialTheme(
+        colorScheme = palette,
+        typography = if (paper) com.aurora.music.ui.theme.auroraTypography(appPrefs.fontScale, typeface = appPrefs.typeface) else MaterialTheme.typography,
+        shapes = if (paper) com.aurora.music.ui.theme.auroraShapes(appPrefs.cornerStyle) else MaterialTheme.shapes,
+    ) { androidx.compose.runtime.CompositionLocalProvider(
+        androidx.compose.material3.LocalContentColor provides palette.onBackground,
+        com.aurora.music.ui.theme.LocalUiPrefs provides pagePrefs,
+    ) {
         BoxWithConstraints(Modifier.fillMaxSize().background(palette.background)) {
             val wide = maxWidth >= 1200.dp
             Box(Modifier.fillMaxWidth().height(280.dp).background(Brush.verticalGradient(listOf(AuroraRose.copy(alpha = .09f), Color.Transparent))))
@@ -233,7 +245,7 @@ fun SignInScreen(
                 }
             }
         }
-    }
+    } }
 }
 
 @Composable
