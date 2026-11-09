@@ -64,6 +64,10 @@ class SearchScreenTest {
         search("search-results-light", SearchUiState(query = "night", results = results), prefs = UiPrefs(themeMode = ThemeMode.LIGHT)).use {
             assertTrue(it.shot().distinctColors(6) > 40)
         }
+        // every catalogue has its own icon in the source picker, in paper's square tiles too
+        val everySource = sources + listOf(SearchSourceChoice("spotify", "Spotify"), SearchSourceChoice("soundcloud", "SoundCloud"))
+        search("search-sources-paper", SearchUiState(query = "night", results = results, sources = everySource, selectedSource = "soundcloud"),
+            prefs = UiPrefs(themeStyle = com.aurora.music.data.ThemeStyle.PAPER)).use { assertTrue(it.shot().distinctColors(6) > 20) }
         search("search-recents", SearchUiState(), recents = listOf("lunar tide", "neon hours", "paper planes")).use { it.shot() }
         search("search-empty", SearchUiState(query = "zzz")).use { assertTrue(it.shot().distinctColors(6) > 5) }
         search("search-loading", SearchUiState(query = "zzz", loading = true)).use { it.shot() }

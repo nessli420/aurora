@@ -37,6 +37,8 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Cloud
+import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -262,6 +264,8 @@ private fun SourcePicker(state: SearchUiState, onSelectSource: (String) -> Unit)
             val icon = when (source.id) {
                 "library" -> Icons.Outlined.LibraryMusic
                 "discovery" -> Icons.Outlined.PlayCircle
+                "spotify" -> Icons.Outlined.GraphicEq
+                "soundcloud" -> Icons.Outlined.Cloud
                 else -> Icons.Outlined.MusicNote
             }
             Box(
