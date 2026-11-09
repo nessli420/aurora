@@ -141,8 +141,9 @@ fun WhatsNewTour(
     fun go(to: Int) { scope.launch { pager.animateScrollToPage(to) } }
     BackHandler { if (pager.currentPage > 0) go(pager.currentPage - 1) else onClose() }
 
-    // owns every touch so nothing reaches the app underneath
-    Box(Modifier.fillMaxSize().auroraBackdrop()
+    // owns every touch so nothing reaches the app underneath. A translucent window's theme colours are
+    // see-through, so the solid background goes down first or the screen behind shows through the tour
+    Box(Modifier.fillMaxSize().background(com.aurora.music.ui.theme.solidColors().background).auroraBackdrop()
         .pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent() } }) {
         HorizontalPager(pager, Modifier.fillMaxSize(), userScrollEnabled = introDone) { index ->
             when (index) {
