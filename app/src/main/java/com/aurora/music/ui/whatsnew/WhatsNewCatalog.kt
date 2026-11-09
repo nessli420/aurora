@@ -2,6 +2,7 @@ package com.aurora.music.ui.whatsnew
 
 import androidx.annotation.StringRes
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Apps
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterAlt
@@ -37,6 +38,9 @@ object WhatsNewCatalog {
             features = listOf(
                 WhatsNewFeature(Icons.Filled.Description, R.string.whats_new_paper_title, R.string.whats_new_paper_body,
                     Routes.SETTINGS_APPEARANCE) { PaperThemePreview() },
+                // Android only: desktop has no launcher icon to switch
+                WhatsNewFeature(Icons.Filled.Apps, R.string.whats_new_paper_icon_title, R.string.whats_new_paper_icon_body,
+                    Routes.SETTINGS_APPEARANCE) { PaperIconPreview() },
             ),
         ),
         WhatsNewRelease(

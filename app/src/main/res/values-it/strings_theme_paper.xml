@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Carta esiste solo in chiaro, come il sito."</string>
     <string name="whats_new_paper_title">"Tema Carta"</string>
     <string name="whats_new_paper_body">"Un nuovo tema preso da auroraplayer.lol: carta calda, inchiostro, cornici sottili, angoli vivi e i caratteri del sito. Solo chiaro. Sceglilo in Aspetto."</string>
+    <string name="whats_new_paper_icon_title">"Icona app Carta"</string>
+    <string name="whats_new_paper_icon_body">"Un'icona della schermata Home in tinta: una A color carta su un quadrato rosa. Sceglila in Icona dell'app, in Aspetto."</string>
 </resources>

@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Papier bestaat alleen in licht, net als de website."</string>
     <string name="whats_new_paper_title">"Papier-thema"</string>
     <string name="whats_new_paper_body">"Een nieuw thema rechtstreeks van auroraplayer.lol: warm papier, inkt, dunne kaders, rechte hoeken en de lettertypes van de site. Alleen licht. Kies het bij Weergave."</string>
+    <string name="whats_new_paper_icon_title">"Papier-app-pictogram"</string>
+    <string name="whats_new_paper_icon_body">"Een bijpassend pictogram voor je startscherm: een papierwitte A op een roze vierkant. Kies het bij App-pictogram in Weergave."</string>
 </resources>

@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Бумага бывает только светлой, как сайт."</string>
     <string name="whats_new_paper_title">"Тема «Бумага»"</string>
     <string name="whats_new_paper_body">"Новая тема прямо с auroraplayer.lol: тёплая бумага, чернила, тонкие рамки, прямые углы и шрифты сайта. Только светлая. Выберите её в разделе «Оформление»."</string>
+    <string name="whats_new_paper_icon_title">"Значок «Бумага»"</string>
+    <string name="whats_new_paper_icon_body">"Значок для главного экрана в тон теме: буква A цвета бумаги на розовом квадрате. Выберите его в разделе «Значок приложения» в «Оформлении»."</string>
 </resources>

@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Kâğıt, web sitesi gibi yalnızca açık temada gelir."</string>
     <string name="whats_new_paper_title">"Kâğıt teması"</string>
     <string name="whats_new_paper_body">"Doğrudan auroraplayer.lol'den yeni bir tema: sıcak kâğıt, mürekkep, ince çerçeveler, keskin köşeler ve sitenin kendi yazı tipleri. Yalnızca açık. Görünüm'den seç."</string>
+    <string name="whats_new_paper_icon_title">"Kâğıt uygulama simgesi"</string>
+    <string name="whats_new_paper_icon_body">"Uyumlu bir ana ekran simgesi: pembe bir kare üzerinde kâğıt beyazı bir A. Görünüm'deki Uygulama simgesi bölümünden seç."</string>
 </resources>

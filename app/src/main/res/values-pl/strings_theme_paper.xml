@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Papier jest dostępny tylko w trybie jasnym, jak strona."</string>
     <string name="whats_new_paper_title">"Motyw Papier"</string>
     <string name="whats_new_paper_body">"Nowy motyw prosto z auroraplayer.lol: ciepły papier, atrament, cienkie ramki, proste rogi i czcionki strony. Tylko jasny. Wybierz go w Wyglądzie."</string>
+    <string name="whats_new_paper_icon_title">"Ikona aplikacji Papier"</string>
+    <string name="whats_new_paper_icon_body">"Pasująca ikona ekranu głównego: papierowobiałe A na różowym kwadracie. Wybierz ją w sekcji Ikona aplikacji w Wyglądzie."</string>
 </resources>

@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"पेपर सिर्फ़ लाइट में आता है, वेबसाइट की तरह।"</string>
     <string name="whats_new_paper_title">"पेपर थीम"</string>
     <string name="whats_new_paper_body">"auroraplayer.lol से सीधी आई नई थीम: गर्म कागज़, स्याही, पतले फ्रेम, सीधे किनारे और साइट के अपने फ़ॉन्ट। सिर्फ़ लाइट। इसे दिखावट में चुनें।"</string>
+    <string name="whats_new_paper_icon_title">"पेपर ऐप आइकन"</string>
+    <string name="whats_new_paper_icon_body">"मेल खाता होम स्क्रीन आइकन: गुलाबी वर्ग पर कागज़ी सफ़ेद A। इसे दिखावट में ऐप आइकन के तहत चुनें।"</string>
 </resources>

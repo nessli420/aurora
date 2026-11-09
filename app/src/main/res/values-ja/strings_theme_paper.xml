@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"ペーパーはウェブサイトと同じくライトのみです。"</string>
     <string name="whats_new_paper_title">"ペーパーテーマ"</string>
     <string name="whats_new_paper_body">"auroraplayer.lol から生まれた新テーマ。温かみのある紙、インク、細い罫線、角ばった形、サイトと同じフォント。ライトのみ。外観から選べます。"</string>
+    <string name="whats_new_paper_icon_title">"ペーパーのアプリアイコン"</string>
+    <string name="whats_new_paper_icon_body">"テーマに合うホーム画面アイコン：ローズ色の正方形に紙色の A。外観の「アプリアイコン」から選べます。"</string>
 </resources>

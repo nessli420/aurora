@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.requiredSize
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.systemBars
@@ -81,6 +82,7 @@ import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -101,6 +103,7 @@ import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.util.lerp as lerpFloat
+import androidx.core.graphics.drawable.toBitmap
 import com.aurora.music.R
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.WhatsNew
@@ -642,6 +645,52 @@ internal fun PaperThemePreview() {
                     }
                     Spacer(Modifier.weight(1f))
                     com.aurora.music.ui.theme.PaperSwitch(true, null)
+                }
+            }
+        }
+    }
+}
+
+/** The Paper launcher icon, square as Paper draws it, over the app icon picker with Paper chosen. */
+@Composable
+internal fun PaperIconPreview() {
+    val context = androidx.compose.ui.platform.LocalContext.current
+    val density = androidx.compose.ui.platform.LocalDensity.current
+    val smallPx = with(density) { 36.dp.roundToPx() }
+    val icons = remember(smallPx) {
+        com.aurora.music.ui.appicon.AppIcon.entries.map { icon ->
+            icon to androidx.core.content.ContextCompat.getDrawable(context, icon.icon)
+                ?.toBitmap(smallPx, smallPx)?.asImageBitmap()
+        }
+    }
+    val paper = com.aurora.music.ui.theme.styleColorScheme(ThemeStyle.PAPER, false)
+    Column(
+        Modifier.fillMaxSize().background(paper.background).padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Spacer(Modifier.weight(1f))
+        // an adaptive icon shows the middle 72 of its 108 canvas, so the layers are drawn 1.5x and cropped square
+        Box(Modifier.size(104.dp).clip(androidx.compose.ui.graphics.RectangleShape), contentAlignment = Alignment.Center) {
+            listOf(R.drawable.ic_launcher_paper_background, R.drawable.ic_launcher_paper_foreground).forEach { layer ->
+                androidx.compose.foundation.Image(
+                    androidx.compose.ui.res.painterResource(layer), contentDescription = null,
+                    modifier = Modifier.requiredSize(156.dp),
+                )
+            }
+        }
+        Spacer(Modifier.height(10.dp))
+        Text(appString(R.string.app_name), style = MaterialTheme.typography.labelLarge, color = paper.onBackground)
+        Spacer(Modifier.weight(1f))
+        Box(Modifier.fillMaxWidth().height(1.dp).background(paper.outlineVariant))
+        Spacer(Modifier.height(12.dp))
+        Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            icons.forEach { (icon, bitmap) ->
+                val chosen = icon == com.aurora.music.ui.appicon.AppIcon.PAPER
+                Box(
+                    Modifier.border(if (chosen) 2.dp else 1.dp, if (chosen) paper.primary else paper.outlineVariant).padding(6.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    if (bitmap != null) androidx.compose.foundation.Image(bitmap, contentDescription = null, modifier = Modifier.size(36.dp))
                 }
             }
         }

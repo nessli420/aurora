@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"O Papel só existe no modo claro, como o site."</string>
     <string name="whats_new_paper_title">"Tema Papel"</string>
     <string name="whats_new_paper_body">"Um tema novo tirado do auroraplayer.lol: papel quente, tinta, molduras finas, cantos retos e as fontes do próprio site. Só claro. Escolha em Aparência."</string>
+    <string name="whats_new_paper_icon_title">"Ícone de app Papel"</string>
+    <string name="whats_new_paper_icon_body">"Um ícone de tela inicial combinando: um A cor de papel num quadrado rosa. Escolha em Ícone do app, em Aparência."</string>
 </resources>

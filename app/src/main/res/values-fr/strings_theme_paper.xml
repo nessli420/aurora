@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Papier existe uniquement en clair, comme le site."</string>
     <string name="whats_new_paper_title">"Thème Papier"</string>
     <string name="whats_new_paper_body">"Un nouveau thème tiré de auroraplayer.lol : papier chaud, encre, filets fins, angles droits et les polices du site. Clair uniquement. Choisissez-le dans Apparence."</string>
+    <string name="whats_new_paper_icon_title">"Icône d'app Papier"</string>
+    <string name="whats_new_paper_icon_body">"Une icône d'écran d'accueil assortie : un A couleur papier sur un carré rose. Choisissez-la dans Icône de l'application, sous Apparence."</string>
 </resources>

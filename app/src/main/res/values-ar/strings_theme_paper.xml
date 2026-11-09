@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"سمة الورق فاتحة فقط، مثل الموقع."</string>
     <string name="whats_new_paper_title">"سمة الورق"</string>
     <string name="whats_new_paper_body">"سمة جديدة مأخوذة من auroraplayer.lol: ورق دافئ وحبر وإطارات رفيعة وحواف مربعة وخطوط الموقع نفسها. فاتحة فقط. اخترها من المظهر."</string>
+    <string name="whats_new_paper_icon_title">"أيقونة تطبيق الورق"</string>
+    <string name="whats_new_paper_icon_body">"أيقونة متناسقة للشاشة الرئيسية: حرف A بلون الورق على مربع وردي. اخترها من أيقونة التطبيق في المظهر."</string>
 </resources>

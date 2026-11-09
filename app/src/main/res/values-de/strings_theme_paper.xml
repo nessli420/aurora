@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Papier gibt es nur hell, wie die Website."</string>
     <string name="whats_new_paper_title">"Papier-Design"</string>
     <string name="whats_new_paper_body">"Ein neues Design direkt von auroraplayer.lol: warmes Papier, Tinte, Haarlinien-Rahmen, eckige Kanten und die Schriften der Website. Nur hell. Wähle es unter Darstellung."</string>
+    <string name="whats_new_paper_icon_title">"Papier-App-Symbol"</string>
+    <string name="whats_new_paper_icon_body">"Ein passendes Symbol für den Startbildschirm: ein papierweißes A auf einem rosa Quadrat. Wähle es unter App-Symbol in Darstellung."</string>
 </resources>

@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"纸张主题和网站一样，只有浅色。"</string>
     <string name="whats_new_paper_title">"纸张主题"</string>
     <string name="whats_new_paper_body">"直接取自 auroraplayer.lol 的新主题：暖色纸张、墨色、细线边框、直角，以及网站本身的字体。仅限浅色。可在外观中选择。"</string>
+    <string name="whats_new_paper_icon_title">"纸张应用图标"</string>
+    <string name="whats_new_paper_icon_body">"与主题相配的主屏幕图标：玫瑰色方块上的纸白色 A。可在外观的“应用图标”中选择。"</string>
 </resources>

@@ -6,4 +6,6 @@
     <string name="theme_paper_light_only">"Paper comes in light only, like the website."</string>
     <string name="whats_new_paper_title">"Paper theme"</string>
     <string name="whats_new_paper_body">"A new theme straight from auroraplayer.lol: warm paper, ink, hairline frames, square edges and the site's own fonts. Light only. Pick it in Appearance."</string>
+    <string name="whats_new_paper_icon_title">"Paper app icon"</string>
+    <string name="whats_new_paper_icon_body">"A home screen icon to match: a paper-white A on a rose square. Pick it under App Icon in Appearance."</string>
 </resources>
