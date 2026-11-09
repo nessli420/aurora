@@ -178,7 +178,7 @@ private fun Avatar(identity: ProfileIdentity, size: Dp) {
     Box(
         Modifier.size(size).paperClip(CircleShape)
             .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
-            .border(4.dp, MaterialTheme.colorScheme.background, CircleShape),
+            .border(4.dp, MaterialTheme.colorScheme.background, com.aurora.music.ui.theme.paperSquare(CircleShape)),
         contentAlignment = Alignment.Center,
     ) {
         if (identity.avatarUrl.isNotBlank()) {

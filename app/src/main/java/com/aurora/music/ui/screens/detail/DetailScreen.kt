@@ -490,7 +490,7 @@ fun DetailScreen(
                             modifier = Modifier
                                 .paperClip(RoundedCornerShape(50))
                                 .background(if (selected) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHigh)
-                                .then(if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.6f), RoundedCornerShape(50)) else Modifier)
+                                .then(if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.6f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(50))) else Modifier)
                                 .clickable { genreFilter = if (i == 0) null else label }
                                 .padding(horizontal = 14.dp, vertical = 7.dp),
                         )

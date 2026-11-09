@@ -1344,7 +1344,7 @@ private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
     ) {
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
             Artwork(row.art, row.accent, Modifier.fillMaxSize(), corner = if (row.circle) 400.dp else 14.dp)
-            if (selected) Box(Modifier.matchParentSize().border(3.dp, MaterialTheme.colorScheme.primary, artShape(row)))
+            if (selected) Box(Modifier.matchParentSize().border(3.dp, MaterialTheme.colorScheme.primary, com.aurora.music.ui.theme.paperSquare(artShape(row))))
             if (row.badge.isNotBlank()) Badge(row.badge, Modifier.align(Alignment.TopStart))
             if (showActions) {
                 Box(Modifier.align(Alignment.TopEnd).padding(6.dp)) {

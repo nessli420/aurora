@@ -246,7 +246,7 @@ private fun SourceLabel(label: String) {
 @Composable
 private fun ServerTile(title: String, subtitle: String, icon: ImageVector, modifier: Modifier, enabled: Boolean, onClick: () -> Unit) {
     Column(modifier.paperClip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface)
-        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+        .border(1.dp, MaterialTheme.colorScheme.outlineVariant, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp)))
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Icon(icon, null, tint = AuroraRose, modifier = Modifier.size(24.dp))
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
@@ -286,7 +286,7 @@ private fun SpotifyStep(state: AuthUiState, onConnect: (String) -> Unit) {
         Spacer(Modifier.height(12.dp))
         Box(
             Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp))
-                .border(1.dp, AuroraRose.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                .border(1.dp, AuroraRose.copy(alpha = 0.6f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(12.dp)))
                 .clickable {
                     runCatching { ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://developer.spotify.com/dashboard"))) }
                 }
@@ -319,7 +319,7 @@ private fun SpotifyStep(state: AuthUiState, onConnect: (String) -> Unit) {
 private fun ServerTypeCard(icon: ImageVector, title: String, subtitle: String, enabled: Boolean = true, featured: Boolean = false, onClick: () -> Unit) {
     Row(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(20.dp))
         .background(if (featured) AuroraRose.copy(alpha = .10f) else MaterialTheme.colorScheme.surface)
-        .border(1.dp, if (featured) AuroraRose.copy(alpha = .3f) else MaterialTheme.colorScheme.outlineVariant, RoundedCornerShape(20.dp))
+        .border(1.dp, if (featured) AuroraRose.copy(alpha = .3f) else MaterialTheme.colorScheme.outlineVariant, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp)))
         .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(42.dp).paperClip(RoundedCornerShape(13.dp)).background(AuroraRose.copy(alpha = .10f)), contentAlignment = Alignment.Center) {
             Icon(icon, null, tint = AuroraRose, modifier = Modifier.size(23.dp))
@@ -472,7 +472,7 @@ private fun SchemePill(label: String, selected: Boolean, modifier: Modifier = Mo
             .height(46.dp)
             .paperClip(RoundedCornerShape(12.dp))
             .background(if (selected) AuroraRose else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
-            .then(if (selected) Modifier else Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), RoundedCornerShape(12.dp)))
+            .then(if (selected) Modifier else Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(12.dp))))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
     ) {

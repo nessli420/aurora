@@ -82,7 +82,7 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
             Row(
                 Modifier.fillMaxWidth().paperClip(RoundedCornerShape(20.dp))
                     .background(Brush.horizontalGradient(listOf(colors.primary.copy(alpha = .13f), colors.surfaceContainerHigh)))
-                    .border(1.dp, colors.primary.copy(alpha = .12f), RoundedCornerShape(20.dp))
+                    .border(1.dp, colors.primary.copy(alpha = .12f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp)))
                     .padding(14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {

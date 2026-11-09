@@ -170,7 +170,7 @@ private fun ShelfChevron(icon: ImageVector, label: String, onClick: () -> Unit) 
     Box(
         Modifier.size(36.dp).paperClip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.9f))
-            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), CircleShape)
+            .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f), com.aurora.music.ui.theme.paperSquare(CircleShape))
             .clickable(onClickLabel = label, onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand),
         contentAlignment = Alignment.Center,

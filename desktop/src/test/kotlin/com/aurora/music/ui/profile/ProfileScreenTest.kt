@@ -165,5 +165,13 @@ class ProfileScreenTest {
                 onEditProfile = {}, playlists = playlists, artists = artists, onBack = {}, onOpenSettings = {}, onOpenDetail = { _, _ -> })
         }.use { it.shot() }
         assertTrue(styled.differsFrom(plain))
+        // paper squares the avatar, and its frame has to follow rather than ring a circle inside the square
+        val paper = AccountScene("profile-local-paper", prefs = com.aurora.music.data.UiPrefs(themeStyle = com.aurora.music.data.ThemeStyle.PAPER),
+            seed = { settingsStore.setLocalProfile(LocalProfile("Mara", avatar, banner)) }) {
+            val appearance = rememberProfileAppearance(local)
+            ProfileScreen(padding, appearance.name, local.server, "Local", appearance.avatarUrl, appearance.bannerUrl,
+                onEditProfile = {}, playlists = playlists, artists = artists, onBack = {}, onOpenSettings = {}, onOpenDetail = { _, _ -> })
+        }.use { it.shot() }
+        assertTrue(paper.differsFrom(styled))
     }
 }

@@ -215,7 +215,7 @@ private fun Swatches(label: String, selected: Int, onPick: (Int) -> Unit) {
                 val isSel = c == selected
                 Box(
                     Modifier.size(34.dp).paperClip(CircleShape).background(Color(c))
-                        .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, CircleShape) else Modifier)
+                        .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, com.aurora.music.ui.theme.paperSquare(CircleShape)) else Modifier)
                         .clickable { onPick(c) },
                 )
             }

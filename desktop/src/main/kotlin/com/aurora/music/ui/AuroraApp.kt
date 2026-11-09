@@ -1746,7 +1746,7 @@ private fun DownloadProgressBanner(count: Int) {
             .fillMaxWidth()
             .then(if (classic) Modifier.paperClip(RoundedCornerShape(themedCorner(18.dp)))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.96f))
-                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(themedCorner(18.dp)))
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(18.dp))))
                 .glassEdge(RoundedCornerShape(themedCorner(18.dp)))
                 else Modifier.auroraPanel(MaterialTheme.shapes.large))
             .padding(horizontal = 14.dp, vertical = 10.dp),

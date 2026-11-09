@@ -307,7 +307,7 @@ private fun MixTimeline(project: MixProject, analyses: Map<String, MixAnalysis>,
             val analysis = analyses[clip.song.id]
             val audibleClip = remember(clip) { clip.copy(muted = false) }
             Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(8.dp)).clickable { onSelect(clip.id) }
-                .then(if (clip.id == selected) Modifier.border(1.dp, color, RoundedCornerShape(8.dp)) else Modifier)
+                .then(if (clip.id == selected) Modifier.border(1.dp, color, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(8.dp))) else Modifier)
                 .padding(horizontal = 8.dp, vertical = 6.dp)) {
                 Text("${index + 1}  ${clip.song.title}${if (clip.muted) appString(R.string.text_muted_b6a778) else if (clip.solo) appString(R.string.text_solo_6d717d) else ""}",
                     style = MaterialTheme.typography.labelMedium, color = if (clip.id == selected) color else foreground,

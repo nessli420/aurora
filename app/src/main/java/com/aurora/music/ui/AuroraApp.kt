@@ -1909,7 +1909,7 @@ private fun DownloadProgressBanner(count: Int) {
             .fillMaxWidth()
             .then(if (classic) Modifier.paperClip(RoundedCornerShape(18.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
-                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(18.dp))
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)))
                 else if (com.aurora.music.ui.theme.isGlassTheme()) Modifier.liquidGlass(com.aurora.music.ui.theme.LocalGlassBackdrop.current, com.kyant.shapes.RoundedRectangle(24.dp), refraction = 16.dp)
                 else Modifier.auroraPanel(MaterialTheme.shapes.large))
             .padding(horizontal = 16.dp, vertical = 11.dp),
@@ -1969,7 +1969,7 @@ private fun FloatingNav(
             .fillMaxWidth()
             .then(if (classic) Modifier.paperClip(RoundedCornerShape(26.dp))
                 .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.96f))
-                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), RoundedCornerShape(26.dp))
+                .border(1.dp, MaterialTheme.colorScheme.onSurface.copy(alpha = 0.06f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(26.dp)))
                 else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true))
             .padding(6.dp),
         horizontalArrangement = Arrangement.spacedBy(4.dp),

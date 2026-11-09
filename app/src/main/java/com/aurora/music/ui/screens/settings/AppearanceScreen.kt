@@ -409,7 +409,7 @@ private fun AccentPresetGrid(selected: Int, onSelect: (Int) -> Unit) {
                     Box(
                         Modifier.weight(1f).height(56.dp).paperClip(RoundedCornerShape(16.dp))
                             .background(preset.seed)
-                            .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, RoundedCornerShape(16.dp)) else Modifier)
+                            .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) else Modifier)
                             .clickable { onSelect(index) },
                         contentAlignment = Alignment.Center,
                     ) {
@@ -442,7 +442,7 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(Modifier.size(56.dp).paperClip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, CircleShape))
+            Box(Modifier.size(56.dp).paperClip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, com.aurora.music.ui.theme.paperSquare(CircleShape)))
             Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         DirectSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f) { hue = it; push() }
