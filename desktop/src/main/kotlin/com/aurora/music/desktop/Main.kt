@@ -55,6 +55,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.merge
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeoutOrNull
@@ -91,7 +92,8 @@ fun main() {
     val (language, savedWindow, initialPrefs) = runBlocking {
         Triple(settings.languageTag.first(), settings.window.first(), container.settingsStore.uiPrefs.first())
     }
-    val initialTranslucent = runBlocking { settings.translucentWindow.first() }
+    // paper is flat paper like the website, so it keeps the window opaque whatever the translucency setting says
+    val initialTranslucent = runBlocking { settings.translucentWindow.first() } && initialPrefs.themeStyle != com.aurora.music.data.ThemeStyle.PAPER
     val glassAtStart = initialTranslucent && WindowBackdrop.supported
     val customTitleBar = !runBlocking { settings.systemTitleBar.first() }
     AppStrings.setLocale(language)
@@ -120,7 +122,10 @@ fun main() {
         var caption by remember { mutableStateOf<CaptionFrame?>(null) }
         var quitting by remember { mutableStateOf(false) }
         val closeToTray by settings.closeToTray.collectAsState(false)
-        val translucentWindow by settings.translucentWindow.collectAsState(initialTranslucent)
+        val translucentSetting by settings.translucentWindow.collectAsState(initialTranslucent)
+        val paperTheme by remember { container.settingsStore.uiPrefs.map { it.themeStyle == com.aurora.music.data.ThemeStyle.PAPER } }
+            .collectAsState(initialPrefs.themeStyle == com.aurora.music.data.ThemeStyle.PAPER)
+        val translucentWindow = translucentSetting && !paperTheme
         val micaBackdrop by settings.micaBackdrop.collectAsState(false)
         val glassLook by settings.glassLook.collectAsState(GlassLook())
         val trayAvailable = remember { runCatching { SystemTray.isSupported() }.getOrDefault(false) }

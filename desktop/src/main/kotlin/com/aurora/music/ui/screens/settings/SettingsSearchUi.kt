@@ -2,6 +2,9 @@ package com.aurora.music.ui.screens.settings
 
 import androidx.compose.foundation.background
 import com.aurora.music.ui.theme.paperClip
+import com.aurora.music.ui.theme.paperFrame
+import androidx.compose.foundation.layout.calculateStartPadding
+import androidx.compose.foundation.layout.calculateEndPadding
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -48,28 +51,36 @@ internal data class SettingsSearchHit(val title: String, val subtitle: String, v
 internal fun SettingsSearchField(query: String, onQuery: (String) -> Unit, modifier: Modifier = Modifier) {
     val colors = MaterialTheme.colorScheme
     val focus = LocalFocusManager.current
-    Row(
-        modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
-            .paperClip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh)
-            .padding(start = 14.dp, end = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Icon(Icons.Filled.Search, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        Spacer(Modifier.width(10.dp))
-        Box(Modifier.weight(1f).padding(vertical = 13.dp)) {
-            if (query.isEmpty()) Text(appString(R.string.settings_search_hint), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
-            BasicTextField(
-                value = query, onValueChange = onQuery, singleLine = true,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
-                cursorBrush = SolidColor(colors.primary),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { focus.clearFocus() }),
-                modifier = Modifier.fillMaxWidth(),
-            )
-        }
-        if (query.isNotEmpty()) {
-            Icon(Icons.Filled.Close, appString(R.string.settings_search_clear), tint = colors.onSurfaceVariant,
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onQuery("") }.padding(10.dp))
+    // sits outside the settings list, so it takes the list's own side padding to line up with the groups below
+    androidx.compose.foundation.layout.BoxWithConstraints(modifier.fillMaxWidth()) {
+        val list = settingsContentPadding(maxWidth, androidx.compose.foundation.layout.PaddingValues())
+        val direction = androidx.compose.ui.platform.LocalLayoutDirection.current
+        Row(
+            Modifier.fillMaxWidth()
+                .padding(start = list.calculateStartPadding(direction), end = list.calculateEndPadding(direction))
+                .padding(horizontal = 12.dp, vertical = 6.dp)
+                // paper frames it in ink like the groups under it
+                .paperFrame(RoundedCornerShape(50), fallback = { background(colors.surfaceContainerHigh) })
+                .padding(start = 14.dp, end = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            Icon(Icons.Filled.Search, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(10.dp))
+            Box(Modifier.weight(1f).padding(vertical = 13.dp)) {
+                if (query.isEmpty()) Text(appString(R.string.settings_search_hint), style = MaterialTheme.typography.bodyLarge, color = colors.onSurfaceVariant)
+                BasicTextField(
+                    value = query, onValueChange = onQuery, singleLine = true,
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(color = colors.onSurface),
+                    cursorBrush = SolidColor(colors.primary),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = androidx.compose.foundation.text.KeyboardActions(onSearch = { focus.clearFocus() }),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+            if (query.isNotEmpty()) {
+                Icon(Icons.Filled.Close, appString(R.string.settings_search_clear), tint = colors.onSurfaceVariant,
+                    modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onQuery("") }.padding(10.dp))
+            }
         }
     }
 }

@@ -113,14 +113,16 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 )
             }
 
-            if (backdropAvailable) item {
+            // paper stays flat and opaque like the site, so the window glass settings go with the mode picker
+            val glassSettings = backdropAvailable && prefs.themeStyle != ThemeStyle.PAPER
+            if (glassSettings) item {
                 SettingsSwitchRow(
                     title = appString(R.string.text_translucent_window_d865c7),
                     subtitle = appString(R.string.text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192),
                     checked = translucentWindow,
                 ) { v -> scope.launch { desktopSettings.setTranslucentWindow(v) } }
             }
-            if (backdropAvailable && translucentWindow) {
+            if (glassSettings && translucentWindow) {
                 item {
                     SegmentedRow(appString(R.string.text_backdrop_d4f5e9),
                         listOf(appString(R.string.text_acrylic_f39ce1), appString(R.string.text_mica_3ccf84)), if (micaBackdrop) 1 else 0) { i ->
