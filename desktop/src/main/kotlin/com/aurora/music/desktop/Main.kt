@@ -208,6 +208,7 @@ fun main() {
                 response.cancelQuit()
                 java.awt.EventQueue.invokeLater { quit() }
             }
+            com.aurora.music.desktop.mac.MacQuitMenu.install { java.awt.EventQueue.invokeLater { quit() } }
             if (supports(java.awt.Desktop.Action.APP_PREFERENCES)) desktop.setPreferencesHandler {
                 java.awt.EventQueue.invokeLater { show(); shortcuts.tryEmit(Shortcut.SETTINGS) }
             }
@@ -294,6 +295,8 @@ fun main() {
             }
         }
     }
+    // chromium leaves threads behind on macos that keep the jvm alive once the window loop ends
+    if (HostPlatform.isMac) kotlin.system.exitProcess(0)
 }
 
 private fun onScreen(window: SavedWindow): Boolean = runCatching {
