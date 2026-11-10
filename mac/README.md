@@ -63,6 +63,7 @@ xattr -dr com.apple.quarantine /Applications/Aurora.app
   | Back | ⌘ [ or Esc |
   | Shortcut list | ⌘ / |
 
+- **Aurora's own title bar.** The bar at the top takes the theme's colour and shows the Aurora logo, as on Windows, with the red, yellow and green buttons on the left working as usual. For the standard grey macOS title bar, turn on **Settings → Appearance → System title bar** and restart Aurora.
 - **The usual Mac behaviour.** ⌘Q and **Aurora → Quit** save your place and quit cleanly, **Aurora → Settings…** opens settings, and clicking the Dock icon brings the window back after it was hidden.
 - **Media keys and Now Playing.** The play/pause, next and previous keys, AirPods and headphone buttons, and the Now Playing widget in Control Center and the menu bar control Aurora. The widget shows the title, artist and cover, and you can scrub, shuffle and repeat from it.
 - **Close to the menu bar.** The red close button keeps Aurora playing in the menu bar and takes it out of the Dock. Click the menu bar icon for play/pause, next, previous, **Show** and **Close**; showing the window brings Aurora back to the Dock. ⌘Q still quits. Turn it off under **Settings → Close to menu bar** to make the close button quit instead.

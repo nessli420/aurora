@@ -69,6 +69,10 @@ private val BarHeight = 36.dp
 private val ButtonWidth = 46.dp
 private val CloseRed = Color(0xFFC42B1C)
 
+// macos: the native title bar is 28pt tall and its traffic lights take the first 78pt
+internal val MacBarHeight = 28.dp
+internal val MacLightsWidth = 78.dp
+
 private enum class Glyph { MINIMIZE, MAXIMIZE, RESTORE, CLOSE }
 
 // caption: windows keeps its native frame and handles the drag area and maximize button itself; null means compose moves the window
@@ -107,6 +111,25 @@ fun TitleBar(window: ComposeWindow, state: WindowState, caption: CaptionFrame?, 
             nativeHover = caption?.maximizeHovered == true, nativePress = caption?.maximizePressed == true, onClick = toggle,
         )
         CaptionButton(Glyph.CLOSE, appString(R.string.text_close_bbfa77), ink, onClick = onClose)
+    }
+}
+
+// macos: the system's own traffic lights sit on the left of this bar (MacTitleBar.install), so it only adds the logo and name
+@Composable
+fun MacTitleBar(window: ComposeWindow, state: WindowState) {
+    val toggle = { state.placement = if (state.placement == WindowPlacement.Maximized) WindowPlacement.Floating else WindowPlacement.Maximized }
+    // the transparent native bar normally takes the drag and the double click itself; these only act if it lets them through
+    MacTitleBarContent(Modifier.windowDrag(window, X11MoveResize.MOVE).pointerInput(Unit) { detectTapGestures(onDoubleTap = { toggle() }) })
+}
+
+@Composable
+internal fun MacTitleBarContent(modifier: Modifier = Modifier) {
+    val focused = LocalWindowInfo.current.isWindowFocused
+    Row(modifier.fillMaxWidth().height(MacBarHeight).padding(start = MacLightsWidth), verticalAlignment = Alignment.CenterVertically) {
+        Icon(rememberVectorPainter(AuroraLogo), null, tint = MaterialTheme.colorScheme.primary.copy(alpha = if (focused) 1f else 0.5f), modifier = Modifier.size(14.dp))
+        Spacer(Modifier.width(8.dp))
+        Text("Aurora", style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
+            color = MaterialTheme.colorScheme.onBackground.copy(alpha = if (focused) 0.9f else 0.45f))
     }
 }
 
