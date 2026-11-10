@@ -39,6 +39,7 @@ import com.aurora.music.desktop.ui.LocalBackdropAvailable
 import com.aurora.music.desktop.ui.LocalTrayAvailable
 import com.aurora.music.desktop.ui.LocalWindowShown
 import com.aurora.music.desktop.ui.Shortcut
+import com.aurora.music.desktop.ui.MacTitleBar
 import com.aurora.music.desktop.ui.TitleBar
 import com.aurora.music.desktop.ui.WindowChrome
 import com.aurora.music.desktop.ui.WindowResizeEdges
@@ -120,7 +121,8 @@ fun main() {
         var composeWindow by remember { mutableStateOf<androidx.compose.ui.awt.ComposeWindow?>(null) }
         var borderless by remember { mutableStateOf(false) }
         var visible by remember { mutableStateOf(true) }
-        var revealed by remember { mutableStateOf(!glassAtStart && !(customTitleBar && HostPlatform.isWindows)) }
+        // windows and macos set up their title bar on the hidden window, before it first shows
+        var revealed by remember { mutableStateOf(!glassAtStart && !(customTitleBar && (HostPlatform.isWindows || HostPlatform.isMac))) }
         var caption by remember { mutableStateOf<CaptionFrame?>(null) }
         var quitting by remember { mutableStateOf(false) }
         val closeToTray by settings.closeToTray.collectAsState(HostPlatform.isMac)
@@ -241,7 +243,8 @@ fun main() {
                 window.minimumSize = Dimension(960, 600)
                 if (!revealed) {
                     if (glassAtStart) WindowBackdrop.prepare(window)
-                    if (customTitleBar) caption = CaptionFrame.install(window)
+                    if (customTitleBar && HostPlatform.isMac) com.aurora.music.desktop.mac.MacTitleBar.install(window.rootPane)
+                    else if (customTitleBar) caption = CaptionFrame.install(window)
                     revealed = true
                 }
                 while (!window.isDisplayable) delay(16)
@@ -278,7 +281,12 @@ fun main() {
                         shortcuts = shortcuts,
                         fullscreen = fullscreen,
                         onFullscreenChange = ::setFullscreen,
-                        titleBar = { if ((caption != null || undecorated) && !fullscreen) TitleBar(window, windowState, caption, ::close) },
+                        titleBar = {
+                            if (!fullscreen) when {
+                                customTitleBar && HostPlatform.isMac -> MacTitleBar(window, windowState)
+                                caption != null || undecorated -> TitleBar(window, windowState, caption, ::close)
+                            }
+                        },
                     )
                     if (undecorated && windowState.placement == WindowPlacement.Floating) WindowResizeEdges(window)
                     com.aurora.music.ui.screens.auth.SoundCloudCaptchaWindow(container.soundcloudWriter)
