@@ -58,6 +58,9 @@
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Укажите, где на этом компьютере хранится ваша музыка"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Очистить кэш изображений"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Сворачивать в трей"</string>
+    <string name="text_translucent_window_detail_mac" formatted="false">"Рабочий стол просвечивает сквозь окно с размытием."</string>
+    <string name="text_clear_mac" formatted="false">"Прозрачное"</string>
+    <string name="text_frosted_mac" formatted="false">"Матовое"</string>
     <string name="text_close_to_menu_bar_mac" formatted="false">"Сворачивать в строку меню"</string>
     <string name="text_close_to_menu_bar_detail_mac" formatted="false">"После закрытия окна Aurora продолжает играть из строки меню и исчезает из Dock, пока вы снова её не откроете."</string>
     <string name="text_date_added_56ab7a" formatted="false">"Дата добавления"</string>

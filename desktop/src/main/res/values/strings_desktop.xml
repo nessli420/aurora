@@ -58,6 +58,9 @@
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Choose where your music lives on this PC"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Clear image cache"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Close to tray"</string>
+    <string name="text_translucent_window_detail_mac" formatted="false">"Let your desktop show through the window, blurred."</string>
+    <string name="text_clear_mac" formatted="false">"Clear"</string>
+    <string name="text_frosted_mac" formatted="false">"Frosted"</string>
     <string name="text_close_to_menu_bar_mac" formatted="false">"Close to menu bar"</string>
     <string name="text_close_to_menu_bar_detail_mac" formatted="false">"Keep Aurora playing in the menu bar when the window closes. It leaves the Dock until you open it again."</string>
     <string name="text_date_added_56ab7a" formatted="false">"Date added"</string>

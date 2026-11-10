@@ -30,9 +30,12 @@ object WindowBackdrop {
     private const val GWLP_WNDPROC = -4
     private const val WM_NCACTIVATE = 0x0086
 
-    val supported: Boolean by lazy { HostPlatform.isWindows && runCatching { windowsBuild() >= FIRST_BACKDROP_BUILD }.getOrDefault(false) }
+    val supported: Boolean by lazy {
+        HostPlatform.isMac || (HostPlatform.isWindows && runCatching { windowsBuild() >= FIRST_BACKDROP_BUILD }.getOrDefault(false))
+    }
 
     fun prepare(window: ComposeWindow) {
+        if (HostPlatform.isMac) return com.aurora.music.desktop.mac.MacBackdrop.prepare(window)
         runCatching {
             window.find(SkiaLayer::class.java)?.transparency = true
             window.paintBehind(Color.BLACK)
@@ -41,6 +44,8 @@ object WindowBackdrop {
 
     fun apply(window: ComposeWindow, enabled: Boolean, mica: Boolean = false): Boolean {
         if (!supported) return false
+        // on macos the second backdrop is the frosted blur rather than mica
+        if (HostPlatform.isMac) return com.aurora.music.desktop.mac.MacBackdrop.apply(window, enabled, frosted = mica)
         val hwnd = window.windowHandle
         if (hwnd == 0L) return false
         return runCatching {

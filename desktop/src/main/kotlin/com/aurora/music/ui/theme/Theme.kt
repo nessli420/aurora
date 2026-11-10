@@ -213,7 +213,9 @@ fun AuroraTheme(
             }
         }
         if (amoled) scheme = scheme.toAmoled()
-        val tint = scheme.background.copy(alpha = (0.35f + glassLook.tint * 0.65f + if (amoled) 0.15f else 0f).coerceIn(0f, 1f))
+        // the macos blur is already dark and dense, so only the user's own tint goes over it there
+        val floor = if (com.aurora.music.desktop.platform.HostPlatform.isMac) 0f else 0.35f + if (amoled) 0.15f else 0f
+        val tint = scheme.background.copy(alpha = (floor + glassLook.tint * 0.65f).coerceIn(0f, 1f))
         Triple(if (translucent) scheme.glassScheme(useDark, glassLook) else scheme, scheme, tint)
     }
 

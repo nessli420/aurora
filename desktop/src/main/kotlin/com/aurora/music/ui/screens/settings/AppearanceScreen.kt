@@ -118,14 +118,16 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
             if (glassSettings) item {
                 SettingsSwitchRow(
                     title = appString(R.string.text_translucent_window_d865c7),
-                    subtitle = appString(R.string.text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192),
+                    subtitle = appString(if (com.aurora.music.desktop.platform.HostPlatform.isMac) R.string.text_translucent_window_detail_mac
+                        else R.string.text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192),
                     checked = translucentWindow,
                 ) { v -> scope.launch { desktopSettings.setTranslucentWindow(v) } }
             }
             if (glassSettings && translucentWindow) {
                 item {
                     SegmentedRow(appString(R.string.text_backdrop_d4f5e9),
-                        listOf(appString(R.string.text_acrylic_f39ce1), appString(R.string.text_mica_3ccf84)), if (micaBackdrop) 1 else 0) { i ->
+                        if (com.aurora.music.desktop.platform.HostPlatform.isMac) listOf(appString(R.string.text_clear_mac), appString(R.string.text_frosted_mac))
+                        else listOf(appString(R.string.text_acrylic_f39ce1), appString(R.string.text_mica_3ccf84)), if (micaBackdrop) 1 else 0) { i ->
                         scope.launch { desktopSettings.setMicaBackdrop(i == 1) }
                     }
                 }

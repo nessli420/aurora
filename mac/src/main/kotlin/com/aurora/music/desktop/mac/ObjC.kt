@@ -30,6 +30,7 @@ internal object ObjC {
     private val runtime: Runtime = Native.load("objc", Runtime::class.java)
 
     fun cls(name: String): Pointer = checkNotNull(runtime.objc_getClass(name)) { "No Objective-C class $name" }
+    fun clsOrNull(name: String): Pointer? = runtime.objc_getClass(name)
     fun sel(name: String): Pointer = runtime.sel_registerName(name)
 
     fun msg(receiver: Pointer?, selector: String, vararg args: Any?): Pointer? =
@@ -57,6 +58,11 @@ internal object ObjC {
         methods.forEach { (selector, method) -> runtime.class_addMethod(cls, sel(selector), method.first, method.second) }
         runtime.objc_registerClassPair(cls)
         return cls
+    }
+
+    @com.sun.jna.Structure.FieldOrder("x", "y", "width", "height")
+    open class NSRect(@JvmField var x: Double = 0.0, @JvmField var y: Double = 0.0, @JvmField var width: Double = 0.0, @JvmField var height: Double = 0.0) : com.sun.jna.Structure() {
+        class ByValue(x: Double = 0.0, y: Double = 0.0, width: Double = 0.0, height: Double = 0.0) : NSRect(x, y, width, height), com.sun.jna.Structure.ByValue
     }
 
     /** The value of an exported NSString constant, such as MPMediaItemPropertyTitle. */
