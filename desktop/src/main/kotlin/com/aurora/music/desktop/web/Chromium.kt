@@ -170,7 +170,8 @@ object Chromium {
     suspend fun open(url: String, hidden: Boolean, origins: Set<String>): WebPage {
         val client = client()
         return withContext(Dispatchers.Swing) {
-            val browser = client.createBrowser(url, true, false)
+            // jcef's off-screen browser draws through jogl, which takes the app down on current macos
+            val browser = if (HostPlatform.isMac) org.cef.browser.CefBrowserSwing(client, url) else client.createBrowser(url, true, false)
             correctWheel(browser.uiComponent)
             WebPage(browser, origins, hidden).also { page ->
                 pages[browser] = page

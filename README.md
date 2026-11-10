@@ -6,7 +6,7 @@ An Android music player built for everyday listening and detailed audio customiz
 
 Bring local files, home music servers and YouTube Music together, or browse your Green Music App library in its own mode. Press play with the default sound, choose a headphone preset, or build your own processing chain. No Aurora account is required.
 
-**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Tablet](#tablet) · [Windows](#windows-desktop) · [Linux](#linux-desktop) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
+**[Download APK](https://github.com/nessli420/aurora/releases/latest)** · [Features](#features) · [Screenshots](#screenshots) · [Tablet](#tablet) · [Windows](#windows-desktop) · [Linux](#linux-desktop) · [macOS](#macos-desktop-experimental) · [Build from source](#build-from-source) · [Report an issue](https://github.com/nessli420/aurora/issues/new/choose) · [Contribute](CONTRIBUTING.md)
 
 Requires **Android 8.0 or newer** on a 64-bit device. Aurora is actively developed; the source may include changes that are not in the latest release yet.
 
@@ -102,6 +102,10 @@ The same desktop app runs on 64-bit (x86_64) Linux distributions with glibc 2.35
 The packages add Aurora to your app menu. Media keys and the desktop's media widget control playback through MPRIS, and Aurora keeps the computer awake while music plays. Server passwords are protected by your keyring (GNOME Keyring, KWallet or another Secret Service provider); without one, they are only remembered until Aurora closes. **Close to tray** appears only on desktops with a system tray, which on GNOME needs the AppIndicator extension.
 
 **Exclusive mode on Linux.** In shared mode Aurora plays through PipeWire or PulseAudio. Exclusive mode opens the sound card directly through ALSA, so pick a specific device under **Output device** rather than the PipeWire/PulseAudio entry. The sound server usually holds the card while it is in use and lets it go a few seconds after its last sound stops, so Aurora waits up to about seven seconds for it. If the card stays busy, Aurora plays in shared mode and says why. Stop other audio or switch the card's profile to **Off** in your sound settings, then turn exclusive mode off and on again.
+
+## macOS desktop (EXPERIMENTAL)
+
+The desktop app also runs on macOS 12 or newer, on Apple silicon and Intel Macs. The Mac port has its own folder and guide: see [mac/README.md](mac/README.md).
 
 ## Get started
 
@@ -330,6 +334,8 @@ Device tests are in `app/src/androidTest/`. They use the release build by defaul
 ```
 
 **Linux desktop app.** Install a JDK 21 such as Temurin, CMake, a C++ compiler and the ALSA headers (`libasound2-dev` or `alsa-lib-devel`). Build the `.deb`, `.rpm` and AppImage with `./gradlew :desktop:packageDeb :desktop:packageRpm :desktop:packageAppImage`; this needs `dpkg-dev` and `rpm`, and the AppImage step downloads a pinned `appimagetool`. The packages bundle the JDK that Gradle runs on, so use a vendor build such as Temurin: a distribution's own JDK links system libraries that other distributions name differently. The **Linux packages** workflow in GitHub Actions builds all three.
+
+**macOS desktop app (experimental).** Install a JDK 21 and run `mac/build.sh`. See [mac/README.md](mac/README.md) for details.
 
 Code shared by both apps is in `core/`, the desktop app in `desktop/`, and the native Windows audio and media controls in `native/`. Run their tests with `./gradlew :core:test :desktop:test`.
 

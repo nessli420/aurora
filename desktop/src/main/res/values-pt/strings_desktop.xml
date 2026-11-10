@@ -73,6 +73,7 @@
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Buffers maiores aguentam melhor cargas altas do sistema; os menores reagem mais rápido a saltos e ao volume. Vale quando a saída é reaberta."</string>
     <string name="text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192" formatted="false">"Deixa a área de trabalho aparecer através da janela, desfocada. Somente no Windows 11."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
+    <string name="text_macos_java_4c1e2a">"macOS · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Logs"</string>
     <string name="text_mica_3ccf84" formatted="false">"Mica"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Abrir em página inteira"</string>

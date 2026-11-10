@@ -187,9 +187,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     init {
         engine.visualizer = deps.visualizer
         engine.bindSettings(deps.settingsStore, scope)
-        scope.launch { engine.state.collect(::sync) }
         scope.launch { deps.settingsStore.mergeFeatures.collect { mergeFeatures = it } }
-        deps.companion?.let { video -> scope.launch { video.state.collect { sync(engine.state.value) } } }
         deps.listeningLevels?.let { levels -> scope.launch(Dispatchers.Default) { observeLevels(levels) } }
         scope.launch { engine.events.collect(::onEvent) }
         scope.launch {
@@ -968,5 +966,14 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         const val RESUME_SAVE_MS = 15_000L
         const val FILL_BATCH = 500
         const val FILL_AHEAD = 50
+    }
+
+    // the state collectors start last: the scope can run them on the ui thread before this constructor finishes,
+    // and sync reaches members declared further down, such as the dj queue, which would still be null
+    init {
+        // one bad update is logged and skipped; letting it escape would end the collector and freeze the player bar
+        fun safeSync(state: EngineState) = runCatching { sync(state) }.onFailure { com.aurora.music.util.AppLog.e("DesktopPlayer", "Player state sync failed", it) }
+        scope.launch { engine.state.collect { safeSync(it) } }
+        deps.companion?.let { video -> scope.launch { video.state.collect { safeSync(engine.state.value) } } }
     }
 }

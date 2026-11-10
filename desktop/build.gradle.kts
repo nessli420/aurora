@@ -17,16 +17,27 @@ val appVersion = Properties().apply {
 val hostOs: String = System.getProperty("os.name")
 val hostWindows = hostOs.startsWith("Windows")
 val hostLinux = hostOs.startsWith("Linux")
+val hostMac = hostOs.startsWith("Mac")
+val hostArm = System.getProperty("os.arch").let { it == "aarch64" || it == "arm64" }
 
-if (!hostWindows && !hostLinux) {
+if (!hostWindows && !hostLinux && !hostMac) {
     gradle.taskGraph.whenReady {
         if (allTasks.any { it.project == project }) {
-            throw GradleException("The Aurora desktop app builds on Windows and Linux only; $hostOs is not supported yet.")
+            throw GradleException("The Aurora desktop app builds on Windows, Linux and macOS only; $hostOs is not supported yet.")
         }
     }
 }
-val nativeClassifier = if (hostWindows) "windows-x86_64" else "linux-x86_64"
-val resourcesTarget = if (hostWindows) "windows-x64" else "linux-x64"
+val nativeClassifier = when {
+    hostWindows -> "windows-x86_64"
+    hostMac -> if (hostArm) "macosx-arm64" else "macosx-x86_64"
+    else -> "linux-x86_64"
+}
+// compose's resource folder names for the current os and arch
+val resourcesTarget = when {
+    hostWindows -> "windows-x64"
+    hostMac -> if (hostArm) "macos-arm64" else "macos-x64"
+    else -> "linux-x64"
+}
 
 java {
     sourceCompatibility = JavaVersion.VERSION_21
@@ -39,7 +50,11 @@ kotlin {
 
 dependencies {
     implementation(project(":core"))
-    implementation(if (hostWindows) compose.desktop.windows_x64 else compose.desktop.linux_x64)
+    implementation(when {
+        hostWindows -> compose.desktop.windows_x64
+        hostMac -> if (hostArm) compose.desktop.macos_arm64 else compose.desktop.macos_x64
+        else -> compose.desktop.linux_x64
+    })
     implementation(compose.material3)
     implementation(compose.materialIconsExtended)
     implementation(libs.compose.ui.backhandler)
@@ -73,6 +88,8 @@ dependencies {
 }
 
 val nativeSource = rootProject.layout.projectDirectory.dir("native")
+// the mac port's own code and packaging live in the top-level mac folder
+val macPort = rootProject.layout.projectDirectory.dir("mac")
 val nativeBuildDir = layout.buildDirectory.dir("native")
 val appResources = layout.buildDirectory.dir("appResources")
 
@@ -141,6 +158,9 @@ tasks.test {
         environment("LC_ALL", "C.UTF-8")
         environment("DBUS_SESSION_BUS_ADDRESS", "unix:path=/nonexistent/aurora-test-bus")
     }
+    if (hostMac) systemProperty("aurora.keychain", "off")
+    if (hostMac) jvmArgs("--add-opens=java.desktop/sun.awt=ALL-UNNAMED", "--add-opens=java.desktop/java.awt.peer=ALL-UNNAMED",
+        "--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED", "--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
 }
 
 compose.desktop {
@@ -155,8 +175,15 @@ compose.desktop {
         jvmArgs += listOf("--add-opens=java.desktop/sun.awt=ALL-UNNAMED", "--add-opens=java.desktop/java.awt.peer=ALL-UNNAMED",
             "--add-exports=java.base/java.lang=ALL-UNNAMED", "--add-exports=java.desktop/sun.awt=ALL-UNNAMED", "--add-exports=java.desktop/sun.java2d=ALL-UNNAMED")
         if (hostLinux) jvmArgs += "--add-opens=java.desktop/sun.awt.X11=ALL-UNNAMED"
+        if (hostMac) {
+            // jcef's mac peer reaches into the lwawt classes
+            jvmArgs += listOf("--add-opens=java.desktop/sun.lwawt=ALL-UNNAMED", "--add-opens=java.desktop/sun.lwawt.macosx=ALL-UNNAMED",
+                "--add-exports=java.desktop/sun.lwawt=ALL-UNNAMED", "--add-exports=java.desktop/sun.lwawt.macosx=ALL-UNNAMED")
+            jvmArgs += listOf("-Dapple.awt.application.name=Aurora", "-Dapple.awt.application.appearance=system")
+        }
         nativeDistributions {
             if (hostWindows) targetFormats(TargetFormat.Msi, TargetFormat.Exe)
+            if (hostMac) targetFormats(TargetFormat.Dmg)
             packageName = "Aurora"
             packageVersion = appVersion.getProperty("versionName")
             description = "Aurora music player"
@@ -180,6 +207,25 @@ compose.desktop {
             }
             linux {
                 iconFile.set(project.file("packaging/aurora.png"))
+            }
+            macOS {
+                // jpackage wants a mac version whose first number is at least 1, with at most three parts
+                packageVersion = appVersion.getProperty("versionName").split('.').take(3).joinToString(".")
+                bundleID = "com.aurora.music"
+                dockName = "Aurora"
+                appCategory = "public.app-category.music"
+                iconFile.set(macPort.file("packaging/aurora.icns"))
+                minimumSystemVersion = "12.0"
+                infoPlist {
+                    extraKeysRawXml = """
+                        <key>NSMicrophoneUsageDescription</key>
+                        <string>Aurora listens to the microphone only while you talk to the AI DJ.</string>
+                        <key>NSBluetoothAlwaysUsageDescription</key>
+                        <string>Sign-in pages use Bluetooth to reach a nearby phone or security key when you sign in with a passkey.</string>
+                        <key>NSCameraUsageDescription</key>
+                        <string>A sign-in page asked to use the camera, for example to scan a passkey QR code.</string>
+                    """.trimIndent()
+                }
             }
         }
     }
@@ -377,6 +423,7 @@ val syncAndroidAssets by tasks.registering(Sync::class) {
 }
 
 sourceSets.named("main") {
+    java.srcDir(macPort.dir("src/main/java"))
     resources.srcDir(generateAndroidStrings.flatMap { it.resourceDir })
     resources.srcDir(syncAndroidAssets)
 }
@@ -397,6 +444,7 @@ val generateBuildInfo by tasks.registering {
 }
 
 kotlin.sourceSets.named("main") {
+    kotlin.srcDir(macPort.dir("src/main/kotlin"))
     kotlin.srcDir(generateAndroidStrings.flatMap { it.kotlinDir })
     kotlin.srcDir(generateBuildInfo)
 }

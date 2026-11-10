@@ -73,6 +73,7 @@
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"较大的缓冲区能应对较高的系统负载；较小的缓冲区对跳转和音量变化响应更快。在输出重新打开时生效。"</string>
     <string name="text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192" formatted="false">"让桌面以模糊效果透过窗口显示。仅限 Windows 11。"</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
+    <string name="text_macos_java_4c1e2a">"macOS · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"日志"</string>
     <string name="text_mica_3ccf84" formatted="false">"云母"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"在完整页面中打开"</string>

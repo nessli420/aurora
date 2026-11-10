@@ -29,7 +29,7 @@ class ProtectedPreferencesSerializer(
     private val protect: ((ByteArray) -> ByteArray?)? = if (HostPlatform.isWindows) { { SystemNative.protect(it, null) } } else null,
     private val unprotect: (ByteArray) -> ByteArray? = if (HostPlatform.isWindows) { { SystemNative.unprotect(it, null) } } else { { null } },
     private val scrub: (Preferences) -> Preferences = Preferences::withoutCredentials,
-    private val vault: CredentialVault? = if (HostPlatform.isLinux) CredentialVault.system else null,
+    private val vault: CredentialVault? = if (HostPlatform.isWindows) null else CredentialVault.system,
 ) : OkioSerializer<Preferences> {
     @Volatile
     private var unsealed: Pair<Preferences, Preferences>? = null

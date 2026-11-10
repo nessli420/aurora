@@ -44,6 +44,7 @@ class MediaControls internal constructor(
             when {
                 HostPlatform.isWindows -> SmtcSession.create(hwnd, Callbacks())
                 HostPlatform.isLinux -> MprisSession.create(Callbacks())
+                HostPlatform.isMac -> com.aurora.music.desktop.mac.MacNowPlaying.create(Callbacks())
                 else -> null
             }
         }

@@ -73,6 +73,7 @@
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"बड़े बफ़र भारी सिस्टम लोड को झेल लेते हैं; छोटे बफ़र सीक और वॉल्यूम पर तेज़ी से प्रतिक्रिया देते हैं। आउटपुट दोबारा खुलने पर लागू होता है।"</string>
     <string name="text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192" formatted="false">"डेस्कटॉप को विंडो के आर-पार धुंधला दिखाएँ। सिर्फ़ Windows 11 पर।"</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
+    <string name="text_macos_java_4c1e2a">"macOS · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"लॉग"</string>
     <string name="text_mica_3ccf84" formatted="false">"माइका"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"पूरे पेज में खोलें"</string>

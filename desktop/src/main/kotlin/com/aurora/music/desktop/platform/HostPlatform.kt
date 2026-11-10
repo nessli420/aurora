@@ -6,9 +6,11 @@ object HostPlatform {
     private val os: String = System.getProperty("os.name").orEmpty()
     val isWindows: Boolean = os.lowercase(Locale.ROOT).startsWith("windows")
     val isLinux: Boolean = os.lowercase(Locale.ROOT).startsWith("linux")
+    val isMac: Boolean = os.lowercase(Locale.ROOT).startsWith("mac")
     val name: String = when {
         isWindows -> "Windows"
         isLinux -> "Linux"
+        isMac -> "macOS"
         else -> os
     }
 }

@@ -58,6 +58,8 @@
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Укажите, где на этом компьютере хранится ваша музыка"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Очистить кэш изображений"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Сворачивать в трей"</string>
+    <string name="text_close_to_menu_bar_mac" formatted="false">"Сворачивать в строку меню"</string>
+    <string name="text_close_to_menu_bar_detail_mac" formatted="false">"После закрытия окна Aurora продолжает играть из строки меню и исчезает из Dock, пока вы снова её не откроете."</string>
     <string name="text_date_added_56ab7a" formatted="false">"Дата добавления"</string>
     <string name="text_device_capabilities_4cac01" formatted="false">"Возможности устройства"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Устройство, монопольный режим и буфер"</string>
@@ -73,6 +75,7 @@
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Большой буфер выдерживает высокую нагрузку на систему, маленький быстрее реагирует на перемотку и громкость. Применяется при повторном открытии вывода."</string>
     <string name="text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192" formatted="false">"Рабочий стол размыто просвечивает сквозь окно. Только в Windows 11."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
+    <string name="text_macos_java_4c1e2a">"macOS · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Журналы"</string>
     <string name="text_mica_3ccf84" formatted="false">"Слюда"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Открыть на всю страницу"</string>

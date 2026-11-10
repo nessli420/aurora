@@ -34,9 +34,20 @@ class DesktopDjVoice(cache: File, private val speaker: DjSpeaker, private val sp
         dir.mkdirs()
         val file = fileFor(id)
         val ok = speaker.speak(text, AppStrings.locale.language, file) ||
-            if (HostPlatform.isWindows) SpeechNative.toWave(text, file.path) else espeak(text, file)
+            when {
+                HostPlatform.isWindows -> SpeechNative.toWave(text, file.path)
+                HostPlatform.isMac -> say(text, file)
+                else -> espeak(text, file)
+            }
         if (ok && file.length() > 44) DjAudio(desktopFileUri(file.path), wavSeconds(file)) else null
     }
+
+    // the system voice, written as 16-bit wave so the player reads it like the other platforms' files
+    private fun say(text: String, file: File): Boolean = runCatching {
+        val process = ProcessBuilder("/usr/bin/say", "-o", file.path, "--file-format=WAVE", "--data-format=LEI16@22050", "--", text)
+            .redirectErrorStream(true).start()
+        process.waitFor(20, TimeUnit.SECONDS) && process.exitValue() == 0
+    }.getOrDefault(false)
 
     private fun espeak(text: String, file: File): Boolean = runCatching {
         val process = ProcessBuilder("espeak-ng", "-w", file.path, text).redirectErrorStream(true).start()

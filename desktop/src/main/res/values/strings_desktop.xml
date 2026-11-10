@@ -58,6 +58,8 @@
     <string name="text_choose_where_your_music_lives_on_this_pc_876bd8" formatted="false">"Choose where your music lives on this PC"</string>
     <string name="text_clear_image_cache_ff7b31" formatted="false">"Clear image cache"</string>
     <string name="text_close_to_tray_f91cc6" formatted="false">"Close to tray"</string>
+    <string name="text_close_to_menu_bar_mac" formatted="false">"Close to menu bar"</string>
+    <string name="text_close_to_menu_bar_detail_mac" formatted="false">"Keep Aurora playing in the menu bar when the window closes. It leaves the Dock until you open it again."</string>
     <string name="text_date_added_56ab7a" formatted="false">"Date added"</string>
     <string name="text_device_capabilities_4cac01" formatted="false">"Device Capabilities"</string>
     <string name="text_device_exclusive_mode_and_buffer_f2337c" formatted="false">"Device, exclusive mode and buffer"</string>
@@ -73,6 +75,7 @@
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Larger buffers ride out heavy system load; smaller ones react faster to seeking and volume. Applies when the output reopens."</string>
     <string name="text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192" formatted="false">"Let your desktop show through the window, blurred. Windows 11 only."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
+    <string name="text_macos_java_4c1e2a">"macOS · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Logs"</string>
     <string name="text_mica_3ccf84" formatted="false">"Mica"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Open in full page"</string>

@@ -73,6 +73,7 @@
     <string name="text_larger_buffers_ride_out_heavy_system_load_smaller_ones_react_fast_e4d5f8" formatted="false">"Büyük arabellekler ağır sistem yükünü kaldırır; küçükler konum değiştirmeye ve ses düzeyine daha hızlı tepki verir. Çıkış yeniden açıldığında uygulanır."</string>
     <string name="text_let_your_desktop_show_through_the_window_blurred_windows_11_only_08f192" formatted="false">"Masaüstünün pencerenin ardından bulanık görünmesini sağlar. Yalnızca Windows 11."</string>
     <string name="text_linux_java_b7923f">"Linux · Java %1$d"</string>
+    <string name="text_macos_java_4c1e2a">"macOS · Java %1$d"</string>
     <string name="text_logs_126dd3" formatted="false">"Günlükler"</string>
     <string name="text_mica_3ccf84" formatted="false">"Mika"</string>
     <string name="text_open_in_full_page_0ec923" formatted="false">"Tam sayfada aç"</string>
