@@ -17,6 +17,8 @@ interface MediaBackend {
     // a guest source browses and plays, but likes, comments, playlists and its personal library need an account
     val signedIn: Boolean get() = true
     fun signedIn(id: String): Boolean = signedIn
+    // a signed-out catalogue still likes songs, on this device until its account is added
+    fun likesLocally(id: String): Boolean = false
     val homeFeeds: List<HomeFeedChoice> get() = emptyList()
     val searchSources: List<SearchSourceChoice> get() = emptyList()
     suspend fun search(query: String, source: String): SearchResults = search(query)

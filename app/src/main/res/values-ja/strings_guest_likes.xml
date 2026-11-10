@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"いいねを%1$sに追加しますか?"</string>
+    <string name="guest_likes_body">"%2$sからサインアウトしている間に%1$sにいいねしました。追加するまでこのデバイスに保存されます。"</string>
+    <string name="guest_likes_add">"追加する"</string>
+    <string name="guest_likes_later">"後で"</string>
+    <string name="guest_likes_added">"%1$sを%2$sのいいねに追加しました"</string>
+    <string name="guest_likes_left">"%1$sを追加できませんでした。後でもう一度確認します。"</string>
+    <string name="guest_sign_in">"サインイン"</string>
+</resources>

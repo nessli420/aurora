@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Misafir"</string>
     <string name="guest_continue">"Oturum açmadan devam et"</string>
-    <string name="guest_detail">"Hesap olmadan göz at, ara ve dinle. Beğeniler, yorumlar ve çalma listeleri için oturum açman gerekir."</string>
+    <string name="guest_detail">"Hesap olmadan göz at, ara ve çal. Beğeniler oturum açana kadar bu cihazda kalır; yorumlar ve çalma listeleri hesap gerektirir."</string>
 </resources>

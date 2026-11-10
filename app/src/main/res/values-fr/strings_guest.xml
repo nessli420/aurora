@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Invité"</string>
     <string name="guest_continue">"Continuer sans se connecter"</string>
-    <string name="guest_detail">"Parcours, cherche et écoute sans compte. Les j'aime, les commentaires et les playlists demandent une connexion."</string>
+    <string name="guest_detail">"Parcourez, cherchez et écoutez sans compte. Les j'aime restent sur cet appareil jusqu'à ce que vous vous connectiez ; les commentaires et les playlists nécessitent un compte."</string>
 </resources>

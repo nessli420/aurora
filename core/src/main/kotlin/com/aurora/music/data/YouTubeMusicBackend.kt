@@ -18,6 +18,7 @@ class YouTubeMusicBackend(
     private val api: YouTubeMusicTransport,
     signatureTimestamp: (String) -> Int? = { null },
     private val localize: (Song) -> Song = { it },
+    private val guestLikes: GuestLikes? = null,
 ) : MediaBackend {
     private val songs = ConcurrentHashMap<String, Song>()
     private val pageCache = ConcurrentHashMap<String, Pair<Long, SearchResults>>()
@@ -35,6 +36,8 @@ class YouTubeMusicBackend(
     private suspend fun browse(id: String) = api.request("browse", json("browseId" to id))
 
     override val signedIn: Boolean get() = !session.isGuest
+    override fun likesLocally(id: String): Boolean = !signedIn && guestLikes != null && id.matches(VIDEO_ID)
+    private val guest: GuestLikes? get() = guestLikes?.takeIf { !signedIn }
 
     override suspend fun ping(): Boolean = if (signedIn) account(api).first.isNotBlank() else browse("FEmusic_moods_and_genres").size() > 0
     override suspend fun profileImageUrl(): String = session.imageUrl
@@ -82,9 +85,9 @@ class YouTubeMusicBackend(
     override suspend fun allSongs() = library("FEmusic_liked_videos").songs.distinctBy { it.id }
     override suspend fun librarySongs(limit: Int) = allSongs().take(limit)
     override suspend fun songsPage(offset: Int, count: Int) = allSongs().drop(offset).take(count)
-    override suspend fun starredSongs() = library("VLLM").songs.distinctBy { it.id }.map { it.copy(liked = true) }
+    override suspend fun starredSongs() = guest?.of(session.type)?.map { localize(it).copy(liked = true) } ?: library("VLLM").songs.distinctBy { it.id }.map { it.copy(liked = true) }
     override suspend fun starredCount() = starredSongs().size
-    override suspend fun starredIds(): Set<String> = coroutineScope {
+    override suspend fun starredIds(): Set<String> = guest?.ids(session.type) ?: coroutineScope {
         val tracks = async { starredSongs().map { it.id } }
         val albums = async { allAlbums().map { it.id } }
         val artists = async { library("FEmusic_library_corpus_artists").artists.map { it.id } }
@@ -185,7 +188,8 @@ class YouTubeMusicBackend(
         return true
     }
 
-    override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean = if (!signedIn) false else when (kind) {
+    override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean = guest?.setStarred(session.type, id, starred, kind, ::songFor)
+        ?: if (!signedIn) false else when (kind) {
         "artist" -> mutation(if (starred) "subscription/subscribe" else "subscription/unsubscribe", JsonObject().apply {
             add("channelIds", JsonArray().apply { add(id) })
         })

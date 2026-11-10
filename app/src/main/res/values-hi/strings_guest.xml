@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"अतिथि"</string>
     <string name="guest_continue">"साइन इन किए बिना जारी रखें"</string>
-    <string name="guest_detail">"बिना खाते के ब्राउज़ करें, खोजें और चलाएँ। लाइक, टिप्पणियों और प्लेलिस्ट के लिए साइन इन करना ज़रूरी है।"</string>
+    <string name="guest_detail">"बिना खाते के ब्राउज़ करें, खोजें और चलाएँ। साइन इन करने तक पसंद इसी डिवाइस पर रहती हैं; टिप्पणियों और प्लेलिस्ट के लिए खाता चाहिए।"</string>
 </resources>

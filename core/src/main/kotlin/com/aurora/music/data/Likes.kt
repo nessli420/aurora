@@ -156,7 +156,7 @@ class Likes(
 
     // songs toggle on the source they play from; album, artist and playlist likes stay with the active source
     fun toggle(id: String, kind: String = "song") {
-        if (id.isEmpty() || id.startsWith("aurora-mix:") || !repository.canLike(id)) return
+        if (id.isEmpty() || id.startsWith("aurora-mix:") || !(if (kind == "song") repository.canLikeSong(id) else repository.canLike(id))) return
         when (kind) {
             "song" -> toggle(seen[id]?.first ?: Song(id, "", "", "", "", 0))
             "playlist" -> {
@@ -174,7 +174,7 @@ class Likes(
     }
 
     fun toggle(song: Song) {
-        if (song.id.isEmpty() || song.id.startsWith("aurora-mix:") || !repository.canLike(song.id)) return
+        if (song.id.isEmpty() || song.id.startsWith("aurora-mix:") || !repository.canLikeSong(song.id)) return
         val now = !ownLiked(song)
         launchChange(song.id, now) { setOwn(song, now) }
     }
@@ -194,6 +194,8 @@ class Likes(
         song.id in serverLikedIds || ledger.owner(song.id)?.let { ledger.likedOn(it.first, song) } == true
 
     private suspend fun setOwn(song: Song, liked: Boolean): Boolean {
+        // a guest source has no account for the ledger to write to; it keeps the like on this device
+        if (!repository.canLike(song.id) && repository.likesLocally(song.id)) return repository.setStarred(song.id, liked)
         val key = ledger.owner(song.id)?.first?.takeUnless { song.id.startsWith("cached:") }
         return key?.let { ledger.set(song, it, liked) } ?: repository.setStarred(song.id, liked)
     }

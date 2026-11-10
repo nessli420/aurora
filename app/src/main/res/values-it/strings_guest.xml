@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Ospite"</string>
     <string name="guest_continue">"Continua senza accedere"</string>
-    <string name="guest_detail">"Sfoglia, cerca e ascolta senza un account. Per Mi piace, commenti e playlist devi accedere."</string>
+    <string name="guest_detail">"Sfoglia, cerca e ascolta senza account. I Mi piace restano su questo dispositivo finché non accedi; commenti e playlist richiedono un account."</string>
 </resources>

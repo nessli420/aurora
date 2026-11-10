@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Guest"</string>
     <string name="guest_continue">"Continue without signing in"</string>
-    <string name="guest_detail">"Browse, search and play without an account. Likes, comments and playlists need you to sign in."</string>
+    <string name="guest_detail">"Browse, search and play without an account. Likes stay on this device until you sign in; comments and playlists need an account."</string>
 </resources>

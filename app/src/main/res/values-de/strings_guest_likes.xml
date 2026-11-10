@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Deine Likes zu %1$s hinzufügen?"</string>
+    <string name="guest_likes_body">"Du hast %1$s geliked, während du bei %2$s abgemeldet warst. Sie bleiben auf diesem Gerät, bis du sie hinzufügst."</string>
+    <string name="guest_likes_add">"Hinzufügen"</string>
+    <string name="guest_likes_later">"Nicht jetzt"</string>
+    <string name="guest_likes_added">"%1$s zu deinen %2$s-Likes hinzugefügt"</string>
+    <string name="guest_likes_left">"%1$s konnten nicht hinzugefügt werden. Aurora fragt später noch einmal."</string>
+    <string name="guest_sign_in">"Anmelden"</string>
+</resources>

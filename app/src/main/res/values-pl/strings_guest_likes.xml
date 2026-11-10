@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Dodać polubienia do %1$s?"</string>
+    <string name="guest_likes_body">"Polubiono %1$s bez logowania do %2$s. Są zapisane na tym urządzeniu, dopóki ich nie dodasz."</string>
+    <string name="guest_likes_add">"Dodaj"</string>
+    <string name="guest_likes_later">"Nie teraz"</string>
+    <string name="guest_likes_added">"Dodano %1$s do polubień w %2$s"</string>
+    <string name="guest_likes_left">"Nie udało się dodać: %1$s. Aurora zapyta ponownie później."</string>
+    <string name="guest_sign_in">"Zaloguj się"</string>
+</resources>

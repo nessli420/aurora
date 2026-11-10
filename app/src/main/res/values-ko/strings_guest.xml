@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"게스트"</string>
     <string name="guest_continue">"로그인하지 않고 계속"</string>
-    <string name="guest_detail">"계정 없이 둘러보고 검색하고 재생할 수 있어요. 좋아요, 댓글, 플레이리스트는 로그인해야 해요."</string>
+    <string name="guest_detail">"계정 없이 둘러보고 검색하고 재생하세요. 좋아요는 로그인할 때까지 이 기기에 저장되며, 댓글과 플레이리스트에는 계정이 필요합니다."</string>
 </resources>

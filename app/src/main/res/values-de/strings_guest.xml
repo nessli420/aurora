@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Gast"</string>
     <string name="guest_continue">"Ohne Anmeldung fortfahren"</string>
-    <string name="guest_detail">"Stöbere, suche und höre ohne Konto. Für Likes, Kommentare und Playlists musst du dich anmelden."</string>
+    <string name="guest_detail">"Ohne Konto stöbern, suchen und abspielen. Likes bleiben auf diesem Gerät, bis du dich anmeldest; Kommentare und Playlists brauchen ein Konto."</string>
 </resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"¿Añadir tus me gusta a %1$s?"</string>
+    <string name="guest_likes_body">"Te gustaron %1$s sin haber iniciado sesión en %2$s. Se guardan en este dispositivo hasta que los añadas."</string>
+    <string name="guest_likes_add">"Añadirlos"</string>
+    <string name="guest_likes_later">"Ahora no"</string>
+    <string name="guest_likes_added">"Se añadieron %1$s a tus me gusta de %2$s"</string>
+    <string name="guest_likes_left">"No se pudieron añadir %1$s. Aurora volverá a preguntar más tarde."</string>
+    <string name="guest_sign_in">"Iniciar sesión"</string>
+</resources>

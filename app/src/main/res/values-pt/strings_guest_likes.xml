@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Adicionar suas curtidas ao %1$s?"</string>
+    <string name="guest_likes_body">"Você curtiu %1$s sem estar conectado ao %2$s. Elas ficam salvas neste dispositivo até você adicioná-las."</string>
+    <string name="guest_likes_add">"Adicionar"</string>
+    <string name="guest_likes_later">"Agora não"</string>
+    <string name="guest_likes_added">"%1$s adicionadas às suas curtidas do %2$s"</string>
+    <string name="guest_likes_left">"Não foi possível adicionar %1$s. O Aurora perguntará de novo mais tarde."</string>
+    <string name="guest_sign_in">"Entrar"</string>
+</resources>

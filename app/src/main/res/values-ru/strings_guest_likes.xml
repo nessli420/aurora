@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Добавить лайки в %1$s?"</string>
+    <string name="guest_likes_body">"Вы лайкнули %1$s, не войдя в %2$s. Они хранятся на этом устройстве, пока вы их не добавите."</string>
+    <string name="guest_likes_add">"Добавить"</string>
+    <string name="guest_likes_later">"Не сейчас"</string>
+    <string name="guest_likes_added">"%1$s добавлено в лайки %2$s"</string>
+    <string name="guest_likes_left">"Не удалось добавить: %1$s. Aurora спросит ещё раз позже."</string>
+    <string name="guest_sign_in">"Войти"</string>
+</resources>

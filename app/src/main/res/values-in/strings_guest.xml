@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Tamu"</string>
     <string name="guest_continue">"Lanjutkan tanpa masuk"</string>
-    <string name="guest_detail">"Jelajahi, cari, dan putar tanpa akun. Suka, komentar, dan playlist perlu masuk ke akun."</string>
+    <string name="guest_detail">"Jelajahi, cari, dan putar tanpa akun. Suka tetap di perangkat ini sampai Anda masuk; komentar dan playlist memerlukan akun."</string>
 </resources>

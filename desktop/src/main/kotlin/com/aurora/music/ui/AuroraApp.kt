@@ -800,6 +800,7 @@ private fun Shell(
                 },
                 onForget = { s -> scope.launch { container.forgetSavedSession(s) } },
                 onAddAccount = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
+                onSignIn = { type -> authVM.reset(); authVM.selectType(type); navController.navigate(Routes.SIGN_IN) },
             )
         }
         composable(Routes.SETTINGS_PLAYBACK) {
@@ -929,7 +930,7 @@ private fun Shell(
     val startRadio: (Song) -> Unit = { song -> player.startSonicRadio(song) { confirm(it) } }
     CompositionLocalProvider(
         com.aurora.music.ui.components.LocalStartRadio provides startRadio,
-        com.aurora.music.ui.components.LocalCanLike provides container.repository::canLike,
+        com.aurora.music.ui.components.LocalCanLike provides container.repository::canLikeSong,
         com.aurora.music.ui.components.LocalLikeMenu provides remember(player) { com.aurora.music.ui.components.LikeMenu(player::likeOptions, player::setLikedOn, player::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },
@@ -937,6 +938,8 @@ private fun Shell(
             (if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE)).let { if (aiDjActive) it - PlayerPane.QUEUE else it },
     ) {
     matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onChanged = { changed -> player.reloadIfPlaying(changed.id) }) { matchSong = null } }
+    com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes,
+        onMoved = { player.refreshLikes() }, notify = ::confirm)
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"将你的喜欢添加到 %1$s?"</string>
+    <string name="guest_likes_body">"你在未登录 %2$s 时喜欢了 %1$s。在你添加之前，它们会保存在此设备上。"</string>
+    <string name="guest_likes_add">"添加"</string>
+    <string name="guest_likes_later">"以后再说"</string>
+    <string name="guest_likes_added">"已将 %1$s 添加到你的 %2$s 喜欢"</string>
+    <string name="guest_likes_left">"无法添加 %1$s。Aurora 稍后会再次询问。"</string>
+    <string name="guest_sign_in">"登录"</string>
+</resources>

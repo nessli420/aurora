@@ -1,6 +1,7 @@
 package com.aurora.music.data.container
 
 import com.aurora.music.data.JellyfinBackend
+import com.aurora.music.data.GuestLikes
 import com.aurora.music.data.LocalBackend
 import com.aurora.music.data.LocalCatalog
 import com.aurora.music.data.LocalStore
@@ -40,6 +41,7 @@ class BackendFactory(
     private val localStore: LocalStore,
     private val localSession: Session,
     private val soundcloudPendingLikes: SoundCloudPendingLikes,
+    private val guestLikes: GuestLikes,
     private val http: () -> OkHttpClient,
     private val maxBitrate: () -> Int,
     private val youtubeMusicLogin: (String) -> String,
@@ -82,8 +84,8 @@ class BackendFactory(
             ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
                 YouTubeMusicClient(
                     session = { YouTubeMusicWebSession.decode(youtubeMusicLogin(session.token)) }.takeUnless { session.isGuest }, http = http()),
-                signatureTimestamp(), localize)) { reportError(session, it) }
-            ServerType.SOUNDCLOUD -> SoundCloudBackend(session, soundcloudClient(session), localize, soundcloudPendingLikes)
+                signatureTimestamp(), localize, guestLikes)) { reportError(session, it) }
+            ServerType.SOUNDCLOUD -> SoundCloudBackend(session, soundcloudClient(session), localize, soundcloudPendingLikes, guestLikes)
             ServerType.EXTENSION -> platformBackend(session, localize)
         }
     }

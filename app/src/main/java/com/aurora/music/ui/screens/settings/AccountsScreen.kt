@@ -29,6 +29,7 @@ import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -57,6 +58,7 @@ fun AccountsScreen(
     onSwitch: (Session) -> Unit,
     onForget: (Session) -> Unit,
     onAddAccount: () -> Unit,
+    onSignIn: (ServerType) -> Unit = {},
 ) {
     val ctx = androidx.compose.ui.platform.LocalContext.current
     val container = (ctx.applicationContext as AuroraApplication).container
@@ -95,6 +97,7 @@ fun AccountsScreen(
                             session = s,
                             isActive = key(s) == activeKey,
                             canForget = saved.any { key(it) == key(s) },   // only saved logins can be forgotten
+                            onSignIn = if (s.isGuest) ({ onSignIn(s.type) }) else null,
                             onClick = {
                                 if (key(s) == activeKey) Unit
                                 else if (isLocalRow) switchLocal()
@@ -155,7 +158,7 @@ fun AccountsScreen(
 }
 
 @Composable
-private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, onClick: () -> Unit, onForget: () -> Unit) {
+private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, onClick: () -> Unit, onForget: () -> Unit, onSignIn: (() -> Unit)? = null) {
     val badge = when (session.type) {
         ServerType.SPOTIFY -> "S"
         ServerType.YOUTUBE_MUSIC -> "Y"
@@ -181,6 +184,8 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
             Text(session.username, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text("${session.typeLabel.localizedMediaType()}${if (session.type != ServerType.LOCAL) " · $host" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
+        // a guest can still sign in later; the account takes the guest's place and its likes come along
+        if (onSignIn != null) TextButton(onClick = onSignIn) { Text(appString(R.string.guest_sign_in), fontWeight = FontWeight.Bold) }
         if (isActive) {
             Row(
                 Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 10.dp, vertical = 5.dp),

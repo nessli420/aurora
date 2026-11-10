@@ -244,6 +244,7 @@ class MergedBackend(
 
     override val signedIn: Boolean get() = sources.all { it.signedIn }
     override fun signedIn(id: String): Boolean = router.unwrap(id)?.let { (i, oid) -> sources[i].signedIn(oid) } ?: router.primary?.signedIn(id) ?: true
+    override fun likesLocally(id: String): Boolean = router.unwrap(id)?.let { (i, oid) -> sources[i].likesLocally(oid) } ?: router.primary?.likesLocally(id) ?: false
 
     // liked songs follow the library view or the picked sources they were opened from; any other id is every source together
     private fun likedScope(id: String): MediaBackend {

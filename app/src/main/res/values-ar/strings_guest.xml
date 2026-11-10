@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"ضيف"</string>
     <string name="guest_continue">"المتابعة دون تسجيل الدخول"</string>
-    <string name="guest_detail">"تصفّح وابحث واستمع دون حساب. الإعجابات والتعليقات وقوائم التشغيل تتطلب تسجيل الدخول."</string>
+    <string name="guest_detail">"تصفّح وابحث وشغّل دون حساب. تبقى الإعجابات على هذا الجهاز حتى تسجّل الدخول؛ أما التعليقات وقوائم التشغيل فتحتاج إلى حساب."</string>
 </resources>

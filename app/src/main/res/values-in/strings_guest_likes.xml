@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Tambahkan suka Anda ke %1$s?"</string>
+    <string name="guest_likes_body">"Anda menyukai %1$s saat keluar dari %2$s. Semuanya disimpan di perangkat ini sampai Anda menambahkannya."</string>
+    <string name="guest_likes_add">"Tambahkan"</string>
+    <string name="guest_likes_later">"Nanti saja"</string>
+    <string name="guest_likes_added">"%1$s ditambahkan ke suka %2$s Anda"</string>
+    <string name="guest_likes_left">"%1$s tidak dapat ditambahkan. Aurora akan bertanya lagi nanti."</string>
+    <string name="guest_sign_in">"Masuk"</string>
+</resources>

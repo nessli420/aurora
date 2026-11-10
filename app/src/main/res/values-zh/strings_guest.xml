@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"访客"</string>
     <string name="guest_continue">"不登录继续"</string>
-    <string name="guest_detail">"无需账号即可浏览、搜索和播放。点赞、评论和歌单需要登录。"</string>
+    <string name="guest_detail">"无需账号即可浏览、搜索和播放。登录前，喜欢会保存在此设备上；评论和播放列表需要账号。"</string>
 </resources>

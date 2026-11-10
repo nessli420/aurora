@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Beğenilerin %1$s hesabına eklensin mi?"</string>
+    <string name="guest_likes_body">"%2$s oturumu kapalıyken %1$s beğendin. Sen ekleyene kadar bu cihazda saklanıyorlar."</string>
+    <string name="guest_likes_add">"Ekle"</string>
+    <string name="guest_likes_later">"Şimdi değil"</string>
+    <string name="guest_likes_added">"%1$s, %2$s beğenilerine eklendi"</string>
+    <string name="guest_likes_left">"%1$s eklenemedi. Aurora daha sonra tekrar soracak."</string>
+    <string name="guest_sign_in">"Oturum aç"</string>
+</resources>

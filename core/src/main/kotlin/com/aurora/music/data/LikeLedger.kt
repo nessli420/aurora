@@ -125,14 +125,17 @@ class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private 
                 val playing = owner?.first == key
                 val account = accounts[key]
                 val liked = account?.let { likes(key, it, song, title, owner) } == true || playing && ownLiked
+                // a guest source keeps its own song's like on this device, so that one row still works
+                val local = playing && !source.signedIn && owner != null && source.likesLocally(owner.second)
                 val id = when {
+                    local -> owner?.second
                     !source.signedIn -> null
                     playing -> owner?.second
                     liked -> account?.matches(song, title)?.firstOrNull()?.id
                     copy?.first == key -> copy.second
                     else -> twin(source, key, song)?.id
                 }
-                LikeOption(key, labels[index], id, liked, !source.signedIn, playing)
+                LikeOption(key, labels[index], id, liked, !source.signedIn && !local, playing)
             }
         }.awaitAll().sortedByDescending { it.playing }
     }

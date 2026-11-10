@@ -75,7 +75,7 @@ class BackendFactoryTest {
     ): BackendFactory {
         val dir = temp.newFolder()
         val localizer = SourceLocalizer(localSession, DownloadManager(dir, { "file://$it" }, { null }), { false }, { emptyList() }, { false }, { _, _, _ -> null })
-        return BackendFactory(testClientInfo, store, localizer, catalog, LocalStore(dir), localSession, SoundCloudPendingLikes(),
+        return BackendFactory(testClientInfo, store, localizer, catalog, LocalStore(dir), localSession, SoundCloudPendingLikes(), com.aurora.music.data.GuestLikes(),
             http = { http.incrementAndGet(); OkHttpClient() }, maxBitrate = { 0 }, youtubeMusicLogin = { "" },
             signatureTimestamp = { signature.incrementAndGet(); { null } },
             spotifyWeb = { spotifyWeb.incrementAndGet(); graphql }, spotifyLogin = { "" },

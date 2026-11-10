@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Gość"</string>
     <string name="guest_continue">"Kontynuuj bez logowania"</string>
-    <string name="guest_detail">"Przeglądaj, wyszukuj i słuchaj bez konta. Polubienia, komentarze i playlisty wymagają zalogowania."</string>
+    <string name="guest_detail">"Przeglądaj, szukaj i odtwarzaj bez konta. Polubienia zostają na tym urządzeniu, dopóki się nie zalogujesz; komentarze i playlisty wymagają konta."</string>
 </resources>

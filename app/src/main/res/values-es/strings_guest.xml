@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Invitado"</string>
     <string name="guest_continue">"Continuar sin iniciar sesión"</string>
-    <string name="guest_detail">"Explora, busca y reproduce sin cuenta. Para los me gusta, los comentarios y las listas tienes que iniciar sesión."</string>
+    <string name="guest_detail">"Explora, busca y reproduce sin cuenta. Los me gusta se quedan en este dispositivo hasta que inicies sesión; los comentarios y las listas necesitan una cuenta."</string>
 </resources>

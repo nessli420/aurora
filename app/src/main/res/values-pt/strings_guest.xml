@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Convidado"</string>
     <string name="guest_continue">"Continuar sem entrar"</string>
-    <string name="guest_detail">"Navegue, pesquise e ouça sem conta. Curtidas, comentários e playlists exigem que você entre."</string>
+    <string name="guest_detail">"Navegue, pesquise e ouça sem conta. As curtidas ficam neste dispositivo até você entrar; comentários e playlists precisam de uma conta."</string>
 </resources>

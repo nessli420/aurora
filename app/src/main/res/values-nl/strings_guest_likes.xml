@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Je likes toevoegen aan %1$s?"</string>
+    <string name="guest_likes_body">"Je hebt %1$s geliket terwijl je was afgemeld bij %2$s. Ze blijven op dit apparaat tot je ze toevoegt."</string>
+    <string name="guest_likes_add">"Toevoegen"</string>
+    <string name="guest_likes_later">"Niet nu"</string>
+    <string name="guest_likes_added">"%1$s toegevoegd aan je likes op %2$s"</string>
+    <string name="guest_likes_left">"%1$s kon(den) niet worden toegevoegd. Aurora vraagt het later opnieuw."</string>
+    <string name="guest_sign_in">"Inloggen"</string>
+</resources>

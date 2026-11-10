@@ -28,6 +28,7 @@ class SoundCloudBackend(
     private val api: SoundCloudTransport,
     private val localize: (Song) -> Song = { it },
     private val pending: SoundCloudPendingLikes = SoundCloudPendingLikes(),
+    private val guestLikes: GuestLikes? = null,
 ) : MediaBackend {
     private val background = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val syncLock = Mutex()
@@ -63,6 +64,8 @@ class SoundCloudBackend(
     private suspend fun list(path: String) = api.get(path).asJsonObject.items("collection")
 
     override val signedIn: Boolean get() = !session.isGuest
+    override fun likesLocally(id: String): Boolean = !signedIn && guestLikes != null && id.matches(TRACK_ID)
+    private val guest: GuestLikes? get() = guestLikes?.takeIf { !signedIn }
 
     override suspend fun ping(): Boolean = if (signedIn) api.get("/me").asJsonObject.string("id").isNotBlank() else list("/mixed-selections?limit=1").isNotEmpty()
     override suspend fun profileImageUrl(): String = session.imageUrl
@@ -200,16 +203,16 @@ class SoundCloudBackend(
     }
     override suspend fun librarySongs(limit: Int) = allSongs().take(limit)
     override suspend fun songsPage(offset: Int, count: Int) = allSongs().drop(offset).take(count)
-    override suspend fun starredSongs() = allSongs().map { it.copy(liked = true) }
-    override suspend fun starredCount() = if (!signedIn) 0 else
+    override suspend fun starredSongs() = guest?.of(session.type)?.map { localize(it).copy(liked = true) } ?: allSongs().map { it.copy(liked = true) }
+    override suspend fun starredCount() = if (!signedIn) guest?.count(session.type) ?: 0 else
         if (pending.of(user).keys.none { it.startsWith("$TRACK_LIKE:") }) api.get("/me").asJsonObject.int("likes_count") else allSongs().size
-    override suspend fun starredIds(): Set<String> = coroutineScope {
+    override suspend fun starredIds(): Set<String> = guest?.ids(session.type) ?: coroutineScope {
         val tracks = async { allSongs().map { it.id } }
         val artists = async { allArtists().map { it.id } }
         val collections = async { library().filter { it.string("type").endsWith("-like") }.map { it.obj("playlist").string("id").ifBlank { it.obj("system_playlist").string("urn") } } }
         (tracks.await() + artists.await() + collections.await()).filter { it.isNotBlank() }.toSet()
     }
-    override suspend fun likedSongIds(ids: List<String>) = allSongs().map { it.id }.toSet().intersect(ids.toSet())
+    override suspend fun likedSongIds(ids: List<String>) = (guest?.ids(session.type) ?: allSongs().map { it.id }.toSet()).intersect(ids.toSet())
 
     override suspend fun search(query: String): SearchResults = if (query.isBlank()) SearchResults() else coroutineScope {
         val q = URLEncoder.encode(query.trim(), "UTF-8")
@@ -282,6 +285,7 @@ class SoundCloudBackend(
 
     // a like or follow counts here straight away and reaches soundcloud in the background, whenever its bot check lets it through
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean {
+        guest?.let { return it.setStarred(session.type, id, starred, kind, ::songFor) }
         if (!signedIn) return false
         val key = "${when (kind) { "artist" -> FOLLOW; "album", "playlist" -> PLAYLIST_LIKE; else -> TRACK_LIKE }}:$id"
         val earlier = pending.of(user)[key]
@@ -396,6 +400,8 @@ class SoundCloudBackend(
     override fun coverArtUrl(id: String, size: Int) = songs[id]?.artworkUrl.orEmpty()
 
     companion object {
+        // the only ids a guest like can be looked up by; one from another source never reaches this account
+        private val TRACK_ID = Regex("[0-9]+")
         private const val SYSTEM_PLAYLIST = "soundcloud:system-playlists:"
         private const val TRACK_LIKE = "track"
         private const val FOLLOW = "artist"

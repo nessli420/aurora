@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"ゲスト"</string>
     <string name="guest_continue">"サインインせずに続ける"</string>
-    <string name="guest_detail">"アカウントなしで閲覧、検索、再生できます。いいね、コメント、プレイリストにはサインインが必要です。"</string>
+    <string name="guest_detail">"アカウントなしで閲覧、検索、再生できます。いいねはサインインするまでこのデバイスに保存されます。コメントとプレイリストにはアカウントが必要です。"</string>
 </resources>

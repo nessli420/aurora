@@ -760,6 +760,7 @@ fun AuroraApp() {
                         },
                         onForget = { s -> scope.launch { container.forgetSavedSession(s) } },
                         onAddAccount = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
+                        onSignIn = { type -> authVM.reset(); authVM.selectType(type); navController.navigate(Routes.SIGN_IN) },
                     )
                 }
                 composable(Routes.SETTINGS_PLAYBACK) {
@@ -978,7 +979,7 @@ fun AuroraApp() {
     androidx.compose.runtime.CompositionLocalProvider(
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides playerPanes,
         com.aurora.music.ui.components.LocalStartRadio provides remember(playerVM) { { song: com.aurora.music.model.Song -> playerVM.startSonicRadio(song) { confirm(it) } } },
-        com.aurora.music.ui.components.LocalCanLike provides container.repository::canLike,
+        com.aurora.music.ui.components.LocalCanLike provides container.repository::canLikeSong,
         com.aurora.music.ui.components.LocalLikeMenu provides remember(playerVM) { com.aurora.music.ui.components.LikeMenu(playerVM::likeOptions, playerVM::setLikedOn, playerVM::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: com.aurora.music.model.Song -> matchSong = song } },
@@ -1857,6 +1858,8 @@ fun AuroraApp() {
         com.aurora.music.ui.screens.player.MixScreen(mixVM, mixQueue, onClose = { showMix = false })
     }
     matchSong?.let { com.aurora.music.ui.components.MatchPickerSheet(it) { matchSong = null } }
+    com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes,
+        onMoved = { playerVM.refreshLikes() }, notify = ::confirm)
 
     val tour = whatsNew?.let { versions -> WhatsNewCatalog.releases.filter { it.version in versions }.reversed() }
     if (tour != null) {

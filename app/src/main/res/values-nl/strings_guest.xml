@@ -2,5 +2,5 @@
 <resources>
     <string name="guest_name">"Gast"</string>
     <string name="guest_continue">"Doorgaan zonder in te loggen"</string>
-    <string name="guest_detail">"Blader, zoek en speel af zonder account. Voor likes, reacties en playlists moet je inloggen."</string>
+    <string name="guest_detail">"Bladeren, zoeken en afspelen zonder account. Likes blijven op dit apparaat tot je inlogt; reacties en playlists hebben een account nodig."</string>
 </resources>

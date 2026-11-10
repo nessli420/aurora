@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"अपनी पसंद %1$s में जोड़ें?"</string>
+    <string name="guest_likes_body">"%2$s से साइन आउट रहते हुए आपने %1$s पसंद किए। जब तक आप इन्हें जोड़ते नहीं, ये इसी डिवाइस पर सहेजे रहेंगे।"</string>
+    <string name="guest_likes_add">"जोड़ें"</string>
+    <string name="guest_likes_later">"अभी नहीं"</string>
+    <string name="guest_likes_added">"%1$s आपकी %2$s पसंद में जोड़े गए"</string>
+    <string name="guest_likes_left">"%1$s नहीं जोड़े जा सके। Aurora बाद में फिर पूछेगा।"</string>
+    <string name="guest_sign_in">"साइन इन करें"</string>
+</resources>

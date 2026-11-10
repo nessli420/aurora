@@ -76,6 +76,7 @@ class AppContainer(context: Context) {
 
     val replayGainStore = ReplayGainStore(appContext.filesDir)
     private val soundcloudPendingLikes = SoundCloudPendingLikes(appContext.filesDir)
+    val guestLikes = com.aurora.music.data.GuestLikes(appContext.filesDir)
 
     val localLibrary = LocalLibrary(appContext, gainProvider = { path -> replayGainStore.gainsFor(path) },
         separatorsProvider = { settingsStore.artistSeparators.first() },
@@ -233,6 +234,9 @@ class AppContainer(context: Context) {
     suspend fun verifySoundCloud(session: Session): Boolean = (backends.build(session) as? SoundCloudBackend)?.verify() == true
     fun soundCloudWaiting(session: Session): Int = soundcloudPendingLikes.waiting(session.userId)
 
+    // adds the songs liked while signed out to the account that took the guest's place
+    suspend fun moveGuestLikes(session: Session): Int = backends.build(session)?.let { guestLikes.moveTo(it) } ?: 0
+
     private fun resolveYtSentinel(sentinel: String): String? {
         val uri = runCatching { android.net.Uri.parse(sentinel) }.getOrNull() ?: return null
         return youtubeResolver.resolveSentinel(uri)
@@ -242,7 +246,7 @@ class AppContainer(context: Context) {
     fun localCopy(song: Song): Song? = sourceLocalizer.localize(song).takeIf { it.streamUrl != song.streamUrl }
 
     private val backends = BackendFactory(appClientInfo, settingsStore, sourceLocalizer, localLibrary, localStore, localMergeSession,
-        soundcloudPendingLikes, http = { http }, maxBitrate = { maxBitrate },
+        soundcloudPendingLikes, guestLikes = guestLikes, http = { http }, maxBitrate = { maxBitrate },
         youtubeMusicLogin = { youtubeMusicCredentials.read(it) }, signatureTimestamp = { youtubeResolver::signatureTimestamp },
         spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
         soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },

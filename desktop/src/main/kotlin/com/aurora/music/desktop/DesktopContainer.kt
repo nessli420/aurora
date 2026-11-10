@@ -132,6 +132,7 @@ class DesktopContainer(
     val soundcloudCredentials = com.aurora.music.desktop.platform.WebCredentials.soundcloud(paths.local)
     val soundcloudWriter = com.aurora.music.desktop.web.SoundCloudWebWriter()
     private val soundcloudPendingLikes = com.aurora.music.data.SoundCloudPendingLikes(paths.local)
+    val guestLikes = com.aurora.music.data.GuestLikes(paths.local)
     val spotifyWeb = com.aurora.music.desktop.web.SpotifyWebBridge(java.io.File(paths.local, "web"))
     val trackChoices = com.aurora.music.data.TrackChoices(paths.local)
     val youtubeResolver by lazy { com.aurora.music.desktop.youtube.YoutubeResolver(http) { trackChoices.matchFor(it)?.videoId } }
@@ -141,6 +142,9 @@ class DesktopContainer(
     }
 
     suspend fun verifySoundCloud(session: Session): Boolean = (backends.build(session) as? com.aurora.music.data.SoundCloudBackend)?.verify() == true
+
+    // adds the songs liked while signed out to the account that took the guest's place
+    suspend fun moveGuestLikes(session: Session): Int = backends.build(session)?.let { guestLikes.moveTo(it) } ?: 0
     fun soundCloudWaiting(session: Session): Int = soundcloudPendingLikes.waiting(session.userId)
 
     val playlistImporter by lazy { com.aurora.music.data.PlaylistImporter(repository, com.aurora.music.data.PlaylistLinks(http), backends::catalogue) }
@@ -220,7 +224,7 @@ class DesktopContainer(
         catalogueMatch = { catalogueMatch.value })
 
     private val backends = BackendFactory(clientInfo, settingsStore, sourceLocalizer, folderLibrary, localStore, localMergeSession,
-        soundcloudPendingLikes, http = { http }, maxBitrate = { maxBitrate },
+        soundcloudPendingLikes, guestLikes = guestLikes, http = { http }, maxBitrate = { maxBitrate },
         youtubeMusicLogin = { youtubeMusicCredentials.read(it) }, signatureTimestamp = { youtubeResolver::signatureTimestamp },
         spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
         soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },

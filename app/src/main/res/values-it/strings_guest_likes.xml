@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="guest_likes_title">"Aggiungere i tuoi Mi piace a %1$s?"</string>
+    <string name="guest_likes_body">"Hai messo Mi piace a %1$s senza aver effettuato l'accesso a %2$s. Restano su questo dispositivo finché non li aggiungi."</string>
+    <string name="guest_likes_add">"Aggiungili"</string>
+    <string name="guest_likes_later">"Non ora"</string>
+    <string name="guest_likes_added">"%1$s aggiunti ai tuoi Mi piace di %2$s"</string>
+    <string name="guest_likes_left">"Impossibile aggiungere %1$s. Aurora te lo chiederà di nuovo più tardi."</string>
+    <string name="guest_sign_in">"Accedi"</string>
+</resources>
