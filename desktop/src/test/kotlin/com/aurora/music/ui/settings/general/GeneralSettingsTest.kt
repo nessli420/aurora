@@ -167,7 +167,11 @@ class GeneralSettingsTest {
         GeneralSettingsScene("about") { AboutSettingsScreen(padding, onBack = {}) }.use { scene ->
             val page = scene.shot()
             assertTrue(page.distinctColors() > 20)
-            scene.click(93f, 360f)
+            // the update card above changes height while it checks, so the ffmpeg link is found by its accent ink
+            val bitmap = org.jetbrains.skia.Bitmap.makeFromImage(page)
+            fun accent(x: Int, y: Int) = bitmap.getColor(x, y).let { c -> (c shr 16 and 0xFF) > 180 && (c shr 8 and 0xFF) < 120 }
+            val link = (380 until page.height).first { y -> (36..150).any { x -> accent(x, y) } }
+            scene.click(93f, link + 6f)
             assertTrue(scene.shot("-ffmpeg").differsFrom(page))
         }
     }

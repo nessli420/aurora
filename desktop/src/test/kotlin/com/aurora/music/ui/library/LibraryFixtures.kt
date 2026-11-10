@@ -31,6 +31,7 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.AmbientBackground
 import com.aurora.music.ui.layout.LocalWindowLayout
 import com.aurora.music.ui.layout.WindowLayout
+import com.aurora.music.desktop.closeAndJoin
 import com.aurora.music.ui.testing.EdtScene
 import com.aurora.music.ui.testing.saveTo
 import com.aurora.music.ui.theme.AuroraTheme
@@ -149,9 +150,16 @@ internal object Samples {
 
 @OptIn(ExperimentalComposeUiApi::class)
 internal class Harness(private val width: Int, private val height: Int, dark: Boolean = true, content: @Composable () -> Unit) : AutoCloseable {
+    // detail screens keep their sort choices in the settings store and read it with the lifecycle, so they need both, as the app gives them
+    private val root = java.nio.file.Files.createTempDirectory("aurora-library").toFile()
+    private val container = com.aurora.music.desktop.DesktopContainer(com.aurora.music.desktop.platform.DesktopPaths(File(root, "Roaming"), File(root, "Local")))
+    private val lifecycle = object : androidx.lifecycle.LifecycleOwner {
+        override val lifecycle = androidx.lifecycle.LifecycleRegistry.createUnsafe(this).apply { currentState = androidx.lifecycle.Lifecycle.State.RESUMED }
+    }
     private val ui = EdtScene(width, height) {
         AuroraTheme(UiPrefs(themeMode = if (dark) ThemeMode.DARK else ThemeMode.LIGHT)) {
-            CompositionLocalProvider(LocalWindowLayout provides WindowLayout(1440, 900)) {
+            CompositionLocalProvider(LocalWindowLayout provides WindowLayout(1440, 900), com.aurora.music.desktop.ui.LocalDesktopContainer provides container,
+                androidx.lifecycle.compose.LocalLifecycleOwner provides lifecycle) {
                 Box(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background)) {
                     AmbientBackground()
                     content()
@@ -180,7 +188,11 @@ internal class Harness(private val width: Int, private val height: Int, dark: Bo
         sendPointerEvent(PointerEventType.Release, Offset(x, y), buttons = PointerButtons(), button = button)
     }
 
-    override fun close() = ui.close()
+    override fun close() {
+        ui.close()
+        container.closeAndJoin()
+        root.deleteRecursively()
+    }
 }
 
 internal fun Image.save(label: String, name: String): Image = saveTo(System.getenv("AURORA_SHOTS")?.let { File(it, label) }, name)

@@ -197,7 +197,8 @@ class VisualizerRenderTest {
         val cells = (0 until count).map { s -> Triple((s % cols) * cellW, (s / cols) * (labelH + canvasH) + labelH, s) }
         val coverage = cells.associate { (x, y, s) -> VisualizerStyle.label(s) to bitmap.coverage(x, y, cellW, canvasH) }
         println(coverage.entries.joinToString("\n") { "%-20s %.4f".format(it.key, it.value) })
-        coverage.forEach { (name, value) -> assertTrue("$name drew nothing ($value)", value > 0.004f) }
+        // a blank cell scores 0; curl flow's 200 thin streaks sit near 0.004, so the bar only has to tell drawn from blank
+        coverage.forEach { (name, value) -> assertTrue("$name drew nothing ($value)", value > 0.001f) }
         assertEquals(count, cells.map { (x, y) -> bitmap.signature(x, y, cellW, canvasH) }.distinct().size)
         val moved = cells.count { (x, y) -> early.signature(x, y, cellW, canvasH) != bitmap.signature(x, y, cellW, canvasH) }
         assertTrue("only $moved of $count styles animated", moved >= count - 1)

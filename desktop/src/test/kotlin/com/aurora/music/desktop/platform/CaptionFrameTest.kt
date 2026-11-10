@@ -78,6 +78,8 @@ class CaptionFrameTest {
                 val monitor = WinUser.MONITORINFO()
                 User32.INSTANCE.GetMonitorInfo(User32.INSTANCE.MonitorFromWindow(hwnd, WinUser.MONITOR_DEFAULTTONEAREST), monitor)
                 assertEquals("maximized client fills the work area, clear of the taskbar", monitor.rcWork.toRectangle(), outer)
+                // the title bar lays out again at the new width, as TitleBar does in the app
+                caption!!.bar = CaptionFrame.Bar(bar, outer.width - 3 * button until outer.width, outer.width - 2 * button until outer.width - button)
                 assertEquals(HTCAPTION, hit(hwnd, outer, outer.width / 2, 1))
                 caption!!.bar = CaptionFrame.Bar()
                 assertTrue(BorderlessFullscreen.enter(frame.windowHandle))
