@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"已将 %1$s 添加到你的 %2$s 喜欢"</string>
     <string name="guest_likes_left">"无法添加 %1$s。Aurora 稍后会再次询问。"</string>
     <string name="guest_sign_in">"登录"</string>
+    <string name="guest_likes_held">"在你通过真人验证之前，%2$s 会暂存 %1$s。请在“设置 → 账号”中验证 %2$s 以完成。"</string>
 </resources>

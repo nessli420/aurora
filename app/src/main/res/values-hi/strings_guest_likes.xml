@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s आपकी %2$s पसंद में जोड़े गए"</string>
     <string name="guest_likes_left">"%1$s नहीं जोड़े जा सके। Aurora बाद में फिर पूछेगा।"</string>
     <string name="guest_sign_in">"साइन इन करें"</string>
+    <string name="guest_likes_held">"%2$s ने %1$s रोक रखे हैं, जब तक आप इंसान होने की जाँच पास नहीं करते। पूरा करने के लिए सेटिंग्स → खाते में %2$s सत्यापित करें।"</string>
 </resources>

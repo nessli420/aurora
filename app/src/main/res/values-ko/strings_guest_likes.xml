@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s을(를) %2$s 좋아요에 추가했습니다"</string>
     <string name="guest_likes_left">"%1$s을(를) 추가하지 못했습니다. Aurora가 나중에 다시 물어봅니다."</string>
     <string name="guest_sign_in">"로그인"</string>
+    <string name="guest_likes_held">"사람 확인을 통과할 때까지 %2$s이(가) %1$s을(를) 보류하고 있습니다. 완료하려면 설정 → 계정에서 %2$s을(를) 인증하세요."</string>
 </resources>

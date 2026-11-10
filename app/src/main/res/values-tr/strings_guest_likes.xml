@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s, %2$s beğenilerine eklendi"</string>
     <string name="guest_likes_left">"%1$s eklenemedi. Aurora daha sonra tekrar soracak."</string>
     <string name="guest_sign_in">"Oturum aç"</string>
+    <string name="guest_likes_held">"%2$s, insan doğrulamasını geçene kadar %1$s bekletiyor. Tamamlamak için Ayarlar → Hesaplar'da %2$s doğrulamasını yap."</string>
 </resources>

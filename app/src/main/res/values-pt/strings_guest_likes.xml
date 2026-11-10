@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s adicionadas às suas curtidas do %2$s"</string>
     <string name="guest_likes_left">"Não foi possível adicionar %1$s. O Aurora perguntará de novo mais tarde."</string>
     <string name="guest_sign_in">"Entrar"</string>
+    <string name="guest_likes_held">"O %2$s está retendo %1$s até você passar na verificação humana. Verifique o %2$s em Configurações → Contas para concluir."</string>
 </resources>

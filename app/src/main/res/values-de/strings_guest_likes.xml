@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s zu deinen %2$s-Likes hinzugefügt"</string>
     <string name="guest_likes_left">"%1$s konnten nicht hinzugefügt werden. Aurora fragt später noch einmal."</string>
     <string name="guest_sign_in">"Anmelden"</string>
+    <string name="guest_likes_held">"%2$s hält %1$s zurück, bis du die Prüfung bestehst, dass du ein Mensch bist. Bestätige %2$s unter Einstellungen → Konten, um abzuschließen."</string>
 </resources>

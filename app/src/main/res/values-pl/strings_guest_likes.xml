@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"Dodano %1$s do polubień w %2$s"</string>
     <string name="guest_likes_left">"Nie udało się dodać: %1$s. Aurora zapyta ponownie później."</string>
     <string name="guest_sign_in">"Zaloguj się"</string>
+    <string name="guest_likes_held">"%2$s wstrzymuje %1$s, dopóki nie przejdziesz weryfikacji, że jesteś człowiekiem. Zweryfikuj %2$s w Ustawienia → Konta, aby dokończyć."</string>
 </resources>

@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s ajoutés à vos j'aime %2$s"</string>
     <string name="guest_likes_left">"Impossible d'ajouter %1$s. Aurora vous redemandera plus tard."</string>
     <string name="guest_sign_in">"Se connecter"</string>
+    <string name="guest_likes_held">"%2$s retient %1$s jusqu'à ce que vous passiez sa vérification humaine. Vérifiez %2$s dans Réglages → Comptes pour terminer."</string>
 </resources>

@@ -1858,7 +1858,7 @@ fun AuroraApp() {
         com.aurora.music.ui.screens.player.MixScreen(mixVM, mixQueue, onClose = { showMix = false })
     }
     matchSong?.let { com.aurora.music.ui.components.MatchPickerSheet(it) { matchSong = null } }
-    com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes,
+    com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
         onMoved = { playerVM.refreshLikes() }, notify = ::confirm)
 
     val tour = whatsNew?.let { versions -> WhatsNewCatalog.releases.filter { it.version in versions }.reversed() }

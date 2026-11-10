@@ -938,7 +938,7 @@ private fun Shell(
             (if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE)).let { if (aiDjActive) it - PlayerPane.QUEUE else it },
     ) {
     matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onChanged = { changed -> player.reloadIfPlaying(changed.id) }) { matchSong = null } }
-    com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes,
+    com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
         onMoved = { player.refreshLikes() }, notify = ::confirm)
     ModalNavigationDrawer(
         drawerState = drawerState,

@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s ditambahkan ke suka %2$s Anda"</string>
     <string name="guest_likes_left">"%1$s tidak dapat ditambahkan. Aurora akan bertanya lagi nanti."</string>
     <string name="guest_sign_in">"Masuk"</string>
+    <string name="guest_likes_held">"%2$s menahan %1$s sampai Anda lulus pemeriksaan manusianya. Verifikasi %2$s di Setelan → Akun untuk menyelesaikan."</string>
 </resources>

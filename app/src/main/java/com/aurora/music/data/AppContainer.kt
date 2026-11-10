@@ -235,7 +235,14 @@ class AppContainer(context: Context) {
     fun soundCloudWaiting(session: Session): Int = soundcloudPendingLikes.waiting(session.userId)
 
     // adds the songs liked while signed out to the account that took the guest's place
-    suspend fun moveGuestLikes(session: Session): Int = backends.build(session)?.let { guestLikes.moveTo(it) } ?: 0
+    suspend fun moveGuestLikes(session: Session): Int {
+        val moved = backends.build(session)?.let { guestLikes.moveTo(it) } ?: 0
+        // soundcloud holds every like behind its bot check until it is passed, so the check opens now rather than leaving them queued
+        if (moved > 0 && session.type == com.aurora.music.data.ServerType.SOUNDCLOUD) verifySoundCloud(session)
+        return moved
+    }
+    // likes the account took but its service hasn't accepted yet
+    fun guestLikesHeld(session: Session): Int = if (session.type == com.aurora.music.data.ServerType.SOUNDCLOUD) soundCloudWaiting(session) else 0
 
     private fun resolveYtSentinel(sentinel: String): String? {
         val uri = runCatching { android.net.Uri.parse(sentinel) }.getOrNull() ?: return null

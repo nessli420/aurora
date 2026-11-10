@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$sを%2$sのいいねに追加しました"</string>
     <string name="guest_likes_left">"%1$sを追加できませんでした。後でもう一度確認します。"</string>
     <string name="guest_sign_in">"サインイン"</string>
+    <string name="guest_likes_held">"%2$sは人間確認が済むまで%1$sを保留しています。完了するには、設定 → アカウントで%2$sを認証してください。"</string>
 </resources>

@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"تمت إضافة %1$s إلى إعجاباتك في %2$s"</string>
     <string name="guest_likes_left">"تعذّرت إضافة %1$s. سيسألك Aurora مرة أخرى لاحقًا."</string>
     <string name="guest_sign_in">"تسجيل الدخول"</string>
+    <string name="guest_likes_held">"يحتجز %2$s %1$s حتى تجتاز التحقق من أنك إنسان. تحقّق من %2$s في الإعدادات ← الحسابات لإكمال ذلك."</string>
 </resources>

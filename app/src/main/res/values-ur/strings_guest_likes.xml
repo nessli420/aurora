@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s آپ کی %2$s پسند میں شامل کر دیے گئے"</string>
     <string name="guest_likes_left">"%1$s شامل نہیں ہو سکے۔ Aurora بعد میں دوبارہ پوچھے گا۔"</string>
     <string name="guest_sign_in">"سائن ان کریں"</string>
+    <string name="guest_likes_held">"%2$s نے %1$s روک رکھے ہیں جب تک آپ انسان ہونے کی جانچ پاس نہیں کرتے۔ مکمل کرنے کے لیے ترتیبات ← اکاؤنٹس میں %2$s کی تصدیق کریں۔"</string>
 </resources>

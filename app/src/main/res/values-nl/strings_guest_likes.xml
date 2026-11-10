@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"%1$s toegevoegd aan je likes op %2$s"</string>
     <string name="guest_likes_left">"%1$s kon(den) niet worden toegevoegd. Aurora vraagt het later opnieuw."</string>
     <string name="guest_sign_in">"Inloggen"</string>
+    <string name="guest_likes_held">"%2$s houdt %1$s vast tot je de menscontrole doorstaat. Verifieer %2$s onder Instellingen → Accounts om af te ronden."</string>
 </resources>

@@ -7,4 +7,5 @@
     <string name="guest_likes_added">"Added %1$s to your %2$s likes"</string>
     <string name="guest_likes_left">"%1$s couldn't be added. Aurora will ask again later."</string>
     <string name="guest_sign_in">"Sign in"</string>
+    <string name="guest_likes_held">"%2$s is holding %1$s until you pass its human check. Verify %2$s under Settings → Accounts to finish."</string>
 </resources>
