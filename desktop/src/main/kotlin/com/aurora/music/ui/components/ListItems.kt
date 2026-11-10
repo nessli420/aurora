@@ -460,16 +460,21 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier, 
 
 @Composable
 fun ArtistCircle(artist: Artist, onClick: () -> Unit, modifier: Modifier = Modifier, width: Dp = PageMetrics.CardWidth) {
+    // the same panel album and playlist cards sit on, so a row of artists lines up with them
+    val aurora = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
+    val shape = if (aurora) RoundedCornerShape(themedCorner(16.dp)) else MaterialTheme.shapes.medium
+    val art = if (aurora) width else width - CardPanelPadding * 2
     Column(
         modifier = modifier
             .width(width)
-            .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(themedCorner(16.dp)) else MaterialTheme.shapes.medium)
+            .clip(shape)
+            .then(if (aurora) Modifier else Modifier.auroraPanel(shape))
             .clickable(onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
-            .padding(bottom = 6.dp),
+            .then(if (aurora) Modifier.padding(bottom = 6.dp) else Modifier.padding(CardPanelPadding)),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        Artwork(artist.imageUrl, MaterialTheme.colorScheme.tertiary, Modifier.size(width), corner = width)
+        Artwork(artist.imageUrl, MaterialTheme.colorScheme.tertiary, Modifier.size(art), corner = art)
         Spacer(Modifier.height(8.dp))
         Text(artist.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text(appString(R.string.text_artist_6c3f3d), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
