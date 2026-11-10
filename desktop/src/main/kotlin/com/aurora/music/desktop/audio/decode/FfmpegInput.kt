@@ -11,6 +11,7 @@ import org.bytedeco.ffmpeg.global.avcodec.av_get_bits_per_sample
 import org.bytedeco.ffmpeg.global.avcodec.avcodec_descriptor_get
 import org.bytedeco.ffmpeg.global.avcodec.avcodec_get_name
 import org.bytedeco.ffmpeg.global.avformat.AVIO_SEEKABLE_NORMAL
+import org.bytedeco.ffmpeg.global.avformat.AVFMTCTX_UNSEEKABLE
 import org.bytedeco.ffmpeg.global.avformat.AV_DISPOSITION_ATTACHED_PIC
 import org.bytedeco.ffmpeg.global.avformat.av_find_best_stream
 import org.bytedeco.ffmpeg.global.avformat.avformat_alloc_context
@@ -134,7 +135,9 @@ internal class FfmpegInput(source: String, http: HttpOptions, val interrupt: Ato
             sampleFormat = sampleFormat(),
             bitrate = parameters.bit_rate().takeIf { it > 0 } ?: format.bit_rate().coerceAtLeast(0),
             durationMs = durationMs,
-            seekable = format.pb()?.let { it.seekable() and AVIO_SEEKABLE_NORMAL != 0 } ?: false,
+            seekable = format.pb()?.let { it.seekable() and AVIO_SEEKABLE_NORMAL != 0 } == true ||
+                // hls and dash read through their own playlists, so the byte reader says no, yet they seek by time to the right segment
+                (durationMs > 0 && format.ctx_flags() and AVFMTCTX_UNSEEKABLE == 0 && format.iformat().name().string.split(',').any { it in SEEKS_BY_TIME }),
         )
     }
 
@@ -233,3 +236,6 @@ internal fun parseTags(all: Map<String, String>): AudioTags {
         all = all,
     )
 }
+
+// demuxers that keep their own segment index and seek by timestamp, not by bytes
+private val SEEKS_BY_TIME = setOf("hls", "dash")
