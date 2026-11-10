@@ -1,6 +1,8 @@
 package com.aurora.music.desktop.audio
 
 import com.aurora.music.desktop.linux.SleepInhibitor
+import com.aurora.music.desktop.mac.MacSleepInhibitor
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.natives.AudioDevice
 import com.aurora.music.desktop.natives.DeviceEvent
 import com.aurora.music.desktop.natives.DeviceKind
@@ -138,7 +140,9 @@ object JavaSoundBackend : OutputBackend {
     private const val CHANNELS = 2
     private val SAMPLE_BITS = listOf(32, 24, 16)
     private val watcher = DeviceWatcher(::devices)
-    private val inhibitor by lazy { SleepInhibitor() }
+    private val inhibitor: (Boolean) -> Unit by lazy {
+        if (HostPlatform.isMac) MacSleepInhibitor()::set else SleepInhibitor()::set
+    }
 
     override fun devices(): List<AudioDevice> {
         val mixers = playbackMixers()
@@ -166,7 +170,7 @@ object JavaSoundBackend : OutputBackend {
 
     override fun listen(listener: (DeviceEvent) -> Unit): AutoCloseable = watcher.listen(listener)
 
-    override fun keepAwake(enabled: Boolean) = inhibitor.set(enabled)
+    override fun keepAwake(enabled: Boolean) = inhibitor(enabled)
 
     private fun formats(sampleRate: Int): List<AudioFormat> =
         listOf(AudioFormat(AudioFormat.Encoding.PCM_FLOAT, sampleRate.toFloat(), 32, CHANNELS, CHANNELS * 4, sampleRate.toFloat(), false)) +

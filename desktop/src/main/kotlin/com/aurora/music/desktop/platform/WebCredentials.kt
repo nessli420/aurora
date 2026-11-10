@@ -12,7 +12,7 @@ import javax.crypto.spec.SecretKeySpec
 
 // browser logins for streaming services; windows keeps them under the user's DPAPI key, linux under the keyring's
 // with no keyring on linux they only last until aurora closes
-class WebCredentials(private val root: File, name: String, private val vault: CredentialVault? = if (HostPlatform.isLinux) CredentialVault.system else null) {
+class WebCredentials(private val root: File, name: String, private val vault: CredentialVault? = if (HostPlatform.isWindows) null else CredentialVault.system) {
     private val directory = File(root, "credentials/$name")
     private val memory = ConcurrentHashMap<String, String>()
 

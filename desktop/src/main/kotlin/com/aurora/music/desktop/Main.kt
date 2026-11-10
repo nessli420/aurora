@@ -78,6 +78,8 @@ fun main() {
     val paths = DesktopPaths.default()
     val instance = DesktopRuntime.init(paths) ?: return
     if (HostPlatform.isLinux) LinuxDesktop.applyWindowClass()
+    // the menu bar icon is drawn as a template, so macos tints it to suit a light or dark menu bar
+    if (HostPlatform.isMac) System.setProperty("apple.awt.enableTemplateImages", "true")
     // skiko's setup on linux needs compose's autodpi property first, and its laf branch would touch swing off the edt
     if (HostPlatform.isWindows && System.getProperty("skiko.rendering.laf.global") == "false") {
         thread(isDaemon = true, name = "skiko-warm") { runCatching { org.jetbrains.skiko.Library.load() } }
@@ -121,7 +123,7 @@ fun main() {
         var revealed by remember { mutableStateOf(!glassAtStart && !(customTitleBar && HostPlatform.isWindows)) }
         var caption by remember { mutableStateOf<CaptionFrame?>(null) }
         var quitting by remember { mutableStateOf(false) }
-        val closeToTray by settings.closeToTray.collectAsState(false)
+        val closeToTray by settings.closeToTray.collectAsState(HostPlatform.isMac)
         val translucentSetting by settings.translucentWindow.collectAsState(initialTranslucent)
         val paperTheme by remember { container.settingsStore.uiPrefs.map { it.themeStyle == com.aurora.music.data.ThemeStyle.PAPER } }
             .collectAsState(initialPrefs.themeStyle == com.aurora.music.data.ThemeStyle.PAPER)
@@ -192,6 +194,26 @@ fun main() {
         }
 
         LaunchedEffect(Unit) { container.appUpdater.quitRequests.collect { quit() } }
+
+        // a window closed to the menu bar takes aurora out of the dock until it is shown again
+        if (HostPlatform.isMac) LaunchedEffect(visible) { com.aurora.music.desktop.mac.MacDock.setVisible(visible) }
+
+        // the app menu's quit and settings items and a click on the dock icon go through aurora's own paths
+        if (HostPlatform.isMac) DisposableEffect(Unit) {
+            val desktop = java.awt.Desktop.getDesktop()
+            fun supports(action: java.awt.Desktop.Action) = runCatching { desktop.isSupported(action) }.getOrDefault(false)
+            if (supports(java.awt.Desktop.Action.APP_QUIT_HANDLER)) desktop.setQuitHandler { _, response ->
+                response.cancelQuit()
+                java.awt.EventQueue.invokeLater { quit() }
+            }
+            if (supports(java.awt.Desktop.Action.APP_PREFERENCES)) desktop.setPreferencesHandler {
+                java.awt.EventQueue.invokeLater { show(); shortcuts.tryEmit(Shortcut.SETTINGS) }
+            }
+            if (supports(java.awt.Desktop.Action.APP_EVENT_REOPENED)) desktop.addAppEventListener(
+                java.awt.desktop.AppReopenedListener { java.awt.EventQueue.invokeLater { show() } },
+            )
+            onDispose { runCatching { desktop.setQuitHandler(null); desktop.setPreferencesHandler(null) } }
+        }
 
         LaunchedEffect(windowState) {
             snapshotFlow { Triple(windowState.placement, windowState.position, windowState.size) }.collectLatest {

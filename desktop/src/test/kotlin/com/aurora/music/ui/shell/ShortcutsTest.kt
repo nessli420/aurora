@@ -4,6 +4,7 @@ import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEvent
 import androidx.compose.ui.input.key.KeyEventType
+import com.aurora.music.desktop.platform.HostPlatform
 import com.aurora.music.desktop.ui.Shortcut
 import com.aurora.music.desktop.ui.claimsSpace
 import com.aurora.music.desktop.ui.shortcut
@@ -15,11 +16,14 @@ import org.junit.Test
 
 @OptIn(InternalComposeUiApi::class)
 class ShortcutsTest {
-    private fun down(key: Key, ctrl: Boolean = false, alt: Boolean = false, shift: Boolean = false) =
-        KeyEvent(key, KeyEventType.KeyDown, isCtrlPressed = ctrl, isAltPressed = alt, isShiftPressed = shift)
+    // ctrl stands for the platform's command key: control on windows and linux, command on macos
+    private val mac = HostPlatform.isMac
+
+    private fun down(key: Key, ctrl: Boolean = false, alt: Boolean = false, shift: Boolean = false, control: Boolean = false) =
+        KeyEvent(key, KeyEventType.KeyDown, isCtrlPressed = (ctrl && !mac) || control, isMetaPressed = ctrl && mac, isAltPressed = alt, isShiftPressed = shift)
 
     private fun typed(char: Char, ctrl: Boolean = false) =
-        KeyEvent(Key.Unknown, KeyEventType.Unknown, codePoint = char.code, isCtrlPressed = ctrl)
+        KeyEvent(Key.Unknown, KeyEventType.Unknown, codePoint = char.code, isCtrlPressed = ctrl && !mac, isMetaPressed = ctrl && mac)
 
     @Test fun mapsTheDesktopShortcuts() {
         assertEquals(Shortcut.PLAY_PAUSE, typed(' ').shortcut())
@@ -27,10 +31,19 @@ class ShortcutsTest {
         assertEquals(Shortcut.NEXT, down(Key.DirectionRight, ctrl = true).shortcut())
         assertEquals(Shortcut.SEARCH, down(Key.F, ctrl = true).shortcut())
         assertEquals(Shortcut.LIKE, down(Key.L, ctrl = true).shortcut())
-        assertEquals(Shortcut.QUEUE, down(Key.Q, ctrl = true).shortcut())
+        // command+q stays the mac's quit
+        assertEquals(Shortcut.QUEUE.takeIf { !mac }, down(Key.Q, ctrl = true).shortcut())
         assertEquals(Shortcut.FULLSCREEN, down(Key.F11).shortcut())
         assertEquals(Shortcut.BACK, down(Key.Escape).shortcut())
-        assertEquals(Shortcut.BACK, down(Key.DirectionLeft, alt = true).shortcut())
+        if (!mac) assertEquals(Shortcut.BACK, down(Key.DirectionLeft, alt = true).shortcut())
+    }
+
+    @Test fun mapsTheMacShortcuts() {
+        if (!mac) return
+        assertEquals(Shortcut.FULLSCREEN, down(Key.F, ctrl = true, control = true).shortcut())
+        assertEquals(Shortcut.BACK, down(Key.LeftBracket, ctrl = true).shortcut())
+        assertNull(down(Key.DirectionLeft, control = true).shortcut())
+        assertNull(down(Key.Q, ctrl = true).shortcut())
     }
 
     @Test fun mapsSpotifysShortcuts() {

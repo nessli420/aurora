@@ -117,7 +117,7 @@ fun SettingsScreen(
     val container = LocalDesktopContainer.current
     val session by container.settingsStore.session.collectAsStateWithLifecycle(initialValue = null)
     val simpleMode by container.settingsStore.simpleMode.collectAsStateWithLifecycle(initialValue = false)
-    val closeToTray by container.desktopSettings.closeToTray.collectAsStateWithLifecycle(initialValue = false)
+    val closeToTray by container.desktopSettings.closeToTray.collectAsStateWithLifecycle(initialValue = com.aurora.music.desktop.platform.HostPlatform.isMac)
     val language by AppStrings.languageTag.collectAsState()
     val scope = rememberCoroutineScope()
     val downloads by container.downloadManager.downloads.collectAsStateWithLifecycle()
@@ -250,8 +250,10 @@ fun SettingsScreen(
                         }
                         if (LocalTrayAvailable.current) {
                             SettingsRowDivider()
-                            SettingsSwitchRow(Icons.Filled.Minimize, appString(R.string.text_close_to_tray_f91cc6),
-                                appString(R.string.text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5), closeToTray) { enabled ->
+                            val mac = com.aurora.music.desktop.platform.HostPlatform.isMac
+                            SettingsSwitchRow(Icons.Filled.Minimize,
+                                appString(if (mac) R.string.text_close_to_menu_bar_mac else R.string.text_close_to_tray_f91cc6),
+                                appString(if (mac) R.string.text_close_to_menu_bar_detail_mac else R.string.text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5), closeToTray) { enabled ->
                                 scope.launch { container.desktopSettings.setCloseToTray(enabled) }
                             }
                         }

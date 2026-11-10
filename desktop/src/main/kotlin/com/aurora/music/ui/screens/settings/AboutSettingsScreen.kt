@@ -114,7 +114,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 Column {
                     Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
                     Text(appString(R.string.text_version_d2f210, (BuildInfo.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    Text(appString(if (HostPlatform.isWindows) R.string.text_windows_java_2566af else R.string.text_linux_java_b7923f, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appString(when { HostPlatform.isWindows -> R.string.text_windows_java_2566af; HostPlatform.isMac -> R.string.text_macos_java_4c1e2a; else -> R.string.text_linux_java_b7923f }, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }
             AppUpdateCard(container.appUpdater)

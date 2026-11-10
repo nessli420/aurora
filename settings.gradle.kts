@@ -21,13 +21,18 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "Aurora"
-include(":app")
 include(":core", ":desktop")
-include(":extension-sdk", ":extension-example")
-project(":extension-example").projectDir = file("examples/extension")
 
-// Vendored decent-player USB bit-perfect driver + Media3 wrapper (MIT). Experimental.
-include(":decent-usb-audio-driver")
-include(":decent-usb-audio-wrapper-media3")
-project(":decent-usb-audio-driver").projectDir = file("decent/decent-usb-audio-driver")
-project(":decent-usb-audio-wrapper-media3").projectDir = file("decent/decent-usb-audio-wrapper-media3")
+// -Paurora.desktopOnly=true leaves out the android modules, so the desktop app builds without an android sdk
+val desktopOnly = providers.gradleProperty("aurora.desktopOnly").orNull == "true"
+if (!desktopOnly) {
+    include(":app")
+    include(":extension-sdk", ":extension-example")
+    project(":extension-example").projectDir = file("examples/extension")
+
+    // Vendored decent-player USB bit-perfect driver + Media3 wrapper (MIT). Experimental.
+    include(":decent-usb-audio-driver")
+    include(":decent-usb-audio-wrapper-media3")
+    project(":decent-usb-audio-driver").projectDir = file("decent/decent-usb-audio-driver")
+    project(":decent-usb-audio-wrapper-media3").projectDir = file("decent/decent-usb-audio-wrapper-media3")
+}
