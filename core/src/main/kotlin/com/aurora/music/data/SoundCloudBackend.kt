@@ -204,8 +204,8 @@ class SoundCloudBackend(
     override suspend fun librarySongs(limit: Int) = allSongs().take(limit)
     override suspend fun songsPage(offset: Int, count: Int) = allSongs().drop(offset).take(count)
     override suspend fun starredSongs() = guest?.of(session.type)?.map { localize(it).copy(liked = true) } ?: allSongs().map { it.copy(liked = true) }
-    override suspend fun starredCount() = if (!signedIn) guest?.count(session.type) ?: 0 else
-        if (pending.of(user).keys.none { it.startsWith("$TRACK_LIKE:") }) api.get("/me").asJsonObject.int("likes_count") else allSongs().size
+    // the list the liked page shows, not /me's likes_count: that counter keeps likes of removed tracks and drifts from the list
+    override suspend fun starredCount() = if (!signedIn) guest?.count(session.type) ?: 0 else allSongs().size
     override suspend fun starredIds(): Set<String> = guest?.ids(session.type) ?: coroutineScope {
         val tracks = async { allSongs().map { it.id } }
         val artists = async { allArtists().map { it.id } }

@@ -231,6 +231,18 @@ class SoundCloudBackendTest {
         assertEquals(listOf("5"), backend.allSongs().map { it.id })
     }
 
+    @Test fun theLikeCountIsTheListNotSoundCloudsDriftingCounter() = runBlocking {
+        val backend = SoundCloudBackend(session, SoundCloudTransport { path ->
+            when (path) {
+                "/me" -> JsonParser.parseString("""{"id":42,"likes_count":14}""")
+                "/users/42/track_likes?limit=200" -> JsonParser.parseString("""{"collection":[{"track":${track(1)}},{"track":${track(2)}},{"track":${track(3)}}]}""")
+                else -> error(path)
+            }
+        })
+        assertEquals(3, backend.starredCount())
+        assertEquals(3, backend.starredSongs().size)
+    }
+
     @Test fun pendingLikesSurviveARestartAndSettleOnceSoundCloudAgrees() = runBlocking {
         val dir = java.nio.file.Files.createTempDirectory("aurora-sc-likes-").toFile()
         try {
