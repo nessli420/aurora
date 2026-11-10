@@ -129,6 +129,8 @@ internal class AuditScene(
         runBlocking {
             with(container) {
                 settingsStore.setLrclibEnabled(false)
+                // seeded accounts with no seen version would open the update tour over every screen
+                settingsStore.setWhatsNewSeen(com.aurora.music.desktop.platform.BuildInfo.VERSION_NAME)
                 settingsStore.setArtworkLookupEnabled(false)
                 settingsStore.setLocalProfile(LocalProfile(name = "Alex Rivera"))
                 desktopSettings.setMusicFolders(listOf(AuditLibrary.music.path))

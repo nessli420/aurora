@@ -137,6 +137,8 @@ internal class ShellScene(
     init {
         runBlocking {
             container.settingsStore.setLrclibEnabled(false)
+            // seeded accounts with no seen version would open the update tour over every screen
+            container.settingsStore.setWhatsNewSeen(com.aurora.music.desktop.platform.BuildInfo.VERSION_NAME)
             container.seed()
         }
         ui = EdtScene(width, height) {
