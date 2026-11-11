@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"Restaurar"</string>
     <string name="window_system_title_bar" formatted="false">"Barra de título do sistema"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Usa a moldura de janela do seu desktop em vez da do Aurora. Aplica-se após reiniciar o Aurora."</string>
+    <string name="window_mac_renderer" formatted="false">"Renderizador gráfico"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"O OpenGL mantém o Aurora estável quando telas são adicionadas ou removidas, como um tablet usado como segunda tela. Metal é o renderizador mais recente da Apple. Aplica-se após reiniciar o Aurora."</string>
     <string name="discord_not_running_desktop" formatted="false">"O Discord não está em execução"</string>
     <string name="discord_without_app_desktop" formatted="false">"Sem o app do Discord"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Só é necessário quando o app do Discord não está em execução neste computador"</string>

@@ -92,6 +92,7 @@ fun main() {
     AppLog.d(TAG, "Container built${since()}")
     SingletonImageLoader.setSafe { container.imageLoader }
     val settings = container.desktopSettings
+    if (HostPlatform.isMac) applyMacRenderer(runBlocking { settings.macMetalRenderer.first() })
     val (language, savedWindow, initialPrefs) = runBlocking {
         Triple(settings.languageTag.first(), settings.window.first(), container.settingsStore.uiPrefs.first())
     }
@@ -309,4 +310,12 @@ private fun defaultWindowSize(): DpSize {
     val width = screen?.let { minOf(1440, it.width - 48) } ?: 1440
     val height = screen?.let { minOf(900, it.height - 48) } ?: 900
     return DpSize(width.coerceAtLeast(960).dp, height.coerceAtLeast(600).dp)
+}
+
+// Java2D reads these once, when AWT starts, so this has to run before the first window or image.
+private fun applyMacRenderer(metal: Boolean) {
+    System.setProperty("sun.java2d.metal", metal.toString())
+    System.setProperty("sun.java2d.opengl", (!metal).toString())
+    val config = java.awt.GraphicsEnvironment.getLocalGraphicsEnvironment().defaultScreenDevice.defaultConfiguration
+    AppLog.d(TAG, "Java2D renderer: ${config.javaClass.simpleName}")
 }

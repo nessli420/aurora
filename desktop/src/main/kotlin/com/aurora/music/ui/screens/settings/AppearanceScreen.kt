@@ -84,6 +84,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
     val backdropAvailable = LocalBackdropAvailable.current
     val micaBackdrop by desktopSettings.micaBackdrop.collectAsStateWithLifecycle(initialValue = false)
     val systemTitleBar by desktopSettings.systemTitleBar.collectAsStateWithLifecycle(initialValue = false)
+    val macMetal by desktopSettings.macMetalRenderer.collectAsStateWithLifecycle(initialValue = false)
     val glassLook by desktopSettings.glassLook.collectAsStateWithLifecycle(initialValue = GlassLook())
     val scope = rememberCoroutineScope()
     fun tablet(setting: TabletSetting, value: Float) { scope.launch { store.setTabletSetting(setting, value) } }
@@ -152,6 +153,13 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                     subtitle = appString(R.string.window_system_title_bar_summary),
                     checked = systemTitleBar,
                 ) { v -> scope.launch { desktopSettings.setSystemTitleBar(v) } }
+            }
+
+            if (HostPlatform.isMac) item {
+                SegmentedRow(
+                    appString(R.string.window_mac_renderer), listOf("OpenGL", "Metal"), if (macMetal) 1 else 0,
+                    subtitle = appString(R.string.window_mac_renderer_summary),
+                ) { i -> scope.launch { desktopSettings.setMacMetalRenderer(i == 1) } }
             }
 
             if (prefs.themeStyle == ThemeStyle.AURORA) {

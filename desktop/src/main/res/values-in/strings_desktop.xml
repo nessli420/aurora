@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"Pulihkan"</string>
     <string name="window_system_title_bar" formatted="false">"Bilah judul sistem"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Gunakan bingkai jendela desktop Anda, bukan milik Aurora. Berlaku setelah Aurora dimulai ulang."</string>
+    <string name="window_mac_renderer" formatted="false">"Perender grafis"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL menjaga Aurora tetap stabil saat layar ditambahkan atau dilepas, misalnya tablet sebagai layar kedua. Metal adalah perender Apple yang lebih baru. Berlaku setelah Aurora dimulai ulang."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord tidak berjalan"</string>
     <string name="discord_without_app_desktop" formatted="false">"Tanpa aplikasi Discord"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Hanya diperlukan jika aplikasi Discord tidak berjalan di komputer ini"</string>

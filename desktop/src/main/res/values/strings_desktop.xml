@@ -116,6 +116,8 @@
     <string name="window_restore" formatted="false">"Restore"</string>
     <string name="window_system_title_bar" formatted="false">"System title bar"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Use your desktop's own window frame instead of Aurora's. Applies after restarting Aurora."</string>
+    <string name="window_mac_renderer" formatted="false">"Graphics renderer"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL keeps Aurora steady when displays are added or removed, such as a tablet used as a second screen. Metal is Apple\'s newer renderer. Applies after restarting Aurora."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord isn't running"</string>
     <string name="discord_without_app_desktop" formatted="false">"Without the Discord app"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Only needed when the Discord app isn't running on this computer"</string>

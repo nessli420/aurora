@@ -116,6 +116,8 @@
     <string name="window_restore" formatted="false">"Восстановить"</string>
     <string name="window_system_title_bar" formatted="false">"Системный заголовок окна"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Использовать рамку окна вашего рабочего стола вместо рамки Aurora. Применяется после перезапуска Aurora."</string>
+    <string name="window_mac_renderer" formatted="false">"Графический рендерер"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL сохраняет стабильность Aurora при подключении и отключении экранов, например планшета в роли второго монитора. Metal — более новый рендерер Apple. Применяется после перезапуска Aurora."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord не запущен"</string>
     <string name="discord_without_app_desktop" formatted="false">"Без приложения Discord"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Нужно, только если приложение Discord не запущено на этом компьютере"</string>

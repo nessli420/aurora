@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"元に戻す"</string>
     <string name="window_system_title_bar" formatted="false">"システムのタイトルバー"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Aurora の代わりにデスクトップ標準のウィンドウ枠を使います。Aurora の再起動後に適用されます。"</string>
+    <string name="window_mac_renderer" formatted="false">"グラフィックレンダラー"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL は、タブレットをサブディスプレイにするなど画面の追加や取り外しがあっても Aurora を安定させます。Metal は Apple の新しいレンダラーです。Aurora の再起動後に適用されます。"</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord が起動していません"</string>
     <string name="discord_without_app_desktop" formatted="false">"Discord アプリを使わない場合"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"このコンピューターで Discord アプリが起動していない場合にのみ必要です"</string>

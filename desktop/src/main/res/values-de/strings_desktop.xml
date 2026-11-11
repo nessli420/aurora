@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"Wiederherstellen"</string>
     <string name="window_system_title_bar" formatted="false">"System-Titelleiste"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Den Fensterrahmen deines Desktops statt des Aurora-Rahmens verwenden. Gilt nach einem Neustart von Aurora."</string>
+    <string name="window_mac_renderer" formatted="false">"Grafik-Renderer"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL hält Aurora stabil, wenn Bildschirme hinzugefügt oder entfernt werden, etwa ein Tablet als zweiter Bildschirm. Metal ist Apples neuerer Renderer. Gilt nach einem Neustart von Aurora."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord läuft nicht"</string>
     <string name="discord_without_app_desktop" formatted="false">"Ohne die Discord-App"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Nur nötig, wenn die Discord-App auf diesem Computer nicht läuft"</string>

@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"استعادة"</string>
     <string name="window_system_title_bar" formatted="false">"شريط عنوان النظام"</string>
     <string name="window_system_title_bar_summary" formatted="false">"استخدام إطار النافذة الخاص بسطح المكتب بدلاً من إطار Aurora. يُطبَّق بعد إعادة تشغيل Aurora."</string>
+    <string name="window_mac_renderer" formatted="false">"محرّك عرض الرسومات"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"يحافظ OpenGL على استقرار Aurora عند إضافة شاشات أو إزالتها، مثل استخدام جهاز لوحي كشاشة ثانية. Metal هو محرّك العرض الأحدث من Apple. يُطبَّق بعد إعادة تشغيل Aurora."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord لا يعمل"</string>
     <string name="discord_without_app_desktop" formatted="false">"بدون تطبيق Discord"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"مطلوب فقط عندما لا يعمل تطبيق Discord على هذا الكمبيوتر"</string>

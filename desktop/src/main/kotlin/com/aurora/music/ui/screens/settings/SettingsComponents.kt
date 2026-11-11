@@ -342,9 +342,10 @@ internal fun DirectSliderRow(title: String, valueLabel: String, value: Float, ra
 }
 
 @Composable
-fun SegmentedRow(title: String, options: List<String>, selected: Int, onSelect: (Int) -> Unit) {
+fun SegmentedRow(title: String, options: List<String>, selected: Int, subtitle: String? = null, onSelect: (Int) -> Unit) {
     Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp)) {
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
+        if (subtitle != null) Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.size(10.dp))
         SegmentedChoice(options, selected, onSelect = onSelect)
     }

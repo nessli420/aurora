@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"Przywróć"</string>
     <string name="window_system_title_bar" formatted="false">"Systemowy pasek tytułu"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Używaj ramki okna pulpitu zamiast ramki Aurory. Zmiana zadziała po ponownym uruchomieniu Aurory."</string>
+    <string name="window_mac_renderer" formatted="false">"Renderer grafiki"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL zapewnia stabilność Aurory przy podłączaniu i odłączaniu ekranów, np. tabletu jako drugiego ekranu. Metal to nowszy renderer Apple. Zmiana zadziała po ponownym uruchomieniu Aurory."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord nie jest uruchomiony"</string>
     <string name="discord_without_app_desktop" formatted="false">"Bez aplikacji Discord"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Potrzebne tylko, gdy aplikacja Discord nie działa na tym komputerze"</string>

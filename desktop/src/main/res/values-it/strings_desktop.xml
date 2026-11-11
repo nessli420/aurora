@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"Ripristina"</string>
     <string name="window_system_title_bar" formatted="false">"Barra del titolo di sistema"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Usa la cornice della finestra del desktop invece di quella di Aurora. Si applica al riavvio di Aurora."</string>
+    <string name="window_mac_renderer" formatted="false">"Motore di rendering"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL mantiene Aurora stabile quando si aggiungono o rimuovono schermi, come un tablet usato come secondo schermo. Metal è il motore più recente di Apple. Si applica al riavvio di Aurora."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord non è in esecuzione"</string>
     <string name="discord_without_app_desktop" formatted="false">"Senza l'app Discord"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Serve solo se l'app Discord non è in esecuzione su questo computer"</string>

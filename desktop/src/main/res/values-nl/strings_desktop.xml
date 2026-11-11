@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"Vorige grootte"</string>
     <string name="window_system_title_bar" formatted="false">"Systeemtitelbalk"</string>
     <string name="window_system_title_bar_summary" formatted="false">"Gebruik het vensterkader van je bureaublad in plaats van dat van Aurora. Wordt toegepast na het herstarten van Aurora."</string>
+    <string name="window_mac_renderer" formatted="false">"Grafische renderer"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"OpenGL houdt Aurora stabiel als er schermen worden toegevoegd of verwijderd, zoals een tablet als tweede scherm. Metal is de nieuwere renderer van Apple. Wordt toegepast na het herstarten van Aurora."</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord is niet actief"</string>
     <string name="discord_without_app_desktop" formatted="false">"Zonder de Discord-app"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"Alleen nodig als de Discord-app niet op deze computer draait"</string>

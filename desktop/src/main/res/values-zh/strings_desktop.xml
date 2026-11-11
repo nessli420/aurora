@@ -111,6 +111,8 @@
     <string name="window_restore" formatted="false">"还原"</string>
     <string name="window_system_title_bar" formatted="false">"系统标题栏"</string>
     <string name="window_system_title_bar_summary" formatted="false">"使用桌面自带的窗口边框，而不是 Aurora 的。重启 Aurora 后生效。"</string>
+    <string name="window_mac_renderer" formatted="false">"图形渲染器"</string>
+    <string name="window_mac_renderer_summary" formatted="false">"添加或移除显示器时（例如把平板用作第二屏幕），OpenGL 能让 Aurora 保持稳定。Metal 是 Apple 较新的渲染器。重启 Aurora 后生效。"</string>
     <string name="discord_not_running_desktop" formatted="false">"Discord 未运行"</string>
     <string name="discord_without_app_desktop" formatted="false">"不使用 Discord 应用"</string>
     <string name="discord_without_app_summary_desktop" formatted="false">"仅在此电脑上未运行 Discord 应用时需要"</string>
