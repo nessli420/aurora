@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"自动播放"</string>
+    <string name="autoplay_detail">"队列播完后，继续播放与你所听歌曲相似的歌曲"</string>
+    <string name="autoplay_heading">"自动播放"</string>
+    <string name="autoplay_heading_detail">"与你播放的歌曲相似的歌曲"</string>
+    <string name="whats_new_autoplay_title">"自动播放让音乐不停歇"</string>
+    <string name="whats_new_autoplay_body">"当队列快播完时，Aurora 会直接在队列中添加与你播放的歌曲相似的歌曲。你自己添加的歌曲仍会先播放。你可以在“播放”设置中关闭它。 再次点按随机播放，即可在随机播放的歌曲之间穿插推荐歌曲。"</string>
+    <string name="shuffle_autoplay">"随机播放并自动播放"</string>
+</resources>

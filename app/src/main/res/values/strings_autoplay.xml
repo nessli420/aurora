@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Autoplay"</string>
+    <string name="autoplay_detail">"When your queue runs out, keep playing songs like the ones you've been listening to"</string>
+    <string name="autoplay_heading">"Autoplay"</string>
+    <string name="autoplay_heading_detail">"Songs like what you've been playing"</string>
+    <string name="whats_new_autoplay_title">"Autoplay keeps the music going"</string>
+    <string name="whats_new_autoplay_body">"When your queue is about to run out, Aurora lines up songs like what you've been playing, right in the queue. Songs you add still play first. You can turn it off in Playback settings. Tap shuffle a second time to mix picks in among your shuffled songs."</string>
+    <string name="shuffle_autoplay">"Shuffle with autoplay"</string>
+</resources>

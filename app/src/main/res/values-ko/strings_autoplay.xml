@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"자동 재생"</string>
+    <string name="autoplay_detail">"대기열이 끝나면 듣던 곡과 비슷한 곡을 계속 재생합니다"</string>
+    <string name="autoplay_heading">"자동 재생"</string>
+    <string name="autoplay_heading_detail">"재생하던 곡과 비슷한 곡"</string>
+    <string name="whats_new_autoplay_title">"자동 재생으로 음악이 멈추지 않아요"</string>
+    <string name="whats_new_autoplay_body">"대기열이 거의 끝나면 Aurora가 재생하던 곡과 비슷한 곡을 대기열에 바로 추가합니다. 직접 추가한 곡은 여전히 먼저 재생됩니다. 재생 설정에서 끌 수 있습니다. 셔플을 한 번 더 탭하면 셔플된 곡 사이에 추천곡이 섞입니다."</string>
+    <string name="shuffle_autoplay">"자동 재생 셔플"</string>
+</resources>

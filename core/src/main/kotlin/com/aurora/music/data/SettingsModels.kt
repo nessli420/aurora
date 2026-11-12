@@ -107,7 +107,7 @@ data class PlaybackPrefs(
     val downloadBitrate: Int = 0,   // 0 uses original quality
     val preferHighRes: Boolean = false,
     val scrobble: Boolean = true,
-    val autoplayRadio: Boolean = false,
+    val autoplayRadio: Boolean = true,
     val resumePodcasts: Boolean = true,
     val resumeLongTracks: Boolean = true,
     val longFormSkipButtons: Boolean = true,

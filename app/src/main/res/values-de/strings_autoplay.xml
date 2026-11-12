@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Autoplay"</string>
+    <string name="autoplay_detail">"Wenn deine Warteschlange endet, laufen Songs weiter, die zu dem passen, was du gehört hast"</string>
+    <string name="autoplay_heading">"Autoplay"</string>
+    <string name="autoplay_heading_detail">"Songs wie das, was du gespielt hast"</string>
+    <string name="whats_new_autoplay_title">"Autoplay lässt die Musik weiterlaufen"</string>
+    <string name="whats_new_autoplay_body">"Wenn deine Warteschlange fast leer ist, reiht Aurora Songs ein, die zu dem passen, was du gespielt hast – direkt in der Warteschlange. Songs, die du selbst hinzufügst, laufen weiterhin zuerst. Du kannst es in den Wiedergabe-Einstellungen ausschalten. Tippe ein zweites Mal auf Zufallswiedergabe, um Vorschläge zwischen deine gemischten Songs zu mischen."</string>
+    <string name="shuffle_autoplay">"Zufallswiedergabe mit Autoplay"</string>
+</resources>

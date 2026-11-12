@@ -672,6 +672,8 @@ private fun Shell(
                 onMove = { from, to -> player.moveQueueItem(from, to) },
                 editable = !playerState.isMix,
                 modifier = modifier.padding(horizontal = 4.dp),
+                autoplayFrom = playerState.autoplayFrom,
+                smartPicks = playerState.smartPicks,
             )
             PlayerPane.RELATED -> com.aurora.music.ui.screens.player.RelatedPane(
                 playerState.current,

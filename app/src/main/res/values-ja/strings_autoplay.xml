@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"自動再生"</string>
+    <string name="autoplay_detail">"キューが終わったら、聴いていた曲に似た曲を流し続けます"</string>
+    <string name="autoplay_heading">"自動再生"</string>
+    <string name="autoplay_heading_detail">"再生していた曲に似た曲"</string>
+    <string name="whats_new_autoplay_title">"自動再生で音楽が止まらない"</string>
+    <string name="whats_new_autoplay_body">"キューが終わりそうになると、Auroraが再生していた曲に似た曲をキューに追加します。自分で追加した曲が先に再生されます。オフにするには再生設定を開いてください。 シャッフルをもう一度タップすると、シャッフル中の曲の間におすすめの曲が混ざります。"</string>
+    <string name="shuffle_autoplay">"自動再生付きシャッフル"</string>
+</resources>

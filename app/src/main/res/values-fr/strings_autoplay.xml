@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Lecture automatique"</string>
+    <string name="autoplay_detail">"Quand votre file d'attente se termine, continuez avec des titres proches de ce que vous écoutiez"</string>
+    <string name="autoplay_heading">"Lecture automatique"</string>
+    <string name="autoplay_heading_detail">"Des titres proches de ce que vous écoutiez"</string>
+    <string name="whats_new_autoplay_title">"La lecture automatique ne coupe jamais la musique"</string>
+    <string name="whats_new_autoplay_body">"Quand votre file d'attente arrive à sa fin, Aurora ajoute des titres proches de ce que vous écoutiez, directement dans la file. Les titres que vous ajoutez passent toujours en premier. Vous pouvez la désactiver dans les réglages de Lecture. Appuyez une deuxième fois sur Lecture aléatoire pour glisser des suggestions parmi vos titres."</string>
+    <string name="shuffle_autoplay">"Lecture aléatoire avec lecture automatique"</string>
+</resources>

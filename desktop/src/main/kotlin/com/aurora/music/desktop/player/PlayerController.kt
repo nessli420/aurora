@@ -46,6 +46,11 @@ data class PlayerUiState(
     val supportsCanvas: Boolean = false,
     val supportsMusicVideo: Boolean = false,
     val longFormSkipButtons: Boolean = true,
+    // where autoplay's picks start among the songs still to come, or -1
+    val autoplayFrom: Int = -1,
+    // shuffle's second tap: autoplay picks mixed in among the shuffled songs, marked in the queue
+    val smartShuffle: Boolean = false,
+    val smartPicks: Set<String> = emptySet(),
     val remote: Boolean = false,
 ) {
     val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec

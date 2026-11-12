@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Riproduzione automatica"</string>
+    <string name="autoplay_detail">"Quando la coda finisce, continua con brani simili a quelli che stavi ascoltando"</string>
+    <string name="autoplay_heading">"Riproduzione automatica"</string>
+    <string name="autoplay_heading_detail">"Brani simili a quelli che stavi ascoltando"</string>
+    <string name="whats_new_autoplay_title">"La riproduzione automatica non ferma la musica"</string>
+    <string name="whats_new_autoplay_body">"Quando la coda sta per finire, Aurora aggiunge brani simili a quelli che stavi ascoltando, direttamente in coda. I brani che aggiungi tu suonano sempre per primi. Puoi disattivarla nelle impostazioni di Riproduzione. Tocca una seconda volta la riproduzione casuale per mescolare i suggerimenti tra i tuoi brani."</string>
+    <string name="shuffle_autoplay">"Casuale con riproduzione automatica"</string>
+</resources>

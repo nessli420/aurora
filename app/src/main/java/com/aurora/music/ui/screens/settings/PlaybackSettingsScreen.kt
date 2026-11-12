@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.Audiotrack
 import androidx.compose.material.icons.filled.AutoStories
 import androidx.compose.material.icons.filled.Forward10
@@ -103,6 +104,9 @@ fun PlaybackSettingsScreen(
                         prefs.gapless -> R.string.text_play_tracks_back_to_back_with_no_gap_e1d3d9
                         else -> R.string.gapless_off_hint
                     }), prefs.gapless) { v -> scope.launch { store.setGapless(v) } }
+                    SettingsRowDivider()
+                    // on unless turned off, as in spotify: the queue never just runs out
+                    SettingsSwitchRow(Icons.Filled.AllInclusive, appString(R.string.autoplay_title), appString(R.string.autoplay_detail), prefs.autoplayRadio) { v -> scope.launch { store.setAutoplayRadio(v) } }
                     SettingsRowDivider()
                     SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_skip_silences_015ea3),
                         appString(if (directUsb) R.string.skip_silence_usb_hint else R.string.skip_silence_hint), prefs.skipSilence) { v -> scope.launch { store.setSkipSilence(v) } }

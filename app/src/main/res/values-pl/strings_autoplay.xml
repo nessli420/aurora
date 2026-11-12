@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Autoodtwarzanie"</string>
+    <string name="autoplay_detail">"Gdy kolejka się skończy, odtwarzaj dalej utwory podobne do tych, których słuchasz"</string>
+    <string name="autoplay_heading">"Autoodtwarzanie"</string>
+    <string name="autoplay_heading_detail">"Utwory podobne do tych, które grały"</string>
+    <string name="whats_new_autoplay_title">"Autoodtwarzanie nie zatrzymuje muzyki"</string>
+    <string name="whats_new_autoplay_body">"Gdy kolejka się kończy, Aurora dodaje do niej utwory podobne do tych, które grały. Utwory dodane przez ciebie wciąż grają pierwsze. Możesz to wyłączyć w ustawieniach Odtwarzania. Dotknij losowania drugi raz, aby wmieszać propozycje między twoje utwory."</string>
+    <string name="shuffle_autoplay">"Losowo z autoodtwarzaniem"</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"ऑटोप्ले"</string>
+    <string name="autoplay_detail">"जब आपकी कतार खत्म हो, तो आपके सुने गानों जैसे गाने चलते रहें"</string>
+    <string name="autoplay_heading">"ऑटोप्ले"</string>
+    <string name="autoplay_heading_detail">"आपके चलाए गानों जैसे गाने"</string>
+    <string name="whats_new_autoplay_title">"ऑटोप्ले संगीत रुकने नहीं देता"</string>
+    <string name="whats_new_autoplay_body">"जब आपकी कतार खत्म होने वाली होती है, Aurora आपके चलाए गानों जैसे गाने सीधे कतार में जोड़ देता है। आपके खुद जोड़े गाने अब भी पहले चलते हैं। आप इसे प्लेबैक सेटिंग्स में बंद कर सकते हैं। अपने शफ़ल किए गानों के बीच सुझाव मिलाने के लिए शफ़ल को दोबारा टैप करें।"</string>
+    <string name="shuffle_autoplay">"ऑटोप्ले के साथ शफ़ल"</string>
+</resources>

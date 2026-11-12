@@ -96,7 +96,8 @@ class DesktopPlayerTest {
         assertEquals(songs.map { it.id }, shuffled.shuffleRestoreIds)
         assertEquals(engine.ids(), player.queueIds())
         val current = shuffled.current!!.song.id
-        on { player.toggleShuffle() }
+        // shuffle with autoplay comes between shuffle and off
+        on { player.toggleShuffle(); player.toggleShuffle() }
         settle()
         assertFalse(engine.state.value.shuffle)
         assertEquals(songs.map { it.id }, engine.ids())
@@ -114,7 +115,8 @@ class DesktopPlayerTest {
         settle()
         assertEquals("s3", engine.ids().first())
         assertEquals(0, on { player.state.value.currentIndex })
-        on { player.toggleShuffle() }
+        // shuffle with autoplay comes between shuffle and off
+        on { player.toggleShuffle(); player.toggleShuffle() }
         settle()
         assertEquals(songs.map { it.id }, engine.ids())
         assertEquals(3, engine.state.value.index)
@@ -215,7 +217,8 @@ class DesktopPlayerTest {
         assertTrue(ui.shuffle)
         assertFalse(ui.isPlaying)
         assertEquals(42f, ui.positionSec)
-        on { second.toggleShuffle() }
+        // shuffle with autoplay comes between shuffle and off
+        on { second.toggleShuffle(); second.toggleShuffle() }
         settle()
         assertEquals(songs.map { it.id }, restoredEngine.ids())
         assertEquals("s2", restoredEngine.state.value.current!!.song.id)

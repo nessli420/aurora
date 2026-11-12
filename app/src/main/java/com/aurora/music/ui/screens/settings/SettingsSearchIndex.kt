@@ -51,7 +51,7 @@ internal object SettingsSearchIndex {
         e(R.string.music_haptics_intensity, null, Routes.SETTINGS_GESTURES),
         e(R.string.text_scrobble_3d49e2, R.string.text_report_plays_to_your_server_262da5, Routes.SETTINGS_GESTURES),
         e(R.string.text_private_session_ec7cef, R.string.text_don_t_report_plays_to_your_server_or_last_fm_074883, Routes.SETTINGS_GESTURES),
-        e(R.string.text_autoplay_radio_7fa244, R.string.text_keep_playing_similar_tracks_when_the_queue_ends_172967, Routes.SETTINGS_GESTURES),
+        e(R.string.autoplay_title, R.string.autoplay_detail, Routes.SETTINGS_PLAYBACK),
         e(R.string.music_haptics_texture, R.string.music_haptics_texture_summary, Routes.SETTINGS_GESTURES),
         e(R.string.music_haptics_timing, null, Routes.SETTINGS_GESTURES),
         e(R.string.text_push_notifications_03be2f, R.string.text_new_releases_recommendations_02976f, Routes.SETTINGS_GESTURES),

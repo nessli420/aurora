@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Reprodução automática"</string>
+    <string name="autoplay_detail">"Quando sua fila acabar, continue tocando músicas parecidas com as que você ouviu"</string>
+    <string name="autoplay_heading">"Reprodução automática"</string>
+    <string name="autoplay_heading_detail">"Músicas parecidas com o que você tocou"</string>
+    <string name="whats_new_autoplay_title">"A reprodução automática mantém a música tocando"</string>
+    <string name="whats_new_autoplay_body">"Quando sua fila está quase no fim, o Aurora adiciona músicas parecidas com o que você tocou, direto na fila. As músicas que você adiciona continuam tocando primeiro. Você pode desativar nas configurações de Reprodução. Toque no aleatório uma segunda vez para misturar sugestões entre suas músicas."</string>
+    <string name="shuffle_autoplay">"Aleatório com reprodução automática"</string>
+</resources>

@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speaker
@@ -192,7 +193,8 @@ fun PlaybackDock(
                     if (state.skipButtons) IconButton(onClick = { skipBy(state, -LongForm.SKIP_SEC, onSeek) }) {
                         Icon(Icons.Filled.Replay10, appString(R.string.skip_back_seconds, LongForm.SKIP_SEC), modifier = Modifier.size(22.dp), tint = colors.onSurface)
                     } else if (!djMode) IconButton(onClick = onToggleShuffle) {
-                        Icon(Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b), modifier = Modifier.size(20.dp),
+                        Icon(if (state.smartShuffle) Icons.Filled.AllInclusive else Icons.Filled.Shuffle,
+                            appString(if (state.smartShuffle) R.string.shuffle_autoplay else R.string.text_shuffle_5b772b), modifier = Modifier.size(20.dp),
                             tint = if (state.shuffle) colors.primary else colors.onSurfaceVariant)
                     }
                     IconButton(onClick = onPrevious) {

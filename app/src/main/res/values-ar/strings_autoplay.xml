@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"التشغيل التلقائي"</string>
+    <string name="autoplay_detail">"عند انتهاء قائمة الانتظار، تابع تشغيل أغانٍ تشبه ما كنت تستمع إليه"</string>
+    <string name="autoplay_heading">"التشغيل التلقائي"</string>
+    <string name="autoplay_heading_detail">"أغانٍ تشبه ما كنت تشغّله"</string>
+    <string name="whats_new_autoplay_title">"التشغيل التلقائي يُبقي الموسيقى مستمرة"</string>
+    <string name="whats_new_autoplay_body">"عندما توشك قائمة الانتظار على الانتهاء، يضيف Aurora أغاني تشبه ما كنت تشغّله مباشرةً في القائمة. الأغاني التي تضيفها بنفسك تُشغَّل أولاً. يمكنك إيقافه من إعدادات التشغيل. اضغط على زر الخلط مرة ثانية لمزج الاقتراحات بين أغانيك المخلوطة."</string>
+    <string name="shuffle_autoplay">"خلط مع التشغيل التلقائي"</string>
+</resources>

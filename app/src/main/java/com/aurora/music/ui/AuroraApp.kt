@@ -625,6 +625,8 @@ fun AuroraApp() {
                 onSaveAsPlaylist = { name -> playerVM.saveQueueAsPlaylist(name) { confirm(it) } },
                 onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showMix = true },
                 editable = !playerState.isMix,
+                autoplayFrom = playerState.autoplayFrom,
+                smartPicks = playerState.smartPicks,
                 showTitle = false,
                 showActions = false,
                 modifier = modifier.padding(horizontal = 4.dp),
@@ -1762,6 +1764,8 @@ fun AuroraApp() {
                     onClose = { showQueue = false },
                     onOpenMix = { playerVM.setExpanded(false); mixQueue = playerState.queue.filterNot { it.id.startsWith("aurora-mix:") }; showQueue = false; showMix = true },
                     shown = showQueue,
+                    autoplayFrom = playerState.autoplayFrom,
+                    smartPicks = playerState.smartPicks,
                 )
             }
             }

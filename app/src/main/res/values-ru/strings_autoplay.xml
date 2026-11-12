@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Автовоспроизведение"</string>
+    <string name="autoplay_detail">"Когда очередь закончится, играть дальше треки, похожие на те, что вы слушали"</string>
+    <string name="autoplay_heading">"Автовоспроизведение"</string>
+    <string name="autoplay_heading_detail">"Треки, похожие на то, что играло"</string>
+    <string name="whats_new_autoplay_title">"Автовоспроизведение не даёт музыке остановиться"</string>
+    <string name="whats_new_autoplay_body">"Когда очередь подходит к концу, Aurora добавляет в неё треки, похожие на то, что играло. Треки, которые вы добавляете сами, по-прежнему звучат первыми. Отключить можно в настройках воспроизведения. Нажмите «Перемешать» ещё раз, чтобы добавить рекомендации между вашими треками."</string>
+    <string name="shuffle_autoplay">"Перемешивание с автовоспроизведением"</string>
+</resources>

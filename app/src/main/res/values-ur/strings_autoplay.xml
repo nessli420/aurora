@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"آٹو پلے"</string>
+    <string name="autoplay_detail">"جب آپ کی قطار ختم ہو تو سنے ہوئے گانوں جیسے گانے چلتے رہیں"</string>
+    <string name="autoplay_heading">"آٹو پلے"</string>
+    <string name="autoplay_heading_detail">"آپ کے چلائے گانوں جیسے گانے"</string>
+    <string name="whats_new_autoplay_title">"آٹو پلے موسیقی رکنے نہیں دیتا"</string>
+    <string name="whats_new_autoplay_body">"جب آپ کی قطار ختم ہونے والی ہو تو Aurora آپ کے چلائے گانوں جیسے گانے سیدھے قطار میں شامل کر دیتا ہے۔ آپ کے خود شامل کیے گانے اب بھی پہلے چلتے ہیں۔ آپ اسے پلے بیک کی ترتیبات میں بند کر سکتے ہیں۔ اپنے شفل کیے گانوں میں تجاویز ملانے کے لیے شفل کو دوسری بار ٹیپ کریں۔"</string>
+    <string name="shuffle_autoplay">"آٹو پلے کے ساتھ شفل"</string>
+</resources>

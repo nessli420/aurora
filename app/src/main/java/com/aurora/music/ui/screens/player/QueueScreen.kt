@@ -30,6 +30,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DeleteSweep
 import androidx.compose.material.icons.filled.DragHandle
@@ -87,6 +88,10 @@ fun QueueScreen(
     onOpenMix: () -> Unit = {},
     editable: Boolean = true,
     shown: Boolean = true,
+    // where autoplay's picks start, or -1; they get their own heading after your own songs
+    autoplayFrom: Int = -1,
+    // songs shuffle with autoplay mixed in among yours, marked with its sign
+    smartPicks: Set<String> = emptySet(),
 ) {
     val accent = MaterialTheme.colorScheme.primary
     var locked by remember { mutableStateOf(false) }
@@ -108,7 +113,7 @@ fun QueueScreen(
                 queue = queue, currentIndex = currentIndex, isPlaying = isPlaying,
                 onJump = onJump, onRemove = onRemove, onMove = onMove, onClear = onClear,
                 onSaveAsPlaylist = onSaveAsPlaylist, onOpenMix = onOpenMix, editable = editable,
-                onClose = onClose, onLockChange = { locked = it },
+                onClose = onClose, onLockChange = { locked = it }, autoplayFrom = autoplayFrom, smartPicks = smartPicks,
                 modifier = Modifier.align(Alignment.TopCenter).widthIn(max = 880.dp).fillMaxSize()
                     .windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 16.dp),
             )
@@ -134,11 +139,15 @@ fun QueueContent(
     showTitle: Boolean = true,
     showActions: Boolean = true,
     onLockChange: (Boolean) -> Unit = {},
+    autoplayFrom: Int = -1,
+    smartPicks: Set<String> = emptySet(),
 ) {
     val current = queue.getOrNull(currentIndex)
     val startIdx = (currentIndex + 1).coerceAtLeast(0)
     // index math instead of queue-sized lists so long queues don't allocate per recomposition
     val upcomingCount = (queue.size - startIdx).coerceAtLeast(0)
+    val autoplay = autoplayFrom.takeIf { it in startIdx until queue.size }
+    val yours = if (autoplay != null) autoplay - startIdx else upcomingCount
     val playedCount = currentIndex.coerceIn(0, queue.size)
     val accent = MaterialTheme.colorScheme.primary
     val rowHeight = 64.dp
@@ -155,6 +164,8 @@ fun QueueContent(
                 if (onClose != null || showTitle || showActions) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (onClose != null) {
                         Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onClose).padding(10.dp))
+                        // as wide as the two actions on the right, so the title sits centered over the mix studio button
+                        if (showActions) Spacer(Modifier.width(48.dp))
                         Spacer(Modifier.weight(1f))
                     }
                     if (showTitle) Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
@@ -231,9 +242,10 @@ fun QueueContent(
                         }
                     }
 
-                    item {
+                    // with only autoplay's picks to come, its heading says what's next on its own
+                    if (yours > 0 || autoplay == null) item {
                         Text(
-                            if (upcomingCount == 0) appString(R.string.text_nothing_up_next_295357) else appString(R.string.queue_track_count, appPlural(R.plurals.track_count, (upcomingCount))),
+                            if (yours == 0) appString(R.string.text_nothing_up_next_295357) else appString(R.string.queue_track_count, appPlural(R.plurals.track_count, yours)),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Black,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -243,6 +255,8 @@ fun QueueContent(
                     items(upcomingCount) { vi ->
                         val i = startIdx + vi
                         val dragging = i == dragIndex
+                        Column {
+                        if (i == autoplay) AutoplayHeading()
                         QueueTrackRow(
                             song = queue[i],
                             index = vi + 1,
@@ -251,6 +265,7 @@ fun QueueContent(
                             dragOffset = if (dragging) dragOffset else 0f,
                             onClick = { onJump(i) },
                             onRemove = if (editable) ({ onRemove(i) }) else null,
+                            picked = queue[i].id in smartPicks,
                             // key on i/startIdx so gesture re-captures fresh indices when current advances or rows shift
                             dragHandle = if (!editable) null else Modifier.pointerInput(queue.size, i, startIdx) {
                                 detectDragGestures(
@@ -265,6 +280,7 @@ fun QueueContent(
                                 )
                             },
                         )
+                        }
                     }
                 }
             }
@@ -310,6 +326,7 @@ private fun QueueTrackRow(
     onClick: () -> Unit,
     onRemove: (() -> Unit)?,
     dragHandle: Modifier?,
+    picked: Boolean = false,
 ) {
     Row(
         Modifier
@@ -338,7 +355,13 @@ private fun QueueTrackRow(
                 song.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
-            Text(song.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                if (picked) {
+                    Icon(Icons.Filled.AllInclusive, appString(R.string.autoplay_heading), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(14.dp))
+                    Spacer(Modifier.width(4.dp))
+                }
+                Text(song.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha), maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
         }
         Text(formatTime(song.durationSec), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
         if (onRemove != null) {
@@ -374,4 +397,19 @@ private fun SaveQueueDialog(onSave: (String) -> Unit, onDismiss: () -> Unit) {
         confirmButton = { TextButton(onClick = { if (name.isNotBlank()) onSave(name.trim()) }, enabled = name.isNotBlank()) { Text(appString(R.string.text_save_efc007)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
     )
+}
+
+// spotify-style: what plays once your own songs run out, picked from what you've been listening to
+@Composable
+private fun AutoplayHeading() {
+    Column(Modifier.fillMaxWidth().padding(top = 14.dp, bottom = 6.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.AllInclusive, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(appString(R.string.autoplay_heading), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black,
+                color = MaterialTheme.colorScheme.onSurface)
+        }
+        Text(appString(R.string.autoplay_heading_detail), style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+    }
 }

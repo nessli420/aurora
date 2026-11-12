@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Putar otomatis"</string>
+    <string name="autoplay_detail">"Saat antrean habis, terus putar lagu yang mirip dengan yang kamu dengarkan"</string>
+    <string name="autoplay_heading">"Putar otomatis"</string>
+    <string name="autoplay_heading_detail">"Lagu yang mirip dengan yang kamu putar"</string>
+    <string name="whats_new_autoplay_title">"Putar otomatis menjaga musik tetap mengalun"</string>
+    <string name="whats_new_autoplay_body">"Saat antreanmu hampir habis, Aurora menambahkan lagu yang mirip dengan yang kamu putar langsung ke antrean. Lagu yang kamu tambahkan sendiri tetap diputar lebih dulu. Kamu bisa mematikannya di setelan Pemutaran. Ketuk acak sekali lagi untuk menyelipkan rekomendasi di antara lagu acakmu."</string>
+    <string name="shuffle_autoplay">"Acak dengan putar otomatis"</string>
+</resources>

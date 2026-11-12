@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Reproducción automática"</string>
+    <string name="autoplay_detail">"Cuando se acabe tu cola, sigue sonando música parecida a la que has escuchado"</string>
+    <string name="autoplay_heading">"Reproducción automática"</string>
+    <string name="autoplay_heading_detail">"Canciones parecidas a lo que has escuchado"</string>
+    <string name="whats_new_autoplay_title">"La reproducción automática mantiene la música"</string>
+    <string name="whats_new_autoplay_body">"Cuando tu cola está a punto de acabarse, Aurora añade canciones parecidas a lo que has escuchado, directamente en la cola. Las canciones que añades tú siguen sonando primero. Puedes desactivarla en los ajustes de Reproducción. Toca el botón de aleatorio una segunda vez para mezclar sugerencias entre tus canciones."</string>
+    <string name="shuffle_autoplay">"Aleatorio con reproducción automática"</string>
+</resources>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Automatisch afspelen"</string>
+    <string name="autoplay_detail">"Als je wachtrij op is, blijven er nummers spelen die lijken op wat je luisterde"</string>
+    <string name="autoplay_heading">"Automatisch afspelen"</string>
+    <string name="autoplay_heading_detail">"Nummers zoals wat je speelde"</string>
+    <string name="whats_new_autoplay_title">"Automatisch afspelen houdt de muziek gaande"</string>
+    <string name="whats_new_autoplay_body">"Als je wachtrij bijna op is, zet Aurora nummers klaar die lijken op wat je speelde, direct in de wachtrij. Nummers die je zelf toevoegt, spelen nog steeds eerst. Je kunt het uitzetten in de instellingen voor Afspelen. Tik nog een keer op shuffle om suggesties tussen je geshuffelde nummers te mengen."</string>
+    <string name="shuffle_autoplay">"Shuffle met automatisch afspelen"</string>
+</resources>

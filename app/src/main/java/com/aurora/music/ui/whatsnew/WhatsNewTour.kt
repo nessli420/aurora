@@ -42,6 +42,7 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.DragIndicator
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.FilterAlt
 import com.aurora.music.data.TrackSort
@@ -107,6 +108,7 @@ import androidx.core.graphics.drawable.toBitmap
 import com.aurora.music.R
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.WhatsNew
+import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.model.LibraryFilter
 import com.aurora.music.model.label
@@ -602,6 +604,27 @@ internal fun TrackSortPreview() {
                     if (active) Icon(Icons.Filled.ArrowDownward, null, Modifier.size(18.dp), tint = colors.primary)
                 }
             }
+        }
+    }
+}
+
+// the queue as autoplay leaves it: your own song, then its picks under their own heading
+@Composable
+internal fun AutoplayPreview() {
+    val colors = MaterialTheme.colorScheme
+    Column(Modifier.fillMaxSize().padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Text(appString(R.string.queue_track_count, appPlural(R.plurals.track_count, 1)), style = MaterialTheme.typography.labelLarge,
+            fontWeight = FontWeight.Bold, color = colors.onSurfaceVariant, modifier = Modifier.padding(start = 4.dp))
+        PreviewRow(AnnotatedString("Golden Hour"), AnnotatedString("Mira Vale")) {}
+        Row(Modifier.padding(start = 4.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(Icons.Filled.AllInclusive, null, Modifier.size(18.dp), tint = colors.primary)
+            Spacer(Modifier.width(6.dp))
+            Text(appString(R.string.autoplay_heading), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold)
+        }
+        Text(appString(R.string.autoplay_heading_detail), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
+            modifier = Modifier.padding(start = 4.dp))
+        listOf("Night Drive" to "Aurelia", "Glass Hours" to "The Lanterns", "Low Tide" to "Sol Marin").forEach { (title, artist) ->
+            PreviewRow(AnnotatedString(title), AnnotatedString(artist)) {}
         }
     }
 }

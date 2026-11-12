@@ -70,6 +70,7 @@ import androidx.compose.material.icons.filled.RepeatOne
 import androidx.compose.material.icons.filled.Forward10
 import androidx.compose.material.icons.filled.Replay10
 import androidx.compose.material.icons.filled.Shuffle
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speed
@@ -543,7 +544,9 @@ fun PlayerScreen(
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable { skipBy(-LongForm.SKIP_SEC) }.pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
                 ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
-                    Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b),
+                    // a second tap on shuffle mixes autoplay picks in, and the button wears autoplay's sign
+                    if (state.smartShuffle) Icons.Filled.AllInclusive else Icons.Filled.Shuffle,
+                    appString(if (state.smartShuffle) R.string.shuffle_autoplay else R.string.text_shuffle_5b772b),
                     tint = if (state.shuffle) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onToggleShuffle).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
                 )

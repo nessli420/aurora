@@ -534,14 +534,24 @@ class MusicRepository(
 
     suspend fun radio(seedId: String): List<Song> {
         if (offline) return emptyList()
-        val id = backendSongId(seedId) ?: return emptyList()
+        val id = radioSeedId(seedId) ?: return emptyList()
         return sourceSongs { it.radio(id) }
     }
 
     fun prefersServerRadio(seedId: String): Boolean {
         if (offline) return false
-        val id = backendSongId(seedId) ?: return false
+        val id = radioSeedId(seedId) ?: return false
         return backend?.prefersServerRadio(id) == true
+    }
+
+    // a song filed under a source's merge namespace (from an imported playlist, say) goes back to that
+    // source by its own id once the source plays on its own; a merged library routes the prefix itself
+    private fun radioSeedId(seedId: String): String? {
+        val id = backendSongId(seedId) ?: return null
+        val source = backend ?: return id
+        if (source is MergedBackend || MERGE_NAMESPACE_SEP !in id) return id
+        val own = mergeNamespace(source.session) + MERGE_NAMESPACE_SEP
+        return if (id.startsWith(own)) id.removePrefix(own) else id
     }
 
     // a library view creates in that library's own account, or in the self-hosted one picked from its targets

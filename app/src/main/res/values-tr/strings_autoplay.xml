@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="autoplay_title">"Otomatik oynatma"</string>
+    <string name="autoplay_detail">"Sıran bittiğinde dinlediklerine benzer şarkıları çalmaya devam et"</string>
+    <string name="autoplay_heading">"Otomatik oynatma"</string>
+    <string name="autoplay_heading_detail">"Çaldıklarına benzer şarkılar"</string>
+    <string name="whats_new_autoplay_title">"Otomatik oynatma müziği durdurmaz"</string>
+    <string name="whats_new_autoplay_body">"Sıran bitmek üzereyken Aurora, çaldıklarına benzer şarkıları doğrudan sıraya ekler. Kendi eklediğin şarkılar yine önce çalar. Oynatma ayarlarından kapatabilirsin. Karışık çalmaya ikinci kez dokunarak önerileri şarkılarının arasına karıştır."</string>
+    <string name="shuffle_autoplay">"Otomatik oynatmalı karışık çalma"</string>
+</resources>

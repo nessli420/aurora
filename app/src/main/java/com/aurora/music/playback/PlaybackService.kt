@@ -600,10 +600,14 @@ class PlaybackService : MediaLibraryService() {
                     customCommand.customExtras.getStringArrayList("order"))
             } else if (mixPlayer != null) {
                 return Futures.immediateFuture(SessionResult(androidx.media3.session.SessionError.ERROR_NOT_SUPPORTED))
-            } else shuffleQueue.setShuffle(
-                customCommand.customExtras.getInt("target", -1),
-                customCommand.customExtras.getStringArrayList("order"),
-            )
+            } else {
+                // shuffle with autoplay's picks leave with it, before the queue goes back in order
+                customCommand.customExtras.getStringArrayList("drop")?.let(shuffleQueue::dropAhead)
+                shuffleQueue.setShuffle(
+                    customCommand.customExtras.getInt("target", -1),
+                    customCommand.customExtras.getStringArrayList("order"),
+                )
+            }
             CMD_REPEAT -> if (container.aiDjMode.state.value.active) Unit else remotePlayer?.cycleRepeat() ?: networkPlayer?.let { remote ->
                 remote.repeatMode = PlaybackSessionCallback.nextRepeatMode(remote.repeatMode)
             } ?: mixPlayer?.let { mix ->

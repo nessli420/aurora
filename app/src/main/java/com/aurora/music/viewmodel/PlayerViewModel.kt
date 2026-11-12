@@ -91,6 +91,11 @@ data class PlayerUiState(
     val comments: List<com.aurora.music.model.TrackComment> = emptyList(),
     val supportsMusicVideo: Boolean = true,
     val longFormSkipButtons: Boolean = true,
+    // where autoplay's picks start among the songs still to come, or -1
+    val autoplayFrom: Int = -1,
+    // shuffle's second tap: autoplay picks mixed in among the shuffled songs, marked in the queue
+    val smartShuffle: Boolean = false,
+    val smartPicks: Set<String> = emptySet(),
     val remote: Boolean = false,
 ) {
     val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec
@@ -147,7 +152,21 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var songById: Map<String, Song> = emptyMap()
     private val remoteSession get() = container.networkOutput.session.value
 
-    @Volatile private var autoplayEnabled = false
+    @Volatile private var autoplayEnabled = true
+    // songs autoplay queued: they sit after the user's own, and turning autoplay off takes them back out
+    private var autoplayIds: Set<String> = emptySet()
+    private var autoplayJob: Job? = null
+    // the last song a top-up ran for, so a seed with no radio isn't asked again on every sync
+    private var autoplayTriedFor: String? = null
+    // shuffle's second tap: autoplay picks mixed in among your shuffled songs; the next tap takes them back out
+    private var smartShuffle = false
+    private var smartIds: Set<String> = emptySet()
+    private var smartJob: Job? = null
+    // a new queue under shuffle with autoplay still wants its picks
+    private var smartPending = false
+    // bumped with every new queue, so picks fetched for an old one are dropped
+    private var smartContext = 0L
+    private var syncedShuffle = false
     @Volatile private var privateSession = false
 
     private val likes = com.aurora.music.data.Likes(viewModelScope, container.repository, container.settingsStore::setPlaylistLiked)
@@ -223,23 +242,126 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         container.listenBrainz.scrobble(cur, playStartMs)
     }
 
+    // where the songs autoplay queued start in what's still to come, or -1
+    private fun autoplayFrom(c: Player): Int {
+        if (autoplayIds.isEmpty()) return -1
+        return (c.currentMediaItemIndex + 1 until c.mediaItemCount).firstOrNull { c.getMediaItemAt(it).mediaId in autoplayIds } ?: -1
+    }
+
+    // once the last song in the queue starts, more like what has been playing follows it, so the music never stops;
+    // shuffle reorders the queue itself, so the last item is the last to play
     private fun maybeAutoplay() {
-        if (!autoplayEnabled || loadingRadio || remoteSession != null || aiDj.state.value.active) return
         val c = controller ?: return
-        val seed = _state.value.current.id.ifEmpty { return }
-        if (seed.startsWith("aurora-mix:")) return
-        loadingRadio = true
-        viewModelScope.launch {
-            val more = runCatching { container.repository.radio(seed) }.getOrDefault(emptyList())
-                .filter { it.id !in songById.keys }
-            if (more.isNotEmpty()) {
-                songById = songById + more.associateBy { it.id }
-                c.addMediaItems(more.map { toMediaItem(it) })
-                c.play()
-                syncFromController()
-            }
-            loadingRadio = false
+        val index = c.currentMediaItemIndex
+        val count = c.mediaItemCount
+        if (!autoplayEnabled || c.repeatMode != Player.REPEAT_MODE_OFF || index < 0 || index != count - 1 || c.isCurrentMediaItemLive) return
+        val last = c.getMediaItemAt(index).mediaId
+        val tried = "$last#$count"
+        if (tried == autoplayTriedFor || autoplayJob?.isActive == true || queueFillJob?.isActive == true || restoreFill?.isActive == true) return
+        if (loadingRadio || remoteSession != null || aiDj.state.value.active || _state.value.isMix) return
+        val songs = (0 until count).mapNotNull { songById[c.getMediaItemAt(it).mediaId] }
+        if (songs.lastOrNull()?.let(com.aurora.music.data.Autoplay::follows) != true) return
+        autoplayTriedFor = tried
+        val seeds = com.aurora.music.data.Autoplay.seeds(songs).ifEmpty { return }
+        autoplayJob = viewModelScope.launch {
+            val more = com.aurora.music.data.Autoplay.next(seeds, songs,
+                radio = { container.repository.radio(it.id) },
+                // the sonic list leads with the seed itself
+                fallback = { seed -> withContext(Dispatchers.IO) { container.sonicEngine.buildRadio(seed).drop(1) } })
+            // a new queue or an edit meanwhile means these were picked for a queue that is gone
+            val now = controller ?: return@launch
+            if (more.isEmpty() || now.mediaItemCount != count || now.getMediaItemAt(count - 1).mediaId != last) return@launch
+            val ended = now.playbackState == Player.STATE_ENDED
+            songById = songById + more.associateBy { it.id }
+            autoplayIds = autoplayIds + more.map { it.id }
+            now.addMediaItems(more.map { toMediaItem(it) })
+            // the last song finished before the picks arrived, so carry on into them
+            if (ended) { now.seekTo(count, 0); now.play() }
+            syncFromController()
         }
+    }
+
+    // shuffle with autoplay: picks like the queue's songs go in after every few of yours, ahead of time
+    private fun maybeSmart() {
+        val c = controller ?: return
+        if (!smartPending || !smartShuffle || !c.shuffleModeEnabled || smartJob?.isActive == true) return
+        // a queue still paging in gets its picks once it's whole, so they spread over all of it
+        if (queueFillJob?.isActive == true || restoreFill?.isActive == true) return
+        if (remoteSession != null || aiDj.state.value.active || _state.value.isMix) return
+        val index = c.currentMediaItemIndex
+        val count = c.mediaItemCount
+        if (index < 0) return
+        smartPending = false
+        val context = smartContext
+        val songs = (0 until count).mapNotNull { songById[c.getMediaItemAt(it).mediaId] }
+        val current = songById[c.getMediaItemAt(index).mediaId] ?: return
+        val upcoming = (index + 1 until count).mapNotNull { songById[c.getMediaItemAt(it).mediaId] }
+        val limit = com.aurora.music.data.Autoplay.smartCount(count - index - 1).takeIf { it > 0 } ?: return
+        // the playing song first, then what's coming, one per artist
+        val seeds = com.aurora.music.data.Autoplay.seeds((listOf(current) + upcoming).asReversed(), com.aurora.music.data.Autoplay.SMART_SEEDS)
+            .ifEmpty { return }
+        smartJob = viewModelScope.launch {
+            val picks = com.aurora.music.data.Autoplay.next(seeds, songs,
+                radio = { container.repository.radio(it.id) },
+                fallback = { seed -> withContext(Dispatchers.IO) { container.sonicEngine.buildRadio(seed).drop(1) } },
+                limit = limit)
+            val now = controller ?: return@launch
+            if (picks.isEmpty() || context != smartContext || !smartShuffle || !now.shuffleModeEnabled) return@launch
+            val start = now.currentMediaItemIndex + 1
+            val ahead = (start until now.mediaItemCount).map(now::getMediaItemAt)
+            val merged = com.aurora.music.data.Autoplay.interleave(ahead, picks.map { toMediaItem(it) })
+            // the songs before the first pick stay as they are, so the next one keeps its buffer
+            val keep = minOf(com.aurora.music.data.Autoplay.SMART_STRIDE, ahead.size)
+            songById = songById + picks.associateBy { it.id }
+            smartIds = smartIds + picks.map { it.id }
+            now.replaceMediaItems(start + keep, now.mediaItemCount, merged.drop(keep))
+            syncFromController()
+        }
+    }
+
+    // puts autoplay's picks back after your own songs once shuffle has mixed them in, in the order they came
+    private fun regroupAutoplay(c: Player): Boolean {
+        val start = c.currentMediaItemIndex + 1
+        if (start <= 0 || start >= c.mediaItemCount) return false
+        val ahead = (start until c.mediaItemCount).map(c::getMediaItemAt)
+        // autoplay's set keeps the order its picks came in
+        val rank = autoplayIds.withIndex().associate { (i, id) -> id to i }
+        val (picks, yours) = ahead.partition { it.mediaId in rank }
+        val grouped = yours + picks.sortedBy { rank.getValue(it.mediaId) }
+        if (grouped.map { it.mediaId } == ahead.map { it.mediaId }) return false
+        c.replaceMediaItems(start, c.mediaItemCount, grouped)
+        return true
+    }
+
+    // takes the picks shuffle mixed in back out of what's still to come
+    private fun dropSmart() {
+        smartJob?.cancel()
+        smartPending = false
+        val ids = smartIds
+        smartIds = emptySet()
+        val c = controller ?: return
+        if (ids.isEmpty()) return
+        (c.currentMediaItemIndex + 1 until c.mediaItemCount).filter { c.getMediaItemAt(it).mediaId in ids }
+            .asReversed().forEach { c.removeMediaItem(it) }
+    }
+
+    // a new queue keeps shuffle with autoplay on and gets picks of its own
+    private fun newSmartContext() {
+        smartJob?.cancel()
+        smartContext++
+        smartIds = emptySet()
+        smartPending = smartShuffle
+    }
+
+    // takes autoplay's upcoming songs back out, last first so the indices ahead stay put
+    private fun dropAutoplay() {
+        autoplayJob?.cancel()
+        val ids = autoplayIds
+        autoplayIds = emptySet()
+        val c = controller ?: return
+        (c.currentMediaItemIndex + 1 until c.mediaItemCount).filter { c.getMediaItemAt(it).mediaId in ids }
+            .asReversed().forEach { c.removeMediaItem(it) }
+        syncFromController()
     }
 
     init {
@@ -312,6 +434,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch {
             container.settingsStore.playbackPrefs.collect { p ->
+                if (autoplayEnabled && !p.autoplayRadio) dropAutoplay()
                 autoplayEnabled = p.autoplayRadio
                 _state.update { it.copy(longFormSkipButtons = p.longFormSkipButtons) }
                 if (_state.value.speed == 1.0f && p.defaultSpeed != 1.0f && _state.value.current.id.isEmpty()) {
@@ -347,6 +470,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             runCatching { c.pause(); c.stop(); c.clearMediaItems() }
         }
         songById = emptyMap()
+        autoplayJob?.cancel()
+        autoplayIds = emptySet()
+        newSmartContext()
+        smartPending = false
         lastRecordedId = null
         lastNowPlayingId = null
         _state.update {
@@ -377,6 +504,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             positionSec = (c.currentPosition / 1000).toInt().coerceAtLeast(0),
             shuffle = c.shuffleModeEnabled,
             repeat = when (c.repeatMode) { Player.REPEAT_MODE_ALL -> 1; Player.REPEAT_MODE_ONE -> 2; else -> 0 },
+            autoplay = autoplayIds.takeIf { it.isNotEmpty() }?.let { ids -> tracks.mapNotNull { it.id?.takeIf(ids::contains) } },
+            smartShuffle = (smartShuffle && c.shuffleModeEnabled).takeIf { it },
+            smartPicks = smartIds.takeIf { it.isNotEmpty() }?.let { ids -> tracks.mapNotNull { it.id?.takeIf(ids::contains) } },
         )
         val last = lastSavedQueue
         val now = System.currentTimeMillis()
@@ -397,6 +527,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         songById = songs.associateBy { it.id }
         val idx = sq.currentIndex.coerceIn(0, songs.lastIndex)
         val delivery = deliverQueue(songs, idx, sq.positionSec.toLong() * 1000, restoring = true)
+        autoplayIds = sq.autoplay.orEmpty().toSet()
+        smartShuffle = sq.shuffle && sq.smartShuffle == true
+        smartIds = sq.smartPicks.orEmpty().toSet()
+        smartPending = false
         c.playbackParameters = currentParams()
         c.repeatMode = when (sq.repeat) { 1 -> Player.REPEAT_MODE_ALL; 2 -> Player.REPEAT_MODE_ONE; else -> Player.REPEAT_MODE_OFF }
         // buffer at the saved position but stay paused, once launch is over; a play tap prepares sooner
@@ -424,7 +558,14 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private fun rehydrateFromController() {
         val c = controller ?: return
         // the saved copy keeps the format details a media item drops
-        val saved = container.queueStore.get(playingAccountKey.ifBlank { container.currentAccountKey() })?.tracks?.associateBy { it.id }
+        val savedQueue = container.queueStore.get(playingAccountKey.ifBlank { container.currentAccountKey() })
+        val saved = savedQueue?.tracks?.associateBy { it.id }
+        // a recreated screen still knows which of the playing queue's songs autoplay added
+        if (autoplayIds.isEmpty()) autoplayIds = savedQueue?.autoplay.orEmpty().toSet()
+        if (smartIds.isEmpty() && savedQueue?.smartShuffle == true && c.shuffleModeEnabled) {
+            smartShuffle = true
+            smartIds = savedQueue.smartPicks.orEmpty().toSet()
+        }
         songById = (0 until c.mediaItemCount).map { i ->
             val item = c.getMediaItemAt(i)
             aiDj.known(item.mediaId) ?: saved?.get(item.mediaId)?.toSong() ?: songOf(item)
@@ -584,6 +725,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                 queue = if (q.isNotEmpty() || remoteSession != null) q else it.queue,
                 remote = remoteSession != null,
                 currentIndex = c.currentMediaItemIndex.coerceAtLeast(0),
+                autoplayFrom = autoplayFrom(c),
+                smartShuffle = smartShuffle && c.shuffleModeEnabled,
+                smartPicks = smartIds,
                 bpm = ki?.bpm ?: 0,
                 camelot = ki?.camelot ?: "",
                 keyName = ki?.name ?: "",
@@ -594,6 +738,17 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         maybeEnrichLocal(_state.value.current)
         maybeFillAlbum(_state.value.current)
         persistQueue()
+        // shuffle went off some other way (a new queue in order, the notification), so its picks go too
+        // (only on the change itself: a restored queue is briefly in order until the service shuffles it again)
+        val shuffled = c.shuffleModeEnabled
+        if (smartShuffle && syncedShuffle && !shuffled && remoteSession == null) { smartShuffle = false; dropSmart() }
+        val shuffledNow = shuffled && !syncedShuffle
+        syncedShuffle = shuffled
+        // shuffle mixes only your songs; autoplay's picks stay after them
+        // regrouping syncs again with the new order, which is the one to fill
+        if (shuffledNow && remoteSession == null && autoplayIds.isNotEmpty() && regroupAutoplay(c)) return
+        maybeSmart()
+        maybeAutoplay()
     }
 
     private val albumLookups = java.util.Collections.synchronizedSet(HashSet<String>())
@@ -809,6 +964,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     // returns whatever was actually included in the synchronous setMediaItems call, and where the
     // "current" song landed within it — the controller resets to a local index for the windowed case.
     private fun deliverQueue(songs: List<Song>, startIndex: Int, startPositionMs: Long, restoring: Boolean = false): QueueDelivery {
+        autoplayJob?.cancel()
+        autoplayIds = emptySet()
+        newSmartContext()
         cancelQueueFill()
         val c = controller ?: return QueueDelivery(emptyList(), 0)
         val token = java.util.UUID.randomUUID().toString().also { queueToken = it }
@@ -988,7 +1146,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val c = controller ?: run { play(song); return }
         if (c.mediaItemCount == 0) { play(song); return }
         songById = songById + (song.id to song)
-        c.addMediaItem(toMediaItem(song))
+        // what you add yourself plays before autoplay's picks
+        val autoplay = autoplayFrom(c)
+        if (autoplay >= 0) c.addMediaItem(autoplay, toMediaItem(song)) else c.addMediaItem(toMediaItem(song))
         if (c.playbackState == Player.STATE_IDLE) c.prepare()
         syncFromController()
     }
@@ -1112,14 +1272,42 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         if (c.currentPosition > 4000) c.seekTo(0) else c.seekToPreviousMediaItem()
     }
 
-    fun toggleShuffle() = sendShuffle(-1)
+    // off, then shuffle, then shuffle with autoplay picks mixed in, then off again
+    fun toggleShuffle() {
+        if (afterRestoreFill { toggleShuffle() }) return
+        val c = controller ?: return
+        if (remoteSession != null) return sendShuffle(-1)
+        when {
+            !c.shuffleModeEnabled -> sendShuffle(1)
+            !smartShuffle && !_state.value.isMix -> {
+                smartShuffle = true
+                smartPending = true
+                _state.update { it.copy(smartShuffle = true) }
+                maybeSmart()
+            }
+            else -> {
+                smartShuffle = false
+                smartJob?.cancel()
+                smartPending = false
+                val picks = smartIds
+                smartIds = emptySet()
+                _state.update { it.copy(smartShuffle = false, smartPicks = emptySet()) }
+                // the service takes the picks out by id along with shuffle, so the reorder can't shift them
+                sendShuffle(0, picks)
+            }
+        }
+    }
 
-    // target 1 on 0 off -1 toggle service physically reorders and restores original order on disable
-    private fun sendShuffle(target: Int) {
-        if (afterRestoreFill { sendShuffle(target) }) return
+    // target 1 on 0 off -1 toggle service physically reorders and restores original order on disable;
+    // drop = songs to take out of what's still to come first
+    private fun sendShuffle(target: Int, drop: Collection<String> = emptyList()) {
+        if (afterRestoreFill { sendShuffle(target, drop) }) return
         val c = controller ?: return
         c.sendCustomCommand(
-            SessionCommand(PlaybackService.CMD_SHUFFLE, android.os.Bundle().apply { putInt("target", target) }),
+            SessionCommand(PlaybackService.CMD_SHUFFLE, android.os.Bundle().apply {
+                putInt("target", target)
+                if (drop.isNotEmpty()) putStringArrayList("drop", ArrayList(drop))
+            }),
             android.os.Bundle.EMPTY,
         )
     }

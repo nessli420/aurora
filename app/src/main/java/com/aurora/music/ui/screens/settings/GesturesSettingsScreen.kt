@@ -12,7 +12,6 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.MusicNote
 import androidx.compose.material.icons.filled.Notifications
-import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.filled.Swipe
 import androidx.compose.material.icons.filled.SwipeDown
 import androidx.compose.material.icons.filled.TouchApp
@@ -110,8 +109,6 @@ fun GesturesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             item {
                 SettingsGroup {
                     SettingsSwitchRow(Icons.Filled.Notifications, appString(R.string.text_push_notifications_03be2f), appString(R.string.text_new_releases_recommendations_02976f), notifications) { notifications = it }
-                    SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.Radio, appString(R.string.text_autoplay_radio_7fa244), appString(R.string.text_keep_playing_similar_tracks_when_the_queue_ends_172967), playback.autoplayRadio) { v -> scope.launch { store.setAutoplayRadio(v) } }
                     SettingsRowDivider()
                     SettingsSwitchRow(Icons.Filled.History, appString(R.string.text_scrobble_3d49e2), appString(R.string.text_report_plays_to_your_server_262da5), playback.scrobble) { v -> scope.launch { store.setScrobble(v) } }
                     SettingsRowDivider()

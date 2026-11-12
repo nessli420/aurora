@@ -51,6 +51,16 @@ internal class LocalShuffleQueue(private val live: () -> ExoPlayer) {
         }
     }
 
+    // takes these songs out of what's still to come, by id, so a reorder in between can't point it at the wrong ones
+    fun dropAhead(ids: Collection<String>) {
+        if (ids.isEmpty()) return
+        val player = live()
+        val drop = ids.toHashSet()
+        for (i in player.mediaItemCount - 1 downTo player.currentMediaItemIndex + 1) {
+            if (player.getMediaItemAt(i).mediaId in drop) player.removeMediaItem(i)
+        }
+    }
+
     fun maybeNeutralize() {
         if (!pendingNeutralize) return
         val player = live()

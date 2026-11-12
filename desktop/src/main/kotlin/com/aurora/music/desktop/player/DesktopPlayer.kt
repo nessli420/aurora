@@ -1,6 +1,7 @@
 package com.aurora.music.desktop.player
 
 import com.aurora.music.R
+import com.aurora.music.data.Autoplay
 import com.aurora.music.data.LastfmScrobbler
 import com.aurora.music.data.ListenBrainzScrobbler
 import com.aurora.music.data.MusicRepository
@@ -163,7 +164,21 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private var persisted: EngineState? = null
     private var lastPersistMs = 0L
 
-    private var autoplayEnabled = false
+    private var autoplayEnabled = true
+    // songs autoplay queued: they sit after the user's own, and turning autoplay off takes them back out
+    private var autoplayIds: Set<String> = emptySet()
+    private var autoplayJob: Job? = null
+    // the queue entry a top-up last ran for, so a seed with no radio isn't asked again on every tick
+    private var autoplayTriedFor = -1L
+    // shuffle's second tap: autoplay picks mixed in among your shuffled songs; the next tap takes them back out
+    private var smartShuffle = false
+    private var smartIds: Set<String> = emptySet()
+    private var smartJob: Job? = null
+    // a new queue under shuffle with autoplay still wants its picks
+    private var smartPending = false
+    // bumped with every new queue, so picks fetched for an old one are dropped
+    private var smartContext = 0L
+    private var syncedShuffle = false
     private var playbackPrefs = com.aurora.music.data.PlaybackPrefs()
     private var resumeId = ""
     private var resumePositionMs = 0L
@@ -268,6 +283,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 details.crossfadeMs = p.crossfadeSec * 1000L
                 playbackPrefs = p
                 _state.update { it.copy(longFormSkipButtons = p.longFormSkipButtons) }
+                if (autoplayEnabled && !p.autoplayRadio) dropAutoplay()
                 autoplayEnabled = p.autoplayRadio
                 if (_state.value.speed == 1.0f && p.defaultSpeed != 1.0f && _state.value.current.id.isEmpty()) {
                     _state.update { it.copy(speed = p.defaultSpeed) }
@@ -343,7 +359,20 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 positionSec = (s.positionMs / 1000f).coerceAtLeast(0f),
                 queue = syncedQueue,
                 currentIndex = s.index.coerceAtLeast(0),
+                autoplayFrom = autoplayFrom(s),
+                smartShuffle = smartShuffle && s.shuffle,
+                smartPicks = smartIds,
             )
+        }
+        // shuffle went off some other way (a new queue in order, say), so its picks go too
+        if (smartShuffle && !s.shuffle) { smartShuffle = false; dropSmart() }
+        val shuffledNow = s.shuffle && !syncedShuffle
+        syncedShuffle = s.shuffle
+        // shuffle mixes only your songs; autoplay's picks stay after them
+        // regrouping syncs again with the new order, which is the one to fill
+        if (!(shuffledNow && autoplayIds.isNotEmpty() && regroupAutoplay(s))) {
+            maybeSmart(s)
+            maybeAutoplay(s)
         }
         deps.nowPlaying(cur, s.effectivelyPlaying && cur.id.isNotBlank() && !privateSession, _state.value.positionSec)
         if (s.effectivelyPlaying) {
@@ -438,7 +467,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 if (_state.value.sleepEndOfTrack && (event.reason == TransitionReason.AUTO || event.reason == TransitionReason.REPEAT)) sleepNow()
             }
             is EngineEvent.Discontinuity -> reporting.discontinuity(event, engine.state.value, uptime())
-            EngineEvent.Ended -> if (_state.value.sleepEndOfTrack) sleepNow() else maybeAutoplay()
+            EngineEvent.Ended -> if (_state.value.sleepEndOfTrack) sleepNow() else maybeAutoplay(engine.state.value)
             is EngineEvent.Failed -> _messages.tryEmit(event.failure.message)
             is EngineEvent.OutputFallback -> _messages.tryEmit(event.reason)
             is EngineEvent.HardwareVolumeChanged -> showVolume(volumePosition(event.gain))
@@ -470,20 +499,113 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         deps.listenBrainz.scrobble(cur, playStartMs)
     }
 
-    private fun maybeAutoplay() {
-        if (!autoplayEnabled || loadingRadio || aiDj?.state?.value?.active == true) return
-        val seed = _state.value.current.id.ifEmpty { return }
-        loadingRadio = true
-        scope.launch {
-            val queued = engine.state.value.entries.mapTo(HashSet()) { it.song.id }
-            val more = runCatching { deps.repository.radio(seed) }.getOrDefault(emptyList()).filter { it.id !in queued }
-            if (more.isNotEmpty()) {
-                queueGeneration++
-                engine.append(more)
-                engine.play()
-            }
-            loadingRadio = false
+    // where the songs autoplay queued start in what's still to come, or -1
+    private fun autoplayFrom(s: EngineState): Int {
+        if (autoplayIds.isEmpty()) return -1
+        return (s.index + 1 until s.entries.size).firstOrNull { s.entries[it].song.id in autoplayIds } ?: -1
+    }
+
+    // once the last song in the queue starts, more like what has been playing follows it, so the music never stops
+    private fun maybeAutoplay(s: EngineState) {
+        val current = s.current ?: return
+        if (!autoplayEnabled || s.repeat != EngineRepeat.OFF || s.index != s.entries.lastIndex || s.live) return
+        if (current.uid == autoplayTriedFor || autoplayJob?.isActive == true || queueFillJob?.isActive == true) return
+        if (loadingRadio || _state.value.isMix || aiDj?.state?.value?.active == true || !Autoplay.follows(current.song)) return
+        autoplayTriedFor = current.uid
+        val generation = queueGeneration
+        val played = s.entries.take(s.index + 1).map { it.song }
+        val seeds = Autoplay.seeds(played).ifEmpty { return }
+        autoplayJob = scope.launch {
+            val more = Autoplay.next(seeds, s.entries.map { it.song },
+                radio = { deps.repository.radio(it.id) },
+                // the sonic list leads with the seed itself
+                fallback = { seed -> withContext(Dispatchers.IO) { deps.sonic?.buildRadio(seed).orEmpty().drop(1) } })
+            val now = engine.state.value
+            // a new queue or an edit meanwhile means these were picked for a queue that is gone
+            if (more.isEmpty() || generation != queueGeneration || now.entries.lastOrNull()?.uid != current.uid) return@launch
+            autoplayIds = autoplayIds + more.map { it.id }
+            queueGeneration++
+            val ended = now.phase == com.aurora.music.desktop.audio.EnginePhase.ENDED
+            engine.append(more)
+            // the last song finished before the picks arrived, so carry on into them
+            if (ended) { engine.next(); engine.play() }
         }
+    }
+
+    // shuffle with autoplay: picks like the queue's songs go in after every few of yours, ahead of time
+    private fun maybeSmart(s: EngineState) {
+        if (!smartPending || !smartShuffle || !s.shuffle || smartJob?.isActive == true) return
+        val current = s.current ?: return
+        // a queue still paging in gets its picks once it's whole, so they spread over all of it
+        if (queueFillJob?.isActive == true || _state.value.isMix || aiDj?.state?.value?.active == true) return
+        smartPending = false
+        val context = smartContext
+        val upcoming = s.entries.drop(s.index + 1).map { it.song }
+        val count = Autoplay.smartCount(upcoming.size).takeIf { it > 0 } ?: return
+        // the playing song first, then what's coming, one per artist
+        val seeds = Autoplay.seeds((listOf(current.song) + upcoming).asReversed(), Autoplay.SMART_SEEDS).ifEmpty { return }
+        smartJob = scope.launch {
+            val picks = Autoplay.next(seeds, s.entries.map { it.song },
+                radio = { deps.repository.radio(it.id) },
+                fallback = { seed -> withContext(Dispatchers.IO) { deps.sonic?.buildRadio(seed).orEmpty().drop(1) } },
+                limit = count)
+            val now = engine.state.value
+            if (picks.isEmpty() || context != smartContext || !smartShuffle || !now.shuffle) return@launch
+            smartIds = smartIds + picks.map { it.id }
+            queueGeneration++
+            val start = now.index + 1
+            // in order, so each insert lands where the finished queue has it
+            Autoplay.interleave(List<Song?>(now.entries.size - start) { null }, picks).forEachIndexed { i, pick ->
+                if (pick != null) engine.insert(start + i, listOf(pick))
+            }
+        }
+    }
+
+    // puts autoplay's picks back after your own songs once shuffle has mixed them in, in the order they came;
+    // true when it moved any, so the next sync sees the regrouped queue
+    private fun regroupAutoplay(s: EngineState): Boolean {
+        val start = s.index + 1
+        val ids = s.entries.map { it.song.id }.toMutableList()
+        // autoplay's set keeps the order its picks came in
+        val rank = autoplayIds.withIndex().associate { (i, id) -> id to i }
+        val ahead = ids.subList(start.coerceAtMost(ids.size), ids.size)
+        val grouped = ahead.filter { it !in rank } + ahead.filter { it in rank }.sortedBy { rank.getValue(it) }
+        if (grouped == ahead) return false
+        queueGeneration++
+        // each pick goes to the end in turn, in the order it came
+        for (id in grouped.filter { it in rank }) {
+            val at = (start until ids.size).first { ids[it] == id }
+            engine.move(at, ids.lastIndex)
+            ids.add(ids.removeAt(at))
+        }
+        return true
+    }
+
+    // takes the picks shuffle mixed in back out of what's still to come
+    private fun dropSmart() {
+        smartJob?.cancel()
+        smartPending = false
+        val ids = smartIds
+        smartIds = emptySet()
+        if (ids.isEmpty()) return
+        val s = engine.state.value
+        val drop = (s.index + 1 until s.entries.size).filter { s.entries[it].song.id in ids }
+        if (drop.isEmpty()) return
+        queueGeneration++
+        drop.asReversed().forEach { engine.remove(it) }
+    }
+
+    // takes autoplay's upcoming songs back out, last first so the indices ahead stay put
+    private fun dropAutoplay() {
+        autoplayJob?.cancel()
+        val s = engine.state.value
+        val ids = autoplayIds
+        autoplayIds = emptySet()
+        if (ids.isEmpty()) return
+        val drop = (s.index + 1 until s.entries.size).filter { s.entries[it].song.id in ids }
+        if (drop.isEmpty()) return
+        queueGeneration++
+        drop.asReversed().forEach { engine.remove(it) }
     }
 
     private fun maybePersist(s: EngineState) {
@@ -513,6 +635,9 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             shuffle = s.shuffle,
             repeat = when (s.repeat) { EngineRepeat.ALL -> 1; EngineRepeat.ONE -> 2; EngineRepeat.OFF -> 0 },
             shuffleOrder = s.shuffleRestoreIds?.takeIf { s.shuffle },
+            autoplay = autoplayIds.takeIf { it.isNotEmpty() }?.let { ids -> s.entries.map { it.song.id }.filter(ids::contains) },
+            smartShuffle = (smartShuffle && s.shuffle).takeIf { it },
+            smartPicks = smartIds.takeIf { it.isNotEmpty() }?.let { ids -> s.entries.map { it.song.id }.filter(ids::contains) },
         ))
     }
 
@@ -539,6 +664,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         val repeat = when (sq.repeat) { 1 -> RepeatMode.ALL; 2 -> RepeatMode.ONE; else -> RepeatMode.OFF }
         // buffer at saved position but stay paused
         replaceQueue(songs, idx, sq.positionSec * 1000L, play = false)
+        autoplayIds = sq.autoplay.orEmpty().toSet()
+        smartShuffle = sq.shuffle && sq.smartShuffle == true
+        smartIds = sq.smartPicks.orEmpty().toSet()
+        smartPending = false
         engine.setRepeat(EngineRepeat.valueOf(repeat.name))
         if (sq.shuffle) engine.setShuffle(ShuffleTarget.ON, sq.shuffleOrder ?: songs.map { it.id })
         else engine.setShuffle(ShuffleTarget.OFF)
@@ -550,10 +679,21 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     private fun replaceQueue(songs: List<Song>, index: Int, positionMs: Long = 0, play: Boolean = true) {
         cancelQueueFill()
+        autoplayJob?.cancel()
+        autoplayIds = emptySet()
+        newSmartContext()
         queueGeneration++
         retiredEntries = engine.state.value.entries
         engine.setQueue(songs, index, positionMs, play)
         engine.setSpeed(_state.value.speed)
+    }
+
+    // a new queue keeps shuffle with autoplay on and gets picks of its own
+    private fun newSmartContext() {
+        smartJob?.cancel()
+        smartContext++
+        smartIds = emptySet()
+        smartPending = smartShuffle
     }
 
     private fun queueSize(): Int = if (retiredEntries != null) _state.value.queue.size else engine.state.value.entries.size
@@ -562,6 +702,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun stopPlayback() {
         cancelQueueFill()
+        autoplayJob?.cancel()
+        autoplayIds = emptySet()
+        newSmartContext()
+        smartPending = false
         queueGeneration++
         retiredEntries = engine.state.value.entries
         engine.stop()
@@ -819,7 +963,9 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override fun addToQueue(song: Song) {
         if (queueSize() == 0) { play(song); return }
         editQueue()
-        engine.append(listOf(song))
+        // what you add yourself plays before autoplay's picks
+        val autoplay = if (retiredEntries == null) autoplayFrom(engine.state.value) else -1
+        if (autoplay >= 0) engine.insert(autoplay, listOf(song)) else engine.append(listOf(song))
     }
 
     override fun playNext(song: Song) {
@@ -905,7 +1051,26 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         if (engine.state.value.positionMs > 4000) engine.seekTo(0) else engine.previousItem()
     }
 
-    override fun toggleShuffle() { if (!djActive) engine.setShuffle(ShuffleTarget.TOGGLE) }
+    // off, then shuffle, then shuffle with autoplay picks mixed in, then off again
+    override fun toggleShuffle() {
+        if (djActive) return
+        val s = engine.state.value
+        when {
+            !s.shuffle -> engine.setShuffle(ShuffleTarget.ON)
+            !smartShuffle && !_state.value.isMix -> {
+                smartShuffle = true
+                smartPending = true
+                _state.update { it.copy(smartShuffle = true) }
+                maybeSmart(s)
+            }
+            else -> {
+                smartShuffle = false
+                _state.update { it.copy(smartShuffle = false) }
+                dropSmart()
+                engine.setShuffle(ShuffleTarget.OFF)
+            }
+        }
+    }
 
     override fun cycleRepeat() {
         if (!djActive) setRepeat(when (_state.value.repeat) {

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.whatsnew
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.AllInclusive
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.FilterAlt
@@ -35,6 +36,8 @@ object WhatsNewCatalog {
             features = listOf(
                 WhatsNewFeature(Icons.Filled.Description, R.string.whats_new_paper_title, R.string.whats_new_paper_body,
                     Routes.SETTINGS_APPEARANCE) { PaperThemePreview() },
+                WhatsNewFeature(Icons.Filled.AllInclusive, R.string.whats_new_autoplay_title, R.string.whats_new_autoplay_body,
+                    Routes.SETTINGS_PLAYBACK) { AutoplayPreview() },
             ),
         ),
         WhatsNewRelease(
