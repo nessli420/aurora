@@ -65,7 +65,7 @@ class SubsonicBackend(
             liked = starred != null,
             explicit = explicitStatus.equals("explicit", true),
             accentArgb = accentArgbFor(id),
-            streamUrl = streamUrl(id, bitrate, bitrate == 0),
+            streamUrl = streamUrl(id, bitrate, bitrate == 0 || bitRate in 1..bitrate),
             albumId = albumId ?: parent ?: "",
             artistId = artistId ?: "",
             suffix = suffix ?: "",

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"Между треками секундная пауза"</string>
+    <string name="gapless_usb_hint">"USB-вывод bit-perfect воспроизводит каждый трек отдельно"</string>
+    <string name="skip_silence_hint">"Убирает тишину между треками и длинные паузы внутри них"</string>
+    <string name="skip_silence_usb_hint">"Недоступно при USB-выводе bit-perfect"</string>
+</resources>

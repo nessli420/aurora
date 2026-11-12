@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"A one-second pause separates tracks"</string>
+    <string name="gapless_usb_hint">"Bit-perfect USB output plays each track separately"</string>
+    <string name="skip_silence_hint">"Trims silence between tracks and long pauses within them"</string>
+    <string name="skip_silence_usb_hint">"Unavailable with bit-perfect USB output"</string>
+</resources>

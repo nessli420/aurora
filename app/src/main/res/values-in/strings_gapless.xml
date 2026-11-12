@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"Jeda satu detik memisahkan setiap lagu"</string>
+    <string name="gapless_usb_hint">"Output USB bit-perfect memutar setiap lagu secara terpisah"</string>
+    <string name="skip_silence_hint">"Memangkas keheningan di antara lagu dan jeda panjang di dalamnya"</string>
+    <string name="skip_silence_usb_hint">"Tidak tersedia dengan output USB bit-perfect"</string>
+</resources>

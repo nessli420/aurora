@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Dodaj czas słuchania sprzed Aurora"</string>
+    <string name="earlier_listening_included">"Zawiera %1$s sprzed Aurora · %2$s w Aurora"</string>
+    <string name="earlier_listening_title">"Czas słuchania sprzed Aurora"</string>
+    <string name="earlier_listening_body">"Dodawany tylko do łącznej liczby minut. Nie tworzy odtworzeń, wykonawców ani dat."</string>
+    <string name="earlier_listening_hours">"Godziny"</string>
+</resources>

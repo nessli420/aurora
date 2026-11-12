@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"\u2067توقف لمدة ثانية واحدة بين المقاطع\u2069"</string>
+    <string name="gapless_usb_hint">"\u2067إخراج USB بنمط bit-perfect يشغّل كل مقطع على حدة\u2069"</string>
+    <string name="skip_silence_hint">"\u2067يقص الصمت بين المقاطع والتوقفات الطويلة داخلها\u2069"</string>
+    <string name="skip_silence_usb_hint">"\u2067غير متاح مع إخراج USB بنمط bit-perfect\u2069"</string>
+</resources>

@@ -932,7 +932,7 @@ class DesktopPlaybackEngine(
             if (deck.draining) {
                 val next = deck.pending
                 if (next == null || !deck.chain.isEnded) return
-                addMarker(deck, deck.restartAfterDrain(), next.track, next.reason)
+                addMarker(deck, deck.restartAfterDrain(gapFrames(next.format.sourceRate)), next.track, next.reason)
                 return@repeat
             }
             if (!deck.decoderEnded || !advance(deck)) return
@@ -988,7 +988,7 @@ class DesktopPlaybackEngine(
                 deck.endInput()
             }
             current.sourceRate == format.sourceRate && current.resampleRate == format.resampleRate && current.outputRate == format.outputRate ->
-                addMarker(deck, deck.switchTo(incoming, format), incoming, reason)
+                addMarker(deck, deck.switchTo(incoming, format, gapFrames(format.sourceRate)), incoming, reason)
             else -> {
                 deck.pending = PendingStart(incoming, reason, format)
                 deck.endInput()
@@ -1007,6 +1007,8 @@ class DesktopPlaybackEngine(
         val next = successorOf(track.entry) ?: return
         // dj speech plays whole and alone, a fade would cut its end or bury its start
         if (track.entry.song.isDjSpeech() || next.song.isDjSpeech()) return
+        // gapless albums play straight through, crossfade only bridges different albums
+        if (settings.gapless && track.entry.song.albumId.isNotBlank() && track.entry.song.albumId == next.song.albumId) return
         val slot = prepared?.takeIf { it.entry.uid == next.uid } ?: return
         val incomingTrack = slot.result?.getOrNull() ?: return
         if (!compatibleOutput(incomingTrack)) return
@@ -1099,6 +1101,8 @@ class DesktopPlaybackEngine(
         val marker = renderMarker ?: return PcmConstants.TIME_UNSET
         return ((marker.startMs + maxOf(0L, streamFrames - marker.frame) * marker.msPerFrame) * 1000).toLong()
     }
+
+    private fun gapFrames(sourceRate: Int): Int = if (config.gapless) 0 else GAP_MS * sourceRate / 1000
 
     private fun maybePrefetch() {
         val deck = primary ?: return
@@ -1329,6 +1333,7 @@ class DesktopPlaybackEngine(
 
     private companion object {
         const val TAG = "AuroraEngine"
+        const val GAP_MS = 1000
         const val WRITE_TIMEOUT_MS = 10
         const val HARDWARE_VOLUME_WAIT_MS = 1_000L
         const val STATUS_NANOS = 20_000_000L

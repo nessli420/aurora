@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Add listening time from before Aurora"</string>
+    <string name="earlier_listening_included">"Includes %1$s from before Aurora · %2$s tracked by Aurora"</string>
+    <string name="earlier_listening_title">"Listening time from before Aurora"</string>
+    <string name="earlier_listening_body">"Adds to your all-time minutes only. No plays, artists or dates are created."</string>
+    <string name="earlier_listening_hours">"Hours"</string>
+</resources>

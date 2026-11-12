@@ -63,6 +63,8 @@ internal class PlaybackAudioOutput(
     private val useFloatOut = bitPerfect || initialPrefs.preferHighRes
     private val usePrecisionProcessing = initialPrefs.preferHighRes || bitPerfect
     @Volatile var preferHighResPref: Boolean = false
+    @Volatile var gapless: Boolean = initialPrefs.gapless
+    private fun gapMs() = if (gapless) 0 else GaplessAudioSink.GAP_MS
     var exclusiveUsbPref = false
     var usbModePref = UsbOutputMode.DIRECT
     var usbFallbackPref = UsbFallbackPolicy.PAUSE
@@ -205,8 +207,9 @@ internal class PlaybackAudioOutput(
                         super.configure(inputFormat, specifiedBufferSize, outputChannels)
                     }
                 }
-                return TappingAudioSink(exclusiveSink, visualizer, initialEvidence.beforeMeter, haptics,
-                    onVolume = { initialEvidence.downstreamGain = it }) { initialEvidence.decoded = it }
+                return GaplessAudioSink(TappingAudioSink(exclusiveSink, visualizer, initialEvidence.beforeMeter, haptics,
+                    onVolume = { initialEvidence.downstreamGain = it }) { initialEvidence.decoded = it }, ::gapMs,
+                    inert = true)
             }
         }
         // prefer ffmpeg decoder so non-flac content decodes to float32
@@ -243,6 +246,14 @@ internal class PlaybackAudioOutput(
         fadeEvidence.compatibilityProcessor.tpdfDither = processing.outputRatePolicy.tpdfDither
         fadeEvidence.compatibilityProcessor.noiseShaping = processing.outputRatePolicy.noiseShaping == true
         val factory = object : DefaultRenderersFactory(context) {
+            override fun buildAudioRenderers(context: Context, extensionRendererMode: Int,
+                mediaCodecSelector: androidx.media3.exoplayer.mediacodec.MediaCodecSelector,
+                enableDecoderFallback: Boolean, audioSink: AudioSink, eventHandler: android.os.Handler,
+                eventListener: androidx.media3.exoplayer.audio.AudioRendererEventListener,
+                out: java.util.ArrayList<androidx.media3.exoplayer.Renderer>) {
+                super.buildAudioRenderers(context, extensionRendererMode, mediaCodecSelector, enableDecoderFallback,
+                    audioSink, eventHandler, eventListener, out)
+            }
             override fun buildAudioSink(context: Context, enableFloatOutput: Boolean, enableAudioTrackPlaybackParams: Boolean): AudioSink {
                 val routedOutput = ConfirmedAudioRoute(context) { changed() }
                 fadeEvidence.routedOutput?.close()
@@ -257,8 +268,8 @@ internal class PlaybackAudioOutput(
                     PrecisionAudioSink(base, it, fadeEvidence.precisionAfterMeter,
                         { processing.outputRatePolicy }, { routedOutput.supportedSampleRates() }).also { wrapped -> fadeEvidence.precisionSink = wrapped }
                 } ?: base
-                return TappingAudioSink(sink, visualizer, fadeEvidence.beforeMeter,
-                    onVolume = { fadeEvidence.downstreamGain = it }) { fadeEvidence.decoded = it }
+                return GaplessAudioSink(TappingAudioSink(sink, visualizer, fadeEvidence.beforeMeter,
+                    onVolume = { fadeEvidence.downstreamGain = it }) { fadeEvidence.decoded = it }, ::gapMs, inert = true)
             }
         }
         return build(factory).also { attachSignalEvidence(it, fadeEvidence) }
@@ -527,10 +538,13 @@ internal class PlaybackAudioOutput(
             nodes += "Single PCM16 output conversion after binary64 global processing"
         if (processors && processing.outputRatePolicy.tpdfDither && engine?.processingChangesSamples == true)
             nodes += "${processing.outputRatePolicy.ditherLabel(raw?.sampleRate ?: 0)} at the final PCM16 conversion"
-        if (processors && player.skipSilenceEnabled) {
-            nodes += "Silence skipping enabled"
-            unknown += "Silence skipping is enabled; removed-sample counts are not instrumented"
-        } else if (player.skipSilenceEnabled) bypassed += "Silence skipping"
+        if (player.skipSilenceEnabled) {
+            if (usb && !processedUsb) bypassed += "Silence trimming (bit-perfect USB)"
+            else {
+                nodes += "Silence trimming (level-relative threshold, faded cuts)"
+                unknown += "Silence trimming removes near-silent passages and fades their edges; removed-sample counts are not instrumented"
+            }
+        }
         val systemEffects = processing.audioEffects?.activeEffectNames().orEmpty()
         if (usb) {
             bypassed += systemEffects

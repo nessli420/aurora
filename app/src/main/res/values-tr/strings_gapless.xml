@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"Parçalar arasında bir saniyelik duraklama olur"</string>
+    <string name="gapless_usb_hint">"Bit-perfect USB çıkışı her parçayı ayrı çalar"</string>
+    <string name="skip_silence_hint">"Parçalar arasındaki sessizliği ve parça içindeki uzun duraklamaları kırpar"</string>
+    <string name="skip_silence_usb_hint">"Bit-perfect USB çıkışında kullanılamaz"</string>
+</resources>

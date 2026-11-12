@@ -84,6 +84,8 @@ internal class FloatTap(private val meter: PcmLevelMeter) {
 internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
     val out = DoubleArray(BLOCK_FRAMES * 2)
     private val decoded = DoubleArray(DECODE_FRAMES * 2)
+    private val silence = DoubleArray(DECODE_FRAMES * 2)
+    private var gapLeft = 0
     private var decodedCount = 0
     private var decodedOffset = 0
     private var configuredAt = 0L
@@ -124,18 +126,19 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
         return trackStart
     }
 
-    fun switchTo(track: OpenTrack, format: ChainFormat): Long {
-        val boundary = configuredAt + ceilDiv(chain.inputFrames * format.outputRate, format.resampleRate.toLong()) + chain.latencyFrames
+    fun switchTo(track: OpenTrack, format: ChainFormat, gap: Int = 0): Long {
+        val boundary = configuredAt + ceilDiv((chain.inputFrames + gap) * format.outputRate, format.resampleRate.toLong()) + chain.latencyFrames
         chain.continueWith(format)
         this.track?.close()
         this.track = track
         resetInput()
+        gapLeft = gap
         scheduleGain(track, boundary)
         trackStart = boundary
         return boundary
     }
 
-    fun restartAfterDrain(): Long {
+    fun restartAfterDrain(gap: Int = 0): Long {
         val next = checkNotNull(pending)
         pending = null
         chain.configure(next.format)
@@ -144,7 +147,8 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
         track?.close()
         track = next.track
         resetInput()
-        val boundary = produced + chain.latencyFrames
+        gapLeft = gap
+        val boundary = produced + ceilDiv(gap.toLong() * next.format.outputRate, next.format.resampleRate.toLong()) + chain.latencyFrames
         scheduleGain(next.track, boundary)
         trackStart = boundary
         return boundary
@@ -168,6 +172,14 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
             }
             val track = track ?: break
             if (draining || decoderEnded) break
+            // gapless off: silence runs through the chain so tails ring out before the next track
+            if (gapLeft > 0) {
+                val accepted = chain.queueInput(silence, 0, minOf(gapLeft, DECODE_FRAMES))
+                if (accepted == 0) break
+                gapLeft -= accepted
+                progress = true
+                continue
+            }
             if (decodedOffset == decodedCount && !read(track)) break
             val accepted = chain.queueInput(decoded, decodedOffset, decodedCount - decodedOffset)
             if (accepted == 0) break
@@ -252,6 +264,7 @@ internal class Deck(val chain: DspChain, private val watch: ReadWatch) {
     }
 
     private fun resetInput() {
+        gapLeft = 0
         decodedCount = 0
         decodedOffset = 0
         decoderEnded = false

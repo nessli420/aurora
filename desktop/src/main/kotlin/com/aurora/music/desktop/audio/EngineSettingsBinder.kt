@@ -27,6 +27,7 @@ fun PlaybackEngine.bindSettings(store: SettingsStore, scope: CoroutineScope): Jo
                 crossfadeMs = playback.crossfadeSec * 1000,
                 crossfadeCurve = playback.crossfadeCurve,
                 crossfadeHeadroom = playback.crossfadeHeadroom,
+                gapless = playback.gapless,
                 replayGain = settings.audio.replayGain,
                 outputRatePolicy = policy,
                 hardwareVolume = playback.usbHardwareVolume != false,

@@ -103,6 +103,7 @@ internal object SettingsKeys {
     val UPDATE_ANNOUNCED = stringPreferencesKey("update_announced")
     val TRACK_SORTS = stringPreferencesKey("track_sorts")
     val PRIVATE_SESSION = booleanPreferencesKey("private_session")
+    val HISTORICAL_LISTENING_MS = longPreferencesKey("historical_listening_ms")
     val GESTURE_SWIPE_ART = booleanPreferencesKey("gesture_swipe_art")
     val GESTURE_SWIPE_DISMISS = booleanPreferencesKey("gesture_swipe_dismiss")
     val GESTURE_DOUBLE_TAP = booleanPreferencesKey("gesture_double_tap")

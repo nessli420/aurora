@@ -216,7 +216,7 @@ class PlaybackService : MediaLibraryService() {
                 ) applyWakeMode(owner)
                 if (p !== player) { refreshEngaged(); return }
                 if (fades.xfadeActive && (events.contains(Player.EVENT_IS_PLAYING_CHANGED) || events.contains(Player.EVENT_PLAY_WHEN_READY_CHANGED))) {
-                    fades.fadePlayer?.playWhenReady = p.isPlaying
+                    fades.followLive(p.isPlaying)
                 }
                 refreshEngaged()
                 if (events.contains(Player.EVENT_MEDIA_ITEM_TRANSITION) || events.contains(Player.EVENT_MEDIA_METADATA_CHANGED) ||
@@ -316,6 +316,8 @@ class PlaybackService : MediaLibraryService() {
                 fades.crossfadeMs = prefs.crossfadeSec * 1000
                 fades.crossfadeCurve = prefs.crossfadeCurve
                 fades.crossfadeHeadroom = prefs.crossfadeHeadroom
+                fades.gapless = prefs.gapless
+                output.gapless = prefs.gapless
                 output.preferHighResPref = prefs.preferHighRes
                 output.exclusiveUsbPref = prefs.bitPerfectUsb
                 output.usbModePref = prefs.usbOutputMode

@@ -80,7 +80,7 @@ fun PlaybackSettingsScreen(
             }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(Icons.Filled.Audiotrack, appString(R.string.text_gapless_playback_439221), appString(R.string.text_play_tracks_back_to_back_with_no_gap_e1d3d9), prefs.gapless) { v -> scope.launch { store.setGapless(v) } }
+                    SettingsSwitchRow(Icons.Filled.Audiotrack, appString(R.string.text_gapless_playback_439221), appString(if (prefs.gapless) R.string.text_play_tracks_back_to_back_with_no_gap_e1d3d9 else R.string.gapless_off_hint), prefs.gapless) { v -> scope.launch { store.setGapless(v) } }
                 }
             }
 

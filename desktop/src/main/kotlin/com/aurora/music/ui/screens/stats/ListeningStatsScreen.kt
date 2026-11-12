@@ -31,6 +31,9 @@ import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.material3.FilterChip
 import com.aurora.music.ui.theme.TextButton
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.OutlinedTextField
+import kotlinx.coroutines.launch
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -74,6 +77,10 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
     val store = LocalDesktopContainer.current.playHistory
     val insights by LocalDesktopContainer.current.settingsStore.insightsPrefs.collectAsStateWithLifecycle(com.aurora.music.data.InsightsPrefs())
     val history by store.history.collectAsStateWithLifecycle()
+    val settings = LocalDesktopContainer.current.settingsStore
+    val earlierMs by settings.historicalListeningMs.collectAsStateWithLifecycle(0L)
+    var editingEarlier by remember { mutableStateOf(false) }
+    val scope = androidx.compose.runtime.rememberCoroutineScope()
     var window by remember(initialWindow) { mutableStateOf(initialWindow ?: RecapWindow.containing(RecapPeriod.DAY, java.time.LocalDate.now().minusDays(1))) }
     var byMinutes by remember { mutableStateOf(false) }
     var picking by remember { mutableStateOf(false) }
@@ -112,7 +119,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     }
                     Row(Modifier.fillMaxWidth().padding(vertical = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         StatCard("${recap.plays}", appString(R.string.text_plays_a6bc73), Modifier.weight(1f))
-                        StatCard("${recap.minutes}", appString(R.string.text_minutes_092f99), Modifier.weight(1f))
+                        StatCard("${recap.minutes + if (window.period == RecapPeriod.ALL) earlierMs / 60_000 else 0}", appString(R.string.text_minutes_092f99), Modifier.weight(1f))
                         StatCard("${recap.artists.size}", appString(R.string.text_artists_1528d8), Modifier.weight(1f))
                         if (wide && recap.millis != 0L) {
                             StatCard("${recap.songs.size}", appString(R.string.text_unique_songs_5af512), Modifier.weight(1f))
@@ -122,6 +129,13 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     }
                     Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (window.period == RecapPeriod.ALL) Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                        if (earlierMs > 0) Text(appString(R.string.earlier_listening_included, listeningDuration(earlierMs), listeningDuration(recap.millis)), Modifier.weight(1f),
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        TextButton({ editingEarlier = true }, Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+                            Text(appString(if (earlierMs > 0) R.string.text_edit_530164 else R.string.earlier_listening_add))
+                        }
+                    }
                     if (onOpenInsights != null && insights.enabled) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).paperClip(RoundedCornerShape(themedCorner(18.dp)))
                             .background(MaterialTheme.colorScheme.primaryContainer)
@@ -185,6 +199,45 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
         picking = false
         window = RecapWindow.containing(window.period, date)
     }
+    if (editingEarlier) EarlierListeningDialog(earlierMs, onDismiss = { editingEarlier = false }) { ms ->
+        editingEarlier = false
+        scope.launch { settings.setHistoricalListeningMs(ms) }
+    }
+}
+
+private fun listeningDuration(ms: Long): String {
+    val minutes = ms / 60_000
+    return if (minutes >= 60) appString(R.string.detail_duration_hours, (minutes / 60).toInt(), (minutes % 60).toInt())
+    else appString(R.string.detail_duration_minutes, minutes.toInt())
+}
+
+@Composable
+private fun EarlierListeningDialog(earlierMs: Long, onDismiss: () -> Unit, onSave: (Long) -> Unit) {
+    var hours by remember { mutableStateOf(if (earlierMs > 0) "${earlierMs / 3_600_000}" else "") }
+    var minutes by remember { mutableStateOf(if (earlierMs > 0) "${earlierMs / 60_000 % 60}" else "") }
+    val parsed = ListeningRecaps.historicalMillis(hours, minutes)
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh,
+        onDismissRequest = onDismiss,
+        title = { Text(appString(R.string.earlier_listening_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                Text(appString(R.string.earlier_listening_body))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedTextField(hours, { hours = it.filter(Char::isDigit).take(7) }, Modifier.weight(1f), label = { Text(appString(R.string.earlier_listening_hours)) },
+                        singleLine = true, isError = parsed == null)
+                    OutlinedTextField(minutes, { minutes = it.filter(Char::isDigit).take(2) }, Modifier.weight(1f), label = { Text(appString(R.string.text_minutes_092f99)) },
+                        singleLine = true, isError = parsed == null)
+                }
+            }
+        },
+        confirmButton = { TextButton(enabled = parsed != null, onClick = { parsed?.let(onSave) }) { Text(appString(R.string.text_save_efc007)) } },
+        dismissButton = {
+            Row {
+                if (earlierMs > 0) TextButton({ onSave(0) }) { Text(appString(R.string.text_remove_e96390), color = MaterialTheme.colorScheme.error) }
+                TextButton(onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) }
+            }
+        },
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

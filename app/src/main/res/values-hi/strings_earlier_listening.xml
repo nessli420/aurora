@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Aurora से पहले का सुनने का समय जोड़ें"</string>
+    <string name="earlier_listening_included">"इसमें Aurora से पहले के %1$s शामिल हैं · Aurora में %2$s"</string>
+    <string name="earlier_listening_title">"Aurora से पहले का सुनने का समय"</string>
+    <string name="earlier_listening_body">"यह सिर्फ़ आपके कुल मिनटों में जुड़ता है। कोई प्ले, कलाकार या तारीख़ नहीं बनती।"</string>
+    <string name="earlier_listening_hours">"घंटे"</string>
+</resources>

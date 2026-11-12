@@ -96,7 +96,7 @@ internal object SettingsSearchIndex {
         e(R.string.text_crossfade_00acfc, null, Routes.SETTINGS_PLAYBACK),
         e(R.string.text_data_saver_07147b, R.string.text_cap_streaming_to_96_kbps_on_mobile_data_4a7eaa, Routes.SETTINGS_PLAYBACK),
         e(R.string.text_playback_speed_6ff42b, null, Routes.SETTINGS_PLAYBACK),
-        e(R.string.text_skip_silences_015ea3, R.string.text_cut_silent_sections_within_tracks_4306c9, Routes.SETTINGS_PLAYBACK),
+        e(R.string.text_skip_silences_015ea3, R.string.skip_silence_hint, Routes.SETTINGS_PLAYBACK),
         e(R.string.text_gapless_playback_439221, R.string.text_play_tracks_back_to_back_with_no_gap_e1d3d9, Routes.SETTINGS_PLAYBACK),
         e(R.string.text_apply_preset_rules_16028a, null, Routes.SETTINGS_PRESET_RULES),
         e(R.string.text_keep_current_sound_6e3bdc, null, Routes.SETTINGS_PRESET_RULES),

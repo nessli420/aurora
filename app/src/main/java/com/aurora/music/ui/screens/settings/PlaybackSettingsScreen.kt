@@ -97,9 +97,15 @@ fun PlaybackSettingsScreen(
             }
             item {
                 SettingsGroup {
-                    SettingsSwitchRow(Icons.Filled.Audiotrack, appString(R.string.text_gapless_playback_439221), appString(R.string.text_play_tracks_back_to_back_with_no_gap_e1d3d9), prefs.gapless) { v -> scope.launch { store.setGapless(v) } }
+                    val directUsb = prefs.bitPerfectUsb && prefs.usbOutputMode == com.aurora.music.data.UsbOutputMode.DIRECT
+                    SettingsSwitchRow(Icons.Filled.Audiotrack, appString(R.string.text_gapless_playback_439221), appString(when {
+                        directUsb -> R.string.gapless_usb_hint
+                        prefs.gapless -> R.string.text_play_tracks_back_to_back_with_no_gap_e1d3d9
+                        else -> R.string.gapless_off_hint
+                    }), prefs.gapless) { v -> scope.launch { store.setGapless(v) } }
                     SettingsRowDivider()
-                    SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_skip_silences_015ea3), appString(R.string.text_cut_silent_sections_within_tracks_4306c9), prefs.skipSilence) { v -> scope.launch { store.setSkipSilence(v) } }
+                    SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_skip_silences_015ea3),
+                        appString(if (directUsb) R.string.skip_silence_usb_hint else R.string.skip_silence_hint), prefs.skipSilence) { v -> scope.launch { store.setSkipSilence(v) } }
                 }
             }
 

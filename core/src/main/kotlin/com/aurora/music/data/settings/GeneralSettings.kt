@@ -26,6 +26,9 @@ interface GeneralSettings {
     val updateAnnounced: Flow<String?>
     suspend fun setUpdateAnnounced(tag: String): Preferences
     val privateSession: Flow<Boolean>
+    // listening time brought from another player, only added to the all-time total
+    val historicalListeningMs: Flow<Long>
+    suspend fun setHistoricalListeningMs(ms: Long): Preferences
     suspend fun setOfflineMode(v: Boolean): Preferences
     suspend fun setDataSaver(v: Boolean): Preferences
     suspend fun setInsightsEnabled(v: Boolean): Preferences
@@ -56,6 +59,10 @@ internal class GeneralSettingsStore(private val dataStore: DataStore<Preferences
     override val updateAnnounced: Flow<String?> = dataStore.data.map { it[Keys.UPDATE_ANNOUNCED] }.distinctUntilChanged()
     override suspend fun setUpdateAnnounced(tag: String) = dataStore.edit { it[Keys.UPDATE_ANNOUNCED] = tag }
     override val privateSession: Flow<Boolean> = dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }.distinctUntilChanged().flowOn(Dispatchers.Default)
+    override val historicalListeningMs: Flow<Long> = dataStore.data.map { it[Keys.HISTORICAL_LISTENING_MS] ?: 0L }.distinctUntilChanged()
+    override suspend fun setHistoricalListeningMs(ms: Long) = dataStore.edit {
+        if (ms > 0) it[Keys.HISTORICAL_LISTENING_MS] = ms else it.remove(Keys.HISTORICAL_LISTENING_MS)
+    }
 
     override suspend fun setOfflineMode(v: Boolean) = dataStore.edit { it[Keys.OFFLINE] = v }
 

@@ -53,7 +53,7 @@ class JellyfinBackend(
             liked = UserData?.IsFavorite == true,
             explicit = false,
             accentArgb = accentArgbFor(Id),
-            streamUrl = client.streamUrl(Id, bitrate, bitrate == 0),
+            streamUrl = client.streamUrl(Id, bitrate, bitrate == 0 || (source?.Bitrate ?: 0) / 1000 in 1..bitrate),
             albumId = AlbumId ?: "",
             artistId = ArtistItems?.firstOrNull()?.Id ?: AlbumArtists?.firstOrNull()?.Id ?: "",
             suffix = source?.Container ?: "",

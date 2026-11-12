@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"트랙 사이에 1초간 멈춥니다"</string>
+    <string name="gapless_usb_hint">"bit-perfect USB 출력은 트랙을 하나씩 따로 재생합니다"</string>
+    <string name="skip_silence_hint">"트랙 사이의 무음과 트랙 안의 긴 무음을 줄입니다"</string>
+    <string name="skip_silence_usb_hint">"bit-perfect USB 출력에서는 사용할 수 없습니다"</string>
+</resources>

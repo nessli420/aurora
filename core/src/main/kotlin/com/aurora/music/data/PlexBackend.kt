@@ -55,7 +55,7 @@ class PlexBackend(
             durationSec = ((duration ?: 0L) / 1000L).coerceIn(0, Int.MAX_VALUE.toLong()).toInt(),
             liked = liked,
             accentArgb = accentArgbFor(id),
-            streamUrl = client.streamUrl(id, bitrate, bitrate <= 0),
+            streamUrl = client.streamUrl(id, bitrate, bitrate <= 0 || (media?.bitrate ?: 0) in 1..bitrate),
             albumId = albumId,
             artistId = grandparentRatingKey.orEmpty(),
             suffix = media?.container ?: part?.container ?: media?.audioCodec.orEmpty(),

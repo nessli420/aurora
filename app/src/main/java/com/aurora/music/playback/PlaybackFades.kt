@@ -48,9 +48,11 @@ internal class PlaybackFades(
     private var nativeEligible = false
     var crossfadeCurve = "SMOOTH"
     var crossfadeHeadroom = true
+    var gapless = true
     private var activeCurve = "SMOOTH"
     private var activeHeadroom = true
     private var xfadeExpectedId: String? = null
+    private var xfadeTailIndex = C.INDEX_UNSET
     private var xfadeInGain = 1f
     private var xfadeOutGain = 1f
 
@@ -95,6 +97,8 @@ internal class PlaybackFades(
         // dj speech plays whole and alone, a fade would cut its end or bury its start
         if (player.currentMediaItem?.mediaId.orEmpty().startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX) ||
             player.getMediaItemAt(next).mediaId.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)) { clearPrepared(); return }
+        // gapless albums play straight through, crossfade only bridges different albums
+        if (gapless && sameAlbum(player.currentMediaItem, player.getMediaItemAt(next))) { clearPrepared(); return }
         val duration = player.duration
         if (duration == C.TIME_UNSET || duration <= 0) return
         val speed = player.playbackParameters.speed.coerceAtLeast(0.1f)
@@ -154,6 +158,7 @@ internal class PlaybackFades(
         incoming.setAudioAttributes(incoming.audioAttributes, !independentOutput())
         setLive(incoming)
         fadePlayer = outgoing
+        xfadeTailIndex = outgoing.currentMediaItemIndex
         // a cloned queue must not auto-advance the fading deck at its end
         outgoing.pauseAtEndOfMediaItems = true
         incoming.pauseAtEndOfMediaItems = false
@@ -172,7 +177,9 @@ internal class PlaybackFades(
         val playing = player.isPlaying
         // pause, focus loss or incoming buffering freezes both decks and the envelope clock
         if (playing) {
-            tail.playWhenReady = true
+            // a tail that ended early (trimmed silence) must not resume into its cloned queue, the fade-in just hurries
+            if (tailDone(tail)) { tail.pause(); xfadeDurationMs = minOf(xfadeDurationMs, xfadeElapsedMs + 1000) }
+            else tail.playWhenReady = true
             xfadeElapsedMs += (now - xfadeStartMs).coerceIn(0, 100)
         } else tail.pause()
         xfadeStartMs = now
@@ -183,6 +190,14 @@ internal class PlaybackFades(
         tail.volume = gains.first * xfadeOutGain * master
         if (t >= 1f) endXfade(master)
     }
+
+    fun followLive(playing: Boolean) {
+        val tail = fadePlayer ?: return
+        if (!playing || !tailDone(tail)) tail.playWhenReady = playing
+    }
+
+    private fun tailDone(tail: ExoPlayer) = tail.playbackState == Player.STATE_ENDED || tail.currentMediaItemIndex != xfadeTailIndex ||
+        !tail.playWhenReady && tail.duration != C.TIME_UNSET && tail.currentPosition >= tail.duration - 100
 
     fun endXfade(master: Float = 1f) {
         xfadeActive = false
@@ -255,6 +270,11 @@ internal class PlaybackFades(
 
         fun fadeWindowMs(crossfadeMs: Int, durationMs: Long, speed: Float): Long =
             crossfadeMs.toLong().coerceAtMost((durationMs / speed / 2).toLong())
+
+        fun sameAlbum(a: MediaItem?, b: MediaItem?): Boolean {
+            val album = a?.mediaMetadata?.extras?.getString("aurora.albumId")
+            return !album.isNullOrBlank() && album == b?.mediaMetadata?.extras?.getString("aurora.albumId")
+        }
 
         fun nativeTailShape(curve: String): Int = when (curve) { "LINEAR" -> 1; "POWER" -> 2; else -> 0 }
 

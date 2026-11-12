@@ -81,6 +81,32 @@ class DesktopPlaybackEngineTest {
         }
     }
 
+    @Test fun gaplessOffPutsOneSecondOfSilenceBetweenTracks() {
+        val (a, left) = tone("a", 48_000, 16, 3_001) { frame, channel -> (frame * 7 + channel * 11) % 20_000 - 10_000 }
+        val (b, right) = tone("b", 48_000, 16, 2_503) { frame, channel -> 12_000 - (frame * 13 + channel * 5) % 24_000 }
+        val backend = FakeBackend()
+        val engine = engine(backend, EngineConfig(gapless = false))
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(a), tracks.song(b)))
+            log.await { EngineEvent.Ended in it }
+        }
+        assertArrayEquals(floats(left + IntArray(48_000 * 2) + right, 16), backend.last.heardFloats(), 0f)
+    }
+
+    @Test fun gaplessSkipsTheCrossfadeInsideAnAlbum() {
+        val (a, _) = tone("one", 48_000, 16, 96_000) { _, _ -> 16_384 }
+        val (b, _) = tone("two", 48_000, 16, 96_000) { _, _ -> 8_192 }
+        val backend = FakeBackend(speed = 8.0)
+        val engine = engine(backend, EngineConfig(crossfadeMs = 1_000))
+        EventLog(engine).use { log ->
+            engine.setQueue(listOf(tracks.song(a).copy(albumId = "album"), tracks.song(b).copy(albumId = "album")))
+            log.await(20_000) { EngineEvent.Ended in it }
+        }
+        val heard = backend.last.heardFloats()
+        assertEquals(192_000 * 2, heard.size)
+        assertTrue(heard.all { it == 0.5f || it == 0.25f })
+    }
+
     @Test fun twentyFourBitSourceIsBitPerfectIntoExclusiveTwentyFourInThirtyTwo() {
         val (file, samples) = hiResTone()
         val backend = FakeBackend(exclusive = hiRes)

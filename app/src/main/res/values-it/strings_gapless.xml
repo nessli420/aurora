@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"Una pausa di un secondo separa i brani"</string>
+    <string name="gapless_usb_hint">"L’uscita USB bit-perfect riproduce ogni brano separatamente"</string>
+    <string name="skip_silence_hint">"Elimina il silenzio tra i brani e le lunghe pause al loro interno"</string>
+    <string name="skip_silence_usb_hint">"Non disponibile con l’uscita USB bit-perfect"</string>
+</resources>

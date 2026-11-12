@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"Jednosekundowa przerwa oddziela utwory"</string>
+    <string name="gapless_usb_hint">"Wyjście USB bit-perfect odtwarza każdy utwór osobno"</string>
+    <string name="skip_silence_hint">"Usuwa ciszę między utworami i długie przerwy w ich trakcie"</string>
+    <string name="skip_silence_usb_hint">"Niedostępne przy wyjściu USB bit-perfect"</string>
+</resources>

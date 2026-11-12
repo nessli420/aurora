@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"曲目之间停顿一秒"</string>
+    <string name="gapless_usb_hint">"bit-perfect USB 输出会逐首单独播放"</string>
+    <string name="skip_silence_hint">"裁剪曲目之间的静音和曲目内的长时间停顿"</string>
+    <string name="skip_silence_usb_hint">"bit-perfect USB 输出时不可用"</string>
+</resources>

@@ -194,7 +194,7 @@ class PrecisionPlaybackDeviceTest {
         }
     }
 
-    @Test fun precisionOutputKeepsSpeedAndFallsBackWhenSilenceSkippingIsEnabled() {
+    @Test fun precisionOutputKeepsSpeedAndStaysPreciseWhenSilenceTrimmingIsEnabled() {
         assumeTrue("Opt-in precision run", preciseOutput)
         withProcessingFixture(crossfadeSeconds = 0) { controller, _ ->
             val items = listOf(item("r1d-96k", tone(96_000, 30)))
@@ -220,10 +220,10 @@ class PrecisionPlaybackDeviceTest {
             File(context.getExternalFilesDir(null), "r1d-signal-path-96k.txt")
                 .writeText(container.signalPath.value.toDiagnosticReport())
             runBlocking { container.settingsStore.setSkipSilence(true) }
-            await("silence skipping chooses compatibility output", controller) {
+            await("silence trimming keeps precision output", controller) {
                 val path = container.signalPath.value
-                path.processing.detail.contains("Compatibility PCM16") &&
-                    path.processing.detail.contains("Silence skipping enabled")
+                !path.processing.detail.contains("Compatibility PCM16") &&
+                    path.processing.detail.contains("Silence trimming")
             }
             awaitLevels(controller, 96_000, 0.5, 0.25, 0)
             File(context.getExternalFilesDir(null), "r1d-signal-path-skip-fallback.txt")

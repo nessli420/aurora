@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Luistertijd van vóór Aurora toevoegen"</string>
+    <string name="earlier_listening_included">"Inclusief %1$s van vóór Aurora · %2$s bijgehouden door Aurora"</string>
+    <string name="earlier_listening_title">"Luistertijd van vóór Aurora"</string>
+    <string name="earlier_listening_body">"Telt alleen mee in je totale minuten. Er worden geen afspeelbeurten, artiesten of datums aangemaakt."</string>
+    <string name="earlier_listening_hours">"Uren"</string>
+</resources>

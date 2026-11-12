@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"Eine Pause von einer Sekunde trennt die Titel"</string>
+    <string name="gapless_usb_hint">"Bit-Perfect-USB-Ausgabe spielt jeden Titel einzeln ab"</string>
+    <string name="skip_silence_hint">"Kürzt Stille zwischen Titeln und lange Pausen darin"</string>
+    <string name="skip_silence_usb_hint">"Bei Bit-Perfect-USB-Ausgabe nicht verfügbar"</string>
+</resources>

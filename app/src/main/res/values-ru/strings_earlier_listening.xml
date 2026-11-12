@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Добавить время прослушивания до Aurora"</string>
+    <string name="earlier_listening_included">"Включает %1$s до Aurora · %2$s в Aurora"</string>
+    <string name="earlier_listening_title">"Время прослушивания до Aurora"</string>
+    <string name="earlier_listening_body">"Добавляется только к общему числу минут. Прослушивания, исполнители и даты не создаются."</string>
+    <string name="earlier_listening_hours">"Часы"</string>
+</resources>

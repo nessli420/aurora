@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Aurora öncesi dinleme süresi ekle"</string>
+    <string name="earlier_listening_included">"Aurora öncesinden %1$s dahil · Aurora\'da %2$s"</string>
+    <string name="earlier_listening_title">"Aurora öncesi dinleme süresi"</string>
+    <string name="earlier_listening_body">"Yalnızca toplam dakikalarına eklenir. Dinleme, sanatçı veya tarih oluşturulmaz."</string>
+    <string name="earlier_listening_hours">"Saat"</string>
+</resources>

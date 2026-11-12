@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"Een pauze van één seconde scheidt de nummers"</string>
+    <string name="gapless_usb_hint">"Bit-perfect USB-uitvoer speelt elk nummer apart af"</string>
+    <string name="skip_silence_hint">"Knipt stilte tussen nummers en lange pauzes erin weg"</string>
+    <string name="skip_silence_usb_hint">"Niet beschikbaar met bit-perfect USB-uitvoer"</string>
+</resources>

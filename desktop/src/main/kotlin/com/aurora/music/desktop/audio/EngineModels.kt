@@ -80,6 +80,7 @@ data class EngineConfig(
     val crossfadeMs: Int = 0,
     val crossfadeCurve: String = "SMOOTH",
     val crossfadeHeadroom: Boolean = true,
+    val gapless: Boolean = true,
     val replayGain: Int = 0,
     val outputRatePolicy: OutputRatePolicy = OutputRatePolicy(),
     val bufferMs: Int = 250,

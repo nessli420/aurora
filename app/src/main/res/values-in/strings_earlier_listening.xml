@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Tambahkan waktu mendengarkan sebelum Aurora"</string>
+    <string name="earlier_listening_included">"Termasuk %1$s sebelum Aurora · %2$s di Aurora"</string>
+    <string name="earlier_listening_title">"Waktu mendengarkan sebelum Aurora"</string>
+    <string name="earlier_listening_body">"Hanya ditambahkan ke total menit Anda. Tidak ada putaran, artis, atau tanggal yang dibuat."</string>
+    <string name="earlier_listening_hours">"Jam"</string>
+</resources>

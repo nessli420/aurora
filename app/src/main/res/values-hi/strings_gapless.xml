@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"ट्रैकों के बीच एक सेकंड का ठहराव"</string>
+    <string name="gapless_usb_hint">"bit-perfect USB आउटपुट हर ट्रैक को अलग से चलाता है"</string>
+    <string name="skip_silence_hint">"ट्रैकों के बीच की खामोशी और उनके भीतर लंबे ठहराव हटाता है"</string>
+    <string name="skip_silence_usb_hint">"bit-perfect USB आउटपुट के साथ उपलब्ध नहीं"</string>
+</resources>

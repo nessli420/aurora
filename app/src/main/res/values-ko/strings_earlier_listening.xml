@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Aurora 이전 감상 시간 추가"</string>
+    <string name="earlier_listening_included">"Aurora 이전 %1$s 포함 · Aurora에서 %2$s"</string>
+    <string name="earlier_listening_title">"Aurora 이전 감상 시간"</string>
+    <string name="earlier_listening_body">"전체 감상 시간(분)에만 더해집니다. 재생 기록, 아티스트, 날짜는 만들어지지 않습니다."</string>
+    <string name="earlier_listening_hours">"시간"</string>
+</resources>

@@ -66,6 +66,13 @@ object ListeningRecaps {
             days.mapValues { it.value.sumOf { e -> e.listeningMillis } })
     }
 
+    // hours and minutes typed for listening from before aurora, null when invalid
+    fun historicalMillis(hours: String, minutes: String): Long? {
+        val h = hours.trim().ifEmpty { "0" }.toLongOrNull()?.takeIf { it in 0..1_000_000 } ?: return null
+        val m = minutes.trim().ifEmpty { "0" }.toLongOrNull()?.takeIf { it in 0..59 } ?: return null
+        return (h * 60 + m) * 60_000
+    }
+
     fun available(history: List<PlayEvent>, today: LocalDate = LocalDate.now(), zone: ZoneId = ZoneId.systemDefault()): List<RecapWindow> =
         history.map { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }.distinct()
             .flatMap { date -> RecapPeriod.entries.filter { it != RecapPeriod.ALL }.map { RecapWindow.containing(it, date) } }

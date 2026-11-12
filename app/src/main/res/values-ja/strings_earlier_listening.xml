@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="earlier_listening_add">"Aurora以前の再生時間を追加"</string>
+    <string name="earlier_listening_included">"Aurora以前の%1$sを含む · Auroraで%2$s"</string>
+    <string name="earlier_listening_title">"Aurora以前の再生時間"</string>
+    <string name="earlier_listening_body">"累計の再生時間（分）にのみ加算されます。再生回数、アーティスト、日付は作成されません。"</string>
+    <string name="earlier_listening_hours">"時間"</string>
+</resources>

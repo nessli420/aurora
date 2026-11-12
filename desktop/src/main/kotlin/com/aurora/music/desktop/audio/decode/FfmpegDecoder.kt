@@ -63,7 +63,7 @@ class FfmpegDecoder private constructor(
     private val rate = input.info.sampleRate
     // a cue track is a range of the album file; positions and duration are reported relative to it
     private val clipStart = (clip?.startMs ?: 0L) * rate / 1000
-    private val clipEnd = clip?.endMs?.let { it * rate / 1000 } ?: -1L
+    private val clipEnd = clip?.endMs?.let { it * rate / 1000 } ?: mp4End()
     val info: StreamInfo = if (clip == null) input.info else input.info.copy(
         durationMs = ((clip.endMs ?: input.info.durationMs.takeIf { it > 0 } ?: clip.startMs) - clip.startMs).coerceAtLeast(0))
     val tags: AudioTags get() = input.tags
@@ -105,6 +105,14 @@ class FfmpegDecoder private constructor(
         timeBaseDen = timeBase.den().toLong()
         startPts = input.stream.start_time().takeIf { it != AV_NOPTS_VALUE } ?: 0L
         for (i in 0 until input.format.nb_streams()) if (i != input.streamIndex) input.format.streams(i).discard(AVDISCARD_ALL)
+    }
+
+    // mp4 keeps encoder padding inside its last frame and ffmpeg only applies the edit list's start
+    private fun mp4End(): Long {
+        val duration = input.stream.duration()
+        if (!input.info.container.startsWith("mov") || duration == AV_NOPTS_VALUE || duration <= 0) return -1L
+        val base = input.stream.time_base()
+        return duration * rate * base.num() / base.den()
     }
 
     fun read(target: DoubleArray, maxFrames: Int = target.size / 2): Int {

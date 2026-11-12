@@ -53,4 +53,10 @@ class ListeningRecapTest {
         val data = (1..40).map { event("2026-09-20T10:00:00+02:00", id = "$it", artist = "Artist $it") }
         assertEquals(40, ListeningRecaps.build(data, RecapWindow.containing(RecapPeriod.DAY, LocalDate.of(2026, 9, 20)), zone).artists.size)
     }
+    @Test fun historicalListeningAcceptsHoursAndMinutesOnly() {
+        assertEquals((1_800L * 60 + 30) * 60_000, ListeningRecaps.historicalMillis(" 1800 ", "30"))
+        assertEquals(45L * 60_000, ListeningRecaps.historicalMillis("", "45"))
+        assertEquals(0L, ListeningRecaps.historicalMillis("", ""))
+        listOf("-1" to "0", "1.5" to "0", "2" to "60", "1000001" to "0", "x" to "").forEach { (h, m) -> assertNull(ListeningRecaps.historicalMillis(h, m)) }
+    }
 }

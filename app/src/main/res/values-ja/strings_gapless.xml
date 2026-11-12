@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="gapless_off_hint">"トラックの間に1秒の間を入れます"</string>
+    <string name="gapless_usb_hint">"bit-perfect USB 出力では各トラックを個別に再生します"</string>
+    <string name="skip_silence_hint">"トラック間の無音とトラック内の長い無音を詰めます"</string>
+    <string name="skip_silence_usb_hint">"bit-perfect USB 出力では使用できません"</string>
+</resources>
