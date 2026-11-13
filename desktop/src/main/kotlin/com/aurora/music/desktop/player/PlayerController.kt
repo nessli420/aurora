@@ -105,6 +105,8 @@ interface PlayerController {
     fun jumpTo(index: Int)
     /** Starts [songId] over with its stream looked up again if it is the song playing now, as after its match changed. */
     fun reloadIfPlaying(songId: String) {}
+    /** Plays [song] in place of the current one from the same moment: another source's copy, or itself after its match changed. */
+    fun swapCurrent(song: Song) {}
     fun removeFromQueue(index: Int)
     fun clearQueue()
     fun moveQueueItem(from: Int, to: Int)

@@ -227,6 +227,22 @@ class DesktopPlaybackEngine(
         restart(index, 0, null)
     }
 
+    // like reload, but with another song in the entry's place and the position kept
+    override fun swap(index: Int, song: Song, positionMs: Long) = post {
+        if (index !in 0 until queue.size) return@post
+        val old = queue[index].uid
+        val current = heardMarker?.entry?.uid == old
+        queue.replace(index, song)
+        if (queue[index].uid == old) queue.renew(index)
+        if (!current) {
+            reconcile()
+            publish()
+            return@post
+        }
+        resetFailures()
+        restart(index, positionMs, null)
+    }
+
     override fun seekTo(positionMs: Long) = post {
         val index = heardMarker?.let { queue.indexOf(it.entry.uid) } ?: -1
         if (index < 0) return@post

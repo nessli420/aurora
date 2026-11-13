@@ -1259,6 +1259,34 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         c.playWhenReady = playWhenReady
     }
 
+    // the song as it was queued, before a better copy took over its stream
+    fun queued(song: Song): Song = songById[song.id] ?: song
+
+    // the playing song from another source, or itself after its match changed, carrying on where it was
+    fun swapCurrent(song: Song) {
+        val c = controller ?: return
+        if (remoteSession != null) return
+        val index = c.currentMediaItemIndex.takeIf { it in 0 until c.mediaItemCount } ?: return
+        val old = c.getMediaItemAt(index)
+        val target = if (song.id == old.mediaId) queued(song) else song
+        val fresh = toMediaItem(target)
+        val extras = Bundle(fresh.mediaMetadata.extras ?: Bundle.EMPTY).apply {
+            old.mediaMetadata.extras?.getString(PlaybackService.QUEUE_TOKEN)?.let { putString(PlaybackService.QUEUE_TOKEN, it) }
+            putBoolean(com.aurora.music.playback.PreferredPlayback.PINNED, true)
+        }
+        // a late-resolved link gets a new uri, so the stream resolved for the old pick isn't reused
+        val uri = Uri.parse(target.streamUrl).let {
+            if (it.scheme == "aurora-yt" || it.scheme == "aurora-sc") it.buildUpon().appendQueryParameter("swap", System.nanoTime().toString()).build() else it
+        }
+        val item = fresh.buildUpon().setUri(uri).setMediaMetadata(fresh.mediaMetadata.buildUpon().setExtras(extras).build()).build()
+        val position = c.currentPosition
+        val playWhenReady = c.playWhenReady
+        songById = songById + (target.id to target)
+        c.replaceMediaItem(index, item)
+        c.seekTo(index, position)
+        c.playWhenReady = playWhenReady
+    }
+
     fun next() {
         cancelMediaSearch()
         container.haptic()

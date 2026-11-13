@@ -17,11 +17,14 @@ import kotlin.coroutines.coroutineContext
 
 object PreferredPlayback {
     private const val URI = "aurora.preferred.uri"
+    // a source the listener picked by hand plays as picked
+    const val PINNED = "aurora.preferred.pinned"
     private val gson = Gson()
 
     suspend fun resolve(context: Context, repository: MusicRepository, item: MediaItem, localCopy: (Song) -> Song? = { null }): MediaItem {
         val metadata = item.mediaMetadata
         val extras = metadata.extras
+        if (extras?.getBoolean(PINNED) == true) return item
         val song = Song(extras?.getString("aurora.songId") ?: item.mediaId,
             metadata.title?.toString().orEmpty(), metadata.artist?.toString().orEmpty(),
             metadata.albumTitle?.toString().orEmpty(), metadata.artworkUri?.toString().orEmpty(),

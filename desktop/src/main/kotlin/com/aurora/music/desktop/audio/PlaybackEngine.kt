@@ -32,6 +32,8 @@ interface PlaybackEngine : AutoCloseable {
     fun seekTo(positionMs: Long)
     /** Plays [index] again from the start with its stream looked up afresh, for when what it resolves to has changed. */
     fun reload(index: Int) = seekTo(index, 0)
+    // puts [song] at [index] with its stream looked up afresh, carrying on from [positionMs]
+    fun swap(index: Int, song: Song, positionMs: Long) { replace(index, song); seekTo(index, positionMs) }
     fun next()
     fun previousItem()
     fun play()

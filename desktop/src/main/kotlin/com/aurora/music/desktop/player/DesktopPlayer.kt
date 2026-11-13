@@ -87,6 +87,8 @@ data class PlayerDependencies(
     val aiDj: com.aurora.music.ai.DjEngine? = null,
     val aiDjVoice: com.aurora.music.ai.DjVoice? = null,
     val aiDjEars: com.aurora.music.ai.DjEars? = null,
+    // a song the listener moved to a source by hand plays from that source, not a local copy
+    val pin: (String) -> Unit = {},
 )
 
 fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependencies(
@@ -117,6 +119,7 @@ fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependenci
     aiDj = aiDj,
     aiDjVoice = aiDjVoice,
     aiDjEars = aiDjEars,
+    pin = pinnedPlayback::add,
 )
 
 class DesktopPlayer(private val engine: PlaybackEngine, private val deps: PlayerDependencies) : PlayerController, AutoCloseable {
@@ -981,6 +984,15 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         val index = currentIndex()
         val current = engine.state.value.current?.song ?: return
         if (com.aurora.music.data.stripMergeNamespace(current.id) == id && index in 0 until queueSize()) engine.reload(index)
+    }
+
+    override fun swapCurrent(song: Song) {
+        val index = currentIndex()
+        val current = engine.state.value.current?.song ?: return
+        if (index !in 0 until queueSize()) return
+        val target = if (song.id == current.id) current else song
+        deps.pin(target.id)
+        engine.swap(index, target, (state.value.positionSec * 1000).toLong())
     }
 
     override fun jumpTo(index: Int) {

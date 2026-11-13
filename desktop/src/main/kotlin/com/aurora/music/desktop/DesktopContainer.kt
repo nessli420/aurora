@@ -171,8 +171,11 @@ class DesktopContainer(
     private val audioCacheDelegate = lazy { com.aurora.music.desktop.audio.AudioCache(java.io.File(paths.cache, "audio-streams"), http, settingsStore, offline = { offlineFlag }) }
     val audioCache by audioCacheDelegate
 
+    val pinnedPlayback: MutableSet<String> = java.util.concurrent.ConcurrentHashMap.newKeySet()
+
     val streamResolver = com.aurora.music.desktop.audio.StreamResolver { song ->
-        localCopy(song)?.let { com.aurora.music.desktop.audio.StreamResolver.Default.resolve(it) } ?: audioCache.resolve(song) { resolveUpstream(song) }
+        (if (song.id in pinnedPlayback) null else localCopy(song))?.let { com.aurora.music.desktop.audio.StreamResolver.Default.resolve(it) }
+            ?: audioCache.resolve(song) { resolveUpstream(song) }
     }
 
     // a song's audio for offline work like analysis or comparison: the cached file when there is one, never filling the cache
