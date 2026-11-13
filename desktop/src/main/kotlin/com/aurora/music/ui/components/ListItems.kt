@@ -166,7 +166,6 @@ fun SongRow(
             onClick = { close(); onToggleHidden() },
             leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
         )
-        MatchMenuItem(song, close)
         DropdownMenuItem(
             text = { Text(appString(R.string.track_swipe_playlists)) },
             onClick = { close(); showPlaylists = true },
