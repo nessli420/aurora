@@ -159,11 +159,14 @@ class DesktopContainer(
     // soundcloud previews and drm-only tracks play from a youtube match instead
     fun resolveSoundCloud(song: Song): String? {
         val id = song.streamUrl.substringAfterLast('/').substringBefore('?').takeIf { it.matches(Regex("[0-9]+")) } ?: return null
-        val source = backend as? com.aurora.music.data.SoundCloudBackend ?: runBlocking { backends.catalogue(ServerType.SOUNDCLOUD) } as? com.aurora.music.data.SoundCloudBackend
-        runCatching { runBlocking { source?.playbackUrl(id) } }.getOrNull()?.let { return it }
+        runCatching { runBlocking { soundcloudSource()?.playbackUrl(id) } }.getOrNull()?.let { return it }
         val query = java.net.URLEncoder.encode("${song.title} ${song.artist}".trim(), "UTF-8")
         return youtubeResolver.resolveSentinel("aurora-yt://sc$id?q=$query&dur=${song.durationSec}")
     }
+
+    private suspend fun soundcloudSource() = backend as? com.aurora.music.data.SoundCloudBackend
+        ?: backends.catalogue(ServerType.SOUNDCLOUD) as? com.aurora.music.data.SoundCloudBackend
+    private val soundcloudStandIn by lazy { com.aurora.music.data.SoundCloudStandIn(::soundcloudSource) { catalogueMatch.value.relaxed } }
 
     private val audioCacheDelegate = lazy { com.aurora.music.desktop.audio.AudioCache(java.io.File(paths.cache, "audio-streams"), http, settingsStore, offline = { offlineFlag }) }
     val audioCache by audioCacheDelegate
@@ -178,9 +181,11 @@ class DesktopContainer(
     private fun resolveUpstream(song: Song): com.aurora.music.desktop.audio.ResolvedStream {
         val url = song.streamUrl.trim()
         return when {
-            url.startsWith("aurora-yt:") -> youtubeResolver.resolveSentinel(url)
-                ?.let { com.aurora.music.desktop.audio.ResolvedStream(it, userAgent = com.aurora.music.desktop.youtube.YoutubeResolver.USER_AGENT) }
-                ?: throw java.io.IOException("No YouTube stream was found for ${song.title}")
+            url.startsWith("aurora-yt:") -> runBlocking {
+                soundcloudStandIn.play(song, { youtubeResolver.resolveSentinel(url)
+                    ?.let { com.aurora.music.desktop.audio.ResolvedStream(it, userAgent = com.aurora.music.desktop.youtube.YoutubeResolver.USER_AGENT) } }
+                ) { com.aurora.music.desktop.audio.ResolvedStream(it) }
+            } ?: throw java.io.IOException(appString(R.string.stand_in_skipped, song.title))
             url.startsWith("aurora-sc:") -> resolveSoundCloud(song)?.let { com.aurora.music.desktop.audio.ResolvedStream(it) }
                 ?: throw java.io.IOException("SoundCloud could not play ${song.title}")
             else -> com.aurora.music.desktop.audio.StreamResolver.Default.resolve(song)

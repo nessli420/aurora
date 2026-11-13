@@ -40,11 +40,14 @@ class YoutubeMediaSourceFactory(
     private val preferred: suspend (MediaItem) -> MediaItem = { it },
     private val prepare: (MediaItem) -> MediaItem = { it },
     private val soundcloud: suspend (MediaItem) -> YoutubeResolver.PlaybackStream? = { null },
+    private val standIn: suspend (MediaItem, suspend () -> YoutubeResolver.PlaybackStream?) -> YoutubeResolver.PlaybackStream? = { _, youtube -> youtube() },
     private val resolveStream: suspend (MediaItem) -> YoutubeResolver.PlaybackStream? = { item ->
         val uri = item.localConfiguration!!.uri
         if (uri.scheme == "aurora-sc") soundcloud(item)
-        else if (uri.host == "video") resolver.resolvePlayback(uri.lastPathSegment.orEmpty(), uri.getQueryParameter("quality")?.toIntOrNull())
-        else resolver.resolveSentinel(uri)?.let { YoutubeResolver.PlaybackStream(it) }
+        else standIn(item) {
+            if (uri.host == "video") resolver.resolvePlayback(uri.lastPathSegment.orEmpty(), uri.getQueryParameter("quality")?.toIntOrNull())
+            else resolver.resolveSentinel(uri)?.let { YoutubeResolver.PlaybackStream(it) }
+        }
     },
 ) : MediaSource.Factory {
     private class Prefetch(val result: Deferred<YoutubeResolution>, val startedAt: Long)

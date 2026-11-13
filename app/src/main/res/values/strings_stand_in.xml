@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stand_in_skipped">Skipped “%1$s”: neither YouTube nor SoundCloud could play it</string>
+</resources>

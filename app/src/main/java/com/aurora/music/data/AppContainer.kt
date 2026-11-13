@@ -220,14 +220,24 @@ class AppContainer(context: Context) {
     // soundcloud previews and drm-only tracks play from a youtube match instead
     suspend fun resolveSoundCloud(item: androidx.media3.common.MediaItem): com.aurora.music.playback.YoutubeResolver.PlaybackStream? {
         val id = item.localConfiguration?.uri?.lastPathSegment?.takeIf { it.matches(Regex("[0-9]+")) } ?: return null
-        val source = backend as? SoundCloudBackend ?: backends.catalogue(ServerType.SOUNDCLOUD) as? SoundCloudBackend
-        source?.playbackUrl(id)?.let { return com.aurora.music.playback.YoutubeResolver.PlaybackStream(it) }
+        soundcloudSource()?.playbackUrl(id)?.let { return com.aurora.music.playback.YoutubeResolver.PlaybackStream(it) }
         val meta = item.mediaMetadata
         val query = java.net.URLEncoder.encode("${meta.title ?: ""} ${meta.artist ?: ""}".trim(), "UTF-8")
         val duration = meta.extras?.getInt("aurora.durationSec") ?: 0
         return youtubeResolver.resolveSentinel(android.net.Uri.parse("aurora-yt://sc$id?q=$query&dur=$duration"))
             ?.let { com.aurora.music.playback.YoutubeResolver.PlaybackStream(it) }
     }
+
+    private suspend fun soundcloudSource() = backend as? SoundCloudBackend ?: backends.catalogue(ServerType.SOUNDCLOUD) as? SoundCloudBackend
+    private val soundcloudStandIn by lazy { SoundCloudStandIn(::soundcloudSource) { catalogueMatch.value.relaxed } }
+
+    suspend fun playOrStandIn(item: androidx.media3.common.MediaItem, youtube: suspend () -> com.aurora.music.playback.YoutubeResolver.PlaybackStream?): com.aurora.music.playback.YoutubeResolver.PlaybackStream? {
+        val meta = item.mediaMetadata
+        val song = Song(item.mediaId, meta.title?.toString().orEmpty(), meta.artist?.toString().orEmpty(), "", "", meta.extras?.getInt("aurora.durationSec") ?: 0)
+        return soundcloudStandIn.play(song, youtube) { com.aurora.music.playback.YoutubeResolver.PlaybackStream(it) }
+    }
+
+    fun report(message: String) { _sourceErrors.tryEmit(message) }
 
     val playlistImporter by lazy { PlaylistImporter(repository, PlaylistLinks(http), backends::catalogue) }
 

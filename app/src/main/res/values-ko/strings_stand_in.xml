@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stand_in_skipped">“%1$s” 건너뜀: YouTube와 SoundCloud 모두에서 재생할 수 없습니다</string>
+</resources>

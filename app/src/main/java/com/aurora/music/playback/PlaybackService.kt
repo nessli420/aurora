@@ -134,7 +134,7 @@ class PlaybackService : MediaLibraryService() {
         val mediaSourceFactory = YoutubeMediaSourceFactory(
             androidx.media3.exoplayer.source.DefaultMediaSourceFactory(dataSourceFactory, DsdExtractorsFactory(rawOutput = output.dsdWire != null)), resolver,
             preferred = { PreferredPlayback.resolve(this, container.repository, it, container::localCopy) }, prepare = { container.audioCache.prepare(cueClipped(it)) },
-            soundcloud = container::resolveSoundCloud)
+            soundcloud = container::resolveSoundCloud, standIn = container::playOrStandIn)
 
         musicSourceFactory = mediaSourceFactory
         val playerBuilder = ExoPlayer.Builder(this, renderersFactory)
@@ -193,6 +193,8 @@ class PlaybackService : MediaLibraryService() {
             }
             override fun onPlayerError(error: androidx.media3.common.PlaybackException) {
                 if (owner === player && isYoutubeStreamFailure(error)) {
+                    container.report(com.aurora.music.localization.appString(com.aurora.music.R.string.stand_in_skipped,
+                        player.currentMediaItem?.mediaMetadata?.title?.toString().orEmpty()))
                     skipUnplayableYoutube()
                     return
                 }

@@ -228,6 +228,10 @@ class SoundCloudBackend(
         if (query.isBlank()) emptyList() else remember(list("/search/tracks?q=${URLEncoder.encode(query.trim(), "UTF-8")}&limit=20").mapNotNull(::song))
     })
 
+    // uploads that play in full: previews and drm-only uploads can't stand in for a song
+    suspend fun fullTracks(query: String): List<Song> = if (query.isBlank()) emptyList() else
+        list("/search/tracks?q=${URLEncoder.encode(query.trim(), "UTF-8")}&limit=20").filter { transcoding(it) != null }.mapNotNull(::song)
+
     suspend fun resolvePlaylist(url: String): DetailData? {
         val item = api.get("/resolve?url=${URLEncoder.encode(url, "UTF-8")}").asJsonObject
         return if (item.string("kind") == "playlist") detail("playlist", item.string("id")) else null

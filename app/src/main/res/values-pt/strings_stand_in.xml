@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="stand_in_skipped">“%1$s” ignorada: nem o YouTube nem o SoundCloud conseguiram reproduzi-la</string>
+</resources>
