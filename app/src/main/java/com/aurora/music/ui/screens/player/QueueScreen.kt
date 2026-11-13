@@ -9,6 +9,7 @@ import com.aurora.music.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -49,29 +50,35 @@ import androidx.compose.material3.Text
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.withFrameNanos
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.LocalPinnableContainer
+import androidx.compose.ui.layout.PinnableContainer
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.zIndex
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.Eyebrow
 import com.aurora.music.ui.components.formatTime
-import kotlin.math.roundToInt
+import com.aurora.music.util.edgeScrollStep
+import com.aurora.music.util.queueDropTarget
 import com.aurora.music.model.accent
 
 @Composable
@@ -155,10 +162,23 @@ fun QueueContent(
 
     var dragIndex by remember { mutableIntStateOf(-1) }
     var dragOffset by remember { mutableFloatStateOf(0f) }
+    var fingerY by remember { mutableFloatStateOf(0f) }
+    var grabY by remember { mutableFloatStateOf(0f) }
+    var pinned by remember { mutableStateOf<PinnableContainer.PinnedHandle?>(null) }
+    fun endDrag() { dragIndex = -1; dragOffset = 0f; pinned?.release(); pinned = null }
     var showHistory by remember { mutableStateOf(false) }
     var showSaveDialog by remember { mutableStateOf(false) }
     val listState = rememberLazyListState()
-    androidx.compose.runtime.LaunchedEffect(dragIndex >= 0 || showSaveDialog) { onLockChange(dragIndex >= 0 || showSaveDialog) }
+    LaunchedEffect(dragIndex >= 0 || showSaveDialog) { onLockChange(dragIndex >= 0 || showSaveDialog) }
+    // a queue change restarts the row gestures without a cancel callback
+    LaunchedEffect(startIdx, queue.size) { endDrag() }
+    LaunchedEffect(dragIndex >= 0) {
+        while (dragIndex >= 0) {
+            withFrameNanos {}
+            val step = edgeScrollStep(fingerY, listState.layoutInfo.viewportSize.height.toFloat(), rowPx)
+            if (step != 0f) dragOffset += listState.scrollBy(step)
+        }
+    }
 
             Column(modifier) {
                 if (onClose != null || showTitle || showActions) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -208,7 +228,10 @@ fun QueueContent(
                     }
                 }
 
-                LazyColumn(state = listState, modifier = Modifier.fillMaxWidth().weight(1f)) {
+                Box(Modifier.fillMaxWidth().weight(1f)) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize().pointerInput(Unit) {
+                    awaitPointerEventScope { while (true) fingerY = awaitPointerEvent(PointerEventPass.Initial).changes.first().position.y }
+                }) {
                     if (playedCount > 0) {
                         item {
                             Row(
@@ -255,33 +278,46 @@ fun QueueContent(
                     items(upcomingCount) { vi ->
                         val i = startIdx + vi
                         val dragging = i == dragIndex
+                        // pinned so the gesture survives auto-scrolling its slot off screen
+                        val pinnable = LocalPinnableContainer.current
                         Column {
                         if (i == autoplay) AutoplayHeading()
                         QueueTrackRow(
                             song = queue[i],
                             index = vi + 1,
                             rowHeight = rowHeight,
-                            dragging = dragging,
-                            dragOffset = if (dragging) dragOffset else 0f,
+                            modifier = if (dragging) Modifier.alpha(0f) else Modifier,
                             onClick = { onJump(i) },
                             onRemove = if (editable) ({ onRemove(i) }) else null,
                             picked = queue[i].id in smartPicks,
                             // key on i/startIdx so gesture re-captures fresh indices when current advances or rows shift
                             dragHandle = if (!editable) null else Modifier.pointerInput(queue.size, i, startIdx) {
                                 detectDragGestures(
-                                    onDragStart = { dragIndex = i; dragOffset = 0f },
-                                    onDragEnd = {
-                                        val target = (dragIndex + (dragOffset / rowPx).roundToInt()).coerceIn(startIdx, queue.size - 1)
-                                        if (target != dragIndex && dragIndex >= 0) onMove(dragIndex, target)
-                                        dragIndex = -1; dragOffset = 0f
+                                    onDragStart = { at ->
+                                        dragIndex = i; dragOffset = 0f; pinned = pinnable?.pin()
+                                        grabY = at.y + (rowPx - size.height) / 2
                                     },
-                                    onDragCancel = { dragIndex = -1; dragOffset = 0f },
+                                    onDragEnd = {
+                                        val target = queueDropTarget(dragIndex, dragOffset, rowPx, startIdx, queue.size - 1)
+                                        if (target != dragIndex && dragIndex >= 0) onMove(dragIndex, target)
+                                        endDrag()
+                                    },
+                                    onDragCancel = { endDrag() },
                                     onDrag = { change, amount -> change.consume(); dragOffset += amount.y },
                                 )
                             },
                         )
                         }
                     }
+                }
+                // drawn over the list at the finger, lazylist parks a pinned off-screen slot beside the visible rows
+                queue.getOrNull(dragIndex)?.let { song ->
+                    QueueTrackRow(
+                        song = song, index = dragIndex - startIdx + 1, rowHeight = rowHeight,
+                        dragging = true, dragOffset = fingerY - grabY,
+                        onClick = {}, onRemove = {}, dragHandle = Modifier, picked = song.id in smartPicks,
+                    )
+                }
                 }
             }
 
@@ -327,12 +363,12 @@ private fun QueueTrackRow(
     onRemove: (() -> Unit)?,
     dragHandle: Modifier?,
     picked: Boolean = false,
+    modifier: Modifier = Modifier,
 ) {
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .height(rowHeight)
-            .zIndex(if (dragging) 1f else 0f)
             .graphicsLayer {
                 translationY = dragOffset
                 if (dragging) { shadowElevation = 16f; scaleX = 1.02f; scaleY = 1.02f }

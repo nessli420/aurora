@@ -49,6 +49,8 @@ internal fun DragToDismiss(
     val flingVelocity = with(density) { 1100.dp.toPx() }
     val reverseVelocity = with(density) { 600.dp.toPx() }
     val dismiss by rememberUpdatedState(onDismiss)
+    // checked per gesture: dropping the pointerInput would cancel every gesture under it, like a queue row's drag
+    val active by rememberUpdatedState(enabled)
     val scope = rememberCoroutineScope()
     val offsetHolder = offsetState ?: remember { mutableFloatStateOf(0f) }
     var offset by offsetHolder
@@ -86,45 +88,43 @@ internal fun DragToDismiss(
     }
 
     // Gesture coordinates stay on this stationary container while only the surface moves.
-    Box(Modifier.fillMaxSize().onSizeChanged { height = it.height }.then(
-        if (enabled && !completed) Modifier.pointerInput(headerHeight) {
-            awaitEachGesture {
-                val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
-                if (down.position.y < offset || down.position.y > offset + headerHeight) return@awaitEachGesture
-                settling?.cancel()
-                val startOffset = offset
-                val tracker = VelocityTracker().apply { addPosition(down.uptimeMillis, down.position) }
-                var dragging = false
-                var released = false
-                try {
-                    while (true) {
-                        val event = awaitPointerEvent(PointerEventPass.Initial)
-                        val change = event.changes.firstOrNull { it.id == down.id } ?: break
-                        tracker.addPosition(change.uptimeMillis, change.position)
-                        if (!change.pressed) {
-                            if (dragging) change.consume()
-                            released = true
-                            break
-                        }
-                        val delta = change.position - down.position
-                        if (!dragging) {
-                            if ((abs(delta.x) > viewConfiguration.touchSlop && abs(delta.x) > abs(delta.y)) ||
-                                delta.y < -viewConfiguration.touchSlop) break
-                            if (delta.y <= viewConfiguration.touchSlop) continue
-                            dragging = true
-                        }
-                        change.consume()
-                        offset = (startOffset + delta.y - viewConfiguration.touchSlop).coerceIn(0f, height.toFloat())
+    Box(Modifier.fillMaxSize().onSizeChanged { height = it.height }.pointerInput(headerHeight) {
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false, pass = PointerEventPass.Initial)
+            if (!active || completed || down.position.y < offset || down.position.y > offset + headerHeight) return@awaitEachGesture
+            settling?.cancel()
+            val startOffset = offset
+            val tracker = VelocityTracker().apply { addPosition(down.uptimeMillis, down.position) }
+            var dragging = false
+            var released = false
+            try {
+                while (true) {
+                    val event = awaitPointerEvent(PointerEventPass.Initial)
+                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+                    tracker.addPosition(change.uptimeMillis, change.position)
+                    if (!change.pressed) {
+                        if (dragging) change.consume()
+                        released = true
+                        break
                     }
-                } finally {
-                    if (dragging || startOffset > 0f) settle(
-                        velocity = if (released && dragging) tracker.calculateVelocity().y else 0f,
-                        allowDismiss = released && dragging,
-                    )
+                    val delta = change.position - down.position
+                    if (!dragging) {
+                        if ((abs(delta.x) > viewConfiguration.touchSlop && abs(delta.x) > abs(delta.y)) ||
+                            delta.y < -viewConfiguration.touchSlop) break
+                        if (delta.y <= viewConfiguration.touchSlop) continue
+                        dragging = true
+                    }
+                    change.consume()
+                    offset = (startOffset + delta.y - viewConfiguration.touchSlop).coerceIn(0f, height.toFloat())
                 }
+            } finally {
+                if (dragging || startOffset > 0f) settle(
+                    velocity = if (released && dragging) tracker.calculateVelocity().y else 0f,
+                    allowDismiss = released && dragging,
+                )
             }
-        } else Modifier,
-    )) {
+        }
+    }) {
         Box(Modifier.fillMaxSize().graphicsLayer {
             translationY = offset
             shape = corners
