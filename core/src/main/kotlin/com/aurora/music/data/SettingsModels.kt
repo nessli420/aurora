@@ -42,6 +42,9 @@ enum class ServerType {
 
     // browsable and playable signed out through the service's public access
     val supportsGuest: Boolean get() = this == YOUTUBE_MUSIC || this == SOUNDCLOUD
+
+    // sign in by approving a code from another session, the way in for single sign-on accounts
+    val supportsQuickConnect: Boolean get() = this == JELLYFIN
 }
 
 // sessions store tokens without raw passwords

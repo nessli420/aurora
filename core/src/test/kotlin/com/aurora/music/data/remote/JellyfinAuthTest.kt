@@ -35,4 +35,39 @@ class JellyfinAuthTest {
             }
         }
     }
+
+    @Test fun quickConnectShowsTheCodeAndSignsInOnceApproved() = runBlocking {
+        MockWebServer().use { server ->
+            fun json(body: String) = MockResponse().setHeader("Content-Type", "application/json").setBody(body)
+            server.enqueue(json("true"))
+            server.enqueue(json("""{"Authenticated":false,"Secret":"s3cret","Code":"123456"}"""))
+            server.enqueue(json("""{"Authenticated":false}"""))
+            server.enqueue(json("""{"Authenticated":true}"""))
+            server.enqueue(json("""{"AccessToken":"tok","User":{"Id":"user-id","Name":"Sso User"}}"""))
+            var code: String? = null
+            val session = JellyfinClient.quickConnect(server.url("/").toString(), testClientInfo, pollMillis = 1) { code = it }
+
+            assertEquals("123456", code)
+            assertEquals(listOf("/QuickConnect/Enabled", "/QuickConnect/Initiate", "/QuickConnect/Connect?secret=s3cret",
+                "/QuickConnect/Connect?secret=s3cret", "/Users/AuthenticateWithQuickConnect"), List(5) { server.takeRequest().path })
+            assertEquals("Sso User", session.username)
+            assertEquals("tok", session.token)
+            assertEquals("user-id", session.userId)
+            assertTrue(session.clientToken!!.startsWith("aurora-"))
+        }
+    }
+
+    @Test fun quickConnectReportsAnExpiredCodeAndADisabledServer() = runBlocking {
+        MockWebServer().use { server ->
+            server.enqueue(MockResponse().setHeader("Content-Type", "application/json").setBody("true"))
+            server.enqueue(MockResponse().setHeader("Content-Type", "application/json").setBody("""{"Secret":"s","Code":"1"}"""))
+            server.enqueue(MockResponse().setResponseCode(404))
+            val expired = runCatching { JellyfinClient.quickConnect(server.url("/").toString(), testClientInfo, pollMillis = 1) {} }
+            assertEquals(true, (expired.exceptionOrNull() as QuickConnectException).expired)
+
+            server.enqueue(MockResponse().setHeader("Content-Type", "application/json").setBody("false"))
+            val disabled = runCatching { JellyfinClient.quickConnect(server.url("/").toString(), testClientInfo) {} }
+            assertEquals(false, (disabled.exceptionOrNull() as QuickConnectException).expired)
+        }
+    }
 }

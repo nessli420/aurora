@@ -7,6 +7,7 @@ import com.aurora.music.data.remote.ClientInfo
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.PlexClient
 import com.aurora.music.data.remote.PlexException
+import com.aurora.music.data.remote.QuickConnectException
 import com.aurora.music.data.remote.SubsonicClient
 import com.aurora.music.localization.appString
 import kotlinx.coroutines.CancellationException
@@ -48,8 +49,12 @@ class AccountAuthenticator(private val clientInfo: ClientInfo) {
 
     fun local(): Session = LOCAL_SESSION
 
+    suspend fun jellyfinQuickConnect(server: String, onCode: (String) -> Unit): Session =
+        withContext(Dispatchers.IO) { JellyfinClient.quickConnect(server, clientInfo, onCode = onCode) }
+
     fun errorMessage(error: Throwable, type: ServerType? = null): String = when (error) {
         is SignInException -> error.message.orEmpty()
+        is QuickConnectException -> appString(if (error.expired) R.string.jellyfin_quick_connect_expired else R.string.jellyfin_quick_connect_disabled)
         is UnknownHostException -> appString(R.string.text_server_not_found_check_the_address_24bc0a)
         is ConnectException -> appString(R.string.text_can_t_reach_the_server_1371a9)
         is SocketTimeoutException -> appString(R.string.text_connection_timed_out_647bf9)

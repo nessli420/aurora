@@ -40,6 +40,7 @@ data class AuthUiState(
     val password: String = "",
     val loading: Boolean = false,
     val error: String? = null,
+    val quickConnectCode: String? = null,
 )
 
 class AuthViewModel(private val container: DesktopContainer) : ViewModel() {
@@ -134,6 +135,31 @@ class AuthViewModel(private val container: DesktopContainer) : ViewModel() {
                 _state.update { it.copy(loading = false, error = if (e is java.io.IOException) container.authenticator.errorMessage(e, it.type) else appString(failure)) }
             }
         }
+    }
+
+    fun quickConnect(onDone: () -> Unit) {
+        val s = _state.value
+        if (s.loading || s.host.isBlank()) return
+        _state.update { it.copy(loading = true, error = null) }
+        signInJob = viewModelScope.launch {
+            try {
+                val session = container.authenticator.jellyfinQuickConnect(s.scheme + s.host.trim()) { code -> _state.update { it.copy(quickConnectCode = code) } }
+                ensureActive()
+                container.applySession(session)
+                ensureActive()
+                _state.update { it.copy(loading = false, error = null, quickConnectCode = null) }
+                onDone()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, quickConnectCode = null, error = container.authenticator.errorMessage(e, s.type)) }
+            }
+        }
+    }
+
+    fun cancelQuickConnect() {
+        signInJob?.cancel()
+        _state.update { it.copy(loading = false, quickConnectCode = null) }
     }
 
     fun addMusicFolder(path: String) {

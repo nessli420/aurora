@@ -7,6 +7,9 @@ data class AuthRequest(val Username: String, val Pw: String)
 data class AuthResult(val AccessToken: String? = null, val User: JellyUser? = null)
 data class JellyUser(val Id: String? = null, val Name: String? = null)
 
+data class QuickConnectResult(val Authenticated: Boolean = false, val Secret: String? = null, val Code: String? = null)
+data class QuickConnectRequest(val Secret: String)
+
 data class ItemsResult(
     val Items: List<BaseItemDto> = emptyList(),
     val TotalRecordCount: Int = 0,

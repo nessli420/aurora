@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jellyfin_quick_connect">"Quick Connect kullan"</string>
+    <string name="jellyfin_quick_connect_hint">"Çoklu oturum açma (SSO) hesapları için: tarayıcıda veya başka bir uygulamada Jellyfin\'den bir kodu onayla."</string>
+    <string name="jellyfin_quick_connect_code">"Quick Connect kodu"</string>
+    <string name="jellyfin_quick_connect_steps">"Tarayıcıda veya başka bir uygulamada Jellyfin\'e giriş yap, kullanıcı ayarlarını aç, Quick Connect\'i seç ve bu kodu gir."</string>
+    <string name="jellyfin_quick_connect_waiting">"Onay bekleniyor…"</string>
+    <string name="jellyfin_quick_connect_open">"Jellyfin\'i aç"</string>
+    <string name="jellyfin_quick_connect_disabled">"Bu sunucuda Quick Connect kapalı. Bir yönetici bunu Kontrol Paneli › Genel bölümünden açabilir."</string>
+    <string name="jellyfin_quick_connect_expired">"Kodun süresi doldu. Quick Connect\'i yeniden başlat."</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jellyfin_quick_connect">"Gunakan Quick Connect"</string>
+    <string name="jellyfin_quick_connect_hint">"Untuk akun single sign-on (SSO): setujui kode dari Jellyfin di browser atau aplikasi lain."</string>
+    <string name="jellyfin_quick_connect_code">"Kode Quick Connect"</string>
+    <string name="jellyfin_quick_connect_steps">"Masuk ke Jellyfin di browser atau aplikasi lain, buka pengaturan pengguna, pilih Quick Connect, lalu masukkan kode ini."</string>
+    <string name="jellyfin_quick_connect_waiting">"Menunggu persetujuan…"</string>
+    <string name="jellyfin_quick_connect_open">"Buka Jellyfin"</string>
+    <string name="jellyfin_quick_connect_disabled">"Quick Connect nonaktif di server ini. Admin dapat mengaktifkannya di Dasbor › Umum."</string>
+    <string name="jellyfin_quick_connect_expired">"Kode sudah kedaluwarsa. Mulai Quick Connect lagi."</string>
+</resources>

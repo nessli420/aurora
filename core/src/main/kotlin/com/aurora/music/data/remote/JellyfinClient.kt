@@ -2,6 +2,7 @@ package com.aurora.music.data.remote
 
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
+import kotlinx.coroutines.delay
 import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.Interceptor
 import retrofit2.Retrofit
@@ -76,12 +77,36 @@ class JellyfinClient(val session: Session, clientInfo: ClientInfo) {
             val norm = normalizeServer(server)
             val deviceId = "aurora-${UUID.randomUUID()}"
             val api = buildApi(norm, "", deviceId, clientInfo)
-            val res = api.authenticate(AuthRequest(username.trim(), password))
+            return session(norm, api.authenticate(AuthRequest(username.trim(), password)), username.trim(), deviceId)
+        }
+
+        // sso accounts have no password, so the user approves the code from a jellyfin session they're already signed in to
+        suspend fun quickConnect(server: String, clientInfo: ClientInfo, pollMillis: Long = 3_000, onCode: (String) -> Unit): Session {
+            val norm = normalizeServer(server)
+            val deviceId = "aurora-${UUID.randomUUID()}"
+            val api = buildApi(norm, "", deviceId, clientInfo)
+            if (!api.quickConnectEnabled()) throw QuickConnectException(expired = false)
+            val request = api.quickConnectInitiate()
+            val secret = request.Secret ?: throw IllegalStateException("No quick connect secret returned")
+            onCode(request.Code.orEmpty())
+            while (true) {
+                val status = try {
+                    api.quickConnectStatus(secret)
+                } catch (e: retrofit2.HttpException) {
+                    throw if (e.code() == 404) QuickConnectException(expired = true) else e
+                }
+                if (status.Authenticated) break
+                delay(pollMillis)
+            }
+            return session(norm, api.authenticateWithQuickConnect(QuickConnectRequest(secret)), "", deviceId)
+        }
+
+        private fun session(server: String, res: AuthResult, username: String, deviceId: String): Session {
             val token = res.AccessToken ?: throw IllegalStateException("Login rejected")
             val uid = res.User?.Id ?: throw IllegalStateException("No user id returned")
             return Session(
-                server = norm,
-                username = res.User?.Name ?: username.trim(),
+                server = server,
+                username = res.User?.Name ?: username,
                 salt = "",
                 token = token,
                 type = ServerType.JELLYFIN,
@@ -91,3 +116,6 @@ class JellyfinClient(val session: Session, clientInfo: ClientInfo) {
         }
     }
 }
+
+// expired = the code timed out (jellyfin keeps it 10 minutes), otherwise quick connect is off on the server
+class QuickConnectException(val expired: Boolean) : Exception(if (expired) "Quick Connect code expired" else "Quick Connect is disabled")

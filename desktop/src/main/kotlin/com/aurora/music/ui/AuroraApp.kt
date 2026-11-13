@@ -1073,6 +1073,8 @@ private fun Shell(
                                     onConnectYouTubeMusic = { authVM.connectYouTubeMusic(it, onSignedIn) },
                                     onConnectSpotifyWeb = { cookie, profile -> authVM.connectSpotifyWeb(cookie, profile, onSignedIn) },
                                     onConnectSoundCloud = { authVM.connectSoundCloud(it, onSignedIn) },
+                                    onQuickConnect = { authVM.quickConnect(onSignedIn) },
+                                    onCancelQuickConnect = authVM::cancelQuickConnect,
                                     onContinueAsGuest = { authVM.continueAsGuest(onSignedIn) },
                                     spotifyOperations = container.spotifyWeb.operations,
                                     onExit = if (sessionReady == true) ({

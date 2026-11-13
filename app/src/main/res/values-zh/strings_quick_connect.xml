@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jellyfin_quick_connect">"使用 Quick Connect"</string>
+    <string name="jellyfin_quick_connect_hint">"适用于单点登录（SSO）账号：在浏览器或其他应用的 Jellyfin 中批准一个代码。"</string>
+    <string name="jellyfin_quick_connect_code">"Quick Connect 代码"</string>
+    <string name="jellyfin_quick_connect_steps">"在浏览器或其他应用中登录 Jellyfin，打开用户设置，选择 Quick Connect 并输入此代码。"</string>
+    <string name="jellyfin_quick_connect_waiting">"等待批准…"</string>
+    <string name="jellyfin_quick_connect_open">"打开 Jellyfin"</string>
+    <string name="jellyfin_quick_connect_disabled">"此服务器已关闭 Quick Connect。管理员可以在控制台 › 常规中开启。"</string>
+    <string name="jellyfin_quick_connect_expired">"代码已过期。请重新开始 Quick Connect。"</string>
+</resources>

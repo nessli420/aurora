@@ -18,6 +18,18 @@ interface JellyfinApi {
     @POST("Users/AuthenticateByName")
     suspend fun authenticate(@Body body: AuthRequest): AuthResult
 
+    @GET("QuickConnect/Enabled")
+    suspend fun quickConnectEnabled(): Boolean
+
+    @POST("QuickConnect/Initiate")
+    suspend fun quickConnectInitiate(): QuickConnectResult
+
+    @GET("QuickConnect/Connect")
+    suspend fun quickConnectStatus(@Query("secret") secret: String): QuickConnectResult
+
+    @POST("Users/AuthenticateWithQuickConnect")
+    suspend fun authenticateWithQuickConnect(@Body body: QuickConnectRequest): AuthResult
+
     @GET("Users/{userId}/Items")
     suspend fun items(@Path("userId") userId: String, @QueryMap params: Map<String, String>): ItemsResult
 

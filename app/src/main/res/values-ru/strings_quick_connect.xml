@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jellyfin_quick_connect">"Войти через Quick Connect"</string>
+    <string name="jellyfin_quick_connect_hint">"Для аккаунтов с единым входом (SSO): подтвердите код в Jellyfin в браузере или другом приложении."</string>
+    <string name="jellyfin_quick_connect_code">"Код Quick Connect"</string>
+    <string name="jellyfin_quick_connect_steps">"Войдите в Jellyfin в браузере или другом приложении, откройте настройки пользователя, выберите Quick Connect и введите этот код."</string>
+    <string name="jellyfin_quick_connect_waiting">"Ожидание подтверждения…"</string>
+    <string name="jellyfin_quick_connect_open">"Открыть Jellyfin"</string>
+    <string name="jellyfin_quick_connect_disabled">"Quick Connect на этом сервере выключен. Администратор может включить его в разделе Панель › Общие."</string>
+    <string name="jellyfin_quick_connect_expired">"Срок действия кода истёк. Запустите Quick Connect снова."</string>
+</resources>

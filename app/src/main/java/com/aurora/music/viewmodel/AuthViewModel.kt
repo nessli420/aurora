@@ -14,6 +14,7 @@ import com.aurora.music.data.SpotifyWebProfile
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.PlexClient
 import com.aurora.music.data.remote.PlexException
+import com.aurora.music.data.remote.QuickConnectException
 import com.aurora.music.data.remote.SpotifyAuth
 import com.aurora.music.data.remote.SpotifyClient
 import com.aurora.music.data.remote.SubsonicClient
@@ -42,6 +43,7 @@ data class AuthUiState(
     val loading: Boolean = false,
     val error: String? = null,
     val pendingAuthUrl: String? = null,
+    val quickConnectCode: String? = null,
 )
 
 class AuthViewModel(app: Application) : AndroidViewModel(app) {
@@ -272,7 +274,35 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    fun quickConnect(onDone: () -> Unit) {
+        val s = _state.value
+        if (s.loading || s.host.isBlank()) return
+        _state.update { it.copy(loading = true, error = null) }
+        signInJob = viewModelScope.launch {
+            try {
+                val session = withContext(Dispatchers.IO) {
+                    JellyfinClient.quickConnect(s.scheme + s.host.trim(), appClientInfo) { code -> _state.update { it.copy(quickConnectCode = code) } }
+                }
+                ensureActive()
+                container.applySession(session)
+                ensureActive()
+                _state.update { it.copy(loading = false, error = null, quickConnectCode = null) }
+                onDone()
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                _state.update { it.copy(loading = false, quickConnectCode = null, error = friendlyError(e, s.type)) }
+            }
+        }
+    }
+
+    fun cancelQuickConnect() {
+        signInJob?.cancel()
+        _state.update { it.copy(loading = false, quickConnectCode = null) }
+    }
+
     private fun friendlyError(e: Throwable, type: ServerType? = null): String = when (e) {
+        is QuickConnectException -> appString(if (e.expired) R.string.jellyfin_quick_connect_expired else R.string.jellyfin_quick_connect_disabled)
         is java.net.UnknownHostException -> appString(R.string.text_server_not_found_check_the_address_24bc0a)
         is java.net.ConnectException -> appString(R.string.text_can_t_reach_the_server_1371a9)
         is java.net.SocketTimeoutException -> appString(R.string.text_connection_timed_out_647bf9)

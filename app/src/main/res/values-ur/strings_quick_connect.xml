@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jellyfin_quick_connect">"Quick Connect استعمال کریں"</string>
+    <string name="jellyfin_quick_connect_hint">"سنگل سائن آن (SSO) اکاؤنٹس کے لیے: اپنے براؤزر یا کسی دوسری ایپ میں Jellyfin سے ایک کوڈ منظور کریں۔"</string>
+    <string name="jellyfin_quick_connect_code">"Quick Connect کوڈ"</string>
+    <string name="jellyfin_quick_connect_steps">"اپنے براؤزر یا کسی دوسری ایپ میں Jellyfin میں سائن ان کریں، یوزر سیٹنگز کھولیں، Quick Connect منتخب کریں اور یہ کوڈ درج کریں۔"</string>
+    <string name="jellyfin_quick_connect_waiting">"منظوری کا انتظار…"</string>
+    <string name="jellyfin_quick_connect_open">"Jellyfin کھولیں"</string>
+    <string name="jellyfin_quick_connect_disabled">"اس سرور پر Quick Connect بند ہے۔ ایڈمن اسے Dashboard › General میں آن کر سکتا ہے۔"</string>
+    <string name="jellyfin_quick_connect_expired">"کوڈ کی میعاد ختم ہو گئی۔ Quick Connect دوبارہ شروع کریں۔"</string>
+</resources>

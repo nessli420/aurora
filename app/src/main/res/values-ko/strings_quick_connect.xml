@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jellyfin_quick_connect">"Quick Connect 사용"</string>
+    <string name="jellyfin_quick_connect_hint">"SSO(통합 로그인) 계정용: 브라우저나 다른 앱의 Jellyfin에서 코드를 승인하세요."</string>
+    <string name="jellyfin_quick_connect_code">"Quick Connect 코드"</string>
+    <string name="jellyfin_quick_connect_steps">"브라우저나 다른 앱에서 Jellyfin에 로그인한 뒤 사용자 설정을 열고 Quick Connect를 선택해 이 코드를 입력하세요."</string>
+    <string name="jellyfin_quick_connect_waiting">"승인 대기 중…"</string>
+    <string name="jellyfin_quick_connect_open">"Jellyfin 열기"</string>
+    <string name="jellyfin_quick_connect_disabled">"이 서버에서 Quick Connect가 꺼져 있습니다. 관리자가 대시보드 › 일반에서 켤 수 있습니다."</string>
+    <string name="jellyfin_quick_connect_expired">"코드가 만료되었습니다. Quick Connect를 다시 시작하세요."</string>
+</resources>

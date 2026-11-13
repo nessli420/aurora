@@ -1153,6 +1153,14 @@ fun AuroraApp() {
                             onContinueAsGuest = authVM::continueAsGuest,
                             savedSessions = savedSessions,
                             onUseSaved = { s -> authVM.useSaved(s) },   // nav to home handled by the sessionReady effect
+                            onQuickConnect = {
+                                authVM.quickConnect {
+                                    navController.navigate(Routes.HOME) {
+                                        popUpTo(Routes.SIGN_IN) { inclusive = true }
+                                    }
+                                }
+                            },
+                            onCancelQuickConnect = authVM::cancelQuickConnect,
                         )
                     }
                     composable(Routes.NOTIFICATIONS) {

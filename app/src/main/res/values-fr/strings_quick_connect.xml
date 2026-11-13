@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="jellyfin_quick_connect">"Utiliser Quick Connect"</string>
+    <string name="jellyfin_quick_connect_hint">"Pour les comptes à authentification unique (SSO) : approuvez un code depuis Jellyfin dans votre navigateur ou une autre app."</string>
+    <string name="jellyfin_quick_connect_code">"Code Quick Connect"</string>
+    <string name="jellyfin_quick_connect_steps">"Connectez-vous à Jellyfin dans votre navigateur ou une autre app, ouvrez vos paramètres utilisateur, choisissez Quick Connect et saisissez ce code."</string>
+    <string name="jellyfin_quick_connect_waiting">"En attente d\'approbation…"</string>
+    <string name="jellyfin_quick_connect_open">"Ouvrir Jellyfin"</string>
+    <string name="jellyfin_quick_connect_disabled">"Quick Connect est désactivé sur ce serveur. Un administrateur peut l\'activer dans Tableau de bord › Général."</string>
+    <string name="jellyfin_quick_connect_expired">"Le code a expiré. Relancez Quick Connect."</string>
+</resources>

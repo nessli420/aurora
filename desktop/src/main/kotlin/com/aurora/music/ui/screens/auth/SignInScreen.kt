@@ -123,6 +123,8 @@ fun SignInScreen(
     onConnectSpotifyWeb: (String, com.aurora.music.data.SpotifyWebProfile?) -> Unit = { _, _ -> },
     onConnectSoundCloud: (String) -> Unit = {},
     onContinueAsGuest: () -> Unit = {},
+    onQuickConnect: () -> Unit = {},
+    onCancelQuickConnect: () -> Unit = {},
     spotifyOperations: com.aurora.music.desktop.web.SpotifyOperations? = null,
     // leaves the page when it was opened to add another account
     onExit: (() -> Unit)? = null,
@@ -206,13 +208,13 @@ fun SignInScreen(
                     when (state.step) {
                         AuthStep.TYPE -> TypeStep(onSelectType, savedSessions, onUseSaved, !state.loading)
                         AuthStep.SERVER -> ServerStep(state, onScheme, onHost, canContinueServer, onContinueServer)
-                        AuthStep.CREDENTIALS -> CredentialsStep(state, onUsername, onPassword, onBack, canSubmit, onSignIn)
+                        AuthStep.CREDENTIALS -> CredentialsStep(state, onUsername, onPassword, onBack, canSubmit, onSignIn, onQuickConnect, onCancelQuickConnect)
                         AuthStep.FOLDERS -> FoldersStep(state, musicFolders, onAddFolder, onRemoveFolder, onLocal)
                         AuthStep.YOUTUBE_MUSIC -> YouTubeMusicStep(state, onConnectYouTubeMusic, onContinueAsGuest)
                         AuthStep.SPOTIFY -> spotifyOperations?.let { SpotifyWebStep(state, it, onConnectSpotifyWeb) }
                         AuthStep.SOUNDCLOUD -> SoundCloudStep(state, onConnectSoundCloud, onContinueAsGuest)
                     }
-                    if (state.loading) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    if (state.loading && state.quickConnectCode == null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         CircularProgressIndicator(Modifier.size(20.dp), color = AuroraRose, strokeWidth = 2.dp)
                         Text(appString(R.string.text_connecting_your_library_a0430a), color = palette.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
                     }
@@ -415,6 +417,8 @@ private fun CredentialsStep(
     onBack: () -> Unit,
     canSubmit: Boolean,
     onSignIn: () -> Unit,
+    onQuickConnect: () -> Unit,
+    onCancelQuickConnect: () -> Unit,
 ) {
     var passwordVisible by remember(state.type) { mutableStateOf(false) }
     val focus = LocalFocusManager.current
@@ -430,6 +434,10 @@ private fun CredentialsStep(
             }
         }
         Spacer(Modifier.height(20.dp))
+        if (state.quickConnectCode != null) {
+            QuickConnectPanel(state, onCancelQuickConnect)
+            return@Column
+        }
         if (!isPlex) {
             OutlinedTextField(
                 value = state.username,
@@ -479,6 +487,46 @@ private fun CredentialsStep(
         Spacer(Modifier.height(22.dp))
         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             PrimaryButton(if (state.loading) "" else appString(R.string.text_connect_b65463), enabled = canSubmit && !state.loading, modifier = Modifier.weight(1f), loading = state.loading, onClick = onSignIn)
+        }
+        if (state.type.supportsQuickConnect) {
+            Spacer(Modifier.height(12.dp))
+            OutlinedButton(onClick = { focus.clearFocus(); onQuickConnect() }, enabled = !state.loading,
+                modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand),
+                shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp)))) {
+                Text(appString(R.string.jellyfin_quick_connect), style = MaterialTheme.typography.titleSmall)
+            }
+            Spacer(Modifier.height(8.dp))
+            Text(appString(R.string.jellyfin_quick_connect_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun QuickConnectPanel(state: AuthUiState, onCancel: () -> Unit) {
+    val uriHandler = LocalUriHandler.current
+    val code = state.quickConnectCode.orEmpty()
+    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        Surface(color = MaterialTheme.colorScheme.surface, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp)))) {
+            Column(Modifier.fillMaxWidth().padding(20.dp), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                Text(appString(R.string.jellyfin_quick_connect_code), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                androidx.compose.foundation.text.selection.SelectionContainer {
+                    Text(code, fontSize = 40.sp, fontWeight = FontWeight.Bold, letterSpacing = 6.sp, color = AuroraRose)
+                }
+            }
+        }
+        Text(appString(R.string.jellyfin_quick_connect_steps), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            CircularProgressIndicator(Modifier.size(18.dp), color = AuroraRose, strokeWidth = 2.dp)
+            Text(appString(R.string.jellyfin_quick_connect_waiting), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            OutlinedButton(onClick = {
+                runCatching { uriHandler.openUri(com.aurora.music.data.remote.JellyfinClient.normalizeServer(state.scheme + state.host) + "/web/#/quickconnect?code=$code") }
+            }, modifier = Modifier.weight(1f).heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand),
+                shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(16.dp)))) {
+                Text(appString(R.string.jellyfin_quick_connect_open), style = MaterialTheme.typography.titleSmall)
+            }
+            TextButton(onClick = onCancel, modifier = Modifier.heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_cancel_77dfd2)) }
         }
     }
 }
