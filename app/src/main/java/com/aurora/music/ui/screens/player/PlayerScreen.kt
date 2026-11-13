@@ -204,6 +204,8 @@ fun PlayerScreen(
     onSplitChange: (Float) -> Unit = {},
 ) {
     val song = state.current
+    val openAlbum = onGoToAlbum.takeIf { song.albumId.isNotBlank() }
+    val openArtist = onGoToArtist.takeIf { song.artistId.isNotBlank() }
     val ui = LocalUiPrefs.current
     val classic = ui.themeStyle == ThemeStyle.AURORA
     val glassStyle = ui.themeStyle == ThemeStyle.GLASS
@@ -604,9 +606,11 @@ fun PlayerScreen(
                     Spacer(Modifier.width(10.dp))
                 }
                 Column(Modifier.weight(1f)) {
-                    MarqueeTitle(song.title, MaterialTheme.typography.headlineMedium, fontWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight)
+                    MarqueeTitle(song.title, MaterialTheme.typography.headlineMedium, fontWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight,
+                        onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = openAlbum)
                     Spacer(Modifier.height(2.dp))
-                    MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null)
+                    MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
+                        onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = openArtist)
                     if (state.bpm > 0) {
                         Spacer(Modifier.height(3.dp))
                         Text(
@@ -886,7 +890,7 @@ fun PlayerScreen(
                         paneCard(portraitTab, Modifier.weight(1f).fillMaxWidth().then(paneSurface).padding(spacing))
                         Spacer(Modifier.height(16.dp))
                         CompactTransport(state, playerAccent, onPlayerAccent, onPrevious, onTogglePlay, onNext, onSeek,
-                            ui.playerSeekStyle, ui.playerWaveBars)
+                            ui.playerSeekStyle, ui.playerWaveBars, openAlbum, openArtist)
                         Spacer(Modifier.height(20.dp))
                     }
                 }
@@ -913,7 +917,8 @@ fun PlayerScreen(
             }
             LyricsOverlay(overlay, lyricsOffset, false, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
         }
-        CoverOverlay(overlay, coverOffset, state, onClose = { showCover = false }, onTogglePlay, onPrevious, onNext, onSeek, onToggleLike, moreMenu)
+        CoverOverlay(overlay, coverOffset, state, onClose = { showCover = false }, onTogglePlay, onPrevious, onNext, onSeek, onToggleLike, moreMenu,
+            openAlbum, openArtist)
         }
     }
     }
@@ -972,6 +977,8 @@ private fun CoverOverlay(
     onSeek: (Float) -> Unit,
     onToggleLike: () -> Unit,
     menu: @Composable () -> Unit,
+    onOpenAlbum: (() -> Unit)?,
+    onOpenArtist: (() -> Unit)?,
 ) {
     val visible = overlay.targetState == 2
     overlay.AnimatedVisibility(visible = { it == 2 }, enter = fadeIn(tween(320)), exit = fadeOut(tween(240))) {
@@ -1016,8 +1023,10 @@ private fun CoverOverlay(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                MarqueeTitle(song.title, MaterialTheme.typography.headlineSmall)
-                                MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null)
+                                MarqueeTitle(song.title, MaterialTheme.typography.headlineSmall,
+                                    onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = onOpenAlbum)
+                                MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
+                                    onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = onOpenArtist)
                             }
                             if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
                                 com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
@@ -1109,6 +1118,8 @@ private fun CompactTransport(
     onSeek: (Float) -> Unit,
     seekStyle: Int = SeekStyle.BAR,
     waveBars: Int = 0,
+    onOpenAlbum: (() -> Unit)? = null,
+    onOpenArtist: (() -> Unit)? = null,
 ) {
     val song = state.current
     Column {
@@ -1116,8 +1127,10 @@ private fun CompactTransport(
             Artwork(song.artworkUrl, song.accent, Modifier.size(56.dp), corner = 12.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                MarqueeTitle(song.title, MaterialTheme.typography.titleMedium)
-                MarqueeTitle(song.artist, MaterialTheme.typography.bodyMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null)
+                MarqueeTitle(song.title, MaterialTheme.typography.titleMedium,
+                    onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = onOpenAlbum)
+                MarqueeTitle(song.artist, MaterialTheme.typography.bodyMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
+                    onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = onOpenArtist)
             }
             if (!state.isMix) IconButton(onClick = onPrevious) {
                 Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = MaterialTheme.colorScheme.onSurface)
@@ -1335,6 +1348,8 @@ private fun MarqueeTitle(
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.labelLarge,
     color: Color = MaterialTheme.colorScheme.onSurface,
     fontWeight: FontWeight? = FontWeight.Bold,
+    onClickLabel: String? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     var fullWidth by remember(text) { androidx.compose.runtime.mutableIntStateOf(0) }
     var shownWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -1344,6 +1359,7 @@ private fun MarqueeTitle(
         maxLines = 1, softWrap = false, color = color,
         onTextLayout = { fullWidth = it.size.width },
         modifier = Modifier
+            .then(if (onClick != null) Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick) else Modifier)
             .onSizeChanged { shownWidth = it.width }
             .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
                 drawContent()

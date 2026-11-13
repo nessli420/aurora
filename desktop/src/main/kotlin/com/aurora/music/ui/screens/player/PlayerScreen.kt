@@ -207,6 +207,8 @@ fun PlayerScreen(
     onToggleMute: () -> Unit = LocalPlayer.current::toggleMute,
 ) {
     val song = state.current
+    val openAlbum = onGoToAlbum.takeIf { song.albumId.isNotBlank() }
+    val openArtist = onGoToArtist.takeIf { song.artistId.isNotBlank() }
     val ui = LocalUiPrefs.current
     val classic = ui.themeStyle == ThemeStyle.AURORA
     val skipBy = { seconds: Int ->
@@ -446,9 +448,11 @@ fun PlayerScreen(
                     Spacer(Modifier.width(10.dp))
                 }
                 Column(Modifier.weight(1f)) {
-                    MarqueeTitle(song.title, MaterialTheme.typography.headlineMedium, fontWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight)
+                    MarqueeTitle(song.title, MaterialTheme.typography.headlineMedium, fontWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight,
+                        onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = openAlbum)
                     Spacer(Modifier.height(2.dp))
-                    MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null)
+                    MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
+                        onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = openArtist)
                     if (state.bpm > 0) {
                         Spacer(Modifier.height(3.dp))
                         Text(
@@ -691,7 +695,7 @@ fun PlayerScreen(
         }
         LyricsOverlay(showLyrics, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
         CoverOverlay(showCover && !showLyrics, state, onClose = { showCover = false }, onTogglePlay, onPrevious, onNext, onSeek, onToggleLike,
-            volume, onVolumeChange, onToggleMute, moreMenu)
+            volume, onVolumeChange, onToggleMute, moreMenu, openAlbum, openArtist)
         if (fullscreenActive && video != null) FullscreenMusicVideo(
             video, state, playerAccent,
             onAudio = { fullscreenVideo = false; showVideo = false },
@@ -753,6 +757,8 @@ private fun CoverOverlay(
     onVolumeChange: (Float) -> Unit,
     onToggleMute: () -> Unit,
     menu: @Composable () -> Unit,
+    onOpenAlbum: (() -> Unit)?,
+    onOpenArtist: (() -> Unit)?,
 ) {
     androidx.compose.animation.AnimatedVisibility(visible, enter = fadeIn(tween(320)), exit = fadeOut(tween(240))) {
         MaterialTheme(colorScheme = canvasColors()) {
@@ -790,8 +796,10 @@ private fun CoverOverlay(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            MarqueeTitle(song.title, MaterialTheme.typography.headlineMedium)
-                            MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null)
+                            MarqueeTitle(song.title, MaterialTheme.typography.headlineMedium,
+                                onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = onOpenAlbum)
+                            MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
+                                onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = onOpenArtist)
                         }
                         if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
                             com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
@@ -852,6 +860,8 @@ private fun MarqueeTitle(
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.labelLarge,
     color: Color = MaterialTheme.colorScheme.onSurface,
     fontWeight: FontWeight? = FontWeight.Bold,
+    onClickLabel: String? = null,
+    onClick: (() -> Unit)? = null,
 ) {
     var fullWidth by remember(text) { androidx.compose.runtime.mutableIntStateOf(0) }
     var shownWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
@@ -863,6 +873,8 @@ private fun MarqueeTitle(
             maxLines = 1, softWrap = false, color = color,
             onTextLayout = { fullWidth = it.size.width },
             modifier = Modifier
+                .then(if (onClick != null) Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick)
+                    .pointerHoverIcon(PointerIcon.Hand) else Modifier)
                 .onSizeChanged { shownWidth = it.width }
                 .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
                     drawContent()
