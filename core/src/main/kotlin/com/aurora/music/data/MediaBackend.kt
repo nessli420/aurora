@@ -9,6 +9,9 @@ import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
 import kotlinx.coroutines.withTimeoutOrNull
 
+// a song as one source has it, labelled for menus; playing marks the source its audio comes from
+data class SourceCopy(val label: String, val song: Song, val playing: Boolean = false)
+
 // returns app domain models so callers are server-agnostic backend owns dto mapping auth and urls
 interface MediaBackend {
     val session: Session
@@ -26,6 +29,10 @@ interface MediaBackend {
     suspend fun homePage(feed: String, continuation: String): HomeData = homePage(continuation)
     suspend fun playbackCandidates(song: Song): List<Song> = emptyList()
     suspend fun matchingSongs(song: Song): List<Song> = search(recordingTitle(song.title)).songs
+    // the song on every source that has it; one source has only its own copy
+    suspend fun sourceCopies(song: Song): List<SourceCopy> = listOf(SourceCopy(session.typeLabel, song, playing = true))
+    // songs on the source this one came from, to trade a wrong match for the right one
+    suspend fun searchOwnSource(song: Song, query: String): List<Song> = search(query).songs
 
     fun playbackSourceIdentity(song: Song): PlaybackSourceIdentity? = song.playbackSource ?: when {
         song.isRadio() -> PlaybackSourceIdentity(source = com.aurora.music.data.rules.RuleSource.RADIO)

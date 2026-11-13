@@ -149,10 +149,7 @@ class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private 
         }
     }
 
-    private fun labels(sources: List<MediaBackend>): List<String> {
-        val types = sources.groupingBy { it.session.type }.eachCount()
-        return sources.map { it.session.typeLabel + if ((types[it.session.type] ?: 0) > 1) " · ${it.session.username}" else "" }
-    }
+    private fun labels(sources: List<MediaBackend>): List<String> = sourceLabels(sources)
 
     // null when no active account goes by that key
     suspend fun set(song: Song, key: String, liked: Boolean): Boolean? {
@@ -235,6 +232,12 @@ class LikeAccounts(private val build: (Session) -> MediaBackend?) {
     private companion object {
         val ONE_ACCOUNT = setOf(ServerType.SPOTIFY, ServerType.LOCAL)
     }
+}
+
+// a source's name in menus, with the account when two sources share a type
+internal fun sourceLabels(sources: List<MediaBackend>): List<String> {
+    val types = sources.groupingBy { it.session.type }.eachCount()
+    return sources.map { it.session.typeLabel + if ((types[it.session.type] ?: 0) > 1) " · ${it.session.username}" else "" }
 }
 
 private fun sameRecording(a: Song, b: Song) = recordingMatches(a, b) &&

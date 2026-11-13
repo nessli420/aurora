@@ -78,6 +78,11 @@ class MergedBackend(
     }
 
     override suspend fun playbackCandidates(song: Song): List<Song> = matcher.playbackCandidates(song)
+    override suspend fun sourceCopies(song: Song): List<SourceCopy> = matcher.copies(song)
+    override suspend fun searchOwnSource(song: Song, query: String): List<Song> {
+        val (i, _) = router.unwrap(song.id) ?: return search(query).songs
+        return sources[i].search(query).songs.map { it.wrap(i) }
+    }
 
     override fun playbackSourceIdentity(song: Song): PlaybackSourceIdentity? {
         song.playbackSource?.let { return it }
