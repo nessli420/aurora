@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"Şarkı seçenekleri"</string>
+    <string name="song_menu_source">"Çalma kaynağı"</string>
+    <string name="song_menu_open_album">"Bu albümü aç"</string>
+    <string name="song_menu_open_single">"Bu single’ı aç"</string>
+    <string name="song_menu_open_ep">"Bu EP’yi aç"</string>
+    <string name="song_menu_play_from">"Şuradan çal"</string>
+    <string name="song_menu_open_in">"Şurada aç"</string>
+    <string name="song_menu_rematch">"Yanlış şarkı mı? Başkasını seç"</string>
+    <string name="match_hint_source">"“%1$s” yerine çalınacak şarkıyı seç."</string>
+    <string name="match_search_source">"Doğru şarkıyı ara"</string>
+    <string name="match_failed_source">"Arama yapılamadı. Bağlantını kontrol edip tekrar dene."</string>
+    <string name="match_none_source">"Şarkı bulunamadı."</string>
+</resources>

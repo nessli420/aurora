@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"Opsi lagu"</string>
+    <string name="song_menu_source">"Sumber pemutaran"</string>
+    <string name="song_menu_open_album">"Buka album ini"</string>
+    <string name="song_menu_open_single">"Buka single ini"</string>
+    <string name="song_menu_open_ep">"Buka EP ini"</string>
+    <string name="song_menu_play_from">"Putar dari"</string>
+    <string name="song_menu_open_in">"Buka di"</string>
+    <string name="song_menu_rematch">"Lagu salah? Pilih yang lain"</string>
+    <string name="match_hint_source">"Pilih lagu yang diputar sebagai ganti “%1$s”."</string>
+    <string name="match_search_source">"Cari lagu yang benar"</string>
+    <string name="match_failed_source">"Tidak dapat mencari. Periksa koneksi Anda dan coba lagi."</string>
+    <string name="match_none_source">"Tidak ada lagu yang ditemukan."</string>
+</resources>

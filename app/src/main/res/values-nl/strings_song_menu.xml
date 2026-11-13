@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"Nummeropties"</string>
+    <string name="song_menu_source">"Afspeelbron"</string>
+    <string name="song_menu_open_album">"Dit album openen"</string>
+    <string name="song_menu_open_single">"Deze single openen"</string>
+    <string name="song_menu_open_ep">"Deze EP openen"</string>
+    <string name="song_menu_play_from">"Afspelen vanaf"</string>
+    <string name="song_menu_open_in">"Openen in"</string>
+    <string name="song_menu_rematch">"Verkeerd nummer? Kies een ander"</string>
+    <string name="match_hint_source">"Kies het nummer dat in plaats van ‘%1$s’ moet spelen."</string>
+    <string name="match_search_source">"Zoek het juiste nummer"</string>
+    <string name="match_failed_source">"Zoeken lukt niet. Controleer je verbinding en probeer het opnieuw."</string>
+    <string name="match_none_source">"Geen nummers gevonden."</string>
+</resources>

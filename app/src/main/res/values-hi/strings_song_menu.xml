@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"गाने के विकल्प"</string>
+    <string name="song_menu_source">"प्लेबैक स्रोत"</string>
+    <string name="song_menu_open_album">"यह एल्बम खोलें"</string>
+    <string name="song_menu_open_single">"यह सिंगल खोलें"</string>
+    <string name="song_menu_open_ep">"यह EP खोलें"</string>
+    <string name="song_menu_play_from">"यहाँ से चलाएँ"</string>
+    <string name="song_menu_open_in">"यहाँ खोलें"</string>
+    <string name="song_menu_rematch">"गलत गाना? दूसरा चुनें"</string>
+    <string name="match_hint_source">"“%1$s” की जगह चलने वाला गाना चुनें।"</string>
+    <string name="match_search_source">"सही गाना खोजें"</string>
+    <string name="match_failed_source">"खोज नहीं हो सकी। अपना कनेक्शन जाँचें और फिर से कोशिश करें।"</string>
+    <string name="match_none_source">"कोई गाना नहीं मिला।"</string>
+</resources>

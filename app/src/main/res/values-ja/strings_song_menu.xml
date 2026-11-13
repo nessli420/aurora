@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"曲のオプション"</string>
+    <string name="song_menu_source">"再生ソース"</string>
+    <string name="song_menu_open_album">"このアルバムを開く"</string>
+    <string name="song_menu_open_single">"このシングルを開く"</string>
+    <string name="song_menu_open_ep">"このEPを開く"</string>
+    <string name="song_menu_play_from">"再生元"</string>
+    <string name="song_menu_open_in">"開く場所"</string>
+    <string name="song_menu_rematch">"違う曲ですか？別の曲を選ぶ"</string>
+    <string name="match_hint_source">"「%1$s」の代わりに再生する曲を選んでください。"</string>
+    <string name="match_search_source">"正しい曲を検索"</string>
+    <string name="match_failed_source">"検索できませんでした。接続を確認してもう一度お試しください。"</string>
+    <string name="match_none_source">"曲が見つかりません。"</string>
+</resources>

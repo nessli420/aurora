@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"Opzioni del brano"</string>
+    <string name="song_menu_source">"Sorgente di riproduzione"</string>
+    <string name="song_menu_open_album">"Apri questo album"</string>
+    <string name="song_menu_open_single">"Apri questo singolo"</string>
+    <string name="song_menu_open_ep">"Apri questo EP"</string>
+    <string name="song_menu_play_from">"Riproduci da"</string>
+    <string name="song_menu_open_in">"Apri in"</string>
+    <string name="song_menu_rematch">"Brano sbagliato? Scegline un altro"</string>
+    <string name="match_hint_source">"Scegli il brano da riprodurre al posto di “%1$s”."</string>
+    <string name="match_search_source">"Cerca il brano giusto"</string>
+    <string name="match_failed_source">"Impossibile cercare. Controlla la connessione e riprova."</string>
+    <string name="match_none_source">"Nessun brano trovato."</string>
+</resources>

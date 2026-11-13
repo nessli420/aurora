@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"Song options"</string>
+    <string name="song_menu_source">"Playback source"</string>
+    <string name="song_menu_open_album">"Open this album"</string>
+    <string name="song_menu_open_single">"Open this single"</string>
+    <string name="song_menu_open_ep">"Open this EP"</string>
+    <string name="song_menu_play_from">"Play from"</string>
+    <string name="song_menu_open_in">"Open in"</string>
+    <string name="song_menu_rematch">"Wrong song? Pick another"</string>
+    <string name="match_hint_source">"Pick the song that should play instead of “%1$s”."</string>
+    <string name="match_search_source">"Search for the right song"</string>
+    <string name="match_failed_source">"Couldn’t search. Check your connection and try again."</string>
+    <string name="match_none_source">"No songs found."</string>
+</resources>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="song_menu_more">"Параметры трека"</string>
+    <string name="song_menu_source">"Источник воспроизведения"</string>
+    <string name="song_menu_open_album">"Открыть этот альбом"</string>
+    <string name="song_menu_open_single">"Открыть этот сингл"</string>
+    <string name="song_menu_open_ep">"Открыть этот EP"</string>
+    <string name="song_menu_play_from">"Воспроизвести из"</string>
+    <string name="song_menu_open_in">"Открыть в"</string>
+    <string name="song_menu_rematch">"Не тот трек? Выбрать другой"</string>
+    <string name="match_hint_source">"Выберите трек, который будет играть вместо «%1$s»."</string>
+    <string name="match_search_source">"Найти нужный трек"</string>
+    <string name="match_failed_source">"Не удалось выполнить поиск. Проверьте подключение и повторите попытку."</string>
+    <string name="match_none_source">"Треки не найдены."</string>
+</resources>
