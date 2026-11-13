@@ -107,4 +107,5 @@
         <item quantity="other">保存したアーティスト：%1$d 人</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">モバイルデータでのダウンロードを許可</string>
 </resources>

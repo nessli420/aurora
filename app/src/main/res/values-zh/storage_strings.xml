@@ -107,4 +107,5 @@
         <item quantity="other">已保存 %1$d 位艺人</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">允许使用移动数据下载</string>
 </resources>

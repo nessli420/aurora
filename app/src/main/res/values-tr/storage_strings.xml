@@ -107,4 +107,5 @@
         <item quantity="other">%1$d sanatçı kaydedildi</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">Mobil veriyle indirmeye izin ver</string>
 </resources>

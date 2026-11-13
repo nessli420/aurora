@@ -145,6 +145,7 @@ internal object SettingsSearchIndex {
         e(R.string.text_artist_information_d5c3fc, R.string.text_look_up_biographies_and_images_9931d4, Routes.SETTINGS_STORAGE),
         e(R.string.artwork_lookup, R.string.artwork_description, Routes.SETTINGS_STORAGE),
         e(R.string.text_offline_mode_66cf31, R.string.cache_offline_summary, Routes.SETTINGS_STORAGE),
+        e(R.string.storage_mobile_data, null, Routes.SETTINGS_STORAGE),
         e(R.string.youtube_download_anonymous, R.string.youtube_download_anonymous_detail, Routes.SETTINGS_STORAGE),
         e(R.string.youtube_download_title, R.string.youtube_download_open_detail, Routes.SETTINGS_STORAGE),
         e(R.string.text_private_session_ec7cef, R.string.storage_private_detail, Routes.SETTINGS_STORAGE),

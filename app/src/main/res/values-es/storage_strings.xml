@@ -112,4 +112,5 @@
         <item quantity="many">%1$d artistas guardados</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">Permitir descargas con datos móviles</string>
 </resources>

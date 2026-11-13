@@ -14,6 +14,7 @@ import kotlinx.coroutines.flow.map
 interface GeneralSettings {
     val offlineMode: Flow<Boolean>
     val dataSaver: Flow<Boolean>
+    val mobileDataDownloads: Flow<Boolean>
     val simpleMode: Flow<Boolean>
     val insightsPrefs: Flow<InsightsPrefs>
     val onboardingSeen: Flow<Boolean?>
@@ -31,6 +32,7 @@ interface GeneralSettings {
     suspend fun setHistoricalListeningMs(ms: Long): Preferences
     suspend fun setOfflineMode(v: Boolean): Preferences
     suspend fun setDataSaver(v: Boolean): Preferences
+    suspend fun setMobileDataDownloads(v: Boolean): Preferences
     suspend fun setInsightsEnabled(v: Boolean): Preferences
     suspend fun setInsightsDevice(v: Boolean): Preferences
     suspend fun setInsightsAudioPath(v: Boolean): Preferences
@@ -44,6 +46,7 @@ internal class GeneralSettingsStore(private val dataStore: DataStore<Preferences
     override val offlineMode: Flow<Boolean> = dataStore.data.map { it[Keys.OFFLINE] ?: false }.distinctUntilChanged()
 
     override val dataSaver: Flow<Boolean> = dataStore.data.map { it[Keys.DATA_SAVER] ?: false }.distinctUntilChanged()
+    override val mobileDataDownloads: Flow<Boolean> = dataStore.data.map { it[Keys.MOBILE_DATA_DOWNLOADS] ?: false }.distinctUntilChanged()
     override val simpleMode: Flow<Boolean> = dataStore.data.map { it[Keys.SIMPLE_MODE] ?: false }.distinctUntilChanged().flowOn(Dispatchers.Default)
     override val insightsPrefs: Flow<InsightsPrefs> = dataStore.data.map {
         InsightsPrefs(it[Keys.INSIGHTS_ENABLED] ?: false, it[Keys.INSIGHTS_DEVICE] ?: true, it[Keys.INSIGHTS_AUDIO_PATH] ?: true,
@@ -67,6 +70,7 @@ internal class GeneralSettingsStore(private val dataStore: DataStore<Preferences
     override suspend fun setOfflineMode(v: Boolean) = dataStore.edit { it[Keys.OFFLINE] = v }
 
     override suspend fun setDataSaver(v: Boolean) = dataStore.edit { it[Keys.DATA_SAVER] = v }
+    override suspend fun setMobileDataDownloads(v: Boolean) = dataStore.edit { it[Keys.MOBILE_DATA_DOWNLOADS] = v }
     override suspend fun setInsightsEnabled(v: Boolean) = dataStore.edit { it[Keys.INSIGHTS_ENABLED] = v }
     override suspend fun setInsightsDevice(v: Boolean) = dataStore.edit { it[Keys.INSIGHTS_DEVICE] = v }
     override suspend fun setInsightsAudioPath(v: Boolean) = dataStore.edit { it[Keys.INSIGHTS_AUDIO_PATH] = v }

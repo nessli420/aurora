@@ -107,4 +107,5 @@
         <item quantity="other">%1$d कलाकार सहेजे गए</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">मोबाइल डेटा पर डाउनलोड की अनुमति दें</string>
 </resources>

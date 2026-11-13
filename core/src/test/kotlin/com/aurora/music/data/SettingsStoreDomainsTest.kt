@@ -60,6 +60,7 @@ class SettingsStoreDomainsTest {
         a.addRecentSearch("query")
         a.setPlaylistLiked("p", true)
         a.setSimpleMode(true)
+        a.setMobileDataDownloads(true)
         a.setInsightsEnabled(true)
         a.setWhatsNewSeen("1.0")
         a.setDspPreamp(-3f)
@@ -78,7 +79,7 @@ class SettingsStoreDomainsTest {
             SettingsStore::extensionGrants, SettingsStore::lastfm, SettingsStore::squigTarget, SettingsStore::uiPrefs, SettingsStore::musicHapticsPrefs,
             SettingsStore::playbackPrefs, SettingsStore::alarmPrefs, SettingsStore::aiDjSpoken, SettingsStore::unifiedLibrary,
             SettingsStore::sourcePriority, SettingsStore::mergeFeatures, SettingsStore::pins, SettingsStore::radioFavorites,
-            SettingsStore::recentSearches, SettingsStore::likedPlaylists, SettingsStore::simpleMode, SettingsStore::insightsPrefs,
+            SettingsStore::recentSearches, SettingsStore::likedPlaylists, SettingsStore::simpleMode, SettingsStore::mobileDataDownloads, SettingsStore::insightsPrefs,
             SettingsStore::whatsNewSeen, SettingsStore::audioPrefs, SettingsStore::reverbPrefs, SettingsStore::processingRack,
             SettingsStore::processingPresetLibrary, SettingsStore::processingRouteRules, SettingsStore::rackSubchains)
         for (flow in flows) assertEquals(flow(a).first(), flow(b).first())

@@ -178,6 +178,7 @@ class AppContainer(context: Context) {
         sonicStore.put(id, vector, account)
     }
     private val canStream: () -> Boolean = { !offlineToggle && networkUp && onWifi && !dataSaver }
+    private val canDownload: () -> Boolean = { downloadAllowed(offlineToggle, networkUp, onWifi, mobileDataDownloads) }
     val sonicEngine by lazy { SonicEngine(sonicStore, { repository.allLibrarySongs(cap = Int.MAX_VALUE) },
         { settingsStore.session.first()?.accountKey().orEmpty() }, mixAnalyzer,
         libraryKey = { offline.value to libraryReload.value }, canStream = canStream, context = appContext) }
@@ -193,14 +194,14 @@ class AppContainer(context: Context) {
             { seed, count, pool -> if (sonicStore.get(seed.id) != null) sonicEngine.buildRadio(seed, count, pool) else emptyList() }, aiDjMemory)
     }
     val aiDj by aiDjDelegate
-    fun downloadAiDjModel() = aiDjModels.download { !offlineToggle && networkUp && onWifi }
+    fun downloadAiDjModel() = aiDjModels.download(canDownload)
     suspend fun deleteAiDjModel() = aiDjModels.delete { aiDjLlm.release() }
     val aiDjVoiceModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(appContext.filesDir, "ai-dj-voice"), http, com.aurora.music.ai.DjModelStore.WHISPER) }
     private val aiDjWhisper by lazy { com.aurora.music.ai.LocalWhisper({ aiDjVoiceModels.model() }, AiDjDevice.threads(), idleMs = 0) }
     val aiDjSpeakerModels by lazy { com.aurora.music.ai.DjModelStore(java.io.File(appContext.filesDir, "ai-dj-speaker"), http, com.aurora.music.ai.DjModelStore.SPEAKER) }
     private val aiDjSpeaker by lazy { com.aurora.music.ai.DjSpeaker({ aiDjSpeakerModels.model().takeIf { aiDjUnsupported == null } }, AiDjDevice.threads()) }
     val aiDjVoice by lazy { AiDjSystemVoice(appContext, aiDjSpeaker) { settingsStore.aiDjSpoken.first() } }
-    fun downloadAiDjSpeakerModel() = aiDjSpeakerModels.download { !offlineToggle && networkUp && onWifi }
+    fun downloadAiDjSpeakerModel() = aiDjSpeakerModels.download(canDownload)
     suspend fun deleteAiDjSpeakerModel() = aiDjSpeakerModels.delete { aiDjSpeaker.release() }
     val aiDjEars by lazy {
         com.aurora.music.ai.WhisperEars(AiDjMicrophone(), aiDjWhisper) { com.aurora.music.localization.AppStrings.context.resources.configuration.locales[0].language }
@@ -208,7 +209,7 @@ class AppContainer(context: Context) {
     val aiDjMode by lazy { com.aurora.music.ai.DjMode(aiDj, CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate), aiDjVoice, aiDjEars) }
     // set while the playback service runs
     @Volatile var aiDjQueue: com.aurora.music.ai.DjMode.Queue? = null
-    fun downloadAiDjVoiceModel() = aiDjVoiceModels.download { !offlineToggle && networkUp && onWifi }
+    fun downloadAiDjVoiceModel() = aiDjVoiceModels.download(canDownload)
     suspend fun deleteAiDjVoiceModel() = aiDjVoiceModels.delete { aiDjWhisper.release() }
 
     val radioBrowser by lazy { com.aurora.music.data.remote.RadioBrowserClient(http) }
@@ -369,11 +370,14 @@ class AppContainer(context: Context) {
     @Volatile
     private var dataSaver: Boolean = false
 
+    @Volatile
+    private var mobileDataDownloads: Boolean = false
+
     val vocalAnalysis = VocalAnalysis(appContext, canStream) { uri ->
         youtubeResolver.resolveSentinel(android.net.Uri.parse(uri))
     }
 
-    val lyricsTranslator = LyricsTranslator(appContext) { !offlineToggle && networkUp && onWifi && !dataSaver }
+    val lyricsTranslator = LyricsTranslator(appContext) { canDownload() && !dataSaver }
 
     // 0 = system default
     val preferredAudioDeviceId = MutableStateFlow(0)
@@ -512,6 +516,17 @@ class AppContainer(context: Context) {
             settingsStore.dataSaver.collect { dataSaver = it; recomputeBitrate() }
         }
         scope.launch {
+            var first = true
+            settingsStore.mobileDataDownloads.collect { on ->
+                mobileDataDownloads = on
+                // model downloads stopped for want of wi-fi resume once mobile data is allowed
+                if (on && !first) listOf(aiDjModels, aiDjSpeakerModels, aiDjVoiceModels)
+                    .filter { it.state.value == com.aurora.music.ai.DjModelState.Failed(com.aurora.music.ai.DjModelStore.FAIL_WIFI) }
+                    .forEach { it.download(canDownload) }
+                first = false
+            }
+        }
+        scope.launch {
             settingsStore.haptics.collect { hapticsEnabled = it }
         }
         scope.launch {
@@ -590,3 +605,7 @@ class AppContainer(context: Context) {
         const val MEDIA_STORE_SETTLE_MS = 2500L
     }
 }
+
+// large one-off downloads stay on wi-fi unless the user allows mobile data
+internal fun downloadAllowed(offline: Boolean, networkUp: Boolean, onWifi: Boolean, mobileData: Boolean) =
+    !offline && networkUp && (onWifi || mobileData)

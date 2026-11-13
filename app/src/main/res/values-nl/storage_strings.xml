@@ -107,4 +107,5 @@
         <item quantity="other">%1$d artiesten opgeslagen</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">Downloads via mobiele data toestaan</string>
 </resources>

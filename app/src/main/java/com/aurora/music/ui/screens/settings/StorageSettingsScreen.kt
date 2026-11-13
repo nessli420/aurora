@@ -39,6 +39,7 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.Map
@@ -148,6 +149,12 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
                             perform("downloads:$serverId") { inventory.removeDownloads(serverId); true }
                         }
                     }
+                }
+            }
+            SettingsGroup {
+                val mobileData by store.mobileDataDownloads.collectAsStateWithLifecycle(initialValue = false)
+                SettingsSwitchRow(Icons.Filled.SignalCellularAlt, appString(R.string.storage_mobile_data), checked = mobileData) { v ->
+                    scope.launch { store.setMobileDataDownloads(v) }
                 }
             }
             if (!isLocal) {

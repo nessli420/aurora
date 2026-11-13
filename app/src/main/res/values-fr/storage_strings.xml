@@ -112,4 +112,5 @@
         <item quantity="many">%1$d artistes enregistrés</item>
     </plurals>
     <string name="storage_size_kb">%1$d Ko</string>
+    <string name="storage_mobile_data">Autoriser les téléchargements via les données mobiles</string>
 </resources>

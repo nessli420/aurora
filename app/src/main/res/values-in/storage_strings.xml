@@ -107,4 +107,5 @@
         <item quantity="other">%1$d artis tersimpan</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">Izinkan unduhan lewat data seluler</string>
 </resources>

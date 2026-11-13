@@ -107,4 +107,5 @@
         <item quantity="other">\u2067%1$d فنکار محفوظ\u2069</item>
     </plurals>
     <string name="storage_size_kb">\u2067%1$d KB\u2069</string>
+    <string name="storage_mobile_data">\u2067موبائل ڈیٹا پر ڈاؤن لوڈ کی اجازت دیں\u2069</string>
 </resources>

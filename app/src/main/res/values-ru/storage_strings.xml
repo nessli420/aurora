@@ -117,4 +117,5 @@
         <item quantity="other">Сохранено %1$d исполнителя</item>
     </plurals>
     <string name="storage_size_kb">%1$d КБ</string>
+    <string name="storage_mobile_data">Разрешить загрузку через мобильный интернет</string>
 </resources>

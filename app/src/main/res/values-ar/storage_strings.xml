@@ -127,4 +127,5 @@
         <item quantity="many">\u2067الفنانون المحفوظون: %1$d\u2069</item>
     </plurals>
     <string name="storage_size_kb">\u2067%1$d كيلوبايت\u2069</string>
+    <string name="storage_mobile_data">\u2067السماح بالتنزيل عبر بيانات الجوال\u2069</string>
 </resources>

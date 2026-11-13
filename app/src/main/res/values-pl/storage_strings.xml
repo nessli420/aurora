@@ -117,4 +117,5 @@
         <item quantity="many">%1$d zapisanych wykonawców</item>
     </plurals>
     <string name="storage_size_kb">%1$d KB</string>
+    <string name="storage_mobile_data">Zezwalaj na pobieranie przez dane komórkowe</string>
 </resources>

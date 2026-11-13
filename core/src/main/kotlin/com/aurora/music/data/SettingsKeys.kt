@@ -91,6 +91,7 @@ internal object SettingsKeys {
     val ANIMATED_COVERS_FOLDER = stringPreferencesKey("animated_covers_folder")
     val LRCLIB = booleanPreferencesKey("lrclib_enabled")
     val DATA_SAVER = booleanPreferencesKey("data_saver")
+    val MOBILE_DATA_DOWNLOADS = booleanPreferencesKey("mobile_data_downloads")
     val SIMPLE_MODE = booleanPreferencesKey("simple_mode")
     val INSIGHTS_ENABLED = booleanPreferencesKey("insights_enabled")
     val INSIGHTS_DEVICE = booleanPreferencesKey("insights_device")
