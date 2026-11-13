@@ -936,10 +936,20 @@ private fun Shell(
         com.aurora.music.ui.components.LocalLikeMenu provides remember(player) { com.aurora.music.ui.components.LikeMenu(player::likeOptions, player::setLikedOn, player::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },
+        com.aurora.music.ui.screens.player.LocalSongSources provides remember(player) {
+            com.aurora.music.ui.screens.player.SongSources(
+                copies = container.repository::sourceCopies,
+                releaseType = { song -> container.repository.detail("album", song.albumId)?.info?.typeLabel },
+                canRematch = { song -> com.aurora.music.data.TrackChoices.matchKey(song.streamUrl) != null || container.repository.sourceType(song)?.isCatalogue == true },
+                playFrom = player::swapCurrent,
+                rematch = { song -> matchSong = song },
+                open = { kind, id -> player.setExpanded(false); openDetail(kind, id) },
+            )
+        },
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides
             (if (exploreAvailable) PlayerPane.entries else listOf(PlayerPane.LYRICS, PlayerPane.QUEUE)).let { if (aiDjActive) it - PlayerPane.QUEUE else it },
     ) {
-    matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onChanged = { changed -> player.reloadIfPlaying(changed.id) }) { matchSong = null } }
+    matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onSwap = player::swapCurrent) { matchSong = null } }
     com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
         onMoved = { player.refreshLikes() }, notify = ::confirm)
     ModalNavigationDrawer(

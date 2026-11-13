@@ -366,7 +366,6 @@ fun PlayerScreen(
                         leadingIcon = { Icon(Icons.Filled.Explore, null) },
                     )
                     if (state.hasTrack) com.aurora.music.ui.components.RepostMenuItem(song) { showMenu = false }
-                    if (state.hasTrack) com.aurora.music.ui.components.MatchMenuItem(song) { showMenu = false }
                     if (state.supportsComments) DropdownMenuItem(
                         text = { Text(appString(R.string.player_comments)) },
                         onClick = { showMenu = false; showComments = true },
@@ -606,11 +605,8 @@ fun PlayerScreen(
                     Spacer(Modifier.width(10.dp))
                 }
                 Column(Modifier.weight(1f)) {
-                    MarqueeTitle(song.title, MaterialTheme.typography.headlineMedium, fontWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight,
-                        onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = openAlbum)
-                    Spacer(Modifier.height(2.dp))
-                    MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
-                        onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = openArtist)
+                    SongTitles(song, MaterialTheme.typography.headlineMedium, MaterialTheme.typography.titleMedium, openAlbum, openArtist,
+                        titleWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight, gap = 2.dp)
                     if (state.bpm > 0) {
                         Spacer(Modifier.height(3.dp))
                         Text(
@@ -932,7 +928,8 @@ private fun CanvasTint(active: Boolean, content: @Composable () -> Unit) {
     val scheme = if (!active) base else base.copy(onSurface = Color.White, onBackground = Color.White,
         onSurfaceVariant = Color.White.copy(alpha = .78f))
     MaterialTheme(colorScheme = scheme) {
-        CompositionLocalProvider(LocalContentColor provides if (active) Color.White else LocalContentColor.current, content = content)
+        CompositionLocalProvider(LocalContentColor provides if (active) Color.White else LocalContentColor.current,
+            LocalUntintedColors provides (LocalUntintedColors.current ?: base), content = content)
     }
 }
 
@@ -1023,10 +1020,7 @@ private fun CoverOverlay(
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f)) {
-                                MarqueeTitle(song.title, MaterialTheme.typography.headlineSmall,
-                                    onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = onOpenAlbum)
-                                MarqueeTitle(song.artist, MaterialTheme.typography.titleMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
-                                    onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = onOpenArtist)
+                                SongTitles(song, MaterialTheme.typography.headlineSmall, MaterialTheme.typography.titleMedium, onOpenAlbum, onOpenArtist)
                             }
                             if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
                                 com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
@@ -1127,10 +1121,7 @@ private fun CompactTransport(
             Artwork(song.artworkUrl, song.accent, Modifier.size(56.dp), corner = 12.dp)
             Spacer(Modifier.width(12.dp))
             Column(Modifier.weight(1f)) {
-                MarqueeTitle(song.title, MaterialTheme.typography.titleMedium,
-                    onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = onOpenAlbum)
-                MarqueeTitle(song.artist, MaterialTheme.typography.bodyMedium, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
-                    onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = onOpenArtist)
+                SongTitles(song, MaterialTheme.typography.titleMedium, MaterialTheme.typography.bodyMedium, onOpenAlbum, onOpenArtist)
             }
             if (!state.isMix) IconButton(onClick = onPrevious) {
                 Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = MaterialTheme.colorScheme.onSurface)
@@ -1350,24 +1341,56 @@ private fun MarqueeTitle(
     fontWeight: FontWeight? = FontWeight.Bold,
     onClickLabel: String? = null,
     onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null,
+    menu: @Composable () -> Unit = {},
 ) {
     var fullWidth by remember(text) { androidx.compose.runtime.mutableIntStateOf(0) }
     var shownWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
     val overflowing = fullWidth > shownWidth && shownWidth > 0
-    Text(
-        text, style = style, fontWeight = fontWeight,
-        maxLines = 1, softWrap = false, color = color,
-        onTextLayout = { fullWidth = it.size.width },
-        modifier = Modifier
-            .then(if (onClick != null) Modifier.clickable(onClickLabel = onClickLabel, role = Role.Button, onClick = onClick) else Modifier)
-            .onSizeChanged { shownWidth = it.width }
-            .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
-                drawContent()
-                drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.08f to Color.Black, 0.92f to Color.Black, 1f to Color.Transparent),
-                    blendMode = BlendMode.DstIn)
-            } else Modifier)
-            .basicMarquee(iterations = Int.MAX_VALUE, initialDelayMillis = 1500, repeatDelayMillis = 2500),
-    )
+    val tap = onClick ?: onLongClick
+    Box {
+        Text(
+            text, style = style, fontWeight = fontWeight,
+            maxLines = 1, softWrap = false, color = color,
+            onTextLayout = { fullWidth = it.size.width },
+            modifier = Modifier
+                .then(if (tap != null) Modifier.combinedClickable(onClickLabel = onClickLabel, role = Role.Button,
+                    onLongClickLabel = onLongClick?.let { appString(R.string.song_menu_more) }, onLongClick = onLongClick, onClick = tap) else Modifier)
+                .onSizeChanged { shownWidth = it.width }
+                .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
+                    drawContent()
+                    drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.08f to Color.Black, 0.92f to Color.Black, 1f to Color.Transparent),
+                        blendMode = BlendMode.DstIn)
+                } else Modifier)
+                .basicMarquee(iterations = Int.MAX_VALUE, initialDelayMillis = 1500, repeatDelayMillis = 2500),
+        )
+        menu()
+    }
+}
+
+// a tap opens the album or artist; a long press, or a tap with nothing to open, the song's menu
+@Composable
+private fun SongTitles(
+    song: com.aurora.music.model.Song,
+    titleStyle: androidx.compose.ui.text.TextStyle,
+    artistStyle: androidx.compose.ui.text.TextStyle,
+    openAlbum: (() -> Unit)?,
+    openArtist: (() -> Unit)?,
+    titleWeight: FontWeight? = FontWeight.Bold,
+    gap: androidx.compose.ui.unit.Dp = 0.dp,
+) {
+    val sources = LocalSongSources.current?.takeIf { songMenusFor(song) }
+    var menu by remember(song.id) { mutableStateOf<SongMenuPage?>(null) }
+    MarqueeTitle(song.title, titleStyle, fontWeight = titleWeight, onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = openAlbum,
+        onLongClick = sources?.let { { menu = SongMenuPage.ROOT } }) {
+        if (menu == SongMenuPage.ROOT && sources != null) SongSourcesMenu(song, sources, SongMenuPage.ROOT) { menu = null }
+    }
+    Spacer(Modifier.height(gap))
+    MarqueeTitle(song.artist, artistStyle, MaterialTheme.colorScheme.onSurfaceVariant, fontWeight = null,
+        onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = openArtist,
+        onLongClick = sources?.let { { menu = SongMenuPage.ARTIST } }) {
+        if (menu == SongMenuPage.ARTIST && sources != null) SongSourcesMenu(song, sources, SongMenuPage.ARTIST) { menu = null }
+    }
 }
 
 private fun sourceLabel(song: com.aurora.music.model.Song): String? = when {

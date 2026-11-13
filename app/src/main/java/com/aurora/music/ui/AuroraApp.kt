@@ -985,6 +985,16 @@ fun AuroraApp() {
         com.aurora.music.ui.components.LocalLikeMenu provides remember(playerVM) { com.aurora.music.ui.components.LikeMenu(playerVM::likeOptions, playerVM::setLikedOn, playerVM::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: com.aurora.music.model.Song -> matchSong = song } },
+        com.aurora.music.ui.screens.player.LocalSongSources provides remember(playerVM) {
+            com.aurora.music.ui.screens.player.SongSources(
+                copies = container.repository::sourceCopies,
+                releaseType = { song -> container.repository.detail("album", song.albumId)?.info?.typeLabel },
+                canRematch = { song -> playerVM.queued(song).let { com.aurora.music.data.TrackChoices.matchKey(it.streamUrl) != null || container.repository.sourceType(it)?.isCatalogue == true } },
+                playFrom = playerVM::swapCurrent,
+                rematch = { song -> matchSong = playerVM.queued(song) },
+                open = { kind, id -> playerVM.setExpanded(false); openDetail(kind, id) },
+            )
+        },
     ) {
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -1869,7 +1879,7 @@ fun AuroraApp() {
     if (showMix) {
         com.aurora.music.ui.screens.player.MixScreen(mixVM, mixQueue, onClose = { showMix = false })
     }
-    matchSong?.let { com.aurora.music.ui.components.MatchPickerSheet(it) { matchSong = null } }
+    matchSong?.let { com.aurora.music.ui.components.MatchPickerSheet(it, onSwap = playerVM::swapCurrent) { matchSong = null } }
     com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
         onMoved = { playerVM.refreshLikes() }, notify = ::confirm)
 

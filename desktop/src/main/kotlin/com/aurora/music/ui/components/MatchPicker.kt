@@ -17,10 +17,8 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -47,36 +45,27 @@ import com.aurora.music.R
 import com.aurora.music.data.MatchChoice
 import com.aurora.music.data.TrackChoices
 import com.aurora.music.desktop.ui.LocalDesktopContainer
-import com.aurora.music.desktop.youtube.YoutubeResolver
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-// opens the picker for a track that plays a youtube match; the dialog lives at the app level so closing a menu keeps it open
+// opens the picker for the playing song; the dialog lives at the app level so closing a menu keeps it open
 val LocalMatchPicker = staticCompositionLocalOf<((Song) -> Unit)?> { null }
 
-@Composable
-fun MatchMenuItem(song: Song, close: () -> Unit) {
-    val open = LocalMatchPicker.current ?: return
-    if (TrackChoices.matchKey(song.streamUrl) == null) return
-    DropdownMenuItem(
-        text = { Text(appString(R.string.match_change)) },
-        onClick = { close(); open(song) },
-        leadingIcon = { Icon(Icons.Filled.SwapHoriz, null) },
-    )
-}
+private class Pick(val id: String, val title: String, val artist: String, val durationSec: Int, val artworkUrl: String, val song: Song?)
 
+// a track without audio of its own picks its youtube video; any other picks the right song on its own source
 @Composable
-fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onChanged: (Song) -> Unit = {}, onDismiss: () -> Unit) {
+fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onSwap: (Song) -> Unit = {}, onDismiss: () -> Unit) {
     val container = LocalDesktopContainer.current
-    val key = TrackChoices.matchKey(song.streamUrl) ?: return
+    val key = TrackChoices.matchKey(song.streamUrl)
     val matches by container.trackChoices.matches.collectAsStateWithLifecycle()
-    val chosen = matches[key]
+    val chosen = key?.let { matches[it]?.videoId } ?: song.id.takeIf { key == null }
     val scope = rememberCoroutineScope()
     var query by remember(song.id) { mutableStateOf(listOf(song.artist, song.title).filter { it.isNotBlank() }.joinToString(" ")) }
-    var results by remember(song.id) { mutableStateOf<List<YoutubeResolver.SearchResult>?>(null) }
+    var results by remember(song.id) { mutableStateOf<List<Pick>?>(null) }
     var failed by remember(song.id) { mutableStateOf(false) }
     var searching by remember(song.id) { mutableStateOf(false) }
 
@@ -84,16 +73,22 @@ fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onChanged: (Song) ->
         val text = query.trim().ifEmpty { return }
         searching = true; failed = false
         scope.launch {
-            val found = withContext(Dispatchers.IO) { runCatching { container.youtubeResolver.searchSongs(text) } }
-            results = found.getOrNull(); failed = found.isFailure; searching = false
+            val found = runCatching {
+                if (key != null) withContext(Dispatchers.IO) { container.youtubeResolver.searchSongs(text) }
+                    .map { Pick(it.videoId, it.title, it.artist, it.durationSec, it.thumbnailUrl, null) }
+                else container.repository.searchOwnSource(song, text).map { Pick(it.id, it.title, it.artist, it.durationSec, it.artworkUrl, it) }
+            }
+            results = found.getOrNull()?.distinctBy { it.id }; failed = found.isFailure; searching = false
         }
     }
-    fun choose(choice: MatchChoice?) {
-        container.trackChoices.setMatch(key, choice)
-        // the old audio has to be out of the cache before the song plays again, or it comes straight back
-        // (chained on the cache's own job: the dialog, and its scope, close straight after this)
-        container.audioCache.forget(song.id).invokeOnCompletion { cause -> if (cause == null) onChanged(song) }
-        notify(if (choice == null) appString(R.string.match_reset_done) else appString(R.string.match_saved, choice.title))
+    fun choose(pick: Pick?) {
+        if (key != null) {
+            container.trackChoices.setMatch(key, pick?.let { MatchChoice(it.id, it.title, it.artist, it.durationSec) })
+            // the old audio has to be out of the cache before the song plays again, or it comes straight back
+            // (chained on the cache's own job: the dialog, and its scope, close straight after this)
+            container.audioCache.forget(song.id).invokeOnCompletion { cause -> if (cause == null) onSwap(song) }
+        } else pick?.song?.takeIf { it.id != song.id }?.let(onSwap)
+        notify(if (pick == null) appString(R.string.match_reset_done) else appString(R.string.match_saved, pick.title))
         onDismiss()
     }
     LaunchedEffect(song.id) { search() }
@@ -103,28 +98,29 @@ fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onChanged: (Song) ->
         title = { Text(appString(R.string.match_change), fontWeight = FontWeight.Bold) },
         text = {
             Column(Modifier.width(520.dp)) {
-                Text(appString(R.string.match_hint, song.title), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(appString(if (key != null) R.string.match_hint else R.string.match_hint_source, song.title),
+                    style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 OutlinedTextField(
                     value = query, onValueChange = { query = it }, singleLine = true,
                     leadingIcon = { Icon(Icons.Filled.Search, null) },
-                    placeholder = { Text(appString(R.string.match_search)) },
+                    placeholder = { Text(appString(if (key != null) R.string.match_search else R.string.match_search_source)) },
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { search() }),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                 )
                 Box(Modifier.fillMaxWidth().height(380.dp)) {
                     when {
                         searching -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                        failed -> Note(appString(R.string.match_failed))
-                        results?.isEmpty() == true -> Note(appString(R.string.match_none))
+                        failed -> Note(appString(if (key != null) R.string.match_failed else R.string.match_failed_source))
+                        results?.isEmpty() == true -> Note(appString(if (key != null) R.string.match_none else R.string.match_none_source))
                         else -> LazyColumn(Modifier.fillMaxWidth()) {
-                            items(results.orEmpty(), key = { it.videoId }) { result ->
-                                val picked = chosen?.videoId == result.videoId
+                            items(results.orEmpty(), key = { it.id }) { result ->
+                                val picked = chosen == result.id
                                 Row(
-                                    Modifier.fillMaxWidth().clickable { choose(MatchChoice(result.videoId, result.title, result.artist, result.durationSec)) }
+                                    Modifier.fillMaxWidth().clickable { choose(result) }
                                         .pointerHoverIcon(PointerIcon.Hand).padding(vertical = 6.dp),
                                     verticalAlignment = Alignment.CenterVertically,
                                 ) {
-                                    Artwork(result.thumbnailUrl, MaterialTheme.colorScheme.primary, Modifier.size(48.dp), corner = 8.dp)
+                                    Artwork(result.artworkUrl, MaterialTheme.colorScheme.primary, Modifier.size(48.dp), corner = 8.dp)
                                     Spacer(Modifier.width(12.dp))
                                     Column(Modifier.weight(1f)) {
                                         Text(result.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
@@ -142,7 +138,7 @@ fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onChanged: (Song) ->
             }
         },
         confirmButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
-        dismissButton = if (chosen != null) ({ TextButton(onClick = { choose(null) }) { Text(appString(R.string.match_reset)) } }) else null,
+        dismissButton = if (key != null && matches[key] != null) ({ TextButton(onClick = { choose(null) }) { Text(appString(R.string.match_reset)) } }) else null,
     )
 }
 
