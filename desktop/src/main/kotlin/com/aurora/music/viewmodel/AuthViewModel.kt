@@ -29,7 +29,7 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-enum class AuthStep { TYPE, SERVER, CREDENTIALS, FOLDERS, YOUTUBE_MUSIC, SPOTIFY, SOUNDCLOUD }
+enum class AuthStep { TYPE, SERVER, CREDENTIALS, FOLDERS, YOUTUBE_MUSIC, SPOTIFY, SOUNDCLOUD, APPLE_MUSIC }
 
 data class AuthUiState(
     val step: AuthStep = AuthStep.TYPE,
@@ -74,6 +74,7 @@ class AuthViewModel(private val container: DesktopContainer) : ViewModel() {
             ServerType.YOUTUBE_MUSIC -> AuthStep.YOUTUBE_MUSIC
             ServerType.SPOTIFY -> AuthStep.SPOTIFY
             ServerType.SOUNDCLOUD -> AuthStep.SOUNDCLOUD
+            ServerType.APPLE_MUSIC -> AuthStep.APPLE_MUSIC
             else -> AuthStep.SERVER
         }
         _state.update { it.copy(type = type, step = step, error = null) }
@@ -93,6 +94,17 @@ class AuthViewModel(private val container: DesktopContainer) : ViewModel() {
         val client = SoundCloudClient({ auth }, { auth = it }, container.http)
         val (id, name, avatar) = SoundCloudBackend.profile(client)
         Session(SoundCloudClient.WEB, name, "", save(auth.encode()), ServerType.SOUNDCLOUD, userId = id, imageUrl = avatar)
+    }
+
+    fun connectAppleMusic(webSession: String, onDone: () -> Unit = {}) = connectWeb(container.appleMusicCredentials, onDone,
+        failure = R.string.apple_music_connect_failed) { save ->
+        val login = com.aurora.music.data.remote.AppleMusicWebSession.decode(webSession)
+        val client = com.aurora.music.data.remote.AppleMusicClient({ login }, container.http,
+            { container.settingsStore.appleMusicToken.first() }, { container.settingsStore.setAppleMusicToken(it) })
+        val profile = com.aurora.music.data.AppleMusicBackend.profile(client, login)
+        Session(com.aurora.music.data.remote.AppleMusicClient.WEB, profile.name, "",
+            save(com.aurora.music.data.remote.AppleMusicWebSession(login.userToken, profile.storefront).encode()),
+            ServerType.APPLE_MUSIC, userId = profile.userId, imageUrl = profile.imageUrl)
     }
 
     fun continueAsGuest(onDone: () -> Unit = {}) {
@@ -193,7 +205,7 @@ class AuthViewModel(private val container: DesktopContainer) : ViewModel() {
     fun back() = _state.update {
         when (it.step) {
             AuthStep.CREDENTIALS -> it.copy(step = AuthStep.SERVER, error = null)
-            AuthStep.SERVER, AuthStep.FOLDERS, AuthStep.YOUTUBE_MUSIC, AuthStep.SPOTIFY, AuthStep.SOUNDCLOUD -> it.copy(step = AuthStep.TYPE, error = null)
+            AuthStep.SERVER, AuthStep.FOLDERS, AuthStep.YOUTUBE_MUSIC, AuthStep.SPOTIFY, AuthStep.SOUNDCLOUD, AuthStep.APPLE_MUSIC -> it.copy(step = AuthStep.TYPE, error = null)
             AuthStep.TYPE -> it
         }
     }

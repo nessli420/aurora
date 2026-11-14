@@ -65,6 +65,7 @@ class WebCredentials(private val root: File, name: String, private val vault: Cr
         fun youtubeMusic(root: File) = WebCredentials(root, "youtube-music")
         fun spotify(root: File) = WebCredentials(root, "spotify-web")
         fun soundcloud(root: File) = WebCredentials(root, "soundcloud-web")
+        fun appleMusic(root: File) = WebCredentials(root, "apple-music-web")
 
         // earlier linux builds sealed logins with a key file kept beside them; move them under the keyring and drop the file
         internal fun migrateLegacy(root: File, vault: CredentialVault?) = synchronized(migration) {

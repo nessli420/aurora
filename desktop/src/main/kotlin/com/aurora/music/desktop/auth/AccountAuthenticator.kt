@@ -32,6 +32,7 @@ class AccountAuthenticator(private val clientInfo: ClientInfo) {
                 ServerType.YOUTUBE_MUSIC -> throw IllegalStateException(appString(R.string.text_youtube_music_uses_google_sign_in_0ba1e7))
                 ServerType.LOCAL -> throw IllegalStateException(appString(R.string.text_local_mode_doesn_t_use_this_form_78c2dc))
                 ServerType.SOUNDCLOUD -> throw IllegalStateException(appString(R.string.soundcloud_connect_failed))
+                ServerType.APPLE_MUSIC -> throw IllegalStateException(appString(R.string.apple_music_connect_failed))
                 ServerType.EXTENSION -> throw IllegalStateException(appString(R.string.text_enable_this_source_in_advanced_audio_extensions_579558))
             }
         }
@@ -77,7 +78,7 @@ class AccountAuthenticator(private val clientInfo: ClientInfo) {
 
     companion object {
         val SUPPORTED: Set<ServerType> = setOf(ServerType.SUBSONIC, ServerType.JELLYFIN, ServerType.PLEX, ServerType.LOCAL,
-            ServerType.YOUTUBE_MUSIC, ServerType.SPOTIFY, ServerType.SOUNDCLOUD)
+            ServerType.YOUTUBE_MUSIC, ServerType.SPOTIFY, ServerType.SOUNDCLOUD, ServerType.APPLE_MUSIC)
         // spotify works on desktop through its web player only, not the developer-app sign-in
         fun supports(session: Session): Boolean = session.type in SUPPORTED &&
             (session.type != ServerType.SPOTIFY || session.salt == com.aurora.music.data.SpotifyWebBackend.WEB_PLAYER)

@@ -3,6 +3,7 @@ package com.aurora.music.ui.screens.library
 import androidx.compose.material.icons.outlined.LibraryMusic
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.paperFrame
+import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material.icons.outlined.PlayCircle
@@ -440,6 +441,7 @@ private fun LibraryViewTabs(views: List<com.aurora.music.data.LibraryViewChoice>
                 "youtube", "discovery" -> Icons.Outlined.PlayCircle
                 "spotify" -> Icons.Outlined.GraphicEq
                 "soundcloud" -> Icons.Outlined.Cloud
+                "apple" -> Icons.Outlined.Album
                 else -> Icons.Outlined.LibraryMusic
             }
             LibTab(label = view.label, icon = icon, selected = view.id == selected, iconOnly = false) { onSelect(view.id) }

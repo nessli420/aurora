@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.auth
 
 import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.Album
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.outlined.MusicNote
 import com.aurora.music.localization.localizedMediaType
@@ -122,6 +123,7 @@ fun SignInScreen(
     onConnectYouTubeMusic: (String) -> Unit = {},
     onConnectSpotifyWeb: (String, com.aurora.music.data.SpotifyWebProfile?) -> Unit = { _, _ -> },
     onConnectSoundCloud: (String) -> Unit = {},
+    onConnectAppleMusic: (String) -> Unit = {},
     onContinueAsGuest: () -> Unit = {},
     onQuickConnect: () -> Unit = {},
     onCancelQuickConnect: () -> Unit = {},
@@ -169,7 +171,7 @@ fun SignInScreen(
                         AuthStep.TYPE -> appString(R.string.text_your_music_your_way_db5743)
                         AuthStep.SERVER -> appString(R.string.text_01_address_ea85bc)
                         AuthStep.CREDENTIALS -> appString(R.string.text_02_account_8088a4)
-                        AuthStep.FOLDERS, AuthStep.YOUTUBE_MUSIC, AuthStep.SPOTIFY, AuthStep.SOUNDCLOUD -> appString(R.string.text_connect_6e2889)
+                        AuthStep.FOLDERS, AuthStep.YOUTUBE_MUSIC, AuthStep.SPOTIFY, AuthStep.SOUNDCLOUD, AuthStep.APPLE_MUSIC -> appString(R.string.text_connect_6e2889)
                     }, style = MaterialTheme.typography.labelSmall, color = palette.onSurfaceVariant, letterSpacing = 1.sp)
                 }
             }
@@ -183,6 +185,7 @@ fun SignInScreen(
                         AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_connect_youtube_music_64e032)
                         AuthStep.SPOTIFY -> appString(R.string.text_connect_spotify_529d56)
                         AuthStep.SOUNDCLOUD -> appString(R.string.soundcloud_connect_title)
+                        AuthStep.APPLE_MUSIC -> appString(R.string.apple_music_connect_title)
                     }
                     val type = state.step == AuthStep.TYPE
                     Text(headline, fontSize = if (wide) (if (type) 52.sp else 40.sp) else if (type) 38.sp else 30.sp,
@@ -200,6 +203,7 @@ fun SignInScreen(
                         AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_your_favourites_mixes_and_new_discoveries_6c2fa1)
                         AuthStep.SPOTIFY -> appString(R.string.text_bring_your_playlists_and_saved_music_into_aurora_df697e)
                         AuthStep.SOUNDCLOUD -> appString(R.string.soundcloud_connect_subtitle)
+                        AuthStep.APPLE_MUSIC -> appString(R.string.apple_music_connect_subtitle)
                     }, style = MaterialTheme.typography.bodyLarge, color = palette.onSurfaceVariant)
                 }
             }
@@ -213,6 +217,7 @@ fun SignInScreen(
                         AuthStep.YOUTUBE_MUSIC -> YouTubeMusicStep(state, onConnectYouTubeMusic, onContinueAsGuest)
                         AuthStep.SPOTIFY -> spotifyOperations?.let { SpotifyWebStep(state, it, onConnectSpotifyWeb) }
                         AuthStep.SOUNDCLOUD -> SoundCloudStep(state, onConnectSoundCloud, onContinueAsGuest)
+                        AuthStep.APPLE_MUSIC -> AppleMusicStep(state, onConnectAppleMusic, onContinueAsGuest)
                     }
                     if (state.loading && state.quickConnectCode == null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         CircularProgressIndicator(Modifier.size(20.dp), color = AuroraRose, strokeWidth = 2.dp)
@@ -279,6 +284,7 @@ private fun TypeStep(onSelectType: (ServerType) -> Unit, savedSessions: List<Ses
         ServerTypeCard(Icons.Outlined.PlayCircle, "YouTube Music", appString(R.string.text_your_google_account_playlists_and_mixes_120c0f), enabled = enabled) { onSelectType(ServerType.YOUTUBE_MUSIC) }
         ServerTypeCard(Icons.Outlined.MusicNote, "Spotify", appString(R.string.text_your_library_played_through_youtube_a53b5e), enabled = enabled) { onSelectType(ServerType.SPOTIFY) }
         ServerTypeCard(Icons.Outlined.GraphicEq, "SoundCloud", appString(R.string.soundcloud_card_detail), enabled = enabled) { onSelectType(ServerType.SOUNDCLOUD) }
+        ServerTypeCard(Icons.Outlined.Album, "Apple Music", appString(R.string.apple_music_card_detail), enabled = enabled) { onSelectType(ServerType.APPLE_MUSIC) }
     }
 }
 

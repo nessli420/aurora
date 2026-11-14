@@ -131,6 +131,7 @@ class DesktopContainer(
     val youtubeMusicCredentials = com.aurora.music.desktop.platform.WebCredentials.youtubeMusic(paths.local)
     val spotifyCredentials = com.aurora.music.desktop.platform.WebCredentials.spotify(paths.local)
     val soundcloudCredentials = com.aurora.music.desktop.platform.WebCredentials.soundcloud(paths.local)
+    val appleMusicCredentials = com.aurora.music.desktop.platform.WebCredentials.appleMusic(paths.local)
     val soundcloudWriter = com.aurora.music.desktop.web.SoundCloudWebWriter()
     private val soundcloudPendingLikes = com.aurora.music.data.SoundCloudPendingLikes(paths.local)
     val guestLikes = com.aurora.music.data.GuestLikes(paths.local)
@@ -145,6 +146,8 @@ class DesktopContainer(
     suspend fun verifySoundCloud(session: Session): Boolean = (backends.build(session) as? com.aurora.music.data.SoundCloudBackend)?.verify() == true
 
     // adds the songs liked while signed out to the account that took the guest's place
+    suspend fun acceptsGuestLikes(session: Session): Boolean = runCatching { backends.build(session)?.acceptsLikes() == true }.getOrDefault(false)
+
     suspend fun moveGuestLikes(session: Session): Int {
         val moved = backends.build(session)?.let { guestLikes.moveTo(it) } ?: 0
         // soundcloud holds every like behind its bot check until it is passed, so the check opens now rather than leaving them queued
@@ -246,7 +249,7 @@ class DesktopContainer(
         soundcloudPendingLikes, guestLikes = guestLikes, http = { http }, maxBitrate = { maxBitrate },
         youtubeMusicLogin = { youtubeMusicCredentials.read(it) }, signatureTimestamp = { youtubeResolver::signatureTimestamp },
         spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
-        soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
+        soundcloudLogin = { soundcloudCredentials.read(it) }, appleMusicLogin = { appleMusicCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
         soundcloudBrowser = { soundcloudWriter }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
         eligible = AccountAuthenticator::supports)
 
@@ -438,6 +441,7 @@ class DesktopContainer(
         when (session.type) {
             ServerType.YOUTUBE_MUSIC -> if (!session.isGuest) youtubeMusicCredentials.remove(session.token)
             ServerType.SOUNDCLOUD -> { backends.forgetSoundCloud(session.token); if (!session.isGuest) soundcloudCredentials.remove(session.token) }
+            ServerType.APPLE_MUSIC -> if (!session.isGuest) appleMusicCredentials.remove(session.token)
             ServerType.SPOTIFY -> if (session.salt == com.aurora.music.data.SpotifyWebBackend.WEB_PLAYER) {
                 spotifyCredentials.remove(session.token)
                 spotifyWeb.reset()

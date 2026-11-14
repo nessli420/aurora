@@ -43,6 +43,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.SpotifyWebBackend
 import com.aurora.music.data.SpotifyWebProfile
+import com.aurora.music.data.remote.AppleMusicClient
+import com.aurora.music.data.remote.AppleMusicWebSession
 import com.aurora.music.data.remote.SoundCloudWebSession
 import com.aurora.music.data.remote.YouTubeMusicClient
 import com.aurora.music.data.remote.YouTubeMusicLoginRecovery
@@ -62,6 +64,7 @@ import kotlinx.coroutines.withTimeoutOrNull
 
 private val GOOGLE_HOSTS = listOf("accounts.google.com", "google.com", "music.youtube.com", "www.youtube.com", "youtube.com")
 private val SOUNDCLOUD_HOSTS = listOf("soundcloud.com", "m.soundcloud.com", "secure.soundcloud.com", "api-auth.soundcloud.com")
+private val APPLE_HOSTS = listOf("music.apple.com", "authorize.music.apple.com", "idmsa.apple.com", "apple.com")
 
 // the window every embedded sign-in uses; chromium downloads on first use, so its progress shows here.
 // a plain swing dialog hosts the browser: compose's own windows keep reclaiming the keyboard from it
@@ -427,6 +430,57 @@ private fun SoundCloudBrowserWindow(state: AuthUiState, onClose: () -> Unit, onC
         onClose = onClose, closeEnabled = !state.loading, onReload = { page?.reload() },
     ) {
         Text(appString(R.string.soundcloud_waiting), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
+    }
+}
+
+@Composable
+fun AppleMusicStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: () -> Unit) {
+    var browserOpen by remember { mutableStateOf(false) }
+    var detailsExpanded by remember { mutableStateOf(false) }
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+        Text(appString(R.string.apple_music_sign_in_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Button(onClick = { browserOpen = true }, enabled = !state.loading,
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
+            Text(appString(R.string.apple_music_sign_in), style = MaterialTheme.typography.titleSmall)
+        }
+        GuestOption(!state.loading, onGuest)
+        TextButton(onClick = { detailsExpanded = !detailsExpanded }) {
+            Text(if (detailsExpanded) appString(R.string.text_hide_connection_details_64711a) else appString(R.string.text_connection_details_ab30a5))
+        }
+        AnimatedVisibility(detailsExpanded) {
+            Text(appString(R.string.apple_music_details), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        }
+    }
+    if (browserOpen) AppleMusicBrowserWindow(state, { browserOpen = false }, onConnect)
+}
+
+@Composable
+private fun AppleMusicBrowserWindow(state: AuthUiState, onClose: () -> Unit, onConnect: (String) -> Unit) {
+    val page = rememberPage(setOf(AppleMusicClient.WEB), prepare = { Chromium.clearCookies(APPLE_HOSTS) }, start = AppleMusicWebSession.LOGIN_URL)
+    val pageLoading by (page?.loading ?: remember { kotlinx.coroutines.flow.MutableStateFlow(true) }).collectAsState()
+    val failed by (page?.failed ?: remember { kotlinx.coroutines.flow.MutableStateFlow(false) }).collectAsState()
+    val connect by rememberUpdatedState(onConnect)
+    val connecting by rememberUpdatedState(state.loading)
+    LaunchedEffect(page) {
+        page ?: return@LaunchedEffect
+        var sent = ""
+        while (true) {
+            delay(750)
+            val token = AppleMusicWebSession.fromCookies(Chromium.cookieHeader(AppleMusicClient.WEB))?.userToken
+            if (token == null || token == sent || connecting) continue
+            // the storefront cookie lands with the login; give it a moment before reading the jar
+            delay(1_000)
+            val login = AppleMusicWebSession.fromCookies(Chromium.cookieHeader(AppleMusicClient.WEB)) ?: continue
+            sent = login.userToken
+            connect(login.encode())
+        }
+    }
+    BrowserWindow(
+        title = "Apple Music", page = page, loading = pageLoading || state.loading,
+        error = state.error ?: if (failed) appString(R.string.soundcloud_page_failed) else null,
+        onClose = onClose, closeEnabled = !state.loading, onReload = { page?.reload() },
+    ) {
+        Text(appString(R.string.apple_music_waiting), style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
     }
 }
 

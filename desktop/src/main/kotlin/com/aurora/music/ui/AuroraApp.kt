@@ -984,7 +984,7 @@ private fun Shell(
     ) {
     matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onSwap = player::swapCurrent) { matchSong = null } }
     com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
-        onMoved = { player.refreshLikes() }, notify = ::confirm)
+        onMoved = { player.refreshLikes() }, notify = ::confirm, canTake = container::acceptsGuestLikes)
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,
@@ -1116,6 +1116,7 @@ private fun Shell(
                                     onConnectYouTubeMusic = { authVM.connectYouTubeMusic(it, onSignedIn) },
                                     onConnectSpotifyWeb = { cookie, profile -> authVM.connectSpotifyWeb(cookie, profile, onSignedIn) },
                                     onConnectSoundCloud = { authVM.connectSoundCloud(it, onSignedIn) },
+                                    onConnectAppleMusic = { authVM.connectAppleMusic(it, onSignedIn) },
                                     onQuickConnect = { authVM.quickConnect(onSignedIn) },
                                     onCancelQuickConnect = authVM::cancelQuickConnect,
                                     onContinueAsGuest = { authVM.continueAsGuest(onSignedIn) },

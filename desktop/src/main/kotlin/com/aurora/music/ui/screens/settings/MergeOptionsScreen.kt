@@ -33,6 +33,7 @@ private fun sourceName(type: ServerType) = when (type) {
     ServerType.YOUTUBE_MUSIC -> "YouTube Music"
     ServerType.SPOTIFY -> "Spotify"
     ServerType.SOUNDCLOUD -> "SoundCloud"
+    ServerType.APPLE_MUSIC -> "Apple Music"
     ServerType.EXTENSION -> appString(R.string.text_extension_659087)
 }
 
