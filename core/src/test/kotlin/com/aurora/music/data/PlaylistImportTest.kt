@@ -42,7 +42,7 @@ class PlaylistImportTest {
         assertEquals(listOf(ImportTrack("Song 2", "Blur", durationSec = 122)), x.tracks)
 
         val m3u = "#EXTM3U\n#EXTINF:200,Blur - Parklife\nMusic/Blur/Parklife.mp3\n"
-        assertEquals(listOf(ImportTrack("Parklife", "Blur", durationSec = 200)), PlaylistFiles.read("p.m3u8", m3u.toByteArray()).tracks)
+        assertEquals(listOf(ImportTrack("Parklife", "Blur", durationSec = 200, location = "Music/Blur/Parklife.mp3")), PlaylistFiles.read("p.m3u8", m3u.toByteArray()).tracks)
     }
 
     @Test fun linksFromEveryAppAreRecognised() {
@@ -103,6 +103,64 @@ class PlaylistImportTest {
             listOf(ImportStage(ImportSource.LIBRARY) { emptyList() }))
         assertEquals("vid", m.song?.id)
         assertEquals(ImportSource.YOUTUBE_MUSIC, m.source)
+    }
+
+    @Test fun anM3uOfYourOwnFilesSkipsTheSearch() = runBlocking {
+        val songs = listOf(
+            Song("a", "Parklife", "Blur", "", "", 187, streamUrl = "file://a", path = "/storage/emulated/0/Music/Blur/Parklife/03 Parklife.mp3"),
+            Song("b", "Song 2", "Blur", "", "", 122, streamUrl = "file://b", path = "/storage/emulated/0/Music/Blur/Blur/02 Song 2.flac"),
+            Song("c", "Creep", "Radiohead", "", "", 236, streamUrl = "file://c", path = "/storage/emulated/0/Music/Radiohead/Pablo Honey/02 Creep.flac"),
+            Song("d", "Intro", "Other", "", "", 60, streamUrl = "file://d", path = "/storage/emulated/0/Music/Other/One/01 Intro.mp3"),
+            Song("e", "Intro", "Another", "", "", 70, streamUrl = "file://e", path = "/storage/emulated/0/Music/Another/One/01 Intro.mp3"),
+        )
+        val local = localLibrary(songs)
+        val repository = MusicRepository({ local }, DownloadManager(temp.newFolder("dl"), { "file://$it" }, { null }), mapping = kotlin.coroutines.EmptyCoroutineContext)
+        val m3u = "#EXTM3U\n" +
+            "#EXTINF:187,Blur - Parklife\n/storage/emulated/0/Music/Blur/Parklife/03 Parklife.mp3\n" +
+            "#EXTINF:122,Blur - Song 2\n..\\Blur\\BLUR\\02 Song 2.flac\n" +
+            "#EXTINF:236,Radiohead - Creep\nD:\\Old PC\\Creep.mp3\n" +
+            "#EXTINF:200,Nobody - Not Here\nfile:///C:/Music/Nobody/Not%20Here.mp3\n"
+        val searched = mutableListOf<String>()
+        val yt = song("vid", "Not Here", "Nobody", 200, "aurora-yt://video/vid").inNamespace(Session.guest(ServerType.YOUTUBE_MUSIC, "Guest"))
+        val result = repository.importTracks(PlaylistFiles.read("Mine.m3u8", m3u.toByteArray()),
+            listOf(ImportStage(ImportSource.YOUTUBE_MUSIC) { q -> synchronized(searched) { searched += q }; listOf(yt) }))
+        assertEquals(listOf("Nobody Not Here"), searched)
+        assertEquals(mapOf(ImportSource.LIBRARY to 3, ImportSource.YOUTUBE_MUSIC to 1), result.found)
+        assertEquals(listOf("a", "b", "c", yt.id), local.playlistEntries(result.playlistId)!!.map { it.id })
+        assertTrue(MergedBackend(listOf(local), local.session).fileCopy(ImportTrack("x", location = "Parklife/03 Parklife.mp3"))!!.id.endsWith("a"))
+
+        val index = LocalCatalogIndex.fileIndex(songs)
+        assertEquals("a", LocalCatalogIndex.findFile(index, "03 Parklife.mp3")?.id)
+        assertNull(LocalCatalogIndex.findFile(index, "Elsewhere/03 Parklife.mp3"))
+        assertNull(LocalCatalogIndex.findFile(index, "One/01 Intro.mp3"))
+        assertEquals("e", LocalCatalogIndex.findFile(index, "file:///sdcard/Music/Another/One/01%20Intro.mp3")?.id)
+    }
+
+    @Test fun aLinkFindsYourOwnCopyByArtistAndTitle() = runBlocking {
+        val local = localLibrary(listOf(
+            Song("q", "Under Pressure", "Queen", "Hot Space", "", 248, streamUrl = "file://q"),
+            Song("p", "Pressure", "Billy Joel", "The Nylon Curtain", "", 279, streamUrl = "file://p"),
+        ))
+        val track = ImportTrack("Under Pressure - Remastered 2011", "Queen, David Bowie", durationSec = 248)
+        assertEquals("q", PlaylistMatcher.match(track, local.importStages()).song?.id)
+        assertTrue(PlaylistMatcher.match(track, MergedBackend(listOf(local), local.session).importStages()).song!!.id.endsWith("q"))
+        assertEquals(listOf("q", "p"), local.search("pressure").songs.map { it.id })
+        assertEquals(listOf("q"), local.search("queen pressure").songs.map { it.id })
+        assertTrue(local.search("queen nylon").songs.isEmpty())
+    }
+
+    private fun localLibrary(songs: List<Song>): LocalBackend {
+        val catalog = Proxy.newProxyInstance(LocalCatalog::class.java.classLoader, arrayOf(LocalCatalog::class.java)) { _, method, args ->
+            when (method.name) {
+                "getSongs" -> songs
+                "getAlbums", "getArtists" -> emptyList<Any>()
+                "song" -> songs.firstOrNull { it.id == args!![0] }
+                "findMatch" -> LocalCatalogIndex.findMatch(LocalCatalogIndex.matchIndex(songs), args!![0] as String, args[1] as String, args[2] as Int)
+                "ensureLoaded" -> Unit
+                else -> error("Unexpected ${method.name}")
+            }
+        } as LocalCatalog
+        return LocalBackend(catalog, LocalStore(temp.newFolder()), Session("local", "Me", "", "", ServerType.LOCAL))
     }
 
     @Test fun importedPlaylistsKeepSongsFromEverySource() = runBlocking {

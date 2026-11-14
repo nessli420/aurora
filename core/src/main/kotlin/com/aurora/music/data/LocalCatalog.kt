@@ -11,6 +11,7 @@ interface LocalCatalog {
     val folderRoot: String
     suspend fun ensureLoaded()
     fun song(id: String): Song?
+    fun findMatch(artist: String, title: String, durationSec: Int): Song?
     fun browse(path: String): Pair<List<String>, List<Song>>
     fun songsByAlbumId(albumId: String): List<Song>
     fun songsByArtistId(artistId: String): List<Song>

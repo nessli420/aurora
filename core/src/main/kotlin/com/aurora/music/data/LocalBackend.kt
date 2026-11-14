@@ -5,6 +5,7 @@ import com.aurora.music.model.Artist
 import com.aurora.music.model.DetailInfo
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import com.aurora.music.util.TrackMatch
 import com.aurora.music.util.accentArgbFor
 
 // mediabackend over on-device files only server-only ops are no-ops
@@ -78,11 +79,27 @@ class LocalBackend(
         val q = query.trim()
         if (q.isBlank()) return SearchResults()
         return SearchResults(
-            songs = library.songs.asSequence().filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }.take(60).toList(),
+            songs = (library.songs.asSequence().filter { it.title.contains(q, true) || it.artist.contains(q, true) || it.album.contains(q, true) }.take(60).toList() +
+                withEveryWord(q)).distinctBy { it.id }.take(60),
             albums = library.albums.filter { it.title.contains(q, true) || it.artist.contains(q, true) }.take(30),
             artists = library.artists.filter { it.name.contains(q, true) }.take(30),
             playlists = store.playlists().map { it.toPlaylist() }.filter { it.title.contains(q, true) }.take(20),
         )
+    }
+
+    @Volatile private var wordIndex: Pair<List<Song>, Map<String, IntArray>>? = null
+
+    private fun words(text: String) = TrackMatch.norm(text).split(' ').filter { it.isNotEmpty() }.toSet()
+
+    // "artist title" sits in no single field, so a song that holds every word anywhere counts too
+    private fun withEveryWord(query: String): List<Song> {
+        val wanted = words(query).takeIf { it.size > 1 } ?: return emptyList()
+        val songs = library.songs
+        val index = wordIndex?.takeIf { it.first === songs } ?: (songs to songs.indices
+            .flatMap { i -> words("${songs[i].artist} ${songs[i].title} ${songs[i].album}").map { it to i } }
+            .groupBy({ it.first }, { it.second }).mapValues { it.value.toIntArray() }).also { wordIndex = it }
+        val lists = wanted.map { index.second[it] ?: return emptyList() }.sortedBy { it.size }
+        return lists.first().filter { i -> lists.all { it.binarySearch(i) >= 0 } }.map { songs[it] }
     }
 
     // a rescan replaces the list, which is what rebuilds this
@@ -94,6 +111,16 @@ class LocalBackend(
         val songs = library.songs
         val index = titleIndex?.takeIf { it.first === songs } ?: (songs to songs.groupBy { recordingKey(it.title) }).also { titleIndex = it }
         return index.second[recordingKey(song.title)].orEmpty()
+    }
+
+    @Volatile private var fileIndex: Pair<List<Song>, Map<String, List<Song>>>? = null
+
+    override suspend fun fileCopy(track: ImportTrack): Song? {
+        if (track.location.isBlank()) return null
+        library.ensureLoaded()
+        val songs = library.songs
+        val index = fileIndex?.takeIf { it.first === songs } ?: (songs to LocalCatalogIndex.fileIndex(songs)).also { fileIndex = it }
+        return LocalCatalogIndex.findFile(index.second, track.location) ?: library.findMatch(track.artist, track.title, track.durationSec)
     }
 
     override suspend fun scrobble(id: String) { /* last.fm handled separately */ }

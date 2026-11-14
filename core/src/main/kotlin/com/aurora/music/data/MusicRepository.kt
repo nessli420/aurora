@@ -613,7 +613,13 @@ class MusicRepository(
         val source = backend ?: throw ImportException(ImportFailure.NOT_SAVED)
         val own = source.importStages()
         val stages = own + extra.filter { e -> own.none { it.source == e.source } }
-        val matches = PlaylistMatcher.matchAll(list.tracks, stages) { done, total -> onProgress(ImportProgress.Matching(done, total)) }
+        // files the list names that you already have go in as they are; only the rest is searched for
+        val files = list.tracks.map { source.fileCopy(it) }
+        val direct = files.count { it != null }
+        val searched = PlaylistMatcher.matchAll(list.tracks.filterIndexed { i, _ -> files[i] == null }, stages) { done, _ ->
+            onProgress(ImportProgress.Matching(direct + done, list.tracks.size))
+        }.iterator()
+        val matches = list.tracks.mapIndexed { i, track -> files[i]?.let { ImportMatch(track, it, ImportSource.LIBRARY, 0) } ?: searched.next() }
         if (backend !== source || offline) throw ImportException(ImportFailure.NOT_SAVED)
         onProgress(ImportProgress.Saving)
         val name = list.name.trim()

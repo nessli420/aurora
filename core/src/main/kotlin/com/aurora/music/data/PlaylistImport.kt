@@ -20,6 +20,8 @@ data class ImportTrack(
     val durationSec: Int = 0,
     val original: Song? = null,
     val originalSource: ImportSource = ImportSource.OTHER,
+    // the file an exported list points at
+    val location: String = "",
 )
 
 data class ImportedPlaylist(val name: String, val tracks: List<ImportTrack>)
@@ -154,7 +156,7 @@ object PlaylistFiles {
         val trimmed = text.trimStart()
         val (name, tracks) = when {
             ext in setOf("m3u", "m3u8") || trimmed.startsWith("#EXTM3U") ->
-                base to M3u.parse(text).map { ImportTrack(it.title, it.artist, durationSec = it.durationSec) }
+                base to M3u.parse(text).map { ImportTrack(it.title, it.artist, durationSec = it.durationSec, location = it.location) }
             ext == "xspf" || trimmed.startsWith("<?xml") && trimmed.contains("<trackList", ignoreCase = true) -> xspf(text, base)
             else -> table(text, base)
         }

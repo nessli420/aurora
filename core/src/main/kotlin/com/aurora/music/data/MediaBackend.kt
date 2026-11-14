@@ -114,6 +114,8 @@ interface MediaBackend {
 
     // where an imported track is looked for, in order
     fun importStages(): List<ImportStage> = listOf(ImportStage(ImportSource.of(session.type)) { search(it).songs })
+    // the file an exported list names, when this source holds it; such tracks skip the search
+    suspend fun fileCopy(track: ImportTrack): Song? = null
     // a playlist that may hold songs from any source; null where only the source's own songs fit
     suspend fun createMixedPlaylist(name: String, songs: List<Song>): String? = null
     suspend fun playlistEntries(id: String): List<Song>? = null

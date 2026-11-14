@@ -375,6 +375,8 @@ class MergedBackend(
         }
     }
 
+    override suspend fun fileCopy(track: ImportTrack): Song? = sources.indices.firstNotNullOfOrNull { i -> sources[i].fileCopy(track)?.wrap(i) }
+
     // the on-device library holds mixed playlists; songs from sources outside this merge keep their own namespace
     override suspend fun createMixedPlaylist(name: String, songs: List<Song>): String? {
         val home = sources.indexOfFirst { it.session.type == ServerType.LOCAL && it.acceptsForeignTracks }.takeIf { it >= 0 } ?: return null

@@ -16,6 +16,29 @@ object LocalCatalogIndex {
         return candidates.singleOrNull()?.takeIf { durationSec <= 0 || it.durationSec <= 0 }
     }
 
+    fun fileIndex(songs: List<Song>): Map<String, List<Song>> = songs.filter { it.path.isNotBlank() }.groupBy { segments(it.path).lastOrNull().orEmpty() }
+
+    // a list entry may be absolute, relative or a file url, written on another device; the most folders in common wins
+    fun findFile(index: Map<String, List<Song>>, location: String): Song? {
+        val wanted = segments(location)
+        val candidates = index[wanted.lastOrNull() ?: return null] ?: return null
+        val scored = candidates.map { it to sharedTail(wanted, segments(it.path)) }
+        val best = scored.maxOf { it.second }
+        if (best < minOf(2, wanted.size)) return null
+        return scored.filter { it.second == best }.singleOrNull()?.first
+    }
+
+    private fun segments(path: String): List<String> {
+        val plain = if (path.startsWith("file:", true)) runCatching { java.net.URI(path).path }.getOrNull() ?: path.substringAfter(':') else path
+        return plain.replace('\\', '/').lowercase(java.util.Locale.ROOT).split('/').filter { it.isNotBlank() && it != "." && it != ".." }
+    }
+
+    private fun sharedTail(a: List<String>, b: List<String>): Int {
+        var n = 0
+        while (n < a.size && n < b.size && a[a.size - 1 - n] == b[b.size - 1 - n]) n++
+        return n
+    }
+
     // tracks keep tag order per album, untagged ones fall back to filename order
     fun browse(path: String, root: String, songs: List<Song>, dirOf: Map<String, String>, positions: Map<String, Int>): Pair<List<String>, List<Song>> {
         val base = path.ifBlank { root }
