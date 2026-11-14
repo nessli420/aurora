@@ -108,6 +108,11 @@ interface PlayerController {
     /** Plays [song] in place of the current one from the same moment: another source's copy, or itself after its match changed. */
     fun swapCurrent(song: Song) {}
     fun removeFromQueue(index: Int)
+    // hiding a song takes every queued copy of it out, the playing one included
+    fun dropFromQueue(hides: (Song) -> Boolean) {
+        val queue = state.value.queue
+        queue.indices.reversed().filter { hides(queue[it]) }.forEach(::removeFromQueue)
+    }
     fun clearQueue()
     fun moveQueueItem(from: Int, to: Int)
     fun saveQueueAsPlaylist(name: String, onResult: (String) -> Unit = {})

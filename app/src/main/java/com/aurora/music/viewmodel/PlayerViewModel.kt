@@ -1190,6 +1190,12 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
     }
 
+    // hiding a song takes every queued copy of it out, the playing one included
+    fun dropFromQueue(hides: (Song) -> Boolean) {
+        val queue = _state.value.queue
+        queue.indices.reversed().filter { hides(queue[it]) }.forEach(::removeFromQueue)
+    }
+
     fun clearQueue() {
         if (afterRestoreFill { clearQueue() }) return
         val c = controller ?: return

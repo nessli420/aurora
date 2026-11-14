@@ -933,7 +933,7 @@ private fun Shell(
 
     val startRadio: (Song) -> Unit = { song -> player.startSonicRadio(song) { confirm(it) } }
     val hiddenIndex by container.hiddenSongs.collectAsStateWithLifecycle()
-    val hideSong: (Song, Boolean) -> Unit = remember(container) { { song, hide ->
+    val hideSong: (Song, Boolean) -> Unit = remember(container, player) { { song, hide ->
         val entry = com.aurora.music.data.HiddenSong.of(song)
         scope.launch {
             if (!hide) {
@@ -941,6 +941,7 @@ private fun Shell(
                 return@launch
             }
             container.settingsStore.setSongHidden(entry, true)
+            player.dropFromQueue(com.aurora.music.data.HiddenSongs(listOf(entry))::hides)
             snackbarHostState.currentSnackbarData?.dismiss()
             if (snackbarHostState.showSnackbar(appString(R.string.hidden_songs_done, song.title), appString(R.string.text_undo_39fc72),
                     duration = androidx.compose.material3.SnackbarDuration.Short) == androidx.compose.material3.SnackbarResult.ActionPerformed)
@@ -963,6 +964,7 @@ private fun Shell(
                 playFrom = player::swapCurrent,
                 rematch = { song -> matchSong = song },
                 open = { kind, id -> player.setExpanded(false); openDetail(kind, id) },
+                manySources = { container.repository.mergedSources.size > 1 },
             )
         },
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides

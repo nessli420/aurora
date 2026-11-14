@@ -258,7 +258,7 @@ fun AuroraApp() {
     var matchSong by remember { mutableStateOf<com.aurora.music.model.Song?>(null) }
     val hiddenSongs by container.trackChoices.hidden.collectAsStateWithLifecycle()
     val hiddenIndex by container.hiddenSongs.collectAsStateWithLifecycle()
-    val hideSong: (com.aurora.music.model.Song, Boolean) -> Unit = remember(container) { { song, hide ->
+    val hideSong: (com.aurora.music.model.Song, Boolean) -> Unit = remember(container, playerVM) { { song, hide ->
         val entry = com.aurora.music.data.HiddenSong.of(song)
         scope.launch {
             if (!hide) {
@@ -266,6 +266,7 @@ fun AuroraApp() {
                 return@launch
             }
             container.settingsStore.setSongHidden(entry, true)
+            playerVM.dropFromQueue(com.aurora.music.data.HiddenSongs(listOf(entry))::hides)
             snackbarHostState.currentSnackbarData?.dismiss()
             if (snackbarHostState.showSnackbar(appString(R.string.hidden_songs_done, song.title), appString(R.string.text_undo_39fc72),
                     duration = androidx.compose.material3.SnackbarDuration.Short) == androidx.compose.material3.SnackbarResult.ActionPerformed)
@@ -1014,6 +1015,7 @@ fun AuroraApp() {
                 playFrom = playerVM::swapCurrent,
                 rematch = { song -> matchSong = playerVM.queued(song) },
                 open = { kind, id -> playerVM.setExpanded(false); openDetail(kind, id) },
+                manySources = { container.repository.mergedSources.size > 1 },
             )
         },
     ) {

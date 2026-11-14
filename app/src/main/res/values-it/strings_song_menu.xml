@@ -7,6 +7,7 @@
     <string name="song_menu_open_ep">"Apri questo EP"</string>
     <string name="song_menu_play_from">"Riproduci da"</string>
     <string name="song_menu_open_in">"Apri in"</string>
+    <string name="song_menu_open_elsewhere">"Apri da un’altra sorgente"</string>
     <string name="song_menu_rematch">"Brano sbagliato? Scegline un altro"</string>
     <string name="match_hint_source">"Scegli il brano da riprodurre al posto di “%1$s”."</string>
     <string name="match_search_source">"Cerca il brano giusto"</string>

@@ -7,6 +7,7 @@
     <string name="song_menu_open_ep">"이 EP 열기"</string>
     <string name="song_menu_play_from">"재생할 소스"</string>
     <string name="song_menu_open_in">"열 위치"</string>
+    <string name="song_menu_open_elsewhere">"다른 소스에서 열기"</string>
     <string name="song_menu_rematch">"잘못된 곡인가요? 다른 곡 선택"</string>
     <string name="match_hint_source">"“%1$s” 대신 재생할 곡을 선택하세요."</string>
     <string name="match_search_source">"올바른 곡 검색"</string>

@@ -7,6 +7,7 @@
     <string name="song_menu_open_ep">"Ouvrir cet EP"</string>
     <string name="song_menu_play_from">"Lire depuis"</string>
     <string name="song_menu_open_in">"Ouvrir dans"</string>
+    <string name="song_menu_open_elsewhere">"Ouvrir depuis une autre source"</string>
     <string name="song_menu_rematch">"Mauvais titre ? En choisir un autre"</string>
     <string name="match_hint_source">"Choisissez le titre à lire à la place de « %1$s »."</string>
     <string name="match_search_source">"Rechercher le bon titre"</string>

@@ -30,6 +30,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.input.pointer.PointerEventType
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.semantics.onLongClick
+import androidx.compose.ui.semantics.semantics
 import com.aurora.music.R
 import com.aurora.music.ai.isDjSpeech
 import com.aurora.music.data.SourceCopy
@@ -37,7 +42,11 @@ import com.aurora.music.data.isPodcast
 import com.aurora.music.data.isRadio
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
+import com.aurora.music.util.TrackMatch
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 
 // what the title and artist menus can do with the playing song; the app supplies it
 class SongSources(
@@ -47,7 +56,11 @@ class SongSources(
     val playFrom: (Song) -> Unit,
     val rematch: (Song) -> Unit,
     val open: (kind: String, id: String) -> Unit,
+    val manySources: () -> Boolean,
 )
+
+suspend fun SongSources.lookup(song: Song): List<SourceCopy> =
+    try { copies(song) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
 
 val LocalSongSources = staticCompositionLocalOf<SongSources?> { null }
 
@@ -56,14 +69,21 @@ enum class SongMenuPage { ROOT, SOURCE, ALBUM, ARTIST }
 fun songMenusFor(song: Song): Boolean = song.id.isNotBlank() && !song.isRadio() && !song.isPodcast() && !song.isDjSpeech() &&
     !song.id.startsWith("aurora-mix:")
 
+// a few tracks stand in for an album or artist page on the other sources, as one title can be spelled differently there
+fun sourcesAnchors(tracks: List<Song>, album: Boolean, artist: String): List<Song> =
+    (if (album) tracks.filter { it.albumId.isNotBlank() }
+    else tracks.filter { it.artistId.isNotBlank() && TrackMatch.identity(it.artist) == TrackMatch.identity(artist) }).take(3)
+
+private fun SourceCopy.opens(page: SongMenuPage) = (if (page == SongMenuPage.ALBUM) song.albumId else song.artistId).isNotBlank()
+
 @Composable
-internal fun SongSourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, onDismiss: () -> Unit) {
+// here: opened on the album or artist page itself, which looks the copies up and is marked among them
+internal fun SongSourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, found: List<SourceCopy>? = null, here: Boolean = false, onDismiss: () -> Unit) {
     var page by remember(song.id) { mutableStateOf(start) }
-    var copies by remember(song.id) { mutableStateOf<List<SourceCopy>?>(null) }
+    var looked by remember(song.id) { mutableStateOf<List<SourceCopy>?>(null) }
     var release by remember(song.id) { mutableStateOf<String?>(null) }
-    LaunchedEffect(song.id) {
-        copies = try { sources.copies(song) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
-    }
+    if (!here) LaunchedEffect(song.id) { looked = sources.lookup(song) }
+    val copies = if (here) found else looked
     if (start == SongMenuPage.ROOT && song.albumId.isNotBlank()) LaunchedEffect(song.albumId) {
         release = try { sources.releaseType(song) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
     }
@@ -136,17 +156,61 @@ internal fun SongSourcesMenu(song: Song, sources: SongSources, start: SongMenuPa
             SongMenuPage.ALBUM, SongMenuPage.ARTIST -> {
                 val album = page == SongMenuPage.ALBUM
                 header(appString(R.string.song_menu_open_in))
-                choices({ (if (album) it.song.albumId else it.song.artistId).isNotBlank() }) { copy ->
+                choices({ it.opens(page) }) { copy ->
+                    val current = here && copy.song.id == song.id
                     DropdownMenuItem(
                         text = { label(copy, if (album) copy.song.album.ifBlank { null } else copy.song.artist.ifBlank { null }) },
-                        leadingIcon = { Icon(if (album) Icons.Filled.Album else Icons.Filled.Person, null) },
+                        leadingIcon = {
+                            if (!here) Icon(if (album) Icons.Filled.Album else Icons.Filled.Person, null)
+                            else Icon(if (current) Icons.Filled.RadioButtonChecked else Icons.Filled.RadioButtonUnchecked, null,
+                                tint = if (current) colors.primary else colors.onSurfaceVariant)
+                        },
                         onClick = {
                             onDismiss()
-                            if (album) sources.open("album", copy.song.albumId) else sources.open("artist", copy.song.artistId)
+                            if (!current) if (album) sources.open("album", copy.song.albumId) else sources.open("artist", copy.song.artistId)
                         },
                     )
                 }
+                if (here && copies?.count { it.opens(page) } == 1) header(appString(R.string.like_no_match))
             }
         }
+    }
+}
+
+// holding an album or artist title opens the same one on another source, found through one of its tracks
+@Composable
+fun SourcesTitle(anchors: List<Song>, album: Boolean, title: @Composable (Modifier) -> Unit) {
+    val anchor = anchors.firstOrNull()
+    val sources = LocalSongSources.current?.takeIf { anchor != null && songMenusFor(anchor) && it.manySources() }
+    if (sources == null || anchor == null) return title(Modifier)
+    val page = if (album) SongMenuPage.ALBUM else SongMenuPage.ARTIST
+    var looking by remember(anchor.id) { mutableStateOf(false) }
+    var found by remember(anchor.id) { mutableStateOf<List<SourceCopy>?>(null) }
+    var open by remember(anchor.id) { mutableStateOf(false) }
+    if (looking) LaunchedEffect(anchor.id) {
+        found = coroutineScope { anchors.map { async { sources.lookup(it) } }.awaitAll() }.flatten().filter { it.opens(page) }.distinctBy { it.label }
+    }
+    val label = appString(R.string.song_menu_open_elsewhere)
+    fun hold(): Boolean {
+        looking = true
+        if (found?.let { list -> list.count { it.opens(page) } < 2 } == true) return false
+        open = true
+        return true
+    }
+    Box {
+        title(Modifier
+            .semantics { onLongClick(label) { hold() } }
+            .pointerInput(anchor.id) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                            event.changes.forEach { it.consume() }
+                            hold()
+                        }
+                    }
+                }
+            })
+        if (open) SongSourcesMenu(anchor, sources, page, found, here = true) { open = false }
     }
 }

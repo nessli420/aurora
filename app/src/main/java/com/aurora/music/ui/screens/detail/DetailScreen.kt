@@ -159,6 +159,9 @@ fun DetailScreen(
     val effectiveArt = info.artUrl.ifBlank { artistInfo?.imageUrl.orEmpty() }
     val albumCover = if (itemKind == "album") CoverKey(info.title, info.subtitle, tracks.firstOrNull { it.path.isNotBlank() }?.path.orEmpty()) else null
     val accentTarget by com.aurora.music.util.rememberDominantTarget(effectiveArt, info.accent)
+    val anchors = remember(data.tracks, itemKind, info.isArtist, info.title) {
+        if (itemKind == "album" || info.isArtist) com.aurora.music.ui.screens.player.sourcesAnchors(data.tracks, itemKind == "album", info.title) else emptyList()
+    }
     // only the header and chips read the tween; the scheme and rows take the target once
     val accent by androidx.compose.animation.animateColorAsState(accentTarget, androidx.compose.animation.core.tween(450), label = "dominant")
     val baseScheme = MaterialTheme.colorScheme
@@ -306,8 +309,10 @@ fun DetailScreen(
                     Column(Modifier.weight(1f)) {
                         Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accent)
                         Spacer(Modifier.height(6.dp))
-                        Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black,
-                            color = MaterialTheme.colorScheme.onSurface, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                        com.aurora.music.ui.screens.player.SourcesTitle(anchors, !info.isArtist) {
+                            Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black,
+                                color = MaterialTheme.colorScheme.onSurface, maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = it)
+                        }
                         if (info.description.isNotBlank()) {
                             Spacer(Modifier.height(4.dp))
                             Text(info.description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -368,7 +373,9 @@ fun DetailScreen(
                         top = if (wideHeader) 48.dp else 0.dp, bottom = 14.dp)) {
                     Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accent)
                     Spacer(Modifier.height(6.dp))
-                    Text(info.title, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, color = headerForeground)
+                    com.aurora.music.ui.screens.player.SourcesTitle(anchors, !info.isArtist) {
+                        Text(info.title, style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, color = headerForeground, modifier = it)
+                    }
                     if (info.description.isNotBlank()) {
                         Spacer(Modifier.height(4.dp))
                         Text(info.description, style = MaterialTheme.typography.bodyMedium, color = headerForeground.copy(alpha = 0.75f),

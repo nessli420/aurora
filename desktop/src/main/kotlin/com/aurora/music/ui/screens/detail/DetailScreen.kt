@@ -197,6 +197,9 @@ fun DetailScreen(
     val albumCover = if (itemKind == "album") CoverKey(info.title, info.subtitle,
         tracks.firstNotNullOfOrNull { CoverKey.localPath(it).takeIf(String::isNotBlank) }.orEmpty()) else null
     val accent by rememberDominantColor(effectiveArt, info.accent)
+    val anchors = remember(data.tracks, itemKind, info.isArtist, info.title) {
+        if (itemKind == "album" || info.isArtist) com.aurora.music.ui.screens.player.sourcesAnchors(data.tracks, itemKind == "album", info.title) else emptyList()
+    }
     val baseScheme = MaterialTheme.colorScheme
     val accentInk = readableAccent(accent, baseScheme.onBackground.luminance() > 0.5f)
     val albumScheme = remember(baseScheme, accentInk) {
@@ -404,8 +407,10 @@ fun DetailScreen(
                     Column(Modifier.weight(1f)) {
                         Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accentInk)
                         Spacer(Modifier.height(6.dp))
-                        Text(info.title, style = titleStyle, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        com.aurora.music.ui.screens.player.SourcesTitle(anchors, !info.isArtist) {
+                            Text(info.title, style = titleStyle, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = it)
+                        }
                         if (description != null) {
                             Spacer(Modifier.height(4.dp))
                             Text(description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -445,8 +450,10 @@ fun DetailScreen(
                     Column(Modifier.align(Alignment.BottomStart).padding(start = gutter, end = gutter, bottom = 14.dp)) {
                         Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accent)
                         Spacer(Modifier.height(6.dp))
-                        Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = Color.White,
-                            maxLines = 2, overflow = TextOverflow.Ellipsis)
+                        com.aurora.music.ui.screens.player.SourcesTitle(anchors, !info.isArtist) {
+                            Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = Color.White,
+                                maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = it)
+                        }
                         if (description != null) {
                             Spacer(Modifier.height(2.dp))
                             Text(description, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f),

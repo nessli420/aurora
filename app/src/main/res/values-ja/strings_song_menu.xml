@@ -7,6 +7,7 @@
     <string name="song_menu_open_ep">"このEPを開く"</string>
     <string name="song_menu_play_from">"再生元"</string>
     <string name="song_menu_open_in">"開く場所"</string>
+    <string name="song_menu_open_elsewhere">"別のソースで開く"</string>
     <string name="song_menu_rematch">"違う曲ですか？別の曲を選ぶ"</string>
     <string name="match_hint_source">"「%1$s」の代わりに再生する曲を選んでください。"</string>
     <string name="match_search_source">"正しい曲を検索"</string>

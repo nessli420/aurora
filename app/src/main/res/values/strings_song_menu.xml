@@ -7,6 +7,7 @@
     <string name="song_menu_open_ep">"Open this EP"</string>
     <string name="song_menu_play_from">"Play from"</string>
     <string name="song_menu_open_in">"Open in"</string>
+    <string name="song_menu_open_elsewhere">"Open from another source"</string>
     <string name="song_menu_rematch">"Wrong song? Pick another"</string>
     <string name="match_hint_source">"Pick the song that should play instead of “%1$s”."</string>
     <string name="match_search_source">"Search for the right song"</string>
