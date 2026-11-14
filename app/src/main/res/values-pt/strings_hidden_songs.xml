@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Músicas ocultas ficam esmaecidas em todas as listas e são puladas na reprodução, em todas as fontes"</string>
     <string name="hidden_songs_empty">"Nada oculto. Oculte uma música pelo menu dela em qualquer lista."</string>
     <string name="hidden_songs_done">"“%1$s” oculta em todos os lugares"</string>
+    <string name="block_artist">"Bloquear artista"</string>
+    <string name="unblock_artist">"Desbloquear artista"</string>
+    <string name="blocked_artist_done">"“%1$s” bloqueado em todos os lugares"</string>
+    <string name="blocked_artists_title">"Artistas bloqueados"</string>
 </resources>

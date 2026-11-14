@@ -22,14 +22,23 @@ import com.aurora.music.AuroraApplication
 fun HiddenSongsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val store = (LocalContext.current.applicationContext as AuroraApplication).container.settingsStore
     val hidden by store.hiddenSongs.collectAsStateWithLifecycle(initialValue = emptyList())
+    val blocked by store.blockedArtists.collectAsStateWithLifecycle(initialValue = emptyList())
     val scope = rememberCoroutineScope()
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(appString(R.string.hidden_songs_title), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             item {
-                Text(appString(if (hidden.isEmpty()) R.string.hidden_songs_empty else R.string.hidden_songs_summary), modifier = Modifier.padding(20.dp),
+                Text(appString(if (hidden.isEmpty() && blocked.isEmpty()) R.string.hidden_songs_empty else R.string.hidden_songs_summary), modifier = Modifier.padding(20.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
+            if (blocked.isNotEmpty()) item { SettingsSectionTitle(appString(R.string.blocked_artists_title)) }
+            items(blocked.asReversed()) { name ->
+                Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(name, style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    TextButton(onClick = { scope.launch { store.setArtistBlocked(name, false) } }) { Text(appString(R.string.unblock_artist)) }
+                }
+            }
+            if (blocked.isNotEmpty() && hidden.isNotEmpty()) item { SettingsSectionTitle(appString(R.string.hidden_songs_title)) }
             items(hidden.asReversed()) { song ->
                 Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {

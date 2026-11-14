@@ -3,6 +3,7 @@ package com.aurora.music.ui.screens.detail
 import androidx.compose.material.icons.filled.GraphicEq
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.Radio
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -309,6 +310,11 @@ fun DetailScreen(
                 com.aurora.music.ui.components.LocalStartRadio.current?.let { startRadio ->
                     DropdownMenuItem(text = { Text(appString(R.string.discovery_start_radio)) }, enabled = tracks.isNotEmpty(),
                         onClick = { headerMenu = false; startRadio(tracks.first()) }, leadingIcon = { Icon(Icons.Filled.Radio, null) })
+                }
+                if (info.isArtist) com.aurora.music.ui.components.LocalBlockArtist.current?.let { block ->
+                    val blocked = hiddenSongs.isBlocked(info.title)
+                    DropdownMenuItem(text = { Text(appString(if (blocked) R.string.unblock_artist else R.string.block_artist)) },
+                        onClick = { headerMenu = false; block(info.title, !blocked) }, leadingIcon = { Icon(Icons.Filled.Block, null) })
                 }
                 DropdownMenuItem(
                     text = { Text(appString(if (isPinned) R.string.text_unpin_from_library_5b3f2e else R.string.text_pin_to_library_7b01e2)) },

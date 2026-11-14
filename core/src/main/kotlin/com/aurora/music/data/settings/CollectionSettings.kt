@@ -34,6 +34,8 @@ interface CollectionSettings {
     suspend fun setPlaylistLiked(id: String, liked: Boolean): Preferences
     val hiddenSongs: Flow<List<HiddenSong>>
     suspend fun setSongHidden(song: HiddenSong, hidden: Boolean): Preferences
+    val blockedArtists: Flow<List<String>>
+    suspend fun setArtistBlocked(name: String, blocked: Boolean): Preferences
 }
 
 internal class CollectionSettingsStore(private val dataStore: DataStore<Preferences>) : CollectionSettings {
@@ -131,5 +133,12 @@ internal class CollectionSettingsStore(private val dataStore: DataStore<Preferen
     override suspend fun setSongHidden(song: HiddenSong, hidden: Boolean) = dataStore.edit { p ->
         val rest = gson.parseList<HiddenSong>(p[Keys.HIDDEN_SONGS]).filterNot { it.id == song.id }
         p[Keys.HIDDEN_SONGS] = gson.toJson(if (hidden) rest + song else rest)
+    }
+
+    override val blockedArtists: Flow<List<String>> = dataStore.data.map { it[Keys.BLOCKED_ARTISTS] }.distinctUntilChanged().map { gson.parseList<String>(it) }.flowOn(Dispatchers.Default)
+
+    override suspend fun setArtistBlocked(name: String, blocked: Boolean) = dataStore.edit { p ->
+        val rest = gson.parseList<String>(p[Keys.BLOCKED_ARTISTS]).filterNot { artistKey(it) == artistKey(name) }
+        p[Keys.BLOCKED_ARTISTS] = gson.toJson(if (blocked) rest + name.trim() else rest)
     }
 }

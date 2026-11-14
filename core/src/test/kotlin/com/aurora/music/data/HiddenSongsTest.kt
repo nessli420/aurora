@@ -44,6 +44,24 @@ class HiddenSongsTest {
         assertSame(list, HiddenSongs.NONE.visible(list))
     }
 
+    @Test fun aBlockedArtistsOwnSongsAreHiddenOnEverySourceButNotTheirFeatures() {
+        val blocked = HiddenSongs(emptyList(), listOf("TV Girl"))
+        listOf(navidrome, spotify, soundcloud, accented, live, remix).forEach { assertTrue(it.title, blocked.hides(it)) }
+        assertEquals("TV Girl", blocked.blockedArtist(spotify))
+        assertFalse(blocked.hides(song("x1", "Their Song", "Someone Else, TV Girl", 200)))
+        assertFalse(blocked.hides(song("x2", "Their Song (feat. TV Girl)", "Someone Else", 200)))
+        assertFalse(blocked.hides(otherArtist))
+        assertFalse(blocked.hidesSong(navidrome))
+        assertTrue(blocked.isBlocked("the tv girl"))
+    }
+
+    @Test fun aDuoIsBlockedByItsWholeName() {
+        val duo = song("d1", "The Boxer", "Simon & Garfunkel", 308)
+        assertTrue(HiddenSongs(emptyList(), listOf("Simon & Garfunkel")).hides(duo))
+        assertEquals("Simon", HiddenSongs.NONE.primaryArtist(duo.artist))
+        assertFalse(HiddenSongs(emptyList(), listOf("Garfunkel")).hides(duo))
+    }
+
     @Test fun unhidingAnotherSourcesCopyFindsTheEntryThatHidesIt() {
         val entry = HiddenSong.of(navidrome)
         val hidden = HiddenSongs(listOf(entry, HiddenSong.of(otherArtist)))

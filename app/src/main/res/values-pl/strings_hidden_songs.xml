@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Ukryte utwory są wyszarzone na każdej liście i pomijane przy odtwarzaniu, w każdym źródle"</string>
     <string name="hidden_songs_empty">"Nic nie jest ukryte. Ukryj utwór z jego menu na dowolnej liście."</string>
     <string name="hidden_songs_done">"Ukryto „%1$s” wszędzie"</string>
+    <string name="block_artist">"Zablokuj wykonawcę"</string>
+    <string name="unblock_artist">"Odblokuj wykonawcę"</string>
+    <string name="blocked_artist_done">"Zablokowano „%1$s” wszędzie"</string>
+    <string name="blocked_artists_title">"Zablokowani wykonawcy"</string>
 </resources>

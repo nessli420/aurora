@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Ausgeblendete Songs sind in jeder Liste ausgegraut und werden bei der Wiedergabe übersprungen, bei jeder Quelle"</string>
     <string name="hidden_songs_empty">"Nichts ausgeblendet. Blende einen Song über sein Menü in einer beliebigen Liste aus."</string>
     <string name="hidden_songs_done">"„%1$s“ überall ausgeblendet"</string>
+    <string name="block_artist">"Künstler blockieren"</string>
+    <string name="unblock_artist">"Künstler nicht mehr blockieren"</string>
+    <string name="blocked_artist_done">"„%1$s“ überall blockiert"</string>
+    <string name="blocked_artists_title">"Blockierte Künstler"</string>
 </resources>

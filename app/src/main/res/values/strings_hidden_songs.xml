@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Hidden songs are greyed out in every list and skipped in playback, on every source"</string>
     <string name="hidden_songs_empty">"Nothing hidden. Hide a song from its menu in any list."</string>
     <string name="hidden_songs_done">"Hid “%1$s” everywhere"</string>
+    <string name="block_artist">"Block Artist"</string>
+    <string name="unblock_artist">"Unblock Artist"</string>
+    <string name="blocked_artist_done">"Blocked “%1$s” everywhere"</string>
+    <string name="blocked_artists_title">"Blocked Artists"</string>
 </resources>

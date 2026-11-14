@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"非表示の曲はどのソースでも、リストではグレー表示になり、再生時はスキップされます"</string>
     <string name="hidden_songs_empty">"非表示の曲はありません。任意のリストで曲のメニューから非表示にできます。"</string>
     <string name="hidden_songs_done">"「%1$s」をすべての場所で非表示にしました"</string>
+    <string name="block_artist">"アーティストをブロック"</string>
+    <string name="unblock_artist">"アーティストのブロックを解除"</string>
+    <string name="blocked_artist_done">"「%1$s」をすべての場所でブロックしました"</string>
+    <string name="blocked_artists_title">"ブロックしたアーティスト"</string>
 </resources>

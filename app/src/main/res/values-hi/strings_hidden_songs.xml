@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"छिपे हुए गाने हर सूची में धुंधले दिखते हैं और हर स्रोत पर प्लेबैक में छोड़ दिए जाते हैं"</string>
     <string name="hidden_songs_empty">"कुछ भी छिपा नहीं है। किसी भी सूची में गाने के मेनू से उसे छिपाएँ।"</string>
     <string name="hidden_songs_done">"“%1$s” हर जगह छिपाया गया"</string>
+    <string name="block_artist">"कलाकार ब्लॉक करें"</string>
+    <string name="unblock_artist">"कलाकार अनब्लॉक करें"</string>
+    <string name="blocked_artist_done">"“%1$s” हर जगह ब्लॉक किया गया"</string>
+    <string name="blocked_artists_title">"ब्लॉक किए गए कलाकार"</string>
 </resources>

@@ -431,7 +431,8 @@ class AppContainer(context: Context) {
     val noNetwork: StateFlow<Boolean> = _noNetwork.asStateFlow()
 
     private val smartPlaylists = settingsStore.smartPlaylists.stateIn(scope, SharingStarted.Eagerly, emptyList())
-    val hiddenSongs: StateFlow<com.aurora.music.data.HiddenSongs> = settingsStore.hiddenSongs.map { com.aurora.music.data.HiddenSongs(it) }
+    val hiddenSongs: StateFlow<com.aurora.music.data.HiddenSongs> = kotlinx.coroutines.flow.combine(settingsStore.hiddenSongs, settingsStore.blockedArtists, settingsStore.artistSeparators) { songs, artists, separators ->
+        com.aurora.music.data.HiddenSongs(songs, artists, separators) }
         .stateIn(scope, SharingStarted.Eagerly, com.aurora.music.data.HiddenSongs.NONE)
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 

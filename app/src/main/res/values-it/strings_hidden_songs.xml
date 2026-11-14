@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"I brani nascosti appaiono in grigio in ogni elenco e vengono saltati durante la riproduzione, da ogni fonte"</string>
     <string name="hidden_songs_empty">"Nessun brano nascosto. Nascondi un brano dal suo menu in qualsiasi elenco."</string>
     <string name="hidden_songs_done">"«%1$s» nascosto ovunque"</string>
+    <string name="block_artist">"Blocca artista"</string>
+    <string name="unblock_artist">"Sblocca artista"</string>
+    <string name="blocked_artist_done">"«%1$s» bloccato ovunque"</string>
+    <string name="blocked_artists_title">"Artisti bloccati"</string>
 </resources>

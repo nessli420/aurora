@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Скрытые треки показываются серыми в любом списке и пропускаются при воспроизведении, в любом источнике"</string>
     <string name="hidden_songs_empty">"Ничего не скрыто. Скройте трек через его меню в любом списке."</string>
     <string name="hidden_songs_done">"«%1$s» скрыт везде"</string>
+    <string name="block_artist">"Заблокировать исполнителя"</string>
+    <string name="unblock_artist">"Разблокировать исполнителя"</string>
+    <string name="blocked_artist_done">"«%1$s» заблокирован везде"</string>
+    <string name="blocked_artists_title">"Заблокированные исполнители"</string>
 </resources>

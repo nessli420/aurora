@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Las canciones ocultas aparecen atenuadas en todas las listas y se omiten al reproducir, en todas las fuentes"</string>
     <string name="hidden_songs_empty">"No hay nada oculto. Oculta una canción desde su menú en cualquier lista."</string>
     <string name="hidden_songs_done">"Se ocultó «%1$s» en todas partes"</string>
+    <string name="block_artist">"Bloquear artista"</string>
+    <string name="unblock_artist">"Desbloquear artista"</string>
+    <string name="blocked_artist_done">"Se bloqueó a «%1$s» en todas partes"</string>
+    <string name="blocked_artists_title">"Artistas bloqueados"</string>
 </resources>

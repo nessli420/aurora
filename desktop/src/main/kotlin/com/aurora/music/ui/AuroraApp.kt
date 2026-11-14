@@ -948,11 +948,23 @@ private fun Shell(
                 container.settingsStore.setSongHidden(entry, false)
         }
     } }
+    val blockArtist: (String, Boolean) -> Unit = remember(container, player) { { name, block ->
+        scope.launch {
+            container.settingsStore.setArtistBlocked(name, block)
+            if (!block) return@launch
+            player.dropFromQueue(container.hiddenSongs.value.onlyArtist(name)::hides)
+            snackbarHostState.currentSnackbarData?.dismiss()
+            if (snackbarHostState.showSnackbar(appString(R.string.blocked_artist_done, name), appString(R.string.text_undo_39fc72),
+                    duration = androidx.compose.material3.SnackbarDuration.Short) == androidx.compose.material3.SnackbarResult.ActionPerformed)
+                container.settingsStore.setArtistBlocked(name, false)
+        }
+    } }
     CompositionLocalProvider(
         com.aurora.music.ui.components.LocalStartRadio provides startRadio,
         com.aurora.music.ui.components.LocalCanLike provides container.repository::canLikeSong,
         com.aurora.music.ui.components.LocalHiddenSongs provides hiddenIndex,
         com.aurora.music.ui.components.LocalHideSong provides hideSong,
+        com.aurora.music.ui.components.LocalBlockArtist provides blockArtist,
         com.aurora.music.ui.components.LocalLikeMenu provides remember(player) { com.aurora.music.ui.components.LikeMenu(player::likeOptions, player::setLikedOn, player::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },

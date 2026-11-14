@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Verborgen nummers zijn in elke lijst grijs en worden bij afspelen overgeslagen, bij elke bron"</string>
     <string name="hidden_songs_empty">"Niets verborgen. Verberg een nummer via het menu in een willekeurige lijst."</string>
     <string name="hidden_songs_done">"“%1$s” overal verborgen"</string>
+    <string name="block_artist">"Artiest blokkeren"</string>
+    <string name="unblock_artist">"Artiest deblokkeren"</string>
+    <string name="blocked_artist_done">"“%1$s” overal geblokkeerd"</string>
+    <string name="blocked_artists_title">"Geblokkeerde artiesten"</string>
 </resources>

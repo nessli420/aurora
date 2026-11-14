@@ -3,6 +3,7 @@ package com.aurora.music.ui.components
 import androidx.compose.material.icons.filled.VisibilityOff
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
@@ -111,6 +112,7 @@ val LocalCanLike = androidx.compose.runtime.staticCompositionLocalOf<(String) ->
 // songs hidden from every list, and the action that hides one
 val LocalHiddenSongs = androidx.compose.runtime.compositionLocalOf { com.aurora.music.data.HiddenSongs.NONE }
 val LocalHideSong = androidx.compose.runtime.staticCompositionLocalOf<((Song, Boolean) -> Unit)?> { null }
+val LocalBlockArtist = androidx.compose.runtime.staticCompositionLocalOf<((String, Boolean) -> Unit)?> { null }
 
 @Composable
 fun SongRow(
@@ -143,16 +145,25 @@ fun SongRow(
     val hovered by interaction.collectIsHoveredAsState()
     val shape = rowShape()
     val hiddenSongs = LocalHiddenSongs.current
-    val hiddenEverywhere = remember(song, hiddenSongs) { hiddenSongs.hides(song) }
+    val (blockedBy, hiddenAlone) = remember(song, hiddenSongs) { hiddenSongs.blockedArtist(song) to hiddenSongs.hidesSong(song) }
+    val hiddenEverywhere = hiddenAlone || blockedBy != null
+    val block = LocalBlockArtist.current
     val greyed = hidden || hiddenEverywhere
     val hide = LocalHideSong.current
     val canLike = LocalCanLike.current(song.id) && !hiddenEverywhere
     val menuItems: @Composable (close: () -> Unit) -> Unit = { close ->
-        if (hiddenEverywhere) DropdownMenuItem(
-            text = { Text(appString(R.string.hide_song_undo)) },
-            onClick = { close(); hide?.invoke(song, false) },
-            leadingIcon = { Icon(Icons.Filled.Visibility, null) },
-        ) else {
+        if (hiddenEverywhere) {
+            if (hiddenAlone) DropdownMenuItem(
+                text = { Text(appString(R.string.hide_song_undo)) },
+                onClick = { close(); hide?.invoke(song, false) },
+                leadingIcon = { Icon(Icons.Filled.Visibility, null) },
+            )
+            if (blockedBy != null) DropdownMenuItem(
+                text = { Text(appString(R.string.unblock_artist)) },
+                onClick = { close(); block?.invoke(blockedBy, false) },
+                leadingIcon = { Icon(Icons.Filled.Block, null) },
+            )
+        } else {
             DropdownMenuItem(
                 text = { Text(appString(R.string.text_play_5d12bd)) },
                 onClick = { close(); onClick() },
@@ -178,6 +189,11 @@ fun SongRow(
                 text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
                 onClick = { close(); if (hidden) onToggleHidden?.invoke() else hide?.invoke(song, true) },
                 leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
+            )
+            if (block != null && song.artist.isNotBlank()) DropdownMenuItem(
+                text = { Text(appString(R.string.block_artist)) },
+                onClick = { close(); block(hiddenSongs.primaryArtist(song.artist), true) },
+                leadingIcon = { Icon(Icons.Filled.Block, null) },
             )
             DropdownMenuItem(
                 text = { Text(appString(R.string.track_swipe_playlists)) },

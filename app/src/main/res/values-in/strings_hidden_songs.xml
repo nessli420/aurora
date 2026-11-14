@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"Lagu tersembunyi tampil abu-abu di setiap daftar dan dilewati saat diputar, di semua sumber"</string>
     <string name="hidden_songs_empty">"Tidak ada yang disembunyikan. Sembunyikan lagu dari menunya di daftar mana pun."</string>
     <string name="hidden_songs_done">"“%1$s” disembunyikan di mana-mana"</string>
+    <string name="block_artist">"Blokir Artis"</string>
+    <string name="unblock_artist">"Buka Blokir Artis"</string>
+    <string name="blocked_artist_done">"“%1$s” diblokir di mana-mana"</string>
+    <string name="blocked_artists_title">"Artis yang Diblokir"</string>
 </resources>

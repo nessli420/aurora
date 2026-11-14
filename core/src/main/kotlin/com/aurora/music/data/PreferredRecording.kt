@@ -40,10 +40,12 @@ private const val RELAXED_DURATION_SEC = 2
 // services disagree on accents and on a leading "the", so "The Soft Walls" is still "Soft Walls"
 private fun normalized(value: String) = markFreeKey(value, Normalizer.Form.NFD)
 
+internal fun artistKey(name: String) = normalized(name).removePrefix("the ")
+
 private fun artistsMatch(a: String, b: String): Boolean {
     fun credits(value: String) = recordingTitle(value).lowercase(Locale.ROOT)
         .split(CREDIT_SEPARATOR)
-        .map { normalized(it).removePrefix("the ") }.filter { it.isNotBlank() }.toSet()
+        .map(::artistKey).filter { it.isNotBlank() }.toSet()
     return credits(a).intersect(credits(b)).isNotEmpty()
 }
 

@@ -4,4 +4,8 @@
     <string name="hidden_songs_summary">"隐藏的歌曲在所有来源的所有列表中都显示为灰色，播放时会跳过"</string>
     <string name="hidden_songs_empty">"没有隐藏的歌曲。可在任意列表中通过歌曲菜单隐藏。"</string>
     <string name="hidden_songs_done">"已在所有位置隐藏“%1$s”"</string>
+    <string name="block_artist">"屏蔽艺人"</string>
+    <string name="unblock_artist">"取消屏蔽艺人"</string>
+    <string name="blocked_artist_done">"已在所有位置屏蔽“%1$s”"</string>
+    <string name="blocked_artists_title">"已屏蔽的艺人"</string>
 </resources>
