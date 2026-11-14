@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"숨긴 노래"</string>
+    <string name="hidden_songs_summary">"숨긴 노래는 모든 소스의 목록에서 흐리게 표시되고 재생 시 건너뜁니다"</string>
+    <string name="hidden_songs_empty">"숨긴 노래가 없습니다. 아무 목록에서나 노래 메뉴로 숨길 수 있습니다."</string>
+    <string name="hidden_songs_done">"“%1$s”을(를) 모든 곳에서 숨겼습니다"</string>
+</resources>

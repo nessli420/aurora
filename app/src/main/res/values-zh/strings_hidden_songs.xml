@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"隐藏的歌曲"</string>
+    <string name="hidden_songs_summary">"隐藏的歌曲在所有来源的所有列表中都显示为灰色，播放时会跳过"</string>
+    <string name="hidden_songs_empty">"没有隐藏的歌曲。可在任意列表中通过歌曲菜单隐藏。"</string>
+    <string name="hidden_songs_done">"已在所有位置隐藏“%1$s”"</string>
+</resources>

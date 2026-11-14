@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Canciones ocultas"</string>
+    <string name="hidden_songs_summary">"Las canciones ocultas aparecen atenuadas en todas las listas y se omiten al reproducir, en todas las fuentes"</string>
+    <string name="hidden_songs_empty">"No hay nada oculto. Oculta una canción desde su menú en cualquier lista."</string>
+    <string name="hidden_songs_done">"Se ocultó «%1$s» en todas partes"</string>
+</resources>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Ukryte utwory"</string>
+    <string name="hidden_songs_summary">"Ukryte utwory są wyszarzone na każdej liście i pomijane przy odtwarzaniu, w każdym źródle"</string>
+    <string name="hidden_songs_empty">"Nic nie jest ukryte. Ukryj utwór z jego menu na dowolnej liście."</string>
+    <string name="hidden_songs_done">"Ukryto „%1$s” wszędzie"</string>
+</resources>

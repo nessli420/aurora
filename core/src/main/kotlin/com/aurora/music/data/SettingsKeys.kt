@@ -173,6 +173,7 @@ internal object SettingsKeys {
     val MERGE_LYRICS_OFF = stringSetPreferencesKey("merge_lyrics_off")
     val LYRICS_SOURCES = stringPreferencesKey("lyrics_sources")
     val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
+    val HIDDEN_SONGS = stringPreferencesKey("hidden_songs")
     val SAVE_SEARCHES = booleanPreferencesKey("save_recent_searches")
     val SQUIG_BASE = stringPreferencesKey("squig_base_url")
     val SQUIG_TARGET = stringPreferencesKey("squig_target")

@@ -167,7 +167,7 @@ class DjEngine(
         }
         val pool = LinkedHashMap<String, Song>()
         for (s in found.flatten() + likedSongs + cached.songs + (seeded?.await().orEmpty())) if (s.id.isNotEmpty()) pool.putIfAbsent(s.id, s)
-        val candidates = pool.values.map { s ->
+        val candidates = pool.values.filterNot(repository::isHidden).map { s ->
             val signal = signals[s.id]
             DjCandidate(s, plays[s.id] ?: 0, s.liked || s.id in likedIds, years[s.albumId] ?: eraOf[s.id] ?: 0, signal?.energy, signal?.bpm ?: 0, signal?.vector, hits[s.id] ?: 0)
         }
@@ -200,7 +200,7 @@ class DjEngine(
             .filter { (_, name) -> name !in session.artists && !memory.artistResting(name) }.associate { (i, name) -> name to top - i }
         fun unheard(s: Song) = s.id !in taste.plays && djTrackKey(s.artist, s.title) !in heard
         fun build(segment: DjSegment, artist: String?, songs: List<Song>, rest: Boolean = true): DjSet? {
-            val fresh = songs.filterNot { it.id in skip || session.heard(it) }
+            val fresh = songs.filterNot { it.id in skip || session.heard(it) || repository.isHidden(it) }
             val usable = if (rest) memory.freshFirst(fresh) else fresh
             val picked = DjPicker.pick(FLOW, usable.take(want).map(::candidate), count, previous = after?.let(::candidate), random = random, flow = true)
             if (picked.size < minOf(MIN_SET, count)) return null

@@ -192,6 +192,7 @@ fun DetailScreen(
     }
     val sortOrder = sortKey?.let { sorts[it] } ?: com.aurora.music.data.TrackSortOrder()
     val tracks = remember(data.tracks, sortOrder) { sortOrder.apply(data.tracks) }
+    val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current
     val effectiveArt = artistInfo?.imageUrl?.takeIf { info.isArtist && it.isNotBlank() } ?: info.artUrl
     val albumCover = if (itemKind == "album") CoverKey(info.title, info.subtitle,
         tracks.firstNotNullOfOrNull { CoverKey.localPath(it).takeIf(String::isNotBlank) }.orEmpty()) else null
@@ -301,7 +302,7 @@ fun DetailScreen(
             DropdownMenu(expanded = headerMenu, onDismissRequest = { headerMenu = false }) {
                 DropdownMenuItem(text = { Text(appString(R.string.text_play_5d12bd)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onPlayAll(tracks, 0) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
                 DropdownMenuItem(text = { Text(appString(R.string.text_shuffle_5b772b)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onShufflePlay(tracks) }, leadingIcon = { Icon(Icons.Filled.Shuffle, null) })
-                DropdownMenuItem(text = { Text(appString(R.string.text_add_all_to_queue_6cb104)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; tracks.forEach { onAddToQueue(it) } }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) })
+                DropdownMenuItem(text = { Text(appString(R.string.text_add_all_to_queue_6cb104)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; hiddenSongs.visible(tracks).forEach { onAddToQueue(it) } }, leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) })
                 com.aurora.music.ui.components.LocalStartRadio.current?.let { startRadio ->
                     DropdownMenuItem(text = { Text(appString(R.string.discovery_start_radio)) }, enabled = tracks.isNotEmpty(),
                         onClick = { headerMenu = false; startRadio(tracks.first()) }, leadingIcon = { Icon(Icons.Filled.Radio, null) })

@@ -53,14 +53,14 @@ internal class PlaybackLibraryBrowser(
                     browseItem("cat_artists", "Artists", MediaMetadata.MEDIA_TYPE_FOLDER_ARTISTS, styleExtras(styleGrid, styleList)),
                     browseItem("cat_downloads", "Downloads", MediaMetadata.MEDIA_TYPE_PLAYLIST, styleExtras(styleList, styleList)),
                 ).browsePage(page, pageSize)
-                parentId == "cat_liked" -> listed(parentId, repository.starredSongs().browsePage(page, pageSize))
-                parentId == "cat_downloads" -> listed(parentId, repository.downloadedSongs().browsePage(page, pageSize))
+                parentId == "cat_liked" -> listed(parentId, repository.starredSongs().let(repository::visible).browsePage(page, pageSize))
+                parentId == "cat_downloads" -> listed(parentId, repository.downloadedSongs().let(repository::visible).browsePage(page, pageSize))
                 parentId == "cat_playlists" -> repository.allPlaylists().browsePage(page, pageSize).map { collectionItem("pl_${it.id}", it.title, it.subtitle, it.coverUrl, MediaMetadata.MEDIA_TYPE_PLAYLIST) }
                 parentId == "cat_albums" -> repository.allAlbums().browsePage(page, pageSize).map { collectionItem("alb_${it.id}", it.title, it.artist, it.artworkUrl, MediaMetadata.MEDIA_TYPE_ALBUM) }
                 parentId == "cat_artists" -> repository.allArtists().browsePage(page, pageSize).map { collectionItem("art_${it.id}", it.name, "Artist", it.imageUrl, MediaMetadata.MEDIA_TYPE_ARTIST) }
-                parentId.startsWith("alb_") -> listed(parentId, repository.detail("album", parentId.removePrefix("alb_"))?.tracks.orEmpty().browsePage(page, pageSize))
-                parentId.startsWith("pl_") -> listed(parentId, repository.detail("playlist", parentId.removePrefix("pl_"))?.tracks.orEmpty().browsePage(page, pageSize))
-                parentId.startsWith("art_") -> listed(parentId, repository.detail("artist", parentId.removePrefix("art_"))?.tracks.orEmpty().browsePage(page, pageSize))
+                parentId.startsWith("alb_") -> listed(parentId, repository.detail("album", parentId.removePrefix("alb_"))?.tracks.orEmpty().let(repository::visible).browsePage(page, pageSize))
+                parentId.startsWith("pl_") -> listed(parentId, repository.detail("playlist", parentId.removePrefix("pl_"))?.tracks.orEmpty().let(repository::visible).browsePage(page, pageSize))
+                parentId.startsWith("art_") -> listed(parentId, repository.detail("artist", parentId.removePrefix("art_"))?.tracks.orEmpty().let(repository::visible).browsePage(page, pageSize))
                 else -> emptyList()
             }
         }.getOrDefault(emptyList())

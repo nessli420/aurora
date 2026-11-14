@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Ausgeblendete Songs"</string>
+    <string name="hidden_songs_summary">"Ausgeblendete Songs sind in jeder Liste ausgegraut und werden bei der Wiedergabe übersprungen, bei jeder Quelle"</string>
+    <string name="hidden_songs_empty">"Nichts ausgeblendet. Blende einen Song über sein Menü in einer beliebigen Liste aus."</string>
+    <string name="hidden_songs_done">"„%1$s“ überall ausgeblendet"</string>
+</resources>

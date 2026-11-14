@@ -264,7 +264,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         autoplayTriedFor = tried
         val seeds = com.aurora.music.data.Autoplay.seeds(songs).ifEmpty { return }
         autoplayJob = viewModelScope.launch {
-            val more = com.aurora.music.data.Autoplay.next(seeds, songs,
+            val more = com.aurora.music.data.Autoplay.next(seeds, songs, hides = container.repository::isHidden,
                 radio = { container.repository.radio(it.id) },
                 // the sonic list leads with the seed itself
                 fallback = { seed -> withContext(Dispatchers.IO) { container.sonicEngine.buildRadio(seed).drop(1) } })
@@ -301,7 +301,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val seeds = com.aurora.music.data.Autoplay.seeds((listOf(current) + upcoming).asReversed(), com.aurora.music.data.Autoplay.SMART_SEEDS)
             .ifEmpty { return }
         smartJob = viewModelScope.launch {
-            val picks = com.aurora.music.data.Autoplay.next(seeds, songs,
+            val picks = com.aurora.music.data.Autoplay.next(seeds, songs, hides = container.repository::isHidden,
                 radio = { container.repository.radio(it.id) },
                 fallback = { seed -> withContext(Dispatchers.IO) { container.sonicEngine.buildRadio(seed).drop(1) } },
                 limit = limit)
@@ -837,6 +837,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     }
 
     fun playAll(songs: List<Song>, startIndex: Int = 0, collection: PlaybackCollectionIdentity? = null) {
+        val picked = songs.getOrNull(startIndex)
+        // a lone song is an explicit pick and plays even when hidden
+        val kept = if (songs.size > 1) container.repository.visible(songs) else songs
+        if (kept.size != songs.size) return playAll(kept, kept.indexOfFirst { it === picked }.coerceAtLeast(0), collection)
         cancelMediaSearch()
         if (leaveMixThen { playAll(songs, startIndex, collection) }) return
         val c = controller ?: return
@@ -1116,6 +1120,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     fun hearAiDj() { container.aiDjQueue?.let(aiDj::stopListening) }
 
     fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity? = null) {
+        val kept = container.repository.visible(songs)
+        if (kept.size != songs.size) return shufflePlay(kept, collection)
         cancelMediaSearch()
         if (leaveMixThen { shufflePlay(songs, collection) }) return
         val c = controller ?: return

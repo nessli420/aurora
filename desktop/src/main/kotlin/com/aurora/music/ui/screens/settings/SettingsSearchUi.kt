@@ -94,6 +94,7 @@ internal fun rememberSettingsSearchHits(): List<SettingsSearchHit> {
             Routes.SETTINGS_LANGUAGE to appString(R.string.language_title),
             Routes.SETTINGS_NAV_MENU to appString(R.string.nav_menu_title),
             Routes.SETTINGS_ARTIST_SEPARATORS to appString(R.string.text_artist_separators_4a3dc4),
+            Routes.SETTINGS_HIDDEN_SONGS to appString(R.string.hidden_songs_title),
         )
         val settingsTitle = appString(R.string.text_settings_c7f73b)
         val pageHits = SettingsDestinations.all.map { SettingsSearchHit(it.label, it.description, settingsTitle, it.route, 0, isPage = true) }

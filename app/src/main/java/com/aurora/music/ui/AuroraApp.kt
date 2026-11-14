@@ -257,6 +257,21 @@ fun AuroraApp() {
     }
     var matchSong by remember { mutableStateOf<com.aurora.music.model.Song?>(null) }
     val hiddenSongs by container.trackChoices.hidden.collectAsStateWithLifecycle()
+    val hiddenIndex by container.hiddenSongs.collectAsStateWithLifecycle()
+    val hideSong: (com.aurora.music.model.Song, Boolean) -> Unit = remember(container) { { song, hide ->
+        val entry = com.aurora.music.data.HiddenSong.of(song)
+        scope.launch {
+            if (!hide) {
+                container.hiddenSongs.value.entriesFor(song).forEach { container.settingsStore.setSongHidden(it, false) }
+                return@launch
+            }
+            container.settingsStore.setSongHidden(entry, true)
+            snackbarHostState.currentSnackbarData?.dismiss()
+            if (snackbarHostState.showSnackbar(appString(R.string.hidden_songs_done, song.title), appString(R.string.text_undo_39fc72),
+                    duration = androidx.compose.material3.SnackbarDuration.Short) == androidx.compose.material3.SnackbarResult.ActionPerformed)
+                container.settingsStore.setSongHidden(entry, false)
+        }
+    } }
 
     val onDownload: (com.aurora.music.model.Song) -> Unit = {
         val already = container.repository.isDownloaded(it.id)
@@ -948,7 +963,11 @@ fun AuroraApp() {
                 }
                 composable(Routes.SETTINGS_SOURCES) {
                     com.aurora.music.ui.screens.settings.SourcesSettingsScreen(contentPadding = padding, onBack = { nav.popBackStack() },
-                        onArtistSeparators = { nav.navigate(Routes.SETTINGS_ARTIST_SEPARATORS) })
+                        onArtistSeparators = { nav.navigate(Routes.SETTINGS_ARTIST_SEPARATORS) },
+                        onHiddenSongs = { nav.navigate(Routes.SETTINGS_HIDDEN_SONGS) })
+                }
+                composable(Routes.SETTINGS_HIDDEN_SONGS) {
+                    com.aurora.music.ui.screens.settings.HiddenSongsScreen(contentPadding = padding, onBack = { nav.popBackStack() })
                 }
                 composable(Routes.SETTINGS_LYRICS) {
                     com.aurora.music.ui.screens.settings.LyricsSettingsScreen(contentPadding = padding, onBack = { nav.popBackStack() })
@@ -982,6 +1001,8 @@ fun AuroraApp() {
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides playerPanes,
         com.aurora.music.ui.components.LocalStartRadio provides remember(playerVM) { { song: com.aurora.music.model.Song -> playerVM.startSonicRadio(song) { confirm(it) } } },
         com.aurora.music.ui.components.LocalCanLike provides container.repository::canLikeSong,
+        com.aurora.music.ui.components.LocalHiddenSongs provides hiddenIndex,
+        com.aurora.music.ui.components.LocalHideSong provides hideSong,
         com.aurora.music.ui.components.LocalLikeMenu provides remember(playerVM) { com.aurora.music.ui.components.LikeMenu(playerVM::likeOptions, playerVM::setLikedOn, playerVM::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: com.aurora.music.model.Song -> matchSong = song } },

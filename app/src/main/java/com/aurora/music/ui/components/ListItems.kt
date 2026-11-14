@@ -69,6 +69,10 @@ import com.aurora.music.model.accent
 // a guest source's songs, albums and artists can't be liked
 val LocalCanLike = androidx.compose.runtime.staticCompositionLocalOf<(String) -> Boolean> { { true } }
 
+// songs hidden from every list, and the action that hides one
+val LocalHiddenSongs = androidx.compose.runtime.compositionLocalOf { com.aurora.music.data.HiddenSongs.NONE }
+val LocalHideSong = androidx.compose.runtime.staticCompositionLocalOf<((Song, Boolean) -> Unit)?> { null }
+
 @Composable
 fun SongRow(
     song: Song,
@@ -95,9 +99,13 @@ fun SongRow(
     var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small
     val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
-    val canLike = LocalCanLike.current(song.id)
+    val hiddenSongs = LocalHiddenSongs.current
+    val hiddenEverywhere = remember(song, hiddenSongs) { hiddenSongs.hides(song) }
+    val greyed = hidden || hiddenEverywhere
+    val hide = LocalHideSong.current
+    val canLike = LocalCanLike.current(song.id) && !hiddenEverywhere
     val itemKey = remember(song.id, song.playbackSource?.providerId) { song.id to song.playbackSource?.providerId }
-    TrackSwipeActions(modifier, shape, isLiked, enabled = !menuOpen && !showPlaylists, itemKey = itemKey,
+    TrackSwipeActions(modifier, shape, isLiked, enabled = !menuOpen && !showPlaylists && !hiddenEverywhere, itemKey = itemKey,
         onPlayNext = onPlayNext, onQueue = onAddToQueue, onLike = onToggleLike.takeIf { canLike },
         onPlaylists = { showPlaylists = true }) {
     // only tablets need the measured width so phones skip the per-row subcomposition
@@ -107,11 +115,11 @@ fun SongRow(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .clickable(onClick = onClick)
+            .clickable(enabled = !hiddenEverywhere, onClick = onClick)
             .padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.alpha(if (hidden) 0.4f else 1f)) {
+        Box(contentAlignment = Alignment.Center, modifier = Modifier.alpha(if (greyed) 0.4f else 1f)) {
             Artwork(song.artworkUrl, song.accent, Modifier.size(52.dp), corner = 10.dp)
             if (isPlaying) {
                 Box(
@@ -124,7 +132,7 @@ fun SongRow(
             }
         }
         Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f).alpha(if (hidden) 0.45f else 1f)) {
+        Column(Modifier.weight(1f).alpha(if (greyed) 0.45f else 1f)) {
             Text(
                 song.title,
                 style = MaterialTheme.typography.titleSmall,
@@ -163,7 +171,7 @@ fun SongRow(
             )
         }
         Spacer(Modifier.width(8.dp))
-        if (hidden) {
+        if (greyed) {
             Icon(Icons.Filled.VisibilityOff, appString(R.string.hide_song_hidden), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(16.dp))
             Spacer(Modifier.width(6.dp))
         }
@@ -194,69 +202,75 @@ fun SongRow(
                     .padding(if (tablet) 12.dp else 4.dp),
             )
             DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
-                DropdownMenuItem(
-                    text = { Text(appString(R.string.text_play_5d12bd)) },
-                    onClick = { menuOpen = false; onClick() },
-                    leadingIcon = { Icon(Icons.Filled.PlayArrow, null) },
-                )
-                if (onPlayNext != null) DropdownMenuItem(
-                    text = { Text(appString(R.string.text_play_next_40d33c)) },
-                    onClick = { menuOpen = false; onPlayNext() },
-                    leadingIcon = { Icon(Icons.Filled.QueuePlayNext, null) },
-                )
-                if (onAddToQueue != null) DropdownMenuItem(
-                    text = { Text(appString(R.string.text_add_to_queue_69b498)) },
-                    onClick = { menuOpen = false; onAddToQueue() },
-                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
-                )
-                if (canLike) DropdownMenuItem(
-                    text = { Text(if (isLiked) appString(R.string.text_remove_from_liked_9d1568) else appString(R.string.text_add_to_liked_b99f26)) },
-                    onClick = { menuOpen = false; onToggleLike() },
-                    leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
-                )
-                RepostMenuItem(song) { menuOpen = false }
-                if (onToggleHidden != null) DropdownMenuItem(
-                    text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
-                    onClick = { menuOpen = false; onToggleHidden() },
-                    leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
-                )
-                DropdownMenuItem(
-                    text = { Text(appString(R.string.track_swipe_playlists)) },
-                    onClick = { menuOpen = false; showPlaylists = true },
-                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
-                )
-                if (isDownloaded && onRemoveDownload != null) DropdownMenuItem(
-                    text = { Text(appString(R.string.text_remove_download_147742)) },
-                    onClick = { menuOpen = false; onRemoveDownload() },
-                    leadingIcon = { Icon(Icons.Filled.DownloadDone, null, tint = MaterialTheme.colorScheme.primary) },
-                ) else if (onDownload != null) DropdownMenuItem(
-                    text = { Text(appString(R.string.text_download_a479c9)) },
-                    onClick = { menuOpen = false; onDownload() },
-                    leadingIcon = { Icon(Icons.Filled.Download, null) },
-                )
-                LocalStartRadio.current?.let { startRadio ->
+                if (hiddenEverywhere) DropdownMenuItem(
+                    text = { Text(appString(R.string.hide_song_undo)) },
+                    onClick = { menuOpen = false; hide?.invoke(song, false) },
+                    leadingIcon = { Icon(Icons.Filled.Visibility, null) },
+                ) else {
                     DropdownMenuItem(
-                        text = { Text(appString(R.string.discovery_start_radio)) },
-                        onClick = { menuOpen = false; startRadio(song) },
-                        leadingIcon = { Icon(Icons.Filled.Radio, null) },
+                        text = { Text(appString(R.string.text_play_5d12bd)) },
+                        onClick = { menuOpen = false; onClick() },
+                        leadingIcon = { Icon(Icons.Filled.PlayArrow, null) },
+                    )
+                    if (onPlayNext != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_play_next_40d33c)) },
+                        onClick = { menuOpen = false; onPlayNext() },
+                        leadingIcon = { Icon(Icons.Filled.QueuePlayNext, null) },
+                    )
+                    if (onAddToQueue != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_add_to_queue_69b498)) },
+                        onClick = { menuOpen = false; onAddToQueue() },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
+                    )
+                    if (canLike) DropdownMenuItem(
+                        text = { Text(if (isLiked) appString(R.string.text_remove_from_liked_9d1568) else appString(R.string.text_add_to_liked_b99f26)) },
+                        onClick = { menuOpen = false; onToggleLike() },
+                        leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
+                    )
+                    RepostMenuItem(song) { menuOpen = false }
+                    if (if (hidden) onToggleHidden != null else hide != null) DropdownMenuItem(
+                        text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
+                        onClick = { menuOpen = false; if (hidden) onToggleHidden?.invoke() else hide?.invoke(song, true) },
+                        leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
+                    )
+                    DropdownMenuItem(
+                        text = { Text(appString(R.string.track_swipe_playlists)) },
+                        onClick = { menuOpen = false; showPlaylists = true },
+                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
+                    )
+                    if (isDownloaded && onRemoveDownload != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_remove_download_147742)) },
+                        onClick = { menuOpen = false; onRemoveDownload() },
+                        leadingIcon = { Icon(Icons.Filled.DownloadDone, null, tint = MaterialTheme.colorScheme.primary) },
+                    ) else if (onDownload != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_download_a479c9)) },
+                        onClick = { menuOpen = false; onDownload() },
+                        leadingIcon = { Icon(Icons.Filled.Download, null) },
+                    )
+                    LocalStartRadio.current?.let { startRadio ->
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.discovery_start_radio)) },
+                            onClick = { menuOpen = false; startRadio(song) },
+                            leadingIcon = { Icon(Icons.Filled.Radio, null) },
+                        )
+                    }
+                    if (onGoToAlbum != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
+                        onClick = { menuOpen = false; onGoToAlbum() },
+                        leadingIcon = { Icon(Icons.Filled.Album, null) },
+                    )
+                    if (onGoToArtist != null) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
+                        onClick = { menuOpen = false; onGoToArtist() },
+                        leadingIcon = { Icon(Icons.Filled.Person, null) },
+                    )
+                    // tag edit only on content:// files or backends with metadata write
+                    if (onEditTags != null && (song.streamUrl.startsWith("content://") && com.aurora.music.data.CueClip.of(song.streamUrl) == null || serverTagEditing)) DropdownMenuItem(
+                        text = { Text(appString(R.string.text_edit_tags_d8a5fc)) },
+                        onClick = { menuOpen = false; onEditTags() },
+                        leadingIcon = { Icon(Icons.Filled.Edit, null) },
                     )
                 }
-                if (onGoToAlbum != null) DropdownMenuItem(
-                    text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
-                    onClick = { menuOpen = false; onGoToAlbum() },
-                    leadingIcon = { Icon(Icons.Filled.Album, null) },
-                )
-                if (onGoToArtist != null) DropdownMenuItem(
-                    text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
-                    onClick = { menuOpen = false; onGoToArtist() },
-                    leadingIcon = { Icon(Icons.Filled.Person, null) },
-                )
-                // tag edit only on content:// files or backends with metadata write
-                if (onEditTags != null && (song.streamUrl.startsWith("content://") && com.aurora.music.data.CueClip.of(song.streamUrl) == null || serverTagEditing)) DropdownMenuItem(
-                    text = { Text(appString(R.string.text_edit_tags_d8a5fc)) },
-                    onClick = { menuOpen = false; onEditTags() },
-                    leadingIcon = { Icon(Icons.Filled.Edit, null) },
-                )
             }
         }
     }

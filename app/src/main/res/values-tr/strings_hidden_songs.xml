@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Gizlenen Şarkılar"</string>
+    <string name="hidden_songs_summary">"Gizlenen şarkılar her kaynakta, her listede soluk görünür ve çalarken atlanır"</string>
+    <string name="hidden_songs_empty">"Gizlenen bir şey yok. Herhangi bir listede şarkının menüsünden gizleyebilirsin."</string>
+    <string name="hidden_songs_done">"“%1$s” her yerde gizlendi"</string>
+</resources>

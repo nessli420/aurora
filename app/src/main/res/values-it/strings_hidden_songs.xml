@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Brani nascosti"</string>
+    <string name="hidden_songs_summary">"I brani nascosti appaiono in grigio in ogni elenco e vengono saltati durante la riproduzione, da ogni fonte"</string>
+    <string name="hidden_songs_empty">"Nessun brano nascosto. Nascondi un brano dal suo menu in qualsiasi elenco."</string>
+    <string name="hidden_songs_done">"«%1$s» nascosto ovunque"</string>
+</resources>

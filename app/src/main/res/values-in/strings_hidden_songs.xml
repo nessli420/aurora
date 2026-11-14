@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Lagu Tersembunyi"</string>
+    <string name="hidden_songs_summary">"Lagu tersembunyi tampil abu-abu di setiap daftar dan dilewati saat diputar, di semua sumber"</string>
+    <string name="hidden_songs_empty">"Tidak ada yang disembunyikan. Sembunyikan lagu dari menunya di daftar mana pun."</string>
+    <string name="hidden_songs_done">"“%1$s” disembunyikan di mana-mana"</string>
+</resources>

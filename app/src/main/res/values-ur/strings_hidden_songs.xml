@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"چھپائے گئے گانے"</string>
+    <string name="hidden_songs_summary">"چھپائے گئے گانے ہر فہرست میں ہلکے دکھائی دیتے ہیں اور ہر ذریعے پر چلاتے وقت چھوڑ دیے جاتے ہیں"</string>
+    <string name="hidden_songs_empty">"کچھ بھی چھپا ہوا نہیں۔ کسی بھی فہرست میں گانے کے مینو سے اسے چھپائیں۔"</string>
+    <string name="hidden_songs_done">"“%1$s” ہر جگہ چھپا دیا گیا"</string>
+</resources>

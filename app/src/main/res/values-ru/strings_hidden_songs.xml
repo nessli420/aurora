@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Скрытые треки"</string>
+    <string name="hidden_songs_summary">"Скрытые треки показываются серыми в любом списке и пропускаются при воспроизведении, в любом источнике"</string>
+    <string name="hidden_songs_empty">"Ничего не скрыто. Скройте трек через его меню в любом списке."</string>
+    <string name="hidden_songs_done">"«%1$s» скрыт везде"</string>
+</resources>

@@ -126,7 +126,8 @@ fun HomeScreen(
     onOpenNotifications: () -> Unit = {},
     onAddSource: () -> Unit = {},
 ) {
-    val data = state.data
+    val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current
+    val data = androidx.compose.runtime.remember(state.data, hiddenSongs) { state.data.copy(starred = hiddenSongs.visible(state.data.starred)) }
     val ui = LocalUiPrefs.current
     val hidden = ui.hiddenHomeSections
     val gutter = LocalPageGutter.current

@@ -55,6 +55,10 @@ fun FeedSection(
     onPlayAll: (List<Song>, Int) -> Unit,
     gutter: Dp = 16.dp,
 ) {
+    val hiddenSongs = LocalHiddenSongs.current
+    @Suppress("NAME_SHADOWING") val section = remember(section, hiddenSongs) {
+        if (hiddenSongs.songs.isEmpty()) section else section.copy(items = section.items.filterNot { it is HomeFeedItem.Track && hiddenSongs.hides(it.song) })
+    }
     val tracks = remember(section) { section.items.filterIsInstance<HomeFeedItem.Track>().map { it.song } }
     Column {
         SectionHeader(section.title, Modifier.padding(horizontal = gutter))

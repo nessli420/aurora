@@ -28,6 +28,7 @@ import androidx.compose.material.icons.filled.MergeType
 import androidx.compose.material.icons.filled.HighQuality
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Switch
@@ -79,7 +80,7 @@ private fun tierSub(t: String) = when (t) {
 }
 
 @Composable
-fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onArtistSeparators: () -> Unit) {
+fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onArtistSeparators: () -> Unit, onHiddenSongs: () -> Unit) {
     val ctx = LocalContext.current
     val container = remember { (ctx.applicationContext as AuroraApplication).container }
     val store = container.settingsStore
@@ -264,6 +265,8 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                         modifier = Modifier.padding(start = 20.dp, end = 20.dp, bottom = 16.dp))
                 }
             }
+
+            item { SettingsGroup { SettingsNavRow(Icons.Filled.VisibilityOff, appString(R.string.hidden_songs_title), appString(R.string.hidden_songs_summary), onClick = onHiddenSongs) } }
 
             item { SettingsSectionTitle(appString(R.string.text_best_source_playback_8c92cb)) }
             item {

@@ -112,6 +112,7 @@ class MusicRepository(
     // every account a song can be liked on; the app adds signed-in accounts outside the library
     private val likeSourcesProvider: suspend () -> List<MediaBackend> = { backendProvider()?.let { (it as? MergedBackend)?.sources ?: listOf(it) }.orEmpty() },
     private val trackChoices: TrackChoices? = null,
+    private val hiddenSongs: () -> HiddenSongs = { HiddenSongs.NONE },
     // reads map and dedup here, one at a time, so callers can stay on the main thread
     private val mapping: CoroutineContext = Dispatchers.Default.limitedParallelism(1),
 ) {
@@ -722,7 +723,11 @@ class MusicRepository(
 
     // songs hidden in a playlist stay listed but are left out when it plays
     fun playable(kind: String, id: String, songs: List<Song>, picked: Song? = null): List<Song> =
-        trackChoices?.visible(kind, id, songs, picked) ?: songs
+        visible(trackChoices?.visible(kind, id, songs, picked) ?: songs)
+
+    fun visible(songs: List<Song>): List<Song> = hiddenSongs().visible(songs)
+
+    fun isHidden(song: Song): Boolean = hiddenSongs().hides(song)
 
     val supportsFolders: Boolean get() = !offline && backend?.supportsFolders == true
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"छिपे हुए गाने"</string>
+    <string name="hidden_songs_summary">"छिपे हुए गाने हर सूची में धुंधले दिखते हैं और हर स्रोत पर प्लेबैक में छोड़ दिए जाते हैं"</string>
+    <string name="hidden_songs_empty">"कुछ भी छिपा नहीं है। किसी भी सूची में गाने के मेनू से उसे छिपाएँ।"</string>
+    <string name="hidden_songs_done">"“%1$s” हर जगह छिपाया गया"</string>
+</resources>

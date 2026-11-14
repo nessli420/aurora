@@ -431,6 +431,8 @@ class AppContainer(context: Context) {
     val noNetwork: StateFlow<Boolean> = _noNetwork.asStateFlow()
 
     private val smartPlaylists = settingsStore.smartPlaylists.stateIn(scope, SharingStarted.Eagerly, emptyList())
+    val hiddenSongs: StateFlow<com.aurora.music.data.HiddenSongs> = settingsStore.hiddenSongs.map { com.aurora.music.data.HiddenSongs(it) }
+        .stateIn(scope, SharingStarted.Eagerly, com.aurora.music.data.HiddenSongs.NONE)
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 
     private val artworkHttp = http.newBuilder().connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS)
@@ -454,6 +456,7 @@ class AppContainer(context: Context) {
         coverUrl = com.aurora.music.data.artwork.ArtworkUrls::cover,
         likeSourcesProvider = { likeAccounts.of(backend, settingsStore.savedSessions.first()) },
         trackChoices = trackChoices,
+        hiddenSongs = { hiddenSongs.value },
     )
 
     // an oauth spotify login refreshes the active session's token, so only the web player one joins as a second account

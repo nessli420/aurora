@@ -65,6 +65,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
 import kotlinx.coroutines.launch
@@ -207,6 +208,8 @@ class DesktopContainer(
     @Volatile private var offlineFlag: Boolean = false
     private val lrclibEnabled = settingsStore.lrclibEnabled.stateIn(scope, SharingStarted.Eagerly, true)
     private val smartPlaylists = settingsStore.smartPlaylists.stateIn(scope, SharingStarted.Eagerly, emptyList())
+    val hiddenSongs: StateFlow<com.aurora.music.data.HiddenSongs> = settingsStore.hiddenSongs.map { com.aurora.music.data.HiddenSongs(it) }
+        .stateIn(scope, SharingStarted.Eagerly, com.aurora.music.data.HiddenSongs.NONE)
     private val localMergeSession = AccountAuthenticator.LOCAL_SESSION
 
     @Volatile
@@ -341,6 +344,7 @@ class DesktopContainer(
         cachedSongsProvider = { audioCache.songs.value },
         likeSourcesProvider = { likeAccounts.of(backend, settingsStore.savedSessions.first()) },
         trackChoices = trackChoices,
+        hiddenSongs = { hiddenSongs.value },
     )
 
     private val likeAccounts = com.aurora.music.data.LikeAccounts { if (AccountAuthenticator.supports(it)) backends.build(it) else null }

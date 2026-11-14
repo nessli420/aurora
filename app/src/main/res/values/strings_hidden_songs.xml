@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Hidden Songs"</string>
+    <string name="hidden_songs_summary">"Hidden songs are greyed out in every list and skipped in playback, on every source"</string>
+    <string name="hidden_songs_empty">"Nothing hidden. Hide a song from its menu in any list."</string>
+    <string name="hidden_songs_done">"Hid “%1$s” everywhere"</string>
+</resources>

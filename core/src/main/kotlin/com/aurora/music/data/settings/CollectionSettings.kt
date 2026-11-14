@@ -32,6 +32,8 @@ interface CollectionSettings {
     suspend fun setSaveRecentSearches(v: Boolean): Preferences
     suspend fun togglePin(pin: Pin): Preferences
     suspend fun setPlaylistLiked(id: String, liked: Boolean): Preferences
+    val hiddenSongs: Flow<List<HiddenSong>>
+    suspend fun setSongHidden(song: HiddenSong, hidden: Boolean): Preferences
 }
 
 internal class CollectionSettingsStore(private val dataStore: DataStore<Preferences>) : CollectionSettings {
@@ -122,5 +124,12 @@ internal class CollectionSettingsStore(private val dataStore: DataStore<Preferen
         val set = (p[Keys.LIKED_PLAYLISTS] ?: emptySet()).toMutableSet()
         if (liked) set.add(id) else set.remove(id)
         p[Keys.LIKED_PLAYLISTS] = set
+    }
+
+    override val hiddenSongs: Flow<List<HiddenSong>> = dataStore.data.map { it[Keys.HIDDEN_SONGS] }.distinctUntilChanged().map { gson.parseList<HiddenSong>(it) }.flowOn(Dispatchers.Default)
+
+    override suspend fun setSongHidden(song: HiddenSong, hidden: Boolean) = dataStore.edit { p ->
+        val rest = gson.parseList<HiddenSong>(p[Keys.HIDDEN_SONGS]).filterNot { it.id == song.id }
+        p[Keys.HIDDEN_SONGS] = gson.toJson(if (hidden) rest + song else rest)
     }
 }

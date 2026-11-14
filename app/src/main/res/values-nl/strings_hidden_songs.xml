@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Verborgen nummers"</string>
+    <string name="hidden_songs_summary">"Verborgen nummers zijn in elke lijst grijs en worden bij afspelen overgeslagen, bij elke bron"</string>
+    <string name="hidden_songs_empty">"Niets verborgen. Verberg een nummer via het menu in een willekeurige lijst."</string>
+    <string name="hidden_songs_done">"“%1$s” overal verborgen"</string>
+</resources>

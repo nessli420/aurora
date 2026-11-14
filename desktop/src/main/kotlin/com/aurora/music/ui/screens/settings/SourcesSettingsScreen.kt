@@ -32,6 +32,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowUp
 import androidx.compose.material.icons.filled.MergeType
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Smartphone
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -76,7 +77,7 @@ private fun tierSub(t: String) = when (t) {
 }
 
 @Composable
-fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onArtistSeparators: (() -> Unit)?) {
+fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onArtistSeparators: (() -> Unit)?, onHiddenSongs: () -> Unit) {
     val container = LocalDesktopContainer.current
     val store = container.settingsStore
     val library = container.folderLibrary
@@ -133,6 +134,8 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                     }
                 }
             }
+
+            item { SettingsGroup { SettingsNavRow(Icons.Filled.VisibilityOff, appString(R.string.hidden_songs_title), appString(R.string.hidden_songs_summary), onClick = onHiddenSongs) } }
 
             item { SettingsSectionTitle(appString(R.string.text_best_source_playback_8c92cb)) }
             item {

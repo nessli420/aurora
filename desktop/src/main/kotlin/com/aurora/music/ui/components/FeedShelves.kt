@@ -64,6 +64,10 @@ private val GridCellWidth = 330.dp
 // one streaming feed shelf; a shelf of songs reads like youtube music's quick picks, a compact grid you play from
 @Composable
 fun FeedSection(section: HomeFeedSection, bleed: Dp, onOpenDetail: (String, String) -> Unit, onPlayAll: (List<Song>, Int) -> Unit) {
+    val hiddenSongs = LocalHiddenSongs.current
+    @Suppress("NAME_SHADOWING") val section = remember(section, hiddenSongs) {
+        if (hiddenSongs.songs.isEmpty()) section else section.copy(items = section.items.filterNot { it is HomeFeedItem.Track && hiddenSongs.hides(it.song) })
+    }
     val tracks = remember(section) { section.items.filterIsInstance<HomeFeedItem.Track>().map { it.song } }
     Column {
         SectionHeader(section.title)

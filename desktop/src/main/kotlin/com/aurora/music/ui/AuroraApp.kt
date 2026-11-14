@@ -918,7 +918,9 @@ private fun Shell(
         }
         composable(Routes.SETTINGS_IMPULSES) { ConvolutionLibraryScreen(padding, player.signalPath, pop) }
         composable(Routes.SETTINGS_VISUALIZER) { VisualizerSettingsScreen(padding, pop) }
-        composable(Routes.SETTINGS_SOURCES) { SourcesSettingsScreen(padding, onBack = pop, onArtistSeparators = { nav.navigate(Routes.SETTINGS_ARTIST_SEPARATORS) }) }
+        composable(Routes.SETTINGS_SOURCES) { SourcesSettingsScreen(padding, onBack = pop, onArtistSeparators = { nav.navigate(Routes.SETTINGS_ARTIST_SEPARATORS) },
+            onHiddenSongs = { nav.navigate(Routes.SETTINGS_HIDDEN_SONGS) }) }
+        composable(Routes.SETTINGS_HIDDEN_SONGS) { com.aurora.music.ui.screens.settings.HiddenSongsScreen(padding, onBack = pop) }
         composable(Routes.SETTINGS_ARTIST_SEPARATORS) { com.aurora.music.ui.screens.settings.ArtistSeparatorsScreen(padding, onBack = pop) }
         composable(Routes.SETTINGS_STORAGE) { StorageSettingsScreen(padding, pop, onOpenYouTubeDownload = { nav.navigate(Routes.YOUTUBE_DOWNLOAD) }) }
         composable(Routes.YOUTUBE_DOWNLOAD) {
@@ -930,9 +932,26 @@ private fun Shell(
     }
 
     val startRadio: (Song) -> Unit = { song -> player.startSonicRadio(song) { confirm(it) } }
+    val hiddenIndex by container.hiddenSongs.collectAsStateWithLifecycle()
+    val hideSong: (Song, Boolean) -> Unit = remember(container) { { song, hide ->
+        val entry = com.aurora.music.data.HiddenSong.of(song)
+        scope.launch {
+            if (!hide) {
+                container.hiddenSongs.value.entriesFor(song).forEach { container.settingsStore.setSongHidden(it, false) }
+                return@launch
+            }
+            container.settingsStore.setSongHidden(entry, true)
+            snackbarHostState.currentSnackbarData?.dismiss()
+            if (snackbarHostState.showSnackbar(appString(R.string.hidden_songs_done, song.title), appString(R.string.text_undo_39fc72),
+                    duration = androidx.compose.material3.SnackbarDuration.Short) == androidx.compose.material3.SnackbarResult.ActionPerformed)
+                container.settingsStore.setSongHidden(entry, false)
+        }
+    } }
     CompositionLocalProvider(
         com.aurora.music.ui.components.LocalStartRadio provides startRadio,
         com.aurora.music.ui.components.LocalCanLike provides container.repository::canLikeSong,
+        com.aurora.music.ui.components.LocalHiddenSongs provides hiddenIndex,
+        com.aurora.music.ui.components.LocalHideSong provides hideSong,
         com.aurora.music.ui.components.LocalLikeMenu provides remember(player) { com.aurora.music.ui.components.LikeMenu(player::likeOptions, player::setLikedOn, player::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },

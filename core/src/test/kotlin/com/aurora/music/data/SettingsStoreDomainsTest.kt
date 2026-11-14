@@ -59,6 +59,7 @@ class SettingsStoreDomainsTest {
         a.saveRadioStation(RadioStation("u", "Station"))
         a.addRecentSearch("query")
         a.setPlaylistLiked("p", true)
+        a.setSongHidden(HiddenSong("nd1", "Song", "Artist", "Album", 200), true)
         a.setSimpleMode(true)
         a.setMobileDataDownloads(true)
         a.setInsightsEnabled(true)
@@ -79,13 +80,14 @@ class SettingsStoreDomainsTest {
             SettingsStore::extensionGrants, SettingsStore::lastfm, SettingsStore::squigTarget, SettingsStore::uiPrefs, SettingsStore::musicHapticsPrefs,
             SettingsStore::playbackPrefs, SettingsStore::alarmPrefs, SettingsStore::aiDjSpoken, SettingsStore::unifiedLibrary,
             SettingsStore::sourcePriority, SettingsStore::mergeFeatures, SettingsStore::pins, SettingsStore::radioFavorites,
-            SettingsStore::recentSearches, SettingsStore::likedPlaylists, SettingsStore::simpleMode, SettingsStore::mobileDataDownloads, SettingsStore::insightsPrefs,
+            SettingsStore::recentSearches, SettingsStore::likedPlaylists, SettingsStore::hiddenSongs, SettingsStore::simpleMode, SettingsStore::mobileDataDownloads, SettingsStore::insightsPrefs,
             SettingsStore::whatsNewSeen, SettingsStore::audioPrefs, SettingsStore::reverbPrefs, SettingsStore::processingRack,
             SettingsStore::processingPresetLibrary, SettingsStore::processingRouteRules, SettingsStore::rackSubchains)
         for (flow in flows) assertEquals(flow(a).first(), flow(b).first())
         assertEquals(session, b.session.first())
         assertEquals(6, b.playbackPrefs.first().crossfadeSec)
         assertEquals(1, b.processingPresetLibrary.first().presets.size)
+        assertEquals(listOf("nd1"), b.hiddenSongs.first().map { it.id })
     }
 
 }

@@ -240,7 +240,7 @@ internal fun sourceLabels(sources: List<MediaBackend>): List<String> {
     return sources.map { it.session.typeLabel + if ((types[it.session.type] ?: 0) > 1) " · ${it.session.username}" else "" }
 }
 
-private fun sameRecording(a: Song, b: Song) = recordingMatches(a, b) &&
+internal fun sameRecording(a: Song, b: Song) = recordingMatches(a, b) &&
     (a.durationSec <= 0 || b.durationSec <= 0 || abs(a.durationSec - b.durationSec) <= TrackMatch.DURATION_TOLERANCE_SEC)
 
 internal suspend fun <T> attempt(fallback: T, block: suspend () -> T): T = try {

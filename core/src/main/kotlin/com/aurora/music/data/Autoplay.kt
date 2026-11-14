@@ -62,11 +62,12 @@ object Autoplay {
         radio: suspend (Song) -> List<Song>,
         fallback: suspend (Song) -> List<Song> = { emptyList() },
         limit: Int = BATCH,
+        hides: (Song) -> Boolean = { false },
     ): List<Song> = coroutineScope {
         val lists = seeds.map { seed ->
             async { quietly { radio(seed) }.ifEmpty { quietly { fallback(seed) } } }
         }.awaitAll()
-        pick(lists, avoid, limit)
+        pick(lists.map { list -> list.filterNot(hides) }, avoid, limit)
     }
 
     fun pick(lists: List<List<Song>>, avoid: Collection<Song>, limit: Int = BATCH): List<Song> {

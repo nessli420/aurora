@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"Titres masqués"</string>
+    <string name="hidden_songs_summary">"Les titres masqués sont grisés dans toutes les listes et ignorés à la lecture, quelle que soit la source"</string>
+    <string name="hidden_songs_empty">"Rien n’est masqué. Masquez un titre depuis son menu dans n’importe quelle liste."</string>
+    <string name="hidden_songs_done">"« %1$s » masqué partout"</string>
+</resources>

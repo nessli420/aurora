@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hidden_songs_title">"非表示の曲"</string>
+    <string name="hidden_songs_summary">"非表示の曲はどのソースでも、リストではグレー表示になり、再生時はスキップされます"</string>
+    <string name="hidden_songs_empty">"非表示の曲はありません。任意のリストで曲のメニューから非表示にできます。"</string>
+    <string name="hidden_songs_done">"「%1$s」をすべての場所で非表示にしました"</string>
+</resources>

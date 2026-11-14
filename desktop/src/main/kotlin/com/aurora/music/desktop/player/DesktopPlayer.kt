@@ -519,7 +519,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         val played = s.entries.take(s.index + 1).map { it.song }
         val seeds = Autoplay.seeds(played).ifEmpty { return }
         autoplayJob = scope.launch {
-            val more = Autoplay.next(seeds, s.entries.map { it.song },
+            val more = Autoplay.next(seeds, s.entries.map { it.song }, hides = deps.repository::isHidden,
                 radio = { deps.repository.radio(it.id) },
                 // the sonic list leads with the seed itself
                 fallback = { seed -> withContext(Dispatchers.IO) { deps.sonic?.buildRadio(seed).orEmpty().drop(1) } })
@@ -548,7 +548,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         // the playing song first, then what's coming, one per artist
         val seeds = Autoplay.seeds((listOf(current.song) + upcoming).asReversed(), Autoplay.SMART_SEEDS).ifEmpty { return }
         smartJob = scope.launch {
-            val picks = Autoplay.next(seeds, s.entries.map { it.song },
+            val picks = Autoplay.next(seeds, s.entries.map { it.song }, hides = deps.repository::isHidden,
                 radio = { deps.repository.radio(it.id) },
                 fallback = { seed -> withContext(Dispatchers.IO) { deps.sonic?.buildRadio(seed).orEmpty().drop(1) } },
                 limit = count)
@@ -770,6 +770,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override fun toggleMute() = setVolume(if (_volume.value > 0f) 0f else unmuteVolume)
 
     override fun playAll(songs: List<Song>, startIndex: Int, collection: PlaybackCollectionIdentity?) {
+        val picked = songs.getOrNull(startIndex)
+        // a lone song is an explicit pick and plays even when hidden
+        val kept = if (songs.size > 1) deps.repository.visible(songs) else songs
+        if (kept.size != songs.size) return playAll(kept, kept.indexOfFirst { it === picked }.coerceAtLeast(0), collection)
         if (songs.isEmpty()) return
         playingAccountKey = deps.accountKey()
         val contextual = songs.map { it.copy(playbackCollection = collection) }
@@ -953,6 +957,8 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     }
 
     override fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity?) {
+        val kept = deps.repository.visible(songs)
+        if (kept.size != songs.size) return shufflePlay(kept, collection)
         if (songs.isEmpty()) return
         playingAccountKey = deps.accountKey()
         val contextual = songs.map { it.copy(playbackCollection = collection) }

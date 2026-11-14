@@ -64,6 +64,7 @@ object Routes {
     const val LISTENING_MAP = "listening_map"
     fun listeningMap(songId: String, at: Long) = "listening_map/${encode(songId)}/$at"
     const val SETTINGS_ARTIST_SEPARATORS = "settings_artist_separators"
+    const val SETTINGS_HIDDEN_SONGS = "settings_hidden_songs"
     fun tagEdit(songId: String) = "tag_edit/${encode(songId)}"
     const val PODCAST_DETAIL = "podcast?feed={feed}&title={title}&image={image}&author={author}"
     fun podcastDetail(feed: String, title: String = "", image: String = "", author: String = "") =
