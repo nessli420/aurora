@@ -104,6 +104,7 @@ class BackendFactoryTest {
         assertTrue(youtube is ReportingMediaBackend)
         assertEquals(1, signature.get())
         assertTrue(backends.build(Session.guest(ServerType.SOUNDCLOUD, "Guest")) is SoundCloudBackend)
+        assertTrue(backends.build(Session.guest(ServerType.APPLE_MUSIC, "Guest")) is com.aurora.music.data.AppleMusicBackend)
         val web = Session("https://open.spotify.com", "me", SpotifyWebBackend.WEB_PLAYER, "web-1", ServerType.SPOTIFY, "me")
         assertTrue(backends.build(web) is SpotifyWebBackend)
         assertEquals(1, spotifyWeb.get())

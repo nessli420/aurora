@@ -225,7 +225,7 @@ class LikeAccounts(private val build: (Session) -> MediaBackend?) {
         val keys = own.mapTo(HashSet()) { it.session.accountKey() }
         // spotify accounts share one web player and the device has one local library
         val single = own.mapNotNullTo(HashSet()) { it.session.type.takeIf { type -> type in ONE_ACCOUNT } }
-        val others = saved.filter { it.type.supportsMergedLibrary && keys.add(it.accountKey()) && (it.type !in ONE_ACCOUNT || single.add(it.type)) }
+        val others = saved.filter { (it.type.supportsMergedLibrary || it.type.isCatalogue) && keys.add(it.accountKey()) && (it.type !in ONE_ACCOUNT || single.add(it.type)) }
         return (own + others.mapNotNull(build)).also { built = Triple(active, saved, it) }
     }
 

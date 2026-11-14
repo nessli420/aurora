@@ -1,5 +1,6 @@
 package com.aurora.music.data.container
 
+import com.aurora.music.data.AppleMusicBackend
 import com.aurora.music.data.JellyfinBackend
 import com.aurora.music.data.GuestLikes
 import com.aurora.music.data.LocalBackend
@@ -17,6 +18,8 @@ import com.aurora.music.data.SourceLocalizer
 import com.aurora.music.data.SpotifyWebBackend
 import com.aurora.music.data.SubsonicBackend
 import com.aurora.music.data.YouTubeMusicBackend
+import com.aurora.music.data.remote.AppleMusicClient
+import com.aurora.music.data.remote.AppleMusicWebSession
 import com.aurora.music.data.remote.ClientInfo
 import com.aurora.music.data.remote.JellyfinClient
 import com.aurora.music.data.remote.PlexClient
@@ -51,6 +54,7 @@ class BackendFactory(
     private val soundcloudLogin: (String) -> String,
     private val saveSoundcloudLogin: (token: String, login: String) -> Unit,
     private val soundcloudBrowser: () -> SoundCloudBrowser,
+    private val appleMusicLogin: (String) -> String = { "" },
     private val reportError: (Session, String) -> Unit,
     private val eligible: (Session) -> Boolean = { true },
     private val platformBackend: (Session, (Song) -> Song) -> MediaBackend? = { _, _ -> null },
@@ -86,6 +90,9 @@ class BackendFactory(
                     session = { YouTubeMusicWebSession.decode(youtubeMusicLogin(session.token)) }.takeUnless { session.isGuest }, http = http()),
                 signatureTimestamp(), localize, guestLikes)) { reportError(session, it) }
             ServerType.SOUNDCLOUD -> SoundCloudBackend(session, soundcloudClient(session), localize, soundcloudPendingLikes, guestLikes)
+            ServerType.APPLE_MUSIC -> AppleMusicBackend(session, AppleMusicClient(
+                session = { AppleMusicWebSession.decode(appleMusicLogin(session.token)) }.takeUnless { session.isGuest }, http = http(),
+                savedToken = { accounts.appleMusicToken.first() }, onToken = { accounts.setAppleMusicToken(it) }), localize, guestLikes)
             ServerType.EXTENSION -> platformBackend(session, localize)
         }
     }

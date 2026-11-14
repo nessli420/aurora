@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.map
 interface AccountSettings {
     val spotifyClientId: Flow<String>
     val soundcloudClientId: Flow<String>
+    val appleMusicToken: Flow<String>
     val session: Flow<Session?>
     suspend fun saveSession(session: Session)
     val extensionGrants: Flow<String?>
@@ -28,6 +29,7 @@ interface AccountSettings {
     suspend fun removeSavedSession(session: Session): Preferences
     suspend fun setSpotifyClientId(v: String): Preferences
     suspend fun setSoundcloudClientId(v: String)
+    suspend fun setAppleMusicToken(v: String)
     val localProfile: Flow<LocalProfile>
     suspend fun setLocalProfile(profile: LocalProfile)
 }
@@ -37,6 +39,7 @@ internal class AccountSettingsStore(private val dataStore: DataStore<Preferences
 
     override val spotifyClientId: Flow<String> = dataStore.data.map { it[Keys.SPOTIFY_CLIENT_ID] ?: "" }.distinctUntilChanged()
     override val soundcloudClientId: Flow<String> = dataStore.data.map { it[Keys.SOUNDCLOUD_CLIENT_ID] ?: "" }.distinctUntilChanged()
+    override val appleMusicToken: Flow<String> = dataStore.data.map { it[Keys.APPLE_MUSIC_TOKEN] ?: "" }.distinctUntilChanged()
 
     override val session: Flow<Session?> = dataStore.data.map { p ->
         val s = Session(
@@ -110,6 +113,7 @@ internal class AccountSettingsStore(private val dataStore: DataStore<Preferences
 
     override suspend fun setSpotifyClientId(v: String) = dataStore.edit { it[Keys.SPOTIFY_CLIENT_ID] = v.trim() }
     override suspend fun setSoundcloudClientId(v: String) { if (v.isNotBlank()) dataStore.edit { it[Keys.SOUNDCLOUD_CLIENT_ID] = v.trim() } }
+    override suspend fun setAppleMusicToken(v: String) { if (v.isNotBlank()) dataStore.edit { it[Keys.APPLE_MUSIC_TOKEN] = v.trim() } }
 
     override val localProfile: Flow<LocalProfile> = dataStore.data.map { it[Keys.LOCAL_PROFILE] }.distinctUntilChanged().map {
         runCatching { LocalProfileCodec.decode(it) }.getOrDefault(LocalProfile())

@@ -58,7 +58,7 @@ class GuestLikes(filesDir: File? = null) {
 
     // oldest first, so the account's likes keep the order they were made in; each one that lands leaves the device
     suspend fun moveTo(target: MediaBackend, pauseMs: Long = MOVE_PAUSE_MS): Int {
-        if (!target.signedIn) return 0
+        if (!attempt(false) { target.acceptsLikes() }) return 0
         val type = target.session.type
         var moved = 0
         for (song in of(type).reversed()) {

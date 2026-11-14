@@ -7,7 +7,8 @@ enum class DownloadSource(val folder: String, val label: String) {
     SERVER("server", "Library"),
     YOUTUBE("youtube", "YouTube Music"),
     SPOTIFY("spotify", "Spotify"),
-    SOUNDCLOUD("soundcloud", "SoundCloud");
+    SOUNDCLOUD("soundcloud", "SoundCloud"),
+    APPLE_MUSIC("apple", "Apple Music");
 
     // matches the online library view ids, so a feed or view picked online still means the same offline
     val viewId: String get() = if (this == SERVER) "library" else folder
@@ -21,6 +22,7 @@ enum class DownloadSource(val folder: String, val label: String) {
                 "YouTube Music" -> return YOUTUBE
                 "Spotify" -> return SPOTIFY
                 "SoundCloud" -> return SOUNDCLOUD
+                "Apple Music" -> return APPLE_MUSIC
             }
             if (!providerLabel.isNullOrBlank()) return SERVER
             val host = runCatching { URI(serverId.orEmpty()).host }.getOrNull().orEmpty()
@@ -28,6 +30,7 @@ enum class DownloadSource(val folder: String, val label: String) {
                 host == "youtube.com" || host.endsWith(".youtube.com") -> YOUTUBE
                 host == "spotify.com" || host.endsWith(".spotify.com") -> SPOTIFY
                 host == "soundcloud.com" || host.endsWith(".soundcloud.com") -> SOUNDCLOUD
+                host == "music.apple.com" -> APPLE_MUSIC
                 else -> SERVER
             }
         }

@@ -33,15 +33,15 @@ data class MergeFeatures(
 val DEFAULT_LYRICS_SOURCES = listOf("server", "spotify", "lrclib")
 
 enum class ServerType {
-    SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION, YOUTUBE_MUSIC, PLEX, SOUNDCLOUD;
+    SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION, YOUTUBE_MUSIC, PLEX, SOUNDCLOUD, APPLE_MUSIC;
 
     val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == PLEX || this == LOCAL || this == YOUTUBE_MUSIC || this == SPOTIFY || this == SOUNDCLOUD
 
     // streaming catalogues get their own home, search and library views instead of mixing into the merged one
-    val isCatalogue: Boolean get() = this == YOUTUBE_MUSIC || this == SPOTIFY || this == SOUNDCLOUD
+    val isCatalogue: Boolean get() = this == YOUTUBE_MUSIC || this == SPOTIFY || this == SOUNDCLOUD || this == APPLE_MUSIC
 
     // browsable and playable signed out through the service's public access
-    val supportsGuest: Boolean get() = this == YOUTUBE_MUSIC || this == SOUNDCLOUD
+    val supportsGuest: Boolean get() = this == YOUTUBE_MUSIC || this == SOUNDCLOUD || this == APPLE_MUSIC
 
     // sign in by approving a code from another session, the way in for single sign-on accounts
     val supportsQuickConnect: Boolean get() = this == JELLYFIN
@@ -67,6 +67,7 @@ data class Session(
         ServerType.SPOTIFY -> "Spotify"
         ServerType.YOUTUBE_MUSIC -> "YouTube Music"
         ServerType.SOUNDCLOUD -> "SoundCloud"
+        ServerType.APPLE_MUSIC -> "Apple Music"
         ServerType.JELLYFIN -> "Jellyfin"
         ServerType.PLEX -> "Plex"
         ServerType.SUBSONIC -> "Navidrome"
@@ -79,7 +80,11 @@ data class Session(
 
         fun guest(type: ServerType, name: String): Session {
             require(type.supportsGuest)
-            val server = if (type == ServerType.SOUNDCLOUD) com.aurora.music.data.remote.SoundCloudClient.WEB else com.aurora.music.data.remote.YouTubeMusicClient.ORIGIN
+            val server = when (type) {
+                ServerType.SOUNDCLOUD -> com.aurora.music.data.remote.SoundCloudClient.WEB
+                ServerType.APPLE_MUSIC -> com.aurora.music.data.remote.AppleMusicClient.WEB
+                else -> com.aurora.music.data.remote.YouTubeMusicClient.ORIGIN
+            }
             return Session(server, name, GUEST, GUEST, type, userId = GUEST)
         }
     }
@@ -87,7 +92,7 @@ data class Session(
 
 fun Session.accountKey(): String = when (type) {
     // the stable account id, so a changed display name stays the same account
-    ServerType.YOUTUBE_MUSIC, ServerType.SPOTIFY, ServerType.SOUNDCLOUD -> "${type.name}|$server|$userId"
+    ServerType.YOUTUBE_MUSIC, ServerType.SPOTIFY, ServerType.SOUNDCLOUD, ServerType.APPLE_MUSIC -> "${type.name}|$server|$userId"
     ServerType.PLEX -> {
         // separate users sharing the same plex server
         val credentialId = java.security.MessageDigest.getInstance("SHA-256")

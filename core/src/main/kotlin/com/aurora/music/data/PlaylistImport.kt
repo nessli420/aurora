@@ -27,13 +27,14 @@ data class ImportTrack(
 data class ImportedPlaylist(val name: String, val tracks: List<ImportTrack>)
 
 enum class ImportSource {
-    LIBRARY, YOUTUBE_MUSIC, SPOTIFY, SOUNDCLOUD, OTHER;
+    LIBRARY, YOUTUBE_MUSIC, SPOTIFY, SOUNDCLOUD, APPLE_MUSIC, OTHER;
 
     companion object {
         fun of(type: ServerType) = when (type) {
             ServerType.YOUTUBE_MUSIC -> YOUTUBE_MUSIC
             ServerType.SPOTIFY -> SPOTIFY
             ServerType.SOUNDCLOUD -> SOUNDCLOUD
+            ServerType.APPLE_MUSIC -> APPLE_MUSIC
             else -> LIBRARY
         }
     }

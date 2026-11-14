@@ -22,6 +22,8 @@ interface MediaBackend {
     fun signedIn(id: String): Boolean = signedIn
     // a signed-out catalogue still likes songs, on this device until its account is added
     fun likesLocally(id: String): Boolean = false
+    // whether the account can take the likes a guest left on this device
+    suspend fun acceptsLikes(): Boolean = signedIn
     val homeFeeds: List<HomeFeedChoice> get() = emptyList()
     val searchSources: List<SearchSourceChoice> get() = emptyList()
     suspend fun search(query: String, source: String): SearchResults = search(query)

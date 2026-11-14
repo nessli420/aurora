@@ -182,6 +182,7 @@ internal object SettingsKeys {
     val SAVED_SESSIONS = stringPreferencesKey("saved_sessions")
     val SPOTIFY_CLIENT_ID = stringPreferencesKey("spotify_client_id")
     val SOUNDCLOUD_CLIENT_ID = stringPreferencesKey("soundcloud_client_id")
+    val APPLE_MUSIC_TOKEN = stringPreferencesKey("apple_music_web_token")
     val ACOUSTID_KEY = stringPreferencesKey("acoustid_key")
     val EQ_BINDINGS = stringPreferencesKey("eq_bindings")
     val AUTOEQ_SWITCH = booleanPreferencesKey("autoeq_autoswitch")
