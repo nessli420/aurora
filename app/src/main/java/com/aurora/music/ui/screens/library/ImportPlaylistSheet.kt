@@ -213,7 +213,7 @@ private fun Note(text: String) {
 private fun sourceIcon(source: ImportSource): ImageVector = when (source) {
     ImportSource.LIBRARY, ImportSource.OTHER -> Icons.Outlined.LibraryMusic
     ImportSource.YOUTUBE_MUSIC -> Icons.Outlined.SmartDisplay
-    ImportSource.SPOTIFY, ImportSource.SOUNDCLOUD -> Icons.Outlined.CloudQueue
+    ImportSource.SPOTIFY, ImportSource.SOUNDCLOUD, ImportSource.APPLE_MUSIC -> Icons.Outlined.CloudQueue
 }
 
 @Composable
@@ -222,6 +222,7 @@ private fun sourceLabel(source: ImportSource): String = when (source) {
     ImportSource.YOUTUBE_MUSIC -> "YouTube Music"
     ImportSource.SPOTIFY -> "Spotify"
     ImportSource.SOUNDCLOUD -> "SoundCloud"
+    ImportSource.APPLE_MUSIC -> "Apple Music"
 }
 
 private fun failureText(f: ImportFailure): Int = when (f) {

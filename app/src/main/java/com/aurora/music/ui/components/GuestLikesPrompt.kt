@@ -22,11 +22,14 @@ import kotlinx.coroutines.launch
 // once an account takes a guest's place, the songs liked as that guest are offered to it; not now asks again next launch
 @Composable
 fun GuestLikesPrompt(sessions: List<Session>, guestLikes: GuestLikes, move: suspend (Session) -> Int, held: (Session) -> Int,
-    onMoved: () -> Unit, notify: (String) -> Unit) {
+    onMoved: () -> Unit, notify: (String) -> Unit, canTake: suspend (Session) -> Boolean = { true }) {
     val revision by guestLikes.revision.collectAsState()
     var later by remember { mutableStateOf(emptySet<ServerType>()) }
     val scope = rememberCoroutineScope()
-    val waiting = remember(sessions, revision, later) { guestLikes.waitingFor(sessions.filter { it.type !in later }) } ?: return
+    // an account that can't keep likes, such as apple music without a subscription, isn't offered them
+    val waiting = androidx.compose.runtime.produceState<Pair<Session, Int>?>(null, sessions, revision, later) {
+        value = guestLikes.waitingFor(sessions.filter { it.type !in later })?.takeIf { canTake(it.first) }
+    }.value ?: return
     val (session, count) = waiting
     val service = session.typeLabel
     AlertDialog(

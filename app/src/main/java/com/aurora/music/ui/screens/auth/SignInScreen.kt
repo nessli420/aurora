@@ -19,6 +19,7 @@ import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material.icons.outlined.VisibilityOff
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.Album
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -110,6 +111,7 @@ fun SignInScreen(
     onConnectSpotifyWeb: (String, com.aurora.music.data.SpotifyWebProfile?) -> Unit = { _, _ -> },
     onConnectYouTubeMusic: (String) -> Unit = {},
     onConnectSoundCloud: (String) -> Unit = {},
+    onConnectAppleMusic: (String) -> Unit = {},
     onContinueAsGuest: () -> Unit = {},
     savedSessions: List<com.aurora.music.data.Session> = emptyList(),
     onUseSaved: (com.aurora.music.data.Session) -> Unit = {},
@@ -169,6 +171,7 @@ fun SignInScreen(
                         AuthStep.SPOTIFY -> appString(R.string.text_connect_spotify_529d56)
                         AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_connect_youtube_music_64e032)
                         AuthStep.SOUNDCLOUD -> appString(R.string.soundcloud_connect_title)
+                        AuthStep.APPLE_MUSIC -> appString(R.string.apple_music_connect_title)
                     }, fontSize = if (state.step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (state.step == AuthStep.TYPE) 43.sp else 36.sp, fontWeight = FontWeight.Bold, color = palette.onBackground)
                     Text(when (state.step) {
                         AuthStep.TYPE -> appString(R.string.text_your_collection_and_your_discoveries_together_in_one_player_093361)
@@ -181,6 +184,7 @@ fun SignInScreen(
                         AuthStep.SPOTIFY -> appString(R.string.text_bring_your_playlists_and_saved_music_into_aurora_df697e)
                         AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_your_favourites_mixes_and_new_discoveries_6c2fa1)
                         AuthStep.SOUNDCLOUD -> appString(R.string.soundcloud_connect_subtitle)
+                        AuthStep.APPLE_MUSIC -> appString(R.string.apple_music_connect_subtitle)
                     }, style = MaterialTheme.typography.bodyLarge, color = palette.onSurfaceVariant)
                 }
                 when (state.step) {
@@ -190,6 +194,7 @@ fun SignInScreen(
                     AuthStep.SPOTIFY -> SpotifyWebStep(state, onConnectSpotifyWeb) { SpotifyStep(state, onConnectSpotify) }
                     AuthStep.YOUTUBE_MUSIC -> YouTubeMusicStep(state, onConnectYouTubeMusic, onContinueAsGuest)
                     AuthStep.SOUNDCLOUD -> SoundCloudStep(state, onConnectSoundCloud, onContinueAsGuest)
+                    AuthStep.APPLE_MUSIC -> AppleMusicStep(state, onConnectAppleMusic, onContinueAsGuest)
                 }
                 if (state.loading && state.quickConnectCode == null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(Modifier.size(20.dp), color = AuroraRose, strokeWidth = 2.dp)
@@ -228,6 +233,7 @@ private fun TypeStep(onSelectType: (ServerType) -> Unit, onLocal: () -> Unit, pe
         ServerTypeCard(Icons.Outlined.PlayCircle, "YouTube Music", appString(R.string.text_your_google_account_playlists_and_mixes_120c0f), enabled = enabled) { onSelectType(ServerType.YOUTUBE_MUSIC) }
         ServerTypeCard(Icons.Outlined.MusicNote, "Spotify", appString(R.string.text_your_library_played_through_youtube_a53b5e), enabled = enabled) { onSelectType(ServerType.SPOTIFY) }
         ServerTypeCard(Icons.Outlined.GraphicEq, "SoundCloud", appString(R.string.soundcloud_card_detail), enabled = enabled) { onSelectType(ServerType.SOUNDCLOUD) }
+        ServerTypeCard(Icons.Outlined.Album, "Apple Music", appString(R.string.apple_music_card_detail), enabled = enabled) { onSelectType(ServerType.APPLE_MUSIC) }
         SourceLabel(appString(R.string.text_your_server_d2f076))
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             ServerTile("Navidrome", appString(R.string.text_subsonic_compatible_b4584c), Icons.Outlined.Dns, Modifier.weight(1f), enabled) { onSelectType(ServerType.SUBSONIC) }

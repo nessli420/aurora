@@ -56,5 +56,6 @@ class WebCredentials(context: Context, name: String, private val alias: String) 
         fun youtubeMusic(context: Context) = WebCredentials(context, "youtube-music", "aurora.youtube-music.account")
         fun spotify(context: Context) = WebCredentials(context, "spotify-web", "aurora.spotify-web.account")
         fun soundcloud(context: Context) = WebCredentials(context, "soundcloud-web", "aurora.soundcloud-web.account")
+        fun appleMusic(context: Context) = WebCredentials(context, "apple-music-web", "aurora.apple-music-web.account")
     }
 }

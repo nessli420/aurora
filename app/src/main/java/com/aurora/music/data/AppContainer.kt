@@ -246,6 +246,8 @@ class AppContainer(context: Context) {
     fun soundCloudWaiting(session: Session): Int = soundcloudPendingLikes.waiting(session.userId)
 
     // adds the songs liked while signed out to the account that took the guest's place
+    suspend fun acceptsGuestLikes(session: Session): Boolean = runCatching { backends.build(session)?.acceptsLikes() == true }.getOrDefault(false)
+
     suspend fun moveGuestLikes(session: Session): Int {
         val moved = backends.build(session)?.let { guestLikes.moveTo(it) } ?: 0
         // soundcloud holds every like behind its bot check until it is passed, so the check opens now rather than leaving them queued
@@ -268,7 +270,7 @@ class AppContainer(context: Context) {
         youtubeMusicLogin = { youtubeMusicCredentials.read(it) }, signatureTimestamp = { youtubeResolver::signatureTimestamp },
         spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
         soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
-        soundcloudBrowser = { soundcloudWriter }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
+        soundcloudBrowser = { soundcloudWriter }, appleMusicLogin = { appleMusicCredentials.read(it) }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
         platformBackend = ::platformBackend)
 
     private fun platformBackend(session: Session, localize: (Song) -> Song): MediaBackend? = when (session.type) {
@@ -332,6 +334,7 @@ class AppContainer(context: Context) {
     val youtubeMusicCredentials = WebCredentials.youtubeMusic(appContext)
     val spotifyCredentials = WebCredentials.spotify(appContext)
     val soundcloudCredentials = WebCredentials.soundcloud(appContext)
+    val appleMusicCredentials = WebCredentials.appleMusic(appContext)
     val soundcloudWriter by lazy { SoundCloudWebWriter(appContext) }
     val spotifyWeb by lazy { SpotifyWebBridge(appContext) }
     val youTubeDownloader by lazy {
@@ -594,6 +597,7 @@ class AppContainer(context: Context) {
         settingsStore.removeSavedSession(session)
         if (session.type == ServerType.YOUTUBE_MUSIC) youtubeMusicCredentials.remove(session.token)
         if (session.type == ServerType.SOUNDCLOUD) { backends.forgetSoundCloud(session.token); soundcloudCredentials.remove(session.token) }
+        if (session.type == ServerType.APPLE_MUSIC && !session.isGuest) appleMusicCredentials.remove(session.token)
         if (session.type == ServerType.SPOTIFY && session.salt == SpotifyWebBackend.WEB_PLAYER) {
             spotifyCredentials.remove(session.token)
             withContext(Dispatchers.Main) {

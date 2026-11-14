@@ -1195,6 +1195,7 @@ fun AuroraApp() {
                             onConnectSpotifyWeb = authVM::connectSpotifyWeb,
                             onConnectYouTubeMusic = authVM::connectYouTubeMusic,
                             onConnectSoundCloud = authVM::connectSoundCloud,
+                            onConnectAppleMusic = authVM::connectAppleMusic,
                             onContinueAsGuest = authVM::continueAsGuest,
                             savedSessions = savedSessions,
                             onUseSaved = { s -> authVM.useSaved(s) },   // nav to home handled by the sessionReady effect
@@ -1916,7 +1917,7 @@ fun AuroraApp() {
     }
     matchSong?.let { com.aurora.music.ui.components.MatchPickerSheet(it, onSwap = playerVM::swapCurrent) { matchSong = null } }
     com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
-        onMoved = { playerVM.refreshLikes() }, notify = ::confirm)
+        onMoved = { playerVM.refreshLikes() }, notify = ::confirm, canTake = container::acceptsGuestLikes)
 
     val tour = whatsNew?.let { versions -> WhatsNewCatalog.releases.filter { it.version in versions }.reversed() }
     if (tour != null) {

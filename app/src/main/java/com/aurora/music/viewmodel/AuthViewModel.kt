@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-enum class AuthStep { TYPE, SERVER, CREDENTIALS, SPOTIFY, YOUTUBE_MUSIC, SOUNDCLOUD }
+enum class AuthStep { TYPE, SERVER, CREDENTIALS, SPOTIFY, YOUTUBE_MUSIC, SOUNDCLOUD, APPLE_MUSIC }
 
 data class AuthUiState(
     val step: AuthStep = AuthStep.TYPE,
@@ -78,8 +78,9 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
 
     fun selectType(type: ServerType) {
         _state.update { if (it.type != type) it.copy(password = "") else it }
-        if (type == ServerType.YOUTUBE_MUSIC || type == ServerType.SOUNDCLOUD) {
-            _state.update { it.copy(type = type, step = if (type == ServerType.SOUNDCLOUD) AuthStep.SOUNDCLOUD else AuthStep.YOUTUBE_MUSIC, error = null) }
+        if (type == ServerType.YOUTUBE_MUSIC || type == ServerType.SOUNDCLOUD || type == ServerType.APPLE_MUSIC) {
+            val step = when (type) { ServerType.SOUNDCLOUD -> AuthStep.SOUNDCLOUD; ServerType.APPLE_MUSIC -> AuthStep.APPLE_MUSIC; else -> AuthStep.YOUTUBE_MUSIC }
+            _state.update { it.copy(type = type, step = step, error = null) }
             return
         }
         if (type == ServerType.SPOTIFY) {
@@ -147,6 +148,34 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             } catch (e: Exception) {
                 reference?.let { container.soundcloudCredentials.remove(it) }
                 _state.update { it.copy(loading = false, error = if (e is java.io.IOException) friendlyError(e) else appString(R.string.soundcloud_connect_failed)) }
+            }
+        }
+    }
+
+    fun connectAppleMusic(webSession: String) {
+        if (_state.value.loading) return
+        _state.update { it.copy(loading = true, error = null) }
+        viewModelScope.launch {
+            var reference: String? = null
+            try {
+                val login = com.aurora.music.data.remote.AppleMusicWebSession.decode(webSession)
+                val client = com.aurora.music.data.remote.AppleMusicClient({ login }, container.http,
+                    { container.settingsStore.appleMusicToken.first() }, { container.settingsStore.setAppleMusicToken(it) })
+                val profile = com.aurora.music.data.AppleMusicBackend.profile(client, login)
+                reference = withContext(Dispatchers.IO) {
+                    container.appleMusicCredentials.save(com.aurora.music.data.remote.AppleMusicWebSession(login.userToken, profile.storefront).encode())
+                }
+                val session = Session(com.aurora.music.data.remote.AppleMusicClient.WEB, profile.name, "", reference,
+                    ServerType.APPLE_MUSIC, userId = profile.userId, imageUrl = profile.imageUrl)
+                val previous = container.settingsStore.savedSessions.first().filter { it.type == ServerType.APPLE_MUSIC && it.userId == profile.userId }
+                container.applySession(session)
+                previous.filter { it.token != reference }.forEach { container.appleMusicCredentials.remove(it.token) }
+                _state.update { it.copy(loading = false, error = null) }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                reference?.let { container.appleMusicCredentials.remove(it) }
+                _state.update { it.copy(loading = false, error = if (e is java.io.IOException) friendlyError(e) else appString(R.string.apple_music_connect_failed)) }
             }
         }
     }
@@ -221,7 +250,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
             AuthStep.CREDENTIALS -> it.copy(step = AuthStep.SERVER, error = null)
             AuthStep.SERVER -> it.copy(step = AuthStep.TYPE, error = null)
             AuthStep.SPOTIFY -> it.copy(step = AuthStep.TYPE, error = null, pendingAuthUrl = null)
-            AuthStep.YOUTUBE_MUSIC, AuthStep.SOUNDCLOUD -> it.copy(step = AuthStep.TYPE, error = null)
+            AuthStep.YOUTUBE_MUSIC, AuthStep.SOUNDCLOUD, AuthStep.APPLE_MUSIC -> it.copy(step = AuthStep.TYPE, error = null)
             AuthStep.TYPE -> it
         }
     }
@@ -256,6 +285,7 @@ class AuthViewModel(app: Application) : AndroidViewModel(app) {
                         ServerType.SPOTIFY -> throw IllegalStateException(appString(R.string.text_spotify_uses_the_connect_button_not_this_form_17d56a))
                         ServerType.YOUTUBE_MUSIC -> throw IllegalStateException(appString(R.string.text_youtube_music_uses_google_sign_in_0ba1e7))
                         ServerType.SOUNDCLOUD -> throw IllegalStateException(appString(R.string.soundcloud_connect_failed))
+                        ServerType.APPLE_MUSIC -> throw IllegalStateException(appString(R.string.apple_music_connect_failed))
                         ServerType.LOCAL -> throw IllegalStateException(appString(R.string.text_local_mode_doesn_t_use_this_form_78c2dc))
                         ServerType.EXTENSION -> throw IllegalStateException(appString(R.string.text_enable_this_source_in_advanced_audio_extensions_579558))
                     }

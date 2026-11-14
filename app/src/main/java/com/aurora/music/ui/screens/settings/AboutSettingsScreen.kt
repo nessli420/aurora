@@ -121,6 +121,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 ServerType.SPOTIFY -> "Spotify"
                 ServerType.YOUTUBE_MUSIC -> "YouTube Music"
                 ServerType.SOUNDCLOUD -> "SoundCloud"
+                ServerType.APPLE_MUSIC -> "Apple Music"
                 ServerType.LOCAL -> appString(R.string.text_on_this_device_a7f962)
                 ServerType.EXTENSION -> appString(R.string.text_extension_659087)
                 null -> "—"

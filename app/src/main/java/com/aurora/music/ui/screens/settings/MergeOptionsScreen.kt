@@ -32,7 +32,7 @@ import com.aurora.music.data.ServerType
 import kotlinx.coroutines.launch
 
 private val SOURCE_ORDER = listOf(ServerType.LOCAL, ServerType.SUBSONIC, ServerType.JELLYFIN, ServerType.PLEX,
-    ServerType.YOUTUBE_MUSIC, ServerType.SPOTIFY, ServerType.SOUNDCLOUD)
+    ServerType.YOUTUBE_MUSIC, ServerType.SPOTIFY, ServerType.SOUNDCLOUD, ServerType.APPLE_MUSIC)
 
 private fun sourceLabel(type: ServerType) = when (type) {
     ServerType.LOCAL -> appString(R.string.text_on_this_device_a7f962)
@@ -42,6 +42,7 @@ private fun sourceLabel(type: ServerType) = when (type) {
     ServerType.YOUTUBE_MUSIC -> "YouTube Music"
     ServerType.SPOTIFY -> "Spotify"
     ServerType.SOUNDCLOUD -> "SoundCloud"
+    ServerType.APPLE_MUSIC -> "Apple Music"
     ServerType.EXTENSION -> appString(R.string.text_extension_659087)
 }
 

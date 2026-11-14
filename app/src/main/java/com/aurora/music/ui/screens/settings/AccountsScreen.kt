@@ -163,6 +163,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
         ServerType.SPOTIFY -> "S"
         ServerType.YOUTUBE_MUSIC -> "Y"
         ServerType.SOUNDCLOUD -> "SC"
+        ServerType.APPLE_MUSIC -> "AM"
         ServerType.JELLYFIN -> "J"
         ServerType.PLEX -> "P"
         ServerType.LOCAL -> "L"
