@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Apple 的曲库，通过 YouTube 播放"</string>
+    <string name="apple_music_connect_title">"连接 Apple Music"</string>
+    <string name="apple_music_connect_subtitle">"浏览 Apple Music 的曲库和排行榜。歌曲通过 YouTube 播放。"</string>
+    <string name="apple_music_sign_in">"登录 Apple Music"</string>
+    <string name="apple_music_sign_in_hint">"在 Apple Music 页面上登录。登录后 Aurora 会立即连接。"</string>
+    <string name="apple_music_waiting">"使用你的 Apple ID 登录以继续。"</string>
+    <string name="apple_music_details">"Aurora 使用 Apple Music 的非官方网页接口，并将你的登录信息加密保存在此设备上。歌曲通过 YouTube 播放，而不是 Apple 自己的音频流。"</string>
+    <string name="apple_music_connect_failed">"无法连接 Apple Music。请重试。"</string>
+</resources>

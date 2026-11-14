@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Il catalogo di Apple, riprodotto tramite YouTube"</string>
+    <string name="apple_music_connect_title">"Collega Apple Music"</string>
+    <string name="apple_music_connect_subtitle">"Sfoglia il catalogo e le classifiche di Apple Music. I brani vengono riprodotti tramite YouTube."</string>
+    <string name="apple_music_sign_in">"Accedi ad Apple Music"</string>
+    <string name="apple_music_sign_in_hint">"Accedi sulla pagina di Apple Music. Aurora si collega appena hai effettuato l\'accesso."</string>
+    <string name="apple_music_waiting">"Accedi con il tuo ID Apple per continuare."</string>
+    <string name="apple_music_details">"Aurora usa l\'interfaccia web non ufficiale di Apple Music e conserva il tuo accesso cifrato su questo dispositivo. I brani vengono riprodotti tramite YouTube, non con gli stream di Apple."</string>
+    <string name="apple_music_connect_failed">"Impossibile collegare Apple Music. Riprova."</string>
+</resources>

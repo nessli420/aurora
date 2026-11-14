@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Apple کا کیٹلاگ، YouTube کے ذریعے چلایا گیا"</string>
+    <string name="apple_music_connect_title">"Apple Music منسلک کریں"</string>
+    <string name="apple_music_connect_subtitle">"Apple Music کا کیٹلاگ اور چارٹس دیکھیں۔ گانے YouTube کے ذریعے چلتے ہیں۔"</string>
+    <string name="apple_music_sign_in">"Apple Music میں سائن ان کریں"</string>
+    <string name="apple_music_sign_in_hint">"Apple Music کے صفحے پر سائن ان کریں۔ آپ کے سائن ان کرتے ہی Aurora منسلک ہو جاتا ہے۔"</string>
+    <string name="apple_music_waiting">"جاری رکھنے کے لیے اپنی Apple ID سے سائن ان کریں۔"</string>
+    <string name="apple_music_details">"Aurora، Apple Music کا غیر سرکاری ویب انٹرفیس استعمال کرتا ہے اور آپ کا سائن ان اس آلے پر خفیہ کر کے رکھتا ہے۔ گانے Apple کی اپنی اسٹریمز سے نہیں بلکہ YouTube کے ذریعے چلتے ہیں۔"</string>
+    <string name="apple_music_connect_failed">"Apple Music منسلک نہیں ہو سکا۔ دوبارہ کوشش کریں۔"</string>
+</resources>

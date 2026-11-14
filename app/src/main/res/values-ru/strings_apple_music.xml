@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Каталог Apple с воспроизведением через YouTube"</string>
+    <string name="apple_music_connect_title">"Подключить Apple Music"</string>
+    <string name="apple_music_connect_subtitle">"Просматривайте каталог и чарты Apple Music. Песни воспроизводятся через YouTube."</string>
+    <string name="apple_music_sign_in">"Войти в Apple Music"</string>
+    <string name="apple_music_sign_in_hint">"Войдите на странице Apple Music. Aurora подключится, как только вы войдёте."</string>
+    <string name="apple_music_waiting">"Чтобы продолжить, войдите с Apple ID."</string>
+    <string name="apple_music_details">"Aurora использует неофициальный веб-интерфейс Apple Music и хранит ваш вход в зашифрованном виде на этом устройстве. Песни воспроизводятся через YouTube, а не через потоки Apple."</string>
+    <string name="apple_music_connect_failed">"Не удалось подключить Apple Music. Попробуйте ещё раз."</string>
+</resources>

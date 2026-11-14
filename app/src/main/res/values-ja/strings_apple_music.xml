@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Apple のカタログを YouTube 経由で再生"</string>
+    <string name="apple_music_connect_title">"Apple Music を接続"</string>
+    <string name="apple_music_connect_subtitle">"Apple Music のカタログとチャートを閲覧できます。曲は YouTube 経由で再生されます。"</string>
+    <string name="apple_music_sign_in">"Apple Music にサインイン"</string>
+    <string name="apple_music_sign_in_hint">"Apple Music のページでサインインしてください。サインインすると Aurora がすぐに接続します。"</string>
+    <string name="apple_music_waiting">"続けるには Apple ID でサインインしてください。"</string>
+    <string name="apple_music_details">"Aurora は Apple Music の非公式ウェブインターフェースを使用し、サインイン情報をこのデバイスに暗号化して保存します。曲は Apple のストリームではなく YouTube 経由で再生されます。"</string>
+    <string name="apple_music_connect_failed">"Apple Music に接続できませんでした。もう一度お試しください。"</string>
+</resources>

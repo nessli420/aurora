@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Apple\'ın kataloğu, YouTube üzerinden çalınır"</string>
+    <string name="apple_music_connect_title">"Apple Music\'i bağla"</string>
+    <string name="apple_music_connect_subtitle">"Apple Music kataloğuna ve listelerine göz atın. Şarkılar YouTube üzerinden çalınır."</string>
+    <string name="apple_music_sign_in">"Apple Music\'te oturum aç"</string>
+    <string name="apple_music_sign_in_hint">"Apple Music sayfasında oturum açın. Aurora siz girer girmez bağlanır."</string>
+    <string name="apple_music_waiting">"Devam etmek için Apple Kimliğinizle oturum açın."</string>
+    <string name="apple_music_details">"Aurora, Apple Music\'in resmi olmayan web arayüzünü kullanır ve oturumunuzu bu cihazda şifreli olarak saklar. Şarkılar Apple\'ın kendi yayınlarıyla değil, YouTube üzerinden çalınır."</string>
+    <string name="apple_music_connect_failed">"Apple Music bağlanamadı. Lütfen tekrar deneyin."</string>
+</resources>

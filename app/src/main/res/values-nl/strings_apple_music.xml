@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"De catalogus van Apple, afgespeeld via YouTube"</string>
+    <string name="apple_music_connect_title">"Apple Music koppelen"</string>
+    <string name="apple_music_connect_subtitle">"Blader door de catalogus en hitlijsten van Apple Music. Nummers spelen via YouTube."</string>
+    <string name="apple_music_sign_in">"Inloggen bij Apple Music"</string>
+    <string name="apple_music_sign_in_hint">"Log in op de pagina van Apple Music. Aurora maakt verbinding zodra je bent ingelogd."</string>
+    <string name="apple_music_waiting">"Log in met je Apple ID om verder te gaan."</string>
+    <string name="apple_music_details">"Aurora gebruikt de onofficiële webinterface van Apple Music en bewaart je login versleuteld op dit apparaat. Nummers spelen via YouTube, niet via de streams van Apple zelf."</string>
+    <string name="apple_music_connect_failed">"Kan Apple Music niet koppelen. Probeer het opnieuw."</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Apple 카탈로그를 YouTube로 재생"</string>
+    <string name="apple_music_connect_title">"Apple Music 연결"</string>
+    <string name="apple_music_connect_subtitle">"Apple Music 카탈로그와 차트를 둘러보세요. 노래는 YouTube로 재생됩니다."</string>
+    <string name="apple_music_sign_in">"Apple Music에 로그인"</string>
+    <string name="apple_music_sign_in_hint">"Apple Music 페이지에서 로그인하세요. 로그인하면 Aurora가 바로 연결됩니다."</string>
+    <string name="apple_music_waiting">"계속하려면 Apple ID로 로그인하세요."</string>
+    <string name="apple_music_details">"Aurora는 Apple Music의 비공식 웹 인터페이스를 사용하며 로그인 정보를 이 기기에 암호화해 보관합니다. 노래는 Apple 자체 스트림이 아닌 YouTube로 재생됩니다."</string>
+    <string name="apple_music_connect_failed">"Apple Music을 연결할 수 없습니다. 다시 시도해 주세요."</string>
+</resources>

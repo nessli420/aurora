@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"كتالوج Apple، يُشغَّل عبر YouTube"</string>
+    <string name="apple_music_connect_title">"ربط Apple Music"</string>
+    <string name="apple_music_connect_subtitle">"تصفّح كتالوج Apple Music وقوائم الأفضل. تُشغَّل الأغاني عبر YouTube."</string>
+    <string name="apple_music_sign_in">"تسجيل الدخول إلى Apple Music"</string>
+    <string name="apple_music_sign_in_hint">"سجّل الدخول من صفحة Apple Music. يتصل Aurora فور دخولك."</string>
+    <string name="apple_music_waiting">"سجّل الدخول باستخدام Apple ID للمتابعة."</string>
+    <string name="apple_music_details">"يستخدم Aurora واجهة الويب غير الرسمية لـ Apple Music ويحفظ تسجيل دخولك مشفّرًا على هذا الجهاز. تُشغَّل الأغاني عبر YouTube وليس عبر بث Apple."</string>
+    <string name="apple_music_connect_failed">"تعذّر ربط Apple Music. حاول مرة أخرى."</string>
+</resources>

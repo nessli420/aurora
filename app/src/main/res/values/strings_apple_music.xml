@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Apple\'s catalogue, played through YouTube"</string>
+    <string name="apple_music_connect_title">"Connect Apple Music"</string>
+    <string name="apple_music_connect_subtitle">"Browse Apple Music\'s catalogue and charts. Songs play through YouTube."</string>
+    <string name="apple_music_sign_in">"Sign in to Apple Music"</string>
+    <string name="apple_music_sign_in_hint">"Sign in on Apple Music\'s page. Aurora connects as soon as you\'re in."</string>
+    <string name="apple_music_waiting">"Sign in with your Apple ID to continue."</string>
+    <string name="apple_music_details">"Aurora uses Apple Music\'s unofficial web interface and keeps your sign-in encrypted on this device. Songs play through YouTube, not Apple\'s own streams."</string>
+    <string name="apple_music_connect_failed">"Could not connect Apple Music. Please try again."</string>
+</resources>

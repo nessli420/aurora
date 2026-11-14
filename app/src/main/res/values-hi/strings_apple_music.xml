@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Apple का कैटलॉग, YouTube के ज़रिए चलाया गया"</string>
+    <string name="apple_music_connect_title">"Apple Music कनेक्ट करें"</string>
+    <string name="apple_music_connect_subtitle">"Apple Music का कैटलॉग और चार्ट देखें। गाने YouTube के ज़रिए चलते हैं।"</string>
+    <string name="apple_music_sign_in">"Apple Music में साइन इन करें"</string>
+    <string name="apple_music_sign_in_hint">"Apple Music के पेज पर साइन इन करें। आपके साइन इन करते ही Aurora कनेक्ट हो जाता है।"</string>
+    <string name="apple_music_waiting">"जारी रखने के लिए अपने Apple ID से साइन इन करें।"</string>
+    <string name="apple_music_details">"Aurora, Apple Music के अनौपचारिक वेब इंटरफ़ेस का उपयोग करता है और आपका साइन-इन इस डिवाइस पर एन्क्रिप्ट करके रखता है। गाने YouTube के ज़रिए चलते हैं, Apple की अपनी स्ट्रीम से नहीं।"</string>
+    <string name="apple_music_connect_failed">"Apple Music कनेक्ट नहीं हो सका। कृपया फिर से कोशिश करें।"</string>
+</resources>

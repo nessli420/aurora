@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="apple_music_card_detail">"Katalog Apple, diputar melalui YouTube"</string>
+    <string name="apple_music_connect_title">"Hubungkan Apple Music"</string>
+    <string name="apple_music_connect_subtitle">"Jelajahi katalog dan tangga lagu Apple Music. Lagu diputar melalui YouTube."</string>
+    <string name="apple_music_sign_in">"Masuk ke Apple Music"</string>
+    <string name="apple_music_sign_in_hint">"Masuk di halaman Apple Music. Aurora terhubung begitu Anda masuk."</string>
+    <string name="apple_music_waiting">"Masuk dengan Apple ID Anda untuk melanjutkan."</string>
+    <string name="apple_music_details">"Aurora menggunakan antarmuka web tidak resmi Apple Music dan menyimpan info masuk Anda terenkripsi di perangkat ini. Lagu diputar melalui YouTube, bukan stream milik Apple."</string>
+    <string name="apple_music_connect_failed">"Tidak dapat menghubungkan Apple Music. Coba lagi."</string>
+</resources>
