@@ -190,11 +190,6 @@ fun SongRow(
                 onClick = { close(); if (hidden) onToggleHidden?.invoke() else hide?.invoke(song, true) },
                 leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
             )
-            if (block != null && song.artist.isNotBlank()) DropdownMenuItem(
-                text = { Text(appString(R.string.block_artist)) },
-                onClick = { close(); block(hiddenSongs.primaryArtist(song.artist), true) },
-                leadingIcon = { Icon(Icons.Filled.Block, null) },
-            )
             DropdownMenuItem(
                 text = { Text(appString(R.string.track_swipe_playlists)) },
                 onClick = { close(); showPlaylists = true },
