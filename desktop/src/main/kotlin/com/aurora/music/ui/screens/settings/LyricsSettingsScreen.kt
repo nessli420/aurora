@@ -25,6 +25,7 @@ import kotlinx.coroutines.launch
 private fun lyricsSourceLabel(id: String) = when (id) {
     "server" -> appString(R.string.lyrics_source_server)
     "spotify" -> "Spotify"
+    "apple" -> "Apple Music"
     "lrclib" -> "LRCLIB"
     else -> id
 }
@@ -32,6 +33,7 @@ private fun lyricsSourceLabel(id: String) = when (id) {
 private fun lyricsSourceDetail(id: String) = when (id) {
     "server" -> appString(R.string.lyrics_source_server_detail)
     "spotify" -> appString(R.string.lyrics_source_spotify_detail)
+    "apple" -> appString(R.string.lyrics_source_apple_desc)
     "lrclib" -> appString(R.string.lyrics_source_lrclib_detail)
     else -> ""
 }

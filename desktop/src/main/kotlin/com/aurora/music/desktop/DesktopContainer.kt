@@ -321,6 +321,7 @@ class DesktopContainer(
             separatorsProvider = { settingsStore.artistSeparators.first() },
             orderProvider = { settingsStore.lyricsSources.first() },
             spotifyAllowed = { type -> settingsStore.mergeFeatures.first().lyricsFor(type) },
+            appleAllowed = { type -> settingsStore.mergeFeatures.first().appleLyricsFor(type) },
             http = http.newBuilder().connectTimeout(8, TimeUnit.SECONDS).readTimeout(8, TimeUnit.SECONDS).build())
     }
 

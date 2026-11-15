@@ -66,6 +66,15 @@ fun MergeOptionsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     onToggle = { save(features.copy(lyrics = it)) },
                     onSource = { type, on -> save(features.copy(lyricsOff = features.lyricsOff.toggled(type, on))) })
             }
+            if (ServerType.APPLE_MUSIC in types) {
+                item { androidx.compose.foundation.layout.Spacer(Modifier.padding(top = 10.dp)) }
+                item {
+                    FeatureGroup(Icons.Filled.Lyrics, appString(R.string.merge_apple_lyrics), appString(R.string.merge_apple_lyrics_summary),
+                        features.appleLyrics, features.appleLyricsOff, types.filter { it != ServerType.APPLE_MUSIC },
+                        onToggle = { save(features.copy(appleLyrics = it)) },
+                        onSource = { type, on -> save(features.copy(appleLyricsOff = features.appleLyricsOff.toggled(type, on))) })
+                }
+            }
         }
     }
 }
