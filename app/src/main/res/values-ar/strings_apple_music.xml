@@ -8,4 +8,7 @@
     <string name="apple_music_waiting">"سجّل الدخول باستخدام Apple ID للمتابعة."</string>
     <string name="apple_music_details">"يستخدم Aurora واجهة الويب غير الرسمية لـ Apple Music ويحفظ تسجيل دخولك مشفّرًا على هذا الجهاز. تُشغَّل الأغاني عبر YouTube وليس عبر بث Apple."</string>
     <string name="apple_music_connect_failed">"تعذّر ربط Apple Music. حاول مرة أخرى."</string>
+    <string name="merge_apple_lyrics">"كلمات Apple Music"</string>
+    <string name="merge_apple_lyrics_summary">"كلمات Apple Music المتزامنة كلمةً بكلمة لأغاني أي مصدر. يتطلب اشتراكًا في Apple Music."</string>
+    <string name="lyrics_source_apple_desc">"تُطابَق على Apple Music أثناء دمجه؛ يتطلب اشتراكًا"</string>
 </resources>

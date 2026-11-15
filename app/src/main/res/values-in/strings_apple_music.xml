@@ -8,4 +8,7 @@
     <string name="apple_music_waiting">"Masuk dengan Apple ID Anda untuk melanjutkan."</string>
     <string name="apple_music_details">"Aurora menggunakan antarmuka web tidak resmi Apple Music dan menyimpan info masuk Anda terenkripsi di perangkat ini. Lagu diputar melalui YouTube, bukan stream milik Apple."</string>
     <string name="apple_music_connect_failed">"Tidak dapat menghubungkan Apple Music. Coba lagi."</string>
+    <string name="merge_apple_lyrics">"Lirik Apple Music"</string>
+    <string name="merge_apple_lyrics_summary">"Lirik Apple Music yang tersinkron kata demi kata untuk lagu dari sumber mana pun. Memerlukan langganan Apple Music."</string>
+    <string name="lyrics_source_apple_desc">"Dicocokkan di Apple Music selama digabungkan; memerlukan langganan"</string>
 </resources>

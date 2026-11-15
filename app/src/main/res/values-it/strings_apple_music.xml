@@ -8,4 +8,7 @@
     <string name="apple_music_waiting">"Accedi con il tuo ID Apple per continuare."</string>
     <string name="apple_music_details">"Aurora usa l\'interfaccia web non ufficiale di Apple Music e conserva il tuo accesso cifrato su questo dispositivo. I brani vengono riprodotti tramite YouTube, non con gli stream di Apple."</string>
     <string name="apple_music_connect_failed">"Impossibile collegare Apple Music. Riprova."</string>
+    <string name="merge_apple_lyrics">"Testi di Apple Music"</string>
+    <string name="merge_apple_lyrics_summary">"I testi sincronizzati parola per parola di Apple Music per i brani di qualsiasi fonte. Richiede un abbonamento ad Apple Music."</string>
+    <string name="lyrics_source_apple_desc">"Cercati su Apple Music mentre è unito; richiede un abbonamento"</string>
 </resources>

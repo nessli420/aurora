@@ -8,4 +8,7 @@
     <string name="apple_music_waiting">"जारी रखने के लिए अपने Apple ID से साइन इन करें।"</string>
     <string name="apple_music_details">"Aurora, Apple Music के अनौपचारिक वेब इंटरफ़ेस का उपयोग करता है और आपका साइन-इन इस डिवाइस पर एन्क्रिप्ट करके रखता है। गाने YouTube के ज़रिए चलते हैं, Apple की अपनी स्ट्रीम से नहीं।"</string>
     <string name="apple_music_connect_failed">"Apple Music कनेक्ट नहीं हो सका। कृपया फिर से कोशिश करें।"</string>
+    <string name="merge_apple_lyrics">"Apple Music के बोल"</string>
+    <string name="merge_apple_lyrics_summary">"किसी भी स्रोत के गानों के लिए Apple Music के शब्द-दर-शब्द सिंक बोल। Apple Music सदस्यता आवश्यक है।"</string>
+    <string name="lyrics_source_apple_desc">"मर्ज रहने पर Apple Music पर मिलाए जाते हैं; सदस्यता आवश्यक है"</string>
 </resources>

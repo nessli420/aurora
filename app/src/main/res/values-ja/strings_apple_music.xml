@@ -8,4 +8,7 @@
     <string name="apple_music_waiting">"続けるには Apple ID でサインインしてください。"</string>
     <string name="apple_music_details">"Aurora は Apple Music の非公式ウェブインターフェースを使用し、サインイン情報をこのデバイスに暗号化して保存します。曲は Apple のストリームではなく YouTube 経由で再生されます。"</string>
     <string name="apple_music_connect_failed">"Apple Music に接続できませんでした。もう一度お試しください。"</string>
+    <string name="merge_apple_lyrics">"Apple Music の歌詞"</string>
+    <string name="merge_apple_lyrics_summary">"どのソースの曲にも、Apple Music の単語単位で同期した歌詞を使います。Apple Music のサブスクリプションが必要です。"</string>
+    <string name="lyrics_source_apple_desc">"統合中は Apple Music で照合します（サブスクリプションが必要）"</string>
 </resources>

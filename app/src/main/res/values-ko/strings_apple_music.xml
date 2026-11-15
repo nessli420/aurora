@@ -8,4 +8,7 @@
     <string name="apple_music_waiting">"계속하려면 Apple ID로 로그인하세요."</string>
     <string name="apple_music_details">"Aurora는 Apple Music의 비공식 웹 인터페이스를 사용하며 로그인 정보를 이 기기에 암호화해 보관합니다. 노래는 Apple 자체 스트림이 아닌 YouTube로 재생됩니다."</string>
     <string name="apple_music_connect_failed">"Apple Music을 연결할 수 없습니다. 다시 시도해 주세요."</string>
+    <string name="merge_apple_lyrics">"Apple Music 가사"</string>
+    <string name="merge_apple_lyrics_summary">"어떤 소스의 노래든 Apple Music의 단어 단위 동기화 가사를 사용합니다. Apple Music 구독이 필요합니다."</string>
+    <string name="lyrics_source_apple_desc">"병합되어 있는 동안 Apple Music에서 찾습니다. 구독이 필요합니다"</string>
 </resources>
