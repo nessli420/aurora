@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"一度だけのお知らせです。アプリを気に入っていただけたら、GitHub リポジトリにスターやフォークをしていただけるととても助かります :) バグを見つけたり提案があれば、GitHub の issue か Discord で教えてください"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"رسالة سريعة لمرة واحدة فقط: إذا كان التطبيق يعجبك، فضلًا ضع نجمة و/أو اعمل fork لمستودع github، سيساعدنا ذلك كثيرًا :) إذا واجهت أي أخطاء أو كانت لديك اقتراحات، أبلغ عنها كـ issue على github أو في خادم discord الخاص بنا"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>

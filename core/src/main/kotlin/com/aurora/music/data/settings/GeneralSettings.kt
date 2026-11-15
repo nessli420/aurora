@@ -26,6 +26,9 @@ interface GeneralSettings {
     // the release tag the launch update toast last named
     val updateAnnounced: Flow<String?>
     suspend fun setUpdateAnnounced(tag: String): Preferences
+    // the one-time star and fork ask
+    val starPromptSeen: Flow<Boolean>
+    suspend fun setStarPromptSeen(): Preferences
     val privateSession: Flow<Boolean>
     // listening time brought from another player, only added to the all-time total
     val historicalListeningMs: Flow<Long>
@@ -61,6 +64,8 @@ internal class GeneralSettingsStore(private val dataStore: DataStore<Preferences
     override suspend fun setWhatsNewEnabled(enabled: Boolean) = dataStore.edit { it[Keys.WHATS_NEW_ENABLED] = enabled }
     override val updateAnnounced: Flow<String?> = dataStore.data.map { it[Keys.UPDATE_ANNOUNCED] }.distinctUntilChanged()
     override suspend fun setUpdateAnnounced(tag: String) = dataStore.edit { it[Keys.UPDATE_ANNOUNCED] = tag }
+    override val starPromptSeen: Flow<Boolean> = dataStore.data.map { it[Keys.STAR_PROMPT_SEEN] ?: false }.distinctUntilChanged()
+    override suspend fun setStarPromptSeen() = dataStore.edit { it[Keys.STAR_PROMPT_SEEN] = true }
     override val privateSession: Flow<Boolean> = dataStore.data.map { it[Keys.PRIVATE_SESSION] ?: false }.distinctUntilChanged().flowOn(Dispatchers.Default)
     override val historicalListeningMs: Flow<Long> = dataStore.data.map { it[Keys.HISTORICAL_LISTENING_MS] ?: 0L }.distinctUntilChanged()
     override suspend fun setHistoricalListeningMs(ms: Long) = dataStore.edit {

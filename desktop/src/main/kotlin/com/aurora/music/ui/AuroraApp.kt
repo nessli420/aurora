@@ -338,6 +338,7 @@ private fun Shell(
     var whatsNew by remember { mutableStateOf<List<String>?>(null) }
     var whatsNewPage by remember { mutableStateOf(0) }
     var whatsNewTrying by remember { mutableStateOf(false) }
+    var starPrompt by remember { mutableStateOf(false) }
     LaunchedEffect(container) {
         if (whatsNew != null) return@LaunchedEffect
         val current = BuildInfo.VERSION_NAME
@@ -381,6 +382,11 @@ private fun Shell(
             store.setUpdateAnnounced(tag)
             snackbarHostState.showSnackbar(appString(R.string.update_available_toast, com.aurora.music.data.WhatsNew.shortVersion(tag)),
                 duration = SnackbarDuration.Long)
+        }
+        // the one-time star ask follows the update notice and this version's tour; sign-in holds it further down
+        if (!store.starPromptSeen.first()) {
+            store.whatsNewSeen.first { it == BuildInfo.VERSION_NAME }
+            starPrompt = true
         }
     }
     var matchSong by remember { mutableStateOf<Song?>(null) }
@@ -985,6 +991,10 @@ private fun Shell(
     matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onSwap = player::swapCurrent) { matchSong = null } }
     com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
         onMoved = { player.refreshLikes() }, notify = ::confirm, canTake = container::acceptsGuestLikes)
+    if (starPrompt && whatsNew == null && sessionReady == true && currentRoute != Routes.SIGN_IN) {
+        LaunchedEffect(Unit) { store.setStarPromptSeen() }
+        com.aurora.music.ui.components.StarPrompt(onClose = { starPrompt = false })
+    }
     ModalNavigationDrawer(
         drawerState = drawerState,
         gesturesEnabled = drawerState.isOpen,

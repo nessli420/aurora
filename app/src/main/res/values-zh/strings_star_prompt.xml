@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"一次性小提示：如果你喜欢这个应用，请给 GitHub 仓库点个星和/或 fork 一下，这对我们帮助很大 :) 如果遇到 bug 或有建议，请在 GitHub 上提交 issue，或到我们的 Discord 反馈"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>

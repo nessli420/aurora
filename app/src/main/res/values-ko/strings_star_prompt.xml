@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"딱 한 번만 보이는 짧은 메시지예요. 앱이 마음에 드신다면 GitHub 저장소에 스타 및/또는 포크를 해 주세요, 큰 도움이 돼요 :) 버그를 발견하거나 제안이 있으면 GitHub 이슈나 저희 Discord로 알려 주세요"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>

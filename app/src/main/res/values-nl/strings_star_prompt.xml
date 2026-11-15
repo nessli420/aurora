@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"kort eenmalig berichtje: als je de app leuk vindt, geef de github-repository dan een ster en/of fork hem, daar help je ons echt mee :) kom je bugs tegen of heb je suggesties, meld ze dan als issue op github of in onze discord"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>

@@ -172,6 +172,7 @@ fun AuroraApp() {
     var whatsNew by rememberSaveable { mutableStateOf<List<String>?>(null) }
     var whatsNewPage by rememberSaveable { androidx.compose.runtime.mutableIntStateOf(0) }
     var whatsNewTrying by rememberSaveable { mutableStateOf(false) }
+    var starPrompt by rememberSaveable { mutableStateOf(false) }
     androidx.compose.runtime.LaunchedEffect(container) {
         if (onboarding.phase == SetupPhase.HIDDEN && container.settingsStore.onboardingSeen.first() == null) {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -214,6 +215,12 @@ fun AuroraApp() {
             container.settingsStore.setUpdateAnnounced(tag)
             android.widget.Toast.makeText(context, appString(R.string.update_available_toast,
                 com.aurora.music.data.WhatsNew.shortVersion(tag)), android.widget.Toast.LENGTH_LONG).show()
+            kotlinx.coroutines.delay(3_500)
+        }
+        // the one-time star ask follows the toast and this version's tour; setup and sign-in hold it further down
+        if (!container.settingsStore.starPromptSeen.first()) {
+            container.settingsStore.whatsNewSeen.first { it == com.aurora.music.BuildConfig.VERSION_NAME }
+            starPrompt = true
         }
     }
     val session by container.session.collectAsStateWithLifecycle()
@@ -1949,6 +1956,10 @@ fun AuroraApp() {
                 )
             }
         }
+    }
+    if (starPrompt && whatsNew == null && onboarding.phase == SetupPhase.HIDDEN && sessionReady == true && currentRoute != Routes.SIGN_IN) {
+        androidx.compose.runtime.LaunchedEffect(Unit) { container.settingsStore.setStarPromptSeen() }
+        com.aurora.music.ui.components.StarPrompt(onClose = { starPrompt = false })
     }
 }
 

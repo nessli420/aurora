@@ -102,6 +102,7 @@ internal object SettingsKeys {
     val WHATS_NEW_SEEN = stringPreferencesKey("whats_new_seen")
     val WHATS_NEW_ENABLED = booleanPreferencesKey("whats_new_enabled")
     val UPDATE_ANNOUNCED = stringPreferencesKey("update_announced")
+    val STAR_PROMPT_SEEN = booleanPreferencesKey("star_prompt_seen")
     val TRACK_SORTS = stringPreferencesKey("track_sorts")
     val PRIVATE_SESSION = booleanPreferencesKey("private_session")
     val HISTORICAL_LISTENING_MS = longPreferencesKey("historical_listening_ms")

@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"pesan singkat, cuma sekali: kalau kamu suka aplikasinya, tolong beri bintang dan/atau fork repositori github-nya, itu sangat membantu kami :) kalau kamu menemukan bug atau punya saran, laporkan sebagai issue di github atau di discord kami"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>

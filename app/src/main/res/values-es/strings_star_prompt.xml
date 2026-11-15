@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"mensaje rápido, solo se muestra una vez: si te está gustando la app, dale una estrella y/o haz un fork del repositorio de github, nos ayudaría mucho :) si encuentras algún error o tienes sugerencias, repórtalo como issue en github o en nuestro discord"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>

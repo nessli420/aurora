@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="star_prompt_body">"बस एक बार का छोटा सा संदेश: अगर आपको ऐप पसंद आ रहा है, तो कृपया github रिपॉज़िटरी को स्टार और/या फ़ोर्क करें, इससे हमारी बहुत मदद होगी :) अगर आपको कोई बग मिले या कोई सुझाव हो, तो कृपया github पर issue के रूप में या हमारे discord में बताएं"</string>
+    <string name="star_prompt_github">"GitHub"</string>
+    <string name="star_prompt_discord">"Discord"</string>
+</resources>
