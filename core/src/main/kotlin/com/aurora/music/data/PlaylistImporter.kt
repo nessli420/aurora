@@ -17,6 +17,9 @@ class PlaylistImporter(
         val list = when (link.service) {
             PlaylistLinks.Service.YOUTUBE -> fromCatalogue(ServerType.YOUTUBE_MUSIC) { it.detail(link.kind, link.id) }
             PlaylistLinks.Service.SOUNDCLOUD -> fromCatalogue(ServerType.SOUNDCLOUD) { (it as? SoundCloudBackend)?.resolvePlaylist(link.url) }
+            // apple's api reads the whole list; its page, which holds only the first part, stays as the fallback
+            PlaylistLinks.Service.APPLE_MUSIC -> try { fromCatalogue(ServerType.APPLE_MUSIC) { it.detail(link.kind, link.id) } }
+                catch (_: ImportException) { attempt { links.read(link) } }
             else -> attempt { links.read(link) }
         }
         val limited = link.service == PlaylistLinks.Service.SPOTIFY && list.tracks.size >= SPOTIFY_LIMIT

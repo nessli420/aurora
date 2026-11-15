@@ -118,6 +118,7 @@ internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences
             videos = it[Keys.MERGE_VIDEOS] ?: true, videosOff = it[Keys.MERGE_VIDEOS_OFF] ?: emptySet(),
             comments = it[Keys.MERGE_COMMENTS] ?: true, commentsOff = it[Keys.MERGE_COMMENTS_OFF] ?: emptySet(),
             lyrics = it[Keys.MERGE_LYRICS] ?: true, lyricsOff = it[Keys.MERGE_LYRICS_OFF] ?: emptySet(),
+            appleLyrics = it[Keys.MERGE_APPLE_LYRICS] ?: true, appleLyricsOff = it[Keys.MERGE_APPLE_LYRICS_OFF] ?: emptySet(),
         )
     }.distinctUntilChanged().flowOn(Dispatchers.Default)
     override suspend fun setMergeFeatures(f: MergeFeatures) = dataStore.edit {
@@ -125,6 +126,7 @@ internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences
         it[Keys.MERGE_VIDEOS] = f.videos; it[Keys.MERGE_VIDEOS_OFF] = f.videosOff
         it[Keys.MERGE_COMMENTS] = f.comments; it[Keys.MERGE_COMMENTS_OFF] = f.commentsOff
         it[Keys.MERGE_LYRICS] = f.lyrics; it[Keys.MERGE_LYRICS_OFF] = f.lyricsOff
+        it[Keys.MERGE_APPLE_LYRICS] = f.appleLyrics; it[Keys.MERGE_APPLE_LYRICS_OFF] = f.appleLyricsOff
     }
 
     // a saved order keeps any source added later, at the end

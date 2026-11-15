@@ -42,6 +42,7 @@ class LyricsRepository(
     // whether spotify may supply lyrics for songs of this kind of source, its own songs included
     private val spotifyAllowed: suspend (ServerType?) -> Boolean = { true },
     private val clock: () -> Long = System::currentTimeMillis,
+    private val appleAllowed: suspend (ServerType?) -> Boolean = { true },
 ) {
     private val gson = Gson()
     private val cache = object : LinkedHashMap<List<Any?>, CachedLyrics>(32, 0.75f, true) {
@@ -59,9 +60,10 @@ class LyricsRepository(
         val backend = backendProvider()
         val type = backend?.sourceType(song)
         val spotify = spotifyAllowed(type)
+        val apple = appleAllowed(type)
         val order = orderProvider()
         val lrclib = lrclibEnabledProvider()
-        val key: List<Any?> = listOf(song.id, song.playbackSource?.providerId, order, lrclib, spotify)
+        val key: List<Any?> = listOf(song.id, song.playbackSource?.providerId, order, lrclib, spotify, apple)
         synchronized(cache) {
             if (cacheBackend !== backend) { cache.clear(); cacheBackend = backend }
             cache[key]?.takeIf { it.lasting || clock() - it.at < MISS_TTL_MS }
@@ -73,8 +75,9 @@ class LyricsRepository(
         var emptied = false
         for (source in order) {
             val found = when (source) {
-                "server" -> if (type == ServerType.SPOTIFY && !spotify) null else attempt(onError) { backend?.serverLyrics(song) }
+                "server" -> if (type == ServerType.SPOTIFY && !spotify || type == ServerType.APPLE_MUSIC && !apple) null else attempt(onError) { backend?.serverLyrics(song) }
                 "spotify" -> if (spotify) attempt(onError) { backend?.catalogueLyrics(song) } else null
+                "apple" -> if (apple) attempt(onError) { backend?.catalogueLyrics(song, ServerType.APPLE_MUSIC) } else null
                 "lrclib" -> if (lrclib) fetchLrcLib(song, onError) else null
                 else -> null
             }

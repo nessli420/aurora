@@ -12,11 +12,11 @@ class LyricsSourceOrderTest {
     private fun lyrics(source: String, synced: Boolean) = Lyrics(listOf(LyricLine(0, "la")), synced, source)
 
     private fun backend(type: ServerType, own: Lyrics?, spotify: Lyrics?): MediaBackend =
-        Proxy.newProxyInstance(MediaBackend::class.java.classLoader, arrayOf(MediaBackend::class.java)) { _, method, _ ->
+        Proxy.newProxyInstance(MediaBackend::class.java.classLoader, arrayOf(MediaBackend::class.java)) { _, method, args ->
             when (method.name) {
                 "sourceType" -> type
                 "serverLyrics" -> own
-                "catalogueLyrics" -> spotify
+                "catalogueLyrics" -> spotify.takeIf { args!![1] == ServerType.SPOTIFY }
                 else -> error("Unexpected ${method.name}")
             }
         } as MediaBackend

@@ -295,7 +295,7 @@ class MergedBackend(
 
     override fun supportsCanvas(song: Song): Boolean = features.supportsCanvas(song)
     override suspend fun canvasUrl(song: Song): String? = features.canvasUrl(song)
-    override suspend fun catalogueLyrics(song: Song): Lyrics? = features.catalogueLyrics(song)
+    override suspend fun catalogueLyrics(song: Song, from: ServerType): Lyrics? = features.catalogueLyrics(song, from)
     override fun supportsComments(song: Song): Boolean = features.supportsComments(song)
     override fun canPostComments(song: Song): Boolean = features.canPostComments(song)
 
@@ -370,7 +370,7 @@ class MergedBackend(
     // your own sources together first, then each catalogue on its own
     override fun importStages(): List<ImportStage> = buildList {
         add(ImportStage(ImportSource.LIBRARY) { search(it, "library").songs })
-        listOf(router.youtubeIndex, router.spotifyIndex, router.soundcloudIndex).filter { it >= 0 }.forEach { i ->
+        listOf(router.youtubeIndex, router.spotifyIndex, router.soundcloudIndex, router.appleIndex).filter { it >= 0 }.forEach { i ->
             sources[i].importStages().forEach { stage -> add(ImportStage(stage.source) { q -> stage.search(q).map { it.wrap(i) } }) }
         }
     }
@@ -421,7 +421,7 @@ class MergedBackend(
         perSource.flatMapIndexed { i, list -> list.map { wrap(it, i) } }
 
     private companion object {
-        val VIEW_IDS = setOf("library", "youtube", "spotify", "soundcloud")
+        val VIEW_IDS = setOf("library", "youtube", "spotify", "soundcloud", "apple")
         val PLAYLIST_HOMES = setOf(ServerType.LOCAL, ServerType.SUBSONIC, ServerType.JELLYFIN, ServerType.PLEX)
     }
 }

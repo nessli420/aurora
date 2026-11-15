@@ -171,6 +171,8 @@ internal object SettingsKeys {
     val MERGE_COMMENTS_OFF = stringSetPreferencesKey("merge_comments_off")
     val MERGE_LYRICS = booleanPreferencesKey("merge_lyrics")
     val MERGE_LYRICS_OFF = stringSetPreferencesKey("merge_lyrics_off")
+    val MERGE_APPLE_LYRICS = booleanPreferencesKey("merge_apple_lyrics")
+    val MERGE_APPLE_LYRICS_OFF = stringSetPreferencesKey("merge_apple_lyrics_off")
     val LYRICS_SOURCES = stringPreferencesKey("lyrics_sources")
     val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
     val HIDDEN_SONGS = stringPreferencesKey("hidden_songs")

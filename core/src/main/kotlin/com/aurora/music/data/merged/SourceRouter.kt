@@ -31,12 +31,14 @@ internal class SourceRouter(
     val youtubeIndex = catalogueOf(ServerType.YOUTUBE_MUSIC)
     val spotifyIndex = catalogueOf(ServerType.SPOTIFY)
     val soundcloudIndex = catalogueOf(ServerType.SOUNDCLOUD)
+    val appleIndex = catalogueOf(ServerType.APPLE_MUSIC)
     fun isCatalogue(source: MediaBackend) = source.session.type.isCatalogue
 
     fun catalogueFor(id: String): Int = when (id) {
         "discovery", "youtube" -> youtubeIndex
         "spotify" -> spotifyIndex
         "soundcloud" -> soundcloudIndex
+        "apple" -> appleIndex
         else -> -1
     }
 
@@ -47,6 +49,7 @@ internal class SourceRouter(
             if (youtubeIndex >= 0) add(make(youtubeId, "YouTube Music"))
             if (spotifyIndex >= 0) add(make("spotify", "Spotify"))
             if (soundcloudIndex >= 0) add(make("soundcloud", "SoundCloud"))
+            if (appleIndex >= 0) add(make("apple", "Apple Music"))
         }.takeIf { it.size > 1 }.orEmpty()
 
     // a missing catalogue falls back to the other one before the merged library
@@ -54,7 +57,8 @@ internal class SourceRouter(
         "library" -> -1
         "spotify" -> spotifyIndex.takeIf { it >= 0 } ?: youtubeIndex
         "soundcloud" -> soundcloudIndex.takeIf { it >= 0 } ?: youtubeIndex
-        else -> youtubeIndex.takeIf { it >= 0 } ?: spotifyIndex.takeIf { it >= 0 } ?: soundcloudIndex
+        "apple" -> appleIndex.takeIf { it >= 0 } ?: youtubeIndex
+        else -> listOf(youtubeIndex, spotifyIndex, soundcloudIndex, appleIndex).firstOrNull { it >= 0 } ?: -1
     }
 
     // discovery comes from the youtube music source, whichever source the song itself plays from

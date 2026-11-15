@@ -1,6 +1,7 @@
 package com.aurora.music.data.merged
 
 import com.aurora.music.data.Lyrics
+import com.aurora.music.data.ServerType
 import com.aurora.music.data.isPodcast
 import com.aurora.music.data.isRadio
 import com.aurora.music.data.recordingTitle
@@ -45,10 +46,11 @@ internal class FeatureBorrower(private val router: SourceRouter) {
         return router.sources[router.spotifyIndex].takeIf { it.supportsCanvas(twin) }?.canvasUrl(twin)
     }
 
-    suspend fun catalogueLyrics(song: Song): Lyrics? {
+    suspend fun catalogueLyrics(song: Song, from: ServerType): Lyrics? {
         val (i, _) = router.unwrap(song.id) ?: return null
-        if (!borrows(router.spotifyIndex, i, song)) return null
-        return twinOn(router.spotifyIndex, song)?.let { router.sources[router.spotifyIndex].serverLyrics(it) }
+        val catalogue = if (from == ServerType.APPLE_MUSIC) router.appleIndex else router.spotifyIndex
+        if (!borrows(catalogue, i, song)) return null
+        return twinOn(catalogue, song)?.let { router.sources[catalogue].serverLyrics(it) }
     }
 
     fun supportsComments(song: Song): Boolean {

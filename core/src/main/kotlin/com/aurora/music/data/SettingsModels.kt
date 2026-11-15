@@ -22,20 +22,23 @@ data class MergeFeatures(
     val commentsOff: Set<String> = emptySet(),
     val lyrics: Boolean = true,
     val lyricsOff: Set<String> = emptySet(),
+    val appleLyrics: Boolean = true,
+    val appleLyricsOff: Set<String> = emptySet(),
 ) {
     fun canvasFor(type: ServerType?) = canvas && type?.name !in canvasOff
     fun videosFor(type: ServerType?) = videos && type?.name !in videosOff
     fun commentsFor(type: ServerType?) = comments && type?.name !in commentsOff
     fun lyricsFor(type: ServerType?) = lyrics && type?.name !in lyricsOff
+    fun appleLyricsFor(type: ServerType?) = appleLyrics && type?.name !in appleLyricsOff
 }
 
 // "server" is the song's own source; the first synced result in this order wins, else the first with any lyrics
-val DEFAULT_LYRICS_SOURCES = listOf("server", "spotify", "lrclib")
+val DEFAULT_LYRICS_SOURCES = listOf("server", "spotify", "apple", "lrclib")
 
 enum class ServerType {
     SUBSONIC, JELLYFIN, SPOTIFY, LOCAL, EXTENSION, YOUTUBE_MUSIC, PLEX, SOUNDCLOUD, APPLE_MUSIC;
 
-    val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == PLEX || this == LOCAL || this == YOUTUBE_MUSIC || this == SPOTIFY || this == SOUNDCLOUD
+    val supportsMergedLibrary: Boolean get() = this == SUBSONIC || this == JELLYFIN || this == PLEX || this == LOCAL || this == YOUTUBE_MUSIC || this == SPOTIFY || this == SOUNDCLOUD || this == APPLE_MUSIC
 
     // streaming catalogues get their own home, search and library views instead of mixing into the merged one
     val isCatalogue: Boolean get() = this == YOUTUBE_MUSIC || this == SPOTIFY || this == SOUNDCLOUD || this == APPLE_MUSIC
