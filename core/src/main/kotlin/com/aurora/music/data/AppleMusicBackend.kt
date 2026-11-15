@@ -36,10 +36,10 @@ class AppleMusicBackend(
     private fun remember(list: List<Song>) = list.map(localize).onEach { songs[it.id] = it }
     private suspend fun catalog(path: String) = api.get("/v1/catalog/${api.storefront()}/$path")
 
-    // an account apple keeps no likes or playlists for counts as signed out once its subscription is known
-    override val signedIn: Boolean get() = !session.isGuest && subscription != false
+    // apple keeps likes and playlists only with a subscription; a guest's, or an account's without one, stay on this device
+    override val signedIn: Boolean get() = !session.isGuest
     override fun likesLocally(id: String): Boolean = session.isGuest && guestLikes != null && id.matches(CATALOG_ID)
-    private val guest: GuestLikes? get() = guestLikes?.takeIf { session.isGuest }
+    private suspend fun device(): GuestLikes? = guestLikes?.takeIf { !subscribed() }
     override suspend fun acceptsLikes(): Boolean = subscribed()
     override suspend fun ping(): Boolean = runCatching { catalog("charts?types=songs&limit=1"); true }.getOrDefault(false)
     override suspend fun profileImageUrl(): String = session.imageUrl
@@ -94,18 +94,25 @@ class AppleMusicBackend(
 
     override suspend fun allAlbums(): List<Album> = library("/v1/me/library/albums?limit=100&include=catalog").mapNotNull(::libraryAlbum).distinctBy { it.id }
     override suspend fun allArtists(): List<Artist> = library("/v1/me/library/artists?limit=100&include=catalog").mapNotNull(::libraryArtist).distinctBy { it.id }
-    override suspend fun allPlaylists(): List<Playlist> = library(PLAYLISTS).filterNot(::isFavorites).mapNotNull(::playlist)
+    override suspend fun allPlaylists(): List<Playlist> = devicePlaylists() + library(PLAYLISTS).filterNot(::isFavorites).mapNotNull(::playlist)
+
+    // still listed once a subscription comes, until they are added to the account
+    private fun devicePlaylists(): List<Playlist> = guestLikes?.playlists(session.type).orEmpty().map { p ->
+        Playlist(p.id, p.name.orEmpty(), session.username, p.songs.orEmpty().firstOrNull()?.artworkUrl.orEmpty(), p.songs.orEmpty().size, accentArgbFor(p.id))
+    }
+    private fun onDevice(id: String) = id.startsWith(GuestLikes.DEVICE_PLAYLIST)
     override suspend fun allSongs(): List<Song> = librarySongs("/v1/me/library/songs?limit=100&include=catalog")
 
-    // apple's favorite songs live in a library playlist it tags as favorited; a guest's stay on this device
-    override suspend fun starredSongs(): List<Song> = guest?.of(session.type)?.map { localize(it).copy(liked = true) }
+    // apple's favorite songs live in a library playlist it tags as favorited
+    override suspend fun starredSongs(): List<Song> = device()?.of(session.type)?.map { localize(it).copy(liked = true) }
         ?: favorites()?.let { librarySongs("/v1/me/library/playlists/${it.string("id")}/tracks?limit=100&include=catalog") }.orEmpty().map { it.copy(liked = true) }
-    override suspend fun starredCount(): Int = guest?.count(session.type) ?: starredSongs().size
-    override suspend fun starredIds(): Set<String> = guest?.ids(session.type) ?: starredSongs().mapTo(HashSet()) { it.id }
+    override suspend fun starredCount(): Int = device()?.count(session.type) ?: starredSongs().size
+    override suspend fun starredIds(): Set<String> = device()?.let { d -> d.ids(session.type) + d.likedCollections(session.type).map { it.substringAfter(':') } }
+        ?: starredSongs().mapTo(HashSet()) { it.id }
 
     // a favourite is a catalogue song the account rated 1
     override suspend fun likedSongIds(ids: List<String>): Set<String> {
-        guest?.let { return it.ids(session.type).intersect(ids.toSet()) }
+        device()?.let { return it.ids(session.type).intersect(ids.toSet()) }
         if (!subscribed()) return emptySet()
         return ids.filter { it.matches(CATALOG_ID) }.distinct().chunked(100).flatMap { chunk ->
             api.get("/v1/catalog/${api.storefront()}?ids[songs]=${chunk.joinToString(",")}&fields[songs]=personalRating").data()
@@ -152,6 +159,12 @@ class AppleMusicBackend(
     override suspend fun detail(kind: String, id: String): DetailData? = when {
         kind == "liked" -> starredSongs().let {
             DetailData(DetailInfo("Liked Songs", session.username, it.firstOrNull()?.artworkUrl.orEmpty(), accentArgbFor("liked"), false, it.size, "Liked"), it)
+        }
+        kind == "playlist" && onDevice(id) -> {
+            val p = guestLikes?.playlist(session.type, id) ?: throw FileNotFoundException("Apple Music could not find this item.")
+            val tracks = remember(p.songs.orEmpty())
+            DetailData(DetailInfo(p.name.orEmpty(), session.username, tracks.firstOrNull()?.artworkUrl.orEmpty(), accentArgbFor(id), false, tracks.size, "Playlist",
+                editableDescription = p.description.orEmpty(), description = p.description.orEmpty(), editable = true), tracks)
         }
         kind == "playlist" && id.startsWith("p.") -> {
             val p = api.get("/v1/me/library/playlists/$id").data().firstOrNull() ?: throw FileNotFoundException("Apple Music could not find this item.")
@@ -219,7 +232,12 @@ class AppleMusicBackend(
 
     // the web player favourites through one endpoint for every kind; a library item goes by its library type
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean {
-        guest?.let { return it.setStarred(session.type, id, starred, kind, ::songFor) }
+        device()?.let { d ->
+            if (kind == "song") return d.setStarred(session.type, id, starred, kind, ::songFor)
+            // the app keeps playlist likes itself, and a playlist on this device has nothing to favourite
+            if (!onDevice(id)) d.setCollectionLiked(session.type, kind, id, starred)
+            return true
+        }
         if (!subscribed()) return false
         change(if (starred) "POST" else "DELETE", "/v1/me/favorites?ids[${resourceType(kind, id)}]=$id")
         return true
@@ -234,12 +252,14 @@ class AppleMusicBackend(
 
     // only playlists the account made take new tracks
     override suspend fun playlistsForSong(songId: String): List<Playlist> =
-        library(PLAYLISTS).filter { it.obj("attributes").bool("canEdit") && !isFavorites(it) }.mapNotNull(::playlist)
+        devicePlaylists() + library(PLAYLISTS).filter { it.obj("attributes").bool("canEdit") && !isFavorites(it) }.mapNotNull(::playlist)
 
     override suspend fun createPlaylist(name: String): Boolean = createPlaylistWithId(name) != null
     override suspend fun createPlaylistWithId(name: String): String? = createPlaylistWithId(name, emptyList())
     override suspend fun createPlaylistWithId(name: String, trackIds: List<String>): String? {
-        if (name.isBlank() || !subscribed()) return null
+        if (name.isBlank()) return null
+        device()?.let { return it.createPlaylist(session.type, name, trackIds.mapNotNull { id -> songFor(id) }) }
+        if (!subscribed()) return null
         val body = JsonObject().apply {
             add("attributes", JsonObject().apply { addProperty("name", name.trim()); addProperty("description", "") })
             if (trackIds.isNotEmpty()) add("relationships", JsonObject().apply { add("tracks", JsonObject().apply { add("data", songRefs(trackIds)) }) })
@@ -249,6 +269,9 @@ class AppleMusicBackend(
 
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean {
         if (name == null && comment == null) return true
+        if (onDevice(id)) return guestLikes?.changePlaylist(session.type, id) { p ->
+            p.copy(name = name?.trim()?.ifBlank { null } ?: p.name, description = comment ?: p.description)
+        } == true
         if (!id.startsWith("p.") || !subscribed()) return false
         val attributes = JsonObject().apply {
             name?.trim()?.takeIf { it.isNotBlank() }?.let { addProperty("name", it) }
@@ -259,6 +282,7 @@ class AppleMusicBackend(
     }
 
     override suspend fun deletePlaylist(id: String): Boolean {
+        if (onDevice(id)) return guestLikes?.changePlaylist(session.type, id) { null } == true
         if (!id.startsWith("p.") || !subscribed()) return false
         change("DELETE", "/v1/me/library/library-playlists/$id")
         return true
@@ -266,6 +290,8 @@ class AppleMusicBackend(
 
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean {
         if (trackIds.isEmpty()) return true
+        // songs are looked up here rather than taken from the caller, whose copies a merge has namespaced
+        if (onDevice(playlistId)) return guestLikes?.addToPlaylist(session.type, playlistId, trackIds.mapNotNull { songFor(it) }) == true
         if (!playlistId.startsWith("p.") || !subscribed()) return false
         change("POST", "/v1/me/library/playlists/$playlistId/tracks?representation=resources", JsonObject().apply { add("data", songRefs(trackIds)) })
         return true
@@ -273,6 +299,10 @@ class AppleMusicBackend(
 
     // apple removes a playlist's tracks by their library ids, every occurrence at once; a removal that matched nothing isn't reported as done
     override suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean {
+        if (onDevice(playlistId)) {
+            val gone = trackIds.toSet()
+            return guestLikes?.changePlaylist(session.type, playlistId) { p -> p.copy(songs = p.songs.orEmpty().filterNot { it.id in gone }) } == true
+        }
         if (!playlistId.startsWith("p.") || !subscribed()) return false
         val path = "/v1/me/library/playlists/$playlistId/tracks?limit=100&include=catalog"
         pageCache.remove(path)

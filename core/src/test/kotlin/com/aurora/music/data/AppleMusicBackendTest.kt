@@ -211,7 +211,7 @@ class AppleMusicBackendTest {
     }
 
     private class Sent(val method: String, val path: String, val body: String?)
-    private fun writable(active: Boolean, sent: MutableList<Sent>, answer: (String) -> String = { error(it) }) = AppleMusicBackend(account, object : AppleMusicTransport {
+    private fun writable(active: Boolean, sent: MutableList<Sent>, likes: GuestLikes? = null, answer: (String) -> String = { error(it) }) = AppleMusicBackend(account, object : AppleMusicTransport {
         override suspend fun get(path: String): JsonObject = JsonParser.parseString(
             if (path.startsWith("/v1/me/account")) """{"meta":{"subscription":{"active":$active}}}""" else answer(path)).asJsonObject
         override suspend fun storefront() = "nl"
@@ -219,7 +219,7 @@ class AppleMusicBackendTest {
             sent += Sent(method, path, body?.toString())
             return JsonParser.parseString(if (method == "POST" && path == "/v1/me/library/playlists") """{"data":[{"id":"p.NEW","type":"library-playlists"}]}""" else "{}").asJsonObject
         }
-    })
+    }, guestLikes = likes)
 
     @Test fun aGuestKeepsItsLikesOnTheDevice() = runBlocking {
         val likes = GuestLikes()
@@ -251,7 +251,37 @@ class AppleMusicBackendTest {
         assertTrue(backend.signedIn)
     }
 
-    @Test fun withoutASubscriptionNothingIsSentAndTheAccountCountsAsSignedOut() = runBlocking {
+    @Test fun withoutASubscriptionLikesAndPlaylistsStayOnTheDevice() = runBlocking {
+        val sent = mutableListOf<Sent>()
+        val backend = writable(active = false, sent, GuestLikes()) { path ->
+            val id = path.substringAfter("/v1/catalog/nl/songs/", "").ifEmpty { error(path) }
+            """{"data":[{"id":"$id","type":"songs","attributes":{"name":"Song $id","artistName":"A","durationInMillis":100000}}]}"""
+        }
+        assertTrue(backend.signedIn)
+        assertFalse(backend.likesLocally("1"))
+        assertTrue(backend.setStarred("1", true, "song"))
+        assertTrue(backend.setStarred("77", true, "album"))
+        assertEquals(setOf("1", "77"), backend.starredIds())
+        assertEquals(listOf("1"), backend.starredSongs().map { it.id })
+        val id = backend.createPlaylistWithId("Road trip", listOf("1"))!!
+        // a merge hands its own copy, with the album id still namespaced
+        assertTrue(backend.addSongsToPlaylist(id, listOf(com.aurora.music.model.Song("2", "Two", "B", "", "", 100, albumId = "apple${MERGE_NAMESPACE_SEP}9"))))
+        assertTrue(backend.addToPlaylist(id, listOf("3")))
+        assertTrue(backend.removeFromPlaylist(id, listOf("1")))
+        assertTrue(backend.updatePlaylist(id, " Late night ", "for the drive"))
+        assertEquals(listOf(id), backend.allPlaylists().map { it.id })
+        assertEquals(listOf(id), backend.playlistsForSong("2").map { it.id })
+        val detail = backend.detail("playlist", id)!!
+        assertEquals("Late night" to "for the drive", detail.info.title to detail.info.editableDescription)
+        assertTrue(detail.info.editable)
+        assertEquals(listOf("2", "3"), detail.tracks.map { it.id })
+        assertTrue(detail.tracks.none { MERGE_NAMESPACE_SEP in it.albumId })
+        assertTrue(backend.deletePlaylist(id))
+        assertTrue(backend.allPlaylists().isEmpty())
+        assertTrue(sent.isEmpty())
+    }
+
+    @Test fun withoutAnyPlaceToKeepThemNothingIsSent() = runBlocking {
         val sent = mutableListOf<Sent>()
         val backend = writable(active = false, sent)
         assertFalse(backend.setStarred("1", true, "song"))
@@ -259,8 +289,6 @@ class AppleMusicBackendTest {
         assertFalse(backend.addToPlaylist("p.MIX", listOf("1")))
         assertFalse(backend.deletePlaylist("p.MIX"))
         assertTrue(sent.isEmpty())
-        assertFalse(backend.signedIn)
-        assertFalse(backend.likesLocally("1"))
     }
 
     @Test fun playlistEditsUseTheLibraryEndpoints() = runBlocking {
@@ -285,17 +313,27 @@ class AppleMusicBackendTest {
         ), sent.map { "${it.method} ${it.path} ${it.body}" })
     }
 
-    @Test fun guestLikesWaitForAnAccountThatCanKeepThem() = runBlocking {
+    @Test fun whatTheDeviceKeptWaitsForAnAccountWithASubscription() = runBlocking {
+        val apple = ServerType.APPLE_MUSIC
         val likes = GuestLikes()
-        likes.add(ServerType.APPLE_MUSIC, com.aurora.music.model.Song("1", "One", "A", "", "", 200))
+        likes.add(apple, com.aurora.music.model.Song("1", "One", "A", "", "", 200))
+        likes.setCollectionLiked(apple, "album", "77", true)
+        val mix = likes.createPlaylist(apple, "Road trip", listOf("2", "3").map { com.aurora.music.model.Song(it, "Song $it", "A", "", "", 200) })
+        likes.changePlaylist(apple, mix) { it.copy(description = "for the drive") }
         val refused = mutableListOf<Sent>()
-        assertEquals(0, likes.moveTo(writable(active = false, refused), pauseMs = 0))
-        assertEquals(1, likes.count(ServerType.APPLE_MUSIC))
+        assertEquals(0, likes.moveTo(writable(active = false, refused, likes), pauseMs = 0))
+        assertEquals(3, likes.pending(apple))
         assertTrue(refused.isEmpty())
         val sent = mutableListOf<Sent>()
-        assertEquals(1, likes.moveTo(writable(active = true, sent), pauseMs = 0))
-        assertEquals(listOf("POST /v1/me/favorites?ids[songs]=1"), sent.map { "${it.method} ${it.path}" })
-        assertEquals(0, likes.count(ServerType.APPLE_MUSIC))
+        assertEquals(3, likes.moveTo(writable(active = true, sent, likes), pauseMs = 0))
+        assertEquals(listOf(
+            "POST /v1/me/favorites?ids[songs]=1 null",
+            "POST /v1/me/favorites?ids[albums]=77 null",
+            "POST /v1/me/library/playlists {\"attributes\":{\"name\":\"Road trip\",\"description\":\"\"}}",
+            "PATCH /v1/me/library/playlists/p.NEW {\"attributes\":{\"description\":\"for the drive\"}}",
+            "POST /v1/me/library/playlists/p.NEW/tracks?representation=resources {\"data\":[{\"id\":\"2\",\"type\":\"songs\"},{\"id\":\"3\",\"type\":\"songs\"}]}",
+        ), sent.map { "${it.method} ${it.path} ${it.body}" })
+        assertEquals(0, likes.pending(apple))
     }
 
     @Test fun onlyPlaylistsTheAccountMadeCanBeEdited() = runBlocking {

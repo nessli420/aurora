@@ -55,6 +55,25 @@ class GuestLikesTest {
         assertNull(likes.waitingFor(listOf(guest)))
         assertNull(likes.waitingFor(listOf(Session.guest(ServerType.YOUTUBE_MUSIC, "Guest"))))
         assertEquals(account to 1, likes.waitingFor(listOf(guest, account)))
+        // an account that can't keep them is passed over for one that can
+        val second = account.copy(token = "other-reference", userId = "43")
+        assertEquals(second to 1, likes.waitingFor(listOf(account, second)) { it == second })
+        assertNull(likes.waitingFor(listOf(account)) { false })
+    }
+
+    @Test fun devicePlaylistsAndOtherLikesSurviveARestart() {
+        val apple = ServerType.APPLE_MUSIC
+        val likes = GuestLikes(dir)
+        val id = likes.createPlaylist(apple, " Mix ", listOf(com.aurora.music.model.Song("1", "One", "A", "", "", 100)))
+        likes.setCollectionLiked(apple, "artist", "9", true)
+        val again = GuestLikes(dir)
+        assertEquals(listOf("Mix"), again.playlists(apple).map { it.name })
+        assertEquals(listOf("1"), again.playlist(apple, id)!!.songs!!.map { it.id })
+        assertEquals(listOf("artist:9"), again.likedCollections(apple))
+        assertEquals(2, again.pending(apple))
+        again.setCollectionLiked(apple, "artist", "9", false)
+        assertTrue(again.changePlaylist(apple, id) { null })
+        assertEquals(0, GuestLikes(dir).pending(apple))
     }
 
     @Test fun movingHandsEveryLikeToTheAccountAndClearsTheDevice() = runBlocking {
