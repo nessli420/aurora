@@ -26,30 +26,35 @@ fun GuestLikesPrompt(sessions: List<Session>, guestLikes: GuestLikes, move: susp
     val revision by guestLikes.revision.collectAsState()
     var later by remember { mutableStateOf(emptySet<ServerType>()) }
     val scope = rememberCoroutineScope()
-    // an account that can't keep likes, such as apple music without a subscription, isn't offered them
+    // an account that can't keep likes (apple music without a subscription) is passed over, asked once per launch since every like bumps the revision
+    val answers = remember { mutableMapOf<Session, Boolean>() }
     val waiting = androidx.compose.runtime.produceState<Pair<Session, Int>?>(null, sessions, revision, later) {
-        value = guestLikes.waitingFor(sessions.filter { it.type !in later })?.takeIf { canTake(it.first) }
+        value = guestLikes.waitingFor(sessions.filter { it.type !in later }) { s -> answers.getOrPut(s) { canTake(s) } }
     }.value ?: return
     val (session, count) = waiting
     val service = session.typeLabel
+    // an account kept playlists or album, artist and playlist likes here, so the offer counts items rather than songs
+    val library = guestLikes.playlists(session.type).isNotEmpty() || guestLikes.likedCollections(session.type).isNotEmpty()
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         // only the buttons close it: a stray click outside used to drop the offer until the next launch
         onDismissRequest = {}, properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(appString(R.string.guest_likes_title, service)) },
-        text = { Text(appString(R.string.guest_likes_body, appPlural(R.plurals.track_count, count), service)) },
+        title = { Text(if (library) appString(R.string.guest_library_title, service) else appString(R.string.guest_likes_title, service)) },
+        text = { Text(if (library) appString(R.string.guest_library_body, appPlural(R.plurals.item_count, count), service)
+            else appString(R.string.guest_likes_body, appPlural(R.plurals.track_count, count), service)) },
         confirmButton = {
             TextButton(onClick = {
                 // whatever doesn't make it waits for the next launch rather than asking again straight away
                 later = later + session.type
                 scope.launch {
                     val moved = move(session)
-                    val left = guestLikes.count(session.type)
+                    val left = guestLikes.pending(session.type)
                     onMoved()
                     val queued = held(session)
                     notify(when {
-                        left > 0 -> appString(R.string.guest_likes_left, appPlural(R.plurals.track_count, left))
+                        left > 0 -> appString(R.string.guest_likes_left, appPlural(if (library) R.plurals.item_count else R.plurals.track_count, left))
                         // the account has them, but the service still wants its human check before it lists them
                         queued > 0 -> appString(R.string.guest_likes_held, appPlural(R.plurals.track_count, queued), service)
+                        library -> appString(R.string.guest_library_added, service)
                         else -> appString(R.string.guest_likes_added, appPlural(R.plurals.track_count, moved), service)
                     })
                 }
