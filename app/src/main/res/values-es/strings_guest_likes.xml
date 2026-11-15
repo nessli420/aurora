@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"No se pudieron añadir %1$s. Aurora volverá a preguntar más tarde."</string>
     <string name="guest_sign_in">"Iniciar sesión"</string>
     <string name="guest_likes_held">"%2$s retiene %1$s hasta que pases su comprobación de que eres humano. Verifica %2$s en Ajustes → Cuentas para terminar."</string>
+    <string name="guest_library_title">"¿Añadir tus me gusta y playlists a %1$s?"</string>
+    <string name="guest_library_body">"%1$s que guardaste sin suscripción se quedan en este dispositivo hasta que los añadas a tu cuenta de %2$s."</string>
+    <string name="guest_library_added">"Tus me gusta y playlists se añadieron a %1$s"</string>
 </resources>

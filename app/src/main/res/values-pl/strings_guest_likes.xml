@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"Nie udało się dodać: %1$s. Aurora zapyta ponownie później."</string>
     <string name="guest_sign_in">"Zaloguj się"</string>
     <string name="guest_likes_held">"%2$s wstrzymuje %1$s, dopóki nie przejdziesz weryfikacji, że jesteś człowiekiem. Zweryfikuj %2$s w Ustawienia → Konta, aby dokończyć."</string>
+    <string name="guest_library_title">"Dodać polubienia i playlisty do %1$s?"</string>
+    <string name="guest_library_body">"Zapisane bez subskrypcji elementy (%1$s) zostają na tym urządzeniu, dopóki nie dodasz ich do konta %2$s."</string>
+    <string name="guest_library_added">"Dodano polubienia i playlisty do %1$s"</string>
 </resources>

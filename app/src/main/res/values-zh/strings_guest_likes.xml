@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"无法添加 %1$s。Aurora 稍后会再次询问。"</string>
     <string name="guest_sign_in">"登录"</string>
     <string name="guest_likes_held">"在你通过真人验证之前，%2$s 会暂存 %1$s。请在“设置 → 账号”中验证 %2$s 以完成。"</string>
+    <string name="guest_library_title">"要将你的喜欢和播放列表添加到 %1$s 吗？"</string>
+    <string name="guest_library_body">"未订阅时保存的 %1$s 会保留在此设备上，直到你将它们添加到 %2$s 账号。"</string>
+    <string name="guest_library_added">"已将你的喜欢和播放列表添加到 %1$s"</string>
 </resources>

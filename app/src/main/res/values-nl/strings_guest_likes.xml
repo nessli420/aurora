@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"%1$s kon(den) niet worden toegevoegd. Aurora vraagt het later opnieuw."</string>
     <string name="guest_sign_in">"Inloggen"</string>
     <string name="guest_likes_held">"%2$s houdt %1$s vast tot je de menscontrole doorstaat. Verifieer %2$s onder Instellingen → Accounts om af te ronden."</string>
+    <string name="guest_library_title">"Je likes en playlists toevoegen aan %1$s?"</string>
+    <string name="guest_library_body">"%1$s die je zonder abonnement hebt bewaard, blijven op dit apparaat tot je ze aan je %2$s-account toevoegt."</string>
+    <string name="guest_library_added">"Je likes en playlists zijn toegevoegd aan %1$s"</string>
 </resources>

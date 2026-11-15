@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"%1$s couldn't be added. Aurora will ask again later."</string>
     <string name="guest_sign_in">"Sign in"</string>
     <string name="guest_likes_held">"%2$s is holding %1$s until you pass its human check. Verify %2$s under Settings → Accounts to finish."</string>
+    <string name="guest_library_title">"Add your likes and playlists to %1$s?"</string>
+    <string name="guest_library_body">"%1$s you saved without a subscription are kept on this device until you add them to your %2$s account."</string>
+    <string name="guest_library_added">"Added your likes and playlists to %1$s"</string>
 </resources>

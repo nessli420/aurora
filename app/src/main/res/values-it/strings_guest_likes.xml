@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"Impossibile aggiungere %1$s. Aurora te lo chiederà di nuovo più tardi."</string>
     <string name="guest_sign_in">"Accedi"</string>
     <string name="guest_likes_held">"%2$s trattiene %1$s finché non superi la verifica umana. Verifica %2$s in Impostazioni → Account per completare."</string>
+    <string name="guest_library_title">"Aggiungere i tuoi mi piace e le playlist a %1$s?"</string>
+    <string name="guest_library_body">"%1$s salvati senza abbonamento restano su questo dispositivo finché non li aggiungi al tuo account %2$s."</string>
+    <string name="guest_library_added">"Mi piace e playlist aggiunti a %1$s"</string>
 </resources>

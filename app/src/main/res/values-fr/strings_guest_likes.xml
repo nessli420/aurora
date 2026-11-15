@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"Impossible d'ajouter %1$s. Aurora vous redemandera plus tard."</string>
     <string name="guest_sign_in">"Se connecter"</string>
     <string name="guest_likes_held">"%2$s retient %1$s jusqu'à ce que vous passiez sa vérification humaine. Vérifiez %2$s dans Réglages → Comptes pour terminer."</string>
+    <string name="guest_library_title">"Ajouter vos j\'aime et playlists à %1$s ?"</string>
+    <string name="guest_library_body">"%1$s enregistrés sans abonnement restent sur cet appareil jusqu\'à ce que vous les ajoutiez à votre compte %2$s."</string>
+    <string name="guest_library_added">"Vos j\'aime et playlists ont été ajoutés à %1$s"</string>
 </resources>

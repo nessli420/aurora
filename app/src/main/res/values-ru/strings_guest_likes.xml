@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"Не удалось добавить: %1$s. Aurora спросит ещё раз позже."</string>
     <string name="guest_sign_in">"Войти"</string>
     <string name="guest_likes_held">"%2$s удерживает %1$s, пока вы не пройдёте проверку на человека. Подтвердите %2$s в Настройки → Аккаунты, чтобы завершить."</string>
+    <string name="guest_library_title">"Добавить лайки и плейлисты в %1$s?"</string>
+    <string name="guest_library_body">"Сохранённое без подписки (%1$s) хранится на этом устройстве, пока вы не добавите его в аккаунт %2$s."</string>
+    <string name="guest_library_added">"Лайки и плейлисты добавлены в %1$s"</string>
 </resources>

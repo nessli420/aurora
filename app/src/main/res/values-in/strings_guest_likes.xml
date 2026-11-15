@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"%1$s tidak dapat ditambahkan. Aurora akan bertanya lagi nanti."</string>
     <string name="guest_sign_in">"Masuk"</string>
     <string name="guest_likes_held">"%2$s menahan %1$s sampai Anda lulus pemeriksaan manusianya. Verifikasi %2$s di Setelan → Akun untuk menyelesaikan."</string>
+    <string name="guest_library_title">"Tambahkan suka dan playlist kamu ke %1$s?"</string>
+    <string name="guest_library_body">"%1$s yang kamu simpan tanpa langganan tetap di perangkat ini sampai kamu menambahkannya ke akun %2$s."</string>
+    <string name="guest_library_added">"Suka dan playlist kamu ditambahkan ke %1$s"</string>
 </resources>

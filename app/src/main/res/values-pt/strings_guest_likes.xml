@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"Não foi possível adicionar %1$s. O Aurora perguntará de novo mais tarde."</string>
     <string name="guest_sign_in">"Entrar"</string>
     <string name="guest_likes_held">"O %2$s está retendo %1$s até você passar na verificação humana. Verifique o %2$s em Configurações → Contas para concluir."</string>
+    <string name="guest_library_title">"Adicionar suas curtidas e playlists ao %1$s?"</string>
+    <string name="guest_library_body">"%1$s salvos sem assinatura ficam neste dispositivo até você adicioná-los à sua conta do %2$s."</string>
+    <string name="guest_library_added">"Suas curtidas e playlists foram adicionadas ao %1$s"</string>
 </resources>

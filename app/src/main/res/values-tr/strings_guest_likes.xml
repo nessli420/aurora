@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"%1$s eklenemedi. Aurora daha sonra tekrar soracak."</string>
     <string name="guest_sign_in">"Oturum aç"</string>
     <string name="guest_likes_held">"%2$s, insan doğrulamasını geçene kadar %1$s bekletiyor. Tamamlamak için Ayarlar → Hesaplar'da %2$s doğrulamasını yap."</string>
+    <string name="guest_library_title">"Beğenilerin ve çalma listelerin %1$s hesabına eklensin mi?"</string>
+    <string name="guest_library_body">"Abonelik olmadan kaydettiğin %1$s, %2$s hesabına ekleyene kadar bu cihazda kalır."</string>
+    <string name="guest_library_added">"Beğenilerin ve çalma listelerin %1$s hesabına eklendi"</string>
 </resources>

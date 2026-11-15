@@ -8,4 +8,7 @@
     <string name="guest_likes_left">"%1$sを追加できませんでした。後でもう一度確認します。"</string>
     <string name="guest_sign_in">"サインイン"</string>
     <string name="guest_likes_held">"%2$sは人間確認が済むまで%1$sを保留しています。完了するには、設定 → アカウントで%2$sを認証してください。"</string>
+    <string name="guest_library_title">"いいねとプレイリストを%1$sに追加しますか？"</string>
+    <string name="guest_library_body">"サブスクリプションなしで保存した%1$sは、%2$sアカウントに追加するまでこのデバイスに保存されます。"</string>
+    <string name="guest_library_added">"いいねとプレイリストを%1$sに追加しました"</string>
 </resources>
