@@ -41,6 +41,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.MusicNote
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.material.icons.outlined.Album
 import androidx.compose.material.icons.outlined.Cloud
 import androidx.compose.material.icons.outlined.GraphicEq
 import androidx.compose.material3.Icon
@@ -154,6 +155,7 @@ fun SearchScreen(
                             "discovery" -> Icons.Outlined.PlayCircle
                             "spotify" -> Icons.Outlined.GraphicEq
                             "soundcloud" -> Icons.Outlined.Cloud
+                            "apple" -> Icons.Outlined.Album
                             else -> Icons.Outlined.MusicNote
                         }
                         Box(

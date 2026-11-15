@@ -36,8 +36,9 @@ fun LyricsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val order by store.lyricsSources.collectAsStateWithLifecycle(initialValue = DEFAULT_LYRICS_SOURCES)
     val lrclib by store.lrclibEnabled.collectAsStateWithLifecycle(initialValue = true)
     val saved by store.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
-    // spotify only shows once an account can supply it; its place in the order is kept either way
-    val shown = order.filter { it != "spotify" || saved.any { s -> s.type == ServerType.SPOTIFY } }
+    // a catalogue only shows once an account can supply it; its place in the order is kept either way
+    val shown = order.filter { (it != "spotify" || saved.any { s -> s.type == ServerType.SPOTIFY }) &&
+        (it != "apple" || saved.any { s -> s.type == ServerType.APPLE_MUSIC && !s.isGuest }) }
     Column(Modifier.fillMaxSize()) {
         SettingsTopBar(appString(R.string.lyrics_settings_title), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
@@ -72,11 +73,13 @@ fun LyricsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     label = when (source) {
                         "server" -> appString(R.string.lyrics_source_own)
                         "spotify" -> "Spotify"
+                        "apple" -> "Apple Music"
                         else -> "LRCLIB"
                     },
                     subtitle = when (source) {
                         "server" -> appString(R.string.lyrics_source_own_desc)
                         "spotify" -> appString(R.string.lyrics_source_spotify_desc)
+                        "apple" -> appString(R.string.lyrics_source_apple_desc)
                         else -> if (lrclib) appString(R.string.lyrics_source_lrclib_desc) else appString(R.string.text_off_e3de5a)
                     },
                     enabled = source != "lrclib" || lrclib,

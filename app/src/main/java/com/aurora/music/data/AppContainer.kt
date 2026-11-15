@@ -352,6 +352,7 @@ class AppContainer(context: Context) {
             separatorsProvider = { settingsStore.artistSeparators.first() },
             orderProvider = { settingsStore.lyricsSources.first() },
             spotifyAllowed = { type -> settingsStore.mergeFeatures.first().lyricsFor(type) },
+            appleAllowed = { type -> settingsStore.mergeFeatures.first().appleLyricsFor(type) },
             http = http.newBuilder().connectTimeout(8, java.util.concurrent.TimeUnit.SECONDS).readTimeout(8, java.util.concurrent.TimeUnit.SECONDS).build())
     }
 

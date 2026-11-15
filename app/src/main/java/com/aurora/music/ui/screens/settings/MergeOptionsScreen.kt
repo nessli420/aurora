@@ -65,6 +65,8 @@ fun MergeOptionsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 features.videos, features.videosOff, types, { save(features.copy(videos = it)) }) { save(features.copy(videosOff = it)) }
             if (ServerType.SPOTIFY in types) feature(Icons.Filled.Lyrics, R.string.merge_lyrics, R.string.merge_lyrics_summary,
                 features.lyrics, features.lyricsOff, types, { save(features.copy(lyrics = it)) }) { save(features.copy(lyricsOff = it)) }
+            if (ServerType.APPLE_MUSIC in types) feature(Icons.Filled.Lyrics, R.string.merge_apple_lyrics, R.string.merge_apple_lyrics_summary,
+                features.appleLyrics, features.appleLyricsOff, types, { save(features.copy(appleLyrics = it)) }) { save(features.copy(appleLyricsOff = it)) }
             if (ServerType.SOUNDCLOUD in types) feature(Icons.Filled.ChatBubble, R.string.merge_comments, R.string.merge_comments_summary,
                 features.comments, features.commentsOff, types, { save(features.copy(comments = it)) }) { save(features.copy(commentsOff = it)) }
         }
