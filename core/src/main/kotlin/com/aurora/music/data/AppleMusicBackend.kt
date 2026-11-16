@@ -32,6 +32,9 @@ class AppleMusicBackend(
     private val songs = ConcurrentHashMap<String, Song>()
     private val pageCache = ConcurrentHashMap<String, Pair<Long, List<JsonObject>>>()
     @Volatile private var subscription: Boolean? = null
+    // apple lists a new playlist, and drops a deleted one, a few seconds late
+    private val createdPlaylists = ConcurrentHashMap<String, Pair<Long, Playlist>>()
+    private val deletedPlaylists = ConcurrentHashMap<String, Long>()
 
     private fun remember(list: List<Song>) = list.map(localize).onEach { songs[it.id] = it }
     private suspend fun catalog(path: String) = api.get("/v1/catalog/${api.storefront()}/$path")
@@ -94,13 +97,21 @@ class AppleMusicBackend(
 
     override suspend fun allAlbums(): List<Album> = library("/v1/me/library/albums?limit=100&include=catalog").mapNotNull(::libraryAlbum).distinctBy { it.id }
     override suspend fun allArtists(): List<Artist> = library("/v1/me/library/artists?limit=100&include=catalog").mapNotNull(::libraryArtist).distinctBy { it.id }
-    override suspend fun allPlaylists(): List<Playlist> = devicePlaylists() + library(PLAYLISTS).filterNot(::isFavorites).mapNotNull(::playlist)
+    override suspend fun allPlaylists(): List<Playlist> = devicePlaylists() + settled(library(PLAYLISTS).filterNot(::isFavorites).mapNotNull(::playlist))
 
     // still listed once a subscription comes, until they are added to the account
     private fun devicePlaylists(): List<Playlist> = guestLikes?.playlists(session.type).orEmpty().map { p ->
         Playlist(p.id, p.name.orEmpty(), session.username, p.songs.orEmpty().firstOrNull()?.artworkUrl.orEmpty(), p.songs.orEmpty().size, accentArgbFor(p.id))
     }
     private fun onDevice(id: String) = id.startsWith(GuestLikes.DEVICE_PLAYLIST)
+
+    private fun settled(listed: List<Playlist>): List<Playlist> {
+        val now = System.nanoTime()
+        createdPlaylists.entries.removeIf { (id, made) -> now - made.first > PENDING_NS || listed.any { it.id == id } }
+        deletedPlaylists.entries.removeIf { (id, at) -> now - at > PENDING_NS || listed.none { it.id == id } }
+        return createdPlaylists.values.map { it.second } + listed.filterNot { deletedPlaylists.containsKey(it.id) }
+    }
+
     override suspend fun allSongs(): List<Song> = librarySongs("/v1/me/library/songs?limit=100&include=catalog")
 
     // apple's favorite songs live in a library playlist it tags as favorited
@@ -252,7 +263,7 @@ class AppleMusicBackend(
 
     // only playlists the account made take new tracks
     override suspend fun playlistsForSong(songId: String): List<Playlist> =
-        devicePlaylists() + library(PLAYLISTS).filter { it.obj("attributes").bool("canEdit") && !isFavorites(it) }.mapNotNull(::playlist)
+        devicePlaylists() + settled(library(PLAYLISTS).filter { it.obj("attributes").bool("canEdit") && !isFavorites(it) }.mapNotNull(::playlist))
 
     override suspend fun createPlaylist(name: String): Boolean = createPlaylistWithId(name) != null
     override suspend fun createPlaylistWithId(name: String): String? = createPlaylistWithId(name, emptyList())
@@ -264,7 +275,9 @@ class AppleMusicBackend(
             add("attributes", JsonObject().apply { addProperty("name", name.trim()); addProperty("description", "") })
             if (trackIds.isNotEmpty()) add("relationships", JsonObject().apply { add("tracks", JsonObject().apply { add("data", songRefs(trackIds)) }) })
         }
-        return change("POST", "/v1/me/library/playlists", body).data().firstOrNull()?.string("id")?.takeIf { it.isNotBlank() }
+        val id = change("POST", "/v1/me/library/playlists", body).data().firstOrNull()?.string("id")?.takeIf { it.isNotBlank() } ?: return null
+        createdPlaylists[id] = System.nanoTime() to Playlist(id, name.trim(), "Apple Music", "", trackIds.distinct().size, accentArgbFor(id))
+        return id
     }
 
     override suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean {
@@ -284,7 +297,9 @@ class AppleMusicBackend(
     override suspend fun deletePlaylist(id: String): Boolean {
         if (onDevice(id)) return guestLikes?.changePlaylist(session.type, id) { null } == true
         if (!id.startsWith("p.") || !subscribed()) return false
-        change("DELETE", "/v1/me/library/library-playlists/$id")
+        change("DELETE", "/v1/me/library/playlists/$id")
+        createdPlaylists.remove(id)
+        deletedPlaylists[id] = System.nanoTime()
         return true
     }
 
@@ -332,7 +347,9 @@ class AppleMusicBackend(
         private const val MAX_PAGES = 50
         private const val MAX_LIBRARY = 5_000
         private const val CACHE_NS = 60_000_000_000L
-        private const val PLAYLISTS = "/v1/me/library/playlists?limit=100"
+        private const val PENDING_NS = 120_000_000_000L
+        // apple leaves a playlist's tags out unless asked, and favorite songs is only known by its tag
+        private const val PLAYLISTS = "/v1/me/library/playlists?limit=100&extend=tags"
         private val RELEASE_SUFFIX = Regex("""\s+-\s+(Single|EP)$""")
 
         private fun enc(text: String) = URLEncoder.encode(text.trim(), "UTF-8")

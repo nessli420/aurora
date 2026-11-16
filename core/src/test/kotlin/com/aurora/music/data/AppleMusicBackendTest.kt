@@ -154,12 +154,15 @@ class AppleMusicBackendTest {
     }
 
     @Test fun favoriteSongsAreTheLikedSongsAndLeaveThePlaylistList() = runBlocking {
-        val playlists = """{"data":[{"id":"p.FAV","type":"library-playlists","attributes":{"name":"Favorite Songs","tags":["favorited"]}},""" +
-            """{"id":"p.MIX","type":"library-playlists","attributes":{"name":"Road trip","canEdit":true}}]}"""
+        // as apple lists them: the tag only comes when asked for, and the name follows the storefront's spelling
+        val favourites = """{"id":"p.FAV","type":"library-playlists","attributes":{"canDelete":false,"canEdit":false,"hasCatalog":false,"isPublic":false,""" +
+            """"name":"Favourite Songs","playParams":{"id":"p.FAV","isLibrary":true,"kind":"playlist"}${'$'}TAGS}}"""
+        val mix = """{"id":"p.MIX","type":"library-playlists","attributes":{"name":"Road trip","canEdit":true}}"""
         val asked = mutableListOf<String>()
         val backend = signedIn(active = true, asked) { path ->
             when {
-                path.startsWith("/v1/me/library/playlists?") -> playlists
+                path.startsWith("/v1/me/library/playlists?") ->
+                    """{"data":[${favourites.replace("\$TAGS", if ("extend=tags" in path) ",\"tags\":[\"favorited\"]" else "")},$mix]}"""
                 path == "/v1/me/library/playlists/p.FAV/tracks?limit=100&include=catalog&offset=0" ->
                     """{"data":[${librarySong("i.1", "One", "11")}],"next":"/v1/me/library/playlists/p.FAV/tracks?offset=1"}"""
                 path == "/v1/me/library/playlists/p.FAV/tracks?limit=100&include=catalog&offset=1" -> """{"data":[${librarySong("i.2", "Two", "22")}]}"""
@@ -309,8 +312,19 @@ class AppleMusicBackendTest {
             "PATCH /v1/me/library/playlists/p.MIX {\"attributes\":{\"name\":\"Late night\"}}",
             "DELETE /v1/me/library/playlists/p.MIX/tracks?ids[library-songs]=i.A&mode=all null",
             "DELETE /v1/me/library/playlists/p.MIX/tracks?ids[library-songs]=i.B&mode=all null",
-            "DELETE /v1/me/library/library-playlists/p.MIX null",
+            "DELETE /v1/me/library/playlists/p.MIX null",
         ), sent.map { "${it.method} ${it.path} ${it.body}" })
+    }
+
+    @Test fun aPlaylistJustMadeOrDeletedShowsSoBeforeAppleListsIt() = runBlocking {
+        val backend = writable(active = true, mutableListOf()) { path ->
+            if (path.startsWith("/v1/me/library/playlists?")) """{"data":[{"id":"p.MIX","type":"library-playlists","attributes":{"name":"Road trip","canEdit":true}}]}"""
+            else error(path)
+        }
+        assertEquals("p.NEW", backend.createPlaylistWithId("Late night", emptyList()))
+        assertTrue(backend.deletePlaylist("p.MIX"))
+        assertEquals(listOf("p.NEW" to "Late night"), backend.allPlaylists().map { it.id to it.title })
+        assertEquals(listOf("p.NEW"), backend.playlistsForSong("1").map { it.id })
     }
 
     @Test fun whatTheDeviceKeptWaitsForAnAccountWithASubscription() = runBlocking {
