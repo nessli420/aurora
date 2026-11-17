@@ -233,7 +233,7 @@ class GeneralSettingsTest {
                 settingsStore.addSavedSession(jellyfin)
                 settingsStore.saveSession(navidrome)
                 settingsStore.setUnifiedLibrary(true)
-            }) { SourcesSettingsScreen(padding, onBack = {}, onArtistSeparators = {}) }.use { scene ->
+            }) { SourcesSettingsScreen(padding, onBack = {}, onArtistSeparators = {}, onHiddenSongs = {}) }.use { scene ->
                 assertTrue(scene.shot().distinctColors() > 20)
                 scene.click(771f, 1070f)
                 assertEquals(setOf(navidrome.accountKey()), scene.await(read = { settingsStore.mergeSources.first() }) { it.isNotEmpty() })

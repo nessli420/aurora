@@ -131,6 +131,8 @@ internal class AuditScene(
                 settingsStore.setLrclibEnabled(false)
                 // seeded accounts with no seen version would open the update tour over every screen
                 settingsStore.setWhatsNewSeen(com.aurora.music.desktop.platform.BuildInfo.VERSION_NAME)
+                // and the one-time star prompt would sit over the tour
+                settingsStore.setStarPromptSeen()
                 settingsStore.setArtworkLookupEnabled(false)
                 settingsStore.setLocalProfile(LocalProfile(name = "Alex Rivera"))
                 desktopSettings.setMusicFolders(listOf(AuditLibrary.music.path))
