@@ -11,7 +11,8 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import com.aurora.music.ui.theme.Button
@@ -90,6 +91,7 @@ fun AppUpdateCard(updater: AppUpdater) {
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun AppUpdateCardContent(
     state: AppUpdateState,
@@ -141,7 +143,7 @@ internal fun AppUpdateCardContent(
                 UpdateDownload.VERIFYING -> Unit
                 UpdateDownload.READY -> {
                     Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_install_update_8a3695)) }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         TextButton(onClick = onReleaseNotes) { Text(appString(R.string.text_release_notes_cd5af7)) }
                         TextButton(onClick = onCancel) { Text(appString(R.string.text_discard_36fff6)) }
                     }
@@ -153,7 +155,7 @@ internal fun AppUpdateCardContent(
                             Text(if (state.release?.apk != null) appString(R.string.text_download_update_870d57) else appString(R.string.text_view_on_github_0c7799))
                         }
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                         TextButton(onClick = onCheck, enabled = !state.checking) { Text(appString(R.string.text_check_for_updates_736b90)) }
                         TextButton(onClick = onReleaseNotes) { Text(appString(R.string.text_release_notes_cd5af7)) }
                     }

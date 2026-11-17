@@ -1,5 +1,12 @@
 package com.aurora.music.ui.appicon
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -36,6 +43,8 @@ import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.aurora.music.R
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.PressScaleIndication
 import com.aurora.music.ui.theme.ThemeIdentities
 
 @Composable
@@ -64,15 +73,14 @@ fun AppIconPicker() {
                     ContextCompat.getDrawable(context, icon.icon)?.toBitmap(iconPx, iconPx)?.asImageBitmap()
                 }
                 val name = ThemeIdentities.firstOrNull { it.id == icon.themeStyle }?.name.orEmpty()
+                val edge by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, Motion.state(), label = "iconEdge")
+                val edgeWidth by animateDpAsState(if (isSelected) 2.dp else 1.dp, Motion.state(), label = "iconEdgeWidth")
+                val ink by animateColorAsState(if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "iconLabel")
                 Column(
                     Modifier.weight(1f)
                         .clip(MaterialTheme.shapes.medium)
-                        .border(
-                            if (isSelected) 2.dp else 1.dp,
-                            if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                            MaterialTheme.shapes.medium,
-                        )
-                        .selectable(selected = isSelected, role = Role.RadioButton) {
+                        .border(edgeWidth, edge, MaterialTheme.shapes.medium)
+                        .selectable(selected = isSelected, interactionSource = null, indication = PressScaleIndication, role = Role.RadioButton) {
                             AppIcons.select(context, icon)
                             selected = icon
                         }
@@ -85,7 +93,7 @@ fun AppIconPicker() {
                     Text(
                         name,
                         style = MaterialTheme.typography.labelMedium,
-                        color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
+                        color = ink,
                         maxLines = 2,
                         minLines = 2,
                         overflow = TextOverflow.Ellipsis,
@@ -94,9 +102,13 @@ fun AppIconPicker() {
                 }
             }
         }
-        if (selected != current) {
-            Text(appString(R.string.app_icon_pending), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+        // one child for both lines so the hidden notice adds no gap of its own
+        Column {
+            AnimatedVisibility(selected != current, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()),
+                exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                Text(appString(R.string.app_icon_pending), Modifier.padding(bottom = 10.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+            }
+            Text(appString(R.string.app_icon_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        Text(appString(R.string.app_icon_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }

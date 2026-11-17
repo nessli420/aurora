@@ -80,10 +80,10 @@ private fun LazyListScope.feature(icon: ImageVector, title: Int, summary: Int, o
     item {
         SettingsGroup {
             SettingsSwitchRow(icon, appString(title), appString(summary), on, onToggle)
-            if (on) {
+            SettingsReveal(on) {
                 SettingsRowDivider()
                 Text(appString(R.string.merge_on_songs_from), style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 16.dp, top = 12.dp, end = 16.dp))
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 20.dp, top = 12.dp, end = 20.dp))
                 types.forEach { type ->
                     SettingsSwitchRow(null, sourceLabel(type), null, type.name !in off) { show ->
                         onSources(if (show) off - type.name else off + type.name)

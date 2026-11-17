@@ -6,8 +6,8 @@ import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -31,8 +31,9 @@ import androidx.compose.material.icons.filled.Smartphone
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -184,29 +185,23 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
             item { SettingsSectionTitle(appString(R.string.text_local_library_1c67cd)) }
             item {
                 SettingsGroup {
-                    Row(
-                        Modifier.fillMaxWidth().clickable(enabled = !rescanBusy) {
-                            if (ctx.checkSelfPermission(audioPermission) == android.content.pm.PackageManager.PERMISSION_GRANTED) rescan()
-                            else requestAudio.launch(audioPermission)
-                        }.padding(20.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Column(Modifier.weight(1f)) {
-                            Text(appString(R.string.rescan_title), style = MaterialTheme.typography.titleSmall)
-                            Text(rescanStatus ?: appString(R.string.rescan_summary), style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
-                        if (rescanBusy) androidx.compose.material3.CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    RowScaffold(null, appString(R.string.rescan_title), rescanStatus ?: appString(R.string.rescan_summary), onClick = if (rescanBusy) null else ({
+                        if (ctx.checkSelfPermission(audioPermission) == android.content.pm.PackageManager.PERMISSION_GRANTED) rescan()
+                        else requestAudio.launch(audioPermission)
+                    })) {
+                        if (rescanBusy) androidx.compose.material3.CircularProgressIndicator(Modifier.padding(start = 12.dp).size(20.dp), strokeWidth = 2.dp)
                     }
-                    Row(Modifier.fillMaxWidth().clickable(onClick = onArtistSeparators).padding(20.dp)) {
-                        Text(appString(R.string.text_artist_separators_4a3dc4), style = MaterialTheme.typography.titleSmall)
+                    RowScaffold(null, appString(R.string.text_artist_separators_4a3dc4), null, onClick = onArtistSeparators) {
+                        Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                     }
                     TextButton(onClick = { importImage.launch(arrayOf("*/*")) }, enabled = !importBusy,
                         modifier = Modifier.padding(horizontal = 12.dp)) {
                         Text(if (importBusy) appString(R.string.text_importing_820599) else appString(R.string.text_import_sacd_image_dd7548))
                     }
-                    importStatus?.let { Text(it, style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp)) }
+                    SettingsReveal(importStatus != null) {
+                        Text(importStatus.orEmpty(), style = MaterialTheme.typography.bodySmall,
+                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp))
+                    }
                     TextButton(onClick = { pickCueFolder.launch(null) }, enabled = !cueBusy, modifier = Modifier.padding(horizontal = 12.dp)) {
                         Text(appString(R.string.cue_add_folder))
                     }
@@ -266,6 +261,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 }
             }
 
+            item { Spacer(Modifier.height(8.dp)) }
             item { SettingsGroup { SettingsNavRow(Icons.Filled.VisibilityOff, appString(R.string.hidden_songs_title), appString(R.string.hidden_songs_summary), onClick = onHiddenSongs) } }
 
             item { SettingsSectionTitle(appString(R.string.text_best_source_playback_8c92cb)) }
@@ -308,13 +304,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                 }
             }
             if (unified) {
-                item {
-                    Text(
-                        appString(R.string.text_included_in_the_unified_library_0ecc5b),
-                        style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 4.dp),
-                    )
-                }
+                item { SettingsSectionTitle(appString(R.string.text_included_in_the_unified_library_0ecc5b)) }
                 item { SourceRow(appString(R.string.text_on_this_device_a7f962), appString(R.string.text_local_files_f4a889), included = true, toggleable = false) {} }
                 items(servers.size) { i ->
                     val s = servers[i]
@@ -348,7 +338,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                             appString(R.string.catalogue_library_copies_summary), catalogue.useLibrary) { v ->
                             scope.launch { store.setCatalogueLibraryCopies(v) }
                         }
-                        if (catalogue.useLibrary) {
+                        SettingsReveal(catalogue.useLibrary) {
                             SettingsRowDivider()
                             SegmentedRow(appString(R.string.catalogue_match), listOf(appString(R.string.catalogue_match_strict),
                                 appString(R.string.catalogue_match_relaxed)), if (catalogue.relaxed) 1 else 0) { i ->
@@ -382,40 +372,47 @@ internal fun List<String>.swapped(a: Int, b: Int): List<String> {
 @Composable
 internal fun PriorityRow(label: String, subtitle: String, enabled: Boolean, canUp: Boolean, canDown: Boolean, onUp: () -> Unit, onDown: () -> Unit) {
     val alpha = if (enabled) 1f else 0.4f
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).paperClip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha))
+    Box(Modifier.padding(vertical = 4.dp)) {
+        SettingsGroup {
+            Row(
+                Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha))
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha))
+                }
+                Icon(
+                    Icons.Filled.KeyboardArrowUp, appString(R.string.text_move_up_b4f57c),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canUp) 1f else 0.25f),
+                    modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).clickable(enabled = enabled && canUp, onClick = onUp).padding(8.dp),
+                )
+                Icon(
+                    Icons.Filled.KeyboardArrowDown, appString(R.string.text_move_down_260ff8),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canDown) 1f else 0.25f),
+                    modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).clickable(enabled = enabled && canDown, onClick = onDown).padding(8.dp),
+                )
+            }
         }
-        Icon(
-            Icons.Filled.KeyboardArrowUp, appString(R.string.text_move_up_b4f57c),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canUp) 1f else 0.25f),
-            modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).clickable(enabled = enabled && canUp, onClick = onUp).padding(8.dp),
-        )
-        Icon(
-            Icons.Filled.KeyboardArrowDown, appString(R.string.text_move_down_260ff8),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canDown) 1f else 0.25f),
-            modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).clickable(enabled = enabled && canDown, onClick = onDown).padding(8.dp),
-        )
     }
 }
 
 @Composable
 private fun SourceRow(title: String, subtitle: String, included: Boolean, toggleable: Boolean, onToggle: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).paperClip(RoundedCornerShape(14.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+    Box(Modifier.padding(vertical = 4.dp)) {
+        SettingsGroup {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Spacer(Modifier.width(12.dp))
+                SettingsToggle(included, enabled = toggleable) { onToggle() }
+            }
         }
-        Switch(checked = included, enabled = toggleable, onCheckedChange = { onToggle() })
     }
 }
 

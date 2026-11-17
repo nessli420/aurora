@@ -7,7 +7,9 @@ import com.aurora.music.R
 import com.aurora.music.localization.localizedSignalLabel
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -60,6 +62,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
@@ -164,7 +167,7 @@ fun SettingsScreen(
                 Row(
                     Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp)
                         .paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .clickable(onClick = onOpenProfile).padding(16.dp),
+                        .pressClickable(onClick = onOpenProfile).padding(16.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(
@@ -180,11 +183,14 @@ fun SettingsScreen(
                     }
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(appString(R.string.text_view_profile_b98795), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary)
+                        Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(appString(R.string.text_view_profile_b98795), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
+                    Spacer(Modifier.width(8.dp))
                     Box(Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).padding(horizontal = 12.dp, vertical = 6.dp)) {
-                        Text(serverBadge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary)
+                        Text(serverBadge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary, maxLines = 1)
                     }
                 }
             }
@@ -219,8 +225,8 @@ fun SettingsScreen(
                     SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
                     AnimatedVisibility(
                         visible = !simpleMode,
-                        enter = expandVertically(animationSpec = tween(260)) + fadeIn(animationSpec = tween(260)),
-                        exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(260)),
+                        enter = expandVertically(animationSpec = Motion.enter()) + fadeIn(animationSpec = Motion.enter()),
+                        exit = shrinkVertically(animationSpec = Motion.exit()) + fadeOut(animationSpec = Motion.exit()),
                     ) {
                         Column {
                             SettingsRowDivider()
@@ -328,4 +334,31 @@ fun SettingsScreen(
             }
         }
     }
+}
+
+// stored values land just after a page opens, so nothing animates until it has settled
+@Composable
+internal fun rememberSettled(): Boolean {
+    var settled by remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { kotlinx.coroutines.delay(com.aurora.music.util.MotionTokens.STANDARD.toLong()); settled = true }
+    return settled
+}
+
+// a block a switch or choice reveals: grows and fades in, leaves faster
+@Composable
+internal fun SettingsReveal(visible: Boolean, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    val settled = rememberSettled()
+    AnimatedVisibility(
+        visible = visible,
+        enter = if (settled) expandVertically(animationSpec = Motion.enter()) + fadeIn(animationSpec = Motion.enter()) else androidx.compose.animation.EnterTransition.None,
+        exit = if (settled) shrinkVertically(animationSpec = Motion.exit()) + fadeOut(animationSpec = Motion.exit()) else androidx.compose.animation.ExitTransition.None,
+    ) { Column(content = content) }
+}
+
+// the switch of the shared rows, for rows that lay themselves out
+@Composable
+internal fun SettingsToggle(checked: Boolean, enabled: Boolean = true, onCheckedChange: (Boolean) -> Unit) {
+    if (com.aurora.music.ui.theme.isGlassTheme()) com.aurora.music.ui.components.glass.GlassToggle(checked, onCheckedChange, enabled = enabled)
+    else if (com.aurora.music.ui.theme.isPaperTheme()) com.aurora.music.ui.theme.PaperSwitch(checked, onCheckedChange, enabled = enabled)
+    else androidx.compose.material3.Switch(checked = checked, onCheckedChange = onCheckedChange, enabled = enabled)
 }

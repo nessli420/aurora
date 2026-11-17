@@ -44,6 +44,7 @@ import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.ArtistCircle
 import com.aurora.music.ui.components.PlaylistCard
 import com.aurora.music.ui.components.SectionHeader
+import com.aurora.music.ui.theme.pressClickable
 
 @Composable
 fun ProfileScreen(
@@ -105,7 +106,8 @@ fun ProfileScreen(
                     Spacer(Modifier.height(10.dp))
                     Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black,
                         maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 16.dp))
-                    Text(serverLabel.ifBlank { server.removePrefix("http://").removePrefix("https://") }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(serverLabel.ifBlank { server.removePrefix("http://").removePrefix("https://") }, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis, modifier = Modifier.padding(horizontal = 16.dp))
                 }
             }
         }
@@ -115,16 +117,16 @@ fun ProfileScreen(
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.SpaceEvenly,
             ) {
-                Stat("${playlists.size}", appString(R.string.text_playlists_77b69f))
-                Stat("${artists.size}", appString(R.string.text_artists_1528d8))
-                Stat(serverLabel.ifBlank { appString(R.string.text_server_cb0cb1) }, appString(R.string.text_server_cb0cb1))
+                Stat("${playlists.size}", appString(R.string.text_playlists_77b69f), Modifier.weight(1f))
+                Stat("${artists.size}", appString(R.string.text_artists_1528d8), Modifier.weight(1f))
+                Stat(serverLabel.ifBlank { appString(R.string.text_server_cb0cb1) }, appString(R.string.text_server_cb0cb1), Modifier.weight(1f))
             }
         }
 
         item {
             Row(Modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
                 Box(
-                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).clickable(onClick = onEditProfile ?: onOpenSettings).padding(vertical = 12.dp),
+                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary).pressClickable(onClick = onEditProfile ?: onOpenSettings).padding(vertical = 12.dp),
                     contentAlignment = Alignment.Center,
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
@@ -159,9 +161,9 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun Stat(value: String, label: String) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+private fun Stat(value: String, label: String, modifier: Modifier = Modifier) {
+    Column(modifier, horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
     }
 }

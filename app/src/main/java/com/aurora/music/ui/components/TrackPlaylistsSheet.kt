@@ -39,6 +39,15 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
 import kotlinx.coroutines.sync.withPermit
 import com.aurora.music.model.accent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.material.icons.automirrored.outlined.QueueMusic
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.ErrorOutline
+import com.aurora.music.ui.theme.Motion
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,8 +83,8 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
         containerColor = colors.surface, tonalElevation = 0.dp,
         shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
     ) {
-        Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).padding(horizontal = 20.dp)) {
-            Text(stringResource(R.string.track_swipe_playlists), style = MaterialTheme.typography.headlineMedium,
+        Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).padding(horizontal = 24.dp)) {
+            Text(stringResource(R.string.track_swipe_playlists), style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold)
             Text(stringResource(R.string.track_playlists_hint), style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 18.dp))
@@ -97,25 +106,23 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(20.dp))
             when {
-                editor == null -> Text(stringResource(R.string.track_playlists_unavailable), color = colors.onSurfaceVariant)
-                loadFailed -> {
-                    Text(stringResource(R.string.track_playlists_load_error), color = colors.onSurfaceVariant)
-                    TextButton(onClick = { retry++ }) { Text(stringResource(R.string.track_swipe_retry)) }
-                }
-                playlists == null -> Box(Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(Modifier.size(28.dp))
-                }
-                playlists!!.isEmpty() -> Text(stringResource(R.string.track_playlists_empty), color = colors.onSurfaceVariant)
+                editor == null -> EmptyState(Icons.Outlined.CloudOff, stringResource(R.string.track_playlists_unavailable))
+                loadFailed -> EmptyState(Icons.Outlined.ErrorOutline, stringResource(R.string.track_playlists_load_error),
+                    action = stringResource(R.string.track_swipe_retry), onAction = { retry++ })
+                playlists == null -> LoadingState()
+                playlists!!.isEmpty() -> EmptyState(Icons.AutoMirrored.Outlined.QueueMusic, stringResource(R.string.track_playlists_empty))
                 else -> {
                     Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(stringResource(R.string.text_your_playlists_df03eb), Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(playlists!!.size.toString(), style = MaterialTheme.typography.labelMedium,
                             color = colors.onSurfaceVariant, modifier = Modifier.paperClip(CircleShape)
                                 .background(colors.surfaceContainerHigh).padding(horizontal = 10.dp, vertical = 4.dp))
                     }
-                    if (saveFailed) Text(stringResource(R.string.track_playlists_save_error), color = colors.error,
-                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 10.dp))
+                    AnimatedVisibility(saveFailed, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                        Text(stringResource(R.string.track_playlists_save_error), color = colors.error,
+                            style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 10.dp))
+                    }
                     LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 380.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 4.dp)) {
                         items(playlists!!, key = { it.id }) { playlist ->

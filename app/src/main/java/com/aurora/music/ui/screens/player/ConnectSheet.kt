@@ -1,6 +1,13 @@
 package com.aurora.music.ui.screens.player
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -42,6 +49,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -86,8 +94,12 @@ internal fun ConnectDevicesSection(onDismiss: () -> Unit) {
         Text(appString(R.string.connect_none_found), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
-    (session?.error?.collectAsStateWithLifecycle()?.value?.let { session?.problem() } ?: state.error)?.let {
-        Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
+    val problem = session?.error?.collectAsStateWithLifecycle()?.value?.let { session?.problem() } ?: state.error
+    // the last message stays up while the line folds away
+    val lastProblem = remember { arrayOf("") }
+    problem?.let { lastProblem[0] = it }
+    AnimatedVisibility(problem != null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+        Text(problem ?: lastProblem[0], Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error)
     }
     val current = remote
     if (state.controlling != null && current != null) {
@@ -103,20 +115,24 @@ internal fun ConnectDevicesSection(onDismiss: () -> Unit) {
     pairing?.let { found -> ConnectPairDialog(found.name, onPair = { code -> manager.pairDiscovered(found, code); pairing = null }, onDismiss = { pairing = null }) }
 }
 
+// the one row of every output list: connect peers, cast routes and audio devices
 @Composable
-private fun ConnectRow(icon: ImageVector, label: String, subtitle: String?, selected: Boolean, onClick: () -> Unit) {
+internal fun ConnectRow(icon: ImageVector, label: String, subtitle: String?, selected: Boolean, onClick: () -> Unit) {
+    val plate by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "rowPlate")
+    val glyph by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "rowGlyph")
+    val ink by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "rowInk")
     Row(
         Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
+        Box(Modifier.size(40.dp).paperClip(CircleShape).background(plate), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = glyph, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
-            subtitle?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1) }
+                color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            subtitle?.takeIf { it.isNotBlank() }?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
         }
         if (selected) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary)
     }
@@ -130,9 +146,11 @@ private fun ConnectChoices(title: String, options: List<Pair<String, String>>, s
     FlowRow(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEach { (id, name) ->
             val on = id == selected
-            Box(Modifier.paperClip(RoundedCornerShape(50)).background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+            val fill by animateColorAsState(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "choiceFill")
+            val ink by animateColorAsState(if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "choiceInk")
+            Box(Modifier.paperClip(RoundedCornerShape(50)).background(fill)
                 .clickable { onSelect(id) }.padding(horizontal = 16.dp, vertical = 10.dp)) {
-                Text(name, style = MaterialTheme.typography.labelLarge, color = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                Text(name, style = MaterialTheme.typography.labelLarge, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }
@@ -143,7 +161,7 @@ internal fun ConnectPairDialog(name: String, key: String? = null, onPair: (Strin
     var code by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.connect_pair_title, name)) },
+        title = { Text(appString(R.string.connect_pair_title, name), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 key?.let {

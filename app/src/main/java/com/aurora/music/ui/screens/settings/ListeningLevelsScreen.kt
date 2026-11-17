@@ -17,6 +17,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -33,6 +34,7 @@ import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
@@ -101,7 +103,7 @@ fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                             Text(profile.routeLabel.ifBlank { appString(R.string.text_output_not_bound_dbaf18) }, style = MaterialTheme.typography.bodySmall)
                             Text(appString(R.string.text_db_136a33, (profile.gainSetting), (levelText(profile.uncertaintyDb))), style = MaterialTheme.typography.bodySmall)
                             Text(profile.provenance, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 TextButton(enabled = !busy && bindable && profile.routeKey == route.route.key,
                                     onClick = { confirming = profile to route }) { Text(appString(R.string.text_use_1d4d43)) }
                                 TextButton(enabled = !busy && bindable, onClick = { editing = profile to route }) { Text(appString(R.string.text_edit_bind_e977d1)) }
@@ -149,7 +151,8 @@ fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         })
     }
     confirming?.let { (profile, expected) ->
-        AlertDialog(onDismissRequest = { confirming = null }, title = { Text(appString(R.string.text_confirm_hardware_d8779b)) }, text = {
+        AlertDialog(onDismissRequest = { confirming = null }, title = { Text(appString(R.string.text_confirm_hardware_d8779b),
+            maxLines = 2, overflow = TextOverflow.Ellipsis) }, text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(appString(R.string.text_headphones_ecc393, (profile.name)))
                 Text(appString(R.string.text_gain_db_cad396, (profile.gainSetting), (levelText(profile.gainDb))))
@@ -161,7 +164,8 @@ fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             perform { store.confirm(profile.id, expected) }
         }) { Text(appString(R.string.text_these_settings_match_4e8e86)) } }, dismissButton = { TextButton(onClick = { confirming = null }) { Text(appString(R.string.text_cancel_77dfd2)) } })
     }
-    if (clearHistory) AlertDialog(onDismissRequest = { clearHistory = false }, title = { Text(appString(R.string.text_clear_listening_history_5076df)) },
+    if (clearHistory) AlertDialog(onDismissRequest = { clearHistory = false }, title = { Text(appString(R.string.text_clear_listening_history_5076df),
+            maxLines = 2, overflow = TextOverflow.Ellipsis) },
         confirmButton = { TextButton(onClick = { clearHistory = false; perform { store.clearHistory() } }) { Text(appString(R.string.text_clear_719ea3)) } },
         dismissButton = { TextButton(onClick = { clearHistory = false }) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }

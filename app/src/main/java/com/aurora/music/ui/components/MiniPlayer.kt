@@ -4,13 +4,24 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import com.aurora.music.model.Song
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.likePop
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -20,8 +31,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
@@ -104,9 +113,9 @@ fun MiniPlayer(
         ) {
             Artwork(song.artworkUrl, song.accent, Modifier.size(artSize), corner = 10.dp)
             Spacer(Modifier.width(10.dp))
-            Column(Modifier.weight(1f)) {
+            TrackLabel(song, Modifier.weight(1f)) { track ->
                 Text(
-                    song.title,
+                    track.title,
                     style = if (ui.miniStyle == MiniStyle.PROMINENT) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
                     fontWeight = FontWeight.Bold,
                     color = MaterialTheme.colorScheme.onSurface,
@@ -114,7 +123,7 @@ fun MiniPlayer(
                     overflow = TextOverflow.Ellipsis,
                 )
                 Text(
-                    song.artist,
+                    track.artist,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     maxLines = 1,
@@ -127,16 +136,15 @@ fun MiniPlayer(
                         imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                         contentDescription = appString(R.string.text_like_c7e02c),
                         tint = likeTint,
-                        modifier = Modifier.size(24.dp),
+                        modifier = Modifier.size(24.dp).likePop(state.isCurrentLiked, song.id),
                     )
                 }
             }
-            Icon(
-                imageVector = if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                contentDescription = appString(R.string.text_play_pause_14a1d0),
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onTogglePlay).padding(6.dp),
-            )
+            val playPause = appString(R.string.text_play_pause_14a1d0)
+            Box(Modifier.size(40.dp).paperClip(CircleShape).clickable(role = Role.Button, onClick = onTogglePlay)
+                .semantics { contentDescription = playPause }.padding(6.dp)) {
+                PlayPauseIcon(state.isPlaying, MaterialTheme.colorScheme.onSurface, Modifier.fillMaxSize())
+            }
             if (!isMix) Icon(
                 imageVector = Icons.Filled.SkipNext,
                 contentDescription = appString(R.string.text_next_bc9819),
@@ -209,19 +217,35 @@ private fun GlassMiniPlayer(
     ) {
         Artwork(song.artworkUrl, song.accent, Modifier.size(art), corner = 10.dp)
         Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(song.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.onSurface,
+        TrackLabel(song, Modifier.weight(1f)) { track ->
+            Text(track.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.onSurface,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(song.artist, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
+            Text(track.artist, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         if (ui.miniStyle != MiniStyle.COMPACT && !isMix && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(44.dp).paperClip(CircleShape)) {
             Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, appString(R.string.text_like_c7e02c),
-                tint = likeTint, modifier = Modifier.size(24.dp))
+                tint = likeTint, modifier = Modifier.size(24.dp).likePop(state.isCurrentLiked, song.id))
         }
-        GlassGlyph(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, appString(R.string.text_play_pause_14a1d0), colors.onSurface, 32.dp, onTogglePlay)
+        val playPause = appString(R.string.text_play_pause_14a1d0)
+        Box(Modifier.size(44.dp).paperClip(CircleShape).clickable(role = Role.Button, onClick = onTogglePlay)
+            .semantics { contentDescription = playPause }, contentAlignment = Alignment.Center) {
+            PlayPauseIcon(state.isPlaying, colors.onSurface, Modifier.size(32.dp))
+        }
         if (!isMix) GlassGlyph(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), colors.onSurface, 32.dp, onNext)
     }
+}
+
+// title and artist crossfade when the track changes; edits to the same track update in place
+@Composable
+private fun TrackLabel(song: Song, modifier: Modifier, content: @Composable (Song) -> Unit) {
+    AnimatedContent(
+        targetState = song,
+        modifier = modifier,
+        transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
+        contentKey = { it.id },
+        label = "miniTrack",
+    ) { track -> Column { content(track) } }
 }
 
 @Composable

@@ -13,7 +13,9 @@ import android.os.Handler
 import android.os.Looper
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -108,6 +110,7 @@ fun AudioOutputSettingsScreen(
             }
             item { SettingsSectionTitle(appString(R.string.text_output_mode_ba6e71)) }
             item { OutputRateSettings(ratePolicy) { change -> scope.launch { store.updateOutputRatePolicy(change) } } }
+            item { Spacer(Modifier.height(8.dp)) }
             item {
                 SettingsGroup {
                     SettingsSwitchRow(

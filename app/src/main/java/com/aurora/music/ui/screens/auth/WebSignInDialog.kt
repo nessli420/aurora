@@ -12,6 +12,9 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import com.aurora.music.ui.theme.TextButton
@@ -91,7 +94,12 @@ internal fun WebSignInDialog(
                     TextButton(onClick = { sentKey = ""; browser?.reload() }, enabled = !state.loading) { Text(appString(R.string.text_reload_cce715)) }
                 }
                 Text(waiting, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                if (pageLoading || state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                // the bar keeps its slot so the page below never resizes
+                Box(Modifier.fillMaxWidth().height(4.dp)) {
+                    androidx.compose.animation.AnimatedVisibility(pageLoading || state.loading, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                }
                 (error ?: state.error)?.let {
                     Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))

@@ -24,7 +24,8 @@ fun RecapInsights(recap: ListeningRecap, previous: ListeningRecap) {
         .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primaryContainer, MaterialTheme.colorScheme.tertiaryContainer))).padding(22.dp),
         verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Text(appString(R.string.recap_sound), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onPrimaryContainer)
-        Text(artist.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimaryContainer)
+        Text(artist.name, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimaryContainer,
+            maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
         Text(appString(R.string.text_minutes_of_your_listening_time_3f3db1, (artist.millis / 60_000), (artist.millis * 100 / recap.millis.coerceAtLeast(1))), color = MaterialTheme.colorScheme.onPrimaryContainer)
     }
     if (recap.window.period != RecapPeriod.ALL && previous.window == recap.window.move(-1) && previous.millis > 0) {

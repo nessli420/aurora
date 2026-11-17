@@ -38,7 +38,11 @@ import androidx.compose.material.icons.filled.Workspaces
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -87,8 +91,10 @@ fun SidebarContent(
             }
             Spacer(Modifier.width(12.dp))
             Column {
-                Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                Text(host, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(username.ifBlank { appString(R.string.text_listener_37ea46) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                Text(host, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
 
@@ -111,15 +117,17 @@ fun SidebarContent(
 
 @Composable
 private fun DrawerItem(icon: ImageVector, label: String, tint: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.onSurface, selected: Boolean = false, onClick: () -> Unit) {
-    val content = if (selected) MaterialTheme.colorScheme.primary else tint
+    val content by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else tint, Motion.state(), label = "drawerItemTint")
+    val fill by animateColorAsState(MaterialTheme.colorScheme.primary.copy(alpha = if (selected) 0.14f else 0f), Motion.state(), label = "drawerItem")
     Row(
         Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
-            .background(if (selected) MaterialTheme.colorScheme.primary.copy(alpha = 0.14f) else androidx.compose.ui.graphics.Color.Transparent)
+            .background(fill)
             .clickable(onClick = onClick).padding(horizontal = 8.dp, vertical = 14.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Icon(icon, null, tint = content, modifier = Modifier.size(24.dp))
         Spacer(Modifier.width(16.dp))
-        Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, color = content)
+        Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, color = content,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }

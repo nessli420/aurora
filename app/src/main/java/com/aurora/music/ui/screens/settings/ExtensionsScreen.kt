@@ -9,9 +9,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Extension
+import com.aurora.music.ui.components.EmptyState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ProcessingRack
@@ -43,13 +48,15 @@ fun ExtensionsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onRack: 
     }
     Column(Modifier.fillMaxSize().padding(contentPadding)) {
         SettingsTopBar(appString(R.string.text_extensions_656bcf), onBack)
-        LazyColumn(contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(contentPadding = PaddingValues(vertical = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item {
-                Text(appString(R.string.text_install_a_compatible_extension_app_then_enable_it_here_c7fadc), style = MaterialTheme.typography.bodyMedium)
-                TextButton(onClick = { run { manager.refresh() } }, enabled = !busy) { Text(appString(R.string.text_refresh_56e3ba)) }
-                message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
-                if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
-                if (entries.isEmpty()) Text(appString(R.string.text_no_extensions_installed_83afbc))
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    Text(appString(R.string.text_install_a_compatible_extension_app_then_enable_it_here_c7fadc), style = MaterialTheme.typography.bodyMedium)
+                    TextButton(onClick = { run { manager.refresh() } }, enabled = !busy) { Text(appString(R.string.text_refresh_56e3ba)) }
+                    message?.let { Text(it, color = MaterialTheme.colorScheme.primary) }
+                    Box(Modifier.fillMaxWidth().height(4.dp)) { if (busy) LinearProgressIndicator(Modifier.fillMaxWidth()) }
+                }
+                if (entries.isEmpty()) EmptyState(Icons.Filled.Extension, appString(R.string.text_no_extensions_installed_83afbc))
             }
             items(entries, key = { it.component }) { entry ->
                 SettingsGroup {
@@ -61,10 +68,11 @@ fun ExtensionsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onRack: 
                         entry.error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
                         val license = entry.manifest?.license ?: entry.descriptor?.license.orEmpty()
                         if (license.isNotBlank()) Text(appString(R.string.text_license_1ba7bb, (license)), style = MaterialTheme.typography.bodySmall)
-                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            Text(appString(R.string.text_enabled_df174a), modifier = Modifier.padding(top = 12.dp))
-                            Switch(checked = entry.enabled, enabled = !busy && entry.descriptor?.compatible == true,
-                                onCheckedChange = { enabled -> run { manager.setEnabled(entry.component, enabled, entry.descriptor).getOrThrow() } })
+                        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                            Text(appString(R.string.text_enabled_df174a))
+                            SettingsToggle(entry.enabled, enabled = !busy && entry.descriptor?.compatible == true) { enabled ->
+                                run { manager.setEnabled(entry.component, enabled, entry.descriptor).getOrThrow() }
+                            }
                         }
                         if (entry.enabled) {
                             if ("metadata" in capabilities) Text(appString(R.string.text_receives_title_artist_and_album_when_you_request_a_tag_lookup_dd0b6a), style = MaterialTheme.typography.bodySmall)
@@ -93,7 +101,8 @@ fun ExtensionsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onRack: 
         }
     }
     pendingAudio?.let { rack ->
-        AlertDialog(onDismissRequest = { pendingAudio = null }, title = { Text(appString(R.string.text_load_audio_preset_24bd13)) },
+        AlertDialog(onDismissRequest = { pendingAudio = null },
+            title = { Text(appString(R.string.text_load_audio_preset_24bd13), maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(rack.name, style = MaterialTheme.typography.titleSmall)

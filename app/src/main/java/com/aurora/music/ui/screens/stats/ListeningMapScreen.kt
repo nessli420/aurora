@@ -166,8 +166,8 @@ fun ListeningMapScreen(contentPadding: PaddingValues, onBack: () -> Unit, songId
     }
     if (confirmDelete) AlertDialog(
         onDismissRequest = { confirmDelete = false },
-        title = { Text(appString(R.string.insights_delete_locations)) },
-        text = { Text(appString(R.string.insights_delete_locations_body)) },
+        title = { Text(appString(R.string.insights_delete_locations), maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        text = { Text(appString(R.string.insights_delete_locations_body), style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
             TextButton(onClick = {
                 confirmDelete = false

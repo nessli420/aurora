@@ -7,7 +7,6 @@ import com.aurora.music.localization.appPlural
 import com.aurora.music.R
 
 import android.widget.Toast
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -151,6 +150,7 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
                     }
                 }
             }
+            Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 val mobileData by store.mobileDataDownloads.collectAsStateWithLifecycle(initialValue = false)
                 SettingsSwitchRow(Icons.Filled.SignalCellularAlt, appString(R.string.storage_mobile_data), checked = mobileData) { v ->
@@ -402,39 +402,41 @@ private fun ReplayGainScanCard() {
     val container = LocalContextApp()
     val rg by container.replayGainScanner.progress.collectAsStateWithLifecycle()
     SettingsSectionTitle(appString(R.string.text_volume_leveling_a9df98))
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-            .paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(enabled = !rg.running) { container.replayGainScanner.scan() }
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        if (rg.running) {
-            androidx.compose.material3.CircularProgressIndicator(
-                modifier = Modifier.width(22.dp).height(22.dp), strokeWidth = 2.dp,
-            )
-        } else {
-            Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.primary)
-        }
-        Spacer(Modifier.width(12.dp))
-        Column(Modifier.weight(1f)) {
-            Text(
-                if (rg.running) appString(R.string.text_scanning_replaygain_c527cc) else appString(R.string.text_scan_replaygain_d09e86),
-                style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
-            )
-            Text(
-                when {
-                    rg.running -> "${rg.done} / ${rg.total} • ${rg.current}"
-                    container.replayGainStore.size > 0 -> appString(R.string.text_analyzed_tap_to_scan_new_tracks_5933cd, (container.replayGainStore.size))
-                    else -> appString(R.string.text_measure_loudness_ebu_r128_to_level_playback_volume_30f01c)
-                },
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
-            )
-        }
-        if (rg.running) {
-            Text(appString(R.string.text_cancel_77dfd2), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { container.replayGainScanner.cancel() }.padding(horizontal = 10.dp, vertical = 6.dp))
+    SettingsGroup {
+        Row(
+            Modifier.fillMaxWidth().clickable(enabled = !rg.running) { container.replayGainScanner.scan() }
+                .padding(horizontal = 20.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            androidx.compose.foundation.layout.Box(Modifier.width(38.dp).height(38.dp), contentAlignment = Alignment.Center) {
+                if (rg.running) {
+                    androidx.compose.material3.CircularProgressIndicator(
+                        modifier = Modifier.width(22.dp).height(22.dp), strokeWidth = 2.dp,
+                    )
+                } else {
+                    Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.primary)
+                }
+            }
+            Spacer(Modifier.width(14.dp))
+            Column(Modifier.weight(1f)) {
+                Text(
+                    if (rg.running) appString(R.string.text_scanning_replaygain_c527cc) else appString(R.string.text_scan_replaygain_d09e86),
+                    style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
+                )
+                Text(
+                    when {
+                        rg.running -> "${rg.done} / ${rg.total} • ${rg.current}"
+                        container.replayGainStore.size > 0 -> appString(R.string.text_analyzed_tap_to_scan_new_tracks_5933cd, (container.replayGainStore.size))
+                        else -> appString(R.string.text_measure_loudness_ebu_r128_to_level_playback_volume_30f01c)
+                    },
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis,
+                )
+            }
+            if (rg.running) {
+                Text(appString(R.string.text_cancel_77dfd2), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { container.replayGainScanner.cancel() }.padding(horizontal = 12.dp, vertical = 10.dp))
+            }
         }
     }
     Text(

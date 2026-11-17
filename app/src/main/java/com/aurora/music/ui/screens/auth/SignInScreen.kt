@@ -6,6 +6,19 @@ import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.localization.appString
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.heightIn
@@ -163,8 +176,14 @@ fun SignInScreen(
                         else -> appString(R.string.text_connect_6e2889)
                     }, style = MaterialTheme.typography.labelSmall, color = palette.onSurfaceVariant, letterSpacing = 1.sp)
                 }
+                AnimatedContent(state.step, transitionSpec = {
+                    val dir = if (targetState.ordinal > initialState.ordinal) 1 else -1
+                    (fadeIn(Motion.enter()) + slideInHorizontally(Motion.enter()) { dir * it / 10 }) togetherWith
+                        (fadeOut(Motion.exit()) + slideOutHorizontally(Motion.exit()) { -dir * it / 10 }) using SizeTransform(clip = false)
+                }, label = "authStep") { step ->
+                Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
                 Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    Text(when (state.step) {
+                    Text(when (step) {
                         AuthStep.TYPE -> appString(R.string.text_a_home_for_your_music_20a46f)
                         AuthStep.SERVER -> appString(R.string.text_connect_your_server_8989fc)
                         AuthStep.CREDENTIALS -> appString(if (state.type == ServerType.PLEX) R.string.plex_connect_title else R.string.text_make_yourself_at_home_3ea2e2)
@@ -172,8 +191,8 @@ fun SignInScreen(
                         AuthStep.YOUTUBE_MUSIC -> appString(R.string.text_connect_youtube_music_64e032)
                         AuthStep.SOUNDCLOUD -> appString(R.string.soundcloud_connect_title)
                         AuthStep.APPLE_MUSIC -> appString(R.string.apple_music_connect_title)
-                    }, fontSize = if (state.step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (state.step == AuthStep.TYPE) 43.sp else 36.sp, fontWeight = FontWeight.Bold, color = palette.onBackground)
-                    Text(when (state.step) {
+                    }, fontSize = if (step == AuthStep.TYPE) 38.sp else 30.sp, lineHeight = if (step == AuthStep.TYPE) 43.sp else 36.sp, fontWeight = FontWeight.Bold, color = palette.onBackground)
+                    Text(when (step) {
                         AuthStep.TYPE -> appString(R.string.text_your_collection_and_your_discoveries_together_in_one_player_093361)
                         AuthStep.SERVER -> appString(R.string.text_enter_the_address_of_your_server_3f01ed, when (state.type) {
                             ServerType.JELLYFIN -> "Jellyfin"
@@ -187,7 +206,7 @@ fun SignInScreen(
                         AuthStep.APPLE_MUSIC -> appString(R.string.apple_music_connect_subtitle)
                     }, style = MaterialTheme.typography.bodyLarge, color = palette.onSurfaceVariant)
                 }
-                when (state.step) {
+                when (step) {
                     AuthStep.TYPE -> TypeStep(onSelectType, requestLocal, permDenied, savedSessions, onUseSaved, !state.loading)
                     AuthStep.SERVER -> ServerStep(state, onScheme, onHost, canContinueServer, onContinueServer)
                     AuthStep.CREDENTIALS -> CredentialsStep(state, onUsername, onPassword, onBack, canSubmit, onSignIn, onQuickConnect, onCancelQuickConnect)
@@ -196,9 +215,14 @@ fun SignInScreen(
                     AuthStep.SOUNDCLOUD -> SoundCloudStep(state, onConnectSoundCloud, onContinueAsGuest)
                     AuthStep.APPLE_MUSIC -> AppleMusicStep(state, onConnectAppleMusic, onContinueAsGuest)
                 }
-                if (state.loading && state.quickConnectCode == null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                }
+                }
+                AnimatedVisibility(state.loading && state.quickConnectCode == null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()),
+                    exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     CircularProgressIndicator(Modifier.size(20.dp), color = AuroraRose, strokeWidth = 2.dp)
                     Text(appString(R.string.text_connecting_your_library_a0430a), color = palette.onSurfaceVariant, style = MaterialTheme.typography.bodyMedium)
+                }
                 }
                 AnimatedVisibility(state.error != null) {
                     Surface(color = palette.errorContainer, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
@@ -255,10 +279,10 @@ private fun SourceLabel(label: String) {
 private fun ServerTile(title: String, subtitle: String, icon: ImageVector, modifier: Modifier, enabled: Boolean, onClick: () -> Unit) {
     Column(modifier.paperClip(RoundedCornerShape(20.dp)).background(MaterialTheme.colorScheme.surface)
         .border(1.dp, MaterialTheme.colorScheme.outlineVariant, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp)))
-        .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        .pressClickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         Icon(icon, null, tint = AuroraRose, modifier = Modifier.size(24.dp))
         Column(verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -328,13 +352,13 @@ private fun ServerTypeCard(icon: ImageVector, title: String, subtitle: String, e
     Row(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(20.dp))
         .background(if (featured) AuroraRose.copy(alpha = .10f) else MaterialTheme.colorScheme.surface)
         .border(1.dp, if (featured) AuroraRose.copy(alpha = .3f) else MaterialTheme.colorScheme.outlineVariant, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp)))
-        .clickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+        .pressClickable(enabled = enabled, role = Role.Button, onClick = onClick).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.size(42.dp).paperClip(RoundedCornerShape(13.dp)).background(AuroraRose.copy(alpha = .10f)), contentAlignment = Alignment.Center) {
             Icon(icon, null, tint = AuroraRose, modifier = Modifier.size(23.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(3.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
         Spacer(Modifier.width(8.dp))
@@ -414,7 +438,7 @@ private fun CredentialsStep(
             Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Outlined.Dns, null, tint = AuroraRose)
                 Spacer(Modifier.width(12.dp))
-                Text(state.scheme + state.host, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                Text(state.scheme + state.host, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 TextButton(onClick = onBack, enabled = !state.loading) { Text(appString(R.string.text_edit_530164)) }
             }
         }
@@ -520,11 +544,13 @@ private fun QuickConnectPanel(state: AuthUiState, onCancel: () -> Unit) {
 
 @Composable
 private fun SchemePill(label: String, selected: Boolean, modifier: Modifier = Modifier, onClick: () -> Unit) {
+    val fill by animateColorAsState(if (selected) AuroraRose else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f), Motion.state(), label = "schemeFill")
+    val ink by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "schemeInk")
     Box(
         modifier
             .height(46.dp)
             .paperClip(RoundedCornerShape(12.dp))
-            .background(if (selected) AuroraRose else MaterialTheme.colorScheme.surface.copy(alpha = 0.4f))
+            .background(fill)
             .then(if (selected) Modifier else Modifier.border(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(12.dp))))
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center,
@@ -533,7 +559,7 @@ private fun SchemePill(label: String, selected: Boolean, modifier: Modifier = Mo
             label,
             style = MaterialTheme.typography.labelLarge,
             fontWeight = FontWeight.Bold,
-            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+            color = ink,
         )
     }
 }
@@ -541,8 +567,10 @@ private fun SchemePill(label: String, selected: Boolean, modifier: Modifier = Mo
 @Composable
 private fun PrimaryButton(label: String, enabled: Boolean, modifier: Modifier = Modifier, loading: Boolean = false, onClick: () -> Unit) {
     Button(onClick = onClick, enabled = enabled, modifier = modifier.heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
-        if (loading) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-        else Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        AnimatedContent(loading, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) }, contentAlignment = Alignment.Center, label = "primaryButton") { busy ->
+            if (busy) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+            else Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+        }
     }
 }
 

@@ -5,7 +5,12 @@ import android.webkit.WebResourceError
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.height
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
@@ -93,7 +98,12 @@ private fun SpotifyLoginBrowser(onClose: () -> Unit, onCaptured: (String, Spotif
                 }
                 Text(appString(R.string.spotify_web_browser_hint), style = MaterialTheme.typography.bodySmall,
                     modifier = Modifier.padding(horizontal = 16.dp))
-                if (pageLoading || reading) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 8.dp))
+                // the bar keeps its slot so the page below never resizes
+                Box(Modifier.fillMaxWidth().padding(top = 8.dp).height(4.dp)) {
+                    androidx.compose.animation.AnimatedVisibility(pageLoading || reading, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                }
                 error?.let {
                     Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))

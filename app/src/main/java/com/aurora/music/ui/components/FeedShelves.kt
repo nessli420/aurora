@@ -40,6 +40,7 @@ import com.aurora.music.data.HomeFeedItem
 import com.aurora.music.data.HomeFeedSection
 import com.aurora.music.model.Song
 import com.aurora.music.model.accent
+import com.aurora.music.ui.theme.pressClickable
 
 val LocalStartRadio = androidx.compose.runtime.staticCompositionLocalOf<((Song) -> Unit)?> { null }
 
@@ -119,7 +120,7 @@ private fun TrackGridRow(song: Song, width: Dp, onClick: () -> Unit) {
 
 @Composable
 fun FeedTrackCard(song: Song, onClick: () -> Unit) {
-    Column(Modifier.width(172.dp).clip(MaterialTheme.shapes.medium).clickable(onClick = onClick).padding(8.dp)) {
+    Column(Modifier.width(172.dp).clip(MaterialTheme.shapes.medium).pressClickable(onClick = onClick).padding(8.dp)) {
         Box {
             Artwork(song.artworkUrl, song.accent, Modifier.size(156.dp), corner = 14.dp)
             Box(Modifier.align(Alignment.BottomEnd).padding(8.dp).size(34.dp).paperClip(CircleShape)

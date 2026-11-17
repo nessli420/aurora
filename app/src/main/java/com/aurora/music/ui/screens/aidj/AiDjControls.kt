@@ -37,7 +37,7 @@ import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.Text
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -81,6 +81,9 @@ import com.aurora.music.ai.DjSegment
 import com.aurora.music.ai.DjSet
 import com.aurora.music.localization.appString
 import com.aurora.music.ui.screens.settings.storageSize
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import com.aurora.music.ui.theme.Motion
 
 fun aiDjLabel(state: DjMode.State): String = state.intent?.let { it.title.ifBlank { state.prompt } }
     ?: state.segment?.let { aiDjSetLabel(it, state.artist) } ?: appString(R.string.ai_dj_busy)
@@ -105,7 +108,7 @@ fun AiDjQueueBanner(state: DjMode.State, onSteer: (String) -> Unit, onSwitch: ()
     val send = { if (steer.isNotBlank() && !state.busy) { onSteer(steer); steer = "" } }
     Card(Modifier.fillMaxWidth().padding(vertical = 6.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        Column(Modifier.animateContentSize(Motion.state()).padding(horizontal = 14.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(Icons.Filled.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(10.dp))
@@ -230,8 +233,10 @@ fun AiDjPlayerButton(state: DjMode.State, onPress: () -> Unit, onHold: () -> Uni
     val colors = MaterialTheme.colorScheme
     val tint = LocalContentColor.current
     val label = appString(R.string.ai_dj_control)
+    val fill by animateColorAsState(if (state.listening) colors.primary else colors.primary.copy(alpha = 0f), Motion.state(), label = "aiDjFill")
+    val ink by animateColorAsState(if (state.listening) colors.onPrimary else tint, Motion.state(), label = "aiDjInk")
     Box(
-        Modifier.size(40.dp).paperClip(CircleShape).background(if (state.listening) colors.primary else Color.Transparent)
+        Modifier.size(40.dp).paperClip(CircleShape).background(fill)
             .semantics { contentDescription = label; role = Role.Button; onClick { press(); true } }
             .pointerInput(Unit) {
                 var holding = false
@@ -243,7 +248,7 @@ fun AiDjPlayerButton(state: DjMode.State, onPress: () -> Unit, onHold: () -> Uni
             },
         contentAlignment = Alignment.Center,
     ) {
-        Icon(if (state.listening) Icons.Filled.Mic else Icons.Filled.AutoAwesome, null, tint = if (state.listening) colors.onPrimary else tint, modifier = Modifier.size(22.dp))
+        Icon(if (state.listening) Icons.Filled.Mic else Icons.Filled.AutoAwesome, null, tint = ink, modifier = Modifier.size(22.dp))
     }
 }
 

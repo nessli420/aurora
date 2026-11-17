@@ -30,13 +30,15 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.LocalFireDepartment
+import androidx.compose.material.icons.filled.History
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.pressClickable
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.material3.FilterChip
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -86,13 +88,13 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
-            Text(appString(R.string.text_your_listening_recap_2d4efe), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.text_your_listening_recap_2d4efe), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         LazyColumn(contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             item {
                 Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     RecapPeriod.entries.forEach { period ->
-                        FilterChip(selected = window.period == period, onClick = { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }, label = { Text(period.label) })
+                        StatChip(window.period == period, period.label) { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }
                     }
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -102,8 +104,8 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                             datePicker.maxDate = System.currentTimeMillis(); show()
                         }
                     }, horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(window.label, fontWeight = FontWeight.Bold)
-                        Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
+                        Text(window.label, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
                 }
@@ -121,7 +123,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                 }
                 if (onOpenInsights != null && insights.enabled) {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp).paperClip(RoundedCornerShape(18.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer).clickable { onOpenInsights(window) }.padding(16.dp),
+                        .background(MaterialTheme.colorScheme.primaryContainer).pressClickable { onOpenInsights(window) }.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         Text(appString(R.string.insights_open_period), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                             fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -129,7 +131,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     }
                 }
             }
-            if (recap.millis == 0L) item { Text(appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2), Modifier.padding(24.dp)) }
+            if (recap.millis == 0L) item { EmptyState(Icons.Filled.History, appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2)) }
             else {
                 item { RecapInsights(recap, previous) }
                 item {
@@ -143,8 +145,8 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     }
                     ListeningClock(recap.hourly.map { (it / 1000).coerceAtMost(Int.MAX_VALUE.toLong()).toInt() }.toIntArray())
                     Row(Modifier.padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        FilterChip(!byMinutes, { byMinutes = false }, label = { Text(appString(R.string.text_most_played_14202e)) })
-                        FilterChip(byMinutes, { byMinutes = true }, label = { Text(appString(R.string.text_most_minutes_0d8b47)) })
+                        StatChip(!byMinutes, appString(R.string.text_most_played_14202e)) { byMinutes = false }
+                        StatChip(byMinutes, appString(R.string.text_most_minutes_0d8b47)) { byMinutes = true }
                     }
                 }
                 listOf(appString(R.string.text_top_artists_4920f8) to recap.artists, appString(R.string.text_top_songs_ad7864) to recap.songs, appString(R.string.text_top_albums_4dfdc0) to recap.albums).forEachIndexed { kind, (title, ranks) ->
@@ -181,10 +183,10 @@ private fun EarlierListeningDialog(earlierMs: Long, onDismiss: () -> Unit, onSav
     val numeric = KeyboardOptions(keyboardType = KeyboardType.Number)
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.earlier_listening_title)) },
+        title = { Text(appString(R.string.earlier_listening_title), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(appString(R.string.earlier_listening_body))
+                Text(appString(R.string.earlier_listening_body), style = MaterialTheme.typography.bodyMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(hours, { hours = it.filter(Char::isDigit).take(7) }, Modifier.weight(1f), label = { Text(appString(R.string.earlier_listening_hours)) },
                         singleLine = true, isError = parsed == null, keyboardOptions = numeric)
@@ -248,9 +250,9 @@ private fun ListeningClock(byHour: IntArray) {
 
 @Composable
 private fun StatCard(value: String, label: String, modifier: Modifier) {
-    Column(modifier.paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(modifier.paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp, horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

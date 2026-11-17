@@ -29,6 +29,11 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.material.icons.filled.AutoFixHigh
 import androidx.compose.material.icons.filled.Compress
@@ -52,7 +57,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.Text
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.TextField
@@ -70,8 +75,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.AppContainer
 import com.aurora.music.data.AudioPrefs
@@ -208,10 +217,7 @@ private fun CollapsibleSection(
     title: String, icon: ImageVector, summary: String?, open: Boolean, onToggle: () -> Unit,
     content: @Composable ColumnScope.() -> Unit,
 ) {
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 5.dp)
-            .paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)),
-    ) {
+    Box(Modifier.padding(vertical = 5.dp)) { SettingsGroup {
         Row(Modifier.fillMaxWidth().clickable(onClick = onToggle).padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Box(
                 Modifier.size(38.dp).paperClip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHighest),
@@ -220,13 +226,20 @@ private fun CollapsibleSection(
             Spacer(Modifier.width(14.dp))
             Column(Modifier.weight(1f)) {
                 Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                if (!summary.isNullOrBlank()) Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                if (!summary.isNullOrBlank()) Text(summary, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             Icon(if (open) Icons.Filled.ExpandLess else Icons.Filled.ExpandMore, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        AnimatedVisibility(visible = open) {
-            Column(Modifier.padding(bottom = 10.dp), content = content)
-        }
+        AudioSection(open, Modifier.padding(bottom = 10.dp), content = content)
+    } }
+}
+
+// optional sections open and close the same way on every audio screen
+@Composable
+internal fun AudioSection(visible: Boolean, modifier: Modifier = Modifier, spacing: Dp = 0.dp, content: @Composable ColumnScope.() -> Unit) {
+    AnimatedVisibility(visible, enter = expandVertically(Motion.enter()) + fadeIn(Motion.enter()),
+        exit = shrinkVertically(Motion.exit()) + fadeOut(Motion.exit())) {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(spacing), content = content)
     }
 }
 
@@ -241,9 +254,7 @@ private fun LazyListScope.collapsible(
 
 @Composable
 private fun ToneEngineCard(mode: Int, onSelect: (Int) -> Unit) {
-    Column(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp).paperClip(RoundedCornerShape(18.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.5f)).padding(12.dp),
-    ) {
+    SettingsGroup { Column(Modifier.padding(12.dp)) {
         EngineDropdown(mode, onSelect)
         Text(
             when (mode) {
@@ -254,7 +265,7 @@ private fun ToneEngineCard(mode: Int, onSelect: (Int) -> Unit) {
             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
         )
-    }
+    } }
 }
 
 @Composable
@@ -291,6 +302,7 @@ private fun ConvolutionPanel(prefs: AudioPrefs, store: SettingsStore, scope: Cor
                 Text(
                     prefs.dspConvIrName.ifBlank { appString(R.string.text_no_impulse_response_selected_a643d4) },
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
             }
             Switch(checked = prefs.dspConvEnabled, onCheckedChange = { v -> scope.launch { store.setDspConvEnabled(v) } })
@@ -322,15 +334,17 @@ private fun PillSelector(options: List<String>, selected: Int, onSelect: (Int) -
     ) {
         options.forEachIndexed { i, opt ->
             val active = i == selected
+            val fill by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0f), Motion.state(), label = "pillFill")
+            val ink by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "pillInk")
             Box(
                 Modifier.weight(1f).paperClip(RoundedCornerShape(50))
-                    .background(if (active) MaterialTheme.colorScheme.primary else Color.Transparent)
-                    .clickable { onSelect(i) }.padding(vertical = 8.dp),
+                    .background(fill)
+                    .clickable { onSelect(i) }.padding(horizontal = 8.dp, vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(
                     opt, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
-                    color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, maxLines = 1,
+                    color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 )
             }
         }
@@ -410,8 +424,9 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = 6.dp)) {
                 Icon(Icons.Filled.Headset, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.width(20.dp))
                 Spacer(Modifier.width(8.dp))
-                Text(appString(R.string.text_applied_60aafc, (active)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.weight(1f))
+                Text(appString(R.string.text_applied_60aafc, (active)), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(8.dp))
                 Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable {
                         scope.launch { store.setDspParametric(emptyList()); store.setDspPreamp(0f); store.setActiveEqProfile("") }
@@ -424,7 +439,7 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
             modifier = Modifier.fillMaxWidth(),
             placeholder = { Text(if (source == 0) appString(R.string.text_search_brand_or_model_673f49) else appString(R.string.text_search_live_iem_measurements_24a92f)) },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
-            trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { query = "" }.padding(4.dp)) },
+            trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { query = "" }.padding(8.dp)) },
             singleLine = true,
             shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(14.dp)),
             colors = TextFieldDefaults.colors(
@@ -472,8 +487,8 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Column(Modifier.weight(1f)) {
-                    Text(p.name, style = MaterialTheme.typography.bodyMedium, maxLines = 2)
-                    Text("${p.source} · ${p.kind.label}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+                    Text(p.name, style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                    Text("${p.source} · ${p.kind.label}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 }
                 Icon(Icons.Filled.Add, appString(R.string.text_apply_cfea41), tint = MaterialTheme.colorScheme.primary)
             }
@@ -502,15 +517,16 @@ private fun AutoEqPanel(container: AppContainer, prefs: AudioPrefs, store: Setti
                             store.bindEqToCurrentOutput(active, prefs.dspPreampDb, prefs.dspParametric)
                                 .onFailure { toast(it.message ?: appString(R.string.text_could_not_bind_this_output_15b372)) }
                         }
-                    }.padding(vertical = 12.dp),
+                    }.padding(horizontal = 12.dp, vertical = 12.dp),
                 contentAlignment = Alignment.Center,
-            ) { Text(appString(R.string.text_bind_to_75e438, (active), (outLabel)), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary) }
+            ) { Text(appString(R.string.text_bind_to_75e438, (active), (outLabel)), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary,
+                maxLines = 2, overflow = TextOverflow.Ellipsis, textAlign = TextAlign.Center) }
         }
         bindings.forEach { b ->
             Row(Modifier.fillMaxWidth().padding(vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
-                    Text(b.deviceLabel, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1)
-                    Text(b.profileName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    Text(b.deviceLabel, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(b.profileName, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Icon(Icons.Filled.Close, appString(R.string.text_unbind_e40303), tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { scope.launch { store.removeEqBinding(b.deviceKey) } }.padding(4.dp))
@@ -647,11 +663,11 @@ private fun LazyListScope.customDspSection(
     val dyn = buildList { if (prefs.dspLimiterEnabled) add(appString(R.string.text_limiter_20fee6)); if (prefs.dspCompEnabled) add(appString(R.string.text_compressor_b23f61)) }.joinToString(" · ").ifBlank { appString(R.string.text_off_e3de5a) }
     collapsible("c_dyn", appString(R.string.text_dynamics_7d5536), Icons.Filled.Compress, dyn, expanded) {
         SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_limiter_20fee6), appString(R.string.text_sample_peak_control_with_attack_and_release_936da5), prefs.dspLimiterEnabled) { v -> scope.launch { store.setDspLimiterEnabled(v) } }
-        if (prefs.dspLimiterEnabled) {
+        AudioSection(prefs.dspLimiterEnabled) {
             FloatSliderRow(appString(R.string.text_ceiling_e29db9), prefs.dspLimiterCeilingDb, -6f..0f, valueText = { appString(R.string.text_1f_db_02557a).format(it) }) { v -> store.setDspCeiling(v) }
         }
         SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_compressor_b23f61), appString(R.string.text_even_out_loud_quiet_passages_5f8fe4), prefs.dspCompEnabled) { v -> scope.launch { store.setDspCompEnabled(v) } }
-        if (prefs.dspCompEnabled) {
+        AudioSection(prefs.dspCompEnabled) {
             FloatSliderRow(appString(R.string.text_threshold_c51f7b), prefs.dspCompThreshDb, -40f..0f, valueText = { appString(R.string.text_0f_db_fd1f4d).format(it) }) { v -> store.setDspCompThresh(v) }
             FloatSliderRow(appString(R.string.text_ratio_794f65), prefs.dspCompRatio, 1f..10f, valueText = { "%.1f:1".format(it) }) { v -> store.setDspCompRatio(v) }
         }
@@ -680,7 +696,8 @@ private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {
                     .clickable { expanded = true }.padding(horizontal = 16.dp, vertical = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Text(labels.getOrElse(selected) { labels[0] }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(labels.getOrElse(selected) { labels[0] }, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f),
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Icon(Icons.Filled.ArrowDropDown, appString(R.string.text_choose_engine_dee9e6), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -700,12 +717,14 @@ private fun EngineDropdown(selected: Int, onSelect: (Int) -> Unit) {
 
 @Composable
 private fun PresetChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val fill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "chipFill")
+    val ink by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "chipInk")
     Box(
         Modifier.paperClip(RoundedCornerShape(50))
-            .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+            .background(fill)
             .clickable(onClick = onClick).padding(horizontal = 16.dp, vertical = 9.dp),
     ) {
-        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = ink, maxLines = 1)
     }
 }
 
@@ -734,7 +753,8 @@ private fun DbSliderRow(label: String, value: Float, range: ClosedFloatingPointR
     val shown = live.local ?: value
     Column(Modifier.padding(horizontal = 20.dp, vertical = 2.dp)) {
         Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.width(72.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, modifier = Modifier.width(72.dp),
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
             Slider(
                 value = shown,
                 onValueChange = { live.set(it) },

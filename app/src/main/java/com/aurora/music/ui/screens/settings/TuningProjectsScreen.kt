@@ -6,7 +6,6 @@ import com.aurora.music.R
 import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -22,9 +21,14 @@ import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.pressClickable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.data.ProcessingRack
@@ -187,7 +191,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
             SettingsTopBar(if (selectedId == null) appString(R.string.text_tuning_projects_e28bb7) else current?.name ?: appString(R.string.text_tuning_project_fe107d)) {
                 if (selectedId != null) safelyLeave(::closeProject) else if (!busy) onBack()
             }
-            if (busy) {
+            AudioSection(busy) {
                 Text(workingText, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall)
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
@@ -213,8 +217,8 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
                     }
                     when {
                         loadError != null -> Unit
-                        projects == null -> item { TuningDescription(appString(R.string.text_loading_saved_projects_b9d89d)) }
-                        projects!!.isEmpty() -> item { TuningDescription(appString(R.string.text_no_saved_projects_7102b1)) }
+                        projects == null -> item { LoadingState() }
+                        projects!!.isEmpty() -> item { EmptyState(Icons.Filled.ShowChart, appString(R.string.text_no_saved_projects_7102b1)) }
                         else -> items(projects!!, key = { it.id }) { project ->
                             TuningProjectCard(project, enabled = !busy, onOpen = { open(project) }, onRename = { rename = project },
                                 onDelete = { delete = project }, onExport = { export(project) })
@@ -239,7 +243,7 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
                     canRevert = appliedUndo != null, onRevert = { appliedUndo?.let { (before, after) -> perform(appString(R.string.text_reverting_correction_6de6e2)) {
                         store.revertTuningAppend(after, before).getOrThrow(); appliedUndo = null; notify(appString(R.string.text_rack_restored_64ad64))
                     } } })
-            } else TuningDescription(appString(R.string.text_loading_project_d3b8f4))
+            } else LoadingState()
         }
         SnackbarHost(snackbar, Modifier.align(Alignment.BottomCenter).padding(bottom = contentPadding.calculateBottomPadding() + 8.dp))
     }
@@ -264,9 +268,9 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
         if (draft?.id == project.id) update { it.copy(name = name) }
         else perform(appString(R.string.text_renaming_project_8cfc7a)) { store.saveTuningProject(project.copy(name = name, updatedAtMs = System.currentTimeMillis())).getOrThrow() }
     } }
-    delete?.let { project -> AlertDialog(onDismissRequest = { if (!busy) delete = null }, title = { Text(appString(R.string.text_delete_137cdc, (project.name))) },
+    delete?.let { project -> AlertDialog(onDismissRequest = { if (!busy) delete = null }, title = { AudioDialogTitle(appString(R.string.text_delete_137cdc, (project.name))) },
         text = { Text(appString(R.string.text_deletes_the_project_and_measurements_existing_rack_stages_stay_un_f93f18)) },
-        confirmButton = { TextButton(enabled = !busy, onClick = { perform(appString(R.string.text_deleting_project_d0e644)) { store.deleteTuningProject(project.id).getOrThrow(); delete = null } }) { Text(appString(R.string.text_delete_f6fdbe)) } },
+        confirmButton = { TextButton(enabled = !busy, onClick = { perform(appString(R.string.text_deleting_project_d0e644)) { store.deleteTuningProject(project.id).getOrThrow(); delete = null } }) { Text(appString(R.string.text_delete_f6fdbe), color = if (busy) Color.Unspecified else MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(enabled = !busy, onClick = { delete = null }) { Text(appString(R.string.text_cancel_77dfd2)) } }) }
     importSlot?.let { slot -> if (current != null) TuningMeasurementImportDialog(slot, current.curve(slot), onDismiss = { importSlot = null }) { curve ->
         update { it.withCurve(slot, curve) }; importSlot = null
@@ -276,14 +280,14 @@ fun TuningProjectsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOp
     } } }
     if (settings && current != null) TuningFitSettingsDialog(current, onDismiss = { settings = false }) { config -> update { it.copy(config = config) }; settings = false }
     if (notes && current != null) TuningNotesDialog(current.notes, onDismiss = { notes = false }) { text -> update { it.copy(notes = text) }; notes = false }
-    leaveAfterSave?.let { action -> AlertDialog(onDismissRequest = { if (!busy) leaveAfterSave = null }, title = { Text(appString(R.string.text_save_project_changes_026247)) },
+    leaveAfterSave?.let { action -> AlertDialog(onDismissRequest = { if (!busy) leaveAfterSave = null }, title = { AudioDialogTitle(appString(R.string.text_save_project_changes_026247)) },
         text = { Column {
             TextButton(enabled = !busy, onClick = { leaveAfterSave = null; action() }) { Text(appString(R.string.text_leave_without_saving_634bae)) } } },
         confirmButton = { TextButton(enabled = !busy, onClick = { current?.let { perform(appString(R.string.text_saving_project_69e697)) { saveCurrent(it); leaveAfterSave = null; action() } } }) { Text(appString(R.string.text_save_leave_fc9cb3)) } },
         dismissButton = { TextButton(enabled = !busy, onClick = { leaveAfterSave = null }) { Text(appString(R.string.text_keep_editing_d4d9e3)) } }) }
-    importedProject?.let { project -> AlertDialog(onDismissRequest = { if (!busy) importedProject = null }, title = { Text(appString(R.string.text_import_tuning_project_2df594)) },
+    importedProject?.let { project -> AlertDialog(onDismissRequest = { if (!busy) importedProject = null }, title = { AudioDialogTitle(appString(R.string.text_import_tuning_project_2df594)) },
         text = { Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(project.name, style = MaterialTheme.typography.titleMedium)
+            Text(project.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(project.inputSummary(), style = MaterialTheme.typography.bodyMedium)
             Text(appString(R.string.text_creates_a_new_project_regenerate_correction_before_applying_it_423e23), style = MaterialTheme.typography.bodySmall)
         } }, confirmButton = { TextButton(enabled = !busy, onClick = { perform(appString(R.string.text_importing_project_5b661a)) { store.saveTuningProject(project).getOrThrow(); importedProject = null; open(project) } }) { Text(appString(R.string.text_import_as_new_project_d6935b)) } },
@@ -308,10 +312,10 @@ private fun TuningProjectCard(project: TuningProject, enabled: Boolean, onOpen: 
     onRename: () -> Unit, onDelete: () -> Unit, onExport: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     SettingsGroup {
-        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).clickable(enabled = enabled, onClick = onOpen).padding(vertical = 16.dp)) {
-                Text(project.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(project.inputSummary(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Row(Modifier.fillMaxWidth().pressClickable(enabled = enabled, onClick = onOpen).padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f).padding(vertical = 16.dp)) {
+                Text(project.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(project.inputSummary(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(if (project.generatedFit == null) appString(R.string.text_no_generated_correction_1d3dac) else appString(R.string.text_generated_correction_saved_b3c6de), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
             }
             Box {
@@ -437,7 +441,7 @@ private fun TuningFitResultCard(fit: TuningFitResult) {
         TuningCurveChart(frequencies, curves, appString(R.string.text_eq_response_only_preamp_trim_and_delay_are_separate_3441df))
         Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
             TextButton(onClick = { details = !details }) { Text(if (details) appString(R.string.text_hide_fit_details_1c2734) else appString(R.string.text_fit_details_generated_filters_e9ff9a)) }
-            if (details) {
+            AudioSection(details, spacing = 5.dp) {
                 Text(appString(R.string.text_measured_target_level_offsets_640c07, (eqDb(fit.measuredNormalizationDb)), (eqDb(fit.targetNormalizationDb))), style = MaterialTheme.typography.bodySmall)
                 Text(appString(R.string.text_fitted_response_boost_db_cut_db_fd80a4, (eqNumber(fit.peakBoostDb)), (eqNumber(fit.peakCutDb))), style = MaterialTheme.typography.bodySmall)
                 fit.notes.forEach { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
@@ -458,9 +462,9 @@ private fun TuningApplyDialog(project: TuningProject, rack: ProcessingRack?, bus
     val bands = fit.channels.sumOf { it.bands.size }
     val oldBands = rack?.nodes?.filter { it.kind == RackNodeKind.EQ || it.kind == RackNodeKind.LEGACY_DSP }?.sumOf { it.audio.dspParametric.size } ?: 0
     val capacityOkay = rack != null && rack.nodes.size + addedNodes <= 16 && oldBands + bands <= ProcessingRackCodec.MAX_TOTAL_PARAMETRIC_BANDS
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(appString(R.string.text_append_this_correction_b6edc0)) }, text = {
+    AlertDialog(onDismissRequest = onDismiss, title = { AudioDialogTitle(appString(R.string.text_append_this_correction_b6edc0)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(project.name, style = MaterialTheme.typography.titleMedium)
+            Text(project.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (fit.preampDb < 0f) Text(appString(R.string.text_gain_2d17e8, (eqDb(fit.preampDb.toDouble()))), style = MaterialTheme.typography.bodyMedium)
             if (fit.config.leftTrimDb != 0.0 || fit.config.rightTrimDb != 0.0) Text(appString(R.string.text_trim_l_r_d8c438, (eqDb(fit.config.leftTrimDb)), (eqDb(fit.config.rightTrimDb))), style = MaterialTheme.typography.bodyMedium)
             if (fit.config.leftDelayMs != 0.0 || fit.config.rightDelayMs != 0.0) Text(appString(R.string.text_delay_l_ms_r_ms_82e61b, (eqNumber(fit.config.leftDelayMs)), (eqNumber(fit.config.rightDelayMs))), style = MaterialTheme.typography.bodyMedium)
@@ -483,8 +487,8 @@ private fun TuningApplyDialog(project: TuningProject, rack: ProcessingRack?, bus
 private fun TuningNameDialog(title: String, initial: String, action: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var name by remember { mutableStateOf(initial) }
     var error by remember { mutableStateOf<String?>(null) }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(title) }, text = { Column {
-        OutlinedTextField(name, { name = it.take(80); error = null }, label = { Text(appString(R.string.text_project_name_ab9773)) }, singleLine = true)
+    AlertDialog(onDismissRequest = onDismiss, title = { AudioDialogTitle(title) }, text = { Column {
+        OutlinedTextField(name, { name = it.take(80); error = null }, label = { Text(appString(R.string.text_project_name_ab9773)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         error?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.error) }
     } }, confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { runCatching { onSave(name.trim()) }.onFailure { error = it.message ?: appString(R.string.text_check_the_project_name_44cbe0) } }) { Text(action) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
@@ -493,8 +497,8 @@ private fun TuningNameDialog(title: String, initial: String, action: String, onD
 @Composable
 private fun TuningNotesDialog(initial: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var notes by remember { mutableStateOf(initial) }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(appString(R.string.text_project_notes_7b2dc5)) }, text = {
-        OutlinedTextField(notes, { notes = it.take(4096) }, label = { Text(appString(R.string.text_purpose_listening_setup_observations_16e335)) }, minLines = 5, maxLines = 10)
+    AlertDialog(onDismissRequest = onDismiss, title = { AudioDialogTitle(appString(R.string.text_project_notes_7b2dc5)) }, text = {
+        OutlinedTextField(notes, { notes = it.take(4096) }, label = { Text(appString(R.string.text_purpose_listening_setup_observations_16e335)) }, minLines = 5, maxLines = 10, modifier = Modifier.fillMaxWidth())
     }, confirmButton = { TextButton(onClick = { onSave(notes) }) { Text(appString(R.string.text_use_notes_415641)) } }, dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }
 

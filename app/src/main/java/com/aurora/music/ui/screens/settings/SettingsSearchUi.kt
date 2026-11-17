@@ -38,6 +38,11 @@ import com.aurora.music.R
 import com.aurora.music.data.SettingsSearch
 import com.aurora.music.localization.appString
 import com.aurora.music.navigation.Routes
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.Motion
 
 // one place a search can take you: a whole page or a single setting on it
 internal data class SettingsSearchHit(val title: String, val subtitle: String, val page: String, val route: String?, val titleRes: Int, val isPage: Boolean)
@@ -65,7 +70,7 @@ internal fun SettingsSearchField(query: String, onQuery: (String) -> Unit, modif
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-        if (query.isNotEmpty()) {
+        AnimatedVisibility(query.isNotEmpty(), enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
             Icon(Icons.Filled.Close, appString(R.string.settings_search_clear), tint = colors.onSurfaceVariant,
                 modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onQuery("") }.padding(10.dp))
         }
@@ -100,8 +105,7 @@ internal fun SettingsSearchResults(query: String, hits: List<SettingsSearchHit>,
         SettingsSearch.rank(query, hits.map { SettingsSearch.Candidate(it, it.title, it.subtitle, it.page) })
     }
     if (found.isEmpty()) {
-        Text(appString(R.string.settings_search_empty, query.trim()), style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 24.dp, vertical = 24.dp))
+        EmptyState(Icons.Filled.Search, appString(R.string.settings_search_empty, query.trim()))
         return
     }
     SettingsGroup {

@@ -63,6 +63,10 @@ import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.screens.settings.SettingsTopBar
 import com.aurora.music.ui.screens.settings.storageSize
 import com.aurora.music.viewmodel.AiPlaylistViewModel
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.MusicNote
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.Motion
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -127,7 +131,7 @@ fun AiPlaylistScreen(
             if (state.phase == AiPlaylistViewModel.Phase.DONE && intent != null) {
                 item { IntentSummary(intent, state.usedModel, state.thinkingMs, state.songs.size) }
                 if (state.songs.isEmpty()) item {
-                    Text(appString(R.string.ai_dj_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    EmptyState(Icons.Filled.MusicNote, appString(R.string.ai_dj_empty))
                 } else {
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -199,7 +203,7 @@ private fun AiDjModelCard(vm: AiPlaylistViewModel) {
     val model by vm.model.collectAsStateWithLifecycle()
     val unsupported = vm.unsupported
     Card(Modifier.fillMaxWidth(), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.animateContentSize(Motion.state()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(appString(R.string.ai_dj_model), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             val muted = MaterialTheme.colorScheme.onSurfaceVariant
             when {

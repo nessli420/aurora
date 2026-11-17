@@ -12,6 +12,7 @@ import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -47,7 +48,7 @@ internal fun TuningTargetLibraryDialog(project: TuningProject?, onDismiss: () ->
             finally { busy = false }
         }
     }
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(appString(R.string.text_target_library_45e3b8)) }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { AudioDialogTitle(appString(R.string.text_target_library_45e3b8)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             TuningChoiceRow(appString(R.string.text_source_6da13a), listOf(appString(R.string.text_saved_c0ae8f), appString(R.string.text_published_483bf2), appString(R.string.text_this_project_940087)), page) { page = it }
             when (page) {
@@ -55,7 +56,7 @@ internal fun TuningTargetLibraryDialog(project: TuningProject?, onDismiss: () ->
                     OutlinedButton(onClick = { importTarget = true }, enabled = !busy && !loadFailed, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_import_custom_target_6450b5)) }
                     if (targets.isEmpty()) Text(appString(R.string.text_no_saved_targets_dd2df6), style = MaterialTheme.typography.bodySmall)
                     targets.forEach { target ->
-                        Text(target.name, style = MaterialTheme.typography.titleSmall)
+                        Text(target.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Text(target.curve.provenance.rig.ifBlank { appString(R.string.text_rig_unspecified_6f488f) }, style = MaterialTheme.typography.bodySmall)
                         Row {
                             TextButton(onClick = { selected = target.curve }, enabled = !busy && project != null) { Text(appString(R.string.text_use_1d4d43)) }
@@ -83,7 +84,7 @@ internal fun TuningTargetLibraryDialog(project: TuningProject?, onDismiss: () ->
                         .filter { it.format != TuningCurveFormat.WAVELET }.distinctBy { it.id }
                     if (curves.isEmpty()) Text(appString(R.string.text_open_a_project_with_measurements_first_5f1e78), style = MaterialTheme.typography.bodySmall)
                     curves.forEach { curve ->
-                        Text(curve.name, style = MaterialTheme.typography.titleSmall)
+                        Text(curve.name, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
                         Row {
                             TextButton(onClick = { selected = curve }, enabled = !busy) { Text(appString(R.string.text_use_as_target_b5e4c2)) }
                             TextButton(onClick = { action { store.saveTuningTarget(withContext(Dispatchers.Default) { TuningTargetCatalog.fromCurve(curve) }).getOrThrow(); page = 0 } }, enabled = !busy && !loadFailed) { Text(appString(R.string.text_save_target_fa5df1)) }
@@ -103,11 +104,11 @@ internal fun TuningTargetLibraryDialog(project: TuningProject?, onDismiss: () ->
         edit = null
         action { store.saveTuningTarget(target.copy(name = curve.name, curve = curve)).getOrThrow() }
     } }
-    delete?.let { target -> AlertDialog(onDismissRequest = { delete = null }, title = { Text(appString(R.string.text_delete_137cdc, (target.name))) },
+    delete?.let { target -> AlertDialog(onDismissRequest = { delete = null }, title = { AudioDialogTitle(appString(R.string.text_delete_137cdc, (target.name))) },
         text = { Text(appString(R.string.text_projects_keep_their_saved_target_copy_f1d9a0)) },
-        confirmButton = { TextButton(onClick = { delete = null; action { store.deleteTuningTarget(target.id).getOrThrow() } }) { Text(appString(R.string.text_delete_f6fdbe)) } },
+        confirmButton = { TextButton(onClick = { delete = null; action { store.deleteTuningTarget(target.id).getOrThrow() } }) { Text(appString(R.string.text_delete_f6fdbe), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { delete = null }) { Text(appString(R.string.text_cancel_77dfd2)) } }) }
-    selected?.let { curve -> AlertDialog(onDismissRequest = { selected = null }, title = { Text(appString(R.string.text_use_9d772b, (curve.name))) }, text = {
+    selected?.let { curve -> AlertDialog(onDismissRequest = { selected = null }, title = { AudioDialogTitle(appString(R.string.text_use_9d772b, (curve.name))) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(appString(R.string.text_target_rig_6556f6, (curve.provenance.rig.ifBlank { appString(R.string.text_unspecified_a6e7eb) })))
             listOfNotNull(project?.measurementLeft, project?.measurementRight).forEach {

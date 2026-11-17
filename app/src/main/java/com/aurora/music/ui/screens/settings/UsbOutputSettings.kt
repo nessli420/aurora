@@ -31,7 +31,7 @@ fun UsbOutputSettings(
     SettingsGroup {
         SettingsSwitchRow(Icons.Filled.Usb, appString(R.string.text_usb_dac_output_c6adc2), appString(R.string.text_restart_aurora_to_apply_usb_settings_2757a4),
             prefs.bitPerfectUsb, onEnabled)
-        if (prefs.bitPerfectUsb) {
+        SettingsReveal(prefs.bitPerfectUsb) {
             SettingsRowDivider()
             SegmentedRow(appString(R.string.text_usb_mode_cce5b7), listOf(appString(R.string.text_direct_bc8152), appString(R.string.text_processed_8291b2)), prefs.usbOutputMode.ordinal) {
                 onMode(UsbOutputMode.entries[it])
@@ -45,7 +45,7 @@ fun UsbOutputSettings(
             SegmentedRow(appString(R.string.text_if_usb_is_unavailable_7d21fd), listOf(appString(R.string.text_pause_781961), appString(R.string.text_android_output_0a3516)), prefs.usbFallbackPolicy.ordinal) {
                 onFallback(UsbFallbackPolicy.entries[it])
             }
-            if (prefs.usbOutputMode == UsbOutputMode.DIRECT) {
+            SettingsReveal(prefs.usbOutputMode == UsbOutputMode.DIRECT) {
                 SettingsSwitchRow(Icons.AutoMirrored.Filled.VolumeUp, appString(R.string.text_dac_hardware_volume_752c71),
                     appString(R.string.text_volume_buttons_set_the_dac_s_own_volume_the_audio_stays_bit_perfe_a4d608),
                     prefs.usbHardwareVolume != false, onHardwareVolume)
@@ -55,13 +55,13 @@ fun UsbOutputSettings(
                 Text(appString(R.string.text_raw_dsd_requires_a_supported_dac_and_stops_if_unavailable_c1bf89),
                     Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (prefs.usbDsdMode != null && prefs.usbDsdMode != UsbDsdMode.PCM) {
+                SettingsReveal(prefs.usbDsdMode != null && prefs.usbDsdMode != UsbDsdMode.PCM) {
                     SettingsSwitchRow(Icons.Filled.Usb, appString(R.string.text_experimental_dsd_f91f90),
                         appString(R.string.text_other_dacs_and_rates_up_to_dsd1024_untested_hardware_support_disc_800807),
                         prefs.usbDsdExperimental == true, onExperimentalDsd)
                 }
             }
-            if (prefs.usbFallbackPolicy == UsbFallbackPolicy.ANDROID) {
+            SettingsReveal(prefs.usbFallbackPolicy == UsbFallbackPolicy.ANDROID) {
                 Text(appString(R.string.text_playback_may_continue_through_the_speaker_7f06f2), Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }

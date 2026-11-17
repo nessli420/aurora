@@ -117,6 +117,17 @@ import com.aurora.music.data.accent
 import com.aurora.music.data.likeWindow
 import com.aurora.music.model.accent
 import com.aurora.music.model.label
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.Layout
+import androidx.compose.ui.unit.Constraints
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.SectionHeader
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.PressScaleIndication
+import com.aurora.music.ui.theme.pressClickable
 
 internal val LocalLibrarySelection = androidx.compose.runtime.compositionLocalOf<String?> { null }
 
@@ -263,18 +274,8 @@ fun LibraryScreen(
                 contentAlignment = Alignment.Center,
             ) { Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
             Spacer(Modifier.width(12.dp))
-            Column(Modifier.weight(1f)) {
-                Text(appString(R.string.text_library_b8100f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                val stats = buildList {
-                    state.views.firstOrNull { it.id == state.view }?.let { add(it.label) }
-                    if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
-                    if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
-                    if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
-                }.joinToString("  ·  ")
-                if (stats.isNotBlank()) {
-                    Text(stats, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-            }
+            Text(appString(R.string.text_library_b8100f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.weight(1f))
             if (state.views.size > 1) {
                 val next = state.views[(state.views.indexOfFirst { it.id == state.view } + 1).mod(state.views.size)]
                 Icon(com.aurora.music.ui.components.sourceViewIcon(state.view), appString(R.string.library_switch_view, next.label),
@@ -282,6 +283,17 @@ fun LibraryScreen(
             }
             Icon(Icons.Filled.Search, appString(R.string.text_search_bce064), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onOpenSearch).padding(8.dp))
             if (state.signedIn) Icon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showCreate = true }.padding(8.dp))
+        }
+        // the stats run under the icons on their own line, so they fit without wrapping mid-phrase
+        val stats = buildList {
+            state.views.firstOrNull { it.id == state.view }?.let { add(it.label) }
+            if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
+            if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
+            if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
+        }.joinToString("  ·  ")
+        if (stats.isNotBlank()) {
+            Text(stats, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(start = 66.dp, end = 16.dp))
         }
 
         if (showCreate) {
@@ -333,7 +345,7 @@ fun LibraryScreen(
                     ) {
                         Icon(Icons.Filled.SwapVert, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
                         Spacer(Modifier.width(6.dp))
-                        Text(sort.label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium)
+                        Text(sort.label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     DropdownMenu(expanded = sortMenu, onDismissRequest = { sortMenu = false }) {
                         LibrarySort.entries.forEach { s ->
@@ -391,7 +403,7 @@ fun LibraryScreen(
                         .distinctBy { "${it.kind}:${it.id}" }
                 }
                 if (dlRows.isEmpty()) {
-                    EmptyHint(appString(R.string.text_no_downloads_yet_9647c1), appString(R.string.text_albums_and_playlists_you_download_live_here_e4c7ba))
+                    EmptyHint(Icons.Filled.Download, appString(R.string.text_no_downloads_yet_9647c1), appString(R.string.text_albums_and_playlists_you_download_live_here_e4c7ba))
                 } else {
                     RowsContent(dlRows, layout, libColumns, sort, bottom, actions) { r -> onOpenDetail(r.kind, r.id) }
                 }
@@ -417,7 +429,7 @@ fun LibraryScreen(
                 }
                 val rows = synced ?: built.value
                 if (rows != null && rows.isEmpty()) {
-                    EmptyHint(appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
+                    EmptyHint(tabIcon(filter), appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
                 } else if (rows != null) {
                     RowsContent(rows, layout, libColumns, sort, bottom, actions) { r ->
                         when (r.kind) {
@@ -447,7 +459,8 @@ internal fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
 
 @Composable
 private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
-    val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val on by animateFloatAsState(if (selected) 1f else 0f, Motion.state(), label = "libTab")
+    val tint = lerp(MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.primary, on)
     Column(
         Modifier.paperClip(RoundedCornerShape(12.dp)).combinedClickable(onClick = onClick, onLongClick = onLongClick).padding(horizontal = 10.dp, vertical = 6.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -459,14 +472,13 @@ private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onLongCl
                 label,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
-                color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                color = lerp(MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.onSurface, on),
             )
         }
         Spacer(Modifier.height(4.dp))
         Box(
-            Modifier.height(3.dp).width(26.dp).paperClip(RoundedCornerShape(50)).background(
-                if (selected) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
-                else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
+            Modifier.height(3.dp).width(26.dp).graphicsLayer { alpha = on }.paperClip(RoundedCornerShape(50)).background(
+                Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
             )
         )
     }
@@ -505,14 +517,7 @@ private fun AllOverview(
                 add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
                 add(QuickTile(appString(R.string.youtube_download_title), appString(R.string.youtube_download_tile_detail), Icons.Filled.CloudDownload, "") { onOpenYouTubeDownload() })
             }
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                tiles.chunked(2).forEach { pair ->
-                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        pair.forEach { t -> QuickTileCard(t, Modifier.weight(1f)) }
-                        if (pair.size == 1) Spacer(Modifier.weight(1f))
-                    }
-                }
-            }
+            QuickTileGrid(tiles, Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
         }
 
         if (pins.isNotEmpty()) {
@@ -591,13 +596,31 @@ private data class QuickTile(
     val onClick: () -> Unit,
 )
 
+// two columns, every tile as tall as the tallest; an odd last tile takes the whole row so its text fits
+@Composable
+private fun QuickTileGrid(tiles: List<QuickTile>, modifier: Modifier = Modifier) {
+    Layout(content = { tiles.forEach { QuickTileCard(it) } }, modifier = modifier) { measurables, constraints ->
+        val gap = 8.dp.roundToPx()
+        val half = ((constraints.maxWidth - gap) / 2).coerceAtLeast(0)
+        val lone = if (measurables.size % 2 == 1) measurables.lastIndex else -1
+        val widths = List(measurables.size) { if (it == lone) constraints.maxWidth else half }
+        val height = measurables.indices.maxOfOrNull { measurables[it].maxIntrinsicHeight(widths[it]) } ?: 0
+        val placeables = measurables.mapIndexed { i, m -> m.measure(Constraints.fixed(widths[i], height)) }
+        val width = half
+        val rows = (placeables.size + 1) / 2
+        layout(constraints.maxWidth, (rows * (height + gap) - gap).coerceAtLeast(0)) {
+            placeables.forEachIndexed { i, p -> p.placeRelative(i % 2 * (width + gap), i / 2 * (height + gap)) }
+        }
+    }
+}
+
 @Composable
 private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
     Row(
         modifier
             .paperClip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f))
-            .combinedClickable(onClick = tile.onClick, onLongClick = tile.onLongClick,
+            .combinedClickable(interactionSource = null, indication = PressScaleIndication, onClick = tile.onClick, onLongClick = tile.onLongClick,
                 onLongClickLabel = if (tile.onLongClick != null) appString(R.string.liked_sources_choose) else null)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -613,8 +636,8 @@ private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
             ) { Icon(tile.icon, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(19.dp)) }
         }
         Spacer(Modifier.width(10.dp))
-        Column {
-            Text(tile.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Column(Modifier.weight(1f)) {
+            Text(tile.title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(tile.subtitle, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
     }
@@ -626,7 +649,8 @@ private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 18.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black)
+        Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
+        SectionHeader(title, Modifier.weight(1f, fill = false).width(IntrinsicSize.Max))
         if (count != null) {
             Spacer(Modifier.width(8.dp))
             Text(
@@ -637,7 +661,7 @@ private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
                 modifier = Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.12f)).padding(horizontal = 8.dp, vertical = 2.dp),
             )
         }
-        Spacer(Modifier.weight(1f))
+        }
         if (count != null) {
             Text(
                 appString(R.string.text_see_all_2941c5),
@@ -663,7 +687,7 @@ private fun ShelfCard(
     onClick: () -> Unit,
 ) {
     Column(
-        Modifier.width(width).paperClip(RoundedCornerShape(14.dp)).background(selectionTint(selectionKey)).clickable(onClick = onClick).padding(4.dp),
+        Modifier.width(width).paperClip(RoundedCornerShape(14.dp)).background(selectionTint(selectionKey)).pressClickable(onClick = onClick).padding(4.dp),
         horizontalAlignment = if (centered) Alignment.CenterHorizontally else Alignment.Start,
     ) {
         Box {
@@ -725,18 +749,20 @@ private fun SongsTab(
     val songs = state.sortedSongs
     // a sort still running must not flash the empty hint
     if (state.songs.isEmpty() && !state.loading) {
-        EmptyHint(appString(R.string.text_no_songs_e6bbe2), appString(R.string.text_songs_from_your_server_appear_here_e4db53))
+        EmptyHint(Icons.Filled.MusicNote, appString(R.string.text_no_songs_e6bbe2), appString(R.string.text_songs_from_your_server_appear_here_e4db53))
         return
     }
 
     Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 3.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
             if (state.canLoadMoreSongs) appString(R.string.track_count_more, (songs.size)) else appPlural(R.plurals.track_count, (songs.size)),
             style = MaterialTheme.typography.labelLarge,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
             modifier = Modifier.weight(1f),
         )
         val accent = MaterialTheme.colorScheme.primary
@@ -755,9 +781,9 @@ private fun SongsTab(
         Icon(
             Icons.Filled.Shuffle, appString(R.string.text_shuffle_all_7e388b),
             tint = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.size(38.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) })
+            modifier = Modifier.size(40.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) })
                 .clickable(enabled = songs.isNotEmpty()) { onPlayAllSongs(true) }
-                .padding(9.dp),
+                .padding(10.dp),
         )
     }
 
@@ -909,13 +935,9 @@ private fun jumpIndex(titles: List<String>, c: Char): Int? {
 }
 
 @Composable
-private fun EmptyHint(title: String, message: String) {
-    Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
-            Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-        }
+private fun EmptyHint(icon: ImageVector, title: String, message: String) {
+    Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.Center) {
+        EmptyState(icon, title, subtitle = message)
     }
 }
 
@@ -1010,7 +1032,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
                 Icon(
                     Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(34.dp).paperClip(CircleShape).clickable { menuOpen = true }.padding(6.dp),
+                    modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { menuOpen = true }.padding(9.dp),
                 )
                 CollectionMenu(row, actions, expanded = menuOpen, onDismiss = { menuOpen = false })
             }
@@ -1020,7 +1042,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 
 @Composable
 private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
-    Column(Modifier.paperClip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).likedLongPress(row, actions, onClick).padding(6.dp)) {
+    Column(Modifier.paperClip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).likedLongPress(row, actions, onClick, PressScaleIndication).padding(6.dp)) {
         if (row.kind == "liked") actions.likedPicker()
         Box {
             Artwork(row.art, row.accent, Modifier.fillMaxWidth().aspectRatio(1f), corner = if (row.circle) 200.dp else 12.dp)
@@ -1058,9 +1080,10 @@ private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 }
 
 @Composable
-private fun Modifier.likedLongPress(row: LibRow, actions: LibActions, onClick: () -> Unit): Modifier {
+private fun Modifier.likedLongPress(row: LibRow, actions: LibActions, onClick: () -> Unit,
+    indication: androidx.compose.foundation.Indication = androidx.compose.foundation.LocalIndication.current): Modifier {
     val longPress = actions.onOpenAllLiked?.takeIf { row.kind == "liked" }
-    return combinedClickable(onClick = onClick, onLongClick = longPress,
+    return combinedClickable(interactionSource = null, indication = indication, onClick = onClick, onLongClick = longPress,
         onLongClickLabel = if (longPress != null) appString(R.string.liked_sources_choose) else null)
 }
 

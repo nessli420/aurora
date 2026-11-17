@@ -4,6 +4,14 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -27,7 +35,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import com.aurora.music.ui.theme.TextButton
@@ -41,8 +49,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.ui.screens.settings.SegmentedChoice
+import com.aurora.music.ui.theme.Motion
 
 // the tab you used last, for as long as the app runs
 private var lastTab = 0
@@ -68,61 +78,65 @@ fun SpeedPitchSheet(
         containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-            Text(appString(R.string.text_playback_controls_5ee1ab), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.text_playback_controls_5ee1ab), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(16.dp))
             SegmentedChoice(listOf(appString(R.string.text_speed_2d2cb0), appString(R.string.reverb_title)), tab) { tab = it; lastTab = it }
             Spacer(Modifier.height(20.dp))
 
-            if (tab == 1) ReverbQuickControls(onOpenReverbSettings)
-            else Column {
-                ControlBlock(
-                    icon = { Icon(Icons.Filled.Speed, null, tint = MaterialTheme.colorScheme.primary) },
-                    title = appString(R.string.text_speed_2d2cb0),
-                    value = "${"%.2f".format(speed)}x",
-                ) {
-                    Slider(
-                        value = speed,
-                        onValueChange = onSpeed,
-                        valueRange = 0.5f..2.0f,
-                        steps = 29,
-                        colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
-                    )
-                    QuickPicks(listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f), speed) { onSpeed(it) }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Column(Modifier.weight(1f)) {
-                        Text(appString(R.string.text_match_pitch_to_speed_ccd7ca), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                        Text(appString(R.string.text_pitch_follows_speed_like_a_turntable_c2a28f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
-                    Switch(
-                        checked = matchPitch,
-                        onCheckedChange = onMatchPitch,
-                        colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onPrimary, checkedTrackColor = MaterialTheme.colorScheme.primary),
-                    )
-                }
-
-                if (!matchPitch) {
-                    Spacer(Modifier.height(16.dp))
+            AnimatedContent(tab, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) }, label = "controlsTab") { shown ->
+                if (shown == 1) ReverbQuickControls(onOpenReverbSettings)
+                else Column {
                     ControlBlock(
-                        icon = { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.tertiary) },
-                        title = appString(R.string.text_pitch_a6c2d0),
-                        value = "${if (pitch >= 0) "+" else ""}${"%.1f".format(pitch)} st",
+                        icon = { Icon(Icons.Filled.Speed, null, tint = MaterialTheme.colorScheme.primary) },
+                        title = appString(R.string.text_speed_2d2cb0),
+                        value = "${"%.2f".format(speed)}x",
                     ) {
                         Slider(
-                            value = pitch,
-                            onValueChange = onPitch,
-                            valueRange = -6f..6f,
-                            steps = 11,
-                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.tertiary, activeTrackColor = MaterialTheme.colorScheme.tertiary),
+                            value = speed,
+                            onValueChange = onSpeed,
+                            valueRange = 0.5f..2.0f,
+                            steps = 29,
+                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
+                        )
+                        QuickPicks(listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f), speed) { onSpeed(it) }
+                    }
+
+                    Spacer(Modifier.height(16.dp))
+
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Column(Modifier.weight(1f)) {
+                            Text(appString(R.string.text_match_pitch_to_speed_ccd7ca), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                            Text(appString(R.string.text_pitch_follows_speed_like_a_turntable_c2a28f), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        }
+                        Switch(
+                            checked = matchPitch,
+                            onCheckedChange = onMatchPitch,
+                            colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onPrimary, checkedTrackColor = MaterialTheme.colorScheme.primary),
                         )
                     }
-                }
 
-                TextButton(onClick = onReset, modifier = Modifier.align(Alignment.End).padding(top = 8.dp)) {
-                    Text(appString(R.string.text_reset_to_default_39c90e))
+                    AnimatedVisibility(!matchPitch, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                        Column {
+                            Spacer(Modifier.height(16.dp))
+                            ControlBlock(
+                                icon = { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.tertiary) },
+                                title = appString(R.string.text_pitch_a6c2d0),
+                                value = "${if (pitch >= 0) "+" else ""}${"%.1f".format(pitch)} st",
+                            ) {
+                                Slider(
+                                    value = pitch,
+                                    onValueChange = onPitch,
+                                    valueRange = -6f..6f,
+                                    steps = 11,
+                                    colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.tertiary, activeTrackColor = MaterialTheme.colorScheme.tertiary),
+                                )
+                            }
+                        }
+                    }
+
+                    TextButton(onClick = onReset, modifier = Modifier.align(Alignment.End).padding(top = 8.dp)) {
+                        Text(appString(R.string.text_reset_to_default_39c90e))
+                    }
                 }
             }
         }
@@ -139,7 +153,7 @@ private fun ControlBlock(
     Row(verticalAlignment = Alignment.CenterVertically) {
         icon()
         Spacer(Modifier.width(10.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     content()
@@ -150,11 +164,13 @@ private fun QuickPicks(options: List<Float>, selected: Float, onPick: (Float) ->
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEach { opt ->
             val active = kotlin.math.abs(opt - selected) < 0.001f
+            val fill by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest, Motion.state(), label = "pickFill")
+            val ink by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "pickInk")
             Box(
                 Modifier
                     .weight(1f)
                     .paperClip(RoundedCornerShape(50))
-                    .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .background(fill)
                     .clickable { onPick(opt) }
                     .padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
@@ -163,7 +179,8 @@ private fun QuickPicks(options: List<Float>, selected: Float, onPick: (Float) ->
                     formatMultiplier(opt),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    color = ink,
+                    maxLines = 1,
                 )
             }
         }

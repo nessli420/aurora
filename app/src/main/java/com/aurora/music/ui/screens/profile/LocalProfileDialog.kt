@@ -47,6 +47,7 @@ fun LocalProfileDialog(onDismiss: () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ProfileImageEditor(label: String, url: String, banner: Boolean, busy: Boolean, onChoose: () -> Unit, onRemove: () -> Unit) {
     Column {
@@ -56,7 +57,7 @@ private fun ProfileImageEditor(label: String, url: String, banner: Boolean, busy
             Artwork(url, MaterialTheme.colorScheme.primary,
                 if (banner) Modifier.fillMaxWidth().height(90.dp) else Modifier.size(72.dp), corner = if (banner) 12.dp else 36.dp)
         }
-        Row {
+        FlowRow {
             TextButton(enabled = !busy, onClick = onChoose) { Text(appString(R.string.text_choose_c2c00f, (label.lowercase()))) }
             if (url.isNotBlank()) TextButton(enabled = !busy, onClick = onRemove) { Text(appString(R.string.text_remove_4d28b5, (label.lowercase()))) }
         }

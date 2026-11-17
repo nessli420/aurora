@@ -43,6 +43,21 @@ fun PaperSwitch(checked: Boolean, onCheckedChange: ((Boolean) -> Unit)?, modifie
     }
 }
 
+// same-name stand-in for the material switch, so paper and glass get their own toggle everywhere
+@Composable
+fun Switch(
+    checked: Boolean,
+    onCheckedChange: ((Boolean) -> Unit)?,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+    colors: androidx.compose.material3.SwitchColors? = null,
+) {
+    if (isPaperTheme()) PaperSwitch(checked, onCheckedChange, modifier, enabled)
+    else if (isGlassTheme() && onCheckedChange != null) com.aurora.music.ui.components.glass.GlassToggle(checked, onCheckedChange, modifier, enabled)
+    else androidx.compose.material3.Switch(checked = checked, onCheckedChange = onCheckedChange, modifier = modifier, enabled = enabled,
+        colors = colors ?: androidx.compose.material3.SwitchDefaults.colors())
+}
+
 @Composable
 @ReadOnlyComposable
 fun isPaperTheme(): Boolean = LocalUiPrefs.current.themeStyle == com.aurora.music.data.ThemeStyle.PAPER

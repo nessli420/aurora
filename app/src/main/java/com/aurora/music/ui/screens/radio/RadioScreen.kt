@@ -61,9 +61,13 @@ import com.aurora.music.data.RadioStation
 import com.aurora.music.data.toSong
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
-import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.RadioViewModel
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material.icons.filled.CloudOff
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.Motion
 
 private val GENRE_TAGS = listOf(
     "pop", "rock", "jazz", "classical", "news", "electronic", "hip hop",
@@ -96,7 +100,8 @@ fun RadioScreen(
                 modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Text(appString(R.string.text_radio_b11bf1), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(appString(R.string.text_radio_b11bf1), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Icon(
                 Icons.Filled.Add, appString(R.string.text_add_custom_stream_638147),
                 modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showAdd = true }.padding(8.dp),
@@ -139,13 +144,15 @@ fun RadioScreen(
                     items(GENRE_TAGS.size) { i ->
                         val tag = GENRE_TAGS[i]
                         val selected = state.activeTag == tag
+                        val chipInk by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "tagInk")
+                        val chipFill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "tagFill")
                         Text(
                             tag.replaceFirstChar { it.uppercase() },
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                            color = chipInk,
                             modifier = Modifier.paperClip(RoundedCornerShape(50))
-                                .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .background(chipFill)
                                 .clickable { if (selected) vm.loadPopular() else vm.byTag(tag) }
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         )
@@ -172,15 +179,11 @@ fun RadioScreen(
             }
 
             if (state.loading) {
-                item { Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(64.dp)) } }
+                item { LoadingState() }
             } else if (listed.isEmpty()) {
                 item {
-                    Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            if (state.failed) appString(R.string.text_couldn_t_reach_the_radio_directory_c0321f) else appString(R.string.text_no_stations_found_173164),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    if (state.failed) EmptyState(Icons.Filled.CloudOff, appString(R.string.text_couldn_t_reach_the_radio_directory_c0321f))
+                    else EmptyState(Icons.Filled.Radio, appString(R.string.text_no_stations_found_173164))
                 }
             } else {
                 items(listed.size) { i ->

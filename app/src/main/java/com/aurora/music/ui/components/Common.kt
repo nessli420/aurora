@@ -1,6 +1,28 @@
 package com.aurora.music.ui.components
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Size
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.asPaddingValues
+import androidx.compose.foundation.layout.statusBars
+import androidx.compose.material.icons.filled.Pause
+import androidx.compose.material.icons.filled.PlayArrow
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.isGlassTheme
+import com.aurora.music.util.MotionTokens
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -65,7 +87,7 @@ fun Artwork(
         // the gradient behind shows while loading or on error so no subcomposed slots are needed
         if (url.isNotBlank()) AsyncImage(
             model = remember(url, decodeSize) {
-                ImageRequest.Builder(context).data(url).crossfade(true).apply { if (decodeSize > 0) size(decodeSize) }.build()
+                ImageRequest.Builder(context).data(url).crossfade(com.aurora.music.util.MotionTokens.STANDARD).apply { if (decodeSize > 0) size(decodeSize) }.build()
             },
             contentDescription = null,
             contentScale = contentScale,
@@ -185,3 +207,59 @@ fun formatTime(totalSec: Int): String {
 }
 
 fun formatTime(totalSec: Float): String = formatTime(totalSec.toInt())
+
+// play and pause swap with a short scale and fade instead of a hard cut
+@Composable
+fun PlayPauseIcon(playing: Boolean, tint: Color, modifier: Modifier = Modifier) {
+    AnimatedContent(
+        targetState = playing,
+        modifier = modifier,
+        transitionSpec = {
+            (scaleIn(Motion.enter(MotionTokens.FAST), initialScale = 0.6f) + fadeIn(Motion.enter(MotionTokens.FAST))) togetherWith
+                (scaleOut(Motion.exit(MotionTokens.INSTANT), targetScale = 0.6f) + fadeOut(Motion.exit(MotionTokens.INSTANT)))
+        },
+        contentAlignment = Alignment.Center,
+        label = "playPause",
+    ) { on ->
+        Icon(if (on) Icons.Filled.Pause else Icons.Filled.PlayArrow, null, tint = tint, modifier = Modifier.fillMaxSize())
+    }
+}
+
+// keeps the clock readable on pages that scroll under the status bar
+@Composable
+fun StatusBarScrim(modifier: Modifier = Modifier) {
+    if (isGlassTheme()) return
+    val base = MaterialTheme.colorScheme.background
+    val inset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    Box(
+        modifier.fillMaxWidth().height(inset + 12.dp).background(
+            Brush.verticalGradient(0f to base.copy(alpha = 0.92f), 0.6f to base.copy(alpha = 0.7f), 1f to base.copy(alpha = 0f))
+        ),
+    )
+}
+
+// the now-playing mark: bars that move while music plays and rest when it stops
+@Composable
+fun PlayingBars(color: Color, modifier: Modifier = Modifier, playing: Boolean = true) {
+    val square = com.aurora.music.ui.theme.isPaperTheme()
+    // the loop only exists while playing, and its value is read in the draw phase alone
+    val phase = if (playing) rememberInfiniteTransition(label = "bars")
+        .animateFloat(0f, 1f, infiniteRepeatable(tween(1400, easing = LinearEasing)), label = "phase") else null
+    Spacer(
+        modifier.drawBehind {
+            val gap = size.width * 0.12f
+            val bar = (size.width - gap * (BAR_REST.size - 1)) / BAR_REST.size
+            val radius = if (square) CornerRadius.Zero else CornerRadius(bar / 2f)
+            val t = phase?.value
+            for (i in BAR_REST.indices) {
+                val level = if (t == null) BAR_REST[i]
+                    else 0.28f + 0.72f * (0.5f + 0.5f * kotlin.math.sin(2f * Math.PI.toFloat() * (BAR_SPEED[i] * t + BAR_REST[i])))
+                val h = size.height * level
+                drawRoundRect(color, Offset(i * (bar + gap), size.height - h), Size(bar, h), radius)
+            }
+        },
+    )
+}
+
+private val BAR_REST = floatArrayOf(0.45f, 0.8f, 0.55f, 0.3f)
+private val BAR_SPEED = intArrayOf(2, 3, 2, 3)

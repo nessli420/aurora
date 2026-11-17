@@ -45,6 +45,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -117,14 +118,15 @@ fun SignalPathScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenOu
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) appString(R.string.text_hide_stage_meters_c123cc) else appString(R.string.text_stage_meters_50fb37)) }
-                            if (expanded) path.nodeMeters.forEach { meter ->
-                                Text(rack.nodes.firstOrNull { it.id == meter.id }?.name ?: appString(R.string.text_stage_ca6d0e), style = MaterialTheme.typography.titleSmall)
+                            AudioSection(expanded, spacing = 8.dp) { path.nodeMeters.forEach { meter ->
+                                Text(rack.nodes.firstOrNull { it.id == meter.id }?.name ?: appString(R.string.text_stage_ca6d0e), style = MaterialTheme.typography.titleSmall,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 Text(String.format(Locale.ROOT, appString(R.string.text_peak_1f_dbfs_change_1f_db_e16aea),
                                     20 * log10(meter.peak.coerceAtLeast(1e-10)), meter.changeDb), style = MaterialTheme.typography.bodySmall)
                                 if (meter.bandChangesDb.isNotEmpty()) Text(meter.bandChangesDb.joinToString(" · ") {
                                     String.format(Locale.ROOT, appString(R.string.text_1f_db_02557a), it)
                                 }, style = MaterialTheme.typography.bodySmall)
-                            }
+                            } }
                         }
                     }
                 }
@@ -189,8 +191,8 @@ private fun MeasurementCard(measurements: AudioMeasurements) {
             measurements.spectrum?.let { SpectrumChart(it) }
                 ?: Text(appString(R.string.text_waiting_for_audio_samples_e18779), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             TextButton(onClick = { details = !details }) { Text(if (details) appString(R.string.text_hide_measurement_details_a40be4) else appString(R.string.text_measurement_details_edeee9)) }
-            if (details) Text(appString(R.string.text_sample_peak_and_rms_before_output_volume_and_android_effects_leve_08e2a4),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            AudioSection(details) { Text(appString(R.string.text_sample_peak_and_rms_before_output_volume_and_android_effects_leve_08e2a4),
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
             if (measurements.overlappingPlayers) Text(appString(R.string.text_crossfade_primary_player_only_8e7de0),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

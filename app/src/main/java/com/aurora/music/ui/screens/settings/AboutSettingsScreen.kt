@@ -37,6 +37,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -52,7 +53,8 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     var showFontLicenses by remember { mutableStateOf(false) }
     if (showDstLicense) {
         val license = remember { context.assets.open("licenses/aurora-dst-LGPL-2.1.txt").bufferedReader().use { it.readText() } }
-        AlertDialog(onDismissRequest = { showDstLicense = false }, title = { Text(appString(R.string.text_dst_decoder_license_1e3fba)) },
+        AlertDialog(onDismissRequest = { showDstLicense = false },
+            title = { Text(appString(R.string.text_dst_decoder_license_1e3fba), maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = { Text("FFmpeg / DSD-Nexus. Copyright © 2014 Peter Ross. LGPL-2.1-or-later.\n\n$license",
                 modifier = Modifier.verticalScroll(rememberScrollState())) },
             confirmButton = { TextButton(onClick = { showDstLicense = false }) { Text(appString(R.string.text_close_bbfa77)) } },
@@ -75,7 +77,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         }
         AlertDialog(
             onDismissRequest = { showFontLicenses = false },
-            title = { Text(appString(R.string.font_licenses_title)) },
+            title = { Text(appString(R.string.font_licenses_title), maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column(
                     Modifier.verticalScroll(rememberScrollState()),

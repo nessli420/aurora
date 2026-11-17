@@ -28,6 +28,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.FilterType
 import com.aurora.music.data.ParsedEq
@@ -100,7 +101,7 @@ internal fun RackEqImportDialog(rack: ProcessingRack, onDismiss: () -> Unit,
         preview?.let { RackEqTextCodec.appendToRack(rack, it, name) }
     }
     val planError = appendPlan?.exceptionOrNull()?.message
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(appString(R.string.text_import_parametric_eq_658f13)) }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { AudioDialogTitle(appString(R.string.text_import_parametric_eq_658f13)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             if (preview == null) {
             Text(appString(R.string.text_open_equalizer_apo_text_autoeq_peq_json_or_aurora_eq_json_9a6150),
@@ -158,9 +159,9 @@ internal fun RackEqImportDialog(rack: ProcessingRack, onDismiss: () -> Unit,
 internal fun RackEqExportDialog(node: ProcessingRackNode, onDismiss: () -> Unit,
     onSaveText: (String) -> Unit, onOpenPresets: () -> Unit) {
     val encoded = remember(node) { runCatching { RackEqTextCodec.encode(ParsedEq(0f, node.audio.dspParametric)) } }
-    AlertDialog(onDismissRequest = onDismiss, title = { Text(appString(R.string.text_export_parametric_eq_text_39190f)) }, text = {
+    AlertDialog(onDismissRequest = onDismiss, title = { AudioDialogTitle(appString(R.string.text_export_parametric_eq_text_39190f)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            Text(node.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+            Text(node.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(appString(R.string.text_exports_parametric_filters_with_preamp_0_db_0ec77d, (node.audio.dspParametric.size)), style = MaterialTheme.typography.bodyMedium)
             Text(appString(R.string.text_parametric_bands_only_use_a_processing_preset_for_routing_and_the_64f11f),
                 style = MaterialTheme.typography.bodySmall)

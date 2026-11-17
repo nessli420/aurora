@@ -18,7 +18,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -35,6 +35,7 @@ import com.aurora.music.data.LibraryTabs
 import com.aurora.music.localization.appString
 import com.aurora.music.model.LibraryFilter
 import com.aurora.music.model.label
+import androidx.compose.ui.text.style.TextOverflow
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +50,7 @@ internal fun LibraryTabsSheet(initial: LibraryTabs, canDownload: Boolean, onChan
         onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = colors.surface, tonalElevation = 0.dp, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
     ) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             Text(appString(R.string.library_tabs_customize), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
             Spacer(Modifier.height(4.dp))
             Text(appString(R.string.library_tabs_hint), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
@@ -62,7 +63,7 @@ internal fun LibraryTabsSheet(initial: LibraryTabs, canDownload: Boolean, onChan
                     Icon(tabIcon(tab), null, tint = if (visible) colors.primary else colors.onSurfaceVariant, modifier = Modifier.size(20.dp))
                     Spacer(Modifier.width(14.dp))
                     Text(tab.label, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Medium,
-                        color = if (visible) colors.onSurface else colors.onSurfaceVariant, modifier = Modifier.weight(1f))
+                        color = if (visible) colors.onSurface else colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Row(horizontalArrangement = Arrangement.spacedBy(0.dp)) {
                         IconButton(onClick = { update(tabs.move(tab, -1)) }, enabled = i > 0) {
                             Icon(Icons.Filled.KeyboardArrowUp, appString(R.string.library_tabs_move_up, tab.label))

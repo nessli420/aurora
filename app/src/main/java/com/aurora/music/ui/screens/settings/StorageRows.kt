@@ -35,6 +35,12 @@ import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.data.StorageUsage
 import com.aurora.music.localization.appString
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.theme.Motion
 
 internal class StorageConfirm(val title: String, val message: String, val confirm: String, val action: () -> Unit)
 
@@ -66,12 +72,15 @@ internal fun StorageRow(
     onAction: () -> Unit = {},
 ) {
     RowScaffold(icon, title, detail, onClick = null) {
-        when {
-            working -> Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-            }
-            action != null -> TextButton(onClick = onAction, enabled = enabled) {
-                Text(action, color = if (destructive && enabled) MaterialTheme.colorScheme.error else Color.Unspecified)
+        AnimatedContent(working, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
+            contentAlignment = Alignment.CenterEnd, label = "storageAction") { busy ->
+            when {
+                busy -> Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+                }
+                action != null -> TextButton(onClick = onAction, enabled = enabled) {
+                    Text(action, color = if (destructive && enabled) MaterialTheme.colorScheme.error else Color.Unspecified)
+                }
             }
         }
     }
@@ -127,7 +136,7 @@ internal fun StorageConfirmDialog(request: StorageConfirm?, onDismiss: () -> Uni
     if (request == null) return
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(request.title) },
+        title = { Text(request.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(request.message) },
         confirmButton = {
             TextButton(onClick = { onDismiss(); request.action() }) { Text(request.confirm, color = MaterialTheme.colorScheme.error) }

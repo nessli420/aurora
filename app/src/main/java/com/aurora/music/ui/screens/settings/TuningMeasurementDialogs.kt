@@ -17,6 +17,7 @@ import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.tuning.*
 import kotlinx.coroutines.CancellationException
@@ -78,7 +79,7 @@ internal fun TuningMeasurementImportDialog(slot: TuningMeasurementSlot, previous
             }
         }
     }
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(if (correctionImport) appString(R.string.text_import_correction_curve_1f6dae) else appString(R.string.text_import_1219ef, (slot.label.lowercase()))) }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { AudioDialogTitle(if (correctionImport) appString(R.string.text_import_correction_curve_1f6dae) else appString(R.string.text_import_1219ef, (slot.label.lowercase()))) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             val preview = parsed
             if (preview == null) {
@@ -97,7 +98,7 @@ internal fun TuningMeasurementImportDialog(slot: TuningMeasurementSlot, previous
                     checked = phaseColumn, onCheckedChange = { if (!busy) { phaseColumn = it; error = null } })
             } else {
                 TextButton(onClick = { parsed = null }, enabled = !busy) { Text(appString(R.string.text_edit_source_text_f113e8)) }
-                Text(preview.name, style = MaterialTheme.typography.titleMedium)
+                Text(preview.name, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(appString(R.string.text_points_d46e78, (preview.points.size), (eqFrequency(preview.points.first().frequencyHz)), (eqFrequency(preview.points.last().frequencyHz))),
                     style = MaterialTheme.typography.bodyMedium)
                 if (preview.points.any { it.phaseDegrees != null }) Text(appString(R.string.text_phase_is_saved_but_not_fitted_3bc04a), style = MaterialTheme.typography.bodySmall)
@@ -124,7 +125,7 @@ internal fun TuningProvenanceDialog(curve: MeasurementCurve, onDismiss: () -> Un
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { Text(appString(R.string.text_measurement_details_edeee9)) }, text = {
+    AlertDialog(onDismissRequest = { if (!busy) onDismiss() }, title = { AudioDialogTitle(appString(R.string.text_measurement_details_edeee9)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             OutlinedTextField(name, { name = it.take(80) }, label = { Text(appString(R.string.text_name_709a23)) }, modifier = Modifier.fillMaxWidth(), singleLine = true, enabled = !busy)
             OutlinedTextField(rig, { rig = it.take(1024) }, label = { Text(appString(R.string.text_rig_microphone_coupler_ccd9a6)) }, modifier = Modifier.fillMaxWidth(), maxLines = 3, enabled = !busy)

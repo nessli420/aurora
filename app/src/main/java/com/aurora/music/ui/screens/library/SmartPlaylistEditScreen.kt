@@ -52,6 +52,12 @@ import com.aurora.music.data.SmartRule
 import com.aurora.music.ui.screens.settings.SegmentedRow
 import com.aurora.music.ui.screens.settings.SettingsGroup
 import com.aurora.music.ui.screens.settings.SettingsTopBar
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import com.aurora.music.ui.theme.Motion
 
 // keys must match SmartPlaylistEngine
 private const val TYPE_TEXT = 0
@@ -106,7 +112,7 @@ fun SmartPlaylistEditScreen(
                 onValueChange = { v -> onUpdate { it.copy(name = v) } },
                 label = { Text(appString(R.string.text_name_709a23)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             )
             Spacer(Modifier.height(14.dp))
 
@@ -138,7 +144,7 @@ fun SmartPlaylistEditScreen(
             Spacer(Modifier.height(14.dp))
 
             SettingsGroup {
-                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(appString(R.string.text_sort_by_a2a5bd), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
                     Dropdown(
                         options = SORTS.map { it.second },
@@ -151,8 +157,8 @@ fun SmartPlaylistEditScreen(
                         if (desc) Icons.Filled.ArrowDownward else Icons.Filled.ArrowUpward,
                         if (desc) appString(R.string.text_descending_36377a) else appString(R.string.text_ascending_2b226c),
                         tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(36.dp).paperClip(CircleShape)
-                            .clickable { onUpdate { it.copy(descending = !desc) } }.padding(7.dp),
+                        modifier = Modifier.size(40.dp).paperClip(CircleShape)
+                            .clickable { onUpdate { it.copy(descending = !desc) } }.padding(9.dp),
                     )
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -171,7 +177,7 @@ fun SmartPlaylistEditScreen(
             Button(
                 onClick = onSave,
                 enabled = !playlist.name.isNullOrBlank(),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp),
             ) { Text(if (isNew) appString(R.string.text_create_smart_playlist_6ea764) else appString(R.string.text_save_changes_179359), fontWeight = FontWeight.Bold) }
         }
     }
@@ -185,7 +191,7 @@ private fun RuleRow(rule: SmartRule, onChange: (SmartRule) -> Unit, onRemove: ()
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp)
             .paperClip(RoundedCornerShape(16.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
-            .padding(horizontal = 12.dp, vertical = 10.dp),
+            .padding(horizontal = 12.dp, vertical = 7.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Dropdown(
@@ -207,17 +213,16 @@ private fun RuleRow(rule: SmartRule, onChange: (SmartRule) -> Unit, onRemove: ()
             Icon(
                 Icons.Filled.Close, appString(R.string.text_remove_rule_e0d4ff),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(32.dp).paperClip(CircleShape).clickable(onClick = onRemove).padding(6.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onRemove).padding(10.dp),
             )
         }
-        if (spec.type != TYPE_BOOL) {
-            Spacer(Modifier.height(8.dp))
+        AnimatedVisibility(spec.type != TYPE_BOOL, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
             OutlinedTextField(
                 value = rule.value.orEmpty(),
                 onValueChange = { v -> onChange(rule.copy(value = if (spec.type == TYPE_NUMBER) v.filter { it.isDigit() } else v)) },
                 placeholder = { Text(if (spec.type == TYPE_NUMBER) appString(R.string.text_number_b1c1ba) else appString(R.string.text_text_6fc726)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
         }
     }

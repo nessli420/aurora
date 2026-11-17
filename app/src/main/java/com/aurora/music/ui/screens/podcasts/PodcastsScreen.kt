@@ -52,9 +52,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.aurora.music.data.Podcast
 import com.aurora.music.ui.components.Artwork
-import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.PodcastViewModel
+import androidx.compose.material.icons.filled.CloudOff
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
 
 private val SEED_TERMS: List<String> get() = listOf(
     appString(R.string.text_news_34c808), appString(R.string.text_comedy_11381a), appString(R.string.text_technology_d018b0), appString(R.string.text_science_d2d066), appString(R.string.text_true_crime_7a3f06),
@@ -82,7 +84,8 @@ fun PodcastsScreen(
                 modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Text(appString(R.string.text_podcasts_fd52b4), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(appString(R.string.text_podcasts_fd52b4), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Icon(
                 if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
                 if (searchOpen) appString(R.string.text_close_search_0906f9) else appString(R.string.text_search_podcasts_758c3a),
@@ -144,12 +147,11 @@ fun PodcastsScreen(
             if (state.query.isNotBlank()) {
                 item { SectionLabel(appString(R.string.text_results_612e12)) }
                 if (state.loading) {
-                    item { Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(64.dp)) } }
+                    item { LoadingState() }
                 } else if (state.results.isEmpty()) {
                     item {
-                        Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
-                            Text(if (state.failed) appString(R.string.text_couldn_t_reach_the_directory_f4b567) else appString(R.string.text_no_shows_found_2f293b), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        }
+                        if (state.failed) EmptyState(Icons.Filled.CloudOff, appString(R.string.text_couldn_t_reach_the_directory_f4b567))
+                        else EmptyState(Icons.Filled.Podcasts, appString(R.string.text_no_shows_found_2f293b))
                     }
                 } else {
                     items(state.results.size) { i ->
@@ -159,13 +161,10 @@ fun PodcastsScreen(
                 }
             } else if (subs.isEmpty()) {
                 item {
-                    Box(Modifier.fillMaxWidth().padding(top = 60.dp, start = 32.dp, end = 32.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            appString(R.string.text_search_for_a_show_or_pick_a_topic_above_to_get_started_681552),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    EmptyState(
+                        Icons.Filled.Podcasts, appString(R.string.text_nothing_here_yet_e89225), Modifier.padding(top = 28.dp),
+                        subtitle = appString(R.string.text_search_for_a_show_or_pick_a_topic_above_to_get_started_681552),
+                    )
                 }
             }
         }

@@ -23,6 +23,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -324,7 +325,7 @@ fun DiscordIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit, 
 @Composable
 private fun DiscordPreview(acct: DiscordAccount) {
     val activity = when (acct.activityName) { "artist" -> appString(R.string.text_listening_to_aurora_24a92c); "song" -> appString(R.string.text_listening_to_midnight_drive_35328b); else -> appString(R.string.text_aurora_eeee9b) }
-    Surface(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp))) {
+    Surface(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp))) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(42.dp).paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = .18f)), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Forum, null, tint = MaterialTheme.colorScheme.primary) }
@@ -354,7 +355,8 @@ private fun ArtistRuleDialog(initial: ScrobbleArtistRule?, onDismiss: () -> Unit
     var replacement by remember(initial) { mutableStateOf(initial?.replacementArtist.orEmpty()) }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(if (initial == null) appString(R.string.text_add_artist_replacement_1379e2) else appString(R.string.text_edit_artist_replacement_2b228e)) },
+        title = { Text(if (initial == null) appString(R.string.text_add_artist_replacement_1379e2) else appString(R.string.text_edit_artist_replacement_2b228e),
+            maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(source, { source = it.take(120) }, label = { Text(appString(R.string.text_artist_from_your_music_10b0e0)) }, placeholder = { Text("Ye") }, singleLine = true)

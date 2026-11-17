@@ -76,7 +76,7 @@ fun GesturesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                         SettingsSwitchRow(Icons.Filled.MusicNote, appString(R.string.music_haptics_title), appString(R.string.music_haptics_summary), music.enabled) { v ->
                             scope.launch { store.setMusicHaptics(v) }
                         }
-                        if (music.enabled) {
+                        SettingsReveal(music.enabled) {
                             SettingsRowDivider()
                             SegmentedRow(appString(R.string.music_haptics_detail), listOf(appString(R.string.music_haptics_detail_beat),
                                 appString(R.string.music_haptics_detail_rhythm), appString(R.string.music_haptics_detail_full)), music.detail) { i ->
@@ -100,9 +100,11 @@ fun GesturesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     }
                 }
             }
-            if (support.available && music.enabled) item {
-                Text(appString(R.string.music_haptics_note), Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (support.available) item {
+                SettingsReveal(music.enabled) {
+                    Text(appString(R.string.music_haptics_note), Modifier.padding(horizontal = 20.dp, vertical = 6.dp),
+                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
 
             item { SettingsSectionTitle(appString(R.string.text_behaviour_171ca0)) }

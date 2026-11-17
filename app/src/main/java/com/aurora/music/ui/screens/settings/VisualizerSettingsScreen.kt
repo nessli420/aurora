@@ -45,6 +45,8 @@ import com.aurora.music.data.VizBackground
 import com.aurora.music.data.VizColor
 import com.aurora.music.ui.screens.visualizer.VisualizerCanvas
 import com.aurora.music.ui.screens.visualizer.VizColors
+import androidx.compose.animation.animateColorAsState
+import com.aurora.music.ui.theme.Motion
 import kotlinx.coroutines.launch
 
 private val SWATCHES = listOf(
@@ -85,15 +87,17 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
                 ) {
                     items((0 until VisualizerStyle.count).toList()) { s ->
                         val selected = s == prefs.style
+                        val fill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "styleFill")
+                        val ink by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "styleInk")
                         Box(
                             Modifier.paperClip(RoundedCornerShape(50))
-                                .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .background(fill)
                                 .clickable { save(prefs.copy(style = s)) }
                                 .padding(horizontal = 14.dp, vertical = 9.dp),
                         ) {
                             Text(
                                 VisualizerStyle.label(s),
-                                color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                                color = ink,
                                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                                 style = MaterialTheme.typography.labelMedium,
                             )
@@ -108,11 +112,15 @@ fun VisualizerSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) 
                     SegmentedRow(appString(R.string.text_colour_source_92c52f), listOf(appString(R.string.text_accent_233064), appString(R.string.text_custom_081ae3), appString(R.string.text_gradient_36463c), appString(R.string.text_album_dfb4c9)), prefs.colorSource) { save(prefs.copy(colorSource = it)) }
                 }
             }
-            if (prefs.colorSource == VizColor.CUSTOM || prefs.colorSource == VizColor.GRADIENT) {
-                item { Swatches(appString(R.string.text_primary_a9a96e), prefs.primaryColor) { save(prefs.copy(primaryColor = it)) } }
+            item {
+                SettingsReveal(prefs.colorSource == VizColor.CUSTOM || prefs.colorSource == VizColor.GRADIENT) {
+                    Swatches(appString(R.string.text_primary_a9a96e), prefs.primaryColor) { save(prefs.copy(primaryColor = it)) }
+                }
             }
-            if (prefs.colorSource == VizColor.GRADIENT) {
-                item { Swatches(appString(R.string.text_secondary_025de5), prefs.secondaryColor) { save(prefs.copy(secondaryColor = it)) } }
+            item {
+                SettingsReveal(prefs.colorSource == VizColor.GRADIENT) {
+                    Swatches(appString(R.string.text_secondary_025de5), prefs.secondaryColor) { save(prefs.copy(secondaryColor = it)) }
+                }
             }
 
             item { SettingsSectionTitle(appString(R.string.text_background_64dd60)) }
@@ -213,9 +221,10 @@ private fun Swatches(label: String, selected: Int, onPick: (Int) -> Unit) {
         ) {
             items(SWATCHES) { c ->
                 val isSel = c == selected
+                val ring by animateColorAsState(MaterialTheme.colorScheme.onSurface.copy(alpha = if (isSel) 1f else 0f), Motion.state(), label = "swatchRing")
                 Box(
                     Modifier.size(34.dp).paperClip(CircleShape).background(Color(c))
-                        .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onSurface, com.aurora.music.ui.theme.paperSquare(CircleShape)) else Modifier)
+                        .border(3.dp, ring, com.aurora.music.ui.theme.paperSquare(CircleShape))
                         .clickable { onPick(c) },
                 )
             }

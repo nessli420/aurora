@@ -2,7 +2,6 @@ package com.aurora.music.ui.components
 
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -19,7 +18,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -53,6 +51,10 @@ import com.aurora.music.model.Song
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.animation.Crossfade
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.SearchOff
+import com.aurora.music.ui.theme.Motion
 
 // opens the picker for the playing song; the sheet lives at the app level so closing a menu keeps it open
 val LocalMatchPicker = staticCompositionLocalOf<((Song) -> Unit)?> { null }
@@ -100,26 +102,31 @@ fun MatchPickerSheet(song: Song, onSwap: (Song) -> Unit = {}, onDismiss: () -> U
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().imePadding().padding(bottom = 16.dp)) {
             Text(appString(R.string.match_change), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 20.dp))
+                modifier = Modifier.padding(horizontal = 24.dp))
             Text(appString(if (key != null) R.string.match_hint else R.string.match_hint_source, song.title), style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 20.dp, end = 20.dp, top = 6.dp))
+                color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(start = 24.dp, end = 24.dp, top = 6.dp))
             OutlinedTextField(
                 value = query, onValueChange = { query = it }, singleLine = true,
                 leadingIcon = { Icon(Icons.Filled.Search, null) },
                 placeholder = { Text(appString(if (key != null) R.string.match_search else R.string.match_search_source)) },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { search() }),
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 24.dp, vertical = 12.dp),
             )
-            when {
-                searching -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-                failed -> Note(appString(if (key != null) R.string.match_failed else R.string.match_failed_source))
-                results?.isEmpty() == true -> Note(appString(if (key != null) R.string.match_none else R.string.match_none_source))
+            val pane = when {
+                searching -> 0
+                failed -> 1
+                results?.isEmpty() == true -> 2
+                else -> 3
             }
-            LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
-                items(if (searching) emptyList() else results.orEmpty(), key = { it.id }) { result ->
+            Crossfade(pane, animationSpec = Motion.state(), label = "matchPane") { shown -> when (shown) {
+                0 -> LoadingState()
+                1 -> EmptyState(Icons.Outlined.ErrorOutline, appString(if (key != null) R.string.match_failed else R.string.match_failed_source))
+                2 -> EmptyState(Icons.Outlined.SearchOff, appString(if (key != null) R.string.match_none else R.string.match_none_source))
+                else -> LazyColumn(Modifier.fillMaxWidth().heightIn(max = 420.dp)) {
+                items(results.orEmpty(), key = { it.id }) { result ->
                     val picked = chosen == result.id
                     Row(
-                        Modifier.fillMaxWidth().clickable { choose(result) }.padding(horizontal = 16.dp, vertical = 8.dp),
+                        Modifier.fillMaxWidth().clickable { choose(result) }.padding(horizontal = 24.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Artwork(result.artworkUrl, MaterialTheme.colorScheme.primary, Modifier.size(52.dp), corner = 8.dp)
@@ -134,16 +141,11 @@ fun MatchPickerSheet(song: Song, onSwap: (Song) -> Unit = {}, onDismiss: () -> U
                         if (picked) Icon(Icons.Filled.CheckCircle, appString(R.string.match_chosen), tint = MaterialTheme.colorScheme.primary)
                     }
                 }
-            }
+                }
+            } }
             if (key != null && matches[key] != null) TextButton(onClick = { choose(null) }, modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)) {
                 Text(appString(R.string.match_reset))
             }
         }
     }
-}
-
-@Composable
-private fun Note(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = 20.dp, vertical = 12.dp))
 }

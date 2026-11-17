@@ -166,6 +166,29 @@ fun Modifier.auroraPanel(
         .border(if (emphasized && style == ThemeStyle.RETRO) 1.5.dp else 1.dp, edge, shape)
 }
 
+// fades the page out behind the floating bars so rows never show between or through them
+@Composable
+fun Modifier.chromeScrim(): Modifier {
+    val style = LocalUiPrefs.current.themeStyle
+    // glass bends whatever sits behind it, so it keeps the page
+    if (style == ThemeStyle.GLASS) return this
+    val colors = MaterialTheme.colorScheme
+    // the aurora page ends in a faint tertiary glow, so the scrim lands on that tone
+    val base = if (style == ThemeStyle.AURORA) lerp(colors.background, colors.tertiary, 0.08f) else colors.background
+    return drawWithCache {
+        val rise = 12.dp.toPx()
+        val height = size.height + rise
+        val brush = Brush.verticalGradient(
+            0f to base.copy(alpha = 0f),
+            ((rise + 8.dp.toPx()) / height).coerceAtMost(0.4f) to base.copy(alpha = 0.8f),
+            0.45f to base,
+            1f to base,
+            startY = -rise, endY = size.height,
+        )
+        onDrawBehind { drawRect(brush, topLeft = Offset(0f, -rise), size = Size(size.width, height)) }
+    }
+}
+
 /** Static, cached decoration: no blur pass or continuously running animation. */
 @Composable
 fun Modifier.auroraBackdrop(): Modifier {

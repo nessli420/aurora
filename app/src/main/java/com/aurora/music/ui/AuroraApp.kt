@@ -2,6 +2,10 @@ package com.aurora.music.ui
 
 import androidx.compose.material.icons.outlined.Check
 import com.aurora.music.ui.theme.paperClip
+import com.aurora.music.ui.theme.chromeScrim
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.util.MotionTokens
+import com.aurora.music.ui.theme.screenEnter
 import com.aurora.music.ui.components.longPressFirst
 import com.aurora.music.localization.localizedMediaType
 
@@ -1110,7 +1114,7 @@ fun AuroraApp() {
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
                     if (showChrome) {
-                        Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Box(Modifier.fillMaxWidth().then(if (rail) Modifier else Modifier.chromeScrim()), contentAlignment = Alignment.Center) {
                         Column(
                             Modifier
                                 .then(if (rail) Modifier.fillMaxWidth() else Modifier.widthIn(max = 960.dp))
@@ -1134,7 +1138,13 @@ fun AuroraApp() {
                                 }
                                 Spacer(Modifier.height(8.dp))
                             }
-                            if (playerState.showsBar && !rail) {
+                            // the bar keeps its full height while it fades in, so the page is laid out once
+                            AnimatedVisibility(
+                                visible = playerState.showsBar && !rail,
+                                enter = fadeIn(Motion.enter()) + slideInVertically(Motion.enter()) { it / 3 },
+                                exit = ExitTransition.None,
+                            ) {
+                                Column {
                                 // The mini player belongs to the app chrome, so it uses the app palette.
                                 MiniPlayer(
                                     state = playerState,
@@ -1144,6 +1154,7 @@ fun AuroraApp() {
                                     onNext = { playerVM.next() },
                                 )
                                 Spacer(Modifier.height(8.dp))
+                                }
                             }
                             if (!rail) Box {
                                 FloatingNav(navRoute, navLayout.bar, navLayout.barMore,
@@ -1177,10 +1188,11 @@ fun AuroraApp() {
                 NavHost(
                     navController = navController,
                     startDestination = startDestination,
-                    modifier = Modifier.widthIn(max = pageWidth).fillMaxSize(),
+                    modifier = Modifier.widthIn(max = pageWidth).fillMaxSize().screenEnter(backStackEntry?.id),
                     // A drawer action followed quickly by Back interrupts Navigation
                     // 2.8's default 700 ms fade and can leave the returned page invisible.
                     // The drawer and player animate independently; route content stays visible.
+                    // screenEnter fades each page in from outside the nav host instead
                     enterTransition = { EnterTransition.None },
                     exitTransition = { ExitTransition.None },
                     popEnterTransition = { EnterTransition.None },
@@ -1718,8 +1730,8 @@ fun AuroraApp() {
                 if (rail) {
                     AnimatedVisibility(
                         visible = shell.sidePanel,
-                        enter = expandHorizontally(tween(240)) + fadeIn(tween(200)),
-                        exit = shrinkHorizontally(tween(220)) + fadeOut(tween(160)),
+                        enter = expandHorizontally(Motion.enter()) + fadeIn(Motion.enter()),
+                        exit = shrinkHorizontally(Motion.exit()) + fadeOut(Motion.exit()),
                     ) {
                         val pane = sidePane ?: PlayerPane.QUEUE
                         NowPlayingSidePanel(
@@ -1759,8 +1771,8 @@ fun AuroraApp() {
             MaterialTheme(colorScheme = playerColors) {
             playerTransition.AnimatedVisibility(
                 visible = { it },
-                enter = slideInVertically(animationSpec = tween(320)) { it } + fadeIn(tween(220)),
-                exit = slideOutVertically(animationSpec = tween(280)) { it } + fadeOut(tween(180)),
+                enter = slideInVertically(tween(MotionTokens.SLOW, easing = Motion.Emphasized)) { it } + fadeIn(Motion.enter()),
+                exit = slideOutVertically(Motion.exit(MotionTokens.STANDARD)) { it } + fadeOut(Motion.exit(MotionTokens.STANDARD)),
             ) {
                 PlayerScreen(
                     state = playerState,
@@ -1819,8 +1831,8 @@ fun AuroraApp() {
 
             AnimatedVisibility(
                 visible = showQueue,
-                enter = slideInVertically(animationSpec = tween(300)) { it } + fadeIn(tween(200)),
-                exit = slideOutVertically(animationSpec = tween(260)) { it } + fadeOut(tween(160)),
+                enter = slideInVertically(tween(MotionTokens.SLOW, easing = Motion.Emphasized)) { it } + fadeIn(Motion.enter()),
+                exit = slideOutVertically(Motion.exit(MotionTokens.STANDARD)) { it } + fadeOut(Motion.exit(MotionTokens.STANDARD)),
             ) {
                 com.aurora.music.ui.screens.player.QueueScreen(
                     queue = playerState.queue,
@@ -1846,8 +1858,8 @@ fun AuroraApp() {
 
             AnimatedVisibility(
                 visible = showVisualizer,
-                enter = fadeIn(tween(220)),
-                exit = fadeOut(tween(180)),
+                enter = fadeIn(Motion.enter()),
+                exit = fadeOut(Motion.exit()),
             ) {
                 com.aurora.music.ui.screens.visualizer.VisualizerScreen(
                     state = playerState,

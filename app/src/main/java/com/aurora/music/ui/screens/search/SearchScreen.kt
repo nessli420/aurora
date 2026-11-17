@@ -73,6 +73,21 @@ import com.aurora.music.ui.components.PlaylistCard
 import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.components.SongRow
 import com.aurora.music.viewmodel.SearchUiState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.SearchOff
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.Motion
+
+private enum class Pane { ERROR, HINT, RECENTS, LOADING, NONE, RESULTS }
+
+// a pane carries its own data so the one fading out keeps what it showed
+private class SearchPane(val kind: Pane, val state: SearchUiState, val recents: List<String>)
 
 private enum class SearchFilter(@androidx.annotation.StringRes private val labelRes: Int) {
     ALL(R.string.text_all_6a7208), SONGS(R.string.text_songs_e1404b), ALBUMS(R.string.text_albums_4c45e7), ARTISTS(R.string.text_artists_1528d8), PLAYLISTS(R.string.text_playlists_77b69f);
@@ -144,7 +159,7 @@ fun SearchScreen(
             Column(Modifier.weight(1f)) {
                 Eyebrow(appString(R.string.text_discover_d3f02e), MaterialTheme.colorScheme.primary)
                 Spacer(Modifier.height(2.dp))
-                Text(appString(R.string.text_search_bce064), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black)
+                Text(appString(R.string.text_search_bce064), style = MaterialTheme.typography.displaySmall, fontWeight = FontWeight.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             if (state.sources.size > 1) {
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -158,14 +173,16 @@ fun SearchScreen(
                             "apple" -> Icons.Outlined.Album
                             else -> Icons.Outlined.MusicNote
                         }
+                        val fill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "sourceFill")
+                        val tint by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "sourceTint")
                         Box(
                             Modifier.size(40.dp).paperClip(CircleShape)
-                                .background(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .background(fill)
                                 .selectable(selected = selected, role = Role.RadioButton) { onSelectSource(source.id) },
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(icon, source.label,
-                                tint = if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant,
+                                tint = tint,
                                 modifier = Modifier.size(20.dp))
                         }
                     }
@@ -181,7 +198,7 @@ fun SearchScreen(
             trailingIcon = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     if (state.query.isNotEmpty()) {
-                        Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(36.dp).paperClip(CircleShape).clickable { onQuery("") }.padding(7.dp))
+                        Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onQuery("") }.padding(9.dp))
                     }
                     Icon(Icons.Filled.Mic, appString(R.string.text_voice_search_9df53f), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { launchVoice() }.padding(8.dp))
                 }
@@ -204,29 +221,41 @@ fun SearchScreen(
         Box(Modifier.fillMaxWidth().height(12.dp), contentAlignment = Alignment.Center) {
             if (state.loading && !empty) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp))
         }
-        when {
-            state.error != null -> EmptyHint(appString(R.string.text_search_unavailable_c32b9f), state.error)
-            state.query.isBlank() ->
-                if (recentSearches.isEmpty()) EmptyHint(appString(R.string.text_search_your_library_d9fa3f), appString(R.string.text_find_any_artist_album_song_or_playlist_9fcb23))
-                else RecentSearches(recentSearches, onRecentClick, onRemoveRecent, onClearRecents, contentPadding)
-            state.loading && empty ->
-                Box(Modifier.fillMaxWidth().height(240.dp), contentAlignment = Alignment.Center) {
-                    com.aurora.music.ui.components.LottieLoader(modifier = Modifier.size(72.dp))
-                }
-            empty -> EmptyHint(appString(R.string.text_no_results_b993b0), appString(R.string.text_nothing_matched_f74d36, (state.query)))
-            else -> {
+        val kind = when {
+            state.error != null -> Pane.ERROR
+            state.query.isBlank() -> if (recentSearches.isEmpty()) Pane.HINT else Pane.RECENTS
+            state.loading && empty -> Pane.LOADING
+            empty -> Pane.NONE
+            else -> Pane.RESULTS
+        }
+        val pane = remember(kind, state, recentSearches) { SearchPane(kind, state, recentSearches) }
+        AnimatedContent(
+            targetState = pane,
+            transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
+            contentKey = { it.kind },
+            label = "searchPane",
+        ) { shown ->
+        when (shown.kind) {
+            Pane.ERROR -> EmptyState(Icons.Outlined.ErrorOutline, appString(R.string.text_search_unavailable_c32b9f), Modifier.fillMaxSize(), subtitle = shown.state.error)
+            Pane.HINT -> EmptyState(Icons.Filled.Search, appString(R.string.text_search_your_library_d9fa3f), Modifier.fillMaxSize(), subtitle = appString(R.string.text_find_any_artist_album_song_or_playlist_9fcb23))
+            Pane.RECENTS -> RecentSearches(shown.recents, onRecentClick, onRemoveRecent, onClearRecents, contentPadding)
+            Pane.LOADING -> LoadingState(Modifier.height(240.dp))
+            Pane.NONE -> EmptyState(Icons.Outlined.SearchOff, appString(R.string.text_no_results_b993b0), Modifier.fillMaxSize(), subtitle = appString(R.string.text_nothing_matched_f74d36, (shown.state.query)))
+            Pane.RESULTS -> Column {
+                val found = shown.state.results
                 // fall back to ALL when chosen type has no results
-                val effective = if (sectionNonEmpty(filter, results)) filter else SearchFilter.ALL
-                FilterChips(effective, results) { filter = it }
+                val effective = if (sectionNonEmpty(filter, found)) filter else SearchFilter.ALL
+                FilterChips(effective, found) { filter = it }
                 Spacer(Modifier.height(6.dp))
                 Results(
-                    effective, results, likedIds, currentSongId, isPlaying, contentPadding,
+                    effective, found, likedIds, currentSongId, isPlaying, contentPadding,
                     onPlayAll = { songs, i -> commitAnd { onPlayAll(songs, i) } },
                     onAddToQueue = onAddToQueue, onPlayNext = onPlayNext, onToggleLike = onToggleLike,
                     onOpenDetail = { k, id -> commitAnd { onOpenDetail(k, id) } },
                     downloadedIds = downloadedIds, onDownload = onDownload, onRemoveDownload = onRemoveDownload, canDownload = canDownload,
                 )
             }
+        }
         }
     }
     }
@@ -248,13 +277,15 @@ private fun FilterChips(selected: SearchFilter, results: SearchResults, onSelect
         items(available.size) { i ->
             val f = available[i]
             val on = f == selected
+            val fill by animateColorAsState(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "chipFill")
+            val ink by animateColorAsState(if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "chipInk")
             Text(
                 f.label,
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
-                color = if (on) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                color = ink,
                 modifier = Modifier.paperClip(RoundedCornerShape(50))
-                    .background(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .background(fill)
                     .clickable { onSelect(f) }
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
@@ -348,7 +379,7 @@ private fun RecentSearches(
     ) {
         item {
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 12.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(appString(R.string.text_recent_76eec7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text(appString(R.string.text_recent_76eec7), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                 Text(appString(R.string.text_clear_719ea3), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable(onClick = onClear).padding(horizontal = 10.dp, vertical = 6.dp))
             }
@@ -356,27 +387,14 @@ private fun RecentSearches(
         items(recents.size) { i ->
             val q = recents[i]
             Row(
-                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable { onClick(q) }.padding(horizontal = 16.dp, vertical = 12.dp),
+                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable { onClick(q) }.padding(start = 16.dp, end = 11.dp, top = 7.dp, bottom = 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(14.dp))
                 Text(q, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                Icon(Icons.Filled.Close, appString(R.string.text_remove_e96390), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(30.dp).paperClip(CircleShape).clickable { onRemove(q) }.padding(6.dp))
+                Icon(Icons.Filled.Close, appString(R.string.text_remove_e96390), tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onRemove(q) }.padding(11.dp))
             }
-        }
-    }
-}
-
-@Composable
-private fun EmptyHint(title: String, subtitle: String) {
-    Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Icon(Icons.Outlined.MusicNote, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(56.dp))
-            Spacer(Modifier.height(12.dp))
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(4.dp))
-            Text(subtitle, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

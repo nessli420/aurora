@@ -16,6 +16,7 @@ import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -58,7 +59,7 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 SettingsSectionTitle(appString(R.string.text_this_device_fa5a6d))
                 SettingsGroup {
                     RemoteControlSwitch(manager)
-                    if (state.receiverEnabled) {
+                    SettingsReveal(state.receiverEnabled) {
                         Column(Modifier.padding(horizontal = 20.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             state.receiverAddress?.let { endpoint ->
                                 Text(appString(R.string.connect_this_key, EndpointTls.shortKey(endpoint.fingerprint)), style = MaterialTheme.typography.titleSmall)
@@ -85,7 +86,7 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     }
                     state.controllers.forEach { controller ->
                         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(controller.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text(controller.name, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             TextButton(onClick = { manager.revokeController(controller.id) }) { Text(appString(R.string.text_revoke_0be720)) }
                         }
                     }
@@ -106,7 +107,7 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     }
                     state.paired.forEach { peer ->
                         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(peer.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text(peer.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             TextButton(onClick = { manager.forget(peer.id) }) { Text(appString(R.string.text_forget_03d5d8)) }
                         }
                     }

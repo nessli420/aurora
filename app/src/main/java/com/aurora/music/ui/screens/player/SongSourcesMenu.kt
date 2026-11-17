@@ -2,6 +2,7 @@ package com.aurora.music.ui.screens.player
 
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
@@ -119,9 +120,15 @@ private fun SourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, f
     fun header(text: String) = Text(text, style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant,
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
+    // one menu row tall, so the menu keeps its height when the first result lands
     @Composable
-    fun loading() = Box(Modifier.padding(16.dp).size(width = 160.dp, height = 24.dp), contentAlignment = Alignment.Center) {
+    fun loading() = Box(Modifier.padding(horizontal = 16.dp, vertical = 12.dp).size(width = 160.dp, height = 24.dp), contentAlignment = Alignment.Center) {
         CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+    }
+
+    @Composable
+    fun noMatch() = Box(Modifier.heightIn(min = 48.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
+        Text(appString(R.string.like_no_match), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
     }
 
     @Composable
@@ -129,14 +136,14 @@ private fun SourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, f
         val list = copies
         when {
             list == null -> loading()
-            list.none(keep) -> header(appString(R.string.like_no_match))
+            list.none(keep) -> noMatch()
             else -> list.filter(keep).forEach { row(it) }
         }
     }
 
     @Composable
     fun label(copy: SourceCopy, note: String?) = Column {
-        Text(copy.label)
+        Text(copy.label, maxLines = 1, overflow = TextOverflow.Ellipsis)
         note?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
 
@@ -195,17 +202,17 @@ private fun SourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, f
                         },
                     )
                 }
-                if (here && copies?.count { it.opens(page) } == 1) header(appString(R.string.like_no_match))
+                if (here && copies?.count { it.opens(page) } == 1) noMatch()
             }
             SongMenuPage.LINK -> {
                 header(appString(R.string.song_menu_copy_link_from))
                 val list = links
                 when {
                     list == null -> loading()
-                    list.isEmpty() -> header(appString(R.string.like_no_match))
+                    list.isEmpty() -> noMatch()
                     else -> list.forEach { link ->
                         DropdownMenuItem(
-                            text = { Text(link.label) },
+                            text = { Text(link.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
                             leadingIcon = { Icon(sourceIcon(ImportSource.of(link.type)), null) },
                             onClick = { sources.copyLink(link); onDismiss() },
                         )

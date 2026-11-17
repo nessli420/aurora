@@ -197,36 +197,24 @@ private fun PermRow(
     enabled: Boolean = true,
     onGrant: () -> Unit,
 ) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)
-            .paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(enabled = enabled && !granted, onClick = onGrant)
-            .padding(16.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier.size(38.dp).paperClip(RoundedCornerShape(10.dp))
-                .background(MaterialTheme.colorScheme.surfaceContainerHighest),
-            contentAlignment = Alignment.Center,
-        ) { Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-        Spacer(Modifier.width(10.dp))
-        if (granted) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(4.dp))
-                Text(appString(R.string.text_granted_43b11e), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
-            }
-        } else if (enabled) {
-            Box(
-                Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
-                    .clickable(onClick = onGrant).padding(horizontal = 14.dp, vertical = 7.dp),
-            ) {
-                Text(appString(R.string.text_grant_c02329), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary)
+    Box(Modifier.padding(vertical = 6.dp)) {
+        SettingsGroup {
+            RowScaffold(icon, title, subtitle, onClick = if (enabled && !granted) onGrant else null) {
+                Spacer(Modifier.width(10.dp))
+                if (granted) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        Spacer(Modifier.width(4.dp))
+                        Text(appString(R.string.text_granted_43b11e), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary, maxLines = 1)
+                    }
+                } else if (enabled) {
+                    Box(
+                        Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary)
+                            .clickable(onClick = onGrant).padding(horizontal = 14.dp, vertical = 7.dp),
+                    ) {
+                        Text(appString(R.string.text_grant_c02329), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onPrimary, maxLines = 1)
+                    }
+                }
             }
         }
     }

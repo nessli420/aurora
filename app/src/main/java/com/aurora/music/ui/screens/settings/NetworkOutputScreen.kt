@@ -13,6 +13,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -58,7 +59,7 @@ fun NetworkOutputControls(
                 Modifier.padding(start = 20.dp, end = 20.dp, bottom = 14.dp), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
-        if (state.receiverName != null || state.preparing || state.error != null) {
+        SettingsReveal(state.receiverName != null || state.preparing || state.error != null) {
             SettingsSectionTitle(appString(R.string.text_playback_c8e308))
             SettingsGroup {
                 Column(Modifier.padding(horizontal = 20.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -88,7 +89,7 @@ fun NetworkOutputControls(
             }
             state.dlna.forEach { renderer ->
                 Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(renderer.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    Text(renderer.name, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     TextButton(enabled = !state.preparing, onClick = { manager.connect(NetworkTarget.Dlna(renderer)); onConnected() }) { Text(appString(R.string.text_play_here_49df29)) }
                 }
             }

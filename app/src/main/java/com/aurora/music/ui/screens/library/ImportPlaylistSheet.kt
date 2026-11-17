@@ -68,6 +68,12 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import com.aurora.music.ui.theme.Motion
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -116,10 +122,10 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
         containerColor = colors.surface, tonalElevation = 0.dp,
         shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
     ) {
-        Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
+        Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             val done = result
             if (done == null) {
-                Text(appString(R.string.import_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                Text(appString(R.string.import_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
                 Text(appString(R.string.import_hint), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant,
                     modifier = Modifier.padding(top = 6.dp, bottom = 18.dp))
                 val start = { if (link.isNotBlank() && !busy) run { report -> importer.fromLink(link, fallback, report) } }
@@ -131,18 +137,21 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Go),
                     keyboardActions = KeyboardActions(onGo = { start() }),
                 )
-                val step = progress
-                if (step != null) {
+                AnimatedVisibility(progress != null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                    val step = progress ?: return@AnimatedVisibility
                     val (text, fraction) = when (step) {
                         ImportProgress.Reading -> appString(R.string.import_reading) to null
                         is ImportProgress.Matching -> appString(R.string.import_matching, step.done, step.total) to step.done.toFloat() / step.total.coerceAtLeast(1)
                         ImportProgress.Saving -> appString(R.string.import_saving) to null
                     }
+                    Column {
                     Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 18.dp, bottom = 8.dp))
                     if (fraction == null) LinearProgressIndicator(Modifier.fillMaxWidth())
                     else LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
+                    }
                 }
-                failure?.let { f ->
+                AnimatedVisibility(failure != null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                    val f = failure ?: return@AnimatedVisibility
                     Row(Modifier.padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically) {
                         Icon(Icons.Outlined.ErrorOutline, null, tint = colors.error, modifier = Modifier.size(18.dp))
                         Text(appString(failureText(f)), color = colors.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
@@ -152,11 +161,11 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
                     OutlinedButton(onClick = { pickFile.launch(arrayOf("*/*")) }, enabled = !busy, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
                         modifier = Modifier.weight(1f).height(54.dp)) {
                         Icon(Icons.Outlined.FileOpen, null, modifier = Modifier.size(18.dp))
-                        Text(appString(R.string.import_file), modifier = Modifier.padding(start = 8.dp))
+                        Text(appString(R.string.import_file), maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 8.dp))
                     }
                     Button(onClick = start, enabled = link.isNotBlank() && !busy, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
                         modifier = Modifier.weight(1f).height(54.dp)) {
-                        Text(appString(R.string.import_start), fontWeight = FontWeight.SemiBold)
+                        Text(appString(R.string.import_start), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             } else {
@@ -184,10 +193,10 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
                 if (done.limited) Note(appString(R.string.import_limited))
                 Row(Modifier.fillMaxWidth().padding(top = 22.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                     OutlinedButton(onClick = onDismiss, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), modifier = Modifier.weight(1f).height(54.dp)) {
-                        Text(appString(R.string.import_done))
+                        Text(appString(R.string.import_done), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                     Button(onClick = { onDismiss(); onOpen(done.playlistId) }, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), modifier = Modifier.weight(1f).height(54.dp)) {
-                        Text(appString(R.string.import_open), fontWeight = FontWeight.SemiBold)
+                        Text(appString(R.string.import_open), fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -199,7 +208,7 @@ internal fun ImportPlaylistSheet(importer: PlaylistImporter, onOpen: (String) ->
 private fun SourceRow(icon: ImageVector, label: String, count: Int) {
     Row(Modifier.fillMaxWidth().padding(vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(22.dp))
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(start = 12.dp))
+        Text(label, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 12.dp))
         Text(count.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
     }
 }

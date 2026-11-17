@@ -61,6 +61,18 @@ import com.aurora.music.localization.appString
 import com.aurora.music.localization.localizedMediaType
 import com.aurora.music.util.accentArgbFor
 import kotlinx.coroutines.launch
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
+import com.aurora.music.util.MotionTokens
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +102,7 @@ internal fun CreatePlaylistSheet(
         containerColor = colors.surface, tonalElevation = 0.dp,
         shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(topStart = 28.dp, topEnd = 28.dp)),
     ) {
-        Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 20.dp).padding(bottom = 24.dp)) {
+        Column(Modifier.fillMaxWidth().imePadding().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 24.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(
                     Modifier.size(76.dp).paperClip(RoundedCornerShape(18.dp))
@@ -102,7 +114,7 @@ internal fun CreatePlaylistSheet(
                     else Icon(Icons.AutoMirrored.Outlined.PlaylistAdd, null, tint = Color.White, modifier = Modifier.size(34.dp))
                 }
                 Column(Modifier.weight(1f).padding(start = 16.dp)) {
-                    Text(name.trim().ifBlank { appString(R.string.text_new_playlist_a5474a) }, style = MaterialTheme.typography.headlineSmall,
+                    Text(name.trim().ifBlank { appString(R.string.text_new_playlist_a5474a) }, style = MaterialTheme.typography.titleLarge,
                         fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     if (home.isNotBlank()) Text(appString(R.string.playlist_saved_to, home), style = MaterialTheme.typography.bodyMedium,
                         color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
@@ -145,8 +157,10 @@ internal fun CreatePlaylistSheet(
                     }
                 }
             }
-            if (failed) Text(appString(R.string.playlist_create_failed), color = colors.error,
-                style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 12.dp))
+            AnimatedVisibility(failed, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                Text(appString(R.string.playlist_create_failed), color = colors.error,
+                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 12.dp))
+            }
             Button(
                 onClick = {
                     saving = true
@@ -159,14 +173,17 @@ internal fun CreatePlaylistSheet(
                 enabled = name.isNotBlank() && !saving, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
                 modifier = Modifier.fillMaxWidth().padding(top = 22.dp).height(54.dp),
             ) {
-                if (saving) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = colors.onPrimary)
-                else Text(appString(R.string.text_create_playlist_62c988), fontWeight = FontWeight.SemiBold)
+                AnimatedContent(saving, transitionSpec = { fadeIn(Motion.enter(MotionTokens.FAST)) togetherWith fadeOut(Motion.exit(MotionTokens.INSTANT)) using null },
+                    contentAlignment = Alignment.Center, label = "createPlaylist") { busy ->
+                    if (busy) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp, color = colors.onPrimary)
+                    else Text(appString(R.string.text_create_playlist_62c988), fontWeight = FontWeight.SemiBold)
+                }
             }
-            Row(Modifier.fillMaxWidth().padding(top = 18.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Row(Modifier.fillMaxWidth().padding(top = 18.dp).height(IntrinsicSize.Min), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ShortcutCard(Icons.Outlined.AutoAwesome, appString(R.string.text_smart_playlist_f77ad7), appString(R.string.playlist_smart_hint),
-                    enabled = !saving, onClick = onCreateSmart, modifier = Modifier.weight(1f))
+                    enabled = !saving, onClick = onCreateSmart, modifier = Modifier.weight(1f).fillMaxHeight())
                 ShortcutCard(Icons.Outlined.FileOpen, appString(R.string.import_title), appString(R.string.import_card_hint),
-                    enabled = !saving, onClick = onImportM3u, modifier = Modifier.weight(1f))
+                    enabled = !saving, onClick = onImportM3u, modifier = Modifier.weight(1f).fillMaxHeight())
             }
             if (onCreateWithAi != null) ShortcutCard(Icons.Outlined.AutoAwesome, appString(R.string.ai_playlist_title), appString(R.string.ai_dj_card_hint),
                 enabled = !saving, onClick = onCreateWithAi, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
@@ -190,7 +207,7 @@ private fun TargetRow(target: PlaylistTarget, trailing: ImageVector, enabled: Bo
             Icon(targetIcon(target.type), null, tint = colors.primary, modifier = Modifier.size(20.dp))
         }
         Column(Modifier.weight(1f).padding(start = 12.dp)) {
-            Text(target.label.localizedMediaType(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Text(target.label.localizedMediaType(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (target.type == ServerType.LOCAL) Text(appString(R.string.playlist_local_hint), style = MaterialTheme.typography.bodySmall,
                 color = colors.onSurfaceVariant)
         }
@@ -204,7 +221,7 @@ private fun ShortcutCard(icon: ImageVector, title: String, hint: String, enabled
     val shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp))
     Column(
         modifier.clip(shape).background(colors.surfaceContainerLow).border(1.dp, colors.outlineVariant.copy(alpha = .3f), shape)
-            .clickable(enabled = enabled, onClick = onClick).padding(14.dp),
+            .pressClickable(enabled = enabled, onClick = onClick).padding(14.dp),
     ) {
         Icon(icon, null, tint = colors.primary, modifier = Modifier.size(22.dp))
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))

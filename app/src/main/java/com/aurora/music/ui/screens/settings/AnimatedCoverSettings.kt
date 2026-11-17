@@ -48,8 +48,10 @@ internal fun AnimatedCoverSettings() {
         Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
             Text(stringResource(R.string.animated_covers_help), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            if (config.folder.isNotBlank()) TextButton(onClick = { scope.launch { runCatching { covers.setFolder(null) } } }) {
-                Text(stringResource(R.string.animated_covers_remove))
+            SettingsReveal(config.folder.isNotBlank()) {
+                TextButton(onClick = { scope.launch { runCatching { covers.setFolder(null) } } }) {
+                    Text(stringResource(R.string.animated_covers_remove))
+                }
             }
         }
     }

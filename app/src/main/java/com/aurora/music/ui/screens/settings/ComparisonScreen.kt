@@ -10,14 +10,17 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.Switch
 import com.aurora.music.ui.theme.TextButton
 import com.aurora.music.ui.theme.OutlinedButton
 import com.aurora.music.ui.theme.Button
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleEventObserver
@@ -109,7 +112,7 @@ fun ComparisonScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                     TextButton(onClick = onOpenPresets) { Text(appString(R.string.text_saved_processing_presets_f22d4b)) }
                 }
                 item {
-                    if (sourceLabel.isNotBlank()) Text(sourceLabel, style = MaterialTheme.typography.titleMedium)
+                    if (sourceLabel.isNotBlank()) Text(sourceLabel, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     OutlinedButton(onClick = { pick.launch(arrayOf("audio/*")) }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_choose_audio_ea6db7)) }
                     if (currentSource.isNotBlank() && source != currentSource) TextButton(onClick = {
                         source = currentSource; sourceLabel = currentTitle
@@ -119,8 +122,8 @@ fun ComparisonScreen(contentPadding: PaddingValues, onBack: () -> Unit,
                         singleLine = true, modifier = Modifier.fillMaxWidth())
                 }
                 item {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(appString(R.string.text_blind_abx_16_trials_eab67b))
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        Text(appString(R.string.text_blind_abx_16_trials_eab67b), Modifier.weight(1f).padding(end = 12.dp))
                         Switch(checked = blind, onCheckedChange = { blind = it })
                     }
                     Text(appString(R.string.text_up_to_15_seconds_rms_matched_within_0_1_db_shorter_at_high_sample_64e480), style = MaterialTheme.typography.bodySmall)
@@ -135,6 +138,7 @@ fun ComparisonScreen(contentPadding: PaddingValues, onBack: () -> Unit,
             }
             if (state.preparing) item {
                 LinearProgressIndicator(Modifier.fillMaxWidth())
+                Spacer(Modifier.height(8.dp))
                 Text(appString(R.string.text_preparing_both_presets_04bd1f))
                 TextButton(onClick = { model.stop() }) { Text(appString(R.string.text_cancel_77dfd2)) }
             }
@@ -177,7 +181,7 @@ private fun PresetComparisonChoice(label: String, selected: String, presets: Lis
     var expanded by remember { mutableStateOf(false) }
     Box {
         OutlinedButton(onClick = { expanded = true }, enabled = presets.isNotEmpty(), modifier = Modifier.fillMaxWidth()) {
-            Text("$label · ${presets.firstOrNull { it.id == selected }?.name ?: appString(R.string.text_save_a_preset_first_0d40db)}")
+            Text("$label · ${presets.firstOrNull { it.id == selected }?.name ?: appString(R.string.text_save_a_preset_first_0d40db)}", maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
             presets.forEach { preset -> DropdownMenuItem(text = { Text(preset.name) }, onClick = { onSelect(preset.id); expanded = false }) }

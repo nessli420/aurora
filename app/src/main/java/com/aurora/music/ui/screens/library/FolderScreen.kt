@@ -45,6 +45,9 @@ import com.aurora.music.data.FolderContent
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.components.SongRow
+import androidx.compose.animation.Crossfade
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.Motion
 
 /** One level of the folder/file-tree browser: subfolders on top, this folder's tracks below. */
 @Composable
@@ -102,11 +105,17 @@ fun FolderScreen(
         androidx.compose.material3.pulltorefresh.PullToRefreshBox(
             isRefreshing = refreshing, onRefresh = onRefresh, modifier = Modifier.fillMaxSize(),
         ) {
+        val pane = when {
+            loading -> 0
+            content == null || (content.folders.isEmpty() && content.songs.isEmpty()) -> 1
+            else -> 2
+        }
+        Crossfade(pane, animationSpec = Motion.state(), label = "folderPane") { shown ->
         when {
-            loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
-            content == null || (content.folders.isEmpty() && content.songs.isEmpty()) ->
+            shown == 0 -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
+            shown == 1 || content == null ->
                 Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.Center) {
-                    Text(appString(R.string.text_nothing_in_this_folder_d2a003), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    EmptyState(Icons.Filled.Folder, appString(R.string.text_nothing_in_this_folder_d2a003))
                 }
             else -> {
                 val bottom = contentPadding.calculateBottomPadding() + 24.dp
@@ -138,6 +147,7 @@ fun FolderScreen(
                     }
                 }
             }
+        }
         }
         }
     }

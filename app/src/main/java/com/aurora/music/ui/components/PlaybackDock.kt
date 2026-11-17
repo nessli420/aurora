@@ -2,6 +2,7 @@ package com.aurora.music.ui.components
 
 import androidx.compose.animation.animateColorAsState
 import com.aurora.music.ui.theme.paperClip
+import com.aurora.music.ui.theme.likePop
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -26,8 +27,6 @@ import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.Lyrics
 import androidx.compose.material.icons.filled.OpenInFull
-import androidx.compose.material.icons.filled.Pause
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.filled.SkipPrevious
 import androidx.compose.material.icons.filled.Speaker
@@ -127,7 +126,8 @@ fun PlaybackDock(
                         else colors.onSurfaceVariant, label = "dockLike")
                     LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
                         Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp))
+                            appString(R.string.text_like_c7e02c), tint = likeTint,
+                            modifier = Modifier.size(22.dp).likePop(state.isCurrentLiked, song.id))
                     }
                 }
             }
@@ -142,8 +142,8 @@ fun PlaybackDock(
                         modifier = Modifier.size((48.dp * scale).coerceAtLeast(36.dp)),
                         colors = IconButtonDefaults.filledIconButtonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
                     ) {
-                        Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            appString(R.string.text_play_pause_14a1d0), modifier = Modifier.size(26.dp * scale))
+                        val playPause = appString(R.string.text_play_pause_14a1d0)
+                        PlayPauseIcon(state.isPlaying, colors.onPrimary, Modifier.size(26.dp * scale).semantics { contentDescription = playPause })
                     }
                     if (!isMix) IconButton(onClick = onNext) {
                         Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = colors.onSurface)

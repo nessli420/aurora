@@ -55,6 +55,8 @@ import com.aurora.music.data.YouTubeDownloader
 import com.aurora.music.localization.appString
 import com.aurora.music.playback.YoutubeResolver
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
 import com.aurora.music.ui.screens.settings.SettingsTopBar
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -114,16 +116,12 @@ fun YouTubeDownloadScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
                 unfocusedIndicatorColor = Color.Transparent,
             ),
         )
-        val message = when {
-            searching -> null
-            failed -> appString(R.string.youtube_download_search_failed)
-            results == null -> appString(R.string.youtube_download_intro)
-            results.orEmpty().isEmpty() -> appString(R.string.youtube_download_no_results)
-            else -> null
+        when {
+            searching -> LoadingState()
+            failed -> EmptyState(Icons.Filled.ErrorOutline, appString(R.string.youtube_download_search_failed))
+            results == null -> EmptyState(Icons.Filled.Download, appString(R.string.youtube_download_tile_detail), subtitle = appString(R.string.youtube_download_intro))
+            results.orEmpty().isEmpty() -> EmptyState(Icons.Filled.Search, appString(R.string.youtube_download_no_results))
         }
-        if (searching) Box(Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
-        if (message != null) Text(message, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp))
         LazyColumn(Modifier.fillMaxWidth().weight(1f), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             items(if (searching) emptyList() else results.orEmpty(), key = { it.videoId }) { result ->
                 ResultRow(result, states[result.videoId]) { container.youTubeDownloader.download(result.videoId) }
@@ -156,8 +154,8 @@ private fun ResultRow(result: YoutubeResolver.SearchResult, state: YouTubeDownlo
         Spacer(Modifier.width(12.dp))
         Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
             when (state) {
-                is YouTubeDownloader.State.Downloading -> CircularProgressIndicator(progress = { state.progress }, modifier = Modifier.size(26.dp), strokeWidth = 3.dp)
-                YouTubeDownloader.State.Queued, YouTubeDownloader.State.Saving -> CircularProgressIndicator(Modifier.size(26.dp), strokeWidth = 3.dp)
+                is YouTubeDownloader.State.Downloading -> CircularProgressIndicator(progress = { state.progress }, modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
+                YouTubeDownloader.State.Queued, YouTubeDownloader.State.Saving -> CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
                 YouTubeDownloader.State.Done -> Icon(Icons.Filled.CheckCircle, null, tint = MaterialTheme.colorScheme.primary)
                 YouTubeDownloader.State.Failed -> Icon(Icons.Filled.ErrorOutline, null, tint = MaterialTheme.colorScheme.error)
                 null -> Icon(Icons.Filled.Download, appString(R.string.youtube_download_action), tint = MaterialTheme.colorScheme.onSurfaceVariant)

@@ -6,6 +6,8 @@ import com.aurora.music.R
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -177,7 +179,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             )
         }
 
-        AnimatedVisibility(controlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.TopStart)) {
+        AnimatedVisibility(controlsVisible, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit()), modifier = Modifier.align(Alignment.TopStart)) {
             Row(
                 Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.systemBars).padding(horizontal = 12.dp, vertical = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
@@ -194,7 +196,7 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             }
         }
 
-        AnimatedVisibility(controlsVisible, enter = fadeIn(), exit = fadeOut(), modifier = Modifier.align(Alignment.BottomCenter)) {
+        AnimatedVisibility(controlsVisible, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit()), modifier = Modifier.align(Alignment.BottomCenter)) {
             LazyRow(
                 Modifier.fillMaxWidth().windowInsetsPadding(WindowInsets.systemBars).padding(vertical = 16.dp),
                 state = modeListState,
@@ -203,10 +205,12 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
             ) {
                 items((0 until VisualizerStyle.count).toList(), key = { it }) { s ->
                     val selected = s == prefs.style
+                    val fill by animateColorAsState(if (selected) colors.primary else Color.White.copy(alpha = 0.14f), Motion.state(), label = "vizMode")
+                    val ink by animateColorAsState(if (selected) Color.Black else Color.White, Motion.state(), label = "vizModeLabel")
                     Box(
                         Modifier
                             .paperClip(RoundedCornerShape(50))
-                            .background(if (selected) colors.primary else Color.White.copy(alpha = 0.14f))
+                            .background(fill)
                             .selectable(selected = selected, role = Role.RadioButton) {
                                 controlsInteraction++
                                 scope.launch { container.settingsStore.setVisualizer(prefs.copy(style = s)) }
@@ -215,9 +219,10 @@ fun VisualizerScreen(state: PlayerUiState, onClose: () -> Unit) {
                     ) {
                         Text(
                             VisualizerStyle.label(s),
-                            color = if (selected) Color.Black else Color.White,
+                            color = ink,
                             fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
                             style = MaterialTheme.typography.labelMedium,
+                            maxLines = 1,
                         )
                     }
                 }

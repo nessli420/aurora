@@ -12,6 +12,7 @@ import com.aurora.music.ui.theme.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -22,6 +23,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import com.aurora.music.data.label
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun ArtistSeparatorsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val store = (LocalContext.current.applicationContext as AuroraApplication).container.settingsStore
@@ -43,24 +45,28 @@ fun ArtistSeparatorsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             item {
-                Column(Modifier.padding(horizontal = 20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedTextField(example, { example = it.take(500) }, label = { Text(appString(R.string.text_preview_artist_tag_ed9b03)) }, modifier = Modifier.fillMaxWidth())
-                    if (example.isNotBlank()) Text(draft?.split(example)?.joinToString(" · ").orEmpty(), style = MaterialTheme.typography.bodyMedium)
+                Column(Modifier.padding(horizontal = 20.dp)) {
+                    OutlinedTextField(example, { example = it.take(500) }, label = { Text(appString(R.string.text_preview_artist_tag_ed9b03)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
+                    SettingsReveal(example.isNotBlank()) {
+                        Text(draft?.split(example)?.joinToString(" · ").orEmpty(), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodyMedium)
+                    }
                 }
             }
             itemsIndexed(rules) { index, rule ->
+                Spacer(Modifier.height(8.dp))
                 SettingsGroup {
                     SegmentedRow(rule.text.orEmpty(), SeparatorMatch.entries.map { it.label },
                         SeparatorMatch.entries.indexOf(rule.match), onSelect = { chosen ->
                             if (!busy) draft = ArtistSeparators(rules.toMutableList().apply { set(index, rule.copy(match = SeparatorMatch.entries[chosen])) })
                         })
                     if (rule.text !in ArtistSeparators.defaults().map { it.text }) {
-                        TextButton(enabled = !busy, onClick = { draft = ArtistSeparators(rules.filterIndexed { i, _ -> i != index }) }) { Text(appString(R.string.text_remove_separator_8580c6)) }
+                        TextButton(enabled = !busy, onClick = { draft = ArtistSeparators(rules.filterIndexed { i, _ -> i != index }) },
+                            modifier = Modifier.padding(horizontal = 8.dp)) { Text(appString(R.string.text_remove_separator_8580c6)) }
                     }
                 }
             }
             item {
-                Row(Modifier.padding(horizontal = 12.dp)) {
+                FlowRow(Modifier.padding(horizontal = 12.dp)) {
                     TextButton(enabled = !busy && draft != null && rules.size < 24, onClick = { adding = true; newText = ""; error = null }) { Text(appString(R.string.text_add_separator_230f65)) }
                     TextButton(enabled = !busy && draft != null, onClick = { draft = ArtistSeparators(); error = null }) { Text(appString(R.string.text_reset_defaults_7871b3)) }
                 }
@@ -81,7 +87,8 @@ fun ArtistSeparatorsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             }
         }
     }
-    if (adding) AlertDialog(onDismissRequest = { adding = false }, title = { Text(appString(R.string.text_add_separator_230f65)) },
+    if (adding) AlertDialog(onDismissRequest = { adding = false },
+        title = { Text(appString(R.string.text_add_separator_230f65), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { OutlinedTextField(newText, { newText = it.take(32) }, label = { Text(appString(R.string.text_separator_b4b289)) }, singleLine = true) },
         confirmButton = { TextButton(enabled = newText.isNotBlank() && rules.none { it.text.equals(newText.trim(), true) }, onClick = {
             draft = ArtistSeparators(rules + ArtistSeparator(newText.trim(), SeparatorMatch.SPACED)); adding = false

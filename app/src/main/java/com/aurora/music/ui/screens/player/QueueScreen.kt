@@ -224,7 +224,7 @@ fun QueueContent(
                             Text(current.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(current.artist, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
-                        Icon(Icons.Filled.GraphicEq, null, tint = accent, modifier = Modifier.size(26.dp))
+                        com.aurora.music.ui.components.PlayingBars(accent, Modifier.padding(end = 4.dp).size(22.dp), playing = isPlaying)
                     }
                 }
 

@@ -1,5 +1,12 @@
 package com.aurora.music.ui.screens.player
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -12,7 +19,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import com.aurora.music.ui.theme.TextButton
@@ -23,6 +30,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
@@ -31,6 +39,7 @@ import com.aurora.music.data.ReverbPrefs
 import com.aurora.music.data.ReverbPreset
 import com.aurora.music.localization.appString
 import com.aurora.music.ui.screens.settings.rememberLiveValue
+import com.aurora.music.ui.theme.Motion
 import java.text.NumberFormat
 
 internal fun reverbPresetName(id: Int): String = appString(when (id) {
@@ -75,25 +84,29 @@ internal fun ReverbQuickControls(onOpenSettings: () -> Unit) {
                 colors = SwitchDefaults.colors(checkedThumbColor = MaterialTheme.colorScheme.onSecondary, checkedTrackColor = accent),
             )
         }
-        if (prefs.enabled) {
-            val mix = if (concert.enabled) concert.amount else prefs.mix
-            ReverbModeChips(concert.enabled, Modifier.padding(top = 16.dp)) { on -> save(prefs.copy(concert = concert.copy(enabled = on))) }
-            Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(appString(R.string.reverb_amount), style = MaterialTheme.typography.titleSmall, modifier = Modifier.weight(1f))
-                Text(NumberFormat.getPercentInstance().format(mix), style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+        AnimatedVisibility(prefs.enabled, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+            Column {
+                val mix = if (concert.enabled) concert.amount else prefs.mix
+                ReverbModeChips(concert.enabled, Modifier.padding(top = 16.dp)) { on -> save(prefs.copy(concert = concert.copy(enabled = on))) }
+                Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Text(appString(R.string.reverb_amount), style = MaterialTheme.typography.titleSmall, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                    Text(NumberFormat.getPercentInstance().format(mix), style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Slider(
+                    value = mix,
+                    onValueChange = { v -> save(if (concert.enabled) prefs.copy(concert = concert.copy(amount = v)) else prefs.copy(mix = v)) },
+                    colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent),
+                )
+                AnimatedContent(concert.enabled, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) }, label = "reverbMode") { inConcert ->
+                    if (inConcert) Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        ConcertSceneChips(concert) { save(prefs.copy(concert = it)) }
+                        ConcertStyleChips(concert) { save(prefs.copy(concert = it)) }
+                        ConcertPositionPicker(concert) { save(prefs.copy(concert = it)) }
+                        ConcertShowControls(concert) { save(prefs.copy(concert = it)) }
+                    } else ReverbPresetChips(prefs.preset) { id -> save(prefs.withPreset(id)) }
+                }
             }
-            Slider(
-                value = mix,
-                onValueChange = { v -> save(if (concert.enabled) prefs.copy(concert = concert.copy(amount = v)) else prefs.copy(mix = v)) },
-                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent),
-            )
-            if (concert.enabled) Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                ConcertSceneChips(concert) { save(prefs.copy(concert = it)) }
-                ConcertStyleChips(concert) { save(prefs.copy(concert = it)) }
-                ConcertPositionPicker(concert) { save(prefs.copy(concert = it)) }
-                ConcertShowControls(concert) { save(prefs.copy(concert = it)) }
-            } else ReverbPresetChips(prefs.preset) { id -> save(prefs.withPreset(id)) }
         }
         TextButton(onClick = onOpenSettings, modifier = Modifier.padding(top = 4.dp)) { Text(appString(R.string.reverb_more)) }
     }

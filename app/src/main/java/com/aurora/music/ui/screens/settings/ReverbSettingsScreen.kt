@@ -78,7 +78,7 @@ fun ReverbSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 SettingsGroup {
                     Column(Modifier.padding(horizontal = 16.dp, vertical = 14.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         ReverbModeChips(concert.enabled) { on -> save(prefs.copy(concert = concert.copy(enabled = on))) }
-                        if (!concert.enabled) ReverbPresetChips(prefs.preset) { id -> save(prefs.withPreset(id)) }
+                        AudioSection(!concert.enabled) { ReverbPresetChips(prefs.preset) { id -> save(prefs.withPreset(id)) } }
                     }
                 }
             }

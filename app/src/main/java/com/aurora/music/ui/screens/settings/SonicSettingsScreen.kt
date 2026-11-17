@@ -4,15 +4,18 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -48,63 +51,68 @@ fun SonicSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
 
     Column(Modifier.fillMaxWidth()) {
         SettingsTopBar(SettingsDestinations.analysis.label, onBack)
-        Column(Modifier.fillMaxWidth().padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
+        Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
 
-            Row(
-                Modifier.fillMaxWidth().padding(16.dp).paperClip(RoundedCornerShape(18.dp))
-                    .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(18.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Filled.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary)
-                Spacer(Modifier.width(14.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(appString(R.string.text_tracks_analyzed_3d39e3, (analyzed)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                    Text(appString(R.string.text_powers_sonic_radio_auto_dj_and_mix_transitions_4e309b), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Spacer(Modifier.height(8.dp))
+            SettingsGroup {
+                Row(Modifier.fillMaxWidth().padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                        Icon(Icons.Filled.AutoAwesome, null, tint = MaterialTheme.colorScheme.primary)
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(appString(R.string.text_tracks_analyzed_3d39e3, (analyzed)), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(appString(R.string.text_powers_sonic_radio_auto_dj_and_mix_transitions_4e309b), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
                 }
             }
 
             SettingsSectionTitle(appString(R.string.text_analyze_0e524d))
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
-                    .paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                    .clickable(enabled = !progress.running) { app.sonicEngine.scan() }
-                    .padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                if (progress.running) {
-                    CircularProgressIndicator(modifier = Modifier.width(22.dp).height(22.dp), strokeWidth = 2.dp)
-                } else {
-                    Icon(Icons.Filled.Radio, null, tint = MaterialTheme.colorScheme.primary)
-                }
-                Spacer(Modifier.width(12.dp))
-                Column(Modifier.weight(1f)) {
-                    Text(
-                        if (progress.running) appString(R.string.text_analyzing_library_c854a6) else appString(R.string.text_analyze_library_afcfa4),
-                        style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
-                    )
-                    Text(
-                        when {
-                            progress.running -> "${progress.done} / ${progress.total} • ${progress.current}"
-                            analyzed > 0 -> appString(R.string.text_analyzed_tap_to_scan_new_tracks_5933cd, (analyzed))
-                            else -> appString(R.string.text_analyze_the_whole_library_including_streamed_tracks_68593c)
-                        },
-                        style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                if (progress.running) {
-                    Text(
-                        appString(R.string.text_cancel_77dfd2), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { app.sonicEngine.cancel() }.padding(horizontal = 10.dp, vertical = 6.dp),
-                    )
+            SettingsGroup {
+                Row(
+                    Modifier.fillMaxWidth().clickable(enabled = !progress.running) { app.sonicEngine.scan() }
+                        .padding(horizontal = 20.dp, vertical = 14.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Box(Modifier.size(38.dp), contentAlignment = Alignment.Center) {
+                        if (progress.running) {
+                            CircularProgressIndicator(modifier = Modifier.width(22.dp).height(22.dp), strokeWidth = 2.dp)
+                        } else {
+                            Icon(Icons.Filled.Radio, null, tint = MaterialTheme.colorScheme.primary)
+                        }
+                    }
+                    Spacer(Modifier.width(14.dp))
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            if (progress.running) appString(R.string.text_analyzing_library_c854a6) else appString(R.string.text_analyze_library_afcfa4),
+                            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium,
+                        )
+                        Text(
+                            when {
+                                progress.running -> "${progress.done} / ${progress.total} • ${progress.current}"
+                                analyzed > 0 -> appString(R.string.text_analyzed_tap_to_scan_new_tracks_5933cd, (analyzed))
+                                else -> appString(R.string.text_analyze_the_whole_library_including_streamed_tracks_68593c)
+                            },
+                            style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                    if (progress.running) {
+                        Text(
+                            appString(R.string.text_cancel_77dfd2), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.paperClip(RoundedCornerShape(50)).clickable { app.sonicEngine.cancel() }.padding(horizontal = 12.dp, vertical = 10.dp),
+                        )
+                    }
                 }
             }
 
-            if (progress.failed > 0 || progress.error != null) Text(
-                progress.error ?: appString(R.string.text_tracks_unavailable_tap_analyze_library_to_retry_dc5b2d, (progress.failed)),
-                modifier = Modifier.padding(horizontal = 20.dp), color = MaterialTheme.colorScheme.error)
-            progress.notice?.let {
-                Text(it, modifier = Modifier.padding(horizontal = 20.dp), style = MaterialTheme.typography.bodySmall,
+            SettingsReveal(progress.failed > 0 || progress.error != null) {
+                Text(
+                    progress.error ?: appString(R.string.text_tracks_unavailable_tap_analyze_library_to_retry_dc5b2d, (progress.failed)),
+                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp), color = MaterialTheme.colorScheme.error)
+            }
+            SettingsReveal(progress.notice != null) {
+                Text(progress.notice.orEmpty(), modifier = Modifier.padding(horizontal = 20.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             SettingsSectionTitle(appString(R.string.text_automation_a15fde))

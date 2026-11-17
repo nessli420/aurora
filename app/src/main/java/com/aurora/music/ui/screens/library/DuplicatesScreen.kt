@@ -39,6 +39,10 @@ import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.screens.settings.SettingsTopBar
 import com.aurora.music.model.accent
+import androidx.compose.animation.Crossfade
+import androidx.compose.material.icons.outlined.CheckCircle
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.Motion
 
 /** Result list of the duplicate scan: one card per suspected-duplicate group. */
 @Composable
@@ -53,11 +57,10 @@ fun DuplicatesScreen(
 ) {
     Column(Modifier.fillMaxSize()) {
         SettingsTopBar(title = appString(R.string.text_duplicates_889a9c), onBack = onBack)
-        when {
-            loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
-            groups.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(appString(R.string.text_no_duplicates_found_across_tracks_8af6bb, (scanned)), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+        Crossfade(if (loading) 0 else if (groups.isEmpty()) 1 else 2, animationSpec = Motion.state(), label = "duplicatesPane") { shown ->
+        when (shown) {
+            0 -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
+            1 -> EmptyState(Icons.Outlined.CheckCircle, appString(R.string.text_no_duplicates_found_across_tracks_8af6bb, (scanned)), Modifier.fillMaxSize())
             else -> {
                 val dupCount = groups.sumOf { it.songs.size }
                 LazyColumn(
@@ -75,6 +78,7 @@ fun DuplicatesScreen(
                     items(groups.size) { i -> GroupCard(groups[i], currentSongId, onPlay) }
                 }
             }
+        }
         }
     }
 }
@@ -94,6 +98,8 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
             appString(R.string.text_copies_0ebf61, (group.artist), (group.songs.size)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(8.dp))
         group.songs.forEach { s ->

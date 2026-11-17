@@ -150,6 +150,10 @@ import androidx.compose.runtime.CompositionLocalProvider
 import com.aurora.music.data.SeekStyle
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.PlayPauseIcon
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.likePop
+import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.ui.components.CoverKey
 import com.aurora.music.ui.components.Waveform
 import com.aurora.music.ui.components.formatTime
@@ -574,7 +578,10 @@ fun PlayerScreen(
                             }
                         }
                     } else {
-                        val artModifier = Modifier.size(artSide)
+                        // the cover settles back a little while paused
+                        val artRest by androidx.compose.animation.core.animateFloatAsState(if (state.isPlaying) 1f else 0.94f,
+                            androidx.compose.animation.core.spring(dampingRatio = 0.72f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow), label = "artRest")
+                        val artModifier = Modifier.size(artSide).graphicsLayer { scaleX = artRest; scaleY = artRest }
                         val cover = CoverKey(song.album, song.artist, song.path)
                         if (classic) {
                             Artwork(song.artworkUrl, song.accent, artModifier, corner = 20.dp, animated = cover)
@@ -628,7 +635,7 @@ fun PlayerScreen(
                             imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             contentDescription = appString(R.string.text_like_c7e02c),
                             tint = likeTint,
-                            modifier = Modifier.size(32.dp),
+                            modifier = Modifier.size(32.dp).likePop(state.isCurrentLiked, song.id),
                         )
                     }
                 }
@@ -715,7 +722,8 @@ fun PlayerScreen(
                     if (state.isMix) Icons.Filled.GraphicEq else if (state.smartShuffle) Icons.Filled.AllInclusive else Icons.Filled.Shuffle,
                     if (state.isMix) appString(R.string.text_edit_mix_transitions_76ee01)
                     else if (state.smartShuffle) appString(R.string.shuffle_autoplay) else appString(R.string.text_shuffle_5b772b),
-                    tint = if (state.shuffle || state.isMix) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = animateColorAsState(if (state.shuffle || state.isMix) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        Motion.state(), label = "shuffleTint").value,
                     modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = if (state.isMix) onOpenMix else onToggleShuffle).padding(8.dp),
                 )
                 Icon(
@@ -727,21 +735,18 @@ fun PlayerScreen(
                     onClick = onTogglePlay, backdrop = glassBackdrop, modifier = Modifier.size(68.dp), tint = playerAccent,
                     contentDescription = appString(R.string.text_play_pause_14a1d0),
                 ) {
-                    Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, null, tint = onPlayerAccent, modifier = Modifier.size(36.dp))
-                } else Box(
-                    Modifier
-                        .size(72.dp)
-                        .clip(if (classic) CircleShape else MaterialTheme.shapes.large)
-                        .background(playerAccent)
-                        .clickable(onClick = onTogglePlay),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Icon(
-                        if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                        contentDescription = appString(R.string.text_play_pause_14a1d0),
-                        tint = onPlayerAccent,
-                        modifier = Modifier.size(36.dp),
-                    )
+                    PlayPauseIcon(state.isPlaying, onPlayerAccent, Modifier.size(36.dp))
+                } else {
+                    val playPause = appString(R.string.text_play_pause_14a1d0)
+                    Box(
+                        Modifier
+                            .size(72.dp)
+                            .clip(if (classic) CircleShape else MaterialTheme.shapes.large)
+                            .pressClickable(role = Role.Button, onClick = onTogglePlay)
+                            .background(playerAccent)
+                            .semantics { contentDescription = playPause },
+                        contentAlignment = Alignment.Center,
+                    ) { PlayPauseIcon(state.isPlaying, onPlayerAccent, Modifier.size(36.dp)) }
                 }
                 Icon(
                     Icons.Filled.SkipNext, appString(R.string.text_next_bc9819),
@@ -755,7 +760,8 @@ fun PlayerScreen(
                 ) else if (djControl != null) Spacer(Modifier.size(44.dp)) else Icon(
                     imageVector = if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
                     contentDescription = appString(R.string.text_repeat_659eba),
-                    tint = if (state.repeat != RepeatMode.OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = animateColorAsState(if (state.repeat != RepeatMode.OFF) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+                        Motion.state(), label = "repeatTint").value,
                     modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onCycleRepeat).padding(8.dp),
                 )
             }
@@ -843,7 +849,8 @@ fun PlayerScreen(
                         val totalPx = with(androidx.compose.ui.platform.LocalDensity.current) { maxWidth.toPx() }
                         Row(Modifier.fillMaxSize()) {
                             BoxWithConstraints(Modifier.weight(split).fillMaxHeight()) {
-                                val artSide = (maxHeight - 340.dp).coerceIn(160.dp, 460.dp).coerceAtMost(maxWidth)
+                                // leaves room for the whole control stack, so the transport is never cut off on an 800dp-high tablet
+                                val artSide = (maxHeight - 410.dp).coerceIn(160.dp, 460.dp).coerceAtMost(maxWidth)
                                 Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally) {
                                     artwork(Modifier.fillMaxWidth().height(artSide))
                                     Spacer(Modifier.height(20.dp))
@@ -1038,8 +1045,11 @@ private fun CoverOverlay(
                         Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly, verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942),
                                 modifier = Modifier.size(64.dp).paperClip(CircleShape).clickable(onClick = onPrevious).padding(8.dp))
-                            Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow, appString(R.string.text_play_pause_14a1d0),
-                                modifier = Modifier.size(80.dp).paperClip(CircleShape).clickable(onClick = onTogglePlay).padding(8.dp))
+                            val playPause = appString(R.string.text_play_pause_14a1d0)
+                            Box(Modifier.size(80.dp).paperClip(CircleShape).clickable(role = Role.Button, onClick = onTogglePlay)
+                                .semantics { contentDescription = playPause }.padding(8.dp)) {
+                                PlayPauseIcon(state.isPlaying, LocalContentColor.current, Modifier.fillMaxSize())
+                            }
                             Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819),
                                 modifier = Modifier.size(64.dp).paperClip(CircleShape).clickable(onClick = onNext).padding(8.dp))
                         }
@@ -1134,8 +1144,8 @@ private fun CompactTransport(
                 modifier = Modifier.size(56.dp),
                 colors = IconButtonDefaults.filledIconButtonColors(containerColor = accent, contentColor = onAccent),
             ) {
-                Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                    appString(R.string.text_play_pause_14a1d0), modifier = Modifier.size(30.dp))
+                val playPause = appString(R.string.text_play_pause_14a1d0)
+                PlayPauseIcon(state.isPlaying, onAccent, Modifier.size(30.dp).semantics { contentDescription = playPause })
             }
             if (!state.isMix) IconButton(onClick = onNext) {
                 Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = MaterialTheme.colorScheme.onSurface)
@@ -1324,8 +1334,8 @@ private fun FullscreenMusicVideo(
                         onClick = { registerInteraction(); onTogglePlay() },
                         modifier = Modifier.padding(horizontal = 18.dp).size(54.dp).paperClip(CircleShape).background(accent),
                     ) {
-                        Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            appString(R.string.text_play_pause_14a1d0), tint = MaterialTheme.colorScheme.onPrimary)
+                        val playPause = appString(R.string.text_play_pause_14a1d0)
+                        PlayPauseIcon(state.isPlaying, MaterialTheme.colorScheme.onPrimary, Modifier.size(24.dp).semantics { contentDescription = playPause })
                     }
                     IconButton(onClick = { registerInteraction(); onNext() }) {
                         Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = Color.White)
@@ -1382,6 +1392,23 @@ private fun SongTitles(
     titleWeight: FontWeight? = FontWeight.Bold,
     gap: androidx.compose.ui.unit.Dp = 0.dp,
 ) {
+    // the names crossfade on a track change; edits to the same track update in place
+    AnimatedContent(song, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
+        contentKey = { it.id }, label = "songTitles") { track ->
+        Column { SongTitleLines(track, titleStyle, artistStyle, openAlbum, openArtist, titleWeight, gap) }
+    }
+}
+
+@Composable
+private fun SongTitleLines(
+    song: com.aurora.music.model.Song,
+    titleStyle: androidx.compose.ui.text.TextStyle,
+    artistStyle: androidx.compose.ui.text.TextStyle,
+    openAlbum: (() -> Unit)?,
+    openArtist: (() -> Unit)?,
+    titleWeight: FontWeight?,
+    gap: androidx.compose.ui.unit.Dp,
+) {
     val sources = LocalSongSources.current?.takeIf { songMenusFor(song) }
     var menu by remember(song.id) { mutableStateOf<SongMenuPage?>(null) }
     MarqueeTitle(song.title, titleStyle, fontWeight = titleWeight, onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = openAlbum,
@@ -1437,9 +1464,10 @@ private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, la
         ).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Icon(icon, label, tint = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
+        val tint by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "utilTint")
+        Icon(icon, null, tint = tint, modifier = Modifier.size(20.dp))
         Spacer(Modifier.width(6.dp))
-        Text(label, style = MaterialTheme.typography.labelMedium, color = if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = tint, maxLines = 1)
     }
 }
 

@@ -61,6 +61,8 @@ import com.aurora.music.navigation.NavLayout
 import com.aurora.music.navigation.NavMenuItem
 import com.aurora.music.navigation.Routes
 import com.aurora.music.ui.layout.TabletMetrics
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.util.MotionTokens
 
 @Composable
 fun TabletNavigationRail(currentRoute: String?, items: List<NavMenuItem>, onOpen: (NavMenuItem) -> Unit, onMenu: () -> Unit, onSettings: () -> Unit) {
@@ -92,7 +94,7 @@ fun TabletNavigationRail(currentRoute: String?, items: List<NavMenuItem>, onOpen
             colors = colors,
             onClick = onSettings,
             icon = { Icon(Icons.Filled.Settings, null) },
-            label = { Text(appString(R.string.text_settings_c7f73b)) },
+            label = { Text(appString(R.string.text_settings_c7f73b), maxLines = 1, overflow = TextOverflow.Ellipsis) },
         )
         Spacer(Modifier.height(16.dp))
     }
@@ -160,17 +162,17 @@ private fun ProfileHeader(username: String, server: String, avatarUrl: String, o
 @Composable
 fun FoldableMore(items: List<NavMenuItem>, currentRoute: String?, onOpen: (NavMenuItem) -> Unit, startPadding: androidx.compose.ui.unit.Dp = 16.dp) {
     var open by rememberSaveable { mutableStateOf(items.any { it.route == currentRoute }) }
-    val rotation by animateFloatAsState(if (open) 180f else 0f, label = "moreChevron")
+    val rotation by animateFloatAsState(if (open) 180f else 0f, Motion.state(MotionTokens.STANDARD), label = "moreChevron")
     Row(
         Modifier.fillMaxWidth().paperClip(CircleShape).clickable(role = Role.Button) { open = !open }
             .heightIn(min = 44.dp).padding(start = startPadding, end = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(appString(R.string.text_more_4bab2d), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f))
+            color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
         Icon(Icons.Filled.KeyboardArrowDown, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp).rotate(rotation))
     }
-    AnimatedVisibility(open, enter = expandVertically() + fadeIn(), exit = shrinkVertically() + fadeOut()) {
+    AnimatedVisibility(open, enter = expandVertically(Motion.enter()) + fadeIn(Motion.enter()), exit = shrinkVertically(Motion.exit()) + fadeOut(Motion.exit())) {
         Column {
             items.forEach { item -> SidebarItem(item.label, item.icon, currentRoute == item.route, prominent = false, compact = true) { onOpen(item) } }
         }
@@ -180,8 +182,8 @@ fun FoldableMore(items: List<NavMenuItem>, currentRoute: String?, onOpen: (NavMe
 @Composable
 private fun SidebarItem(label: String, icon: ImageVector, selected: Boolean, prominent: Boolean, compact: Boolean = false, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val container by animateColorAsState(if (selected) colors.primary.copy(alpha = 0.16f) else Color.Transparent, label = "sidebarItem")
-    val content = if (selected) colors.primary else if (prominent) colors.onSurface else colors.onSurfaceVariant
+    val container by animateColorAsState(colors.primary.copy(alpha = if (selected) 0.16f else 0f), Motion.state(), label = "sidebarItem")
+    val content by animateColorAsState(if (selected) colors.primary else if (prominent) colors.onSurface else colors.onSurfaceVariant, Motion.state(), label = "sidebarItemTint")
     Row(
         Modifier.fillMaxWidth().padding(vertical = 1.dp).paperClip(CircleShape).background(container)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)

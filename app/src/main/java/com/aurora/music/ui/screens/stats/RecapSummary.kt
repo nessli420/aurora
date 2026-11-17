@@ -8,6 +8,10 @@ import com.aurora.music.R
 import android.graphics.*
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
@@ -82,10 +86,10 @@ fun RecapSummary(recap: ListeningRecap) {
     Column(Modifier.fillMaxWidth().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(appString(R.string.text_your_recap_all_together_933de3), style = MaterialTheme.typography.titleLarge)
         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            RecapStyle.entries.forEach { s -> FilterChip(style == s, { style = s }, label = { Text(when (s) { RecapStyle.MIDNIGHT -> appString(R.string.recap_midnight); RecapStyle.PAPER -> appString(R.string.recap_paper); RecapStyle.AURORA -> "Aurora" }) }) }
+            RecapStyle.entries.forEach { s -> StatChip(style == s, when (s) { RecapStyle.MIDNIGHT -> appString(R.string.recap_midnight); RecapStyle.PAPER -> appString(R.string.recap_paper); RecapStyle.AURORA -> "Aurora" }) { style = s } }
         }
         Image(bitmap.asImageBitmap(), appString(R.string.text_recap_picture_preview_with_top_five_artists_and_songs_30bda2), Modifier.fillMaxWidth().aspectRatio(1080f / 1600f))
         Button(onClick = { pending = bitmap; save.launch("Aurora-${recap.window.key.replace(':', '-')}-${style.name.lowercase()}.png") }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_save_picture_ccdb19)) }
-        if (status.isNotEmpty()) Text(status)
+        AnimatedVisibility(status.isNotEmpty(), enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter())) { Text(status) }
     }
 }

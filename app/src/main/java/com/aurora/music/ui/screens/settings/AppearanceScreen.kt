@@ -69,6 +69,18 @@ import com.aurora.music.ui.theme.auroraShapes
 import com.aurora.music.ui.theme.auroraFontFamily
 import com.aurora.music.ui.theme.auroraTypography
 import com.aurora.music.ui.theme.styleColorScheme
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.PressScaleIndication
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -124,23 +136,25 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 }
             }
 
-            when (prefs.accentMode) {
-                AccentMode.PRESET -> item {
-                    AccentPresetGrid(selected = prefs.accentPreset) { i -> scope.launch { store.setAccentPreset(i) } }
-                }
-                AccentMode.CUSTOM -> item {
-                    CustomColorPicker(initialArgb = prefs.accentColor.toInt()) { argb ->
-                        scope.launch { store.setAccentColor(argb.toLong() and 0xFFFFFFFFL) }
+            item {
+                AnimatedContent(
+                    prefs.accentMode,
+                    transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using SizeTransform { _, _ -> Motion.enter() } },
+                    label = "accentMode",
+                ) { mode ->
+                    when (mode) {
+                        AccentMode.PRESET -> AccentPresetGrid(selected = prefs.accentPreset) { i -> scope.launch { store.setAccentPreset(i) } }
+                        AccentMode.CUSTOM -> CustomColorPicker(initialArgb = prefs.accentColor.toInt()) { argb ->
+                            scope.launch { store.setAccentColor(argb.toLong() and 0xFFFFFFFFL) }
+                        }
+                        else -> Text(
+                            if (materialYouSupported) appString(R.string.text_using_your_wallpaper_colors_material_you_33e00d)
+                            else appString(R.string.text_material_you_needs_android_12_falling_back_to_the_preset_accent_8c9a77),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                        )
                     }
-                }
-                else -> item {
-                    Text(
-                        if (materialYouSupported) appString(R.string.text_using_your_wallpaper_colors_material_you_33e00d)
-                        else appString(R.string.text_material_you_needs_android_12_falling_back_to_the_preset_accent_8c9a77),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    )
                 }
             }
             }
@@ -166,8 +180,8 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                     scope.launch { store.setPlayerSeekStyle(i) }
                 }
             }
-            if (prefs.playerSeekStyle == SeekStyle.WAVEFORM) {
-                item {
+            item {
+                SettingsReveal(prefs.playerSeekStyle == SeekStyle.WAVEFORM) {
                     SettingsSliderRow(appString(R.string.text_waveform_bars_c215c9), "${prefs.playerWaveBars}", prefs.playerWaveBars.toFloat(), 24f..96f) { v ->
                         scope.launch { store.setPlayerWaveBars(v.roundToInt()) }
                     }
@@ -315,7 +329,7 @@ private fun TypefacePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
                 Row(
                     Modifier.fillMaxWidth()
                         .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(typeface) })
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -343,18 +357,22 @@ private fun ThemeStylePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { identity ->
                     val selected = identity.id == prefs.themeStyle
+                    val frameWidth by animateDpAsState(if (selected) 2.dp else 1.dp, Motion.state(), label = "themeFrameWidth")
+                    val frame by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, Motion.state(), label = "themeFrame")
                     Column(
                         Modifier.weight(1f)
                             .clip(MaterialTheme.shapes.medium)
                             .background(MaterialTheme.colorScheme.surface)
-                            .border(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
-                            .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(identity.id) })
+                            .border(frameWidth, frame, MaterialTheme.shapes.medium)
+                            .selectable(selected = selected, interactionSource = null, indication = PressScaleIndication, role = Role.RadioButton, onClick = { onSelect(identity.id) })
                             .padding(4.dp),
                     ) {
                         ThemePreview(identity, prefs, dark)
                         Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 6.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(identity.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                            if (selected) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            AnimatedVisibility(selected, enter = fadeIn(Motion.state()) + scaleIn(Motion.state()), exit = fadeOut(Motion.state()) + scaleOut(Motion.state())) {
+                                Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            }
                         }
                     }
                 }
@@ -406,14 +424,15 @@ private fun AccentPresetGrid(selected: Int, onSelect: (Int) -> Unit) {
                 row.forEachIndexed { colIdx, preset ->
                     val index = rowIdx * 5 + colIdx
                     val isSel = index == selected
+                    val ring by animateColorAsState(MaterialTheme.colorScheme.onBackground.copy(alpha = if (isSel) 1f else 0f), Motion.state(), label = "accentRing")
                     Box(
                         Modifier.weight(1f).height(56.dp).paperClip(RoundedCornerShape(16.dp))
                             .background(preset.seed)
-                            .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) else Modifier)
+                            .border(3.dp, ring, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)))
                             .clickable { onSelect(index) },
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (isSel) {
+                        androidx.compose.animation.AnimatedVisibility(isSel, enter = fadeIn(Motion.state()) + scaleIn(Motion.state()), exit = fadeOut(Motion.state()) + scaleOut(Motion.state())) {
                             val on = if (preset.seed.luminanceApprox() > 0.5f) Color.Black else Color.White
                             Icon(Icons.Filled.Check, appString(R.string.text_selected_9a976f), tint = on, modifier = Modifier.size(22.dp))
                         }
@@ -441,7 +460,8 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
     val preview = Color(android.graphics.Color.HSVToColor(floatArrayOf(hue, sat, bri)))
 
     Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(Modifier.size(56.dp).paperClip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, com.aurora.music.ui.theme.paperSquare(CircleShape)))
             Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }

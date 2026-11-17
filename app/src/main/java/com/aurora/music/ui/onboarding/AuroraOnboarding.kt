@@ -1,5 +1,16 @@
 package com.aurora.music.ui.onboarding
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -25,13 +36,19 @@ import com.aurora.music.ui.theme.Button
 import androidx.compose.material3.MaterialTheme
 import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.Text
 import com.aurora.music.ui.theme.TextButton
+import androidx.compose.material3.contentColorFor
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.data.ServerType
@@ -51,37 +68,63 @@ fun AuroraOnboarding(
 ) {
     when (state.phase) {
         SetupPhase.HIDDEN -> Unit
-        SetupPhase.QUESTIONS -> QuestionsScreen(state, onFinish, onChoicesConfirmed)
-        SetupPhase.SOURCES -> SourcesScreen(state, connected, onConnectSource, onFinish)
+        SetupPhase.QUESTIONS, SetupPhase.SOURCES, SetupPhase.TASKS ->
+            SetupFlow(state, connected, hasSession, onConnectSource, onOpenTask, onFinish, onChoicesConfirmed)
         SetupPhase.AUTH -> AuthPrompt(state.connectingSource, onLeaveAuth)
-        SetupPhase.TASKS -> TasksScreen(state, connected, hasSession, onOpenTask, onFinish)
         SetupPhase.TASK -> TaskPrompt(state.activeTask, onLeaveTask)
     }
 }
 
+// the four questions, sources and tasks as steps 0..5 of one page, so a step slides the way it travels
 @Composable
-private fun QuestionsScreen(state: OnboardingState, onFinish: () -> Unit, onChoicesConfirmed: () -> Unit) {
+private fun SetupFlow(state: OnboardingState, connected: Set<ServerType>, hasSession: Boolean,
+    onConnectSource: (SetupSource) -> Unit, onOpenTask: (SetupTask) -> Unit, onFinish: () -> Unit, onChoicesConfirmed: () -> Unit) {
+    val step = when (state.phase) { SetupPhase.QUESTIONS -> state.page; SetupPhase.SOURCES -> 4; else -> 5 }
+    SetupPage(step, footer = {
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically) {
+            TextButton(onClick = {
+                when (state.phase) {
+                    SetupPhase.QUESTIONS -> if (state.page > 0) state.page-- else onFinish()
+                    SetupPhase.SOURCES -> { state.phase = SetupPhase.QUESTIONS; state.page = 2 }
+                    else -> state.phase = SetupPhase.SOURCES
+                }
+            }) { FooterLabel(appString(if (step > 0) R.string.setup_back else R.string.onboarding_skip)) }
+            Button(onClick = {
+                when (state.phase) {
+                    SetupPhase.QUESTIONS -> if (state.page < 3) state.page++ else {
+                        onChoicesConfirmed()
+                        state.phase = SetupPhase.SOURCES
+                    }
+                    SetupPhase.SOURCES -> state.phase = SetupPhase.TASKS
+                    else -> onFinish()
+                }
+            }) { FooterLabel(appString(when { step < 3 -> R.string.onboarding_next; step == 5 -> R.string.setup_finish; else -> R.string.setup_continue })) }
+        }
+    }) { shown ->
+        when (shown) {
+            4 -> SourcesScreen(state, connected, onConnectSource, onFinish)
+            5 -> TasksScreen(state, connected, hasSession, onOpenTask)
+            else -> QuestionsScreen(state, shown)
+        }
+    }
+}
+
+@Composable
+private fun FooterLabel(text: String) {
+    AnimatedContent(text, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) },
+        contentAlignment = Alignment.Center, label = "setupLabel") { Text(it, maxLines = 1) }
+}
+
+@Composable
+private fun QuestionsScreen(state: OnboardingState, page: Int) {
     val titles = listOf(R.string.setup_listening_title, R.string.setup_gear_title,
         R.string.setup_sources_title, R.string.setup_features_title)
     val details = listOf(R.string.setup_listening_detail, R.string.setup_gear_detail,
         R.string.setup_sources_detail, R.string.setup_features_detail)
-    SetupPage(appString(R.string.setup_progress, state.page + 1, 4), appString(titles[state.page]),
-        appString(details[state.page]), footer = {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = { if (state.page > 0) state.page-- else onFinish() }) {
-                    Text(appString(if (state.page > 0) R.string.setup_back else R.string.onboarding_skip))
-                }
-                Button(onClick = {
-                    if (state.page < 3) state.page++
-                    else {
-                        onChoicesConfirmed()
-                        state.phase = SetupPhase.SOURCES
-                    }
-                }) { Text(appString(if (state.page == 3) R.string.setup_continue else R.string.onboarding_next)) }
-            }
-        }) {
-        when (state.page) {
+    SetupStep(appString(R.string.setup_progress, page + 1, 4), appString(titles[page]),
+        appString(details[page])) {
+        when (page) {
             0 -> {
                 ChoiceRow(appString(R.string.setup_everyday), appString(R.string.setup_everyday_detail),
                     state.mode == ListeningMode.EVERYDAY) { state.mode = ListeningMode.EVERYDAY }
@@ -114,15 +157,8 @@ private fun QuestionsScreen(state: OnboardingState, onFinish: () -> Unit, onChoi
 @Composable
 private fun SourcesScreen(state: OnboardingState, connected: Set<ServerType>,
     onConnectSource: (SetupSource) -> Unit, onFinish: () -> Unit) {
-    SetupPage(appString(R.string.setup_stage_sources), appString(R.string.setup_connect_title),
-        appString(R.string.setup_connect_detail), footer = {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { state.phase = SetupPhase.QUESTIONS; state.page = 2 }) {
-                    Text(appString(R.string.setup_back))
-                }
-                Button(onClick = { state.phase = SetupPhase.TASKS }) { Text(appString(R.string.setup_continue)) }
-            }
-        }) {
+    SetupStep(appString(R.string.setup_stage_sources), appString(R.string.setup_connect_title),
+        appString(R.string.setup_connect_detail)) {
         if (state.sources.isEmpty()) Text(appString(R.string.setup_no_sources),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         SetupSource.entries.filter { it in state.sources }.forEach { source ->
@@ -150,14 +186,9 @@ private fun SourcesScreen(state: OnboardingState, connected: Set<ServerType>,
 
 @Composable
 private fun TasksScreen(state: OnboardingState, connected: Set<ServerType>, hasSession: Boolean,
-    onOpenTask: (SetupTask) -> Unit, onFinish: () -> Unit) {
-    SetupPage(appString(R.string.setup_stage_preferences), appString(R.string.setup_tasks_title),
-        appString(R.string.setup_tasks_detail), footer = {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                TextButton(onClick = { state.phase = SetupPhase.SOURCES }) { Text(appString(R.string.setup_back)) }
-                Button(onClick = onFinish) { Text(appString(R.string.setup_finish)) }
-            }
-        }) {
+    onOpenTask: (SetupTask) -> Unit) {
+    SetupStep(appString(R.string.setup_stage_preferences), appString(R.string.setup_tasks_title),
+        appString(R.string.setup_tasks_detail)) {
         if (!hasSession && state.tasks.isNotEmpty()) Text(appString(R.string.setup_connect_first),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.error)
         if (state.tasks.isEmpty()) Text(appString(R.string.setup_no_tasks),
@@ -178,10 +209,13 @@ private fun TasksScreen(state: OnboardingState, connected: Set<ServerType>, hasS
                         OutlinedButton(onClick = { onOpenTask(task) }, enabled = hasSession && !needsSecondSource) {
                             Text(appString(if (done) R.string.setup_open_again else R.string.setup_open))
                         }
-                        if (done || skipped) Text(appString(if (done) R.string.setup_done else R.string.setup_skipped),
+                        AnimatedContent(done || skipped, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) },
+                            contentAlignment = Alignment.CenterStart, label = "taskMark") { marked ->
+                        if (marked) Text(appString(if (done) R.string.setup_done else R.string.setup_skipped),
                             style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
                         else TextButton(onClick = { state.skippedTasks = state.skippedTasks + task }) {
                             Text(appString(R.string.setup_skip))
+                        }
                         }
                     }
                 }
@@ -199,7 +233,8 @@ private fun AuthPrompt(source: SetupSource?, onLeave: (Boolean) -> Unit) {
             shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)), color = MaterialTheme.colorScheme.surfaceContainerHigh,
             shadowElevation = 8.dp) {
             Row(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                Text(appString(source.title), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge)
+                Text(appString(source.title), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                 TextButton(onClick = { onLeave(false) }) { Text(appString(R.string.setup_back)) }
                 TextButton(onClick = { onLeave(true) }) { Text(appString(R.string.setup_skip)) }
             }
@@ -229,23 +264,16 @@ private fun TaskPrompt(task: SetupTask?, onLeave: (Boolean?) -> Unit) {
 }
 
 @Composable
-private fun SetupPage(kicker: String, title: String, detail: String,
-    footer: @Composable () -> Unit, content: @Composable () -> Unit) {
+private fun SetupPage(step: Int, footer: @Composable () -> Unit, content: @Composable (Int) -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background), contentAlignment = Alignment.TopCenter) {
         val wide = maxWidth >= 600.dp
         Column(Modifier.widthIn(max = 640.dp).fillMaxSize().windowInsetsPadding(WindowInsets.systemBars)
             .padding(horizontal = 20.dp, vertical = if (wide) 32.dp else 14.dp)) {
-            Text(kicker, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary)
-            Spacer(Modifier.height(12.dp))
-            Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            Text(detail, style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant)
-            Spacer(Modifier.height(24.dp))
-            LazyColumn(Modifier.weight(1f)) {
-                item { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() } }
-            }
+            AnimatedContent(step, Modifier.weight(1f).fillMaxWidth(), transitionSpec = {
+                val dir = if (targetState > initialState) 1 else -1
+                (fadeIn(Motion.enter()) + slideInHorizontally(Motion.enter()) { dir * it / 10 }) togetherWith
+                    (fadeOut(Motion.exit()) + slideOutHorizontally(Motion.exit()) { -dir * it / 10 }) using SizeTransform(clip = false)
+            }, label = "setupStep") { shown -> content(shown) }
             Spacer(Modifier.height(12.dp))
             footer()
         }
@@ -253,18 +281,42 @@ private fun SetupPage(kicker: String, title: String, detail: String,
 }
 
 @Composable
+private fun SetupStep(kicker: String, title: String, detail: String, content: @Composable () -> Unit) {
+    Column(Modifier.fillMaxSize()) {
+        Text(kicker, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary)
+        Spacer(Modifier.height(12.dp))
+        Text(title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(8.dp))
+        Text(detail, style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Spacer(Modifier.height(24.dp))
+        LazyColumn(Modifier.weight(1f)) {
+            item { Column(verticalArrangement = Arrangement.spacedBy(12.dp)) { content() } }
+        }
+    }
+}
+
+@Composable
 private fun ChoiceRow(title: String, detail: String, selected: Boolean, onClick: () -> Unit) {
-    Surface(onClick = onClick, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp)),
-        color = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh,
-        border = if (selected) BorderStroke(1.dp, MaterialTheme.colorScheme.primary) else null) {
+    val shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp))
+    val target = if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh
+    val fill by animateColorAsState(target, Motion.state(), label = "choiceFill")
+    val edge by animateColorAsState(MaterialTheme.colorScheme.primary.copy(alpha = if (selected) 1f else 0f), Motion.state(), label = "choiceEdge")
+    Surface(Modifier.clip(shape).pressClickable(onClick = onClick), shape = shape,
+        color = fill, contentColor = contentColorFor(target), border = BorderStroke(1.dp, edge)) {
         Row(Modifier.fillMaxWidth().padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
                 Text(detail, style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            if (selected) androidx.compose.material3.Icon(Icons.Filled.Check, null,
-                Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+            AnimatedVisibility(selected, enter = fadeIn(Motion.enter()) + scaleIn(Motion.enter()),
+                exit = fadeOut(Motion.exit()) + scaleOut(Motion.exit())) {
+                androidx.compose.material3.Icon(Icons.Filled.Check, null,
+                    Modifier.size(20.dp), tint = MaterialTheme.colorScheme.primary)
+            }
         }
     }
 }

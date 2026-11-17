@@ -31,7 +31,6 @@ import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.DownloadDone
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
@@ -65,6 +64,7 @@ import com.aurora.music.model.Song
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.model.accent
 
 // a guest source's songs, albums and artists can't be liked
@@ -132,7 +132,7 @@ fun SongRow(
                         .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+                    PlayingBars(MaterialTheme.colorScheme.primary, Modifier.size(20.dp))
                 }
             }
         }
@@ -308,7 +308,7 @@ fun PlaylistCard(
             .width(width)
             .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium)
             .then(if (LocalUiPrefs.current.themeStyle.let { it != ThemeStyle.AURORA && it != ThemeStyle.GLASS }) Modifier.auroraPanel(MaterialTheme.shapes.medium) else Modifier)
-            .clickable(onClick = onClick)
+            .pressClickable(onClick = onClick)
             .padding(8.dp),
     ) {
         Artwork(playlist.coverUrl, playlist.accent, Modifier.size(width - 16.dp), corner = 14.dp)
@@ -338,7 +338,7 @@ fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier) 
             .width(156.dp)
             .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium)
             .then(if (LocalUiPrefs.current.themeStyle.let { it != ThemeStyle.AURORA && it != ThemeStyle.GLASS }) Modifier.auroraPanel(MaterialTheme.shapes.medium) else Modifier)
-            .clickable(onClick = onClick)
+            .pressClickable(onClick = onClick)
             .padding(8.dp),
     ) {
         Box {
@@ -375,7 +375,7 @@ fun ArtistCircle(artist: Artist, onClick: () -> Unit, modifier: Modifier = Modif
         modifier = modifier
             .width(124.dp)
             .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium)
-            .clickable(onClick = onClick)
+            .pressClickable(onClick = onClick)
             .padding(8.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
@@ -397,7 +397,7 @@ fun RecentTile(playlist: Playlist, onClick: () -> Unit, modifier: Modifier = Mod
                     Modifier.paperClip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh)
                 else Modifier.auroraPanel(MaterialTheme.shapes.small)
             )
-            .clickable(onClick = onClick),
+            .pressClickable(onClick = onClick),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Artwork(playlist.coverUrl, playlist.accent, Modifier.size(60.dp), corner = 0.dp)

@@ -10,6 +10,9 @@ import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import com.aurora.music.ui.theme.TextButton
@@ -114,8 +117,14 @@ private fun YouTubeMusicBrowser(state: AuthUiState, onClose: () -> Unit, onConne
                     else appString(R.string.text_complete_google_verification_if_the_page_stops_responding_tap_con_a561de),
                     style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 16.dp))
                 Text(runCatching { java.net.URI(pageUrl).host }.getOrNull().orEmpty(),
-                    style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp))
-                if (pageLoading || reading || state.loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    style = MaterialTheme.typography.labelSmall, modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    maxLines = 1, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis)
+                // the bar keeps its slot so the page below never resizes
+                Box(Modifier.fillMaxWidth().height(4.dp)) {
+                    androidx.compose.animation.AnimatedVisibility(pageLoading || reading || state.loading, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
+                        LinearProgressIndicator(Modifier.fillMaxWidth())
+                    }
+                }
                 (error ?: state.error)?.let {
                     Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))

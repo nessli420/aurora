@@ -12,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.R
@@ -71,7 +72,7 @@ internal fun AudioCacheSettings(container: AppContainer) {
         }
     }
     if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false },
-        title = { Text(stringResource(R.string.cache_clear_title)) },
+        title = { Text(stringResource(R.string.cache_clear_title), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(stringResource(R.string.cache_clear_message)) },
         confirmButton = { TextButton(onClick = {
             confirmClear = false

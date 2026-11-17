@@ -6,6 +6,12 @@ import com.aurora.music.R
 
 import android.media.AudioDeviceInfo
 import android.media.AudioManager
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -14,14 +20,11 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -40,16 +43,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.AuroraApplication
 import com.aurora.music.ui.screens.settings.NetworkOutputControls
+import com.aurora.music.ui.theme.Motion
 
 private data class OutputDevice(val id: Int, val label: String, val icon: ImageVector)
 
@@ -66,21 +70,7 @@ fun PlayerCastButton(modifier: Modifier = Modifier) {
 @Composable
 private fun CastRow() {
     var show by remember { mutableStateOf(false) }
-    Row(
-        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable { show = true }
-            .padding(horizontal = 16.dp, vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(
-            Modifier.size(40.dp).paperClip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh),
-            contentAlignment = Alignment.Center,
-        ) { Icon(Icons.Filled.Cast, null, modifier = Modifier.size(20.dp)) }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(appString(R.string.text_cast_to_a_device_1c0bd6), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium)
-            Text("Chromecast · DLNA · Aurora", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
-    }
+    ConnectRow(Icons.Filled.Cast, appString(R.string.text_cast_to_a_device_1c0bd6), "Chromecast · DLNA · Aurora", false) { show = true }
     if (show) CastSheet(onDismiss = { show = false })
 }
 
@@ -123,36 +113,12 @@ private fun CastSheet(onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
         Column(Modifier.fillMaxWidth().heightIn(max = 650.dp).verticalScroll(rememberScrollState()).padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
             Text(appString(R.string.text_play_on_a_device_d66db5), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp))
-            if (routes.isEmpty()) {
+            AnimatedVisibility(routes.isEmpty(), enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
                 Text(appString(R.string.text_searching_for_chromecast_devices_13fdbb), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(16.dp))
             }
-            routes.forEach { route ->
-                val selected = route.id == selectedId
-                Row(
-                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable { route.select(); onDismiss() }.padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.Cast, null, tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Text(route.name, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                    if (selected) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary)
-                }
-            }
-            if (casting) {
-                Row(
-                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable {
-                        router.unselect(androidx.mediarouter.media.MediaRouter.UNSELECT_REASON_STOPPED); onDismiss()
-                    }.padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(Modifier.size(40.dp).paperClip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.Speaker, null, modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Text(appString(R.string.text_stop_casting_1f7a2c), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.onSurface)
-                }
+            routes.forEach { route -> ConnectRow(Icons.Filled.Cast, route.name, null, route.id == selectedId) { route.select(); onDismiss() } }
+            if (casting) ConnectRow(Icons.Filled.Speaker, appString(R.string.text_stop_casting_1f7a2c), null, false) {
+                router.unselect(androidx.mediarouter.media.MediaRouter.UNSELECT_REASON_STOPPED); onDismiss()
             }
             NetworkOutputControls(network, onConnected = onDismiss)
         }
@@ -178,20 +144,7 @@ fun OutputDeviceSheet(currentId: Int, onSelect: (Int) -> Unit, onDismiss: () -> 
             Text(appString(R.string.text_play_on_4bd6fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
             ConnectDevicesSection(onDismiss)
             if (!controlling) CastRow()
-            if (!controlling) devices.forEach { d ->
-                val selected = d.id == currentId
-                Row(
-                    Modifier.fillMaxWidth().paperClip(RoundedCornerShape(14.dp)).clickable { onSelect(d.id); onDismiss() }.padding(horizontal = 16.dp, vertical = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-                        Icon(d.icon, null, tint = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp))
-                    }
-                    Spacer(Modifier.width(14.dp))
-                    Text(d.label, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium, color = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
-                    if (selected) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary)
-                }
-            }
+            if (!controlling) devices.forEach { d -> ConnectRow(d.icon, d.label, null, d.id == currentId) { onSelect(d.id); onDismiss() } }
         }
     }
 }
@@ -212,30 +165,24 @@ fun SleepTimerSheet(
         else -> appString(R.string.text_pause_playback_after_a_set_time_ef485a)
     }
     ModalBottomSheet(onDismissRequest = onDismiss, containerColor = MaterialTheme.colorScheme.surface) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 28.dp)) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(bottom = 28.dp)) {
             Text(appString(R.string.text_sleep_timer_e90613), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(bottom = 4.dp))
             Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                options.forEach { (min, label) ->
-                    val selected = !endOfTrack && min == currentMinutes
-                    Box(
-                        Modifier.paperClip(RoundedCornerShape(50))
-                            .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .clickable { onSelect(min); onDismiss() }.padding(horizontal = 20.dp, vertical = 12.dp),
-                    ) {
-                        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
-                    }
-                }
-                Box(
-                    Modifier.paperClip(RoundedCornerShape(50))
-                        .background(if (endOfTrack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .clickable { onEndOfTrack(); onDismiss() }.padding(horizontal = 20.dp, vertical = 12.dp),
-                ) {
-                    Text(appString(R.string.text_end_of_track_9923e9), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (endOfTrack) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
-                }
+                options.forEach { (min, label) -> TimerChip(label, !endOfTrack && min == currentMinutes) { onSelect(min); onDismiss() } }
+                TimerChip(appString(R.string.text_end_of_track_9923e9), endOfTrack) { onEndOfTrack(); onDismiss() }
             }
         }
+    }
+}
+
+@Composable
+private fun TimerChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val fill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "timerFill")
+    val ink by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "timerInk")
+    Box(Modifier.paperClip(RoundedCornerShape(50)).background(fill).clickable(onClick = onClick).padding(horizontal = 20.dp, vertical = 12.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
