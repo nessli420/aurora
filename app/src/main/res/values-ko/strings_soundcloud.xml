@@ -13,6 +13,9 @@
     <string name="player_comments">"댓글"</string>
     <string name="player_soundcloud_comments">"SoundCloud 댓글"</string>
     <string name="comments_empty">"아직 댓글이 없습니다. 첫 댓글을 남겨 보세요."</string>
+    <string name="comments_none">"아직 댓글이 없습니다"</string>
+    <string name="comment_hint_untimed">"댓글 추가…"</string>
+    <string name="comment_like_failed">"좋아요를 업데이트하지 못했습니다. 다시 시도하세요."</string>
     <string name="comment_hint">"%1$s에 댓글"</string>
     <string name="comment_post">"게시"</string>
     <string name="comment_failed">"댓글을 게시하지 못했습니다. 다시 시도하세요."</string>

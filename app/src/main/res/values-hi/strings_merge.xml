@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"वीडियो बटन पर YouTube के म्यूज़िक वीडियो"</string>
     <string name="merge_comments">"SoundCloud टिप्पणियाँ"</string>
     <string name="merge_comments_summary">"वेवफ़ॉर्म पर SoundCloud की समय वाली टिप्पणियाँ"</string>
+    <string name="merge_youtube_comments">"YouTube टिप्पणियाँ"</string>
+    <string name="merge_youtube_comments_summary">"पूरी टिप्पणी सूची में गाने के YouTube वीडियो की टिप्पणियाँ"</string>
     <string name="merge_on_songs_from">"इन स्रोतों के गानों पर दिखाएँ"</string>
 </resources>

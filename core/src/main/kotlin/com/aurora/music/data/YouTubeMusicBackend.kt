@@ -6,10 +6,12 @@ import com.aurora.music.util.accentArgbFor
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
+import kotlinx.coroutines.withContext
 import java.io.IOException
 import java.util.concurrent.ConcurrentHashMap
 
@@ -19,6 +21,7 @@ class YouTubeMusicBackend(
     signatureTimestamp: (String) -> Int? = { null },
     private val localize: (Song) -> Song = { it },
     private val guestLikes: GuestLikes? = null,
+    private val videoComments: (videoId: String, page: Any?) -> CommentPage? = { _, _ -> null },
 ) : MediaBackend {
     private val songs = ConcurrentHashMap<String, Song>()
     private val pageCache = ConcurrentHashMap<String, Pair<Long, SearchResults>>()
@@ -252,6 +255,56 @@ class YouTubeMusicBackend(
     override suspend fun reportPlayback(report: PlaybackReport) { if (signedIn) playbackTracker.report(report) }
     override suspend fun serverLyrics(song: Song): Lyrics? = null
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean) = YouTubeMusicParser.sentinel(songId)
+
+    override fun supportsComments(song: Song) = song.id.matches(VIDEO_ID)
+
+    // comment id to its like and unlike tokens, and song id to the token that posts under the video its comments came from
+    private val commentActions = ConcurrentHashMap<String, Pair<String, String>>()
+    private val postParams = ConcurrentHashMap<String, String>()
+
+    // a track with comments turned off or none yet shows the ones on its music video
+    override suspend fun comments(song: Song, source: ServerType, page: Any?): CommentPage? {
+        if (source != ServerType.YOUTUBE_MUSIC || !supportsComments(song)) return null
+        if (page != null) return commentPage(song, song.id, page)
+        val first = commentPage(song, song.id, null)
+        if (first != null && first.comments.isNotEmpty()) return first
+        val video = search("${recordingTitle(song.title)} ${song.artist}".trim()).songs.firstOrNull {
+            it.id != song.id && artistKey(it.artist) == artistKey(song.artist) && recordingKey(it.title).startsWith(recordingKey(song.title))
+        } ?: return first
+        return commentPage(song, video.id, null) ?: first
+    }
+
+    // an account reads its own view of the thread, which carries its likes and the tokens to like and post with
+    private suspend fun commentPage(song: Song, videoId: String, page: Any?): CommentPage? {
+        // a refused account read falls back to the public one, without likes or posting
+        if (signedIn && (page == null || page is String)) try {
+            val token = page as? String ?: YouTubeCommentPages.sectionToken(api.youtube("next", json("videoId" to videoId))) ?: return null
+            val parsed = YouTubeCommentPages.page(api.youtube("next", json("continuation" to token)))
+            // shortcut: tokens pile up for the whole run, fine for a few thousand comments
+            commentActions.putAll(parsed.actions)
+            if (page == null) parsed.createParams?.let { postParams[song.id] = it }
+            return CommentPage(parsed.comments, parsed.next)
+        } catch (e: kotlinx.coroutines.CancellationException) { throw e } catch (e: Exception) {
+            com.aurora.music.util.AppLog.w("YouTube", "account comments failed: ${e.message}")
+            if (page != null) return null
+        }
+        return withContext(Dispatchers.IO) { videoComments(videoId, page) }
+    }
+
+    override suspend fun postComment(song: Song, source: ServerType, body: String, timestampMs: Long): TrackComment? {
+        if (!canPostComments(song, source)) return null
+        val params = postParams[song.id] ?: comments(song, source).let { postParams[song.id] } ?: return null
+        val created = YouTubeCommentPages.created(api.youtube("comment/create_comment", json("createCommentParams" to params, "commentText" to body)))
+        commentActions.putAll(created.actions)
+        return created.comments.firstOrNull() ?: TrackComment("posted-${System.currentTimeMillis()}", body, -1, session.username, session.imageUrl)
+    }
+
+    override suspend fun likeComment(song: Song, source: ServerType, commentId: String, liked: Boolean): Boolean {
+        if (!canLikeComments(song, source)) return false
+        val action = commentActions[commentId]?.let { if (liked) it.first else it.second }?.takeIf { it.isNotBlank() } ?: return false
+        val result = api.youtube("comment/perform_comment_action", JsonObject().apply { add("actions", JsonArray().apply { add(action) }) })
+        return result.array("actionResults").none { it.isJsonObject && it.asJsonObject.string("status") == "STATUS_FAILED" }
+    }
 
     override val linksSongs: Boolean get() = true
     override suspend fun songLink(song: Song): String? = song.id.takeIf { it.matches(VIDEO_ID) }?.let { "https://music.youtube.com/watch?v=$it" }

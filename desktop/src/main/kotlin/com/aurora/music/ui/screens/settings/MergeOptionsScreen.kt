@@ -59,6 +59,15 @@ fun MergeOptionsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     onToggle = { save(features.copy(comments = it)) },
                     onSource = { type, on -> save(features.copy(commentsOff = features.commentsOff.toggled(type, on))) })
             }
+            if (ServerType.YOUTUBE_MUSIC in types) {
+                item { androidx.compose.foundation.layout.Spacer(Modifier.padding(top = 10.dp)) }
+                item {
+                    FeatureGroup(Icons.Filled.ChatBubble, appString(R.string.merge_youtube_comments), appString(R.string.merge_youtube_comments_summary),
+                        features.youtubeComments, features.youtubeCommentsOff, types.filter { it != ServerType.YOUTUBE_MUSIC },
+                        onToggle = { save(features.copy(youtubeComments = it)) },
+                        onSource = { type, on -> save(features.copy(youtubeCommentsOff = features.youtubeCommentsOff.toggled(type, on))) })
+                }
+            }
             item { androidx.compose.foundation.layout.Spacer(Modifier.padding(top = 10.dp)) }
             item {
                 FeatureGroup(Icons.Filled.Lyrics, appString(R.string.merge_lyrics_desktop), appString(R.string.merge_lyrics_summary_desktop),

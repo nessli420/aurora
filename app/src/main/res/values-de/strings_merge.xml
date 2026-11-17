@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Musikvideos von YouTube über die Videotaste"</string>
     <string name="merge_comments">"SoundCloud-Kommentare"</string>
     <string name="merge_comments_summary">"Zeitgestempelte SoundCloud-Kommentare entlang der Wellenform"</string>
+    <string name="merge_youtube_comments">"YouTube-Kommentare"</string>
+    <string name="merge_youtube_comments_summary">"Kommentare zum YouTube-Video des Titels in der vollen Kommentaransicht"</string>
     <string name="merge_on_songs_from">"Anzeigen bei Titeln aus"</string>
 </resources>

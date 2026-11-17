@@ -20,7 +20,10 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionCommand
 import androidx.media3.session.SessionToken
 import com.aurora.music.AuroraApplication
+import com.aurora.music.data.CommentFeed
 import com.aurora.music.data.SavedQueue
+import com.aurora.music.data.ServerType
+import com.aurora.music.data.mayHaveComments
 import com.aurora.music.data.isPodcast
 import com.aurora.music.ai.isDjSpeech
 import com.aurora.music.data.isRadio
@@ -84,11 +87,17 @@ data class PlayerUiState(
     val canSelectVideoQuality: Boolean = false,
     val videoIsCanvas: Boolean = false,
     val supportsCanvas: Boolean = false,
-    val supportsComments: Boolean = false,
-    val canPostComments: Boolean = false,
+    // the comment services this account can post to and like on, only ever signed in
+    val commentPostable: Set<ServerType> = emptySet(),
+    val commentLikeable: Set<ServerType> = emptySet(),
     val commentsAvailable: Boolean = false,
     val commentsEnabled: Boolean = true,
+    // the timed ones along the waveform
     val comments: List<com.aurora.music.model.TrackComment> = emptyList(),
+    val commentSources: List<ServerType> = emptyList(),
+    val commentFeeds: Map<ServerType, CommentFeed> = emptyMap(),
+    // the comments sheet's last pick, kept while the app runs
+    val commentPick: ServerType? = null,
     val supportsMusicVideo: Boolean = true,
     val longFormSkipButtons: Boolean = true,
     // where autoplay's picks start among the songs still to come, or -1
@@ -102,6 +111,7 @@ data class PlayerUiState(
     val skipButtons: Boolean get() = longFormSkipButtons && !isMix && !isLive &&
         com.aurora.music.data.LongForm.skips(current.id, maxOf(current.durationSec, durationSec), current.genre)
     fun progressAt(positionSec: Float): Float = if (durationSec == 0) 0f else (positionSec / durationSec).coerceIn(0f, 1f)
+    val supportsComments: Boolean get() = mayHaveComments(commentSources, commentFeeds, commentPostable)
     val isCurrentLiked: Boolean get() = likedIds.contains(current.id)
     val hasTrack: Boolean get() = current.id.isNotEmpty()
     // controlling another device keeps the bar, so there is always a way back
@@ -1375,39 +1385,79 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var commentsFor: String? = null
     private var commentsJob: Job? = null
 
-    // comments load once per track; the player offers them only once a soundcloud track for the song turned up
+    // timed comments load with the track for the waveform; the others wait for the comments sheet
     private fun loadComments(song: Song) {
         if (song.id == commentsFor) return
         commentsFor = song.id
         commentsJob?.cancel()
         val type = container.repository.sourceType(song)
-        val available = container.repository.supportsComments(song) && type?.name !in mergeFeatures.commentsOff
-        _state.update { it.copy(comments = emptyList(), supportsComments = false, canPostComments = container.repository.canPostComments(song),
-            commentsAvailable = available, commentsEnabled = mergeFeatures.comments) }
-        if (!available || !mergeFeatures.commentsFor(type)) return
-        commentsJob = viewModelScope.launch {
-            val list = runCatching { container.repository.comments(song) }.getOrNull() ?: return@launch
-            if (_state.value.current.id == song.id) _state.update { it.copy(comments = list, supportsComments = true) }
+        val all = container.repository.commentSources(song)
+        val sources = all.filter { mergeFeatures.commentsFrom(it, type) }
+        _state.update { it.copy(comments = emptyList(), commentSources = sources, commentFeeds = emptyMap(),
+            commentPostable = sources.filter { container.repository.canPostComments(song, it) }.toSet(),
+            commentLikeable = sources.filter { container.repository.canLikeComments(song, it) }.toSet(),
+            commentsAvailable = all.any { s -> s.timedComments } && type?.name !in mergeFeatures.commentsOff, commentsEnabled = mergeFeatures.comments) }
+        sources.filter { it.timedComments }.forEach { loadCommentPage(song, it) }
+    }
+
+    fun loadMoreComments(source: ServerType) = loadCommentPage(_state.value.current, source)
+
+    // the state can still hold the previous track while a new one's comments start
+    private fun loadCommentPage(song: Song, source: ServerType) {
+        val s = _state.value
+        val feed = s.commentFeeds[source] ?: CommentFeed()
+        if (song.id != commentsFor || source !in s.commentSources || feed.loading || !feed.hasMore) return
+        setCommentFeed(song, source, feed.copy(loading = true))
+        val job = viewModelScope.launch {
+            val page = runCatching { container.repository.comments(song, source, feed.next) }.getOrNull()
+            setCommentFeed(song, source, feed.plus(page))
         }
+        if (source.timedComments) commentsJob = job
+    }
+
+    fun pickCommentSource(source: ServerType) = _state.update { it.copy(commentPick = source) }
+
+    private fun setCommentFeed(song: Song, source: ServerType, feed: CommentFeed) = _state.update { s ->
+        if (song.id != commentsFor || source !in s.commentSources) s
+        else s.copy(commentFeeds = s.commentFeeds + (source to feed), comments = if (source.timedComments) feed.comments else s.comments)
     }
 
     fun setCommentsEnabled(on: Boolean) {
         viewModelScope.launch { container.settingsStore.setMergeFeatures(mergeFeatures.copy(comments = on)) }
     }
 
-    // posted at the moment the track is at, the way soundcloud pins a comment
-    fun postComment(body: String) {
+    // a timed comment is pinned to the moment the track is at; an untimed one goes on top
+    fun postComment(source: ServerType, body: String) {
         val song = _state.value.current
-        val at = (controller?.currentPosition ?: 0L).coerceAtLeast(0L)
+        val at = if (source.timedComments) (controller?.currentPosition ?: 0L).coerceAtLeast(0L) else -1L
         viewModelScope.launch {
-            val result = runCatching { container.repository.postComment(song, body, at) }
+            val result = runCatching { container.repository.postComment(song, source, body, at) }
             val posted = result.getOrNull()
             if (posted == null) {
                 val needsVerify = result.exceptionOrNull() is com.aurora.music.data.remote.SoundCloudCheckException
                 android.widget.Toast.makeText(getApplication(), appString(if (needsVerify) R.string.comment_needs_verify else R.string.comment_failed),
                     if (needsVerify) android.widget.Toast.LENGTH_LONG else android.widget.Toast.LENGTH_SHORT).show()
+                return@launch
             }
-            else if (_state.value.current.id == song.id) _state.update { it.copy(comments = (it.comments + posted).sortedBy { c -> c.timestampMs }) }
+            val feed = _state.value.commentFeeds[source] ?: CommentFeed(loaded = true)
+            val comments = if (source.timedComments) (feed.comments + posted).sortedBy { c -> c.timestampMs } else listOf(posted) + feed.comments
+            setCommentFeed(song, source, feed.copy(comments = comments, missing = false))
+        }
+    }
+
+    // shows at once and goes back if the service refuses it
+    fun likeComment(source: ServerType, commentId: String, liked: Boolean) {
+        val song = _state.value.current
+        fun mark(on: Boolean) = _state.value.commentFeeds[source]?.let { feed ->
+            setCommentFeed(song, source, feed.copy(comments = feed.comments.map {
+                if (it.id != commentId || it.liked == on) it else it.copy(liked = on, likes = (it.likes + if (on) 1 else -1).coerceAtLeast(0))
+            }))
+        }
+        mark(liked)
+        viewModelScope.launch {
+            if (runCatching { container.repository.likeComment(song, source, commentId, liked) }.getOrDefault(false)) return@launch
+            mark(!liked)
+            android.widget.Toast.makeText(getApplication(), appString(R.string.comment_like_failed), android.widget.Toast.LENGTH_SHORT).show()
         }
     }
 

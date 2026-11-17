@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"ビデオボタンでYouTubeのミュージックビデオ"</string>
     <string name="merge_comments">"SoundCloudのコメント"</string>
     <string name="merge_comments_summary">"波形に沿ったSoundCloudのタイムコメント"</string>
+    <string name="merge_youtube_comments">"YouTubeのコメント"</string>
+    <string name="merge_youtube_comments_summary">"コメント一覧に曲のYouTube動画のコメントを表示"</string>
     <string name="merge_on_songs_from">"表示する曲のソース"</string>
 </resources>

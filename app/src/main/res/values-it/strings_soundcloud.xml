@@ -13,6 +13,9 @@
     <string name="player_comments">"Commenti"</string>
     <string name="player_soundcloud_comments">"Commenti di SoundCloud"</string>
     <string name="comments_empty">"Ancora nessun commento. Sii il primo."</string>
+    <string name="comments_none">"Ancora nessun commento qui"</string>
+    <string name="comment_hint_untimed">"Aggiungi un commento…"</string>
+    <string name="comment_like_failed">"Impossibile aggiornare il Mi piace. Riprova."</string>
     <string name="comment_hint">"Commenta a %1$s"</string>
     <string name="comment_post">"Pubblica"</string>
     <string name="comment_failed">"Impossibile pubblicare il commento. Riprova."</string>

@@ -50,6 +50,9 @@ fun interface YouTubeMusicTransport {
     suspend fun trackPlayback(url: String, parameters: Map<String, String>) {
         throw IOException("YouTube Music playback reporting is unavailable.")
     }
+
+    // the account's comment pages and comment actions, which live on youtube's own web api
+    suspend fun youtube(endpoint: String, body: JsonObject): JsonObject = throw IOException("Sign in to YouTube Music to do this.")
 }
 
 // a null session is a signed-out guest on the public web api
@@ -60,15 +63,28 @@ class YouTubeMusicClient(
     private val http = http.newBuilder().followRedirects(false).followSslRedirects(false)
         .callTimeout(30, TimeUnit.SECONDS).build()
 
-    override suspend fun request(endpoint: String, body: JsonObject): JsonObject = withContext(Dispatchers.IO) {
+    override suspend fun request(endpoint: String, body: JsonObject): JsonObject {
         require(endpoint.matches(Regex("[a-zA-Z_/]+")))
         val auth = session?.invoke()?.validate()
         val version = auth?.clientVersion.orEmpty().ifBlank {
             "1.${LocalDate.now(ZoneOffset.UTC).format(DateTimeFormatter.BASIC_ISO_DATE)}.01.00"
         }
+        return call(ORIGIN, "WEB_REMIX", "67", version, "en", auth, endpoint, body)
+    }
+
+    // only the comment calls go to youtube.com, with the same google account
+    override suspend fun youtube(endpoint: String, body: JsonObject): JsonObject {
+        require(endpoint in YOUTUBE_ENDPOINTS)
+        val auth = session?.invoke()?.validate() ?: throw IOException("Sign in to YouTube Music to do this.")
+        val version = "2.${LocalDate.now(ZoneOffset.UTC).minusDays(1).format(DateTimeFormatter.BASIC_ISO_DATE)}.00.00"
+        return call(YOUTUBE, "WEB", "1", version, java.util.Locale.getDefault().language.ifBlank { "en" }, auth, endpoint, body)
+    }
+
+    private suspend fun call(origin: String, client: String, clientId: String, version: String, language: String,
+        auth: YouTubeMusicWebSession?, endpoint: String, body: JsonObject): JsonObject = withContext(Dispatchers.IO) {
         val payload = body.deepCopy().apply {
             add("context", JsonObject().apply {
-                add("client", json("clientName" to "WEB_REMIX", "clientVersion" to version, "hl" to "en").apply {
+                add("client", json("clientName" to client, "clientVersion" to version, "hl" to language).apply {
                     auth?.let { addProperty("visitorData", it.visitorData) }
                 })
                 add("user", JsonObject().apply {
@@ -77,7 +93,7 @@ class YouTubeMusicClient(
                 })
             })
         }
-        val request = authenticated(auth, version).url("$ORIGIN/youtubei/v1/$endpoint?prettyPrint=false")
+        val request = authenticated(auth, version, origin, clientId).url("$origin/youtubei/v1/$endpoint?prettyPrint=false")
             .post(payload.toString().toRequestBody("application/json".toMediaType())).build()
         execute(request) { response ->
             val result = runCatching { JsonParser.parseReader(response.body?.charStream()).asJsonObject }
@@ -98,13 +114,13 @@ class YouTubeMusicClient(
         execute(request) { Unit }
     }
 
-    private fun authenticated(auth: YouTubeMusicWebSession?, version: String) = Request.Builder()
-        .header("Origin", ORIGIN).header("X-Origin", ORIGIN).header("Referer", "$ORIGIN/")
+    private fun authenticated(auth: YouTubeMusicWebSession?, version: String, origin: String = ORIGIN, clientId: String = "67") = Request.Builder()
+        .header("Origin", origin).header("X-Origin", origin).header("Referer", "$origin/")
         .header("User-Agent", auth?.userAgent.orEmpty().ifBlank { USER_AGENT })
-        .header("X-YouTube-Client-Name", "67").header("X-YouTube-Client-Version", version)
+        .header("X-YouTube-Client-Name", clientId).header("X-YouTube-Client-Version", version)
         .apply {
             if (auth == null) return@apply
-            header("Cookie", auth.cookie).header("Authorization", auth.authorization(System.currentTimeMillis() / 1000))
+            header("Cookie", auth.cookie).header("Authorization", auth.authorization(System.currentTimeMillis() / 1000, origin))
             header("X-Goog-AuthUser", auth.authUser).header("X-Goog-Visitor-Id", auth.visitorData)
             auth.pageId?.takeIf { it.isNotBlank() }?.let { header("X-Goog-PageId", it) }
         }
@@ -141,6 +157,8 @@ class YouTubeMusicClient(
 
     companion object {
         const val ORIGIN = "https://music.youtube.com"
+        private const val YOUTUBE = "https://www.youtube.com"
+        private val YOUTUBE_ENDPOINTS = setOf("next", "comment/create_comment", "comment/perform_comment_action")
         const val USER_AGENT = "Aurora/1.0 (Android)"
 
         fun validatedTrackingUrl(value: String): okhttp3.HttpUrl {

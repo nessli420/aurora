@@ -65,8 +65,9 @@ data class Artist(
     val monthlyListeners: Long,
 )
 
-// a comment pinned to a moment in the track, as soundcloud shows them along the waveform
-data class TrackComment(val id: String, val body: String, val timestampMs: Long, val user: String, val avatarUrl: String)
+// a comment on the track; soundcloud pins it to a moment along the waveform, an untimed one has -1
+data class TrackComment(val id: String, val body: String, val timestampMs: Long, val user: String, val avatarUrl: String,
+    val likes: Int = 0, val age: String = "", val liked: Boolean = false)
 
 data class Playlist(
     val id: String,

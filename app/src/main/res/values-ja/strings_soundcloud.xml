@@ -13,6 +13,9 @@
     <string name="player_comments">"コメント"</string>
     <string name="player_soundcloud_comments">"SoundCloud のコメント"</string>
     <string name="comments_empty">"まだコメントはありません。最初のコメントを書きましょう。"</string>
+    <string name="comments_none">"まだコメントはありません"</string>
+    <string name="comment_hint_untimed">"コメントを追加…"</string>
+    <string name="comment_like_failed">"高評価を更新できませんでした。もう一度お試しください。"</string>
     <string name="comment_hint">"%1$s にコメント"</string>
     <string name="comment_post">"投稿"</string>
     <string name="comment_failed">"コメントを投稿できませんでした。もう一度お試しください。"</string>

@@ -305,7 +305,8 @@ class MergedBackend(
     override suspend fun canvasUrl(song: Song): String? = features.canvasUrl(song)
     override suspend fun catalogueLyrics(song: Song, from: ServerType): Lyrics? = features.catalogueLyrics(song, from)
     override fun supportsComments(song: Song): Boolean = features.supportsComments(song)
-    override fun canPostComments(song: Song): Boolean = features.canPostComments(song)
+    override fun canPostComments(song: Song, source: ServerType): Boolean = features.canPostComments(song, source)
+    override fun canLikeComments(song: Song, source: ServerType): Boolean = features.canLikeComments(song, source)
 
     override fun supportsReposts(id: String): Boolean = router.unwrap(id)?.let { (i, oid) -> sources[i].supportsReposts(oid) } ?: false
     override suspend fun isReposted(id: String): Boolean = router.route(id) { src, _, oid -> src.isReposted(oid) } ?: false
@@ -315,9 +316,13 @@ class MergedBackend(
         return sources[i].setReposted(oid, reposted)
     }
 
-    override suspend fun comments(song: Song): List<com.aurora.music.model.TrackComment>? = features.comments(song)
-    override suspend fun postComment(song: Song, body: String, timestampMs: Long): com.aurora.music.model.TrackComment? =
-        features.postComment(song, body, timestampMs)
+    override fun commentSources(song: Song): List<ServerType> = features.commentSources(song)
+    override suspend fun comments(song: Song, source: ServerType, page: Any?): com.aurora.music.data.CommentPage? =
+        features.comments(song, source, page)
+    override suspend fun postComment(song: Song, source: ServerType, body: String, timestampMs: Long): com.aurora.music.model.TrackComment? =
+        features.postComment(song, source, body, timestampMs)
+    override suspend fun likeComment(song: Song, source: ServerType, commentId: String, liked: Boolean): Boolean =
+        features.likeComment(song, source, commentId, liked)
 
     override suspend fun serverLyrics(song: Song): Lyrics? {
         val (i, oid) = router.unwrap(song.id) ?: return router.primary?.serverLyrics(song)

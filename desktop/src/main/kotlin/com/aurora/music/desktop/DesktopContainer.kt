@@ -251,7 +251,7 @@ class DesktopContainer(
         spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
         soundcloudLogin = { soundcloudCredentials.read(it) }, appleMusicLogin = { appleMusicCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
         soundcloudBrowser = { soundcloudWriter }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
-        eligible = AccountAuthenticator::supports)
+        eligible = AccountAuthenticator::supports, youtubeComments = { youtubeResolver::comments })
 
     val smartEngine = SmartPlaylistEngine(playHistory, downloadManager)
 

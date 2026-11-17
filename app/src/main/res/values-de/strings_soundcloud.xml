@@ -13,6 +13,9 @@
     <string name="player_comments">"Kommentare"</string>
     <string name="player_soundcloud_comments">"SoundCloud-Kommentare"</string>
     <string name="comments_empty">"Noch keine Kommentare. Sei der Erste."</string>
+    <string name="comments_none">"Hier gibt es noch keine Kommentare"</string>
+    <string name="comment_hint_untimed">"Kommentar hinzufügen…"</string>
+    <string name="comment_like_failed">"Das Like konnte nicht gespeichert werden. Versuch es noch einmal."</string>
     <string name="comment_hint">"Kommentar bei %1$s"</string>
     <string name="comment_post">"Senden"</string>
     <string name="comment_failed">"Dein Kommentar konnte nicht gesendet werden. Versuche es erneut."</string>

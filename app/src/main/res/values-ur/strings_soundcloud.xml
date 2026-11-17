@@ -13,6 +13,9 @@
     <string name="player_comments">"تبصرے"</string>
     <string name="player_soundcloud_comments">"SoundCloud تبصرے"</string>
     <string name="comments_empty">"ابھی کوئی تبصرہ نہیں۔ پہلا تبصرہ آپ کریں۔"</string>
+    <string name="comments_none">"یہاں ابھی کوئی تبصرہ نہیں"</string>
+    <string name="comment_hint_untimed">"تبصرہ شامل کریں…"</string>
+    <string name="comment_like_failed">"پسند اپ ڈیٹ نہیں ہو سکی۔ دوبارہ کوشش کریں۔"</string>
     <string name="comment_hint">"%1$s پر تبصرہ"</string>
     <string name="comment_post">"پوسٹ کریں"</string>
     <string name="comment_failed">"آپ کا تبصرہ پوسٹ نہیں ہو سکا۔ دوبارہ کوشش کریں۔"</string>

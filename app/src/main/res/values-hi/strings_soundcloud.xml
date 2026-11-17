@@ -13,6 +13,9 @@
     <string name="player_comments">"टिप्पणियाँ"</string>
     <string name="player_soundcloud_comments">"SoundCloud टिप्पणियाँ"</string>
     <string name="comments_empty">"अभी कोई टिप्पणी नहीं। पहले आप करें।"</string>
+    <string name="comments_none">"यहाँ अभी कोई टिप्पणी नहीं"</string>
+    <string name="comment_hint_untimed">"टिप्पणी जोड़ें…"</string>
+    <string name="comment_like_failed">"पसंद अपडेट नहीं हो सकी। फिर से कोशिश करें।"</string>
     <string name="comment_hint">"%1$s पर टिप्पणी"</string>
     <string name="comment_post">"पोस्ट करें"</string>
     <string name="comment_failed">"आपकी टिप्पणी पोस्ट नहीं हो सकी। फिर से कोशिश करें।"</string>

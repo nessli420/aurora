@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Videoclipes do YouTube no botão de vídeo"</string>
     <string name="merge_comments">"Comentários do SoundCloud"</string>
     <string name="merge_comments_summary">"Comentários com tempo do SoundCloud ao longo da onda"</string>
+    <string name="merge_youtube_comments">"Comentários do YouTube"</string>
+    <string name="merge_youtube_comments_summary">"Comentários do vídeo da música no YouTube na visualização completa de comentários"</string>
     <string name="merge_on_songs_from">"Mostrar em músicas de"</string>
 </resources>

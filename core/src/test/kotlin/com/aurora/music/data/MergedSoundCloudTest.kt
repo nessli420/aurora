@@ -30,9 +30,13 @@ class MergedSoundCloudTest {
                 "allAlbums", "allArtists", "allPlaylists" -> emptyList<Any>()
                 "playbackSourceIdentity" -> PlaybackSourceIdentity.fromSession(session, (args!![0] as Song).albumId)
                 "downloadUrl" -> "https://cdn.example/${args!![0]}/playlist.m3u8"
-                "supportsComments" -> session.type == ServerType.SOUNDCLOUD
-                "comments" -> listOf(com.aurora.music.model.TrackComment("c-${(args!![0] as Song).id}", "fire", 42000, "fan", ""))
-                "postComment" -> com.aurora.music.model.TrackComment("new-${(args!![0] as Song).id}", args[1] as String, args[2] as Long, "me", "")
+                "supportsComments" -> session.type == ServerType.SOUNDCLOUD || session.type == ServerType.YOUTUBE_MUSIC
+                "canPostComments" -> session.type == args!![1]
+                "getSignedIn" -> true
+                "comments" -> com.aurora.music.data.CommentPage(listOf(com.aurora.music.model.TrackComment(
+                    "${session.type.name.lowercase()}-${(args!![0] as Song).id}-${args[2] ?: 1}", "fire", 42000, "fan", "")), "page2".takeIf { args[2] == null })
+                "postComment" -> com.aurora.music.model.TrackComment("new-${session.type.name.lowercase()}-${(args!![0] as Song).id}", args[2] as String, args[3] as Long, "me", "")
+                "likeComment" -> session.type == ServerType.YOUTUBE_MUSIC && args!![2] == "c1"
                 else -> error("Unexpected ${method.name}")
             }
         } as MediaBackend
@@ -62,12 +66,40 @@ class MergedSoundCloudTest {
         val merged = MergedBackend(listOf(source(server, listOf(hosted)), source(soundcloud, listOf(upload), searches)), server)
         val track = merged.libraryView("library").allSongs().single()
         assertTrue(merged.supportsComments(track))
-        assertEquals(listOf("c-275215991"), merged.comments(track)!!.map { it.id })
-        assertEquals("new-275215991", merged.postComment(track, "yo", 1000)!!.id)
+        assertEquals(listOf(ServerType.SOUNDCLOUD), merged.commentSources(track))
+        assertEquals(listOf("soundcloud-275215991-1"), merged.comments(track, ServerType.SOUNDCLOUD)!!.comments.map { it.id })
+        assertNull(merged.comments(track, ServerType.YOUTUBE_MUSIC))
+        assertEquals("new-soundcloud-275215991", merged.postComment(track, ServerType.SOUNDCLOUD, "yo", 1000)!!.id)
         assertEquals(listOf("sake bomb Topherblaine"), searches)
         val other = MergedBackend(listOf(source(server, listOf(hosted.copy(title = "Elsewhere"))), source(soundcloud, listOf(upload))), server)
         // no upload to match means no comments to show or post to
-        assertNull(other.comments(other.libraryView("library").allSongs().single()))
+        assertNull(other.comments(other.libraryView("library").allSongs().single(), ServerType.SOUNDCLOUD))
+    }
+
+    @Test fun youtubeCommentsJoinSoundcloudsAndPageThroughTheTwin() = runBlocking {
+        val hosted = Song("nd-1", "Still love you", "GLM-RST", "Still", "", 146, streamUrl = "https://server.invalid/stream")
+        val upload = scSong.copy(title = "Still love you", artist = "GLM-RST", durationSec = 146)
+        val ytSearches = mutableListOf<String>()
+        val merged = MergedBackend(listOf(source(server, listOf(hosted)), source(yt, listOf(ytSong), ytSearches), source(soundcloud, listOf(upload))), server)
+        val track = merged.libraryView("library").allSongs().single()
+        // soundcloud's timed comments come first, whatever order the sources were added in
+        assertEquals(listOf(ServerType.SOUNDCLOUD, ServerType.YOUTUBE_MUSIC), merged.commentSources(track))
+        val first = merged.comments(track, ServerType.YOUTUBE_MUSIC)!!
+        assertEquals(listOf("youtube_music-youtube-id-1"), first.comments.map { it.id })
+        assertEquals(listOf("youtube_music-youtube-id-page2"), merged.comments(track, ServerType.YOUTUBE_MUSIC, first.next)!!.comments.map { it.id })
+        assertEquals(1, ytSearches.size)
+        // a youtube music song shows its own comments and soundcloud's, and posts only to soundcloud
+        val own = merged.detail("liked", "youtube")!!.tracks.single()
+        assertEquals(listOf(ServerType.SOUNDCLOUD, ServerType.YOUTUBE_MUSIC), merged.commentSources(own))
+        assertEquals("youtube_music-youtube-id-1", merged.comments(own, ServerType.YOUTUBE_MUSIC)!!.comments.single().id)
+        assertTrue(merged.canPostComments(own, ServerType.SOUNDCLOUD) && merged.canPostComments(own, ServerType.YOUTUBE_MUSIC))
+        assertEquals("new-soundcloud-${upload.id}", merged.postComment(own, ServerType.SOUNDCLOUD, "yo", 1000)!!.id)
+        assertEquals("new-youtube_music-youtube-id", merged.postComment(own, ServerType.YOUTUBE_MUSIC, "yo", -1)!!.id)
+        // likes are youtube's alone, on its own songs and through a twin
+        assertTrue(merged.canLikeComments(own, ServerType.YOUTUBE_MUSIC) && !merged.canLikeComments(own, ServerType.SOUNDCLOUD))
+        assertTrue(merged.likeComment(own, ServerType.YOUTUBE_MUSIC, "c1", true))
+        assertTrue(merged.likeComment(track, ServerType.YOUTUBE_MUSIC, "c1", true))
+        assertFalse(merged.likeComment(track, ServerType.SOUNDCLOUD, "c1", true))
     }
 
     @Test fun mergeOptionsFollowTheSourceASongComesFrom() = runBlocking {
@@ -83,5 +115,10 @@ class MergedSoundCloudTest {
         assertFalse(options.canvasFor(ServerType.SPOTIFY))
         assertTrue(options.videosFor(ServerType.SUBSONIC))
         assertFalse(MergeFeatures(videos = false).videosFor(ServerType.YOUTUBE_MUSIC))
+        val noYoutube = MergeFeatures(youtubeCommentsOff = setOf(ServerType.SUBSONIC.name))
+        assertFalse(noYoutube.commentsFrom(ServerType.YOUTUBE_MUSIC, ServerType.SUBSONIC))
+        assertTrue(noYoutube.commentsFrom(ServerType.SOUNDCLOUD, ServerType.SUBSONIC))
+        assertTrue(noYoutube.commentsFrom(ServerType.YOUTUBE_MUSIC, ServerType.SOUNDCLOUD))
+        assertFalse(MergeFeatures(youtubeComments = false).commentsFrom(ServerType.YOUTUBE_MUSIC, ServerType.YOUTUBE_MUSIC))
     }
 }

@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Клипы с YouTube по кнопке видео"</string>
     <string name="merge_comments">"Комментарии SoundCloud"</string>
     <string name="merge_comments_summary">"Комментарии SoundCloud с метками времени вдоль волны"</string>
+    <string name="merge_youtube_comments">"Комментарии YouTube"</string>
+    <string name="merge_youtube_comments_summary">"Комментарии к видео песни на YouTube в полном списке комментариев"</string>
     <string name="merge_on_songs_from">"Показывать для треков из"</string>
 </resources>

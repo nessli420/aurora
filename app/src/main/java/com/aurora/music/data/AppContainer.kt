@@ -272,7 +272,7 @@ class AppContainer(context: Context) {
         spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
         soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
         soundcloudBrowser = { soundcloudWriter }, appleMusicLogin = { appleMusicCredentials.read(it) }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
-        mirrorSpotify = { mirrorSpotify.value }, platformBackend = ::platformBackend)
+        mirrorSpotify = { mirrorSpotify.value }, platformBackend = ::platformBackend, youtubeComments = { youtubeResolver::comments })
 
     private fun platformBackend(session: Session, localize: (Song) -> Song): MediaBackend? = when (session.type) {
         ServerType.SPOTIFY -> SpotifyBackend(

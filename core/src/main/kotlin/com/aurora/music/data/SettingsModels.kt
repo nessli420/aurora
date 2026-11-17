@@ -24,12 +24,18 @@ data class MergeFeatures(
     val lyricsOff: Set<String> = emptySet(),
     val appleLyrics: Boolean = true,
     val appleLyricsOff: Set<String> = emptySet(),
+    val youtubeComments: Boolean = true,
+    val youtubeCommentsOff: Set<String> = emptySet(),
 ) {
     fun canvasFor(type: ServerType?) = canvas && type?.name !in canvasOff
     fun videosFor(type: ServerType?) = videos && type?.name !in videosOff
     fun commentsFor(type: ServerType?) = comments && type?.name !in commentsOff
     fun lyricsFor(type: ServerType?) = lyrics && type?.name !in lyricsOff
     fun appleLyricsFor(type: ServerType?) = appleLyrics && type?.name !in appleLyricsOff
+    fun youtubeCommentsFor(type: ServerType?) = youtubeComments && type?.name !in youtubeCommentsOff
+    // comments from a service on songs from the given kind of source
+    fun commentsFrom(service: ServerType, type: ServerType?) =
+        if (service == ServerType.YOUTUBE_MUSIC) youtubeCommentsFor(type) else commentsFor(type)
 }
 
 // "server" is the song's own source; the first synced result in this order wins, else the first with any lyrics
@@ -48,6 +54,11 @@ enum class ServerType {
 
     // sign in by approving a code from another session, the way in for single sign-on accounts
     val supportsQuickConnect: Boolean get() = this == JELLYFIN
+
+    // comments pinned to moments of the track, so they ride the waveform and load with it
+    val timedComments: Boolean get() = this == SOUNDCLOUD
+    // an account can like other people's comments there
+    val likesComments: Boolean get() = this == YOUTUBE_MUSIC
 }
 
 // sessions store tokens without raw passwords

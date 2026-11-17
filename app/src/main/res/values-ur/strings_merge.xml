@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"ویڈیو بٹن پر YouTube کی میوزک ویڈیوز"</string>
     <string name="merge_comments">"SoundCloud تبصرے"</string>
     <string name="merge_comments_summary">"ویوفارم کے ساتھ SoundCloud کے وقت والے تبصرے"</string>
+    <string name="merge_youtube_comments">"YouTube تبصرے"</string>
+    <string name="merge_youtube_comments_summary">"مکمل تبصروں کے منظر میں گانے کی YouTube ویڈیو کے تبصرے"</string>
     <string name="merge_on_songs_from">"ان ذرائع کے گانوں پر دکھائیں"</string>
 </resources>

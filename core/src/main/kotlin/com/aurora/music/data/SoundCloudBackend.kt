@@ -359,8 +359,8 @@ class SoundCloudBackend(
     override fun supportsComments(song: Song) = song.id.matches(Regex("[0-9]+"))
 
     // popular tracks carry thousands; the newest thousand are plenty to scatter along the waveform
-    override suspend fun comments(song: Song): List<TrackComment>? {
-        if (!supportsComments(song)) return null
+    override suspend fun comments(song: Song, source: ServerType, page: Any?): CommentPage? {
+        if (source != ServerType.SOUNDCLOUD || !supportsComments(song)) return null
         val out = mutableListOf<TrackComment>()
         val seen = hashSetOf<String>()
         var next: String? = "/tracks/${song.id}/comments?threaded=0&filter_replies=0&limit=200"
@@ -369,11 +369,11 @@ class SoundCloudBackend(
             out += page.items("collection").mapNotNull(::comment)
             next = page.string("next_href").takeIf { it.isNotBlank() && seen.add(it) }
         }
-        return out.sortedBy { it.timestampMs }
+        return CommentPage(out.sortedBy { it.timestampMs })
     }
 
-    override suspend fun postComment(song: Song, body: String, timestampMs: Long): TrackComment? {
-        if (!canPostComments(song)) return null
+    override suspend fun postComment(song: Song, source: ServerType, body: String, timestampMs: Long): TrackComment? {
+        if (!canPostComments(song, source)) return null
         // the web player posts comments form-encoded and unwrapped, and json gets a 400
         return comment(api.send("POST", "/tracks/${song.id}/comments", form = mapOf("body" to body, "timestamp" to timestampMs.toString())).asJsonObject)
     }

@@ -6,6 +6,7 @@ import com.aurora.music.data.isPodcast
 import com.aurora.music.data.isRadio
 import com.aurora.music.data.recordingTitle
 import com.aurora.music.data.twinMatches
+import com.aurora.music.data.CommentPage
 import com.aurora.music.model.Song
 import com.aurora.music.model.TrackComment
 import kotlinx.coroutines.CancellationException
@@ -53,31 +54,52 @@ internal class FeatureBorrower(private val router: SourceRouter) {
         return twinOn(catalogue, song)?.let { router.sources[catalogue].serverLyrics(it) }
     }
 
-    fun supportsComments(song: Song): Boolean {
-        val (i, oid) = router.unwrap(song.id) ?: return false
-        return router.sources[i].supportsComments(song.copy(id = oid)) || borrows(router.soundcloudIndex, i, song)
+    // soundcloud's timed comments first, then youtube's; a song's own service answers for itself, the others through its twin
+    private fun commentIndices(owner: Int, song: Song, original: Song): List<Int> {
+        val ownType = router.sources[owner].session.type
+        return listOf(router.soundcloudIndex, router.youtubeIndex, owner).distinct().filter { c ->
+            if (c == owner) router.sources[c].supportsComments(original)
+            else router.sources.getOrNull(c)?.session?.type != ownType && borrows(c, owner, song)
+        }.sortedBy { !router.sources[it].session.type.timedComments }
     }
 
-    fun canPostComments(song: Song): Boolean {
-        val (i, oid) = router.unwrap(song.id) ?: return false
-        val original = song.copy(id = oid)
-        if (router.sources[i].supportsComments(original)) return router.sources[i].canPostComments(original)
-        return borrows(router.soundcloudIndex, i, song) && router.sources[router.soundcloudIndex].signedIn
-    }
-
-    suspend fun comments(song: Song): List<TrackComment>? {
+    private fun commentIndex(song: Song, source: ServerType): Triple<Int, Int, Song>? {
         val (i, oid) = router.unwrap(song.id) ?: return null
         val original = song.copy(id = oid)
-        if (router.sources[i].supportsComments(original)) return router.sources[i].comments(original)
-        if (!borrows(router.soundcloudIndex, i, song)) return null
-        return twinOn(router.soundcloudIndex, song)?.let { router.sources[router.soundcloudIndex].comments(it) }
+        val c = commentIndices(i, song, original).firstOrNull { router.sources[it].session.type == source } ?: return null
+        return Triple(c, i, original)
     }
 
-    suspend fun postComment(song: Song, body: String, timestampMs: Long): TrackComment? {
-        val (i, oid) = router.unwrap(song.id) ?: return null
-        val original = song.copy(id = oid)
-        if (router.sources[i].supportsComments(original)) return router.sources[i].postComment(original, body, timestampMs)
-        if (!borrows(router.soundcloudIndex, i, song)) return null
-        return twinOn(router.soundcloudIndex, song)?.let { router.sources[router.soundcloudIndex].postComment(it, body, timestampMs) }
+    fun supportsComments(song: Song): Boolean = commentSources(song).isNotEmpty()
+
+    fun commentSources(song: Song): List<ServerType> {
+        val (i, oid) = router.unwrap(song.id) ?: return emptyList()
+        return commentIndices(i, song, song.copy(id = oid)).map { router.sources[it].session.type }
+    }
+
+    suspend fun comments(song: Song, source: ServerType, page: Any?): CommentPage? {
+        val (c, i, original) = commentIndex(song, source) ?: return null
+        if (c == i) return router.sources[i].comments(original, source, page)
+        return twinOn(c, song)?.let { router.sources[c].comments(it, source, page) }
+    }
+
+    // a borrowed service takes posts and likes once its account is signed in
+    fun canPostComments(song: Song, source: ServerType): Boolean {
+        val (c, i, original) = commentIndex(song, source) ?: return false
+        return if (c == i) router.sources[i].canPostComments(original, source) else router.sources[c].signedIn
+    }
+
+    fun canLikeComments(song: Song, source: ServerType): Boolean = source.likesComments && canPostComments(song, source)
+
+    suspend fun postComment(song: Song, source: ServerType, body: String, timestampMs: Long): TrackComment? {
+        val (c, i, original) = commentIndex(song, source) ?: return null
+        if (c == i) return router.sources[i].postComment(original, source, body, timestampMs)
+        return twinOn(c, song)?.let { router.sources[c].postComment(it, source, body, timestampMs) }
+    }
+
+    suspend fun likeComment(song: Song, source: ServerType, commentId: String, liked: Boolean): Boolean {
+        val (c, i, original) = commentIndex(song, source) ?: return false
+        if (c == i) return router.sources[i].likeComment(original, source, commentId, liked)
+        return twinOn(c, song)?.let { router.sources[c].likeComment(it, source, commentId, liked) } ?: false
     }
 }

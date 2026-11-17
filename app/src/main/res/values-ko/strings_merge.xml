@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"비디오 버튼으로 보는 YouTube 뮤직비디오"</string>
     <string name="merge_comments">"SoundCloud 댓글"</string>
     <string name="merge_comments_summary">"파형을 따라 표시되는 SoundCloud 타임 댓글"</string>
+    <string name="merge_youtube_comments">"YouTube 댓글"</string>
+    <string name="merge_youtube_comments_summary">"전체 댓글 화면에 노래의 YouTube 동영상 댓글 표시"</string>
     <string name="merge_on_songs_from">"다음 소스의 곡에 표시"</string>
 </resources>

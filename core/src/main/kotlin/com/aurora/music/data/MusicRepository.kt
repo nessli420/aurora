@@ -449,8 +449,9 @@ class MusicRepository(
     fun supportsCanvas(song: Song): Boolean = !offline && backend?.supportsCanvas(song) == true
     suspend fun canvasUrl(song: Song): String? = if (offline) null else backend?.canvasUrl(song)
 
-    fun supportsComments(song: Song): Boolean = !offline && backend?.supportsComments(song) == true
-    fun canPostComments(song: Song): Boolean = !offline && backend?.canPostComments(song) == true
+    fun commentSources(song: Song): List<ServerType> = if (offline) emptyList() else backend?.commentSources(song).orEmpty()
+    fun canPostComments(song: Song, source: ServerType): Boolean = !offline && backend?.canPostComments(song, source) == true
+    fun canLikeComments(song: Song, source: ServerType): Boolean = !offline && backend?.canLikeComments(song, source) == true
 
     fun supportsReposts(id: String): Boolean = !offline && backendSongId(id)?.let { backend?.supportsReposts(it) } == true
     suspend fun isReposted(id: String): Boolean = supportsReposts(id) && backend?.isReposted(backendSongId(id) ?: id) == true
@@ -464,9 +465,12 @@ class MusicRepository(
     fun canLikeSong(id: String): Boolean = canLike(id) || likesLocally(id)
     fun signedIn(view: String? = null): Boolean = viewOf(view)?.signedIn != false
     fun sourceType(song: Song): ServerType? = backend?.sourceType(song)
-    suspend fun comments(song: Song): List<com.aurora.music.model.TrackComment>? = if (offline) null else backend?.comments(song)
-    suspend fun postComment(song: Song, body: String, timestampMs: Long): com.aurora.music.model.TrackComment? =
-        if (offline || body.isBlank()) null else backend?.postComment(song, body.trim(), timestampMs)
+    suspend fun comments(song: Song, source: ServerType, page: Any? = null): com.aurora.music.data.CommentPage? =
+        if (offline) null else backend?.comments(song, source, page)
+    suspend fun postComment(song: Song, source: ServerType, body: String, timestampMs: Long): com.aurora.music.model.TrackComment? =
+        if (offline || body.isBlank()) null else backend?.postComment(song, source, body.trim(), timestampMs)
+    suspend fun likeComment(song: Song, source: ServerType, commentId: String, liked: Boolean): Boolean =
+        !offline && backend?.likeComment(song, source, commentId, liked) == true
 
     suspend fun likedSongIds(ids: List<String>): Set<String> =
         if (offline) emptySet() else withContext(mapping) { backend?.likedSongIds(ids).orEmpty() }

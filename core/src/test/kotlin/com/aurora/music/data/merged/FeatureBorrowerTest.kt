@@ -36,6 +36,7 @@ class FeatureBorrowerTest {
                 "supportsCanvas" -> session.type == ServerType.SPOTIFY
                 "canvasUrl" -> { calls.canvases += (args!![0] as Song).id; "https://canvaz.scdn.co/loop.mp4" }
                 "supportsComments" -> session.type == ServerType.SOUNDCLOUD
+                "canPostComments" -> session.type == args!![1] && signedIn
                 else -> error("Unexpected ${method.name}")
             }
         } as MediaBackend
@@ -68,7 +69,7 @@ class FeatureBorrowerTest {
 
     @Test fun borrowedCommentsNeedASignedInSoundcloud() {
         val hosted = serverSong.copy(id = "${mergeNamespace(server)}\u0001server")
-        assertFalse(borrowerOf(source(server), source(soundcloud, signedIn = false)).canPostComments(hosted))
-        assertTrue(borrowerOf(source(server), source(soundcloud, signedIn = true)).canPostComments(hosted))
+        assertFalse(borrowerOf(source(server), source(soundcloud, signedIn = false)).canPostComments(hosted, ServerType.SOUNDCLOUD))
+        assertTrue(borrowerOf(source(server), source(soundcloud, signedIn = true)).canPostComments(hosted, ServerType.SOUNDCLOUD))
     }
 }

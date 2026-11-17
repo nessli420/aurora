@@ -13,6 +13,9 @@
     <string name="player_comments">"评论"</string>
     <string name="player_soundcloud_comments">"SoundCloud 评论"</string>
     <string name="comments_empty">"还没有评论，来抢沙发吧。"</string>
+    <string name="comments_none">"这里还没有评论"</string>
+    <string name="comment_hint_untimed">"添加评论…"</string>
+    <string name="comment_like_failed">"无法更新点赞，请重试。"</string>
     <string name="comment_hint">"在 %1$s 处评论"</string>
     <string name="comment_post">"发布"</string>
     <string name="comment_failed">"无法发布评论，请重试。"</string>

@@ -51,6 +51,11 @@ class YoutubeResolver(private val http: OkHttpClient = OkHttpClient(), private v
         }
     }
 
+    fun comments(videoId: String, page: Any?): com.aurora.music.data.CommentPage? {
+        ensureInit()
+        return com.aurora.music.data.remote.YouTubeComments.page(videoId, page)
+    }
+
     fun resolve(spotifyId: String, query: String, durationSec: Int): String? {
         cached("spotify:$spotifyId")?.let { return it }
         if (query.isBlank()) return null

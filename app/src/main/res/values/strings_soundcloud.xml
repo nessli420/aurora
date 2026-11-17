@@ -13,6 +13,9 @@
     <string name="player_comments">"Comments"</string>
     <string name="player_soundcloud_comments">"SoundCloud Comments"</string>
     <string name="comments_empty">"No comments yet. Be the first."</string>
+    <string name="comments_none">"No comments here yet"</string>
+    <string name="comment_hint_untimed">"Add a comment…"</string>
+    <string name="comment_like_failed">"Couldn\'t update the like. Try again."</string>
     <string name="comment_hint">"Comment at %1$s"</string>
     <string name="comment_post">"Post"</string>
     <string name="comment_failed">"Couldn\'t post your comment. Try again."</string>

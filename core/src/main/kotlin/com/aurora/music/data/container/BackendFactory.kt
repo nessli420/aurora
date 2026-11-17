@@ -58,6 +58,7 @@ class BackendFactory(
     private val reportError: (Session, String) -> Unit,
     private val eligible: (Session) -> Boolean = { true },
     private val mirrorSpotify: () -> Boolean = { false },
+    private val youtubeComments: () -> (String, Any?) -> com.aurora.music.data.CommentPage? = { { _, _ -> null } },
     private val platformBackend: (Session, (Song) -> Song) -> MediaBackend? = { _, _ -> null },
 ) {
     // one client per login: soundcloud rotates the refresh token, so two clients refreshing it would sign each other out
@@ -89,7 +90,7 @@ class BackendFactory(
             ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
                 YouTubeMusicClient(
                     session = { YouTubeMusicWebSession.decode(youtubeMusicLogin(session.token)) }.takeUnless { session.isGuest }, http = http()),
-                signatureTimestamp(), localize, guestLikes)) { reportError(session, it) }
+                signatureTimestamp(), localize, guestLikes, youtubeComments())) { reportError(session, it) }
             ServerType.SOUNDCLOUD -> SoundCloudBackend(session, soundcloudClient(session), localize, soundcloudPendingLikes, guestLikes)
             ServerType.APPLE_MUSIC -> AppleMusicBackend(session, AppleMusicClient(
                 session = { AppleMusicWebSession.decode(appleMusicLogin(session.token)) }.takeUnless { session.isGuest }, http = http(),

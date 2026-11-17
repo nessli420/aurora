@@ -13,6 +13,9 @@
     <string name="player_comments">"التعليقات"</string>
     <string name="player_soundcloud_comments">"تعليقات SoundCloud"</string>
     <string name="comments_empty">"لا توجد تعليقات بعد. كن أول من يعلّق."</string>
+    <string name="comments_none">"لا توجد تعليقات هنا بعد"</string>
+    <string name="comment_hint_untimed">"أضف تعليقًا…"</string>
+    <string name="comment_like_failed">"تعذّر تحديث الإعجاب. حاول مرة أخرى."</string>
     <string name="comment_hint">"تعليق عند %1$s"</string>
     <string name="comment_post">"نشر"</string>
     <string name="comment_failed">"تعذّر نشر تعليقك. حاول مرة أخرى."</string>

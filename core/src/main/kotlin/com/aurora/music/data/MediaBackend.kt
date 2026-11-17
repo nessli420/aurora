@@ -180,11 +180,14 @@ interface MediaBackend {
     // the kind of account a song comes from; a merged library answers for the source behind it
     fun sourceType(song: Song): ServerType = session.type
 
-    // timed comments along the track; null when there is no track on the service to comment on
+    // comments on the song's track, a page at a time from each service that has it; null when it has none to comment on
     fun supportsComments(song: Song): Boolean = false
-    fun canPostComments(song: Song): Boolean = signedIn && supportsComments(song)
-    suspend fun comments(song: Song): List<com.aurora.music.model.TrackComment>? = null
-    suspend fun postComment(song: Song, body: String, timestampMs: Long): com.aurora.music.model.TrackComment? = null
+    fun commentSources(song: Song): List<ServerType> = if (supportsComments(song)) listOf(session.type) else emptyList()
+    fun canPostComments(song: Song, source: ServerType): Boolean = signedIn && source == session.type && supportsComments(song)
+    fun canLikeComments(song: Song, source: ServerType): Boolean = source.likesComments && canPostComments(song, source)
+    suspend fun comments(song: Song, source: ServerType, page: Any? = null): com.aurora.music.data.CommentPage? = null
+    suspend fun postComment(song: Song, source: ServerType, body: String, timestampMs: Long): com.aurora.music.model.TrackComment? = null
+    suspend fun likeComment(song: Song, source: ServerType, commentId: String, liked: Boolean): Boolean = false
 
     fun supportsReposts(id: String): Boolean = false
     suspend fun isReposted(id: String): Boolean = false

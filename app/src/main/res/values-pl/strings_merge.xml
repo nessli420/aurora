@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Teledyski z YouTube pod przyciskiem wideo"</string>
     <string name="merge_comments">"Komentarze SoundCloud"</string>
     <string name="merge_comments_summary">"Komentarze z SoundCloud wzdłuż przebiegu fali"</string>
+    <string name="merge_youtube_comments">"Komentarze YouTube"</string>
+    <string name="merge_youtube_comments_summary">"Komentarze z filmu utworu na YouTube w pełnym widoku komentarzy"</string>
     <string name="merge_on_songs_from">"Pokazuj przy utworach z"</string>
 </resources>

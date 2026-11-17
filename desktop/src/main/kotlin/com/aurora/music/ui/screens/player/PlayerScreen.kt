@@ -721,8 +721,8 @@ fun PlayerScreen(
         val immersive by rememberUpdatedState(onImmersiveLyrics)
         val takesScreen = showLyrics || fullscreenActive
         LaunchedEffect(takesScreen) { immersive(takesScreen) }
-        if (showComments && comments.supported) CommentsSheet(comments, playerAccent, state.positionSec, state.durationSec, focusComment,
-            onSeek = onSeek, onDismiss = { showComments = false; focusComment = null })
+        if (showComments && comments.sources.isNotEmpty()) CommentsSheet(comments, playerAccent, state.positionSec, state.durationSec, focusComment,
+            onSeek = onSeek, onDismiss = { showComments = false; focusComment = null }, onPick = { focusComment = null })
     }
     }
     }

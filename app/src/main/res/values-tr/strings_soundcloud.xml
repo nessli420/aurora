@@ -13,6 +13,9 @@
     <string name="player_comments">"Yorumlar"</string>
     <string name="player_soundcloud_comments">"SoundCloud Yorumları"</string>
     <string name="comments_empty">"Henüz yorum yok. İlk yorumu sen yap."</string>
+    <string name="comments_none">"Burada henüz yorum yok"</string>
+    <string name="comment_hint_untimed">"Yorum ekle…"</string>
+    <string name="comment_like_failed">"Beğeni güncellenemedi. Tekrar deneyin."</string>
     <string name="comment_hint">"%1$s anına yorum"</string>
     <string name="comment_post">"Gönder"</string>
     <string name="comment_failed">"Yorumun gönderilemedi. Tekrar dene."</string>

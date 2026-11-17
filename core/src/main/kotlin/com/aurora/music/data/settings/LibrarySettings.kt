@@ -119,6 +119,7 @@ internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences
             comments = it[Keys.MERGE_COMMENTS] ?: true, commentsOff = it[Keys.MERGE_COMMENTS_OFF] ?: emptySet(),
             lyrics = it[Keys.MERGE_LYRICS] ?: true, lyricsOff = it[Keys.MERGE_LYRICS_OFF] ?: emptySet(),
             appleLyrics = it[Keys.MERGE_APPLE_LYRICS] ?: true, appleLyricsOff = it[Keys.MERGE_APPLE_LYRICS_OFF] ?: emptySet(),
+            youtubeComments = it[Keys.MERGE_YOUTUBE_COMMENTS] ?: true, youtubeCommentsOff = it[Keys.MERGE_YOUTUBE_COMMENTS_OFF] ?: emptySet(),
         )
     }.distinctUntilChanged().flowOn(Dispatchers.Default)
     override suspend fun setMergeFeatures(f: MergeFeatures) = dataStore.edit {
@@ -127,6 +128,7 @@ internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences
         it[Keys.MERGE_COMMENTS] = f.comments; it[Keys.MERGE_COMMENTS_OFF] = f.commentsOff
         it[Keys.MERGE_LYRICS] = f.lyrics; it[Keys.MERGE_LYRICS_OFF] = f.lyricsOff
         it[Keys.MERGE_APPLE_LYRICS] = f.appleLyrics; it[Keys.MERGE_APPLE_LYRICS_OFF] = f.appleLyricsOff
+        it[Keys.MERGE_YOUTUBE_COMMENTS] = f.youtubeComments; it[Keys.MERGE_YOUTUBE_COMMENTS_OFF] = f.youtubeCommentsOff
     }
 
     // a saved order keeps any source added later, at the end

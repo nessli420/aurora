@@ -13,6 +13,9 @@
     <string name="player_comments">"Komentarze"</string>
     <string name="player_soundcloud_comments">"Komentarze SoundCloud"</string>
     <string name="comments_empty">"Brak komentarzy. Bądź pierwszy."</string>
+    <string name="comments_none">"Nie ma tu jeszcze komentarzy"</string>
+    <string name="comment_hint_untimed">"Dodaj komentarz…"</string>
+    <string name="comment_like_failed">"Nie udało się zaktualizować polubienia. Spróbuj ponownie."</string>
     <string name="comment_hint">"Komentarz w %1$s"</string>
     <string name="comment_post">"Opublikuj"</string>
     <string name="comment_failed">"Nie udało się opublikować komentarza. Spróbuj ponownie."</string>

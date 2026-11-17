@@ -39,6 +39,11 @@ class YoutubeResolver(http: OkHttpClient, private val chosenVideo: (String) -> S
         }
     }
 
+    fun comments(videoId: String, page: Any?): com.aurora.music.data.CommentPage? {
+        ensureInit()
+        return com.aurora.music.data.remote.YouTubeComments.page(videoId, page)
+    }
+
     fun signatureTimestamp(videoId: String): Int? {
         ensureInit()
         return runCatching { YoutubeJavaScriptPlayerManager.getSignatureTimestamp(videoId) }.getOrNull()

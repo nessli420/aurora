@@ -85,6 +85,10 @@ import androidx.compose.material.icons.filled.SpeakerNotes
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.SpeakerNotesOff
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.ThumbUp
+import androidx.compose.material.icons.filled.ThumbUp
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material.icons.filled.ChatBubble
@@ -141,7 +145,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
+import com.aurora.music.data.CommentFeed
 import com.aurora.music.data.MockData
+import com.aurora.music.data.ServerType
+import com.aurora.music.data.commentSourceName
+import com.aurora.music.data.compactCount
+import com.aurora.music.data.offeredCommentSources
+import com.aurora.music.data.shownCommentSource
 import com.aurora.music.data.isPodcast
 import com.aurora.music.ai.isDjSpeech
 import com.aurora.music.data.isRadio
@@ -152,6 +162,7 @@ import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.PlayPauseIcon
 import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.Space
 import com.aurora.music.ui.theme.likePop
 import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.ui.components.CoverKey
@@ -193,8 +204,11 @@ fun PlayerScreen(
     djControl: (@Composable () -> Unit)? = null,
     djStage: (@Composable (Modifier) -> Unit)? = null,
     onOpenMix: () -> Unit = {},
-    onPostComment: (String) -> Unit = {},
+    onPostComment: (ServerType, String) -> Unit = { _, _ -> },
+    onLikeComment: (ServerType, String, Boolean) -> Unit = { _, _, _ -> },
     onToggleComments: (Boolean) -> Unit = {},
+    onLoadComments: (ServerType) -> Unit = {},
+    onPickCommentSource: (ServerType) -> Unit = {},
     onOpenRelated: (() -> Unit)? = null,
     videoPlayer: androidx.media3.common.Player? = null,
     onVideoQualityChange: (Int?) -> Unit = {},
@@ -224,8 +238,9 @@ fun PlayerScreen(
     var portraitTabName by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf<String?>(null) }
     var showComments by remember { mutableStateOf(false) }
     var focusComment by remember { mutableStateOf<String?>(null) }
-    if (showComments && state.supportsComments) CommentsSheet(state, focusComment, onDismiss = { showComments = false; focusComment = null },
-        onSeek = onSeek, onPost = onPostComment)
+    if (showComments && state.commentSources.isNotEmpty()) CommentsSheet(state, focusComment, onDismiss = { showComments = false; focusComment = null },
+        onSeek = onSeek, onPost = onPostComment, onLoadMore = onLoadComments, onPick = { focusComment = null; onPickCommentSource(it) },
+        onLike = onLikeComment)
     val panes = LocalPlayerPanes.current
     val playbackPosition = com.aurora.music.ui.components.LocalPlaybackPosition.current
     val skipBy = { seconds: Int ->
@@ -1601,50 +1616,103 @@ private fun CommentTrack(comments: List<com.aurora.music.model.TrackComment>, du
 // a fixed height keeps the sheet from resizing while rows load and scroll
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun CommentsSheet(state: PlayerUiState, focusId: String?, onDismiss: () -> Unit, onSeek: (Float) -> Unit, onPost: (String) -> Unit) {
+private fun CommentsSheet(state: PlayerUiState, focusId: String?, onDismiss: () -> Unit, onSeek: (Float) -> Unit, onPost: (ServerType, String) -> Unit,
+    onLoadMore: (ServerType) -> Unit, onPick: (ServerType) -> Unit, onLike: (ServerType, String, Boolean) -> Unit) {
     var draft by remember { mutableStateOf("") }
-    val positionSec = com.aurora.music.ui.components.LocalPlaybackPosition.current.value
-    val list = androidx.compose.foundation.lazy.rememberLazyListState()
+    var pickedHere by remember(state.current.id) { mutableStateOf(false) }
+    val postable = state.commentPostable
+    // a comment opened from the waveform shows among the timed ones
+    val shown = state.commentSources.firstOrNull { focusId != null && it.timedComments }
+        ?: shownCommentSource(state.commentSources, state.commentFeeds, state.commentPick, pickedHere, postable)
+    val offered = offeredCommentSources(state.commentSources, state.commentFeeds, shown, postable)
+    val feed = state.commentFeeds[shown] ?: CommentFeed()
+    val comments = feed.comments
+    val list = remember(shown) { androidx.compose.foundation.lazy.LazyListState() }
+    // an untimed post lands on top, above where the list is anchored
+    var postedOnTop by remember { mutableStateOf(false) }
+    LaunchedEffect(comments.firstOrNull()?.id) { if (postedOnTop) { postedOnTop = false; list.animateScrollToItem(0) } }
     val sheet = androidx.compose.material3.rememberModalBottomSheetState(skipPartiallyExpanded = true)
-    LaunchedEffect(focusId, state.comments.size) {
-        val index = state.comments.indexOfFirst { it.id == focusId }
+    // each service's first page loads as the sheet opens, so the switch offers only those with comments
+    LaunchedEffect(state.current.id, state.commentSources) { state.commentSources.filter { state.commentFeeds[it] == null }.forEach(onLoadMore) }
+    LaunchedEffect(focusId, comments.size) {
+        val index = comments.indexOfFirst { it.id == focusId }
         if (index >= 0) list.scrollToItem(index)
     }
     androidx.compose.material3.ModalBottomSheet(onDismissRequest = onDismiss, sheetState = sheet) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.8f).padding(horizontal = 16.dp).imePadding()) {
-            Text(appString(R.string.player_comments), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(8.dp))
-            androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list) {
-                if (state.comments.isEmpty()) item {
-                    Text(appString(R.string.comments_empty), style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
-                }
-                items(state.comments.size, key = { state.comments[it].id }) { index ->
-                    val comment = state.comments[index]
-                    val focused = comment.id == focusId
-                    Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
-                        .background(if (focused) MaterialTheme.colorScheme.primary.copy(alpha = .12f) else Color.Transparent)
-                        .clickable { onSeek(state.progressAt(comment.timestampMs / 1000f)) }.padding(8.dp)) {
-                        Artwork(comment.avatarUrl, state.current.accent, Modifier.size(32.dp), corner = 16.dp, decodeSize = 96)
-                        Spacer(Modifier.width(10.dp))
-                        Column(Modifier.weight(1f)) {
-                            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                                Text(comment.user, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                                Spacer(Modifier.width(6.dp))
-                                Text(formatTime((comment.timestampMs / 1000).toInt()), style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.primary)
-                            }
-                            Text(comment.body, style = MaterialTheme.typography.bodyMedium)
+            Row(Modifier.fillMaxWidth().heightIn(min = 40.dp), verticalAlignment = Alignment.CenterVertically) {
+                Text(appString(R.string.player_comments), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                AnimatedVisibility(offered.size > 1, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
+                    Row(horizontalArrangement = Arrangement.spacedBy(Space.s)) {
+                        offered.forEach { source ->
+                            androidx.compose.material3.FilterChip(source == shown, { pickedHere = true; onPick(source) },
+                                label = { Text(commentSourceName(source)) })
                         }
                     }
                 }
             }
-            if (state.canPostComments) Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Spacer(Modifier.height(8.dp))
+            androidx.compose.foundation.lazy.LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list) {
+                items(comments.size, key = { comments[it].id }) { index ->
+                    val comment = comments[index]
+                    CommentRow(comment, comment.id == focusId, state.current.accent,
+                        if (comment.timestampMs >= 0) ({ onSeek(state.progressAt(comment.timestampMs / 1000f)) }) else null,
+                        if (shown != null && shown in state.commentLikeable) ({ on -> onLike(shown, comment.id, on) }) else null)
+                }
+                // the next page loads as this row scrolls near; unkeyed, so the list keeps its place when a page lands above it
+                if (feed.hasMore) item {
+                    LaunchedEffect(shown, feed.next, feed.loaded) { shown?.let(onLoadMore) }
+                    if (comments.isEmpty()) com.aurora.music.ui.components.LoadingState()
+                    else Box(Modifier.fillMaxWidth().padding(Space.m), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                    }
+                } else if (comments.isEmpty()) item {
+                    com.aurora.music.ui.components.EmptyState(Icons.Filled.ChatBubbleOutline,
+                        appString(if (shown in postable) R.string.comments_empty else R.string.comments_none))
+                }
+            }
+            if (shown != null && shown in postable) Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 androidx.compose.material3.OutlinedTextField(draft, { draft = it }, Modifier.weight(1f), singleLine = true,
-                    placeholder = { Text(appString(R.string.comment_hint, formatTime(positionSec.toInt()))) })
+                    placeholder = { Text(if (shown.timedComments) appString(R.string.comment_hint, formatTime(com.aurora.music.ui.components.LocalPlaybackPosition.current.value.toInt()))
+                        else appString(R.string.comment_hint_untimed)) })
                 Spacer(Modifier.width(8.dp))
-                com.aurora.music.ui.theme.TextButton(onClick = { onPost(draft); draft = "" }, enabled = draft.isNotBlank()) { Text(appString(R.string.comment_post)) }
+                com.aurora.music.ui.theme.TextButton(onClick = { postedOnTop = !shown.timedComments; onPost(shown, draft); draft = "" }, enabled = draft.isNotBlank()) { Text(appString(R.string.comment_post)) }
+            }
+        }
+    }
+}
+
+// timed comments seek to their moment; the others show their age and likes
+@Composable
+private fun CommentRow(comment: com.aurora.music.model.TrackComment, focused: Boolean, accent: Color, onClick: (() -> Unit)?, onLike: ((Boolean) -> Unit)?) {
+    Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
+        .background(if (focused) MaterialTheme.colorScheme.primary.copy(alpha = .12f) else Color.Transparent)
+        .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier).padding(8.dp)) {
+        Artwork(comment.avatarUrl, accent, Modifier.size(32.dp), corner = 16.dp, decodeSize = 96)
+        Spacer(Modifier.width(10.dp))
+        Column(Modifier.weight(1f)) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Text(comment.user, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, maxLines = 1,
+                    overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+                Spacer(Modifier.width(6.dp))
+                if (comment.timestampMs >= 0) Text(formatTime((comment.timestampMs / 1000).toInt()), style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary)
+                else Text(comment.age, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            }
+            Text(comment.body, style = MaterialTheme.typography.bodyMedium)
+            val likeTint = if (comment.liked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+            // signed in, the count turns into the like toggle
+            if (onLike != null || comment.likes > 0) Row(Modifier.padding(top = Space.xs)
+                .then(if (onLike == null) Modifier else Modifier.offset(x = (-8).dp).heightIn(min = 36.dp).clip(CircleShape)
+                    .toggleable(comment.liked, role = androidx.compose.ui.semantics.Role.Checkbox, onValueChange = onLike).padding(horizontal = 8.dp)),
+                verticalAlignment = Alignment.CenterVertically) {
+                Icon(if (comment.liked) Icons.Filled.ThumbUp else Icons.Outlined.ThumbUp,
+                    if (onLike != null) appString(R.string.text_like_c7e02c) else null, Modifier.size(if (onLike != null) 16.dp else 14.dp), tint = likeTint)
+                if (comment.likes > 0) {
+                    Spacer(Modifier.width(Space.xs))
+                    Text(compactCount(comment.likes), style = MaterialTheme.typography.labelSmall, color = likeTint)
+                }
             }
         }
     }

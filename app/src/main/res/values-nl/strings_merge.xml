@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Muziekvideo\'s van YouTube via de videoknop"</string>
     <string name="merge_comments">"SoundCloud-reacties"</string>
     <string name="merge_comments_summary">"Reacties met tijdstip van SoundCloud langs de golfvorm"</string>
+    <string name="merge_youtube_comments">"YouTube-reacties"</string>
+    <string name="merge_youtube_comments_summary">"Reacties op de YouTube-video van het nummer in de volledige reactieweergave"</string>
     <string name="merge_on_songs_from">"Tonen bij nummers uit"</string>
 </resources>

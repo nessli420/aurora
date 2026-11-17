@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Video musik dari YouTube di tombol video"</string>
     <string name="merge_comments">"Komentar SoundCloud"</string>
     <string name="merge_comments_summary">"Komentar berwaktu dari SoundCloud di sepanjang gelombang"</string>
+    <string name="merge_youtube_comments">"Komentar YouTube"</string>
+    <string name="merge_youtube_comments_summary">"Komentar dari video YouTube lagu di tampilan komentar lengkap"</string>
     <string name="merge_on_songs_from">"Tampilkan di lagu dari"</string>
 </resources>

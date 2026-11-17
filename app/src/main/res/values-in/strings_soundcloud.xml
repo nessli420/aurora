@@ -13,6 +13,9 @@
     <string name="player_comments">"Komentar"</string>
     <string name="player_soundcloud_comments">"Komentar SoundCloud"</string>
     <string name="comments_empty">"Belum ada komentar. Jadilah yang pertama."</string>
+    <string name="comments_none">"Belum ada komentar di sini"</string>
+    <string name="comment_hint_untimed">"Tambahkan komentar…"</string>
+    <string name="comment_like_failed">"Tidak dapat memperbarui suka. Coba lagi."</string>
     <string name="comment_hint">"Komentar di %1$s"</string>
     <string name="comment_post">"Kirim"</string>
     <string name="comment_failed">"Komentar Anda tidak dapat dikirim. Coba lagi."</string>

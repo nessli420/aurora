@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Video düğmesinde YouTube müzik videoları"</string>
     <string name="merge_comments">"SoundCloud yorumları"</string>
     <string name="merge_comments_summary">"Dalga formu boyunca SoundCloud\'dan zamanlı yorumlar"</string>
+    <string name="merge_youtube_comments">"YouTube yorumları"</string>
+    <string name="merge_youtube_comments_summary">"Şarkının YouTube videosundaki yorumlar, tam yorum görünümünde"</string>
     <string name="merge_on_songs_from">"Şu kaynaklardaki şarkılarda göster"</string>
 </resources>

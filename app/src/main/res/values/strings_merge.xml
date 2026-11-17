@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"Music videos from YouTube on the video button"</string>
     <string name="merge_comments">"SoundCloud comments"</string>
     <string name="merge_comments_summary">"Timed comments from SoundCloud along the waveform"</string>
+    <string name="merge_youtube_comments">"YouTube comments"</string>
+    <string name="merge_youtube_comments_summary">"Comments from the song\'s YouTube video in the full comments view"</string>
     <string name="merge_on_songs_from">"Show on songs from"</string>
 </resources>

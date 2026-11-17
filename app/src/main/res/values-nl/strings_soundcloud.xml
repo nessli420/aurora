@@ -13,6 +13,9 @@
     <string name="player_comments">"Reacties"</string>
     <string name="player_soundcloud_comments">"SoundCloud-reacties"</string>
     <string name="comments_empty">"Nog geen reacties. Wees de eerste."</string>
+    <string name="comments_none">"Hier nog geen reacties"</string>
+    <string name="comment_hint_untimed">"Reactie toevoegen…"</string>
+    <string name="comment_like_failed">"De like kon niet worden bijgewerkt. Probeer het opnieuw."</string>
     <string name="comment_hint">"Reageer op %1$s"</string>
     <string name="comment_post">"Plaatsen"</string>
     <string name="comment_failed">"Je reactie kon niet worden geplaatst. Probeer het opnieuw."</string>

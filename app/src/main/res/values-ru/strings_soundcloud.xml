@@ -13,6 +13,9 @@
     <string name="player_comments">"Комментарии"</string>
     <string name="player_soundcloud_comments">"Комментарии SoundCloud"</string>
     <string name="comments_empty">"Комментариев пока нет. Будьте первым."</string>
+    <string name="comments_none">"Здесь пока нет комментариев"</string>
+    <string name="comment_hint_untimed">"Добавьте комментарий…"</string>
+    <string name="comment_like_failed">"Не удалось обновить отметку «Нравится». Попробуйте ещё раз."</string>
     <string name="comment_hint">"Комментарий на %1$s"</string>
     <string name="comment_post">"Отправить"</string>
     <string name="comment_failed">"Не удалось отправить комментарий. Попробуйте ещё раз."</string>

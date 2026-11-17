@@ -8,5 +8,7 @@
     <string name="merge_videos_summary">"通过视频按钮观看 YouTube 音乐视频"</string>
     <string name="merge_comments">"SoundCloud 评论"</string>
     <string name="merge_comments_summary">"沿波形显示的 SoundCloud 定时评论"</string>
+    <string name="merge_youtube_comments">"YouTube 评论"</string>
+    <string name="merge_youtube_comments_summary">"在完整评论列表中显示歌曲 YouTube 视频的评论"</string>
     <string name="merge_on_songs_from">"在以下来源的歌曲上显示"</string>
 </resources>
