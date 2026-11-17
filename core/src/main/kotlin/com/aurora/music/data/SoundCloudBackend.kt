@@ -6,6 +6,7 @@ import com.aurora.music.util.accentArgbFor
 import com.google.gson.JsonArray
 import com.google.gson.JsonElement
 import com.google.gson.JsonObject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -197,9 +198,12 @@ class SoundCloudBackend(
     // sends whatever is waiting and lets soundcloud's bot check ask first; with nothing waiting, re-liking a liked track shows whether it would
     suspend fun verify(): Boolean {
         if (!signedIn) return true
-        if (pending.of(user).values.any { it.sentAt == 0L }) return sync(check = true)
-        val probe = allSongs().firstOrNull() ?: return true
-        return runCatching { api.sendWithCheck("PUT", "/users/$user/track_likes/${probe.id}") }.isSuccess
+        return try {
+            if (pending.of(user).values.any { it.sentAt == 0L }) return sync(check = true)
+            val probe = allSongs().firstOrNull() ?: return true
+            api.sendWithCheck("PUT", "/users/$user/track_likes/${probe.id}")
+            true
+        } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
     }
     override suspend fun librarySongs(limit: Int) = allSongs().take(limit)
     override suspend fun songsPage(offset: Int, count: Int) = allSongs().drop(offset).take(count)
@@ -341,6 +345,17 @@ class SoundCloudBackend(
         if (signedIn && id.matches(Regex("[0-9]+"))) api.send("POST", "/me/play-history", JsonObject().apply { addProperty("track_urn", "soundcloud:tracks:$id") })
     }
 
+    // history is built from the web player's play event as a play starts; sent off the report queue, whose 8 s cap a cold hidden page overruns
+    override suspend fun reportPlayback(report: PlaybackReport) {
+        if (report.event != PlaybackReportEvent.START || !signedIn || !report.song.id.matches(TRACK_ID)) return
+        background.launch {
+            try {
+                api.send("POST", "/me", playEvent(api.get("/tracks/${report.song.id}").asJsonObject, user, report.positionMs))
+                scrobble(report.song.id)
+            } catch (e: Exception) { com.aurora.music.util.AppLog.w("SoundCloud", "play history failed: ${e.message}") }
+        }
+    }
+
     override fun supportsComments(song: Song) = song.id.matches(Regex("[0-9]+"))
 
     // popular tracks carry thousands; the newest thousand are plenty to scatter along the waveform
@@ -426,6 +441,44 @@ class SoundCloudBackend(
             .filter { !it.bool("snipped") && it.obj("format").string("protocol") in setOf("hls", "progressive") && it.string("url").isNotBlank() }
             .sortedWith(compareBy({ it.string("quality") != "hq" }, { PRESETS.indexOf(it.string("preset")).let { i -> if (i < 0) PRESETS.size else i } }))
             .firstOrNull()
+
+        // one browser's ids, as the web player keeps them
+        private val ANONYMOUS_ID = List(4) { (100_000..999_999).random() }.joinToString("-")
+        private val PLAY_SESSION = java.util.UUID.randomUUID().toString().uppercase()
+
+        // the web player's audio play event; the track's own authorization names the listener
+        fun playEvent(track: JsonObject, user: String, positionMs: Long, now: Long = System.currentTimeMillis()): JsonObject {
+            val coding = transcoding(track)
+            val payload = JsonObject().apply {
+                addProperty("page_name", "stream:main")
+                addProperty("source", "stream")
+                addProperty("track_length", track.int("full_duration").takeIf { it > 0 } ?: track.int("duration"))
+                addProperty("track_authorization", track.string("track_authorization"))
+                addProperty("player_type", "MaestroHLSMSE")
+                addProperty("preset", coding?.string("preset")?.ifBlank { null } ?: "aac_160k")
+                addProperty("quality", coding?.string("quality")?.ifBlank { null } ?: "sq")
+                addProperty("audio_quality_mode", "standard")
+                addProperty("app_state", "foreground")
+                addProperty("action", "play")
+                addProperty("trigger", "manual")
+                addProperty("policy", track.string("policy"))
+                addProperty("monetization_model", track.string("monetization_model"))
+                addProperty("query_position", 0)
+                addProperty("queue_id", java.util.UUID.randomUUID().toString())
+                addProperty("queue_source_id", java.util.UUID.randomUUID().toString())
+                addProperty("track", "soundcloud:tracks:${track.string("id")}")
+                addProperty("track_owner", "soundcloud:users:${track.obj("user").string("id").ifBlank { track.string("user_id") }}")
+                addProperty("playhead_position", positionMs)
+                addProperty("anonymous_id", ANONYMOUS_ID)
+                addProperty("client_id", 46941)
+                addProperty("ts", now)
+                addProperty("url", track.string("permalink_url").ifBlank { SoundCloudClient.WEB })
+                addProperty("session_id", PLAY_SESSION)
+                addProperty("user", "soundcloud:users:$user")
+            }
+            val event = JsonObject().apply { addProperty("event", "audio"); addProperty("version", "v1.27.47"); add("payload", payload) }
+            return JsonObject().apply { add("events", JsonArray().apply { add(event) }) }
+        }
 
         // the api links 100px art, the same file comes in 500px
         fun art(url: String) = url.replace("-large.", "-t500x500.")

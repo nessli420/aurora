@@ -1,8 +1,13 @@
 package com.aurora.music.data
 
 import com.aurora.music.data.remote.*
+import com.aurora.music.model.Song
+import com.aurora.music.playback.PlaybackReportSnapshot
+import com.aurora.music.playback.PlaybackReportTracker
 import com.google.gson.JsonParser
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
 import okhttp3.ResponseBody.Companion.toResponseBody
 import org.junit.Assert.*
 import org.junit.Test
@@ -295,5 +300,89 @@ class SoundCloudBackendTest {
         assertEquals(listOf("uploader"), backend.allArtists().map { it.name })
         assertTrue(backend.verify())
         assertEquals(listOf("POST /me/followings/7"), sent)
+    }
+    private val playable = """{"id":5,"policy":"ALLOW","monetization_model":"NOT_APPLICABLE","track_authorization":"auth-5","duration":30000,"full_duration":200000,"permalink_url":"https://soundcloud.com/uploader/track","user":{"id":7},"media":{"transcodings":[{"url":"https://api-v2.soundcloud.com/media/x","preset":"aac_160k","quality":"sq","format":{"protocol":"hls"}}]}}"""
+
+    @Test fun playEventsCarryTheTrackAuthorizationTheListenerAndTheOwner() {
+        val event = SoundCloudBackend.playEvent(JsonParser.parseString(playable).asJsonObject, "42", 1500, now = 99).getAsJsonArray("events").single().asJsonObject
+        assertEquals("audio", event.string("event"))
+        val payload = event.obj("payload")
+        listOf("action" to "play", "track" to "soundcloud:tracks:5", "track_owner" to "soundcloud:users:7", "user" to "soundcloud:users:42",
+            "track_authorization" to "auth-5", "policy" to "ALLOW", "preset" to "aac_160k", "url" to "https://soundcloud.com/uploader/track",
+        ).forEach { (key, value) -> assertEquals(key, value, payload.string(key)) }
+        assertEquals(200000, payload.get("track_length").asInt)
+        assertEquals(1500, payload.get("playhead_position").asLong)
+        assertEquals(46941, payload.get("client_id").asInt)
+        assertEquals(99, payload.get("ts").asLong)
+    }
+
+    @Test fun historyTakesEachPlayOnceAsItStartsOnTheAccountThatOwnsIt() = runBlocking {
+        val friend = Session(SoundCloudClient.WEB, "friend", "", "friend-reference", ServerType.SOUNDCLOUD, "43")
+        val mine = Recorder { if (it == "/tracks/5") playable else error(it) }
+        val theirs = Recorder { error(it) }
+        val merged = MergedBackend(listOf(SoundCloudBackend(friend, theirs), SoundCloudBackend(session, mine)), friend)
+        val song = Song(mergeNamespace(session) + MERGE_NAMESPACE_SEP + "5", "Track", "Artist", "", "", 200,
+            playbackSource = PlaybackSourceIdentity.fromSession(session, ""))
+        val reports = mutableListOf<Pair<PlaybackReportTarget, PlaybackReport>>()
+        val tracker = PlaybackReportTracker(merged::playbackReportTarget, { target, report -> reports += target to report })
+        fun at(second: Long, position: Long, state: PlaybackReportState = PlaybackReportState.PLAYING, from: Long? = null, again: Boolean = false) =
+            tracker.update(PlaybackReportSnapshot(song, position * 1000, 200_000, state), second * 1000, second * 1000, true,
+                discontinuity = from != null, newOccurrence = again, endingPositionMs = from?.times(1000))
+        (0L..40L).forEach { at(it, it) }
+        at(41, 41, PlaybackReportState.PAUSED)
+        at(50, 41)
+        at(51, 120, from = 42)
+        at(52, 121)
+        at(53, 0, from = 122, again = true)
+        reports.forEach { (target, report) -> target.send(report) }
+        assertTrue(PlaybackReportEvent.SCROBBLE in reports.map { it.second.event })
+        withTimeout(5_000) { while (mine.writes.size < 4) delay(10) }
+        delay(100)
+        assertEquals(List(2) { listOf("play", "POST /me/play-history {\"track_urn\":\"soundcloud:tracks:5\"}") }.flatten(),
+            mine.writes.map { if (it.startsWith("POST /me {") && "\"action\":\"play\"" in it && "soundcloud:tracks:5" in it) "play" else it })
+        assertTrue(theirs.writes.isEmpty())
+    }
+
+    @Test fun guestsLeaveNoHistory() = runBlocking {
+        val api = Recorder { error(it) }
+        SoundCloudBackend(Session.guest(ServerType.SOUNDCLOUD, "Guest"), api)
+            .reportPlayback(PlaybackReport(Song("5", "Track", "Artist", "", "", 200), "play", PlaybackReportEvent.START, PlaybackReportState.PLAYING, 0, 200_000, 0, 0))
+        delay(100)
+        assertTrue(api.writes.isEmpty())
+    }
+
+    @Test fun anExpiredLoginRefreshesBeforeThePlayIsSent() = runBlocking {
+        fun jwt(exp: Long) = "h." + Base64.getUrlEncoder().withoutPadding().encodeToString("""{"exp":$exp}""".toByteArray()) + ".s"
+        val stale = jwt(1)
+        val fresh = jwt(4102444800)
+        val http = okhttp3.OkHttpClient.Builder().addInterceptor { chain ->
+            val request = chain.request()
+            val response = okhttp3.Response.Builder().request(request).protocol(okhttp3.Protocol.HTTP_1_1).code(200).message("OK")
+            if (request.url.host == "api-v2.soundcloud.com") {
+                assertEquals("OAuth $fresh", request.header("Authorization"))
+                return@addInterceptor response.body(playable.toResponseBody()).build()
+            }
+            assertEquals("https://soundcloud.com/n/api/refresh-token", request.url.toString())
+            assertTrue("oauth_refresh_token=r1" in request.header("Cookie").orEmpty())
+            response.addHeader("Set-Cookie", "oauth_token=$fresh; Path=/").addHeader("Set-Cookie", "oauth_refresh_token=r2; Path=/")
+                .body("".toResponseBody()).build()
+        }.build()
+        val sent = java.util.Collections.synchronizedList(mutableListOf<String>())
+        var saved: SoundCloudWebSession? = null
+        val client = SoundCloudClient({ SoundCloudWebSession("oauth_token=$stale; oauth_refresh_token=r1") }, { saved = it }, http,
+            browser = SoundCloudBrowser { _, method, url, token, body, _, _ ->
+                sent += "$method ${url.substringBefore('?')} $body ${token == fresh}"
+                (if (token == fresh) 201 else 401) to "{}"
+            }, savedClientId = { "abcdefghijklmnopqrstuvwxyz012345" })
+        SoundCloudBackend(session, client)
+            .reportPlayback(PlaybackReport(Song("5", "Track", "Artist", "", "", 200), "play", PlaybackReportEvent.START, PlaybackReportState.PLAYING, 0, 200_000, 0, 0))
+        withTimeout(5_000) { while (sent.size < 2) delay(10) }
+        assertTrue(sent[0], sent[0].startsWith("POST https://api-v2.soundcloud.com/me {") && sent[0].endsWith("true"))
+        assertEquals("""POST https://api-v2.soundcloud.com/me/play-history {"track_urn":"soundcloud:tracks:5"} true""", sent[1])
+        assertEquals(fresh, saved?.token)
+    }
+
+    @Test fun verifyingAnExpiredLoginFailsInsteadOfThrowing() = runBlocking {
+        assertFalse(SoundCloudBackend(session, SoundCloudTransport { throw MediaAccountExpiredException() }).verify())
     }
 }
