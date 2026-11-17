@@ -73,11 +73,10 @@ fun MiniPlayer(
     val isMix = song.id.startsWith("aurora-mix:")
     val ui = LocalUiPrefs.current
     val position = LocalPlaybackPosition.current
-    val progressBrush = com.aurora.music.ui.theme.rememberColorSweep(
-        com.aurora.music.ui.theme.LocalContextAccent.current.color ?: MaterialTheme.colorScheme.primary,
-    )
+    val accent = com.aurora.music.ui.theme.LocalContextAccent.current.color ?: MaterialTheme.colorScheme.primary
+    val progressBrush = com.aurora.music.ui.theme.rememberColorSweep(accent)
     val likeTint by animateColorAsState(
-        if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        if (state.isCurrentLiked) accent else MaterialTheme.colorScheme.onSurfaceVariant,
         label = "likeTint",
     )
 
@@ -179,7 +178,7 @@ private fun GlassMiniPlayer(
     val colors = MaterialTheme.colorScheme
     val position = LocalPlaybackPosition.current
     val accent = com.aurora.music.ui.theme.LocalContextAccent.current.color ?: colors.primary
-    val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurface, label = "glassLike")
+    val likeTint by animateColorAsState(if (state.isCurrentLiked) accent else colors.onSurface, label = "glassLike")
     val scope = rememberCoroutineScope()
     val highlight = remember(scope) { InteractiveHighlight(scope) }
     val height = when (ui.miniStyle) { MiniStyle.COMPACT -> 54.dp; MiniStyle.PROMINENT -> 70.dp; else -> 62.dp }

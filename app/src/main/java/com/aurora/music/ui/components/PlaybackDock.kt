@@ -123,7 +123,8 @@ fun PlaybackDock(
                     }
                 }
                 if (!isMix && LocalCanLike.current(song.id)) {
-                    val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurfaceVariant, label = "dockLike")
+                    val likeTint by animateColorAsState(if (state.isCurrentLiked) com.aurora.music.ui.theme.LocalContextAccent.current.color ?: colors.primary
+                        else colors.onSurfaceVariant, label = "dockLike")
                     LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
                         Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
                             appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp))
