@@ -122,7 +122,8 @@ class PlayerScreenTest {
     @Test fun theMoreMenuOffersToPickAnotherMatch() {
         val rec = Recorder()
         val sources = SongSources(copies = { emptyList() }, releaseType = { null }, canRematch = { true }, playFrom = {},
-            rematch = { rec.events += "rematch:${it.id}" }, open = { _, _ -> }, manySources = { false })
+            rematch = { rec.events += "rematch:${it.id}" }, open = { _, _ -> }, manySources = { false },
+            linksSongs = { false }, links = { emptyList() }, copyLink = {})
         PlayerScene("player-menu-rematch", 1440, 900) {
             CompositionLocalProvider(LocalSongSources provides sources) { Player(PlayerFixtures.playing, rec, lyrics = null) }
         }.use { scene ->
