@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/aurora.svg" alt="Aurora logo" width="96" height="96">
+<img src="docs/assets/aurora-paper.svg" alt="Aurora logo" width="96" height="96">
 
 # Aurora
 
