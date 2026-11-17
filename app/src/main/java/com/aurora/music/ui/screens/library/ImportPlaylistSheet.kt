@@ -210,7 +210,7 @@ private fun Note(text: String) {
         modifier = Modifier.padding(top = 14.dp).paperClip(RoundedCornerShape(12.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(12.dp))
 }
 
-private fun sourceIcon(source: ImportSource): ImageVector = when (source) {
+internal fun sourceIcon(source: ImportSource): ImageVector = when (source) {
     ImportSource.LIBRARY, ImportSource.OTHER -> Icons.Outlined.LibraryMusic
     ImportSource.YOUTUBE_MUSIC -> Icons.Outlined.SmartDisplay
     ImportSource.SPOTIFY, ImportSource.SOUNDCLOUD, ImportSource.APPLE_MUSIC -> Icons.Outlined.CloudQueue

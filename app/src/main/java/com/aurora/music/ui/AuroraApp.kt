@@ -1016,6 +1016,7 @@ fun AuroraApp() {
                 }
         }
 
+    val focusManager = androidx.compose.ui.platform.LocalFocusManager.current
     androidx.compose.runtime.CompositionLocalProvider(
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides playerPanes,
         com.aurora.music.ui.components.LocalStartRadio provides remember(playerVM) { { song: com.aurora.music.model.Song -> playerVM.startSonicRadio(song) { confirm(it) } } },
@@ -1028,13 +1029,22 @@ fun AuroraApp() {
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: com.aurora.music.model.Song -> matchSong = song } },
         com.aurora.music.ui.screens.player.LocalSongSources provides remember(playerVM) {
             com.aurora.music.ui.screens.player.SongSources(
-                copies = container.repository::sourceCopies,
+                copies = { song -> container.repository.sourceCopies(playerVM.anchor(song), song) },
                 releaseType = { song -> container.repository.detail("album", song.albumId)?.info?.typeLabel },
                 canRematch = { song -> playerVM.queued(song).let { com.aurora.music.data.TrackChoices.matchKey(it.streamUrl) != null || container.repository.sourceType(it)?.isCatalogue == true } },
                 playFrom = playerVM::swapCurrent,
                 rematch = { song -> matchSong = playerVM.queued(song) },
                 open = { kind, id -> playerVM.setExpanded(false); openDetail(kind, id) },
                 manySources = { container.repository.mergedSources.size > 1 },
+                linksSongs = { container.repository.linksSongs },
+                links = container.repository::songLinks,
+                copyLink = { link ->
+                    // a search field left focused under the menu would take the keyboard back when it closes
+                    focusManager.clearFocus()
+                    (context.getSystemService(android.content.Context.CLIPBOARD_SERVICE) as? android.content.ClipboardManager)
+                        ?.setPrimaryClip(android.content.ClipData.newPlainText(link.label, link.url))
+                    confirm(appString(R.string.song_link_copied, link.label))
+                },
             )
         },
     ) {

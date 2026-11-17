@@ -98,6 +98,7 @@ fun SongRow(
     onToggleHidden: (() -> Unit)? = null,
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
+    var linking by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small
     val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
@@ -205,7 +206,8 @@ fun SongRow(
                 modifier = Modifier.size(if (tablet) 48.dp else 32.dp).paperClip(CircleShape).clickable { menuOpen = true }
                     .padding(if (tablet) 12.dp else 4.dp),
             )
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
+            if (menuOpen && linking) com.aurora.music.ui.screens.player.CopyLinkMenu(song) { linking = false; menuOpen = false }
+            DropdownMenu(expanded = menuOpen && !linking, onDismissRequest = { menuOpen = false }) {
                 if (hiddenEverywhere) {
                     if (hiddenAlone) DropdownMenuItem(
                         text = { Text(appString(R.string.hide_song_undo)) },
@@ -239,6 +241,7 @@ fun SongRow(
                         leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
                     )
                     RepostMenuItem(song) { menuOpen = false }
+                    com.aurora.music.ui.screens.player.CopyLinkMenuItem(song) { linking = true }
                     if (if (hidden) onToggleHidden != null else hide != null) DropdownMenuItem(
                         text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
                         onClick = { menuOpen = false; if (hidden) onToggleHidden?.invoke() else hide?.invoke(song, true) },

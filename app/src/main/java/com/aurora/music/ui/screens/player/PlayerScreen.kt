@@ -338,12 +338,14 @@ fun PlayerScreen(
         CanvasTint(canvasShown) {
         val moreMenu: @Composable () -> Unit = {
             var showMenu by remember { mutableStateOf(false) }
+            var linking by remember { mutableStateOf(false) }
             Box {
                 Icon(
                     Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                     modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showMenu = true }.padding(8.dp),
                 )
-                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                if (showMenu && linking) CopyLinkMenu(song) { linking = false; showMenu = false }
+                DropdownMenu(expanded = showMenu && !linking, onDismissRequest = { showMenu = false }) {
                     DropdownMenuItem(text = { Text(appString(R.string.text_mix_studio_668363)) }, onClick = { showMenu = false; onOpenMix() }, leadingIcon = { Icon(Icons.Filled.GraphicEq, null) })
                     DropdownMenuItem(
                         text = { Text(appString(R.string.text_sonic_radio_9b7bff)) },
@@ -366,6 +368,7 @@ fun PlayerScreen(
                         leadingIcon = { Icon(Icons.Filled.Explore, null) },
                     )
                     if (state.hasTrack) com.aurora.music.ui.components.RepostMenuItem(song) { showMenu = false }
+                    if (state.hasTrack) CopyLinkMenuItem(song) { linking = true }
                     if (state.supportsComments) DropdownMenuItem(
                         text = { Text(appString(R.string.player_comments)) },
                         onClick = { showMenu = false; showComments = true },

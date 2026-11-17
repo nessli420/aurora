@@ -976,13 +976,19 @@ private fun Shell(
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },
         com.aurora.music.ui.screens.player.LocalSongSources provides remember(player) {
             com.aurora.music.ui.screens.player.SongSources(
-                copies = container.repository::sourceCopies,
+                copies = { song -> container.repository.sourceCopies(player.anchor(song), song) },
                 releaseType = { song -> container.repository.detail("album", song.albumId)?.info?.typeLabel },
                 canRematch = { song -> com.aurora.music.data.TrackChoices.matchKey(song.streamUrl) != null || container.repository.sourceType(song)?.isCatalogue == true },
                 playFrom = player::swapCurrent,
                 rematch = { song -> matchSong = song },
                 open = { kind, id -> player.setExpanded(false); openDetail(kind, id) },
                 manySources = { container.repository.mergedSources.size > 1 },
+                linksSongs = { container.repository.linksSongs },
+                links = container.repository::songLinks,
+                copyLink = { link ->
+                    runCatching { java.awt.Toolkit.getDefaultToolkit().systemClipboard.setContents(java.awt.datatransfer.StringSelection(link.url), null) }
+                    confirm(appString(R.string.song_link_copied, link.label))
+                },
             )
         },
         com.aurora.music.ui.screens.player.LocalPlayerPanes provides

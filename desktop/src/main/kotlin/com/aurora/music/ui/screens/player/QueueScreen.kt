@@ -305,6 +305,7 @@ private fun QueueTrackRow(
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
     var contextAt by remember(song.id) { mutableStateOf<Offset?>(null) }
+    var linking by remember(song.id) { mutableStateOf(false) }
     val actions = hovered || dragging || contextAt != null
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Box(
@@ -376,7 +377,8 @@ private fun QueueTrackRow(
         }
         contextAt?.let { at ->
             Box(Modifier.offset { at.round() }) {
-                DropdownMenu(expanded = true, onDismissRequest = { contextAt = null }) {
+                if (linking) CopyLinkMenu(song) { linking = false; contextAt = null }
+                DropdownMenu(expanded = !linking, onDismissRequest = { contextAt = null }) {
                     DropdownMenuItem(
                         text = { Text(appString(R.string.text_play_5d12bd)) },
                         onClick = { contextAt = null; onClick() },
@@ -387,6 +389,7 @@ private fun QueueTrackRow(
                         onClick = { contextAt = null; onPlayNext() },
                         leadingIcon = { Icon(Icons.Filled.QueuePlayNext, null) },
                     )
+                    CopyLinkMenuItem(song) { linking = true }
                     if (onRemove != null) DropdownMenuItem(
                         text = { Text(appString(R.string.text_remove_e96390)) },
                         onClick = { contextAt = null; onRemove() },

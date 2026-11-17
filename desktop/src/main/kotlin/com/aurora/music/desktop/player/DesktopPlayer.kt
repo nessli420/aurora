@@ -992,11 +992,16 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         if (com.aurora.music.data.stripMergeNamespace(current.id) == id && index in 0 until queueSize()) engine.reload(index)
     }
 
+    // the song a swapped-in copy stands for, so its sources are found from the original's tags
+    private val anchors = java.util.concurrent.ConcurrentHashMap<String, Song>()
+    override fun anchor(song: Song): Song = anchors[song.id] ?: song
+
     override fun swapCurrent(song: Song) {
         val index = currentIndex()
         val current = engine.state.value.current?.song ?: return
         if (index !in 0 until queueSize()) return
         val target = if (song.id == current.id) current else song
+        if (target.id != current.id) anchors[target.id] = anchors[current.id] ?: current
         deps.pin(target.id)
         engine.swap(index, target, (state.value.positionSec * 1000).toLong())
     }

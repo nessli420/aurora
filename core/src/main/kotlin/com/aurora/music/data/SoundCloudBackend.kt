@@ -395,6 +395,11 @@ class SoundCloudBackend(
     override suspend fun serverLyrics(song: Song): Lyrics? = null
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean) = sentinel(songId)
 
+    override val linksSongs: Boolean get() = true
+    // the page lives at the uploader's and the track's names, which only the track itself carries
+    override suspend fun songLink(song: Song): String? = song.id.takeIf { it.matches(Regex("[0-9]+")) }
+        ?.let { item("/tracks/$it")?.string("permalink_url")?.takeIf { url -> url.startsWith("https://soundcloud.com/") } }
+
     // the hls stream is joined into one file; previews and drm-only tracks save their youtube match instead
     override suspend fun downloadUrl(songId: String, maxBitrate: Int, lossless: Boolean): String {
         playbackUrl(songId)?.let { return it }

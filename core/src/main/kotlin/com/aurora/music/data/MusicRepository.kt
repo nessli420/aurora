@@ -320,8 +320,10 @@ class MusicRepository(
 
     suspend fun playbackCandidates(song: Song): List<Song> = if (offline) emptyList() else backend?.playbackCandidates(song).orEmpty().map { artwork(it) }
 
-    suspend fun sourceCopies(song: Song): List<SourceCopy> = if (offline) emptyList()
-        else withContext(mapping) { backend?.sourceCopies(song).orEmpty().map { it.copy(song = artwork(it.song)) } }
+    suspend fun sourceCopies(song: Song, playing: Song = song): List<SourceCopy> = if (offline) emptyList()
+        else withContext(mapping) { backend?.sourceCopies(song, playing).orEmpty().map { it.copy(song = artwork(it.song)) } }
+    val linksSongs: Boolean get() = !offline && backend?.linksSongs == true
+    suspend fun songLinks(song: Song): List<SongLink> = if (!linksSongs) emptyList() else withContext(Dispatchers.IO) { backend?.songLinks(song).orEmpty() }
 
     suspend fun searchOwnSource(song: Song, query: String): List<Song> = withContext(mapping) {
         val source = backend?.takeUnless { offline } ?: return@withContext emptyList()

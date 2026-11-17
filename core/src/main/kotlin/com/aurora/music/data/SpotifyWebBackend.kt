@@ -501,6 +501,9 @@ class SpotifyWebBackend(
 
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean): String = "aurora-yt://$songId"
 
+    override val linksSongs: Boolean get() = true
+    override suspend fun songLink(song: Song): String? = song.id.takeIf { it.matches(TRACK_ID) }?.let { "https://open.spotify.com/track/$it" }
+
     override fun coverArtUrl(id: String, size: Int): String = ""
 
     private fun song(t: JsonObject, uri: String = t.string("uri"), album: AlbumRef? = null, addedAt: String = ""): Song? {

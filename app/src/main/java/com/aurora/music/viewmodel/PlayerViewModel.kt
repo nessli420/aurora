@@ -1274,6 +1274,10 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     // the song as it was queued, before a better copy took over its stream
     fun queued(song: Song): Song = songById[song.id] ?: song
 
+    // the song a swapped-in copy stands for, so its sources are found from the original's tags
+    private var anchors: Map<String, Song> = emptyMap()
+    fun anchor(song: Song): Song = anchors[song.id] ?: queued(song)
+
     // the playing song from another source, or itself after its match changed, carrying on where it was
     fun swapCurrent(song: Song) {
         val c = controller ?: return
@@ -1293,6 +1297,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         val item = fresh.buildUpon().setUri(uri).setMediaMetadata(fresh.mediaMetadata.buildUpon().setExtras(extras).build()).build()
         val position = c.currentPosition
         val playWhenReady = c.playWhenReady
+        if (target.id != old.mediaId) anchors = anchors + (target.id to (anchors[old.mediaId] ?: songById[old.mediaId] ?: songOf(old)))
         songById = songById + (target.id to target)
         c.replaceMediaItem(index, item)
         c.seekTo(index, position)

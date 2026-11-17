@@ -12,6 +12,8 @@ import kotlinx.coroutines.withTimeoutOrNull
 // a song as one source has it, labelled for menus; playing marks the source its audio comes from
 data class SourceCopy(val label: String, val song: Song, val playing: Boolean = false)
 
+data class SongLink(val label: String, val type: ServerType, val url: String)
+
 // returns app domain models so callers are server-agnostic backend owns dto mapping auth and urls
 interface MediaBackend {
     val session: Session
@@ -32,7 +34,12 @@ interface MediaBackend {
     suspend fun playbackCandidates(song: Song): List<Song> = emptyList()
     suspend fun matchingSongs(song: Song): List<Song> = search(recordingTitle(song.title)).songs
     // the song on every source that has it; one source has only its own copy
-    suspend fun sourceCopies(song: Song): List<SourceCopy> = listOf(SourceCopy(session.typeLabel, song, playing = true))
+    // [playing] is the copy heard now, which may be another source's twin of [song] after a swap
+    suspend fun sourceCopies(song: Song, playing: Song = song): List<SourceCopy> = listOf(SourceCopy(session.typeLabel, playing, playing = true))
+    // a public web page for the song; only catalogues have one, a merged library has one per source with the song
+    val linksSongs: Boolean get() = false
+    suspend fun songLink(song: Song): String? = null
+    suspend fun songLinks(song: Song): List<SongLink> = listOfNotNull(songLink(song)?.let { SongLink(session.typeLabel, session.type, it) })
     // songs on the source this one came from, to trade a wrong match for the right one
     suspend fun searchOwnSource(song: Song, query: String): List<Song> = search(query).songs
 

@@ -107,6 +107,8 @@ interface PlayerController {
     fun reloadIfPlaying(songId: String) {}
     /** Plays [song] in place of the current one from the same moment: another source's copy, or itself after its match changed. */
     fun swapCurrent(song: Song) {}
+    /** The song [song] was swapped in for, or [song] itself. */
+    fun anchor(song: Song): Song = song
     fun removeFromQueue(index: Int)
     // hiding a song takes every queued copy of it out, the playing one included
     fun dropFromQueue(hides: (Song) -> Boolean) {

@@ -8,6 +8,9 @@
     <string name="song_menu_play_from">"Play from"</string>
     <string name="song_menu_open_in">"Open in"</string>
     <string name="song_menu_open_elsewhere">"Open from another source"</string>
+    <string name="song_menu_copy_link">"Copy link"</string>
+    <string name="song_menu_copy_link_from">"Copy link from"</string>
+    <string name="song_link_copied">"%1$s link copied"</string>
     <string name="song_menu_rematch">"Wrong song? Pick another"</string>
     <string name="match_hint_source">"Pick the song that should play instead of “%1$s”."</string>
     <string name="match_search_source">"Search for the right song"</string>

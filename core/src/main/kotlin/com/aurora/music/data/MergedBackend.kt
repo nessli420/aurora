@@ -78,7 +78,14 @@ class MergedBackend(
     }
 
     override suspend fun playbackCandidates(song: Song): List<Song> = matcher.playbackCandidates(song)
-    override suspend fun sourceCopies(song: Song): List<SourceCopy> = matcher.copies(song)
+    override suspend fun sourceCopies(song: Song, playing: Song): List<SourceCopy> = matcher.copies(song, playing)
+    override val linksSongs: Boolean get() = sources.any { it.linksSongs }
+    override suspend fun songLink(song: Song): String? = router.unwrap(song.id)?.let { (i, id) -> sources[i].songLink(song.copy(id = id)) }
+    override suspend fun songLinks(song: Song): List<SongLink> = coroutineScope {
+        matcher.copies(song) { it.linksSongs }.map { copy ->
+            async { attempt(null) { songLink(copy.song) }?.let { SongLink(copy.label, sourceType(copy.song), it) } }
+        }.awaitAll().filterNotNull().distinctBy { it.url }
+    }
     override suspend fun searchOwnSource(song: Song, query: String): List<Song> {
         val (i, _) = router.unwrap(song.id) ?: return search(query).songs
         return sources[i].search(query).songs.map { it.wrap(i) }

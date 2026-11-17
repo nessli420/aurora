@@ -140,6 +140,7 @@ fun SongRow(
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var contextAt by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Offset?>(null) }
+    var linking by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
     val hovered by interaction.collectIsHoveredAsState()
@@ -185,6 +186,7 @@ fun SongRow(
                 leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
             )
             RepostMenuItem(song, close)
+            com.aurora.music.ui.screens.player.CopyLinkMenuItem(song) { linking = true }
             if (if (hidden) onToggleHidden != null else hide != null) DropdownMenuItem(
                 text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
                 onClick = { close(); if (hidden) onToggleHidden?.invoke() else hide?.invoke(song, true) },
@@ -345,13 +347,15 @@ fun SongRow(
         )
         Box {
             RowAction(Icons.Outlined.MoreVert, appString(R.string.text_more_4bab2d), tint = muted, visible = hovered || menuOpen) { menuOpen = true }
-            DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) { menuItems { menuOpen = false } }
+            if (menuOpen && linking) com.aurora.music.ui.screens.player.CopyLinkMenu(song) { linking = false; menuOpen = false }
+            DropdownMenu(expanded = menuOpen && !linking, onDismissRequest = { menuOpen = false }) { menuItems { menuOpen = false } }
         }
     }
     }
     contextAt?.let { at ->
         Box(Modifier.offset { at.round() }) {
-            DropdownMenu(expanded = true, onDismissRequest = { contextAt = null }) { menuItems { contextAt = null } }
+            if (linking) com.aurora.music.ui.screens.player.CopyLinkMenu(song) { linking = false; contextAt = null }
+            DropdownMenu(expanded = !linking, onDismissRequest = { contextAt = null }) { menuItems { contextAt = null } }
         }
     }
     }

@@ -61,7 +61,34 @@ class MergedMatchingTest {
         assertEquals(listOf(idOn(server, "s1"), idOn(youtube, "y1")), copies.map { it.song.id })
         assertEquals(idOn(youtube, "ya"), copies[1].song.albumId)
     }
-    private val server = Session("https://server.invalid", "Listener", "", "token", ServerType.SUBSONIC)
+
+    // finds only what a title search would: songs whose title is in the query
+    private class Finds(override val session: Session, val songs: List<Song>) : MediaBackend by unsupported() {
+        override suspend fun matchingSongs(song: Song) = songs.filter { recordingKey(it.title) == recordingKey(song.title) }
+        override suspend fun search(query: String) = SearchResults(songs = songs.filter { query.contains(it.title, ignoreCase = true) })
+        override fun playbackSourceIdentity(song: Song) = PlaybackSourceIdentity.fromSession(session, song.albumId)
+    }
+
+    @Test fun anUploadWithTheArtistInItsTitleStillFindsItsCopies() = runBlocking {
+        val soundcloud = Session("https://soundcloud.com", "Listener", "", "token", ServerType.SOUNDCLOUD, userId = "sc")
+        val original = Song(idOn(spotify, "p1"), "Мало тебя", "Серебро", "", "", 201, playbackSource = PlaybackSourceIdentity.fromSession(spotify, ""))
+        val merged = MergedBackend(listOf(
+            Finds(server, listOf(Song("s1", "Мало тебя", "Серебро", "", "", 201))),
+            Finds(youtube, listOf(Song("y1", "Мало тебя", "Серебро", "", "", 200))),
+            Finds(spotify, emptyList()),
+            Finds(soundcloud, emptyList()),
+        ), server)
+        val upload = Song(idOn(soundcloud, "c1"), "Мало тебя - Серебро", "some uploader", "", "", 202,
+            playbackSource = PlaybackSourceIdentity.fromSession(soundcloud, ""))
+
+        val alone = merged.sourceCopies(upload)
+        assertEquals(listOf(idOn(server, "s1"), idOn(youtube, "y1"), idOn(soundcloud, "c1")), alone.map { it.song.id })
+
+        val swapped = merged.sourceCopies(original, playing = upload)
+        assertEquals(listOf(idOn(server, "s1"), idOn(youtube, "y1"), idOn(spotify, "p1"), idOn(soundcloud, "c1")), swapped.map { it.song.id })
+        assertEquals(listOf(false, false, false, true), swapped.map { it.playing })
+    }
+    private val server =Session("https://server.invalid", "Listener", "", "token", ServerType.SUBSONIC)
     private fun idOn(session: Session, id: String) = "${mergeNamespace(session)}$MERGE_NAMESPACE_SEP$id"
 
     @Test fun aSearchOutOfTimeIsSkippedForTheNextTitleWhileBrowsingStillAsksTheServer() = runBlocking {

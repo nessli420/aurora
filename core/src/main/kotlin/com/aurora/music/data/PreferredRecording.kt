@@ -27,10 +27,11 @@ fun recordingKey(title: String): String = normalized(recordingTitle(title))
 fun sameLength(song: Song, copy: Song) = recordingTitlesMatch(song, copy) && song.durationSec > 0 && copy.durationSec > 0 &&
     kotlin.math.abs(song.durationSec - copy.durationSec) <= RELAXED_DURATION_SEC
 
-// uploads often carry "artist - title" in the title, posted by a label or fan account
+// uploads often carry "artist - title" or "title - artist" in the title, posted by a label or fan account
 fun recordingVariants(song: Song): List<Song> {
     val parts = song.title.split(" - ", " \u2013 ", limit = 2)
-    return if (parts.size == 2) listOf(song, song.copy(artist = parts[0], title = parts[1])) else listOf(song)
+    return if (parts.size == 2) listOf(song, song.copy(artist = parts[0], title = parts[1]), song.copy(artist = parts[1], title = parts[0]))
+        else listOf(song)
 }
 
 fun twinMatches(song: Song, candidate: Song): Boolean = recordingVariants(candidate).any { recordingMatches(song, it) || sameLength(song, it) }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Album
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -37,11 +38,14 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import com.aurora.music.R
 import com.aurora.music.ai.isDjSpeech
+import com.aurora.music.data.ImportSource
+import com.aurora.music.data.SongLink
 import com.aurora.music.data.SourceCopy
 import com.aurora.music.data.isPodcast
 import com.aurora.music.data.isRadio
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
+import com.aurora.music.ui.screens.library.sourceIcon
 import com.aurora.music.util.TrackMatch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -57,6 +61,9 @@ class SongSources(
     val rematch: (Song) -> Unit,
     val open: (kind: String, id: String) -> Unit,
     val manySources: () -> Boolean,
+    val linksSongs: () -> Boolean,
+    val links: suspend (Song) -> List<SongLink>,
+    val copyLink: (SongLink) -> Unit,
 )
 
 suspend fun SongSources.lookup(song: Song): List<SourceCopy> =
@@ -64,7 +71,7 @@ suspend fun SongSources.lookup(song: Song): List<SourceCopy> =
 
 val LocalSongSources = staticCompositionLocalOf<SongSources?> { null }
 
-enum class SongMenuPage { ROOT, SOURCE, ALBUM, ARTIST }
+enum class SongMenuPage { ROOT, SOURCE, ALBUM, ARTIST, LINK }
 
 fun songMenusFor(song: Song): Boolean = song.id.isNotBlank() && !song.isRadio() && !song.isPodcast() && !song.isDjSpeech() &&
     !song.id.startsWith("aurora-mix:")
@@ -82,7 +89,12 @@ internal fun SongSourcesMenu(song: Song, sources: SongSources, start: SongMenuPa
     var page by remember(song.id) { mutableStateOf(start) }
     var looked by remember(song.id) { mutableStateOf<List<SourceCopy>?>(null) }
     var release by remember(song.id) { mutableStateOf<String?>(null) }
-    if (!here) LaunchedEffect(song.id) { looked = sources.lookup(song) }
+    var links by remember(song.id) { mutableStateOf<List<SongLink>?>(null) }
+    if (start == SongMenuPage.LINK) LaunchedEffect(song.id) {
+        val found = try { sources.links(song) } catch (e: CancellationException) { throw e } catch (_: Exception) { emptyList() }
+        links = found
+        found.singleOrNull()?.let { sources.copyLink(it); onDismiss() }
+    } else if (!here) LaunchedEffect(song.id) { looked = sources.lookup(song) }
     val copies = if (here) found else looked
     if (start == SongMenuPage.ROOT && song.albumId.isNotBlank()) LaunchedEffect(song.albumId) {
         release = try { sources.releaseType(song) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
@@ -99,12 +111,15 @@ internal fun SongSourcesMenu(song: Song, sources: SongSources, start: SongMenuPa
         modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
 
     @Composable
+    fun loading() = Box(Modifier.padding(16.dp).size(width = 160.dp, height = 24.dp), contentAlignment = Alignment.Center) {
+        CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+    }
+
+    @Composable
     fun choices(keep: (SourceCopy) -> Boolean, row: @Composable (SourceCopy) -> Unit) {
         val list = copies
         when {
-            list == null -> Box(Modifier.padding(16.dp).size(width = 160.dp, height = 24.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
-            }
+            list == null -> loading()
             list.none(keep) -> header(appString(R.string.like_no_match))
             else -> list.filter(keep).forEach { row(it) }
         }
@@ -173,6 +188,21 @@ internal fun SongSourcesMenu(song: Song, sources: SongSources, start: SongMenuPa
                 }
                 if (here && copies?.count { it.opens(page) } == 1) header(appString(R.string.like_no_match))
             }
+            SongMenuPage.LINK -> {
+                header(appString(R.string.song_menu_copy_link_from))
+                val list = links
+                when {
+                    list == null -> loading()
+                    list.isEmpty() -> header(appString(R.string.like_no_match))
+                    else -> list.forEach { link ->
+                        DropdownMenuItem(
+                            text = { Text(link.label) },
+                            leadingIcon = { Icon(sourceIcon(ImportSource.of(link.type)), null) },
+                            onClick = { sources.copyLink(link); onDismiss() },
+                        )
+                    }
+                }
+            }
         }
     }
 }
@@ -213,4 +243,21 @@ fun SourcesTitle(anchors: List<Song>, album: Boolean, title: @Composable (Modifi
             })
         if (open) SongSourcesMenu(anchor, sources, page, found, here = true) { open = false }
     }
+}
+
+@Composable
+fun CopyLinkMenuItem(song: Song, onClick: () -> Unit) {
+    if (LocalSongSources.current?.takeIf { songMenusFor(song) && it.linksSongs() } == null) return
+    DropdownMenuItem(
+        text = { Text(appString(R.string.song_menu_copy_link)) },
+        onClick = onClick,
+        leadingIcon = { Icon(Icons.Filled.Link, null) },
+    )
+}
+
+// the song's page on each merged catalogue that has it, shown in place of the menu it was picked from
+@Composable
+fun CopyLinkMenu(song: Song, onDismiss: () -> Unit) {
+    val sources = LocalSongSources.current ?: return
+    SongSourcesMenu(song, sources, SongMenuPage.LINK, onDismiss = onDismiss)
 }

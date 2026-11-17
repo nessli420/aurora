@@ -8,6 +8,9 @@
     <string name="song_menu_play_from">"Putar dari"</string>
     <string name="song_menu_open_in">"Buka di"</string>
     <string name="song_menu_open_elsewhere">"Buka dari sumber lain"</string>
+    <string name="song_menu_copy_link">"Salin tautan"</string>
+    <string name="song_menu_copy_link_from">"Salin tautan dari"</string>
+    <string name="song_link_copied">"Tautan %1$s disalin"</string>
     <string name="song_menu_rematch">"Lagu salah? Pilih yang lain"</string>
     <string name="match_hint_source">"Pilih lagu yang diputar sebagai ganti “%1$s”."</string>
     <string name="match_search_source">"Cari lagu yang benar"</string>

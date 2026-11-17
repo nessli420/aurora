@@ -8,6 +8,9 @@
     <string name="song_menu_play_from">"التشغيل من"</string>
     <string name="song_menu_open_in">"الفتح في"</string>
     <string name="song_menu_open_elsewhere">"الفتح من مصدر آخر"</string>
+    <string name="song_menu_copy_link">"نسخ الرابط"</string>
+    <string name="song_menu_copy_link_from">"نسخ الرابط من"</string>
+    <string name="song_link_copied">"تم نسخ رابط %1$s"</string>
     <string name="song_menu_rematch">"أغنية خاطئة؟ اختر أخرى"</string>
     <string name="match_hint_source">"اختر الأغنية التي ستُشغَّل بدلًا من “%1$s”."</string>
     <string name="match_search_source">"ابحث عن الأغنية الصحيحة"</string>

@@ -339,6 +339,10 @@ class AppleMusicBackend(
     }
 
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean): String = songs[songId]?.streamUrl ?: "aurora-yt://am$songId"
+
+    override val linksSongs: Boolean get() = true
+    // a library-only upload has no catalogue page
+    override suspend fun songLink(song: Song): String? = song.id.takeIf { it.matches(CATALOG_ID) }?.let { "https://music.apple.com/${api.storefront()}/song/$it" }
     override fun coverArtUrl(id: String, size: Int): String = songs[id]?.artworkUrl.orEmpty()
 
     companion object {

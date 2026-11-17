@@ -8,6 +8,9 @@
     <string name="song_menu_play_from">"从以下来源播放"</string>
     <string name="song_menu_open_in">"在以下来源中打开"</string>
     <string name="song_menu_open_elsewhere">"从其他来源打开"</string>
+    <string name="song_menu_copy_link">"复制链接"</string>
+    <string name="song_menu_copy_link_from">"从以下来源复制链接"</string>
+    <string name="song_link_copied">"已复制 %1$s 链接"</string>
     <string name="song_menu_rematch">"歌曲不对？选择其他歌曲"</string>
     <string name="match_hint_source">"选择要代替“%1$s”播放的歌曲。"</string>
     <string name="match_search_source">"搜索正确的歌曲"</string>

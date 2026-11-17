@@ -8,6 +8,9 @@
     <string name="song_menu_play_from">"Воспроизвести из"</string>
     <string name="song_menu_open_in">"Открыть в"</string>
     <string name="song_menu_open_elsewhere">"Открыть из другого источника"</string>
+    <string name="song_menu_copy_link">"Копировать ссылку"</string>
+    <string name="song_menu_copy_link_from">"Копировать ссылку из"</string>
+    <string name="song_link_copied">"Ссылка %1$s скопирована"</string>
     <string name="song_menu_rematch">"Не тот трек? Выбрать другой"</string>
     <string name="match_hint_source">"Выберите трек, который будет играть вместо «%1$s»."</string>
     <string name="match_search_source">"Найти нужный трек"</string>

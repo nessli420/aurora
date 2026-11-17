@@ -252,6 +252,9 @@ class YouTubeMusicBackend(
     override suspend fun reportPlayback(report: PlaybackReport) { if (signedIn) playbackTracker.report(report) }
     override suspend fun serverLyrics(song: Song): Lyrics? = null
     override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean) = YouTubeMusicParser.sentinel(songId)
+
+    override val linksSongs: Boolean get() = true
+    override suspend fun songLink(song: Song): String? = song.id.takeIf { it.matches(VIDEO_ID) }?.let { "https://music.youtube.com/watch?v=$it" }
     override fun coverArtUrl(id: String, size: Int) = songs[id]?.artworkUrl.orEmpty()
 
     companion object {

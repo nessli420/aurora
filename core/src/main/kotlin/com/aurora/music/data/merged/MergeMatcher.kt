@@ -3,6 +3,7 @@ package com.aurora.music.data.merged
 import com.aurora.music.data.CatalogueMatchPrefs
 import com.aurora.music.data.HomeData
 import com.aurora.music.data.HomeFeedSection
+import com.aurora.music.data.MediaBackend
 import com.aurora.music.data.PlaybackSourceIdentity
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.SourceCopy
@@ -12,8 +13,10 @@ import com.aurora.music.data.sourceLabels
 import com.aurora.music.data.twinMatches
 import com.aurora.music.data.merged.SourceRouter.Companion.DOWN_MS
 import com.aurora.music.data.merged.SourceRouter.Companion.SEP
+import com.aurora.music.data.recordingKey
 import com.aurora.music.data.recordingMatches
 import com.aurora.music.data.recordingTitle
+import com.aurora.music.data.recordingVariants
 import com.aurora.music.data.sameLength
 import com.aurora.music.data.withPlaybackFrom
 import com.aurora.music.model.Album
@@ -84,25 +87,37 @@ internal class MergeMatcher(
     }
 
     // the song itself on its own source and the closest twin on each other one; a source too slow to answer is left out
-    suspend fun copies(song: Song): List<SourceCopy> = coroutineScope {
+    suspend fun copies(song: Song, playing: Song = song, asked: (MediaBackend) -> Boolean = { true }): List<SourceCopy> = coroutineScope {
         val owner = router.unwrap(song.id)?.first ?: -1
+        val current = router.unwrap(playing.id)?.first ?: owner
         val labels = sourceLabels(router.sources)
-        val playing = song.playbackSource?.providerId
+        val heard = playing.playbackSource?.providerId
         router.sources.mapIndexed { i, source ->
             async {
-                val copy = if (i == owner) song else if (router.isDown(i)) null else attempt(null) {
-                    withTimeoutOrNull(COPY_TIMEOUT_MS) {
-                        val found = if (router.isCatalogue(source)) source.search("${recordingTitle(song.title)} ${song.artist}".trim()).songs
-                            else source.matchingSongs(song)
-                        found.filter { twinMatches(song, it) }.minByOrNull { kotlin.math.abs(it.durationSec - song.durationSec) }
-                    }
+                val copy = if (!asked(source)) null else if (i == current) playing else if (i == owner) song else if (router.isDown(i)) null else attempt(null) {
+                    withTimeoutOrNull(COPY_TIMEOUT_MS) { twinOn(source, song) }
                 }?.let { router.wrap(it, i) }
                 copy?.let {
                     val provider = PlaybackSourceIdentity.fromSession(source.session, "").providerId
-                    SourceCopy(labels[i], it, if (playing != null) playing == provider else i == owner)
+                    SourceCopy(labels[i], it, if (heard != null) heard == provider else i == current)
                 }
             }
         }.awaitAll().filterNotNull()
+    }
+
+    // a playing upload may carry the artist in its title, so every reading of it is looked up and matched
+    private suspend fun twinOn(source: MediaBackend, song: Song): Song? = coroutineScope {
+        val readings = recordingVariants(song)
+        readings.distinctBy { recordingKey(it.title) + "\u0000" + it.artist.lowercase() }.map { reading ->
+            async {
+                attempt(emptyList()) {
+                    if (router.isCatalogue(source)) source.search("${recordingTitle(reading.title)} ${reading.artist}".trim()).songs
+                    else source.matchingSongs(reading)
+                }
+            }
+        }.awaitAll().flatten().distinctBy { it.id }
+            .filter { candidate -> readings.any { twinMatches(it, candidate) } }
+            .minByOrNull { kotlin.math.abs(it.durationSec - song.durationSec) }
     }
 
     fun dedupAlbums(all: List<Album>): List<Album> =

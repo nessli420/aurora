@@ -8,6 +8,9 @@
     <string name="song_menu_play_from">"یہاں سے چلائیں"</string>
     <string name="song_menu_open_in">"یہاں کھولیں"</string>
     <string name="song_menu_open_elsewhere">"دوسرے ماخذ سے کھولیں"</string>
+    <string name="song_menu_copy_link">"لنک کاپی کریں"</string>
+    <string name="song_menu_copy_link_from">"یہاں سے لنک کاپی کریں"</string>
+    <string name="song_link_copied">"%1$s لنک کاپی ہو گیا"</string>
     <string name="song_menu_rematch">"غلط گانا؟ دوسرا چنیں"</string>
     <string name="match_hint_source">"“%1$s” کی جگہ چلنے والا گانا چنیں۔"</string>
     <string name="match_search_source">"درست گانا تلاش کریں"</string>
