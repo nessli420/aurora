@@ -110,6 +110,9 @@ class LocalLibrary(
         return LocalRescan.result(before, songKeys())
     }
 
+    // a newly chosen folder, often on an sd card, may not be in the system's media index yet
+    suspend fun index(folders: Collection<String>) = requestMediaScan(LocalRescan.roots(folders), SCAN_TIMEOUT_MS)
+
     // change notifications only rebuild when the indexed rows really changed the media scanner stays manual
     suspend fun syncWithMediaStore(): Boolean {
         val current = withContext(Dispatchers.IO) { mediaSignature() }

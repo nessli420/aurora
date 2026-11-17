@@ -545,7 +545,13 @@ class AppContainer(context: Context) {
             }
         }
         scope.launch {
-            kotlinx.coroutines.flow.combine(settingsStore.localFolders, settingsStore.localExcludedFolders, ::Pair).drop(1).collect {
+            var known: Set<String>? = null
+            kotlinx.coroutines.flow.combine(settingsStore.localFolders, settingsStore.localExcludedFolders, ::Pair).collect { (folders, _) ->
+                val added = known?.let { folders - it }.orEmpty()
+                val first = known == null
+                known = folders
+                if (first) return@collect
+                if (added.isNotEmpty()) runCatching { localLibrary.index(added) }
                 if (localLibrary.inUse && runCatching { localLibrary.refresh() }.getOrDefault(false)) sessions.reloadLibrary()
             }
         }
