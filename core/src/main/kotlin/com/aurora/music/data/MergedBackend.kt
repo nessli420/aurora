@@ -208,6 +208,7 @@ class MergedBackend(
     }
 
     override val supportsServerTagEdit: Boolean get() = sources.any { it.supportsServerTagEdit }
+    override suspend fun canMirrorPlays(): Boolean = sources.any { it.canMirrorPlays() }
     override suspend fun readMetadata(songId: String): AudioTags? = router.route(songId) { src, _, oid -> src.readMetadata(oid) }
     override suspend fun updateMetadata(songId: String, tags: AudioTags): Boolean =
         router.route(songId) { src, _, oid -> src.updateMetadata(oid, tags) } ?: false

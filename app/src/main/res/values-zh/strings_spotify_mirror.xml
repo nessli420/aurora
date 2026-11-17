@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"将播放同步到 Spotify"</string>
+    <string name="mirror_spotify_detail">"同时在 Spotify 网页播放器中静音播放每首 Spotify 歌曲，让它出现在最近播放、推荐和 Wrapped 中。仅限 Premium：免费账户会播放没人听的广告。Spotify 同一时间只在一台设备上播放，因此会接管你其他设备上的 Spotify，并大约再消耗同样多的流量。"</string>
+</resources>

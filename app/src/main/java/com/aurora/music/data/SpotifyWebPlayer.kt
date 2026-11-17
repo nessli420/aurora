@@ -6,6 +6,8 @@ import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
 import android.webkit.CookieManager
+import android.webkit.PermissionRequest
+import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
 import android.webkit.WebViewClient
@@ -159,7 +161,7 @@ object SpotifyWebPlayer {
               function (e) { post({ type: 'result', id: id, status: 0, body: String(e && e.message || e), hash: '' }); });
           };
           state.spclient = function (id, path, body) {
-            if (!/^\/(playlist\/v2\/|color-lyrics\/v2\/track\/)/.test(path) || path.indexOf('..') >= 0) { post({ type: 'result', id: id, status: -1, body: '', hash: '' }); return; }
+            if (!/^\/(playlist\/v2\/|color-lyrics\/v2\/track\/|melody\/v1\/product_state\?)/.test(path) || path.indexOf('..') >= 0) { post({ type: 'result', id: id, status: -1, body: '', hash: '' }); return; }
             var headers = Object.assign({ accept: 'application/json' }, state.headers);
             if (!headers['spotify-app-version']) {
               try { headers['spotify-app-version'] = JSON.parse(atob(document.getElementById('appServerConfig').textContent.trim())).clientVersion || ''; } catch (e) {}
@@ -174,6 +176,55 @@ object SpotifyWebPlayer {
               body: body ? JSON.stringify(body) : undefined
             }).then(function (r) { return r.text().then(function (t) { post({ type: 'result', id: id, status: r.status, body: t, hash: '' }); }); },
               function (e) { post({ type: 'result', id: id, status: 0, body: String(e && e.message || e), hash: '' }); });
+          };
+        })();
+    """.trimIndent()
+
+    // drives the track page's own play button; android's webview has no media session to call instead
+    internal val MIRROR_SCRIPT = """
+        (function () {
+          if (window.__auroraMirror) return;
+          var proto = HTMLMediaElement.prototype;
+          var muted = Object.getOwnPropertyDescriptor(proto, 'muted');
+          var nativePlay = proto.play;
+          var media = null;
+          // muted media never takes android's audio focus from aurora, while even a silent volume does
+          Object.defineProperty(proto, 'muted', { configurable: true, get: function () { return muted.get.call(this); }, set: function () { muted.set.call(this, true); } });
+          proto.play = function () {
+            muted.set.call(this, true);
+            if (String(this.currentSrc || this.src).indexOf('blob:') === 0) media = this;
+            return nativePlay.apply(this, arguments);
+          };
+          function button() { return document.querySelector('[data-testid="track-view"] [data-testid="entity-play-button"] [data-testid="play-button"]'); }
+          function toggle(play) { var b = button(); if (b && media && media.paused === play) b.click(); }
+          // the progress bar's range input in milliseconds; web player tokens get 429 from the web api's seek
+          function seekTo(positionMs) {
+            var input = document.querySelector('[data-testid="playback-progressbar"] input[type="range"]');
+            if (!input || !media || media.paused) return;
+            var setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+            setter.call(input, String(Math.min(Math.round(positionMs), Number(input.max) || positionMs)));
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          var timer = null;
+          function start(positionMs) {
+            clearInterval(timer);
+            var tries = 0;
+            timer = setInterval(function () {
+              var b = button();
+              if (!b && ++tries < 40) return;
+              clearInterval(timer);
+              timer = null;
+              if (!b) return;
+              b.click();
+              if (positionMs > 5000) setTimeout(function () { seekTo(positionMs); }, 3000);
+            }, 500);
+          }
+          window.__auroraMirror = {
+            start: start,
+            pause: function () { clearInterval(timer); timer = null; toggle(false); },
+            resume: function () { if (media) toggle(true); else start(0); },
+            seek: seekTo
           };
         })();
     """.trimIndent()
@@ -329,7 +380,7 @@ class SpotifyPage(val view: WebView, private val operations: SpotifyOperations) 
     private companion object {
         const val READY_TIMEOUT_MS = 30_000L
         const val QUERY_TIMEOUT_MS = 30_000L
-        val SPCLIENT_PATH = Regex("^/(playlist/v2/|color-lyrics/v2/track/)")
+        val SPCLIENT_PATH = Regex("^/(playlist/v2/|color-lyrics/v2/track/|melody/v1/product_state\\?)")
     }
 }
 
@@ -343,7 +394,8 @@ class SpotifyWebBridge(context: Context) {
     private var pageCookie = ""
     @Volatile private var failedAt = 0L
     private val inFlight = AtomicInteger()
-    private val idle = Runnable { if (inFlight.get() == 0) reset() else scheduleIdle() }
+    private val idle = Runnable { if (inFlight.get() == 0) closePage() else scheduleIdle() }
+    private val mirror by lazy { SpotifyMirrorPlayer(this.context) }
 
     fun account(cookie: () -> String): SpotifyGraphql = object : SpotifyGraphql {
         override suspend fun query(operation: String, variables: JsonObject): JsonObject =
@@ -351,6 +403,13 @@ class SpotifyWebBridge(context: Context) {
 
         override suspend fun spclient(path: String, body: JsonObject?): JsonObject =
             run(withContext(Dispatchers.IO) { cookie() }) { it.spclient(path, body) }
+
+        override val canMirror: Boolean get() = SpotifyWebPlayer.supported
+
+        override suspend fun mirror(command: SpotifyMirrorCommand) {
+            val value = withContext(Dispatchers.IO) { cookie() }
+            if (value.isNotBlank()) main.post { mirror.follow(value, command) }
+        }
     }
 
     // spotify rate limits bursts such as a whole liked library; a short back-off keeps pages from going missing
@@ -450,6 +509,11 @@ class SpotifyWebBridge(context: Context) {
 
     // main thread; next query starts a fresh page
     fun reset() {
+        closePage()
+        mirror.close()
+    }
+
+    private fun closePage() {
         main.removeCallbacks(idle)
         page?.let(::close)
         failedAt = 0L
@@ -462,5 +526,83 @@ class SpotifyWebBridge(context: Context) {
         const val IDLE_MS = 3 * 60_000L
         const val RATE_RETRIES = 3
         const val RATE_BACKOFF_MS = 2_000L
+    }
+}
+
+// a second hidden page that only plays, muted; the query page pauses when idle and a paused page pauses its media
+class SpotifyMirrorPlayer(private val context: Context) {
+    private val main = Handler(Looper.getMainLooper())
+    private var view: WebView? = null
+    private var viewCookie = ""
+    private var startAt: Long? = null
+    private val idle = Runnable(::close)
+
+    // main thread
+    fun follow(cookie: String, command: SpotifyMirrorCommand) {
+        main.removeCallbacks(idle)
+        when (command) {
+            is SpotifyMirrorCommand.Play -> {
+                startAt = command.positionMs
+                val url = "${SpotifyWebPlayer.ORIGIN}/track/${command.trackId}"
+                view?.takeIf { viewCookie == cookie }?.loadUrl(url) ?: open(cookie, url)
+            }
+            SpotifyMirrorCommand.Resume -> run("resume()")
+            is SpotifyMirrorCommand.Seek -> run("seek(${command.positionMs})")
+            SpotifyMirrorCommand.Pause, SpotifyMirrorCommand.Stop -> {
+                startAt = null
+                run("pause()")
+                main.postDelayed(idle, IDLE_MS)
+            }
+        }
+    }
+
+    private fun run(call: String) {
+        view?.evaluateJavascript("window.__auroraMirror && window.__auroraMirror.$call", null)
+    }
+
+    private fun open(cookie: String, url: String) {
+        close()
+        if (!SpotifyWebPlayer.supported) return
+        val page = WebView(context)
+        val metrics = context.resources.displayMetrics
+        page.layout(0, 0, metrics.widthPixels, metrics.heightPixels)
+        SpotifyWebPlayer.configure(page)
+        page.settings.mediaPlaybackRequiresUserGesture = false
+        page.webChromeClient = object : WebChromeClient() {
+            // spotify's audio is widevine protected, which a webview only plays once granted
+            override fun onPermissionRequest(request: PermissionRequest) {
+                if (request.origin.host == HOST && PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID in request.resources) {
+                    request.grant(arrayOf(PermissionRequest.RESOURCE_PROTECTED_MEDIA_ID))
+                } else request.deny()
+            }
+        }
+        page.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(view: WebView, request: WebResourceRequest): Boolean = request.url.scheme != "https"
+            override fun onPageFinished(view: WebView, url: String?) {
+                val at = startAt?.takeIf { url.orEmpty().contains("/track/") } ?: return
+                startAt = null
+                view.evaluateJavascript("window.__auroraMirror && window.__auroraMirror.start($at)", null)
+            }
+        }
+        WebViewCompat.addDocumentStartJavaScript(page, SpotifyWebPlayer.MIRROR_SCRIPT, setOf(SpotifyWebPlayer.ORIGIN))
+        view = page
+        viewCookie = cookie
+        CookieManager.getInstance().setCookie(SpotifyWebPlayer.ORIGIN, "sp_dc=$cookie; Domain=.spotify.com; Path=/; Secure; HttpOnly") {
+            if (view === page) page.loadUrl(url)
+        }
+    }
+
+    // main thread
+    fun close() {
+        main.removeCallbacks(idle)
+        startAt = null
+        view?.let { it.stopLoading(); it.destroy() }
+        view = null
+        viewCookie = ""
+    }
+
+    private companion object {
+        const val HOST = "open.spotify.com"
+        const val IDLE_MS = 2 * 60_000L
     }
 }

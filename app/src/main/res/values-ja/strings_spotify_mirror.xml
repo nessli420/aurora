@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"再生を Spotify にミラー"</string>
+    <string name="mirror_spotify_detail">"Spotify の曲を Spotify のウェブプレーヤーでもミュート再生し、最近再生した項目、おすすめ、Wrapped に反映させます。Premium 限定です。無料アカウントでは誰も聞かない広告が再生されてしまいます。Spotify は一度に 1 台でしか再生できないため、他のデバイスで再生中の Spotify はこちらに切り替わり、データ通信量もほぼ同じだけ増えます。"</string>
+</resources>

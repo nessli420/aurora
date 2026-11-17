@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Rispecchia gli ascolti su Spotify"</string>
+    <string name="mirror_spotify_detail">"Riproduce anche ogni brano Spotify senza audio nel web player di Spotify, così compare in Ascoltati di recente, nei tuoi consigli e in Wrapped. Solo Premium: un account gratuito riprodurrebbe pubblicità che nessuno ascolta. Spotify riproduce su un dispositivo alla volta, quindi prende il posto di Spotify sugli altri tuoi dispositivi e usa all'incirca altrettanti dati."</string>
+</resources>

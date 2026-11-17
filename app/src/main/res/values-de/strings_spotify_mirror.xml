@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Wiedergaben an Spotify spiegeln"</string>
+    <string name="mirror_spotify_detail">"Spielt jeden Spotify-Song zusätzlich stumm im Webplayer von Spotify ab, damit er unter „Kürzlich gehört“, in deinen Empfehlungen und in Wrapped erscheint. Nur mit Premium: Ein kostenloses Konto würde Werbung abspielen, die niemand hört. Spotify spielt immer nur auf einem Gerät, daher übernimmt dies die Wiedergabe von deinen anderen Geräten, und es verbraucht noch einmal etwa so viele Daten."</string>
+</resources>

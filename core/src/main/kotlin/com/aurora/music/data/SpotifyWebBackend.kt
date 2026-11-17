@@ -36,8 +36,11 @@ data class SpotifyWebProfile(val userId: String, val name: String, val imageUrl:
 class SpotifyWebBackend(
     override val session: Session,
     private val gql: SpotifyGraphql,
+    private val mirrorPlays: () -> Boolean = { false },
     private val localize: (Song) -> Song,
 ) : MediaBackend {
+    private val mirror = SpotifyMirrorFollower()
+    @Volatile private var premium: Boolean? = null
 
     private data class AlbumRef(val id: String, val name: String, val art: String)
     private class Page(val songs: List<Song>, val consumed: Int, val total: Int)
@@ -239,6 +242,23 @@ class SpotifyWebBackend(
     }
 
     override suspend fun scrobble(id: String) {}
+
+    override suspend fun reportPlayback(report: PlaybackReport) {
+        if (!report.song.id.matches(TRACK_ID)) return
+        // a cold web player can't answer within the report's time limit; that song just goes unmirrored
+        val enabled = mirrorPlays() && withTimeoutOrNull(4_000) { canMirrorPlays() } == true
+        mirror.follow(report, System.nanoTime() / 1_000_000, enabled).forEach { gql.mirror(it) }
+    }
+
+    // premium only: a free account's web player would play ads that nobody hears
+    override suspend fun canMirrorPlays(): Boolean {
+        if (!gql.canMirror) return false
+        premium?.let { return it }
+        return runCatching {
+            val state = gql.spclient(PRODUCT_STATE)
+            listOf("catalogue", "product").any { state.string(it) == "premium" }
+        }.onFailure { AppLog.d(TAG, "product state failed: ${it.message}") }.getOrNull()?.also { premium = it } ?: false
+    }
 
     override suspend fun radio(seedId: String): List<Song> = runCatching {
         q("internalLinkRecommenderTrack", "uri" to TRACK + seedId, "limit" to RADIO_SIZE)
@@ -543,6 +563,7 @@ class SpotifyWebBackend(
         private const val ARTIST = "spotify:artist:"
         private const val PLAYLIST = "spotify:playlist:"
         private val TRACK_ID = Regex("[A-Za-z0-9]{22}")
+        private const val PRODUCT_STATE = "/melody/v1/product_state?market=from_token"
         private const val LIBRARY_PAGE = 200
         private const val LIBRARY_CAP = 5000
         private const val TRACK_PAGE = 100

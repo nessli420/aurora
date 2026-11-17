@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Refléter les écoutes sur Spotify"</string>
+    <string name="mirror_spotify_detail">"Lit aussi chaque titre Spotify en sourdine dans le lecteur web de Spotify, pour qu'il apparaisse dans Écoutés récemment, vos recommandations et Wrapped. Premium uniquement : un compte gratuit diffuserait des pubs que personne n'entend. Spotify ne lit que sur un appareil à la fois, donc cela prend le relais de Spotify sur vos autres appareils, et consomme à peu près autant de données en plus."</string>
+</resources>

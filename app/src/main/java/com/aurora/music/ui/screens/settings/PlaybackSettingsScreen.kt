@@ -17,12 +17,14 @@ import androidx.compose.material.icons.filled.Podcasts
 import androidx.compose.material.icons.filled.DataSaverOn
 import androidx.compose.material.icons.filled.Devices
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Tune
 import androidx.compose.material.icons.filled.VolumeUp
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
@@ -51,6 +53,7 @@ fun PlaybackSettingsScreen(
     val isLocal = container.isLocal
     val prefs by store.playbackPrefs.collectAsStateWithLifecycle(initialValue = PlaybackPrefs())
     val dataSaver by store.dataSaver.collectAsStateWithLifecycle(initialValue = false)
+    val canMirror by produceState(false) { value = container.repository.canMirrorPlays() }
     val scope = rememberCoroutineScope()
 
     Column(Modifier.fillMaxWidth()) {
@@ -110,6 +113,11 @@ fun PlaybackSettingsScreen(
                     SettingsRowDivider()
                     SettingsSwitchRow(Icons.Filled.GraphicEq, appString(R.string.text_skip_silences_015ea3),
                         appString(if (directUsb) R.string.skip_silence_usb_hint else R.string.skip_silence_hint), prefs.skipSilence) { v -> scope.launch { store.setSkipSilence(v) } }
+                    if (canMirror) {
+                        SettingsRowDivider()
+                        SettingsSwitchRow(Icons.Filled.History, appString(R.string.mirror_spotify_title), appString(R.string.mirror_spotify_detail),
+                            prefs.mirrorSpotify) { v -> scope.launch { store.setMirrorSpotify(v) } }
+                    }
                 }
             }
 

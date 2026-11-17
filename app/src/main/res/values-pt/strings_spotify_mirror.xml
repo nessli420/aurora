@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Espelhar reproduções no Spotify"</string>
+    <string name="mirror_spotify_detail">"Também toca cada música do Spotify sem som no player web do Spotify, para que ela apareça em Tocadas recentemente, nas suas recomendações e no Wrapped. Só Premium: uma conta gratuita tocaria anúncios que ninguém ouve. O Spotify toca em um dispositivo por vez, então isso assume o Spotify nos seus outros dispositivos e usa mais ou menos a mesma quantidade de dados de novo."</string>
+</resources>

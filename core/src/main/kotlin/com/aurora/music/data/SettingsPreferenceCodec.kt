@@ -120,6 +120,7 @@ internal fun readPlaybackPrefs(p: Preferences): PlaybackPrefs =
         preferHighRes = p[Keys.PREFER_HIRES] ?: false,
         scrobble = p[Keys.SCROBBLE] ?: true,
         autoplayRadio = p[Keys.AUTOPLAY_RADIO] ?: true,
+        mirrorSpotify = p[Keys.MIRROR_SPOTIFY] ?: false,
         resumePodcasts = p[Keys.RESUME_PODCASTS] ?: true,
         resumeLongTracks = p[Keys.RESUME_LONG_TRACKS] ?: true,
         longFormSkipButtons = p[Keys.LONG_FORM_SKIP_BUTTONS] ?: true,

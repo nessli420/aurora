@@ -352,6 +352,8 @@ class MusicRepository(
 
     val supportsExplore: Boolean get() = !offline && backend?.supportsExplore == true
 
+    suspend fun canMirrorPlays(): Boolean = !offline && backend?.canMirrorPlays() == true
+
     suspend fun explore(): ExploreData = withContext(mapping) {
         val source = backend?.takeIf { !offline } ?: return@withContext ExploreData()
         val data = source.explore()

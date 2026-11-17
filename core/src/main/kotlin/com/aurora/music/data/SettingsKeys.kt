@@ -81,6 +81,7 @@ internal object SettingsKeys {
     val AI_DJ_SPOKEN = booleanPreferencesKey("ai_dj_spoken")
     val SCROBBLE = booleanPreferencesKey("scrobble")
     val AUTOPLAY_RADIO = booleanPreferencesKey("autoplay_radio")
+    val MIRROR_SPOTIFY = booleanPreferencesKey("mirror_spotify_plays")
     val RESUME_PODCASTS = booleanPreferencesKey("resume_podcasts")
     val RESUME_LONG_TRACKS = booleanPreferencesKey("resume_long_tracks")
     val LONG_FORM_SKIP_BUTTONS = booleanPreferencesKey("long_form_skip_buttons")

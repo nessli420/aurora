@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Odtwarzaj równolegle w Spotify"</string>
+    <string name="mirror_spotify_detail">"Odtwarza też każdy utwór ze Spotify bez dźwięku w odtwarzaczu internetowym Spotify, aby pojawił się w Ostatnio odtwarzanych, rekomendacjach i Wrapped. Tylko Premium: darmowe konto odtwarzałoby reklamy, których nikt nie słyszy. Spotify gra naraz tylko na jednym urządzeniu, więc przejmuje odtwarzanie z Twoich innych urządzeń i zużywa mniej więcej drugie tyle danych."</string>
+</resources>

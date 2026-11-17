@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Spotify पर प्ले मिरर करें"</string>
+    <string name="mirror_spotify_detail">"हर Spotify गाने को Spotify के वेब प्लेयर में म्यूट करके भी चलाता है, ताकि वह आपके हाल ही में चलाए गए, सुझावों और Wrapped में दिखे। सिर्फ़ Premium के लिए: फ़्री खाता ऐसे विज्ञापन चलाएगा जिन्हें कोई नहीं सुनता। Spotify एक समय में एक ही डिवाइस पर चलता है, इसलिए यह आपके दूसरे डिवाइस पर चल रहे Spotify की जगह ले लेता है, और लगभग उतना ही डेटा और खर्च करता है।"</string>
+</resources>

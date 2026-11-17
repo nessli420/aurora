@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Afspelen spiegelen naar Spotify"</string>
+    <string name="mirror_spotify_detail">"Speelt elk Spotify-nummer ook gedempt af in de webplayer van Spotify, zodat het verschijnt bij Recent afgespeeld, je aanbevelingen en Wrapped. Alleen Premium: een gratis account zou advertenties afspelen die niemand hoort. Spotify speelt op één apparaat tegelijk, dus dit neemt Spotify op je andere apparaten over, en het gebruikt ongeveer nog eens zoveel data."</string>
+</resources>

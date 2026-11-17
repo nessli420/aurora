@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Çalınanları Spotify'a yansıt"</string>
+    <string name="mirror_spotify_detail">"Her Spotify şarkısını Spotify'ın web oynatıcısında sessiz olarak da çalar; böylece şarkı Son çalınanlar, önerilerin ve Wrapped'te görünür. Yalnızca Premium: ücretsiz hesap kimsenin duymadığı reklamlar çalardı. Spotify aynı anda tek cihazda çalar, bu yüzden bu, diğer cihazlarındaki Spotify'ı devralır ve yaklaşık bir o kadar daha veri kullanır."</string>
+</resources>

@@ -54,6 +54,7 @@ class AppContainer(context: Context) {
     val playbackReportingAllowed = kotlinx.coroutines.flow.combine(settingsStore.playbackPrefs, settingsStore.privateSession) { prefs, private ->
         prefs.scrobble && !private
     }.stateIn(scope, SharingStarted.Eagerly, false)
+    private val mirrorSpotify = settingsStore.playbackPrefs.map { it.mirrorSpotify }.stateIn(scope, SharingStarted.Eagerly, false)
     val playbackReports = PlaybackReportDispatcher(scope, allowed = { playbackReportingAllowed.value }) {
         _sourceErrors.tryEmit(appContext.getString(com.aurora.music.R.string.playback_history_sync_failed))
     }
@@ -271,7 +272,7 @@ class AppContainer(context: Context) {
         spotifyWeb = { cookie -> spotifyWeb.account(cookie) }, spotifyLogin = { spotifyCredentials.read(it) },
         soundcloudLogin = { soundcloudCredentials.read(it) }, saveSoundcloudLogin = { token, login -> soundcloudCredentials.update(token, login) },
         soundcloudBrowser = { soundcloudWriter }, appleMusicLogin = { appleMusicCredentials.read(it) }, reportError = { session, message -> if (sessions.isActive(session)) _sourceErrors.tryEmit(message) },
-        platformBackend = ::platformBackend)
+        mirrorSpotify = { mirrorSpotify.value }, platformBackend = ::platformBackend)
 
     private fun platformBackend(session: Session, localize: (Song) -> Song): MediaBackend? = when (session.type) {
         ServerType.SPOTIFY -> SpotifyBackend(

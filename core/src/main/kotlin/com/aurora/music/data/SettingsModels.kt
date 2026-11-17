@@ -119,6 +119,7 @@ data class PlaybackPrefs(
     val preferHighRes: Boolean = false,
     val scrobble: Boolean = true,
     val autoplayRadio: Boolean = true,
+    val mirrorSpotify: Boolean = false,
     val resumePodcasts: Boolean = true,
     val resumeLongTracks: Boolean = true,
     val longFormSkipButtons: Boolean = true,

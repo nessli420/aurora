@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Cerminkan putaran ke Spotify"</string>
+    <string name="mirror_spotify_detail">"Juga memutar setiap lagu Spotify tanpa suara di pemutar web Spotify, agar muncul di Baru diputar, rekomendasi, dan Wrapped Anda. Khusus Premium: akun gratis akan memutar iklan yang tidak didengar siapa pun. Spotify hanya memutar di satu perangkat sekaligus, jadi ini mengambil alih Spotify di perangkat Anda yang lain, dan memakai data kira-kira sebanyak itu lagi."</string>
+</resources>

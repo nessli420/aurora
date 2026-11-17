@@ -9,6 +9,10 @@ interface SpotifyGraphql {
 
     // spotify's own service host for what the query api lacks (playlist edits, lyrics); posts when a body is given
     suspend fun spclient(path: String, body: JsonObject? = null): JsonObject
+
+    // real playback in a muted web player, so spotify records the plays aurora streams from youtube; only android has one
+    val canMirror: Boolean get() = false
+    suspend fun mirror(command: com.aurora.music.data.SpotifyMirrorCommand) {}
 }
 
 class SpotifyGraphqlException(message: String, val status: Int = 0) : Exception(message)

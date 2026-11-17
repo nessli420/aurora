@@ -47,6 +47,7 @@ interface PlaybackSettings {
     suspend fun setIndependentOutput(v: Boolean): Preferences
     suspend fun setScrobble(v: Boolean): Preferences
     suspend fun setAutoplayRadio(v: Boolean): Preferences
+    suspend fun setMirrorSpotify(v: Boolean): Preferences
     suspend fun setResumePodcasts(v: Boolean): Preferences
     suspend fun setResumeLongTracks(v: Boolean): Preferences
     suspend fun setLongFormSkipButtons(v: Boolean): Preferences
@@ -118,6 +119,7 @@ internal class PlaybackSettingsStore(private val dataStore: DataStore<Preference
     override suspend fun setIndependentOutput(v: Boolean) = editManualProcessing { it[Keys.INDEPENDENT_OUTPUT] = v }
     override suspend fun setScrobble(v: Boolean) = dataStore.edit { it[Keys.SCROBBLE] = v }
     override suspend fun setAutoplayRadio(v: Boolean) = dataStore.edit { it[Keys.AUTOPLAY_RADIO] = v }
+    override suspend fun setMirrorSpotify(v: Boolean) = dataStore.edit { it[Keys.MIRROR_SPOTIFY] = v }
     override suspend fun setResumePodcasts(v: Boolean) = dataStore.edit { it[Keys.RESUME_PODCASTS] = v }
     override suspend fun setResumeLongTracks(v: Boolean) = dataStore.edit { it[Keys.RESUME_LONG_TRACKS] = v }
     override suspend fun setLongFormSkipButtons(v: Boolean) = dataStore.edit { it[Keys.LONG_FORM_SKIP_BUTTONS] = v }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"نسخ التشغيل إلى Spotify"</string>
+    <string name="mirror_spotify_detail">"يشغّل أيضًا كل أغنية من Spotify بصوت مكتوم في مشغّل الويب الخاص بـ Spotify، فتظهر في ما شغّلته مؤخرًا والتوصيات وWrapped. لحسابات Premium فقط: الحساب المجاني سيشغّل إعلانات لا يسمعها أحد. يشغّل Spotify على جهاز واحد في كل مرة، لذا يتولى هذا التشغيل بدلًا من Spotify على أجهزتك الأخرى، ويستهلك تقريبًا القدر نفسه من البيانات مرة أخرى."</string>
+</resources>

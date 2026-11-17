@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Spotify에 재생 미러링"</string>
+    <string name="mirror_spotify_detail">"각 Spotify 곡을 Spotify 웹 플레이어에서도 음소거로 재생해 최근 재생, 추천, Wrapped에 표시되게 합니다. Premium 전용: 무료 계정에서는 아무도 듣지 않는 광고가 재생됩니다. Spotify는 한 번에 한 기기에서만 재생되므로 다른 기기의 Spotify 재생을 가져오며, 데이터도 거의 같은 양만큼 더 사용합니다."</string>
+</resources>

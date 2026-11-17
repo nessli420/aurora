@@ -91,6 +91,8 @@ interface MediaBackend {
         val original = song.copy(id = id.substringAfter(MERGE_NAMESPACE_SEP))
         return PlaybackReportTarget(original) { report -> reportPlayback(report.copy(song = original)) }
     }
+    // whether this account can also play its songs in the service's own player so the service records them
+    suspend fun canMirrorPlays(): Boolean = false
     suspend fun radio(seedId: String): List<Song>
     fun prefersServerRadio(seedId: String): Boolean = false
 

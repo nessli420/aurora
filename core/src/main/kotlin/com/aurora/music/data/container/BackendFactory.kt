@@ -57,6 +57,7 @@ class BackendFactory(
     private val appleMusicLogin: (String) -> String = { "" },
     private val reportError: (Session, String) -> Unit,
     private val eligible: (Session) -> Boolean = { true },
+    private val mirrorSpotify: () -> Boolean = { false },
     private val platformBackend: (Session, (Song) -> Song) -> MediaBackend? = { _, _ -> null },
 ) {
     // one client per login: soundcloud rotates the refresh token, so two clients refreshing it would sign each other out
@@ -84,7 +85,7 @@ class BackendFactory(
             ServerType.PLEX -> ReportingMediaBackend(PlexBackend(PlexClient(session, clientInfo), maxBitrate, localize)) { reportError(session, it) }
             ServerType.LOCAL -> LocalBackend(localLibrary, localStore, session)
             ServerType.SPOTIFY -> if (session.salt == SpotifyWebBackend.WEB_PLAYER)
-                SpotifyWebBackend(session, spotifyWeb { spotifyLogin(session.token) }, localize) else platformBackend(session, localize)
+                SpotifyWebBackend(session, spotifyWeb { spotifyLogin(session.token) }, mirrorSpotify, localize) else platformBackend(session, localize)
             ServerType.YOUTUBE_MUSIC -> ReportingMediaBackend(YouTubeMusicBackend(session,
                 YouTubeMusicClient(
                     session = { YouTubeMusicWebSession.decode(youtubeMusicLogin(session.token)) }.takeUnless { session.isGuest }, http = http()),

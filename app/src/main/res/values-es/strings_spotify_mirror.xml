@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="mirror_spotify_title">"Reflejar reproducciones en Spotify"</string>
+    <string name="mirror_spotify_detail">"Reproduce también cada canción de Spotify silenciada en el reproductor web de Spotify, para que aparezca en Escuchado recientemente, tus recomendaciones y Wrapped. Solo Premium: una cuenta gratuita reproduciría anuncios que nadie escucha. Spotify reproduce en un dispositivo a la vez, así que esto toma el control de Spotify en tus otros dispositivos, y usa aproximadamente los mismos datos otra vez."</string>
+</resources>
