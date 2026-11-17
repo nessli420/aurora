@@ -18,7 +18,7 @@
 
 ## What is Aurora?
 
-Aurora is a music player and a Navidrome, Subsonic, Jellyfin and Plex client in one app. It also plays the music on your device and streams from YouTube Music, SoundCloud and Green Music App, and it can merge all of them into a single library where each song plays from the best copy you have.
+Aurora is a music player and a Navidrome, Subsonic, Jellyfin and Plex client in one app. It also plays the music on your device and streams from YouTube Music, SoundCloud, Apple Music and Green Music App, and it can merge all of them into a single library where each song plays from the best copy you have.
 
 Under the library sits a 64-bit audio engine with parametric EQ, a 16-stage effects rack, measured headphone corrections and bit-perfect output to USB DACs. You can ignore all of that and just press play, or tune every stage. No Aurora account, no ads and no tracking.
 
@@ -31,7 +31,7 @@ Under the library sits a 64-bit audio engine with parametric EQ, a 16-stage effe
 | AI DJ and AI playlists that run entirely on your device | 5,057 measured headphone and 1,083 speaker corrections |
 | Downloads, offline mode, podcasts and internet radio | Bit-perfect USB DAC output up to 384 kHz, native DSD up to DSD1024 |
 | Recaps, a listening heatmap and statistics that stay on your device | Exclusive output on Windows (WASAPI) and Linux (ALSA) |
-| Tablet layouts, 4 interface styles and 17 languages | Signal Path shows exactly what happens to every sample |
+| Tablet layouts, 5 interface styles and 17 languages | Signal Path shows exactly what happens to every sample |
 
 ## Screenshots
 
@@ -102,24 +102,27 @@ Media keys work through MPRIS. Server passwords go in your keyring (GNOME Keyrin
 | --- | --- | --- |
 | Music on this device | Nothing, just the files | Yes |
 | Navidrome, Subsonic, OpenSubsonic | Server address, username and password | Yes |
-| Jellyfin | Server address, username and password | Yes |
+| Jellyfin | Server address, then a username and password or Quick Connect | Yes |
 | Plex | Server address and an [X-Plex-Token](https://support.plex.tv/articles/204059436-finding-an-authentication-token-x-plex-token/) | Yes |
 | YouTube Music | Nothing to browse and play; a Google account for likes and playlists | As its own view |
 | SoundCloud | Nothing to browse and play; a SoundCloud account for likes, comments and playlists | As its own view |
+| Apple Music | Nothing to browse and play; an Apple ID with a subscription for your library and synced lyrics | As its own view |
 | Green Music App | A free or paid account, signed in inside Aurora. No API key and no Premium. | As its own view |
 | Extensions (Android) | A compatible extension app; read-only libraries | No |
 
 Turn on **Merge all sources** in Settings, under Library & sources, to combine them. Duplicates fold into one song, and Aurora plays the best copy it can reach: a file on your device first, then a download, then a server stream. A streaming track you also own plays from your own copy. Likes, playlist edits and play history go back to the source each song came from. The [merge guide](https://auroraplayer.lol/features/#merge) on the website explains every step.
 
-YouTube Music, SoundCloud and Green Music App are unofficial integrations. Their streams are lossy, and a change on their side can break them until Aurora catches up.
+YouTube Music, SoundCloud, Apple Music and Green Music App are unofficial integrations. Their streams are lossy, and a change on their side can break them until Aurora catches up. Apple Music and Green Music App never send audio themselves: their songs play from your own copy or a matching YouTube recording.
+
+Hide a song or block an artist once and it's gone from every source: greyed out in lists, skipped in playback and taken out of the queue.
 
 ## Features
 
 The full, searchable list is on [auroraplayer.lol/features](https://auroraplayer.lol/features/). The highlights:
 
-**Library and playback.** Albums, artists, folders, playlists and smart playlists, with gapless playback, crossfade and an editable queue saved per account. Import playlists from other services or files, find duplicates, fix tags, and split single-file albums with `.cue` sheets. Podcasts and audiobooks resume where you left off.
+**Library and playback.** Albums, artists, folders, playlists and smart playlists, with gapless playback, crossfade and an editable queue saved per account. Autoplay keeps the music going with similar songs when the queue runs out, and a song can switch to another source's copy without losing its place. Import playlists from other services or files, find duplicates, fix tags, and split single-file albums with `.cue` sheets. Podcasts and audiobooks resume where you left off.
 
-**Lyrics.** Synced lyrics from your server, the file itself (embedded or `.lrc`) or LRCLIB, highlighted word by word. On Android, Follow vocals listens to the track and moves each word onto the singing, and lyrics can be translated on the device.
+**Lyrics.** Synced lyrics from your server, the file itself (embedded or `.lrc`), Apple Music, Green Music App or LRCLIB, highlighted word by word. With sources merged, a song can borrow lyrics from a service that has them. On Android, Follow vocals listens to the track and moves each word onto the singing, and lyrics can be translated on the device.
 
 **AI that stays on your device.** AI DJ builds sets from your listening history and talks between them. Ask for music by voice or text, or describe a playlist and let Aurora build it from real tracks in your library. The language model, speech recognition and natural voice are optional downloads, and nothing leaves the device.
 
@@ -129,7 +132,7 @@ The full, searchable list is on [auroraplayer.lol/features](https://auroraplayer
 
 **Listening history.** Daily to all-time recaps, a 7 × 24 listening heatmap, badges and shareable recap images, all kept on the device. Scrobble to Last.fm or ListenBrainz and show what's playing on Discord if you want to.
 
-**Make it yours.** Four interface styles (Aurora, Retro hi-fi, Aero and Liquid Glass), light, dark and black modes, accent colours or Material You, 31 visualizers, tablet layouts with side panels, and 17 languages including Arabic and Urdu.
+**Make it yours.** Five interface styles (Aurora, Paper, Retro hi-fi, Aero and Liquid Glass), light, dark and black modes, accent colours or Material You, 31 visualizers, tablet layouts with side panels, and 17 languages including Arabic and Urdu.
 
 A few things are Android only: Chromecast and DLNA, USB DAC output on the phone, Follow vocals, lyric translation, widgets, Music Haptics, Android Auto, alarms and extensions.
 
@@ -150,7 +153,7 @@ Yes, with a USB DAC on Android (Direct mode) and with exclusive output on Window
 <details>
 <summary>Do I need an account or an API key?</summary>
 
-No Aurora account exists. Local files need nothing, servers use your own login, and YouTube Music and SoundCloud play without signing in at all. Last.fm, ListenBrainz and AcoustID are optional and use your own keys.
+No Aurora account exists. Local files need nothing, servers use your own login, and YouTube Music, SoundCloud and Apple Music play without signing in at all. Likes you make as a guest stay on your device until you sign in. Last.fm, ListenBrainz and AcoustID are optional and use your own keys.
 </details>
 
 <details>
