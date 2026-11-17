@@ -26,7 +26,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import com.aurora.music.ui.theme.Button
+import androidx.compose.material.icons.filled.Insights
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
@@ -102,29 +110,27 @@ fun InsightsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onSetup: (
     Column(Modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
-            Text(appString(R.string.insights_screen_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).pointerHoverIcon(PointerIcon.Hand).padding(8.dp))
+            Text(appString(R.string.insights_screen_title), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         if (prefs == null) return@Column
         if (!enabled) {
-            Column(Modifier.padding(24.dp)) {
-                Text(appString(R.string.insights_off_body), style = MaterialTheme.typography.bodyMedium)
-                Button(onClick = onSetup, modifier = Modifier.padding(top = 16.dp)) { Text(appString(R.string.insights_set_up)) }
-            }
+            EmptyState(Icons.Filled.Insights, appString(R.string.insights_off_body), action = appString(R.string.insights_set_up), onAction = onSetup)
             return@Column
         }
         LazyColumn(contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             item { PeriodPicker(window) { window = it } }
             val current = data
             when {
-                current == null -> item { LinearProgressIndicator(Modifier.fillMaxWidth().padding(16.dp)) }
-                current.second.empty -> item { Text(appString(R.string.insights_empty_period), Modifier.padding(24.dp)) }
+                current == null -> item { LoadingState() }
+                current.second.empty -> item { EmptyState(Icons.Filled.Insights, appString(R.string.insights_empty_period)) }
                 else -> {
                     val (plays, report) = current
                     item { Overview(report) }
                     if (report.badges.isNotEmpty()) item { Badges(report.badges) }
                     if (onOpenMap != null && prefs?.locationHistory == true) item {
-                        com.aurora.music.ui.theme.OutlinedButton(onClick = onOpenMap, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp)) {
+                        com.aurora.music.ui.theme.OutlinedButton(onClick = onOpenMap, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp).pointerHoverIcon(PointerIcon.Hand)) {
                             Text(appString(R.string.insights_open_map))
                         }
                     }
@@ -142,7 +148,7 @@ fun InsightsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onSetup: (
                                 if (slice.genres.isNotEmpty()) Metric(appString(R.string.insights_genres), slice.genres.joinToString(" · ") { "${it.label} ${pct(it.fraction)}" })
                                 if (slice.zones.isNotEmpty()) Metric(appString(R.string.insights_places), slice.zones.joinToString(" · ") { "${zoneName(it.label)} ${pct(it.fraction)}" })
                                 if (slice.outputs.isNotEmpty()) Metric(appString(R.string.insights_outputs), slice.outputs.take(2).joinToString(" · ") { "${outputName(it.label)} ${pct(it.fraction)}" })
-                                TextButton(onClick = { selection = null }) { Text(appString(R.string.insights_clear_selection)) }
+                                TextButton(onClick = { selection = null }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.insights_clear_selection)) }
                             }
                         }
                     }
@@ -151,7 +157,8 @@ fun InsightsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onSetup: (
                             report.zones.forEach { z ->
                                 Column(Modifier.padding(vertical = 6.dp)) {
                                     Row(verticalAlignment = Alignment.CenterVertically) {
-                                        Text(zoneName(z.zone), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                        Text(zoneName(z.zone), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
+                                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                                         Text("${duration(z.minutes)} · ${pct(z.fraction)}", style = MaterialTheme.typography.labelLarge)
                                     }
                                     Text(listOfNotNull(z.topGenre, z.topArtist, z.peakHour?.let { appString(R.string.insights_around, hour(it)) }).joinToString(" · "),
@@ -194,17 +201,27 @@ fun InsightsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onSetup: (
 internal fun PeriodPicker(window: RecapWindow, onChange: (RecapWindow) -> Unit) {
     Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(12.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         RecapPeriod.entries.forEach { period ->
-            FilterChip(selected = window.period == period, onClick = { onChange(RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) LocalDate.now() else window.start)) },
-                label = { Text(period.label) })
+            StatChip(window.period == period, period.label) { onChange(RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) LocalDate.now() else window.start)) }
         }
     }
     Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-        TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { onChange(window.move(-1)) }) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
-        Text(window.label, Modifier.weight(1f), fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center)
-        TextButton(enabled = window.period != RecapPeriod.ALL && window.end <= LocalDate.now(), onClick = { onChange(window.move(1)) }) {
+        TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { onChange(window.move(-1)) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
+        Text(window.label, Modifier.weight(1f), fontWeight = FontWeight.Bold, textAlign = androidx.compose.ui.text.style.TextAlign.Center,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
+        TextButton(enabled = window.period != RecapPeriod.ALL && window.end <= LocalDate.now(), onClick = { onChange(window.move(1)) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
             Text("›", style = MaterialTheme.typography.headlineMedium)
         }
     }
+}
+
+// m3's own filter chip colours, eased between selected and not
+@Composable
+internal fun StatChip(selected: Boolean, label: String, onClick: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val fill by animateColorAsState(if (selected) colors.secondaryContainer else colors.secondaryContainer.copy(alpha = 0f), Motion.state(), label = "statChip")
+    val ink by animateColorAsState(if (selected) colors.onSecondaryContainer else colors.onSurfaceVariant, Motion.state(), label = "statChipLabel")
+    FilterChip(selected, onClick, label = { Text(label, maxLines = 1) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+        colors = FilterChipDefaults.filterChipColors(containerColor = fill, labelColor = ink, selectedContainerColor = fill, selectedLabelColor = ink))
 }
 
 @Composable
@@ -290,8 +307,8 @@ private fun Section(title: String, content: @Composable () -> Unit) {
 @Composable
 private fun Stat(value: String, label: String, modifier: Modifier) {
     Column(modifier.paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(14.dp)) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1)
-        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -308,7 +325,7 @@ private fun Bars(shares: List<Share>, name: (String) -> String) {
     shares.take(6).forEach { share ->
         Column(Modifier.padding(vertical = 4.dp)) {
             Row {
-                Text(name(share.label), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                Text(name(share.label), Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(pct(share.fraction), style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
             }
             LinearProgressIndicator(progress = { share.fraction }, modifier = Modifier.fillMaxWidth().padding(top = 4.dp).height(6.dp).paperClip(CircleShape))

@@ -1,5 +1,6 @@
 package com.aurora.music.ui.components
 
+import com.aurora.music.ui.theme.likePop
 import com.aurora.music.data.LongForm
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.animateColorAsState
@@ -184,7 +185,7 @@ fun PlaybackDock(
                 val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurfaceVariant, label = "dockLike")
                 if (!compact && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
                     Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp))
+                        appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp).likePop(state.isCurrentLiked, song.id))
                 }
             }
             Spacer(Modifier.width(8.dp))
@@ -205,8 +206,8 @@ fun PlaybackDock(
                         modifier = Modifier.size((48.dp * scale).coerceAtLeast(36.dp)),
                         colors = IconButtonDefaults.filledIconButtonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
                     ) {
-                        Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            appString(R.string.text_play_pause_14a1d0), modifier = Modifier.size(26.dp * scale))
+                        val playPause = appString(R.string.text_play_pause_14a1d0)
+                        PlayPauseIcon(state.isPlaying, colors.onPrimary, Modifier.size(26.dp * scale).semantics { contentDescription = playPause })
                     }
                     IconButton(onClick = onNext) {
                         Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = colors.onSurface)

@@ -63,6 +63,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import kotlin.math.abs
 import com.aurora.music.ui.theme.themedCorner
+import androidx.compose.animation.animateColorAsState
+import com.aurora.music.ui.theme.Motion
 
 internal val OUTPUT_SUMMARY: String get() = appString(R.string.text_device_exclusive_mode_and_buffer_f2337c)
 
@@ -133,7 +135,7 @@ fun AudioOutputSettingsScreen(
                         else R.string.text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9), exclusive) {
                         player.setExclusiveOutput(it)
                     }
-                    if (exclusive) {
+                    SettingsReveal(exclusive) {
                         SettingsRowDivider()
                         SettingsSwitchRow(Icons.AutoMirrored.Filled.VolumeUp, appString(R.string.text_dac_hardware_volume_752c71),
                             appString(R.string.text_aurora_s_volume_sets_the_dac_s_own_volume_when_it_has_one_the_audi_371db5),
@@ -211,18 +213,21 @@ private fun Note(text: String) {
 @Composable
 private fun DeviceRow(icon: ImageVector, title: String, subtitle: String?, selected: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val wash by animateColorAsState(colors.primary.copy(alpha = if (selected) 0.14f else 0f), Motion.state(), label = "deviceWash")
+    val plate by animateColorAsState(if (selected) colors.primary else colors.surfaceContainerHigh, Motion.state(), label = "devicePlate")
+    val ink by animateColorAsState(if (selected) colors.onPrimary else colors.onSurface, Motion.state(), label = "deviceInk")
     Row(
         Modifier.fillMaxWidth()
-            .then(if (selected) Modifier.background(colors.primary.copy(alpha = 0.14f)) else Modifier)
+            .background(wash)
             .pointerHoverIcon(PointerIcon.Hand)
             .selectable(selected = selected, role = Role.RadioButton, onClick = onClick)
             .padding(horizontal = 20.dp, vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(
-            Modifier.size(38.dp).paperClip(RoundedCornerShape(themedCorner(10.dp))).background(if (selected) colors.primary else colors.surfaceContainerHigh),
+            Modifier.size(38.dp).paperClip(RoundedCornerShape(themedCorner(10.dp))).background(plate),
             contentAlignment = Alignment.Center,
-        ) { Icon(icon, null, tint = if (selected) colors.onPrimary else colors.onSurface, modifier = Modifier.size(20.dp)) }
+        ) { Icon(icon, null, tint = ink, modifier = Modifier.size(20.dp)) }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)

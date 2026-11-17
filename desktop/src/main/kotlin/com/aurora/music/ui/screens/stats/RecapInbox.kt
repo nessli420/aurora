@@ -4,8 +4,14 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.GridItemSpan
@@ -92,8 +98,10 @@ fun RecapInboxScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpen: 
     val full: LazyGridItemSpanScope.() -> GridItemSpan = { GridItemSpan(maxLineSpan) }
     Column(Modifier.fillMaxSize()) {
         PageHeader(appString(R.string.text_notifications_753a22), Modifier.padding(horizontal = LocalPageGutter.current), onBack = onBack) {
-            if (inbox.unread > 0) TextButton(onClick = { inbox.markRead(inbox.windows.map { it.key }.toSet()) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
-                Text(appString(R.string.text_mark_all_read_8958e2))
+            AnimatedVisibility(inbox.unread > 0, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
+            TextButton(onClick = { inbox.markRead(inbox.windows.map { it.key }.toSet()) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+                Text(appString(R.string.text_mark_all_read_8958e2), maxLines = 1)
+            }
             }
         }
         LazyVerticalGrid(
@@ -109,19 +117,16 @@ fun RecapInboxScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpen: 
             }
             item(span = full) {
                 LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    item { FilterChip(filter == "ALL", { filter = "ALL" }, label = { Text(appString(R.string.text_all_6a7208)) }) }
+                    item { StatChip(filter == "ALL", appString(R.string.text_all_6a7208)) { filter = "ALL" } }
                     items(RecapPeriod.entries.filter { it != RecapPeriod.ALL }) { period ->
-                        FilterChip(filter == period.name, { filter = period.name }, label = { Text(period.label) })
+                        StatChip(filter == period.name, period.label) { filter = period.name }
                     }
                 }
             }
-            if (inbox.loading) item(span = full) { Box(Modifier.fillMaxWidth().padding(40.dp), contentAlignment = Alignment.Center) { CircularProgressIndicator() } }
+            if (inbox.loading) item(span = full) { LoadingState() }
             else if (featured == null) item(span = full) {
-                Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(24.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(28.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Icon(Icons.Outlined.Headphones, null, Modifier.size(40.dp), tint = MaterialTheme.colorScheme.primary)
-                    Text(appString(R.string.text_good_listening_takes_time_eac7f9), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Text(if (filter == "ALL") appString(R.string.text_listen_today_and_come_back_tomorrow_for_your_first_recap_9a9aec) else appString(R.string.recap_pending), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                EmptyState(Icons.Outlined.Headphones, appString(R.string.text_good_listening_takes_time_eac7f9),
+                    subtitle = if (filter == "ALL") appString(R.string.text_listen_today_and_come_back_tomorrow_for_your_first_recap_9a9aec) else appString(R.string.recap_pending))
             }
             else {
                 item(key = "featured:${featured.key}", span = full) { RecapNotification(featured, inbox.history, featured.key !in inbox.seen, true) { open(featured) } }
@@ -147,15 +152,15 @@ private fun RecapNotification(window: RecapWindow, history: List<PlayEvent>, unr
     val palette = MaterialTheme.colorScheme
     val brush = if (featured) Brush.linearGradient(listOf(palette.primaryContainer, palette.tertiaryContainer)) else Brush.linearGradient(listOf(palette.surfaceContainerHigh, palette.surfaceContainerHigh))
     val textColor = if (featured) palette.onPrimaryContainer else palette.onSurface
-    Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(if (featured) 28.dp else 20.dp)).background(brush).clickable(onClick = onOpen).pointerHoverIcon(PointerIcon.Hand).padding(if (featured) 22.dp else 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
+    Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(if (featured) 28.dp else 20.dp))).background(brush).pressClickable(onClick = onOpen).pointerHoverIcon(PointerIcon.Hand).padding(if (featured) 22.dp else 18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(if (featured) appString(R.string.recap_latest_title, (window.period.label.uppercase(java.util.Locale.getDefault()))) else appString(R.string.recap_title, (window.period.label)), style = MaterialTheme.typography.labelLarge, color = textColor, modifier = Modifier.weight(1f))
+            Text(if (featured) appString(R.string.recap_latest_title, (window.period.label.uppercase(java.util.Locale.getDefault()))) else appString(R.string.recap_title, (window.period.label)), style = MaterialTheme.typography.labelLarge, color = textColor, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (unread) Box(Modifier.paperClip(CircleShape).background(palette.primary).padding(horizontal = 10.dp, vertical = 4.dp)) { Text(appString(R.string.text_new_6403f2), style = MaterialTheme.typography.labelSmall, color = palette.onPrimary) }
         }
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             Artwork(top?.artwork.orEmpty(), accentFor(top?.id.orEmpty()), Modifier.size(if (featured) 80.dp else 56.dp), corner = 16.dp)
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                Text(window.label, style = if (featured) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = textColor)
+                Text(window.label, style = if (featured) MaterialTheme.typography.headlineSmall else MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = textColor, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 if (top != null) Text(appString(R.string.text_led_by_ba943b, (top.name)), style = MaterialTheme.typography.bodyMedium, maxLines = 2, overflow = TextOverflow.Ellipsis, color = textColor.copy(alpha = .8f))
             }
         }

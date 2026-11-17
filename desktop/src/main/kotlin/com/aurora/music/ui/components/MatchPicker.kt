@@ -1,10 +1,11 @@
 package com.aurora.music.ui.components
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -17,8 +18,9 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.ErrorOutline
+import androidx.compose.material.icons.outlined.SearchOff
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
@@ -47,6 +49,7 @@ import com.aurora.music.data.TrackChoices
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
+import com.aurora.music.ui.theme.Motion
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -95,7 +98,7 @@ fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onSwap: (Song) -> Un
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.match_change), fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.match_change), fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(Modifier.width(520.dp)) {
                 Text(appString(if (key != null) R.string.match_hint else R.string.match_hint_source, song.title),
@@ -107,11 +110,17 @@ fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onSwap: (Song) -> Un
                     keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { search() }),
                     modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
                 )
-                Box(Modifier.fillMaxWidth().height(380.dp)) {
-                    when {
-                        searching -> CircularProgressIndicator(Modifier.align(Alignment.Center))
-                        failed -> Note(appString(if (key != null) R.string.match_failed else R.string.match_failed_source))
-                        results?.isEmpty() == true -> Note(appString(if (key != null) R.string.match_none else R.string.match_none_source))
+                val pane = when {
+                    searching -> 0
+                    failed -> 1
+                    results?.isEmpty() == true -> 2
+                    else -> 3
+                }
+                Crossfade(pane, Modifier.fillMaxWidth().height(380.dp), animationSpec = Motion.state(), label = "matchPane") { shown ->
+                    when (shown) {
+                        0 -> LoadingState(Modifier.fillMaxSize())
+                        1 -> EmptyState(Icons.Outlined.ErrorOutline, appString(if (key != null) R.string.match_failed else R.string.match_failed_source), Modifier.fillMaxSize())
+                        2 -> EmptyState(Icons.Outlined.SearchOff, appString(if (key != null) R.string.match_none else R.string.match_none_source), Modifier.fillMaxSize())
                         else -> LazyColumn(Modifier.fillMaxWidth()) {
                             items(results.orEmpty(), key = { it.id }) { result ->
                                 val picked = chosen == result.id
@@ -140,9 +149,4 @@ fun MatchPickerDialog(song: Song, notify: (String) -> Unit, onSwap: (Song) -> Un
         confirmButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } },
         dismissButton = if (key != null && matches[key] != null) ({ TextButton(onClick = { choose(null) }) { Text(appString(R.string.match_reset)) } }) else null,
     )
-}
-
-@Composable
-private fun Note(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 12.dp))
 }

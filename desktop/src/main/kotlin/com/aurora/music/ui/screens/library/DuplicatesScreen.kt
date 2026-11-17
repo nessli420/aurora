@@ -7,6 +7,7 @@ import com.aurora.music.ui.theme.fade
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -29,6 +30,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.outlined.CheckCircle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -42,11 +44,13 @@ import androidx.compose.ui.unit.dp
 import com.aurora.music.data.DuplicateGroup
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.EmptyState
 import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.model.accent
 import com.aurora.music.ui.theme.themedCorner
@@ -67,11 +71,10 @@ fun DuplicatesScreen(
             R.string.duplicates_counts, appPlural(R.plurals.group_count, (groups.size)), appPlural(R.plurals.track_count, (groups.sumOf { it.songs.size })), (scanned),
         )
         PageHeader(appString(R.string.text_duplicates_889a9c), Modifier.padding(horizontal = gutter), subtitle = counts, onBack = onBack)
-        when {
-            loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
-            groups.isEmpty() -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(appString(R.string.text_no_duplicates_found_across_tracks_8af6bb, (scanned)), color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
+        Crossfade(if (loading) 0 else if (groups.isEmpty()) 1 else 2, animationSpec = Motion.state(), label = "duplicatesPane") { shown ->
+        when (shown) {
+            0 -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
+            1 -> EmptyState(Icons.Outlined.CheckCircle, appString(R.string.text_no_duplicates_found_across_tracks_8af6bb, (scanned)), Modifier.fillMaxSize())
             else -> {
                 val bottom = contentPadding.calculateBottomPadding() + 24.dp
                 val gridState = rememberLazyGridState()
@@ -86,6 +89,7 @@ fun DuplicatesScreen(
                     items(groups.size) { i -> GroupCard(groups[i], currentSongId, onPlay) }
                 }
             }
+        }
         }
     }
 }
@@ -105,6 +109,8 @@ private fun GroupCard(group: DuplicateGroup, currentSongId: String, onPlay: (Son
             appString(R.string.text_copies_0ebf61, (group.artist), (group.songs.size)),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(8.dp))
         group.songs.forEach { s ->

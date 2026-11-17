@@ -5,7 +5,6 @@ import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -48,8 +47,16 @@ import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.screens.settings.SettingsTopBar
 import com.aurora.music.viewmodel.TagEditState
 import kotlinx.coroutines.launch
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.pressClickable
 
 // saving a local file goes through the mediastore write-consent dialog on android 11+
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TagEditScreen(
     contentPadding: PaddingValues,
@@ -91,7 +98,7 @@ fun TagEditScreen(
     Column(Modifier.fillMaxSize()) {
         SettingsTopBar(appString(R.string.text_edit_tags_d8a5fc), onBack)
         if (state.loading) {
-            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            LoadingState(Modifier.fillMaxSize())
             return
         }
         Column(
@@ -104,21 +111,21 @@ fun TagEditScreen(
                 Column(Modifier.weight(1f)) {
                     Text(state.tags.title.ifBlank { appString(R.string.text_untitled_621521) }, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(java.io.File(state.path).name, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    if (state.pickedCoverUrl.isNotBlank()) Text(appString(R.string.text_new_cover_staged_ac4238), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                    if (state.pickedCoverUrl.isNotBlank()) Text(appString(R.string.text_new_cover_staged_ac4238), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
             Spacer(Modifier.height(12.dp))
 
-            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 OutlinedButton(onClick = onMatch, enabled = !state.matching) {
-                    if (state.matching) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                    if (state.matching) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     else Icon(Icons.Filled.AutoFixHigh, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(6.dp))
                     Text(appString(R.string.text_match_metadata_f9f1d7))
                 }
                 if (onIdentify != null) {
                     OutlinedButton(onClick = onIdentify, enabled = !identifying) {
-                        if (identifying) CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp)
+                        if (identifying) { CircularProgressIndicator(Modifier.size(16.dp), strokeWidth = 2.dp); Spacer(Modifier.width(6.dp)) }
                         Text(if (identifying) appString(R.string.text_identifying_883ba7) else appString(R.string.text_auto_identify_f23ca3))
                     }
                 }
@@ -138,7 +145,7 @@ fun TagEditScreen(
             }
             Spacer(Modifier.height(16.dp))
             Button(onClick = onSave, enabled = !saving, modifier = Modifier.fillMaxWidth()) {
-                if (saving) { CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp); Spacer(Modifier.width(8.dp)) }
+                if (saving) { CircularProgressIndicator(Modifier.size(18.dp), color = LocalContentColor.current, strokeWidth = 2.dp); Spacer(Modifier.width(8.dp)) }
                 Text(if (saving) appString(R.string.text_saving_56a228) else appString(R.string.text_save_tags_842d99), fontWeight = FontWeight.Bold)
             }
             Text(
@@ -168,7 +175,7 @@ private fun MatchRow(m: MetadataMatch, onApply: () -> Unit) {
         Modifier.fillMaxWidth().padding(vertical = 4.dp)
             .paperClip(RoundedCornerShape(12.dp))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.let { it.copy(alpha = it.alpha * 0.5f) })
-            .clickable(onClick = onApply)
+            .pressClickable(onClick = onApply).pointerHoverIcon(PointerIcon.Hand)
             .padding(10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -178,12 +185,13 @@ private fun MatchRow(m: MetadataMatch, onApply: () -> Unit) {
         }
         Column(Modifier.weight(1f)) {
             Text(m.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(m.source, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(m.source, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
                 listOfNotNull(m.artist.ifBlank { null }, m.album.ifBlank { null }, m.year.ifBlank { null }).joinToString(" • "),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
             )
         }
+        Spacer(Modifier.width(8.dp))
         Text(appString(R.string.text_apply_cfea41), style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary)
     }
 }

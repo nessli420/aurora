@@ -8,13 +8,16 @@ import com.aurora.music.localization.appString
 import com.aurora.music.R
 
 import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.tween
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -186,8 +189,8 @@ fun SettingsScreen(
                         SettingsDestinationRow(Icons.Filled.Tune, SettingsDestinations.equalizer, onClick = onOpenEq)
                         AnimatedVisibility(
                             visible = !simpleMode,
-                            enter = expandVertically(animationSpec = tween(260)) + fadeIn(animationSpec = tween(260)),
-                            exit = shrinkVertically(animationSpec = tween(260)) + fadeOut(animationSpec = tween(260)),
+                            enter = expandVertically(animationSpec = Motion.enter()) + fadeIn(animationSpec = Motion.enter()),
+                            exit = shrinkVertically(animationSpec = Motion.exit()) + fadeOut(animationSpec = Motion.exit()),
                         ) {
                             Column {
                                 SettingsRowDivider()
@@ -287,13 +290,14 @@ fun SettingsScreen(
                     Box(
                         Modifier.fillMaxWidth().padding(horizontal = 12.dp).paperClip(RoundedCornerShape(50))
                             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onLogout).padding(vertical = 14.dp),
+                            .pointerHoverIcon(PointerIcon.Hand).pressClickable(onClick = onLogout).padding(vertical = 14.dp),
                         contentAlignment = Alignment.Center,
                     ) {
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error, modifier = Modifier.size(20.dp))
                             Spacer(Modifier.width(8.dp))
-                            Text(appString(R.string.text_log_out_6e78c9), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error)
+                            Text(appString(R.string.text_log_out_6e78c9), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.error,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }
@@ -326,6 +330,31 @@ private fun AccountRow(username: String, avatarUrl: String, badge: String, onCli
             Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = colors.primary, maxLines = 1)
         }
     }
+}
+
+// stored values land just after a page opens, so nothing animates until it has settled
+@Composable
+internal fun rememberSettled(): Boolean {
+    var settled by remember { androidx.compose.runtime.mutableStateOf(false) }
+    androidx.compose.runtime.LaunchedEffect(Unit) { kotlinx.coroutines.delay(com.aurora.music.util.MotionTokens.STANDARD.toLong()); settled = true }
+    return settled
+}
+
+// a block a switch or choice reveals: grows and fades in, leaves faster
+@Composable
+internal fun SettingsReveal(visible: Boolean, content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit) {
+    val settled = rememberSettled()
+    AnimatedVisibility(
+        visible = visible,
+        enter = if (settled) expandVertically(animationSpec = Motion.enter()) + fadeIn(animationSpec = Motion.enter()) else EnterTransition.None,
+        exit = if (settled) shrinkVertically(animationSpec = Motion.exit()) + fadeOut(animationSpec = Motion.exit()) else ExitTransition.None,
+    ) { Column(content = content) }
+}
+
+// the switch of the shared rows, for rows that lay themselves out
+@Composable
+internal fun SettingsToggle(checked: Boolean, enabled: Boolean = true, onCheckedChange: (Boolean) -> Unit) {
+    com.aurora.music.ui.theme.Switch(checked, onCheckedChange, if (enabled) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier, enabled)
 }
 
 private fun SignalPath.settingsSummary(): String = if (!active) appString(R.string.text_nothing_playing_13ae37) else buildList {

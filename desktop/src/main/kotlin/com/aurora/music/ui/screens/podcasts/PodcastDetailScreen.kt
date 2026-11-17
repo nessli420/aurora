@@ -6,7 +6,6 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -47,12 +46,20 @@ import com.aurora.music.data.PodcastEpisode
 import com.aurora.music.data.toSong
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
-import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.PodcastViewModel
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Podcasts
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
 
 @Composable
 fun PodcastDetailScreen(
@@ -81,7 +88,7 @@ fun PodcastDetailScreen(
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
             Text(showTitle, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
@@ -99,25 +106,28 @@ fun PodcastDetailScreen(
                             Text(it, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                         Spacer(Modifier.height(10.dp))
+                        val pillFill by animateColorAsState(if (subscribed) MaterialTheme.colorScheme.surfaceContainerHighest else accent, Motion.state(), label = "subscribeFill")
+                        val pillInk by animateColorAsState(if (subscribed) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary, Motion.state(), label = "subscribeInk")
                         Row(
                             Modifier.paperClip(RoundedCornerShape(50))
-                                .background(if (subscribed) MaterialTheme.colorScheme.surfaceContainerHighest else accent)
-                                .clickable {
+                                .pressClickable {
                                     vm.toggleSubscribe(Podcast(feedUrl = feedUrl, title = showTitle, author = author, imageUrl = showImage))
                                 }
+                                .background(pillFill)
+                                .pointerHoverIcon(PointerIcon.Hand)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             Icon(
                                 if (subscribed) Icons.Filled.Check else Icons.Filled.Add, null,
-                                tint = if (subscribed) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary,
+                                tint = pillInk,
                                 modifier = Modifier.size(18.dp),
                             )
                             Spacer(Modifier.width(6.dp))
                             Text(
                                 if (subscribed) appString(R.string.text_subscribed_dd1242) else appString(R.string.text_subscribe_d6981f),
                                 style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-                                color = if (subscribed) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onPrimary,
+                                color = pillInk,
                             )
                         }
                     }
@@ -133,12 +143,11 @@ fun PodcastDetailScreen(
             }
 
             if (episodesState.loading) {
-                item { Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(64.dp)) } }
+                item { LoadingState() }
             } else if (episodesState.episodes.isEmpty()) {
                 item {
-                    Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
-                        Text(if (episodesState.failed) appString(R.string.text_couldn_t_load_this_feed_d1428a) else appString(R.string.text_no_episodes_38e050), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    }
+                    if (episodesState.failed) EmptyState(Icons.Filled.CloudOff, appString(R.string.text_couldn_t_load_this_feed_d1428a))
+                    else EmptyState(Icons.Filled.Podcasts, appString(R.string.text_no_episodes_38e050))
                 }
             } else {
                 items(episodesState.episodes.size) { i ->
@@ -154,7 +163,7 @@ fun PodcastDetailScreen(
 private fun EpisodeRow(episode: PodcastEpisode, onPlay: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
-            .paperClip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).padding(horizontal = 12.dp, vertical = 10.dp),
+            .paperClip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 12.dp, vertical = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Column(Modifier.weight(1f)) {
@@ -163,13 +172,13 @@ private fun EpisodeRow(episode: PodcastEpisode, onPlay: () -> Unit) {
                 episode.pubDateMs.takeIf { it > 0 }?.let { formatDate(it) },
                 episode.durationSec.takeIf { it > 0 }?.let { formatDuration(it) },
             ).joinToString(" • ")
-            if (meta.isNotBlank()) Text(meta, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            if (meta.isNotBlank()) Text(meta, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         Spacer(Modifier.width(8.dp))
         Icon(
             Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd),
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onPlay).padding(9.dp),
+            modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onPlay).pointerHoverIcon(PointerIcon.Hand).padding(9.dp),
         )
     }
 }

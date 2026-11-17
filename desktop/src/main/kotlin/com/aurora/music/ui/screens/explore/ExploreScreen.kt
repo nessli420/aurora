@@ -5,7 +5,6 @@ import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -16,15 +15,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
-import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -48,7 +44,6 @@ import com.aurora.music.data.HomeData
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.FeedSection
-import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.ui.components.SectionHeader
 import com.aurora.music.ui.layout.LocalPageGutter
@@ -56,6 +51,11 @@ import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.layout.pagePadding
 import com.aurora.music.ui.theme.themedCorner
 import kotlinx.coroutines.CancellationException
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CloudOff
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.pressClickable
 
 private sealed interface Loaded<out T> {
     data object Loading : Loaded<Nothing>
@@ -145,7 +145,7 @@ private fun CategoryChip(category: ExploreCategory, onClick: () -> Unit) {
     Row(
         Modifier.width(196.dp).height(48.dp).paperClip(RoundedCornerShape(themedCorner(10.dp)))
             .background(MaterialTheme.colorScheme.surfaceContainerHigh)
-            .clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand),
+            .pressClickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.width(6.dp).fillMaxHeight().background(stripe))
@@ -156,14 +156,10 @@ private fun CategoryChip(category: ExploreCategory, onClick: () -> Unit) {
 
 @Composable
 private fun Loading() {
-    Box(Modifier.fillMaxWidth().height(320.dp), contentAlignment = Alignment.Center) { LottieLoader(Modifier.size(80.dp)) }
+    LoadingState(Modifier.height(320.dp))
 }
 
 @Composable
 private fun Failed(onRetry: () -> Unit) {
-    Column(Modifier.fillMaxWidth().padding(vertical = 48.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(appString(R.string.discovery_explore_failed), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(Modifier.height(12.dp))
-        OutlinedButton(onClick = onRetry) { Text(appString(R.string.text_try_again_042c86)) }
-    }
+    EmptyState(Icons.Filled.CloudOff, appString(R.string.discovery_explore_failed), action = appString(R.string.text_try_again_042c86), onAction = onRetry)
 }

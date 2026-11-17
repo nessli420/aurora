@@ -112,6 +112,16 @@ import com.aurora.music.viewmodel.DetailUiState
 import kotlinx.coroutines.launch
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.ui.theme.themedCorner
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.ErrorOutline
+import androidx.compose.material.icons.filled.MusicNote
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.likePop
+import com.aurora.music.ui.theme.pressClickable
+import com.aurora.music.util.MotionTokens
 
 private val MetaSeparator = Regex("\\s+[•·]\\s+|\\s*[•·]\\s*$")
 private val YearPattern = Regex("(19|20)\\d{2}")
@@ -179,8 +189,8 @@ fun DetailScreen(
             if (onExpand != null) FullPageButton(onExpand, Modifier.align(Alignment.TopEnd).padding(end = gutter - 14.dp, top = 16.dp),
                 tint = MaterialTheme.colorScheme.onSurface)
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                if (state.loading) LottieLoader(modifier = Modifier.size(72.dp))
-                else Text(appString(R.string.text_couldn_t_load_8b7b6b), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (state.loading) LoadingState()
+                else EmptyState(Icons.Filled.ErrorOutline, appString(R.string.text_couldn_t_load_8b7b6b))
             }
         }
         return
@@ -197,12 +207,14 @@ fun DetailScreen(
     val effectiveArt = artistInfo?.imageUrl?.takeIf { info.isArtist && it.isNotBlank() } ?: info.artUrl
     val albumCover = if (itemKind == "album") CoverKey(info.title, info.subtitle,
         tracks.firstNotNullOfOrNull { CoverKey.localPath(it).takeIf(String::isNotBlank) }.orEmpty()) else null
-    val accent by rememberDominantColor(effectiveArt, info.accent)
+    val accentTarget by rememberDominantColor(effectiveArt, info.accent)
+    // only the header and chips read the tween; the scheme and rows take the target once
+    val accent by animateColorAsState(accentTarget, Motion.state(MotionTokens.SLOW), label = "dominant")
     val anchors = remember(data.tracks, itemKind, info.isArtist, info.title) {
         if (itemKind == "album" || info.isArtist) com.aurora.music.ui.screens.player.sourcesAnchors(data.tracks, itemKind == "album", info.title) else emptyList()
     }
     val baseScheme = MaterialTheme.colorScheme
-    val accentInk = readableAccent(accent, baseScheme.onBackground.luminance() > 0.5f)
+    val accentInk = readableAccent(accentTarget, baseScheme.onBackground.luminance() > 0.5f)
     val albumScheme = remember(baseScheme, accentInk) {
         baseScheme.copy(primary = accentInk, onPrimary = if (accentInk.luminance() > 0.5f) Color.Black else Color.White)
     }
@@ -259,13 +271,13 @@ fun DetailScreen(
             Row(
                 Modifier
                     .paperClip(RoundedCornerShape(50))
+                    .pressClickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
                     .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.78f))))
-                    .clickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
                     .pointerHoverIcon(PointerIcon.Hand)
                     .padding(horizontal = 28.dp, vertical = 13.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = onAccent, modifier = Modifier.size(20.dp))
+                Icon(Icons.Filled.PlayArrow, null, tint = onAccent, modifier = Modifier.size(20.dp))
                 Spacer(Modifier.width(8.dp))
                 Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = onAccent)
             }
@@ -281,19 +293,22 @@ fun DetailScreen(
                 sortScope.launch { sortStore.setTrackSort(sortKey, sortOrder.pick(choice)) }
             }
             if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist")) {
+                val likeTint by animateColorAsState(if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "like")
                 HeaderIcon(
                     if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
                     appString(if (isItemLiked) R.string.text_unlike_e4fc40 else R.string.text_like_c7e02c),
-                    if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface,
+                    likeTint,
+                    glyph = Modifier.likePop(isItemLiked, collectionKey ?: info.title),
                     onClick = onToggleItemLike,
                 )
             }
             if (canDownload) {
                 val allDownloaded = tracks.isNotEmpty() && tracks.all { downloadedIds.contains(it.id) }
+                val downloadTint by animateColorAsState(if (allDownloaded) accent else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "download")
                 HeaderIcon(
                     if (allDownloaded) Icons.Filled.DownloadDone else Icons.Filled.Download,
                     appString(if (allDownloaded) R.string.text_remove_downloads_cbe8be else R.string.text_download_a479c9),
-                    if (allDownloaded) accent else MaterialTheme.colorScheme.onSurfaceVariant,
+                    downloadTint,
                 ) { if (allDownloaded) onRemoveDownloads() else onDownloadAll() }
             }
             if (searchable) searchToggle()
@@ -453,20 +468,23 @@ fun DetailScreen(
                         if (onExpand != null) FullPageButton(onExpand, tint = Color.White)
                         menuButton(Color.White, Modifier)
                     }
+                    // the art fades into the page, so light pages need dark type under the title
+                    val lightPage = MaterialTheme.colorScheme.background.luminance() > 0.5f
+                    val ink = if (lightPage) MaterialTheme.colorScheme.onSurface else Color.White
                     Column(Modifier.align(Alignment.BottomStart).padding(start = gutter, end = gutter, bottom = 14.dp)) {
-                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), accent)
+                        Eyebrow(info.typeLabel.localizedMediaType().uppercase(java.util.Locale.getDefault()), if (lightPage) MaterialTheme.colorScheme.primary else accent)
                         Spacer(Modifier.height(6.dp))
                         com.aurora.music.ui.screens.player.SourcesTitle(anchors, !info.isArtist) {
-                            Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = Color.White,
+                            Text(info.title, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Black, color = ink,
                                 maxLines = 2, overflow = TextOverflow.Ellipsis, modifier = it)
                         }
                         if (description != null) {
                             Spacer(Modifier.height(2.dp))
-                            Text(description, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f),
+                            Text(description, style = MaterialTheme.typography.bodyMedium, color = ink.copy(alpha = 0.85f),
                                 maxLines = 2, overflow = TextOverflow.Ellipsis)
                         }
                         Spacer(Modifier.height(4.dp))
-                        MetaLine(albumArtist, onArtist, metaParts, Color.White, Color.White.copy(alpha = 0.85f))
+                        MetaLine(albumArtist, onArtist, metaParts, ink, ink.copy(alpha = 0.85f))
                     }
                 }
                 actionsRow(Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = 8.dp), false)
@@ -486,7 +504,7 @@ fun DetailScreen(
                     leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                     trailingIcon = {
                         if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3),
-                            modifier = Modifier.paperClip(CircleShape).clickable { query = "" }.pointerHoverIcon(PointerIcon.Hand).padding(4.dp))
+                            modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { query = "" }.pointerHoverIcon(PointerIcon.Hand).padding(8.dp))
                     },
                     singleLine = true,
                     shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(14.dp))),
@@ -509,15 +527,18 @@ fun DetailScreen(
             ) {
                 (listOf<String?>(null) + genres).forEach { genre ->
                     val selected = if (genre == null) genreFilter == null else genreFilter.equals(genre, true)
+                    val chipInk by animateColorAsState(if (selected) accent else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "genreInk")
+                    val chipFill by animateColorAsState(if (selected) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "genreFill")
+                    val chipLine by animateColorAsState(accent.copy(alpha = if (selected) 0.6f else 0f), Motion.state(), label = "genreLine")
                     Text(
                         genre ?: appString(R.string.text_all_6a7208),
                         style = MaterialTheme.typography.labelMedium,
                         fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
-                        color = if (selected) accent else MaterialTheme.colorScheme.onSurface,
+                        color = chipInk,
                         modifier = Modifier
                             .paperClip(RoundedCornerShape(50))
-                            .background(if (selected) accent.copy(alpha = 0.16f) else MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .then(if (selected) Modifier.border(1.dp, accent.copy(alpha = 0.6f), com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(50))) else Modifier)
+                            .background(chipFill)
+                            .border(1.dp, chipLine, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(50)))
                             .clickable { genreFilter = genre }
                             .pointerHoverIcon(PointerIcon.Hand)
                             .padding(horizontal = 14.dp, vertical = 7.dp),
@@ -543,6 +564,7 @@ fun DetailScreen(
                             popularHeader(Modifier)
                             Spacer(Modifier.height(PageMetrics.HeaderToContent))
                             repeat(minOf(popular.size, PopularPreview)) { i -> trackRow(popular, i, i + 1, Modifier) }
+                            if (popular.isEmpty() && tracks.isNotEmpty()) EmptyState(Icons.Filled.Search, appString(R.string.text_no_results_b993b0))
                         }
                         Spacer(Modifier.width(columnGap))
                         ArtistAbout(aboutInfo, accent, Modifier.weight(0.4f), card = true)
@@ -558,6 +580,8 @@ fun DetailScreen(
                     Spacer(Modifier.height(PageMetrics.HeaderToContent))
                 }
                 items(popular.size) { i -> trackRow(popular, i, i + 1, Modifier) }
+            } else if (tracks.isNotEmpty()) {
+                item(key = "empty") { EmptyState(Icons.Filled.Search, appString(R.string.text_no_results_b993b0)) }
             }
 
             val (short, full) = data.albums.partition { it.typeLabel == "EP" || it.typeLabel == "Single" }
@@ -583,6 +607,10 @@ fun DetailScreen(
                 SongListHeader(Modifier.padding(top = 20.dp), showIndex = true, showArt = !isAlbum, showAlbum = !isAlbum)
             }
             items(shown.size) { i -> trackRow(shown, i, numberOf(i), Modifier) }
+            if (shown.isEmpty() && !state.loadingMore && !state.canLoadMore) item(key = "empty") {
+                if (tracks.isEmpty()) EmptyState(Icons.Filled.MusicNote, appString(R.string.text_no_songs_e6bbe2))
+                else EmptyState(Icons.Filled.Search, appString(R.string.text_no_results_b993b0))
+            }
         }
 
         if (state.loadingMore) {
@@ -630,10 +658,11 @@ private fun HeaderIcon(
     tint: Color,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    glyph: Modifier = Modifier,
     onClick: () -> Unit,
 ) {
     Icon(icon, label, tint = tint,
-        modifier = modifier.size(48.dp).paperClip(CircleShape).clickable(enabled = enabled, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(12.dp))
+        modifier = modifier.size(48.dp).paperClip(CircleShape).clickable(enabled = enabled, onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(12.dp).then(glyph))
 }
 
 @Composable
@@ -694,7 +723,7 @@ private fun ArtistAbout(info: ArtistInfo, accent: Color, modifier: Modifier, car
                     maxLines = if (expanded) Int.MAX_VALUE else 5,
                     overflow = TextOverflow.Ellipsis,
                     onTextLayout = { if (!expanded) clipped = it.hasVisualOverflow },
-                    modifier = Modifier.widthIn(max = PageMetrics.ReadingMaxWidth).clickable(enabled = clipped || expanded) { expanded = !expanded },
+                    modifier = Modifier.widthIn(max = PageMetrics.ReadingMaxWidth).animateContentSize(Motion.state(MotionTokens.STANDARD)).clickable(enabled = clipped || expanded) { expanded = !expanded },
                 )
                 if (clipped || expanded) Text(
                     appString(if (expanded) R.string.text_show_less_4c852b else R.string.text_show_more_25911d),
@@ -731,13 +760,13 @@ private fun EditPlaylistDialog(initialName: String, initialDesc: String, onSave:
     val scope = rememberCoroutineScope()
     androidx.compose.material3.AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         onDismissRequest = { if (!saving) onDismiss() },
-        title = { Text(appString(R.string.text_edit_playlist_1528d5), fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.text_edit_playlist_1528d5), fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
                 androidx.compose.material3.OutlinedTextField(value = name, onValueChange = { name = it; failed = false }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true, enabled = !saving)
                 Spacer(Modifier.height(10.dp))
                 androidx.compose.material3.OutlinedTextField(value = desc, onValueChange = { desc = it; failed = false }, label = { Text(appString(R.string.text_description_55f8eb)) }, enabled = !saving)
-                if (failed) {
+                AnimatedVisibility(failed) {
                     Text(appString(R.string.playlist_update_failed), color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
                 }

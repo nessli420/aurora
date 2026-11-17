@@ -3,12 +3,12 @@ package com.aurora.music.ui.screens.settings
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.GraphicEq
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material3.*
 import com.aurora.music.ui.theme.TextButton
@@ -20,10 +20,15 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.pressClickable
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.AudioPrefs
 import com.aurora.music.data.DspMode
@@ -114,7 +119,7 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, signalPath: StateFlo
     Box(Modifier.fillMaxSize()) {
         Column(Modifier.fillMaxSize()) {
             SettingsTopBar(current?.name ?: appString(R.string.text_ir_library_46a40d), ::back)
-            if (busy) {
+            AudioSection(busy) {
                 Text(workingText, Modifier.padding(horizontal = 20.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall)
                 LinearProgressIndicator(Modifier.fillMaxWidth())
             }
@@ -141,7 +146,8 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, signalPath: StateFlo
                     }) item {
                         SettingsGroup {
                             Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                Text(audio?.dspConvIrName?.ifBlank { appString(R.string.text_selected_ir_6a167c) } ?: appString(R.string.text_selected_ir_6a167c), style = MaterialTheme.typography.titleSmall)
+                                Text(audio?.dspConvIrName?.ifBlank { appString(R.string.text_selected_ir_6a167c) } ?: appString(R.string.text_selected_ir_6a167c), style = MaterialTheme.typography.titleSmall,
+                                    maxLines = 2, overflow = TextOverflow.Ellipsis)
                                 OutlinedButton(enabled = ready, onClick = { perform(appString(R.string.text_saving_selected_ir_1e5b57)) {
                                     selectedId = store.importCurrentImpulse().getOrThrow().id
                                 } }, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_add_selected_ir_to_library_d9c2a9)) }
@@ -149,9 +155,9 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, signalPath: StateFlo
                         }
                     }
                     when {
-                        entries == null -> item { ImpulseStatusText(appString(R.string.text_loading_ir_library_0a9e58)) }
+                        entries == null -> item { LoadingState() }
                         loadError != null -> Unit
-                        entries!!.isEmpty() -> item { ImpulseStatusText(appString(R.string.text_no_saved_impulse_responses_5d3fa1)) }
+                        entries!!.isEmpty() -> item { EmptyState(Icons.Filled.GraphicEq, appString(R.string.text_no_saved_impulse_responses_5d3fa1)) }
                         else -> items(entries!!, key = { it.id }) { entry ->
                             ImpulseLibraryRow(entry, ready, selectedPath, onOpen = { selectedId = entry.id },
                                 onRename = { rename = entry }, onDelete = { delete = entry })
@@ -183,13 +189,13 @@ fun ConvolutionLibraryScreen(contentPadding: PaddingValues, signalPath: StateFlo
         rename = null
         perform(appString(R.string.text_renaming_ir_4c7642)) { store.renameImpulse(entry.id, name).getOrThrow() }
     } }
-    delete?.let { entry -> AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { if (!busy) delete = null }, title = { Text(appString(R.string.text_delete_137cdc, (entry.name))) },
+    delete?.let { entry -> AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { if (!busy) delete = null }, title = { AudioDialogTitle(appString(R.string.text_delete_137cdc, (entry.name))) },
         text = { Text(appString(R.string.text_removes_this_library_entry_selected_irs_and_saved_presets_stay_un_0fb84e)) },
         confirmButton = { TextButton(enabled = ready, onClick = { perform(appString(R.string.text_deleting_ir_794fb8)) {
             store.deleteImpulse(entry.id).getOrThrow()
             delete = null
             if (selectedId == entry.id) selectedId = null
-        } }) { Text(appString(R.string.text_delete_f6fdbe)) } }, dismissButton = { TextButton(enabled = !busy, onClick = { delete = null }) { Text(appString(R.string.text_cancel_77dfd2)) } }) }
+        } }) { Text(appString(R.string.text_delete_f6fdbe), color = if (ready) MaterialTheme.colorScheme.error else Color.Unspecified) } }, dismissButton = { TextButton(enabled = !busy, onClick = { delete = null }) { Text(appString(R.string.text_cancel_77dfd2)) } }) }
     prepare?.let { entry -> ImpulsePreparationDialog(entry, onDismiss = { prepare = null }, onSave = { options ->
         store.prepareImpulse(entry.id, options).getOrThrow()
         prepare = null
@@ -202,11 +208,11 @@ private fun ImpulseLibraryRow(entry: ImpulseLibraryEntry, enabled: Boolean, sele
     onOpen: () -> Unit, onRename: () -> Unit, onDelete: () -> Unit) {
     var menu by remember { mutableStateOf(false) }
     SettingsGroup {
-        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f).pointerHoverIcon(PointerIcon.Hand).clickable(enabled = enabled, onClick = onOpen).padding(vertical = 16.dp),
+        Row(Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand).pressClickable(enabled = enabled, onClick = onOpen).padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f).padding(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text(entry.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(entry.sourceMetadata.summary(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(entry.name, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(entry.sourceMetadata.summary(), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
                 val selection = when (selectedPath) {
                     entry.sourcePath -> appString(R.string.text_original_selected_634e39)
                     entry.prepared?.path -> appString(R.string.text_variant_selected_b06527)
@@ -256,7 +262,7 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
                 else -> appString(R.string.text_bit_pcm_692bdd, (metadata.validBits))
             }
             Text(appString(R.string.text_peak_6a5678, (format), (metadata.peak.peakLabel())), style = MaterialTheme.typography.bodySmall)
-            Text(appString(R.string.text_source_e9f395, (entry.sourceName)), style = MaterialTheme.typography.bodySmall)
+            Text(appString(R.string.text_source_e9f395, (entry.sourceName)), style = MaterialTheme.typography.bodySmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
             if (showingPrepared) {
                 val options = entry.prepared!!.preparation
                 Text(buildList {
@@ -280,7 +286,7 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
             OutlinedButton(onClick = { onExport(showingPrepared) }, enabled = enabled, modifier = Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_export_wav_f98f7d)) }
             OutlinedButton(onClick = onPrepare, enabled = enabled, modifier = Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_prepare_impulse_828a45)) }
             TextButton(onClick = { showSize = !showSize }) { Text(if (showSize) appString(R.string.text_hide_playback_size_fd99cc) else appString(R.string.text_playback_size_aeb4ca)) }
-            if (showSize) {
+            AudioSection(showSize, spacing = 10.dp) {
                 Text(appString(R.string.text_khz_32b265, (impulseNumber(targetRate / 1000.0)), (if (playbackRate == null) appString(R.string.text_source_rate_cf5128) else appString(R.string.text_current_playback_27f5a5))), style = MaterialTheme.typography.bodySmall)
                 Text(appString(R.string.text_taps_estimated_memory_mib_88d38b, (estimate.targetFrames), (impulseNumber((estimate.decodedBytes + estimate.partitionBytes) / 1048576.0))),
                     style = MaterialTheme.typography.bodySmall)
@@ -294,8 +300,8 @@ private fun ImpulseDetails(entry: ImpulseLibraryEntry, enabled: Boolean, selecte
 @Composable
 private fun ImpulseNameDialog(initial: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var name by remember { mutableStateOf(initial) }
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { Text(appString(R.string.text_rename_ir_350160)) }, text = {
-        OutlinedTextField(name, { name = it.take(80) }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true)
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { AudioDialogTitle(appString(R.string.text_rename_ir_350160)) }, text = {
+        OutlinedTextField(name, { name = it.take(80) }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
     }, confirmButton = { TextButton(enabled = name.isNotBlank(), onClick = { onSave(name.trim()) }) { Text(appString(R.string.text_save_efc007)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }

@@ -11,6 +11,7 @@ import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.*
 
@@ -21,28 +22,28 @@ internal fun RackSubchainsDialog(rack: ProcessingRack, chains: List<RackSubchain
     var name by remember { mutableStateOf("") }
     var selected by remember { mutableStateOf(rack.nodes.map { it.id }.toSet()) }
     var error by remember { mutableStateOf<String?>(null) }
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { Text(if (saving) appString(R.string.text_save_subchain_d43195) else appString(R.string.text_saved_subchains_46c948)) }, text = {
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { AudioDialogTitle(if (saving) appString(R.string.text_save_subchain_d43195) else appString(R.string.text_saved_subchains_46c948)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             if (saving) {
-                OutlinedTextField(name, { name = it }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true)
+                OutlinedTextField(name, { name = it }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
                 rack.nodes.forEach { node ->
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Checkbox(node.id in selected, { checked -> selected = if (checked) selected + node.id else selected - node.id })
-                        Text(node.name)
+                        Text(node.name, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
                 Text(appString(R.string.text_external_inputs_become_the_subchain_input_3057fb), style = MaterialTheme.typography.bodySmall)
             } else {
                 chains.forEach { chain ->
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                        Column(Modifier.weight(1f)) { Text(chain.name); Text(appString(R.string.text_stages_b02622, (chain.rack.nodes.size)), style = MaterialTheme.typography.bodySmall) }
+                        Column(Modifier.weight(1f)) { Text(chain.name, maxLines = 1, overflow = TextOverflow.Ellipsis); Text(appString(R.string.text_stages_b02622, (chain.rack.nodes.size)), style = MaterialTheme.typography.bodySmall) }
                         TextButton(onClick = { onAppend(chain) }) { Text(appString(R.string.text_append_6b3a60)) }
                         TextButton(onClick = { onDelete(chain.id) }) { Text(appString(R.string.text_delete_f6fdbe)) }
                     }
                 }
                 if (chains.isEmpty()) Text(appString(R.string.text_no_saved_subchains_27969b))
             }
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error, modifier = Modifier.padding(top = 8.dp)) }
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp)) }
         }
     }, confirmButton = {
         TextButton(enabled = if (saving) name.isNotBlank() && selected.isNotEmpty() else rack.nodes.isNotEmpty() && chains.size < RackSubchainCodec.MAX_CHAINS,

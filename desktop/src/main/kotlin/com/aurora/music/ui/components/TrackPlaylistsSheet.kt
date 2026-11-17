@@ -1,6 +1,11 @@
 package com.aurora.music.ui.components
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -9,8 +14,11 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.outlined.QueueMusic
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.outlined.CloudOff
+import androidx.compose.material.icons.outlined.ErrorOutline
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,6 +45,7 @@ import com.aurora.music.localization.appString
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
 import com.aurora.music.ui.layout.LocalWindowLayout
+import com.aurora.music.ui.theme.Motion
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Semaphore
@@ -73,9 +82,9 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
     Dialog(onDismissRequest = { if (busy == null) onDismiss() }, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         Surface(shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(themedCorner(28.dp))), color = com.aurora.music.ui.theme.solidColors().surface, tonalElevation = 0.dp,
             modifier = Modifier.widthIn(max = 520.dp).fillMaxWidth().padding(24.dp)) {
-        Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).padding(start = 20.dp, end = 20.dp, top = 24.dp)) {
-            Text(appString(R.string.track_swipe_playlists), style = MaterialTheme.typography.headlineMedium,
-                fontWeight = FontWeight.Bold)
+        Column(Modifier.fillMaxWidth().heightIn(max = maxHeight).padding(start = 24.dp, end = 24.dp, top = 24.dp)) {
+            Text(appString(R.string.track_swipe_playlists), style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(appString(R.string.track_playlists_hint), style = MaterialTheme.typography.bodyMedium,
                 color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp, bottom = 18.dp))
             Row(
@@ -96,25 +105,23 @@ internal fun TrackPlaylistsSheet(song: Song, onDismiss: () -> Unit) {
             }
             Spacer(Modifier.height(20.dp))
             when {
-                editor == null -> Text(appString(R.string.track_playlists_unavailable), color = colors.onSurfaceVariant)
-                loadFailed -> {
-                    Text(appString(R.string.track_playlists_load_error), color = colors.onSurfaceVariant)
-                    TextButton(onClick = { retry++ }) { Text(appString(R.string.track_swipe_retry)) }
-                }
-                playlists == null -> Box(Modifier.fillMaxWidth().height(100.dp), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator(Modifier.size(28.dp))
-                }
-                playlists!!.isEmpty() -> Text(appString(R.string.track_playlists_empty), color = colors.onSurfaceVariant)
+                editor == null -> EmptyState(Icons.Outlined.CloudOff, appString(R.string.track_playlists_unavailable))
+                loadFailed -> EmptyState(Icons.Outlined.ErrorOutline, appString(R.string.track_playlists_load_error),
+                    action = appString(R.string.track_swipe_retry), onAction = { retry++ })
+                playlists == null -> LoadingState()
+                playlists!!.isEmpty() -> EmptyState(Icons.AutoMirrored.Outlined.QueueMusic, appString(R.string.track_playlists_empty))
                 else -> {
                     Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(appString(R.string.text_your_playlists_df03eb), Modifier.weight(1f),
-                            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                            style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(playlists!!.size.toString(), style = MaterialTheme.typography.labelMedium,
                             color = colors.onSurfaceVariant, modifier = Modifier.paperClip(CircleShape)
                                 .background(colors.surfaceContainerHigh).padding(horizontal = 10.dp, vertical = 4.dp))
                     }
-                    if (saveFailed) Text(appString(R.string.track_playlists_save_error), color = colors.error,
-                        style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 10.dp))
+                    AnimatedVisibility(saveFailed, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                        Text(appString(R.string.track_playlists_save_error), color = colors.error,
+                            style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(bottom = 10.dp))
+                    }
                     LazyColumn(Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 380.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(bottom = 4.dp)) {
                         items(playlists!!, key = { it.id }) { playlist ->

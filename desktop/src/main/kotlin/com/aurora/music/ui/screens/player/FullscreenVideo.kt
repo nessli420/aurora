@@ -1,5 +1,7 @@
 package com.aurora.music.ui.screens.player
 
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.animation.AnimatedVisibility
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.core.tween
@@ -144,8 +146,8 @@ internal fun FullscreenMusicVideo(
                         onClick = { wake(); onTogglePlay() },
                         modifier = Modifier.padding(horizontal = 18.dp).size(56.dp).paperClip(CircleShape).background(accent).pointerHoverIcon(PointerIcon.Hand),
                     ) {
-                        Icon(if (state.isPlaying) Icons.Filled.Pause else Icons.Filled.PlayArrow,
-                            appString(R.string.text_play_pause_14a1d0), tint = MaterialTheme.colorScheme.onPrimary)
+                        val playPause = appString(R.string.text_play_pause_14a1d0)
+                        com.aurora.music.ui.components.PlayPauseIcon(state.isPlaying, MaterialTheme.colorScheme.onPrimary, Modifier.size(24.dp).semantics { contentDescription = playPause })
                     }
                     IconButton(onClick = { wake(); onNext() }, Modifier.pointerHoverIcon(PointerIcon.Hand)) {
                         Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = Color.White)

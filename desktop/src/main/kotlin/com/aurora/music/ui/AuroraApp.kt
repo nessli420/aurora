@@ -98,6 +98,9 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.screenEnter
+import com.aurora.music.util.MotionTokens
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.savedstate.read
@@ -497,7 +500,7 @@ private fun Shell(
     val glass = LocalGlass.current
     // the opaque player hides the shell once it has slid in, and shows it again before its exit reveals anything
     val shellAlpha by animateFloatAsState(if (playerState.expanded) 0f else 1f,
-        if (glass) tween(260) else tween(0, delayMillis = if (playerState.expanded) 340 else 0), label = "shellFade")
+        if (glass) tween(260) else tween(0, delayMillis = if (playerState.expanded) MotionTokens.SLOW else 0), label = "shellFade")
 
     fun navigateTopLevel(route: String) {
         if (navController.currentDestination?.route == route) return
@@ -1099,7 +1102,8 @@ private fun Shell(
                         NavHost(
                             navController = navController,
                             startDestination = startDestination,
-                            modifier = Modifier.fillMaxSize(),
+                            // the nav host stays on none; screenEnter fades each page in from outside it
+                            modifier = Modifier.fillMaxSize().screenEnter(backStackEntry?.id),
                             enterTransition = { EnterTransition.None },
                             exitTransition = { ExitTransition.None },
                             popEnterTransition = { EnterTransition.None },
@@ -1605,8 +1609,8 @@ private fun Shell(
                     if (rail) {
                         AnimatedVisibility(
                             visible = shell.sidePanel,
-                            enter = expandHorizontally(tween(240)) + fadeIn(tween(200)),
-                            exit = shrinkHorizontally(tween(220)) + fadeOut(tween(160)),
+                            enter = expandHorizontally(Motion.enter()) + fadeIn(Motion.enter()),
+                            exit = shrinkHorizontally(Motion.exit()) + fadeOut(Motion.exit()),
                         ) {
                             Row(Modifier.fillMaxHeight().padding(top = panelSpacing, bottom = inner.calculateBottomPadding())) {
                                 PaneDivider(panelPane, onSave = { scope.launch { desktopSettings.setSidePanelWidth(it) } }, fromEnd = true)
@@ -1653,8 +1657,8 @@ private fun Shell(
                 if (playerState.expanded) BackHandler { player.setExpanded(false) }
                 AnimatedVisibility(
                     visible = playerState.expanded,
-                    enter = slideInVertically(animationSpec = tween(320)) { it } + fadeIn(tween(220)),
-                    exit = slideOutVertically(animationSpec = tween(280)) { it } + fadeOut(tween(180)),
+                    enter = slideInVertically(tween(MotionTokens.SLOW, easing = Motion.Emphasized)) { it } + fadeIn(Motion.enter()),
+                    exit = slideOutVertically(Motion.exit(MotionTokens.STANDARD)) { it } + fadeOut(Motion.exit(MotionTokens.STANDARD)),
                 ) {
                     LivePlayer(player) { live -> PlayerScreen(
                         state = live,
@@ -1718,7 +1722,7 @@ private fun Shell(
             // the shell's snackbar sits under the expanded player, so player messages need their own host above it
             if (playerState.expanded) SnackbarHost(snackbarHostState, Modifier.align(Alignment.BottomCenter).padding(bottom = 24.dp))
 
-            AnimatedVisibility(visible = showVisualizer, enter = fadeIn(tween(220)), exit = fadeOut(tween(180))) {
+            AnimatedVisibility(visible = showVisualizer, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
                 LivePlayer(player) { live -> VisualizerScreen(state = live, onClose = { showVisualizer = false }) }
             }
             if (showMix) {

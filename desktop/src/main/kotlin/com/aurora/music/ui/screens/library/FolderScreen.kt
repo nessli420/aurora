@@ -4,8 +4,8 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.fade
 import com.aurora.music.R
 
+import androidx.compose.animation.Crossfade
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -41,6 +41,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.FolderContent
 import com.aurora.music.model.Song
+import com.aurora.music.ui.components.EmptyState
 import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.ui.components.SongListHeader
@@ -49,7 +50,9 @@ import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.pressClickable
 import kotlin.math.floor
 import com.aurora.music.ui.theme.themedCorner
 
@@ -93,12 +96,15 @@ fun FolderScreen(
             }
         }
 
+        val pane = when {
+            loading -> 0
+            content == null || (content.folders.isEmpty() && content.songs.isEmpty()) -> 1
+            else -> 2
+        }
+        Crossfade(pane, animationSpec = Motion.state(), label = "folderPane") { shown ->
         when {
-            loading -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
-            content == null || (content.folders.isEmpty() && content.songs.isEmpty()) ->
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(appString(R.string.text_nothing_in_this_folder_d2a003), color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+            shown == 0 -> Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(72.dp)) }
+            shown == 1 || content == null -> EmptyState(Icons.Filled.Folder, appString(R.string.text_nothing_in_this_folder_d2a003), Modifier.fillMaxSize())
             else -> {
                 val bottom = contentPadding.calculateBottomPadding() + 24.dp
                 val listState = rememberLazyListState()
@@ -135,6 +141,7 @@ fun FolderScreen(
                 }
             }
         }
+        }
     }
 }
 
@@ -162,7 +169,7 @@ private fun FolderTile(name: String, modifier: Modifier = Modifier, onClick: () 
         modifier
             .height(56.dp)
             .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.45f)) else Modifier.auroraPanel(shape))
-            .clickable(onClick = onClick)
+            .pressClickable(onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
             .padding(horizontal = 14.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -1,5 +1,6 @@
 package com.aurora.music.ui.components
 
+import com.aurora.music.ui.theme.pressClickable
 import androidx.compose.material.icons.filled.VisibilityOff
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.Visibility
@@ -260,7 +261,7 @@ fun SongRow(
     ) {
         if (index != null) {
             Box(Modifier.width(IndexWidth), contentAlignment = Alignment.CenterEnd) {
-                if (isPlaying) Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                if (isPlaying) PlayingBars(MaterialTheme.colorScheme.primary, Modifier.size(16.dp))
                 else Text(index.toString(), style = MaterialTheme.typography.labelLarge, color = muted, maxLines = 1)
             }
             Spacer(Modifier.width(CellGap))
@@ -274,7 +275,7 @@ fun SongRow(
                             .background(MaterialTheme.colorScheme.scrim.copy(alpha = 0.45f)),
                         contentAlignment = Alignment.Center,
                     ) {
-                        Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                        PlayingBars(MaterialTheme.colorScheme.primary, Modifier.size(16.dp))
                     }
                 }
             }
@@ -424,7 +425,7 @@ private fun MediaCard(width: Dp, cover: String, onClick: () -> Unit, modifier: M
             .width(width)
             .clip(shape)
             .then(if (aurora) Modifier else Modifier.auroraPanel(shape))
-            .clickable(onClick = onClick)
+            .pressClickable(onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
             .coverHover(cover)
             .padding(if (aurora) 0.dp else CardPanelPadding),
@@ -497,7 +498,7 @@ fun ArtistCircle(artist: Artist, onClick: () -> Unit, modifier: Modifier = Modif
             .width(width)
             .clip(shape)
             .then(if (aurora) Modifier else Modifier.auroraPanel(shape))
-            .clickable(onClick = onClick)
+            .pressClickable(onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
             .then(if (aurora) Modifier.padding(bottom = 6.dp) else Modifier.padding(CardPanelPadding)),
         horizontalAlignment = Alignment.CenterHorizontally,

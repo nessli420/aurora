@@ -8,7 +8,9 @@ import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.Canvas
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -44,7 +46,7 @@ import androidx.compose.material3.MaterialTheme
 import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.Text
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
@@ -62,7 +64,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -80,6 +81,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.aurora.music.R
@@ -399,8 +401,8 @@ private fun AdvancedControls(bands: List<ParamBand>, current: Int, maxBands: Int
         Row(Modifier.weight(1f).horizontalScroll(rememberScrollState())) {
             bands.forEachIndexed { i, band -> BandTab(i + 1, i == current, band.isEnabled) { onSelect(i) } }
         }
-        IconButton(onClick = onRemove, enabled = bands.isNotEmpty()) { Icon(Icons.Filled.Remove, appString(R.string.text_remove_band_fb769d)) }
-        IconButton(onClick = onAdd, enabled = bands.size < maxBands) { Icon(Icons.Filled.Add, appString(R.string.text_add_band_563c3b)) }
+        IconButton(onClick = onRemove, enabled = bands.isNotEmpty(), modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Icon(Icons.Filled.Remove, appString(R.string.text_remove_band_fb769d)) }
+        IconButton(onClick = onAdd, enabled = bands.size < maxBands, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Icon(Icons.Filled.Add, appString(R.string.text_add_band_563c3b)) }
     }
     SettingsRowDivider()
     val band = bands.getOrNull(current)
@@ -416,12 +418,14 @@ private fun AdvancedControls(bands: List<ParamBand>, current: Int, maxBands: Int
 @Composable
 private fun BandTab(number: Int, active: Boolean, enabled: Boolean, onClick: () -> Unit) {
     val accent = MaterialTheme.colorScheme.primary
-    Column(Modifier.paperClip(RoundedCornerShape(themedCorner(8.dp))).clickable(onClick = onClick).semantics { selected = active }
+    val ink by animateColorAsState((if (active) accent else MaterialTheme.colorScheme.onSurface).copy(alpha = if (enabled) 1f else .4f), Motion.state(), label = "bandTabInk")
+    val line by animateColorAsState(if (active) accent else accent.copy(alpha = 0f), Motion.state(), label = "bandTabLine")
+    Column(Modifier.paperClip(RoundedCornerShape(themedCorner(8.dp))).pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onClick).semantics { selected = active }
         .padding(horizontal = 12.dp, vertical = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Text("$number", style = MaterialTheme.typography.titleMedium, fontWeight = if (active) FontWeight.Bold else FontWeight.Normal,
-            color = (if (active) accent else MaterialTheme.colorScheme.onSurface).copy(alpha = if (enabled) 1f else .4f))
+            color = ink)
         Box(Modifier.padding(top = 4.dp).size(width = 16.dp, height = 2.dp)
-            .background(if (active) accent else Color.Transparent, RoundedCornerShape(themedCorner(1.dp))))
+            .background(line, RoundedCornerShape(themedCorner(1.dp))))
     }
 }
 
@@ -431,8 +435,8 @@ private fun BandControls(index: Int, band: ParamBand, onChange: (ParamBand) -> U
     var menu by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
         Box(Modifier.weight(1f)) {
-            OutlinedButton(onClick = { menu = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(appString(R.string.text_filter_4a5de1, type.label), Modifier.weight(1f), maxLines = 1)
+            OutlinedButton(onClick = { menu = true }, modifier = Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand)) {
+                Text(appString(R.string.text_filter_4a5de1, type.label), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Icon(Icons.Filled.ArrowDropDown, appString(R.string.text_choose_filter_type_6698bc))
             }
             DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
@@ -444,7 +448,7 @@ private fun BandControls(index: Int, band: ParamBand, onChange: (ParamBand) -> U
         Spacer(Modifier.width(12.dp))
         val enabledLabel = appString(R.string.text_enabled_df174a)
         Switch(checked = band.isEnabled, onCheckedChange = { onChange(band.copy(enabled = it)) },
-            modifier = Modifier.semantics { contentDescription = enabledLabel })
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand).semantics { contentDescription = enabledLabel })
     }
     if (type == FilterType.CUSTOM_BIQUAD) {
         TextButton(onClick = onEditCustom, modifier = Modifier.padding(start = 8.dp)) { Text(appString(R.string.text_edit_band_903859, index + 1)) }
@@ -476,8 +480,8 @@ private fun ParamControl(label: String, value: Float, allowed: ClosedFloatingPoi
         }
         Row(verticalAlignment = Alignment.CenterVertically) {
             Slider(position(value), { onChange(round(valueAt(it))) }, Modifier.weight(1f))
-            IconButton(onClick = { onChange(round(step(value, -1)).coerceIn(allowed)) }) { Icon(Icons.Filled.Remove, appString(R.string.eq_decrease, label)) }
-            IconButton(onClick = { onChange(round(step(value, 1)).coerceIn(allowed)) }) { Icon(Icons.Filled.Add, appString(R.string.eq_increase, label)) }
+            IconButton(onClick = { onChange(round(step(value, -1)).coerceIn(allowed)) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Icon(Icons.Filled.Remove, appString(R.string.eq_decrease, label)) }
+            IconButton(onClick = { onChange(round(step(value, 1)).coerceIn(allowed)) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Icon(Icons.Filled.Add, appString(R.string.eq_increase, label)) }
         }
     }
 }

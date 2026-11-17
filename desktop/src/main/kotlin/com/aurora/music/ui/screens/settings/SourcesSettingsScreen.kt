@@ -7,8 +7,9 @@ import com.aurora.music.localization.appString
 import com.aurora.music.localization.appPlural
 import com.aurora.music.R
 
-import androidx.compose.foundation.background
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -37,7 +38,6 @@ import androidx.compose.material.icons.filled.TextFields
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -61,7 +61,7 @@ import com.aurora.music.desktop.ui.FilePickers
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import kotlinx.coroutines.launch
 import java.io.File
-import com.aurora.music.ui.theme.themedCorner
+import com.aurora.music.ui.theme.Motion
 
 private fun tierLabel(t: String) = when (t) {
     "local" -> appString(R.string.text_on_device_file_7d2f79)
@@ -115,13 +115,13 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                     }
                     SettingsNavRow(Icons.Filled.CreateNewFolder, appString(R.string.text_add_music_folder_a083d8),
                         subtitle = if (folders.isEmpty()) appString(R.string.text_choose_where_your_music_lives_on_this_pc_876bd8) else null, onClick = ::addFolder)
-                    if (folders.isNotEmpty()) {
+                    SettingsReveal(folders.isNotEmpty()) {
                         SettingsRowDivider()
                         SettingsNavRow(Icons.Filled.Refresh, appString(R.string.text_refresh_56e3ba),
                             subtitle = if (scan.running) "${scan.scanned} / ${scan.total}" else appPlural(R.plurals.track_count, trackCount)) {
                             if (!scan.running) container.scope.launch { runCatching { library.refresh() } }
                         }
-                        if (scan.running) {
+                        SettingsReveal(scan.running) {
                             LinearProgressIndicator(
                                 progress = { if (scan.total == 0) 0f else scan.scanned.toFloat() / scan.total },
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
@@ -176,33 +176,30 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                     ) { v -> scope.launch { store.setUnifiedLibrary(v) } }
                 }
             }
-            if (unified) {
-                item {
+            item {
+                SettingsReveal(unified) {
                     Text(
                         appString(R.string.text_included_in_the_unified_library_0ecc5b),
                         style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 4.dp),
                     )
-                }
-                item { SourceRow(appString(R.string.text_on_this_device_a7f962), appString(R.string.text_local_files_f4a889), included = true, toggleable = false) {} }
-                items(servers.size) { i ->
-                    val s = servers[i]
-                    val key = s.accountKey()
-                    val noneSelected = mergeKeys == setOf(MERGE_NONE)
-                    val included = !noneSelected && (mergeKeys.isEmpty() || key in mergeKeys)
-                    SourceRow(s.typeLabel.localizedMediaType(), s.server.removePrefix("http://").removePrefix("https://"), included = included, toggleable = true) {
-                        val current = when {
-                            noneSelected -> emptySet()
-                            mergeKeys.isEmpty() -> servers.map { it.accountKey() }.toSet()   // empty means all make explicit
-                            else -> mergeKeys
+                    SourceRow(appString(R.string.text_on_this_device_a7f962), appString(R.string.text_local_files_f4a889), included = true, toggleable = false) {}
+                    servers.forEach { s ->
+                        val key = s.accountKey()
+                        val noneSelected = mergeKeys == setOf(MERGE_NONE)
+                        val included = !noneSelected && (mergeKeys.isEmpty() || key in mergeKeys)
+                        SourceRow(s.typeLabel.localizedMediaType(), s.server.removePrefix("http://").removePrefix("https://"), included = included, toggleable = true) {
+                            val current = when {
+                                noneSelected -> emptySet()
+                                mergeKeys.isEmpty() -> servers.map { it.accountKey() }.toSet()   // empty means all make explicit
+                                else -> mergeKeys
+                            }
+                            val next = if (key in current) current - key else current + key
+                            // empty re-reads as all so persist none-sentinel for local only
+                            scope.launch { store.setMergeSources(if (next.isEmpty()) setOf(MERGE_NONE) else next) }
                         }
-                        val next = if (key in current) current - key else current + key
-                        // empty re-reads as all so persist none-sentinel for local only
-                        scope.launch { store.setMergeSources(if (next.isEmpty()) setOf(MERGE_NONE) else next) }
                     }
-                }
-                if (servers.isEmpty()) {
-                    item {
+                    if (servers.isEmpty()) {
                         Text(
                             appString(R.string.plex_sources_empty_detail),
                             style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -219,7 +216,7 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                         appString(R.string.catalogue_library_copies_summary), catalogue.useLibrary) { v ->
                         scope.launch { store.setCatalogueLibraryCopies(v) }
                     }
-                    if (catalogue.useLibrary) {
+                    SettingsReveal(catalogue.useLibrary) {
                         SettingsRowDivider()
                         SegmentedRow(appString(R.string.catalogue_match), listOf(appString(R.string.catalogue_match_strict),
                             appString(R.string.catalogue_match_relaxed)), if (catalogue.relaxed) 1 else 0) { i ->
@@ -270,43 +267,50 @@ private fun FolderRow(path: String, onRemove: () -> Unit) {
 
 @Composable
 internal fun PriorityRow(label: String, subtitle: String, enabled: Boolean, canUp: Boolean, canDown: Boolean, onUp: () -> Unit, onDown: () -> Unit) {
-    val alpha = if (enabled) 1f else 0.4f
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).paperClip(RoundedCornerShape(themedCorner(14.dp)))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 14.dp, vertical = 10.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha))
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha))
+    val alpha by animateFloatAsState(if (enabled) 1f else 0.4f, Motion.state(), label = "priorityAlpha")
+    Box(Modifier.padding(vertical = 4.dp)) {
+        SettingsGroup {
+            Row(
+                Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha),
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = alpha))
+                }
+                Icon(
+                    Icons.Filled.KeyboardArrowUp, appString(R.string.text_move_up_b4f57c),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canUp) 1f else 0.25f),
+                    modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).then(if (enabled && canUp) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier)
+                        .clickable(enabled = enabled && canUp, onClick = onUp).padding(8.dp),
+                )
+                Icon(
+                    Icons.Filled.KeyboardArrowDown, appString(R.string.text_move_down_260ff8),
+                    tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canDown) 1f else 0.25f),
+                    modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).then(if (enabled && canDown) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier)
+                        .clickable(enabled = enabled && canDown, onClick = onDown).padding(8.dp),
+                )
+            }
         }
-        Icon(
-            Icons.Filled.KeyboardArrowUp, appString(R.string.text_move_up_b4f57c),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canUp) 1f else 0.25f),
-            modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).then(if (enabled && canUp) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier)
-                .clickable(enabled = enabled && canUp, onClick = onUp).padding(8.dp),
-        )
-        Icon(
-            Icons.Filled.KeyboardArrowDown, appString(R.string.text_move_down_260ff8),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = if (enabled && canDown) 1f else 0.25f),
-            modifier = Modifier.size(40.dp).paperClip(RoundedCornerShape(50)).then(if (enabled && canDown) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier)
-                .clickable(enabled = enabled && canDown, onClick = onDown).padding(8.dp),
-        )
     }
 }
 
 @Composable
 private fun SourceRow(title: String, subtitle: String, included: Boolean, toggleable: Boolean, onToggle: () -> Unit) {
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).paperClip(RoundedCornerShape(themedCorner(14.dp)))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(horizontal = 14.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+    Box(Modifier.padding(vertical = 4.dp)) {
+        SettingsGroup {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Column(Modifier.weight(1f)) {
+                    Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(subtitle, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+                Spacer(Modifier.width(12.dp))
+                SettingsToggle(included, enabled = toggleable) { onToggle() }
+            }
         }
-        Switch(checked = included, enabled = toggleable, onCheckedChange = { onToggle() },
-            modifier = if (toggleable) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier)
     }
 }

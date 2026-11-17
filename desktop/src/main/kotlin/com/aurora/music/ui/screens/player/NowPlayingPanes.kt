@@ -4,7 +4,6 @@ import androidx.compose.material.icons.filled.Explore
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
@@ -50,6 +49,7 @@ import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.auroraPanel
 
 enum class PlayerPane(val icon: ImageVector, private val labelRes: Int) {
@@ -89,9 +89,11 @@ fun PaneSwitcher(selected: PlayerPane?, onSelect: (PlayerPane) -> Unit, modifier
 internal fun PaneTab(label: String, icon: ImageVector?, selected: Boolean, onClick: () -> Unit) {
     val scale = LocalUiPrefs.current.tabletPanelScale
     val container by animateColorAsState(
-        if (selected) MaterialTheme.colorScheme.primary else Color.Transparent, tween(180), label = "paneTab",
+        if (selected) MaterialTheme.colorScheme.primary else Color.Transparent, Motion.state(), label = "paneTab",
     )
-    val content = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant
+    val content by animateColorAsState(
+        if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "paneTabInk",
+    )
     Row(
         Modifier.paperClip(CircleShape).background(container)
             .selectable(selected = selected, role = Role.Tab, onClick = onClick)
@@ -123,14 +125,14 @@ fun NowPlayingSidePanel(
             PaneSwitcher(pane, onSelect)
             Spacer(Modifier.weight(1f))
             actions(pane)
-            IconButton(onClick = onClose) {
+            IconButton(onClick = onClose, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
                 Icon(Icons.Filled.Close, appString(R.string.tablet_close_panel), tint = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
         Spacer(Modifier.height(spacing.coerceAtLeast(4.dp)))
         AnimatedContent(
             targetState = pane,
-            transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(120)) },
+            transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) },
             label = "sidePanelPane",
             modifier = Modifier.weight(1f).fillMaxWidth(),
         ) { target ->

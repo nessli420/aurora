@@ -146,11 +146,11 @@ private fun NavEditRow(
             if (placement == NavPlacement.HIDDEN) {
                 TextButton(onClick = { onMove(NavPlacement.MAIN) }, modifier = hand) {
                     Icon(Icons.Filled.Add, null, Modifier.size(16.dp)); Spacer(Modifier.width(4.dp))
-                    Text(appString(R.string.nav_section_main))
+                    Text(appString(R.string.nav_section_main), maxLines = 1)
                 }
                 TextButton(onClick = { onMove(NavPlacement.MORE) }, modifier = hand) {
                     Icon(Icons.Filled.Add, null, Modifier.size(16.dp)); Spacer(Modifier.width(4.dp))
-                    Text(appString(R.string.nav_section_more))
+                    Text(appString(R.string.nav_section_more), maxLines = 1)
                 }
             } else {
                 IconButton(onClick = { onShift(-1) }, enabled = !first, modifier = hand) {
@@ -161,7 +161,7 @@ private fun NavEditRow(
                 }
                 if (item.locked) {
                     Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.Lock, appString(R.string.nav_locked), tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                        Icon(Icons.Filled.Lock, null, tint = colors.onSurfaceVariant, modifier = Modifier.size(18.dp))
                     }
                 } else Box {
                     IconButton(onClick = { menu = true }, modifier = hand) {

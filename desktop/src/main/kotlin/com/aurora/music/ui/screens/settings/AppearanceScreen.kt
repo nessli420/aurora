@@ -6,7 +6,6 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -71,6 +70,21 @@ import com.aurora.music.ui.theme.auroraShapes
 import com.aurora.music.ui.theme.auroraFontFamily
 import com.aurora.music.ui.theme.auroraTypography
 import com.aurora.music.ui.theme.styleColorScheme
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.togetherWith
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.PressScaleIndication
+import com.aurora.music.ui.theme.pressClickable
 import kotlinx.coroutines.launch
 import kotlin.math.roundToInt
 
@@ -95,9 +109,11 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
             item { SettingsSectionTitle(appString(R.string.text_theme_a797e3)) }
             item { ThemeStylePicker(prefs) { style -> scope.launch { store.setThemeStyle(style) } } }
             // paper is the website's light edition, so it has no mode to pick
-            if (prefs.themeStyle != ThemeStyle.PAPER) item {
-                SegmentedRow(appString(R.string.text_mode_a7b93d), listOf(appString(R.string.text_system_bc0792), appString(R.string.text_light_a36ef8), appString(R.string.text_dark_ae1ef0), "AMOLED"), prefs.themeMode) { i ->
-                    scope.launch { store.setThemeMode(i) }
+            item {
+                SettingsReveal(prefs.themeStyle != ThemeStyle.PAPER) {
+                    SegmentedRow(appString(R.string.text_mode_a7b93d), listOf(appString(R.string.text_system_bc0792), appString(R.string.text_light_a36ef8), appString(R.string.text_dark_ae1ef0), "AMOLED"), prefs.themeMode) { i ->
+                        scope.launch { store.setThemeMode(i) }
+                    }
                 }
             }
             item {
@@ -122,22 +138,16 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                     checked = translucentWindow,
                 ) { v -> scope.launch { desktopSettings.setTranslucentWindow(v) } }
             }
-            if (glassSettings && translucentWindow) {
-                item {
+            item {
+                SettingsReveal(glassSettings && translucentWindow) {
                     SegmentedRow(appString(R.string.text_backdrop_d4f5e9),
                         listOf(appString(R.string.text_acrylic_f39ce1), appString(R.string.text_mica_3ccf84)), if (micaBackdrop) 1 else 0) { i ->
                         scope.launch { desktopSettings.setMicaBackdrop(i == 1) }
                     }
-                }
-                item {
                     SettingsSliderRow(appString(R.string.text_background_tint_a39a12), "${(glassLook.tint / 0.8f * 100).roundToInt()}%",
                         glassLook.tint, 0f..0.8f) { v -> scope.launch { desktopSettings.setGlassTint(v) } }
-                }
-                item {
                     SettingsSliderRow(appString(R.string.text_panel_frost_ada0d3), "${(glassLook.frost / 0.3f * 100).roundToInt()}%",
                         glassLook.frost, 0f..0.3f) { v -> scope.launch { desktopSettings.setGlassFrost(v) } }
-                }
-                item {
                     SettingsSwitchRow(title = appString(R.string.text_glass_edges_f462cd), checked = glassLook.edges) { v ->
                         scope.launch { desktopSettings.setGlassEdges(v) }
                     }
@@ -167,22 +177,28 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 ) { v -> scope.launch { desktopSettings.setAccentFollowsPlaying(v) } }
             }
 
-            when (prefs.accentMode) {
-                AccentMode.PRESET -> item {
-                    AccentPresetGrid(selected = prefs.accentPreset) { i -> scope.launch { store.setAccentPreset(i) } }
-                }
-                AccentMode.CUSTOM -> item {
-                    CustomColorPicker(initialArgb = prefs.accentColor.toInt()) { argb ->
-                        scope.launch { store.setAccentColor(argb.toLong() and 0xFFFFFFFFL) }
+            item {
+                val settled = rememberSettled()
+                AnimatedContent(
+                    prefs.accentMode,
+                    transitionSpec = {
+                        if (settled) fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using SizeTransform { _, _ -> Motion.enter() }
+                        else EnterTransition.None togetherWith ExitTransition.None using null
+                    },
+                    label = "accentMode",
+                ) { mode ->
+                    when (mode) {
+                        AccentMode.PRESET -> AccentPresetGrid(selected = prefs.accentPreset) { i -> scope.launch { store.setAccentPreset(i) } }
+                        AccentMode.CUSTOM -> CustomColorPicker(initialArgb = prefs.accentColor.toInt()) { argb ->
+                            scope.launch { store.setAccentColor(argb.toLong() and 0xFFFFFFFFL) }
+                        }
+                        else -> Text(
+                            appString(if (HostPlatform.isWindows) R.string.text_using_your_windows_accent_colour_7d4b4a else R.string.text_using_your_system_accent_colour_89502e),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp),
+                        )
                     }
-                }
-                else -> item {
-                    Text(
-                        appString(if (HostPlatform.isWindows) R.string.text_using_your_windows_accent_colour_7d4b4a else R.string.text_using_your_system_accent_colour_89502e),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    )
                 }
             }
             }
@@ -208,8 +224,8 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                     scope.launch { store.setPlayerSeekStyle(i) }
                 }
             }
-            if (prefs.playerSeekStyle == SeekStyle.WAVEFORM) {
-                item {
+            item {
+                SettingsReveal(prefs.playerSeekStyle == SeekStyle.WAVEFORM) {
                     SettingsSliderRow(appString(R.string.text_waveform_bars_c215c9), "${prefs.playerWaveBars}", prefs.playerWaveBars.toFloat(), 24f..96f) { v ->
                         scope.launch { store.setPlayerWaveBars(v.roundToInt()) }
                     }
@@ -346,12 +362,13 @@ private fun TypefacePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
                     Modifier.fillMaxWidth()
                         .pointerHoverIcon(PointerIcon.Hand)
                         .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(typeface) })
-                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                        .padding(horizontal = 20.dp, vertical = 12.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(label, style = MaterialTheme.typography.titleMedium, fontFamily = family, fontWeight = FontWeight.Bold)
+                        Text(label, style = MaterialTheme.typography.titleMedium, fontFamily = family, fontWeight = FontWeight.Bold,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(
                             appString(R.string.typeface_preview),
                             style = MaterialTheme.typography.bodySmall,
@@ -374,19 +391,23 @@ private fun ThemeStylePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 row.forEach { identity ->
                     val selected = identity.id == prefs.themeStyle
+                    val frameWidth by animateDpAsState(if (selected) 2.dp else 1.dp, Motion.state(), label = "themeFrameWidth")
+                    val frame by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, Motion.state(), label = "themeFrame")
                     Column(
                         Modifier.weight(1f)
                             .clip(MaterialTheme.shapes.medium)
                             .background(MaterialTheme.colorScheme.surface)
-                            .border(if (selected) 2.dp else 1.dp, if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant, MaterialTheme.shapes.medium)
+                            .border(frameWidth, frame, MaterialTheme.shapes.medium)
                             .pointerHoverIcon(PointerIcon.Hand)
-                            .selectable(selected = selected, role = Role.RadioButton, onClick = { onSelect(identity.id) })
+                            .selectable(selected = selected, interactionSource = null, indication = PressScaleIndication, role = Role.RadioButton, onClick = { onSelect(identity.id) })
                             .padding(4.dp),
                     ) {
                         ThemePreview(identity, prefs, dark)
                         Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 6.dp, top = 10.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(identity.name, style = MaterialTheme.typography.labelLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
-                            if (selected) Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            AnimatedVisibility(selected, enter = fadeIn(Motion.state()) + scaleIn(Motion.state()), exit = fadeOut(Motion.state()) + scaleOut(Motion.state())) {
+                                Icon(Icons.Filled.Check, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(18.dp))
+                            }
                         }
                     }
                 }
@@ -438,15 +459,16 @@ private fun AccentPresetGrid(selected: Int, onSelect: (Int) -> Unit) {
                 row.forEachIndexed { colIdx, preset ->
                     val index = rowIdx * 5 + colIdx
                     val isSel = index == selected
+                    val ring by animateColorAsState(MaterialTheme.colorScheme.onBackground.copy(alpha = if (isSel) 1f else 0f), Motion.state(), label = "accentRing")
                     Box(
                         Modifier.weight(1f).height(56.dp).paperClip(RoundedCornerShape(16.dp))
                             .background(preset.seed)
-                            .then(if (isSel) Modifier.border(3.dp, MaterialTheme.colorScheme.onBackground, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) else Modifier)
+                            .border(3.dp, ring, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)))
                             .pointerHoverIcon(PointerIcon.Hand)
-                            .clickable { onSelect(index) },
+                            .pressClickable { onSelect(index) },
                         contentAlignment = Alignment.Center,
                     ) {
-                        if (isSel) {
+                        androidx.compose.animation.AnimatedVisibility(isSel, enter = fadeIn(Motion.state()) + scaleIn(Motion.state()), exit = fadeOut(Motion.state()) + scaleOut(Motion.state())) {
                             val on = if (preset.seed.luminanceApprox() > 0.5f) Color.Black else Color.White
                             Icon(Icons.Filled.Check, appString(R.string.text_selected_9a976f), tint = on, modifier = Modifier.size(22.dp))
                         }
@@ -476,9 +498,11 @@ private fun CustomColorPicker(initialArgb: Int, onChange: (Int) -> Unit) {
     val preview = Color(argb())
 
     Column(Modifier.fillMaxWidth()) {
-        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             Box(Modifier.size(56.dp).paperClip(CircleShape).background(preview).border(2.dp, MaterialTheme.colorScheme.outline, com.aurora.music.ui.theme.paperSquare(CircleShape)))
-            Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            Text(appString(R.string.text_live_preview_d44c24), style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         DirectSliderRow(appString(R.string.text_hue_7e58a6), "${hue.roundToInt()}°", hue, 0f..360f, onValueChangeFinished = flush) { hue = it; push() }
         DirectSliderRow(appString(R.string.text_saturation_20a32b), "${(sat * 100).roundToInt()}%", sat, 0f..1f, onValueChangeFinished = flush) { sat = it; push() }

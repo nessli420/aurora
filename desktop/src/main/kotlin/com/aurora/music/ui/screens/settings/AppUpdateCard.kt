@@ -5,7 +5,8 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import com.aurora.music.ui.theme.Button
@@ -17,6 +18,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -41,6 +44,7 @@ fun AppUpdateCard(updater: DesktopUpdater) {
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 internal fun AppUpdateCardContent(
     state: DesktopUpdateState,
@@ -70,6 +74,7 @@ internal fun AppUpdateCardContent(
         state.checked -> appString(R.string.text_latest_release_on_github_a3fe9b, (state.release?.tag))
         else -> appString(R.string.text_get_the_latest_version_from_github_ffde96)
     }
+    val hand = Modifier.pointerHoverIcon(PointerIcon.Hand)
     SettingsGroup {
         Column(Modifier.fillMaxWidth().padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
@@ -87,25 +92,25 @@ internal fun AppUpdateCardContent(
                 }
             }
             when (state.download) {
-                UpdateDownload.DOWNLOADING -> TextButton(onClick = onCancel) { Text(appString(R.string.text_cancel_download_67bb11)) }
+                UpdateDownload.DOWNLOADING -> TextButton(onClick = onCancel, modifier = hand) { Text(appString(R.string.text_cancel_download_67bb11)) }
                 UpdateDownload.VERIFYING -> Unit
                 UpdateDownload.READY -> {
-                    Button(onClick = onInstall, modifier = Modifier.fillMaxWidth()) { Text(appString(R.string.text_install_update_8a3695)) }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = onReleaseNotes) { Text(appString(R.string.text_release_notes_cd5af7)) }
-                        TextButton(onClick = onCancel) { Text(appString(R.string.text_discard_36fff6)) }
+                    Button(onClick = onInstall, modifier = Modifier.fillMaxWidth().then(hand)) { Text(appString(R.string.text_install_update_8a3695)) }
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(onClick = onReleaseNotes, modifier = hand) { Text(appString(R.string.text_release_notes_cd5af7)) }
+                        TextButton(onClick = onCancel, modifier = hand) { Text(appString(R.string.text_discard_36fff6)) }
                     }
                 }
                 UpdateDownload.IDLE -> {
                     if (state.updateAvailable) {
                         Button(onClick = if (state.installer != null) onDownload else onReleaseNotes,
-                            enabled = !state.checking, modifier = Modifier.fillMaxWidth()) {
+                            enabled = !state.checking, modifier = Modifier.fillMaxWidth().then(if (state.checking) Modifier else hand)) {
                             Text(if (state.installer != null) appString(R.string.text_download_update_870d57) else appString(R.string.text_view_on_github_0c7799))
                         }
                     }
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        TextButton(onClick = onCheck, enabled = !state.checking) { Text(appString(R.string.text_check_for_updates_736b90)) }
-                        TextButton(onClick = onReleaseNotes) { Text(appString(R.string.text_release_notes_cd5af7)) }
+                    FlowRow(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        TextButton(onClick = onCheck, enabled = !state.checking, modifier = if (state.checking) Modifier else hand) { Text(appString(R.string.text_check_for_updates_736b90)) }
+                        TextButton(onClick = onReleaseNotes, modifier = hand) { Text(appString(R.string.text_release_notes_cd5af7)) }
                     }
                 }
             }

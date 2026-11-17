@@ -7,6 +7,10 @@ import com.aurora.music.localization.appString
 import com.aurora.music.R
 
 import androidx.compose.ui.backhandler.BackHandler
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.*
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.Switch
 import com.aurora.music.ui.theme.TextButton
 import com.aurora.music.ui.theme.FilledTonalButton
 import com.aurora.music.ui.theme.OutlinedButton
@@ -26,10 +31,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
@@ -37,6 +45,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.mix.*
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.viewmodel.MixViewModel
 import java.util.Locale
 import kotlin.math.*
@@ -78,8 +88,9 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
                 Column {
                     Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = onClose) { Icon(Icons.Default.ArrowBack, appString(R.string.text_close_mix_studio_bb83bf)) }
-                        Column(Modifier.weight(1f).clickable { rename = true }.padding(vertical = 8.dp)) {
-                            Text(appString(R.string.text_mix_studio_cdc446), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+                        Column(Modifier.weight(1f).clickable { rename = true }.pointerHoverIcon(PointerIcon.Hand).padding(vertical = 8.dp)) {
+                            Text(appString(R.string.text_mix_studio_cdc446), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(project.name + if (state.dirty) " ·" else "", style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
@@ -88,7 +99,7 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
                     }
                     Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                         Text(appString(R.string.tracks_duration, appPlural(R.plurals.track_count, (project.clips.size)), (time(project.durationSec))), Modifier.weight(1f), style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         IconButton(onClick = vm::undo, enabled = state.canUndo) { Icon(Icons.Default.Undo, appString(R.string.text_undo_edit_7e5f02)) }
                         IconButton(onClick = vm::redo, enabled = state.canRedo) { Icon(Icons.Default.Redo, appString(R.string.text_redo_edit_15178f)) }
                         IconButton(onClick = { master = true }) { Icon(Icons.Default.Tune, appString(R.string.text_master_controls_1c46ae)) }
@@ -106,8 +117,8 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
                             IconButton(onClick = vm::stop, enabled = active) { Icon(Icons.Default.Stop, appString(R.string.text_stop_mix_and_return_to_queue_eeb40f)) }
                             FilledIconButton(onClick = { if (active && playback.error == null) vm.toggle() else vm.play(position) }, enabled = project.clips.size >= 2 && !state.busy && !state.building,
                                 modifier = Modifier.size(56.dp).semantics { contentDescription = if (active && playback.playing) appString(R.string.text_pause_mix_cf2e8e) else appString(R.string.text_play_mix_7ae7ed) }) {
-                                if (active && playback.buffering) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-                                else Icon(if (active && playback.playing) Icons.Default.Pause else Icons.Default.PlayArrow, if (active && playback.playing) appString(R.string.text_pause_mix_cf2e8e) else appString(R.string.text_play_mix_7ae7ed))
+                                if (active && playback.buffering) CircularProgressIndicator(Modifier.size(24.dp), color = LocalContentColor.current, strokeWidth = 2.dp)
+                                else com.aurora.music.ui.components.PlayPauseIcon(active && playback.playing, LocalContentColor.current, Modifier.size(24.dp))
                             }
                             IconButton(onClick = { vm.edit { it.copy(loop = !it.loop) } }) {
                                 Icon(Icons.Default.Repeat, appString(R.string.text_loop_mix_721c7e, (if (project.loop) appString(R.string.text_on_e0049a) else appString(R.string.text_off_e3de5a))), tint = if (project.loop) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
@@ -122,7 +133,7 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
                 if (state.building) item {
                     ElevatedCard(Modifier.fillMaxWidth()) { Column(Modifier.padding(16.dp)) {
                         Text(appString(R.string.text_creating_transitions_12f0bd), style = MaterialTheme.typography.titleMedium)
-                        Text("${state.buildDone} / ${state.buildTotal} · ${state.buildLabel}", maxLines = 2)
+                        Text("${state.buildDone} / ${state.buildTotal} · ${state.buildLabel}", maxLines = 2, overflow = TextOverflow.Ellipsis)
                         LinearProgressIndicator(progress = { if (state.buildTotal > 0) (state.buildDone + state.analysisProgress) / state.buildTotal else 0f }, modifier = Modifier.fillMaxWidth().padding(top = 12.dp))
                         TextButton(onClick = vm::cancelAutoMix) { Text(appString(R.string.text_cancel_keep_current_mix_d10ab9)) }
                     } }
@@ -134,10 +145,11 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
                     Column(Modifier.fillMaxWidth().padding(vertical = 30.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                         Icon(Icons.Default.GraphicEq, null, Modifier.size(64.dp), tint = MaterialTheme.colorScheme.primary)
                         Spacer(Modifier.height(18.dp))
-                        Text(appString(R.string.text_make_room_for_your_own_mix_7600ed), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                        Text(appString(R.string.text_make_room_for_your_own_mix_7600ed), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center)
                         Spacer(Modifier.height(8.dp))
                         Text(appString(R.string.text_blend_transitions_or_layer_tracks_shape_every_entrance_exit_and_s_022092), style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
                         Spacer(Modifier.height(18.dp))
                         if (queue.isNotEmpty()) OutlinedButton(onClick = { vm.seed(queue) }) { Text(appString(R.string.text_start_from_queue_237018)) }
                     }
@@ -145,7 +157,7 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
                 item {
                     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                         Text(if (project.clips.isEmpty()) appString(R.string.text_your_tracks_226210) else appString(R.string.text_arrangement_48db54), Modifier.weight(1f), style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         FilledTonalButton(onClick = { picker = true; if (state.songs.isEmpty() && state.query.isBlank()) vm.search("") }, enabled = project.clips.size < MixProject.MAX_TRACKS) {
                             Icon(Icons.Default.Add, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(appString(R.string.text_add_track_316cad))
                         }
@@ -202,30 +214,31 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
         } }, confirmButton = { TextButton(onClick = { autoConfirm = false; vm.autoMix() }) { Text(appString(R.string.text_create_transitions_47dcdf)) } },
         dismissButton = { TextButton(onClick = { autoConfirm = false }) { Text(appString(R.string.text_cancel_77dfd2)) } })
     if (trackList) ModalBottomSheet(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { trackList = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
-        Text(appString(R.string.text_mix_tracklist_a8a9ff), style = MaterialTheme.typography.headlineSmall, modifier = Modifier.padding(20.dp))
+        Text(appString(R.string.text_mix_tracklist_a8a9ff), style = MaterialTheme.typography.titleLarge, modifier = Modifier.padding(20.dp))
         LazyColumn(Modifier.fillMaxHeight(.8f)) {
             items(project.clips, key = { it.id }) { clip ->
-                ListItem(headlineContent = { Text(clip.song.title) }, supportingContent = { Text("${time(clip.startSec)} · ${clip.song.artist}") },
+                ListItem(headlineContent = { Text(clip.song.title, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+                    supportingContent = { Text("${time(clip.startSec)} · ${clip.song.artist}", maxLines = 1, overflow = TextOverflow.Ellipsis) },
                     leadingContent = { Artwork(clip.song.artworkUrl, clip.song.accent, Modifier.size(48.dp)) },
-                    modifier = Modifier.clickable { vm.select(clip.id); trackList = false })
+                    modifier = Modifier.clickable { vm.select(clip.id); trackList = false }.pointerHoverIcon(PointerIcon.Hand))
             }
         }
     }
     if (picker) ModalBottomSheet(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { picker = false }, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
         Column(Modifier.fillMaxWidth().fillMaxHeight(0.85f).padding(horizontal = 20.dp)) {
-            Text(appString(R.string.text_add_to_your_mix_927f93), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.text_add_to_your_mix_927f93), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(!layered, { layered = false }, label = { Text(appString(R.string.text_blend_after_last_68db27)) })
                 FilterChip(layered, { layered = true }, label = { Text(appString(R.string.text_layer_from_start_25e830)) })
             }
             OutlinedTextField(state.query, vm::search, Modifier.fillMaxWidth(), label = { Text(appString(R.string.text_search_your_library_d9fa3f)) },
                 singleLine = true, leadingIcon = { Icon(Icons.Default.Search, null) })
-            if (state.searching) LinearProgressIndicator(Modifier.fillMaxWidth())
+            Box(Modifier.fillMaxWidth().height(4.dp)) { if (state.searching) LinearProgressIndicator(Modifier.fillMaxWidth()) }
             LazyColumn(Modifier.weight(1f), contentPadding = PaddingValues(vertical = 12.dp)) {
                 val songs = (if (state.query.isBlank()) queue + state.songs else state.songs).distinctBy { it.id }
-                if (!state.searching && songs.isEmpty()) item { Text(appString(R.string.text_no_songs_found_try_another_search_or_check_your_library_connectio_b6d0ed), Modifier.padding(16.dp)) }
+                if (!state.searching && songs.isEmpty()) item { EmptyState(Icons.Default.SearchOff, appString(R.string.text_no_songs_found_try_another_search_or_check_your_library_connectio_b6d0ed)) }
                 items(songs, key = { it.id }) { song ->
-                    Row(Modifier.fillMaxWidth().clickable { vm.add(song, layered); picker = false }.padding(vertical = 10.dp),
+                    Row(Modifier.fillMaxWidth().clickable { vm.add(song, layered); picker = false }.pointerHoverIcon(PointerIcon.Hand).padding(vertical = 10.dp),
                         verticalAlignment = Alignment.CenterVertically) {
                         Artwork(song.artworkUrl, MaterialTheme.colorScheme.primary, Modifier.size(48.dp), corner = 8.dp)
                         Column(Modifier.weight(1f).padding(horizontal = 12.dp)) {
@@ -241,20 +254,20 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
     if (saved) ModalBottomSheet(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { saved = false }) {
         LazyColumn(contentPadding = PaddingValues(20.dp)) {
             item { Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(appString(R.string.text_your_mixes_7e74f6), Modifier.weight(1f), style = MaterialTheme.typography.headlineSmall)
+                Text(appString(R.string.text_your_mixes_7e74f6), Modifier.weight(1f), style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 TextButton(onClick = { if (state.dirty) newConfirm = true else vm.newMix(); saved = false }) { Text(appString(R.string.text_new_mix_48ef4a)) }
             } }
-            if (state.saved.isEmpty()) item { Text(appString(R.string.text_save_your_first_mix_to_find_it_here_9d6680), Modifier.padding(vertical = 24.dp)) }
+            if (state.saved.isEmpty()) item { EmptyState(Icons.Default.FolderOpen, appString(R.string.text_save_your_first_mix_to_find_it_here_9d6680)) }
             items(state.saved, key = { it.id }) { mix ->
-                ListItem(headlineContent = { Text(mix.name) }, supportingContent = { Text(appString(R.string.tracks_duration, appPlural(R.plurals.track_count, (mix.clips.size)), (time(mix.durationSec)))) },
+                ListItem(headlineContent = { Text(mix.name, maxLines = 1, overflow = TextOverflow.Ellipsis) }, supportingContent = { Text(appString(R.string.tracks_duration, appPlural(R.plurals.track_count, (mix.clips.size)), (time(mix.durationSec)))) },
                     trailingContent = { IconButton(onClick = { delete = mix }) { Icon(Icons.Default.DeleteOutline, appString(R.string.text_delete_48c860, (mix.name))) } },
-                    modifier = Modifier.clickable { if (state.dirty) replace = mix else vm.open(mix); saved = false })
+                    modifier = Modifier.clickable { if (state.dirty) replace = mix else vm.open(mix); saved = false }.pointerHoverIcon(PointerIcon.Hand))
             }
         }
     }
     if (master) ModalBottomSheet(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { master = false }) {
         Column(Modifier.padding(24.dp)) {
-            Text(appString(R.string.text_master_controls_1c46ae), style = MaterialTheme.typography.headlineSmall)
+            Text(appString(R.string.text_master_controls_1c46ae), style = MaterialTheme.typography.titleLarge)
             ValueSlider(appString(R.string.text_master_level_2293c4), project.masterDb, -36f..0f, appString(R.string.text_db_e44622)) { value -> vm.edit { it.copy(masterDb = value) } }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Column(Modifier.weight(1f)) {
@@ -277,9 +290,9 @@ fun MixScreen(vm: MixViewModel, queue: List<Song>, onClose: () -> Unit) {
         title = { Text(appString(R.string.text_replace_unsaved_edits_8ff8f2)) }, text = { Text(appString(R.string.text_save_this_mix_first_if_you_want_to_keep_your_changes_655e48)) },
         confirmButton = { TextButton(onClick = { replace?.let(vm::open) ?: vm.newMix(); replace = null; newConfirm = false }) { Text(appString(R.string.text_replace_a7cf7b)) } },
         dismissButton = { TextButton(onClick = { replace = null; newConfirm = false }) { Text(appString(R.string.text_keep_editing_d4d9e3)) } })
-    delete?.let { mix -> AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { delete = null }, title = { Text(appString(R.string.text_delete_137cdc, (mix.name))) },
+    delete?.let { mix -> AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { delete = null }, title = { Text(appString(R.string.text_delete_137cdc, (mix.name)), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(appString(R.string.text_this_removes_the_saved_mix_your_songs_stay_in_your_library_1951d2)) },
-        confirmButton = { TextButton(onClick = { vm.delete(mix); delete = null }) { Text(appString(R.string.text_delete_f6fdbe)) } },
+        confirmButton = { TextButton(onClick = { vm.delete(mix); delete = null }) { Text(appString(R.string.text_delete_f6fdbe), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { delete = null }) { Text(appString(R.string.text_cancel_77dfd2)) } }) }
 }
 
@@ -306,7 +319,7 @@ private fun MixTimeline(project: MixProject, analyses: Map<String, MixAnalysis>,
             val color = if (index % 2 == 0) primary else secondary
             val analysis = analyses[clip.song.id]
             val audibleClip = remember(clip) { clip.copy(muted = false) }
-            Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(8.dp)).clickable { onSelect(clip.id) }
+            Column(Modifier.fillMaxWidth().paperClip(RoundedCornerShape(8.dp)).clickable { onSelect(clip.id) }.pointerHoverIcon(PointerIcon.Hand)
                 .then(if (clip.id == selected) Modifier.border(1.dp, color, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(8.dp))) else Modifier)
                 .padding(horizontal = 8.dp, vertical = 6.dp)) {
                 Text("${index + 1}  ${clip.song.title}${if (clip.muted) appString(R.string.text_muted_b6a778) else if (clip.solo) appString(R.string.text_solo_6d717d) else ""}",
@@ -362,7 +375,7 @@ private fun ClipEditor(clip: MixClip, project: MixProject, analyses: Map<String,
                 FilterChip(clip.muted, { onChange(clip.copy(muted = !clip.muted)) }, label = { Text(appString(R.string.text_mute_0f0973)) })
                 FilterChip(clip.solo, { onChange(clip.copy(solo = !clip.solo)) }, label = { Text(appString(R.string.text_solo_9fc93a)) })
                 Spacer(Modifier.weight(1f))
-                TextButton(onClick = onPreview, enabled = project.clips.size >= 2) { Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp)); Text(appString(R.string.text_preview_f1fbb2)) }
+                TextButton(onClick = onPreview, enabled = project.clips.size >= 2) { Icon(Icons.Default.PlayArrow, null, Modifier.size(18.dp)); Spacer(Modifier.width(6.dp)); Text(appString(R.string.text_preview_f1fbb2)) }
             }
             if (analyzing) {
                 LinearProgressIndicator(progress = { progress }, modifier = Modifier.fillMaxWidth())
@@ -379,7 +392,7 @@ private fun ClipEditor(clip: MixClip, project: MixProject, analyses: Map<String,
             PrimaryTabRow(selectedTabIndex = tab) {
                 listOf(appString(R.string.text_timing_098024), appString(R.string.text_fades_6d1e7d), appString(R.string.text_sound_b4e3ef)).forEachIndexed { i, label -> Tab(tab == i, { tab = i }, text = { Text(label) }) }
             }
-            when (tab) {
+            AnimatedContent(tab, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) }, label = "clipTab") { shown -> Column(verticalArrangement = Arrangement.spacedBy(6.dp)) { when (shown) {
                 0 -> {
                     ValueSlider(appString(R.string.text_starts_in_mix_0762f2), clip.startSec, 0f..max(60f, project.durationSec), "s") { onChange(clip.copy(startSec = it)) }
                     ValueSlider(appString(R.string.text_cue_in_52bfaa), clip.cueInSec, 0f..max(0.1f, clip.cueOutSec - 0.1f), "s") { onChange(clip.copy(cueInSec = it)) }
@@ -416,7 +429,7 @@ private fun ClipEditor(clip: MixClip, project: MixProject, analyses: Map<String,
                     if (analysis?.bpm != null && analysis.bpm > 0 && project.clips.indexOf(clip) > 0) OutlinedButton(onClick = onTempoMatch) { Text(appString(R.string.text_match_previous_track_s_tempo_70bf60)) }
                     Text(appString(R.string.text_tempo_preserves_pitch_eq_boosts_reserve_headroom_before_processin_2b088a), style = MaterialTheme.typography.bodySmall)
                 }
-            }
+            } } }
         }
     }
 }
@@ -469,7 +482,7 @@ private fun ValueSlider(label: String, value: Float, range: ClosedFloatingPointR
     var drag by remember { mutableStateOf<Float?>(null) }
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+            Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             TextButton(onClick = { edit = true }) { Text("${number(drag ?: value, decimals)} $unit") }
         }
         Slider((drag ?: value).coerceIn(range), { drag = it; if (live) onValue(it) }, valueRange = range,

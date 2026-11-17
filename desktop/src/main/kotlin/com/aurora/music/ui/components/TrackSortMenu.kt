@@ -1,5 +1,6 @@
 package com.aurora.music.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.clickable
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.layout.Box
@@ -32,6 +33,7 @@ import com.aurora.music.R
 import com.aurora.music.data.TrackSort
 import com.aurora.music.data.TrackSortOrder
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.Motion
 
 val TrackSort.label: String get() = appString(when (this) {
     TrackSort.CUSTOM -> R.string.track_sort_custom
@@ -46,11 +48,12 @@ val TrackSort.label: String get() = appString(when (this) {
 @Composable
 fun TrackSortButton(order: TrackSortOrder, accent: Color, enabled: Boolean = true, onPick: (TrackSort) -> Unit) {
     var open by remember { mutableStateOf(false) }
+    val tint by animateColorAsState(if (order.isDefault) MaterialTheme.colorScheme.onSurfaceVariant else accent, Motion.state(), label = "sortTint")
     Box {
         Icon(
             if (order.isDefault) Icons.Outlined.FilterAlt else Icons.Filled.FilterAlt,
             appString(R.string.track_sort_button),
-            tint = if (order.isDefault) MaterialTheme.colorScheme.onSurfaceVariant else accent,
+            tint = tint,
             modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(enabled = enabled) { open = true }.pointerHoverIcon(PointerIcon.Hand).padding(12.dp),
         )
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {

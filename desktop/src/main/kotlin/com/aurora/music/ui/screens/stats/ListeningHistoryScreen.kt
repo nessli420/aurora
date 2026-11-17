@@ -23,6 +23,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
+import com.aurora.music.ui.components.EmptyState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -67,12 +68,8 @@ fun ListeningHistoryScreen(contentPadding: PaddingValues, onBack: () -> Unit, on
         PageHeader(appString(R.string.text_listening_history_bd9991), Modifier.padding(horizontal = LocalPageGutter.current), onBack = onBack)
         if (history.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(56.dp))
-                    Spacer(Modifier.size(12.dp))
-                    Text(appString(R.string.text_nothing_played_yet_9503da), style = MaterialTheme.typography.titleMedium)
-                    Text(appString(R.string.text_your_recently_played_tracks_will_appear_here_0bdf0b), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
+                EmptyState(Icons.Filled.History, appString(R.string.text_nothing_played_yet_9503da),
+                    subtitle = appString(R.string.text_your_recently_played_tracks_will_appear_here_0bdf0b))
             }
             return@Column
         }
@@ -99,7 +96,7 @@ fun ListeningHistoryScreen(contentPadding: PaddingValues, onBack: () -> Unit, on
                         }
                         if (onShowOnMap != null && located[e.songId]?.any { e.timestamp in it } == true) {
                             Icon(androidx.compose.material.icons.Icons.Filled.Place, appString(R.string.map_show_on_map), tint = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.size(36.dp).paperClip(CircleShape).clickable { onShowOnMap(e.songId, e.timestamp) }.padding(8.dp))
+                                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onShowOnMap(e.songId, e.timestamp) }.padding(10.dp))
                         }
                         Text(timeFmt.format(Date(e.timestamp)), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                     }

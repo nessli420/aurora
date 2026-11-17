@@ -16,6 +16,7 @@ import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.tuning.*
 import kotlinx.coroutines.CancellationException
@@ -48,7 +49,7 @@ internal fun TuningFitSettingsDialog(project: TuningProject, onDismiss: () -> Un
     var error by remember { mutableStateOf<String?>(null) }
     var busy by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { if (!busy) onDismiss() }, title = { Text(appString(R.string.text_fitting_settings_d58cce)) }, text = {
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { if (!busy) onDismiss() }, title = { AudioDialogTitle(appString(R.string.text_fitting_settings_d58cce)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             TuningChoiceRow(appString(R.string.text_channel_intent_e006ec), TuningChannelMode.entries.map { it.label() }, channelMode.ordinal) {
                 if (!busy) { channelMode = TuningChannelMode.entries[it]; error = null }
@@ -145,7 +146,7 @@ internal fun TuningChoiceRow(title: String, options: List<String>, selected: Int
         Text(title, style = MaterialTheme.typography.labelLarge)
         Box {
             OutlinedButton(onClick = { expanded = true }, modifier = Modifier.fillMaxWidth()) {
-                Text(options.getOrElse(selected) { options.first() }, Modifier.weight(1f))
+                Text(options.getOrElse(selected) { options.first() }, Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Icon(Icons.Filled.ArrowDropDown, appString(R.string.text_choose_c2c00f, (title)))
             }
             DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {

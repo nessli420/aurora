@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.desktop.ui.Shortcut
@@ -32,7 +33,7 @@ fun ShortcutsDialog(onDismiss: () -> Unit) {
     AlertDialog(
         containerColor = solidColors().surfaceContainerHigh,
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.shortcuts_title), fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.shortcuts_title), fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             LazyColumn(Modifier.widthIn(min = 360.dp).heightIn(max = 520.dp)) {
                 items(ShortcutKeys.entries.toList()) { (shortcut, keys) ->

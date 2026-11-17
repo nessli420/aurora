@@ -64,6 +64,12 @@ import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.screens.settings.SettingsTopBar
 import com.aurora.music.ui.screens.settings.storageSize
 import com.aurora.music.viewmodel.AiPlaylistViewModel
+import androidx.compose.animation.animateContentSize
+import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.Motion
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -129,7 +135,7 @@ fun AiPlaylistScreen(
             if (state.phase == AiPlaylistViewModel.Phase.DONE && intent != null) {
                 item { IntentSummary(intent, state.usedModel, state.thinkingMs, state.songs.size) }
                 if (state.songs.isEmpty()) item {
-                    Text(appString(R.string.ai_dj_empty), color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    EmptyState(Icons.Filled.MusicNote, appString(R.string.ai_dj_empty))
                 } else {
                     item {
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -152,7 +158,7 @@ fun AiPlaylistScreen(
         var name by remember { mutableStateOf(state.intent?.title?.ifBlank { null } ?: state.prompt.take(40)) }
         AlertDialog(
             onDismissRequest = { saving = false },
-            title = { Text(appString(R.string.ai_dj_save)) },
+            title = { Text(appString(R.string.ai_dj_save), maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = { OutlinedTextField(name, { name = it }, singleLine = true, label = { Text(appString(R.string.ai_dj_playlist_name)) }) },
             confirmButton = { TextButton(onClick = { saving = false; vm.save(name, onMessage) }, enabled = name.isNotBlank()) { Text(appString(R.string.ai_dj_save)) } },
             dismissButton = { TextButton(onClick = { saving = false }) { Text(appString(R.string.ai_dj_model_cancel)) } },
@@ -184,7 +190,7 @@ private fun IntentSummary(intent: DjIntent, usedModel: Boolean, thinkingMs: Long
 
 @Composable
 private fun TrackRow(song: Song, playing: Boolean, onClick: () -> Unit) {
-    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+    Row(Modifier.fillMaxWidth().clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(vertical = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         Artwork(song.artworkUrl, song.accent, Modifier.size(48.dp), corner = 8.dp)
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -201,7 +207,7 @@ private fun AiDjModelCard(vm: AiPlaylistViewModel) {
     val model by vm.model.collectAsStateWithLifecycle()
     val unsupported = vm.unsupported
     Card(Modifier.fillMaxWidth(), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp)), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceContainerHigh)) {
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.animateContentSize(Motion.state()).padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text(appString(R.string.ai_dj_model), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
             val muted = MaterialTheme.colorScheme.onSurfaceVariant
             when {

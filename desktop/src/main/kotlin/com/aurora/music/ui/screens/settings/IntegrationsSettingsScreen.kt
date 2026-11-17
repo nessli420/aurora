@@ -25,6 +25,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.*
@@ -116,8 +117,10 @@ private fun AnimatedCoverSettings() {
             Column(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp)) {
                 Text(appString(R.string.animated_covers_help), style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant)
-                if (config.folder.isNotBlank()) com.aurora.music.ui.theme.TextButton(onClick = { scope.launch { covers.setFolder(null) } }) {
-                    Text(appString(R.string.animated_covers_remove))
+                SettingsReveal(config.folder.isNotBlank()) {
+                    com.aurora.music.ui.theme.TextButton(onClick = { scope.launch { covers.setFolder(null) } }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+                        Text(appString(R.string.animated_covers_remove))
+                    }
                 }
             }
         }
@@ -157,8 +160,10 @@ private fun ArtworkLookupGroup() {
                         clearing = false
                     }
                 }) { Text(appString(R.string.artwork_clear)) }
-                if (failed) Text(appString(R.string.artwork_clear_failed), style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error)
+                SettingsReveal(failed) {
+                    Text(appString(R.string.artwork_clear_failed), style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error)
+                }
             }
         }
     }
@@ -419,12 +424,12 @@ fun DiscordIntegrationScreen(contentPadding: PaddingValues, onBack: () -> Unit, 
 @Composable
 private fun DiscordPreview(acct: DiscordAccount) {
     val activity = when (acct.activityName) { "artist" -> appString(R.string.text_listening_to_aurora_24a92c); "song" -> appString(R.string.text_listening_to_midnight_drive_35328b); else -> appString(R.string.text_aurora_eeee9b) }
-    Surface(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(20.dp))) {
+    Surface(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), color = MaterialTheme.colorScheme.surfaceContainerHigh, shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(com.aurora.music.ui.theme.themedCorner(18.dp)))) {
         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(42.dp).paperClip(RoundedCornerShape(14.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = .18f)), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Forum, null, tint = MaterialTheme.colorScheme.primary) }
                 Spacer(Modifier.width(12.dp))
-                Column { Text(appString(R.string.text_discord_preview_401388), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold); Text(activity, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+                Column { Text(appString(R.string.text_discord_preview_401388), style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis); Text(activity, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis) }
             }
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Box(Modifier.size(78.dp).paperClip(RoundedCornerShape(12.dp)).background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))), contentAlignment = Alignment.Center) { Icon(Icons.Filled.Album, null, Modifier.size(34.dp), tint = MaterialTheme.colorScheme.onPrimary) }
@@ -432,7 +437,7 @@ private fun DiscordPreview(acct: DiscordAccount) {
                 Column(Modifier.weight(1f)) {
                     Text("Midnight Drive", fontWeight = FontWeight.Bold)
                     Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.bodyMedium)
-                    if (acct.showAlbum) Text("Afterglow", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    SettingsReveal(acct.showAlbum) { Text("Afterglow", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                     Spacer(Modifier.height(8.dp))
                     LinearProgressIndicator(progress = { .43f }, modifier = Modifier.fillMaxWidth().height(3.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) { Text("1:42", style = MaterialTheme.typography.labelSmall); Text("3:58", style = MaterialTheme.typography.labelSmall) }
@@ -449,7 +454,8 @@ private fun ArtistRuleDialog(initial: ScrobbleArtistRule?, onDismiss: () -> Unit
     var replacement by remember(initial) { mutableStateOf(initial?.replacementArtist.orEmpty()) }
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         onDismissRequest = onDismiss,
-        title = { Text(if (initial == null) appString(R.string.text_add_artist_replacement_1379e2) else appString(R.string.text_edit_artist_replacement_2b228e)) },
+        title = { Text(if (initial == null) appString(R.string.text_add_artist_replacement_1379e2) else appString(R.string.text_edit_artist_replacement_2b228e),
+            maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(source, { source = it.take(120) }, label = { Text(appString(R.string.text_artist_from_your_music_10b0e0)) }, placeholder = { Text("Ye") }, singleLine = true)

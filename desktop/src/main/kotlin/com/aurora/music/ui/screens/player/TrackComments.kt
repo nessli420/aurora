@@ -3,7 +3,12 @@ package com.aurora.music.ui.screens.player
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectTapGestures
@@ -21,6 +26,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ChatBubbleOutline
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -53,7 +60,9 @@ import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.model.Song
 import com.aurora.music.model.TrackComment
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.EmptyState
 import com.aurora.music.ui.components.formatTime
+import com.aurora.music.ui.theme.Motion
 import kotlinx.coroutines.launch
 
 @Stable
@@ -166,10 +175,7 @@ fun CommentsSheet(comments: TrackComments, accent: Color, positionSec: Float, du
             Text(appString(R.string.player_comments), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(8.dp))
             LazyColumn(Modifier.weight(1f).fillMaxWidth(), state = list) {
-                if (comments.list.isEmpty()) item {
-                    Text(appString(R.string.comments_empty), style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(vertical = 16.dp))
-                }
+                if (comments.list.isEmpty()) item { EmptyState(Icons.Filled.ChatBubbleOutline, appString(R.string.comments_empty)) }
                 items(comments.list.size, key = { comments.list[it].id }) { index ->
                     val comment = comments.list[index]
                     Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.small)
@@ -191,8 +197,14 @@ fun CommentsSheet(comments: TrackComments, accent: Color, positionSec: Float, du
                     }
                 }
             }
-            if (comments.failed) Text(appString(if (comments.needsVerify) R.string.comment_needs_verify else R.string.comment_failed), color = MaterialTheme.colorScheme.error,
-                style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+            // the last message stays up while the line folds away
+            val problem = if (!comments.failed) null else if (comments.needsVerify) R.string.comment_needs_verify else R.string.comment_failed
+            val lastProblem = remember { intArrayOf(R.string.comment_failed) }
+            problem?.let { lastProblem[0] = it }
+            AnimatedVisibility(problem != null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                Text(appString(problem ?: lastProblem[0]), color = MaterialTheme.colorScheme.error,
+                    style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 6.dp))
+            }
             if (comments.canPost) Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                 OutlinedTextField(draft, { draft = it }, Modifier.weight(1f), singleLine = true,
                     placeholder = { Text(appString(R.string.comment_hint, formatTime(positionSec.toInt()))) })

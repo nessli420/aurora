@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Bookmark
 import androidx.compose.material.icons.filled.FileDownload
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Route
@@ -47,7 +48,10 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.DspMode
 import com.aurora.music.data.ProcessingPreset
@@ -141,7 +145,7 @@ fun ProcessingPresetsScreen(
             SettingsList(contentPadding, state = listState, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 item {
                     com.aurora.music.ui.theme.OutlinedButton(onClick = { showOutputBindings = true }, enabled = !busy,
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)) { Text(appString(R.string.text_output_presets_8523fd)) }
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_output_presets_8523fd)) }
                 }
                 item {
                     Text(
@@ -206,14 +210,9 @@ fun ProcessingPresetsScreen(
                     }
                 }
                 if (library == null) {
-                    item { Text(appString(R.string.text_loading_presets_4c510b), Modifier.padding(20.dp), style = MaterialTheme.typography.bodyMedium) }
+                    item { LoadingState() }
                 } else if (library?.error == null && library?.presets.isNullOrEmpty()) {
-                    item {
-                        SettingsGroup {
-                            Text(appString(R.string.text_no_saved_presets_yet_a819ff), Modifier.padding(20.dp),
-                                style = MaterialTheme.typography.titleMedium)
-                        }
-                    }
+                    item { EmptyState(Icons.Filled.Bookmark, appString(R.string.text_no_saved_presets_yet_a819ff)) }
                 }
                 items(library?.presets.orEmpty(), key = { it.id }) { preset ->
                     ProcessingPresetCard(
@@ -266,7 +265,7 @@ fun ProcessingPresetsScreen(
     deleteTarget?.let { preset ->
         AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
             onDismissRequest = { deleteTarget = null },
-            title = { Text(appString(R.string.text_delete_preset_f004e2)) },
+            title = { AudioDialogTitle(appString(R.string.text_delete_preset_f004e2)) },
             text = { Text(appString(R.string.text_delete_your_current_audio_settings_will_stay_as_they_are_243d73, (preset.name))) },
             confirmButton = {
                 TextButton(onClick = {
@@ -295,7 +294,8 @@ private fun ProcessingPresetCard(
     var menuOpen by remember(preset.id) { mutableStateOf(false) }
     SettingsGroup {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-            Text(preset.name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+            Text(preset.name, Modifier.weight(1f), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
             Box {
                 IconButton(onClick = { menuOpen = true }, enabled = enabled, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
                     Icon(Icons.Filled.MoreVert, contentDescription = appString(R.string.text_actions_for_cf6f1b, (preset.name)))
@@ -324,7 +324,8 @@ private fun ProcessingPresetCard(
         if (preset.audio.dspConvEnabled) {
             Text(appString(R.string.text_convolution_206000, (preset.audio.dspConvIrName.ifBlank { appString(R.string.text_saved_impulse_response_a5fc40) })),
                 Modifier.padding(horizontal = 20.dp, vertical = 4.dp),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 2, overflow = TextOverflow.Ellipsis)
         }
         TextButton(onClick = onApply, enabled = enabled, modifier = Modifier.padding(start = 12.dp, bottom = 4.dp).pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_apply_cfea41)) }
     }
@@ -350,7 +351,7 @@ private fun ProcessingPresetNameDialog(dialog: PresetNameDialog, onDismiss: () -
     val title = when (dialog.mode) { PresetNameMode.SAVE -> appString(R.string.text_save_current_settings_0eaab9); PresetNameMode.RENAME -> appString(R.string.text_rename_preset_52abbe); PresetNameMode.DUPLICATE -> appString(R.string.text_duplicate_preset_27bc59) }
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         onDismissRequest = onDismiss,
-        title = { Text(title) },
+        title = { AudioDialogTitle(title) },
         text = {
             Column {
                 OutlinedTextField(value = name, onValueChange = { name = it.take(80) }, label = { Text(appString(R.string.text_preset_name_eb39e1)) },

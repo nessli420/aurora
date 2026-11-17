@@ -15,6 +15,13 @@ import com.aurora.music.localization.appPlural
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.TooltipArea
@@ -112,6 +119,8 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -139,6 +148,7 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.HoverTooltip
 import com.aurora.music.ui.components.AdaptiveShelf
 import com.aurora.music.ui.components.Artwork
+import com.aurora.music.ui.components.EmptyState
 import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.ui.components.PageSection
 import com.aurora.music.ui.components.SongListHeader
@@ -146,6 +156,8 @@ import com.aurora.music.ui.components.SongRow
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.PressScaleIndication
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.LibraryUiState
@@ -372,7 +384,7 @@ fun LibraryScreen(
                     state.downloadedRows.map { LibRow(it.title, appString(R.string.downloaded_collection), it.coverUrl, it.accent, it.id, it.kind) }
                 }
                 if (dlRows.isEmpty()) {
-                    EmptyHint(appString(R.string.text_no_downloads_yet_9647c1), appString(R.string.text_albums_and_playlists_you_download_live_here_e4c7ba))
+                    EmptyHint(Icons.Filled.Download, appString(R.string.text_no_downloads_yet_9647c1), appString(R.string.text_albums_and_playlists_you_download_live_here_e4c7ba))
                 } else {
                     RowsContent(dlRows, emptyList(), layout, cardMin, sort, bottom, actions, open)
                 }
@@ -380,7 +392,7 @@ fun LibraryScreen(
             else -> {
                 val rows = remember(state, filter, sort, pins) { buildRows(state, filter, sort, pins) }
                 if (rows.isEmpty()) {
-                    EmptyHint(appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
+                    EmptyHint(tabIcon(filter), appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
                 } else {
                     key(filter) { RowsContent(rows, tableColumns(filter), layout, cardMin, sort, bottom, actions, open) }
                 }
@@ -518,10 +530,10 @@ private fun LibraryTabsMenu(initial: com.aurora.music.data.LibraryTabs, canDownl
                         Spacer(Modifier.width(8.dp))
                         Text(tab.label, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f),
                             color = if (visible) colors.onSurface else colors.onSurfaceVariant)
-                        androidx.compose.material3.IconButton(onClick = { update(tabs.move(tab, -1)) }, enabled = i > 0) {
+                        androidx.compose.material3.IconButton(onClick = { update(tabs.move(tab, -1)) }, enabled = i > 0, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
                             Icon(Icons.Filled.KeyboardArrowUp, appString(R.string.library_tabs_move_up, tab.label), Modifier.size(18.dp))
                         }
-                        androidx.compose.material3.IconButton(onClick = { update(tabs.move(tab, 1)) }, enabled = i < shown.lastIndex) {
+                        androidx.compose.material3.IconButton(onClick = { update(tabs.move(tab, 1)) }, enabled = i < shown.lastIndex, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
                             Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.library_tabs_move_down, tab.label), Modifier.size(18.dp))
                         }
                     }
@@ -546,7 +558,7 @@ private fun SortButton(sort: LibrarySort, iconOnly: Boolean, onSort: (LibrarySor
             Icon(Icons.Filled.SwapVert, if (iconOnly) sort.label else label, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
             if (!iconOnly) {
                 Spacer(Modifier.width(6.dp))
-                Text(sort.label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 1)
+                Text(sort.label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
@@ -568,14 +580,16 @@ private fun LayoutToggle(layout: LibraryLayout, onToggle: () -> Unit) {
     Row(Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.6f)).padding(3.dp)) {
         listOf(LibraryLayout.LIST to Icons.AutoMirrored.Filled.List, LibraryLayout.GRID to Icons.Filled.GridView).forEach { (mode, icon) ->
             val on = mode == layout
+            val fill by animateColorAsState(MaterialTheme.colorScheme.primary.copy(alpha = if (on) 0.18f else 0f), Motion.state(), label = "layoutFill")
+            val tint by animateColorAsState(if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "layoutTint")
             Box(
                 Modifier.size(30.dp).clip(shape)
-                    .background(if (on) MaterialTheme.colorScheme.primary.copy(alpha = 0.18f) else Color.Transparent)
+                    .background(fill)
                     .clickable(enabled = !on, onClickLabel = label, onClick = onToggle)
                     .pointerHoverIcon(PointerIcon.Hand),
                 contentAlignment = Alignment.Center,
             ) {
-                Icon(icon, label, tint = if (on) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(18.dp))
+                Icon(icon, label, tint = tint, modifier = Modifier.size(18.dp))
             }
         }
     }
@@ -584,7 +598,8 @@ private fun LayoutToggle(layout: LibraryLayout, onToggle: () -> Unit) {
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun LibTab(label: String, icon: ImageVector, selected: Boolean, iconOnly: Boolean, onClick: () -> Unit) {
-    val tint = if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+    val on by animateFloatAsState(if (selected) 1f else 0f, Motion.state(), label = "libTab")
+    val tint = lerp(MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.primary, on)
     val bare = iconOnly && !selected
     val tab: @Composable () -> Unit = {
         Column(
@@ -599,16 +614,15 @@ private fun LibTab(label: String, icon: ImageVector, selected: Boolean, iconOnly
                         label,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
-                        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = lerp(MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.onSurface, on),
                         maxLines = 1,
                     )
                 }
             }
             Spacer(Modifier.height(4.dp))
             Box(
-                Modifier.height(3.dp).width(if (bare) 16.dp else 26.dp).paperClip(RoundedCornerShape(50)).background(
-                    if (selected) Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
-                    else Brush.horizontalGradient(listOf(Color.Transparent, Color.Transparent))
+                Modifier.height(3.dp).width(if (bare) 16.dp else 26.dp).graphicsLayer { alpha = on }.paperClip(RoundedCornerShape(50)).background(
+                    Brush.horizontalGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary))
                 )
             )
         }
@@ -749,7 +763,7 @@ private fun QuickTileCard(tile: QuickTile, actions: LibActions, modifier: Modifi
                 .height(64.dp)
                 .then(if (aurora) Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.6f)) else Modifier.auroraPanel(shape))
                 .then(if (selected) Modifier.background(MaterialTheme.colorScheme.primary.copy(alpha = 0.16f), shape) else Modifier)
-                .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = tile.onClick)
+                .clickable(interactionSource = interaction, indication = PressScaleIndication, onClick = tile.onClick)
                 .pointerHoverIcon(PointerIcon.Hand)
                 .padding(start = 12.dp, end = if (row != null) 8.dp else 12.dp),
             verticalAlignment = Alignment.CenterVertically,
@@ -787,7 +801,7 @@ private fun QuickTileCard(tile: QuickTile, actions: LibActions, modifier: Modifi
                 ) { Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(18.dp)) }
                 Box {
                     Box(
-                        Modifier.size(28.dp).paperClip(CircleShape)
+                        Modifier.size(32.dp).paperClip(CircleShape)
                             .clickable(onClickLabel = appString(R.string.text_more_4bab2d)) { menuOpen = true }
                             .pointerHoverIcon(PointerIcon.Hand),
                         contentAlignment = Alignment.Center,
@@ -826,7 +840,7 @@ private fun SongsTab(
 ) {
     val songs = remember(state.songs, sort, state.localPlayCounts) { sortedSongs(state.songs, sort, state.localPlayCounts) }
     if (songs.isEmpty() && !state.loading) {
-        EmptyHint(appString(R.string.text_no_songs_e6bbe2), appString(R.string.text_songs_from_your_server_appear_here_e4db53))
+        EmptyHint(Icons.Filled.MusicNote, appString(R.string.text_no_songs_e6bbe2), appString(R.string.text_songs_from_your_server_appear_here_e4db53))
         return
     }
     val insets = LocalLibInsets.current
@@ -994,7 +1008,7 @@ private fun LibTableHeader(columns: List<TableColumn>, modifier: Modifier = Modi
     Column(modifier.fillMaxWidth()) {
         Row(Modifier.fillMaxWidth().height(36.dp).padding(horizontal = RowInset), verticalAlignment = Alignment.CenterVertically) {
             Spacer(Modifier.width(ListArt + CellGap))
-            Text(appString(R.string.text_title_768e0c), style = MaterialTheme.typography.labelMedium, color = muted, maxLines = 1, modifier = Modifier.weight(titleWeight(columns)))
+            Text(appString(R.string.text_title_768e0c), style = MaterialTheme.typography.labelMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(titleWeight(columns)))
             columns.forEach { c ->
                 Text(
                     c.label, style = MaterialTheme.typography.labelMedium, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -1008,14 +1022,8 @@ private fun LibTableHeader(columns: List<TableColumn>, modifier: Modifier = Modi
 }
 
 @Composable
-private fun EmptyHint(title: String, message: String) {
-    Box(Modifier.fillMaxSize().padding(horizontal = 40.dp), contentAlignment = Alignment.Center) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally) {
-            Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-            Spacer(Modifier.height(6.dp))
-            Text(message, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center)
-        }
-    }
+private fun EmptyHint(icon: ImageVector, title: String, message: String) {
+    EmptyState(icon, title, Modifier.fillMaxSize(), subtitle = message)
 }
 
 @Composable
@@ -1174,7 +1182,7 @@ private fun CreatePlaylistDialog(
     val scope = rememberCoroutineScope()
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         onDismissRequest = { if (!saving) onDismiss() },
-        title = { Text(appString(R.string.text_new_playlist_a5474a), fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.text_new_playlist_a5474a), fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
                 OutlinedTextField(
@@ -1208,7 +1216,7 @@ private fun CreatePlaylistDialog(
                         }
                     }
                 }
-                if (failed) {
+                AnimatedVisibility(failed, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
                     Text(appString(R.string.playlist_create_failed), color = MaterialTheme.colorScheme.error,
                         style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(top = 8.dp))
                 }
@@ -1340,7 +1348,7 @@ private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
         Modifier.fillMaxWidth()
             .clip(shape)
             .then(if (aurora) Modifier else Modifier.auroraPanel(shape))
-            .clickable(interactionSource = interaction, indication = LocalIndication.current, onClick = onClick)
+            .clickable(interactionSource = interaction, indication = PressScaleIndication, onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
             .padding(if (aurora) 0.dp else 8.dp),
     ) {

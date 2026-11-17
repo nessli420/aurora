@@ -28,7 +28,7 @@ import androidx.compose.material.icons.filled.VerifiedUser
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -100,12 +100,13 @@ fun AccountsScreen(
             item {
                 SettingsGroup {
                     Row(
-                        Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onAddAccount).padding(horizontal = 20.dp, vertical = 16.dp),
+                        Modifier.fillMaxWidth().pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onAddAccount).padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Filled.Add, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp).padding(8.dp))
                         Spacer(Modifier.width(14.dp))
-                        Text(appString(R.string.text_add_another_account_5dcc79), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary)
+                        Text(appString(R.string.text_add_another_account_5dcc79), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                     }
                 }
             }
@@ -175,7 +176,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
             Text("${session.typeLabel.localizedMediaType()}${if (session.type != ServerType.LOCAL) " · $host" else ""}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         // a guest can still sign in later; the account takes the guest's place and its likes come along
-        if (onSignIn != null) TextButton(onClick = onSignIn) { Text(appString(R.string.guest_sign_in), fontWeight = FontWeight.Bold) }
+        if (onSignIn != null) TextButton(onClick = onSignIn, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.guest_sign_in), fontWeight = FontWeight.Bold) }
         if (isActive) {
             Row(
                 Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 10.dp, vertical = 5.dp),
@@ -189,7 +190,7 @@ private fun AccountRow(session: Session, isActive: Boolean, canForget: Boolean, 
             Icon(
                 Icons.Filled.Delete, appString(R.string.text_forget_03d5d8),
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.size(34.dp).paperClip(CircleShape).pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onForget).padding(6.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onForget).padding(9.dp),
             )
         }
     }

@@ -29,7 +29,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.material3.FilterChip
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.History
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.OutlinedTextField
@@ -96,18 +99,18 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     val chips: @Composable (Modifier) -> Unit = { modifier ->
                         Row(modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                             RecapPeriod.entries.forEach { period ->
-                                FilterChip(selected = window.period == period, onClick = { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }, label = { Text(period.label) })
+                                StatChip(window.period == period, period.label) { window = RecapWindow.containing(period, if (window.period == RecapPeriod.ALL) java.time.LocalDate.now().minusDays(1) else window.start) }
                             }
                         }
                     }
                     val navigator: @Composable (Modifier) -> Unit = { modifier ->
                         Row(modifier, verticalAlignment = Alignment.CenterVertically) {
-                            TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
-                            Column(Modifier.weight(1f).clickable(enabled = window.period != RecapPeriod.ALL) { picking = true }.pointerHoverIcon(PointerIcon.Hand), horizontalAlignment = Alignment.CenterHorizontally) {
-                                Text(window.label, fontWeight = FontWeight.Bold)
-                                Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall)
+                            TextButton(enabled = window.period != RecapPeriod.ALL, onClick = { window = window.move(-1) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text("‹", style = MaterialTheme.typography.headlineMedium) }
+                            Column(Modifier.weight(1f).paperClip(RoundedCornerShape(themedCorner(12.dp))).clickable(enabled = window.period != RecapPeriod.ALL) { picking = true }.pointerHoverIcon(PointerIcon.Hand), horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(window.label, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(if (window.period == RecapPeriod.ALL) appString(R.string.text_your_complete_history_990be7) else if (window.end.isAfter(java.time.LocalDate.now())) appString(R.string.text_in_progress_choose_date_0239bc) else appString(R.string.text_choose_date_e7877f), style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
-                            TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }) { Text("›", style = MaterialTheme.typography.headlineMedium) }
+                            TextButton(enabled = window.end <= java.time.LocalDate.now(), onClick = { window = window.move(1) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text("›", style = MaterialTheme.typography.headlineMedium) }
                         }
                     }
                     if (wide) Row(Modifier.fillMaxWidth().padding(vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -139,7 +142,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     if (onOpenInsights != null && insights.enabled) {
                         Row(Modifier.fillMaxWidth().padding(vertical = 8.dp).paperClip(RoundedCornerShape(themedCorner(18.dp)))
                             .background(MaterialTheme.colorScheme.primaryContainer)
-                            .pointerHoverIcon(androidx.compose.ui.input.pointer.PointerIcon.Hand).clickable { onOpenInsights(window) }.padding(16.dp),
+                            .pointerHoverIcon(androidx.compose.ui.input.pointer.PointerIcon.Hand).pressClickable { onOpenInsights(window) }.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically) {
                             Text(appString(R.string.insights_open_period), Modifier.weight(1f), style = MaterialTheme.typography.titleSmall,
                                 fontWeight = FontWeight.SemiBold, color = MaterialTheme.colorScheme.onPrimaryContainer)
@@ -147,7 +150,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                         }
                     }
                 }
-                if (recap.millis == 0L) item { Text(appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2), Modifier.padding(vertical = 24.dp)) }
+                if (recap.millis == 0L) item { EmptyState(Icons.Filled.History, appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2)) }
                 else {
                     item { RecapInsights(recap, previous, wide) }
                     item {
@@ -166,8 +169,8 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                             if (recap.hasDailyChart()) RecapDays(recap, Modifier.weight(1f).fillMaxHeight())
                         } else ListeningClock(hourly, Modifier.fillMaxWidth().padding(vertical = 6.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            FilterChip(!byMinutes, { byMinutes = false }, label = { Text(appString(R.string.text_most_played_14202e)) })
-                            FilterChip(byMinutes, { byMinutes = true }, label = { Text(appString(R.string.text_most_minutes_0d8b47)) })
+                            StatChip(!byMinutes, appString(R.string.text_most_played_14202e)) { byMinutes = false }
+                            StatChip(byMinutes, appString(R.string.text_most_minutes_0d8b47)) { byMinutes = true }
                         }
                     }
                     val rankings = listOf(appString(R.string.text_top_artists_4920f8) to recap.artists, appString(R.string.text_top_songs_ad7864) to recap.songs, appString(R.string.text_top_albums_4dfdc0) to recap.albums)
@@ -218,10 +221,10 @@ private fun EarlierListeningDialog(earlierMs: Long, onDismiss: () -> Unit, onSav
     val parsed = ListeningRecaps.historicalMillis(hours, minutes)
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh,
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.earlier_listening_title)) },
+        title = { Text(appString(R.string.earlier_listening_title), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(appString(R.string.earlier_listening_body))
+                Text(appString(R.string.earlier_listening_body), style = MaterialTheme.typography.bodyMedium)
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     OutlinedTextField(hours, { hours = it.filter(Char::isDigit).take(7) }, Modifier.weight(1f), label = { Text(appString(R.string.earlier_listening_hours)) },
                         singleLine = true, isError = parsed == null)
@@ -289,9 +292,9 @@ private fun ListeningClock(byHour: IntArray, modifier: Modifier) {
 
 @Composable
 private fun StatCard(value: String, label: String, modifier: Modifier) {
-    Column(modifier.paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary)
-        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+    Column(modifier.paperClip(RoundedCornerShape(themedCorner(18.dp))).background(MaterialTheme.colorScheme.surfaceContainerHigh).padding(vertical = 16.dp, horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Text(value, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.primary, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

@@ -66,7 +66,7 @@ fun PlaybackSettingsScreen(
                     if (prefs.crossfadeSec == 0) appString(R.string.text_off_e3de5a) else appString(R.string.text_s_3eb314, (prefs.crossfadeSec)),
                     prefs.crossfadeSec.toFloat(), 0f..30f, steps = 29,
                 ) { v -> scope.launch { store.setCrossfade(v.roundToInt()) } }
-                if (prefs.crossfadeSec > 0) {
+                SettingsReveal(prefs.crossfadeSec > 0) {
                     val curves = listOf("SMOOTH", "LINEAR", "POWER")
                     SegmentedRow(appString(R.string.text_fade_curve_7089cd), listOf(appString(R.string.text_smooth_7f93ca), appString(R.string.text_linear_af502f), appString(R.string.text_equal_power_70e301)), curves.indexOf(prefs.crossfadeCurve).coerceAtLeast(0)) {
                         index -> scope.launch { store.setCrossfadeCurve(curves[index]) }

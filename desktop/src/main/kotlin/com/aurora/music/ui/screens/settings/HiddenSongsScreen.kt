@@ -15,6 +15,9 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.VisibilityOff
+import com.aurora.music.ui.components.EmptyState
 
 @Composable
 fun HiddenSongsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
@@ -26,7 +29,8 @@ fun HiddenSongsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         SettingsTopBar(appString(R.string.hidden_songs_title), onBack)
         LazyColumn(Modifier.fillMaxWidth(), contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp)) {
             item {
-                Text(appString(if (hidden.isEmpty() && blocked.isEmpty()) R.string.hidden_songs_empty else R.string.hidden_songs_summary), modifier = Modifier.padding(20.dp),
+                if (hidden.isEmpty() && blocked.isEmpty()) EmptyState(Icons.Filled.VisibilityOff, appString(R.string.hidden_songs_empty))
+                else Text(appString(R.string.hidden_songs_summary), modifier = Modifier.padding(20.dp),
                     style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
             if (blocked.isNotEmpty()) item { SettingsSectionTitle(appString(R.string.blocked_artists_title)) }

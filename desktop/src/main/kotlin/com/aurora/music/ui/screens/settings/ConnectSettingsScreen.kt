@@ -25,6 +25,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.desktop.connect.LocalConnect
@@ -63,7 +64,11 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 SettingsGroup {
                     SettingsSwitchRow(Icons.Filled.Devices, appString(R.string.text_allow_remote_control_0f0d85),
                         appString(if (state.enabled) R.string.connect_host_on else R.string.connect_host_off), state.enabled, connect::setEnabled)
-                    state.address?.let { address ->
+                    // the last address stays up while the block folds away
+                    val shown = remember { arrayOf(state.address) }
+                    state.address?.let { shown[0] = it }
+                    SettingsReveal(state.address != null) {
+                        val address = shown[0] ?: return@SettingsReveal
                         Column(Modifier.padding(horizontal = 20.dp, vertical = 10.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
                             Text(appString(R.string.connect_this_key, EndpointTls.shortKey(address.fingerprint)), style = MaterialTheme.typography.titleSmall)
                             Text(appString(R.string.connect_reachable_at), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -83,7 +88,7 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     }
                     state.controllers.forEach { controller ->
                         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(controller.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text(controller.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             TextButton(onClick = { connect.revokeController(controller.id) }) { Text(appString(R.string.text_revoke_0be720)) }
                         }
                     }
@@ -104,7 +109,7 @@ fun ConnectSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     }
                     state.paired.forEach { peer ->
                         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                            Text(peer.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium)
+                            Text(peer.name, Modifier.weight(1f), style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             TextButton(onClick = { connect.forget(peer.id) }) { Text(appString(R.string.text_forget_03d5d8)) }
                         }
                     }

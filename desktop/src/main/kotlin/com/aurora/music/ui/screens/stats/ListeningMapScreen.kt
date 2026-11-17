@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.stats
 
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.foundation.background
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
@@ -94,23 +99,26 @@ fun ListeningMapScreen(contentPadding: PaddingValues, onBack: () -> Unit, songId
     Column(Modifier.fillMaxSize()) {
         Row(Modifier.fillMaxWidth().padding(top = 6.dp, start = 8.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).pointerHoverIcon(PointerIcon.Hand).padding(8.dp))
             Column(Modifier.weight(1f).padding(start = 8.dp)) {
                 Text(highlighted?.track?.title ?: appString(R.string.map_title), style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 if (songId != null) Text(appString(R.string.map_song_subtitle, plays.orEmpty().size), style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
-            IconButton(onClick = { confirmDelete = true }) {
+            IconButton(onClick = { confirmDelete = true }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
                 Icon(Icons.Filled.DeleteForever, appString(R.string.insights_delete_locations), tint = MaterialTheme.colorScheme.error)
             }
         }
         if (songId == null) PeriodPicker(window) { window = it; selected = null }
         Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 12.dp).paperClip(RoundedCornerShape(20.dp))) {
             TileMap(tiles, markers, focus?.point, onSelect = { selected = it }, modifier = Modifier.fillMaxSize())
-            if (plays != null && spots.isEmpty()) Text(appString(R.string.map_empty),
-                Modifier.align(Alignment.Center).paperClip(CircleShape).background(MaterialTheme.colorScheme.surface).padding(horizontal = 16.dp, vertical = 10.dp),
-                style = MaterialTheme.typography.bodyMedium)
+            androidx.compose.animation.AnimatedVisibility(plays != null && spots.isEmpty(), Modifier.align(Alignment.Center),
+                enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
+                Text(appString(R.string.map_empty),
+                    Modifier.paperClip(CircleShape).background(MaterialTheme.colorScheme.surface).padding(horizontal = 16.dp, vertical = 10.dp),
+                    style = MaterialTheme.typography.bodyMedium)
+            }
         }
         val listed = focus?.plays ?: if (songId != null) plays.orEmpty().sortedByDescending { it.startedAt } else emptyList()
         Spacer(Modifier.height(4.dp))
@@ -123,7 +131,7 @@ fun ListeningMapScreen(contentPadding: PaddingValues, onBack: () -> Unit, songId
                 items(listed, key = { it.id }) { play ->
                     Row(Modifier.fillMaxWidth().clickable {
                         selected = spots.firstOrNull { s -> s.plays.any { it.id == play.id } }?.key
-                    }.padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 20.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
                             Text(play.track.title, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                                 color = if (play.id == highlighted?.id) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface)
@@ -140,8 +148,8 @@ fun ListeningMapScreen(contentPadding: PaddingValues, onBack: () -> Unit, songId
     }
     if (confirmDelete) AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh,
         onDismissRequest = { confirmDelete = false },
-        title = { Text(appString(R.string.insights_delete_locations)) },
-        text = { Text(appString(R.string.insights_delete_locations_body)) },
+        title = { Text(appString(R.string.insights_delete_locations), maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        text = { Text(appString(R.string.insights_delete_locations_body), style = MaterialTheme.typography.bodyMedium) },
         confirmButton = {
             TextButton(onClick = {
                 confirmDelete = false

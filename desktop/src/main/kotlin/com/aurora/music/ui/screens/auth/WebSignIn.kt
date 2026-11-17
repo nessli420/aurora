@@ -8,6 +8,13 @@ import com.aurora.music.localization.appString
 import com.aurora.music.R
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import com.aurora.music.ui.components.LottieLoader
+import com.aurora.music.ui.theme.Motion
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -20,7 +27,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import com.aurora.music.ui.theme.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import com.aurora.music.ui.theme.OutlinedButton
@@ -164,7 +170,12 @@ private class BrowserChrome(
             if (onReload != null) TextButton(onClick = onReload, enabled = page != null && closeEnabled) { Text(appString(R.string.text_reload_cce715)) }
         }
         header()
-        if (loading || page == null) LinearProgressIndicator(Modifier.fillMaxWidth().padding(top = 6.dp))
+        // the bar keeps its slot so the browser below never resizes
+        Box(Modifier.fillMaxWidth().padding(top = 6.dp).height(4.dp)) {
+            androidx.compose.animation.AnimatedVisibility(loading || page == null, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) {
+                LinearProgressIndicator(Modifier.fillMaxWidth())
+            }
+        }
         error?.let {
             Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall,
                 modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp))
@@ -181,11 +192,11 @@ private fun ChromiumStatus(status: Chromium.Status) {
                 style = MaterialTheme.typography.bodyMedium)
             is Chromium.Status.Preparing -> {
                 if (status.downloading && status.fraction >= 0f) LinearProgressIndicator(progress = { status.fraction }, modifier = Modifier.width(260.dp))
-                else CircularProgressIndicator()
+                else LottieLoader(Modifier.size(64.dp))
                 Text(appString(if (status.downloading) R.string.chromium_downloading else R.string.chromium_preparing),
                     style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
-            else -> CircularProgressIndicator()
+            else -> LottieLoader(Modifier.size(64.dp))
         }
     }
 }
@@ -216,11 +227,11 @@ fun YouTubeMusicStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: (
         Text(appString(R.string.text_sign_in_on_google_s_page_then_choose_your_youtube_music_profile_n_0b2a03),
             style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.text_sign_in_with_google_4a0b72), style = MaterialTheme.typography.titleSmall)
         }
         GuestOption(!state.loading, onGuest)
-        TextButton(onClick = { detailsExpanded = !detailsExpanded }) {
+        TextButton(onClick = { detailsExpanded = !detailsExpanded }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
             Text(if (detailsExpanded) appString(R.string.text_hide_connection_details_64711a) else appString(R.string.text_connection_details_ab30a5))
         }
         AnimatedVisibility(detailsExpanded) {
@@ -325,7 +336,7 @@ fun SpotifyWebStep(state: AuthUiState, operations: SpotifyOperations, onConnect:
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text(appString(R.string.spotify_web_intro), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.spotify_web_login), style = MaterialTheme.typography.titleSmall)
         }
         Text(appString(R.string.spotify_web_login_note), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -374,11 +385,11 @@ fun SoundCloudStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: () 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text(appString(R.string.soundcloud_sign_in_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.soundcloud_sign_in), style = MaterialTheme.typography.titleSmall)
         }
         GuestOption(!state.loading, onGuest)
-        TextButton(onClick = { detailsExpanded = !detailsExpanded }) {
+        TextButton(onClick = { detailsExpanded = !detailsExpanded }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
             Text(if (detailsExpanded) appString(R.string.text_hide_connection_details_64711a) else appString(R.string.text_connection_details_ab30a5))
         }
         AnimatedVisibility(detailsExpanded) {
@@ -392,7 +403,7 @@ fun SoundCloudStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: () 
 private fun GuestOption(enabled: Boolean, onClick: () -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         OutlinedButton(onClick = onClick, enabled = enabled,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.guest_continue), style = MaterialTheme.typography.titleSmall)
         }
         Text(appString(R.string.guest_detail), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -440,11 +451,11 @@ fun AppleMusicStep(state: AuthUiState, onConnect: (String) -> Unit, onGuest: () 
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
         Text(appString(R.string.apple_music_sign_in_hint), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Button(onClick = { browserOpen = true }, enabled = !state.loading,
-            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
+            modifier = Modifier.fillMaxWidth().heightIn(min = 54.dp).pointerHoverIcon(PointerIcon.Hand), shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(16.dp))) {
             Text(appString(R.string.apple_music_sign_in), style = MaterialTheme.typography.titleSmall)
         }
         GuestOption(!state.loading, onGuest)
-        TextButton(onClick = { detailsExpanded = !detailsExpanded }) {
+        TextButton(onClick = { detailsExpanded = !detailsExpanded }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
             Text(if (detailsExpanded) appString(R.string.text_hide_connection_details_64711a) else appString(R.string.text_connection_details_ab30a5))
         }
         AnimatedVisibility(detailsExpanded) {

@@ -14,6 +14,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ShowChart
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.Switch
 import com.aurora.music.ui.theme.TextButton
 import com.aurora.music.ui.theme.OutlinedButton
 import com.aurora.music.ui.theme.Button
@@ -27,7 +28,9 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import com.aurora.music.ui.components.LoadingState
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.*
 import com.aurora.music.desktop.ui.FilePickers
@@ -182,7 +185,7 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, signalPath: StateFlow<Si
             Column(Modifier.fillMaxSize()) {
                 SettingsTopBar(appString(R.string.text_processing_rack_f7dff1)) { leave(onBack) }
                 SettingsList(contentPadding, state = listState, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                    if (current == null) item { Text(appString(R.string.text_loading_your_rack_cb2909), Modifier.padding(20.dp)) }
+                    if (current == null) item { LoadingState() }
                     else {
                         item {
                             SettingsGroup {
@@ -200,7 +203,8 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, signalPath: StateFlow<Si
                         item {
                             Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                                 Column(Modifier.weight(1f)) {
-                                    Text(current.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold)
+                                    Text(current.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.SemiBold,
+                                        maxLines = 2, overflow = TextOverflow.Ellipsis)
                                     Text(appString(R.string.text_16_stages_256_parametric_bands_cc3e87, (current.nodes.size), (current.parametricBandCount())),
                                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -318,15 +322,15 @@ fun ProcessingRackScreen(contentPadding: PaddingValues, signalPath: StateFlow<Si
         }
     }
     removeTarget?.let { target ->
-        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { removeTarget = null }, title = { Text(appString(R.string.text_remove_436e1a, (target.name))) },
+        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { removeTarget = null }, title = { AudioDialogTitle(appString(R.string.text_remove_436e1a, (target.name))) },
             text = { Text(appString(R.string.text_this_removes_the_stage_and_its_settings_from_this_rack_03575f)) },
             confirmButton = { TextButton(onClick = {
                 change { it.copy(nodes = it.nodes.filterNot { node -> node.id == target.id }) }
                 removeTarget = null
-            }) { Text(appString(R.string.text_remove_e96390)) } }, dismissButton = { TextButton(onClick = { removeTarget = null }) { Text(appString(R.string.text_cancel_77dfd2)) } })
+            }) { Text(appString(R.string.text_remove_e96390), color = MaterialTheme.colorScheme.error) } }, dismissButton = { TextButton(onClick = { removeTarget = null }) { Text(appString(R.string.text_cancel_77dfd2)) } })
     }
     template?.let { selected ->
-        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { template = null }, title = { Text(appString(R.string.text_replace_this_rack_957859)) },
+        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { template = null }, title = { AudioDialogTitle(appString(R.string.text_replace_this_rack_957859)) },
             text = { Text(if (selected == RackTemplate.LEGACY)
                 appString(R.string.text_copy_your_standard_software_eq_effects_and_mono_setting_into_an_e_4eccb4)
             else appString(R.string.text_copy_your_standard_sound_settings_into_separate_stages_and_place_61d4ee)) },
@@ -346,10 +350,13 @@ private fun RackNodeCard(node: ProcessingRackNode, index: Int, count: Int, onEdi
     SettingsGroup {
         Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 6.dp, top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
             Column(Modifier.weight(1f).pointerHoverIcon(PointerIcon.Hand).clickable(onClick = onEdit).padding(vertical = 8.dp)) {
-                Text("${index + 1}. ${node.name}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-                Text(node.kind.label(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary)
+                Text("${index + 1}. ${node.name}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text(node.kind.label(), style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(if (node.bypass) appString(R.string.text_bypassed_7a944b) else appString(R.string.text_wet_1df0cd, (node.summary()), ((node.wet * 100).roundToInt())),
-                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             Box {
                 IconButton(onClick = { menu = true }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Icon(Icons.Filled.MoreVert, appString(R.string.text_actions_for_cf6f1b, (node.name))) }
@@ -362,12 +369,12 @@ private fun RackNodeCard(node: ProcessingRackNode, index: Int, count: Int, onEdi
             }
         }
         Row(Modifier.fillMaxWidth().padding(start = 8.dp, end = 12.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-            IconButton(onClick = { onMove(-1) }, enabled = index > 0) { Icon(Icons.Filled.ArrowUpward, appString(R.string.text_move_up_a55bd8, (node.name))) }
-            IconButton(onClick = { onMove(1) }, enabled = index + 1 < count) { Icon(Icons.Filled.ArrowDownward, appString(R.string.text_move_down_533269, (node.name))) }
-            TextButton(onClick = onEdit) { Text(appString(R.string.text_edit_530164)) }
+            IconButton(onClick = { onMove(-1) }, enabled = index > 0, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Icon(Icons.Filled.ArrowUpward, appString(R.string.text_move_up_a55bd8, (node.name))) }
+            IconButton(onClick = { onMove(1) }, enabled = index + 1 < count, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Icon(Icons.Filled.ArrowDownward, appString(R.string.text_move_down_533269, (node.name))) }
+            TextButton(onClick = onEdit, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_edit_530164)) }
             Spacer(Modifier.weight(1f))
-            Text(appString(R.string.text_bypass_497852), style = MaterialTheme.typography.labelMedium)
-            Switch(checked = node.bypass, onCheckedChange = onBypass, modifier = Modifier.padding(start = 8.dp))
+            Text(appString(R.string.text_bypass_497852), style = MaterialTheme.typography.labelMedium, maxLines = 1)
+            Switch(checked = node.bypass, onCheckedChange = onBypass, modifier = Modifier.padding(start = 8.dp).pointerHoverIcon(PointerIcon.Hand))
         }
     }
 }
@@ -428,8 +435,8 @@ private fun RackNodeEditor(node: ProcessingRackNode, totalBands: Int, rackEnable
                             SettingsRowDivider()
                             SettingsNavRow(Icons.Filled.FileUpload, appString(R.string.text_export_parametric_eq_text_39190f), appString(R.string.text_review_what_the_text_file_includes_before_saving_feb089), onClick = onExportEq)
                         }
+                        AudioSection(showResponse, Modifier.padding(top = 8.dp)) { RackEqResponseCard(node, decoderRate, rackEnabled) }
                     }
-                    if (showResponse) item { RackEqResponseCard(node, decoderRate, rackEnabled) }
                 }
                 val stageLimit = if (legacy) DspCoeffBuilder.MAX_PARAMETRIC else ProcessingRackCodec.MAX_PARAMETRIC_BANDS
                 item {
@@ -519,11 +526,11 @@ internal fun RackBandDialog(band: ParamBand, title: String, onDismiss: () -> Uni
     val frequencyValid = valid(f, band.freqHz, 10f..24_000f)
     val gainValid = !filterType.hasGain || valid(g, band.gainDb, -30f..30f)
     val qValid = !filterType.hasQ || valid(quality, band.q, 0.1f..100f)
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { Text(title) }, text = {
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { AudioDialogTitle(title) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Box {
                 OutlinedButton(onClick = { typeMenu = true }, modifier = Modifier.fillMaxWidth()) {
-                    Text(appString(R.string.text_filter_4a5de1, (rackFilterLabel(type))), Modifier.weight(1f))
+                    Text(appString(R.string.text_filter_4a5de1, (rackFilterLabel(type))), Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Icon(Icons.Filled.ArrowDropDown, appString(R.string.text_choose_filter_type_6698bc))
                 }
                 DropdownMenu(expanded = typeMenu, onDismissRequest = { typeMenu = false }) {
@@ -568,11 +575,15 @@ internal fun RackBandDialog(band: ParamBand, title: String, onDismiss: () -> Uni
 @Composable
 private fun RackNameDialog(initial: String, title: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
     var name by remember(initial) { mutableStateOf(initial) }
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { Text(title) }, text = {
-        OutlinedTextField(name, { name = it.take(80) }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true)
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { AudioDialogTitle(title) }, text = {
+        OutlinedTextField(name, { name = it.take(80) }, label = { Text(appString(R.string.text_name_709a23)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
     }, confirmButton = { TextButton(onClick = { onSave(name.trim()) }, enabled = name.isNotBlank()) { Text(appString(R.string.text_save_efc007)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }
+
+// dialog titles on the audio screens cap at two lines
+@Composable
+internal fun AudioDialogTitle(text: String) = Text(text, maxLines = 2, overflow = TextOverflow.Ellipsis)
 
 @Composable
 private fun RackDescription(text: String) = Text(text, Modifier.padding(horizontal = 20.dp, vertical = 10.dp),

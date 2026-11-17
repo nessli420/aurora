@@ -1,5 +1,9 @@
 package com.aurora.music.ui.screens.settings
 
+import com.aurora.music.ui.theme.Motion
+import androidx.compose.ui.semantics.Role
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.LocalGlass
@@ -260,7 +264,9 @@ internal fun SettingsRowScaffold(
 fun SettingsNavRow(icon: ImageVector, title: String, subtitle: String? = null, value: String? = null, selected: Boolean = false, onClick: () -> Unit) {
     RowScaffold(icon, title, subtitle, onClick, selected) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            if (value != null) Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            // a long value ellipsizes instead of squeezing the title
+            if (value != null) Text(value, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(start = 12.dp).widthIn(max = 220.dp))
             if (!LocalSettingsListPane.current) Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -363,14 +369,17 @@ fun SegmentedChoice(options: List<String>, selected: Int, modifier: Modifier = M
     ) {
         options.forEachIndexed { i, opt ->
             val active = i == selected
+            val fill by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.primary.copy(alpha = 0f), Motion.state(), label = "segmentFill")
+            val ink by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "segmentInk")
             Box(
                 Modifier.weight(1f).clip(shape)
-                    .background(if (active) MaterialTheme.colorScheme.primary else androidx.compose.ui.graphics.Color.Transparent)
+                    .background(fill)
                     .pointerHoverIcon(PointerIcon.Hand)
-                    .clickable { onSelect(i) }.padding(vertical = 8.dp),
+                    .selectable(selected = active, role = Role.Tab) { onSelect(i) }.padding(vertical = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
-                Text(opt, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                Text(opt, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = ink,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
         }
     }

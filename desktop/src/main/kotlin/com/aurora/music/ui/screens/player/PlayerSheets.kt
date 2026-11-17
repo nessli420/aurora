@@ -4,6 +4,7 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.rememberScrollState
@@ -28,7 +29,6 @@ import androidx.compose.material.icons.automirrored.filled.VolumeDown
 import androidx.compose.material.icons.automirrored.filled.VolumeOff
 import androidx.compose.material.icons.automirrored.filled.VolumeUp
 import androidx.compose.material.icons.filled.Cable
-import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.DesktopWindows
 import androidx.compose.material.icons.filled.Headphones
 import androidx.compose.material.icons.filled.HighQuality
@@ -44,11 +44,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
-import androidx.compose.material3.Switch
+import com.aurora.music.ui.theme.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -65,6 +66,7 @@ import com.aurora.music.desktop.natives.AudioDevice
 import com.aurora.music.desktop.natives.DeviceKind
 import com.aurora.music.desktop.platform.HostPlatform
 import kotlin.math.roundToInt
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.themedCorner
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
@@ -87,15 +89,16 @@ fun OutputDeviceSheet(
         Column(Modifier.fillMaxWidth().heightIn(max = 650.dp).verticalScroll(rememberScrollState()).padding(horizontal = 8.dp).padding(bottom = 28.dp)) {
             Text(appString(R.string.text_play_on_4bd6fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black, modifier = Modifier.padding(start = 16.dp, bottom = 8.dp))
             ConnectDevicesSection(onDismiss)
-            OutputRow(Icons.Filled.SettingsSuggest, appString(R.string.language_system), systemDefault?.name, currentId == null) { onSelect(null) }
+            DeviceRow(Icons.Filled.SettingsSuggest, appString(R.string.language_system), systemDefault?.name, currentId == null, 14.dp) { onSelect(null) }
             devices.forEach { d ->
-                OutputRow(deviceIcon(d.kind), d.name, if (d.isDefault) appString(R.string.text_default_808d7d) else null, d.id == currentId) { onSelect(d.id) }
+                DeviceRow(deviceIcon(d.kind), d.name, if (d.isDefault) appString(R.string.text_default_808d7d) else null, d.id == currentId, 14.dp) { onSelect(d.id) }
             }
             if (currentId != null && devices.none { it.id == currentId }) {
-                OutputRow(Icons.Filled.LinkOff, appString(R.string.text_selected_device_disconnected_c2d1b1), systemDefault?.name, selected = true) {}
+                DeviceRow(Icons.Filled.LinkOff, appString(R.string.text_selected_device_disconnected_c2d1b1), systemDefault?.name, selected = true, vertical = 14.dp) {}
             }
             HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 8.dp), color = colors.outlineVariant.copy(alpha = 0.5f))
             if (exclusiveAvailable) {
+                val exclusiveTint by animateColorAsState(if (exclusive) colors.primary else colors.onSurface, Motion.state(), label = "exclusiveTint")
                 Row(
                     Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(14.dp)))
                         .clickable(role = Role.Switch) { onExclusiveChange(!exclusive) }.pointerHoverIcon(PointerIcon.Hand)
@@ -103,11 +106,12 @@ fun OutputDeviceSheet(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Box(Modifier.size(40.dp).paperClip(CircleShape).background(colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-                        Icon(Icons.Filled.HighQuality, null, tint = if (exclusive) colors.primary else colors.onSurface, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Filled.HighQuality, null, tint = exclusiveTint, modifier = Modifier.size(20.dp))
                     }
                     Spacer(Modifier.width(14.dp))
                     Column(Modifier.weight(1f)) {
-                        Text(appString(R.string.text_exclusive_mode_01d9b2), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = colors.onSurface)
+                        Text(appString(R.string.text_exclusive_mode_01d9b2), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, color = colors.onSurface,
+                            maxLines = 1, overflow = TextOverflow.Ellipsis)
                         Text(appString(if (HostPlatform.isWindows) R.string.text_bit_perfect_output_that_bypasses_the_windows_mixer_eff21d
                             else R.string.text_bit_perfect_output_that_bypasses_the_sound_server_d2dcd9), style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
                     }
@@ -119,7 +123,7 @@ fun OutputDeviceSheet(
                 }
             }
             Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 20.dp, top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onToggleMute, modifier = Modifier.size(40.dp)) {
+                IconButton(onClick = onToggleMute, modifier = Modifier.size(40.dp).pointerHoverIcon(PointerIcon.Hand)) {
                     Icon(volumeIcon(volume), appString(R.string.text_mute_0f0973), tint = colors.onSurface, modifier = Modifier.size(20.dp))
                 }
                 Spacer(Modifier.width(14.dp))
@@ -133,28 +137,6 @@ fun OutputDeviceSheet(
                     modifier = Modifier.widthIn(min = 48.dp).padding(start = 12.dp))
             }
         }
-    }
-}
-
-@Composable
-private fun OutputRow(icon: ImageVector, label: String, detail: String?, selected: Boolean, onClick: () -> Unit) {
-    val colors = MaterialTheme.colorScheme
-    Row(
-        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(14.dp))).clickable(role = Role.RadioButton, onClick = onClick)
-            .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 16.dp, vertical = 14.dp),
-        verticalAlignment = Alignment.CenterVertically,
-    ) {
-        Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) colors.primary else colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = if (selected) colors.onPrimary else colors.onSurface, modifier = Modifier.size(20.dp))
-        }
-        Spacer(Modifier.width(14.dp))
-        Column(Modifier.weight(1f)) {
-            Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) colors.primary else colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-            if (detail != null) Text(detail, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-        }
-        if (selected) Icon(Icons.Filled.Check, null, tint = colors.primary)
     }
 }
 
@@ -179,25 +161,19 @@ fun SleepTimerSheet(
             Text(status, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Spacer(Modifier.height(16.dp))
             FlowRow(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                options.forEach { (min, label) ->
-                    val selected = !endOfTrack && min == currentMinutes
-                    Box(
-                        Modifier.paperClip(RoundedCornerShape(50))
-                            .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                            .clickable { onSelect(min); onDismiss() }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 20.dp, vertical = 12.dp),
-                    ) {
-                        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
-                    }
-                }
-                Box(
-                    Modifier.paperClip(RoundedCornerShape(50))
-                        .background(if (endOfTrack) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
-                        .clickable { onEndOfTrack(); onDismiss() }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 20.dp, vertical = 12.dp),
-                ) {
-                    Text(appString(R.string.text_end_of_track_9923e9), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = if (endOfTrack) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
-                }
+                options.forEach { (min, label) -> TimerChip(label, !endOfTrack && min == currentMinutes) { onSelect(min); onDismiss() } }
+                TimerChip(appString(R.string.text_end_of_track_9923e9), endOfTrack) { onEndOfTrack(); onDismiss() }
             }
         }
+    }
+}
+
+@Composable
+private fun TimerChip(label: String, selected: Boolean, onClick: () -> Unit) {
+    val fill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "timerFill")
+    val ink by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "timerInk")
+    Box(Modifier.paperClip(RoundedCornerShape(50)).background(fill).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 20.dp, vertical = 12.dp)) {
+        Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 

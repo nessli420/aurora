@@ -61,9 +61,15 @@ import com.aurora.music.data.RadioStation
 import com.aurora.music.data.toSong
 import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
-import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.RadioViewModel
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import com.aurora.music.ui.components.EmptyState
+import com.aurora.music.ui.components.LoadingState
+import com.aurora.music.ui.theme.Motion
 
 private val GENRE_TAGS = listOf(
     "pop", "rock", "jazz", "classical", "news", "electronic", "hip hop",
@@ -94,13 +100,14 @@ fun RadioScreen(
         Row(Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(
                 Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36),
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
             )
             Spacer(Modifier.width(8.dp))
-            Text(appString(R.string.text_radio_b11bf1), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+            Text(appString(R.string.text_radio_b11bf1), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold,
+                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
             Icon(
                 Icons.Filled.Add, appString(R.string.text_add_custom_stream_638147),
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showAdd = true }.padding(8.dp),
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showAdd = true }.pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
             )
             Icon(
                 if (searchOpen) Icons.Filled.Close else Icons.Filled.Search,
@@ -108,7 +115,7 @@ fun RadioScreen(
                 modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable {
                     searchOpen = !searchOpen
                     if (!searchOpen) { query = ""; vm.clearSearch() }
-                }.padding(8.dp),
+                }.pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
             )
         }
 
@@ -140,14 +147,17 @@ fun RadioScreen(
                     items(GENRE_TAGS.size) { i ->
                         val tag = GENRE_TAGS[i]
                         val selected = state.activeTag == tag
+                        val chipInk by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "tagInk")
+                        val chipFill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "tagFill")
                         Text(
                             tag.replaceFirstChar { it.uppercase() },
                             style = MaterialTheme.typography.labelLarge,
                             fontWeight = FontWeight.SemiBold,
-                            color = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                            color = chipInk,
                             modifier = Modifier.paperClip(RoundedCornerShape(50))
-                                .background(if (selected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                                .background(chipFill)
                                 .clickable { if (selected) vm.loadPopular() else vm.byTag(tag) }
+                                .pointerHoverIcon(PointerIcon.Hand)
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                         )
                     }
@@ -173,15 +183,11 @@ fun RadioScreen(
             }
 
             if (state.loading) {
-                item { Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) { LottieLoader(modifier = Modifier.size(64.dp)) } }
+                item { LoadingState() }
             } else if (listed.isEmpty()) {
                 item {
-                    Box(Modifier.fillMaxWidth().padding(vertical = 36.dp), contentAlignment = Alignment.Center) {
-                        Text(
-                            if (state.failed) appString(R.string.text_couldn_t_reach_the_radio_directory_c0321f) else appString(R.string.text_no_stations_found_173164),
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
+                    if (state.failed) EmptyState(Icons.Filled.CloudOff, appString(R.string.text_couldn_t_reach_the_radio_directory_c0321f))
+                    else EmptyState(Icons.Filled.Radio, appString(R.string.text_no_stations_found_173164))
                 }
             } else {
                 items(listed.size) { i ->
@@ -219,7 +225,7 @@ private fun StationRow(
 ) {
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp)
-            .paperClip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).padding(horizontal = 8.dp, vertical = 8.dp),
+            .paperClip(RoundedCornerShape(16.dp)).clickable(onClick = onPlay).pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 8.dp, vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
@@ -242,12 +248,12 @@ private fun StationRow(
             if (isFavorite) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
             if (isFavorite) appString(R.string.text_unfavorite_de9bba) else appString(R.string.text_favorite_6b90b6),
             tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onToggleFavorite).padding(8.dp),
+            modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onToggleFavorite).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
         )
         Icon(
             Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd),
             tint = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onPlay).padding(8.dp),
+            modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onPlay).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
         )
     }
 }
@@ -258,7 +264,7 @@ private fun AddStreamDialog(onAdd: (String, String) -> Unit, onDismiss: () -> Un
     var url by remember { mutableStateOf("") }
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.text_add_radio_stream_48fecc), fontWeight = FontWeight.Bold) },
+        title = { Text(appString(R.string.text_add_radio_stream_48fecc), fontWeight = FontWeight.Bold, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column {
                 OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text(appString(R.string.text_name_optional_9c9f03)) }, singleLine = true)

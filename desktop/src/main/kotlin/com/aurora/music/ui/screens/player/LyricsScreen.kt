@@ -1,5 +1,6 @@
 package com.aurora.music.ui.screens.player
 
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.animation.animateColorAsState
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.animation.core.*
@@ -131,8 +132,8 @@ private fun WideLyrics(
                         }
                         Spacer(Modifier.width(20.dp))
                         IconButton(onTogglePlay, Modifier.size(60.dp).background(Color.White.copy(alpha = .16f), CircleShape)) {
-                            Icon(if (state.isPlaying) Icons.Default.Pause else Icons.Default.PlayArrow,
-                                appString(R.string.text_play_pause_14a1d0), Modifier.size(32.dp), tint = Color.White)
+                            val playPause = appString(R.string.text_play_pause_14a1d0)
+                            com.aurora.music.ui.components.PlayPauseIcon(state.isPlaying, Color.White, Modifier.size(32.dp).semantics { contentDescription = playPause })
                         }
                         Spacer(Modifier.width(20.dp))
                         IconButton(onNext, Modifier.size(52.dp)) {

@@ -88,7 +88,7 @@ private fun FeatureGroup(
 ) {
     SettingsGroup {
         SettingsSwitchRow(icon, title, summary, enabled, onToggle)
-        if (enabled && types.isNotEmpty()) {
+        SettingsReveal(enabled && types.isNotEmpty()) {
             SettingsRowDivider()
             Text(appString(R.string.merge_songs_from), style = MaterialTheme.typography.labelLarge,
                 modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 2.dp))

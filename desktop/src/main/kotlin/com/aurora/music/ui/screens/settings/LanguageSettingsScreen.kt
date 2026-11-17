@@ -18,6 +18,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.desktop.ui.LocalDesktopContainer
@@ -54,7 +55,7 @@ fun LanguageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                             RadioButton(selected = tag == selected, onClick = null)
-                            Text(name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                            Text(name, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f), maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }

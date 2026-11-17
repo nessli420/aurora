@@ -33,7 +33,7 @@ fun LocalProfileDialog(onDismiss: () -> Unit) {
     }
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         onDismissRequest = { if (!state.busy) onDismiss() },
-        title = { Text(appString(R.string.text_edit_local_profile_6f9d95)) },
+        title = { Text(appString(R.string.text_edit_local_profile_6f9d95), maxLines = 2, overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis) },
         text = {
             Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 OutlinedTextField(value = state.profile.name.orEmpty(), onValueChange = vm::name, singleLine = true,
@@ -55,6 +55,7 @@ fun LocalProfileDialog(onDismiss: () -> Unit) {
     )
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun ProfileImageEditor(label: String, url: String, banner: Boolean, busy: Boolean, onChoose: () -> Unit, onRemove: () -> Unit) {
     Column {
@@ -64,7 +65,7 @@ private fun ProfileImageEditor(label: String, url: String, banner: Boolean, busy
             Artwork(url, MaterialTheme.colorScheme.primary,
                 if (banner) Modifier.fillMaxWidth().height(90.dp) else Modifier.size(72.dp), corner = if (banner) 12.dp else 36.dp)
         }
-        Row {
+        FlowRow {
             TextButton(enabled = !busy, onClick = onChoose, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_choose_c2c00f, (label.lowercase()))) }
             if (url.isNotBlank()) TextButton(enabled = !busy, onClick = onRemove, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) { Text(appString(R.string.text_remove_4d28b5, (label.lowercase()))) }
         }

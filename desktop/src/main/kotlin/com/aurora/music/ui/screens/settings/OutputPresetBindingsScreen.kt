@@ -14,6 +14,7 @@ import com.aurora.music.ui.theme.Button
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.ProcessingPreset
@@ -63,7 +64,7 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                 item {
                     SettingsGroup {
                         Column(Modifier.padding(20.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Text(route.label, style = MaterialTheme.typography.titleMedium)
+                            Text(route.label, style = MaterialTheme.typography.titleMedium, maxLines = 2, overflow = TextOverflow.Ellipsis)
                             Text(route.detail, style = MaterialTheme.typography.bodySmall)
                             if (key != null) Text(status.message, style = MaterialTheme.typography.bodySmall)
                         }
@@ -93,7 +94,7 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                                     Row(verticalAlignment = Alignment.CenterVertically) {
                                         RadioButton(selected = rules?.headphones?.get(key).orEmpty() == headphones,
                                             enabled = ready, onClick = { perform { store.chooseRouteHeadphones(key, headphones) } })
-                                        Text(headphones.ifEmpty { appString(R.string.text_output_default_f4c103) })
+                                        Text(headphones.ifEmpty { appString(R.string.text_output_default_f4c103) }, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     }
                                 }
                             }
@@ -110,9 +111,10 @@ fun OutputPresetBindingsScreen(contentPadding: PaddingValues, onBack: () -> Unit
                     SettingsGroup {
                         Row(Modifier.padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
                             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Text(binding.routeLabel, style = MaterialTheme.typography.titleSmall)
-                                if (binding.headphones.isNotEmpty()) Text(binding.headphones, style = MaterialTheme.typography.bodyMedium)
-                                Text(library?.presets?.firstOrNull { it.id == binding.presetId }?.name ?: appString(R.string.text_deleted_preset_4bf611), style = MaterialTheme.typography.bodySmall)
+                                Text(binding.routeLabel, style = MaterialTheme.typography.titleSmall, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                                if (binding.headphones.isNotEmpty()) Text(binding.headphones, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(library?.presets?.firstOrNull { it.id == binding.presetId }?.name ?: appString(R.string.text_deleted_preset_4bf611), style = MaterialTheme.typography.bodySmall,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                             TextButton(enabled = ready, onClick = { perform { store.removeRouteBinding(binding) } }) { Text(appString(R.string.text_remove_e96390)) }
                         }
@@ -137,15 +139,15 @@ private fun OutputBindingDialog(presets: List<ProcessingPreset>, initialHeadphon
     var selected by remember { mutableStateOf(presets.firstOrNull()?.id) }
     var headphones by remember { mutableStateOf(initialHeadphones) }
     var expanded by remember { mutableStateOf(false) }
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { Text(appString(R.string.text_bind_to_9fa6ec, (output))) }, text = {
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { AudioDialogTitle(appString(R.string.text_bind_to_9fa6ec, (output))) }, text = {
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Box {
-                OutlinedButton(onClick = { expanded = true }) { Text(presets.firstOrNull { it.id == selected }?.name ?: appString(R.string.text_choose_preset_005541)) }
+                OutlinedButton(onClick = { expanded = true }) { Text(presets.firstOrNull { it.id == selected }?.name ?: appString(R.string.text_choose_preset_005541), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                 DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
                     presets.forEach { preset -> DropdownMenuItem(text = { Text(preset.name) }, onClick = { selected = preset.id; expanded = false }) }
                 }
             }
-            OutlinedTextField(headphones, { headphones = it.take(80) }, label = { Text(appString(R.string.text_headphones_optional_995b8e)) }, singleLine = true)
+            OutlinedTextField(headphones, { headphones = it.take(80) }, label = { Text(appString(R.string.text_headphones_optional_995b8e)) }, singleLine = true, modifier = Modifier.fillMaxWidth())
         }
     }, confirmButton = { TextButton(enabled = selected != null, onClick = { selected?.let { onBind(it, headphones.trim()) } }) { Text(appString(R.string.text_bind_and_apply_d9c71d)) } },
         dismissButton = { TextButton(onClick = onDismiss) { Text(appString(R.string.text_cancel_77dfd2)) } })

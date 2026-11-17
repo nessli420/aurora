@@ -5,6 +5,11 @@ import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.fade
 import com.aurora.music.R
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -58,6 +63,7 @@ import com.aurora.music.ui.screens.settings.SettingsGroup
 import com.aurora.music.ui.components.PageHeader
 import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.themedCorner
 
 // keys must match SmartPlaylistEngine
@@ -152,7 +158,7 @@ fun SmartPlaylistEditScreen(
 
             SettingsGroup {
                 Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(appString(R.string.text_sort_by_a2a5bd), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Text(appString(R.string.text_sort_by_a2a5bd), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     Dropdown(
                         options = SORTS.map { it.second },
                         selected = SORTS.indexOfFirst { it.first == (playlist.sortBy ?: "title") }.coerceAtLeast(0),
@@ -169,7 +175,7 @@ fun SmartPlaylistEditScreen(
                     )
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-                    Text(appString(R.string.text_limit_0_all_451057), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, modifier = Modifier.weight(1f))
+                    Text(appString(R.string.text_limit_0_all_451057), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
                     OutlinedTextField(
                         value = (playlist.limit ?: 0).takeIf { it > 0 }?.toString() ?: "",
                         onValueChange = { v -> onUpdate { it.copy(limit = v.filter { c -> c.isDigit() }.toIntOrNull() ?: 0) } },
@@ -224,14 +230,13 @@ private fun RuleRow(rule: SmartRule, onChange: (SmartRule) -> Unit, onRemove: ()
                 modifier = Modifier.size(32.dp).paperClip(CircleShape).clickable(onClick = onRemove).pointerHoverIcon(PointerIcon.Hand).padding(6.dp),
             )
         }
-        if (spec.type != TYPE_BOOL) {
-            Spacer(Modifier.height(8.dp))
+        AnimatedVisibility(spec.type != TYPE_BOOL, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
             OutlinedTextField(
                 value = rule.value.orEmpty(),
                 onValueChange = { v -> onChange(rule.copy(value = if (spec.type == TYPE_NUMBER) v.filter { it.isDigit() } else v)) },
                 placeholder = { Text(if (spec.type == TYPE_NUMBER) appString(R.string.text_number_b1c1ba) else appString(R.string.text_text_6fc726)) },
                 singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
             )
         }
     }

@@ -4,6 +4,7 @@ import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.hoverable
@@ -55,7 +56,9 @@ import com.aurora.music.model.Song
 import com.aurora.music.model.accent
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.ui.theme.themedCorner
 
 private const val GridRows = 4
@@ -139,7 +142,7 @@ fun FeedTrackCard(song: Song, width: Dp, onClick: () -> Unit) {
     Column(
         Modifier.width(width).clip(shape)
             .then(if (aurora) Modifier else Modifier.auroraPanel(shape))
-            .clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand)
+            .pressClickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand)
             .padding(inset),
     ) {
         Box {
@@ -165,16 +168,19 @@ fun ChoiceTabs(options: List<Triple<String, String, ImageVector>>, selected: Str
         items(options.size) { i ->
             val (id, label, icon) = options[i]
             val active = id == selected
+            val fill by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "choiceFill")
+            val tint by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "choiceTint")
+            val ink by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "choiceInk")
             Row(
                 Modifier.height(36.dp).paperClip(RoundedCornerShape(50))
-                    .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh)
+                    .background(fill)
                     .clickable { onSelect(id) }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                Icon(icon, null, Modifier.size(18.dp), tint = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant)
+                Icon(icon, null, Modifier.size(18.dp), tint = tint)
                 Spacer(Modifier.width(8.dp))
                 Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
-                    color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface)
+                    color = ink, maxLines = 1)
             }
         }
     }

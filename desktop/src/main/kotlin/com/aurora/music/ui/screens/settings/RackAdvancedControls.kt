@@ -11,6 +11,7 @@ import androidx.compose.material3.*
 import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -198,7 +199,7 @@ private fun DynamicsControls(d: RackDynamics, detectorSolo: Boolean, gate: Boole
 private fun RackModePicker(title: String, labels: List<String>, selected: Int, onSelect: (Int) -> Unit) {
     var expanded by remember { mutableStateOf(false) }
     Box(Modifier.padding(horizontal = 12.dp)) {
-        TextButton(onClick = { expanded = true }) { Text("$title: ${labels[selected]}") }
+        TextButton(onClick = { expanded = true }) { Text("$title: ${labels[selected]}", maxLines = 1, overflow = TextOverflow.Ellipsis) }
         DropdownMenu(expanded, { expanded = false }) {
             labels.forEachIndexed { index, label -> DropdownMenuItem(text = { Text(label) }, onClick = { expanded = false; onSelect(index) }) }
         }
@@ -215,7 +216,7 @@ internal fun RackRoutingDialog(title: String, available: List<ProcessingRackNode
     onSave: (List<RackInput>?) -> Unit) {
     var inputs by remember { mutableStateOf(initial ?: listOf(RackInput(available.lastOrNull()?.id ?: RackInput.INPUT))) }
     var error by remember { mutableStateOf<String?>(null) }
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { Text(title) }, text = {
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = onDismiss, title = { AudioDialogTitle(title) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState())) {
             inputs.forEachIndexed { index, edge ->
                 var sourceMenu by remember(index) { mutableStateOf(false) }
@@ -223,7 +224,7 @@ internal fun RackRoutingDialog(title: String, available: List<ProcessingRackNode
                 fun edit(value: RackInput) { inputs = inputs.mapIndexed { i, old -> if (i == index) value else old } }
                 Row {
                     Box(Modifier.weight(1f)) {
-                        TextButton(onClick = { sourceMenu = true }) { Text(available.firstOrNull { it.id == edge.source }?.name ?: appString(R.string.text_input_b568d4)) }
+                        TextButton(onClick = { sourceMenu = true }) { Text(available.firstOrNull { it.id == edge.source }?.name ?: appString(R.string.text_input_b568d4), maxLines = 1, overflow = TextOverflow.Ellipsis) }
                         DropdownMenu(sourceMenu, { sourceMenu = false }) {
                             DropdownMenuItem({ Text(appString(R.string.text_input_b568d4)) }, onClick = { edit(edge.copy(source = RackInput.INPUT)); sourceMenu = false })
                             available.forEach { source -> DropdownMenuItem({ Text(source.name) }, onClick = { edit(edge.copy(source = source.id)); sourceMenu = false }) }
@@ -240,7 +241,7 @@ internal fun RackRoutingDialog(title: String, available: List<ProcessingRackNode
                 if (inputs.size > 1) TextButton(onClick = { inputs = inputs.filterIndexed { i, _ -> i != index } }) { Text(appString(R.string.text_remove_input_d3f475)) }
             }
             if (inputs.size < 4) TextButton(onClick = { inputs = inputs + RackInput() }) { Text(appString(R.string.text_add_input_2a21ea)) }
-            error?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+            error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
         }
     }, confirmButton = { TextButton(onClick = {
         if (inputs.map { it.source to it.channel }.distinct().size != inputs.size) error = appString(R.string.text_choose_distinct_inputs_00550b) else onSave(inputs)
@@ -258,7 +259,7 @@ private fun RackChannel.label() = when (this) {
 internal fun RackImpulsePicker(node: ProcessingRackNode, library: List<ImpulseLibraryEntry>, onEdit: ((ProcessingRackNode) -> ProcessingRackNode) -> Unit) {
     var menu by remember { mutableStateOf(false) }
     Box(Modifier.padding(horizontal = 12.dp)) {
-        TextButton(onClick = { menu = true }) { Text(library.firstOrNull { it.id == node.impulseId }?.name ?: if (node.impulseId == null) appString(R.string.text_use_standard_impulse_289fd1) else appString(R.string.text_missing_impulse_7f47dc)) }
+        TextButton(onClick = { menu = true }) { Text(library.firstOrNull { it.id == node.impulseId }?.name ?: if (node.impulseId == null) appString(R.string.text_use_standard_impulse_289fd1) else appString(R.string.text_missing_impulse_7f47dc), maxLines = 1, overflow = TextOverflow.Ellipsis) }
         DropdownMenu(menu, { menu = false }) {
             DropdownMenuItem({ Text(appString(R.string.text_use_standard_impulse_289fd1)) }, onClick = { onEdit { it.copy(impulseId = null) }; menu = false })
             library.forEach { entry -> DropdownMenuItem({ Text(entry.name + if (entry.prepared != null) appString(R.string.text_prepared_19d34e) else appString(R.string.text_source_ddb023)) }, onClick = { onEdit { it.copy(impulseId = entry.id) }; menu = false }) }

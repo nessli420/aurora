@@ -9,6 +9,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
+import com.aurora.music.ui.theme.Switch
 import com.aurora.music.ui.theme.TextButton
 import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
@@ -66,7 +67,7 @@ internal fun ImpulsePreparationDialog(entry: ImpulseLibraryEntry, onDismiss: () 
         }
     }
     LaunchedEffect(entry.id) { loadPreview(initial) }
-    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { if (!busy) onDismiss() }, title = { Text(appString(R.string.text_prepare_impulse_828a45)) }, text = {
+    AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { if (!busy) onDismiss() }, title = { AudioDialogTitle(appString(R.string.text_prepare_impulse_828a45)) }, text = {
         Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             Text(appString(R.string.text_original_frames_26e777, (frames), (entry.sourceMetadata.summary())), style = MaterialTheme.typography.bodySmall)
             Text(appString(R.string.text_creates_a_32_bit_float_copy_d569be), style = MaterialTheme.typography.bodySmall)

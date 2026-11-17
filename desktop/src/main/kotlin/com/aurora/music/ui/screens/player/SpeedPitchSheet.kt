@@ -6,6 +6,11 @@ import androidx.compose.foundation.rememberScrollState
 import com.aurora.music.localization.appString
 import com.aurora.music.R
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -40,8 +45,10 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.ui.screens.settings.SegmentedChoice
+import com.aurora.music.ui.theme.Motion
 
 // the tab you used last, for as long as the app runs
 private var lastTab = 0
@@ -63,30 +70,32 @@ fun SpeedPitchSheet(
         containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh,
     ) {
         Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp).padding(bottom = 32.dp)) {
-            Text(appString(R.string.text_playback_controls_5ee1ab), style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+            Text(appString(R.string.text_playback_controls_5ee1ab), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
             Spacer(Modifier.height(16.dp))
             SegmentedChoice(listOf(appString(R.string.text_speed_2d2cb0), appString(R.string.reverb_title)), tab) { tab = it; lastTab = it }
             Spacer(Modifier.height(20.dp))
 
-            if (tab == 1) com.aurora.music.ui.screens.settings.ReverbQuickControls(onOpenReverbSettings)
-            else Column {
-                ControlBlock(
-                    icon = { Icon(Icons.Filled.Speed, null, tint = MaterialTheme.colorScheme.primary) },
-                    title = appString(R.string.text_speed_2d2cb0),
-                    value = "${"%.2f".format(speed)}x",
-                ) {
-                    Slider(
-                        value = speed,
-                        onValueChange = onSpeed,
-                        valueRange = 0.5f..2.0f,
-                        steps = 29,
-                        colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
-                    )
-                    QuickPicks(listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f), speed) { onSpeed(it) }
-                }
+            AnimatedContent(tab, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) }, label = "controlsTab") { shown ->
+                if (shown == 1) com.aurora.music.ui.screens.settings.ReverbQuickControls(onOpenReverbSettings)
+                else Column {
+                    ControlBlock(
+                        icon = { Icon(Icons.Filled.Speed, null, tint = MaterialTheme.colorScheme.primary) },
+                        title = appString(R.string.text_speed_2d2cb0),
+                        value = "${"%.2f".format(speed)}x",
+                    ) {
+                        Slider(
+                            value = speed,
+                            onValueChange = onSpeed,
+                            valueRange = 0.5f..2.0f,
+                            steps = 29,
+                            colors = SliderDefaults.colors(thumbColor = MaterialTheme.colorScheme.primary, activeTrackColor = MaterialTheme.colorScheme.primary),
+                        )
+                        QuickPicks(listOf(0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 2.0f), speed) { onSpeed(it) }
+                    }
 
-                TextButton(onClick = onReset, modifier = Modifier.align(Alignment.End).padding(top = 8.dp).pointerHoverIcon(PointerIcon.Hand)) {
-                    Text(appString(R.string.text_reset_to_default_39c90e))
+                    TextButton(onClick = onReset, modifier = Modifier.align(Alignment.End).padding(top = 8.dp).pointerHoverIcon(PointerIcon.Hand)) {
+                        Text(appString(R.string.text_reset_to_default_39c90e))
+                    }
                 }
             }
         }
@@ -103,7 +112,7 @@ private fun ControlBlock(
     Row(verticalAlignment = Alignment.CenterVertically) {
         icon()
         Spacer(Modifier.width(10.dp))
-        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+        Text(title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
         Text(value, style = MaterialTheme.typography.titleMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
     content()
@@ -114,11 +123,13 @@ private fun QuickPicks(options: List<Float>, selected: Float, onPick: (Float) ->
     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         options.forEach { opt ->
             val active = kotlin.math.abs(opt - selected) < 0.001f
+            val fill by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest, Motion.state(), label = "pickFill")
+            val ink by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "pickInk")
             Box(
                 Modifier
                     .weight(1f)
                     .paperClip(RoundedCornerShape(50))
-                    .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHighest)
+                    .background(fill)
                     .clickable { onPick(opt) }
                     .pointerHoverIcon(PointerIcon.Hand)
                     .padding(vertical = 8.dp),
@@ -128,7 +139,8 @@ private fun QuickPicks(options: List<Float>, selected: Float, onPick: (Float) ->
                     formatMultiplier(opt),
                     style = MaterialTheme.typography.labelSmall,
                     fontWeight = FontWeight.Bold,
-                    color = if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
+                    color = ink,
+                    maxLines = 1,
                 )
             }
         }

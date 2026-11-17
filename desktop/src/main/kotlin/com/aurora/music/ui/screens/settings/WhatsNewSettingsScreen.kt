@@ -3,13 +3,10 @@ package com.aurora.music.ui.screens.settings
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.NewReleases
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -21,6 +18,7 @@ import com.aurora.music.data.WhatsNew
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.components.EmptyState
 import com.aurora.music.ui.whatsnew.WhatsNewCatalog
 import com.aurora.music.ui.whatsnew.WhatsNewLauncher
 import kotlinx.coroutines.launch
@@ -46,8 +44,7 @@ fun WhatsNewSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             item { SettingsSectionTitle(appString(R.string.whats_new_past)) }
             item {
                 SettingsGroup {
-                    if (releases.isEmpty()) Text(appString(R.string.whats_new_past_empty), Modifier.padding(20.dp),
-                        style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    if (releases.isEmpty()) EmptyState(Icons.Filled.History, appString(R.string.whats_new_past_empty))
                     releases.forEachIndexed { i, release ->
                         if (i > 0) SettingsRowDivider()
                         SettingsNavRow(Icons.Filled.History, appString(R.string.text_version_d2f210, WhatsNew.shortVersion(release.version)),

@@ -16,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -31,7 +32,7 @@ import java.util.UUID
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.launch
 
-@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class, ExperimentalLayoutApi::class)
 @Composable
 fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val container = com.aurora.music.desktop.ui.LocalDesktopContainer.current
@@ -100,7 +101,7 @@ fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                             Text(profile.routeLabel.ifBlank { appString(R.string.text_output_not_bound_dbaf18) }, style = MaterialTheme.typography.bodySmall)
                             Text(appString(R.string.text_db_136a33, (profile.gainSetting), (levelText(profile.uncertaintyDb))), style = MaterialTheme.typography.bodySmall)
                             Text(profile.provenance, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                            FlowRow(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                                 TextButton(enabled = !busy && bindable && profile.routeKey == route.route.key,
                                     onClick = { confirming = profile to route }) { Text(appString(R.string.text_use_1d4d43)) }
                                 TextButton(enabled = !busy && bindable, onClick = { editing = profile to route }) { Text(appString(R.string.text_edit_bind_e977d1)) }
@@ -119,14 +120,16 @@ fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                     SettingsGroup {
                         SettingsSwitchRow(title = appString(R.string.text_save_level_samples_c79a47), subtitle = appString(R.string.text_every_30_seconds_up_to_2_880_samples_stored_locally_39373d),
                             checked = state.historyEnabled, onCheckedChange = { enabled -> perform { store.setHistoryEnabled(enabled) } })
-                        if (state.history.isNotEmpty()) TextButton(onClick = { clearHistory = true }, enabled = !busy,
-                            modifier = Modifier.padding(horizontal = 12.dp)) { Text(appString(R.string.text_clear_history_53b515)) }
+                        SettingsReveal(state.history.isNotEmpty()) {
+                            TextButton(onClick = { clearHistory = true }, enabled = !busy,
+                                modifier = Modifier.padding(horizontal = 12.dp)) { Text(appString(R.string.text_clear_history_53b515)) }
+                        }
                     }
                 }
                 items(state.history.take(60)) { entry ->
                     Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                         Column(Modifier.weight(1f)) {
-                            Text(entry.profileName, style = MaterialTheme.typography.bodyMedium)
+                            Text(entry.profileName, style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
                             Text(DateFormat.getDateTimeInstance(DateFormat.SHORT, DateFormat.SHORT).format(Date(entry.timestampMillis)),
                                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
@@ -148,7 +151,8 @@ fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         })
     }
     confirming?.let { (profile, expected) ->
-        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { confirming = null }, title = { Text(appString(R.string.text_confirm_hardware_d8779b)) }, text = {
+        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { confirming = null }, title = { Text(appString(R.string.text_confirm_hardware_d8779b),
+            maxLines = 2, overflow = TextOverflow.Ellipsis) }, text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(appString(R.string.text_headphones_ecc393, (profile.name)))
                 Text(appString(R.string.text_gain_db_cad396, (profile.gainSetting), (levelText(profile.gainDb))))
@@ -160,8 +164,9 @@ fun ListeningLevelsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             perform { store.confirm(profile.id, expected) }
         }) { Text(appString(R.string.text_these_settings_match_4e8e86)) } }, dismissButton = { TextButton(onClick = { confirming = null }) { Text(appString(R.string.text_cancel_77dfd2)) } })
     }
-    if (clearHistory) AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { clearHistory = false }, title = { Text(appString(R.string.text_clear_listening_history_5076df)) },
-        confirmButton = { TextButton(onClick = { clearHistory = false; perform { store.clearHistory() } }) { Text(appString(R.string.text_clear_719ea3)) } },
+    if (clearHistory) AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { clearHistory = false }, title = { Text(appString(R.string.text_clear_listening_history_5076df),
+            maxLines = 2, overflow = TextOverflow.Ellipsis) },
+        confirmButton = { TextButton(onClick = { clearHistory = false; perform { store.clearHistory() } }) { Text(appString(R.string.text_clear_719ea3), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { clearHistory = false }) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }
 

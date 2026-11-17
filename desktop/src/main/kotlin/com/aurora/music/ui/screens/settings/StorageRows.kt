@@ -37,6 +37,12 @@ import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.data.StorageUsage
 import com.aurora.music.localization.appString
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.theme.Motion
 
 internal class StorageConfirm(val title: String, val message: String, val confirm: String, val action: () -> Unit)
 
@@ -68,13 +74,16 @@ internal fun StorageRow(
     onAction: () -> Unit = {},
 ) {
     SettingsRowScaffold(leading = { SettingsRowIcon(icon) }, title = title, subtitle = detail, onClick = null) {
-        when {
-            working -> Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-            }
-            action != null -> TextButton(onClick = onAction, enabled = enabled,
-                modifier = if (enabled) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier) {
-                Text(action, color = if (destructive && enabled) MaterialTheme.colorScheme.error else Color.Unspecified)
+        AnimatedContent(working, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
+            contentAlignment = Alignment.CenterEnd, label = "storageAction") { busy ->
+            when {
+                busy -> Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
+                }
+                action != null -> TextButton(onClick = onAction, enabled = enabled,
+                    modifier = if (enabled) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier) {
+                    Text(action, color = if (destructive && enabled) MaterialTheme.colorScheme.error else Color.Unspecified)
+                }
             }
         }
     }
@@ -106,8 +115,10 @@ internal fun StorageOverview(usage: StorageUsage, clearing: Boolean, notice: Str
                             Box(Modifier.size(10.dp).paperClip(CircleShape).background(color))
                             Spacer(Modifier.width(8.dp))
                             Column {
-                                Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                                Text(if (usage.ready) storageSize(bytes) else "–", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
+                                Text(label, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
+                                Text(if (usage.ready) storageSize(bytes) else "–", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium,
+                                    maxLines = 1, overflow = TextOverflow.Ellipsis)
                             }
                         }
                     }
@@ -122,10 +133,12 @@ internal fun StorageOverview(usage: StorageUsage, clearing: Boolean, notice: Str
                     if (clearing) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
                     else Icon(Icons.Filled.CleaningServices, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(8.dp))
-                    Text(appString(R.string.storage_clear_caches))
+                    Text(appString(R.string.storage_clear_caches), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
-                if (notice != null) Text(notice, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(start = 14.dp))
+                AnimatedContent(notice, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null }, label = "storageNotice") { text ->
+                    if (text != null) Text(text, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(start = 14.dp))
+                }
             }
         }
     }
@@ -137,7 +150,7 @@ internal fun StorageConfirmDialog(request: StorageConfirm?, onDismiss: () -> Uni
     AlertDialog(
         containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh,
         onDismissRequest = onDismiss,
-        title = { Text(request.title) },
+        title = { Text(request.title, maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(request.message) },
         confirmButton = {
             TextButton(onClick = { onDismiss(); request.action() }) { Text(request.confirm, color = MaterialTheme.colorScheme.error) }

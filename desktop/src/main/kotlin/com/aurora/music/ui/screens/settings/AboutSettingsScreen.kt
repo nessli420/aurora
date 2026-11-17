@@ -40,6 +40,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.ServerType
@@ -66,7 +67,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     var openNotice by remember { mutableStateOf<Notice?>(null) }
     var showFontLicenses by remember { mutableStateOf(false) }
     openNotice?.let { notice ->
-        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { openNotice = null }, title = { Text(notice.name) },
+        AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, onDismissRequest = { openNotice = null }, title = { Text(notice.name, maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = { Text(notice.detail, modifier = Modifier.verticalScroll(rememberScrollState())) },
             confirmButton = { TextButton(onClick = { openNotice = null }) { Text(appString(R.string.text_close_bbfa77)) } },
             dismissButton = { TextButton(onClick = { runCatching { uriHandler.openUri(notice.source) } }) { Text(appString(R.string.text_source_6da13a)) } })
@@ -83,7 +84,7 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
         }
         AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
             onDismissRequest = { showFontLicenses = false },
-            title = { Text(appString(R.string.font_licenses_title)) },
+            title = { Text(appString(R.string.font_licenses_title), maxLines = 2, overflow = TextOverflow.Ellipsis) },
             text = {
                 Column(
                     Modifier.verticalScroll(rememberScrollState()),
@@ -112,8 +113,8 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 ) { Icon(Icons.Filled.GraphicEq, null, tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(36.dp)) }
                 Spacer(Modifier.width(18.dp))
                 Column {
-                    Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black)
-                    Text(appString(R.string.text_version_d2f210, (BuildInfo.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text(appString(R.string.text_aurora_eeee9b), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(appString(R.string.text_version_d2f210, (BuildInfo.VERSION_NAME)), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Text(appString(when { HostPlatform.isWindows -> R.string.text_windows_java_2566af; HostPlatform.isMac -> R.string.text_macos_java_4c1e2a; else -> R.string.text_linux_java_b7923f }, Runtime.version().feature()), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
             }

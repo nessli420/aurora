@@ -2,7 +2,7 @@ package com.aurora.music.ui.components
 
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import com.aurora.music.ui.theme.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -10,6 +10,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.window.DialogProperties
 import com.aurora.music.R
 import com.aurora.music.data.GuestLikes
@@ -38,7 +39,7 @@ fun GuestLikesPrompt(sessions: List<Session>, guestLikes: GuestLikes, move: susp
     AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         // only the buttons close it: a stray click outside used to drop the offer until the next launch
         onDismissRequest = {}, properties = DialogProperties(dismissOnClickOutside = false),
-        title = { Text(if (library) appString(R.string.guest_library_title, service) else appString(R.string.guest_likes_title, service)) },
+        title = { Text(if (library) appString(R.string.guest_library_title, service) else appString(R.string.guest_likes_title, service), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(if (library) appString(R.string.guest_library_body, appPlural(R.plurals.item_count, count), service)
             else appString(R.string.guest_likes_body, appPlural(R.plurals.track_count, count), service)) },
         confirmButton = {

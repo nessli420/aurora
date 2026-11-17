@@ -8,6 +8,9 @@ import com.aurora.music.ui.theme.TextButton
 import com.aurora.music.ui.theme.OutlinedButton
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.R
@@ -49,12 +52,12 @@ internal fun AudioCacheSettings(container: DesktopContainer) {
             Text(appPlural(R.plurals.cache_ready_tracks, status.tracks),
                 style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             Box {
-                OutlinedButton(onClick = { choices = true }) {
-                    Text(appString(R.string.cache_limit) + ": " + bytes(prefs.limitBytes))
+                OutlinedButton(onClick = { choices = true }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
+                    Text(appString(R.string.cache_limit) + ": " + bytes(prefs.limitBytes), maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 DropdownMenu(expanded = choices, onDismissRequest = { choices = false }) {
                     AudioCachePrefs.limitsMb.forEach { mb ->
-                        DropdownMenuItem(text = { Text(bytes(mb * 1024L * 1024)) }, onClick = {
+                        DropdownMenuItem(text = { Text(bytes(mb * 1024L * 1024)) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand), onClick = {
                             choices = false
                             scope.launch { container.settingsStore.setAudioCacheLimit(mb) }
                         })
@@ -63,14 +66,20 @@ internal fun AudioCacheSettings(container: DesktopContainer) {
             }
             Text(appString(R.string.cache_policy), style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant)
-            TextButton(enabled = status.ready && status.bytes > 0 && !clearing, onClick = { confirmClear = true }) {
-                Text(appString(if (clearing) R.string.cache_clearing else R.string.cache_clear))
+            Column {
+                val canClear = status.ready && status.bytes > 0 && !clearing
+                TextButton(enabled = canClear, onClick = { confirmClear = true },
+                    modifier = if (canClear) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier) {
+                    Text(appString(if (clearing) R.string.cache_clearing else R.string.cache_clear))
+                }
+                SettingsReveal(message != null) {
+                    Text(message.orEmpty(), Modifier.padding(top = 8.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
             }
-            message?.let { Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant) }
         }
     }
     if (confirmClear) AlertDialog(onDismissRequest = { confirmClear = false }, containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh,
-        title = { Text(appString(R.string.cache_clear_title)) },
+        title = { Text(appString(R.string.cache_clear_title), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(appString(R.string.cache_clear_message)) },
         confirmButton = { TextButton(onClick = {
             confirmClear = false
@@ -80,6 +89,6 @@ internal fun AudioCacheSettings(container: DesktopContainer) {
                 clearing = false
                 message = appString(if (result.isSuccess) R.string.cache_cleared else R.string.cache_clear_failed)
             }
-        }) { Text(appString(R.string.cache_clear)) } },
+        }) { Text(appString(R.string.cache_clear), color = MaterialTheme.colorScheme.error) } },
         dismissButton = { TextButton(onClick = { confirmClear = false }) { Text(appString(R.string.text_cancel_77dfd2)) } })
 }

@@ -1,5 +1,11 @@
 package com.aurora.music.ui.whatsnew
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.ui.input.pointer.PointerIcon
+import androidx.compose.ui.input.pointer.pointerHoverIcon
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.pressClickable
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
@@ -154,7 +160,8 @@ fun WhatsNewTour(
                 count - 1 -> DonePage(version, fixes, enabled, onEnabledChange, onClose)
                 else -> {
                     val feature = features[index - 1]
-                    FeaturePage(feature, index - 1, features.size, onSkip = onClose,
+                    // every page's bars follow the pager, so the step fills in place while the pages slide
+                    FeaturePage(feature, (pager.currentPage - 1).coerceIn(0, features.size - 1), features.size, onSkip = onClose,
                         onTry = feature.route?.let { route -> { onTry(route) } }, onNext = { go(index + 1) })
                 }
             }
@@ -171,10 +178,11 @@ fun WhatsNewReturnPill(onResume: () -> Unit, onClose: () -> Unit) {
         contentAlignment = Alignment.TopCenter) {
         Row(Modifier.shadow(12.dp, shape).auroraPanel(shape, emphasized = true).padding(start = 6.dp, end = 2.dp),
             verticalAlignment = Alignment.CenterVertically) {
-            TextButton(onClick = onResume) {
+            TextButton(onClick = onResume, modifier = Modifier.weight(1f, fill = false)) {
                 Icon(Icons.AutoMirrored.Filled.ArrowBack, null, Modifier.size(18.dp), tint = colors.primary)
                 Spacer(Modifier.width(8.dp))
-                Text(appString(R.string.whats_new_resume), color = colors.primary, fontWeight = FontWeight.SemiBold)
+                Text(appString(R.string.whats_new_resume), color = colors.primary, fontWeight = FontWeight.SemiBold,
+                    maxLines = 1, overflow = TextOverflow.Ellipsis)
             }
             IconButton(onClick = onClose) { Icon(Icons.Filled.Close, appString(R.string.whats_new_close), tint = colors.onSurface) }
         }
@@ -255,10 +263,10 @@ private fun TourButton(text: String, modifier: Modifier = Modifier, primary: Boo
             .border(1.5.dp, colors.onBackground.copy(alpha = 0.45f), shape)
         else -> Modifier.clip(shape).background(colors.primary)
     }
-    Box(modifier.height(54.dp).then(surface).clickable(role = Role.Button, onClick = onClick), contentAlignment = Alignment.Center) {
-        Text(if (style == ThemeStyle.RETRO) text.uppercase(Locale.getDefault()) else text,
+    Box(modifier.height(54.dp).then(surface).pressClickable(role = Role.Button, onClick = onClick).pointerHoverIcon(PointerIcon.Hand), contentAlignment = Alignment.Center) {
+        Text(if (style == ThemeStyle.RETRO) text.uppercase(Locale.getDefault()) else text, Modifier.padding(horizontal = 12.dp),
             style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold,
-            color = if (primary) colors.onPrimary else colors.onSurface, maxLines = 1)
+            color = if (primary) colors.onPrimary else colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
     }
 }
 
@@ -481,8 +489,8 @@ private fun ProgressBars(index: Int, total: Int, modifier: Modifier) {
     val shape = MaterialTheme.shapes.extraSmall
     Row(modifier.semantics { contentDescription = label }, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
         repeat(total) { i ->
-            Box(Modifier.weight(1f).height(4.dp).clip(shape)
-                .background(if (i <= index) colors.primary else colors.surfaceContainerHighest))
+            val fill by animateColorAsState(if (i <= index) colors.primary else colors.surfaceContainerHighest, Motion.state(), label = "tourProgress")
+            Box(Modifier.weight(1f).height(4.dp).clip(shape).background(fill))
         }
     }
 }
@@ -517,8 +525,8 @@ private fun PreviewRow(title: AnnotatedString, subtitle: AnnotatedString, traili
     Row(Modifier.fillMaxWidth().clip(MaterialTheme.shapes.medium).background(colors.surfaceContainerHighest.copy(alpha = 0.7f))
         .padding(horizontal = 16.dp, vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
         Column(Modifier.weight(1f)) {
-            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1)
-            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1)
+            Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(subtitle, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
         trailing()
     }
@@ -571,7 +579,8 @@ private fun PreviewTab(label: String, lifted: Boolean = false, hidden: Boolean =
         .alpha(if (hidden) 0.5f else 1f).padding(horizontal = 14.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(Icons.Filled.DragIndicator, null, Modifier.size(20.dp), tint = if (lifted) colors.primary else colors.onSurfaceVariant)
         Spacer(Modifier.width(12.dp))
-        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = if (lifted) FontWeight.SemiBold else null)
+        Text(label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge, fontWeight = if (lifted) FontWeight.SemiBold else null,
+            maxLines = 1, overflow = TextOverflow.Ellipsis)
         Icon(if (hidden) Icons.Filled.VisibilityOff else Icons.Filled.Visibility, null, Modifier.size(20.dp), tint = colors.onSurfaceVariant)
     }
 }
@@ -592,7 +601,8 @@ internal fun TrackSortPreview() {
                 val active = sort == TrackSort.RECENTLY_ADDED
                 Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                     Text(sort.label, Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge,
-                        fontWeight = if (active) FontWeight.SemiBold else null, color = if (active) colors.primary else colors.onSurface)
+                        fontWeight = if (active) FontWeight.SemiBold else null, color = if (active) colors.primary else colors.onSurface,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
                     if (active) Icon(Icons.Filled.ArrowDownward, null, Modifier.size(18.dp), tint = colors.primary)
                 }
             }
@@ -646,7 +656,7 @@ internal fun PaperThemePreview() {
                         if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(colors.outlineVariant))
                         Row(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 7.dp), verticalAlignment = Alignment.CenterVertically) {
                             Text(field, Modifier.width(84.dp), style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant)
-                            Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onBackground, maxLines = 1)
+                            Text(value, style = MaterialTheme.typography.bodyMedium, color = colors.onBackground, maxLines = 1, overflow = TextOverflow.Ellipsis)
                         }
                     }
                 }

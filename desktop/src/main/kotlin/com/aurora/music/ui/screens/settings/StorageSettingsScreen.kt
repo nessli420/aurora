@@ -174,7 +174,7 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
                     appString(R.string.storage_clear), enabled = usage.images > 0, working = "images" in working) {
                     perform("images", R.string.storage_cleared) { inventory.clearImages(); true }
                 }
-                if (usage.mapTiles > 0) {
+                SettingsReveal(usage.mapTiles > 0) {
                     SettingsRowDivider()
                     StorageRow(Icons.Filled.Map, appString(R.string.storage_map_tiles),
                         storageDetail(usage.mapTiles, appString(R.string.storage_map_tiles_detail)),
@@ -354,7 +354,7 @@ private fun AnalysisSettings(usage: StorageUsage, working: Set<String>, perform:
             appString(R.string.ai_dj_speaker_missing, storageSize(com.aurora.music.ai.DjModelStore.SPEAKER.bytes)), working, perform, ask,
             container::downloadAiDjSpeakerModel, container::deleteAiDjSpeakerModel)
         val measured = container.replayGainStore.size
-        if (measured > 0) {
+        SettingsReveal(measured > 0) {
             SettingsRowDivider()
             StorageRow(Icons.Filled.Hearing, appString(R.string.storage_replaygain),
                 appPlural(R.plurals.storage_tracks_analysed, measured), clear, working = "replaygain" in working) {
@@ -402,7 +402,7 @@ private fun HistorySettings(usage: StorageUsage, working: Set<String>, perform: 
                 perform("insights", R.string.storage_cleared) { container.listeningDetails.clear(); true }
             }
         }
-        if (usage.locatedPlays > 0) {
+        SettingsReveal(usage.locatedPlays > 0) {
             SettingsRowDivider()
             StorageRow(Icons.Filled.Map, appString(R.string.insights_location_history),
                 appString(R.string.insights_location_count, usage.locatedPlays.toString()),
@@ -412,7 +412,7 @@ private fun HistorySettings(usage: StorageUsage, working: Set<String>, perform: 
                 }
             }
         }
-        if (places.configured) {
+        SettingsReveal(places.configured) {
             SettingsRowDivider()
             StorageRow(Icons.Filled.Place, appString(R.string.insights_places), appString(R.string.storage_places_detail),
                 appString(R.string.text_forget_03d5d8), working = "places" in working, destructive = true) {

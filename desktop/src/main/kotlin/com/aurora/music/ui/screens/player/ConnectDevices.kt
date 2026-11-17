@@ -1,6 +1,13 @@
 package com.aurora.music.ui.screens.player
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +52,7 @@ import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.desktop.connect.LocalConnect
@@ -84,8 +92,12 @@ fun ConnectDevicesSection(onDismiss: () -> Unit) {
         Text(appString(R.string.connect_none_found), Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
             style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant)
     }
-    (remote?.session?.error?.collectAsState()?.value?.let { remote.session.problem() } ?: state.error)?.let {
-        Text(it, Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = colors.error)
+    val problem = remote?.session?.error?.collectAsState()?.value?.let { remote.session.problem() } ?: state.error
+    // the last message stays up while the line folds away
+    val lastProblem = remember { arrayOf("") }
+    problem?.let { lastProblem[0] = it }
+    AnimatedVisibility(problem != null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+        Text(problem ?: lastProblem[0], Modifier.padding(horizontal = 16.dp, vertical = 4.dp), style = MaterialTheme.typography.bodySmall, color = colors.error)
     }
     if (status != null && status.presets.isNotEmpty()) {
         Text(appString(R.string.connect_preset), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant,
@@ -95,7 +107,7 @@ fun ConnectDevicesSection(onDismiss: () -> Unit) {
                 Box(Modifier.paperClip(RoundedCornerShape(50)).background(colors.surfaceContainerHigh)
                     .clickable { connect.command(ConnectCommand.Preset(preset.id)) }.pointerHoverIcon(PointerIcon.Hand)
                     .padding(horizontal = 16.dp, vertical = 10.dp)) {
-                    Text(preset.name, style = MaterialTheme.typography.labelLarge, color = colors.onSurface)
+                    Text(preset.name, style = MaterialTheme.typography.labelLarge, color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
             }
         }
@@ -106,25 +118,29 @@ fun ConnectDevicesSection(onDismiss: () -> Unit) {
     pairing?.let { found -> ConnectPairDialog(found.name, null, onPair = { code -> connect.pairDiscovered(found, code); pairing = null }, onDismiss = { pairing = null }) }
 }
 
+// the one row of every output list: connect peers and audio devices
 @Composable
-private fun DeviceRow(icon: ImageVector, label: String, detail: String?, selected: Boolean, onClick: () -> Unit) {
+internal fun DeviceRow(icon: ImageVector, label: String, detail: String?, selected: Boolean, vertical: Dp = 12.dp, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val plate by animateColorAsState(if (selected) colors.primary else colors.surfaceContainerHigh, Motion.state(), label = "rowPlate")
+    val glyph by animateColorAsState(if (selected) colors.onPrimary else colors.onSurface, Motion.state(), label = "rowGlyph")
+    val ink by animateColorAsState(if (selected) colors.primary else colors.onSurface, Motion.state(), label = "rowInk")
     Row(
         Modifier.fillMaxWidth().paperClip(RoundedCornerShape(themedCorner(14.dp))).clickable(role = Role.RadioButton, onClick = onClick)
-            .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 16.dp, vertical = 12.dp),
+            .pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 16.dp, vertical = vertical),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(Modifier.size(40.dp).paperClip(CircleShape).background(if (selected) colors.primary else colors.surfaceContainerHigh), contentAlignment = Alignment.Center) {
-            Icon(icon, null, tint = if (selected) colors.onPrimary else colors.onSurface, modifier = Modifier.size(20.dp))
+        Box(Modifier.size(40.dp).paperClip(CircleShape).background(plate), contentAlignment = Alignment.Center) {
+            Icon(icon, null, tint = glyph, modifier = Modifier.size(20.dp))
         }
         Spacer(Modifier.width(14.dp))
         Column(Modifier.weight(1f)) {
             Text(label, style = MaterialTheme.typography.titleSmall, fontWeight = if (selected) FontWeight.Bold else FontWeight.Medium,
-                color = if (selected) colors.primary else colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                color = ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
             if (!detail.isNullOrBlank()) Text(detail, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
                 maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (selected) Icon(Icons.Filled.Check, null, tint = colors.primary)
+        AnimatedVisibility(selected, enter = fadeIn(Motion.enter()), exit = fadeOut(Motion.exit())) { Icon(Icons.Filled.Check, null, tint = colors.primary) }
     }
 }
 
@@ -133,7 +149,7 @@ fun ConnectPairDialog(name: String, key: String?, onPair: (String) -> Unit, onDi
     var code by remember { mutableStateOf("") }
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text(appString(R.string.connect_pair_title, name)) },
+        title = { Text(appString(R.string.connect_pair_title, name), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 key?.let {

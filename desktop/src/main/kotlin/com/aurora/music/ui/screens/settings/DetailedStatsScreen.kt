@@ -46,6 +46,10 @@ import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.data.InsightsPrefs
 import com.aurora.music.data.InsightsSummary
 import com.aurora.music.localization.appString
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.ui.text.style.TextOverflow
+import com.aurora.music.ui.theme.screenEnter
 import kotlinx.coroutines.launch
 import java.text.DateFormat
 import java.util.Date
@@ -70,7 +74,7 @@ fun DetailedStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpe
     Column(Modifier.fillMaxSize()) {
         SettingsTopBar(appString(R.string.insights_title), onBack)
         val current = prefs ?: return@Column
-        LazyColumn(Modifier.fillMaxWidth().weight(1f),
+        LazyColumn(Modifier.fillMaxWidth().weight(1f).screenEnter(current.enabled),
             contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)) {
             if (!current.enabled) {
@@ -164,7 +168,7 @@ fun DetailedStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpe
     if (confirmDelete) AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh, 
         onDismissRequest = { confirmDelete = false },
         icon = { androidx.compose.material3.Icon(Icons.Filled.Delete, null) },
-        title = { Text(appString(R.string.insights_delete)) },
+        title = { Text(appString(R.string.insights_delete), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(appString(R.string.insights_delete_body)) },
         confirmButton = {
             TextButton(onClick = {
@@ -224,7 +228,7 @@ private fun PlacesSettings(enabled: Boolean) {
         }
         Note(appString(R.string.insights_places_guide_desktop))
         LocationAccess()
-        if (enabled) {
+        SettingsReveal(enabled) {
             SettingsRowDivider()
             PlaceRow(Icons.Filled.Home, appString(R.string.insights_zone_home), places.home != null) { setHere { p, place -> p.copy(home = place) } }
             PlaceRow(Icons.Filled.Work, appString(R.string.insights_zone_work), places.work != null) { setHere { p, place -> p.copy(work = place) } }
@@ -239,6 +243,7 @@ private fun PlacesSettings(enabled: Boolean) {
     }
 }
 
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LocationHistorySettings(enabled: Boolean, refreshKey: Int, onOpenMap: () -> Unit) {
     val container = com.aurora.music.desktop.ui.LocalDesktopContainer.current
@@ -259,7 +264,7 @@ private fun LocationHistorySettings(enabled: Boolean, refreshKey: Int, onOpenMap
         LocationAccess()
         SettingsRowDivider()
         Note(appString(R.string.insights_location_count, count))
-        Row(Modifier.padding(horizontal = 8.dp)) {
+        FlowRow(Modifier.padding(horizontal = 8.dp)) {
             TextButton(onClick = onOpenMap) { Text(appString(R.string.insights_open_map)) }
             TextButton(onClick = { confirm = true }, enabled = count > 0) {
                 Text(appString(R.string.insights_delete_locations),
@@ -269,7 +274,7 @@ private fun LocationHistorySettings(enabled: Boolean, refreshKey: Int, onOpenMap
     }
     if (confirm) AlertDialog(containerColor = com.aurora.music.ui.theme.solidColors().surfaceContainerHigh,
         onDismissRequest = { confirm = false },
-        title = { Text(appString(R.string.insights_delete_locations)) },
+        title = { Text(appString(R.string.insights_delete_locations), maxLines = 2, overflow = TextOverflow.Ellipsis) },
         text = { Text(appString(R.string.insights_delete_locations_body)) },
         confirmButton = {
             TextButton(onClick = {
@@ -283,13 +288,7 @@ private fun LocationHistorySettings(enabled: Boolean, refreshKey: Int, onOpenMap
 
 @Composable
 private fun PlaceRow(icon: androidx.compose.ui.graphics.vector.ImageVector, title: String, set: Boolean, onUseLocation: () -> Unit) {
-    Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 6.dp), verticalAlignment = Alignment.CenterVertically) {
-        androidx.compose.material3.Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Column(Modifier.weight(1f).padding(start = 16.dp)) {
-            Text(title, style = MaterialTheme.typography.titleSmall)
-            Text(if (set) appString(R.string.insights_place_saved) else appString(R.string.text_not_set_93039e),
-                style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        }
+    RowScaffold(icon, title, if (set) appString(R.string.insights_place_saved) else appString(R.string.text_not_set_93039e), onClick = null) {
         TextButton(onClick = onUseLocation) { Text(appString(R.string.insights_use_location)) }
     }
 }

@@ -8,6 +8,9 @@ import com.aurora.music.ui.theme.fade
 import com.aurora.music.R
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
@@ -27,6 +30,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -99,7 +103,9 @@ import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.layout.pagePadding
 import com.aurora.music.ui.screens.stats.RecapInboxButton
 import com.aurora.music.ui.theme.LocalUiPrefs
+import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.util.accentFor
 import com.aurora.music.viewmodel.HomeUiState
 import kotlinx.coroutines.launch
@@ -173,7 +179,7 @@ fun HomeScreen(
                     Box(
                         Modifier.size(88.dp).paperClip(CircleShape)
                             .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
-                            .clickable(onClickLabel = appString(R.string.home_add_source), onClick = onAddSource)
+                            .pressClickable(onClickLabel = appString(R.string.home_add_source), onClick = onAddSource)
                             .pointerHoverIcon(PointerIcon.Hand),
                         contentAlignment = Alignment.Center,
                     ) {
@@ -209,9 +215,13 @@ fun HomeScreen(
                 }
                 Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
                     state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                    if (state.loadingMore) CircularProgressIndicator(Modifier.size(28.dp))
-                    else OutlinedButton(onClick = if (data.continuation != null) onLoadMore else onRetry) {
-                        Text(if (state.error != null) appString(R.string.text_try_again_042c86) else appString(R.string.text_more_recommendations_5fd054))
+                    Crossfade(state.loadingMore, animationSpec = Motion.state(), label = "feedMore") { busy ->
+                        Box(Modifier.fillMaxWidth().heightIn(min = 40.dp), contentAlignment = Alignment.Center) {
+                            if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                            else OutlinedButton(onClick = if (data.continuation != null) onLoadMore else onRetry) {
+                                Text(if (state.error != null) appString(R.string.text_try_again_042c86) else appString(R.string.text_more_recommendations_5fd054))
+                            }
+                        }
                     }
                 }
             }
@@ -331,11 +341,13 @@ private fun HeroPager(albums: List<Album>, scale: Float, onOpenDetail: (String, 
                     val current = pagerState.currentPage.coerceAtMost(stops - 1)
                     repeat(stops) { i ->
                         val active = current == i
+                        val dot by animateDpAsState(if (active) 22.dp else 6.dp, Motion.state(), label = "heroDot")
+                        val tint by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f), Motion.state(), label = "heroDotTint")
                         Box(
                             Modifier.padding(horizontal = 3.dp).height(6.dp)
-                                .width(if (active) 22.dp else 6.dp)
+                                .width(dot)
                                 .paperClip(RoundedCornerShape(50))
-                                .background(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.25f)),
+                                .background(tint),
                         )
                     }
                 }
@@ -384,7 +396,7 @@ private fun HeroCard(album: Album, height: Dp, onOpenDetail: (String, String) ->
             .fillMaxWidth()
             .height(height)
             .paperClip(RoundedCornerShape(themedCorner(24.dp)))
-            .clickable { onOpenDetail("album", album.id) }
+            .pressClickable { onOpenDetail("album", album.id) }
             .pointerHoverIcon(PointerIcon.Hand)
             .coverHover(album.artworkUrl),
     ) {
@@ -412,7 +424,7 @@ private fun HeroCard(album: Album, height: Dp, onOpenDetail: (String, String) ->
             Box(
                 // paper: the site's primary button, rose with an ink rule
                 Modifier.size(48.dp).paperFrame(CircleShape, { background(Color.White) }, fill = com.aurora.music.ui.theme.PaperTokens.rose)
-                    .clickable(onClickLabel = appString(R.string.text_play_5d12bd)) { onPlayAlbum(album.id) }
+                    .pressClickable(onClickLabel = appString(R.string.text_play_5d12bd)) { onPlayAlbum(album.id) }
                     .pointerHoverIcon(PointerIcon.Hand),
                 contentAlignment = Alignment.Center,
             ) {
@@ -450,7 +462,7 @@ private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, o
             .paperFrame(RoundedCornerShape(themedCorner(20.dp)), {
                 background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
             })
-            .clickable { onPlay(featured) }
+            .pressClickable { onPlay(featured) }
             .pointerHoverIcon(PointerIcon.Hand)
             .padding(16.dp * scale),
     ) {
@@ -463,7 +475,7 @@ private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, o
                     Eyebrow(appString(R.string.text_starred_5f1f99), featured.accent)
                     Spacer(Modifier.height(2.dp))
                     Text(featured.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                    Text(featured.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+                    Text(featured.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
                 Box(Modifier.size(46.dp * scale).paperFrame(CircleShape, { this }, fill = MaterialTheme.colorScheme.primary)
                     .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
@@ -509,7 +521,7 @@ private fun LikedRow(song: Song, onClick: () -> Unit) {
 @Composable
 private fun OverlayTile(album: Album, width: Dp, onClick: () -> Unit) {
     Box(
-        Modifier.size(width).paperClip(RoundedCornerShape(themedCorner(18.dp))).clickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand)
+        Modifier.size(width).paperClip(RoundedCornerShape(themedCorner(18.dp))).pressClickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand)
             .coverHover(album.artworkUrl),
     ) {
         Artwork(album.artworkUrl, accentFor(album.id), Modifier.matchParentSize(), corner = 18.dp)

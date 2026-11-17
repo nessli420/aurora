@@ -44,11 +44,16 @@ private val DarkColors = darkColorScheme(
     onSurface = TextPrimaryDark,
     surfaceVariant = DarkSurfaceElevated,
     onSurfaceVariant = TextSecondaryDark,
+    // sheets take the low roles and snackbars the inverse ones; left unset they fall back to material's grey-violet
+    surfaceContainerLowest = DarkBackground,
+    surfaceContainerLow = DarkSurface,
     surfaceContainer = DarkSurfaceElevated,
     surfaceContainerHigh = DarkSurfaceHigh,
     surfaceContainerHighest = DarkSurfaceHigh,
     outline = DarkOutline,
     outlineVariant = DarkOutline,
+    inverseSurface = TextPrimaryDark,
+    inverseOnSurface = DarkBackground,
     error = Color(0xFFFF5470),
 )
 
@@ -66,9 +71,13 @@ private val LightColors = lightColorScheme(
     onSurface = TextPrimaryLight,
     surfaceVariant = LightSurfaceElevated,
     onSurfaceVariant = TextSecondaryLight,
+    surfaceContainerLowest = LightSurface,
+    surfaceContainerLow = LightSurface,
     surfaceContainer = LightSurfaceElevated,
     surfaceContainerHigh = LightSurfaceElevated,
     outline = LightOutline,
+    inverseSurface = TextPrimaryLight,
+    inverseOnSurface = LightBackground,
     error = Color(0xFFD11A4B),
 )
 
@@ -124,6 +133,8 @@ private fun ColorScheme.withAccent(seed: Color, dark: Boolean): ColorScheme {
         onSecondary = on,
         tertiary = if (dark) lerp(seed, Color.White, 0.22f) else lerp(seed, Color.Black, 0.18f),
         onTertiary = on,
+        // the snackbar action sits on the inverse surface, so it takes the accent shifted towards that surface's ink
+        inversePrimary = if (dark) lerp(seed, Color.Black, 0.3f) else lerp(seed, Color.White, 0.3f),
     )
 }
 
@@ -131,6 +142,8 @@ private fun ColorScheme.toAmoled(): ColorScheme = copy(
     background = Color.Black,
     surface = Color.Black,
     surfaceVariant = Color(0xFF0B0B0B),
+    surfaceContainerLowest = Color.Black,
+    surfaceContainerLow = Color(0xFF0B0B0B),
     surfaceContainer = Color(0xFF0B0B0B),
     surfaceContainerHigh = Color(0xFF151515),
     surfaceContainerHighest = Color(0xFF1E1E1E),

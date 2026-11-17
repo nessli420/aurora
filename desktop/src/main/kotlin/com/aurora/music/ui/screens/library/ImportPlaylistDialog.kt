@@ -1,5 +1,10 @@
 package com.aurora.music.ui.screens.library
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.background
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.layout.Column
@@ -50,6 +55,7 @@ import com.aurora.music.data.ImportSource
 import com.aurora.music.data.PlaylistImporter
 import com.aurora.music.desktop.ui.FilePickers
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.Motion
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -107,17 +113,20 @@ fun ImportPlaylistDialog(importer: PlaylistImporter, onOpen: (String) -> Unit, o
                         singleLine = true, enabled = !busy, modifier = Modifier.fillMaxWidth().padding(top = 14.dp),
                         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Go), keyboardActions = KeyboardActions(onGo = { start() }),
                     )
-                    val step = progress
-                    if (step != null) {
+                    AnimatedVisibility(progress != null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                        val step = progress ?: return@AnimatedVisibility
                         val (text, fraction) = when (step) {
                             ImportProgress.Reading -> appString(R.string.import_reading) to null
                             is ImportProgress.Matching -> appString(R.string.import_matching, step.done, step.total) to step.done.toFloat() / step.total.coerceAtLeast(1)
                             ImportProgress.Saving -> appString(R.string.import_saving) to null
                         }
-                        Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
-                        if (fraction == null) LinearProgressIndicator(Modifier.fillMaxWidth()) else LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
+                        Column {
+                            Text(text, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.padding(top = 16.dp, bottom = 8.dp))
+                            if (fraction == null) LinearProgressIndicator(Modifier.fillMaxWidth()) else LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth())
+                        }
                     }
-                    failure?.let { f ->
+                    AnimatedVisibility(failure != null, enter = fadeIn(Motion.enter()) + expandVertically(Motion.enter()), exit = fadeOut(Motion.exit()) + shrinkVertically(Motion.exit())) {
+                        val f = failure ?: return@AnimatedVisibility
                         Row(Modifier.padding(top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
                             Icon(Icons.Outlined.ErrorOutline, null, tint = colors.error, modifier = Modifier.size(18.dp))
                             Text(failureText(f), color = colors.error, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(start = 8.dp))
@@ -156,7 +165,7 @@ fun ImportPlaylistDialog(importer: PlaylistImporter, onOpen: (String) -> Unit, o
 private fun SourceRow(icon: ImageVector, label: String, count: Int) {
     Row(Modifier.fillMaxWidth().padding(vertical = 5.dp), verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))
-        Text(label, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f).padding(start = 12.dp))
+        Text(label, style = MaterialTheme.typography.bodyLarge, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f).padding(start = 12.dp))
         Text(count.toString(), style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
     }
 }
