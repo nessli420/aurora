@@ -9,6 +9,11 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Album
 import androidx.compose.material.icons.filled.Link
+import androidx.compose.material.icons.outlined.Album as AlbumOutlined
+import androidx.compose.material.icons.outlined.GraphicEq
+import androidx.compose.material.icons.outlined.MusicNote
+import androidx.compose.material.icons.outlined.PlayCircle
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RadioButtonChecked
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
@@ -39,14 +44,13 @@ import androidx.compose.ui.semantics.onLongClick
 import androidx.compose.ui.semantics.semantics
 import com.aurora.music.R
 import com.aurora.music.ai.isDjSpeech
-import com.aurora.music.data.ImportSource
+import com.aurora.music.data.ServerType
 import com.aurora.music.data.SongLink
 import com.aurora.music.data.SourceCopy
 import com.aurora.music.data.isPodcast
 import com.aurora.music.data.isRadio
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
-import com.aurora.music.ui.screens.library.sourceIcon
 import com.aurora.music.util.TrackMatch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -204,7 +208,7 @@ internal fun SongSourcesMenu(song: Song, sources: SongSources, start: SongMenuPa
                     else -> list.forEach { link ->
                         DropdownMenuItem(
                             text = { Text(link.label, maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                            leadingIcon = { Icon(sourceIcon(ImportSource.of(link.type)), null) },
+                            leadingIcon = { Icon(linkIcon(link.type), null) },
                             onClick = { sources.copyLink(link); onDismiss() },
                         )
                     }
@@ -267,4 +271,13 @@ fun CopyLinkMenuItem(song: Song, onClick: () -> Unit) {
 fun CopyLinkMenu(song: Song, onDismiss: () -> Unit) {
     val sources = LocalSongSources.current ?: return
     SongSourcesMenu(song, sources, SongMenuPage.LINK, onDismiss = onDismiss)
+}
+
+// the icon each source has on the sign-in screen
+private fun linkIcon(type: ServerType): ImageVector = when (type) {
+    ServerType.YOUTUBE_MUSIC -> Icons.Outlined.PlayCircle
+    ServerType.SPOTIFY -> Icons.Outlined.MusicNote
+    ServerType.SOUNDCLOUD -> Icons.Outlined.GraphicEq
+    ServerType.APPLE_MUSIC -> Icons.Outlined.AlbumOutlined
+    else -> Icons.Filled.Link
 }
