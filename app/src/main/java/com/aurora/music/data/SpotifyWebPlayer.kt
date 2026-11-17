@@ -184,6 +184,11 @@ object SpotifyWebPlayer {
     internal val MIRROR_SCRIPT = """
         (function () {
           if (window.__auroraMirror) return;
+          // a fresh page picks the first file within the reported downlink; 0.2 Mbit/s lands on its lowest, 128 kbps aac
+          var connection = navigator.connection;
+          var slow = { downlink: 0.2, effectiveType: connection ? connection.effectiveType : '4g', rtt: connection ? connection.rtt : 0, saveData: false,
+            type: connection ? connection.type : undefined, addEventListener: function () {}, removeEventListener: function () {} };
+          Object.defineProperty(navigator, 'connection', { configurable: true, get: function () { return slow; } });
           var proto = HTMLMediaElement.prototype;
           var muted = Object.getOwnPropertyDescriptor(proto, 'muted');
           var nativePlay = proto.play;
