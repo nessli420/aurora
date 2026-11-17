@@ -25,8 +25,6 @@ import com.aurora.music.ui.screens.player.PlayerPane
 import com.aurora.music.ui.screens.player.PlayerScreen
 import com.aurora.music.ui.screens.player.QueueActions
 import com.aurora.music.ui.screens.player.QueueContent
-import com.aurora.music.ui.screens.player.LocalSongSources
-import com.aurora.music.ui.screens.player.SongSources
 import com.aurora.music.ui.testing.differsFrom
 import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.ui.testing.pixel
@@ -116,21 +114,6 @@ class PlayerScreenTest {
 
             scene.click(1396f, 36f)
             scene.shot("-menu")
-        }
-    }
-
-    @Test fun theMoreMenuOffersToPickAnotherMatch() {
-        val rec = Recorder()
-        val sources = SongSources(copies = { emptyList() }, releaseType = { null }, canRematch = { true }, playFrom = {},
-            rematch = { rec.events += "rematch:${it.id}" }, open = { _, _ -> }, manySources = { false },
-            linksSongs = { false }, links = { emptyList() }, copyLink = {})
-        PlayerScene("player-menu-rematch", 1440, 900) {
-            CompositionLocalProvider(LocalSongSources provides sources) { Player(PlayerFixtures.playing, rec, lyrics = null) }
-        }.use { scene ->
-            scene.click(1396f, 36f)
-            scene.shot()
-            scene.click(REMATCH_ITEM_X, REMATCH_ITEM_Y)
-            assertEquals(listOf("rematch:${PlayerFixtures.playing.current.id}"), rec.events)
         }
     }
 
@@ -259,5 +242,3 @@ private const val VIDEO_BUTTON = 1276f
 private const val FULLSCREEN_BUTTON = 1316f
 private const val QUEUE_BUTTON = 1276f
 private const val LYRICS_BUTTON = 1236f
-private const val REMATCH_ITEM_X = 1300f
-private const val REMATCH_ITEM_Y = 376f

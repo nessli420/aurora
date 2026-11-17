@@ -8,7 +8,6 @@ import com.aurora.music.ui.theme.likePop
 import com.aurora.music.ui.components.PlayPauseIcon
 import com.aurora.music.data.LongForm
 import com.aurora.music.ui.theme.paperClip
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Animation
 import androidx.compose.material.icons.filled.VideoLibrary
@@ -354,13 +353,6 @@ fun PlayerScreen(
                         enabled = song.artistId.isNotBlank(),
                         onClick = { showMenu = false; onGoToArtist() },
                         leadingIcon = { Icon(Icons.Filled.Person, null) },
-                    )
-                    // the same rematch the title's playback source menu offers, where it's easy to miss
-                    val sources = com.aurora.music.ui.screens.player.LocalSongSources.current
-                    if (state.hasTrack && sources != null && songMenusFor(song) && sources.canRematch(song)) DropdownMenuItem(
-                        text = { Text(appString(R.string.song_menu_rematch)) },
-                        onClick = { showMenu = false; sources.rematch(song) },
-                        leadingIcon = { Icon(Icons.Filled.Search, null) },
                     )
                 }
             }
