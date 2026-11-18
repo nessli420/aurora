@@ -72,6 +72,7 @@ import kotlin.math.roundToInt
 import com.aurora.music.desktop.platform.WindowPlacement as SavedWindow
 
 private const val TAG = "AuroraMain"
+private const val QUIT_TIMEOUT_MS = 8_000L
 
 fun main() {
     val start = ProcessHandle.current().info().startInstant().orElse(null)
@@ -174,6 +175,7 @@ fun main() {
         }
 
         fun show() {
+            if (quitting) return
             visible = true
             windowState.isMinimized = false
         }
@@ -182,13 +184,26 @@ fun main() {
             if (quitting) return
             quitting = true
             AppLog.d(TAG, "Quitting")
+            instance.stopListening()
             placement()?.let { runCatching { runBlocking { settings.setWindow(it) } } }
-            connect.close()
-            player.close()
-            container.close()
-            com.aurora.music.desktop.web.Chromium.shutdown()
-            instance.close()
-            exitApplication()
+            // the window goes at once and the rest closes off the ui thread; connect's mdns goodbye alone takes seconds
+            composeWindow?.isVisible = false
+            visible = false
+            thread(isDaemon = true, name = "aurora-quit") {
+                val started = System.nanoTime()
+                fun step(name: String, close: () -> Unit) = runCatching(close).onFailure { AppLog.e(TAG, "Closing $name failed", it) }
+                val work = thread(name = "aurora-shutdown") {
+                    step("player", player::close)
+                    step("container", container::close)
+                    step("chromium", com.aurora.music.desktop.web.Chromium::shutdown)
+                    step("connect", connect::close)
+                }
+                work.join(QUIT_TIMEOUT_MS)
+                if (work.isAlive) AppLog.w(TAG, "Shutdown still running after $QUIT_TIMEOUT_MS ms, exiting anyway")
+                AppLog.d(TAG, "Shut down in ${(System.nanoTime() - started) / 1_000_000} ms")
+                instance.close()
+                java.awt.EventQueue.invokeLater { exitApplication() }
+            }
         }
 
         fun close() {
@@ -224,7 +239,7 @@ fun main() {
             }
         }
 
-        if (trayAvailable) AppTray(icon, player, onShow = ::show, onQuit = ::quit)
+        if (trayAvailable && !quitting) AppTray(icon, player, onShow = ::show, onQuit = ::quit)
 
         Window(
             onCloseRequest = ::close,

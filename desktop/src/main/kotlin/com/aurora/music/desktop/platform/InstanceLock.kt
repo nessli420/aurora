@@ -37,20 +37,30 @@ class InstanceLock private constructor(
         }
     }
 
-    override fun close() {
+    // a quitting instance stops answering first, so a launch meanwhile waits for the lock instead of waking it
+    fun stopListening() {
         runCatching { server.close() }
         portFile.delete()
+    }
+
+    override fun close() {
+        stopListening()
         runCatching { channel.close() }
     }
 
     companion object {
-        fun acquire(dir: File, allowForeground: (Long) -> Unit = ::grantForeground): InstanceLock? {
+        fun acquire(dir: File, waitMs: Long = 15_000, allowForeground: (Long) -> Unit = ::grantForeground): InstanceLock? {
             dir.mkdirs()
             val channel = FileChannel.open(File(dir, "instance.lock").toPath(), StandardOpenOption.CREATE, StandardOpenOption.WRITE)
-            val lock = try { channel.tryLock() } catch (_: OverlappingFileLockException) { null }
+            fun tryLock() = try { channel.tryLock() } catch (_: OverlappingFileLockException) { null }
+            var lock = tryLock()
+            val deadline = System.nanoTime() + waitMs * 1_000_000
+            while (lock == null && !signal(dir, allowForeground) && System.nanoTime() < deadline) {
+                Thread.sleep(100)
+                lock = tryLock()
+            }
             if (lock == null) {
                 channel.close()
-                signal(dir, allowForeground)
                 return null
             }
             val server = ServerSocket(0, 8, InetAddress.getLoopbackAddress())

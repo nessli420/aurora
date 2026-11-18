@@ -9,11 +9,13 @@ import kotlinx.coroutines.withTimeout
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.rules.TemporaryFolder
 import java.io.File
+import kotlin.concurrent.thread
 
 class InstanceLockTest {
     @get:Rule val temp = TemporaryFolder()
@@ -31,6 +33,16 @@ class InstanceLockTest {
         assertFalse(File(dir, "instance.port").exists())
         assertFalse(InstanceLock.signal(dir))
         requireNotNull(InstanceLock.acquire(dir)).close()
+    }
+
+    @Test fun aLaunchWhileTheOldInstanceQuitsWaitsForItsLock() {
+        val dir = temp.newFolder("local")
+        val old = requireNotNull(InstanceLock.acquire(dir))
+        old.stopListening()
+        thread { Thread.sleep(300); old.close() }
+        val started = System.nanoTime()
+        requireNotNull(InstanceLock.acquire(dir, waitMs = 5_000) {}).close()
+        assertTrue((System.nanoTime() - started) / 1_000_000 >= 250)
     }
 
     @Test fun theForegroundGrantLinksAgainstTheNativeLibrary() {

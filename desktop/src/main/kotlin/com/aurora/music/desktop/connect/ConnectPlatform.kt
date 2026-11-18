@@ -108,7 +108,8 @@ internal class MdnsAdvertiser : EndpointAdvertiser {
     }
 
     @Synchronized override fun stop() {
-        instances.forEach { runCatching { it.unregisterAllServices(); it.close() } }
+        // close sends the goodbyes itself; unregistering first waits out a second two-second round
+        instances.forEach { runCatching { it.close() } }
         instances = emptyList()
     }
 }
