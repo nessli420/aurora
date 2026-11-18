@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"Made for you"</string>
+    <string name="foryou_daily">"Daily Mix %1$d"</string>
+    <string name="foryou_morning">"Morning Mix"</string>
+    <string name="foryou_afternoon">"Afternoon Mix"</string>
+    <string name="foryou_evening">"Evening Mix"</string>
+    <string name="foryou_night">"Night Mix"</string>
+    <string name="foryou_recommended">"Recommended songs"</string>
+    <string name="foryou_discover">"Discover"</string>
+    <string name="foryou_artists_more">"%1$s and more"</string>
+    <string name="foryou_setting_daily">"Daily mixes"</string>
+    <string name="foryou_setting_time">"Time-of-day mix"</string>
+    <string name="foryou_saved">"Saved a copy to your Library"</string>
+    <string name="foryou_removed">"Removed the saved copy"</string>
+</resources>

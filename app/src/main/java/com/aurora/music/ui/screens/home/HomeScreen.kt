@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.home
 
 import com.aurora.music.localization.appString
+import com.aurora.music.localization.asPlaylist
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
@@ -92,6 +93,7 @@ fun HomeScreen(
     onSelectFeed: (String) -> Unit = {},
     onOpenNotifications: () -> Unit = {},
     onAddSource: () -> Unit = {},
+    mixes: List<com.aurora.music.foryou.GeneratedMix> = emptyList(),
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current
@@ -146,6 +148,20 @@ fun HomeScreen(
                 com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenNotifications)
                 Spacer(Modifier.width(8.dp))
                 IconPill(Icons.Outlined.Settings, appString(R.string.text_settings_c7f73b), onClick = onOpenSettings)
+            }
+        }
+
+        if (mixes.isNotEmpty() && state.selectedFeed == "library") {
+            item(key = "mixes") {
+                val tiles = androidx.compose.runtime.remember(mixes) { mixes.map { it.asPlaylist() } }
+                SectionHeader(appString(R.string.foryou_title), Modifier.padding(horizontal = 16.dp))
+                Spacer(Modifier.height(10.dp))
+                LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                    items(tiles.size, key = { tiles[it].id }) { i ->
+                        // mix names run long in some languages and have no artwork to tell them apart
+                        PlaylistCard(tiles[i], onClick = { onOpenDetail(com.aurora.music.foryou.MIX_KIND, tiles[i].id) }, titleLines = 2)
+                    }
+                }
             }
         }
 

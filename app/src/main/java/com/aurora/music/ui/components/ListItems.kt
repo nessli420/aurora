@@ -302,6 +302,7 @@ fun PlaylistCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     width: androidx.compose.ui.unit.Dp = 156.dp,
+    titleLines: Int = 1,
 ) {
     Column(
         modifier = modifier
@@ -317,7 +318,7 @@ fun PlaylistCard(
             playlist.title,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.Bold,
-            maxLines = 1,
+            maxLines = titleLines,
             overflow = TextOverflow.Ellipsis,
         )
         Spacer(Modifier.height(2.dp))

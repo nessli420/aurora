@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"Voor jou gemaakt"</string>
+    <string name="foryou_daily">"Dagmix %1$d"</string>
+    <string name="foryou_morning">"Ochtendmix"</string>
+    <string name="foryou_afternoon">"Middagmix"</string>
+    <string name="foryou_evening">"Avondmix"</string>
+    <string name="foryou_night">"Nachtmix"</string>
+    <string name="foryou_recommended">"Aanbevolen nummers"</string>
+    <string name="foryou_discover">"Ontdekken"</string>
+    <string name="foryou_artists_more">"%1$s en meer"</string>
+    <string name="foryou_setting_daily">"Dagmixen"</string>
+    <string name="foryou_setting_time">"Mix per dagdeel"</string>
+    <string name="foryou_saved">"Kopie opgeslagen in je bibliotheek"</string>
+    <string name="foryou_removed">"Opgeslagen kopie verwijderd"</string>
+</resources>

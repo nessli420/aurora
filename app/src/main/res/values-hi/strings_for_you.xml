@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"आपके लिए बनाया गया"</string>
+    <string name="foryou_daily">"डेली मिक्स %1$d"</string>
+    <string name="foryou_morning">"सुबह का मिक्स"</string>
+    <string name="foryou_afternoon">"दोपहर का मिक्स"</string>
+    <string name="foryou_evening">"शाम का मिक्स"</string>
+    <string name="foryou_night">"रात का मिक्स"</string>
+    <string name="foryou_recommended">"सुझाए गए गाने"</string>
+    <string name="foryou_discover">"खोजें"</string>
+    <string name="foryou_artists_more">"%1$s और अन्य"</string>
+    <string name="foryou_setting_daily">"डेली मिक्स"</string>
+    <string name="foryou_setting_time">"समय के अनुसार मिक्स"</string>
+    <string name="foryou_saved">"एक कॉपी आपकी लाइब्रेरी में सेव की गई"</string>
+    <string name="foryou_removed">"सेव की गई कॉपी हटाई गई"</string>
+</resources>

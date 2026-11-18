@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"Senin için"</string>
+    <string name="foryou_daily">"Günlük Mix %1$d"</string>
+    <string name="foryou_morning">"Sabah Mix'i"</string>
+    <string name="foryou_afternoon">"Öğleden Sonra Mix'i"</string>
+    <string name="foryou_evening">"Akşam Mix'i"</string>
+    <string name="foryou_night">"Gece Mix'i"</string>
+    <string name="foryou_recommended">"Önerilen şarkılar"</string>
+    <string name="foryou_discover">"Keşfet"</string>
+    <string name="foryou_artists_more">"%1$s ve daha fazlası"</string>
+    <string name="foryou_setting_daily">"Günlük mix'ler"</string>
+    <string name="foryou_setting_time">"Günün saatine göre mix"</string>
+    <string name="foryou_saved">"Kopyası kitaplığına kaydedildi"</string>
+    <string name="foryou_removed">"Kaydedilen kopya kaldırıldı"</string>
+</resources>

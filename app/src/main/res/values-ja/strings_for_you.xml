@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"あなたのために"</string>
+    <string name="foryou_daily">"デイリーミックス %1$d"</string>
+    <string name="foryou_morning">"朝のミックス"</string>
+    <string name="foryou_afternoon">"午後のミックス"</string>
+    <string name="foryou_evening">"夕方のミックス"</string>
+    <string name="foryou_night">"夜のミックス"</string>
+    <string name="foryou_recommended">"おすすめの曲"</string>
+    <string name="foryou_discover">"ディスカバー"</string>
+    <string name="foryou_artists_more">"%1$s など"</string>
+    <string name="foryou_setting_daily">"デイリーミックス"</string>
+    <string name="foryou_setting_time">"時間帯のミックス"</string>
+    <string name="foryou_saved">"コピーをライブラリに保存しました"</string>
+    <string name="foryou_removed">"保存したコピーを削除しました"</string>
+</resources>

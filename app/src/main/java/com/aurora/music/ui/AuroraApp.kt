@@ -687,6 +687,10 @@ fun AuroraApp() {
         )
     }
 
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        container.madeForYou.saved.collect { confirm(appString(if (it) R.string.foryou_saved else R.string.foryou_removed)) }
+    }
+
     val detailContent: @Composable (String, String, DetailViewModel, androidx.compose.foundation.layout.PaddingValues, () -> Unit, (String, String) -> Unit) -> Unit =
         { kind, id, detailVM, padding, onBack, onOpen ->
             androidx.compose.runtime.LaunchedEffect(kind, id) { detailVM.load(kind, id) }
@@ -720,7 +724,7 @@ fun AuroraApp() {
                 onToggleHidden = if (kind == "playlist") ({ song -> container.trackChoices.setHidden(kind, id, song.id, !container.trackChoices.isHidden(kind, id, song.id)) }) else null,
                 isItemLiked = playerState.likedIds.contains(id),
                 onToggleItemLike = { playerVM.toggleLike(id, kind) },
-                canLikeItem = container.repository.canLike(id),
+                canLikeItem = kind == com.aurora.music.foryou.MIX_KIND || container.repository.canLike(id),
                 downloadedIds = downloadedIds,
                 onDownload = onDownload,
                 onRemoveDownload = onRemoveDownload,
@@ -1251,7 +1255,9 @@ fun AuroraApp() {
                     composable(Routes.HOME) {
                         val homeVM: HomeViewModel = viewModel(viewModelStoreOwner = activityOwner)
                         val homeState by homeVM.state.collectAsStateWithLifecycle()
+                        val mixes by container.madeForYou.mixes.collectAsStateWithLifecycle()
                         HomeScreen(
+                            mixes = mixes,
                             contentPadding = inner,
                             state = homeState,
                             username = profileAppearance.name,

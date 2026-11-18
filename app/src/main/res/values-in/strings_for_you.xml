@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"Dibuat untukmu"</string>
+    <string name="foryou_daily">"Mix Harian %1$d"</string>
+    <string name="foryou_morning">"Mix Pagi"</string>
+    <string name="foryou_afternoon">"Mix Siang"</string>
+    <string name="foryou_evening">"Mix Sore"</string>
+    <string name="foryou_night">"Mix Malam"</string>
+    <string name="foryou_recommended">"Lagu rekomendasi"</string>
+    <string name="foryou_discover">"Temukan"</string>
+    <string name="foryou_artists_more">"%1$s dan lainnya"</string>
+    <string name="foryou_setting_daily">"Mix harian"</string>
+    <string name="foryou_setting_time">"Mix sesuai waktu"</string>
+    <string name="foryou_saved">"Salinan disimpan ke pustakamu"</string>
+    <string name="foryou_removed">"Salinan tersimpan dihapus"</string>
+</resources>

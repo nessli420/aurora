@@ -162,7 +162,7 @@ fun DetailScreen(
     }
 
     val info = data.info
-    val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
+    val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true) || itemKind == com.aurora.music.foryou.MIX_KIND
     // play, shuffle and the list all follow the chosen sort
     val sortKey = collectionKey?.takeIf { isSongMix }
     val sortOrder = sortKey?.let { sorts[it] } ?: com.aurora.music.data.TrackSortOrder()
@@ -250,7 +250,7 @@ fun DetailScreen(
                 if (sortKey != null) com.aurora.music.ui.components.TrackSortButton(sortOrder, accent, enabled = tracks.size > 1) { choice ->
                     sortScope.launch { sortStore.setTrackSort(sortKey, sortOrder.pick(choice)) }
                 }
-                if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist")) {
+                if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist" || itemKind == com.aurora.music.foryou.MIX_KIND)) {
                     val likeTint by animateColorAsState(if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "like")
                     Icon(
                         if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
@@ -291,7 +291,8 @@ fun DetailScreen(
                                 DropdownMenuItem(text = { Text(appString(if (blocked) R.string.unblock_artist else R.string.block_artist)) },
                                     onClick = { headerMenu = false; block(info.title, !blocked) }, leadingIcon = { Icon(Icons.Filled.Block, null) })
                             }
-                            DropdownMenuItem(
+                            // a generated mix lives on home only
+                            if (itemKind != com.aurora.music.foryou.MIX_KIND) DropdownMenuItem(
                                 text = { Text(if (isPinned) appString(R.string.text_unpin_from_library_5b3f2e) else appString(R.string.text_pin_to_library_7b01e2)) },
                                 onClick = { headerMenu = false; onTogglePin() },
                                 leadingIcon = { Icon(if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin, null) },

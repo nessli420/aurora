@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"آپ کے لیے تیار کردہ"</string>
+    <string name="foryou_daily">"ڈیلی مکس %1$d"</string>
+    <string name="foryou_morning">"صبح کا مکس"</string>
+    <string name="foryou_afternoon">"دوپہر کا مکس"</string>
+    <string name="foryou_evening">"شام کا مکس"</string>
+    <string name="foryou_night">"رات کا مکس"</string>
+    <string name="foryou_recommended">"تجویز کردہ گانے"</string>
+    <string name="foryou_discover">"دریافت کریں"</string>
+    <string name="foryou_artists_more">"%1$s اور مزید"</string>
+    <string name="foryou_setting_daily">"ڈیلی مکس"</string>
+    <string name="foryou_setting_time">"وقت کے مطابق مکس"</string>
+    <string name="foryou_saved">"ایک کاپی آپ کی لائبریری میں محفوظ ہو گئی"</string>
+    <string name="foryou_removed">"محفوظ کردہ کاپی ہٹا دی گئی"</string>
+</resources>

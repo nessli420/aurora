@@ -85,7 +85,8 @@ fun Artwork(
         contentAlignment = Alignment.Center,
     ) {
         // the gradient behind shows while loading or on error so no subcomposed slots are needed
-        if (url.isNotBlank()) AsyncImage(
+        if (url.startsWith(com.aurora.music.foryou.MIX_COVER_PREFIX)) MixCover(url.removePrefix(com.aurora.music.foryou.MIX_COVER_PREFIX), accent, Modifier.fillMaxSize())
+        else if (url.isNotBlank()) AsyncImage(
             model = remember(url, decodeSize) {
                 ImageRequest.Builder(context).data(url).crossfade(com.aurora.music.util.MotionTokens.STANDARD).apply { if (decodeSize > 0) size(decodeSize) }.build()
             },

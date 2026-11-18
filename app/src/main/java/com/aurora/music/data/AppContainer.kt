@@ -1,5 +1,6 @@
 package com.aurora.music.data
 
+import com.aurora.music.localization.mixName
 import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.drop
 
@@ -464,7 +465,21 @@ class AppContainer(context: Context) {
         likeSourcesProvider = { likeAccounts.of(backend, settingsStore.savedSessions.first()) },
         trackChoices = trackChoices,
         hiddenSongs = { hiddenSongs.value },
+        mixes = { madeForYou.detail(it) },
     )
+
+    val madeForYou by lazy {
+        com.aurora.music.foryou.MadeForYou(repository, playHistory, java.io.File(appContext.filesDir, "made-for-you.json"),
+            { currentAccountKey() }, settingsStore.uiPrefs.map { com.aurora.music.foryou.mixKinds(it.hiddenHomeSections) },
+            settingsStore.mixSnapshots, { id, playlist -> settingsStore.setMixLiked(id, playlist) }, { settingsStore.keepMixLikes(it) },
+            { it.mixName() }, { sonicStore.snapshot() }, ::detailedSkips)
+    }
+
+    private suspend fun detailedSkips(since: Long): Map<String, Int> {
+        if (!settingsStore.insightsPrefs.first().enabled) return emptyMap()
+        return listeningDetails.plays(since, System.currentTimeMillis()).filter { it.ending == com.aurora.music.data.PlayEnding.SKIPPED }
+            .groupingBy { com.aurora.music.foryou.mixTrackKey(it.track.artist, it.track.title) }.eachCount()
+    }
 
     // an oauth spotify login refreshes the active session's token, so only the web player one joins as a second account
     private val likeAccounts = LikeAccounts { s -> if (s.type == ServerType.SPOTIFY && s.salt != SpotifyWebBackend.WEB_PLAYER) null else backends.build(s) }
@@ -483,9 +498,10 @@ class AppContainer(context: Context) {
         withContext(Dispatchers.IO) { sonicStore.selectAccount(session?.accountKey().orEmpty()) }
         if (session != null) prefetchLocalIndex()
         if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
+        madeForYou.recheck()
     }
 
-    private fun forgetAiDjLibrary() { if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary() }
+    private fun forgetAiDjLibrary() { if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary(); madeForYou.invalidate() }
 
     private fun recomputeBitrate() {
         maxBitrate = if (onWifi) {
@@ -501,6 +517,7 @@ class AppContainer(context: Context) {
                 android.provider.MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, true, mediaStoreObserver)
         }
         scope.launch { followMediaStore() }
+        scope.launch { offline.drop(1).collect { madeForYou.recheck() } }
         scope.launch {
             var first = true
             kotlinx.coroutines.flow.combine(settingsStore.artistSeparators, settingsStore.trackCovers, ::Pair).collect {

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"Stworzone dla Ciebie"</string>
+    <string name="foryou_daily">"Miks dnia %1$d"</string>
+    <string name="foryou_morning">"Poranny miks"</string>
+    <string name="foryou_afternoon">"Popołudniowy miks"</string>
+    <string name="foryou_evening">"Wieczorny miks"</string>
+    <string name="foryou_night">"Nocny miks"</string>
+    <string name="foryou_recommended">"Polecane utwory"</string>
+    <string name="foryou_discover">"Odkrywaj"</string>
+    <string name="foryou_artists_more">"%1$s i inni"</string>
+    <string name="foryou_setting_daily">"Miksy dnia"</string>
+    <string name="foryou_setting_time">"Miks na porę dnia"</string>
+    <string name="foryou_saved">"Zapisano kopię w bibliotece"</string>
+    <string name="foryou_removed">"Usunięto zapisaną kopię"</string>
+</resources>

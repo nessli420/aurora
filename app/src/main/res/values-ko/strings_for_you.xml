@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"나를 위한 믹스"</string>
+    <string name="foryou_daily">"데일리 믹스 %1$d"</string>
+    <string name="foryou_morning">"아침 믹스"</string>
+    <string name="foryou_afternoon">"오후 믹스"</string>
+    <string name="foryou_evening">"저녁 믹스"</string>
+    <string name="foryou_night">"밤 믹스"</string>
+    <string name="foryou_recommended">"추천 곡"</string>
+    <string name="foryou_discover">"새로운 발견"</string>
+    <string name="foryou_artists_more">"%1$s 외"</string>
+    <string name="foryou_setting_daily">"데일리 믹스"</string>
+    <string name="foryou_setting_time">"시간대별 믹스"</string>
+    <string name="foryou_saved">"보관함에 사본을 저장했습니다"</string>
+    <string name="foryou_removed">"저장된 사본을 삭제했습니다"</string>
+</resources>

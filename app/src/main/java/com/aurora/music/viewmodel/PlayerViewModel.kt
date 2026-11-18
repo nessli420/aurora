@@ -179,7 +179,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     private var syncedShuffle = false
     @Volatile private var privateSession = false
 
-    private val likes = com.aurora.music.data.Likes(viewModelScope, container.repository, container.settingsStore::setPlaylistLiked)
+    private val likes = com.aurora.music.data.Likes(viewModelScope, container.repository, container.madeForYou::toggleLike, container.settingsStore::setPlaylistLiked)
     @Volatile private var mergeFeatures = com.aurora.music.data.MergeFeatures()
     private var lastRecordedId: String? = null
     private var lastNowPlayingId: String? = null

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="foryou_title">"Создано для вас"</string>
+    <string name="foryou_daily">"Микс дня %1$d"</string>
+    <string name="foryou_morning">"Утренний микс"</string>
+    <string name="foryou_afternoon">"Дневной микс"</string>
+    <string name="foryou_evening">"Вечерний микс"</string>
+    <string name="foryou_night">"Ночной микс"</string>
+    <string name="foryou_recommended">"Рекомендуемые треки"</string>
+    <string name="foryou_discover">"Открытия"</string>
+    <string name="foryou_artists_more">"%1$s и другие"</string>
+    <string name="foryou_setting_daily">"Миксы дня"</string>
+    <string name="foryou_setting_time">"Микс по времени суток"</string>
+    <string name="foryou_saved">"Копия сохранена в медиатеке"</string>
+    <string name="foryou_removed">"Сохранённая копия удалена"</string>
+</resources>
