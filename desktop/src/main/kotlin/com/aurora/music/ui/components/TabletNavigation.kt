@@ -72,8 +72,20 @@ import com.aurora.music.util.MotionTokens
 import com.aurora.music.util.accentFor
 
 @Composable
-fun TabletNavigationRail(currentRoute: String?, items: List<NavMenuItem>, onOpen: (NavMenuItem) -> Unit, onMenu: () -> Unit, onSettings: () -> Unit) {
-    val colors = NavigationRailItemDefaults.colors(
+fun TabletNavigationRail(
+    currentRoute: String?,
+    items: List<NavMenuItem>,
+    onOpen: (NavMenuItem) -> Unit,
+    onMenu: () -> Unit,
+    inverse: Boolean = false,
+    edgeMark: Boolean = false,
+    onSettings: () -> Unit,
+) {
+    val colors = if (inverse) NavigationRailItemDefaults.colors(
+        selectedIconColor = MaterialTheme.colorScheme.inverseOnSurface,
+        selectedTextColor = MaterialTheme.colorScheme.onSurface,
+        indicatorColor = MaterialTheme.colorScheme.inverseSurface,
+    ) else NavigationRailItemDefaults.colors(
         selectedIconColor = MaterialTheme.colorScheme.primary,
         selectedTextColor = MaterialTheme.colorScheme.primary,
         indicatorColor = MaterialTheme.colorScheme.primary.copy(alpha = .18f),
@@ -96,7 +108,8 @@ fun TabletNavigationRail(currentRoute: String?, items: List<NavMenuItem>, onOpen
                     onClick = { onOpen(item) },
                     icon = { Icon(item.icon, null) },
                     label = { Text(railLabel(item), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-                    modifier = Modifier.padding(vertical = 4.dp).pointerHoverIcon(PointerIcon.Hand),
+                    modifier = Modifier.padding(vertical = 4.dp).pointerHoverIcon(PointerIcon.Hand)
+                        .then(if (edgeMark) Modifier.railMark(currentRoute == item.route) else Modifier),
                 )
             }
         }
@@ -106,7 +119,8 @@ fun TabletNavigationRail(currentRoute: String?, items: List<NavMenuItem>, onOpen
             onClick = onSettings,
             icon = { Icon(Icons.Filled.Settings, null) },
             label = { Text(appString(R.string.text_settings_c7f73b), maxLines = 1, overflow = TextOverflow.Ellipsis) },
-            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand),
+            modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)
+                .then(if (edgeMark) Modifier.railMark(currentRoute == Routes.SETTINGS) else Modifier),
         )
         Spacer(Modifier.height(16.dp))
     }
@@ -129,6 +143,7 @@ fun TabletSidebar(
     pins: List<Pin> = emptyList(),
     selectedId: String? = null,
     onOpenCollection: (kind: String, id: String) -> Unit = { _, _ -> },
+    inverse: Boolean = false,
 ) {
     Column(
         Modifier.width(TabletMetrics.SidebarWidth).fillMaxHeight()
@@ -143,11 +158,11 @@ fun TabletSidebar(
         // lazy, so only the visible rows compose and fetch covers; no keys, ids can repeat across kinds
         LazyColumn(Modifier.weight(1f)) {
             items(layout.main) { item ->
-                SidebarItem(item.label, item.icon, currentRoute == item.route, prominent = true) { onOpen(item) }
+                SidebarItem(item.label, item.icon, currentRoute == item.route, prominent = true, inverse = inverse) { onOpen(item) }
             }
             if (layout.more.isNotEmpty()) item {
                 Spacer(Modifier.height(12.dp))
-                FoldableMore(layout.more, currentRoute, onOpen)
+                FoldableMore(layout.more, currentRoute, onOpen, inverse = inverse)
             }
             if (pins.isNotEmpty()) {
                 item { SidebarHeading(appString(R.string.text_pinned_f93121)) }
@@ -164,7 +179,7 @@ fun TabletSidebar(
                 }
             }
         }
-        SidebarItem(appString(R.string.text_settings_c7f73b), Icons.Filled.Settings, currentRoute == Routes.SETTINGS, prominent = false, onClick = onSettings)
+        SidebarItem(appString(R.string.text_settings_c7f73b), Icons.Filled.Settings, currentRoute == Routes.SETTINGS, prominent = false, inverse = inverse, onClick = onSettings)
     }
 }
 
@@ -233,7 +248,7 @@ private fun ProfileHeader(username: String, server: String, avatarUrl: String, o
 }
 
 @Composable
-fun FoldableMore(items: List<NavMenuItem>, currentRoute: String?, onOpen: (NavMenuItem) -> Unit, startPadding: Dp = 16.dp) {
+fun FoldableMore(items: List<NavMenuItem>, currentRoute: String?, onOpen: (NavMenuItem) -> Unit, startPadding: Dp = 16.dp, inverse: Boolean = false) {
     var open by rememberSaveable { mutableStateOf(items.any { it.route == currentRoute }) }
     val rotation by animateFloatAsState(if (open) 180f else 0f, Motion.state(MotionTokens.STANDARD), label = "moreChevron")
     Row(
@@ -247,16 +262,18 @@ fun FoldableMore(items: List<NavMenuItem>, currentRoute: String?, onOpen: (NavMe
     }
     AnimatedVisibility(open, enter = expandVertically(Motion.enter()) + fadeIn(Motion.enter()), exit = shrinkVertically(Motion.exit()) + fadeOut(Motion.exit())) {
         Column {
-            items.forEach { item -> SidebarItem(item.label, item.icon, currentRoute == item.route, prominent = false, compact = true) { onOpen(item) } }
+            items.forEach { item -> SidebarItem(item.label, item.icon, currentRoute == item.route, prominent = false, compact = true, inverse = inverse) { onOpen(item) } }
         }
     }
 }
 
 @Composable
-private fun SidebarItem(label: String, icon: ImageVector, selected: Boolean, prominent: Boolean, compact: Boolean = false, onClick: () -> Unit) {
+private fun SidebarItem(label: String, icon: ImageVector, selected: Boolean, prominent: Boolean, compact: Boolean = false, inverse: Boolean = false, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val container by animateColorAsState(colors.primary.copy(alpha = if (selected) 0.16f else 0f), Motion.state(), label = "sidebarItem")
-    val content by animateColorAsState(if (selected) colors.primary else if (prominent) colors.onSurface else colors.onSurfaceVariant, Motion.state(), label = "sidebarItemTint")
+    val container by animateColorAsState(
+        if (inverse) colors.inverseSurface.copy(alpha = if (selected) 1f else 0f) else colors.primary.copy(alpha = if (selected) 0.16f else 0f), Motion.state(), label = "sidebarItem")
+    val content by animateColorAsState(
+        if (selected) (if (inverse) colors.inverseOnSurface else colors.primary) else if (prominent) colors.onSurface else colors.onSurfaceVariant, Motion.state(), label = "sidebarItemTint")
     Row(
         Modifier.fillMaxWidth().padding(vertical = 1.dp).paperClip(CircleShape).background(container)
             .pointerHoverIcon(PointerIcon.Hand)

@@ -105,6 +105,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.savedstate.read
 import com.aurora.music.R
+import com.aurora.music.data.BarStyle
 import com.aurora.music.data.DownloadState
 import com.aurora.music.data.GesturePrefs
 import com.aurora.music.data.Pin
@@ -135,7 +136,7 @@ import com.aurora.music.navigation.Routes
 import com.aurora.music.ui.components.AmbientBackground
 import com.aurora.music.ui.components.LottieLoader
 import com.aurora.music.ui.components.PaneDivider
-import com.aurora.music.ui.components.PlaybackDock
+import com.aurora.music.ui.components.StyledDock
 import com.aurora.music.ui.components.TabletNavigationRail
 import com.aurora.music.ui.components.TabletSidebar
 import com.aurora.music.ui.components.rememberPaneWidth
@@ -465,8 +466,12 @@ private fun Shell(
     val sidePane = sidePaneName?.let { runCatching { PlayerPane.valueOf(it) }.getOrNull() }?.takeUnless { aiDjActive && it == PlayerPane.QUEUE }
     val panelPane = rememberPaneWidth(savedPanelWidth)
     val panelWidth = panelPane.resolve(TabletMetrics.SidePanelWidth, TabletMetrics.SidePanelMinWidth, windowLayout.maxSidePanelWidth)
-    val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack, panelWidth = panelWidth)
     val uiPrefs = LocalUiPrefs.current
+    val bars = uiPrefs.bars
+    val shell = windowLayout.shell(panelRequested = rail && sidePane != null && playerState.hasTrack, panelWidth = panelWidth)
+        .let { if (bars == BarStyle.CONSOLE) it.copy(expandedSidebar = false) else it }
+    // spotlight and console run their dock edge to edge
+    val dockGap = if (bars == BarStyle.SPOTLIGHT || bars == BarStyle.CONSOLE) 0.dp else 12.dp
     val libraryReloads by container.libraryReload.collectAsStateWithLifecycle()
     val exploreAvailable = remember(sessionReady, accountEpoch, libraryReloads) { container.repository.supportsExplore }
     val navLayout = remember(uiPrefs.navLayout, simpleMode, exploreAvailable) {
@@ -1025,6 +1030,7 @@ private fun Shell(
                     pins = if (drawerShown) pins else emptyList(),
                     selectedId = detailId,
                     onOpenCollection = { kind, id -> closeDrawerThen { openDetail(kind, id) } },
+                    inverse = bars == BarStyle.SPOTLIGHT,
                 )
             }
         },
@@ -1041,7 +1047,7 @@ private fun Shell(
         ) {
             if (rail) {
                 Box(Modifier.fillMaxHeight().graphicsLayer { alpha = shellAlpha }
-                    .then(if (dockVisible) Modifier.padding(bottom = dockHeight + 12.dp) else Modifier)) {
+                    .then(if (dockVisible) Modifier.padding(bottom = dockHeight + dockGap) else Modifier)) {
                     if (shell.expandedSidebar) {
                         TabletSidebar(
                             currentRoute = currentRoute,
@@ -1056,9 +1062,11 @@ private fun Shell(
                             pins = pins,
                             selectedId = detailId,
                             onOpenCollection = { kind, id -> openDetail(kind, id) },
+                            inverse = bars == BarStyle.SPOTLIGHT,
                         )
                     } else {
-                        TabletNavigationRail(currentRoute, navLayout.main, { openNavItem(it) }, { openDrawer() }) {
+                        TabletNavigationRail(currentRoute, navLayout.main, { openNavItem(it) }, { openDrawer() },
+                            inverse = bars == BarStyle.SPOTLIGHT, edgeMark = bars == BarStyle.CONSOLE) {
                             navController.navigate(Routes.SETTINGS) { launchSingleTop = true }
                         }
                     }
@@ -1066,7 +1074,7 @@ private fun Shell(
             }
             Scaffold(
                 modifier = Modifier.graphicsLayer { alpha = shellAlpha }.padding(start = if (rail) shell.navWidth + navGap else 0.dp)
-                    .then(if (dockVisible) Modifier.padding(bottom = dockHeight + 12.dp + panelSpacing) else Modifier),
+                    .then(if (dockVisible) Modifier.padding(bottom = dockHeight + dockGap + panelSpacing) else Modifier),
                 containerColor = Color.Transparent,
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
@@ -1647,7 +1655,8 @@ private fun Shell(
                 }
             }
             if (dockVisible) DockPlayer(player) { live ->
-                PlaybackDock(
+                StyledDock(
+                    style = bars,
                     djMode = aiDjActive,
                     state = live,
                     openPane = if (shell.sidePanel) sidePane else null,
@@ -1666,7 +1675,7 @@ private fun Shell(
                     onPane = { showPane(it) },
                     modifier = Modifier.align(Alignment.BottomCenter)
                         .graphicsLayer { alpha = shellAlpha }
-                        .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+                        .padding(start = dockGap, end = dockGap, bottom = dockGap)
                         .onSizeChanged { dockHeight = with(density) { it.height.toDp() } },
                 )
             }

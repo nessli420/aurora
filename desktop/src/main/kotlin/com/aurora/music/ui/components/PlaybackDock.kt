@@ -67,6 +67,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -107,7 +108,7 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 import com.aurora.music.ui.theme.themedCorner
 
-private val DockButton = 48.dp
+internal val DockButton = 48.dp
 private const val DockCenterShare = 1.4f / 3.4f
 
 @Composable
@@ -130,6 +131,10 @@ fun PlaybackDock(
     onPane: (PlayerPane) -> Unit,
     modifier: Modifier = Modifier,
     onOpenArtist: (() -> Unit)? = null,
+    surface: Modifier? = null,
+    play: Color = MaterialTheme.colorScheme.primary,
+    onPlay: Color = MaterialTheme.colorScheme.onPrimary,
+    playShape: Shape = IconButtonDefaults.filledShape,
 ) {
     val song = state.current
     val ui = LocalUiPrefs.current
@@ -142,7 +147,7 @@ fun PlaybackDock(
         modifier
             .fillMaxWidth()
             .then(
-                if (classic && LocalGlass.current) Modifier.paperClip(RoundedCornerShape(themedCorner(22.dp))).background(glassSheen())
+                surface ?: if (classic && LocalGlass.current) Modifier.paperClip(RoundedCornerShape(themedCorner(22.dp))).background(glassSheen())
                     .glassEdge(RoundedCornerShape(themedCorner(22.dp)))
                 else if (classic) Modifier.paperClip(RoundedCornerShape(themedCorner(22.dp))).background(
                     Brush.horizontalGradient(listOf(colors.surfaceContainerHigh, lerp(colors.surfaceContainerHigh, colors.primary, 0.14f)))
@@ -161,64 +166,19 @@ fun PlaybackDock(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Row(Modifier.weight(1f), verticalAlignment = Alignment.CenterVertically) {
-                Row(
-                    Modifier.weight(1f, fill = false).paperClip(RoundedCornerShape(themedCorner(14.dp)))
-                        .clickable(onClickLabel = appString(R.string.tablet_open_now_playing), onClick = onExpand)
-                        .pointerHoverIcon(PointerIcon.Hand)
-                        .padding(4.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
+                DockTrack(state, onExpand, onOpenArtist, Modifier.weight(1f, fill = false)) {
                     val art = when (ui.miniStyle) {
                         MiniStyle.COMPACT -> if (roomy) 46.dp else 42.dp
                         MiniStyle.PROMINENT -> if (roomy) 78.dp else 66.dp
                         else -> if (roomy) 62.dp else 54.dp
                     }
                     Artwork(song.artworkUrl, song.accent, Modifier.size(art * scale), corner = 10.dp)
-                    Spacer(Modifier.width(12.dp))
-                    Column(Modifier.weight(1f, fill = false)) {
-                        MarqueeText(song.title, if (prominent) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
-                            colors.onSurface, fontWeight = FontWeight.Bold)
-                        DockArtist(song.artist, if (song.artistId.isNotBlank()) onOpenArtist else null)
-                    }
                 }
-                val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurfaceVariant, label = "dockLike")
-                if (!compact && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
-                    Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                        appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp).likePop(state.isCurrentLiked, song.id))
-                }
+                if (!compact) DockLike(state, onToggleLike)
             }
             Spacer(Modifier.width(8.dp))
             Column(Modifier.width(center), horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (state.skipButtons) IconButton(onClick = { skipBy(state, -LongForm.SKIP_SEC, onSeek) }) {
-                        Icon(Icons.Filled.Replay10, appString(R.string.skip_back_seconds, LongForm.SKIP_SEC), modifier = Modifier.size(22.dp), tint = colors.onSurface)
-                    } else if (!djMode) IconButton(onClick = onToggleShuffle) {
-                        Icon(if (state.smartShuffle) Icons.Filled.AllInclusive else Icons.Filled.Shuffle,
-                            appString(if (state.smartShuffle) R.string.shuffle_autoplay else R.string.text_shuffle_5b772b), modifier = Modifier.size(20.dp),
-                            tint = if (state.shuffle) colors.primary else colors.onSurfaceVariant)
-                    }
-                    IconButton(onClick = onPrevious) {
-                        Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = colors.onSurface)
-                    }
-                    FilledIconButton(
-                        onClick = onTogglePlay,
-                        modifier = Modifier.size((48.dp * scale).coerceAtLeast(36.dp)),
-                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
-                    ) {
-                        val playPause = appString(R.string.text_play_pause_14a1d0)
-                        PlayPauseIcon(state.isPlaying, colors.onPrimary, Modifier.size(26.dp * scale).semantics { contentDescription = playPause })
-                    }
-                    IconButton(onClick = onNext) {
-                        Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = colors.onSurface)
-                    }
-                    if (state.skipButtons) IconButton(onClick = { skipBy(state, LongForm.SKIP_SEC, onSeek) }) {
-                        Icon(Icons.Filled.Forward10, appString(R.string.skip_forward_seconds, LongForm.SKIP_SEC), modifier = Modifier.size(22.dp), tint = colors.onSurface)
-                    } else if (!djMode) IconButton(onClick = onCycleRepeat) {
-                        Icon(if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
-                            appString(R.string.text_repeat_659eba), modifier = Modifier.size(20.dp),
-                            tint = if (state.repeat != RepeatMode.OFF) colors.primary else colors.onSurfaceVariant)
-                    }
-                }
+                DockTransport(djMode, state, onTogglePlay, onPrevious, onNext, onSeek, onToggleShuffle, onCycleRepeat, play = play, onPlay = onPlay, playShape = playShape)
                 if (ui.miniProgress != MiniProgress.NONE) DockSeek(state, onSeek, showTimes = roomy, thick = ui.miniProgress == MiniProgress.BAR)
             }
             Spacer(Modifier.width(8.dp))
@@ -242,7 +202,108 @@ private fun skipBy(state: PlayerUiState, seconds: Int, onSeek: (Float) -> Unit) 
 }
 
 @Composable
-private fun DockArtist(artist: String, onOpenArtist: (() -> Unit)?) {
+internal fun DockTrack(
+    state: PlayerUiState,
+    onExpand: () -> Unit,
+    onOpenArtist: (() -> Unit)?,
+    modifier: Modifier = Modifier,
+    shape: Shape = RoundedCornerShape(themedCorner(14.dp)),
+    art: @Composable () -> Unit,
+) {
+    val song = state.current
+    Row(
+        modifier.paperClip(shape)
+            .clickable(onClickLabel = appString(R.string.tablet_open_now_playing), onClick = onExpand)
+            .pointerHoverIcon(PointerIcon.Hand)
+            .padding(4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        art()
+        Spacer(Modifier.width(12.dp))
+        Column(Modifier.weight(1f, fill = false)) {
+            MarqueeText(song.title, if (LocalUiPrefs.current.miniStyle == MiniStyle.PROMINENT) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+            DockArtist(song.artist, if (song.artistId.isNotBlank()) onOpenArtist else null)
+        }
+    }
+}
+
+@Composable
+internal fun DockLike(state: PlayerUiState, onToggleLike: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    val song = state.current
+    val likeTint by animateColorAsState(if (state.isCurrentLiked) colors.primary else colors.onSurfaceVariant, label = "dockLike")
+    if (LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
+        Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+            appString(R.string.text_like_c7e02c), tint = likeTint, modifier = Modifier.size(22.dp).likePop(state.isCurrentLiked, song.id))
+    }
+}
+
+@Composable
+internal fun DockShuffle(state: PlayerUiState, onToggleShuffle: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    IconButton(onClick = onToggleShuffle) {
+        Icon(if (state.smartShuffle) Icons.Filled.AllInclusive else Icons.Filled.Shuffle,
+            appString(if (state.smartShuffle) R.string.shuffle_autoplay else R.string.text_shuffle_5b772b), modifier = Modifier.size(20.dp),
+            tint = if (state.shuffle) colors.primary else colors.onSurfaceVariant)
+    }
+}
+
+@Composable
+internal fun DockRepeat(state: PlayerUiState, onCycleRepeat: () -> Unit) {
+    val colors = MaterialTheme.colorScheme
+    IconButton(onClick = onCycleRepeat) {
+        Icon(if (state.repeat == RepeatMode.ONE) Icons.Filled.RepeatOne else Icons.Filled.Repeat,
+            appString(R.string.text_repeat_659eba), modifier = Modifier.size(20.dp),
+            tint = if (state.repeat != RepeatMode.OFF) colors.primary else colors.onSurfaceVariant)
+    }
+}
+
+// modes off leaves shuffle and repeat to the caller; the long-form skips stay either way
+@Composable
+internal fun DockTransport(
+    djMode: Boolean,
+    state: PlayerUiState,
+    onTogglePlay: () -> Unit,
+    onPrevious: () -> Unit,
+    onNext: () -> Unit,
+    onSeek: (Float) -> Unit,
+    onToggleShuffle: () -> Unit,
+    onCycleRepeat: () -> Unit,
+    modes: Boolean = true,
+    play: Color = MaterialTheme.colorScheme.primary,
+    onPlay: Color = MaterialTheme.colorScheme.onPrimary,
+    playShape: Shape = IconButtonDefaults.filledShape,
+) {
+    val colors = MaterialTheme.colorScheme
+    val scale = LocalUiPrefs.current.tabletDockScale
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        if (state.skipButtons) IconButton(onClick = { skipBy(state, -LongForm.SKIP_SEC, onSeek) }) {
+            Icon(Icons.Filled.Replay10, appString(R.string.skip_back_seconds, LongForm.SKIP_SEC), modifier = Modifier.size(22.dp), tint = colors.onSurface)
+        } else if (modes && !djMode) DockShuffle(state, onToggleShuffle)
+        IconButton(onClick = onPrevious) {
+            Icon(Icons.Filled.SkipPrevious, appString(R.string.text_previous_50f942), tint = colors.onSurface)
+        }
+        FilledIconButton(
+            onClick = onTogglePlay,
+            modifier = Modifier.size((48.dp * scale).coerceAtLeast(36.dp)),
+            shape = playShape,
+            colors = IconButtonDefaults.filledIconButtonColors(containerColor = play, contentColor = onPlay),
+        ) {
+            val playPause = appString(R.string.text_play_pause_14a1d0)
+            PlayPauseIcon(state.isPlaying, onPlay, Modifier.size(26.dp * scale).semantics { contentDescription = playPause })
+        }
+        IconButton(onClick = onNext) {
+            Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = colors.onSurface)
+        }
+        if (state.skipButtons) IconButton(onClick = { skipBy(state, LongForm.SKIP_SEC, onSeek) }) {
+            Icon(Icons.Filled.Forward10, appString(R.string.skip_forward_seconds, LongForm.SKIP_SEC), modifier = Modifier.size(22.dp), tint = colors.onSurface)
+        } else if (modes && !djMode) DockRepeat(state, onCycleRepeat)
+    }
+}
+
+@Composable
+internal fun DockArtist(artist: String, onOpenArtist: (() -> Unit)?) {
     val colors = MaterialTheme.colorScheme
     val hover = remember { MutableInteractionSource() }
     val hovered by hover.collectIsHoveredAsState()
@@ -257,7 +318,7 @@ private fun DockArtist(artist: String, onOpenArtist: (() -> Unit)?) {
 }
 
 @Composable
-private fun PaneToggle(pane: PlayerPane, icon: ImageVector, checked: Boolean, onClick: () -> Unit) {
+internal fun PaneToggle(pane: PlayerPane, icon: ImageVector, checked: Boolean, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     IconToggleButton(
         checked = checked,
@@ -354,7 +415,7 @@ private fun VolumeTip(level: Float, width: Dp) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: Boolean, thick: Boolean = false) {
+internal fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: Boolean, thick: Boolean = false) {
     val colors = MaterialTheme.colorScheme
     val duration = state.durationSec
     if (duration <= 0) {

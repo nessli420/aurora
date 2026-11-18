@@ -3,18 +3,22 @@ package com.aurora.music.ui.player
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.aurora.music.data.BarStyle
 import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.desktop.player.PlayerUiState
-import com.aurora.music.ui.components.PlaybackDock
+import com.aurora.music.desktop.ui.LocalPlayer
+import com.aurora.music.ui.components.StyledDock
 import com.aurora.music.ui.screens.player.PlayerPane
+import com.aurora.music.ui.uxaudit.AuditPlayer
 import com.aurora.music.ui.testing.distinctColors
 import com.aurora.music.ui.testing.region
 import org.junit.Assert.assertEquals
@@ -28,10 +32,14 @@ class PlaybackDockTest {
         var volume by mutableFloatStateOf(0.6f)
     }
 
-    private fun dock(name: String, width: Int, state: PlayerUiState, rec: Recorder, openPane: PlayerPane? = null, prefs: UiPrefs = UiPrefs()) =
-        PlayerScene(name, width, 110, prefs) {
-            Box(Modifier.fillMaxSize()) {
-                PlaybackDock(
+    private fun dock(name: String, width: Int, state: PlayerUiState, rec: Recorder, openPane: PlayerPane? = null, prefs: UiPrefs = UiPrefs(),
+        style: Int = BarStyle.CLASSIC, height: Int = 110) =
+        PlayerScene(name, width, height, prefs) {
+            // console's dock reads the signal path from the player
+            CompositionLocalProvider(LocalPlayer provides AuditPlayer()) { Box(Modifier.fillMaxSize()) {
+                StyledDock(
+                    style = style,
+                    djMode = false,
                     state = state,
                     openPane = openPane,
                     volume = rec.volume,
@@ -50,8 +58,51 @@ class PlaybackDockTest {
                     modifier = Modifier.align(Alignment.BottomCenter).padding(12.dp),
                     onOpenArtist = { rec.events += "artist" },
                 )
-            }
+            } }
         }
+
+    @Test fun consoleDockRoutesEveryControl() {
+        val rec = Recorder()
+        dock("dock-console", 1440, PlayerFixtures.playing, rec, style = BarStyle.CONSOLE).use { scene ->
+            assertTrue(scene.shot().distinctColors(6) > 20)
+            listOf(630f, 683f, 735f, 960f, 1008f, 1056f, 1104f, 1152f, 1200f, 1388f, 50f).forEach { scene.click(it, 66f) }
+            assertEquals(listOf("previous", "play", "next", "shuffle", "repeat", "pane:LYRICS", "pane:QUEUE", "output", "mute", "expand", "expand"), rec.events)
+            rec.events.clear()
+            // the seek bar rides the dock's top edge, half of it above the dock
+            scene.click(720f, 28f)
+            val seek = rec.events.single().removePrefix("seek:").toFloat()
+            assertTrue("seek $seek", seek in 0.45f..0.55f)
+        }
+    }
+
+    @Test fun driftDockKeepsTheRestBehindMore() {
+        val rec = Recorder()
+        dock("dock-drift", 1440, PlayerFixtures.playing, rec, style = BarStyle.DRIFT, height = 220).use { scene ->
+            assertTrue(scene.shot().distinctColors(6) > 20)
+            listOf(487f, 539f, 592f, 912f, 960f, 1008f, 292f).forEach { scene.click(it, 166f) }
+            assertEquals(listOf("previous", "play", "next", "like", "pane:QUEUE", "mute", "expand"), rec.events)
+            rec.events.clear()
+            scene.click(749f, 166f)
+            val seek = rec.events.single().removePrefix("seek:").toFloat()
+            assertTrue("seek $seek", seek in 0.4f..0.6f)
+            rec.events.clear()
+            // shuffle and repeat leave the menu open; lyrics, output and expand close it
+            listOf(1148f, 1196f, 1244f, 1292f, 1340f).forEachIndexed { i, x ->
+                if (i == 0 || i > 2) scene.click(1144f, 166f)
+                scene.click(x, 110f)
+            }
+            assertEquals(listOf("shuffle", "repeat", "pane:LYRICS", "output", "expand"), rec.events)
+        }
+    }
+
+    @Test fun spotlightDockKeepsTheClassicControls() {
+        val rec = Recorder()
+        dock("dock-spotlight", 1440, PlayerFixtures.playing, rec, style = BarStyle.SPOTLIGHT).use { scene ->
+            assertTrue(scene.shot().distinctColors(6) > 20)
+            listOf(720f, 612f, 828f).forEach { scene.click(it, 46f) }
+            assertEquals(listOf("play", "shuffle", "repeat"), rec.events)
+        }
+    }
 
     @Test fun roomyDockRoutesEveryControl() {
         val rec = Recorder()
