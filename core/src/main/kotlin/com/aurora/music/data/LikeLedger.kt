@@ -173,15 +173,11 @@ class LikeLedger(private val sources: suspend () -> List<MediaBackend>, private 
 
     private fun copyOf(song: Song) = song.playbackSource?.songId?.takeIf { MERGE_NAMESPACE_SEP in it }?.let(::owner)
 
+    // the lookup copy link and play-from use; a miss isn't remembered, so the next try asks again
     private suspend fun twin(source: MediaBackend, key: String, song: Song): Song? {
         val cacheKey = "$key\u0000${song.id}"
-        synchronized(twins) { if (twins.containsKey(cacheKey)) return twins[cacheKey] }
-        // a failed search isn't remembered, so the next try asks again
-        val found = attempt(null) { withTimeoutOrNull(TWIN_TIMEOUT_MS) { source.search("${recordingTitle(song.title)} ${song.artist}".trim()).songs } }
-            ?: return null
-        val twin = found.firstOrNull { c -> recordingVariants(c).any { sameRecording(song, it) } } ?: found.firstOrNull { twinMatches(song, it) }
-        synchronized(twins) { twins[cacheKey] = twin }
-        return twin
+        synchronized(twins) { twins[cacheKey]?.let { return it } }
+        return withTimeoutOrNull(TWIN_TIMEOUT_MS) { findTwin(source, song) }?.also { synchronized(twins) { twins[cacheKey] = it } }
     }
 
     private fun record(key: String, songs: List<Song>, liked: Boolean): List<Edit> {
@@ -242,6 +238,21 @@ internal fun sourceLabels(sources: List<MediaBackend>): List<String> {
 
 internal fun sameRecording(a: Song, b: Song) = recordingMatches(a, b) &&
     (a.durationSec <= 0 || b.durationSec <= 0 || abs(a.durationSec - b.durationSec) <= TrackMatch.DURATION_TOLERANCE_SEC)
+
+// a playing upload may carry the artist in its title, so every reading of it is looked up and matched
+internal suspend fun findTwin(source: MediaBackend, song: Song): Song? = coroutineScope {
+    val readings = recordingVariants(song)
+    readings.distinctBy { recordingKey(it.title) + "\u0000" + it.artist.lowercase() }.map { reading ->
+        async {
+            attempt(emptyList()) {
+                if (source.session.type.isCatalogue) source.search("${recordingTitle(reading.title)} ${reading.artist}".trim()).songs
+                else source.matchingSongs(reading)
+            }
+        }
+    }.awaitAll().flatten().distinctBy { it.id }
+        .filter { candidate -> readings.any { twinMatches(it, candidate) } }
+        .minByOrNull { abs(it.durationSec - song.durationSec) }
+}
 
 internal suspend fun <T> attempt(fallback: T, block: suspend () -> T): T = try {
     block()

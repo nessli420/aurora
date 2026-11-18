@@ -154,6 +154,11 @@ class LikesTest {
         until { red.id in likes.likedIds.value }
     }
 
+    @Test fun anUploadWithTheArtistInItsTitleFindsTheSameTwinAsCopyLink() = test {
+        val upload = song(idOf(navidrome, "n3"), "Red Sky - The Band (HQ)", "The Band", 180)
+        assertEquals("sp2", likes.options(upload).first { it.key == mergeNamespace(spotify.session) }.id)
+    }
+
     @Test fun theLikedSongsPickerListsTheLibrarySourcesWithLikes() = test {
         navidrome.liked += "n2"
         loaded(navidrome, spotify)

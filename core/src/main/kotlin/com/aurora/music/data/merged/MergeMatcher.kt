@@ -9,14 +9,12 @@ import com.aurora.music.data.ServerType
 import com.aurora.music.data.SourceCopy
 import com.aurora.music.data.accountKey
 import com.aurora.music.data.attempt
+import com.aurora.music.data.findTwin
 import com.aurora.music.data.sourceLabels
-import com.aurora.music.data.twinMatches
 import com.aurora.music.data.merged.SourceRouter.Companion.DOWN_MS
 import com.aurora.music.data.merged.SourceRouter.Companion.SEP
-import com.aurora.music.data.recordingKey
 import com.aurora.music.data.recordingMatches
 import com.aurora.music.data.recordingTitle
-import com.aurora.music.data.recordingVariants
 import com.aurora.music.data.sameLength
 import com.aurora.music.data.withPlaybackFrom
 import com.aurora.music.model.Album
@@ -95,7 +93,7 @@ internal class MergeMatcher(
         router.sources.mapIndexed { i, source ->
             async {
                 val copy = if (!asked(source)) null else if (i == current) playing else if (i == owner) song else if (router.isDown(i)) null else attempt(null) {
-                    withTimeoutOrNull(COPY_TIMEOUT_MS) { twinOn(source, song) }
+                    withTimeoutOrNull(COPY_TIMEOUT_MS) { findTwin(source, song) }
                 }?.let { router.wrap(it, i) }
                 copy?.let {
                     val provider = PlaybackSourceIdentity.fromSession(source.session, "").providerId
@@ -103,21 +101,6 @@ internal class MergeMatcher(
                 }
             }
         }.awaitAll().filterNotNull()
-    }
-
-    // a playing upload may carry the artist in its title, so every reading of it is looked up and matched
-    private suspend fun twinOn(source: MediaBackend, song: Song): Song? = coroutineScope {
-        val readings = recordingVariants(song)
-        readings.distinctBy { recordingKey(it.title) + "\u0000" + it.artist.lowercase() }.map { reading ->
-            async {
-                attempt(emptyList()) {
-                    if (router.isCatalogue(source)) source.search("${recordingTitle(reading.title)} ${reading.artist}".trim()).songs
-                    else source.matchingSongs(reading)
-                }
-            }
-        }.awaitAll().flatten().distinctBy { it.id }
-            .filter { candidate -> readings.any { twinMatches(it, candidate) } }
-            .minByOrNull { kotlin.math.abs(it.durationSec - song.durationSec) }
     }
 
     fun dedupAlbums(all: List<Album>): List<Album> =
