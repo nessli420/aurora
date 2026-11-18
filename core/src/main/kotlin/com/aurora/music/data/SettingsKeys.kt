@@ -195,6 +195,7 @@ internal object SettingsKeys {
     val AUTOEQ_SWITCH = booleanPreferencesKey("autoeq_autoswitch")
     val AUTOEQ_PROFILE = stringPreferencesKey("autoeq_active_profile")
     val LIKED_PLAYLISTS = stringSetPreferencesKey("liked_playlists")
+    val MIX_SNAPSHOTS = stringPreferencesKey("mix_snapshots")
     val EQ_ENABLED = booleanPreferencesKey("eq_enabled")
     val EQ_PRESET = intPreferencesKey("eq_preset")
     val EQ_BANDS = stringPreferencesKey("eq_bands")

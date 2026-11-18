@@ -18,6 +18,8 @@ import kotlinx.coroutines.withContext
 class Likes(
     private val scope: CoroutineScope,
     private val repository: MusicRepository,
+    // a generated mix keeps its like as a saved copy; null means the copy could not be made
+    private val toggleMix: suspend (String) -> Boolean? = { null },
     private val savePlaylistLike: suspend (String, Boolean) -> Unit,
 ) {
     val ledger = LikeLedger(repository::likeSources) { repository.activeSession }
@@ -156,6 +158,10 @@ class Likes(
 
     // songs toggle on the source they play from; album, artist and playlist likes stay with the active source
     fun toggle(id: String, kind: String = "song") {
+        if (kind == com.aurora.music.foryou.MIX_KIND) {
+            scope.launch { if (attempt(null) { toggleMix(id) } == null) _failures.tryEmit(Unit) }
+            return
+        }
         if (id.isEmpty() || id.startsWith("aurora-mix:") || !(if (kind == "song") repository.canLikeSong(id) else repository.canLike(id))) return
         when (kind) {
             "song" -> toggle(seen[id]?.first ?: Song(id, "", "", "", "", 0))

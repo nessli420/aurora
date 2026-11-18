@@ -274,6 +274,8 @@ object HomeSection {
     const val HERO = "hero"; const val RECENT = "recent"; const val PLAYLISTS = "playlists"
     const val FAVOURITE = "favourite"; const val MOST = "most"; const val ARTISTS = "artists"; const val NEW = "new"
     const val RECOMMENDED = "recommended"
+    const val MIXES = "mixes"; const val MIX_TIME = "mix_time"; const val MIX_DAILY = "mix_daily"
+    const val MIX_RECOMMENDED = "mix_recommended"; const val MIX_DISCOVER = "mix_discover"
 }
 
 data class UiPrefs(

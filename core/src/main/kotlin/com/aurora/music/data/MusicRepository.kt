@@ -113,6 +113,7 @@ class MusicRepository(
     private val likeSourcesProvider: suspend () -> List<MediaBackend> = { backendProvider()?.let { (it as? MergedBackend)?.sources ?: listOf(it) }.orEmpty() },
     private val trackChoices: TrackChoices? = null,
     private val hiddenSongs: () -> HiddenSongs = { HiddenSongs.NONE },
+    private val mixes: suspend (String) -> DetailData? = { null },
     // reads map and dedup here, one at a time, so callers can stay on the main thread
     private val mapping: CoroutineContext = Dispatchers.Default.limitedParallelism(1),
 ) {
@@ -612,6 +613,15 @@ class MusicRepository(
         return true
     }
 
+    // a frozen copy of a list that isn't a playlist yet; a mixed local one where the library has those
+    suspend fun savePlaylistCopy(name: String, songs: List<Song>): String? {
+        if (offline || songs.isEmpty()) return null
+        val source = backend ?: return null
+        val id = source.createMixedPlaylist(name, songs) ?: source.createPlaylistWithId(name, songs.map { it.id }) ?: return null
+        playlistChangeEvents.tryEmit(id)
+        return id
+    }
+
     suspend fun exportPlaylist(kind: String, id: String): String? =
         detail(kind, id)?.tracks?.takeIf { it.isNotEmpty() }?.let { M3u.write(it) }
 
@@ -678,6 +688,7 @@ class MusicRepository(
             val first = tracks.firstOrNull() ?: return null
             return DetailData(DetailInfo(first.album.ifBlank { "Album" }, "${first.artist} • Downloaded", first.artworkUrl, accentArgbFor(id), false, tracks.size, "Downloaded"), tracks)
         }
+        if (kind == com.aurora.music.foryou.MIX_KIND) return mixes(id)
         if (kind == "smart") {
             val sp = smartPlaylistsProvider().firstOrNull { it.id == id } ?: return null
             val tracks = smartEngine?.evaluate(sp, librarySongs()).orEmpty()
@@ -725,7 +736,7 @@ class MusicRepository(
         if (offline) emptyList() else sourceSongs { it.detailPage(kind, id, offset) }
 
     suspend fun collectionTracks(kind: String, id: String): List<Song> = withContext(mapping) {
-        playable(kind, id, if (offline || kind == "smart") detail(kind, id)?.tracks.orEmpty()
+        playable(kind, id, if (offline || kind == "smart" || kind == com.aurora.music.foryou.MIX_KIND) detail(kind, id)?.tracks.orEmpty()
             else sourceSongs { it.collectionTracks(kind, id) })
     }
 

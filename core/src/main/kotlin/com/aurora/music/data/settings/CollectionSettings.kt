@@ -32,6 +32,9 @@ interface CollectionSettings {
     suspend fun setSaveRecentSearches(v: Boolean): Preferences
     suspend fun togglePin(pin: Pin): Preferences
     suspend fun setPlaylistLiked(id: String, liked: Boolean): Preferences
+    val mixSnapshots: Flow<Map<String, String>>
+    suspend fun setMixLiked(id: String, playlistId: String?): Preferences
+    suspend fun keepMixLikes(ids: Set<String>): Preferences
     val hiddenSongs: Flow<List<HiddenSong>>
     suspend fun setSongHidden(song: HiddenSong, hidden: Boolean): Preferences
     val blockedArtists: Flow<List<String>>
@@ -126,6 +129,29 @@ internal class CollectionSettingsStore(private val dataStore: DataStore<Preferen
         val set = (p[Keys.LIKED_PLAYLISTS] ?: emptySet()).toMutableSet()
         if (liked) set.add(id) else set.remove(id)
         p[Keys.LIKED_PLAYLISTS] = set
+    }
+
+    private fun parseSnapshots(json: String?): Map<String, String> =
+        runCatching { gson.fromJson<Map<String, String?>>(json, object : com.google.gson.reflect.TypeToken<Map<String, String?>>() {}.type) }.getOrNull()
+            .orEmpty().mapNotNull { (k, v) -> v?.let { k to it } }.toMap()
+
+    override val mixSnapshots: Flow<Map<String, String>> = dataStore.data.map { it[Keys.MIX_SNAPSHOTS] }.distinctUntilChanged().map { parseSnapshots(it) }.flowOn(Dispatchers.Default)
+
+    // the heart reads liked playlists like any other, the map finds the copy to remove
+    override suspend fun setMixLiked(id: String, playlistId: String?) = dataStore.edit { p ->
+        val liked = (p[Keys.LIKED_PLAYLISTS] ?: emptySet()).toMutableSet()
+        val saved = parseSnapshots(p[Keys.MIX_SNAPSHOTS]).toMutableMap()
+        if (playlistId != null) { liked += id; saved[id] = playlistId } else { liked -= id; saved -= id }
+        p[Keys.LIKED_PLAYLISTS] = liked
+        p[Keys.MIX_SNAPSHOTS] = gson.toJson(saved)
+    }
+
+    override suspend fun keepMixLikes(ids: Set<String>) = dataStore.edit { p ->
+        val saved = parseSnapshots(p[Keys.MIX_SNAPSHOTS])
+        val gone = saved.keys - ids
+        if (gone.isEmpty()) return@edit
+        p[Keys.LIKED_PLAYLISTS] = (p[Keys.LIKED_PLAYLISTS] ?: emptySet()) - gone
+        p[Keys.MIX_SNAPSHOTS] = gson.toJson(saved - gone)
     }
 
     override val hiddenSongs: Flow<List<HiddenSong>> = dataStore.data.map { it[Keys.HIDDEN_SONGS] }.distinctUntilChanged().map { gson.parseList<HiddenSong>(it) }.flowOn(Dispatchers.Default)
