@@ -467,8 +467,15 @@ fun AuroraApp() {
         alpha = if (covered) 0f else 1f
     }
 
+    // the entry under a page opened from the full player: going back to it reopens the player
+    var playerReturn by remember { mutableStateOf<String?>(null) }
+    androidx.compose.runtime.LaunchedEffect(backStackEntry?.id) {
+        if (playerReturn != null && backStackEntry?.id == playerReturn) { playerReturn = null; playerVM.setExpanded(true) }
+    }
+
     fun navigateTopLevel(route: String) {
         if (navController.currentDestination?.route == route) return
+        playerReturn = null
         container.haptic()
         // tab press lands on the tab root pop pushed detail/settings dont restore the sub-stack
         navController.navigate(route) {
@@ -534,6 +541,14 @@ fun AuroraApp() {
         }
     }
     fun openDetail(kind: String, id: String) = navController.navigate(Routes.detail(kind, id))
+
+    fun leavePlayer(open: () -> Unit) {
+        val below = navController.currentBackStackEntry?.id
+        val fromPlayer = playerState.expanded
+        playerVM.setExpanded(false)
+        open()
+        if (fromPlayer && below != null && navController.currentBackStackEntry?.id != below) playerReturn = below
+    }
     fun playAlbum(id: String) = scope.launch {
         container.repository.detail("album", id)?.let { if (it.tracks.isNotEmpty()) playerVM.playCollection("album", id, it.tracks, 0, it.info.songCount) }
     }
@@ -671,7 +686,7 @@ fun AuroraApp() {
             )
             PlayerPane.RELATED -> com.aurora.music.ui.screens.player.RelatedPane(
                 playerState.current,
-                onOpenDetail = { kind, id -> playerVM.setExpanded(false); openDetail(kind, id) },
+                onOpenDetail = { kind, id -> leavePlayer { openDetail(kind, id) } },
                 onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
                 modifier = modifier,
             )
@@ -1042,7 +1057,7 @@ fun AuroraApp() {
                 canRematch = { song -> playerVM.queued(song).let { com.aurora.music.data.TrackChoices.matchKey(it.streamUrl) != null || container.repository.sourceType(it)?.isCatalogue == true } },
                 playFrom = playerVM::swapCurrent,
                 rematch = { song -> matchSong = playerVM.queued(song) },
-                open = { kind, id -> playerVM.setExpanded(false); openDetail(kind, id) },
+                open = { kind, id -> leavePlayer { openDetail(kind, id) } },
                 manySources = { container.repository.mergedSources.size > 1 },
                 linksSongs = { container.repository.linksSongs },
                 links = container.repository::songLinks,
@@ -1780,6 +1795,8 @@ fun AuroraApp() {
                 enter = slideInVertically(tween(MotionTokens.SLOW, easing = Motion.Emphasized)) { it } + fadeIn(Motion.enter()),
                 exit = slideOutVertically(Motion.exit(MotionTokens.STANDARD)) { it } + fadeOut(Motion.exit(MotionTokens.STANDARD)),
             ) {
+                // registered as the player opens: after the nav host so it wins, before the player's own overlays so they still do
+                BackHandler(enabled = playerState.expanded && !showMix) { playerVM.setExpanded(false) }
                 PlayerScreen(
                     state = playerState,
                     surfaceOffset = playerSurfaceOffset,
@@ -1799,22 +1816,21 @@ fun AuroraApp() {
                     onOpenQueue = { showQueue = true },
                     onGoToAlbum = {
                         val id = playerState.current.albumId
-                        if (id.isNotBlank()) { playerVM.setExpanded(false); openDetail("album", id) }
+                        if (id.isNotBlank()) leavePlayer { openDetail("album", id) }
                     },
                     onGoToArtist = {
                         val id = playerState.current.artistId
-                        if (id.isNotBlank()) { playerVM.setExpanded(false); openDetail("artist", id) }
+                        if (id.isNotBlank()) leavePlayer { openDetail("artist", id) }
                     },
                     onOpenOutput = { showOutput = true },
                     onOpenSleep = { showSleep = true },
                     onOpenVisualizer = { showVisualizer = true },
                     onOpenSignalPath = {
-                        playerVM.setExpanded(false)
                         showQueue = false
                         showSpeedSheet = false
                         showOutput = false
                         showSleep = false
-                        navController.navigate(Routes.SIGNAL_PATH) { launchSingleTop = true }
+                        leavePlayer { navController.navigate(Routes.SIGNAL_PATH) { launchSingleTop = true } }
                     },
                     onSonicRadio = { playerVM.startSonicRadio(onResult = { confirm(it) }) },
                     onAutoDj = { playerVM.startAutoDj(onResult = { confirm(it) }) },
@@ -1870,6 +1886,7 @@ fun AuroraApp() {
                 enter = fadeIn(Motion.enter()),
                 exit = fadeOut(Motion.exit()),
             ) {
+                BackHandler(enabled = showVisualizer && !showMix) { showVisualizer = false }
                 com.aurora.music.ui.screens.visualizer.VisualizerScreen(
                     state = playerState,
                     onClose = { showVisualizer = false },
@@ -1879,8 +1896,6 @@ fun AuroraApp() {
         }
     }
     }
-
-    BackHandler(enabled = playerState.expanded && !showMix) { playerVM.setExpanded(false) }
 
     if (showNavMore) {
         val inBar = navLayout.bar.map { it.id }.toSet()
@@ -1905,8 +1920,7 @@ fun AuroraApp() {
             onReset = { playerVM.resetSpeedPitch() },
             onOpenReverbSettings = {
                 showSpeedSheet = false
-                playerVM.setExpanded(false)
-                navController.navigate(Routes.SETTINGS_REVERB) { launchSingleTop = true }
+                leavePlayer { navController.navigate(Routes.SETTINGS_REVERB) { launchSingleTop = true } }
             },
             onDismiss = { showSpeedSheet = false },
         )
@@ -1932,14 +1946,14 @@ fun AuroraApp() {
         com.aurora.music.ui.screens.player.RelatedSheet(
             song = playerState.current,
             onDismiss = { showRelated = false },
-            onOpenDetail = { kind, id -> showRelated = false; playerVM.setExpanded(false); openDetail(kind, id) },
+            onOpenDetail = { kind, id -> showRelated = false; leavePlayer { openDetail(kind, id) } },
             onPlayAll = { songs, index -> playerVM.playAll(songs, index) },
         )
     }
     }
 
-    BackHandler(enabled = showQueue) { showQueue = false }
-    BackHandler(enabled = showVisualizer && !showMix) { showVisualizer = false }
+    // the queue sheet stays composed, so its handler re-registers on open to beat the nav host's
+    androidx.compose.runtime.key(showQueue) { BackHandler(enabled = showQueue) { showQueue = false } }
     BackHandler(enabled = onboarding.phase != SetupPhase.HIDDEN) {
         when (onboarding.phase) {
             SetupPhase.QUESTIONS -> if (onboarding.page > 0) onboarding.page-- else finishOnboarding()
