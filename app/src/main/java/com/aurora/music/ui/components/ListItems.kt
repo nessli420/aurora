@@ -346,17 +346,17 @@ fun PlaylistCard(
 }
 
 @Composable
-fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier) {
+fun AlbumCard(album: Album, onClick: () -> Unit, modifier: Modifier = Modifier, width: androidx.compose.ui.unit.Dp = 156.dp) {
     Column(
         modifier = modifier
-            .width(156.dp)
+            .width(width)
             .clip(if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(16.dp) else MaterialTheme.shapes.medium)
             .then(if (LocalUiPrefs.current.themeStyle.let { it != ThemeStyle.AURORA && it != ThemeStyle.GLASS }) Modifier.auroraPanel(MaterialTheme.shapes.medium) else Modifier)
             .pressClickable(onClick = onClick)
             .padding(8.dp),
     ) {
         Box {
-            Artwork(album.artworkUrl, MaterialTheme.colorScheme.secondary, Modifier.size(140.dp), corner = 14.dp)
+            Artwork(album.artworkUrl, MaterialTheme.colorScheme.secondary, Modifier.size(width - 16.dp), corner = 14.dp)
             val label = album.typeLabel.localizedMediaType()
             if (label != appString(R.string.text_album_dfb4c9)) {
                 Text(

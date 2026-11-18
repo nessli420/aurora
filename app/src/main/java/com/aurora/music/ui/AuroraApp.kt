@@ -1287,6 +1287,9 @@ fun AuroraApp() {
                             onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                             onRetry = { homeVM.load() },
                             onAddSource = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
+                            onPlayCollection = { kind, id, shuffle -> scope.launch { container.repository.detail(kind, id)?.let { d -> if (d.tracks.isNotEmpty()) {
+                                if (shuffle) playerVM.shuffleCollection(kind, id, d.tracks, d.info.songCount) else playerVM.playCollection(kind, id, d.tracks, 0, d.info.songCount)
+                            } } } },
                         )
                     }
                     composable(Routes.SEARCH) {
@@ -1434,6 +1437,7 @@ fun AuroraApp() {
                                 },
                                 onVisibleSongs = playerVM::checkVisibleLiked,
                                 selectedItem = if (split) librarySelection else null,
+                                onSignIn = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
                                 folderEdits = remember(libraryVM) {
                                     com.aurora.music.ui.screens.library.FolderEdits(libraryVM::createFolder, libraryVM::renameFolder, libraryVM::deleteFolder, libraryVM::moveToFolder)
                                 },

@@ -140,7 +140,7 @@ internal val LocalLibrarySelection = androidx.compose.runtime.compositionLocalOf
 private fun selectionTint(key: String): Color =
     if (key.isNotEmpty() && LocalLibrarySelection.current == key) MaterialTheme.colorScheme.primary.copy(alpha = 0.16f) else Color.Transparent
 
-private data class LibRow(
+internal data class LibRow(
     val title: String,
     val subtitle: String,
     val art: String,
@@ -156,7 +156,7 @@ private data class LibRow(
     val icon: ImageVector? = null,
 )
 
-private class LibActions(
+internal class LibActions(
     val onOpenAllLiked: (() -> Unit)?,
     val likedPicker: @Composable () -> Unit,
     val isLiked: (String) -> Boolean,
@@ -231,6 +231,7 @@ fun LibraryScreen(
     onRefresh: () -> Unit = {},
     onCycleView: () -> Unit = {},
     folderEdits: FolderEdits? = null,
+    onSignIn: () -> Unit = {},
 ) {
     androidx.compose.runtime.CompositionLocalProvider(LocalLibrarySelection provides selectedItem) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -286,15 +287,23 @@ fun LibraryScreen(
     }
     if (folderEdits != null) prompt?.let { FolderPromptDialog(it, tree, folderEdits) { prompt = null } }
 
+    val pageLayout = com.aurora.music.ui.theme.LocalUiPrefs.current.pageLayout
     Column(Modifier.fillMaxWidth().padding(top = topInset)) {
+        // the stats run under the icons on their own line, so they fit without wrapping mid-phrase
+        val stats = buildList {
+            state.views.firstOrNull { it.id == state.view }?.let { add(it.label) }
+            if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
+            if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
+            if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
+        }.joinToString("  ·  ")
+        // each page layout brings its own header and tab control
+        when (pageLayout) {
+        com.aurora.music.data.PageLayout.SPOTLIGHT -> LibrarySpotlightHeader(state, username, stats, visibleTabs, filter, onOpenDrawer, onOpenSearch,
+            onCreate = { showCreate = true }, onCycleView = onCycleView, onFilter = onFilter, onCustomizeTabs = { showTabs = true })
+        else -> {
         // ---- header: identity + stats ----
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Box(
-                Modifier.size(38.dp).paperClip(CircleShape)
-                    .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
-                    .clickable(onClick = onOpenDrawer),
-                contentAlignment = Alignment.Center,
-            ) { Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
+            LibraryAvatar(username, onOpenDrawer)
             Spacer(Modifier.width(12.dp))
             Text(appString(R.string.text_library_b8100f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f))
@@ -306,29 +315,9 @@ fun LibraryScreen(
             Icon(Icons.Filled.Search, appString(R.string.text_search_bce064), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onOpenSearch).padding(8.dp))
             if (state.signedIn) Icon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showCreate = true }.padding(8.dp))
         }
-        // the stats run under the icons on their own line, so they fit without wrapping mid-phrase
-        val stats = buildList {
-            state.views.firstOrNull { it.id == state.view }?.let { add(it.label) }
-            if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
-            if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
-            if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
-        }.joinToString("  ·  ")
         if (stats.isNotBlank()) {
             Text(stats, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.padding(start = 66.dp, end = 16.dp))
-        }
-
-        if (showCreate) {
-            CreatePlaylistSheet(
-                destination = state.views.firstOrNull { it.id == state.view }?.label ?: playlistHome,
-                targets = playlistTargets,
-                onCreate = onCreatePlaylist,
-                onCreateSmart = { showCreate = false; onCreateSmart() },
-                onImportM3u = { showCreate = false; onImportM3u() },
-                onDismiss = { showCreate = false },
-                onCreateWithAi = onCreateWithAi?.let { open -> { showCreate = false; open() } },
-                onNewFolder = if (tree == null) null else ({ showCreate = false; prompt = FolderPrompt.Create(folder?.id.orEmpty()) }),
-            )
         }
 
         Spacer(Modifier.height(10.dp))
@@ -352,6 +341,20 @@ fun LibraryScreen(
                 Icon(Icons.Filled.Tune, appString(R.string.library_tabs_customize), tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.size(36.dp).paperClip(CircleShape).clickable { showTabs = true }.padding(9.dp))
             }
+        }
+        }
+        }
+        if (showCreate) {
+            CreatePlaylistSheet(
+                destination = state.views.firstOrNull { it.id == state.view }?.label ?: playlistHome,
+                targets = playlistTargets,
+                onCreate = onCreatePlaylist,
+                onCreateSmart = { showCreate = false; onCreateSmart() },
+                onImportM3u = { showCreate = false; onImportM3u() },
+                onDismiss = { showCreate = false },
+                onCreateWithAi = onCreateWithAi?.let { open -> { showCreate = false; open() } },
+                onNewFolder = if (tree == null) null else ({ showCreate = false; prompt = FolderPrompt.Create(folder?.id.orEmpty()) }),
+            )
         }
         if (showTabs) LibraryTabsSheet(tabPrefs, canDownload, onChange = onTabs, onDismiss = { showTabs = false })
 
@@ -406,12 +409,21 @@ fun LibraryScreen(
         ) {
         Column(Modifier.fillMaxSize()) {
         when (filter) {
-            LibraryFilter.ALL -> AllOverview(
+            LibraryFilter.ALL -> when (pageLayout) {
+                com.aurora.music.data.PageLayout.SPOTLIGHT -> LibrarySpotlightAll(
+                    state = state, pins = pins, bottom = bottom, columns = libColumns, tree = tree, actions = actions, onOpenDetail = onOpenDetail,
+                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
+                    onOpenMix = onOpenMix, onSignIn = onSignIn,
+                    // a folder opens where the playlists tab shows it
+                    onOpenFolder = if (LibraryFilter.PLAYLISTS in visibleTabs) ({ id -> openFolder = id; onFilter(LibraryFilter.PLAYLISTS) }) else null,
+                )
+                else -> AllOverview(
                 state = state, pins = pins, canDownload = canDownload, bottom = bottom,
                 onFilter = onFilter, onOpenDetail = onOpenDetail,
                 onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts,
                 onOpenYouTubeDownload = onOpenYouTubeDownload, onOpenAllLiked = openAllLiked, likedPicker = likedPicker, onAiDj = onAiDj, aiDjDetail = aiDjDetail,
             )
+            }
             LibraryFilter.SONGS -> SongsTab(
                 state = state, likedIds = likedIds, currentSongId = currentSongId, isPlaying = isPlaying,
                 bottom = bottom, canDownload = canDownload, downloadedIds = downloadedIds,
@@ -542,12 +554,7 @@ private fun AllOverview(
                 // 0 doubles as not counted yet, so no number rather than a wrong 0
                 if (state.signedIn) add(QuickTile(appString(R.string.text_liked_songs_58c3a9), if (state.likedSongCount > 0) appPlural(R.plurals.track_count, (state.likedSongCount)) else "", Icons.Filled.Favorite, state.likedCover,
                     onLongClick = onOpenAllLiked, menu = likedPicker) { onOpenDetail("liked", state.likedId) })
-                if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
-                if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
-                if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
-                add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
-                add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
-                add(QuickTile(appString(R.string.youtube_download_title), appString(R.string.youtube_download_tile_detail), Icons.Filled.CloudDownload, "") { onOpenYouTubeDownload() })
+                addAll(collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail))
             }
             QuickTileGrid(tiles, Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
         }
@@ -618,7 +625,28 @@ private fun AllOverview(
     }
 }
 
-private data class QuickTile(
+// the quick tiles besides liked songs, which each page layout places itself
+internal fun collectionTiles(state: LibraryUiState, canDownload: Boolean, onFilter: (LibraryFilter) -> Unit, onOpenFolders: () -> Unit, onOpenRadio: () -> Unit,
+    onOpenPodcasts: () -> Unit, onOpenYouTubeDownload: () -> Unit, onAiDj: (() -> Unit)?, aiDjDetail: String): List<QuickTile> = buildList {
+    if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
+    if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
+    if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
+    add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
+    add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
+    add(QuickTile(appString(R.string.youtube_download_title), appString(R.string.youtube_download_tile_detail), Icons.Filled.CloudDownload, "") { onOpenYouTubeDownload() })
+}
+
+@Composable
+internal fun LibraryAvatar(username: String, onOpenDrawer: () -> Unit) {
+    Box(
+        Modifier.size(38.dp).paperClip(CircleShape)
+            .background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.primary, MaterialTheme.colorScheme.tertiary)))
+            .clickable(onClick = onOpenDrawer),
+        contentAlignment = Alignment.Center,
+    ) { Text(username.take(2).uppercase().ifBlank { appString(R.string.text_me_b4d362) }, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Black, color = MaterialTheme.colorScheme.onPrimary) }
+}
+
+internal data class QuickTile(
     val title: String,
     val subtitle: String,
     val icon: ImageVector,
@@ -676,7 +704,7 @@ private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
 }
 
 @Composable
-private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
+internal fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 18.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -706,7 +734,7 @@ private fun ShelfHeader(title: String, count: Int?, onSeeAll: () -> Unit) {
 }
 
 @Composable
-private fun ShelfCard(
+internal fun ShelfCard(
     title: String,
     subtitle: String,
     art: String,
@@ -974,7 +1002,7 @@ private fun EmptyHint(icon: ImageVector, title: String, message: String) {
 }
 
 // tree is the view's playlist folders; an open folder lists only what is filed in it, the top level leaves those out
-private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>,
+internal fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>,
     tree: com.aurora.music.data.PlaylistFolder? = null, folder: com.aurora.music.data.PlaylistFolder? = null): List<LibRow> {
     val smart = if (filter != LibraryFilter.PLAYLISTS || folder != null) emptyList() else state.smartPlaylists.map {
         val n = it.rules.orEmpty().size
@@ -1092,7 +1120,7 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 }
 
 @Composable
-private fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
+internal fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
     Column(Modifier.paperClip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).likedLongPress(row, actions, onClick, PressScaleIndication).padding(6.dp)) {
         if (row.kind == "liked") actions.likedPicker()
         Box {
