@@ -35,7 +35,6 @@ import androidx.compose.material.icons.filled.SkipNext
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -55,7 +54,6 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.data.MiniProgress
 import com.aurora.music.data.MiniStyle
@@ -114,21 +112,14 @@ fun MiniPlayer(
             Artwork(song.artworkUrl, song.accent, Modifier.size(artSize), corner = 10.dp)
             Spacer(Modifier.width(10.dp))
             TrackLabel(song, Modifier.weight(1f)) { track ->
-                Text(
+                MarqueeText(
                     track.title,
-                    style = if (ui.miniStyle == MiniStyle.PROMINENT) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                    if (ui.miniStyle == MiniStyle.PROMINENT) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                    MaterialTheme.colorScheme.onSurface,
                     fontWeight = FontWeight.Bold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
+                    paused = state.expanded,
                 )
-                Text(
-                    track.artist,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+                MarqueeText(track.artist, MaterialTheme.typography.bodySmall, MaterialTheme.colorScheme.onSurfaceVariant, paused = state.expanded)
             }
             if (showLike) {
                 LikeHeart(song, onToggleLike, Modifier.size(40.dp).paperClip(CircleShape)) {
@@ -218,10 +209,8 @@ private fun GlassMiniPlayer(
         Artwork(song.artworkUrl, song.accent, Modifier.size(art), corner = 10.dp)
         Spacer(Modifier.width(12.dp))
         TrackLabel(song, Modifier.weight(1f)) { track ->
-            Text(track.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, color = colors.onSurface,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
-            Text(track.artist, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
-                maxLines = 1, overflow = TextOverflow.Ellipsis)
+            MarqueeText(track.title, MaterialTheme.typography.titleSmall, colors.onSurface, fontWeight = FontWeight.SemiBold, paused = state.expanded)
+            MarqueeText(track.artist, MaterialTheme.typography.bodySmall, colors.onSurfaceVariant, paused = state.expanded)
         }
         if (ui.miniStyle != MiniStyle.COMPACT && !isMix && LocalCanLike.current(song.id)) LikeHeart(song, onToggleLike, Modifier.size(44.dp).paperClip(CircleShape)) {
             Icon(if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, appString(R.string.text_like_c7e02c),

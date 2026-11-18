@@ -79,7 +79,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDecoration
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntRect
@@ -177,8 +176,8 @@ fun PlaybackDock(
                     Artwork(song.artworkUrl, song.accent, Modifier.size(art * scale), corner = 10.dp)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f, fill = false)) {
-                        Text(song.title, style = if (prominent) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
-                            color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        MarqueeText(song.title, if (prominent) MaterialTheme.typography.titleMedium else MaterialTheme.typography.titleSmall,
+                            colors.onSurface, fontWeight = FontWeight.Bold)
                         DockArtist(song.artist, if (song.artistId.isNotBlank()) onOpenArtist else null)
                     }
                 }
@@ -248,11 +247,9 @@ private fun DockArtist(artist: String, onOpenArtist: (() -> Unit)?) {
     val hover = remember { MutableInteractionSource() }
     val hovered by hover.collectIsHoveredAsState()
     val link = onOpenArtist != null
-    Text(
-        artist, style = MaterialTheme.typography.bodySmall,
-        color = if (link && hovered) colors.onSurface else colors.onSurfaceVariant,
-        textDecoration = if (link && hovered) TextDecoration.Underline else null,
-        maxLines = 1, overflow = TextOverflow.Ellipsis,
+    MarqueeText(
+        artist, MaterialTheme.typography.bodySmall.copy(textDecoration = if (link && hovered) TextDecoration.Underline else null),
+        if (link && hovered) colors.onSurface else colors.onSurfaceVariant,
         modifier = if (onOpenArtist == null) Modifier else Modifier
             .clickable(interactionSource = hover, indication = null, onClickLabel = appString(R.string.text_go_to_artist_d8f70c), onClick = onOpenArtist)
             .pointerHoverIcon(PointerIcon.Hand),

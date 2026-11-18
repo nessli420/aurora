@@ -6,6 +6,7 @@ import androidx.compose.ui.semantics.contentDescription
 import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.ui.theme.likePop
 import com.aurora.music.ui.components.PlayPauseIcon
+import com.aurora.music.ui.components.MarqueeText
 import com.aurora.music.data.LongForm
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.material.icons.filled.Check
@@ -26,7 +27,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -872,43 +872,27 @@ private fun MarqueeTitle(
     onMenu: (() -> Unit)? = null,
     menu: @Composable () -> Unit = {},
 ) {
-    var fullWidth by remember(text) { androidx.compose.runtime.mutableIntStateOf(0) }
-    var shownWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-    val overflowing = fullWidth > shownWidth && shownWidth > 0
     val tap = onClick ?: onMenu
-    // each new title scrolls twice then rests, so an idle player stops repainting
-    androidx.compose.runtime.key(text) {
-        Box {
-            Text(
-                text, style = style, fontWeight = fontWeight,
-                maxLines = 1, softWrap = false, color = color,
-                onTextLayout = { fullWidth = it.size.width },
-                modifier = Modifier
-                    .then(if (tap != null) Modifier.combinedClickable(onClickLabel = onClickLabel, role = Role.Button,
-                        onLongClickLabel = onMenu?.let { appString(R.string.song_menu_more) }, onLongClick = onMenu,
-                        onDoubleClick = onMenu, onClick = tap).pointerHoverIcon(PointerIcon.Hand) else Modifier)
-                    .then(if (onMenu != null) Modifier.pointerInput(onMenu) {
-                        awaitPointerEventScope {
-                            while (true) {
-                                val event = awaitPointerEvent()
-                                if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
-                                    event.changes.forEach { it.consume() }
-                                    onMenu()
-                                }
+    Box {
+        MarqueeText(
+            text, style, color, fontWeight = fontWeight,
+            modifier = Modifier
+                .then(if (tap != null) Modifier.combinedClickable(onClickLabel = onClickLabel, role = Role.Button,
+                    onLongClickLabel = onMenu?.let { appString(R.string.song_menu_more) }, onLongClick = onMenu,
+                    onDoubleClick = onMenu, onClick = tap).pointerHoverIcon(PointerIcon.Hand) else Modifier)
+                .then(if (onMenu != null) Modifier.pointerInput(onMenu) {
+                    awaitPointerEventScope {
+                        while (true) {
+                            val event = awaitPointerEvent()
+                            if (event.type == PointerEventType.Press && event.buttons.isSecondaryPressed) {
+                                event.changes.forEach { it.consume() }
+                                onMenu()
                             }
                         }
-                    } else Modifier)
-                    .onSizeChanged { shownWidth = it.width }
-                    .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
-                        drawContent()
-                        // the title rests at its start, so only the right edge fades
-                        drawRect(Brush.horizontalGradient(0f to Color.Black, 0.92f to Color.Black, 1f to Color.Transparent),
-                            blendMode = BlendMode.DstIn)
-                    } else Modifier)
-                    .basicMarquee(iterations = 2, initialDelayMillis = 1500, repeatDelayMillis = 2500),
-            )
-            menu()
-        }
+                    }
+                } else Modifier),
+        )
+        menu()
     }
 }
 

@@ -55,7 +55,6 @@ import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.aurora.music.R
 import com.aurora.music.data.ThemeStyle
@@ -115,10 +114,8 @@ fun PlaybackDock(
                     Artwork(song.artworkUrl, song.accent, Modifier.size((if (roomy) 62.dp else 54.dp) * scale), corner = 10.dp)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f, fill = false)) {
-                        Text(song.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold,
-                            color = colors.onSurface, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                        Text(song.artist, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        MarqueeText(song.title, MaterialTheme.typography.titleSmall, colors.onSurface, fontWeight = FontWeight.Bold, paused = state.expanded)
+                        MarqueeText(song.artist, MaterialTheme.typography.bodySmall, colors.onSurfaceVariant, paused = state.expanded)
                     }
                 }
                 if (!isMix && LocalCanLike.current(song.id)) {

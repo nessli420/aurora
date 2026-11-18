@@ -17,7 +17,6 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.background
-import androidx.compose.foundation.basicMarquee
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.PressInteraction
@@ -133,7 +132,6 @@ import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.CompositingStrategy
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.combinedClickable
@@ -161,6 +159,7 @@ import com.aurora.music.data.SeekStyle
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.PlayPauseIcon
+import com.aurora.music.ui.components.MarqueeText
 import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.Space
 import com.aurora.music.ui.theme.likePop
@@ -1372,25 +1371,12 @@ private fun MarqueeTitle(
     onLongClick: (() -> Unit)? = null,
     menu: @Composable () -> Unit = {},
 ) {
-    var fullWidth by remember(text) { androidx.compose.runtime.mutableIntStateOf(0) }
-    var shownWidth by remember { androidx.compose.runtime.mutableIntStateOf(0) }
-    val overflowing = fullWidth > shownWidth && shownWidth > 0
     val tap = onClick ?: onLongClick
     Box {
-        Text(
-            text, style = style, fontWeight = fontWeight,
-            maxLines = 1, softWrap = false, color = color,
-            onTextLayout = { fullWidth = it.size.width },
-            modifier = Modifier
-                .then(if (tap != null) Modifier.combinedClickable(onClickLabel = onClickLabel, role = Role.Button,
-                    onLongClickLabel = onLongClick?.let { appString(R.string.song_menu_more) }, onLongClick = onLongClick, onClick = tap) else Modifier)
-                .onSizeChanged { shownWidth = it.width }
-                .then(if (overflowing) Modifier.graphicsLayer(compositingStrategy = CompositingStrategy.Offscreen).drawWithContent {
-                    drawContent()
-                    drawRect(Brush.horizontalGradient(0f to Color.Transparent, 0.08f to Color.Black, 0.92f to Color.Black, 1f to Color.Transparent),
-                        blendMode = BlendMode.DstIn)
-                } else Modifier)
-                .basicMarquee(iterations = Int.MAX_VALUE, initialDelayMillis = 1500, repeatDelayMillis = 2500),
+        MarqueeText(
+            text, style, color, fontWeight = fontWeight,
+            modifier = if (tap != null) Modifier.combinedClickable(onClickLabel = onClickLabel, role = Role.Button,
+                onLongClickLabel = onLongClick?.let { appString(R.string.song_menu_more) }, onLongClick = onLongClick, onClick = tap) else Modifier,
         )
         menu()
     }
