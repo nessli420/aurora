@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"歌词释义"</string>
+    <string name="genius_meanings_desc">"来自 Genius 的歌词含义与每首歌背后的故事。会将歌曲名和艺人发送到 genius.com"</string>
+    <string name="genius_explain">"解释这一句"</string>
+    <string name="genius_about">"关于这首歌"</string>
+    <string name="genius_view">"在 Genius 上查看"</string>
+    <string name="genius_by">"作者：%1$s"</string>
+    <string name="genius_verified">"艺人认证"</string>
+    <string name="genius_attribution">"释义来自 Genius"</string>
+</resources>

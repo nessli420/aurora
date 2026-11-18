@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Смысл текстов"</string>
+    <string name="genius_meanings_desc">"Что значат строки и история каждой песни, от Genius. Отправляет название песни и исполнителя на genius.com"</string>
+    <string name="genius_explain">"Объяснить строку"</string>
+    <string name="genius_about">"Об этой песне"</string>
+    <string name="genius_view">"Открыть на Genius"</string>
+    <string name="genius_by">"Автор: %1$s"</string>
+    <string name="genius_verified">"Подтверждено артистом"</string>
+    <string name="genius_attribution">"Толкования от Genius"</string>
+</resources>

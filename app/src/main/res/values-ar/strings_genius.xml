@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"معاني الكلمات"</string>
+    <string name="genius_meanings_desc">"ما تعنيه الأسطر والقصة وراء كل أغنية، من Genius. يرسل عنوان الأغنية والفنان إلى genius.com"</string>
+    <string name="genius_explain">"اشرح هذا السطر"</string>
+    <string name="genius_about">"عن هذه الأغنية"</string>
+    <string name="genius_view">"عرض على Genius"</string>
+    <string name="genius_by">"بواسطة %1$s"</string>
+    <string name="genius_verified">"موثّق من الفنان"</string>
+    <string name="genius_attribution">"المعاني من Genius"</string>
+</resources>

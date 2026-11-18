@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Znaczenie tekstów"</string>
+    <string name="genius_meanings_desc">"Co znaczą wersy i historia każdego utworu, z Genius. Wysyła tytuł i wykonawcę do genius.com"</string>
+    <string name="genius_explain">"Wyjaśnij ten wers"</string>
+    <string name="genius_about">"O tym utworze"</string>
+    <string name="genius_view">"Zobacz w Genius"</string>
+    <string name="genius_by">"Autor: %1$s"</string>
+    <string name="genius_verified">"Zweryfikowane przez artystę"</string>
+    <string name="genius_attribution">"Znaczenia z Genius"</string>
+</resources>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"بولوں کے معنی"</string>
+    <string name="genius_meanings_desc">"سطروں کا مطلب اور ہر گانے کے پیچھے کی کہانی، Genius سے۔ گانے کا نام اور فنکار genius.com کو بھیجتا ہے"</string>
+    <string name="genius_explain">"اس سطر کی وضاحت کریں"</string>
+    <string name="genius_about">"اس گانے کے بارے میں"</string>
+    <string name="genius_view">"Genius پر دیکھیں"</string>
+    <string name="genius_by">"از %1$s"</string>
+    <string name="genius_verified">"فنکار سے تصدیق شدہ"</string>
+    <string name="genius_attribution">"معنی Genius سے"</string>
+</resources>

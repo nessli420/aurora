@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Betekenis van songteksten"</string>
+    <string name="genius_meanings_desc">"Wat regels betekenen en het verhaal achter elk nummer, van Genius. Stuurt de titel en artiest naar genius.com"</string>
+    <string name="genius_explain">"Leg deze regel uit"</string>
+    <string name="genius_about">"Over dit nummer"</string>
+    <string name="genius_view">"Bekijk op Genius"</string>
+    <string name="genius_by">"Door %1$s"</string>
+    <string name="genius_verified">"Geverifieerd door de artiest"</string>
+    <string name="genius_attribution">"Betekenissen van Genius"</string>
+</resources>

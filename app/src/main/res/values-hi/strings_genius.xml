@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"गीतों के अर्थ"</string>
+    <string name="genius_meanings_desc">"पंक्तियों का अर्थ और हर गाने के पीछे की कहानी, Genius से। गाने का नाम और कलाकार genius.com को भेजता है"</string>
+    <string name="genius_explain">"इस पंक्ति को समझाएं"</string>
+    <string name="genius_about">"इस गाने के बारे में"</string>
+    <string name="genius_view">"Genius पर देखें"</string>
+    <string name="genius_by">"%1$s द्वारा"</string>
+    <string name="genius_verified">"कलाकार द्वारा सत्यापित"</string>
+    <string name="genius_attribution">"अर्थ Genius से"</string>
+</resources>

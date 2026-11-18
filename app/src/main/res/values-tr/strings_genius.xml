@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Şarkı sözü anlamları"</string>
+    <string name="genius_meanings_desc">"Dizelerin anlamı ve her şarkının arkasındaki hikâye, Genius’tan. Şarkı adını ve sanatçıyı genius.com’a gönderir"</string>
+    <string name="genius_explain">"Bu dizeyi açıkla"</string>
+    <string name="genius_about">"Bu şarkı hakkında"</string>
+    <string name="genius_view">"Genius’ta gör"</string>
+    <string name="genius_by">"%1$s tarafından"</string>
+    <string name="genius_verified">"Sanatçı tarafından doğrulandı"</string>
+    <string name="genius_attribution">"Anlamlar Genius’tan"</string>
+</resources>

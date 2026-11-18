@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"가사 의미"</string>
+    <string name="genius_meanings_desc">"Genius가 제공하는 가사의 의미와 곡에 얽힌 이야기. 곡 제목과 아티스트를 genius.com으로 보냅니다"</string>
+    <string name="genius_explain">"이 줄 설명 보기"</string>
+    <string name="genius_about">"이 곡에 대해"</string>
+    <string name="genius_view">"Genius에서 보기"</string>
+    <string name="genius_by">"작성: %1$s"</string>
+    <string name="genius_verified">"아티스트 인증"</string>
+    <string name="genius_attribution">"의미 출처: Genius"</string>
+</resources>

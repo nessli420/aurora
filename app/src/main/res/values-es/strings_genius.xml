@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Significados de las letras"</string>
+    <string name="genius_meanings_desc">"Qué significan los versos y la historia detrás de cada canción, de Genius. Envía el título y el artista a genius.com"</string>
+    <string name="genius_explain">"Explicar este verso"</string>
+    <string name="genius_about">"Acerca de esta canción"</string>
+    <string name="genius_view">"Ver en Genius"</string>
+    <string name="genius_by">"Por %1$s"</string>
+    <string name="genius_verified">"Verificado por el artista"</string>
+    <string name="genius_attribution">"Significados de Genius"</string>
+</resources>

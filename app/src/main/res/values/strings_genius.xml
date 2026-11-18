@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Lyric meanings"</string>
+    <string name="genius_meanings_desc">"What lines mean and the story behind each song, from Genius. Sends the song title and artist to genius.com"</string>
+    <string name="genius_explain">"Explain this line"</string>
+    <string name="genius_about">"About this song"</string>
+    <string name="genius_view">"View on Genius"</string>
+    <string name="genius_by">"By %1$s"</string>
+    <string name="genius_verified">"Verified by the artist"</string>
+    <string name="genius_attribution">"Meanings from Genius"</string>
+</resources>

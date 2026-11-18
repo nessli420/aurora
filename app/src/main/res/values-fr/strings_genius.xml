@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Sens des paroles"</string>
+    <string name="genius_meanings_desc">"Ce que veulent dire les paroles et l’histoire de chaque chanson, par Genius. Envoie le titre et l’artiste à genius.com"</string>
+    <string name="genius_explain">"Expliquer cette ligne"</string>
+    <string name="genius_about">"À propos de cette chanson"</string>
+    <string name="genius_view">"Voir sur Genius"</string>
+    <string name="genius_by">"Par %1$s"</string>
+    <string name="genius_verified">"Vérifié par l’artiste"</string>
+    <string name="genius_attribution">"Explications de Genius"</string>
+</resources>

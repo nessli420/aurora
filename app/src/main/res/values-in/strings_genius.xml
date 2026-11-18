@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"Makna lirik"</string>
+    <string name="genius_meanings_desc">"Arti setiap baris dan cerita di balik setiap lagu, dari Genius. Mengirim judul lagu dan artis ke genius.com"</string>
+    <string name="genius_explain">"Jelaskan baris ini"</string>
+    <string name="genius_about">"Tentang lagu ini"</string>
+    <string name="genius_view">"Lihat di Genius"</string>
+    <string name="genius_by">"Oleh %1$s"</string>
+    <string name="genius_verified">"Diverifikasi oleh artis"</string>
+    <string name="genius_attribution">"Makna dari Genius"</string>
+</resources>

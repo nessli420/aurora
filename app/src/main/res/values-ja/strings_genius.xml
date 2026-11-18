@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="genius_meanings">"歌詞の意味"</string>
+    <string name="genius_meanings_desc">"Genius による歌詞の意味と曲の背景。曲名とアーティスト名を genius.com に送信します"</string>
+    <string name="genius_explain">"この行を解説"</string>
+    <string name="genius_about">"この曲について"</string>
+    <string name="genius_view">"Genius で見る"</string>
+    <string name="genius_by">"%1$s"</string>
+    <string name="genius_verified">"アーティスト認証済み"</string>
+    <string name="genius_attribution">"解説：Genius"</string>
+</resources>
