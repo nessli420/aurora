@@ -31,6 +31,7 @@ import androidx.glance.LocalSize
 import androidx.glance.action.clickable
 import androidx.glance.appwidget.GlanceAppWidget
 import androidx.glance.appwidget.SizeMode
+import androidx.glance.appwidget.action.actionStartActivity
 import androidx.glance.appwidget.action.actionStartService
 import androidx.glance.appwidget.cornerRadius
 import androidx.glance.appwidget.provideContent
@@ -148,10 +149,14 @@ private fun widgetColors(context: Context, theme: WidgetTheme, opacity: Float, a
 
 @Composable
 private fun WidgetContent(np: NowPlaying, art: Art, style: WidgetStyle) {
-    val colors = widgetColors(LocalContext.current, style.theme, style.opacity, art.color)
+    val context = LocalContext.current
+    val colors = widgetColors(context, style.theme, style.opacity, art.color)
+    // a loaded track opens the full player, otherwise just the app
+    val root = GlanceModifier.fillMaxSize().clickable(actionStartActivity(
+        if (np.hasTrack) com.aurora.music.AuroraActivity.openPlayer(context) else Intent(context, com.aurora.music.AuroraActivity::class.java)))
     when (style.layout) {
         WidgetLayout.COMPACT -> Row(
-            GlanceModifier.fillMaxSize().background(colors.background).cornerRadius(22.dp).padding(12.dp),
+            root.background(colors.background).cornerRadius(22.dp).padding(12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Artwork(art.bitmap, 56.dp, 12.dp)
@@ -163,7 +168,7 @@ private fun WidgetContent(np: NowPlaying, art: Art, style: WidgetStyle) {
         WidgetLayout.CARD -> {
             val size = LocalSize.current
             Row(
-                GlanceModifier.fillMaxSize().background(colors.background).cornerRadius(22.dp).padding(12.dp),
+                root.background(colors.background).cornerRadius(22.dp).padding(12.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 // leave the text column room for the three 40dp controls
@@ -176,7 +181,7 @@ private fun WidgetContent(np: NowPlaying, art: Art, style: WidgetStyle) {
                 }
             }
         }
-        WidgetLayout.COVER -> Box(GlanceModifier.fillMaxSize().cornerRadius(22.dp)) {
+        WidgetLayout.COVER -> Box(root.cornerRadius(22.dp)) {
             if (art.bitmap != null) {
                 Image(ImageProvider(art.bitmap), null, GlanceModifier.fillMaxSize(), contentScale = ContentScale.Crop)
             } else {

@@ -65,7 +65,7 @@ class MediaSearchIntentDeviceTest {
     }
 
     @Test fun lateSearchCannotReplaceNewerManualPlayback() = withSearchFixture { controller, first, second, counts, delayed ->
-        val vm = fixture.main { ViewModelProvider(requireNotNull(currentActivity()))[PlayerViewModel::class.java] }
+        val vm = fixture.main { ViewModelProvider(context.applicationContext as AuroraApplication)[PlayerViewModel::class.java] }
         context.startActivity(searchIntent("Delayed fixture"))
         fixture.await("delayed search begins") { counts["Delayed fixture"]?.get() == 1 }
         fixture.main { vm.play(second) }
@@ -96,7 +96,7 @@ class MediaSearchIntentDeviceTest {
                 block(controller, first, second, counts, delayed)
             } finally {
                 delayed.complete(SearchResults())
-                fixture.main { currentActivity()?.let { ViewModelProvider(it)[PlayerViewModel::class.java].stopPlayback() } }
+                fixture.main { ViewModelProvider(context.applicationContext as AuroraApplication)[PlayerViewModel::class.java].stopPlayback() }
                 field.set(container, original)
             }
         }

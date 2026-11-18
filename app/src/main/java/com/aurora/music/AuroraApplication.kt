@@ -10,7 +10,13 @@ import java.util.concurrent.ExecutionException
 import java.util.concurrent.FutureTask
 import kotlin.concurrent.thread
 
-class AuroraApplication : Application(), coil.ImageLoaderFactory {
+class AuroraApplication : Application(), coil.ImageLoaderFactory, androidx.lifecycle.ViewModelStoreOwner,
+    androidx.lifecycle.HasDefaultViewModelProviderFactory {
+    // the player view model outlives a swiped-away activity so background playback keeps its sleep timer, scrobbles and autoplay
+    override val viewModelStore = androidx.lifecycle.ViewModelStore()
+    override val defaultViewModelProviderFactory: androidx.lifecycle.ViewModelProvider.Factory
+        get() = androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.getInstance(this)
+
     private val built = FutureTask(Callable { AppContainer(this).also { it.aiDjMode } })
     @Volatile private var builder: Thread? = null
 

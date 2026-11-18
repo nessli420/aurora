@@ -163,7 +163,7 @@ fun AuroraApp() {
     val container = (context.applicationContext as AuroraApplication).container
 
     val navController = rememberNavController()
-    val playerVM: PlayerViewModel = viewModel()
+    val playerVM: PlayerViewModel = viewModel(viewModelStoreOwner = context.applicationContext as AuroraApplication)
     val activityOwner = checkNotNull(androidx.lifecycle.viewmodel.compose.LocalViewModelStoreOwner.current)
     val authVM: AuthViewModel = viewModel()
 

@@ -160,8 +160,12 @@ class PlaybackService : MediaLibraryService() {
 
         player.addListener(serviceListener(player))
 
+        // media3 1.5.1 has no default, so without this the notification and lock screen player had no tap target
+        val openPlayer = android.app.PendingIntent.getActivity(this, 0, com.aurora.music.AuroraActivity.openPlayer(this),
+            android.app.PendingIntent.FLAG_IMMUTABLE or android.app.PendingIntent.FLAG_UPDATE_CURRENT)
         mediaSession = MediaLibrarySession.Builder(this, player, sessionCallback)
             .setCustomLayout(buildCustomLayout())
+            .setSessionActivity(openPlayer)
             .build()
 
         djQueue.follow(player)
@@ -977,16 +981,9 @@ class PlaybackService : MediaLibraryService() {
         super.onUpdateNotification(session, startInForegroundRequired)
 
     override fun onTaskRemoved(rootIntent: android.content.Intent?) {
-        if (foreground.receiverForeground) return
-        container.aiDjMode.stop()
-        alarmLoadJob?.cancel()
-        alarmLoadJob = null
-        stopMix()
-        // swipe-away stops playback so music doesnt keep going
-        runCatching { fades.fadePlayer?.run { pause(); clearMediaItems() } }
-        player.pause()
-        player.stop()
-        player.clearMediaItems()
+        if (foreground.receiverForeground || alarmLoadJob?.isActive == true || playbackEngaged()) return
+        // idle like media3: the view model saves the queue and unbinds, so stopSelf can end the service
+        (application as AuroraApplication).viewModelStore.clear()
         stopSelf()
     }
 

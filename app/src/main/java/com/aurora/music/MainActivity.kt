@@ -10,7 +10,6 @@ import android.provider.MediaStore
 import androidx.appcompat.app.AppCompatActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.viewModels
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -28,7 +27,7 @@ import com.aurora.music.viewmodel.PlayerViewModel
 typealias MainActivity = AuroraActivity
 
 class AuroraActivity : AppCompatActivity() {
-    private val playerViewModel: PlayerViewModel by viewModels()
+    private val playerViewModel by lazy { androidx.lifecycle.ViewModelProvider(application as AuroraApplication)[PlayerViewModel::class.java] }
 
     override fun onStop() {
         super.onStop()
@@ -46,7 +45,7 @@ class AuroraActivity : AppCompatActivity() {
         requestedOrientation = if (largeDisplay) ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED else ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         com.aurora.music.localization.AppStrings.useConfiguration(resources.configuration)
         handleAuthRedirect(intent)
-        if (savedInstanceState == null) handleMediaSearch(intent)
+        if (savedInstanceState == null) { handleMediaSearch(intent); handleOpenPlayer(intent) }
         setContent {
             // first read is here, at first composition, so the container builds while the window comes up
             val uiPrefs by (application as AuroraApplication).container.uiPrefs.collectAsStateWithLifecycle()
@@ -68,6 +67,11 @@ class AuroraActivity : AppCompatActivity() {
         setIntent(intent)
         handleAuthRedirect(intent)
         handleMediaSearch(intent)
+        handleOpenPlayer(intent)
+    }
+
+    private fun handleOpenPlayer(intent: Intent?) {
+        if (intent?.action == ACTION_OPEN_PLAYER) playerViewModel.setExpanded(true)
     }
 
     override fun onConfigurationChanged(newConfig: Configuration) {
@@ -99,5 +103,11 @@ class AuroraActivity : AppCompatActivity() {
                 (application as AuroraApplication).container.emitSpotifyRedirect(it)
             }
         }
+    }
+
+    companion object {
+        const val ACTION_OPEN_PLAYER = "com.aurora.music.action.OPEN_PLAYER"
+
+        fun openPlayer(context: android.content.Context): Intent = Intent(context, AuroraActivity::class.java).setAction(ACTION_OPEN_PLAYER)
     }
 }

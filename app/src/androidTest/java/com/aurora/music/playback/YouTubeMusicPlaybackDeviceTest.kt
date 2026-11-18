@@ -183,10 +183,7 @@ class YouTubeMusicPlaybackDeviceTest {
         assertEquals(listOf("coT-TN5U1V8", "hBhxjVnLQbs"), tracks.map { com.aurora.music.data.stripMergeNamespace(it.id) })
         assertEquals(listOf("still love you (Slowed)", "still love you"), tracks.map { it.title })
         helper.withProcessingFixture(0) { controller, _ ->
-            val vm = helper.main {
-                val activity = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).first() as androidx.activity.ComponentActivity
-                androidx.lifecycle.ViewModelProvider(activity)[com.aurora.music.viewmodel.PlayerViewModel::class.java]
-            }
+            val vm = helper.main { androidx.lifecycle.ViewModelProvider(context.applicationContext as AuroraApplication)[com.aurora.music.viewmodel.PlayerViewModel::class.java] }
             helper.await("app player connected", controller) { helper.main { vm.videoPlayer != null } }
             for (index in tracks.indices) {
                 helper.main { vm.playCollection("album", albumId, tracks, index, tracks.size) }
