@@ -228,7 +228,7 @@ internal data class LibRow(
     val icon: ImageVector? = null,
 )
 
-private class TableColumn(val label: String, val weight: Float = 0f, val width: Dp = 0.dp)
+internal class TableColumn(val label: String, val weight: Float = 0f, val width: Dp = 0.dp)
 
 internal class LibActions(
     val onOpenLiked: (String) -> Unit,
@@ -300,6 +300,7 @@ fun LibraryScreen(
     selectedItem: String? = null,
     folderEdits: FolderEdits? = null,
     onSignIn: () -> Unit = {},
+    sourceLabel: String = "",
 ) {
     val gutter = LocalPageGutter.current
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -310,8 +311,12 @@ fun LibraryScreen(
     var showCreate by remember { mutableStateOf(false) }
     val tabPrefs = LocalUiPrefs.current.libraryTabs
     val visibleTabs = tabPrefs.visible.filter { canDownload || it != LibraryFilter.DOWNLOADED }.ifEmpty { listOf(LibraryFilter.ALL) }
-    // a hidden tab never stays on screen
-    val filter = state.filter.takeIf { it in visibleTabs } ?: visibleTabs.first()
+    val pageLayout = LocalUiPrefs.current.pageLayout
+    val console = pageLayout == com.aurora.music.data.PageLayout.CONSOLE
+    // console's pane of tabs needs the room classic's labelled tabs do
+    val browser = console && !compact
+    // a hidden tab never stays on screen; console's hub is the all tab, so that one always can
+    val filter = state.filter.takeIf { it in visibleTabs || console && it == LibraryFilter.ALL } ?: if (console) LibraryFilter.ALL else visibleTabs.first()
     val sort = state.sort
     val layout = state.layout
     val cardMin = cardMinWidth(LocalUiPrefs.current.libraryColumns, compact)
@@ -320,6 +325,8 @@ fun LibraryScreen(
     // a folder deleted or moved away meanwhile drops back to the top
     val folder = openFolder?.let { tree?.find(it) }.takeIf { filter == LibraryFilter.PLAYLISTS }
     var prompt by remember { mutableStateOf<FolderPrompt?>(null) }
+    // registered before the folder handler, so back leaves an open folder first
+    androidx.compose.ui.backhandler.BackHandler(enabled = console && compact && filter != LibraryFilter.ALL && selectedItem == null) { onFilter(LibraryFilter.ALL) }
     androidx.compose.ui.backhandler.BackHandler(enabled = folder != null) { openFolder = tree?.parentOf(folder?.id.orEmpty())?.id?.ifEmpty { null } }
     val actions = remember(likedIds, onPlayCollection, onShuffleCollection, onQueueCollection, onToggleLikeKind,
         onDeletePlaylist, onEditSmart, onDeleteSmart, onExportPlaylist, tree) {
@@ -349,17 +356,21 @@ fun LibraryScreen(
         }
     }
 
-    Column(Modifier.fillMaxSize()) {
+    val consoleTiles = { collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail) }
+    LibraryConsoleFrame(browser, contentPadding, side = { modifier ->
+        LibraryConsoleSide(state, sourceLabel, filter, visibleTabs, consoleTiles(), actions, modifier, onFilter, onSelectView, open, onOpenMix)
+    }) {
         val stats = if (compact) null else buildList {
             if (state.playlists.isNotEmpty() || state.smartPlaylists.isNotEmpty()) add(appPlural(R.plurals.playlist_count, (state.playlists.size + state.smartPlaylists.size)))
             if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
             if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
         }.joinToString("  ·  ")
-        val pageLayout = LocalUiPrefs.current.pageLayout
         // each page layout brings its own header and tab control
         when (pageLayout) {
             com.aurora.music.data.PageLayout.SPOTLIGHT -> LibrarySpotlightHeader(state, stats, paneWidth, compact, filter, sort, layout, canDownload, tabPrefs, visibleTabs,
                 onFilter, onSort, onToggleLayout, onTabs, onSelectView, onOpenSearch, onOpenMix, onCreate = { showCreate = true })
+            com.aurora.music.data.PageLayout.CONSOLE -> LibraryConsoleHeader(state, sourceLabel, browser, paneWidth >= 1000.dp, filter, sort, layout, canDownload, tabPrefs,
+                onFilter, onSort, onToggleLayout, onTabs, onSelectView, onOpenSearch, onCreate = { showCreate = true })
             else -> {
                 PageHeader(
                     appString(R.string.text_library_b8100f),
@@ -386,13 +397,13 @@ fun LibraryScreen(
             )
         }
 
-        val bottom = contentPadding.calculateBottomPadding() + 24.dp
+        val bottom = if (browser) 12.dp else contentPadding.calculateBottomPadding() + 24.dp
 
         if (state.loading && state.albums.isEmpty() && state.playlists.isEmpty() && state.songs.isEmpty()) {
             Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                 com.aurora.music.ui.components.LottieLoader(modifier = Modifier.size(72.dp))
             }
-            return@Column
+            return@LibraryConsoleFrame
         }
 
         when (filter) {
@@ -403,6 +414,11 @@ fun LibraryScreen(
                     tree = tree.takeIf { LibraryFilter.PLAYLISTS in visibleTabs },
                     tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
                     onOpen = { row -> open(row); if (row.kind == "folder") onFilter(LibraryFilter.PLAYLISTS) }, onSignIn = onSignIn,
+                )
+                com.aurora.music.data.PageLayout.CONSOLE -> LibraryConsoleAll(
+                    state = state, pins = pins, browser = browser, bottom = bottom, tabs = visibleTabs, actions = actions,
+                    tree = tree.takeIf { LibraryFilter.PLAYLISTS in visibleTabs }, tiles = consoleTiles(), onFilter = onFilter,
+                    onOpen = { row -> open(row); if (row.kind == "folder") onFilter(LibraryFilter.PLAYLISTS) }, onOpenMix = onOpenMix, onSignIn = onSignIn,
                 )
                 else -> AllOverview(
                     state = state, pins = pins, canDownload = canDownload, compact = compact, bottom = bottom, cardMin = cardMin, actions = actions,
@@ -1342,7 +1358,7 @@ private fun Badge(text: String, modifier: Modifier = Modifier, small: Boolean = 
 }
 
 @Composable
-private fun LibListItem(row: LibRow, columns: List<TableColumn>, actions: LibActions, onClick: () -> Unit) {
+internal fun LibListItem(row: LibRow, columns: List<TableColumn>, actions: LibActions, onClick: () -> Unit) {
     var contextAt by remember { mutableStateOf<Offset?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }

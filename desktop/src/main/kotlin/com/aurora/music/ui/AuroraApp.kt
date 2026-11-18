@@ -1180,6 +1180,9 @@ private fun Shell(
                                     onSelectFeed = homeVM::selectFeed,
                                     onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                                     onAddSource = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
+                                    sourceLabel = session?.typeLabel?.localizedMediaType().orEmpty(),
+                                    onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) { launchSingleTop = true } },
+                                    onOpenStats = { navController.navigate(Routes.STATS) { launchSingleTop = true } },
                                     onPlayCollection = { kind, id, shuffle ->
                                         scope.launch {
                                             repository.detail(kind, id)?.let { d ->
@@ -1394,6 +1397,7 @@ private fun Shell(
                                                     }
                                                 },
                                                 selectedItem = if (split) librarySelection else null,
+                                                sourceLabel = session?.typeLabel?.localizedMediaType().orEmpty(),
                                                 onSignIn = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
                                                 folderEdits = remember(libraryVM) {
                                                     com.aurora.music.ui.screens.library.FolderEdits(libraryVM::createFolder, libraryVM::renameFolder, libraryVM::deleteFolder, libraryVM::moveToFolder)

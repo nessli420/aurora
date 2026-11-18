@@ -139,7 +139,7 @@ private val TileHeight = 72.dp
 private val TileGap = 12.dp
 private val TileMinWidth = 230.dp
 
-private class Hero(val kind: String, val id: String, val label: String, val title: String, val subtitle: String, val art: String, val accent: Color)
+internal class Hero(val kind: String, val id: String, val label: String, val title: String, val subtitle: String, val meta: String, val art: String, val accent: Color)
 
 @Composable
 internal fun HomeSpotlight(
@@ -282,7 +282,7 @@ internal fun HomeSpotlight(
     }
 }
 
-private fun heroesOf(data: HomeData): List<Hero> {
+internal fun heroesOf(data: HomeData): List<Hero> {
     if (data.newReleases.isNotEmpty()) {
         val label = appString(R.string.text_new_release_f0ec22)
         return data.newReleases.take(HeroCount).map { it.hero(label) }
@@ -293,15 +293,14 @@ private fun heroesOf(data: HomeData): List<Hero> {
         when (item) {
             is HomeFeedItem.Record -> item.album.hero(label)
             is HomeFeedItem.Collection -> item.playlist.let {
-                Hero("playlist", it.id, label, it.title, listOfNotNull(it.subtitle.ifBlank { null }, it.songCount.takeIf { n -> n > 0 }?.let { n -> appPlural(R.plurals.track_count, n) }).joinToString(" · "),
-                    it.coverUrl, it.accent)
+                Hero("playlist", it.id, label, it.title, it.subtitle, it.songCount.takeIf { n -> n > 0 }?.let { n -> appPlural(R.plurals.track_count, n) }.orEmpty(), it.coverUrl, it.accent)
             }
             else -> null
         }
     })
 }
 
-private fun Album.hero(label: String) = Hero("album", id, label, title, listOf(artist, meta()).filter { it.isNotBlank() }.joinToString(" · "), artworkUrl, accentFor(id))
+private fun Album.hero(label: String) = Hero("album", id, label, title, artist, meta(), artworkUrl, accentFor(id))
 
 private fun Album.meta(): String =
     listOfNotNull(year.takeIf { it > 0 }?.toString(), songCount.takeIf { it > 0 }?.let { appPlural(R.plurals.track_count, it) }).joinToString(" · ")
@@ -456,7 +455,7 @@ private fun HeroBlock(heroes: List<Hero>, width: Dp, scale: Float, modifier: Mod
                     Spacer(Modifier.height(10.dp))
                     Text(hero.title, style = title, fontWeight = FontWeight.Black, maxLines = 2, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(10.dp))
-                    Text(hero.subtitle, style = type.titleLarge, fontWeight = FontWeight.Normal, color = soft, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    Text(listOf(hero.subtitle, hero.meta).filter { it.isNotBlank() }.joinToString(" · "), style = type.titleLarge, fontWeight = FontWeight.Normal, color = soft, maxLines = 1, overflow = TextOverflow.Ellipsis)
                     Spacer(Modifier.height(24.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(10.dp), verticalAlignment = Alignment.CenterVertically) {
                         // the pill's own ink is what its hover shade is drawn in

@@ -138,6 +138,7 @@ fun PageHeader(
     modifier: Modifier = Modifier,
     subtitle: String? = null,
     onBack: (() -> Unit)? = null,
+    eyebrow: String? = null,
     actions: @Composable RowScope.() -> Unit = {},
 ) {
     Row(
@@ -158,6 +159,7 @@ fun PageHeader(
             Spacer(Modifier.width(12.dp))
         }
         Column(Modifier.weight(1f)) {
+            if (!eyebrow.isNullOrBlank()) Eyebrow(eyebrow.uppercase(java.util.Locale.getDefault()), MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
             Text(
                 title,
                 style = MaterialTheme.typography.headlineMedium,
@@ -259,7 +261,7 @@ fun PageSection(
 }
 
 @Composable
-fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
+fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier, maxLines: Int = Int.MAX_VALUE) {
     // paper's eyebrows are the site's mono labels: regular weight, no extra tracking
     val paper = com.aurora.music.ui.theme.isPaperTheme()
     Text(
@@ -268,6 +270,8 @@ fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
         fontWeight = if (paper) FontWeight.Normal else FontWeight.Black,
         color = color,
         letterSpacing = if (paper) MaterialTheme.typography.labelSmall.letterSpacing else 1.5.sp,
+        maxLines = maxLines,
+        overflow = if (maxLines == Int.MAX_VALUE) TextOverflow.Clip else TextOverflow.Ellipsis,
         modifier = modifier,
     )
 }
