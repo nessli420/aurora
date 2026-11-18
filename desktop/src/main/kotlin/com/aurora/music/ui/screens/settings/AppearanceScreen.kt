@@ -320,7 +320,13 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
             }
 
             item { SettingsSectionTitle(appString(R.string.text_home_sections_1f24fb)) }
-            val homeSections = listOf(
+            val mixSections = listOf(HomeSection.MIXES to appString(R.string.foryou_title)) + if (HomeSection.MIXES in prefs.hiddenHomeSections) emptyList() else listOf(
+                HomeSection.MIX_TIME to appString(R.string.foryou_setting_time),
+                HomeSection.MIX_DAILY to appString(R.string.foryou_setting_daily),
+                HomeSection.MIX_RECOMMENDED to appString(R.string.foryou_recommended),
+                HomeSection.MIX_DISCOVER to appString(R.string.foryou_discover),
+            )
+            val homeSections = mixSections + listOf(
                 HomeSection.HERO to appString(R.string.text_new_release_hero_c354b3),
                 HomeSection.RECENT to appString(R.string.text_jump_back_in_1d9181),
                 HomeSection.PLAYLISTS to appString(R.string.text_your_playlists_df03eb),

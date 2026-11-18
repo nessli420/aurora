@@ -332,7 +332,8 @@ private fun Shell(
     val snackbarHostState = remember { SnackbarHostState() }
     val connect = com.aurora.music.desktop.connect.LocalConnect.current
     LaunchedEffect(container, player, connect) {
-        merge(container.sourceErrors, player.messages, connect?.messages ?: kotlinx.coroutines.flow.emptyFlow()).collect { message ->
+        val mixSaves = container.madeForYou.saved.map { appString(if (it) R.string.foryou_saved else R.string.foryou_removed) }
+        merge(container.sourceErrors, player.messages, mixSaves, connect?.messages ?: kotlinx.coroutines.flow.emptyFlow()).collect { message ->
             if (snackbarHostState.currentSnackbarData == null) snackbarHostState.showSnackbar(message)
         }
     }
@@ -737,7 +738,7 @@ private fun Shell(
                 onToggleHidden = if (kind == "playlist") ({ song -> container.trackChoices.setHidden(kind, id, song.id, !container.trackChoices.isHidden(kind, id, song.id)) }) else null,
                 isItemLiked = playerState.likedIds.contains(id),
                 onToggleItemLike = { player.toggleLike(id, kind) },
-                canLikeItem = container.repository.canLike(id),
+                canLikeItem = kind == com.aurora.music.foryou.MIX_KIND || container.repository.canLike(id),
                 downloadedIds = downloadedIds,
                 onDownload = onDownload,
                 onRemoveDownload = onRemoveDownload,
@@ -1162,7 +1163,9 @@ private fun Shell(
                             composable(Routes.HOME) {
                                 val homeVM = viewModel(viewModelStoreOwner = rootOwner) { HomeViewModel(container) }
                                 val homeState by homeVM.state.collectAsStateWithLifecycle()
+                                val mixes by container.madeForYou.mixes.collectAsStateWithLifecycle()
                                 HomeScreen(
+                                    mixes = mixes,
                                     contentPadding = inner,
                                     state = homeState,
                                     username = profileAppearance.name,

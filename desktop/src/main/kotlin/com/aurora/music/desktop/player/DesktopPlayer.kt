@@ -89,6 +89,7 @@ data class PlayerDependencies(
     val aiDjEars: com.aurora.music.ai.DjEars? = null,
     // a song the listener moved to a source by hand plays from that source, not a local copy
     val pin: (String) -> Unit = {},
+    val toggleMixLike: suspend (String) -> Boolean? = { null },
 )
 
 fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependencies(
@@ -109,6 +110,7 @@ fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependenci
     visualizer = visualizer,
     artwork = { url -> artworkBytes(url, http, artworkRepository) },
     listeningDetails = { play -> listeningDetails.save(play) },
+    toggleMixLike = { madeForYou.toggleLike(it) },
     platform = com.aurora.music.desktop.platform.HostPlatform.name.lowercase(java.util.Locale.ROOT),
     nowPlaying = { song, playing, position -> discord.update(song, playing, position) },
     location = placesStore::sample,
@@ -188,7 +190,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private var resumeDurationSec = 0
     private var resumeSavedAt = 0L
     private var privateSession = false
-    private val likes = com.aurora.music.data.Likes(scope, deps.repository, deps.settingsStore::setPlaylistLiked)
+    private val likes = com.aurora.music.data.Likes(scope, deps.repository, deps.toggleMixLike, deps.settingsStore::setPlaylistLiked)
     private var lastRecordedId: String? = null
     private var lastNowPlayingId: String? = null
     // account the live queue belongs to so it persists/restores under the right key

@@ -21,6 +21,7 @@ internal object SettingsSearchIndex {
         e(R.string.tablet_favourites_size, null, Routes.SETTINGS_APPEARANCE),
         e(R.string.tablet_player_split, null, Routes.SETTINGS_APPEARANCE),
         e(R.string.tablet_hero_size, null, Routes.SETTINGS_APPEARANCE),
+        e(R.string.foryou_title, R.string.foryou_setting_daily, Routes.SETTINGS_APPEARANCE),
         e(R.string.tablet_nav_gap, null, Routes.SETTINGS_APPEARANCE),
         e(R.string.tablet_page_margins, null, Routes.SETTINGS_APPEARANCE),
         e(R.string.text_brightness_e1a2b6, null, Routes.SETTINGS_APPEARANCE),

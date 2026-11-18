@@ -14,6 +14,7 @@ fun String.localizedMediaType(): String = when (lowercase(Locale.ROOT)) {
     "playlist" -> appString(R.string.text_playlist_cd95b4)
     "smart playlist", "smart" -> appString(R.string.text_smart_playlist_f77ad7)
     "liked" -> appString(R.string.text_liked_songs_58c3a9)
+    "made for you" -> appString(R.string.foryou_title)
     "artist" -> appString(R.string.text_artist_6c3f3d)
     "song", "track" -> appString(R.string.text_track_b1c5a7)
     else -> this

@@ -1,6 +1,7 @@
 package com.aurora.music.ui.screens.home
 
 import com.aurora.music.localization.appString
+import com.aurora.music.localization.asPlaylist
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.paperFrame
 import com.aurora.music.ui.theme.isPaperTheme
@@ -131,6 +132,7 @@ fun HomeScreen(
     onSelectFeed: (String) -> Unit = {},
     onOpenNotifications: () -> Unit = {},
     onAddSource: () -> Unit = {},
+    mixes: List<com.aurora.music.foryou.GeneratedMix> = emptyList(),
 ) {
     val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current
     val data = androidx.compose.runtime.remember(state.data, hiddenSongs) { state.data.copy(starred = hiddenSongs.visible(state.data.starred)) }
@@ -158,6 +160,17 @@ fun HomeScreen(
             item(key = "feeds") {
                 com.aurora.music.ui.components.ChoiceTabs(state.feeds.map { Triple(it.id, it.label, com.aurora.music.ui.components.feedIcon(it.id)) },
                     state.selectedFeed, onSelectFeed)
+            }
+        }
+
+        if (mixes.isNotEmpty() && state.selectedFeed == "library") {
+            item(key = "mixes") {
+                val tiles = androidx.compose.runtime.remember(mixes) { mixes.map { it.asPlaylist() } }
+                PageSection(appString(R.string.foryou_title)) {
+                    AdaptiveShelf(tiles, bleed = gutter) { playlist, width ->
+                        PlaylistCard(playlist, onClick = { onOpenDetail(com.aurora.music.foryou.MIX_KIND, playlist.id) }, width = width)
+                    }
+                }
             }
         }
 

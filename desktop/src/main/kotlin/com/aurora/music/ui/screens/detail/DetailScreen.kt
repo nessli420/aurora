@@ -292,7 +292,7 @@ fun DetailScreen(
             if (sortKey != null) com.aurora.music.ui.components.TrackSortButton(sortOrder, accent, enabled = tracks.size > 1) { choice ->
                 sortScope.launch { sortStore.setTrackSort(sortKey, sortOrder.pick(choice)) }
             }
-            if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist")) {
+            if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist" || itemKind == com.aurora.music.foryou.MIX_KIND)) {
                 val likeTint by animateColorAsState(if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "like")
                 HeaderIcon(
                     if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
@@ -331,7 +331,8 @@ fun DetailScreen(
                     DropdownMenuItem(text = { Text(appString(if (blocked) R.string.unblock_artist else R.string.block_artist)) },
                         onClick = { headerMenu = false; block(info.title, !blocked) }, leadingIcon = { Icon(Icons.Filled.Block, null) })
                 }
-                DropdownMenuItem(
+                // a generated mix lives on home only
+                if (itemKind != com.aurora.music.foryou.MIX_KIND) DropdownMenuItem(
                     text = { Text(appString(if (isPinned) R.string.text_unpin_from_library_5b3f2e else R.string.text_pin_to_library_7b01e2)) },
                     onClick = { headerMenu = false; onTogglePin() },
                     leadingIcon = { Icon(if (isPinned) Icons.Filled.PushPin else Icons.Outlined.PushPin, null) },
@@ -396,7 +397,7 @@ fun DetailScreen(
     val columnGap = 32.dp
     val popularWidth = (contentWidth - columnGap) * 0.6f
 
-    val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true)
+    val isSongMix = info.typeLabel.equals("Playlist", true) || info.typeLabel.equals("Smart playlist", true) || info.typeLabel.equals("Liked", true) || itemKind == com.aurora.music.foryou.MIX_KIND
     val genres = remember(tracks, isSongMix) {
         if (isSongMix) tracks.flatMap { com.aurora.music.data.GenreText.split(it.genre) }.distinctBy { it.lowercase() }.sortedBy { it.lowercase() } else emptyList()
     }

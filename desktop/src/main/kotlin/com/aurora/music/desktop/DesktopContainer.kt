@@ -48,6 +48,7 @@ import com.aurora.music.desktop.platform.preferencesStore
 import com.aurora.music.desktop.platform.protectedPreferencesStore
 import com.aurora.music.localization.AppStrings
 import com.aurora.music.localization.appString
+import com.aurora.music.localization.mixName
 import com.aurora.music.model.Song
 import com.aurora.music.playback.VisualizerController
 import kotlinx.coroutines.CoroutineScope
@@ -351,7 +352,21 @@ class DesktopContainer(
         likeSourcesProvider = { likeAccounts.of(backend, settingsStore.savedSessions.first()) },
         trackChoices = trackChoices,
         hiddenSongs = { hiddenSongs.value },
+        mixes = { madeForYou.detail(it) },
     )
+
+    val madeForYou by lazy {
+        com.aurora.music.foryou.MadeForYou(repository, playHistory, java.io.File(paths.local, "made-for-you.json"),
+            { currentAccountKey() }, settingsStore.uiPrefs.map { com.aurora.music.foryou.mixKinds(it.hiddenHomeSections) },
+            settingsStore.mixSnapshots, { id, playlist -> settingsStore.setMixLiked(id, playlist) }, { settingsStore.keepMixLikes(it) },
+            { it.mixName() }, { sonicStore.snapshot() }, ::detailedSkips)
+    }
+
+    private suspend fun detailedSkips(since: Long): Map<String, Int> {
+        if (!settingsStore.insightsPrefs.first().enabled) return emptyMap()
+        return listeningDetails.plays(since, System.currentTimeMillis()).filter { it.ending == com.aurora.music.data.PlayEnding.SKIPPED }
+            .groupingBy { com.aurora.music.foryou.mixTrackKey(it.track.artist, it.track.title) }.eachCount()
+    }
 
     private val likeAccounts = com.aurora.music.data.LikeAccounts { if (AccountAuthenticator.supports(it)) backends.build(it) else null }
 
@@ -376,7 +391,7 @@ class DesktopContainer(
     // the downloaded or on-device copy of a song, when it should play instead of the stream
     fun localCopy(song: Song): Song? = sourceLocalizer.localize(song).takeIf { it.streamUrl != song.streamUrl }
 
-    private fun forgetAiDjLibrary() { if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary() }
+    private fun forgetAiDjLibrary() { if (aiDjDelegate.isInitialized()) aiDj.forgetLibrary(); madeForYou.invalidate() }
 
     private fun recomputeOffline() {
         // local-files mode never needs the network so it's never offline
@@ -389,7 +404,10 @@ class DesktopContainer(
         sonicEngine.cancel()
         withContext(Dispatchers.IO) { sonicStore.selectAccount(session?.accountKey().orEmpty()) }
         if (session != null && settingsStore.sonicAutoAnalyze.first()) sonicEngine.scan()
+        madeForYou.recheck()
     }
+
+    init { scope.launch { offline.drop(1).collect { madeForYou.recheck() } } }
 
     init {
         scope.launch {

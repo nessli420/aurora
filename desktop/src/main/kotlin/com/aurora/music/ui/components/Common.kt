@@ -119,7 +119,8 @@ fun Artwork(
     ) {
         // the box already paints the placeholder, and a subcomposition per cover is what makes grids scroll heavily
         val context = LocalPlatformContext.current
-        AsyncImage(
+        if (url.startsWith(com.aurora.music.foryou.MIX_COVER_PREFIX)) MixCover(url.removePrefix(com.aurora.music.foryou.MIX_COVER_PREFIX), accent, Modifier.fillMaxSize())
+        else AsyncImage(
             model = remember(url, context) { ImageRequest.Builder(context).data(url).crossfade(MotionTokens.STANDARD).build() },
             contentDescription = null,
             contentScale = contentScale,
