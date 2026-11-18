@@ -42,7 +42,7 @@ class NowPlayingSurfacesTest {
         val seeks = mutableListOf<Float>()
         PlayerScene("lyrics-full", 1440, 900) {
             LyricsScreen(PlayerFixtures.playing, onClose = { events += "close" }, onTogglePlay = { events += "play" },
-                onPrevious = {}, onNext = {}, onSeek = { seeks += it }, loadLyrics = { PlayerFixtures.lyrics })
+                onPrevious = {}, onNext = {}, onSeek = { seeks += it }, loadLyrics = { PlayerFixtures.lyrics }, loadMeanings = { null })
         }.use { scene ->
             val image = scene.shot(realMillis = 60)
             assertTrue(image.distinctColors(6) > 40)

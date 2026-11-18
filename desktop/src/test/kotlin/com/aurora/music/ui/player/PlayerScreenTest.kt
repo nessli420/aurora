@@ -68,7 +68,7 @@ class PlayerScreenTest {
                 paneContent = { pane, modifier ->
                     when (pane) {
                         PlayerPane.LYRICS -> LyricsPane(state, onSeek = { rec.events += "lyric-seek" },
-                            modifier = modifier.clip(RoundedCornerShape(20.dp)), loadLyrics = { lyrics })
+                            modifier = modifier.clip(RoundedCornerShape(20.dp)), loadLyrics = { lyrics }, loadMeanings = { null })
                         PlayerPane.QUEUE -> QueueContent(
                             queue = state.queue, currentIndex = state.currentIndex, isPlaying = state.isPlaying,
                             onJump = { rec.events += "jump:$it" }, onRemove = { rec.events += "remove:$it" },
