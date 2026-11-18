@@ -3,5 +3,6 @@
     <string name="layout_title">"Indeling"</string>
     <string name="layout_classic">"Klassiek"</string>
     <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_console">"Console"</string>
     <string name="layout_hint">"Hoe Home en Bibliotheek zijn ingedeeld. Klassiek is de oorspronkelijke indeling."</string>
 </resources>

@@ -3,5 +3,6 @@
     <string name="layout_title">"Düzen"</string>
     <string name="layout_classic">"Klasik"</string>
     <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_console">"Konsol"</string>
     <string name="layout_hint">"Ana Sayfa ve Kitaplığın nasıl düzenlendiği. Klasik, özgün düzendir."</string>
 </resources>

@@ -3,5 +3,6 @@
     <string name="layout_title">"Layout"</string>
     <string name="layout_classic">"Klassisch"</string>
     <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_console">"Konsole"</string>
     <string name="layout_hint">"Wie Start und Bibliothek angeordnet sind. Klassisch ist das Original."</string>
 </resources>

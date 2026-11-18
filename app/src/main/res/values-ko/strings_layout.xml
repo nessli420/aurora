@@ -3,5 +3,6 @@
     <string name="layout_title">"레이아웃"</string>
     <string name="layout_classic">"클래식"</string>
     <string name="layout_spotlight">"스포트라이트"</string>
+    <string name="layout_console">"콘솔"</string>
     <string name="layout_hint">"홈과 라이브러리의 배치 방식입니다. 클래식은 기존 레이아웃입니다."</string>
 </resources>

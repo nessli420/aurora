@@ -161,7 +161,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
 
             item { SettingsSectionTitle(appString(R.string.text_display_574ff9)) }
             item {
-                SegmentedRow(appString(R.string.layout_title), listOf(appString(R.string.layout_classic), appString(R.string.layout_spotlight)), prefs.pageLayout) { i ->
+                SegmentedRow(appString(R.string.layout_title), listOf(appString(R.string.layout_classic), appString(R.string.layout_spotlight), appString(R.string.layout_console)), prefs.pageLayout) { i ->
                     scope.launch { store.setPageLayout(i) }
                 }
             }

@@ -63,7 +63,7 @@ class SettingsStoreFlowsTest {
         store.setPageLayout(PageLayout.SPOTLIGHT)
         assertEquals(PageLayout.SPOTLIGHT, store.uiPrefs.first().pageLayout)
         store.setPageLayout(99)
-        assertEquals(PageLayout.SPOTLIGHT, store.uiPrefs.first().pageLayout)
+        assertEquals(PageLayout.CONSOLE, store.uiPrefs.first().pageLayout)
     }
 
     @Test fun savedSessionsKeepTheValidityFilter() = runBlocking {

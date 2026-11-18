@@ -58,7 +58,7 @@ internal class AppearanceSettingsStore(private val dataStore: DataStore<Preferen
         UiPrefs(
             themeMode = p[Keys.UI_THEME_MODE] ?: ThemeMode.DARK,
             themeStyle = (p[Keys.UI_THEME_STYLE] ?: ThemeStyle.AURORA).coerceIn(ThemeStyle.AURORA, ThemeStyle.PAPER),
-            pageLayout = (p[Keys.UI_PAGE_LAYOUT] ?: PageLayout.CLASSIC).coerceIn(PageLayout.CLASSIC, PageLayout.SPOTLIGHT),
+            pageLayout = (p[Keys.UI_PAGE_LAYOUT] ?: PageLayout.CLASSIC).coerceIn(PageLayout.CLASSIC, PageLayout.CONSOLE),
             accentMode = p[Keys.UI_ACCENT_MODE] ?: AccentMode.PRESET,
             accentPreset = p[Keys.UI_ACCENT_PRESET] ?: 0,
             accentColor = p[Keys.UI_ACCENT_COLOR] ?: 0xFFFF2E7EL,
@@ -142,7 +142,7 @@ internal class AppearanceSettingsStore(private val dataStore: DataStore<Preferen
 
     override suspend fun setThemeMode(v: Int) = dataStore.edit { it[Keys.UI_THEME_MODE] = v }
     override suspend fun setThemeStyle(v: Int) = dataStore.edit { it[Keys.UI_THEME_STYLE] = v.coerceIn(ThemeStyle.AURORA, ThemeStyle.PAPER) }
-    override suspend fun setPageLayout(v: Int) = dataStore.edit { it[Keys.UI_PAGE_LAYOUT] = v.coerceIn(PageLayout.CLASSIC, PageLayout.SPOTLIGHT) }
+    override suspend fun setPageLayout(v: Int) = dataStore.edit { it[Keys.UI_PAGE_LAYOUT] = v.coerceIn(PageLayout.CLASSIC, PageLayout.CONSOLE) }
     override suspend fun setAccentMode(v: Int) = dataStore.edit { it[Keys.UI_ACCENT_MODE] = v }
     override suspend fun setAccentPreset(v: Int) = dataStore.edit { it[Keys.UI_ACCENT_PRESET] = v }
     override suspend fun setAccentColor(v: Long) = dataStore.edit { it[Keys.UI_ACCENT_COLOR] = v }

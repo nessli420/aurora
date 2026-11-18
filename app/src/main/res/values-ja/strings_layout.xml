@@ -3,5 +3,6 @@
     <string name="layout_title">"レイアウト"</string>
     <string name="layout_classic">"クラシック"</string>
     <string name="layout_spotlight">"スポットライト"</string>
+    <string name="layout_console">"コンソール"</string>
     <string name="layout_hint">"ホームとライブラリの配置です。クラシックは従来のレイアウトです。"</string>
 </resources>

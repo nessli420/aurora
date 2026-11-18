@@ -3,5 +3,6 @@
     <string name="layout_title">"Układ"</string>
     <string name="layout_classic">"Klasyczny"</string>
     <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_console">"Konsola"</string>
     <string name="layout_hint">"Sposób ułożenia ekranu głównego i biblioteki. Klasyczny to układ pierwotny."</string>
 </resources>

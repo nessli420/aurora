@@ -3,5 +3,6 @@
     <string name="layout_title">"布局"</string>
     <string name="layout_classic">"经典"</string>
     <string name="layout_spotlight">"聚光"</string>
+    <string name="layout_console">"控制台"</string>
     <string name="layout_hint">"首页和音乐库的排列方式。经典为原始布局。"</string>
 </resources>
