@@ -53,6 +53,7 @@ fun mixKinds(hiddenHomeSections: Set<String>): Set<MixKind> = if (HomeSection.MI
     if (HomeSection.MIX_DAILY !in hiddenHomeSections) add(MixKind.DAILY)
     if (HomeSection.MIX_RECOMMENDED !in hiddenHomeSections) add(MixKind.RECOMMENDED)
     if (HomeSection.MIX_DISCOVER !in hiddenHomeSections) add(MixKind.DISCOVER)
+    if (HomeSection.MIX_STATIONS !in hiddenHomeSections) add(MixKind.STATION)
 }
 
 class MadeForYou(
@@ -198,7 +199,9 @@ class MadeForYou(
         val started = System.currentTimeMillis()
         val input = try { gather(kinds, clock, current?.shown.orEmpty()) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (input == null) { attempted = attempt to now(); return@withLock }
-        val built = pictured(withContext(Dispatchers.Default) { MixBuilder.build(input) })
+        val prepared = withContext(Dispatchers.Default) { MixBuilder.prepare(input) }
+        val stations = stations(prepared.stationArtists)
+        val built = pictured(withContext(Dispatchers.Default) { prepared.build(stations) })
         if (key != key()) return@withLock
         val next = Cache(key, clock.day, kinds, built, remember(current?.shown.orEmpty(), built, clock.day))
         cache = next
@@ -209,11 +212,30 @@ class MadeForYou(
         AppLog.d("Mixes", "built ${built.joinToString { "${it.slot}=${it.songs.size}" }} from ${input.known.size} known, ${input.candidates.size} candidates, ${input.vectors.size} analyzed in ${System.currentTimeMillis() - started}ms")
     }
 
-    // each mix on the row shows a different artist where it can; only one time-of-day mix is there at once
+    private suspend fun stations(seeds: List<StationSeed>): List<Station> = coroutineScope {
+        if (seeds.isEmpty() || repository.isOffline) return@coroutineScope emptyList()
+        val views = repository.searchSources.map { it.id }
+        val gate = Semaphore(6)
+        seeds.map { seed ->
+            async {
+                val wanted = mixArtistKey(seed.artist)
+                val found = (if (views.isEmpty()) listOf(async { gate.withPermit { quietly(8_000, emptyList()) { repository.search(seed.artist).songs } } })
+                    else views.map { view -> async { gate.withPermit { quietly(8_000, emptyList()) { repository.search(seed.artist, view).songs } } } })
+                    .awaitAll().map { songs -> songs.take(25).filter { creditNames(it.artist, wanted) } }
+                // one song per source starts that source's radio; the library's own copy speaks for wherever it lives
+                val starts = (listOfNotNull(seed.songs.firstOrNull()) + found.mapNotNull { it.firstOrNull() }).distinctBy { it.id }.take(4)
+                val related = starts.map { s -> async { gate.withPermit { quietly(8_000, emptyList()) { repository.radio(s.id) } }.take(30) } }.awaitAll().flatten()
+                Station(seed.artist, found.flatten(), related)
+            }
+        }.awaitAll()
+    }
+
+    // a station shows its own artist; the other tiles on the row then each take a different one, and only one time-of-day mix is there at once
     private suspend fun pictured(mixes: List<GeneratedMix>): List<GeneratedMix> = coroutineScope {
         val used = HashSet<String>()
         fun faces(mix: GeneratedMix) = mix.artists.mapNotNull { name -> mix.songs.firstOrNull { djPrimaryArtist(it.artist) == name } }
-        val chosen = mixes.filter { it.part == null }.associate { mix -> mix.slot to faces(mix).let { f -> f.firstOrNull { used.add(mixArtistKey(it.artist)) } ?: f.firstOrNull() } } +
+        val chosen = mixes.filter { it.kind == MixKind.STATION }.associate { mix -> mix.slot to faces(mix).firstOrNull()?.also { used += mixArtistKey(it.artist) } } +
+            mixes.filter { it.part == null && it.kind != MixKind.STATION }.associate { mix -> mix.slot to faces(mix).let { f -> f.firstOrNull { used.add(mixArtistKey(it.artist)) } ?: f.firstOrNull() } } +
             mixes.filter { it.part != null }.associate { mix -> mix.slot to faces(mix).let { f -> f.firstOrNull { mixArtistKey(it.artist) !in used } ?: f.firstOrNull() } }
         mixes.map { mix ->
             async {
@@ -232,6 +254,8 @@ class MadeForYou(
             val kept = keys.filterValues { day - it <= SHOWN_DAYS }.entries.sortedByDescending { it.value }.take(SHOWN_CAP)
             if (kept.isNotEmpty()) out[slot] = kept.associate { it.key to it.value }
         }
+        val stationed = old[MixBuilder.STATION_ARTISTS].orEmpty() + built.filter { it.kind == MixKind.STATION }.mapNotNull { it.artists.firstOrNull() }.associate { mixArtistKey(it) to day }
+        stationed.filterValues { day - it <= SHOWN_DAYS }.takeIf { it.isNotEmpty() }?.let { out[MixBuilder.STATION_ARTISTS] = it }
         return out
     }
 

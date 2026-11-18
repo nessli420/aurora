@@ -17,7 +17,12 @@ import kotlin.math.pow
 import kotlin.math.sqrt
 import kotlin.random.Random
 
-enum class MixKind { TIME, DAILY, RECOMMENDED, DISCOVER }
+enum class MixKind { TIME, DAILY, RECOMMENDED, DISCOVER, STATION }
+
+class StationSeed(val artist: String, val songs: List<Song>)
+
+// what the sources answered for one station: the artist's songs on each of them, and songs their radios play next to those
+class Station(val artist: String, val own: List<Song>, val related: List<Song>)
 
 enum class DayPart(val startHour: Int) {
     MORNING(5), AFTERNOON(12), EVENING(17), NIGHT(22);
@@ -85,6 +90,7 @@ class MixInput(
     val hidden: (Song) -> Boolean = { false },
     val kinds: Set<MixKind> = MixKind.entries.toSet(),
     val seed: Long = 0,
+    val stations: List<Station> = emptyList(),
 ) {
     internal var taste: MixTaste? = null
 }
@@ -94,6 +100,12 @@ fun mixTrackKey(artist: String, title: String) = djTrackKey(djPrimaryArtist(arti
 internal fun mixTrackKey(song: Song) = mixTrackKey(song.artist, song.title)
 
 internal fun mixArtistKey(name: String) = DjKeywords.norm(djPrimaryArtist(name))
+
+private val CREDIT_SPLIT = Regex("[,;&]| feat[.]? | ft[.]? | x | with ", RegexOption.IGNORE_CASE)
+
+// whether a credit names the artist, alone or among others; a longer name that merely starts the same is someone else
+internal fun creditNames(credit: String, artistKey: String): Boolean =
+    mixArtistKey(credit) == artistKey || credit.split(CREDIT_SPLIT).any { DjKeywords.norm(it) == artistKey }
 
 // what the history says, keyed by recording so a play on one source counts for its copy on another
 internal class MixTaste(events: List<PlayEvent>, val clock: MixClock, extraSkips: Map<String, Int> = emptyMap()) {
@@ -172,6 +184,9 @@ object MixBuilder {
     const val MIN = 12
     const val MIN_DISCOVER = 10
     const val MAX_DAILY = 6
+    const val MAX_STATIONS = 5
+    // the pseudo slot station artists rest under, next to the track keys of real slots
+    const val STATION_ARTISTS = "station-artists"
     private const val MAX_MEMBERS = 10
     private const val MIN_MEMBERS = 3
     private const val SEEDS = 60
@@ -186,6 +201,7 @@ object MixBuilder {
         MixKind.DAILY, MixKind.TIME -> 1
         MixKind.RECOMMENDED -> 3
         MixKind.DISCOVER -> 7
+        MixKind.STATION -> 2
     }
 
     fun slot(kind: MixKind, index: Int = 0, part: DayPart? = null) = when (kind) {
@@ -193,20 +209,29 @@ object MixBuilder {
         MixKind.TIME -> "time-${part?.name?.lowercase()}"
         MixKind.RECOMMENDED -> "recommended"
         MixKind.DISCOVER -> "discover"
+        MixKind.STATION -> "artist-$index"
     }
 
-    fun build(input: MixInput): List<GeneratedMix> = Build(input).run()
+    fun build(input: MixInput): List<GeneratedMix> = Build(input).run(input.stations)
 
-    private class Track(val song: Song, val key: String, val artist: String, val genres: Set<String>, val signal: DjSonic.Signal?, val liked: Boolean)
+    // two steps, for a caller that asks the sources about the station artists in between
+    fun prepare(input: MixInput) = Prepared(Build(input))
 
-    private class Artist(val key: String, val name: String) {
+    class Prepared internal constructor(private val build: Build) {
+        val stationArtists: List<StationSeed> get() = build.stationSeeds()
+        fun build(stations: List<Station>): List<GeneratedMix> = build.run(stations)
+    }
+
+    internal class Track(val song: Song, val key: String, val artist: String, val genres: Set<String>, val signal: DjSonic.Signal?, val liked: Boolean)
+
+    internal class Artist(val key: String, val name: String) {
         val tracks = ArrayList<Track>()
         var love = 0.0
         var genres: Set<String> = emptySet()
         var centroid: FloatArray? = null
     }
 
-    private class Build(private val input: MixInput) {
+    internal class Build(private val input: MixInput) {
         private val clock = input.clock
         private val taste = input.taste ?: MixTaste(input.events, clock, input.skips)
         private val signals = DjSonic.signals(input.vectors)
@@ -420,13 +445,51 @@ object MixBuilder {
             return if (picked.size < MIN_DISCOVER) null else mix(MixKind.DISCOVER, slot(MixKind.DISCOVER), picked)
         }
 
-        fun run(): List<GeneratedMix> {
+        fun stationSeeds(): List<StationSeed> {
+            if (MixKind.STATION !in input.kinds) return emptyList()
+            val random = Random(seedFor(STATION_ARTISTS))
+            val shown = input.shown[STATION_ARTISTS].orEmpty()
+            return topArtists.take(STATION_POOL).filter { it.key !in NO_ARTIST }
+                .map { Triple(it, random.nextDouble().pow(1.0 / it.love), shown[it.key]?.let { day -> clock.day - day in 1..rest(MixKind.STATION) } == true) }
+                .sortedWith(compareBy<Triple<Artist, Double, Boolean>> { it.third }.thenByDescending { it.second }).take(MAX_STATIONS)
+                .map { (artist, _, _) -> StationSeed(artist.name, artist.tracks.sortedWith(compareByDescending<Track> { love(it) }.thenBy { it.song.id }).map { it.song }) }
+        }
+
+        // the artist on every source that has them, one copy per recording, then what the sources play next to them
+        private fun station(index: Int, material: Station): GeneratedMix? {
+            val artist = mixArtistKey(material.artist)
+            val seen = HashSet<String>()
+            val own = ((artists[artist]?.tracks.orEmpty().map { it.song }) + material.own).mapNotNull(::track)
+                .filter { creditNames(it.song.artist, artist) }.filter { seen.add(it.key) }
+            if (own.size < STATION_OWN_MIN) return null
+            val evidence = HashMap<String, Int>()
+            val around = LinkedHashMap<String, Track>()
+            for (song in material.related) {
+                val t = track(song) ?: continue
+                if (t.key in seen || t.artist == artist || t.artist in NO_ARTIST) continue
+                evidence.merge(t.key, 1, Int::plus)
+                around.putIfAbsent(t.key, t)
+            }
+            val slot = slot(MixKind.STATION, index)
+            // the sources list an artist's best known songs first
+            val picked = choose(MixKind.STATION, slot, own.mapIndexed { i, t -> t to 1.0 + love(t) + 1.0 / (1 + i / 5) }, TARGET, count = if (around.isEmpty()) TARGET else STATION_OWN)
+            val keys = picked.mapTo(HashSet()) { it.key }
+            val rest = choose(MixKind.STATION, slot, around.values.map { it to 0.5 + 0.5 * minOf(evidence[it.key] ?: 1, 3) + 0.5 * minOf(fit(it), 2.0) }, 2, keys, TARGET - picked.size)
+            if (picked.size + rest.size < MIN) return null
+            val mix = mix(MixKind.STATION, slot, picked + rest, index)
+            val opener = mix.songs.firstOrNull { s -> picked.any { it.song.id == s.id } }
+            val names = listOf(material.artist) + mix.artists.filter { mixArtistKey(it) != artist }.take(2)
+            return mix.copy(artists = names, songs = listOfNotNull(opener) + mix.songs.filter { it !== opener })
+        }
+
+        fun run(stations: List<Station> = emptyList()): List<GeneratedMix> {
             val out = ArrayList<GeneratedMix>()
             val taken = HashSet<String>()
             if (MixKind.TIME in input.kinds) DayPart.entries.forEach { part -> time(part)?.let(out::add) }
             if (MixKind.DAILY in input.kinds) out += daily(taken)
             if (MixKind.RECOMMENDED in input.kinds) recommended(taken)?.let(out::add)
             if (MixKind.DISCOVER in input.kinds) discover(taken)?.let(out::add)
+            if (MixKind.STATION in input.kinds) stations.forEach { material -> station(out.count { it.kind == MixKind.STATION } + 1, material)?.let(out::add) }
             return out
         }
 
@@ -434,6 +497,9 @@ object MixBuilder {
             const val LIKE_TRACK = 1.0
             const val LIKE_ARTIST = 0.6
             const val SKIP = 0.5
+            const val STATION_POOL = 15
+            const val STATION_OWN = 12
+            const val STATION_OWN_MIN = 3
         }
     }
 }

@@ -36,8 +36,13 @@ class MixBuilderTest {
 
     private fun build(events: List<PlayEvent> = twoTastes(), known: List<Song> = library, candidates: List<Song> = emptyList(),
         vectors: Map<String, FloatArray> = emptyMap(), shown: Map<String, Map<String, Long>> = emptyMap(), at: MixClock = clock,
-        seed: Long = 7, hidden: (Song) -> Boolean = { false }) =
-        MixBuilder.build(MixInput(events, at, known, known.filter { it.liked }.mapTo(HashSet()) { it.id }, candidates, vectors, shown = shown, hidden = hidden, seed = seed))
+        seed: Long = 7, hidden: (Song) -> Boolean = { false }, stations: List<Station> = emptyList()) =
+        MixBuilder.build(input(events, known, candidates, vectors, shown, at, seed, hidden, stations))
+
+    private fun input(events: List<PlayEvent> = twoTastes(), known: List<Song> = library, candidates: List<Song> = emptyList(),
+        vectors: Map<String, FloatArray> = emptyMap(), shown: Map<String, Map<String, Long>> = emptyMap(), at: MixClock = clock,
+        seed: Long = 7, hidden: (Song) -> Boolean = { false }, stations: List<Station> = emptyList()) =
+        MixInput(events, at, known, known.filter { it.liked }.mapTo(HashSet()) { it.id }, candidates, vectors, shown = shown, hidden = hidden, seed = seed, stations = stations)
 
     private fun List<GeneratedMix>.slot(name: String) = firstOrNull { it.slot == name }
 
@@ -178,6 +183,54 @@ class MixBuilderTest {
 
         val aFewPlays = build(events = twoTastes(days = 1), known = library)
         assertTrue("twelve plays are no base for a time of day", aFewPlays.none { it.kind == MixKind.TIME })
+    }
+
+    @Test fun anArtistStationHoldsTheirSongsFromEverySourceAndTheArtistsAround() {
+        val mine = library.filter { it.artist == "Rock A" }
+        val sameOnAnotherSource = mine.take(4).map { it.copy(id = "other:${it.id}") }
+        val onlyThere = (1..10).map { song("other:exclusive$it", "Rock A") }
+        val featured = Song("other:feat", "Guest Spot", "Somebody Else, Rock A", "", "", 200)
+        val namesake = song("other:namesake", "Rock A Tribute Band")
+        val around = (1..40).map { song("around$it", "Neighbour ${it % 20}") }
+        val station = Station("Rock A", sameOnAnotherSource + onlyThere + featured + namesake, around + around.take(6) + mine.take(2) + Song("mixtape", "Rock Mix Vol 2", "DJ Nobody", "", "", 4000))
+        val mix = build(stations = listOf(station)).slot("artist-1")!!
+
+        assertEquals(MixKind.STATION, mix.kind)
+        assertEquals("Rock A", mix.artists.first())
+        assertTrue("the others named are the artists around: ${mix.artists}", mix.artists.drop(1).all { it.startsWith("Neighbour") })
+        assertTrue("it opens with the artist", mix.songs.first().artist.contains("Rock A"))
+        val own = mix.songs.filter { it.artist.contains("Rock A") }
+        assertEquals("a dozen of theirs, the rest from around them", 12, own.size)
+        assertEquals(MixBuilder.TARGET, mix.songs.size)
+        assertTrue("songs only the other source has are in", own.any { it.id.startsWith("other:exclusive") })
+        assertTrue("a recording both sources have comes once, as the library's copy", own.none { it.id in sameOnAnotherSource.map { s -> s.id } })
+        assertEquals(mix.songs.size, mix.songs.distinctBy { it.title to it.artist }.size)
+        assertTrue("another artist whose name starts the same is not them", mix.songs.none { it.id == "other:namesake" })
+        assertTrue(creditNames("Somebody Else, Rock A", "rock a") && creditNames("Rock A & Friend", "rock a") && creditNames("Friend feat. Rock A", "rock a"))
+        assertFalse(creditNames("Rock A Tribute Band", "rock a") || creditNames("Rocka", "rock a"))
+        assertTrue(mix.songs.none { it.id == "mixtape" })
+        assertTrue("two per neighbour", mix.songs.filter { it.artist.startsWith("Neighbour") }.groupingBy { it.artist }.eachCount().values.all { it <= 2 })
+
+        assertNull("three songs are not a station", build(stations = listOf(Station("Stranger", (1..2).map { song("s$it", "Stranger") }, around))).slot("artist-1"))
+        val alone = build(stations = listOf(Station("Rock A", onlyThere, emptyList()))).slot("artist-1")!!
+        assertTrue("no source plays anything next to them: the station is all theirs", alone.songs.all { it.artist == "Rock A" })
+        assertTrue(alone.songs.size >= MixBuilder.MIN)
+    }
+
+    @Test fun stationsGoToTheMostLovedArtistsAndMoveOnTheNextDay() {
+        val many = (1..12).flatMap { a -> (1..4).map { song("a${a}s$it", "Artist $a", liked = true) } }
+        val seeds = MixBuilder.prepare(input(events = emptyList(), known = many)).stationArtists
+        assertEquals(MixBuilder.MAX_STATIONS, seeds.size)
+        assertEquals(seeds.map { it.artist }, MixBuilder.prepare(input(events = emptyList(), known = many)).stationArtists.map { it.artist })
+        assertTrue(seeds.all { seed -> seed.songs.size == 4 && seed.songs.all { it.artist == seed.artist } })
+
+        val shown = mapOf(MixBuilder.STATION_ARTISTS to seeds.associate { mixArtistKey(it.artist) to clock.day })
+        val next = MixBuilder.prepare(input(events = emptyList(), known = many, shown = shown, at = MixClock(now + day, 0))).stationArtists
+        assertTrue("yesterday's artists sit out while others wait: ${next.map { it.artist }}", next.map { it.artist }.intersect(seeds.map { it.artist }.toSet()).isEmpty())
+
+        val favourite = MixBuilder.prepare(input(known = library + many.take(4))).stationArtists.map { it.artist }
+        assertTrue("played artists come before one with a few likes: $favourite", favourite.count { it.startsWith("Rock") || it.startsWith("Calm") } >= 4)
+        assertTrue(MixBuilder.prepare(MixInput(emptyList(), clock, many, kinds = setOf(MixKind.DAILY))).stationArtists.isEmpty())
     }
 
     @Test fun switchedOffKindsAreNotBuilt() {

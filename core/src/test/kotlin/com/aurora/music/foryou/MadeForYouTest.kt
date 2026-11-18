@@ -56,7 +56,7 @@ class MadeForYouTest {
     private val library = listOf("Rock A", "Rock B", "Rock C", "Calm A", "Calm B", "Calm C").flatMap { artist -> (1..12).map { song("${artist.replace(" ", "")}$it", artist) } }
     private val catalogue = (1..60).map { song("new$it", "Newcomer ${it % 30}").copy(artworkUrl = "https://art.invalid/new$it.jpg") }
 
-    private inner class Source : MediaBackend {
+    private inner class Source(val extras: Boolean) : MediaBackend {
         var asked = 0
         override val session = Session("https://mixes.invalid", "listener", "salt", "token", ServerType.SUBSONIC, "user")
         override suspend fun ping() = true
@@ -69,7 +69,8 @@ class MadeForYouTest {
         override suspend fun starredCount() = 3
         override suspend fun starredIds() = library.take(3).map { it.id }.toSet()
         override suspend fun songFor(id: String) = (library + catalogue).firstOrNull { it.id == id }
-        override suspend fun search(query: String) = SearchResults()
+        override suspend fun search(query: String) = SearchResults(songs = if (!extras || library.none { it.artist == query }) emptyList()
+            else (1..6).map { song("only-${query.replace(" ", "")}$it", query) } + song("stray-$query", "Somebody Else"))
         override suspend fun scrobble(id: String) = Unit
         override suspend fun radio(seedId: String) = catalogue
         override suspend fun createPlaylist(name: String) = false
@@ -92,9 +93,9 @@ class MadeForYouTest {
         }
     } as LocalCatalog
 
-    private inner class World(kinds: Set<MixKind> = MixKind.entries.toSet()) {
+    private inner class World(kinds: Set<MixKind> = MixKind.entries.toSet(), extras: Boolean = true) {
         val dir: File = temp.newFolder()
-        val source = Source()
+        val source = Source(extras)
         val store = LocalStore(dir)
         val merged = MergedBackend(listOf(LocalBackend(nothingOnDevice, store, Session("local", "Me", "", "local", ServerType.LOCAL)), source), source.session)
         val history = PlayHistoryStore(dir)
@@ -159,9 +160,9 @@ class MadeForYouTest {
         val w = World()
         w.made.refresh()
         val mixes = w.made.mixes.value
-        assertEquals(setOf(MixKind.TIME, MixKind.DAILY, MixKind.RECOMMENDED, MixKind.DISCOVER), mixes.mapTo(HashSet()) { it.kind } + MixKind.RECOMMENDED)
+        assertEquals(MixKind.entries.toSet(), mixes.mapTo(HashSet()) { it.kind } + MixKind.RECOMMENDED)
         assertEquals(listOf(DayPart.EVENING), mixes.filter { it.kind == MixKind.TIME }.map { it.part })
-        assertTrue(mixes.first { it.kind == MixKind.DISCOVER }.songs.all { it.artist.startsWith("Newcomer") })
+        assertTrue(mixes.first { it.kind == MixKind.DISCOVER }.songs.all { it.artist.startsWith("Newcomer") || it.title.startsWith("Title only-") })
 
         // the morning mix was built with the rest and only has to be shown
         time += 12 * MixClock.HOUR
@@ -171,8 +172,31 @@ class MadeForYouTest {
         assertTrue(w.made.mixes.value.first { it.kind == MixKind.TIME }.songs.all { it.artist.startsWith("Calm") })
     }
 
-    @Test fun eachMixWearsAPictureOfOneOfItsArtists() = runBlocking {
+    @Test fun aStationAsksTheSourcesForItsArtistAndWearsTheirFace() = runBlocking {
         val w = World()
+        w.made.refresh()
+        val stations = w.made.mixes.value.filter { it.kind == MixKind.STATION }
+        assertEquals(MixBuilder.MAX_STATIONS, stations.size)
+        assertEquals((1..stations.size).map { "artist-$it" }, stations.map { it.slot })
+        stations.forEach { station ->
+            val artist = station.artists.first()
+            assertEquals("https://faces.invalid/${artist.replace(" ", "")}.jpg", station.art)
+            assertEquals(artist, station.songs.first().artist)
+            assertTrue("what a search of the source found is in", station.songs.any { it.title.startsWith("Title only-") && it.artist == artist })
+            assertTrue("and what its radio plays next to them", station.songs.any { it.artist.startsWith("Newcomer") })
+            assertTrue(station.songs.none { it.artist == "Somebody Else" })
+            assertEquals("Mix ${station.slot}", w.repository.detail(MIX_KIND, station.id)!!.info.title)
+        }
+        assertEquals(stations.size, stations.map { it.artists.first() }.distinct().size)
+
+        time += day
+        w.made.refresh()
+        val next = w.made.mixes.value.filter { it.kind == MixKind.STATION }
+        assertTrue("with six artists and five stations, the one that sat out is in today", (next.map { it.artists.first() } - stations.map { it.artists.first() }.toSet()).isNotEmpty())
+    }
+
+    @Test fun eachMixWearsAPictureOfOneOfItsArtists() = runBlocking {
+        val w = World(MixKind.entries.toSet() - MixKind.STATION, extras = false)
         w.made.refresh()
         val mixes = w.made.mixes.value
         val daily = mixes.filter { it.kind == MixKind.DAILY }
@@ -246,6 +270,7 @@ class MadeForYouTest {
     @Test fun theHomeSwitchesChooseTheKinds() {
         assertEquals(MixKind.entries.toSet(), mixKinds(emptySet()))
         assertEquals(emptySet<MixKind>(), mixKinds(setOf(HomeSection.MIXES)))
-        assertEquals(setOf(MixKind.TIME, MixKind.RECOMMENDED), mixKinds(setOf(HomeSection.MIX_DAILY, HomeSection.MIX_DISCOVER, HomeSection.HERO)))
+        assertEquals(setOf(MixKind.TIME, MixKind.RECOMMENDED, MixKind.STATION), mixKinds(setOf(HomeSection.MIX_DAILY, HomeSection.MIX_DISCOVER, HomeSection.HERO)))
+        assertEquals(MixKind.entries.toSet() - MixKind.STATION, mixKinds(setOf(HomeSection.MIX_STATIONS)))
     }
 }
