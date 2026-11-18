@@ -371,6 +371,8 @@ fun LibraryScreen(
                 onFilter, onSort, onToggleLayout, onTabs, onSelectView, onOpenSearch, onOpenMix, onCreate = { showCreate = true })
             com.aurora.music.data.PageLayout.CONSOLE -> LibraryConsoleHeader(state, sourceLabel, browser, paneWidth >= 1000.dp, filter, sort, layout, canDownload, tabPrefs,
                 onFilter, onSort, onToggleLayout, onTabs, onSelectView, onOpenSearch, onCreate = { showCreate = true })
+            com.aurora.music.data.PageLayout.DRIFT -> LibraryDriftHeader(state, stats, paneWidth, compact, filter, sort, layout, canDownload, tabPrefs, visibleTabs,
+                onFilter, onSort, onToggleLayout, onTabs, onSelectView, onOpenSearch, onOpenMix, onCreate = { showCreate = true })
             else -> {
                 PageHeader(
                     appString(R.string.text_library_b8100f),
@@ -419,6 +421,11 @@ fun LibraryScreen(
                     state = state, pins = pins, browser = browser, bottom = bottom, tabs = visibleTabs, actions = actions,
                     tree = tree.takeIf { LibraryFilter.PLAYLISTS in visibleTabs }, tiles = consoleTiles(), onFilter = onFilter,
                     onOpen = { row -> open(row); if (row.kind == "folder") onFilter(LibraryFilter.PLAYLISTS) }, onOpenMix = onOpenMix, onSignIn = onSignIn,
+                )
+                com.aurora.music.data.PageLayout.DRIFT -> LibraryDriftAll(
+                    state = state, pins = pins, width = paneWidth, bottom = bottom, tabs = visibleTabs, actions = actions,
+                    tree = tree.takeIf { LibraryFilter.PLAYLISTS in visibleTabs }, tiles = consoleTiles(), onFilter = onFilter,
+                    onOpen = { row -> open(row); if (row.kind == "folder") onFilter(LibraryFilter.PLAYLISTS) }, onSignIn = onSignIn,
                 )
                 else -> AllOverview(
                     state = state, pins = pins, canDownload = canDownload, compact = compact, bottom = bottom, cardMin = cardMin, actions = actions,

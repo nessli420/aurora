@@ -144,6 +144,8 @@ fun HomeScreen(
             onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection)
         com.aurora.music.data.PageLayout.CONSOLE -> return HomeConsole(contentPadding, state, sourceLabel, onOpenDetail, onPlayAlbum, onPlayAll, onLoadMore, onRetry,
             onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection, onOpenSignalPath, onOpenStats)
+        com.aurora.music.data.PageLayout.DRIFT -> return HomeDrift(contentPadding, state, sourceLabel, onOpenDetail, onPlayAlbum, onPlayAll, onLoadMore, onRetry,
+            onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection)
     }
     val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current
     val data = androidx.compose.runtime.remember(state.data, hiddenSongs) { state.data.copy(starred = hiddenSongs.visible(state.data.starred)) }
