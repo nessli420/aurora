@@ -2,7 +2,7 @@
 
 <img src="docs/assets/aurora-paper.svg" alt="Aurora logo" width="96" height="96">
 
-# Aurora
+# Aurora Music Player
 
 **A free, open-source music player for Android, Windows and Linux that plays your own files and servers, streaming services and everything in between, with a serious audio engine underneath.**
 
