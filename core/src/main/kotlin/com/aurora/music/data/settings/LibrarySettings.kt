@@ -22,6 +22,8 @@ interface LibrarySettings {
     suspend fun setSonicAutoAnalyze(v: Boolean): Preferences
     val artistEnrichment: Flow<Boolean>
     suspend fun setArtistEnrichment(v: Boolean): Preferences
+    val lyricMeanings: Flow<Boolean>
+    suspend fun setLyricMeanings(v: Boolean): Preferences
     val preferLocalSources: Flow<Boolean>
     suspend fun setPreferLocalSources(v: Boolean): Preferences
     val sourcePriority: Flow<List<String>>
@@ -76,6 +78,10 @@ internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences
     // off keeps artist names from ever leaving the device
     override val artistEnrichment: Flow<Boolean> = dataStore.data.map { it[Keys.ARTIST_ENRICHMENT] ?: true }.distinctUntilChanged()
     override suspend fun setArtistEnrichment(v: Boolean) = dataStore.edit { it[Keys.ARTIST_ENRICHMENT] = v }
+
+    // off by default, song titles only go to genius once asked
+    override val lyricMeanings: Flow<Boolean> = dataStore.data.map { it[Keys.GENIUS_MEANINGS] ?: false }.distinctUntilChanged()
+    override suspend fun setLyricMeanings(v: Boolean) = dataStore.edit { it[Keys.GENIUS_MEANINGS] = v }
 
     override val preferLocalSources: Flow<Boolean> = dataStore.data.map { it[Keys.PREFER_LOCAL] ?: true }.distinctUntilChanged()
     override suspend fun setPreferLocalSources(v: Boolean) = dataStore.edit { it[Keys.PREFER_LOCAL] = v }

@@ -156,6 +156,7 @@ internal object SettingsKeys {
     val RADIO_FAVORITES = stringPreferencesKey("radio_favorites")
     val PODCAST_SUBS = stringPreferencesKey("podcast_subs")
     val ARTIST_ENRICHMENT = booleanPreferencesKey("artist_enrichment")
+    val GENIUS_MEANINGS = booleanPreferencesKey("genius_meanings")
     val PREFER_LOCAL = booleanPreferencesKey("prefer_local_sources")
     val SOURCE_PRIORITY = stringPreferencesKey("source_priority")
     val CATALOGUE_LIBRARY_COPIES = booleanPreferencesKey("catalogue_library_copies")
