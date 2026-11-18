@@ -1180,6 +1180,14 @@ private fun Shell(
                                     onSelectFeed = homeVM::selectFeed,
                                     onOpenNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                                     onAddSource = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
+                                    onPlayCollection = { kind, id, shuffle ->
+                                        scope.launch {
+                                            repository.detail(kind, id)?.let { d ->
+                                                if (d.tracks.isEmpty()) return@let
+                                                if (shuffle) player.shuffleCollection(kind, id, d.tracks, d.info.songCount) else player.playCollection(kind, id, d.tracks, 0, d.info.songCount)
+                                            }
+                                        }
+                                    },
                                 )
                             }
                             composable(Routes.EXPLORE) {
@@ -1386,6 +1394,7 @@ private fun Shell(
                                                     }
                                                 },
                                                 selectedItem = if (split) librarySelection else null,
+                                                onSignIn = { authVM.reset(); navController.navigate(Routes.SIGN_IN) },
                                                 folderEdits = remember(libraryVM) {
                                                     com.aurora.music.ui.screens.library.FolderEdits(libraryVM::createFolder, libraryVM::renameFolder, libraryVM::deleteFolder, libraryVM::moveToFolder)
                                                 },

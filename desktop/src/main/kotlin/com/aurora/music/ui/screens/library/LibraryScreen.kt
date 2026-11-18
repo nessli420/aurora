@@ -176,9 +176,9 @@ import com.aurora.music.ui.theme.themedCorner
 
 internal val LocalLibrarySelection = androidx.compose.runtime.compositionLocalOf<String?> { null }
 
-private data class LibInsets(val start: Dp, val end: Dp)
+internal data class LibInsets(val start: Dp, val end: Dp)
 
-private val LocalLibInsets = staticCompositionLocalOf { LibInsets(24.dp, 24.dp) }
+internal val LocalLibInsets = staticCompositionLocalOf { LibInsets(24.dp, 24.dp) }
 
 private val RowInset = 8.dp
 private val RailReserve = 40.dp
@@ -208,9 +208,9 @@ internal fun Modifier.onSecondaryPress(onPress: (Offset) -> Unit): Modifier = po
 }
 
 @Composable
-private fun isSelected(row: LibRow): Boolean = LocalLibrarySelection.current == "${row.kind}:${row.id}"
+internal fun isSelected(row: LibRow): Boolean = LocalLibrarySelection.current == "${row.kind}:${row.id}"
 
-private data class LibRow(
+internal data class LibRow(
     val title: String,
     val subtitle: String,
     val art: String,
@@ -230,7 +230,7 @@ private data class LibRow(
 
 private class TableColumn(val label: String, val weight: Float = 0f, val width: Dp = 0.dp)
 
-private class LibActions(
+internal class LibActions(
     val onOpenLiked: (String) -> Unit,
     val isLiked: (String) -> Boolean,
     val onPlay: (LibRow) -> Unit,
@@ -299,10 +299,12 @@ fun LibraryScreen(
     onPlaySong: (Song) -> Unit = {},
     selectedItem: String? = null,
     folderEdits: FolderEdits? = null,
+    onSignIn: () -> Unit = {},
 ) {
     val gutter = LocalPageGutter.current
     BoxWithConstraints(Modifier.fillMaxSize()) {
-    val compact = maxWidth < CompactWidth
+    val paneWidth = maxWidth
+    val compact = paneWidth < CompactWidth
     val insets = LibInsets(gutter, if (compact && selectedItem != null) 16.dp else gutter)
     CompositionLocalProvider(LocalLibrarySelection provides selectedItem, LocalLibInsets provides insets) {
     var showCreate by remember { mutableStateOf(false) }
@@ -353,14 +355,24 @@ fun LibraryScreen(
             if (state.albums.isNotEmpty()) add(appPlural(R.plurals.album_count, (state.albums.size)))
             if (state.artists.isNotEmpty()) add(appPlural(R.plurals.artist_count, (state.artists.size)))
         }.joinToString("  ·  ")
-        PageHeader(
-            appString(R.string.text_library_b8100f),
-            Modifier.padding(start = insets.start, end = (insets.end - RowInset).coerceAtLeast(0.dp)),
-            subtitle = stats,
-        ) {
-            HeaderAction(Icons.Filled.Search, appString(R.string.text_search_bce064), onOpenSearch)
-            onOpenMix?.let { HeaderAction(Icons.Filled.GraphicEq, appString(R.string.text_mix_studio_668363), it) }
-            if (state.signedIn) HeaderAction(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988)) { showCreate = true }
+        val pageLayout = LocalUiPrefs.current.pageLayout
+        // each page layout brings its own header and tab control
+        when (pageLayout) {
+            com.aurora.music.data.PageLayout.SPOTLIGHT -> LibrarySpotlightHeader(state, stats, paneWidth, compact, filter, sort, layout, canDownload, tabPrefs, visibleTabs,
+                onFilter, onSort, onToggleLayout, onTabs, onSelectView, onOpenSearch, onOpenMix, onCreate = { showCreate = true })
+            else -> {
+                PageHeader(
+                    appString(R.string.text_library_b8100f),
+                    Modifier.padding(start = insets.start, end = (insets.end - RowInset).coerceAtLeast(0.dp)),
+                    subtitle = stats,
+                ) {
+                    HeaderAction(Icons.Filled.Search, appString(R.string.text_search_bce064), onOpenSearch)
+                    onOpenMix?.let { HeaderAction(Icons.Filled.GraphicEq, appString(R.string.text_mix_studio_668363), it) }
+                    if (state.signedIn) HeaderAction(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988)) { showCreate = true }
+                }
+                if (state.views.size > 1) LibraryViewTabs(state.views, state.view, onSelectView)
+                LibraryToolbar(filter, sort, layout, canDownload, compact, onFilter, onSort, onToggleLayout, tabPrefs, visibleTabs, onTabs)
+            }
         }
 
         if (showCreate) {
@@ -374,9 +386,6 @@ fun LibraryScreen(
             )
         }
 
-        if (state.views.size > 1) LibraryViewTabs(state.views, state.view, onSelectView)
-        LibraryToolbar(filter, sort, layout, canDownload, compact, onFilter, onSort, onToggleLayout, tabPrefs, visibleTabs, onTabs)
-
         val bottom = contentPadding.calculateBottomPadding() + 24.dp
 
         if (state.loading && state.albums.isEmpty() && state.playlists.isEmpty() && state.songs.isEmpty()) {
@@ -387,12 +396,21 @@ fun LibraryScreen(
         }
 
         when (filter) {
-            LibraryFilter.ALL -> AllOverview(
-                state = state, pins = pins, canDownload = canDownload, compact = compact, bottom = bottom, cardMin = cardMin, actions = actions,
-                onFilter = onFilter, onOpen = open,
-                onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts, onOpenYouTubeDownload = onOpenYouTubeDownload,
-                onAiDj = onAiDj, aiDjDetail = aiDjDetail,
-            )
+            LibraryFilter.ALL -> when (pageLayout) {
+                com.aurora.music.data.PageLayout.SPOTLIGHT -> LibrarySpotlightAll(
+                    state = state, pins = pins, width = paneWidth, compact = compact, bottom = bottom, cardMin = cardMin, actions = actions,
+                    // a folder opens where the playlists tab shows it
+                    tree = tree.takeIf { LibraryFilter.PLAYLISTS in visibleTabs },
+                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
+                    onOpen = { row -> open(row); if (row.kind == "folder") onFilter(LibraryFilter.PLAYLISTS) }, onSignIn = onSignIn,
+                )
+                else -> AllOverview(
+                    state = state, pins = pins, canDownload = canDownload, compact = compact, bottom = bottom, cardMin = cardMin, actions = actions,
+                    onFilter = onFilter, onOpen = open,
+                    onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts, onOpenYouTubeDownload = onOpenYouTubeDownload,
+                    onAiDj = onAiDj, aiDjDetail = aiDjDetail,
+                )
+            }
             LibraryFilter.SONGS -> SongsTab(
                 state = state, sort = sort, likedIds = likedIds, currentSongId = currentSongId, isPlaying = isPlaying,
                 bottom = bottom, canDownload = canDownload, downloadedIds = downloadedIds,
@@ -447,13 +465,13 @@ private fun tableColumns(filter: LibraryFilter): List<TableColumn> = when (filte
 }
 
 @Composable
-private fun HeaderAction(icon: ImageVector, label: String, onClick: () -> Unit) {
+internal fun HeaderAction(icon: ImageVector, label: String, onClick: () -> Unit) {
     IconButton(onClick = onClick, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
         Icon(icon, label)
     }
 }
 
-private fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
+internal fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
     LibraryFilter.ALL -> Icons.Filled.Apps
     LibraryFilter.PLAYLISTS -> Icons.AutoMirrored.Filled.QueueMusic
     LibraryFilter.ALBUMS -> Icons.Filled.Album
@@ -527,7 +545,7 @@ private fun LibraryToolbar(
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun LibraryTabsMenu(initial: com.aurora.music.data.LibraryTabs, canDownload: Boolean, onChange: (com.aurora.music.data.LibraryTabs) -> Unit) {
+internal fun LibraryTabsMenu(initial: com.aurora.music.data.LibraryTabs, canDownload: Boolean, onChange: (com.aurora.music.data.LibraryTabs) -> Unit) {
     var open by remember { mutableStateOf(false) }
     var tabs by remember(initial) { mutableStateOf(initial) }
     val label = appString(R.string.library_tabs_customize)
@@ -569,7 +587,7 @@ private fun LibraryTabsMenu(initial: com.aurora.music.data.LibraryTabs, canDownl
 }
 
 @Composable
-private fun SortButton(sort: LibrarySort, iconOnly: Boolean, onSort: (LibrarySort) -> Unit) {
+internal fun SortButton(sort: LibrarySort, iconOnly: Boolean, onSort: (LibrarySort) -> Unit) {
     var open by remember { mutableStateOf(false) }
     val label = appString(R.string.text_sort_by_a2a5bd)
     Box {
@@ -599,7 +617,7 @@ private fun SortButton(sort: LibrarySort, iconOnly: Boolean, onSort: (LibrarySor
 }
 
 @Composable
-private fun LayoutToggle(layout: LibraryLayout, onToggle: () -> Unit) {
+internal fun LayoutToggle(layout: LibraryLayout, onToggle: () -> Unit) {
     val label = appString(R.string.text_toggle_layout_6169e7)
     val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(50) else MaterialTheme.shapes.small
     Row(Modifier.clip(shape).background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.6f)).padding(3.dp)) {
@@ -703,12 +721,7 @@ private fun AllOverview(
             )
             val tiles = buildList {
                 if (state.signedIn) add(QuickTile(liked.title, liked.subtitle, Icons.Filled.Favorite, state.likedCover, row = liked) { onOpen(liked) })
-                if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
-                if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
-                if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
-                if (onOpenRadio != null) add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
-                if (onOpenPodcasts != null) add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
-                if (onOpenYouTubeDownload != null) add(QuickTile(appString(R.string.youtube_download_title), appString(R.string.youtube_download_tile_detail), Icons.Filled.CloudDownload, "") { onOpenYouTubeDownload() })
+                addAll(collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail))
                 pinRows.forEach { r -> add(QuickTile(r.title, r.subtitle, null, r.art, row = r, pinned = true) { onOpen(r) }) }
             }
             QuickTiles(tiles, compact, actions)
@@ -748,7 +761,18 @@ private fun LibShelf(rows: List<LibRow>, minWidth: Dp, actions: LibActions, onOp
     }
 }
 
-private data class QuickTile(
+// the quick tiles besides liked songs and the pins, which each page layout places itself
+internal fun collectionTiles(state: LibraryUiState, canDownload: Boolean, onFilter: (LibraryFilter) -> Unit, onOpenFolders: () -> Unit, onOpenRadio: (() -> Unit)?,
+    onOpenPodcasts: (() -> Unit)?, onOpenYouTubeDownload: (() -> Unit)?, onAiDj: (() -> Unit)?, aiDjDetail: String): List<QuickTile> = buildList {
+    if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
+    if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
+    if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
+    if (onOpenRadio != null) add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
+    if (onOpenPodcasts != null) add(QuickTile(appString(R.string.text_podcasts_fd52b4), appString(R.string.text_shows_episodes_526d46), Icons.Filled.Podcasts, "") { onOpenPodcasts() })
+    if (onOpenYouTubeDownload != null) add(QuickTile(appString(R.string.youtube_download_title), appString(R.string.youtube_download_tile_detail), Icons.Filled.CloudDownload, "") { onOpenYouTubeDownload() })
+}
+
+internal data class QuickTile(
     val title: String,
     val subtitle: String,
     val icon: ImageVector?,
@@ -1120,14 +1144,14 @@ private fun jumpIndex(titles: List<String>, c: Char): Int? {
 private fun sortedSongs(songs: List<Song>, sort: LibrarySort, localPlayCounts: Map<String, Int>): List<Song> =
     com.aurora.music.viewmodel.sortLibrarySongs(songs, sort, localPlayCounts)
 
-private fun kindLabel(kind: String): String = when (kind) {
+internal fun kindLabel(kind: String): String = when (kind) {
     "album" -> appString(R.string.text_album_dfb4c9)
     "artist" -> appString(R.string.text_artist_6c3f3d)
     "playlist" -> appString(R.string.text_playlist_cd95b4)
     else -> kind.replaceFirstChar { it.uppercase() }
 }
 
-private fun albumRow(album: com.aurora.music.model.Album): LibRow {
+internal fun albumRow(album: com.aurora.music.model.Album): LibRow {
     val label = album.typeLabel.localizedMediaType()
     val year = album.year.takeIf { it > 0 }?.toString().orEmpty()
     return LibRow(
@@ -1138,14 +1162,14 @@ private fun albumRow(album: com.aurora.music.model.Album): LibRow {
     )
 }
 
-private fun artistRow(artist: com.aurora.music.model.Artist, albums: Int, plays: Int = 0, recency: Long = 0): LibRow = LibRow(
+internal fun artistRow(artist: com.aurora.music.model.Artist, albums: Int, plays: Int = 0, recency: Long = 0): LibRow = LibRow(
     artist.name, if (albums > 0) appPlural(R.plurals.album_count, albums) else appString(R.string.text_artist_6c3f3d), artist.imageUrl,
     accentFor(artist.id), artist.id, "artist", circle = true, sortPlayCount = plays, sortRecencySec = recency,
     detail = appString(R.string.text_artist_6c3f3d), cells = listOf(albums.takeIf { it > 0 }?.toString().orEmpty()),
 )
 
 // tree is the view's playlist folders; an open folder lists only what is filed in it, the top level leaves those out
-private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>,
+internal fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>,
     tree: com.aurora.music.data.PlaylistFolder? = null, folder: com.aurora.music.data.PlaylistFolder? = null): List<LibRow> {
     fun playlistRow(it: com.aurora.music.model.Playlist) = LibRow(
         it.title, if (it.songCount < 0) appString(R.string.text_playlist_cd95b4) else appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist",
@@ -1378,7 +1402,7 @@ private fun LibListItem(row: LibRow, columns: List<TableColumn>, actions: LibAct
 }
 
 @Composable
-private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
+internal fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
     var contextAt by remember { mutableStateOf<Offset?>(null) }
     var menuOpen by remember { mutableStateOf(false) }
     val interaction = remember { MutableInteractionSource() }
@@ -1443,7 +1467,7 @@ private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 
 // right-clicking liked songs picks which sources' likes to open when more than one has any
 @Composable
-private fun ContextMenu(row: LibRow, actions: LibActions, onDismiss: () -> Unit) {
+internal fun ContextMenu(row: LibRow, actions: LibActions, onDismiss: () -> Unit) {
     val likeMenu = com.aurora.music.ui.components.LocalLikeMenu.current
     val sources = remember { if (row.kind == "liked") likeMenu?.likedSources?.invoke().orEmpty() else emptyList() }
     if (sources.size > 1) com.aurora.music.ui.components.LikedSourcesMenu(sources, onDismiss) { id -> onDismiss(); actions.onOpenLiked(id) }
@@ -1451,7 +1475,7 @@ private fun ContextMenu(row: LibRow, actions: LibActions, onDismiss: () -> Unit)
 }
 
 @Composable
-private fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, onDismiss: () -> Unit) {
+internal fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, onDismiss: () -> Unit) {
     if (row.kind == "folder") return FolderMenu(row.id, row.title, actions, expanded, onDismiss)
     // liked row is virtual no like/delete just playback
     val isVirtual = row.kind == "liked"

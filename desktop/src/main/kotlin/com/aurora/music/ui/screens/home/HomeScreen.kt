@@ -112,7 +112,7 @@ import com.aurora.music.viewmodel.HomeUiState
 import kotlinx.coroutines.launch
 import com.aurora.music.ui.theme.themedCorner
 
-private const val HeroCount = 5
+internal const val HeroCount = 5
 private val FavouritesHeight = 204.dp
 private val LikedRowHeight = 48.dp
 
@@ -133,15 +133,19 @@ fun HomeScreen(
     onOpenNotifications: () -> Unit = {},
     onAddSource: () -> Unit = {},
     mixes: List<com.aurora.music.foryou.GeneratedMix> = emptyList(),
+    onPlayCollection: (kind: String, id: String, shuffle: Boolean) -> Unit = { _, _, _ -> },
 ) {
+    // each page layout is its own file; classic is the rest of this one
+    when (LocalUiPrefs.current.pageLayout) {
+        com.aurora.music.data.PageLayout.SPOTLIGHT -> return HomeSpotlight(contentPadding, state, onOpenDetail, onPlayAlbum, onPlayAll, onLoadMore, onRetry,
+            onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection)
+    }
     val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current
     val data = androidx.compose.runtime.remember(state.data, hiddenSongs) { state.data.copy(starred = hiddenSongs.visible(state.data.starred)) }
     val ui = LocalUiPrefs.current
     val hidden = ui.hiddenHomeSections
     val gutter = LocalPageGutter.current
-    val nothingToShow = !state.loading && state.error == null && data.continuation == null &&
-        data.sections.isEmpty() && data.newReleases.isEmpty() && data.recentlyPlayed.isEmpty() && data.playlists.isEmpty() &&
-        data.starred.isEmpty() && data.mostPlayed.isEmpty() && data.random.isEmpty() && data.artists.isEmpty()
+    val nothingToShow = state.nothingToShow(data)
     val heroItems = if (HomeSection.HERO in hidden) emptyList() else data.newReleases.take(HeroCount)
     val listState = rememberLazyListState()
     Box(Modifier.fillMaxSize()) {
@@ -187,34 +191,7 @@ fun HomeScreen(
         }
 
         if (nothingToShow) {
-            item(key = "empty") {
-                Column(
-                    Modifier.fillMaxWidth().padding(vertical = 96.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(
-                        Modifier.size(88.dp).paperClip(CircleShape)
-                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
-                            .pressClickable(onClickLabel = appString(R.string.home_add_source), onClick = onAddSource)
-                            .pointerHoverIcon(PointerIcon.Hand),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Icon(Icons.Filled.Add, appString(R.string.home_add_source), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
-                    }
-                    Spacer(Modifier.height(20.dp))
-                    Text(appString(R.string.home_empty_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-                    Spacer(Modifier.height(6.dp))
-                    Text(appString(R.string.home_empty_body), style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
-                        modifier = Modifier.widthIn(max = 420.dp))
-                    Spacer(Modifier.height(20.dp))
-                    Button(onClick = onAddSource) {
-                        Icon(Icons.Filled.Add, null, Modifier.size(18.dp))
-                        Spacer(Modifier.width(8.dp))
-                        Text(appString(R.string.home_add_source))
-                    }
-                }
-            }
+            item(key = "empty") { HomeEmptyState(onAddSource) }
             return@LazyColumn
         }
 
@@ -225,22 +202,7 @@ fun HomeScreen(
             }
         }
         if (data.continuation != null || state.error != null) {
-            item(key = "feed-more") {
-                LaunchedEffect(data.continuation) {
-                    if (data.continuation != null && state.error == null) onLoadMore()
-                }
-                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
-                    Crossfade(state.loadingMore, animationSpec = Motion.state(), label = "feedMore") { busy ->
-                        Box(Modifier.fillMaxWidth().heightIn(min = 40.dp), contentAlignment = Alignment.Center) {
-                            if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
-                            else OutlinedButton(onClick = if (data.continuation != null) onLoadMore else onRetry) {
-                                Text(if (state.error != null) appString(R.string.text_try_again_042c86) else appString(R.string.text_more_recommendations_5fd054))
-                            }
-                        }
-                    }
-                }
-            }
+            item(key = "feed-more") { HomeFeedMore(state, onLoadMore, onRetry) }
         }
 
         if (heroItems.isNotEmpty()) {
@@ -300,7 +262,7 @@ fun HomeScreen(
     }
 }
 
-private fun LazyListScope.albumShelf(
+internal fun LazyListScope.albumShelf(
     key: String,
     title: String,
     albums: List<Album>?,
@@ -312,6 +274,59 @@ private fun LazyListScope.albumShelf(
         PageSection(title) {
             AdaptiveShelf(albums, bleed = gutter) { album, width ->
                 AlbumCard(album, onClick = { onOpenDetail("album", album.id) }, width = width)
+            }
+        }
+    }
+}
+
+internal fun HomeUiState.nothingToShow(data: HomeData): Boolean = !loading && error == null && data.continuation == null &&
+    data.sections.isEmpty() && data.newReleases.isEmpty() && data.recentlyPlayed.isEmpty() && data.playlists.isEmpty() &&
+    data.starred.isEmpty() && data.mostPlayed.isEmpty() && data.random.isEmpty() && data.artists.isEmpty()
+
+@Composable
+internal fun HomeEmptyState(onAddSource: () -> Unit) {
+    Column(
+        Modifier.fillMaxWidth().padding(vertical = 96.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
+        Box(
+            Modifier.size(88.dp).paperClip(CircleShape)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f))
+                .pressClickable(onClickLabel = appString(R.string.home_add_source), onClick = onAddSource)
+                .pointerHoverIcon(PointerIcon.Hand),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(Icons.Filled.Add, appString(R.string.home_add_source), tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(40.dp))
+        }
+        Spacer(Modifier.height(20.dp))
+        Text(appString(R.string.home_empty_title), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Spacer(Modifier.height(6.dp))
+        Text(appString(R.string.home_empty_body), style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant, textAlign = TextAlign.Center,
+            modifier = Modifier.widthIn(max = 420.dp))
+        Spacer(Modifier.height(20.dp))
+        Button(onClick = onAddSource) {
+            Icon(Icons.Filled.Add, null, Modifier.size(18.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(appString(R.string.home_add_source))
+        }
+    }
+}
+
+@Composable
+internal fun HomeFeedMore(state: HomeUiState, onLoadMore: () -> Unit, onRetry: () -> Unit) {
+    val continuation = state.data.continuation
+    LaunchedEffect(continuation) {
+        if (continuation != null && state.error == null) onLoadMore()
+    }
+    Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+        state.error?.let { Text(it, color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall) }
+        Crossfade(state.loadingMore, animationSpec = Motion.state(), label = "feedMore") { busy ->
+            Box(Modifier.fillMaxWidth().heightIn(min = 40.dp), contentAlignment = Alignment.Center) {
+                if (busy) CircularProgressIndicator(Modifier.size(24.dp), strokeWidth = 2.dp)
+                else OutlinedButton(onClick = if (continuation != null) onLoadMore else onRetry) {
+                    Text(if (state.error != null) appString(R.string.text_try_again_042c86) else appString(R.string.text_more_recommendations_5fd054))
+                }
             }
         }
     }
@@ -391,7 +406,7 @@ private fun HeroPager(albums: List<Album>, scale: Float, onOpenDetail: (String, 
 }
 
 @Composable
-private fun HeroArrow(icon: ImageVector, label: String, onClick: () -> Unit) {
+internal fun HeroArrow(icon: ImageVector, label: String, onClick: () -> Unit) {
     Box(
         Modifier.size(36.dp).paperClip(CircleShape)
             .background(MaterialTheme.colorScheme.surfaceContainerHigh.fade(0.9f))
@@ -512,7 +527,7 @@ private fun FavouriteCard(songs: List<Song>, scale: Float, modifier: Modifier, o
 }
 
 @Composable
-private fun LikedRow(song: Song, onClick: () -> Unit) {
+internal fun LikedRow(song: Song, showAlbum: Boolean = true, onClick: () -> Unit) {
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
     Row(
         Modifier.fillMaxWidth().height(LikedRowHeight).paperClip(RoundedCornerShape(themedCorner(12.dp)))
@@ -526,7 +541,7 @@ private fun LikedRow(song: Song, onClick: () -> Unit) {
             Text(song.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Medium, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(song.artist, style = MaterialTheme.typography.bodySmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis)
         }
-        if (song.album.isNotBlank()) {
+        if (showAlbum && song.album.isNotBlank()) {
             Text(song.album, style = MaterialTheme.typography.bodySmall, color = muted, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(0.7f).padding(horizontal = 16.dp))
         }
@@ -562,5 +577,5 @@ internal fun IconPill(icon: ImageVector, desc: String, onClick: () -> Unit) {
     ) { Icon(icon, desc, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
 }
 
-private fun greeting(): String = appString(R.string.text_good_evening_47f6d5).lowercase().replaceFirstChar { it.titlecase() }
+internal fun greeting(): String = appString(R.string.text_good_evening_47f6d5).lowercase().replaceFirstChar { it.titlecase() }
 
