@@ -54,7 +54,7 @@ class MadeForYouTest {
     private fun song(id: String, artist: String) = Song(id, "Title $id", artist, "Album", "", 200, artistId = artist)
 
     private val library = listOf("Rock A", "Rock B", "Rock C", "Calm A", "Calm B", "Calm C").flatMap { artist -> (1..12).map { song("${artist.replace(" ", "")}$it", artist) } }
-    private val catalogue = (1..60).map { song("new$it", "Newcomer ${it % 30}") }
+    private val catalogue = (1..60).map { song("new$it", "Newcomer ${it % 30}").copy(artworkUrl = "https://art.invalid/new$it.jpg") }
 
     private inner class Source : MediaBackend {
         var asked = 0
@@ -76,7 +76,8 @@ class MadeForYouTest {
         override suspend fun updatePlaylist(id: String, name: String?, comment: String?) = false
         override suspend fun deletePlaylist(id: String) = false
         override suspend fun setStarred(id: String, starred: Boolean, kind: String) = false
-        override suspend fun detail(kind: String, id: String): DetailData? = null
+        override suspend fun detail(kind: String, id: String): DetailData? = if (kind != "artist" || id.startsWith("Newcomer")) null
+            else DetailData(com.aurora.music.model.DetailInfo(id, "", "https://faces.invalid/${id.replace(" ", "")}.jpg", 0, true, 0, "Artist"), emptyList())
         override suspend fun serverLyrics(song: Song): Lyrics? = null
         override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean) = ""
         override fun coverArtUrl(id: String, size: Int) = ""
@@ -168,6 +169,27 @@ class MadeForYouTest {
         w.made.refresh()
         assertEquals(listOf(DayPart.MORNING), w.made.mixes.value.filter { it.kind == MixKind.TIME }.map { it.part })
         assertTrue(w.made.mixes.value.first { it.kind == MixKind.TIME }.songs.all { it.artist.startsWith("Calm") })
+    }
+
+    @Test fun eachMixWearsAPictureOfOneOfItsArtists() = runBlocking {
+        val w = World()
+        w.made.refresh()
+        val mixes = w.made.mixes.value
+        val daily = mixes.filter { it.kind == MixKind.DAILY }
+        assertEquals(2, daily.size)
+        daily.forEach { mix ->
+            assertTrue(mix.art, mix.art.startsWith("https://faces.invalid/"))
+            assertTrue("the picture is of an artist in the mix", mix.songs.any { it.artist.replace(" ", "") in mix.art })
+            assertEquals(MIX_COVER_PREFIX + mix.slot + "|" + mix.art, mix.coverUrl)
+        }
+        val shown = mixes.filter { it.kind != MixKind.DISCOVER }.map { it.art }
+        assertEquals("no two tiles on the row share a face: $shown", shown.size, shown.distinct().size)
+        val discover = mixes.first { it.kind == MixKind.DISCOVER }
+        assertTrue("an artist the source has no picture of falls back to the track's art", discover.art in discover.songs.map { it.artworkUrl })
+
+        val restarted = w.service()
+        restarted.refresh()
+        assertEquals(mixes.map { it.coverUrl }, restarted.mixes.value.map { it.coverUrl })
     }
 
     @Test fun theCacheOpensHomeWithoutAskingTheLibraryAgain() = runBlocking {

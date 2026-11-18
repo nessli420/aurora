@@ -65,9 +65,11 @@ data class GeneratedMix(
     val part: DayPart? = null,
     val artists: List<String> = emptyList(),
     val songs: List<Song> = emptyList(),
+    // a picture of one of its artists, drawn under the cover's mark
+    val art: String = "",
 ) {
     val id: String get() = "$slot@$day"
-    val coverUrl: String get() = MIX_COVER_PREFIX + slot
+    val coverUrl: String get() = MIX_COVER_PREFIX + slot + if (art.isBlank()) "" else "|$art"
 }
 
 class MixInput(

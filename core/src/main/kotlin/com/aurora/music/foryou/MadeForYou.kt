@@ -74,7 +74,7 @@ class MadeForYou(
     private val settleMs: Long = 4_000,
 ) {
     private class SavedMix(val slot: String? = null, val kind: String? = null, val day: Long? = null, val index: Int? = null,
-        val part: String? = null, val artists: List<String>? = null, val songs: List<SavedTrack>? = null)
+        val part: String? = null, val artists: List<String>? = null, val songs: List<SavedTrack>? = null, val art: String? = null)
 
     private class Saved(val version: Int? = null, val account: String? = null, val day: Long? = null, val kinds: List<String>? = null,
         val mixes: List<SavedMix>? = null, val shown: Map<String, Map<String, Long>>? = null)
@@ -82,7 +82,7 @@ class MadeForYou(
     private class Cache(val account: String, val day: Long, val kinds: Set<MixKind>, val mixes: List<GeneratedMix>, val shown: Map<String, Map<String, Long>>)
 
     private companion object {
-        const val VERSION = 1
+        const val VERSION = 2
         const val RETRY_MS = 15 * 60_000L
         const val SHOWN_DAYS = 14
         const val SHOWN_CAP = 600
@@ -173,13 +173,13 @@ class MadeForYou(
         val songs = m.songs.orEmpty().map { it.toSong() }.filter { it.id.isNotEmpty() }
         if (songs.isEmpty()) return null
         return GeneratedMix(m.slot ?: return null, kind, m.day ?: return null, m.index ?: 0,
-            DayPart.entries.firstOrNull { it.name == m.part }, m.artists.orEmpty(), songs)
+            DayPart.entries.firstOrNull { it.name == m.part }, m.artists.orEmpty(), songs, m.art.orEmpty())
     }
 
     private suspend fun save(c: Cache) = withContext(Dispatchers.IO) {
         val target = file ?: return@withContext
         val saved = Saved(VERSION, c.account, c.day, c.kinds.map { it.name },
-            c.mixes.map { m -> SavedMix(m.slot, m.kind.name, m.day, m.index, m.part?.name, m.artists, m.songs.map { it.toSavedTrack() }) }, c.shown)
+            c.mixes.map { m -> SavedMix(m.slot, m.kind.name, m.day, m.index, m.part?.name, m.artists, m.songs.map { it.toSavedTrack() }, m.art) }, c.shown)
         runCatching { target.parentFile?.mkdirs(); persistBackupFileAtomically(target, gson.toJson(saved).toByteArray()) }
     }
 
@@ -198,7 +198,7 @@ class MadeForYou(
         val started = System.currentTimeMillis()
         val input = try { gather(kinds, clock, current?.shown.orEmpty()) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (input == null) { attempted = attempt to now(); return@withLock }
-        val built = withContext(Dispatchers.Default) { MixBuilder.build(input) }
+        val built = pictured(withContext(Dispatchers.Default) { MixBuilder.build(input) })
         if (key != key()) return@withLock
         val next = Cache(key, clock.day, kinds, built, remember(current?.shown.orEmpty(), built, clock.day))
         cache = next
@@ -207,6 +207,21 @@ class MadeForYou(
         // likes of editions that are gone have done their job; their playlists stay
         runCatching { keepLikes(built.mapTo(HashSet()) { it.id }) }
         AppLog.d("Mixes", "built ${built.joinToString { "${it.slot}=${it.songs.size}" }} from ${input.known.size} known, ${input.candidates.size} candidates, ${input.vectors.size} analyzed in ${System.currentTimeMillis() - started}ms")
+    }
+
+    // each mix on the row shows a different artist where it can; only one time-of-day mix is there at once
+    private suspend fun pictured(mixes: List<GeneratedMix>): List<GeneratedMix> = coroutineScope {
+        val used = HashSet<String>()
+        fun faces(mix: GeneratedMix) = mix.artists.mapNotNull { name -> mix.songs.firstOrNull { djPrimaryArtist(it.artist) == name } }
+        val chosen = mixes.filter { it.part == null }.associate { mix -> mix.slot to faces(mix).let { f -> f.firstOrNull { used.add(mixArtistKey(it.artist)) } ?: f.firstOrNull() } } +
+            mixes.filter { it.part != null }.associate { mix -> mix.slot to faces(mix).let { f -> f.firstOrNull { mixArtistKey(it.artist) !in used } ?: f.firstOrNull() } }
+        mixes.map { mix ->
+            async {
+                val face = chosen[mix.slot] ?: return@async mix
+                val portrait = face.artistId.takeIf { it.isNotBlank() }?.let { id -> quietly(6_000, null) { repository.detail("artist", id)?.info?.artUrl } }
+                mix.copy(art = portrait?.takeIf { it.isNotBlank() } ?: face.artworkUrl)
+            }
+        }.awaitAll()
     }
 
     private fun remember(old: Map<String, Map<String, Long>>, built: List<GeneratedMix>, day: Long): Map<String, Map<String, Long>> {
