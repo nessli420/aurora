@@ -77,10 +77,13 @@ class MadeForYou(
     private class SavedMix(val slot: String? = null, val kind: String? = null, val day: Long? = null, val index: Int? = null,
         val part: String? = null, val artists: List<String>? = null, val songs: List<SavedTrack>? = null, val art: String? = null)
 
-    private class Saved(val version: Int? = null, val account: String? = null, val day: Long? = null, val kinds: List<String>? = null,
-        val mixes: List<SavedMix>? = null, val shown: Map<String, Map<String, Long>>? = null)
+    private class SavedFace(val url: String? = null, val day: Long? = null)
 
-    private class Cache(val account: String, val day: Long, val kinds: Set<MixKind>, val mixes: List<GeneratedMix>, val shown: Map<String, Map<String, Long>>)
+    private class Saved(val version: Int? = null, val account: String? = null, val day: Long? = null, val kinds: List<String>? = null,
+        val mixes: List<SavedMix>? = null, val shown: Map<String, Map<String, Long>>? = null, val faces: Map<String, SavedFace>? = null)
+
+    private class Cache(val account: String, val day: Long, val kinds: Set<MixKind>, val mixes: List<GeneratedMix>, val shown: Map<String, Map<String, Long>>,
+        val faces: Map<String, SavedFace> = emptyMap())
 
     private companion object {
         const val VERSION = 2
@@ -90,7 +93,13 @@ class MadeForYou(
         const val HYDRATE = 60
         const val SEEDS = 6
         const val SKIP_WINDOW = 90 * MixClock.DAY
+        const val FACE_DAYS = 14
     }
+
+    // the row's own few lines, kept apart from the tracks so home has its tiles before those are read
+    private val tiles = file?.let { File(it.parentFile, it.nameWithoutExtension + "-tiles.json") }
+    private val born = System.currentTimeMillis()
+    @Volatile private var previewed = false
 
     private val gson = Gson()
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
@@ -127,6 +136,9 @@ class MadeForYou(
 
     private fun key() = account()
 
+    // until the session is back the cache speaks for the account it was built for
+    private fun mine(account: String) = key().let { it.isEmpty() || it == account }
+
     fun recheck() {
         attempted = null
         wake.value++
@@ -134,7 +146,7 @@ class MadeForYou(
 
     // the library was rebuilt from other sources: what is cached may name songs that are gone
     fun invalidate() {
-        cache = cache?.let { Cache(it.account, -1, it.kinds, it.mixes, it.shown) }
+        cache = cache?.let { Cache(it.account, -1, it.kinds, it.mixes, it.shown, it.faces) }
         recheck()
     }
 
@@ -143,19 +155,35 @@ class MadeForYou(
         loaded = true
         attempted = null
         _mixes.value = emptyList()
-        background.launch { runCatching { file?.delete() } }
+        background.launch { runCatching { file?.delete(); tiles?.delete() } }
         wake.value++
     }
 
     private suspend fun publish() {
         val part = clock().part
         val kinds = enabled
-        var shown = cache?.takeIf { it.account == key() }?.mixes.orEmpty().filter { it.kind in kinds && (it.part == null || it.part == part) && it.songs.isNotEmpty() }
+        var shown = cache?.takeIf { mine(it.account) }?.mixes.orEmpty().filter { it.kind in kinds && (it.part == null || it.part == part) && it.songs.isNotEmpty() }
         // offline only downloads can play, and a mix that loses most of itself is not shown
         if (repository.isOffline) shown = shown.mapNotNull { mix ->
             mix.copy(songs = mix.songs.mapNotNull { s -> if (repository.isDownloaded(s.id)) repository.songFor(s.id) else null }).takeIf { it.songs.size >= MixBuilder.MIN_DISCOVER }
         }
         _mixes.value = shown
+    }
+
+    private suspend fun preview(kinds: Set<MixKind>) {
+        if (previewed || loaded) return
+        previewed = true
+        val saved = withContext(Dispatchers.IO) { runCatching { tiles?.takeIf { it.exists() }?.readText()?.let { gson.fromJson(it, Saved::class.java) } }.getOrNull() } ?: return
+        if (saved.version != VERSION || !mine(saved.account.orEmpty())) return
+        val part = clock().part
+        _mixes.value = saved.mixes.orEmpty().mapNotNull { restore(it, tile = true) }.filter { it.kind in kinds && (it.part == null || it.part == part) }
+        AppLog.d("Mixes", "showing ${_mixes.value.size} tiles ${System.currentTimeMillis() - born}ms after start")
+    }
+
+    // app start: home opens on the tiles, the tracks are read when it looks
+    suspend fun warm() = lock.withLock {
+        val kinds = kinds.first().also { enabled = it }
+        if (kinds.isNotEmpty()) preview(kinds)
     }
 
     private suspend fun load() {
@@ -164,46 +192,80 @@ class MadeForYou(
             val saved = runCatching { file?.takeIf { it.exists() }?.readText()?.let { gson.fromJson(it, Saved::class.java) } }.getOrNull()
             if (saved != null && saved.version == VERSION) cache = Cache(saved.account.orEmpty(), saved.day ?: -1,
                 saved.kinds.orEmpty().mapNotNullTo(HashSet()) { name -> MixKind.entries.firstOrNull { it.name == name } },
-                saved.mixes.orEmpty().mapNotNull(::restore), saved.shown.orEmpty())
+                saved.mixes.orEmpty().mapNotNull { restore(it) }, saved.shown.orEmpty(), saved.faces.orEmpty())
+            // a cache from before the tiles had their own file
+            cache?.takeIf { tiles?.exists() == false }?.let { runCatching { writeTiles(it) } }
         }
         loaded = true
     }
 
-    private fun restore(m: SavedMix): GeneratedMix? {
+    private fun restore(m: SavedMix, tile: Boolean = false): GeneratedMix? {
         val kind = MixKind.entries.firstOrNull { it.name == m.kind } ?: return null
         val songs = m.songs.orEmpty().map { it.toSong() }.filter { it.id.isNotEmpty() }
-        if (songs.isEmpty()) return null
+        if (songs.isEmpty() && !tile) return null
         return GeneratedMix(m.slot ?: return null, kind, m.day ?: return null, m.index ?: 0,
             DayPart.entries.firstOrNull { it.name == m.part }, m.artists.orEmpty(), songs, m.art.orEmpty())
     }
 
-    private suspend fun save(c: Cache) = withContext(Dispatchers.IO) {
-        val target = file ?: return@withContext
-        val saved = Saved(VERSION, c.account, c.day, c.kinds.map { it.name },
-            c.mixes.map { m -> SavedMix(m.slot, m.kind.name, m.day, m.index, m.part?.name, m.artists, m.songs.map { it.toSavedTrack() }, m.art) }, c.shown)
-        runCatching { target.parentFile?.mkdirs(); persistBackupFileAtomically(target, gson.toJson(saved).toByteArray()) }
+    private fun saved(c: Cache, tracks: Boolean) = c.mixes.map { m ->
+        SavedMix(m.slot, m.kind.name, m.day, m.index, m.part?.name, m.artists, if (tracks) m.songs.map { it.toSavedTrack() } else null, m.art)
     }
 
-    suspend fun refresh() = lock.withLock {
+    private fun writeTiles(c: Cache) {
+        tiles?.let { persistBackupFileAtomically(it, gson.toJson(Saved(VERSION, c.account, c.day, mixes = saved(c, tracks = false))).toByteArray()) }
+    }
+
+    private suspend fun save(c: Cache) = withContext(Dispatchers.IO) {
+        val target = file ?: return@withContext
+        runCatching {
+            target.parentFile?.mkdirs()
+            persistBackupFileAtomically(target, gson.toJson(Saved(VERSION, c.account, c.day, c.kinds.map { it.name }, saved(c, tracks = true), c.shown, c.faces)).toByteArray())
+            writeTiles(c)
+        }
+    }
+
+    // null while what is cached still stands; otherwise the name of the attempt a rebuild would be
+    private fun due(kinds: Set<MixKind>): String? {
+        val key = key()
+        // no session yet: the account change that follows asks again
+        if (key.isEmpty() || repository.isOffline) return null
+        val clock = clock()
+        val current = cache?.takeIf { it.account == key }
+        if (current != null && current.day == clock.day && current.kinds.containsAll(kinds)) return null
+        // a source that is down gets another go later, not on every look at home
+        return "$key|${clock.day}|$kinds".takeUnless { attempt -> attempted?.let { (k, at) -> k == attempt && now() - at < RETRY_MS } == true }
+    }
+
+    private suspend fun show(): Boolean = lock.withLock {
         val kinds = kinds.first().also { enabled = it }
-        if (kinds.isEmpty()) { _mixes.value = emptyList(); return@withLock }
+        if (kinds.isEmpty()) { _mixes.value = emptyList(); return@withLock false }
+        preview(kinds)
         load()
         publish()
+        due(kinds) != null
+    }
+
+    // the lock is free while home settles, so a session that arrives meanwhile can show its row
+    suspend fun refresh() {
+        if (!show()) return
+        delay(settleMs)
+        rebuild()
+    }
+
+    private suspend fun rebuild() = lock.withLock {
+        val kinds = enabled
+        val attempt = due(kinds) ?: return@withLock
         val key = key()
         val clock = clock()
         val current = cache?.takeIf { it.account == key }
-        if (repository.isOffline || current != null && current.day == clock.day && current.kinds.containsAll(kinds)) return@withLock
-        val attempt = "$key|${clock.day}|$kinds"
-        attempted?.let { (k, at) -> if (k == attempt && now() - at < RETRY_MS) return@withLock }
-        delay(settleMs)
         val started = System.currentTimeMillis()
         val input = try { gather(kinds, clock, current?.shown.orEmpty()) } catch (e: CancellationException) { throw e } catch (_: Exception) { null }
         if (input == null) { attempted = attempt to now(); return@withLock }
         val prepared = withContext(Dispatchers.Default) { MixBuilder.prepare(input) }
         val stations = stations(prepared.stationArtists)
-        val built = pictured(withContext(Dispatchers.Default) { prepared.build(stations) })
+        val (built, faces) = pictured(withContext(Dispatchers.Default) { prepared.build(stations) }, cache?.faces.orEmpty(), clock.day)
         if (key != key()) return@withLock
-        val next = Cache(key, clock.day, kinds, built, remember(current?.shown.orEmpty(), built, clock.day))
+        val next = Cache(key, clock.day, kinds, built, remember(current?.shown.orEmpty(), built, clock.day), faces)
         cache = next
         publish()
         save(next)
@@ -231,19 +293,24 @@ class MadeForYou(
     }
 
     // a station shows its own artist; the other tiles on the row then each take a different one, and only one time-of-day mix is there at once
-    private suspend fun pictured(mixes: List<GeneratedMix>): List<GeneratedMix> = coroutineScope {
+    private suspend fun pictured(mixes: List<GeneratedMix>, known: Map<String, SavedFace>, day: Long): Pair<List<GeneratedMix>, Map<String, SavedFace>> = coroutineScope {
         val used = HashSet<String>()
         fun faces(mix: GeneratedMix) = mix.artists.mapNotNull { name -> mix.songs.firstOrNull { djPrimaryArtist(it.artist) == name } }
         val chosen = mixes.filter { it.kind == MixKind.STATION }.associate { mix -> mix.slot to faces(mix).firstOrNull()?.also { used += mixArtistKey(it.artist) } } +
             mixes.filter { it.part == null && it.kind != MixKind.STATION }.associate { mix -> mix.slot to faces(mix).let { f -> f.firstOrNull { used.add(mixArtistKey(it.artist)) } ?: f.firstOrNull() } } +
             mixes.filter { it.part != null }.associate { mix -> mix.slot to faces(mix).let { f -> f.firstOrNull { mixArtistKey(it.artist) !in used } ?: f.firstOrNull() } }
-        mixes.map { mix ->
+        val fresh = known.filterValues { day - (it.day ?: 0) in 0..FACE_DAYS && !it.url.isNullOrBlank() }
+        val done = mixes.map { mix ->
             async {
-                val face = chosen[mix.slot] ?: return@async mix
-                val portrait = face.artistId.takeIf { it.isNotBlank() }?.let { id -> quietly(6_000, null) { repository.detail("artist", id)?.info?.artUrl } }
-                mix.copy(art = portrait?.takeIf { it.isNotBlank() } ?: face.artworkUrl)
+                val face = chosen[mix.slot] ?: return@async mix to null
+                val artist = mixArtistKey(face.artist)
+                // an artist's picture rarely changes, so the source is only asked again after a couple of weeks
+                val kept = fresh[artist]
+                val portrait = kept?.url ?: face.artistId.takeIf { it.isNotBlank() }?.let { id -> quietly(6_000, null) { repository.detail("artist", id)?.info?.artUrl } }.orEmpty()
+                mix.copy(art = portrait.ifBlank { face.artworkUrl }) to (artist to (kept ?: SavedFace(portrait, day))).takeIf { portrait.isNotBlank() }
             }
         }.awaitAll()
+        done.map { it.first } to fresh + done.mapNotNull { it.second }
     }
 
     private fun remember(old: Map<String, Map<String, Long>>, built: List<GeneratedMix>, day: Long): Map<String, Map<String, Long>> {
@@ -308,11 +375,11 @@ class MadeForYou(
 
     private suspend fun all(): List<GeneratedMix> {
         load()
-        return cache?.takeIf { it.account == key() }?.mixes.orEmpty()
+        return cache?.takeIf { mine(it.account) }?.mixes.orEmpty()
     }
 
     // an edition that was replaced while its page was open resolves to the slot's current one
-    private suspend fun find(id: String): GeneratedMix? = (mixes.value + all()).let { mixes ->
+    private suspend fun find(id: String): GeneratedMix? = (mixes.value.filter { it.songs.isNotEmpty() } + all()).let { mixes ->
         mixes.firstOrNull { it.id == id } ?: mixes.firstOrNull { it.slot == mixSlotOf(id) }
     }
 

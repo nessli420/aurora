@@ -58,6 +58,7 @@ class MadeForYouTest {
 
     private inner class Source(val extras: Boolean) : MediaBackend {
         var asked = 0
+        var portraits = 0
         override val session = Session("https://mixes.invalid", "listener", "salt", "token", ServerType.SUBSONIC, "user")
         override suspend fun ping() = true
         override suspend fun home() = HomeData()
@@ -78,7 +79,7 @@ class MadeForYouTest {
         override suspend fun deletePlaylist(id: String) = false
         override suspend fun setStarred(id: String, starred: Boolean, kind: String) = false
         override suspend fun detail(kind: String, id: String): DetailData? = if (kind != "artist" || id.startsWith("Newcomer")) null
-            else DetailData(com.aurora.music.model.DetailInfo(id, "", "https://faces.invalid/${id.replace(" ", "")}.jpg", 0, true, 0, "Artist"), emptyList())
+            else DetailData(com.aurora.music.model.DetailInfo(id, "", "https://faces.invalid/${id.replace(" ", "")}.jpg", 0, true, 0, "Artist"), emptyList()).also { portraits++ }
         override suspend fun serverLyrics(song: Song): Lyrics? = null
         override fun streamUrl(songId: String, maxBitrate: Int, lossless: Boolean) = ""
         override fun coverArtUrl(id: String, size: Int) = ""
@@ -101,10 +102,11 @@ class MadeForYouTest {
         val history = PlayHistoryStore(dir)
         val settings = SettingsStore(PreferenceDataStoreFactory.create(scope = scope) { File(dir, "mixes.preferences_pb") }, dir, dir)
         val kinds = MutableStateFlow(kinds)
+        var account = "listener"
         lateinit var made: MadeForYou
         val repository = MusicRepository({ merged }, DownloadManager(dir, { "file://$it" }, { null }), mixes = { made.detail(it) })
 
-        fun service() = MadeForYou(repository, history, File(dir, "made-for-you.json"), { "listener" }, this.kinds, settings.mixSnapshots,
+        fun service() = MadeForYou(repository, history, File(dir, "made-for-you.json"), { account }, this.kinds, settings.mixSnapshots,
             { id, playlist -> settings.setMixLiked(id, playlist) }, { settings.keepMixLikes(it) },
             { MixName("Mix ${it.slot}", it.artists.joinToString(), "Copy of ${it.slot}") }, now = { time }, offset = { 0 }, seed = 3, settleMs = 0)
 
@@ -233,6 +235,75 @@ class MadeForYouTest {
         restarted.refresh()
         assertTrue("a library change builds again", w.source.asked > asked)
         assertEquals("and the same day gives the same mixes", built, restarted.mixes.value.map { it.id to it.songs.map { s -> s.id } })
+    }
+
+    @Test fun theRowIsThereFromItsTilesBeforeTheSessionOrTheTracks() = runBlocking {
+        val w = World()
+        w.made.refresh()
+        val built = w.made.mixes.value
+        val tiles = File(w.dir, "made-for-you-tiles.json")
+        assertTrue(tiles.exists())
+        assertFalse("the tiles hold no tracks", "streamUrl" in tiles.readText())
+        assertTrue("${tiles.length()} of ${File(w.dir, "made-for-you.json").length()} bytes", tiles.length() * 10 < File(w.dir, "made-for-you.json").length())
+        val asked = w.source.asked
+
+        // a cold start: no session yet, so no account to compare with
+        w.account = ""
+        w.made = w.service()
+        w.made.warm()
+        val row = w.made.mixes.value
+        assertEquals(built.map { Triple(it.id, it.coverUrl, it.artists) }, row.map { Triple(it.id, it.coverUrl, it.artists) })
+        assertTrue("only the tiles were read", row.all { it.songs.isEmpty() })
+        assertEquals("a tile opened this early still finds its tracks", built.first().songs.map { it.id }, w.repository.detail(MIX_KIND, row.first().id)!!.tracks.map { it.id })
+
+        w.made.refresh()
+        assertEquals(built.map { it.id to it.songs.map { s -> s.id } }, w.made.mixes.value.map { it.id to it.songs.map { s -> s.id } })
+        assertEquals("nothing is built without a session", asked, w.source.asked)
+
+        w.account = "listener"
+        w.made.recheck()
+        w.made.refresh()
+        assertEquals(asked, w.source.asked)
+        assertEquals(built.map { it.id }, w.made.mixes.value.map { it.id })
+
+        // the session turned out to be someone else's: their own mixes replace the borrowed row
+        w.account = "another listener"
+        w.made.recheck()
+        w.made.refresh()
+        assertTrue(w.source.asked > asked)
+        assertTrue(w.made.mixes.value.isNotEmpty())
+    }
+
+    @Test fun aSwitchedOffRowIsNotShownFromItsTilesEither() = runBlocking {
+        val w = World()
+        w.made.refresh()
+        w.kinds.value = setOf(MixKind.DISCOVER)
+        w.made = w.service()
+        w.made.warm()
+        assertTrue(w.made.mixes.value.isNotEmpty())
+        assertTrue(w.made.mixes.value.all { it.kind == MixKind.DISCOVER })
+        w.kinds.value = emptySet()
+        val off = w.service()
+        off.warm()
+        assertTrue(off.mixes.value.isEmpty())
+    }
+
+    @Test fun anArtistsPictureIsAskedForOnceNotEveryDay() = runBlocking {
+        val w = World()
+        w.made.refresh()
+        val first = w.source.portraits
+        assertTrue(first > 0)
+        val faces = w.made.mixes.value.filter { it.art.startsWith("https://faces.invalid/") }.associate { it.slot to it.art }
+
+        time += day
+        w.made.refresh()
+        assertEquals("six artists, all pictured yesterday", first, w.source.portraits)
+        assertTrue(w.made.mixes.value.filter { it.kind == MixKind.STATION }.all { it.art.startsWith("https://faces.invalid/") })
+        assertTrue(faces.isNotEmpty())
+
+        time += 20 * day
+        w.made.refresh()
+        assertTrue("after a few weeks the source is asked again", w.source.portraits > first)
     }
 
     @Test fun aMixOpensLikeAnyCollection() = runBlocking {
