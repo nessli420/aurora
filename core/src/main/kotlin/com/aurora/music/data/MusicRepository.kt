@@ -114,6 +114,8 @@ class MusicRepository(
     private val trackChoices: TrackChoices? = null,
     private val hiddenSongs: () -> HiddenSongs = { HiddenSongs.NONE },
     private val mixes: suspend (String) -> DetailData? = { null },
+    // aurora's own playlists, for copies that must never be written to an account
+    private val ownPlaylists: LocalStore? = null,
     // reads map and dedup here, one at a time, so callers can stay on the main thread
     private val mapping: CoroutineContext = Dispatchers.Default.limitedParallelism(1),
 ) {
@@ -401,7 +403,33 @@ class MusicRepository(
     }
 
     suspend fun allPlaylists(view: String? = null): List<Playlist> = withContext(mapping) {
-        if (offline) offlinePlaylists(view) else viewOf(view)?.allPlaylists().orEmpty()
+        if (offline) offlinePlaylists(view) else viewOf(view)?.allPlaylists().orEmpty() + if (view == null) savedMixes() else emptyList()
+    }
+
+    // a merged or on-device library lists aurora's playlists through its local source already
+    private fun keepsOwn(source: MediaBackend) = source is MergedBackend || source.acceptsForeignTracks
+
+    private fun ownPrefix(source: MediaBackend): String? = runCatching { mergeNamespace(source.session) + MERGE_NAMESPACE_SEP }.getOrNull()
+
+    // a saved mix as a source on its own sees it: the tracks filed under its namespace, by their own ids
+    private fun ownTracks(playlist: LocalPlaylist, source: MediaBackend): List<Song> {
+        val prefix = ownPrefix(source) ?: return emptyList()
+        val saved = playlist.foreign.orEmpty().associateBy { it.id }
+        return playlist.trackIds.orEmpty().mapNotNull { id -> saved[id]?.takeIf { id.startsWith(prefix) }?.toSong()?.let { tag(it.copy(id = id.removePrefix(prefix)), source) } }
+    }
+
+    private fun savedMix(kind: String, id: String): LocalPlaylist? {
+        if (kind != "playlist" || !id.startsWith(LOCAL_PLAYLIST_PREFIX) || backend?.let(::keepsOwn) != false) return null
+        return ownPlaylists?.playlist(id)?.takeIf { it.origin == ORIGIN_MIX }
+    }
+
+    private fun savedMixes(): List<Playlist> {
+        val source = backend?.takeUnless(::keepsOwn) ?: return emptyList()
+        return ownPlaylists?.playlists().orEmpty().filter { it.origin == ORIGIN_MIX }.mapNotNull { p ->
+            val tracks = ownTracks(p, source).takeIf { it.isNotEmpty() } ?: return@mapNotNull null
+            Playlist(p.id, p.title.orEmpty(), p.subtitle.orEmpty().ifBlank { "${tracks.size} song${if (tracks.size == 1) "" else "s"}" },
+                tracks.firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl.orEmpty(), tracks.size, accentArgbFor(p.id))
+        }
     }
 
     suspend fun allSongs(): List<Song> = withContext(mapping) {
@@ -613,11 +641,17 @@ class MusicRepository(
         return true
     }
 
-    // a frozen copy of a list that isn't a playlist yet; a mixed local one where the library has those
+    // a frozen copy of a mix: always one of aurora's own playlists, never a playlist on the account
     suspend fun savePlaylistCopy(name: String, songs: List<Song>): String? {
         if (offline || songs.isEmpty()) return null
         val source = backend ?: return null
-        val id = source.createMixedPlaylist(name, songs) ?: source.createPlaylistWithId(name, songs.map { it.id }) ?: return null
+        val store = ownPlaylists ?: return null
+        val id = source.createMixedPlaylist(name, songs)?.also { store.setOrigin(it.substringAfterLast(MERGE_NAMESPACE_SEP), ORIGIN_MIX) } ?: run {
+            // a source on its own files its songs under the namespace a merged library would give them
+            val prefix = ownPrefix(source) ?: return null
+            val filed = songs.map { if (MERGE_NAMESPACE_SEP in it.id) it else it.copy(id = prefix + it.id) }
+            store.createPlaylist(name.trim()).also { made -> store.addTracks(made, filed.map { it.id }, filed.map { it.toSavedTrack() }); store.setOrigin(made, ORIGIN_MIX) }
+        }
         playlistChangeEvents.tryEmit(id)
         return id
     }
@@ -656,20 +690,21 @@ class MusicRepository(
     }
 
     suspend fun updatePlaylist(id: String, name: String?, comment: String?): Boolean {
-        val updated = backend?.updatePlaylist(id, name, comment) ?: false
+        val updated = if (savedMix("playlist", id) != null) { ownPlaylists?.updatePlaylist(id, name, comment); true }
+            else backend?.updatePlaylist(id, name, comment) ?: false
         if (updated) playlistChangeEvents.tryEmit(id)
         return updated
     }
 
     suspend fun deletePlaylist(id: String): Boolean {
-        val deleted = backend?.deletePlaylist(id) ?: false
+        val deleted = if (savedMix("playlist", id) != null) { ownPlaylists?.deletePlaylist(id); true } else backend?.deletePlaylist(id) ?: false
         if (deleted) playlistChangeEvents.tryEmit(id)
         return deleted
     }
 
     // playlists arent server-starrable handled locally by the caller
     suspend fun setStarred(id: String, starred: Boolean, kind: String = "song"): Boolean {
-        if (offline) return false
+        if (offline || savedMix(kind, id) != null) return false
         return backend?.setStarred(backendSongId(id) ?: return false, starred, kind) ?: false
     }
 
@@ -721,6 +756,11 @@ class MusicRepository(
             }
         }
         val source = backend ?: return null
+        savedMix(kind, id)?.let { p ->
+            val tracks = ownTracks(p, source)
+            return DetailData(DetailInfo(p.title.orEmpty(), "${tracks.size} song${if (tracks.size == 1) "" else "s"}", tracks.firstOrNull { it.artworkUrl.isNotBlank() }?.artworkUrl.orEmpty(),
+                accentArgbFor(id), false, tracks.size, "Playlist", editableDescription = p.subtitle.orEmpty(), description = p.subtitle.orEmpty()), tracks)
+        }
         val result = source.detail(kind, id) ?: return null
         rememberCollection(source, kind, id, source.playbackCollectionIdentity(kind, id, result.info.title))
         val tracks = result.tracks.map { tag(it, source) }
@@ -736,7 +776,7 @@ class MusicRepository(
         if (offline) emptyList() else sourceSongs { it.detailPage(kind, id, offset) }
 
     suspend fun collectionTracks(kind: String, id: String): List<Song> = withContext(mapping) {
-        playable(kind, id, if (offline || kind == "smart" || kind == com.aurora.music.foryou.MIX_KIND) detail(kind, id)?.tracks.orEmpty()
+        playable(kind, id, if (offline || kind == "smart" || kind == com.aurora.music.foryou.MIX_KIND || savedMix(kind, id) != null) detail(kind, id)?.tracks.orEmpty()
             else sourceSongs { it.collectionTracks(kind, id) })
     }
 

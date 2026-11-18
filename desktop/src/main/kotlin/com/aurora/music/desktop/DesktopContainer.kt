@@ -353,6 +353,7 @@ class DesktopContainer(
         trackChoices = trackChoices,
         hiddenSongs = { hiddenSongs.value },
         mixes = { madeForYou.detail(it) },
+        ownPlaylists = localStore,
     )
 
     val madeForYou by lazy {

@@ -466,6 +466,7 @@ class AppContainer(context: Context) {
         trackChoices = trackChoices,
         hiddenSongs = { hiddenSongs.value },
         mixes = { madeForYou.detail(it) },
+        ownPlaylists = localStore,
     )
 
     val madeForYou by lazy {

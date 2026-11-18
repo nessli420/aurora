@@ -21,7 +21,6 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.SwapHoriz
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -30,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -53,6 +53,8 @@ import com.aurora.music.data.isPodcast
 import com.aurora.music.data.isRadio
 import com.aurora.music.localization.appString
 import com.aurora.music.model.Song
+import com.aurora.music.ui.components.SongMenu
+import com.aurora.music.ui.components.SongMenuSection
 import com.aurora.music.util.TrackMatch
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.async
@@ -151,8 +153,8 @@ private fun SourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, f
         note?.let { Text(it, style = MaterialTheme.typography.labelSmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis) }
     }
 
-    DropdownMenu(expanded = true, onDismissRequest = onDismiss) {
-        when (page) {
+    SongMenu(expanded = true, onDismissRequest = onDismiss) {
+        key(page) { SongMenuSection(0) { when (page) {
             SongMenuPage.ROOT -> {
                 DropdownMenuItem(
                     text = { Text(appString(R.string.song_menu_source)) },
@@ -180,7 +182,7 @@ private fun SourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, f
                     )
                 }
                 if (sources.canRematch(song)) {
-                    HorizontalDivider()
+                    HorizontalDivider(Modifier.padding(horizontal = 16.dp, vertical = 4.dp), color = colors.outlineVariant.copy(alpha = 0.6f))
                     DropdownMenuItem(
                         text = { Text(appString(R.string.song_menu_rematch)) },
                         leadingIcon = { Icon(Icons.Filled.Search, null) },
@@ -223,7 +225,7 @@ private fun SourcesMenu(song: Song, sources: SongSources, start: SongMenuPage, f
                     }
                 }
             }
-        }
+        } } }
     }
 }
 
@@ -269,11 +271,28 @@ fun CopyLinkMenuItem(song: Song, onClick: () -> Unit) {
     )
 }
 
-// the song's page on each merged catalogue that has it, shown in place of the menu it was picked from
+// the playing song's other sources and its match, as holding its title offers them
 @Composable
-fun CopyLinkMenu(song: Song, onDismiss: () -> Unit) {
+fun PlaybackSourceMenuItems(song: Song, pick: () -> Unit, close: () -> Unit) {
+    val sources = LocalSongSources.current?.takeIf { songMenusFor(song) } ?: return
+    if (sources.manySources()) DropdownMenuItem(
+        text = { Text(appString(R.string.song_menu_source)) },
+        leadingIcon = { Icon(Icons.Filled.SwapHoriz, null) },
+        trailingIcon = { Icon(Icons.AutoMirrored.Filled.KeyboardArrowRight, null) },
+        onClick = pick,
+    )
+    if (sources.canRematch(song)) DropdownMenuItem(
+        text = { Text(appString(R.string.song_menu_rematch)) },
+        leadingIcon = { Icon(Icons.Filled.Search, null) },
+        onClick = { close(); sources.rematch(song) },
+    )
+}
+
+// a page of the sources menu, shown in place of the song menu it was picked from
+@Composable
+fun SongPageMenu(song: Song, page: SongMenuPage, onDismiss: () -> Unit) {
     val sources = LocalSongSources.current ?: return
-    SongSourcesMenu(song, sources, SongMenuPage.LINK, onDismiss = onDismiss)
+    SongSourcesMenu(song, sources, page, onDismiss = onDismiss)
 }
 
 // the icon each source has on the sign-in screen

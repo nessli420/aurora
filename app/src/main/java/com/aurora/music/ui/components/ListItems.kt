@@ -39,7 +39,6 @@ import androidx.compose.material.icons.filled.Radio
 import androidx.compose.material.icons.outlined.Explicit
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -61,6 +60,10 @@ import com.aurora.music.model.Album
 import com.aurora.music.model.Artist
 import com.aurora.music.model.Playlist
 import com.aurora.music.model.Song
+import com.aurora.music.ui.screens.player.CopyLinkMenuItem
+import com.aurora.music.ui.screens.player.PlaybackSourceMenuItems
+import com.aurora.music.ui.screens.player.SongMenuPage
+import com.aurora.music.ui.screens.player.SongPageMenu
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
@@ -98,7 +101,7 @@ fun SongRow(
     onToggleHidden: (() -> Unit)? = null,
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
-    var linking by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
+    var page by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<SongMenuPage?>(null) }
     var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small
     val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
@@ -206,9 +209,9 @@ fun SongRow(
                 modifier = Modifier.size(if (tablet) 48.dp else 32.dp).paperClip(CircleShape).clickable { menuOpen = true }
                     .padding(if (tablet) 12.dp else 4.dp),
             )
-            if (menuOpen && linking) com.aurora.music.ui.screens.player.CopyLinkMenu(song) { linking = false; menuOpen = false }
-            DropdownMenu(expanded = menuOpen && !linking, onDismissRequest = { menuOpen = false }) {
-                if (hiddenEverywhere) {
+            if (menuOpen) page?.let { SongPageMenu(song, it) { page = null; menuOpen = false } }
+            SongMenu(expanded = menuOpen && page == null, onDismissRequest = { menuOpen = false }) {
+                if (hiddenEverywhere) SongMenuSection(0) {
                     if (hiddenAlone) DropdownMenuItem(
                         text = { Text(appString(R.string.hide_song_undo)) },
                         onClick = { menuOpen = false; hide?.invoke(song, false) },
@@ -220,70 +223,80 @@ fun SongRow(
                         leadingIcon = { Icon(Icons.Filled.Block, null) },
                     )
                 } else {
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.text_play_5d12bd)) },
-                        onClick = { menuOpen = false; onClick() },
-                        leadingIcon = { Icon(Icons.Filled.PlayArrow, null) },
-                    )
-                    if (onPlayNext != null) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_play_next_40d33c)) },
-                        onClick = { menuOpen = false; onPlayNext() },
-                        leadingIcon = { Icon(Icons.Filled.QueuePlayNext, null) },
-                    )
-                    if (onAddToQueue != null) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_add_to_queue_69b498)) },
-                        onClick = { menuOpen = false; onAddToQueue() },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
-                    )
-                    if (canLike) DropdownMenuItem(
-                        text = { Text(if (isLiked) appString(R.string.text_remove_from_liked_9d1568) else appString(R.string.text_add_to_liked_b99f26)) },
-                        onClick = { menuOpen = false; onToggleLike() },
-                        leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
-                    )
-                    RepostMenuItem(song) { menuOpen = false }
-                    com.aurora.music.ui.screens.player.CopyLinkMenuItem(song) { linking = true }
-                    if (if (hidden) onToggleHidden != null else hide != null) DropdownMenuItem(
-                        text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
-                        onClick = { menuOpen = false; if (hidden) onToggleHidden?.invoke() else hide?.invoke(song, true) },
-                        leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.track_swipe_playlists)) },
-                        onClick = { menuOpen = false; showPlaylists = true },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
-                    )
-                    if (isDownloaded && onRemoveDownload != null) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_remove_download_147742)) },
-                        onClick = { menuOpen = false; onRemoveDownload() },
-                        leadingIcon = { Icon(Icons.Filled.DownloadDone, null, tint = MaterialTheme.colorScheme.primary) },
-                    ) else if (onDownload != null) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_download_a479c9)) },
-                        onClick = { menuOpen = false; onDownload() },
-                        leadingIcon = { Icon(Icons.Filled.Download, null) },
-                    )
-                    LocalStartRadio.current?.let { startRadio ->
+                    SongMenuSection(0) {
                         DropdownMenuItem(
-                            text = { Text(appString(R.string.discovery_start_radio)) },
-                            onClick = { menuOpen = false; startRadio(song) },
-                            leadingIcon = { Icon(Icons.Filled.Radio, null) },
+                            text = { Text(appString(R.string.text_play_5d12bd)) },
+                            onClick = { menuOpen = false; onClick() },
+                            leadingIcon = { Icon(Icons.Filled.PlayArrow, null) },
+                        )
+                        if (canLike) DropdownMenuItem(
+                            text = { Text(if (isLiked) appString(R.string.text_remove_from_liked_9d1568) else appString(R.string.text_add_to_liked_b99f26)) },
+                            onClick = { menuOpen = false; onToggleLike() },
+                            leadingIcon = { Icon(if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder, null) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.track_swipe_playlists)) },
+                            onClick = { menuOpen = false; showPlaylists = true },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.PlaylistAdd, null) },
+                        )
+                        if (isDownloaded && onRemoveDownload != null) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_remove_download_147742)) },
+                            onClick = { menuOpen = false; onRemoveDownload() },
+                            leadingIcon = { Icon(Icons.Filled.DownloadDone, null, tint = MaterialTheme.colorScheme.primary) },
+                        ) else if (onDownload != null) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_download_a479c9)) },
+                            onClick = { menuOpen = false; onDownload() },
+                            leadingIcon = { Icon(Icons.Filled.Download, null) },
+                        )
+                        // tag edit only on content:// files or backends with metadata write
+                        if (onEditTags != null && (song.streamUrl.startsWith("content://") && com.aurora.music.data.CueClip.of(song.streamUrl) == null || serverTagEditing)) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_edit_tags_d8a5fc)) },
+                            onClick = { menuOpen = false; onEditTags() },
+                            leadingIcon = { Icon(Icons.Filled.Edit, null) },
+                        )
+                        // only the playing song can be swapped to another source or match
+                        if (isPlaying) PlaybackSourceMenuItems(song, pick = { page = SongMenuPage.SOURCE }) { menuOpen = false }
+                    }
+                    SongMenuSection(1) {
+                        if (onPlayNext != null) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_play_next_40d33c)) },
+                            onClick = { menuOpen = false; onPlayNext() },
+                            leadingIcon = { Icon(Icons.Filled.QueuePlayNext, null) },
+                        )
+                        if (onAddToQueue != null) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_add_to_queue_69b498)) },
+                            onClick = { menuOpen = false; onAddToQueue() },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
+                        )
+                        LocalStartRadio.current?.let { startRadio ->
+                            DropdownMenuItem(
+                                text = { Text(appString(R.string.discovery_start_radio)) },
+                                onClick = { menuOpen = false; startRadio(song) },
+                                leadingIcon = { Icon(Icons.Filled.Radio, null) },
+                            )
+                        }
+                    }
+                    SongMenuSection(2) {
+                        if (onGoToAlbum != null) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
+                            onClick = { menuOpen = false; onGoToAlbum() },
+                            leadingIcon = { Icon(Icons.Filled.Album, null) },
+                        )
+                        if (onGoToArtist != null) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
+                            onClick = { menuOpen = false; onGoToArtist() },
+                            leadingIcon = { Icon(Icons.Filled.Person, null) },
                         )
                     }
-                    if (onGoToAlbum != null) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
-                        onClick = { menuOpen = false; onGoToAlbum() },
-                        leadingIcon = { Icon(Icons.Filled.Album, null) },
-                    )
-                    if (onGoToArtist != null) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
-                        onClick = { menuOpen = false; onGoToArtist() },
-                        leadingIcon = { Icon(Icons.Filled.Person, null) },
-                    )
-                    // tag edit only on content:// files or backends with metadata write
-                    if (onEditTags != null && (song.streamUrl.startsWith("content://") && com.aurora.music.data.CueClip.of(song.streamUrl) == null || serverTagEditing)) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_edit_tags_d8a5fc)) },
-                        onClick = { menuOpen = false; onEditTags() },
-                        leadingIcon = { Icon(Icons.Filled.Edit, null) },
-                    )
+                    SongMenuSection(3) {
+                        RepostMenuItem(song) { menuOpen = false }
+                        CopyLinkMenuItem(song) { page = SongMenuPage.LINK }
+                        if (if (hidden) onToggleHidden != null else hide != null) DropdownMenuItem(
+                            text = { Text(appString(if (hidden) R.string.hide_song_undo else R.string.hide_song)) },
+                            onClick = { menuOpen = false; if (hidden) onToggleHidden?.invoke() else hide?.invoke(song, true) },
+                            leadingIcon = { Icon(if (hidden) Icons.Filled.Visibility else Icons.Filled.VisibilityOff, null) },
+                        )
+                    }
                 }
             }
         }

@@ -7,7 +7,9 @@ import com.aurora.music.data.HomeData
 import com.aurora.music.data.HomeSection
 import com.aurora.music.data.LocalBackend
 import com.aurora.music.data.LocalCatalog
+import com.aurora.music.data.LOCAL_PLAYLIST_PREFIX
 import com.aurora.music.data.LocalStore
+import com.aurora.music.data.ORIGIN_MIX
 import com.aurora.music.data.Lyrics
 import com.aurora.music.data.MediaBackend
 import com.aurora.music.data.MergedBackend
@@ -59,6 +61,8 @@ class MadeForYouTest {
     private inner class Source(val extras: Boolean) : MediaBackend {
         var asked = 0
         var portraits = 0
+        // anything that would change the listener's account
+        val written = ArrayList<String>()
         override val session = Session("https://mixes.invalid", "listener", "salt", "token", ServerType.SUBSONIC, "user")
         override suspend fun ping() = true
         override suspend fun home() = HomeData()
@@ -74,10 +78,12 @@ class MadeForYouTest {
             else (1..6).map { song("only-${query.replace(" ", "")}$it", query) } + song("stray-$query", "Somebody Else"))
         override suspend fun scrobble(id: String) = Unit
         override suspend fun radio(seedId: String) = catalogue
-        override suspend fun createPlaylist(name: String) = false
-        override suspend fun updatePlaylist(id: String, name: String?, comment: String?) = false
-        override suspend fun deletePlaylist(id: String) = false
-        override suspend fun setStarred(id: String, starred: Boolean, kind: String) = false
+        override suspend fun createPlaylist(name: String) = true.also { written += "create $name" }
+        override suspend fun createPlaylistWithId(name: String): String? = "on-the-account".also { written += "create $name" }
+        override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>) = true.also { written += "add to $playlistId" }
+        override suspend fun updatePlaylist(id: String, name: String?, comment: String?) = true.also { written += "update $id" }
+        override suspend fun deletePlaylist(id: String) = true.also { written += "delete $id" }
+        override suspend fun setStarred(id: String, starred: Boolean, kind: String) = true.also { written += "star $kind $id" }
         override suspend fun detail(kind: String, id: String): DetailData? = if (kind != "artist" || id.startsWith("Newcomer")) null
             else DetailData(com.aurora.music.model.DetailInfo(id, "", "https://faces.invalid/${id.replace(" ", "")}.jpg", 0, true, 0, "Artist"), emptyList()).also { portraits++ }
         override suspend fun serverLyrics(song: Song): Lyrics? = null
@@ -94,17 +100,20 @@ class MadeForYouTest {
         }
     } as LocalCatalog
 
-    private inner class World(kinds: Set<MixKind> = MixKind.entries.toSet(), extras: Boolean = true) {
+    private inner class World(kinds: Set<MixKind> = MixKind.entries.toSet(), extras: Boolean = true, alone: Boolean = false, shared: LocalStore? = null) {
         val dir: File = temp.newFolder()
         val source = Source(extras)
-        val store = LocalStore(dir)
+        // aurora's playlists outlive a change of library; everything else here belongs to one session
+        val store = shared ?: LocalStore(dir)
         val merged = MergedBackend(listOf(LocalBackend(nothingOnDevice, store, Session("local", "Me", "", "local", ServerType.LOCAL)), source), source.session)
         val history = PlayHistoryStore(dir)
         val settings = SettingsStore(PreferenceDataStoreFactory.create(scope = scope) { File(dir, "mixes.preferences_pb") }, dir, dir)
         val kinds = MutableStateFlow(kinds)
         var account = "listener"
         lateinit var made: MadeForYou
-        val repository = MusicRepository({ merged }, DownloadManager(dir, { "file://$it" }, { null }), mixes = { made.detail(it) })
+        // alone: the streaming account is the whole library, with no merged library around it
+        val backend: MediaBackend = if (alone) source else merged
+        val repository = MusicRepository({ backend }, DownloadManager(dir, { "file://$it" }, { null }), mixes = { made.detail(it) }, ownPlaylists = store)
 
         fun service() = MadeForYou(repository, history, File(dir, "made-for-you.json"), { account }, this.kinds, settings.mixSnapshots,
             { id, playlist -> settings.setMixLiked(id, playlist) }, { settings.keepMixLikes(it) },
@@ -114,7 +123,7 @@ class MadeForYouTest {
             made = service()
             runBlocking {
                 // rock in the evenings and calm in the mornings, never in the same sitting
-                val songs = merged.allSongs()
+                val songs = backend.allSongs()
                 val rock = songs.filter { it.artist.startsWith("Rock") }
                 val calm = songs.filter { it.artist.startsWith("Calm") }
                 fun play(s: Song, at: Long) = PlayEvent(s.id, s.title, s.artist, s.album, "", s.artistId, "", s.durationSec, at)
@@ -137,6 +146,7 @@ class MadeForYouTest {
         assertTrue(mix.id in w.settings.likedPlaylists.first())
         val playlist = w.settings.mixSnapshots.first().getValue(mix.id)
         assertEquals("Copy of ${mix.slot}", w.store.playlists().single().title)
+        assertEquals(ORIGIN_MIX, w.store.playlists().single().origin)
         val frozen = w.repository.detail("playlist", playlist)!!.tracks.map { it.id }
         assertEquals(mix.songs.map { it.id }, frozen)
 
@@ -156,6 +166,73 @@ class MadeForYouTest {
         assertEquals("unliking removes only its own copy", listOf("Copy of ${mix.slot}"), w.store.playlists().map { it.title })
         assertFalse(next.id in w.settings.likedPlaylists.first())
         assertTrue(w.settings.mixSnapshots.first().isEmpty())
+        assertTrue("the account was never written to: ${w.source.written}", w.source.written.isEmpty())
+    }
+
+    @Test fun onAStreamingAccountAloneALikedMixIsStillAuroraOwnPlaylist() = runBlocking {
+        val w = World(alone = true)
+        w.made.refresh()
+        val mix = w.made.mixes.value.first { it.kind == MixKind.DAILY }
+        assertTrue(w.repository.allPlaylists().isEmpty())
+
+        assertEquals(true, w.made.toggleLike(mix.id))
+        val saved = w.store.playlists().single()
+        assertEquals(ORIGIN_MIX, saved.origin)
+        assertTrue(saved.id.startsWith(LOCAL_PLAYLIST_PREFIX))
+        assertEquals(saved.id, w.settings.mixSnapshots.first().getValue(mix.id))
+        assertTrue("nothing was created on the account: ${w.source.written}", w.source.written.isEmpty())
+        assertTrue("it is in the backup with the other local playlists", saved.id in w.store.exportJson())
+
+        val listed = w.repository.allPlaylists().single()
+        assertEquals(saved.id to "Copy of ${mix.slot}", listed.id to listed.title)
+        assertEquals(mix.songs.size, listed.songCount)
+        val page = w.repository.detail("playlist", saved.id)!!
+        assertEquals("the tracks come back under the account's own ids", mix.songs.map { it.id }, page.tracks.map { it.id })
+        assertEquals(mix.songs.map { it.id }, w.repository.collectionTracks("playlist", saved.id).map { it.id })
+        assertTrue(page.info.editable)
+
+        assertTrue(w.repository.updatePlaylist(saved.id, "Kept", null))
+        assertEquals("Kept", w.repository.allPlaylists().single().title)
+        assertFalse("its heart has nothing to tell the account", w.repository.setStarred(saved.id, true, "playlist"))
+        assertTrue(w.source.written.isEmpty())
+
+        assertEquals(false, w.made.toggleLike(mix.id))
+        assertTrue(w.store.playlists().isEmpty())
+        assertTrue(w.repository.allPlaylists().isEmpty())
+        assertTrue(w.source.written.isEmpty())
+
+        // the account's own playlists still go to the account
+        assertTrue(w.repository.deletePlaylist("theirs"))
+        assertEquals(listOf("delete theirs"), w.source.written)
+    }
+
+    @Test fun aSavedMixFollowsTheAccountBetweenAMergedLibraryAndTheAccountAlone() = runBlocking {
+        val alone = World(alone = true)
+        alone.made.refresh()
+        val mix = alone.made.mixes.value.first { it.kind == MixKind.DAILY }
+        assertEquals(true, alone.made.toggleLike(mix.id))
+        val id = alone.store.playlists().single().id
+
+        // the same account inside a merged library: the local source lists it and every track routes back to the account
+        val merged = World(shared = alone.store)
+        val listed = merged.repository.allPlaylists().single()
+        assertEquals("Copy of ${mix.slot}", listed.title)
+        val tracks = merged.repository.detail("playlist", listed.id)!!.tracks
+        assertEquals(mix.songs.map { it.title }, tracks.map { it.title })
+        assertEquals(merged.backend.allSongs().filter { s -> mix.songs.any { it.title == s.title } }.map { it.id }.toSet(), tracks.map { it.id }.toSet())
+
+        // and one saved from the merged library opens on the account alone
+        merged.made.refresh()
+        val other = merged.made.mixes.value.first { it.kind == MixKind.DAILY && it.slot != mix.slot }
+        assertEquals(true, merged.made.toggleLike(other.id))
+        val again = World(alone = true, shared = alone.store)
+        val both = again.repository.allPlaylists()
+        assertEquals(setOf("Copy of ${mix.slot}", "Copy of ${other.slot}"), both.map { it.title }.toSet())
+        val back = again.repository.detail("playlist", both.first { it.title == "Copy of ${other.slot}" }.id)!!.tracks
+        assertEquals(other.songs.map { it.title }, back.map { it.title })
+        assertTrue(back.all { s -> library.any { it.id == s.id } })
+        assertTrue(alone.source.written.isEmpty() && merged.source.written.isEmpty() && again.source.written.isEmpty())
+        assertTrue(id.isNotEmpty())
     }
 
     @Test fun everyKindComesFromTheOneLibraryAndOnlyTheCurrentPartShows() = runBlocking {

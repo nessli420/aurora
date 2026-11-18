@@ -356,74 +356,83 @@ fun PlayerScreen(
         CanvasTint(canvasShown) {
         val moreMenu: @Composable () -> Unit = {
             var showMenu by remember { mutableStateOf(false) }
-            var linking by remember { mutableStateOf(false) }
+            var page by remember { mutableStateOf<SongMenuPage?>(null) }
             Box {
                 Icon(
                     Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d),
                     modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showMenu = true }.padding(8.dp),
                 )
-                if (showMenu && linking) CopyLinkMenu(song) { linking = false; showMenu = false }
-                DropdownMenu(expanded = showMenu && !linking, onDismissRequest = { showMenu = false }) {
-                    DropdownMenuItem(text = { Text(appString(R.string.text_mix_studio_668363)) }, onClick = { showMenu = false; onOpenMix() }, leadingIcon = { Icon(Icons.Filled.GraphicEq, null) })
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.text_sonic_radio_9b7bff)) },
-                        onClick = { showMenu = false; onSonicRadio() },
-                        leadingIcon = { Icon(Icons.Filled.Radio, null) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.text_auto_dj_774a78)) },
-                        onClick = { showMenu = false; onAutoDj() },
-                        leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.text_visualizer_7177c7)) },
-                        onClick = { showMenu = false; onOpenVisualizer() },
-                        leadingIcon = { Icon(Icons.Filled.GraphicEq, null) },
-                    )
-                    if (onOpenRelated != null && state.hasTrack) DropdownMenuItem(
-                        text = { Text(appString(R.string.discovery_related)) },
-                        onClick = { showMenu = false; onOpenRelated() },
-                        leadingIcon = { Icon(Icons.Filled.Explore, null) },
-                    )
-                    if (state.hasTrack) com.aurora.music.ui.components.RepostMenuItem(song) { showMenu = false }
-                    if (state.hasTrack) CopyLinkMenuItem(song) { linking = true }
-                    if (state.supportsComments) DropdownMenuItem(
-                        text = { Text(appString(R.string.player_comments)) },
-                        onClick = { showMenu = false; showComments = true },
-                        leadingIcon = { Icon(Icons.Filled.ChatBubble, null) },
-                    )
-                    if (state.commentsAvailable) DropdownMenuItem(
-                        text = { Text(appString(R.string.player_soundcloud_comments)) },
-                        onClick = { onToggleComments(!state.commentsEnabled) },
-                        leadingIcon = { Icon(if (state.commentsEnabled) Icons.Filled.SpeakerNotes else Icons.Filled.SpeakerNotesOff, null) },
-                        trailingIcon = if (state.commentsEnabled) ({ Icon(Icons.Filled.Check, null) }) else null,
-                    )
-                    MusicHapticsMenuItem()
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.text_sleep_timer_e90613)) },
-                        onClick = { showMenu = false; onOpenSleep() },
-                        leadingIcon = { Icon(Icons.Filled.Bedtime, null) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
-                        enabled = song.albumId.isNotBlank(),
-                        onClick = { showMenu = false; onGoToAlbum() },
-                        leadingIcon = { Icon(Icons.Filled.Album, null) },
-                    )
-                    DropdownMenuItem(
-                        text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
-                        enabled = song.artistId.isNotBlank(),
-                        onClick = { showMenu = false; onGoToArtist() },
-                        leadingIcon = { Icon(Icons.Filled.Person, null) },
-                    )
-                    if (PlayerPane.QUEUE in panes) DropdownMenuItem(
-                        text = { Text(appString(R.string.text_view_queue_827a90)) },
-                        onClick = {
-                            showMenu = false
-                            if (tablet) { sidePaneName = PlayerPane.QUEUE.name; portraitTabName = PlayerPane.QUEUE.name } else onOpenQueue()
-                        },
-                        leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
-                    )
+                if (showMenu) page?.let { SongPageMenu(song, it) { page = null; showMenu = false } }
+                com.aurora.music.ui.components.SongMenu(expanded = showMenu && page == null, onDismissRequest = { showMenu = false }) {
+                    com.aurora.music.ui.components.SongMenuSection(0) {
+                        DropdownMenuItem(text = { Text(appString(R.string.text_mix_studio_668363)) }, onClick = { showMenu = false; onOpenMix() }, leadingIcon = { Icon(Icons.Filled.GraphicEq, null) })
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.text_visualizer_7177c7)) },
+                            onClick = { showMenu = false; onOpenVisualizer() },
+                            leadingIcon = { Icon(Icons.Filled.GraphicEq, null) },
+                        )
+                        MusicHapticsMenuItem()
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.text_sleep_timer_e90613)) },
+                            onClick = { showMenu = false; onOpenSleep() },
+                            leadingIcon = { Icon(Icons.Filled.Bedtime, null) },
+                        )
+                        if (state.hasTrack) PlaybackSourceMenuItems(song, pick = { page = SongMenuPage.SOURCE }) { showMenu = false }
+                    }
+                    com.aurora.music.ui.components.SongMenuSection(1) {
+                        if (PlayerPane.QUEUE in panes) DropdownMenuItem(
+                            text = { Text(appString(R.string.text_view_queue_827a90)) },
+                            onClick = {
+                                showMenu = false
+                                if (tablet) { sidePaneName = PlayerPane.QUEUE.name; portraitTabName = PlayerPane.QUEUE.name } else onOpenQueue()
+                            },
+                            leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.text_sonic_radio_9b7bff)) },
+                            onClick = { showMenu = false; onSonicRadio() },
+                            leadingIcon = { Icon(Icons.Filled.Radio, null) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.text_auto_dj_774a78)) },
+                            onClick = { showMenu = false; onAutoDj() },
+                            leadingIcon = { Icon(Icons.Filled.AutoAwesome, null) },
+                        )
+                    }
+                    com.aurora.music.ui.components.SongMenuSection(2) {
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.text_go_to_album_e2d3b3)) },
+                            enabled = song.albumId.isNotBlank(),
+                            onClick = { showMenu = false; onGoToAlbum() },
+                            leadingIcon = { Icon(Icons.Filled.Album, null) },
+                        )
+                        DropdownMenuItem(
+                            text = { Text(appString(R.string.text_go_to_artist_d8f70c)) },
+                            enabled = song.artistId.isNotBlank(),
+                            onClick = { showMenu = false; onGoToArtist() },
+                            leadingIcon = { Icon(Icons.Filled.Person, null) },
+                        )
+                    }
+                    com.aurora.music.ui.components.SongMenuSection(3) {
+                        if (state.hasTrack) com.aurora.music.ui.components.RepostMenuItem(song) { showMenu = false }
+                        if (state.hasTrack) CopyLinkMenuItem(song) { page = SongMenuPage.LINK }
+                        if (state.supportsComments) DropdownMenuItem(
+                            text = { Text(appString(R.string.player_comments)) },
+                            onClick = { showMenu = false; showComments = true },
+                            leadingIcon = { Icon(Icons.Filled.ChatBubble, null) },
+                        )
+                        if (state.commentsAvailable) DropdownMenuItem(
+                            text = { Text(appString(R.string.player_soundcloud_comments)) },
+                            onClick = { onToggleComments(!state.commentsEnabled) },
+                            leadingIcon = { Icon(if (state.commentsEnabled) Icons.Filled.SpeakerNotes else Icons.Filled.SpeakerNotesOff, null) },
+                            trailingIcon = if (state.commentsEnabled) ({ Icon(Icons.Filled.Check, null) }) else null,
+                        )
+                        if (onOpenRelated != null && state.hasTrack) DropdownMenuItem(
+                            text = { Text(appString(R.string.discovery_related)) },
+                            onClick = { showMenu = false; onOpenRelated() },
+                            leadingIcon = { Icon(Icons.Filled.Explore, null) },
+                        )
+                    }
                 }
             }
         }

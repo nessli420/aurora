@@ -18,7 +18,12 @@ data class LocalPlaylist(
     val subtitle: String? = "",
     val trackIds: List<String>? = emptyList(),
     val foreign: List<SavedTrack>? = null,
+    // what made it, for the ones the listener didn't build by hand
+    val origin: String? = null,
 )
+
+const val LOCAL_PLAYLIST_PREFIX = "local-pl-"
+const val ORIGIN_MIX = "mix"
 
 private data class LocalState(
     val playlists: List<LocalPlaylist>? = emptyList(),
@@ -58,7 +63,7 @@ class LocalStore(filesDir: File) {
     fun playlist(id: String): LocalPlaylist? = state.playlists.orEmpty().firstOrNull { it.id == id }
 
     fun createPlaylist(name: String): String = synchronized(lock) {
-        val id = "local-pl-" + UUID.randomUUID().toString().take(8)
+        val id = LOCAL_PLAYLIST_PREFIX + UUID.randomUUID().toString().take(8)
         state = state.copy(playlists = state.playlists.orEmpty() + LocalPlaylist(id, name, "", emptyList()))
         persist()
         id
@@ -68,6 +73,11 @@ class LocalStore(filesDir: File) {
         state = state.copy(playlists = state.playlists.orEmpty().map {
             if (it.id == id) it.copy(title = name ?: it.title, subtitle = subtitle ?: it.subtitle) else it
         })
+        persist()
+    }
+
+    fun setOrigin(id: String, origin: String) = synchronized(lock) {
+        state = state.copy(playlists = state.playlists.orEmpty().map { if (it.id == id) it.copy(origin = origin) else it })
         persist()
     }
 
