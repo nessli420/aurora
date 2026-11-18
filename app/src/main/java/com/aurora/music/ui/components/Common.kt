@@ -156,7 +156,7 @@ fun SectionHeader(
 }
 
 @Composable
-fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
+fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier, maxLines: Int = Int.MAX_VALUE) {
     // paper's eyebrows are the site's mono labels: regular weight, no extra tracking
     val paper = com.aurora.music.ui.theme.isPaperTheme()
     Text(
@@ -165,6 +165,8 @@ fun Eyebrow(text: String, color: Color, modifier: Modifier = Modifier) {
         fontWeight = if (paper) FontWeight.Normal else FontWeight.Black,
         color = color,
         letterSpacing = if (paper) MaterialTheme.typography.labelSmall.letterSpacing else 1.5.sp,
+        maxLines = maxLines,
+        overflow = if (maxLines == Int.MAX_VALUE) androidx.compose.ui.text.style.TextOverflow.Clip else androidx.compose.ui.text.style.TextOverflow.Ellipsis,
         modifier = modifier,
     )
 }

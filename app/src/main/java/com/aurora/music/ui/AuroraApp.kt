@@ -1290,6 +1290,9 @@ fun AuroraApp() {
                             onPlayCollection = { kind, id, shuffle -> scope.launch { container.repository.detail(kind, id)?.let { d -> if (d.tracks.isNotEmpty()) {
                                 if (shuffle) playerVM.shuffleCollection(kind, id, d.tracks, d.info.songCount) else playerVM.playCollection(kind, id, d.tracks, 0, d.info.songCount)
                             } } } },
+                            sourceLabel = session?.typeLabel?.localizedMediaType().orEmpty(),
+                            onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) { launchSingleTop = true } },
+                            onOpenStats = { navController.navigate(Routes.STATS) { launchSingleTop = true } },
                         )
                     }
                     composable(Routes.SEARCH) {

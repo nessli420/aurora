@@ -239,8 +239,10 @@ fun LibraryScreen(
     var showTabs by remember { mutableStateOf(false) }
     val tabPrefs = com.aurora.music.ui.theme.LocalUiPrefs.current.libraryTabs
     val visibleTabs = tabPrefs.visible.filter { canDownload || it != LibraryFilter.DOWNLOADED }.ifEmpty { listOf(LibraryFilter.ALL) }
-    // a hidden tab never stays on screen
-    val filter = state.filter.takeIf { it in visibleTabs } ?: visibleTabs.first()
+    val pageLayout = com.aurora.music.ui.theme.LocalUiPrefs.current.pageLayout
+    val console = pageLayout == com.aurora.music.data.PageLayout.CONSOLE
+    // a hidden tab never stays on screen; console's hub is the all tab, so that one always can
+    val filter = state.filter.takeIf { it in visibleTabs || console && it == LibraryFilter.ALL } ?: if (console) LibraryFilter.ALL else visibleTabs.first()
     val sort = state.sort
     val layout = state.layout
     val libColumns = com.aurora.music.ui.theme.LocalUiPrefs.current.libraryColumns.coerceIn(2, 4)
@@ -264,6 +266,8 @@ fun LibraryScreen(
     // a folder deleted or moved away meanwhile drops back to the top
     val folder = openFolder?.let { tree?.find(it) }
     var prompt by remember { mutableStateOf<FolderPrompt?>(null) }
+    // registered before the folder handler, so back leaves an open folder first
+    androidx.activity.compose.BackHandler(enabled = console && filter != LibraryFilter.ALL && selectedItem == null) { onFilter(LibraryFilter.ALL) }
     androidx.activity.compose.BackHandler(enabled = folder != null && filter == LibraryFilter.PLAYLISTS) {
         openFolder = tree?.parentOf(folder?.id.orEmpty())?.id?.ifEmpty { null }
     }
@@ -287,7 +291,6 @@ fun LibraryScreen(
     }
     if (folderEdits != null) prompt?.let { FolderPromptDialog(it, tree, folderEdits) { prompt = null } }
 
-    val pageLayout = com.aurora.music.ui.theme.LocalUiPrefs.current.pageLayout
     Column(Modifier.fillMaxWidth().padding(top = topInset)) {
         // the stats run under the icons on their own line, so they fit without wrapping mid-phrase
         val stats = buildList {
@@ -299,6 +302,8 @@ fun LibraryScreen(
         // each page layout brings its own header and tab control
         when (pageLayout) {
         com.aurora.music.data.PageLayout.SPOTLIGHT -> LibrarySpotlightHeader(state, username, stats, visibleTabs, filter, onOpenDrawer, onOpenSearch,
+            onCreate = { showCreate = true }, onCycleView = onCycleView, onFilter = onFilter, onCustomizeTabs = { showTabs = true })
+        com.aurora.music.data.PageLayout.CONSOLE -> LibraryConsoleHeader(state, username, playlistHome, filter, onOpenDrawer, onOpenSearch,
             onCreate = { showCreate = true }, onCycleView = onCycleView, onFilter = onFilter, onCustomizeTabs = { showTabs = true })
         else -> {
         // ---- header: identity + stats ----
@@ -416,6 +421,11 @@ fun LibraryScreen(
                     onOpenMix = onOpenMix, onSignIn = onSignIn,
                     // a folder opens where the playlists tab shows it
                     onOpenFolder = if (LibraryFilter.PLAYLISTS in visibleTabs) ({ id -> openFolder = id; onFilter(LibraryFilter.PLAYLISTS) }) else null,
+                )
+                com.aurora.music.data.PageLayout.CONSOLE -> LibraryConsoleAll(
+                    state = state, pins = pins, bottom = bottom, tabs = visibleTabs, actions = actions, onFilter = onFilter, onOpenDetail = onOpenDetail,
+                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
+                    onOpenMix = onOpenMix, onCustomizeTabs = { showTabs = true }, onSignIn = onSignIn,
                 )
                 else -> AllOverview(
                 state = state, pins = pins, canDownload = canDownload, bottom = bottom,
@@ -744,6 +754,7 @@ internal fun ShelfCard(
     width: androidx.compose.ui.unit.Dp = 132.dp,
     centered: Boolean = false,
     selectionKey: String = "",
+    titleLines: Int = 1,
     onClick: () -> Unit,
 ) {
     Column(
@@ -767,7 +778,7 @@ internal fun ShelfCard(
         Spacer(Modifier.height(7.dp))
         Text(
             title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold,
-            maxLines = 1, overflow = TextOverflow.Ellipsis,
+            maxLines = titleLines, overflow = TextOverflow.Ellipsis,
             textAlign = if (centered) TextAlign.Center else TextAlign.Start,
             modifier = Modifier.fillMaxWidth(),
         )

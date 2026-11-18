@@ -169,7 +169,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
     }
 }
 
-private fun listeningDuration(ms: Long): String {
+internal fun listeningDuration(ms: Long): String {
     val minutes = ms / 60_000
     return if (minutes >= 60) appString(R.string.detail_duration_hours, (minutes / 60).toInt(), (minutes % 60).toInt())
     else appString(R.string.detail_duration_minutes, minutes.toInt())

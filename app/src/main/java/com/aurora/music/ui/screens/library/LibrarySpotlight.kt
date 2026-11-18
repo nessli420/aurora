@@ -227,15 +227,15 @@ private fun interleave(playlists: Int, albums: Int, artists: Int): IntArray {
     return slots
 }
 
-private fun albumRow(album: Album, albumLabel: String): LibRow {
+internal fun albumRow(album: Album, albumLabel: String): LibRow {
     val label = album.typeLabel.localizedMediaType()
     return LibRow(album.title, "$label · ${album.artist}", album.artworkUrl, accentFor(album.id), album.id, "album",
         badge = if (label == albumLabel) "" else label.uppercase(Locale.getDefault()))
 }
 
-private fun artistRow(artist: Artist, label: String) = LibRow(artist.name, label, artist.imageUrl, accentFor(artist.id), artist.id, "artist", circle = true)
+internal fun artistRow(artist: Artist, label: String) = LibRow(artist.name, label, artist.imageUrl, accentFor(artist.id), artist.id, "artist", circle = true)
 
-private fun Modifier.bleed(by: Dp): Modifier = layout { measurable, constraints ->
+internal fun Modifier.bleed(by: Dp): Modifier = layout { measurable, constraints ->
     val extra = by.roundToPx()
     val width = constraints.maxWidth + extra * 2
     val placeable = measurable.measure(constraints.copy(minWidth = width, maxWidth = width))

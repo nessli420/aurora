@@ -124,7 +124,7 @@ private const val ENTRANCE_MS = MotionTokens.EMPHASIZED + 2 * RISE_GAP_MS
 
 private val ShelfWidths = listOf(168.dp, 144.dp)
 
-private class Hero(val kind: String, val id: String, val label: String, val title: String, val subtitle: String, val meta: String, val art: String, val accent: Color)
+internal class Hero(val kind: String, val id: String, val label: String, val title: String, val subtitle: String, val meta: String, val art: String, val accent: Color)
 
 @Composable
 internal fun HomeSpotlight(
@@ -323,7 +323,7 @@ private fun BoxScope.TopScrim(always: Boolean, list: LazyListState) {
     }
 }
 
-private fun heroesOf(data: HomeData): List<Hero> {
+internal fun heroesOf(data: HomeData): List<Hero> {
     if (data.newReleases.isNotEmpty()) {
         val label = appString(R.string.text_new_release_f0ec22)
         return data.newReleases.take(5).map { it.hero(label) }

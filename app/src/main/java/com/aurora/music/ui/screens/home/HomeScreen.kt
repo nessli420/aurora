@@ -95,11 +95,17 @@ fun HomeScreen(
     onAddSource: () -> Unit = {},
     mixes: List<com.aurora.music.foryou.GeneratedMix> = emptyList(),
     onPlayCollection: (kind: String, id: String, shuffle: Boolean) -> Unit = { _, _, _ -> },
+    sourceLabel: String = "",
+    onOpenSignalPath: (() -> Unit)? = null,
+    onOpenStats: (() -> Unit)? = null,
 ) {
     // each page layout is its own file; classic is the rest of this one
     when (com.aurora.music.ui.theme.LocalUiPrefs.current.pageLayout) {
         com.aurora.music.data.PageLayout.SPOTLIGHT -> return HomeSpotlight(contentPadding, state, username, avatarUrl, onOpenDrawer, onOpenSettings,
             onOpenDetail, onPlayAlbum, onPlayAll, onLoadMore, onRetry, onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection)
+        com.aurora.music.data.PageLayout.CONSOLE -> return HomeConsole(contentPadding, state, username, avatarUrl, sourceLabel, onOpenDrawer, onOpenSettings,
+            onOpenDetail, onPlayAlbum, onPlayAll, onLoadMore, onRetry, onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection,
+            onOpenSignalPath, onOpenStats)
     }
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current
