@@ -325,6 +325,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
                 HomeSection.MIX_DAILY to appString(R.string.foryou_setting_daily),
                 HomeSection.MIX_RECOMMENDED to appString(R.string.foryou_recommended),
                 HomeSection.MIX_DISCOVER to appString(R.string.foryou_discover),
+                HomeSection.MIX_STATIONS to appString(R.string.foryou_stations),
             )
             val homeSections = mixSections + listOf(
                 HomeSection.HERO to appString(R.string.text_new_release_hero_c354b3),

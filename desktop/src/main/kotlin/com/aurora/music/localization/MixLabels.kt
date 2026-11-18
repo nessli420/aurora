@@ -13,6 +13,7 @@ fun GeneratedMix.mixTitle(): String = when (kind) {
     MixKind.DAILY -> appString(R.string.foryou_daily, index)
     MixKind.RECOMMENDED -> appString(R.string.foryou_recommended)
     MixKind.DISCOVER -> appString(R.string.foryou_discover)
+    MixKind.STATION -> appString(R.string.foryou_station, artists.firstOrNull().orEmpty())
     MixKind.TIME -> appString(when (part) {
         DayPart.MORNING -> R.string.foryou_morning
         DayPart.AFTERNOON -> R.string.foryou_afternoon
@@ -21,8 +22,10 @@ fun GeneratedMix.mixTitle(): String = when (kind) {
     })
 }
 
-fun GeneratedMix.mixSubtitle(): String =
-    if (artists.isEmpty()) appString(R.string.foryou_title) else appString(R.string.foryou_artists_more, artists.joinToString(", "))
+// a station is named after its artist, so the line under it names the others
+fun GeneratedMix.mixSubtitle(): String = (if (kind == MixKind.STATION) artists.drop(1) else artists).let { names ->
+    if (names.isEmpty()) appString(R.string.foryou_title) else appString(R.string.foryou_artists_more, names.joinToString(", "))
+}
 
 // the saved copy carries its date, so copies of later editions sit side by side
 fun GeneratedMix.mixName(): MixName =

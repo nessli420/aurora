@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"时段歌单"</string>
     <string name="foryou_saved">"已将副本保存到音乐库"</string>
     <string name="foryou_removed">"已移除保存的副本"</string>
+    <string name="foryou_station">"%1$s 电台"</string>
+    <string name="foryou_stations">"艺人电台"</string>
 </resources>

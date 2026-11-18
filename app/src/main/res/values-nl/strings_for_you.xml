@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"Mix per dagdeel"</string>
     <string name="foryou_saved">"Kopie opgeslagen in je bibliotheek"</string>
     <string name="foryou_removed">"Opgeslagen kopie verwijderd"</string>
+    <string name="foryou_station">"%1$s-radio"</string>
+    <string name="foryou_stations">"Artiestenradio's"</string>
 </resources>

@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"Mix sesuai waktu"</string>
     <string name="foryou_saved">"Salinan disimpan ke pustakamu"</string>
     <string name="foryou_removed">"Salinan tersimpan dihapus"</string>
+    <string name="foryou_station">"Radio %1$s"</string>
+    <string name="foryou_stations">"Radio artis"</string>
 </resources>

@@ -164,11 +164,14 @@ fun HomeScreen(
         }
 
         if (mixes.isNotEmpty() && state.selectedFeed == "library") {
-            item(key = "mixes") {
-                val tiles = androidx.compose.runtime.remember(mixes) { mixes.map { it.asPlaylist() } }
-                PageSection(appString(R.string.foryou_title)) {
-                    AdaptiveShelf(tiles, bleed = gutter) { playlist, width ->
-                        PlaylistCard(playlist, onClick = { onOpenDetail(com.aurora.music.foryou.MIX_KIND, playlist.id) }, width = width)
+            val rows = mixes.partition { it.kind != com.aurora.music.foryou.MixKind.STATION }
+            listOf(R.string.foryou_title to rows.first, R.string.foryou_stations to rows.second).forEach { (title, row) ->
+                if (row.isNotEmpty()) item(key = "mixes:$title") {
+                    val tiles = androidx.compose.runtime.remember(row) { row.map { it.asPlaylist() } }
+                    PageSection(appString(title)) {
+                        AdaptiveShelf(tiles, bleed = gutter) { playlist, width ->
+                            PlaylistCard(playlist, onClick = { onOpenDetail(com.aurora.music.foryou.MIX_KIND, playlist.id) }, width = width)
+                        }
                     }
                 }
             }

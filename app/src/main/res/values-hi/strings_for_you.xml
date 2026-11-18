@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"समय के अनुसार मिक्स"</string>
     <string name="foryou_saved">"एक कॉपी आपकी लाइब्रेरी में सेव की गई"</string>
     <string name="foryou_removed">"सेव की गई कॉपी हटाई गई"</string>
+    <string name="foryou_station">"%1$s रेडियो"</string>
+    <string name="foryou_stations">"कलाकार रेडियो"</string>
 </resources>

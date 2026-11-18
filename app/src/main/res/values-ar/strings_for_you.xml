@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"ميكس حسب وقت اليوم"</string>
     <string name="foryou_saved">"تم حفظ نسخة في مكتبتك"</string>
     <string name="foryou_removed">"تمت إزالة النسخة المحفوظة"</string>
+    <string name="foryou_station">"راديو %1$s"</string>
+    <string name="foryou_stations">"محطات الفنانين"</string>
 </resources>

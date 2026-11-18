@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"وقت کے مطابق مکس"</string>
     <string name="foryou_saved">"ایک کاپی آپ کی لائبریری میں محفوظ ہو گئی"</string>
     <string name="foryou_removed">"محفوظ کردہ کاپی ہٹا دی گئی"</string>
+    <string name="foryou_station">"%1$s ریڈیو"</string>
+    <string name="foryou_stations">"فنکار ریڈیو"</string>
 </resources>

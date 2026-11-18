@@ -152,14 +152,17 @@ fun HomeScreen(
         }
 
         if (mixes.isNotEmpty() && state.selectedFeed == "library") {
-            item(key = "mixes") {
-                val tiles = androidx.compose.runtime.remember(mixes) { mixes.map { it.asPlaylist() } }
-                SectionHeader(appString(R.string.foryou_title), Modifier.padding(horizontal = 16.dp))
-                Spacer(Modifier.height(10.dp))
-                LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
-                    items(tiles.size, key = { tiles[it].id }) { i ->
-                        // mix names run long in some languages and have no artwork to tell them apart
-                        PlaylistCard(tiles[i], onClick = { onOpenDetail(com.aurora.music.foryou.MIX_KIND, tiles[i].id) }, titleLines = 2)
+            val rows = mixes.partition { it.kind != com.aurora.music.foryou.MixKind.STATION }
+            listOf(R.string.foryou_title to rows.first, R.string.foryou_stations to rows.second).forEach { (title, row) ->
+                if (row.isNotEmpty()) item(key = "mixes:$title") {
+                    val tiles = androidx.compose.runtime.remember(row) { row.map { it.asPlaylist() } }
+                    SectionHeader(appString(title), Modifier.padding(horizontal = 16.dp))
+                    Spacer(Modifier.height(10.dp))
+                    LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
+                        items(tiles.size, key = { tiles[it].id }) { i ->
+                            // mix names run long in some languages and have no artwork to tell them apart
+                            PlaylistCard(tiles[i], onClick = { onOpenDetail(com.aurora.music.foryou.MIX_KIND, tiles[i].id) }, titleLines = 2)
+                        }
                     }
                 }
             }

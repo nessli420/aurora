@@ -8,12 +8,14 @@ import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.filled.Bedtime
 import androidx.compose.material.icons.filled.Explore
 import androidx.compose.material.icons.filled.Nightlight
+import androidx.compose.material.icons.filled.Sensors
 import androidx.compose.material.icons.filled.WbSunny
 import androidx.compose.material.icons.filled.WbTwilight
 import androidx.compose.material3.Icon
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.BiasAlignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -61,5 +63,9 @@ fun MixCover(slot: String, accent: Color, modifier: Modifier = Modifier, picture
             }
         }
         if (icon != null) Icon(icon, null, tint = if (paper) Color.Black else Color.White, modifier = Modifier.fillMaxSize(0.42f))
+        // a station is its artist's face, so its mark keeps to the side, below where a page puts its back button
+        if (slot.startsWith("artist-")) Box(Modifier.align(BiasAlignment(-1f, -0.42f)).fillMaxSize(0.32f), contentAlignment = Alignment.Center) {
+            Icon(Icons.Filled.Sensors, null, tint = if (paper) Color.Black else Color.White, modifier = Modifier.fillMaxSize(0.62f))
+        }
     }
 }

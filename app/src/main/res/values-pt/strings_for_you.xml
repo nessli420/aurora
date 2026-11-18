@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"Mix por hora do dia"</string>
     <string name="foryou_saved">"Cópia salva na sua biblioteca"</string>
     <string name="foryou_removed">"Cópia salva removida"</string>
+    <string name="foryou_station">"Rádio de %1$s"</string>
+    <string name="foryou_stations">"Rádios de artistas"</string>
 </resources>

@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"Микс по времени суток"</string>
     <string name="foryou_saved">"Копия сохранена в медиатеке"</string>
     <string name="foryou_removed">"Сохранённая копия удалена"</string>
+    <string name="foryou_station">"Радио: %1$s"</string>
+    <string name="foryou_stations">"Радио артистов"</string>
 </resources>

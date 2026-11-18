@@ -13,4 +13,6 @@
     <string name="foryou_setting_time">"Tageszeit-Mix"</string>
     <string name="foryou_saved">"Kopie in deiner Bibliothek gespeichert"</string>
     <string name="foryou_removed">"Gespeicherte Kopie entfernt"</string>
+    <string name="foryou_station">"%1$s Radio"</string>
+    <string name="foryou_stations">"Künstlerradios"</string>
 </resources>
