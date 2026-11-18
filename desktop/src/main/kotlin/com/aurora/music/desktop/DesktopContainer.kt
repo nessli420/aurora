@@ -407,7 +407,10 @@ class DesktopContainer(
         madeForYou.recheck()
     }
 
-    init { scope.launch { offline.drop(1).collect { madeForYou.recheck() } } }
+    init {
+        scope.launch { offline.drop(1).collect { madeForYou.recheck() } }
+        scope.launch { madeForYou.warm() }
+    }
 
     init {
         scope.launch {

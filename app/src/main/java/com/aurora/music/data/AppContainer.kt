@@ -518,6 +518,7 @@ class AppContainer(context: Context) {
         }
         scope.launch { followMediaStore() }
         scope.launch { offline.drop(1).collect { madeForYou.recheck() } }
+        scope.launch { madeForYou.warm() }
         scope.launch {
             var first = true
             kotlinx.coroutines.flow.combine(settingsStore.artistSeparators, settingsStore.trackCovers, ::Pair).collect {
