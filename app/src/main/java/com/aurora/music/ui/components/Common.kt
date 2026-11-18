@@ -85,15 +85,17 @@ fun Artwork(
         contentAlignment = Alignment.Center,
     ) {
         // the gradient behind shows while loading or on error so no subcomposed slots are needed
-        if (url.startsWith(com.aurora.music.foryou.MIX_COVER_PREFIX)) MixCover(url.removePrefix(com.aurora.music.foryou.MIX_COVER_PREFIX), accent, Modifier.fillMaxSize())
-        else if (url.isNotBlank()) AsyncImage(
-            model = remember(url, decodeSize) {
-                ImageRequest.Builder(context).data(url).crossfade(com.aurora.music.util.MotionTokens.STANDARD).apply { if (decodeSize > 0) size(decodeSize) }.build()
+        val mix = url.startsWith(com.aurora.music.foryou.MIX_COVER_PREFIX)
+        val picture = if (mix) url.substringAfter('|', "") else url
+        if (picture.isNotBlank()) AsyncImage(
+            model = remember(picture, decodeSize) {
+                ImageRequest.Builder(context).data(picture).crossfade(com.aurora.music.util.MotionTokens.STANDARD).apply { if (decodeSize > 0) size(decodeSize) }.build()
             },
             contentDescription = null,
             contentScale = contentScale,
             modifier = Modifier.fillMaxSize(),
         )
+        if (mix) MixCover(url.removePrefix(com.aurora.music.foryou.MIX_COVER_PREFIX).substringBefore('|'), accent, Modifier.fillMaxSize(), picture.isNotBlank())
         if (animated != null) AnimatedCoverLayer(animated, Modifier.fillMaxSize())
     }
 }

@@ -29,8 +29,8 @@ import com.aurora.music.ui.theme.isPaperTheme
 import kotlin.random.Random
 
 @Composable
-fun MixCover(slot: String, accent: Color, modifier: Modifier = Modifier) {
-    val paper = isPaperTheme()
+fun MixCover(slot: String, accent: Color, modifier: Modifier = Modifier, pictured: Boolean = false) {
+    val paper = isPaperTheme() && !pictured
     val number = slot.substringAfter("daily-", "")
     val icon = when (slot) {
         "time-morning" -> Icons.Filled.WbTwilight
@@ -45,13 +45,15 @@ fun MixCover(slot: String, accent: Color, modifier: Modifier = Modifier) {
     val measurer = rememberTextMeasurer()
     Box(modifier, contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
-            if (paper) drawRect(lerp(accent, Color.White, 0.55f))
+            // over a picture the accent only tints, and the dark end keeps the mark readable
+            if (pictured) drawRect(Brush.linearGradient(listOf(accent.copy(alpha = 0.66f), Color.Black.copy(alpha = 0.3f), Color.Black.copy(alpha = 0.7f)), Offset.Zero, Offset(size.width, size.height)))
+            else if (paper) drawRect(lerp(accent, Color.White, 0.55f))
             else drawRect(Brush.linearGradient(listOf(lerp(accent, Color.White, 0.14f), lerp(accent, Color.Black, 0.62f)), Offset.Zero, Offset(size.width, size.height)))
             val ink = if (paper) Color.Black else Color.White
             val step = size.width / bars.size
             bars.forEachIndexed { i, level ->
                 val h = size.height * 0.34f * level
-                drawRoundRect(ink.copy(alpha = 0.16f), Offset(i * step + step * 0.2f, size.height - h), Size(step * 0.6f, h), CornerRadius(if (paper) 0f else step * 0.3f))
+                drawRoundRect(ink.copy(alpha = if (pictured) 0.26f else 0.16f), Offset(i * step + step * 0.2f, size.height - h), Size(step * 0.6f, h), CornerRadius(if (paper) 0f else step * 0.3f))
             }
             if (number.isNotEmpty()) {
                 val text = measurer.measure(number, TextStyle(color = ink, fontWeight = FontWeight.Black, fontSize = (size.minDimension * 0.5f).toSp()))
