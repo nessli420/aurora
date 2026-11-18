@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="layout_title">"Tata letak"</string>
+    <string name="layout_classic">"Klasik"</string>
+    <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_hint">"Cara Beranda dan Pustaka disusun. Klasik adalah tata letak asli."</string>
+</resources>

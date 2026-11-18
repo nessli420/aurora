@@ -258,6 +258,9 @@ object AppTypeface {
     fun normalize(value: Int): Int = value.takeIf { it in THEME_DEFAULT..MANROPE } ?: THEME_DEFAULT
 }
 
+// how home and library are arranged; classic is the original
+object PageLayout { const val CLASSIC = 0; const val SPOTLIGHT = 1 }
+
 object AccentMode { const val PRESET = 0; const val CUSTOM = 1; const val MATERIAL_YOU = 2 }
 
 object CornerStyle { const val SHARP = 0; const val DEFAULT = 1; const val ROUNDED = 2; const val PILL = 3 }
@@ -281,6 +284,7 @@ object HomeSection {
 data class UiPrefs(
     val themeMode: Int = ThemeMode.DARK,
     val themeStyle: Int = ThemeStyle.AURORA,
+    val pageLayout: Int = PageLayout.CLASSIC,
     val accentMode: Int = AccentMode.PRESET,
     val accentPreset: Int = 0,
     val accentColor: Long = 0xFFFF2E7EL,

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="layout_title">"Layout"</string>
+    <string name="layout_classic">"Classico"</string>
+    <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_hint">"Come sono organizzate Home e Libreria. Classico è il layout originale."</string>
+</resources>

@@ -58,6 +58,14 @@ class SettingsStoreFlowsTest {
         assertEquals(listOf("query"), store.recentSearches.first())
     }
 
+    @Test fun pageLayoutDefaultsToClassicAndClampsUnknownValues() = runBlocking {
+        assertEquals(PageLayout.CLASSIC, store.uiPrefs.first().pageLayout)
+        store.setPageLayout(PageLayout.SPOTLIGHT)
+        assertEquals(PageLayout.SPOTLIGHT, store.uiPrefs.first().pageLayout)
+        store.setPageLayout(99)
+        assertEquals(PageLayout.SPOTLIGHT, store.uiPrefs.first().pageLayout)
+    }
+
     @Test fun savedSessionsKeepTheValidityFilter() = runBlocking {
         val valid = Session("https://music.example", "alice", "salt", "token")
         store.importPrefs(PrefsBackup(strings = mapOf("saved_sessions" to Gson().toJson(listOf(valid, valid.copy(token = ""))))))

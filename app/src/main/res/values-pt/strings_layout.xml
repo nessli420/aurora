@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="layout_title">"Layout"</string>
+    <string name="layout_classic">"Clássico"</string>
+    <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_hint">"Como o Início e a Biblioteca são organizados. Clássico é o original."</string>
+</resources>

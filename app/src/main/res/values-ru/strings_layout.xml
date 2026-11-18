@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="layout_title">"Макет"</string>
+    <string name="layout_classic">"Классический"</string>
+    <string name="layout_spotlight">"Spotlight"</string>
+    <string name="layout_hint">"Как устроены Главная и Медиатека. Классический — исходный макет."</string>
+</resources>

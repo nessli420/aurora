@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="layout_title">"التخطيط"</string>
+    <string name="layout_classic">"كلاسيكي"</string>
+    <string name="layout_spotlight">"سبوتلايت"</string>
+    <string name="layout_hint">"طريقة ترتيب الصفحة الرئيسية والمكتبة. الكلاسيكي هو الأصلي."</string>
+</resources>
