@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.ui.draw.alpha
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -167,6 +168,21 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
             }
             item {
                 Text(appString(R.string.layout_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+            }
+            item {
+                Box(Modifier.alpha(if (prefs.barsMatchLayout) 0.55f else 1f)) {
+                    SegmentedRow(appString(R.string.bars_title), listOf(appString(R.string.layout_classic), appString(R.string.layout_spotlight), appString(R.string.layout_console), appString(R.string.layout_drift)), prefs.bars) { i ->
+                        scope.launch { store.setBarStyle(i) }
+                    }
+                }
+            }
+            item {
+                Text(appString(R.string.bars_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
+            }
+            item {
+                SettingsSwitchRow(title = appString(R.string.bars_match_title), subtitle = appString(R.string.bars_match_hint), checked = prefs.barsMatchLayout) { v ->
+                    scope.launch { store.setBarsMatchLayout(v) }
+                }
             }
             item {
                 TypefacePicker(prefs) { typeface -> scope.launch { store.setTypeface(typeface) } }

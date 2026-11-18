@@ -6,4 +6,8 @@
     <string name="layout_console">"Console"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Come sono organizzate Home e Libreria. Classico è il layout originale."</string>
+    <string name="bars_title">"Barre"</string>
+    <string name="bars_hint">"Il mini player e la barra di navigazione. Classico è quello originale."</string>
+    <string name="bars_match_title">"Segui il layout"</string>
+    <string name="bars_match_hint">"Le barre seguono il layout scelto sopra."</string>
 </resources>

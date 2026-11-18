@@ -30,6 +30,8 @@ interface AppearanceSettings {
     suspend fun setThemeMode(v: Int): Preferences
     suspend fun setThemeStyle(v: Int): Preferences
     suspend fun setPageLayout(v: Int): Preferences
+    suspend fun setBarStyle(v: Int): Preferences
+    suspend fun setBarsMatchLayout(v: Boolean): Preferences
     suspend fun setAccentMode(v: Int): Preferences
     suspend fun setAccentPreset(v: Int): Preferences
     suspend fun setAccentColor(v: Long): Preferences
@@ -59,6 +61,8 @@ internal class AppearanceSettingsStore(private val dataStore: DataStore<Preferen
             themeMode = p[Keys.UI_THEME_MODE] ?: ThemeMode.DARK,
             themeStyle = (p[Keys.UI_THEME_STYLE] ?: ThemeStyle.AURORA).coerceIn(ThemeStyle.AURORA, ThemeStyle.PAPER),
             pageLayout = (p[Keys.UI_PAGE_LAYOUT] ?: PageLayout.CLASSIC).coerceIn(PageLayout.CLASSIC, PageLayout.DRIFT),
+            barStyle = (p[Keys.UI_BAR_STYLE] ?: BarStyle.CLASSIC).coerceIn(BarStyle.CLASSIC, BarStyle.DRIFT),
+            barsMatchLayout = p[Keys.UI_BARS_MATCH] ?: false,
             accentMode = p[Keys.UI_ACCENT_MODE] ?: AccentMode.PRESET,
             accentPreset = p[Keys.UI_ACCENT_PRESET] ?: 0,
             accentColor = p[Keys.UI_ACCENT_COLOR] ?: 0xFFFF2E7EL,
@@ -143,6 +147,9 @@ internal class AppearanceSettingsStore(private val dataStore: DataStore<Preferen
     override suspend fun setThemeMode(v: Int) = dataStore.edit { it[Keys.UI_THEME_MODE] = v }
     override suspend fun setThemeStyle(v: Int) = dataStore.edit { it[Keys.UI_THEME_STYLE] = v.coerceIn(ThemeStyle.AURORA, ThemeStyle.PAPER) }
     override suspend fun setPageLayout(v: Int) = dataStore.edit { it[Keys.UI_PAGE_LAYOUT] = v.coerceIn(PageLayout.CLASSIC, PageLayout.DRIFT) }
+    // choosing a style by hand stops the bars following the layout
+    override suspend fun setBarStyle(v: Int) = dataStore.edit { it[Keys.UI_BAR_STYLE] = v.coerceIn(BarStyle.CLASSIC, BarStyle.DRIFT); it[Keys.UI_BARS_MATCH] = false }
+    override suspend fun setBarsMatchLayout(v: Boolean) = dataStore.edit { it[Keys.UI_BARS_MATCH] = v }
     override suspend fun setAccentMode(v: Int) = dataStore.edit { it[Keys.UI_ACCENT_MODE] = v }
     override suspend fun setAccentPreset(v: Int) = dataStore.edit { it[Keys.UI_ACCENT_PRESET] = v }
     override suspend fun setAccentColor(v: Long) = dataStore.edit { it[Keys.UI_ACCENT_COLOR] = v }

@@ -6,4 +6,8 @@
     <string name="layout_console">"Consola"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Cómo se organizan Inicio y Biblioteca. Clásico es el original."</string>
+    <string name="bars_title">"Barras"</string>
+    <string name="bars_hint">"El minirreproductor y la barra de navegación. Clásico es el original."</string>
+    <string name="bars_match_title">"Igual que el diseño"</string>
+    <string name="bars_match_hint">"Las barras siguen el diseño elegido arriba."</string>
 </resources>

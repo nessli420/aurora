@@ -6,4 +6,8 @@
     <string name="layout_console">"كونسول"</string>
     <string name="layout_drift">"دريفت"</string>
     <string name="layout_hint">"طريقة ترتيب الصفحة الرئيسية والمكتبة. الكلاسيكي هو الأصلي."</string>
+    <string name="bars_title">"الأشرطة"</string>
+    <string name="bars_hint">"المشغّل المصغّر وشريط التنقل. الكلاسيكي هو الأصلي."</string>
+    <string name="bars_match_title">"مطابقة التخطيط"</string>
+    <string name="bars_match_hint">"الأشرطة تتبع التخطيط المختار أعلاه."</string>
 </resources>

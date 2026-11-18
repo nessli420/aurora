@@ -6,4 +6,8 @@
     <string name="layout_console">"Konsol"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Cara Beranda dan Pustaka disusun. Klasik adalah tata letak asli."</string>
+    <string name="bars_title">"Bilah"</string>
+    <string name="bars_hint">"Pemutar mini dan bilah navigasi. Klasik adalah yang asli."</string>
+    <string name="bars_match_title">"Ikuti tata letak"</string>
+    <string name="bars_match_hint">"Bilah mengikuti tata letak yang dipilih di atas."</string>
 </resources>

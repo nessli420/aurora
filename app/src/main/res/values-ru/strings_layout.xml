@@ -6,4 +6,8 @@
     <string name="layout_console">"Консоль"</string>
     <string name="layout_drift">"Дрифт"</string>
     <string name="layout_hint">"Как устроены Главная и Медиатека. Классический — исходный макет."</string>
+    <string name="bars_title">"Панели"</string>
+    <string name="bars_hint">"Мини-плеер и панель навигации. Классический — исходный вариант."</string>
+    <string name="bars_match_title">"Как у макета"</string>
+    <string name="bars_match_hint">"Панели следуют макету, выбранному выше."</string>
 </resources>

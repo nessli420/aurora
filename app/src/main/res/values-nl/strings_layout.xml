@@ -6,4 +6,8 @@
     <string name="layout_console">"Console"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Hoe Home en Bibliotheek zijn ingedeeld. Klassiek is de oorspronkelijke indeling."</string>
+    <string name="bars_title">"Balken"</string>
+    <string name="bars_hint">"De miniplayer en de navigatiebalk. Klassiek is het origineel."</string>
+    <string name="bars_match_title">"Indeling volgen"</string>
+    <string name="bars_match_hint">"De balken volgen de hierboven gekozen indeling."</string>
 </resources>

@@ -6,4 +6,8 @@
     <string name="layout_console">"Konsole"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Wie Start und Bibliothek angeordnet sind. Klassisch ist das Original."</string>
+    <string name="bars_title">"Leisten"</string>
+    <string name="bars_hint">"Der Miniplayer und die Navigationsleiste. Klassisch ist das Original."</string>
+    <string name="bars_match_title">"Layout übernehmen"</string>
+    <string name="bars_match_hint">"Die Leisten folgen dem oben gewählten Layout."</string>
 </resources>

@@ -6,4 +6,8 @@
     <string name="layout_console">"कंसोल"</string>
     <string name="layout_drift">"ड्रिफ्ट"</string>
     <string name="layout_hint">"होम और लाइब्रेरी की व्यवस्था। क्लासिक मूल लेआउट है।"</string>
+    <string name="bars_title">"बार"</string>
+    <string name="bars_hint">"मिनी प्लेयर और नेविगेशन बार। क्लासिक मूल है।"</string>
+    <string name="bars_match_title">"लेआउट से मिलाएँ"</string>
+    <string name="bars_match_hint">"बार ऊपर चुने गए लेआउट का अनुसरण करते हैं।"</string>
 </resources>

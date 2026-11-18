@@ -66,6 +66,17 @@ class SettingsStoreFlowsTest {
         assertEquals(PageLayout.DRIFT, store.uiPrefs.first().pageLayout)
     }
 
+    @Test fun barsFollowTheLayoutOnlyWhileMatching() = runBlocking {
+        assertEquals(BarStyle.CLASSIC, store.uiPrefs.first().bars)
+        store.setPageLayout(PageLayout.CONSOLE)
+        assertEquals(BarStyle.CLASSIC, store.uiPrefs.first().bars)
+        store.setBarsMatchLayout(true)
+        assertEquals(BarStyle.CONSOLE, store.uiPrefs.first().bars)
+        store.setBarStyle(BarStyle.DRIFT)
+        assertEquals(false, store.uiPrefs.first().barsMatchLayout)
+        assertEquals(BarStyle.DRIFT, store.uiPrefs.first().bars)
+    }
+
     @Test fun savedSessionsKeepTheValidityFilter() = runBlocking {
         val valid = Session("https://music.example", "alice", "salt", "token")
         store.importPrefs(PrefsBackup(strings = mapOf("saved_sessions" to Gson().toJson(listOf(valid, valid.copy(token = ""))))))

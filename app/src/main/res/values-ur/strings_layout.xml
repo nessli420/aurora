@@ -6,4 +6,8 @@
     <string name="layout_console">"کنسول"</string>
     <string name="layout_drift">"ڈرفٹ"</string>
     <string name="layout_hint">"ہوم اور لائبریری کی ترتیب۔ کلاسک اصل لے آؤٹ ہے۔"</string>
+    <string name="bars_title">"بارز"</string>
+    <string name="bars_hint">"منی پلیئر اور نیویگیشن بار۔ کلاسک اصل ہے۔"</string>
+    <string name="bars_match_title">"لے آؤٹ کے مطابق"</string>
+    <string name="bars_match_hint">"بارز اوپر منتخب کردہ لے آؤٹ کی پیروی کرتی ہیں۔"</string>
 </resources>

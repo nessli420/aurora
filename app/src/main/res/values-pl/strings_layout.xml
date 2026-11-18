@@ -6,4 +6,8 @@
     <string name="layout_console">"Konsola"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Sposób ułożenia ekranu głównego i biblioteki. Klasyczny to układ pierwotny."</string>
+    <string name="bars_title">"Paski"</string>
+    <string name="bars_hint">"Miniodtwarzacz i pasek nawigacji. Klasyczny to oryginał."</string>
+    <string name="bars_match_title">"Dopasuj do układu"</string>
+    <string name="bars_match_hint">"Paski podążają za układem wybranym powyżej."</string>
 </resources>

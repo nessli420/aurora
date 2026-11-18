@@ -261,6 +261,9 @@ object AppTypeface {
 // how home and library are arranged; classic is the original
 object PageLayout { const val CLASSIC = 0; const val SPOTLIGHT = 1; const val CONSOLE = 2; const val DRIFT = 3 }
 
+// the mini player and navigation bar; numbered like the page layouts so they can follow one
+object BarStyle { const val CLASSIC = 0; const val SPOTLIGHT = 1; const val CONSOLE = 2; const val DRIFT = 3 }
+
 object AccentMode { const val PRESET = 0; const val CUSTOM = 1; const val MATERIAL_YOU = 2 }
 
 object CornerStyle { const val SHARP = 0; const val DEFAULT = 1; const val ROUNDED = 2; const val PILL = 3 }
@@ -285,6 +288,8 @@ data class UiPrefs(
     val themeMode: Int = ThemeMode.DARK,
     val themeStyle: Int = ThemeStyle.AURORA,
     val pageLayout: Int = PageLayout.CLASSIC,
+    val barStyle: Int = BarStyle.CLASSIC,
+    val barsMatchLayout: Boolean = false,
     val accentMode: Int = AccentMode.PRESET,
     val accentPreset: Int = 0,
     val accentColor: Long = 0xFFFF2E7EL,
@@ -312,7 +317,9 @@ data class UiPrefs(
     val navLayout: String = "",
     val lyricsSync: Int = LyricsSync.WORD,
     val lyricsTranslate: Boolean = false,
-)
+) {
+    val bars: Int get() = if (barsMatchLayout) pageLayout else barStyle
+}
 
 enum class TabletSetting(val default: Float, val range: ClosedFloatingPointRange<Float>) {
     DOCK(0.85f, 0.7f..1.15f),

@@ -6,4 +6,8 @@
     <string name="layout_console">"コンソール"</string>
     <string name="layout_drift">"ドリフト"</string>
     <string name="layout_hint">"ホームとライブラリの配置です。クラシックは従来のレイアウトです。"</string>
+    <string name="bars_title">"バー"</string>
+    <string name="bars_hint">"ミニプレーヤーとナビゲーションバーです。クラシックは従来のものです。"</string>
+    <string name="bars_match_title">"レイアウトに合わせる"</string>
+    <string name="bars_match_hint">"バーは上で選んだレイアウトに従います。"</string>
 </resources>

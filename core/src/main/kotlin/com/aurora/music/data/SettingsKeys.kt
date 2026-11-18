@@ -228,6 +228,8 @@ internal object SettingsKeys {
     val UI_THEME_MODE = intPreferencesKey("ui_theme_mode")
     val UI_THEME_STYLE = intPreferencesKey("ui_theme_style")
     val UI_PAGE_LAYOUT = intPreferencesKey("ui_page_layout")
+    val UI_BAR_STYLE = intPreferencesKey("ui_bar_style")
+    val UI_BARS_MATCH = booleanPreferencesKey("ui_bars_match_layout")
     val UI_ACCENT_MODE = intPreferencesKey("ui_accent_mode")
     val UI_ACCENT_PRESET = intPreferencesKey("ui_accent_preset")
     val UI_ACCENT_COLOR = longPreferencesKey("ui_accent_color")

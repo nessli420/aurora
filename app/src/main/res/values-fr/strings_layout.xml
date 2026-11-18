@@ -6,4 +6,8 @@
     <string name="layout_console">"Console"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"La façon dont Accueil et Bibliothèque sont organisés. Classique est la disposition initiale."</string>
+    <string name="bars_title">"Barres"</string>
+    <string name="bars_hint">"Le mini-lecteur et la barre de navigation. Classique est la disposition initiale."</string>
+    <string name="bars_match_title">"Suivre la disposition"</string>
+    <string name="bars_match_hint">"Les barres suivent la disposition choisie ci-dessus."</string>
 </resources>

@@ -6,4 +6,8 @@
     <string name="layout_console">"Konsol"</string>
     <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Ana Sayfa ve Kitaplığın nasıl düzenlendiği. Klasik, özgün düzendir."</string>
+    <string name="bars_title">"Çubuklar"</string>
+    <string name="bars_hint">"Mini oynatıcı ve gezinme çubuğu. Klasik, özgün olandır."</string>
+    <string name="bars_match_title">"Düzenle eşleştir"</string>
+    <string name="bars_match_hint">"Çubuklar yukarıda seçilen düzeni izler."</string>
 </resources>
