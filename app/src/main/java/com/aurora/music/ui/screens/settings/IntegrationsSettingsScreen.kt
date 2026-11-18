@@ -52,6 +52,8 @@ fun IntegrationsSettingsScreen(
     val store = appContainer().settingsStore
     val lrclib by store.lrclibEnabled.collectAsStateWithLifecycle(initialValue = true)
     val artistInfo by store.artistEnrichment.collectAsStateWithLifecycle(initialValue = true)
+    val meanings by store.lyricMeanings.collectAsStateWithLifecycle(initialValue = false)
+    val scope = rememberCoroutineScope()
     val acoustId by store.acoustIdKey.collectAsStateWithLifecycle(initialValue = "")
     val lastfm by store.lastfm.collectAsStateWithLifecycle(initialValue = LastfmAccount())
     val listenBrainz by store.listenBrainz.collectAsStateWithLifecycle(initialValue = ListenBrainzAccount())
@@ -74,6 +76,10 @@ fun IntegrationsSettingsScreen(
                 IntegrationRow(Icons.Filled.Lyrics, "LRCLIB", appString(R.string.text_synced_lyrics_when_your_server_has_none_b4054e), if (lrclib) appString(R.string.text_on_e0049a) else appString(R.string.text_off_e3de5a), onOpenLyrics)
                 SettingsRowDivider()
                 IntegrationRow(Icons.Filled.Person, appString(R.string.text_artist_information_d5c3fc), appString(R.string.text_musicbrainz_and_wikipedia_biographies_73227e), if (artistInfo) appString(R.string.text_on_e0049a) else appString(R.string.text_off_e3de5a), onOpenArtistInfo)
+                SettingsRowDivider()
+                SettingsSwitchRow(Icons.Filled.TipsAndUpdates, appString(R.string.genius_meanings), appString(R.string.genius_meanings_desc), meanings) {
+                    scope.launch { store.setLyricMeanings(it) }
+                }
                 SettingsRowDivider()
                 IntegrationRow(Icons.Filled.Fingerprint, "AcoustID", appString(R.string.text_identify_tracks_from_their_audio_51a42b), if (acoustId.isBlank()) appString(R.string.text_not_set_93039e) else appString(R.string.text_ready_20c7c5), onOpenAcoustId)
             }

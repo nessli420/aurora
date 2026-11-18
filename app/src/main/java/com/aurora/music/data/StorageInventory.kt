@@ -28,6 +28,7 @@ data class StorageUsage(
     val stems: Long = 0,
     val temporary: Long = 0,
     val artistInfo: Long = 0,
+    val genius: Long = 0,
     val sonic: Long = 0,
     val stemModel: Long = 0,
     val aiDjModel: Long = 0,
@@ -38,7 +39,7 @@ data class StorageUsage(
     val insightsPlays: Int = 0,
     val locatedPlays: Int = 0,
 ) {
-    val caches: Long get() = audioCache + artwork + images + mapTiles + vocals + stems + temporary + artistInfo
+    val caches: Long get() = audioCache + artwork + images + mapTiles + vocals + stems + temporary + artistInfo + genius
     val analysis: Long get() = sonic + stemModel + aiDjModel + aiDjVoiceModel + aiDjSpeakerModel + languagePackBytes
     val other: Long get() = (total - downloads - caches - analysis).coerceAtLeast(0)
 }
@@ -76,6 +77,7 @@ class StorageInventory(private val context: Context, private val container: AppC
             stems = container.stemSeparator.stemBytes(),
             temporary = temporaryFiles().sumOf { it.diskBytes() },
             artistInfo = container.artistInfoStore.bytes(),
+            genius = container.genius.bytes(),
             sonic = container.sonicStore.bytes() + container.mixAnalyzer.bytes(),
             stemModel = container.stemSeparator.modelBytes(),
             aiDjModel = container.aiDjModels.bytes(),
@@ -132,6 +134,8 @@ class StorageInventory(private val context: Context, private val container: AppC
 
     suspend fun clearArtistInfo() = withContext(Dispatchers.IO) { container.artistInfoStore.clear() }
 
+    suspend fun clearGenius() = withContext(Dispatchers.IO) { container.genius.clear() }
+
     // returns false when vocal separation was running and its files were left alone
     suspend fun clearCaches(): Boolean {
         runCatching { container.audioCache.clear() }
@@ -140,6 +144,7 @@ class StorageInventory(private val context: Context, private val container: AppC
         runCatching { clearMapTiles() }
         runCatching { clearVocals() }
         runCatching { clearArtistInfo() }
+        runCatching { clearGenius() }
         runCatching { clearTemporary() }
         return container.stemSeparator.clearStems()
     }
@@ -150,6 +155,6 @@ class StorageInventory(private val context: Context, private val container: AppC
         const val MAP_TILES = "osmdroid"
         // these have their own rows or are in use by playback and clean themselves up
         val MANAGED_CACHE = setOf("audio-streams", "metadata-artwork", "image_cache", "vocal-activity", "separated-stems-v1",
-            "network-audio", "renderer-media", "local-profile", "connect-art", "dj-speech", MAP_TILES)
+            "network-audio", "renderer-media", "local-profile", "connect-art", "dj-speech", GENIUS_CACHE, MAP_TILES)
     }
 }

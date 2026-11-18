@@ -31,6 +31,10 @@ import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.input.pointer.PointerEventPass
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.material.icons.outlined.Info
+import com.aurora.music.data.LyricMeanings
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -136,8 +140,12 @@ internal fun LyricsScreen(
         lyrics = if (song.id.isBlank()) null else container.lyricsRepository.lyricsFor(song)
         loading = false
     }
+    val meanings = rememberMeanings(song, lyrics)
+    var explain by remember(song.id) { mutableStateOf<List<com.aurora.music.data.GeniusReferent>?>(null) }
+    var about by remember(song.id) { mutableStateOf(false) }
+    GeniusSheets(meanings, explain, about) { explain = null; about = false }
     if (wide) {
-        WideLyrics(state, lyrics, loading, onClose, onTogglePlay, onPrevious, onNext, onSeek)
+        WideLyrics(state, lyrics, loading, onClose, onTogglePlay, onPrevious, onNext, onSeek, meanings, { explain = it }, { about = true })
         return
     }
     LaunchedEffect(interactionVersion, pointerHeld, scrolling, seeking, loading, lyrics, touchExploration) {
@@ -181,6 +189,13 @@ internal fun LyricsScreen(
                     Text(song.artist, color = Color.White.copy(alpha = .65f), fontSize = 13.sp,
                         maxLines = 1, overflow = TextOverflow.Ellipsis)
                 }
+                androidx.compose.animation.AnimatedVisibility(meanings?.hasAbout == true,
+                    enter = androidx.compose.animation.fadeIn(com.aurora.music.ui.theme.Motion.enter()),
+                    exit = androidx.compose.animation.fadeOut(com.aurora.music.ui.theme.Motion.exit())) {
+                    IconButton(onClick = { interactionVersion++; about = true }, enabled = controlsVisible) {
+                        Icon(Icons.Outlined.Info, appString(R.string.genius_about), tint = Color.White)
+                    }
+                }
                 val translating = com.aurora.music.ui.theme.LocalUiPrefs.current.lyricsTranslate
                 val scope = rememberCoroutineScope()
                 IconButton(onClick = { interactionVersion++; scope.launch { container.settingsStore.setLyricsTranslate(!translating) } },
@@ -209,12 +224,13 @@ internal fun LyricsScreen(
                     else -> key(song.id, song.playbackSource?.providerId) {
                         ImmersiveLyrics(content, state.current, state.isPlaying, state.durationSec,
                             onSeek = { interactionVersion++; onSeek(it) }, onScrolling = { scrolling = it },
-                            onBackgroundTap = { controlsVisible = !controlsVisible })
+                            onBackgroundTap = { controlsVisible = !controlsVisible },
+                            meanings = meanings, onExplain = { interactionVersion++; explain = it })
                     }
                 }
             }
             Box(Modifier.lyricsChrome(controlsVisible, controlsAlpha)) {
-                LyricsTransport(state, lyrics?.source,
+                LyricsTransport(state, sourceLabel(lyrics?.source, meanings),
                     onTogglePlay = { interactionVersion++; onTogglePlay() },
                     onPrevious = { interactionVersion++; onPrevious() },
                     onNext = { interactionVersion++; onNext() },
@@ -235,6 +251,9 @@ private fun WideLyrics(
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onSeek: (Float) -> Unit,
+    meanings: LyricMeanings?,
+    onExplain: (List<com.aurora.music.data.GeniusReferent>) -> Unit,
+    onAbout: () -> Unit,
 ) {
     val song = state.current
     val ui = com.aurora.music.ui.theme.LocalUiPrefs.current
@@ -293,7 +312,8 @@ private fun WideLyrics(
                         Text(appString(R.string.text_no_lyrics_found_75127a), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     }
                     else -> key(song.id, song.playbackSource?.providerId) {
-                        ImmersiveLyrics(lyrics, state.current, state.isPlaying, state.durationSec, onSeek = onSeek, onScrolling = {}, onBackgroundTap = {})
+                        ImmersiveLyrics(lyrics, state.current, state.isPlaying, state.durationSec, onSeek = onSeek, onScrolling = {}, onBackgroundTap = {},
+                            meanings = meanings, onExplain = onExplain)
                     }
                 }
             }
@@ -301,8 +321,11 @@ private fun WideLyrics(
         IconButton(onClose, Modifier.align(Alignment.TopStart).padding(12.dp)) {
             Icon(Icons.Default.CloseFullscreen, appString(R.string.text_collapse_9cf188), tint = Color.White.copy(alpha = .8f))
         }
-        if (!lyrics?.source.isNullOrBlank()) Text(lyrics?.source.orEmpty(), color = Color.White.copy(alpha = .4f),
-            style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp))
+        if (meanings?.hasAbout == true) IconButton(onAbout, Modifier.align(Alignment.TopEnd).padding(12.dp)) {
+            Icon(Icons.Outlined.Info, appString(R.string.genius_about), tint = Color.White.copy(alpha = .8f))
+        }
+        sourceLabel(lyrics?.source, meanings)?.let { Text(it, color = Color.White.copy(alpha = .4f),
+            style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) }
     }
 }
 
@@ -316,6 +339,10 @@ internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier:
         lyrics = if (song.id.isBlank()) null else container.lyricsRepository.lyricsFor(song)
         loading = false
     }
+    val meanings = rememberMeanings(song, lyrics)
+    var explain by remember(song.id) { mutableStateOf<List<com.aurora.music.data.GeniusReferent>?>(null) }
+    var about by remember(song.id) { mutableStateOf(false) }
+    GeniusSheets(meanings, explain, about) { explain = null; about = false }
     Box(modifier) {
         LyricsBackdrop(song)
         val content = lyrics
@@ -338,12 +365,17 @@ internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier:
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     key(song.id, song.playbackSource?.providerId) {
                         ImmersiveLyrics(content, state.current, state.isPlaying, state.durationSec, onSeek = onSeek,
-                            onScrolling = {}, onBackgroundTap = {}, compact = compact)
+                            onScrolling = {}, onBackgroundTap = {}, compact = compact, meanings = meanings, onExplain = { explain = it })
                     }
                 }
-                if (!content.source.isNullOrBlank()) Text(content.source, color = Color.White.copy(alpha = .45f),
-                    style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp))
+                Row(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    sourceLabel(content.source, meanings)?.let { Text(it, color = Color.White.copy(alpha = .45f),
+                        style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    if (meanings?.hasAbout == true) Text(appString(R.string.genius_about), color = Color.White.copy(alpha = .8f),
+                        style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(start = 10.dp).paperClip(CircleShape).background(Color.White.copy(alpha = .12f))
+                            .clickable(role = Role.Button) { about = true }.padding(horizontal = 10.dp, vertical = 4.dp))
+                }
             }
         }
     }
@@ -412,8 +444,11 @@ internal fun LyricsBackdrop(song: Song) {
 
 @Composable
 private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durationSec: Int, onSeek: (Float) -> Unit,
-    onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit, compact: Boolean = false) {
+    onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit, compact: Boolean = false,
+    meanings: LyricMeanings? = null, onExplain: (List<com.aurora.music.data.GeniusReferent>) -> Unit = {}) {
     val mode = com.aurora.music.ui.theme.LocalUiPrefs.current.lyricsSync
+    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+    val explainLabel = appString(R.string.genius_explain)
     val vocals = rememberVocals(song, source, mode)
     // off the main thread so a cached fetch doesn't put the timing pass in the slide-in
     val estimate by produceState(source, source, mode) {
@@ -481,6 +516,10 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                     }
                 }
                 val backgroundTap by rememberUpdatedState(onBackgroundTap)
+                // tap keeps seeking; the mark, a long press or a tap on unsynced lyrics explains
+                val notes = meanings?.at(index).orEmpty()
+                val marked = meanings?.markedAt(index) == true
+                val explainLine by rememberUpdatedState { if (notes.isNotEmpty()) onExplain(notes) }
                 val active = index == current
                 val alpha by animateFloatAsState(when {
                     !lyrics.synced || browsing -> .88f
@@ -502,8 +541,9 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                         if (karaokeOn) line.charFill(clock.longValue).map { (it * FILL_STEPS).roundToInt() / FILL_STEPS } else null
                     }
                 }
-                val text = fill?.let { remember(line, it) { karaoke(line.displayText, it) } }
+                val plain = fill?.let { remember(line, it) { karaoke(line.displayText, it) } }
                     ?: AnnotatedString(line.displayText.ifBlank { "•••" })
+                val text = if (marked) remember(plain) { plain.withMeaningMark() } else plain
                 val meaning = translated?.getOrNull(index)
                 // fades live in the layer so a line change doesn't recompose every visible line per frame
                 Column(Modifier.fillMaxWidth().graphicsLayer {
@@ -517,20 +557,32 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                 }.semantics(mergeDescendants = true) {
                     selected = active
                     if (seekable) onClick { seekLine(); true }
+                    if (notes.isNotEmpty()) customActions = listOf(CustomAccessibilityAction(explainLabel) { explainLine(); true })
                 }) {
                     Text(text,
+                        inlineContent = meaningMarkContent,
                         onTextLayout = { textLayout = it },
                         color = Color.White, fontSize = if (compact) 22.sp else 30.sp,
                         lineHeight = if (compact) 29.sp else 38.sp,
                         fontWeight = FontWeight.Bold, letterSpacing = (-.5).sp,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).pointerInput(seekable) {
-                            detectTapGestures { point ->
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).pointerInput(seekable, marked, notes.isNotEmpty()) {
+                            val slop = 12.dp.toPx()
+                            detectTapGestures(onLongPress = if (notes.isEmpty()) null else { _ ->
+                                haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                                explainLine()
+                            }) { point ->
                                 val layout = textLayout
                                 val line = layout?.getLineForVerticalPosition(point.y)
                                 val onText = layout != null && line != null &&
                                     point.y >= layout.getLineTop(line) && point.y < layout.getLineBottom(line) &&
                                     point.x >= layout.getLineLeft(line) && point.x < layout.getLineRight(line)
-                                if (onText && seekable) seekLine() else backgroundTap()
+                                val onMark = marked && layout?.placeholderRects?.lastOrNull()?.inflate(slop)?.contains(point) == true
+                                when {
+                                    onMark -> explainLine()
+                                    onText && seekable -> seekLine()
+                                    onText && notes.isNotEmpty() -> explainLine()
+                                    else -> backgroundTap()
+                                }
                             }
                         },
                     )

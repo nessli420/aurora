@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.PhotoLibrary
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material.icons.filled.Psychology
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.TipsAndUpdates
 import androidx.compose.material.icons.filled.SignalCellularAlt
 import androidx.compose.material.icons.filled.Translate
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -223,6 +224,11 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
                     ask(appString(R.string.storage_artist_info_clear_title), appString(R.string.storage_artist_info_clear_message)) {
                         perform("artists") { inventory.clearArtistInfo(); true }
                     }
+                }
+                if (usage.genius > 0) {
+                    SettingsRowDivider()
+                    StorageRow(Icons.Filled.TipsAndUpdates, appString(R.string.genius_meanings), storageDetail(usage.genius),
+                        appString(R.string.storage_clear), working = "genius" in working) { perform("genius") { inventory.clearGenius(); true } }
                 }
                 SettingsRowDivider()
                 StorageRow(Icons.Filled.DeleteSweep, appString(R.string.storage_temporary),

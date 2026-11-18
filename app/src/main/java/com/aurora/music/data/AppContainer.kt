@@ -218,6 +218,7 @@ class AppContainer(context: Context) {
 
     val artistInfoClient by lazy { com.aurora.music.data.remote.ArtistInfoClient(http) }
     val artistInfoStore = ArtistInfoStore(appContext.filesDir)
+    val genius by lazy { GeniusMeanings(com.aurora.music.data.remote.GeniusClient(http), GeniusStore(java.io.File(appContext.cacheDir, GENIUS_CACHE))) }
 
     // soundcloud previews and drm-only tracks play from a youtube match instead
     suspend fun resolveSoundCloud(item: androidx.media3.common.MediaItem): com.aurora.music.playback.YoutubeResolver.PlaybackStream? {

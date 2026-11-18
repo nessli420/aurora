@@ -78,6 +78,7 @@ internal object SettingsSearchIndex {
         e(R.string.text_connect_last_fm_406205, R.string.text_create_an_api_account_then_link_your_profile_5a93ca, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.text_create_a_free_acoustid_key_928b23, R.string.text_opens_acoustid_org_in_your_browser_6e6b1f, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.text_artist_information_d5c3fc, R.string.text_look_up_biographies_and_images_9931d4, Routes.SETTINGS_INTEGRATIONS),
+        e(R.string.genius_meanings, R.string.genius_meanings_desc, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.text_use_lrclib_1d1cb5, R.string.text_fetch_lyrics_from_the_public_lrclib_service_36057a, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.text_no_replacement_rules_b1f9fb, R.string.text_example_ye_kanye_west_ded92b, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.text_disconnect_last_fm_e2c81c, R.string.text_replacement_rules_will_be_kept_6ce6ce, Routes.SETTINGS_INTEGRATIONS),
