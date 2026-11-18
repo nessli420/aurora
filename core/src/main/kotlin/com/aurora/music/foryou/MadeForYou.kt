@@ -17,6 +17,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -32,8 +33,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.mapNotNull
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.Semaphore
@@ -382,6 +386,11 @@ class MadeForYou(
     private suspend fun find(id: String): GeneratedMix? = (mixes.value.filter { it.songs.isNotEmpty() } + all()).let { mixes ->
         mixes.firstOrNull { it.id == id } ?: mixes.firstOrNull { it.slot == mixSlotOf(id) }
     }
+
+    // each edition that takes the place of the one a queue is on; a queue on a mix keeps the mixes turning like home does
+    @OptIn(ExperimentalCoroutinesApi::class)
+    fun following(playing: Flow<String?>): Flow<GeneratedMix> =
+        playing.distinctUntilChanged().flatMapLatest { id -> if (id == null) emptyFlow() else mixes.mapNotNull { mixSuccessor(id, it) } }
 
     suspend fun detail(id: String): DetailData? {
         val mix = find(id) ?: return null

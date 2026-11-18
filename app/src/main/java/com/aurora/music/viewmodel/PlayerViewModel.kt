@@ -374,6 +374,28 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         syncFromController()
     }
 
+    // a mix that moved on takes over behind the playing song; what the listener queued themself stays in front
+    private suspend fun followMix(next: com.aurora.music.foryou.GeneratedMix) {
+        initialQueueReady.await()
+        restoreFill?.join()
+        val fresh = container.repository.collectionTracks(com.aurora.music.foryou.MIX_KIND, next.id)
+        val c = controller ?: return
+        val index = c.currentMediaItemIndex
+        val s = _state.value
+        if (index < 0 || s.queue.size != c.mediaItemCount || queueFillJob?.isActive == true || restoreFill?.isActive == true) return
+        if (remoteSession != null || aiDj.state.value.active || s.isMix) return
+        val tag = com.aurora.music.foryou.mixCollection(next.id)
+        val behind = com.aurora.music.foryou.mixFollowUp(s.queue, index, autoplayIds + smartIds,
+            (if (c.shuffleModeEnabled) fresh.shuffled() else fresh).map { it.copy(playbackCollection = tag) })
+        if (behind.isEmpty()) return
+        autoplayJob?.cancel()
+        autoplayIds = emptySet()
+        newSmartContext()
+        songById = songById + behind.associateBy { it.id }
+        c.replaceMediaItems(index + 1, c.mediaItemCount, behind.map { toMediaItem(it) })
+        syncFromController()
+    }
+
     init {
         val token = SessionToken(app, ComponentName(app, PlaybackService::class.java))
         val future = MediaController.Builder(app, token).buildAsync()
@@ -451,6 +473,9 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
                     _state.update { it.copy(speed = p.defaultSpeed) }
                 }
             }
+        }
+        viewModelScope.launch {
+            container.madeForYou.following(_state.map { com.aurora.music.foryou.queueMix(it.queue, it.currentIndex) }).collectLatest { followMix(it) }
         }
         // on account change save outgoing queue first stop then restore incoming epoch only bumps on real transitions
         viewModelScope.launch {

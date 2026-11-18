@@ -31,6 +31,8 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -381,6 +383,27 @@ class MadeForYouTest {
         time += 20 * day
         w.made.refresh()
         assertTrue("after a few weeks the source is asked again", w.source.portraits > first)
+    }
+
+    @Test fun aQueueOnAMixIsHandedTheEditionThatReplacesIt() = runBlocking {
+        val w = World()
+        w.made.refresh()
+        val evening = w.made.mixes.value.first { it.kind == MixKind.TIME }
+        val tag = w.repository.playbackCollectionIdentity(MIX_KIND, evening.id)
+        val queue = evening.songs.map { it.copy(playbackCollection = tag) }
+        val playing = MutableStateFlow(queueMix(queue, 2))
+        assertEquals(evening.id, playing.value)
+        assertNull("nothing moves while the edition stands", withTimeoutOrNull(200) { w.made.following(playing).first() })
+
+        time += 12 * MixClock.HOUR
+        w.made.refresh()
+        val next = withTimeout(5_000) { w.made.following(playing).first() }
+        assertEquals(DayPart.MORNING, next.part)
+        val behind = mixFollowUp(queue, 2, emptySet(), w.repository.collectionTracks(MIX_KIND, next.id).map { it.copy(playbackCollection = mixCollection(next.id)) })
+        assertTrue(behind.isNotEmpty() && behind.all { it.artist.startsWith("Calm") })
+        playing.value = queueMix(queue.take(3) + behind, 2)
+        assertEquals(next.id, playing.value)
+        assertNull(withTimeoutOrNull(200) { w.made.following(playing).first() })
     }
 
     @Test fun aMixOpensLikeAnyCollection() = runBlocking {

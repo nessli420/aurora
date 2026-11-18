@@ -9,6 +9,7 @@ import com.aurora.music.ai.djPrimaryArtist
 import com.aurora.music.ai.djTrackKey
 import com.aurora.music.data.GenreText
 import com.aurora.music.data.PlayEvent
+import com.aurora.music.data.PlaybackCollectionIdentity
 import com.aurora.music.data.qualifiesAsPlay
 import com.aurora.music.model.Song
 import kotlin.math.ceil
@@ -61,6 +62,35 @@ const val MIX_KIND = "mix"
 const val MIX_COVER_PREFIX = "aurora-mix-cover:"
 
 fun mixSlotOf(id: String): String = id.substringBefore('@')
+
+private const val MIX_QUEUE_PREFIX = "foryou:"
+
+// what a queued song carries so its queue can move on with the mix
+fun mixCollection(id: String) = PlaybackCollectionIdentity(MIX_QUEUE_PREFIX + id)
+
+private fun mixOf(song: Song): String? = song.playbackCollection?.id?.takeIf { it.startsWith(MIX_QUEUE_PREFIX) }?.substring(MIX_QUEUE_PREFIX.length)
+
+// the edition a queue is on: the last mix song from the playing one on says which
+fun queueMix(queue: List<Song>, index: Int): String? {
+    if (index < 0) return null
+    for (i in queue.lastIndex downTo index) mixOf(queue[i])?.let { return it }
+    return null
+}
+
+// what took a playing edition's place: its slot's next, or the mix for the new time of day; a station's artist moves on, so it has none
+fun mixSuccessor(playing: String, tiles: List<GeneratedMix>): GeneratedMix? {
+    if (tiles.any { it.id == playing }) return null
+    val slot = mixSlotOf(playing)
+    return tiles.firstOrNull { it.kind != MixKind.STATION && if (slot.startsWith("time-")) it.kind == MixKind.TIME else it.slot == slot }
+}
+
+// behind the playing song once its mix moved on: what the listener queued themself, then the new edition without what was heard
+fun mixFollowUp(queue: List<Song>, index: Int, added: Set<String>, next: List<Song>): List<Song> {
+    val yours = queue.drop(index + 1).filter { it.id !in added && mixOf(it) == null }
+    val taken = (queue.take(index + 1) + yours).mapTo(HashSet()) { it.id }
+    val fresh = next.filter { it.id !in taken }
+    return if (fresh.isEmpty()) emptyList() else yours + fresh
+}
 
 data class GeneratedMix(
     val slot: String,

@@ -233,6 +233,37 @@ class MixBuilderTest {
         assertTrue(MixBuilder.prepare(MixInput(emptyList(), clock, many, kinds = setOf(MixKind.DAILY))).stationArtists.isEmpty())
     }
 
+    @Test fun aPlayingEditionIsFollowedByItsSlotOrTheNewTimeOfDay() {
+        val tiles = listOf(GeneratedMix("time-evening", MixKind.TIME, 2), GeneratedMix("daily-1", MixKind.DAILY, 2),
+            GeneratedMix("daily-2", MixKind.DAILY, 2), GeneratedMix("artist-1", MixKind.STATION, 2))
+        assertNull("still the edition on home", mixSuccessor("daily-2@2", tiles))
+        assertEquals("time-evening@2", mixSuccessor("time-afternoon@2", tiles)?.id)
+        assertEquals("time-evening@2", mixSuccessor("time-evening@1", tiles)?.id)
+        assertEquals("daily-2@2", mixSuccessor("daily-2@1", tiles)?.id)
+        assertNull("the next day's station is another artist's", mixSuccessor("artist-1@1", tiles))
+        assertNull("its row is gone", mixSuccessor("discover@1", tiles))
+        assertNull(mixSuccessor("daily-1@1", emptyList()))
+    }
+
+    @Test fun theNewEditionGoesBehindThePlayingSongAndWhatTheListenerQueued() {
+        fun from(mix: String, vararg ids: String) = ids.map { song(it, "Rock A").copy(playbackCollection = mixCollection(mix)) }
+        val old = from("time-afternoon@2", "a", "b", "c", "d")
+        val mine = song("mine", "Calm A")
+        val pick = song("pick", "Calm B")
+        val queue = old.take(2) + mine + old.drop(2) + pick
+        assertEquals("time-afternoon@2", queueMix(queue, 1))
+        assertNull(queueMix(queue, -1))
+        assertNull("only the listener's own songs are left", queueMix(listOf(mine, pick), 0))
+        assertNull("another collection is not a mix", queueMix(listOf(mine.copy(playbackCollection = com.aurora.music.data.PlaybackCollectionIdentity("playlist:abc"))), 0))
+
+        val behind = mixFollowUp(queue, 1, setOf("pick"), from("time-evening@2", "a", "x", "mine", "y", "b"))
+        assertEquals("heard songs, the playing one and autoplay's picks are not queued again", listOf("mine", "x", "y"), behind.map { it.id })
+        val after = queue.take(2) + behind
+        assertEquals("time-evening@2", queueMix(after, 1))
+        assertEquals("on its last song a queue still knows its mix", "time-afternoon@2", queueMix(old, 3))
+        assertTrue("nothing new leaves the queue alone", mixFollowUp(queue, 1, emptySet(), from("time-evening@2", "a", "b")).isEmpty())
+    }
+
     @Test fun switchedOffKindsAreNotBuilt() {
         val mixes = MixBuilder.build(MixInput(twoTastes(), clock, library, kinds = setOf(MixKind.TIME)))
         assertTrue(mixes.isNotEmpty())

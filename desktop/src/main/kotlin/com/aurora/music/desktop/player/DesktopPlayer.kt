@@ -45,8 +45,10 @@ import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.emptyFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
@@ -90,6 +92,7 @@ data class PlayerDependencies(
     // a song the listener moved to a source by hand plays from that source, not a local copy
     val pin: (String) -> Unit = {},
     val toggleMixLike: suspend (String) -> Boolean? = { null },
+    val followingMix: (Flow<String?>) -> Flow<com.aurora.music.foryou.GeneratedMix> = { emptyFlow() },
 )
 
 fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependencies(
@@ -111,6 +114,7 @@ fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependenci
     artwork = { url -> artworkBytes(url, http, artworkRepository) },
     listeningDetails = { play -> listeningDetails.save(play) },
     toggleMixLike = { madeForYou.toggleLike(it) },
+    followingMix = madeForYou::following,
     platform = com.aurora.music.desktop.platform.HostPlatform.name.lowercase(java.util.Locale.ROOT),
     nowPlaying = { song, playing, position -> discord.update(song, playing, position) },
     location = placesStore::sample,
@@ -294,6 +298,9 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                     _state.update { it.copy(speed = p.defaultSpeed) }
                 }
             }
+        }
+        scope.launch {
+            deps.followingMix(_state.map { com.aurora.music.foryou.queueMix(it.queue, it.currentIndex) }).collectLatest { followMix(it) }
         }
         // account change saves the outgoing queue then restores the incoming one
         scope.launch {
@@ -611,6 +618,24 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         if (drop.isEmpty()) return
         queueGeneration++
         drop.asReversed().forEach { engine.remove(it) }
+    }
+
+    // a mix that moved on takes over behind the playing song; what the listener queued themself stays in front
+    private suspend fun followMix(next: com.aurora.music.foryou.GeneratedMix) {
+        val fresh = deps.repository.collectionTracks(com.aurora.music.foryou.MIX_KIND, next.id)
+        // a queue just handed to the engine is edited once the engine has it
+        val s = engine.state.first { it.entries !== retiredEntries }
+        if (s.index < 0 || queueFillJob?.isActive == true || _state.value.isMix || aiDj?.state?.value?.active == true) return
+        val tag = com.aurora.music.foryou.mixCollection(next.id)
+        val behind = com.aurora.music.foryou.mixFollowUp(s.entries.map { it.song }, s.index, autoplayIds + smartIds,
+            (if (s.shuffle) fresh.shuffled() else fresh).map { it.copy(playbackCollection = tag) })
+        if (behind.isEmpty()) return
+        autoplayJob?.cancel()
+        autoplayIds = emptySet()
+        newSmartContext()
+        queueGeneration++
+        if (s.index < s.entries.lastIndex) engine.remove(s.index + 1, s.entries.size)
+        engine.append(behind)
     }
 
     private fun maybePersist(s: EngineState) {

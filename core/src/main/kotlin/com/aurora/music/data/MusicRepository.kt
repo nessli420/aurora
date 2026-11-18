@@ -182,6 +182,7 @@ class MusicRepository(
             val smart = smartPlaylistsProvider().firstOrNull { it.id == id } ?: return null
             return PlaybackCollectionIdentity(PlaybackSourceIdentity.scoped("aurora-smart", "playlist", id), smart.name)
         }
+        if (kind == com.aurora.music.foryou.MIX_KIND) return com.aurora.music.foryou.mixCollection(id)
         if (kind != "playlist") return null
         if (offline) return downloadManager.collections.value.filter { it.kind == kind && it.id == id }.singleOrNull()?.let {
             it.playbackCollection ?: PlaybackCollectionIdentity(name = it.title)
