@@ -32,6 +32,10 @@ import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.input.pointer.isSecondaryPressed
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.onClick
@@ -75,6 +79,7 @@ internal fun LyricsScreen(
     onNext: () -> Unit,
     onSeek: (Float) -> Unit,
     loadLyrics: suspend (Song) -> Lyrics? = LocalDesktopContainer.current.lyricsRepository::lyricsFor,
+    loadMeanings: suspend (Song) -> com.aurora.music.data.GeniusSong? = defaultMeaningsLoader(),
 ) {
     val song = state.current
     var lyrics by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Lyrics?>(null) }
@@ -83,7 +88,11 @@ internal fun LyricsScreen(
         lyrics = if (song.id.isBlank()) null else loadLyrics(song)
         loading = false
     }
-    WideLyrics(state, lyrics, loading, onClose, onTogglePlay, onPrevious, onNext, onSeek)
+    val meanings = rememberMeanings(song, lyrics, loadMeanings)
+    var explain by remember(song.id) { mutableStateOf<List<com.aurora.music.data.GeniusReferent>?>(null) }
+    var about by remember(song.id) { mutableStateOf(false) }
+    WideLyrics(state, lyrics, loading, onClose, onTogglePlay, onPrevious, onNext, onSeek, meanings, { explain = it }, { about = true })
+    GeniusSheets(meanings, explain, about) { explain = null; about = false }
 }
 
 @Composable
@@ -96,6 +105,9 @@ private fun WideLyrics(
     onPrevious: () -> Unit,
     onNext: () -> Unit,
     onSeek: (Float) -> Unit,
+    meanings: com.aurora.music.data.LyricMeanings?,
+    onExplain: (List<com.aurora.music.data.GeniusReferent>) -> Unit,
+    onAbout: () -> Unit,
 ) {
     val song = state.current
     val ui = com.aurora.music.ui.theme.LocalUiPrefs.current
@@ -153,7 +165,8 @@ private fun WideLyrics(
                         Text(appString(R.string.text_no_lyrics_found_75127a), color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold)
                     }
                     else -> key(song.id, song.playbackSource?.providerId) {
-                        ImmersiveLyrics(lyrics, state.positionSec, state.isPlaying, state.durationSec, onSeek = onSeek)
+                        ImmersiveLyrics(lyrics, state.positionSec, state.isPlaying, state.durationSec, onSeek = onSeek,
+                            meanings = meanings, onExplain = onExplain)
                     }
                 }
             }
@@ -161,8 +174,11 @@ private fun WideLyrics(
         IconButton(onClose, Modifier.align(Alignment.TopStart).padding(12.dp)) {
             Icon(Icons.Default.CloseFullscreen, appString(R.string.text_collapse_9cf188), tint = Color.White.copy(alpha = .8f))
         }
-        if (!lyrics?.source.isNullOrBlank()) Text(lyrics?.source.orEmpty(), color = Color.White.copy(alpha = .4f),
-            style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp))
+        if (meanings?.hasAbout == true) IconButton(onAbout, Modifier.align(Alignment.TopEnd).padding(12.dp).pointerHoverIcon(PointerIcon.Hand)) {
+            Icon(Icons.Outlined.Info, appString(R.string.genius_about), tint = Color.White.copy(alpha = .8f))
+        }
+        sourceLabel(lyrics?.source, meanings)?.let { Text(it, color = Color.White.copy(alpha = .4f),
+            style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.BottomEnd).padding(16.dp)) }
     }
 }
 
@@ -173,6 +189,7 @@ internal fun LyricsPane(
     modifier: Modifier = Modifier,
     compact: Boolean = true,
     loadLyrics: suspend (Song) -> Lyrics? = LocalDesktopContainer.current.lyricsRepository::lyricsFor,
+    loadMeanings: suspend (Song) -> com.aurora.music.data.GeniusSong? = defaultMeaningsLoader(),
 ) {
     val song = state.current
     var lyrics by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Lyrics?>(null) }
@@ -181,6 +198,10 @@ internal fun LyricsPane(
         lyrics = if (song.id.isBlank()) null else loadLyrics(song)
         loading = false
     }
+    val meanings = rememberMeanings(song, lyrics, loadMeanings)
+    var explain by remember(song.id) { mutableStateOf<List<com.aurora.music.data.GeniusReferent>?>(null) }
+    var about by remember(song.id) { mutableStateOf(false) }
+    GeniusSheets(meanings, explain, about) { explain = null; about = false }
     Box(modifier) {
         LyricsBackdrop(song, state.isPlaying)
         val content = lyrics
@@ -202,12 +223,19 @@ internal fun LyricsPane(
             else -> Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     key(song.id, song.playbackSource?.providerId) {
-                        ImmersiveLyrics(content, state.positionSec, state.isPlaying, state.durationSec, onSeek = onSeek, compact = compact)
+                        ImmersiveLyrics(content, state.positionSec, state.isPlaying, state.durationSec, onSeek = onSeek, compact = compact,
+                            meanings = meanings, onExplain = { explain = it })
                     }
                 }
-                if (content.source.isNotBlank()) Text(content.source, color = Color.White.copy(alpha = .45f),
-                    style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp))
+                Row(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                    sourceLabel(content.source, meanings)?.let { Text(it, color = Color.White.copy(alpha = .45f),
+                        style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) }
+                    if (meanings?.hasAbout == true) Text(appString(R.string.genius_about), color = Color.White.copy(alpha = .8f),
+                        style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold,
+                        modifier = Modifier.padding(start = 10.dp).paperClip(CircleShape).background(Color.White.copy(alpha = .12f))
+                            .clickable(role = Role.Button) { about = true }.pointerHoverIcon(PointerIcon.Hand)
+                            .padding(horizontal = 10.dp, vertical = 4.dp))
+                }
             }
         }
     }
@@ -261,7 +289,9 @@ internal fun LyricsBackdrop(song: Song, playing: Boolean) {
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
-private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean, durationSec: Int, onSeek: (Float) -> Unit, compact: Boolean = false) {
+private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean, durationSec: Int, onSeek: (Float) -> Unit, compact: Boolean = false,
+    meanings: com.aurora.music.data.LyricMeanings? = null, onExplain: (List<com.aurora.music.data.GeniusReferent>) -> Unit = {}) {
+    val explainLabel = appString(R.string.genius_explain)
     val wordByWord = com.aurora.music.ui.theme.LocalUiPrefs.current.lyricsSync != com.aurora.music.data.LyricsSync.LINE
     // off the main thread so a cached fetch doesn't put the timing pass in the slide-in
     val lyrics by produceState(source, source, wordByWord) {
@@ -311,6 +341,10 @@ private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean
                         onSeek((lines[index].startMs / 1000f / durationSec).coerceIn(0f, 1f))
                     }
                 }
+                // a click keeps seeking; the mark or a right click explains
+                val notes = meanings?.at(index).orEmpty()
+                val marked = meanings?.markedAt(index) == true
+                val explainLine by rememberUpdatedState { if (notes.isNotEmpty()) onExplain(notes) }
                 val active = index == current
                 val alpha by animateFloatAsState(when {
                     !lyrics.synced || browsing -> .88f
@@ -325,10 +359,12 @@ private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean
                     else ((abs(index - current) - 1).coerceAtLeast(0) * 1.6f).coerceAtMost(7f),
                     tween(450), label = "lineSoftness")
                 val line = lines[index]
-                val text = if (wordByWord && active && !browsing && line.words.isNotEmpty())
+                val plain = if (wordByWord && active && !browsing && line.words.isNotEmpty())
                     karaoke(line.displayText, line.charFill(clock.longValue), alpha)
                 else AnnotatedString(line.displayText.ifBlank { "•••" })
+                val text = if (marked) remember(plain) { plain.withMeaningMark() } else plain
                 Text(text,
+                    inlineContent = if (marked) meaningMarkContent(alpha) else emptyMap(),
                     onTextLayout = { textLayout = it },
                     color = Color.White.copy(alpha = alpha), fontSize = if (compact) 22.sp else 30.sp,
                     lineHeight = if (compact) 29.sp else 38.sp,
@@ -338,15 +374,19 @@ private fun ImmersiveLyrics(source: Lyrics, positionSec: Float, playing: Boolean
                     }.blur(soften.dp).semantics {
                         selected = active
                         if (seekable) onClick { seekLine(); true }
+                        if (notes.isNotEmpty()) customActions = listOf(CustomAccessibilityAction(explainLabel) { explainLine(); true })
                     }.padding(vertical = 6.dp).then(if (seekable) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier)
-                        .pointerInput(seekable) {
+                        .onPointerEvent(PointerEventType.Press) { if (it.buttons.isSecondaryPressed) explainLine() }
+                        .pointerInput(seekable, marked) {
+                            val slop = 8.dp.toPx()
                             detectTapGestures { point ->
                                 val layout = textLayout
                                 val line = layout?.getLineForVerticalPosition(point.y)
                                 val onText = layout != null && line != null &&
                                     point.y >= layout.getLineTop(line) && point.y < layout.getLineBottom(line) &&
                                     point.x >= layout.getLineLeft(line) && point.x < layout.getLineRight(line)
-                                if (onText && seekable) seekLine()
+                                val onMark = marked && layout?.placeholderRects?.lastOrNull()?.inflate(slop)?.contains(point) == true
+                                if (onMark) explainLine() else if (onText && seekable) seekLine() else if (onText) explainLine()
                             }
                         },
                 )

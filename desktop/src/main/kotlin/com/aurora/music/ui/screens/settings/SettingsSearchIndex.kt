@@ -63,6 +63,7 @@ internal object SettingsSearchIndex {
         e(R.string.text_show_album_b04b79, R.string.text_include_the_album_and_artwork_caption_1d812f, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.text_use_lrclib_1d1cb5, R.string.text_fetch_lyrics_from_the_public_lrclib_service_36057a, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.text_artist_information_d5c3fc, R.string.text_look_up_biographies_and_images_9931d4, Routes.SETTINGS_INTEGRATIONS),
+        e(R.string.genius_meanings, R.string.genius_meanings_desc, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.artwork_lookup, R.string.artwork_description, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.animated_covers_toggle, R.string.animated_covers_toggle_desc, Routes.SETTINGS_INTEGRATIONS),
         e(R.string.animated_covers_folder, R.string.animated_covers_folder_none, Routes.SETTINGS_INTEGRATIONS),

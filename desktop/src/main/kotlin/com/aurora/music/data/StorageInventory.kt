@@ -21,6 +21,7 @@ data class StorageUsage(
     val stems: Long = 0,
     val temporary: Long = 0,
     val artistInfo: Long = 0,
+    val genius: Long = 0,
     val sonic: Long = 0,
     val stemModel: Long = 0,
     val aiDjModel: Long = 0,
@@ -30,7 +31,7 @@ data class StorageUsage(
     val insightsPlays: Int = 0,
     val locatedPlays: Int = 0,
 ) {
-    val caches: Long get() = audioCache + artwork + images + mapTiles + stems + temporary + artistInfo
+    val caches: Long get() = audioCache + artwork + images + mapTiles + stems + temporary + artistInfo + genius
     val analysis: Long get() = sonic + stemModel + aiDjModel + aiDjVoiceModel + aiDjSpeakerModel
     val other: Long get() = (total - downloads - caches - analysis).coerceAtLeast(0)
 }
@@ -65,6 +66,7 @@ class StorageInventory(private val container: DesktopContainer) {
             stems = container.stemSeparator.stemBytes(),
             temporary = temporaryFiles().sumOf { it.diskBytes() },
             artistInfo = container.artistInfoStore.bytes(),
+            genius = container.genius.bytes(),
             sonic = container.sonicStore.bytes() + container.mixAnalyzer.bytes(),
             stemModel = container.stemSeparator.modelBytes(),
             aiDjModel = container.aiDjModels.bytes(),
@@ -114,6 +116,8 @@ class StorageInventory(private val container: DesktopContainer) {
 
     suspend fun clearArtistInfo() = withContext(Dispatchers.IO) { container.artistInfoStore.clear() }
 
+    suspend fun clearGenius() = withContext(Dispatchers.IO) { container.genius.clear() }
+
     // returns false when vocal separation was running and its files were left alone
     suspend fun clearCaches(): Boolean {
         runCatching { container.audioCache.clear() }
@@ -121,6 +125,7 @@ class StorageInventory(private val container: DesktopContainer) {
         runCatching { clearImages() }
         runCatching { clearMapTiles() }
         runCatching { clearArtistInfo() }
+        runCatching { clearGenius() }
         runCatching { clearTemporary() }
         return container.stemSeparator.clearStems()
     }

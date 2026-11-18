@@ -112,6 +112,7 @@ class DesktopContainer(
     val replayGainStore = ReplayGainStore(paths.roaming)
     val artistInfoStore = ArtistInfoStore(paths.roaming)
     val artistInfoClient by lazy { ArtistInfoClient(http) }
+    val genius by lazy { com.aurora.music.data.GeniusMeanings(com.aurora.music.data.remote.GeniusClient(http), com.aurora.music.data.GeniusStore(java.io.File(paths.cache, com.aurora.music.data.GENIUS_CACHE))) }
     val radioBrowser by lazy { com.aurora.music.data.remote.RadioBrowserClient(http) }
     val podcastClient by lazy { com.aurora.music.data.remote.PodcastClient(http) }
     val tagEditor = com.aurora.music.desktop.library.TagEditor()
