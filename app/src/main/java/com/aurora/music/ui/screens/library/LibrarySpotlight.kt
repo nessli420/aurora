@@ -117,15 +117,7 @@ internal fun LibrarySpotlightHeader(
         Text(stats, style = MaterialTheme.typography.labelMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
             modifier = Modifier.padding(start = Gutter, end = Gutter, top = 4.dp))
     }
-    if (state.views.size > 1) {
-        val at = state.views.indexOfFirst { it.id == state.view }.coerceAtLeast(0)
-        Row(Modifier.padding(top = 14.dp).horizontalScroll(rememberScrollState()).padding(horizontal = Gutter), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            state.views.forEachIndexed { i, view ->
-                // shortcut: the view model can only step to the next view, so a far pill starts loads it cancels; call a select-by-id once it has one
-                SpotlightPill(view.label, i == at) { repeat((i - at).mod(state.views.size)) { onCycleView() } }
-            }
-        }
-    }
+    if (state.views.size > 1) LibraryViewPills(state, Gutter, onCycleView)
     Row(
         Modifier.padding(top = 14.dp).horizontalScroll(rememberScrollState()).padding(horizontal = Gutter),
         horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
@@ -138,6 +130,17 @@ internal fun LibrarySpotlightHeader(
         }
         Icon(Icons.Filled.Tune, appString(R.string.library_tabs_customize), tint = colors.onSurfaceVariant,
             modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onCustomizeTabs).padding(10.dp))
+    }
+}
+
+@Composable
+internal fun LibraryViewPills(state: LibraryUiState, gutter: Dp, onCycleView: () -> Unit) {
+    val at = state.views.indexOfFirst { it.id == state.view }.coerceAtLeast(0)
+    Row(Modifier.padding(top = 14.dp).horizontalScroll(rememberScrollState()).padding(horizontal = gutter), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        state.views.forEachIndexed { i, view ->
+            // shortcut: the view model can only step to the next view, so a far pill starts loads it cancels; call a select-by-id once it has one
+            SpotlightPill(view.label, i == at) { repeat((i - at).mod(state.views.size)) { onCycleView() } }
+        }
     }
 }
 

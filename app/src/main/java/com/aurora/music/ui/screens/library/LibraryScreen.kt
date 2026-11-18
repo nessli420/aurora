@@ -305,6 +305,8 @@ fun LibraryScreen(
             onCreate = { showCreate = true }, onCycleView = onCycleView, onFilter = onFilter, onCustomizeTabs = { showTabs = true })
         com.aurora.music.data.PageLayout.CONSOLE -> LibraryConsoleHeader(state, username, playlistHome, filter, onOpenDrawer, onOpenSearch,
             onCreate = { showCreate = true }, onCycleView = onCycleView, onFilter = onFilter, onCustomizeTabs = { showTabs = true })
+        com.aurora.music.data.PageLayout.DRIFT -> LibraryDriftHeader(state, username, playlistHome, stats, visibleTabs, filter, onOpenDrawer, onOpenSearch,
+            onCreate = { showCreate = true }, onCycleView = onCycleView, onFilter = onFilter, onCustomizeTabs = { showTabs = true })
         else -> {
         // ---- header: identity + stats ----
         Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -426,6 +428,12 @@ fun LibraryScreen(
                     state = state, pins = pins, bottom = bottom, tabs = visibleTabs, actions = actions, onFilter = onFilter, onOpenDetail = onOpenDetail,
                     tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
                     onOpenMix = onOpenMix, onCustomizeTabs = { showTabs = true }, onSignIn = onSignIn,
+                )
+                com.aurora.music.data.PageLayout.DRIFT -> LibraryDriftAll(
+                    state = state, pins = pins, bottom = bottom, tabs = visibleTabs, tree = tree, actions = actions, onFilter = onFilter, onOpenDetail = onOpenDetail,
+                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
+                    onOpenMix = onOpenMix, onSignIn = onSignIn,
+                    onOpenFolder = if (LibraryFilter.PLAYLISTS in visibleTabs) ({ id -> openFolder = id; onFilter(LibraryFilter.PLAYLISTS) }) else null,
                 )
                 else -> AllOverview(
                 state = state, pins = pins, canDownload = canDownload, bottom = bottom,
@@ -1179,7 +1187,7 @@ private fun Modifier.likedLongPress(row: LibRow, actions: LibActions, onClick: (
 }
 
 @Composable
-private fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, onDismiss: () -> Unit) {
+internal fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, onDismiss: () -> Unit) {
     if (row.kind == "folder") return FolderMenu(row.id, row.title, actions, expanded, onDismiss)
     // liked row is virtual no like/delete just playback
     val isVirtual = row.kind == "liked"

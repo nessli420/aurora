@@ -106,6 +106,8 @@ fun HomeScreen(
         com.aurora.music.data.PageLayout.CONSOLE -> return HomeConsole(contentPadding, state, username, avatarUrl, sourceLabel, onOpenDrawer, onOpenSettings,
             onOpenDetail, onPlayAlbum, onPlayAll, onLoadMore, onRetry, onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection,
             onOpenSignalPath, onOpenStats)
+        com.aurora.music.data.PageLayout.DRIFT -> return HomeDrift(contentPadding, state, username, avatarUrl, sourceLabel, onOpenDrawer, onOpenSettings,
+            onOpenDetail, onPlayAlbum, onPlayAll, onLoadMore, onRetry, onSelectFeed, onOpenNotifications, onAddSource, mixes, onPlayCollection)
     }
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val hiddenSongs = com.aurora.music.ui.components.LocalHiddenSongs.current

@@ -348,7 +348,7 @@ internal fun HomeConsole(
     }
 }
 
-private fun titleCase(text: String): String {
+internal fun titleCase(text: String): String {
     val locale = AppStrings.context.resources.configuration.locales[0]
     return text.split(' ').joinToString(" ") { word -> word.lowercase(locale).replaceFirstChar { it.titlecase(locale) } }
 }

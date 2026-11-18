@@ -353,7 +353,7 @@ internal fun rememberEntrance(): Animatable<Float, AnimationVector1D> {
     return clock
 }
 
-private fun entrance(clock: Float, step: Int): Float =
+internal fun entrance(clock: Float, step: Int): Float =
     Motion.EaseOut.transform(((clock * ENTRANCE_MS - step * RISE_GAP_MS) / MotionTokens.EMPHASIZED).coerceIn(0f, 1f))
 
 internal fun Modifier.rise(clock: Animatable<Float, AnimationVector1D>, step: Int): Modifier = graphicsLayer {
@@ -605,9 +605,6 @@ private fun ChartRow(rank: Int, album: Album, onClick: () -> Unit) {
 @Composable
 private fun FavouriteCard(song: Song, scale: Float, onPlay: () -> Unit) {
     val colors = MaterialTheme.colorScheme
-    val square = isPaperTheme()
-    val levels = remember(song.id) { Random(song.id.hashCode()).let { r -> FloatArray(30) { 0.3f + r.nextFloat() * 0.7f } } }
-    val bar = colors.onSurface.copy(alpha = 0.22f)
     Column(
         Modifier.fillMaxWidth().spotSurface(MaterialTheme.shapes.large, colors.surface, outlined = true).pressClickable(onClick = onPlay).padding(14.dp * scale),
         verticalArrangement = Arrangement.spacedBy(12.dp * scale),
@@ -626,15 +623,23 @@ private fun FavouriteCard(song: Song, scale: Float, onPlay: () -> Unit) {
                 Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = colors.onPrimary, modifier = Modifier.size(22.dp * scale))
             }
         }
-        Spacer(Modifier.fillMaxWidth().height(34.dp * scale).drawBehind {
-            val step = size.width / levels.size
-            val radius = if (square) CornerRadius.Zero else CornerRadius(2.dp.toPx())
-            for (i in levels.indices) {
-                val h = size.height * levels[i]
-                drawRoundRect(bar, Offset(i * step, (size.height - h) / 2f), Size(step * 0.72f, h), radius)
-            }
-        })
+        StillBars(song.id, Modifier.fillMaxWidth().height(34.dp * scale))
     }
+}
+
+@Composable
+internal fun StillBars(seed: String, modifier: Modifier) {
+    val square = isPaperTheme()
+    val levels = remember(seed) { Random(seed.hashCode()).let { r -> FloatArray(30) { 0.3f + r.nextFloat() * 0.7f } } }
+    val bar = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.22f)
+    Spacer(modifier.drawBehind {
+        val step = size.width / levels.size
+        val radius = if (square) CornerRadius.Zero else CornerRadius(2.dp.toPx())
+        for (i in levels.indices) {
+            val h = size.height * levels[i]
+            drawRoundRect(bar, Offset(i * step, (size.height - h) / 2f), Size(step * 0.72f, h), radius)
+        }
+    })
 }
 
 @Composable
