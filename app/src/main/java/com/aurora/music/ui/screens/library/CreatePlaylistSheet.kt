@@ -21,6 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.PlaylistAdd
 import androidx.compose.material.icons.outlined.AutoAwesome
+import androidx.compose.material.icons.outlined.CreateNewFolder
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Dns
 import androidx.compose.material.icons.outlined.FileOpen
@@ -84,6 +85,7 @@ internal fun CreatePlaylistSheet(
     onImportM3u: () -> Unit,
     onDismiss: () -> Unit,
     onCreateWithAi: (() -> Unit)? = null,
+    onNewFolder: (() -> Unit)? = null,
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -187,6 +189,8 @@ internal fun CreatePlaylistSheet(
             }
             if (onCreateWithAi != null) ShortcutCard(Icons.Outlined.AutoAwesome, appString(R.string.ai_playlist_title), appString(R.string.ai_dj_card_hint),
                 enabled = !saving, onClick = onCreateWithAi, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
+            if (onNewFolder != null) ShortcutCard(Icons.Outlined.CreateNewFolder, appString(R.string.playlist_folder_new), "",
+                enabled = !saving, onClick = onNewFolder, modifier = Modifier.fillMaxWidth().padding(top = 10.dp))
         }
     }
 }
@@ -225,6 +229,6 @@ private fun ShortcutCard(icon: ImageVector, title: String, hint: String, enabled
     ) {
         Icon(icon, null, tint = colors.primary, modifier = Modifier.size(22.dp))
         Text(title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.padding(top = 10.dp))
-        Text(hint, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
+        if (hint.isNotEmpty()) Text(hint, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, modifier = Modifier.padding(top = 2.dp))
     }
 }

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Ordner</string>
+    <string name="playlist_folder_new">Neuer Ordner</string>
+    <string name="playlist_folder_name">Ordnername</string>
+    <string name="playlist_folder_untitled">Unbenannter Ordner</string>
+    <string name="playlist_folder_rename">Ordner umbenennen</string>
+    <string name="playlist_folder_delete">Ordner löschen</string>
+    <string name="playlist_folder_delete_message">„%1$s“ löschen? Die Playlists darin bleiben in deiner Mediathek und rücken eine Ebene nach oben.</string>
+    <string name="playlist_folder_move">In Ordner verschieben</string>
+    <string name="playlist_folder_none">Kein Ordner</string>
+    <string name="playlist_folder_failed">Der Ordner konnte nicht aktualisiert werden. Prüfe deine Verbindung und versuch es dann noch einmal.</string>
+</resources>

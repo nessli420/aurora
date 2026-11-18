@@ -72,6 +72,9 @@ import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.CreateNewFolder
+import androidx.compose.material.icons.automirrored.filled.DriveFileMove
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.GridView
 import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.automirrored.filled.List
@@ -157,6 +160,7 @@ import com.aurora.music.ui.layout.LocalPageGutter
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.Motion
+import com.aurora.music.ui.theme.screenEnter
 import com.aurora.music.ui.theme.PressScaleIndication
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.util.accentFor
@@ -220,6 +224,8 @@ private data class LibRow(
     val sortRecencySec: Long = 0,
     val detail: String = subtitle,
     val cells: List<String> = emptyList(),
+    // drawn instead of artwork, as for a playlist folder
+    val icon: ImageVector? = null,
 )
 
 private class TableColumn(val label: String, val weight: Float = 0f, val width: Dp = 0.dp)
@@ -235,9 +241,13 @@ private class LibActions(
     val onEditSmart: (LibRow) -> Unit,
     val onDeleteSmart: (LibRow) -> Unit,
     val onExport: (LibRow) -> Unit,
+    val prompt: (FolderPrompt) -> Unit = {},
+    // the folder a playlist sits in ("" at the top), null where it can't be filed
+    val folderOf: (String) -> String? = { null },
 )
 
 @Composable
+@OptIn(androidx.compose.ui.ExperimentalComposeUiApi::class)
 fun LibraryScreen(
     contentPadding: PaddingValues,
     state: LibraryUiState,
@@ -288,6 +298,7 @@ fun LibraryScreen(
     onPlayAllSongs: (shuffle: Boolean) -> Unit = {},
     onPlaySong: (Song) -> Unit = {},
     selectedItem: String? = null,
+    folderEdits: FolderEdits? = null,
 ) {
     val gutter = LocalPageGutter.current
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -302,8 +313,14 @@ fun LibraryScreen(
     val sort = state.sort
     val layout = state.layout
     val cardMin = cardMinWidth(LocalUiPrefs.current.libraryColumns, compact)
+    val tree = state.playlistFolders.takeIf { folderEdits != null }
+    var openFolder by remember(state.view) { mutableStateOf<String?>(null) }
+    // a folder deleted or moved away meanwhile drops back to the top
+    val folder = openFolder?.let { tree?.find(it) }.takeIf { filter == LibraryFilter.PLAYLISTS }
+    var prompt by remember { mutableStateOf<FolderPrompt?>(null) }
+    androidx.compose.ui.backhandler.BackHandler(enabled = folder != null) { openFolder = tree?.parentOf(folder?.id.orEmpty())?.id?.ifEmpty { null } }
     val actions = remember(likedIds, onPlayCollection, onShuffleCollection, onQueueCollection, onToggleLikeKind,
-        onDeletePlaylist, onEditSmart, onDeleteSmart, onExportPlaylist) {
+        onDeletePlaylist, onEditSmart, onDeleteSmart, onExportPlaylist, tree) {
         LibActions(
             onOpenLiked = { id -> onOpenDetail("liked", id) },
             isLiked = { id -> likedIds.contains(id) },
@@ -315,10 +332,14 @@ fun LibraryScreen(
             onEditSmart = { r -> onEditSmart(r.id) },
             onDeleteSmart = { r -> onDeleteSmart(r.id) },
             onExport = { r -> onExportPlaylist(r.id, r.kind, r.title) },
+            prompt = { prompt = it },
+            folderOf = { id -> tree?.folderOf(id)?.id },
         )
     }
+    if (folderEdits != null) prompt?.let { FolderPromptDialog(it, tree, folderEdits) { prompt = null } }
     val open: (LibRow) -> Unit = { r ->
         when (r.kind) {
+            "folder" -> openFolder = r.id
             "folders" -> onOpenFolders()
             "radio" -> onOpenRadio?.invoke()
             "podcasts" -> onOpenPodcasts?.invoke()
@@ -349,6 +370,7 @@ fun LibraryScreen(
                 onCreateSmart = { showCreate = false; onCreateSmart() },
                 onImportM3u = { showCreate = false; onImportM3u() },
                 onDismiss = { showCreate = false },
+                onNewFolder = if (tree == null) null else ({ showCreate = false; prompt = FolderPrompt.Create(folder?.id.orEmpty()) }),
             )
         }
 
@@ -390,11 +412,14 @@ fun LibraryScreen(
                 }
             }
             else -> {
-                val rows = remember(state, filter, sort, pins) { buildRows(state, filter, sort, pins) }
-                if (rows.isEmpty()) {
+                if (folder != null) FolderHeader(folder, actions) { openFolder = tree?.parentOf(folder.id)?.id?.ifEmpty { null } }
+                val rows = remember(state, filter, sort, pins, tree, folder) { buildRows(state, filter, sort, pins, tree, folder) }
+                if (rows.isEmpty() && folder != null) {
+                    EmptyHint(Icons.Filled.Folder, appString(R.string.text_nothing_in_this_folder_d2a003), "")
+                } else if (rows.isEmpty()) {
                     EmptyHint(tabIcon(filter), appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
                 } else {
-                    key(filter) { RowsContent(rows, tableColumns(filter), layout, cardMin, sort, bottom, actions, open) }
+                    key(filter, folder?.id) { Box(Modifier.fillMaxSize().screenEnter(folder?.id)) { RowsContent(rows, tableColumns(filter), layout, cardMin, sort, bottom, actions, open) } }
                 }
             }
         }
@@ -1119,19 +1144,34 @@ private fun artistRow(artist: com.aurora.music.model.Artist, albums: Int, plays:
     detail = appString(R.string.text_artist_6c3f3d), cells = listOf(albums.takeIf { it > 0 }?.toString().orEmpty()),
 )
 
-private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>): List<LibRow> {
+// tree is the view's playlist folders; an open folder lists only what is filed in it, the top level leaves those out
+private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>,
+    tree: com.aurora.music.data.PlaylistFolder? = null, folder: com.aurora.music.data.PlaylistFolder? = null): List<LibRow> {
+    fun playlistRow(it: com.aurora.music.model.Playlist) = LibRow(
+        it.title, if (it.songCount < 0) appString(R.string.text_playlist_cd95b4) else appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist",
+        detail = appString(R.string.text_playlist_cd95b4), cells = listOf(it.songCount.takeIf { n -> n >= 0 }?.toString().orEmpty()),
+    )
+    fun folderRow(f: com.aurora.music.data.PlaylistFolder): LibRow {
+        val count = f.playlistIds.size + f.nestedPlaylistIds().size
+        return LibRow(f.name.ifBlank { appString(R.string.playlist_folder_untitled) }, appPlural(R.plurals.playlist_count, count), "", accentFor(f.id), f.id, "folder",
+            detail = appString(R.string.playlist_folder), cells = listOf(count.toString()), icon = Icons.Filled.Folder)
+    }
     val base = when (filter) {
-        LibraryFilter.PLAYLISTS -> {
+        LibraryFilter.PLAYLISTS -> if (folder != null) {
+            val byId = state.playlists.associateBy { it.id }
+            folder.entries.mapNotNull { entry ->
+                when (entry) {
+                    is com.aurora.music.data.PlaylistFolderEntry.Folder -> folderRow(entry.folder)
+                    is com.aurora.music.data.PlaylistFolderEntry.Item -> byId[entry.playlistId]?.let(::playlistRow)
+                }
+            }
+        } else {
             val smart = state.smartPlaylists.map {
                 val n = it.rules.orEmpty().size
                 LibRow(it.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.smart_rule_count, appPlural(R.plurals.rule_count, (n))), "", accentFor(it.id ?: "smart"), it.id ?: "", "smart", badge = appString(R.string.text_auto_50c3f1))
             }
-            smart + state.playlists.map {
-                LibRow(
-                    it.title, if (it.songCount < 0) appString(R.string.text_playlist_cd95b4) else appString(R.string.playlist_track_count, appPlural(R.plurals.track_count, (it.songCount))), it.coverUrl, it.accent, it.id, "playlist",
-                    detail = appString(R.string.text_playlist_cd95b4), cells = listOf(it.songCount.takeIf { n -> n >= 0 }?.toString().orEmpty()),
-                )
-            }
+            val filed = tree?.nestedPlaylistIds().orEmpty()
+            smart + tree?.folders.orEmpty().map(::folderRow) + state.playlists.filter { it.id !in filed }.map(::playlistRow)
         }
         LibraryFilter.ALBUMS -> state.albums.map { albumRow(it) }
         LibraryFilter.ARTISTS -> {
@@ -1154,7 +1194,7 @@ private fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Librar
         LibrarySort.MOST_PLAYED -> base.sortedByDescending { it.sortPlayCount }
         LibrarySort.RECENT -> base.sortedByDescending { it.sortRecencySec }
     }
-    if (filter != LibraryFilter.PLAYLISTS) return sorted
+    if (filter != LibraryFilter.PLAYLISTS || folder != null) return sorted
 
     // playlists tab keeps liked songs on top pinned entries stay deduped
     val pinned = pins.map { it.kind to it.id }.toSet()
@@ -1173,6 +1213,7 @@ private fun CreatePlaylistDialog(
     onCreateSmart: () -> Unit,
     onImportM3u: () -> Unit,
     onDismiss: () -> Unit,
+    onNewFolder: (() -> Unit)? = null,
 ) {
     var name by remember { mutableStateOf("") }
     var description by remember { mutableStateOf("") }
@@ -1225,6 +1266,9 @@ private fun CreatePlaylistDialog(
                 }
                 TextButton(onClick = onImportM3u, enabled = !saving) {
                     Text(appString(R.string.import_title))
+                }
+                if (onNewFolder != null) TextButton(onClick = onNewFolder, enabled = !saving) {
+                    Text(appString(R.string.playlist_folder_new))
                 }
             }
         },
@@ -1294,7 +1338,8 @@ private fun LibListItem(row: LibRow, columns: List<TableColumn>, actions: LibAct
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box {
-            Artwork(row.art, row.accent, Modifier.size(ListArt), corner = if (row.circle) ListArt else 10.dp)
+            if (row.icon != null) IconTile(row.icon, Modifier.size(ListArt))
+            else Artwork(row.art, row.accent, Modifier.size(ListArt), corner = if (row.circle) ListArt else 10.dp)
             if (row.badge.isNotBlank()) Badge(row.badge, Modifier.align(Alignment.BottomStart), small = true)
         }
         Spacer(Modifier.width(CellGap))
@@ -1353,7 +1398,8 @@ private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
             .padding(if (aurora) 0.dp else 8.dp),
     ) {
         Box(Modifier.fillMaxWidth().aspectRatio(1f)) {
-            Artwork(row.art, row.accent, Modifier.fillMaxSize(), corner = if (row.circle) 400.dp else 14.dp)
+            if (row.icon != null) IconTile(row.icon, Modifier.fillMaxSize())
+            else Artwork(row.art, row.accent, Modifier.fillMaxSize(), corner = if (row.circle) 400.dp else 14.dp)
             if (selected) Box(Modifier.matchParentSize().border(3.dp, MaterialTheme.colorScheme.primary, com.aurora.music.ui.theme.paperSquare(artShape(row))))
             if (row.badge.isNotBlank()) Badge(row.badge, Modifier.align(Alignment.TopStart))
             if (showActions) {
@@ -1365,7 +1411,7 @@ private fun LibCard(row: LibRow, actions: LibActions, onClick: () -> Unit) {
                         contentAlignment = Alignment.Center,
                     ) { Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = Color.White, modifier = Modifier.size(18.dp)) }
                 }
-                Box(
+                if (row.icon == null) Box(
                     Modifier.align(Alignment.BottomEnd).padding(8.dp).size(40.dp).paperClip(CircleShape)
                         .background(MaterialTheme.colorScheme.primary)
                         .clickable(onClickLabel = appString(R.string.text_play_5d12bd)) { actions.onPlay(row) }
@@ -1406,6 +1452,7 @@ private fun ContextMenu(row: LibRow, actions: LibActions, onDismiss: () -> Unit)
 
 @Composable
 private fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, onDismiss: () -> Unit) {
+    if (row.kind == "folder") return FolderMenu(row.id, row.title, actions, expanded, onDismiss)
     // liked row is virtual no like/delete just playback
     val isVirtual = row.kind == "liked"
     val isSmart = row.kind == "smart"
@@ -1440,6 +1487,13 @@ private fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, 
                 onClick = { onDismiss(); actions.onToggleLike(row) },
                 leadingIcon = { Icon(if (liked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder, null) },
             )
+            if (isPlaylist) actions.folderOf(row.id)?.let { from ->
+                DropdownMenuItem(
+                    text = { Text(appString(R.string.playlist_folder_move)) },
+                    onClick = { onDismiss(); actions.prompt(FolderPrompt.Move(row.id, from)) },
+                    leadingIcon = { Icon(Icons.AutoMirrored.Filled.DriveFileMove, null) },
+                )
+            }
             if (isPlaylist) {
                 DropdownMenuItem(
                     text = { Text(appString(R.string.text_delete_playlist_b55b18)) },
@@ -1447,6 +1501,44 @@ private fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean, 
                     leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) },
                 )
             }
+        }
+    }
+}
+
+@Composable
+private fun IconTile(icon: ImageVector, modifier: Modifier) {
+    Box(modifier.paperClip(RoundedCornerShape(10.dp)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.14f)), contentAlignment = Alignment.Center) {
+        Icon(icon, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.fillMaxSize(0.42f))
+    }
+}
+
+@Composable
+private fun FolderMenu(id: String, name: String, actions: LibActions, expanded: Boolean, onDismiss: () -> Unit) {
+    DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
+        DropdownMenuItem(text = { Text(appString(R.string.playlist_folder_new)) }, onClick = { onDismiss(); actions.prompt(FolderPrompt.Create(id)) },
+            leadingIcon = { Icon(Icons.Filled.CreateNewFolder, null) })
+        DropdownMenuItem(text = { Text(appString(R.string.playlist_folder_rename)) }, onClick = { onDismiss(); actions.prompt(FolderPrompt.Rename(id, name)) },
+            leadingIcon = { Icon(Icons.Filled.Edit, null) })
+        DropdownMenuItem(text = { Text(appString(R.string.playlist_folder_delete)) }, onClick = { onDismiss(); actions.prompt(FolderPrompt.Delete(id, name)) },
+            leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) })
+    }
+}
+
+// the open folder's title bar inside the playlists tab; back goes up one level
+@Composable
+private fun FolderHeader(folder: com.aurora.music.data.PlaylistFolder, actions: LibActions, onBack: () -> Unit) {
+    var menuOpen by remember { mutableStateOf(false) }
+    val insets = LocalLibInsets.current
+    Row(Modifier.fillMaxWidth().padding(start = insets.start, end = insets.end, top = 4.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+        HeaderAction(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), onBack)
+        Spacer(Modifier.width(6.dp))
+        Icon(Icons.Filled.Folder, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(22.dp))
+        Spacer(Modifier.width(10.dp))
+        Text(folderName(folder.name), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold,
+            maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f))
+        Box {
+            HeaderAction(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d)) { menuOpen = true }
+            FolderMenu(folder.id, folder.name, actions, menuOpen) { menuOpen = false }
         }
     }
 }

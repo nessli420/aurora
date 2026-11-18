@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Carpeta</string>
+    <string name="playlist_folder_new">Nueva carpeta</string>
+    <string name="playlist_folder_name">Nombre de la carpeta</string>
+    <string name="playlist_folder_untitled">Carpeta sin nombre</string>
+    <string name="playlist_folder_rename">Cambiar nombre de la carpeta</string>
+    <string name="playlist_folder_delete">Eliminar carpeta</string>
+    <string name="playlist_folder_delete_message">¿Eliminar «%1$s»? Sus listas se quedan en tu biblioteca y suben un nivel.</string>
+    <string name="playlist_folder_move">Mover a carpeta</string>
+    <string name="playlist_folder_none">Sin carpeta</string>
+    <string name="playlist_folder_failed">No se pudo actualizar la carpeta. Revisa tu conexión e inténtalo de nuevo.</string>
+</resources>

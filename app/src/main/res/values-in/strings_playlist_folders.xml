@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Folder</string>
+    <string name="playlist_folder_new">Folder baru</string>
+    <string name="playlist_folder_name">Nama folder</string>
+    <string name="playlist_folder_untitled">Folder tanpa nama</string>
+    <string name="playlist_folder_rename">Ganti nama folder</string>
+    <string name="playlist_folder_delete">Hapus folder</string>
+    <string name="playlist_folder_delete_message">Hapus “%1$s”? Playlist di dalamnya tetap ada di koleksimu dan naik satu tingkat.</string>
+    <string name="playlist_folder_move">Pindahkan ke folder</string>
+    <string name="playlist_folder_none">Tanpa folder</string>
+    <string name="playlist_folder_failed">Folder tidak dapat diperbarui. Periksa koneksimu, lalu coba lagi.</string>
+</resources>

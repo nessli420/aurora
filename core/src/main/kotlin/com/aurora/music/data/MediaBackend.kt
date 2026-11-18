@@ -157,6 +157,15 @@ interface MediaBackend {
 
     suspend fun profileImageUrl(): String = ""
 
+    // folders of playlists (spotify); the root has id "" and folder id "" below means the top level
+    val supportsPlaylistFolders: Boolean get() = false
+    suspend fun playlistFolders(): PlaylistFolder? = null
+    suspend fun createPlaylistFolder(name: String, parentId: String): Boolean = false
+    suspend fun renamePlaylistFolder(id: String, name: String): Boolean = false
+    // the folder goes, its playlists and folders move up a level
+    suspend fun deletePlaylistFolder(id: String): Boolean = false
+    suspend fun movePlaylistToFolder(playlistId: String, folderId: String): Boolean = false
+
     val supportsFolders: Boolean get() = false
 
     // folderId "" = root

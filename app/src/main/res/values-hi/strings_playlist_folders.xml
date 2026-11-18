@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">फ़ोल्डर</string>
+    <string name="playlist_folder_new">नया फ़ोल्डर</string>
+    <string name="playlist_folder_name">फ़ोल्डर का नाम</string>
+    <string name="playlist_folder_untitled">बिना नाम का फ़ोल्डर</string>
+    <string name="playlist_folder_rename">फ़ोल्डर का नाम बदलें</string>
+    <string name="playlist_folder_delete">फ़ोल्डर हटाएँ</string>
+    <string name="playlist_folder_delete_message">“%1$s” हटाएँ? इसकी प्लेलिस्ट आपकी लाइब्रेरी में रहेंगी और एक स्तर ऊपर चली जाएँगी।</string>
+    <string name="playlist_folder_move">फ़ोल्डर में ले जाएँ</string>
+    <string name="playlist_folder_none">कोई फ़ोल्डर नहीं</string>
+    <string name="playlist_folder_failed">फ़ोल्डर अपडेट नहीं हो सका। अपना कनेक्शन जाँचें, फिर दोबारा कोशिश करें।</string>
+</resources>

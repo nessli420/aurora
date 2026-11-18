@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">文件夹</string>
+    <string name="playlist_folder_new">新建文件夹</string>
+    <string name="playlist_folder_name">文件夹名称</string>
+    <string name="playlist_folder_untitled">未命名文件夹</string>
+    <string name="playlist_folder_rename">重命名文件夹</string>
+    <string name="playlist_folder_delete">删除文件夹</string>
+    <string name="playlist_folder_delete_message">删除“%1$s”？其中的歌单会保留在资料库中，并上移一级。</string>
+    <string name="playlist_folder_move">移到文件夹</string>
+    <string name="playlist_folder_none">不在文件夹中</string>
+    <string name="playlist_folder_failed">无法更新文件夹。请检查网络连接后重试。</string>
+</resources>

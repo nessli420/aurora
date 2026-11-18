@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Klasör</string>
+    <string name="playlist_folder_new">Yeni klasör</string>
+    <string name="playlist_folder_name">Klasör adı</string>
+    <string name="playlist_folder_untitled">Adsız klasör</string>
+    <string name="playlist_folder_rename">Klasörü yeniden adlandır</string>
+    <string name="playlist_folder_delete">Klasörü sil</string>
+    <string name="playlist_folder_delete_message">“%1$s” silinsin mi? İçindeki çalma listeleri kitaplığınızda kalır ve bir üst düzeye taşınır.</string>
+    <string name="playlist_folder_move">Klasöre taşı</string>
+    <string name="playlist_folder_none">Klasör yok</string>
+    <string name="playlist_folder_failed">Klasör güncellenemedi. Bağlantınızı denetleyip tekrar deneyin.</string>
+</resources>

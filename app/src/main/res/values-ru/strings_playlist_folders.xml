@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Папка</string>
+    <string name="playlist_folder_new">Новая папка</string>
+    <string name="playlist_folder_name">Название папки</string>
+    <string name="playlist_folder_untitled">Папка без названия</string>
+    <string name="playlist_folder_rename">Переименовать папку</string>
+    <string name="playlist_folder_delete">Удалить папку</string>
+    <string name="playlist_folder_delete_message">Удалить «%1$s»? Плейлисты из неё останутся в медиатеке и поднимутся на уровень выше.</string>
+    <string name="playlist_folder_move">Переместить в папку</string>
+    <string name="playlist_folder_none">Без папки</string>
+    <string name="playlist_folder_failed">Не удалось обновить папку. Проверьте подключение и повторите попытку.</string>
+</resources>

@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">فولڈر</string>
+    <string name="playlist_folder_new">نیا فولڈر</string>
+    <string name="playlist_folder_name">فولڈر کا نام</string>
+    <string name="playlist_folder_untitled">بے نام فولڈر</string>
+    <string name="playlist_folder_rename">فولڈر کا نام بدلیں</string>
+    <string name="playlist_folder_delete">فولڈر حذف کریں</string>
+    <string name="playlist_folder_delete_message">“%1$s” حذف کریں؟ اس کی پلے لسٹس آپ کی لائبریری میں رہیں گی اور ایک درجہ اوپر چلی جائیں گی۔</string>
+    <string name="playlist_folder_move">فولڈر میں منتقل کریں</string>
+    <string name="playlist_folder_none">کوئی فولڈر نہیں</string>
+    <string name="playlist_folder_failed">فولڈر اپ ڈیٹ نہیں ہو سکا۔ اپنا کنکشن چیک کریں، پھر دوبارہ کوشش کریں۔</string>
+</resources>

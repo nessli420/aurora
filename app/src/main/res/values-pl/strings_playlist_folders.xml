@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Folder</string>
+    <string name="playlist_folder_new">Nowy folder</string>
+    <string name="playlist_folder_name">Nazwa folderu</string>
+    <string name="playlist_folder_untitled">Folder bez nazwy</string>
+    <string name="playlist_folder_rename">Zmień nazwę folderu</string>
+    <string name="playlist_folder_delete">Usuń folder</string>
+    <string name="playlist_folder_delete_message">Usunąć „%1$s”? Playlisty z tego folderu zostaną w bibliotece i przejdą poziom wyżej.</string>
+    <string name="playlist_folder_move">Przenieś do folderu</string>
+    <string name="playlist_folder_none">Bez folderu</string>
+    <string name="playlist_folder_failed">Nie udało się zaktualizować folderu. Sprawdź połączenie i spróbuj ponownie.</string>
+</resources>

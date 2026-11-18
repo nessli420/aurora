@@ -702,6 +702,28 @@ class MusicRepository(
         return deleted
     }
 
+    // folders exist only online and only in a library whose source files playlists in them
+    fun supportsPlaylistFolders(view: String? = null): Boolean = !offline && viewOf(view)?.supportsPlaylistFolders == true
+
+    suspend fun playlistFolders(view: String? = null): com.aurora.music.data.PlaylistFolder? =
+        if (!supportsPlaylistFolders(view)) null else withContext(mapping) { viewOf(view)?.playlistFolders() }
+
+    suspend fun createPlaylistFolder(name: String, parentId: String, view: String? = null): Boolean =
+        name.isNotBlank() && folderEdit(view) { it.createPlaylistFolder(name.trim(), parentId) }
+
+    suspend fun renamePlaylistFolder(id: String, name: String, view: String? = null): Boolean =
+        name.isNotBlank() && folderEdit(view) { it.renamePlaylistFolder(id, name.trim()) }
+
+    suspend fun deletePlaylistFolder(id: String, view: String? = null): Boolean = folderEdit(view) { it.deletePlaylistFolder(id) }
+
+    suspend fun movePlaylistToFolder(playlistId: String, folderId: String, view: String? = null): Boolean =
+        folderEdit(view) { it.movePlaylistToFolder(playlistId, folderId) }
+
+    private suspend fun folderEdit(view: String?, edit: suspend (MediaBackend) -> Boolean): Boolean {
+        val source = viewOf(view)?.takeIf { supportsPlaylistFolders(view) } ?: return false
+        return edit(source).also { if (it) playlistChangeEvents.tryEmit("") }
+    }
+
     // playlists arent server-starrable handled locally by the caller
     suspend fun setStarred(id: String, starred: Boolean, kind: String = "song"): Boolean {
         if (offline || savedMix(kind, id) != null) return false

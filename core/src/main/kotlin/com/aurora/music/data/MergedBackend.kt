@@ -181,6 +181,31 @@ class MergedBackend(
         liked
     }
 
+    // only spotify files playlists in folders, so its tree comes back under its namespace and the other sources stay flat
+    private val folderSource: Int get() = sources.indexOfFirst { it.supportsPlaylistFolders }
+    override val supportsPlaylistFolders: Boolean get() = folderSource >= 0
+
+    override suspend fun playlistFolders(): PlaylistFolder? {
+        val i = folderSource.takeIf { it >= 0 } ?: return null
+        return withTimeoutOrNull(SOURCE_TIMEOUT_MS) { sources[i].playlistFolders() }?.mapIds { router.wrapId(i, it) }
+    }
+
+    override suspend fun createPlaylistFolder(name: String, parentId: String): Boolean =
+        if (parentId.isEmpty()) folderSource.takeIf { it >= 0 }?.let { sources[it].createPlaylistFolder(name, "") } ?: false
+        else router.route(parentId) { src, _, oid -> src.createPlaylistFolder(name, oid) } ?: false
+
+    override suspend fun renamePlaylistFolder(id: String, name: String): Boolean =
+        router.route(id) { src, _, oid -> src.renamePlaylistFolder(oid, name) } ?: false
+
+    override suspend fun deletePlaylistFolder(id: String): Boolean =
+        router.route(id) { src, _, oid -> src.deletePlaylistFolder(oid) } ?: false
+
+    override suspend fun movePlaylistToFolder(playlistId: String, folderId: String): Boolean =
+        router.route(playlistId) { src, i, oid ->
+            val target = if (folderId.isEmpty()) "" else router.unwrap(folderId)?.takeIf { it.first == i }?.second ?: return@route false
+            src.movePlaylistToFolder(oid, target)
+        } ?: false
+
     override val supportsFolders: Boolean get() = sources.any { it.supportsFolders }
 
     override suspend fun browseFolder(folderId: String): FolderContent? {

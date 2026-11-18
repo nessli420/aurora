@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Cartella</string>
+    <string name="playlist_folder_new">Nuova cartella</string>
+    <string name="playlist_folder_name">Nome della cartella</string>
+    <string name="playlist_folder_untitled">Cartella senza nome</string>
+    <string name="playlist_folder_rename">Rinomina cartella</string>
+    <string name="playlist_folder_delete">Elimina cartella</string>
+    <string name="playlist_folder_delete_message">Eliminare “%1$s”? Le sue playlist restano nella tua libreria e salgono di un livello.</string>
+    <string name="playlist_folder_move">Sposta in una cartella</string>
+    <string name="playlist_folder_none">Nessuna cartella</string>
+    <string name="playlist_folder_failed">Impossibile aggiornare la cartella. Controlla la connessione, poi riprova.</string>
+</resources>

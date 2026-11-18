@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">フォルダ</string>
+    <string name="playlist_folder_new">新しいフォルダ</string>
+    <string name="playlist_folder_name">フォルダ名</string>
+    <string name="playlist_folder_untitled">名前のないフォルダ</string>
+    <string name="playlist_folder_rename">フォルダ名を変更</string>
+    <string name="playlist_folder_delete">フォルダを削除</string>
+    <string name="playlist_folder_delete_message">「%1$s」を削除しますか？中のプレイリストはライブラリに残り、1つ上の階層に移動します。</string>
+    <string name="playlist_folder_move">フォルダに移動</string>
+    <string name="playlist_folder_none">フォルダなし</string>
+    <string name="playlist_folder_failed">フォルダを更新できませんでした。接続を確認してから、もう一度お試しください。</string>
+</resources>

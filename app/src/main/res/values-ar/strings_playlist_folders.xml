@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">مجلد</string>
+    <string name="playlist_folder_new">مجلد جديد</string>
+    <string name="playlist_folder_name">اسم المجلد</string>
+    <string name="playlist_folder_untitled">مجلد بلا اسم</string>
+    <string name="playlist_folder_rename">إعادة تسمية المجلد</string>
+    <string name="playlist_folder_delete">حذف المجلد</string>
+    <string name="playlist_folder_delete_message">هل تريد حذف “%1$s”؟ ستبقى قوائم التشغيل التي بداخله في مكتبتك وتنتقل مستوى واحدًا للأعلى.</string>
+    <string name="playlist_folder_move">نقل إلى مجلد</string>
+    <string name="playlist_folder_none">بلا مجلد</string>
+    <string name="playlist_folder_failed">تعذّر تحديث المجلد. تحقّق من اتصالك ثم حاول مرة أخرى.</string>
+</resources>

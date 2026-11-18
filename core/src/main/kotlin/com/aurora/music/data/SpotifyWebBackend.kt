@@ -459,6 +459,54 @@ class SpotifyWebBackend(
 
     override suspend fun deletePlaylist(id: String): Boolean = setStarred(id, false, "playlist")
 
+    // folders live only in the rootlist, as group markers around their playlists; edits are the web player's own key based ops
+    override val supportsPlaylistFolders: Boolean get() = true
+
+    private val rootlist get() = "/playlist/v2/user/${URLEncoder.encode(session.userId, "UTF-8")}/rootlist"
+
+    override suspend fun playlistFolders(): PlaylistFolder? = runCatching {
+        SpotifyRootlist.parse(gql.spclient("$rootlist?decorate=revision,length&bustCache=${System.currentTimeMillis()}"))
+    }.onFailure { AppLog.d(TAG, "rootlist failed: ${it.message}") }.getOrNull()
+
+    override suspend fun createPlaylistFolder(name: String, parentId: String): Boolean {
+        val id = SpotifyRootlist.newId()
+        return changeRootlist(add(listOf(SpotifyRootlist.start(id, name), SpotifyRootlist.end(id)), into(parentId)))
+    }
+
+    // the web player swaps the start marker through a stand-in so two markers never share a key
+    override suspend fun renamePlaylistFolder(id: String, name: String): Boolean {
+        val temp = SpotifyRootlist.start(SpotifyRootlist.newId(), name)
+        val old = SpotifyRootlist.start(id)
+        return changeRootlist(add(listOf(temp), before(old)), remove(old), add(listOf(SpotifyRootlist.start(id, name)), before(temp)), remove(temp))
+    }
+
+    // spotify's own delete also drops every playlist inside; only the markers go here so nothing leaves the library
+    override suspend fun deletePlaylistFolder(id: String): Boolean = changeRootlist(remove(SpotifyRootlist.start(id), SpotifyRootlist.end(id)))
+
+    override suspend fun movePlaylistToFolder(playlistId: String, folderId: String): Boolean =
+        changeRootlist(mapOf("kind" to "MOV", "mov" to into(folderId) + ("items" to listOf(mapOf("uri" to PLAYLIST + playlistId, "attributes" to NO_ATTRIBUTES)))))
+
+    private suspend fun changeRootlist(vararg ops: Map<String, Any>): Boolean = runCatching {
+        gql.spclient("$rootlist/changes", element(mapOf(
+            "deltas" to listOf(mapOf("ops" to ops.toList(), "info" to mapOf("source" to mapOf("client" to "WEBPLAYER")))),
+            "wantResultingRevisions" to false, "wantSyncResult" to false, "nonces" to emptyList<String>(),
+        )).asJsonObject)
+        true
+    }.onFailure { AppLog.d(TAG, "rootlist change failed: ${it.message}") }.getOrDefault(false)
+
+    private fun add(uris: List<String>, at: Map<String, Any>): Map<String, Any> {
+        val now = System.currentTimeMillis().toString()
+        return mapOf("kind" to "ADD", "add" to at + ("items" to uris.map { mapOf("uri" to it, "attributes" to NO_ATTRIBUTES + ("timestamp" to now)) }))
+    }
+
+    private fun remove(vararg uris: String): Map<String, Any> = mapOf("kind" to "REM", "rem" to mapOf("itemsAsKey" to true, "items" to uris.map { mapOf("uri" to it) }))
+
+    private fun before(uri: String): Map<String, Any> = mapOf("addBeforeItem" to mapOf("uri" to uri, "attributes" to NO_ATTRIBUTES))
+
+    // a folder's top, or the top of the library as the web player's remove from folders does
+    private fun into(folderId: String): Map<String, Any> =
+        if (folderId.isEmpty()) mapOf("addFirst" to true) else mapOf("addAfterItem" to mapOf("uri" to SpotifyRootlist.start(folderId), "attributes" to NO_ATTRIBUTES))
+
     override suspend fun addToPlaylist(playlistId: String, trackIds: List<String>): Boolean = runCatching {
         trackIds.chunked(100).forEach { chunk ->
             q("addToPlaylist", "playlistUri" to PLAYLIST + playlistId, "playlistItemUris" to chunk.map { TRACK + it },
@@ -564,6 +612,7 @@ class SpotifyWebBackend(
         private const val PLAYLIST = "spotify:playlist:"
         private val TRACK_ID = Regex("[A-Za-z0-9]{22}")
         private const val PRODUCT_STATE = "/melody/v1/product_state?market=from_token"
+        private val NO_ATTRIBUTES = mapOf("formatAttributes" to emptyList<Any>(), "availableSignals" to emptyList<Any>())
         private const val LIBRARY_PAGE = 200
         private const val LIBRARY_CAP = 5000
         private const val TRACK_PAGE = 100

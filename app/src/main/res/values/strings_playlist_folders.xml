@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Folder</string>
+    <string name="playlist_folder_new">New folder</string>
+    <string name="playlist_folder_name">Folder name</string>
+    <string name="playlist_folder_untitled">Untitled folder</string>
+    <string name="playlist_folder_rename">Rename folder</string>
+    <string name="playlist_folder_delete">Delete folder</string>
+    <string name="playlist_folder_delete_message">Delete “%1$s”? The playlists in it stay in your library and move up a level.</string>
+    <string name="playlist_folder_move">Move to folder</string>
+    <string name="playlist_folder_none">No folder</string>
+    <string name="playlist_folder_failed">Could not update the folder. Check your connection, then try again.</string>
+</resources>

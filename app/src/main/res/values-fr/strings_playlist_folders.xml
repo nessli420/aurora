@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Dossier</string>
+    <string name="playlist_folder_new">Nouveau dossier</string>
+    <string name="playlist_folder_name">Nom du dossier</string>
+    <string name="playlist_folder_untitled">Dossier sans titre</string>
+    <string name="playlist_folder_rename">Renommer le dossier</string>
+    <string name="playlist_folder_delete">Supprimer le dossier</string>
+    <string name="playlist_folder_delete_message">Supprimer « %1$s » ? Ses playlists restent dans votre bibliothèque et remontent d\'un niveau.</string>
+    <string name="playlist_folder_move">Déplacer vers un dossier</string>
+    <string name="playlist_folder_none">Aucun dossier</string>
+    <string name="playlist_folder_failed">Impossible de mettre à jour le dossier. Vérifiez votre connexion, puis réessayez.</string>
+</resources>

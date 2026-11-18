@@ -1386,6 +1386,9 @@ private fun Shell(
                                                     }
                                                 },
                                                 selectedItem = if (split) librarySelection else null,
+                                                folderEdits = remember(libraryVM) {
+                                                    com.aurora.music.ui.screens.library.FolderEdits(libraryVM::createFolder, libraryVM::renameFolder, libraryVM::deleteFolder, libraryVM::moveToFolder)
+                                                },
                                             )
                                         }
                                         if (selected != null) {

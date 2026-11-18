@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Map</string>
+    <string name="playlist_folder_new">Nieuwe map</string>
+    <string name="playlist_folder_name">Mapnaam</string>
+    <string name="playlist_folder_untitled">Naamloze map</string>
+    <string name="playlist_folder_rename">Map hernoemen</string>
+    <string name="playlist_folder_delete">Map verwijderen</string>
+    <string name="playlist_folder_delete_message">“%1$s” verwijderen? De playlists erin blijven in je bibliotheek en gaan een niveau omhoog.</string>
+    <string name="playlist_folder_move">Naar map verplaatsen</string>
+    <string name="playlist_folder_none">Geen map</string>
+    <string name="playlist_folder_failed">Kan de map niet bijwerken. Controleer je verbinding en probeer het opnieuw.</string>
+</resources>

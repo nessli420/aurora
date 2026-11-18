@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="playlist_folder">Pasta</string>
+    <string name="playlist_folder_new">Nova pasta</string>
+    <string name="playlist_folder_name">Nome da pasta</string>
+    <string name="playlist_folder_untitled">Pasta sem nome</string>
+    <string name="playlist_folder_rename">Renomear pasta</string>
+    <string name="playlist_folder_delete">Excluir pasta</string>
+    <string name="playlist_folder_delete_message">Excluir “%1$s”? As playlists dentro dela continuam na sua biblioteca e sobem um nível.</string>
+    <string name="playlist_folder_move">Mover para pasta</string>
+    <string name="playlist_folder_none">Sem pasta</string>
+    <string name="playlist_folder_failed">Não foi possível atualizar a pasta. Verifique sua conexão e tente de novo.</string>
+</resources>

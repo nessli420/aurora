@@ -40,6 +40,8 @@ data class LibraryUiState(
     val albums: List<Album> = emptyList(),
     val artists: List<Artist> = emptyList(),
     val playlists: List<Playlist> = emptyList(),
+    // the view's playlist folders, null where its source keeps playlists flat
+    val playlistFolders: com.aurora.music.data.PlaylistFolder? = null,
     val songs: List<Song> = emptyList(),
     // songs in a sort made off the main thread; sortedFor is the sort it was built with
     val sortedSongs: List<Song> = emptyList(),
@@ -84,8 +86,12 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
 
     init {
         viewModelScope.launch { container.repository.playlistChanges.collect {
-            val playlists = container.repository.allPlaylists(scope())
-            _state.update { it.copy(playlists = playlists) }
+            val scope = scope()
+            val (playlists, folders) = kotlinx.coroutines.coroutineScope {
+                val folders = async { container.repository.playlistFolders(scope) }
+                container.repository.allPlaylists(scope) to folders.await()
+            }
+            if (scope() == scope) _state.update { it.copy(playlists = playlists, playlistFolders = folders) }
         } }
         viewModelScope.launch { container.offline.collect { load() } }
         // the count lands on its own, so the old account's number goes now
@@ -159,7 +165,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         if (s.views.size < 2) return
         viewChosen = true
         val next = s.views[(s.views.indexOfFirst { it.id == s.view } + 1).mod(s.views.size)].id
-        _state.update { it.copy(view = next, playlists = emptyList(), albums = emptyList(), artists = emptyList(), songs = emptyList(),
+        _state.update { it.copy(view = next, playlists = emptyList(), playlistFolders = null, albums = emptyList(), artists = emptyList(), songs = emptyList(),
             likedSongCount = 0, likedCover = "", canLoadMoreSongs = false) }
         load()
     }
@@ -200,14 +206,16 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             if (count != null && scope() == scope && epoch == container.accountEpoch.value) _state.update { it.copy(likedSongCount = count) }
         }
         // together, so one slow or unreachable server costs a single timeout rather than one per section
-        val (lists, songs) = kotlinx.coroutines.coroutineScope {
+        val (lists, loaded) = kotlinx.coroutines.coroutineScope {
             val playlists = async { repo.allPlaylists(scope) }
+            val folders = async { repo.playlistFolders(scope) }
             val albums = async { repo.allAlbums(scope) }
             val artists = async { repo.allArtists(scope) }
             val songs = async { repo.songsPage(0, SONG_PAGE, scope) }
-            Triple(playlists.await(), albums.await(), artists.await()) to songs.await()
+            Triple(playlists.await(), albums.await(), artists.await()) to (songs.await() to folders.await())
         }
         val (playlists, albums, artists) = lists
+        val (songs, folders) = loaded
         songsOffset = SONG_PAGE
         val rows = withContext(Dispatchers.Default) { repo.downloadedLibrary() }
         // a view switch while this was loading belongs to the newer load
@@ -220,7 +228,7 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
             return reload(showLoading)
         }
         _state.update {
-            it.copy(loading = false, playlists = playlists, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = rows, supportsFolders = container.repository.supportsFolders, signedIn = repo.signedIn(scope))
+            it.copy(loading = false, playlists = playlists, playlistFolders = folders, albums = albums, artists = artists, songs = songs, songsLoadingMore = false, canLoadMoreSongs = songs.size >= SONG_PAGE, downloadedRows = rows, supportsFolders = container.repository.supportsFolders, signedIn = repo.signedIn(scope))
         }
         // warm the full-library cache in the background so the first Play is instant
         fullSongsAsync()
@@ -273,6 +281,15 @@ class LibraryViewModel(app: Application) : AndroidViewModel(app) {
         if (memo != null && memo.first === all && memo.second == s.sort && memo.third === counts) return s.sortedSongs
         return withContext(Dispatchers.Default) { sortLibrarySongs(all, s.sort, counts) }
     }
+
+    // the repository announces a change, which reloads the playlists and folders above
+    suspend fun createFolder(name: String, parentId: String) = folderEdit { container.repository.createPlaylistFolder(name, parentId, scope()) }
+    suspend fun renameFolder(id: String, name: String) = folderEdit { container.repository.renamePlaylistFolder(id, name, scope()) }
+    suspend fun deleteFolder(id: String) = folderEdit { container.repository.deletePlaylistFolder(id, scope()) }
+    suspend fun moveToFolder(playlistId: String, folderId: String) = folderEdit { container.repository.movePlaylistToFolder(playlistId, folderId, scope()) }
+
+    private suspend fun folderEdit(edit: suspend () -> Boolean): Boolean =
+        try { edit() } catch (e: CancellationException) { throw e } catch (_: Exception) { false }
 
     @Volatile private var filterChosen = false
 
