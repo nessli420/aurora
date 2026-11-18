@@ -259,7 +259,7 @@ object AppTypeface {
 }
 
 // how home and library are arranged; classic is the original
-object PageLayout { const val CLASSIC = 0; const val SPOTLIGHT = 1; const val CONSOLE = 2 }
+object PageLayout { const val CLASSIC = 0; const val SPOTLIGHT = 1; const val CONSOLE = 2; const val DRIFT = 3 }
 
 object AccentMode { const val PRESET = 0; const val CUSTOM = 1; const val MATERIAL_YOU = 2 }
 

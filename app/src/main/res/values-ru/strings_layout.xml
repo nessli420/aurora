@@ -4,5 +4,6 @@
     <string name="layout_classic">"Классический"</string>
     <string name="layout_spotlight">"Spotlight"</string>
     <string name="layout_console">"Консоль"</string>
+    <string name="layout_drift">"Дрифт"</string>
     <string name="layout_hint">"Как устроены Главная и Медиатека. Классический — исходный макет."</string>
 </resources>

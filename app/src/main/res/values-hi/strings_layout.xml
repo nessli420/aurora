@@ -4,5 +4,6 @@
     <string name="layout_classic">"क्लासिक"</string>
     <string name="layout_spotlight">"स्पॉटलाइट"</string>
     <string name="layout_console">"कंसोल"</string>
+    <string name="layout_drift">"ड्रिफ्ट"</string>
     <string name="layout_hint">"होम और लाइब्रेरी की व्यवस्था। क्लासिक मूल लेआउट है।"</string>
 </resources>

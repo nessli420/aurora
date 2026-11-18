@@ -4,5 +4,6 @@
     <string name="layout_classic">"كلاسيكي"</string>
     <string name="layout_spotlight">"سبوتلايت"</string>
     <string name="layout_console">"كونسول"</string>
+    <string name="layout_drift">"دريفت"</string>
     <string name="layout_hint">"طريقة ترتيب الصفحة الرئيسية والمكتبة. الكلاسيكي هو الأصلي."</string>
 </resources>

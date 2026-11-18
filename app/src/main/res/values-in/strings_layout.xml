@@ -4,5 +4,6 @@
     <string name="layout_classic">"Klasik"</string>
     <string name="layout_spotlight">"Spotlight"</string>
     <string name="layout_console">"Konsol"</string>
+    <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"Cara Beranda dan Pustaka disusun. Klasik adalah tata letak asli."</string>
 </resources>

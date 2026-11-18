@@ -4,5 +4,6 @@
     <string name="layout_classic">"کلاسک"</string>
     <string name="layout_spotlight">"اسپاٹ لائٹ"</string>
     <string name="layout_console">"کنسول"</string>
+    <string name="layout_drift">"ڈرفٹ"</string>
     <string name="layout_hint">"ہوم اور لائبریری کی ترتیب۔ کلاسک اصل لے آؤٹ ہے۔"</string>
 </resources>

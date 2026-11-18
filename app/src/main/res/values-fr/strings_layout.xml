@@ -4,5 +4,6 @@
     <string name="layout_classic">"Classique"</string>
     <string name="layout_spotlight">"Spotlight"</string>
     <string name="layout_console">"Console"</string>
+    <string name="layout_drift">"Drift"</string>
     <string name="layout_hint">"La façon dont Accueil et Bibliothèque sont organisés. Classique est la disposition initiale."</string>
 </resources>
