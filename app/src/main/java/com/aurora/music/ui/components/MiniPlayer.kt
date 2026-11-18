@@ -227,7 +227,7 @@ private fun GlassMiniPlayer(
 
 // title and artist crossfade when the track changes; edits to the same track update in place
 @Composable
-private fun TrackLabel(song: Song, modifier: Modifier, content: @Composable (Song) -> Unit) {
+internal fun TrackLabel(song: Song, modifier: Modifier, content: @Composable (Song) -> Unit) {
     AnimatedContent(
         targetState = song,
         modifier = modifier,

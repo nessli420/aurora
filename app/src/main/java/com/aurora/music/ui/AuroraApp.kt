@@ -1132,7 +1132,53 @@ fun AuroraApp() {
                 contentWindowInsets = WindowInsets(0, 0, 0, 0),
                 snackbarHost = { SnackbarHost(snackbarHostState) },
                 bottomBar = {
-                    if (showChrome) {
+                    val barStyle = if (rail) com.aurora.music.data.BarStyle.CLASSIC else com.aurora.music.ui.components.activeBarStyle()
+                    val chromeNotices: @Composable () -> Unit = {
+                        if (activeDownloads > 0) {
+                            DownloadProgressBanner(count = activeDownloads)
+                            Spacer(Modifier.height(8.dp))
+                        }
+                        if (offlineMode) {
+                            Row(
+                                Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 14.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Icon(Icons.Filled.CloudOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
+                                Spacer(Modifier.width(6.dp))
+                                Text(appString(R.string.text_offline_mode_66cf31), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
+                            }
+                            Spacer(Modifier.height(8.dp))
+                        }
+                    }
+                    val homeFeedDropdown: @Composable () -> Unit = {
+                        androidx.compose.material3.DropdownMenu(expanded = homeFeedMenu != null, onDismissRequest = { homeFeedMenu = null },
+                            shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp))) {
+                            val (feeds, selected) = homeFeedMenu ?: (emptyList<com.aurora.music.data.HomeFeedChoice>() to "")
+                            feeds.forEach { feed ->
+                                androidx.compose.material3.DropdownMenuItem(
+                                    leadingIcon = { Icon(com.aurora.music.ui.components.sourceViewIcon(feed.id), null) },
+                                    text = { Text(feed.label, fontWeight = if (feed.id == selected) FontWeight.Bold else FontWeight.Medium) },
+                                    trailingIcon = { if (feed.id == selected) Icon(androidx.compose.material.icons.Icons.Outlined.Check, null, tint = MaterialTheme.colorScheme.primary) },
+                                    onClick = {
+                                        homeFeedMenu = null
+                                        androidx.lifecycle.ViewModelProvider(activityOwner)[HomeViewModel::class.java].selectFeed(feed.id)
+                                        navigateTopLevel(Routes.HOME)
+                                    },
+                                )
+                            }
+                        }
+                    }
+                    if (showChrome && barStyle != com.aurora.music.data.BarStyle.CLASSIC) {
+                        com.aurora.music.ui.components.StyledBars(
+                            style = barStyle, state = playerState, currentRoute = navRoute, tabs = navLayout.bar, moreTab = navLayout.barMore,
+                            onExpand = { if (!playerState.hasTrack) showOutput = true else if (playerState.current.id.startsWith("aurora-mix:")) showMix = true else playerVM.setExpanded(true) },
+                            onTogglePlay = { playerVM.togglePlay() },
+                            onToggleLike = { playerVM.toggleLikeCurrent() },
+                            onNext = { playerVM.next() },
+                            onNavigate = { navigateTopLevel(it) }, onMore = { showNavMore = true }, onLongPress = ::onNavLongPress,
+                            notices = chromeNotices.takeIf { activeDownloads > 0 || offlineMode }, navMenu = homeFeedDropdown,
+                        )
+                    } else if (showChrome) {
                         Box(Modifier.fillMaxWidth().then(if (rail) Modifier else Modifier.chromeScrim()), contentAlignment = Alignment.Center) {
                         Column(
                             Modifier
@@ -1142,21 +1188,7 @@ fun AuroraApp() {
                                     top = 8.dp, bottom = if (dockVisible) 0.dp else if (rail) 12.dp else 8.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
-                            if (activeDownloads > 0) {
-                                DownloadProgressBanner(count = activeDownloads)
-                                Spacer(Modifier.height(8.dp))
-                            }
-                            if (offlineMode) {
-                                Row(
-                                    Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.primary.copy(alpha = 0.18f)).padding(horizontal = 14.dp, vertical = 6.dp),
-                                    verticalAlignment = Alignment.CenterVertically,
-                                ) {
-                                    Icon(Icons.Filled.CloudOff, null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(16.dp))
-                                    Spacer(Modifier.width(6.dp))
-                                    Text(appString(R.string.text_offline_mode_66cf31), style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-                                }
-                                Spacer(Modifier.height(8.dp))
-                            }
+                            chromeNotices()
                             // the bar keeps its full height while it fades in, so the page is laid out once
                             AnimatedVisibility(
                                 visible = playerState.showsBar && !rail,
@@ -1178,24 +1210,7 @@ fun AuroraApp() {
                             if (!rail) Box {
                                 FloatingNav(navRoute, navLayout.bar, navLayout.barMore,
                                     onNavigate = { navigateTopLevel(it) }, onMore = { showNavMore = true }, onLongPress = ::onNavLongPress)
-                                Box(Modifier.align(Alignment.TopStart).padding(start = 8.dp)) {
-                                    androidx.compose.material3.DropdownMenu(expanded = homeFeedMenu != null, onDismissRequest = { homeFeedMenu = null },
-                                        shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(18.dp))) {
-                                        val (feeds, selected) = homeFeedMenu ?: (emptyList<com.aurora.music.data.HomeFeedChoice>() to "")
-                                        feeds.forEach { feed ->
-                                            androidx.compose.material3.DropdownMenuItem(
-                                                leadingIcon = { Icon(com.aurora.music.ui.components.sourceViewIcon(feed.id), null) },
-                                                text = { Text(feed.label, fontWeight = if (feed.id == selected) FontWeight.Bold else FontWeight.Medium) },
-                                                trailingIcon = { if (feed.id == selected) Icon(androidx.compose.material.icons.Icons.Outlined.Check, null, tint = MaterialTheme.colorScheme.primary) },
-                                                onClick = {
-                                                    homeFeedMenu = null
-                                                    androidx.lifecycle.ViewModelProvider(activityOwner)[HomeViewModel::class.java].selectFeed(feed.id)
-                                                    navigateTopLevel(Routes.HOME)
-                                                },
-                                            )
-                                        }
-                                    }
-                                }
+                                Box(Modifier.align(Alignment.TopStart).padding(start = 8.dp)) { homeFeedDropdown() }
                             }
                         }
                         }

@@ -67,6 +67,9 @@ import com.aurora.music.viewmodel.PlayerUiState
 import kotlinx.coroutines.delay
 import kotlin.math.abs
 import com.aurora.music.model.accent
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.takeOrElse
+import com.aurora.music.data.BarStyle
 
 @Composable
 fun PlaybackDock(
@@ -88,11 +91,16 @@ fun PlaybackDock(
     val classic = ui.themeStyle == ThemeStyle.AURORA
     val colors = MaterialTheme.colorScheme
     val scale = ui.tabletDockScale
+    val bars = activeBarStyle()
+    val playFill = if (bars == BarStyle.CLASSIC) colors.primary else colors.inverseSurface
+    val playInk = if (bars == BarStyle.CLASSIC) colors.onPrimary else colors.inverseOnSurface
     BoxWithConstraints(
         modifier
+            .then(if (bars == BarStyle.DRIFT) Modifier.widthIn(max = 920.dp) else Modifier)
             .fillMaxWidth()
             .then(
-                if (classic) Modifier.paperClip(RoundedCornerShape(22.dp)).background(
+                if (bars != BarStyle.CLASSIC) Modifier.dockSurface(bars, state)
+                else if (classic) Modifier.paperClip(RoundedCornerShape(22.dp)).background(
                     Brush.horizontalGradient(listOf(colors.surfaceContainerHigh, lerp(colors.surfaceContainerHigh, colors.primary, 0.14f)))
                 ) else if (ui.themeStyle == ThemeStyle.GLASS) Modifier.liquidGlass(com.aurora.music.ui.theme.LocalGlassBackdrop.current,
                     com.kyant.shapes.RoundedRectangle(32.dp), refraction = 20.dp, depth = 28.dp)
@@ -111,12 +119,14 @@ fun PlaybackDock(
                         .padding(4.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Artwork(song.artworkUrl, song.accent, Modifier.size((if (roomy) 62.dp else 54.dp) * scale), corner = 10.dp)
+                    val artSize = Modifier.size((if (roomy) 62.dp else 54.dp) * scale)
+                    if (bars == BarStyle.DRIFT) RingCover(state, artSize) else Artwork(song.artworkUrl, song.accent, artSize, corner = 10.dp)
                     Spacer(Modifier.width(12.dp))
                     Column(Modifier.weight(1f, fill = false)) {
                         MarqueeText(song.title, MaterialTheme.typography.titleSmall, colors.onSurface, fontWeight = FontWeight.Bold, paused = state.expanded)
                         MarqueeText(song.artist, MaterialTheme.typography.bodySmall, colors.onSurfaceVariant, paused = state.expanded)
                     }
+                    if (bars == BarStyle.CONSOLE && roomy) FormatChip(song, Modifier.padding(start = 12.dp))
                 }
                 if (!isMix && LocalCanLike.current(song.id)) {
                     val likeTint by animateColorAsState(if (state.isCurrentLiked) com.aurora.music.ui.theme.LocalContextAccent.current.color ?: colors.primary
@@ -137,16 +147,16 @@ fun PlaybackDock(
                     FilledIconButton(
                         onClick = onTogglePlay,
                         modifier = Modifier.size((48.dp * scale).coerceAtLeast(36.dp)),
-                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = colors.primary, contentColor = colors.onPrimary),
+                        colors = IconButtonDefaults.filledIconButtonColors(containerColor = playFill, contentColor = playInk),
                     ) {
                         val playPause = appString(R.string.text_play_pause_14a1d0)
-                        PlayPauseIcon(state.isPlaying, colors.onPrimary, Modifier.size(26.dp * scale).semantics { contentDescription = playPause })
+                        PlayPauseIcon(state.isPlaying, playInk, Modifier.size(26.dp * scale).semantics { contentDescription = playPause })
                     }
                     if (!isMix) IconButton(onClick = onNext) {
                         Icon(Icons.Filled.SkipNext, appString(R.string.text_next_bc9819), tint = colors.onSurface)
                     }
                 }
-                DockSeek(state, onSeek, showTimes = roomy)
+                DockSeek(state, onSeek, showTimes = roomy, tint = if (bars == BarStyle.SPOTLIGHT) colors.onSurface else Color.Unspecified)
             }
             Spacer(Modifier.width(8.dp))
             Row(if (roomy) Modifier.weight(1f) else Modifier, horizontalArrangement = Arrangement.End, verticalAlignment = Alignment.CenterVertically) {
@@ -182,7 +192,7 @@ private fun PaneToggle(pane: PlayerPane, icon: androidx.compose.ui.graphics.vect
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: Boolean) {
+private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: Boolean, tint: Color = Color.Unspecified) {
     val colors = MaterialTheme.colorScheme
     val duration = state.durationSec
     if (duration <= 0) {
@@ -194,7 +204,7 @@ private fun DockSeek(state: PlayerUiState, onSeek: (Float) -> Unit, showTimes: B
         }
         return
     }
-    val seekTarget = com.aurora.music.ui.theme.LocalContextAccent.current.color ?: colors.primary
+    val seekTarget = tint.takeOrElse { com.aurora.music.ui.theme.LocalContextAccent.current.color ?: colors.primary }
     val seekBrush = com.aurora.music.ui.theme.rememberColorSweep(seekTarget)
     val thumbColor by animateColorAsState(seekTarget, androidx.compose.animation.core.tween(750), label = "dockThumb")
     var dragging by remember(state.current.id) { mutableStateOf<Float?>(null) }
