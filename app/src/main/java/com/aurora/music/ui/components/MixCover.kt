@@ -22,13 +22,22 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.StrokeCap
+import androidx.compose.ui.graphics.StrokeJoin
+import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.drawscope.withTransform
+import androidx.compose.ui.graphics.vector.PathParser
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.rememberTextMeasurer
+import androidx.compose.ui.unit.dp
 import com.aurora.music.ui.theme.isPaperTheme
 import kotlin.random.Random
+
+// the app's logo as ic_aurora_logo draws it: a 64 box, stroke 9, round ends
+private const val AURORA_MARK = "M9,53 L28.4,11.3 Q32,3.8 35.6,11.3 L55,53 M16,39.5 C27,30 37,49 48,39.5"
 
 @Composable
 fun MixCover(slot: String, accent: Color, modifier: Modifier = Modifier, pictured: Boolean = false) {
@@ -45,6 +54,7 @@ fun MixCover(slot: String, accent: Color, modifier: Modifier = Modifier, picture
     }
     val bars = remember(slot) { Random(slot.hashCode()).let { r -> FloatArray(22) { 0.25f + r.nextFloat() * 0.75f } } }
     val measurer = rememberTextMeasurer()
+    val logo = remember { PathParser().parsePathString(AURORA_MARK).toPath() }
     Box(modifier, contentAlignment = Alignment.Center) {
         Canvas(Modifier.fillMaxSize()) {
             // over a picture the accent only tints, and the dark end keeps the mark readable
@@ -60,6 +70,13 @@ fun MixCover(slot: String, accent: Color, modifier: Modifier = Modifier, picture
             if (number.isNotEmpty()) {
                 val text = measurer.measure(number, TextStyle(color = ink, fontWeight = FontWeight.Black, fontSize = (size.minDimension * 0.5f).toSp()))
                 drawText(text, topLeft = Offset(size.width * 0.1f, size.height * 0.14f))
+            }
+            val mark = size.minDimension * 0.13f
+            val edge = size.minDimension * 0.07f
+            // a phone's page header spans the screen and has its buttons over the top edge
+            val top = if (size.width > 340.dp.toPx()) 104.dp.toPx() else edge
+            withTransform({ translate(size.width - edge - mark, top); scale(mark / 64f, mark / 64f, Offset.Zero) }) {
+                drawPath(logo, lerp(accent, Color.Black, 0.48f), style = Stroke(9f, cap = StrokeCap.Round, join = StrokeJoin.Round))
             }
         }
         if (icon != null) Icon(icon, null, tint = if (paper) Color.Black else Color.White, modifier = Modifier.fillMaxSize(0.42f))
