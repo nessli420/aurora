@@ -153,11 +153,14 @@ private fun ColorScheme.toAmoled(): ColorScheme = copy(
 fun rememberPlayerColorScheme(artworkUrl: String, fallback: Color): ColorScheme {
     val prefs = LocalUiPrefs.current
     val appColors = MaterialTheme.colorScheme
-    if (prefs.themeStyle != ThemeStyle.AURORA) return appColors
+    if (prefs.themeStyle != ThemeStyle.AURORA && prefs.themeStyle != ThemeStyle.GLASS) return appColors
 
     val accent by rememberDominantColor(artworkUrl, fallback)
     val dark = appColors.onBackground.luminance() > 0.5f
     val amoled = prefs.themeMode == ThemeMode.AMOLED
+    if (prefs.themeStyle == ThemeStyle.GLASS) return remember(accent, dark, amoled) {
+        styleColorScheme(ThemeStyle.GLASS, dark, accent).let { if (amoled) it.toAmoled() else it }
+    }
     return remember(accent, dark, amoled) { playerColorScheme(accent, dark).let { if (amoled) it.toAmoled() else it } }
 }
 

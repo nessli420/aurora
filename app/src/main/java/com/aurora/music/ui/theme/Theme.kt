@@ -117,11 +117,14 @@ private fun ColorScheme.toAmoled(): ColorScheme = copy(
 fun rememberPlayerColorScheme(artworkUrl: String, fallback: Color): ColorScheme {
     val prefs = LocalUiPrefs.current
     val appColors = MaterialTheme.colorScheme
-    // The alternate styles own their complete palette, including the player.
-    if (prefs.themeStyle != ThemeStyle.AURORA) return appColors
+    // retro, aero and paper own their complete palette, including the player
+    if (prefs.themeStyle != ThemeStyle.AURORA && prefs.themeStyle != ThemeStyle.GLASS) return appColors
 
     val accent by rememberDominantTarget(artworkUrl, fallback)
     val dark = appColors.background.luminance() < 0.5f
+    if (prefs.themeStyle == ThemeStyle.GLASS) return remember(accent, dark, prefs.themeMode) {
+        styleColorScheme(ThemeStyle.GLASS, dark, accent).let { if (prefs.themeMode == ThemeMode.AMOLED) it.toAmoled() else it }
+    }
     // a fresh ColorScheme has no equals so rebuilding it every pass defeats skipping under the player
     return remember(accent, dark, prefs.themeMode) { playerColorScheme(accent, dark, prefs.themeMode == ThemeMode.AMOLED) }
 }
