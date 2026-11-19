@@ -32,6 +32,8 @@ interface AppearanceSettings {
     suspend fun setPageLayout(v: Int): Preferences
     suspend fun setBarStyle(v: Int): Preferences
     suspend fun setBarsMatchLayout(v: Boolean): Preferences
+    suspend fun setSearchOwnLayout(v: Boolean): Preferences
+    suspend fun setSearchStyle(v: Int): Preferences
     suspend fun setPlayerStyle(v: Int): Preferences
     suspend fun setAccentMode(v: Int): Preferences
     suspend fun setAccentPreset(v: Int): Preferences
@@ -64,6 +66,8 @@ internal class AppearanceSettingsStore(private val dataStore: DataStore<Preferen
             pageLayout = (p[Keys.UI_PAGE_LAYOUT] ?: PageLayout.CLASSIC).coerceIn(PageLayout.CLASSIC, PageLayout.DRIFT),
             barStyle = (p[Keys.UI_BAR_STYLE] ?: BarStyle.CLASSIC).coerceIn(BarStyle.CLASSIC, BarStyle.DRIFT),
             barsMatchLayout = p[Keys.UI_BARS_MATCH] ?: false,
+            searchOwnLayout = p[Keys.UI_SEARCH_OWN] ?: false,
+            searchStyle = (p[Keys.UI_SEARCH_STYLE] ?: PageLayout.CLASSIC).coerceIn(PageLayout.CLASSIC, PageLayout.DRIFT),
             playerStyle = (p[Keys.UI_PLAYER_STYLE] ?: PlayerStyle.CLASSIC).coerceIn(PlayerStyle.CLASSIC, PlayerStyle.DRIFT),
             accentMode = p[Keys.UI_ACCENT_MODE] ?: AccentMode.PRESET,
             accentPreset = p[Keys.UI_ACCENT_PRESET] ?: 0,
@@ -152,6 +156,8 @@ internal class AppearanceSettingsStore(private val dataStore: DataStore<Preferen
     // choosing a style by hand stops the bars following the layout
     override suspend fun setBarStyle(v: Int) = dataStore.edit { it[Keys.UI_BAR_STYLE] = v.coerceIn(BarStyle.CLASSIC, BarStyle.DRIFT); it[Keys.UI_BARS_MATCH] = false }
     override suspend fun setBarsMatchLayout(v: Boolean) = dataStore.edit { it[Keys.UI_BARS_MATCH] = v }
+    override suspend fun setSearchOwnLayout(v: Boolean) = dataStore.edit { it[Keys.UI_SEARCH_OWN] = v }
+    override suspend fun setSearchStyle(v: Int) = dataStore.edit { it[Keys.UI_SEARCH_STYLE] = v.coerceIn(PageLayout.CLASSIC, PageLayout.DRIFT) }
     override suspend fun setPlayerStyle(v: Int) = dataStore.edit { it[Keys.UI_PLAYER_STYLE] = v.coerceIn(PlayerStyle.CLASSIC, PlayerStyle.DRIFT) }
     override suspend fun setAccentMode(v: Int) = dataStore.edit { it[Keys.UI_ACCENT_MODE] = v }
     override suspend fun setAccentPreset(v: Int) = dataStore.edit { it[Keys.UI_ACCENT_PRESET] = v }

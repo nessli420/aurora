@@ -308,7 +308,7 @@ fun SearchScreen(
         onPlayCollection = onPlayCollection?.let { play -> { k, id, shuffle -> commitAnd { play(k, id, shuffle) } } },
         onAddToQueue = onAddToQueue, onPlayNext = onPlayNext, onToggleLike = onToggleLike, onDownload = onDownload, onRemoveDownload = onRemoveDownload,
     )
-    when (LocalUiPrefs.current.pageLayout) {
+    when (LocalUiPrefs.current.searchLayout) {
         PageLayout.SPOTLIGHT -> return SearchSpotlight(parts)
         PageLayout.CONSOLE -> return SearchConsole(parts)
         PageLayout.DRIFT -> return SearchDrift(parts)

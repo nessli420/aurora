@@ -10,4 +10,6 @@
     <string name="bars_match_title">"跟随布局"</string>
     <string name="bars_match_hint">"栏跟随上方选择的布局。"</string>
     <string name="search_top_result">"最佳结果"</string>
+    <string name="search_own_title">"搜索使用单独布局"</string>
+    <string name="search_own_hint">"搜索使用自己的布局，而不跟随首页和音乐库。"</string>
 </resources>

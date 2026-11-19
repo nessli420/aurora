@@ -10,4 +10,6 @@
     <string name="bars_match_title">"Layout übernehmen"</string>
     <string name="bars_match_hint">"Die Leisten folgen dem oben gewählten Layout."</string>
     <string name="search_top_result">"Top-Ergebnis"</string>
+    <string name="search_own_title">"Eigenes Layout für die Suche"</string>
+    <string name="search_own_hint">"Die Suche bekommt ein eigenes Layout, statt Start und Bibliothek zu folgen."</string>
 </resources>

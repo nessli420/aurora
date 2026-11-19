@@ -10,4 +10,6 @@
     <string name="bars_match_title">"لے آؤٹ کے مطابق"</string>
     <string name="bars_match_hint">"بارز اوپر منتخب کردہ لے آؤٹ کی پیروی کرتی ہیں۔"</string>
     <string name="search_top_result">"بہترین نتیجہ"</string>
+    <string name="search_own_title">"تلاش کے لیے الگ لے آؤٹ"</string>
+    <string name="search_own_hint">"تلاش ہوم اور لائبریری کی پیروی کے بجائے اپنا لے آؤٹ استعمال کرتی ہے۔"</string>
 </resources>

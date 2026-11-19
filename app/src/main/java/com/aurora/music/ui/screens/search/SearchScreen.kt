@@ -405,7 +405,7 @@ fun SearchScreen(
         onPlayCollection = { k, id -> commitAnd { onPlayCollection(k, id) } },
         onAddToQueue = onAddToQueue, onPlayNext = onPlayNext, onToggleLike = onToggleLike, onDownload = onDownload, onRemoveDownload = onRemoveDownload,
     )
-    when (com.aurora.music.ui.theme.LocalUiPrefs.current.pageLayout) {
+    when (com.aurora.music.ui.theme.LocalUiPrefs.current.searchLayout) {
         com.aurora.music.data.PageLayout.SPOTLIGHT -> return SearchSpotlight(parts)
         com.aurora.music.data.PageLayout.CONSOLE -> return SearchConsole(parts)
         com.aurora.music.data.PageLayout.DRIFT -> return SearchDrift(parts)

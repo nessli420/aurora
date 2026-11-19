@@ -10,4 +10,6 @@
     <string name="bars_match_title">"Dopasuj do układu"</string>
     <string name="bars_match_hint">"Paski podążają za układem wybranym powyżej."</string>
     <string name="search_top_result">"Najlepszy wynik"</string>
+    <string name="search_own_title">"Osobny układ wyszukiwania"</string>
+    <string name="search_own_hint">"Wyszukiwanie ma własny układ zamiast podążać za stroną główną i biblioteką."</string>
 </resources>

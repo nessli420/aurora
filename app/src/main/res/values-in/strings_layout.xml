@@ -10,4 +10,6 @@
     <string name="bars_match_title">"Ikuti tata letak"</string>
     <string name="bars_match_hint">"Bilah mengikuti tata letak yang dipilih di atas."</string>
     <string name="search_top_result">"Hasil teratas"</string>
+    <string name="search_own_title">"Tata letak pencarian terpisah"</string>
+    <string name="search_own_hint">"Pencarian memakai tata letaknya sendiri, tidak mengikuti Beranda dan Pustaka."</string>
 </resources>

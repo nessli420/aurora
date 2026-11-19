@@ -10,4 +10,6 @@
     <string name="bars_match_title">"Indeling volgen"</string>
     <string name="bars_match_hint">"De balken volgen de hierboven gekozen indeling."</string>
     <string name="search_top_result">"Topresultaat"</string>
+    <string name="search_own_title">"Eigen indeling voor zoeken"</string>
+    <string name="search_own_hint">"Zoeken krijgt een eigen indeling in plaats van Start en Bibliotheek te volgen."</string>
 </resources>

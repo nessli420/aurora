@@ -10,4 +10,6 @@
     <string name="bars_match_title">"레이아웃에 맞추기"</string>
     <string name="bars_match_hint">"바가 위에서 선택한 레이아웃을 따릅니다."</string>
     <string name="search_top_result">"상위 결과"</string>
+    <string name="search_own_title">"검색 레이아웃 따로 설정"</string>
+    <string name="search_own_hint">"검색이 홈과 보관함을 따르지 않고 자체 레이아웃을 사용합니다."</string>
 </resources>

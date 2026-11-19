@@ -293,6 +293,8 @@ data class UiPrefs(
     val pageLayout: Int = PageLayout.CLASSIC,
     val barStyle: Int = BarStyle.CLASSIC,
     val barsMatchLayout: Boolean = false,
+    val searchOwnLayout: Boolean = false,
+    val searchStyle: Int = PageLayout.CLASSIC,
     val playerStyle: Int = PlayerStyle.CLASSIC,
     val accentMode: Int = AccentMode.PRESET,
     val accentPreset: Int = 0,
@@ -323,6 +325,7 @@ data class UiPrefs(
     val lyricsTranslate: Boolean = false,
 ) {
     val bars: Int get() = if (barsMatchLayout) pageLayout else barStyle
+    val searchLayout: Int get() = if (searchOwnLayout) searchStyle else pageLayout
 }
 
 enum class TabletSetting(val default: Float, val range: ClosedFloatingPointRange<Float>) {

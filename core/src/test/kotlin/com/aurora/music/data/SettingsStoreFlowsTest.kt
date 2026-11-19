@@ -77,6 +77,14 @@ class SettingsStoreFlowsTest {
         assertEquals(BarStyle.DRIFT, store.uiPrefs.first().bars)
     }
 
+    @Test fun searchFollowsTheLayoutUntilItGetsItsOwn() = runBlocking {
+        store.setPageLayout(PageLayout.DRIFT)
+        store.setSearchStyle(PageLayout.CONSOLE)
+        assertEquals(PageLayout.DRIFT, store.uiPrefs.first().searchLayout)
+        store.setSearchOwnLayout(true)
+        assertEquals(PageLayout.CONSOLE, store.uiPrefs.first().searchLayout)
+    }
+
     @Test fun playerStyleDefaultsToClassicAndClampsUnknownValues() = runBlocking {
         assertEquals(PlayerStyle.CLASSIC, store.uiPrefs.first().playerStyle)
         store.setPlayerStyle(PlayerStyle.CONSOLE)

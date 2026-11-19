@@ -10,4 +10,6 @@
     <string name="bars_match_title">"लेआउट से मिलाएँ"</string>
     <string name="bars_match_hint">"बार ऊपर चुने गए लेआउट का अनुसरण करते हैं।"</string>
     <string name="search_top_result">"शीर्ष परिणाम"</string>
+    <string name="search_own_title">"खोज के लिए अलग लेआउट"</string>
+    <string name="search_own_hint">"खोज होम और लाइब्रेरी का अनुसरण करने के बजाय अपना लेआउट पाती है."</string>
 </resources>

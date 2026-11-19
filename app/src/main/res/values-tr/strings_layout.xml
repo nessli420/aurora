@@ -10,4 +10,6 @@
     <string name="bars_match_title">"Düzenle eşleştir"</string>
     <string name="bars_match_hint">"Çubuklar yukarıda seçilen düzeni izler."</string>
     <string name="search_top_result">"En iyi sonuç"</string>
+    <string name="search_own_title">"Arama için ayrı düzen"</string>
+    <string name="search_own_hint">"Arama, ana sayfa ve kitaplığı izlemek yerine kendi düzenini kullanır."</string>
 </resources>

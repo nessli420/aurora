@@ -10,4 +10,6 @@
     <string name="bars_match_title">"Match the layout"</string>
     <string name="bars_match_hint">"Bars follow the layout chosen above."</string>
     <string name="search_top_result">"Top result"</string>
+    <string name="search_own_title">"Separate search layout"</string>
+    <string name="search_own_hint">"Search gets a layout of its own instead of following Home &amp; Library."</string>
 </resources>

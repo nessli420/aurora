@@ -10,4 +10,6 @@
     <string name="bars_match_title">"Как у макета"</string>
     <string name="bars_match_hint">"Панели следуют макету, выбранному выше."</string>
     <string name="search_top_result">"Лучший результат"</string>
+    <string name="search_own_title">"Отдельный макет поиска"</string>
+    <string name="search_own_hint">"У поиска свой макет, а не тот, что у главной и медиатеки."</string>
 </resources>

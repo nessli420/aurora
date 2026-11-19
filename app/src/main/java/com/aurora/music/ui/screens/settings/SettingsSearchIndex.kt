@@ -40,6 +40,7 @@ internal object SettingsSearchIndex {
         e(R.string.text_gradient_intensity_84a1f5, null, Routes.SETTINGS_APPEARANCE_PLAYER),
         e(R.string.text_font_size_83ca9e, null, Routes.SETTINGS_APPEARANCE_TEXT),
         e(R.string.bars_match_title, R.string.bars_match_hint, Routes.SETTINGS_APPEARANCE_LAYOUTS),
+        e(R.string.search_own_title, R.string.search_own_hint, Routes.SETTINGS_APPEARANCE_LAYOUTS),
         e(R.string.text_waveform_bars_c215c9, null, Routes.SETTINGS_APPEARANCE_PLAYER),
         e(R.string.text_bottom_utilities_8b97ef, R.string.text_speed_lyrics_queue_row_814225, Routes.SETTINGS_APPEARANCE_PLAYER),
         e(R.string.tablet_panel_spacing, null, Routes.SETTINGS_APPEARANCE_LAYOUTS),

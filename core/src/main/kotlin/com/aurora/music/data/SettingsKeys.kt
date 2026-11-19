@@ -230,6 +230,8 @@ internal object SettingsKeys {
     val UI_PAGE_LAYOUT = intPreferencesKey("ui_page_layout")
     val UI_BAR_STYLE = intPreferencesKey("ui_bar_style")
     val UI_BARS_MATCH = booleanPreferencesKey("ui_bars_match_layout")
+    val UI_SEARCH_OWN = booleanPreferencesKey("ui_search_own_layout")
+    val UI_SEARCH_STYLE = intPreferencesKey("ui_search_style")
     val UI_PLAYER_STYLE = intPreferencesKey("ui_player_style")
     val UI_ACCENT_MODE = intPreferencesKey("ui_accent_mode")
     val UI_ACCENT_PRESET = intPreferencesKey("ui_accent_preset")

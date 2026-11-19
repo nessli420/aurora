@@ -38,6 +38,7 @@ internal object SettingsSearchIndex {
         e(R.string.text_follow_the_playing_cover_5d2e91, R.string.text_tint_the_whole_app_with_the_playing_song_s_cover_a83c17, Routes.SETTINGS_APPEARANCE_THEMES),
         e(R.string.text_font_size_83ca9e, null, Routes.SETTINGS_APPEARANCE_TEXT),
         e(R.string.bars_match_title, R.string.bars_match_hint, Routes.SETTINGS_APPEARANCE_LAYOUTS),
+        e(R.string.search_own_title, R.string.search_own_hint, Routes.SETTINGS_APPEARANCE_LAYOUTS),
         e(R.string.text_background_tint_a39a12, null, Routes.SETTINGS_APPEARANCE_THEMES),
         e(R.string.text_panel_frost_ada0d3, null, Routes.SETTINGS_APPEARANCE_THEMES),
         e(R.string.text_glass_edges_f462cd, null, Routes.SETTINGS_APPEARANCE_THEMES),

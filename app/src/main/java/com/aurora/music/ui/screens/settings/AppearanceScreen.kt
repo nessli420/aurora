@@ -198,13 +198,25 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, page: St
                         Text(appString(R.string.bars_hint), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(horizontal = 20.dp))
                     }
                     item {
+                        SegmentedRow(appString(R.string.text_player_e53407), listOf(appString(R.string.layout_classic), appString(R.string.layout_spotlight), appString(R.string.layout_console), appString(R.string.layout_drift)), prefs.playerStyle) { i ->
+                            scope.launch { store.setPlayerStyle(i) }
+                        }
+                    }
+                    item {
                         SettingsSwitchRow(title = appString(R.string.bars_match_title), subtitle = appString(R.string.bars_match_hint), checked = prefs.barsMatchLayout) { v ->
                             scope.launch { store.setBarsMatchLayout(v) }
                         }
                     }
                     item {
-                        SegmentedRow(appString(R.string.text_player_e53407), listOf(appString(R.string.layout_classic), appString(R.string.layout_spotlight), appString(R.string.layout_console), appString(R.string.layout_drift)), prefs.playerStyle) { i ->
-                            scope.launch { store.setPlayerStyle(i) }
+                        SettingsSwitchRow(title = appString(R.string.search_own_title), subtitle = appString(R.string.search_own_hint), checked = prefs.searchOwnLayout) { v ->
+                            scope.launch { store.setSearchOwnLayout(v) }
+                        }
+                    }
+                    item {
+                        SettingsReveal(prefs.searchOwnLayout) {
+                            SegmentedRow(appString(R.string.text_search_bce064), listOf(appString(R.string.layout_classic), appString(R.string.layout_spotlight), appString(R.string.layout_console), appString(R.string.layout_drift)), prefs.searchStyle) { i ->
+                                scope.launch { store.setSearchStyle(i) }
+                            }
                         }
                     }
                     if (largeDisplay) {

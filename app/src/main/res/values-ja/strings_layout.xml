@@ -10,4 +10,6 @@
     <string name="bars_match_title">"レイアウトに合わせる"</string>
     <string name="bars_match_hint">"バーは上で選んだレイアウトに従います。"</string>
     <string name="search_top_result">"トップの結果"</string>
+    <string name="search_own_title">"検索のレイアウトを別にする"</string>
+    <string name="search_own_hint">"検索はホームとライブラリに合わせず、独自のレイアウトを使います。"</string>
 </resources>
