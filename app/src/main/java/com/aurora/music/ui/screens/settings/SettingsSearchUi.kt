@@ -85,6 +85,11 @@ internal fun rememberSettingsSearchHits(): List<SettingsSearchHit> {
         val pages = SettingsDestinations.all.associate { it.route to it.label } + mapOf(
             Routes.SETTINGS_LANGUAGE to appString(R.string.language_title),
             Routes.SETTINGS_NAV_MENU to appString(R.string.nav_menu_title),
+            Routes.SETTINGS_APPEARANCE_THEMES to appString(R.string.appearance_themes),
+            Routes.SETTINGS_APPEARANCE_LAYOUTS to appString(R.string.appearance_layouts),
+            Routes.SETTINGS_APPEARANCE_TEXT to appString(R.string.appearance_text),
+            Routes.SETTINGS_APPEARANCE_PLAYER to appString(R.string.text_player_e53407),
+            Routes.SETTINGS_APPEARANCE_HOME to appString(R.string.appearance_home_library),
             Routes.SETTINGS_ARTIST_SEPARATORS to appString(R.string.text_artist_separators_4a3dc4),
             Routes.SETTINGS_HIDDEN_SONGS to appString(R.string.hidden_songs_title),
         )

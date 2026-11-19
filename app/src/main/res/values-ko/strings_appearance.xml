@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"테마"</string>
+    <string name="appearance_themes_summary">"테마 스타일, 라이트/다크 모드 및 강조 색상"</string>
+    <string name="appearance_layouts">"레이아웃"</string>
+    <string name="appearance_layouts_summary">"홈, 보관함, 바, 플레이어의 배치"</string>
+    <string name="appearance_text">"텍스트"</string>
+    <string name="appearance_text_summary">"서체 및 글꼴 크기"</string>
+    <string name="appearance_player_summary">"탐색 막대, 아트워크 및 미니 플레이어"</string>
+    <string name="appearance_home_library">"홈 및 보관함"</string>
+    <string name="appearance_home_library_summary">"홈 섹션 및 보관함 그리드"</string>
+</resources>

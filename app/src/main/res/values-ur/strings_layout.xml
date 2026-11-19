@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="layout_title">"لے آؤٹ"</string>
     <string name="layout_classic">"کلاسک"</string>
     <string name="layout_spotlight">"اسپاٹ لائٹ"</string>
     <string name="layout_console">"کنسول"</string>

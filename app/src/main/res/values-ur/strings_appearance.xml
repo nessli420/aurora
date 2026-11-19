@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"تھیمز"</string>
+    <string name="appearance_themes_summary">"تھیم کا انداز، لائٹ یا ڈارک موڈ اور ایکسنٹ رنگ"</string>
+    <string name="appearance_layouts">"لے آؤٹس"</string>
+    <string name="appearance_layouts_summary">"ہوم، لائبریری، بارز اور پلیئر کی ترتیب"</string>
+    <string name="appearance_text">"متن"</string>
+    <string name="appearance_text_summary">"ٹائپ فیس اور فونٹ کا سائز"</string>
+    <string name="appearance_player_summary">"سیک بار، آرٹ ورک اور منی پلیئر"</string>
+    <string name="appearance_home_library">"ہوم اور لائبریری"</string>
+    <string name="appearance_home_library_summary">"ہوم کے حصے اور لائبریری گرڈ"</string>
+</resources>

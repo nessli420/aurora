@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Temi"</string>
+    <string name="appearance_themes_summary">"Stile del tema, modalità chiara o scura e colore principale"</string>
+    <string name="appearance_layouts">"Layout"</string>
+    <string name="appearance_layouts_summary">"Disposizione di Home, Libreria, barre e lettore"</string>
+    <string name="appearance_text">"Testo"</string>
+    <string name="appearance_text_summary">"Carattere e dimensione carattere"</string>
+    <string name="appearance_player_summary">"Barra di avanzamento, copertina e miniplayer"</string>
+    <string name="appearance_home_library">"Home e Libreria"</string>
+    <string name="appearance_home_library_summary">"Sezioni della home e griglia della libreria"</string>
+</resources>

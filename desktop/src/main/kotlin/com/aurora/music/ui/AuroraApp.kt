@@ -902,8 +902,8 @@ private fun Shell(
         composable(Routes.SETTINGS_INTEGRATION_LASTFM) { LastfmIntegrationScreen(padding, pop) }
         composable(Routes.SETTINGS_INTEGRATION_LISTENBRAINZ) { ListenBrainzIntegrationScreen(padding, pop) }
         composable(Routes.SETTINGS_INTEGRATION_ARTIST_INFO) { ArtistInfoIntegrationScreen(padding, pop) }
-        composable(Routes.SETTINGS_APPEARANCE) {
-            AppearanceScreen(padding, onBack = pop, onOpenNavigationMenu = { nav.navigate(Routes.SETTINGS_NAV_MENU) })
+        Routes.APPEARANCE_PAGES.forEach { route ->
+            composable(route) { AppearanceScreen(padding, onBack = pop, page = route, onOpen = { nav.navigate(it) }) }
         }
         composable(Routes.SETTINGS_NAV_MENU) { NavigationMenuScreen(padding, pop) }
         composable(Routes.SETTINGS_EQ) {

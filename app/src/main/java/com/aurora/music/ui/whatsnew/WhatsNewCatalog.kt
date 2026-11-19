@@ -38,10 +38,10 @@ object WhatsNewCatalog {
             "3.4.0",
             features = listOf(
                 WhatsNewFeature(Icons.Filled.Description, R.string.whats_new_paper_title, R.string.whats_new_paper_body,
-                    Routes.SETTINGS_APPEARANCE) { PaperThemePreview() },
+                    Routes.SETTINGS_APPEARANCE_THEMES) { PaperThemePreview() },
                 // Android only: desktop has no launcher icon to switch
                 WhatsNewFeature(Icons.Filled.Apps, R.string.whats_new_paper_icon_title, R.string.whats_new_paper_icon_body,
-                    Routes.SETTINGS_APPEARANCE) { PaperIconPreview() },
+                    Routes.SETTINGS_APPEARANCE_THEMES) { PaperIconPreview() },
                 WhatsNewFeature(Icons.Filled.AllInclusive, R.string.whats_new_autoplay_title, R.string.whats_new_autoplay_body,
                     Routes.SETTINGS_PLAYBACK) { AutoplayPreview() },
             ),

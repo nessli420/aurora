@@ -931,9 +931,11 @@ fun AuroraApp() {
                 composable(Routes.SETTINGS_INTEGRATION_ACOUSTID) {
                     com.aurora.music.ui.screens.settings.AcoustIdIntegrationScreen(padding) { nav.popBackStack() }
                 }
-                composable(Routes.SETTINGS_APPEARANCE) {
-                    com.aurora.music.ui.screens.settings.AppearanceScreen(contentPadding = padding, onBack = { nav.popBackStack() },
-                        onOpenNavigationMenu = { nav.navigate(Routes.SETTINGS_NAV_MENU) })
+                Routes.APPEARANCE_PAGES.forEach { route ->
+                    composable(route) {
+                        com.aurora.music.ui.screens.settings.AppearanceScreen(contentPadding = padding, onBack = { nav.popBackStack() },
+                            page = route, onOpen = { nav.navigate(it) })
+                    }
                 }
                 composable(Routes.SETTINGS_NAV_MENU) {
                     com.aurora.music.ui.screens.settings.NavigationMenuScreen(contentPadding = padding, onBack = { nav.popBackStack() })

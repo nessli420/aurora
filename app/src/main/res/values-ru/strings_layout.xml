@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="layout_title">"Макет"</string>
     <string name="layout_classic">"Классический"</string>
     <string name="layout_spotlight">"Spotlight"</string>
     <string name="layout_console">"Консоль"</string>

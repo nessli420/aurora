@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"السمات"</string>
+    <string name="appearance_themes_summary">"نمط السمة، الوضع الفاتح أو الداكن ولون التمييز"</string>
+    <string name="appearance_layouts">"التخطيطات"</string>
+    <string name="appearance_layouts_summary">"طريقة ترتيب الرئيسية والمكتبة والأشرطة والمشغّل"</string>
+    <string name="appearance_text">"النص"</string>
+    <string name="appearance_text_summary">"نوع الخط وحجمه"</string>
+    <string name="appearance_player_summary">"شريط التقدم والغلاف والمشغّل المصغّر"</string>
+    <string name="appearance_home_library">"الرئيسية والمكتبة"</string>
+    <string name="appearance_home_library_summary">"أقسام الرئيسية وشبكة المكتبة"</string>
+</resources>

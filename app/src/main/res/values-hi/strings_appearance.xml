@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"थीम"</string>
+    <string name="appearance_themes_summary">"थीम की शैली, लाइट या डार्क मोड और एक्सेंट रंग"</string>
+    <string name="appearance_layouts">"लेआउट"</string>
+    <string name="appearance_layouts_summary">"होम, लाइब्रेरी, बार और प्लेयर की व्यवस्था"</string>
+    <string name="appearance_text">"टेक्स्ट"</string>
+    <string name="appearance_text_summary">"टाइपफ़ेस और फ़ॉन्ट का आकार"</string>
+    <string name="appearance_player_summary">"सीक बार, आर्टवर्क और मिनीप्लेयर"</string>
+    <string name="appearance_home_library">"होम और लाइब्रेरी"</string>
+    <string name="appearance_home_library_summary">"होम के सेक्शन और लाइब्रेरी ग्रिड"</string>
+</resources>

@@ -25,6 +25,13 @@ object Routes {
     const val SETTINGS = "settings"
     const val SETTINGS_ADVANCED_AUDIO = "settings_advanced_audio"
     const val SETTINGS_APPEARANCE = "settings_appearance"
+    const val SETTINGS_APPEARANCE_THEMES = "settings_appearance_themes"
+    const val SETTINGS_APPEARANCE_LAYOUTS = "settings_appearance_layouts"
+    const val SETTINGS_APPEARANCE_TEXT = "settings_appearance_text"
+    const val SETTINGS_APPEARANCE_PLAYER = "settings_appearance_player"
+    const val SETTINGS_APPEARANCE_HOME = "settings_appearance_home"
+    val APPEARANCE_PAGES = listOf(SETTINGS_APPEARANCE, SETTINGS_APPEARANCE_THEMES, SETTINGS_APPEARANCE_LAYOUTS, SETTINGS_APPEARANCE_TEXT,
+        SETTINGS_APPEARANCE_PLAYER, SETTINGS_APPEARANCE_HOME)
     const val SETTINGS_NAV_MENU = "settings_nav_menu"
     const val SETTINGS_PLAYBACK = "settings_playback"
     const val SETTINGS_OUTPUT = "settings_output"

@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="layout_title">"布局"</string>
     <string name="layout_classic">"经典"</string>
     <string name="layout_spotlight">"聚光"</string>
     <string name="layout_console">"控制台"</string>

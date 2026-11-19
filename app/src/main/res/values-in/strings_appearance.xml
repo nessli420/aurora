@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Tema"</string>
+    <string name="appearance_themes_summary">"Gaya tema, mode terang atau gelap, dan warna aksen"</string>
+    <string name="appearance_layouts">"Tata letak"</string>
+    <string name="appearance_layouts_summary">"Susunan Beranda, Pustaka, bilah, dan pemutar"</string>
+    <string name="appearance_text">"Teks"</string>
+    <string name="appearance_text_summary">"Jenis huruf dan ukuran huruf"</string>
+    <string name="appearance_player_summary">"Bilah geser, sampul, dan pemutar mini"</string>
+    <string name="appearance_home_library">"Beranda &amp; Pustaka"</string>
+    <string name="appearance_home_library_summary">"Bagian Beranda dan kisi pustaka"</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Designs"</string>
+    <string name="appearance_themes_summary">"Designstil, heller oder dunkler Modus und Akzentfarbe"</string>
+    <string name="appearance_layouts">"Layouts"</string>
+    <string name="appearance_layouts_summary">"Anordnung von Start, Bibliothek, Leisten und Player"</string>
+    <string name="appearance_text">"Text"</string>
+    <string name="appearance_text_summary">"Schriftart und Schriftgröße"</string>
+    <string name="appearance_player_summary">"Suchleiste, Cover und Miniplayer"</string>
+    <string name="appearance_home_library">"Start &amp; Bibliothek"</string>
+    <string name="appearance_home_library_summary">"Startseiten-Bereiche und Bibliotheksraster"</string>
+</resources>

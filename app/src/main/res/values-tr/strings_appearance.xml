@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Temalar"</string>
+    <string name="appearance_themes_summary">"Tema stili, açık veya koyu mod ve vurgu rengi"</string>
+    <string name="appearance_layouts">"Düzenler"</string>
+    <string name="appearance_layouts_summary">"Ana sayfa, kitaplık, çubuklar ve oynatıcının yerleşimi"</string>
+    <string name="appearance_text">"Metin"</string>
+    <string name="appearance_text_summary">"Yazı tipi ve yazı boyutu"</string>
+    <string name="appearance_player_summary">"İlerleme çubuğu, kapak ve mini oynatıcı"</string>
+    <string name="appearance_home_library">"Ana sayfa ve kitaplık"</string>
+    <string name="appearance_home_library_summary">"Ana sayfa bölümleri ve kitaplık ızgarası"</string>
+</resources>

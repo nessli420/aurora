@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="layout_title">"레이아웃"</string>
     <string name="layout_classic">"클래식"</string>
     <string name="layout_spotlight">"스포트라이트"</string>
     <string name="layout_console">"콘솔"</string>

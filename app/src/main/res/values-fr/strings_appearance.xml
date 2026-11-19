@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Thèmes"</string>
+    <string name="appearance_themes_summary">"Style du thème, mode clair ou sombre et couleur d\'accent"</string>
+    <string name="appearance_layouts">"Dispositions"</string>
+    <string name="appearance_layouts_summary">"Organisation de l\'accueil, de la bibliothèque, des barres et du lecteur"</string>
+    <string name="appearance_text">"Texte"</string>
+    <string name="appearance_text_summary">"Police et taille de police"</string>
+    <string name="appearance_player_summary">"Barre de progression, pochette et mini-lecteur"</string>
+    <string name="appearance_home_library">"Accueil et bibliothèque"</string>
+    <string name="appearance_home_library_summary">"Sections de l\'accueil et grille de la bibliothèque"</string>
+</resources>

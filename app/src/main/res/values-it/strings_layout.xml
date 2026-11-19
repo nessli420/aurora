@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="layout_title">"Layout"</string>
     <string name="layout_classic">"Classico"</string>
     <string name="layout_spotlight">"Spotlight"</string>
     <string name="layout_console">"Console"</string>

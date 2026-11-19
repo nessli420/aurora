@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Thema\'s"</string>
+    <string name="appearance_themes_summary">"Themastijl, lichte of donkere modus en accentkleur"</string>
+    <string name="appearance_layouts">"Indelingen"</string>
+    <string name="appearance_layouts_summary">"Hoe Start, Bibliotheek, de balken en de speler zijn ingedeeld"</string>
+    <string name="appearance_text">"Tekst"</string>
+    <string name="appearance_text_summary">"Lettertype en lettergrootte"</string>
+    <string name="appearance_player_summary">"Zoekbalk, hoes en miniplayer"</string>
+    <string name="appearance_home_library">"Start en Bibliotheek"</string>
+    <string name="appearance_home_library_summary">"Startsecties en het bibliotheekraster"</string>
+</resources>

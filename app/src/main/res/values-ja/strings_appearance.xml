@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"テーマ"</string>
+    <string name="appearance_themes_summary">"テーマのスタイル、ライト/ダークモード、アクセントカラー"</string>
+    <string name="appearance_layouts">"レイアウト"</string>
+    <string name="appearance_layouts_summary">"ホーム、ライブラリ、バー、プレーヤーの配置"</string>
+    <string name="appearance_text">"テキスト"</string>
+    <string name="appearance_text_summary">"書体と文字サイズ"</string>
+    <string name="appearance_player_summary">"シークバー、アートワーク、ミニプレーヤー"</string>
+    <string name="appearance_home_library">"ホームとライブラリ"</string>
+    <string name="appearance_home_library_summary">"ホームのセクションとライブラリのグリッド"</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Motywy"</string>
+    <string name="appearance_themes_summary">"Styl motywu, tryb jasny lub ciemny i kolor akcentu"</string>
+    <string name="appearance_layouts">"Układy"</string>
+    <string name="appearance_layouts_summary">"Rozmieszczenie strony głównej, biblioteki, pasków i odtwarzacza"</string>
+    <string name="appearance_text">"Tekst"</string>
+    <string name="appearance_text_summary">"Krój pisma i rozmiar czcionki"</string>
+    <string name="appearance_player_summary">"Pasek przewijania, okładka i miniodtwarzacz"</string>
+    <string name="appearance_home_library">"Główna i biblioteka"</string>
+    <string name="appearance_home_library_summary">"Sekcje strony głównej i siatka biblioteki"</string>
+</resources>

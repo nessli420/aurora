@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="layout_title">"लेआउट"</string>
     <string name="layout_classic">"क्लासिक"</string>
     <string name="layout_spotlight">"स्पॉटलाइट"</string>
     <string name="layout_console">"कंसोल"</string>

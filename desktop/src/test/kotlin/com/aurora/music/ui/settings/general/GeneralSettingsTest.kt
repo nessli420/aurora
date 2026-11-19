@@ -16,6 +16,7 @@ import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
 import com.aurora.music.data.accountKey
 import com.aurora.music.desktop.auth.AccountAuthenticator
+import com.aurora.music.navigation.Routes
 import com.aurora.music.desktop.ui.LocalDesktopContainer
 import com.aurora.music.desktop.ui.LocalTrayAvailable
 import com.aurora.music.localization.AppStrings
@@ -134,7 +135,7 @@ class GeneralSettingsTest {
     }
 
     @Test fun appearancePicksAccentAndThemeStyle() {
-        GeneralSettingsScene("appearance", height = 1600) { AppearanceScreen(padding, onBack = {}) }.use { scene ->
+        GeneralSettingsScene("appearance", height = 1600) { AppearanceScreen(padding, onBack = {}, page = Routes.SETTINGS_APPEARANCE_THEMES) }.use { scene ->
             val aurora = scene.shot()
             assertTrue(aurora.distinctColors() > 20)
             scene.click(419f, 1005f)

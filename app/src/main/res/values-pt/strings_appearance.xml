@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Temas"</string>
+    <string name="appearance_themes_summary">"Estilo do tema, modo claro ou escuro e cor de destaque"</string>
+    <string name="appearance_layouts">"Layouts"</string>
+    <string name="appearance_layouts_summary">"Como o Início, a Biblioteca, as barras e o player são organizados"</string>
+    <string name="appearance_text">"Texto"</string>
+    <string name="appearance_text_summary">"Tipografia e tamanho da fonte"</string>
+    <string name="appearance_player_summary">"Barra de progresso, capa e miniplayer"</string>
+    <string name="appearance_home_library">"Início e Biblioteca"</string>
+    <string name="appearance_home_library_summary">"Seções do início e grade da biblioteca"</string>
+</resources>

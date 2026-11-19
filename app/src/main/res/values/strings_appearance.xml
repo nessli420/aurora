@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Themes"</string>
+    <string name="appearance_themes_summary">"Theme style, light or dark mode and accent colour"</string>
+    <string name="appearance_layouts">"Layouts"</string>
+    <string name="appearance_layouts_summary">"How Home, Library, the bars and the player are arranged"</string>
+    <string name="appearance_text">"Text"</string>
+    <string name="appearance_text_summary">"Typeface and font size"</string>
+    <string name="appearance_player_summary">"Seek bar, artwork and the miniplayer"</string>
+    <string name="appearance_home_library">"Home &amp; Library"</string>
+    <string name="appearance_home_library_summary">"Home sections and the library grid"</string>
+</resources>

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"主题"</string>
+    <string name="appearance_themes_summary">"主题风格、浅色或深色模式和强调色"</string>
+    <string name="appearance_layouts">"布局"</string>
+    <string name="appearance_layouts_summary">"首页、音乐库、栏和播放器的排列方式"</string>
+    <string name="appearance_text">"文字"</string>
+    <string name="appearance_text_summary">"字体和字体大小"</string>
+    <string name="appearance_player_summary">"进度条、封面和迷你播放器"</string>
+    <string name="appearance_home_library">"首页和音乐库"</string>
+    <string name="appearance_home_library_summary">"首页版块和音乐库网格"</string>
+</resources>

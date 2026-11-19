@@ -63,6 +63,11 @@ class SettingsShotsTest {
         scene.shot("eq-page")
         scene.navigate(Routes.SETTINGS_APPEARANCE)
         scene.shot("appearance-page")
+        listOf("themes" to Routes.SETTINGS_APPEARANCE_THEMES, "layouts" to Routes.SETTINGS_APPEARANCE_LAYOUTS, "text" to Routes.SETTINGS_APPEARANCE_TEXT,
+            "player" to Routes.SETTINGS_APPEARANCE_PLAYER, "home" to Routes.SETTINGS_APPEARANCE_HOME).forEach { (name, route) ->
+            scene.navigate(route)
+            scene.shot("appearance-$name")
+        }
         scene.navigate(Routes.SETTINGS_ABOUT)
         scene.shot("about-page")
     }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="appearance_themes">"Темы"</string>
+    <string name="appearance_themes_summary">"Стиль темы, светлый или тёмный режим и акцентный цвет"</string>
+    <string name="appearance_layouts">"Макеты"</string>
+    <string name="appearance_layouts_summary">"Расположение главной, медиатеки, панелей и плеера"</string>
+    <string name="appearance_text">"Текст"</string>
+    <string name="appearance_text_summary">"Шрифт и размер текста"</string>
+    <string name="appearance_player_summary">"Шкала воспроизведения, обложка и мини-плеер"</string>
+    <string name="appearance_home_library">"Главная и медиатека"</string>
+    <string name="appearance_home_library_summary">"Разделы главной и сетка медиатеки"</string>
+</resources>
