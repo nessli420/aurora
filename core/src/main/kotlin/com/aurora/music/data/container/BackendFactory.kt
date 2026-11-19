@@ -7,6 +7,7 @@ import com.aurora.music.data.LocalBackend
 import com.aurora.music.data.LocalCatalog
 import com.aurora.music.data.LocalStore
 import com.aurora.music.data.MediaBackend
+import com.aurora.music.data.NoDeviceFiles
 import com.aurora.music.data.PlaybackSourceIdentity
 import com.aurora.music.data.PlexBackend
 import com.aurora.music.data.ReportingMediaBackend
@@ -99,10 +100,10 @@ class BackendFactory(
         }
     }
 
-    fun buildActive(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>): MediaBackend? {
+    fun buildActive(session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>, withLocal: Boolean = true): MediaBackend? {
         if (!eligible(session)) return null
-        if (!unified || !session.type.supportsMergedLibrary) return build(session)
-        return localizer.mergedBackend(session, mergeKeys, saved, LocalBackend(localLibrary, localStore, localSession),
-            eligible = eligible, build = ::build)
+        if (!unified || !session.type.supportsMergedLibrary) return build(session).also { localizer.deviceLibrary = true }
+        return localizer.mergedBackend(session, mergeKeys, saved, { files -> LocalBackend(if (files) localLibrary else NoDeviceFiles, localStore, localSession) },
+            eligible = eligible, build = ::build, withDevice = withLocal)
     }
 }

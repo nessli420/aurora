@@ -23,9 +23,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shuffle
-import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -79,6 +77,7 @@ fun FolderScreen(
     canDownload: Boolean = true,
     onEditTags: ((Song) -> Unit)? = null,
     serverTagEditing: Boolean = false,
+    origin: String? = null,
 ) {
     val header = title.ifBlank { content?.title ?: appString(R.string.text_folders_19adc4) }
     val gutter = LocalPageGutter.current
@@ -90,9 +89,8 @@ fun FolderScreen(
                 IconButton(onClick = { onShufflePlay(songs) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
                     Icon(Icons.Filled.Shuffle, appString(R.string.text_shuffle_folder_681a21))
                 }
-                FilledIconButton(onClick = { onPlayAll(songs, 0) }, modifier = Modifier.pointerHoverIcon(PointerIcon.Hand)) {
-                    Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_folder_3f9fd7))
-                }
+                com.aurora.music.ui.components.CollectionPlayButton(origin, { onPlayAll(songs, 0) },
+                    label = appString(R.string.text_play_folder_3f9fd7), iconOnly = true)
             }
         }
 

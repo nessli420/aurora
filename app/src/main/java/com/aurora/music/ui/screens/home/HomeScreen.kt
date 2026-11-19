@@ -7,6 +7,7 @@ import com.aurora.music.R
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -35,6 +36,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.LibraryMusic
 import androidx.compose.material.icons.outlined.PlayCircle
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Smartphone
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -146,8 +148,9 @@ fun HomeScreen(
                 if (state.feeds.size > 1) {
                     // cycles library, youtube music and spotify in turn
                     val next = state.feeds[(state.feeds.indexOfFirst { it.id == state.selectedFeed } + 1).mod(state.feeds.size)]
-                    IconPill(com.aurora.music.ui.components.sourceViewIcon(state.selectedFeed),
-                        appString(R.string.text_switch_to_home_42c520, (next.label))) { onSelectFeed(next.id) }
+                    IconPill(if (state.localHome == true && state.selectedFeed == "library") Icons.Outlined.Smartphone
+                        else com.aurora.music.ui.components.sourceViewIcon(state.selectedFeed),
+                        appString(R.string.text_switch_to_home_42c520, (next.label)), state.holdFor("library", onSelectFeed)) { onSelectFeed(next.id) }
                     Spacer(Modifier.width(8.dp))
                 }
                 com.aurora.music.ui.screens.stats.RecapInboxButton(onOpenNotifications)
@@ -508,16 +511,22 @@ private fun OverlayTile(title: String, artUrl: String, accent: Color, onClick: (
 }
 
 @Composable
-internal fun IconPill(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, onClick: () -> Unit) {
+internal fun IconPill(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, onClick: () -> Unit) = IconPill(icon, desc, null, onClick)
+
+@Composable
+internal fun IconPill(icon: androidx.compose.ui.graphics.vector.ImageVector, desc: String, onLongClick: (() -> Unit)?, onClick: () -> Unit) {
     if (com.aurora.music.ui.theme.isGlassTheme()) {
+        val haptic = androidx.compose.ui.platform.LocalHapticFeedback.current
         com.aurora.music.ui.components.glass.GlassButton(onClick, com.aurora.music.ui.theme.LocalGlassAmbient.current,
-            Modifier.size(44.dp), contentDescription = desc) {
+            Modifier.size(44.dp), contentDescription = desc,
+            onLongClick = onLongClick?.let { hold -> { haptic.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress); hold() } }) {
             Icon(icon, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(22.dp))
         }
         return
     }
     Box(
-        Modifier.size(40.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) }).clickable(onClick = onClick),
+        Modifier.size(40.dp).paperFrame(CircleShape, { background(MaterialTheme.colorScheme.surfaceContainerHigh) })
+            .combinedClickable(onLongClick = onLongClick, onLongClickLabel = onLongClick?.let { appString(R.string.home_hold_switch) }, onClick = onClick),
         contentAlignment = Alignment.Center,
     ) { Icon(icon, desc, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(20.dp)) }
 }

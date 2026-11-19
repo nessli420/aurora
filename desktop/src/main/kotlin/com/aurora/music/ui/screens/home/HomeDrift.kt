@@ -1,5 +1,6 @@
 package com.aurora.music.ui.screens.home
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.animateColorAsState
@@ -254,7 +255,8 @@ internal fun HomeDrift(
                     ) {
                         if (line.isNotBlank()) Text(line, style = type.titleLarge, fontWeight = FontWeight.Normal, color = colors.onSurfaceVariant,
                             maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.align(Alignment.CenterVertically))
-                        if (state.feeds.size > 1) DriftTabs(state.feeds.map { it.label }, state.feeds.indexOfFirst { it.id == state.selectedFeed }, type.titleLarge) {
+                        if (state.feeds.size > 1) DriftTabs(state.feeds.map { it.label }, state.feeds.indexOfFirst { it.id == state.selectedFeed }, type.titleLarge,
+                            hold = { state.holdFor(state.feeds[it].id, onSelectFeed) }) {
                             onSelectFeed(state.feeds[it].id)
                         }
                     }
@@ -377,7 +379,8 @@ internal fun driftTitleStyle(text: String, room: Int, width: Dp, maxLines: Int =
 }
 
 @Composable
-internal fun DriftTabs(labels: List<String>, selected: Int, style: TextStyle, modifier: Modifier = Modifier, gap: Dp = 22.dp, dot: Boolean = false, onSelect: (Int) -> Unit) {
+internal fun DriftTabs(labels: List<String>, selected: Int, style: TextStyle, modifier: Modifier = Modifier, gap: Dp = 22.dp, dot: Boolean = false,
+    hold: (Int) -> (() -> Unit)? = { null }, onSelect: (Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
     val square = isPaperTheme()
@@ -385,10 +388,11 @@ internal fun DriftTabs(labels: List<String>, selected: Int, style: TextStyle, mo
         labels.forEachIndexed { i, label ->
             val active = i == selected
             val on by animateFloatAsState(if (active) 1f else 0f, Motion.state(), label = "driftTab")
+            com.aurora.music.ui.components.HoldTip(hold(i)) {
             Text(
                 label, style = style, fontWeight = if (active) FontWeight.Black else FontWeight.SemiBold, color = lerp(colors.onSurfaceVariant, colors.onSurface, on), maxLines = 1,
                 modifier = Modifier.paperClip(MaterialTheme.shapes.extraSmall).semantics { this.selected = active }
-                    .clickable(role = Role.Tab) { onSelect(i) }.pointerHoverIcon(PointerIcon.Hand)
+                    .combinedClickable(role = Role.Tab, onLongClick = hold(i)) { onSelect(i) }.pointerHoverIcon(PointerIcon.Hand)
                     .drawBehind {
                         val bar = if (dot) Size(6.dp.toPx(), 6.dp.toPx()) else Size(minOf(28.dp.toPx(), size.width), 3.dp.toPx())
                         val at = Offset(if (dot) (size.width - bar.width) / 2f else if (rtl) size.width - bar.width else 0f, size.height - bar.height)
@@ -396,6 +400,7 @@ internal fun DriftTabs(labels: List<String>, selected: Int, style: TextStyle, mo
                     }
                     .padding(vertical = 10.dp),
             )
+            }
         }
     }
 }

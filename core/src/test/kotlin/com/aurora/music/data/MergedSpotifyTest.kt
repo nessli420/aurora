@@ -77,8 +77,10 @@ class MergedSpotifyTest {
         val track = (home.sections.single().items.single() as HomeFeedItem.Track).song
         assertEquals(spotifySong.streamUrl, merged.songFor(track.id)!!.streamUrl)
 
-        merged.home("library")
+        merged.home(LOCAL_HOME_FEED)
         assertEquals(1, localCalls.homes); assertEquals(0, ytCalls.homes); assertEquals(1, spotifyCalls.homes)
+        merged.home("library")
+        assertEquals(2, localCalls.homes); assertEquals(1, ytCalls.homes); assertEquals(2, spotifyCalls.homes)
 
         assertEquals(spotifySong.id, stripMergeNamespace(merged.search("never", "spotify").songs.single().id))
         assertEquals(listOf("never"), spotifyCalls.searches); assertTrue(ytCalls.searches.isEmpty())

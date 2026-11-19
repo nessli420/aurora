@@ -1,5 +1,6 @@
 package com.aurora.music.ui.screens.home
 
+import androidx.compose.material.icons.outlined.Computer
 import com.aurora.music.localization.appString
 import com.aurora.music.localization.asPlaylist
 import com.aurora.music.ui.theme.paperClip
@@ -169,8 +170,10 @@ fun HomeScreen(
         }
         if (state.feeds.size > 1) {
             item(key = "feeds") {
-                com.aurora.music.ui.components.ChoiceTabs(state.feeds.map { Triple(it.id, it.label, com.aurora.music.ui.components.feedIcon(it.id)) },
-                    state.selectedFeed, onSelectFeed)
+                com.aurora.music.ui.components.ChoiceTabs(state.feeds.map { Triple(it.id, it.label,
+                    if (it.id == "library" && state.localHome == true) androidx.compose.material.icons.Icons.Outlined.Computer
+                    else com.aurora.music.ui.components.feedIcon(it.id)) },
+                    state.selectedFeed, onSelectFeed, hold = { state.holdFor(it, onSelectFeed) })
             }
         }
 

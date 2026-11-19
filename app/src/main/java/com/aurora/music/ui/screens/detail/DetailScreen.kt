@@ -94,7 +94,6 @@ import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.likePop
 import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.util.MotionTokens
-import com.aurora.music.ui.components.glass.GlassAction
 import com.aurora.music.ui.components.glass.GlassIconButton
 import com.aurora.music.ui.theme.LocalGlassAmbient
 import com.aurora.music.ui.theme.glassCard
@@ -234,26 +233,12 @@ fun DetailScreen(
             ) {
                 // two groups, so a narrow or large-type screen wraps the secondary actions together instead of orphaning one
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
+                com.aurora.music.ui.components.CollectionPlayButton(collectionKey, { onPlayAll(tracks, 0) }, enabled = tracks.isNotEmpty(), accent = accent)
                 if (glass) {
-                    GlassAction(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), onClick = { onPlayAll(tracks, 0) },
-                        accent = accent, enabled = tracks.isNotEmpty())
                     Spacer(Modifier.width(10.dp))
                     GlassIconButton(Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b), onClick = { onShufflePlay(tracks) },
                         modifier = Modifier.size(44.dp), enabled = tracks.isNotEmpty())
                 } else {
-                Row(
-                    Modifier
-                        .paperClip(RoundedCornerShape(50))
-                        .pressClickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
-                        .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.78f))))
-                        .padding(horizontal = 24.dp, vertical = 13.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Icon(Icons.Filled.PlayArrow, null, tint = onAccent, modifier = Modifier.size(20.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = onAccent)
-                }
                 Spacer(Modifier.width(6.dp))
                 Icon(
                     Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b),

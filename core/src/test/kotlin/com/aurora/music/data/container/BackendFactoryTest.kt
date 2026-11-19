@@ -26,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import org.junit.After
@@ -69,12 +70,15 @@ class BackendFactoryTest {
     private val jellyfin = Session("http://127.0.0.1:9", "bob", "", "token", ServerType.JELLYFIN, userId = "u1")
     private val soundcloud = Session("https://soundcloud.com", "listener", "", "login-1", ServerType.SOUNDCLOUD, "42")
 
+    private val localLookups = AtomicInteger()
+
     private fun factory(
         eligible: (Session) -> Boolean = { true },
         platform: (Session, (Song) -> Song) -> MediaBackend? = { _, _ -> null },
+        localizer: SourceLocalizer? = null,
     ): BackendFactory {
         val dir = temp.newFolder()
-        val localizer = SourceLocalizer(localSession, DownloadManager(dir, { "file://$it" }, { null }), { false }, { emptyList() }, { false }, { _, _, _ -> null })
+        val localizer = localizer ?: SourceLocalizer(localSession, DownloadManager(dir, { "file://$it" }, { null }), { false }, { emptyList() }, { false }, { _, _, _ -> null })
         return BackendFactory(testClientInfo, store, localizer, catalog, LocalStore(dir), localSession, SoundCloudPendingLikes(), com.aurora.music.data.GuestLikes(),
             http = { http.incrementAndGet(); OkHttpClient() }, maxBitrate = { 0 }, youtubeMusicLogin = { "" },
             signatureTimestamp = { signature.incrementAndGet(); { null } },
@@ -133,6 +137,41 @@ class BackendFactoryTest {
         assertNull(noJellyfin.buildActive(jellyfin, true, emptySet(), emptyList()))
         val withoutJellyfin = noJellyfin.buildActive(subsonic, true, emptySet(), listOf(jellyfin)) as MergedBackend
         assertEquals(listOf(localSession, subsonic), withoutJellyfin.sources.map { it.session })
+    }
+
+    @Test fun aMergeWithoutTheDeviceKeepsOnlyAurorasPlaylistsAndNeverLooksForDeviceCopies() = runBlocking {
+        val localizer = SourceLocalizer(localSession, DownloadManager(temp.newFolder(), { "file://$it" }, { null }), { true }, { listOf("local", "stream") },
+            { false }, { _, _, _ -> localLookups.incrementAndGet(); null })
+        val backends = factory(localizer = localizer)
+        val merged = backends.buildActive(subsonic, true, emptySet(), listOf(soundcloud), withLocal = false) as MergedBackend
+        assertEquals(listOf(localSession, soundcloud, subsonic), merged.sources.map { it.session })
+        assertFalse((merged.sources.first() as LocalBackend).readsDevice)
+        assertTrue(merged.allAlbums().isEmpty())
+        assertTrue(merged.home("library").newReleases.isEmpty())
+        assertFalse(localizer.deviceLibrary)
+        localizer.localize(Song("1", "Title", "Artist", "Album", "", 200))
+        assertEquals(0, localLookups.get())
+        assertNull(merged.localHome)
+
+        // with nothing else merged the device stays, so the library is never empty
+        val alone = backends.buildActive(subsonic, true, setOf(com.aurora.music.data.MERGE_NONE), emptyList(), withLocal = false) as MergedBackend
+        assertTrue((alone.sources.single() as LocalBackend).readsDevice)
+        assertTrue(localizer.deviceLibrary)
+        localizer.localize(Song("1", "Title", "Artist", "Album", "", 200))
+        assertEquals(1, localLookups.get())
+    }
+
+    @Test fun anExistingMergeKeepsTheDeviceWithoutTheNewSetting() = runBlocking {
+        assertTrue(store.mergeLocal.first())
+        assertFalse(store.mergedLocalHome.first())
+        // a backup made before the setting existed restores with the device still merged
+        store.setMergeLocal(false)
+        val old = store.exportPrefs()
+        store.restoreBackupPrefs(old.copy(booleans = old.booleans - "merge_local")).getOrThrow()
+        assertTrue(store.mergeLocal.first())
+        val merged = factory().buildActive(subsonic, true, emptySet(), listOf(jellyfin), store.mergeLocal.first()) as MergedBackend
+        assertEquals(listOf(localSession, jellyfin, subsonic), merged.sources.map { it.session })
+        assertTrue((merged.sources.first() as LocalBackend).readsDevice)
     }
 
     @Test fun soundCloudKeepsOneClientPerLogin() {

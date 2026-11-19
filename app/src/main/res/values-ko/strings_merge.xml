@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"YouTube 댓글"</string>
     <string name="merge_youtube_comments_summary">"전체 댓글 화면에 노래의 YouTube 동영상 댓글 표시"</string>
     <string name="merge_on_songs_from">"다음 소스의 곡에 표시"</string>
+    <string name="home_all_sources">"모든 소스"</string>
+    <string name="home_hold_switch">"길게 눌러 모든 소스와 내 음악 사이를 전환"</string>
 </resources>

@@ -5,6 +5,7 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -236,7 +237,7 @@ internal fun HomeConsole(
                         IconPill(Icons.Outlined.Settings, appString(R.string.text_settings_c7f73b), onClick = onOpenSettings)
                     }
                     if (state.feeds.size > 1) ConsoleSegments(state.feeds.size, state.feeds.indexOfFirst { it.id == state.selectedFeed }, { state.feeds[it].label },
-                        Modifier.widthIn(max = 560.dp)) { onSelectFeed(state.feeds[it].id) }
+                        Modifier.widthIn(max = 560.dp), hold = { state.holdFor(state.feeds[it].id, onSelectFeed) }) { onSelectFeed(state.feeds[it].id) }
                 }
             }
 
@@ -425,7 +426,7 @@ internal fun ConsoleTitle(eyebrow: String, title: String, modifier: Modifier = M
 }
 
 @Composable
-internal fun ConsoleSegments(count: Int, selected: Int, label: (Int) -> String, modifier: Modifier = Modifier, onSelect: (Int) -> Unit) {
+internal fun ConsoleSegments(count: Int, selected: Int, label: (Int) -> String, modifier: Modifier = Modifier, hold: (Int) -> (() -> Unit)? = { null }, onSelect: (Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val paper = isPaperTheme()
     val on = when (LocalUiPrefs.current.themeStyle) {
@@ -442,7 +443,7 @@ internal fun ConsoleSegments(count: Int, selected: Int, label: (Int) -> String, 
             val fill = animateColorAsState(if (active) on else on.copy(alpha = 0f), Motion.state(), label = "segment")
             Box(
                 Modifier.weight(if (active) 1.4f else 1f).height(44.dp).paperClip(MaterialTheme.shapes.small).drawBehind { drawRect(fill.value) }
-                    .semantics { this.selected = active }.clickable(role = Role.Tab) { onSelect(i) }.padding(horizontal = 8.dp),
+                    .semantics { this.selected = active }.combinedClickable(role = Role.Tab, onLongClick = hold(i)) { onSelect(i) }.padding(horizontal = 8.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(label(i), style = MaterialTheme.typography.labelLarge, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,

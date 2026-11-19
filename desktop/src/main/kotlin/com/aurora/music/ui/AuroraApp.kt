@@ -999,6 +999,9 @@ private fun Shell(
         com.aurora.music.ui.components.LocalHiddenSongs provides hiddenIndex,
         com.aurora.music.ui.components.LocalHideSong provides hideSong,
         com.aurora.music.ui.components.LocalBlockArtist provides blockArtist,
+        com.aurora.music.ui.components.LocalQueuePlayback provides remember(player, playerState.origin, playerState.isPlaying) {
+            com.aurora.music.ui.components.QueuePlayback(playerState.origin, playerState.isPlaying, player::togglePlay)
+        },
         com.aurora.music.ui.components.LocalLikeMenu provides remember(player) { com.aurora.music.ui.components.LikeMenu(player::likeOptions, player::setLikedOn, player::likedSources) },
         com.aurora.music.ui.components.LocalRepostMenu provides remember(container) { com.aurora.music.ui.components.RepostMenu(container.repository, scope, ::confirm) },
         com.aurora.music.ui.components.LocalMatchPicker provides remember { { song: Song -> matchSong = song } },
@@ -1472,8 +1475,9 @@ private fun Shell(
                                     isPlaying = playerState.isPlaying,
                                     onBack = { navController.popBackStack() },
                                     onOpenFolder = { id, name -> navController.navigate(Routes.folders(id, name)) },
-                                    onPlayAll = { songs, index -> player.playAll(songs, index) },
-                                    onShufflePlay = { songs -> player.shufflePlay(songs) },
+                                    onPlayAll = { songs, index -> player.playCollection("folder", fid, songs, index, songs.size) },
+                                    onShufflePlay = { songs -> player.shuffleCollection("folder", fid, songs, songs.size) },
+                                    origin = com.aurora.music.data.QueueOrigin.of("folder", fid),
                                     onAddToQueue = { player.addToQueue(it); confirm(appString(R.string.text_added_to_queue_9d7749)) },
                                     onPlayNext = { player.playNext(it); confirm(appString(R.string.text_playing_next_b23445)) },
                                     onToggleLike = { player.toggleLike(it) },

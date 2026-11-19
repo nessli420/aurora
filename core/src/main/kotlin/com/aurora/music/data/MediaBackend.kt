@@ -27,6 +27,8 @@ interface MediaBackend {
     // whether the account can take the likes a guest left on this device
     suspend fun acceptsLikes(): Boolean = signedIn
     val homeFeeds: List<HomeFeedChoice> get() = emptyList()
+    // the narrower home a merged library can show instead of its combined one
+    val localHome: HomeFeedChoice? get() = null
     val searchSources: List<SearchSourceChoice> get() = emptyList()
     suspend fun search(query: String, source: String): SearchResults = search(query)
     suspend fun home(feed: String): HomeData = home()

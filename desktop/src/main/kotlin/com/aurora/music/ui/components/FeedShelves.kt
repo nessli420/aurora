@@ -1,5 +1,6 @@
 package com.aurora.music.ui.components
 
+import androidx.compose.foundation.combinedClickable
 import com.aurora.music.localization.appString
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
@@ -163,7 +164,8 @@ fun FeedTrackCard(song: Song, width: Dp, onClick: () -> Unit) {
 
 // a row of choices such as which library or feed to show
 @Composable
-fun ChoiceTabs(options: List<Triple<String, String, ImageVector>>, selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier) {
+fun ChoiceTabs(options: List<Triple<String, String, ImageVector>>, selected: String, onSelect: (String) -> Unit, modifier: Modifier = Modifier,
+    hold: (String) -> (() -> Unit)? = { null }) {
     LazyRow(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), contentPadding = PaddingValues(horizontal = 4.dp)) {
         items(options.size) { i ->
             val (id, label, icon) = options[i]
@@ -171,10 +173,11 @@ fun ChoiceTabs(options: List<Triple<String, String, ImageVector>>, selected: Str
             val fill by animateColorAsState(if (active) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "choiceFill")
             val tint by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "choiceTint")
             val ink by animateColorAsState(if (active) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "choiceInk")
+            HoldTip(hold(id)) {
             Row(
                 Modifier.height(36.dp).paperClip(RoundedCornerShape(50))
                     .background(fill)
-                    .clickable { onSelect(id) }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 14.dp),
+                    .combinedClickable(onLongClick = hold(id)) { onSelect(id) }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 14.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(icon, null, Modifier.size(18.dp), tint = tint)
@@ -182,8 +185,17 @@ fun ChoiceTabs(options: List<Triple<String, String, ImageVector>>, selected: Str
                 Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
                     color = ink, maxLines = 1)
             }
+            }
         }
     }
+}
+
+// holding a feed switch flips home's base, and only the hover tells a mouse so
+@OptIn(androidx.compose.foundation.ExperimentalFoundationApi::class)
+@Composable
+fun HoldTip(hold: (() -> Unit)?, content: @Composable () -> Unit) {
+    if (hold == null) content()
+    else androidx.compose.foundation.TooltipArea(tooltip = { HoverTooltip(appString(R.string.home_hold_switch)) }, delayMillis = 400) { content() }
 }
 
 fun feedIcon(id: String): ImageVector = when (id) {

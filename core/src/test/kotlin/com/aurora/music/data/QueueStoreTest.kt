@@ -65,6 +65,17 @@ class QueueStoreTest {
         assertEquals(reordered, QueueStore(root).get("alice"))
     }
 
+    @Test fun aLostOriginIsWrittenInFullEvenWhenTheTracksStayTheSame() {
+        val store = QueueStore(root)
+        val alice = queue("a", "b").copy(origin = "playlist:p")
+        store.save("alice", alice)
+        store.flushNow()
+        assertEquals("playlist:p", QueueStore(root).get("alice")?.origin)
+        store.save("alice", alice.copy(origin = null, positionSec = 9))
+        store.flushNow()
+        assertNull(QueueStore(root).get("alice")?.origin)
+    }
+
     @Test fun aFullWriteThatNeverLandsKeepsTheLastSavedPosition() {
         val fail = AtomicBoolean(false)
         val store = QueueStore(root) { target, bytes -> if (fail.get()) throw IOException("killed"); persistBackupFileAtomically(target, bytes) }

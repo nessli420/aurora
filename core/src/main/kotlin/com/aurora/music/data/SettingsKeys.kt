@@ -166,6 +166,8 @@ internal object SettingsKeys {
     val LOCAL_FOLDERS = stringSetPreferencesKey("local_folders")
     val LOCAL_EXCLUDED_FOLDERS = stringSetPreferencesKey("local_excluded_folders")
     val MERGE_SOURCES = stringSetPreferencesKey("merge_sources")
+    val MERGE_LOCAL = booleanPreferencesKey("merge_local")
+    val MERGED_LOCAL_HOME = booleanPreferencesKey("merged_local_home")
     val MERGE_CANVAS = booleanPreferencesKey("merge_canvas")
     val MERGE_CANVAS_OFF = stringSetPreferencesKey("merge_canvas_off")
     val MERGE_VIDEOS = booleanPreferencesKey("merge_videos")

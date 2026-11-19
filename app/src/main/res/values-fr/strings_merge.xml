@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"Commentaires YouTube"</string>
     <string name="merge_youtube_comments_summary">"Les commentaires de la vidéo YouTube du titre dans la vue complète des commentaires"</string>
     <string name="merge_on_songs_from">"Afficher sur les titres de"</string>
+    <string name="home_all_sources">"Toutes les sources"</string>
+    <string name="home_hold_switch">"Maintenez appuyé pour basculer entre toutes les sources et votre propre musique"</string>
 </resources>

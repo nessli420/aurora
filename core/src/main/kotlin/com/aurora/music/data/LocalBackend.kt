@@ -205,7 +205,8 @@ class LocalBackend(
 
     // folder tree rooted at the deepest common directory
 
-    override val supportsFolders: Boolean get() = true
+    override val supportsFolders: Boolean get() = readsDevice
+    val readsDevice: Boolean get() = library !== NoDeviceFiles
 
     override suspend fun browseFolder(folderId: String): FolderContent? {
         library.ensureLoaded()

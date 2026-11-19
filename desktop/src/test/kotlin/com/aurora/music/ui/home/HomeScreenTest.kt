@@ -5,6 +5,8 @@ import com.aurora.music.data.HomeData
 import com.aurora.music.data.HomeFeedChoice
 import com.aurora.music.data.HomeFeedItem
 import com.aurora.music.data.HomeFeedSection
+import com.aurora.music.data.LOCAL_HOME_FEED
+import com.aurora.music.data.PageLayout
 import com.aurora.music.data.ThemeMode
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.UiPrefs
@@ -77,8 +79,31 @@ class HomeScreenTest {
         home("home-glass", HomeUiState(loading = false, data = library), UiPrefs(themeStyle = ThemeStyle.GLASS)).use { it.shot() }
     }
 
+    @Test fun holdingTheLibraryFeedFlipsTheLocalHomeAndATapStillSwitches() {
+        val feeds = listOf(HomeFeedChoice("library", "All sources"), HomeFeedChoice("discovery", "Discover"))
+        for (layout in listOf(PageLayout.CLASSIC, PageLayout.DRIFT)) {
+            val events = mutableListOf<String>()
+            home("home-hold-$layout", HomeUiState(loading = false, data = library, feeds = feeds, localHome = false), UiPrefs(pageLayout = layout), events).use { scene ->
+                scene.shot()
+                val (library, discover) = if (layout == PageLayout.CLASSIC) (90f to 130f) to (194f to 130f) else HOLD_DRIFT
+                scene.hold(library.first, library.second)
+                assertEquals("$layout", "feed:$LOCAL_HOME_FEED", events.lastOrNull())
+                scene.click(discover.first, discover.second)
+                assertEquals("$layout", "feed:discovery", events.lastOrNull())
+            }
+        }
+        // without a local home to flip to, holding does nothing beyond a tap's own selection
+        val events = mutableListOf<String>()
+        home("home-hold-none", HomeUiState(loading = false, data = library, feeds = feeds), events = events).use { scene ->
+            scene.hold(90f, 130f)
+            assertTrue(events.none { it == "feed:$LOCAL_HOME_FEED" })
+        }
+    }
+
     @Test fun rendersLoadingAndEmptyStates() {
         home("home-loading", HomeUiState(loading = true)).use { assertTrue(it.shot().distinctColors(6) > 5) }
         home("home-empty", HomeUiState(loading = false)).use { assertTrue(it.shot().distinctColors(6) > 5) }
     }
 }
+
+private val HOLD_DRIFT = (72f to 165f) to (182f to 165f)

@@ -17,6 +17,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.first
+import com.aurora.music.localization.localizedMediaType
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
@@ -29,7 +31,13 @@ data class HomeUiState(
     val selectedFeed: String = "library",
     // the favourites row is capped; the whole list lands here after home, for a tap to play
     val allStarred: List<Song> = emptyList(),
-)
+    // null when the library has no narrower home; true while home shows only the device and servers
+    val localHome: Boolean? = null,
+) {
+    // holding the library feed's switch flips it between every source and the device with servers alone
+    fun holdFor(feed: String, select: (String) -> Unit): (() -> Unit)? =
+        if (feed == "library" && localHome != null) ({ select(com.aurora.music.data.LOCAL_HOME_FEED) }) else null
+}
 
 class HomeViewModel(app: Application) : AndroidViewModel(app) {
     private val container = (app as AuroraApplication).container
@@ -49,6 +57,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         viewModelScope.launch { container.accountEpoch.drop(1).collect { lastHome = null; load(clear = true) } }
         viewModelScope.launch { container.libraryReload.drop(1).collect { load() } }
         viewModelScope.launch { container.audioCache.songs.collect { if (container.offline.value) load() } }
+        viewModelScope.launch { container.settingsStore.mergedLocalHome.drop(1).collect { load(clear = true) } }
     }
 
     fun load(clear: Boolean = false) {
@@ -57,15 +66,21 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
         seenPages.clear()
         loadJob = viewModelScope.launch {
             val key = homeKey()
-            val feeds = container.repository.homeFeeds
+            val local = container.repository.localHome
+            val localOn = local != null && container.settingsStore.mergedLocalHome.first()
+            val feeds = container.repository.homeFeeds.map { feed ->
+                if (feed.id != "library" || local == null) feed
+                else feed.copy(label = if (localOn) local.label.localizedMediaType() else appString(R.string.home_all_sources))
+            }
             val selected = _state.value.selectedFeed.takeIf { id -> feeds.any { it.id == id } } ?: "library"
-            _state.update { it.copy(loading = true, loadingMore = false, error = null, feeds = feeds, selectedFeed = selected,
+            val asked = if (selected == "library" && localOn) com.aurora.music.data.LOCAL_HOME_FEED else selected
+            _state.update { it.copy(loading = true, loadingMore = false, error = null, feeds = feeds, selectedFeed = selected, localHome = local?.let { localOn },
                 data = if (clear || selected != it.selectedFeed) HomeData() else it.data,
                 allStarred = if (clear || selected != it.selectedFeed || starredFor != key) emptyList() else it.allStarred) }
             try {
                 val shown = _state.value.data
                 var latest = shown
-                container.repository.homeUpdates(selected).collect { update ->
+                container.repository.homeUpdates(asked).collect { update ->
                     latest = update
                     _state.update { it.copy(data = shown.filledFrom(update)) }
                 }
@@ -78,7 +93,7 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
                 }
                 _state.update { it.copy(loading = false, data = latest) }
                 lastHome = key to _state.value.copy(allStarred = emptyList())
-                if (latest.starred.isNotEmpty()) allStarred(selected).let { all -> starredFor = key; _state.update { it.copy(allStarred = all) } }
+                if (latest.starred.isNotEmpty()) allStarred(asked).let { all -> starredFor = key; _state.update { it.copy(allStarred = all) } }
             } catch (e: CancellationException) { throw e }
             catch (_: Exception) { _state.update { it.copy(loading = false, error = appString(R.string.text_could_not_load_the_home_feed_try_again_f756b3)) } }
         }
@@ -95,10 +110,19 @@ class HomeViewModel(app: Application) : AndroidViewModel(app) {
     @Volatile private var feedChosen = false
 
     fun selectFeed(id: String) {
+        if (id == com.aurora.music.data.LOCAL_HOME_FEED) return toggleLocalHome()
         if (id == _state.value.selectedFeed || _state.value.feeds.none { it.id == id }) return
         feedChosen = true
         _state.update { it.copy(selectedFeed = id) }
         load(clear = true)
+    }
+
+    // flips the library feed between every source and the device with servers alone; the choice is a setting
+    private fun toggleLocalHome() {
+        val on = _state.value.localHome ?: return
+        feedChosen = true
+        _state.update { it.copy(selectedFeed = "library") }
+        viewModelScope.launch { container.settingsStore.setMergedLocalHome(!on) }
     }
 
     fun loadMore() {

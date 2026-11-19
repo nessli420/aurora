@@ -16,6 +16,7 @@ import androidx.annotation.OptIn
 import androidx.media3.common.util.UnstableApi
 import com.aurora.music.data.container.BackendFactory
 import com.aurora.music.data.container.SessionCoordinator
+import com.aurora.music.data.settings.skipsDevice
 import com.aurora.music.data.remote.appClientInfo
 import com.aurora.music.data.remote.SpotifyClient
 import kotlinx.coroutines.flow.asSharedFlow
@@ -164,6 +165,7 @@ class AppContainer(context: Context) {
     // best-source matching needs the on-device index only once a server session will look up local copies
     private suspend fun prefetchLocalIndex() {
         val session = settingsStore.session.first() ?: return
+        if (settingsStore.skipsDevice(session)) return
         val order = settingsStore.sourcePriority.first()
         val local = order.indexOf("local")
         val stream = order.indexOf("stream")
@@ -415,7 +417,7 @@ class AppContainer(context: Context) {
     @OptIn(kotlinx.coroutines.FlowPreview::class)
     private suspend fun followMediaStore() {
         mediaStoreChanges.debounce(MEDIA_STORE_SETTLE_MS).collect {
-            if (localLibrary.inUse && runCatching { localLibrary.syncWithMediaStore() }.getOrDefault(false)) sessions.reloadLibrary()
+            if (localLibrary.inUse && sourceLocalizer.deviceLibrary && runCatching { localLibrary.syncWithMediaStore() }.getOrDefault(false)) sessions.reloadLibrary()
         }
     }
 

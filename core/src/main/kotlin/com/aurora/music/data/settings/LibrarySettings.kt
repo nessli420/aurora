@@ -9,6 +9,7 @@ import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
 
@@ -40,6 +41,10 @@ interface LibrarySettings {
     suspend fun setLocalExcludedFolders(paths: Set<String>): Preferences
     val mergeSources: Flow<Set<String>>
     suspend fun setMergeSources(keys: Set<String>): Preferences
+    val mergeLocal: Flow<Boolean>
+    suspend fun setMergeLocal(v: Boolean): Preferences
+    val mergedLocalHome: Flow<Boolean>
+    suspend fun setMergedLocalHome(v: Boolean): Preferences
     val mergeFeatures: Flow<MergeFeatures>
     suspend fun setMergeFeatures(f: MergeFeatures): Preferences
     val lyricsSources: Flow<List<String>>
@@ -55,6 +60,10 @@ interface LibrarySettings {
     val trackSorts: Flow<Map<String, TrackSortOrder>>
     suspend fun setTrackSort(collection: String, order: TrackSortOrder): Preferences
 }
+
+// a merge that leaves the device out never needs the device's index
+suspend fun LibrarySettings.skipsDevice(session: Session?): Boolean = session != null && session.type != ServerType.LOCAL &&
+    session.type.supportsMergedLibrary && unifiedLibrary.first() && !mergeLocal.first()
 
 internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences>) : LibrarySettings {
     private val gson = Gson()
@@ -117,6 +126,11 @@ internal class LibrarySettingsStore(private val dataStore: DataStore<Preferences
     // empty = every eligible saved source
     override val mergeSources: Flow<Set<String>> = dataStore.data.map { it[Keys.MERGE_SOURCES] ?: emptySet() }.distinctUntilChanged()
     override suspend fun setMergeSources(keys: Set<String>) = dataStore.edit { it[Keys.MERGE_SOURCES] = keys }
+    // missing means the device stays in, as every merge had it before
+    override val mergeLocal: Flow<Boolean> = dataStore.data.map { it[Keys.MERGE_LOCAL] ?: true }.distinctUntilChanged()
+    override suspend fun setMergeLocal(v: Boolean) = dataStore.edit { it[Keys.MERGE_LOCAL] = v }
+    override val mergedLocalHome: Flow<Boolean> = dataStore.data.map { it[Keys.MERGED_LOCAL_HOME] ?: false }.distinctUntilChanged()
+    override suspend fun setMergedLocalHome(v: Boolean) = dataStore.edit { it[Keys.MERGED_LOCAL_HOME] = v }
 
     override val mergeFeatures: Flow<MergeFeatures> = dataStore.data.map {
         MergeFeatures(

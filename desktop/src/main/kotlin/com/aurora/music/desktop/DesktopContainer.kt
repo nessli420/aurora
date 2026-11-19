@@ -66,6 +66,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.drop
 import kotlinx.coroutines.flow.first
+import com.aurora.music.data.settings.skipsDevice
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.job
@@ -431,7 +432,7 @@ class DesktopContainer(
             settingsStore.preferLocalSources.collect { on ->
                 preferLocalSources = on
                 // best-source matching needs the folder index so load it once when enabled
-                if (on) runCatching { folderLibrary.ensureLoaded() }
+                if (on && !settingsStore.skipsDevice(settingsStore.session.first())) runCatching { folderLibrary.ensureLoaded() }
             }
         }
         scope.launch {

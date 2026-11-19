@@ -1,5 +1,6 @@
 package com.aurora.music.ui.screens.home
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
@@ -191,7 +192,7 @@ internal fun HomeSpotlight(
                         Modifier.widthIn(max = (width - 320.dp).coerceAtLeast(0.dp)).horizontalScroll(rememberScrollState()),
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
-                        state.feeds.forEach { feed -> SpotlightPill(feed.label, feed.id == state.selectedFeed) { onSelectFeed(feed.id) } }
+                        state.feeds.forEach { feed -> SpotlightPill(feed.label, feed.id == state.selectedFeed, onLongClick = state.holdFor(feed.id, onSelectFeed)) { onSelectFeed(feed.id) } }
                     }
                     RecapInboxButton(onOpenNotifications)
                 }
@@ -338,7 +339,8 @@ internal fun Modifier.spotSurface(shape: Shape, outlined: Boolean = false): Modi
 }
 
 @Composable
-internal fun SpotlightPill(label: String, selected: Boolean, modifier: Modifier = Modifier, accent: Boolean = false, icon: ImageVector? = null, onClick: () -> Unit) {
+internal fun SpotlightPill(label: String, selected: Boolean, modifier: Modifier = Modifier, accent: Boolean = false, icon: ImageVector? = null,
+    onLongClick: (() -> Unit)? = null, onClick: () -> Unit) = com.aurora.music.ui.components.HoldTip(onLongClick) {
     val colors = MaterialTheme.colorScheme
     val on by animateFloatAsState(if (selected) 1f else 0f, Motion.state(), label = "pill")
     val fill = if (accent) colors.primary else colors.inverseSurface
@@ -350,7 +352,7 @@ internal fun SpotlightPill(label: String, selected: Boolean, modifier: Modifier 
                 background(lerp(rest, fill, on)).then(if (accent) Modifier.border(1.dp, lerp(colors.outlineVariant, fill, on), CircleShape) else Modifier)
             }, fill = if (selected) colors.primary else PaperTokens.paper)
             .semantics { this.selected = selected }
-            .clickable(onClickLabel = label, role = Role.Tab, onClick = onClick)
+            .combinedClickable(onClickLabel = label, role = Role.Tab, onLongClick = onLongClick, onClick = onClick)
             .pointerHoverIcon(PointerIcon.Hand)
             .padding(horizontal = if (icon != null) 13.dp else 18.dp),
         contentAlignment = Alignment.Center,

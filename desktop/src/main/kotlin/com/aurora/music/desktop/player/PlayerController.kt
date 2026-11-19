@@ -52,6 +52,8 @@ data class PlayerUiState(
     val smartShuffle: Boolean = false,
     val smartPicks: Set<String> = emptySet(),
     val remote: Boolean = false,
+    // the collection page whose play button made the queue, see QueueOrigin
+    val origin: String? = null,
 ) {
     val durationSec: Int get() = if (isLive) 0 else timelineDurationSec.takeIf { it > 0 } ?: current.durationSec
     val skipButtons: Boolean get() = longFormSkipButtons && !isMix && !isLive &&

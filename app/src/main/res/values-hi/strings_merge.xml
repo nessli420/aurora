@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"YouTube टिप्पणियाँ"</string>
     <string name="merge_youtube_comments_summary">"पूरी टिप्पणी सूची में गाने के YouTube वीडियो की टिप्पणियाँ"</string>
     <string name="merge_on_songs_from">"इन स्रोतों के गानों पर दिखाएँ"</string>
+    <string name="home_all_sources">"सभी स्रोत"</string>
+    <string name="home_hold_switch">"सभी स्रोतों और अपने संगीत के बीच बदलने के लिए दबाकर रखें"</string>
 </resources>

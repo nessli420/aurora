@@ -70,6 +70,8 @@ data class SavedQueue(
     // shuffle with autoplay, and the picks it mixed in among your songs
     val smartShuffle: Boolean? = null,
     val smartPicks: List<String>? = null,
+    // the page whose play button made this queue, see QueueOrigin
+    val origin: String? = null,
 )
 
 // per-account so queue survives swipe-away and server switch writes coalesced by periodic flush
@@ -124,7 +126,7 @@ class QueueStore(filesDir: File, private val persist: (File, ByteArray) -> Unit 
             val old = map[accountKey]
             // the list on disk is this same instance, so only index and position moved
             if (!dirty && old != null && old.revision != null && old.tracks === saved.tracks && old.shuffle == saved.shuffle && old.repeat == saved.repeat && old.shuffleOrder == saved.shuffleOrder && old.autoplay == saved.autoplay &&
-                old.smartShuffle == saved.smartShuffle && old.smartPicks == saved.smartPicks) {
+                old.smartShuffle == saved.smartShuffle && old.smartPicks == saved.smartPicks && old.origin == saved.origin) {
                 map[accountKey] = saved.copy(revision = old.revision)
                 positions[accountKey] = SavedQueue(tracks = null, currentIndex = saved.currentIndex, positionSec = saved.positionSec, revision = old.revision)
                 positionDirty = true

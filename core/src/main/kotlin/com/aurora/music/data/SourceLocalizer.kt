@@ -13,13 +13,16 @@ class SourceLocalizer(
     private val findLocal: (artist: String, title: String, durationSec: Int) -> Song?,
     private val catalogueMatch: () -> CatalogueMatchPrefs = { CatalogueMatchPrefs() },
 ) {
+    // false while a merge leaves the device out, so no song looks for an on-device copy
+    @Volatile var deviceLibrary: Boolean = true
+
     // rewrites only streamUrl/metadata id stays the server's so server features keep working
     fun localize(song: Song): Song {
         if (!preferLocal()) return song
         val alreadyLocal = isLocalUrl(song.streamUrl)
         for (tier in priority()) {
             when (tier) {
-                "local" -> if (!alreadyLocal) {
+                "local" -> if (!alreadyLocal && deviceLibrary) {
                     findLocal(song.artist, song.title, song.durationSec)?.let { return fromFile(song, it) }
                 }
                 "downloaded" -> downloads.getByOriginalId(song.id, song.playbackSource?.providerId)
@@ -58,9 +61,10 @@ class SourceLocalizer(
         session: Session,
         mergeKeys: Set<String>,
         saved: List<Session>,
-        local: MediaBackend,
+        local: (deviceFiles: Boolean) -> MediaBackend,
         eligible: (Session) -> Boolean = { true },
         build: (Session) -> MediaBackend?,
+        withDevice: Boolean = true,
     ): MergedBackend {
         // empty = all eligible servers MERGE_NONE sentinel = local files only
         val serverSessions = if (mergeKeys == setOf(MERGE_NONE)) emptyList() else (saved + session)
@@ -73,10 +77,11 @@ class SourceLocalizer(
                 val kept = spotify.firstOrNull { it.accountKey() == session.accountKey() } ?: spotify.firstOrNull()
                 all.filter { it.type != ServerType.SPOTIFY || it == kept }
             }
-        val sources = buildList {
-            add(local)
-            serverSessions.forEach { build(it)?.let(::add) }
-        }
+        val others = serverSessions.mapNotNull(build)
+        // the device's own playlists always take part; its files only when picked, or when nothing else is left
+        val device = withDevice || session.type == ServerType.LOCAL || others.isEmpty()
+        deviceLibrary = device
+        val sources = listOf(local(device)) + others
         return MergedBackend(sources, session,
             priority = { if (preferLocal()) priority() else listOf("stream", "local", "downloaded") },
             catalogueMatch = catalogueMatch,

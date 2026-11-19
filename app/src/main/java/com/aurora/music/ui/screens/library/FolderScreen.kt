@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Folder
-import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Shuffle
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -76,6 +75,7 @@ fun FolderScreen(
     serverTagEditing: Boolean = false,
     refreshing: Boolean = false,
     onRefresh: () -> Unit = {},
+    origin: String? = null,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val header = title.ifBlank { content?.title ?: appString(R.string.text_folders_19adc4) }
@@ -94,11 +94,8 @@ fun FolderScreen(
                     Icons.Filled.Shuffle, appString(R.string.text_shuffle_folder_681a21),
                     modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { onShufflePlay(songs) }.padding(8.dp),
                 )
-                Icon(
-                    Icons.Filled.PlayArrow, appString(R.string.text_play_folder_3f9fd7),
-                    tint = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable { onPlayAll(songs, 0) }.padding(8.dp),
-                )
+                com.aurora.music.ui.components.CollectionPlayButton(origin, { onPlayAll(songs, 0) },
+                    label = appString(R.string.text_play_folder_3f9fd7), iconOnly = true)
             }
         }
 

@@ -135,7 +135,7 @@ internal class MergeMatcher(
     fun mergeHomes(homes: List<HomeData?>): HomeData {
         val albums = ArrayList<Album>(); val recent = ArrayList<Album>(); val most = ArrayList<Album>(); val random = ArrayList<Album>()
         val playlists = ArrayList<Playlist>(); val artists = ArrayList<Artist>(); val starred = ArrayList<Song>()
-        val sections = ArrayList<HomeFeedSection>()
+        val perSource = ArrayList<List<HomeFeedSection>>()
         for ((idx, h) in homes.withIndex()) {
             if (h == null) continue
             albums += h.newReleases.map { router.wrap(it, idx) }
@@ -145,7 +145,7 @@ internal class MergeMatcher(
             playlists += h.playlists.map { router.wrap(it, idx) }
             artists += h.artists.map { router.wrap(it, idx) }
             starred += h.starred.map { router.wrap(it, idx) }
-            sections += router.wrapSections(h.sections, idx)
+            perSource += router.wrapSections(h.sections, idx)
         }
         return HomeData(
             newReleases = dedupAlbums(albums),
@@ -155,7 +155,8 @@ internal class MergeMatcher(
             playlists = playlists,
             artists = dedupArtists(artists),
             starred = dedupSongs(starred),
-            sections = sections,
+            // one shelf from each source in turn, so no catalogue buries the others
+            sections = (0 until (perSource.maxOfOrNull { it.size } ?: 0)).flatMap { row -> perSource.mapNotNull { it.getOrNull(row) } },
         )
     }
 

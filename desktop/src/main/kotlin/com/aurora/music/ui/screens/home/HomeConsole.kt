@@ -1,5 +1,6 @@
 package com.aurora.music.ui.screens.home
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
@@ -283,7 +284,7 @@ internal fun HomeConsole(
             item(key = "header", contentType = "header") {
                 PageHeader(greeting(), eyebrow = state.feeds.firstOrNull { it.id == state.selectedFeed }?.label ?: sourceLabel) {
                     if (state.feeds.size > 1) ConsoleSegments(state.feeds.map { it.label }, state.feeds.indexOfFirst { it.id == state.selectedFeed },
-                        Modifier.widthIn(max = (width - 320.dp).coerceAtLeast(0.dp))) { onSelectFeed(state.feeds[it].id) }
+                        Modifier.widthIn(max = (width - 320.dp).coerceAtLeast(0.dp)), hold = { state.holdFor(state.feeds[it].id, onSelectFeed) }) { onSelectFeed(state.feeds[it].id) }
                     RecapInboxButton(onOpenNotifications)
                 }
             }
@@ -464,7 +465,7 @@ internal fun ConsoleLabel(text: String, modifier: Modifier = Modifier) =
     Eyebrow(text.uppercase(Locale.getDefault()), MaterialTheme.colorScheme.onSurfaceVariant, modifier, maxLines = 1)
 
 @Composable
-internal fun ConsoleSegments(labels: List<String>, selected: Int, modifier: Modifier = Modifier, onSelect: (Int) -> Unit) {
+internal fun ConsoleSegments(labels: List<String>, selected: Int, modifier: Modifier = Modifier, hold: (Int) -> (() -> Unit)? = { null }, onSelect: (Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val paper = isPaperTheme()
     val on = when (LocalUiPrefs.current.themeStyle) {
@@ -480,14 +481,16 @@ internal fun ConsoleSegments(labels: List<String>, selected: Int, modifier: Modi
         labels.forEachIndexed { i, label ->
             val active = i == selected
             val fill = animateColorAsState(if (active) on else on.copy(alpha = 0f), Motion.state(), label = "segment")
+            com.aurora.music.ui.components.HoldTip(hold(i)) {
             Box(
                 Modifier.height(44.dp).paperClip(MaterialTheme.shapes.small).drawBehind { drawRect(fill.value) }
-                    .semantics { this.selected = active }.clickable(role = Role.Tab) { onSelect(i) }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 14.dp),
+                    .semantics { this.selected = active }.combinedClickable(role = Role.Tab, onLongClick = hold(i)) { onSelect(i) }.pointerHoverIcon(PointerIcon.Hand).padding(horizontal = 14.dp),
                 contentAlignment = Alignment.Center,
             ) {
                 Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium,
                     maxLines = 1, overflow = TextOverflow.Ellipsis,
                     color = if (paper) PaperTokens.ink else if (active) colors.onSurface else colors.onSurfaceVariant)
+            }
             }
         }
     }

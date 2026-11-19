@@ -48,7 +48,7 @@ class SessionCoordinatorTest {
     private val b = Session("http://127.0.0.1:10", "bob", "salt", "token")
     private val c = Session("http://127.0.0.1:11", "carol", "salt", "token")
 
-    private class Build(val session: Session, val unified: Boolean, val mergeKeys: Set<String>)
+    private class Build(val session: Session, val unified: Boolean, val mergeKeys: Set<String>, val withLocal: Boolean = true)
     private val builds = CopyOnWriteArrayList<Build>()
     private val restored = CopyOnWriteArrayList<Session>()
     private val accountChanges = CopyOnWriteArrayList<Session?>()
@@ -58,7 +58,7 @@ class SessionCoordinatorTest {
     private fun coordinator(
         supports: ((Session) -> Boolean)? = null,
         build: (Session) -> MediaBackend? = { LocalBackend(catalog, localStore, it) },
-    ) = SessionCoordinator(store, store, scope, { session, unified, mergeKeys, _ -> builds += Build(session, unified, mergeKeys); build(session) },
+    ) = SessionCoordinator(store, store, scope, { session, unified, mergeKeys, _, withLocal -> builds += Build(session, unified, mergeKeys, withLocal); build(session) },
         backend = { backend }, setBackend = { backend = it }, rememberRestored = { restored += it }, rememberApplied = {},
         onAccountChanged = { accountChanges += it }, forgetLibrary = { forgotten.incrementAndGet() }, supports = supports)
 
@@ -114,6 +114,22 @@ class SessionCoordinatorTest {
         assertEquals(setOf("k"), builds.last().mergeKeys)
         assertEquals(2, sessions.libraryReload.value)
         assertEquals(1, accountChanges.size)
+        assertEquals(0, sessions.accountEpoch.value)
+    }
+
+    @Test fun leavingTheDeviceOutRebuildsAndAnExistingMergeKeepsIt() = runBlocking {
+        store.saveSession(a)
+        store.setUnifiedLibrary(true)
+        val sessions = coordinator().also { it.start() }
+        until { accountChanges.size == 1 }
+        assertTrue(builds.single().withLocal)
+        val local = Session("On this device", "Local Library", "", "local", ServerType.LOCAL)
+        assertTrue(sessions.isActive(local))
+        store.setMergeLocal(false)
+        until { forgotten.get() == 1 }
+        assertFalse(builds.last().withLocal)
+        assertEquals(1, sessions.libraryReload.value)
+        assertFalse(sessions.isActive(local))
         assertEquals(0, sessions.accountEpoch.value)
     }
 

@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"Комментарии YouTube"</string>
     <string name="merge_youtube_comments_summary">"Комментарии к видео песни на YouTube в полном списке комментариев"</string>
     <string name="merge_on_songs_from">"Показывать для треков из"</string>
+    <string name="home_all_sources">"Все источники"</string>
+    <string name="home_hold_switch">"Удерживайте, чтобы переключаться между всеми источниками и вашей музыкой"</string>
 </resources>

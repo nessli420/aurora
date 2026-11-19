@@ -1,6 +1,7 @@
 package com.aurora.music.data.container
 
 import com.aurora.music.data.MediaBackend
+import com.aurora.music.data.ServerType
 import com.aurora.music.data.Session
 import com.aurora.music.data.accountKey
 import com.aurora.music.data.settings.AccountSettings
@@ -19,7 +20,7 @@ class SessionCoordinator(
     private val accounts: AccountSettings,
     private val library: LibrarySettings,
     private val scope: CoroutineScope,
-    private val buildActive: (session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>) -> MediaBackend?,
+    private val buildActive: (session: Session, unified: Boolean, mergeKeys: Set<String>, saved: List<Session>, withLocal: Boolean) -> MediaBackend?,
     private val backend: () -> MediaBackend?,
     private val setBackend: (MediaBackend?) -> Unit,
     private val rememberRestored: suspend (Session) -> Unit,
@@ -32,6 +33,7 @@ class SessionCoordinator(
 ) {
     @Volatile private var unifiedLibrary: Boolean = false
     @Volatile private var mergeSourceKeys: Set<String> = emptySet()
+    @Volatile private var mergeLocal: Boolean = true
     @Volatile var lastSession: Session? = null
         private set
     @Volatile private var lastAccountKey: String? = null
@@ -54,21 +56,22 @@ class SessionCoordinator(
 
     fun isActive(session: Session): Boolean = lastSession?.accountKey() == session.accountKey() ||
         (unifiedLibrary && lastSession?.type?.supportsMergedLibrary == true &&
-            (mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))
+            (if (session.type == ServerType.LOCAL) mergeLocal else mergeSourceKeys.isEmpty() || session.accountKey() in mergeSourceKeys))
 
     fun start() {
         scope.launch {
-            var previous: Triple<Session?, Boolean, Set<String>>? = null
+            var previous: MergeState? = null
             // one collector, so launch builds once with the merge settings already known
             combine(accounts.session.distinctUntilChanged(), library.unifiedLibrary.distinctUntilChanged(),
-                library.mergeSources.distinctUntilChanged()) { session, unified, merge -> Triple(session, unified, merge) }
+                library.mergeSources.distinctUntilChanged(), library.mergeLocal.distinctUntilChanged(), ::MergeState)
                 .distinctUntilChanged().collect { current ->
-                    val (session, unified, merge) = current
+                    val (session, unified, merge, withLocal) = current
                     val last = previous
                     previous = current
-                    val sessionChanged = last == null || last.first != session
+                    val sessionChanged = last == null || last.session != session
                     unifiedLibrary = unified
                     mergeSourceKeys = merge
+                    mergeLocal = withLocal
                     if (sessionChanged) {
                         lastSession = session
                         // keep a disk-restored session in the saved list so it shows up for switching
@@ -84,7 +87,7 @@ class SessionCoordinator(
                         lastAccountKey = key
                         onAccountChanged(session)
                     }
-                    if (last != null && (last.second != unified || last.third != merge)) { reloadLibrary(); forgetLibrary() }
+                    if (last != null && last.copy(session = session) != current) { reloadLibrary(); forgetLibrary() }
                 }
         }
         scope.launch {
@@ -102,7 +105,7 @@ class SessionCoordinator(
         val session = lastSession
         setBackend(session?.let {
             val saved = runCatching { accounts.savedSessions.first() }.getOrDefault(emptyList())
-            buildActive(it, unifiedLibrary, mergeSourceKeys, saved)
+            buildActive(it, unifiedLibrary, mergeSourceKeys, saved, mergeLocal)
         })
     }
 
@@ -126,3 +129,5 @@ class SessionCoordinator(
         _sessionReady.value = session != null && (supports == null || backend() != null)
     }
 }
+
+private data class MergeState(val session: Session?, val unified: Boolean, val merge: Set<String>, val withLocal: Boolean)

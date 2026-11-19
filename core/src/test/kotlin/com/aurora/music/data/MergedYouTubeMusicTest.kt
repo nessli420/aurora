@@ -35,12 +35,14 @@ class MergedYouTubeMusicTest {
             }
         } as MediaBackend
 
-    @Test fun libraryHomeExcludesDiscoveryButSwitchAndPaginationRetainTrackRouting() = runBlocking {
+    @Test fun localHomeExcludesDiscoveryButSwitchAndPaginationRetainTrackRouting() = runBlocking {
         val localCalls = Calls(); val ytCalls = Calls()
         val merged = MergedBackend(listOf(source(local, listOf(file), localCalls), source(yt, listOf(original), ytCalls)), yt)
         assertEquals(listOf("Library", "YouTube Music"), merged.homeFeeds.map { it.label })
-        val home = merged.home("library")
+        val home = merged.home(LOCAL_HOME_FEED)
         assertEquals(1, localCalls.homes); assertEquals(0, ytCalls.homes)
+        merged.home("library")
+        assertEquals(2, localCalls.homes); assertEquals(1, ytCalls.homes)
         assertEquals(file.streamUrl, home.starred.single().streamUrl)
         val discovery = merged.home("discovery")
         val track = (discovery.sections.single().items.single() as HomeFeedItem.Track).song
@@ -147,7 +149,7 @@ class MergedYouTubeMusicTest {
     @Test fun librarySearchExcludesCatalogueAndRetainsServerRouting() = runBlocking {
         val serverCalls = Calls(); val catalogueCalls = Calls()
         val merged = MergedBackend(listOf(source(server, listOf(hosted), serverCalls), source(yt, listOf(original), catalogueCalls)), yt)
-        assertEquals(listOf("Local & servers", "YouTube Music"), merged.searchSources.map { it.label })
+        assertEquals(listOf("Library", "YouTube Music"), merged.searchSources.map { it.label })
         val result = merged.search("Title", "library")
         assertEquals(hosted.streamUrl, result.songs.single().streamUrl)
         assertTrue(catalogueCalls.searches.isEmpty())

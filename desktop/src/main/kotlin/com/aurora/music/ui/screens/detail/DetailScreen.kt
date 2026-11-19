@@ -267,20 +267,7 @@ fun DetailScreen(
             verticalArrangement = Arrangement.spacedBy(4.dp),
             itemVerticalAlignment = Alignment.CenterVertically,
         ) {
-            val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
-            Row(
-                Modifier
-                    .paperClip(RoundedCornerShape(50))
-                    .pressClickable(enabled = tracks.isNotEmpty()) { onPlayAll(tracks, 0) }
-                    .background(Brush.horizontalGradient(listOf(accent, accent.copy(alpha = 0.78f))))
-                    .pointerHoverIcon(PointerIcon.Hand)
-                    .padding(horizontal = 28.dp, vertical = 13.dp),
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(Icons.Filled.PlayArrow, null, tint = onAccent, modifier = Modifier.size(20.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(appString(R.string.text_play_5d12bd), style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Black, color = onAccent)
-            }
+            com.aurora.music.ui.components.CollectionPlayButton(collectionKey, { onPlayAll(tracks, 0) }, enabled = tracks.isNotEmpty(), accent = accent)
             Spacer(Modifier.width(10.dp))
             HeaderIcon(Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b), MaterialTheme.colorScheme.onSurface, enabled = tracks.isNotEmpty()) {
                 onShufflePlay(tracks)

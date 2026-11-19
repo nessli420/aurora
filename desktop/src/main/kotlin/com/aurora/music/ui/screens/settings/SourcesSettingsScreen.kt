@@ -92,6 +92,8 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
     val priority by store.sourcePriority.collectAsStateWithLifecycle(initialValue = DEFAULT_SOURCE_PRIORITY)
     val unified by store.unifiedLibrary.collectAsStateWithLifecycle(initialValue = false)
     val mergeKeys by store.mergeSources.collectAsStateWithLifecycle(initialValue = emptySet())
+    val mergeLocal by store.mergeLocal.collectAsStateWithLifecycle(initialValue = true)
+    val activeLocal = store.session.collectAsStateWithLifecycle(initialValue = null).value?.type == ServerType.LOCAL
     val saved by store.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())
     val catalogue by store.catalogueMatch.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.CatalogueMatchPrefs())
 
@@ -183,12 +185,18 @@ fun SourcesSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onA
                         style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold,
                         modifier = Modifier.padding(start = 20.dp, top = 10.dp, bottom = 4.dp),
                     )
-                    SourceRow(appString(R.string.text_on_this_device_a7f962), appString(R.string.text_local_files_f4a889), included = true, toggleable = false) {}
+                    val noneSelected = mergeKeys == setOf(MERGE_NONE)
+                    fun merged(s: com.aurora.music.data.Session) = !noneSelected && (mergeKeys.isEmpty() || s.accountKey() in mergeKeys)
+                    val deviceIn = mergeLocal || activeLocal
+                    // the merge always keeps one source, and the active local account keeps the device
+                    val serversIn = servers.count(::merged)
+                    SourceRow(appString(R.string.text_on_this_device_a7f962), appString(R.string.text_local_files_f4a889), included = deviceIn,
+                        toggleable = !activeLocal && (!deviceIn || serversIn > 0)) { scope.launch { store.setMergeLocal(!deviceIn) } }
                     servers.forEach { s ->
                         val key = s.accountKey()
-                        val noneSelected = mergeKeys == setOf(MERGE_NONE)
-                        val included = !noneSelected && (mergeKeys.isEmpty() || key in mergeKeys)
-                        SourceRow(s.typeLabel.localizedMediaType(), s.server.removePrefix("http://").removePrefix("https://"), included = included, toggleable = true) {
+                        val included = merged(s)
+                        SourceRow(s.typeLabel.localizedMediaType(), s.server.removePrefix("http://").removePrefix("https://"), included = included,
+                            toggleable = deviceIn || !included || serversIn > 1) {
                             val current = when {
                                 noneSelected -> emptySet()
                                 mergeKeys.isEmpty() -> servers.map { it.accountKey() }.toSet()   // empty means all make explicit

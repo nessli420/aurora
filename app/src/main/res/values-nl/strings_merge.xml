@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"YouTube-reacties"</string>
     <string name="merge_youtube_comments_summary">"Reacties op de YouTube-video van het nummer in de volledige reactieweergave"</string>
     <string name="merge_on_songs_from">"Tonen bij nummers uit"</string>
+    <string name="home_all_sources">"Alle bronnen"</string>
+    <string name="home_hold_switch">"Houd ingedrukt om te wisselen tussen alle bronnen en je eigen muziek"</string>
 </resources>

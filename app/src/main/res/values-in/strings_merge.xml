@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"Komentar YouTube"</string>
     <string name="merge_youtube_comments_summary">"Komentar dari video YouTube lagu di tampilan komentar lengkap"</string>
     <string name="merge_on_songs_from">"Tampilkan di lagu dari"</string>
+    <string name="home_all_sources">"Semua sumber"</string>
+    <string name="home_hold_switch">"Tahan untuk beralih antara semua sumber dan musikmu sendiri"</string>
 </resources>

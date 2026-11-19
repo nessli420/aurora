@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"YouTube yorumları"</string>
     <string name="merge_youtube_comments_summary">"Şarkının YouTube videosundaki yorumlar, tam yorum görünümünde"</string>
     <string name="merge_on_songs_from">"Şu kaynaklardaki şarkılarda göster"</string>
+    <string name="home_all_sources">"Tüm kaynaklar"</string>
+    <string name="home_hold_switch">"Tüm kaynaklar ile kendi müziğin arasında geçiş yapmak için basılı tut"</string>
 </resources>

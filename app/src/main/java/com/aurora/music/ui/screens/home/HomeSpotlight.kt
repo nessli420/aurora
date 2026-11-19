@@ -444,7 +444,7 @@ private fun SpotlightTop(
         }
         if (state.feeds.size > 1) {
             Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = gutter), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                state.feeds.forEach { feed -> SpotlightPill(feed.label, feed.id == state.selectedFeed) { onSelectFeed(feed.id) } }
+                state.feeds.forEach { feed -> SpotlightPill(feed.label, feed.id == state.selectedFeed, onLongClick = state.holdFor(feed.id, onSelectFeed)) { onSelectFeed(feed.id) } }
             }
         }
         if (current != null) {

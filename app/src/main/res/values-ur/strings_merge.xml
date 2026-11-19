@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"YouTube تبصرے"</string>
     <string name="merge_youtube_comments_summary">"مکمل تبصروں کے منظر میں گانے کی YouTube ویڈیو کے تبصرے"</string>
     <string name="merge_on_songs_from">"ان ذرائع کے گانوں پر دکھائیں"</string>
+    <string name="home_all_sources">"تمام ذرائع"</string>
+    <string name="home_hold_switch">"تمام ذرائع اور اپنی موسیقی کے درمیان بدلنے کے لیے دبائے رکھیں"</string>
 </resources>

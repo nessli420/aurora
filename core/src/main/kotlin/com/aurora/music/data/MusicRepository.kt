@@ -321,6 +321,7 @@ class MusicRepository(
 
     val homeFeeds: List<HomeFeedChoice> get() = if (offline) offlineSources().map { HomeFeedChoice(it.viewId, it.label) }
         else backend?.homeFeeds.orEmpty()
+    val localHome: HomeFeedChoice? get() = if (offline) null else backend?.localHome
 
     suspend fun playbackCandidates(song: Song): List<Song> = if (offline) emptyList() else backend?.playbackCandidates(song).orEmpty().map { artwork(it) }
 

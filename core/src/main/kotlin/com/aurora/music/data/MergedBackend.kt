@@ -47,9 +47,20 @@ class MergedBackend(
     private fun Playlist.wrap(i: Int) = router.wrap(this, i)
     private fun HomeData.wrapHome(i: Int) = router.wrapHome(this, i)
 
+    private fun readsDevice(source: MediaBackend) = source.session.type == ServerType.LOCAL && (source as? LocalBackend)?.readsDevice != false
+    // a library of its own beyond aurora's playlists: the device's files or a server; without one the library is every source
+    private val ownLibrary = sources.any { !router.isCatalogue(it) && (it as? LocalBackend)?.readsDevice != false }
+    private val libraryLabel = if (sources.any(::readsDevice)) "Local & servers" else "Library"
+
     override val homeFeeds: List<HomeFeedChoice> get() = router.choices(::HomeFeedChoice, "library", "Library", "discovery")
-    override val searchSources: List<SearchSourceChoice> get() = router.choices(::SearchSourceChoice, "library", "Local & servers", "discovery")
-    override val libraryViews: List<LibraryViewChoice> get() = router.choices(::LibraryViewChoice, "library", "Local & servers", "youtube")
+    // with no library of its own there is nothing to search beyond the catalogues
+    override val searchSources: List<SearchSourceChoice> get() = router.choices(::SearchSourceChoice, "library", libraryLabel, "discovery")
+        .let { all -> if (ownLibrary) all else all.filter { it.id != "library" }.takeIf { it.size > 1 }.orEmpty() }
+    override val libraryViews: List<LibraryViewChoice> get() = router.choices(::LibraryViewChoice, "library", libraryLabel, "youtube")
+
+    // home is every source together; with the device's files merged it can also show only the device and servers
+    override val localHome: HomeFeedChoice? get() = if (nested || sources.none(::readsDevice) || sources.none(router::isCatalogue)) null
+        else HomeFeedChoice(LOCAL_HOME_FEED, if (sources.any { !router.isCatalogue(it) && it.session.type != ServerType.LOCAL }) "Local & servers" else "On this device")
 
     private val views = HashMap<String, MediaBackend>()
 
@@ -59,7 +70,8 @@ class MergedBackend(
         return synchronized(views) {
             views.getOrPut(view) {
                 val picked = when (view) {
-                    "library" -> sources.filterNot(router::isCatalogue)
+                    "library" -> if (ownLibrary) sources.filterNot(router::isCatalogue) else emptyList()
+                    LOCAL_HOME_FEED -> sources.filterNot(router::isCatalogue)
                     else -> listOfNotNull(sources.getOrNull(router.catalogueFor(view)))
                 }
                 if (picked.isEmpty()) this else MergedBackend(picked, session, priority, downloads, catalogueMatch, nested = true, downUntil = downUntil)
@@ -68,6 +80,7 @@ class MergedBackend(
     }
 
     override suspend fun home(feed: String): HomeData {
+        if (feed == LOCAL_HOME_FEED) return homeOf(ownOnly = true)
         val index = router.catalogueFor(feed)
         return if (index >= 0) sources[index].home().wrapHome(index) else home()
     }
@@ -105,10 +118,13 @@ class MergedBackend(
 
     override suspend fun ping(): Boolean = router.fanOut { listOf(it.ping()) }.any { it.firstOrNull() == true }
 
-    private suspend fun sourceHome(idx: Int): HomeData? = if (router.isCatalogue(sources[idx])) null
+    private suspend fun sourceHome(idx: Int, ownOnly: Boolean): HomeData? = if (ownOnly && router.isCatalogue(sources[idx])) null
         else router.reach(idx) { withTimeoutOrNull(SOURCE_TIMEOUT_MS) { sources[idx].home() } }
 
-    override suspend fun home(): HomeData = matcher.mergeHomes(coroutineScope { sources.indices.map { async { sourceHome(it) } }.awaitAll() })
+    private suspend fun homeOf(ownOnly: Boolean): HomeData =
+        matcher.mergeHomes(coroutineScope { sources.indices.map { async { sourceHome(it, ownOnly) } }.awaitAll() })
+
+    override suspend fun home(): HomeData = homeOf(ownOnly = false)
 
     // what home(feed) returns, built up as each source answers; the last emission is the whole of it
     fun homeUpdates(feed: String): Flow<HomeData> = flow {
@@ -116,9 +132,10 @@ class MergedBackend(
             emit(home(feed))
             return@flow
         }
+        val ownOnly = feed == LOCAL_HOME_FEED
         coroutineScope {
             val landed = Channel<Pair<Int, HomeData?>>(sources.size)
-            sources.indices.forEach { idx -> launch { landed.send(idx to sourceHome(idx)) } }
+            sources.indices.forEach { idx -> launch { landed.send(idx to sourceHome(idx, ownOnly)) } }
             val homes = arrayOfNulls<HomeData>(sources.size)
             repeat(sources.size) { count ->
                 val (idx, data) = landed.receive()
@@ -470,6 +487,9 @@ const val MERGE_NAMESPACE_SEP = '\u0001'   // same control char as SourceRouter.
 // and songs from a source outside the merge are wrapped the same way
 fun mergeNamespace(session: Session): String = "s" + PlaybackSourceIdentity.fromSession(session, "").providerId!!.removePrefix("provider:")
 fun Song.inNamespace(session: Session): Song = if (MERGE_NAMESPACE_SEP in id) this else copy(id = "${mergeNamespace(session)}$MERGE_NAMESPACE_SEP$id")
+
+// home feed of the device and servers alone, beside the combined home every merged source fills
+const val LOCAL_HOME_FEED = "local"
 
 // liked songs id for every source's likes together, beside the per-view ids
 const val ALL_LIKED_ID = "all"

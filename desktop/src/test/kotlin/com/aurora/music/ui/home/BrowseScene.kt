@@ -118,6 +118,11 @@ internal class BrowseScene(
         frames(3)
     }
 
+    fun hold(x: Float, y: Float) {
+        ui.hold(x, y)
+        frames(3)
+    }
+
     @OptIn(InternalComposeUiApi::class)
     fun type(text: String) {
         // a text field only takes a typed key that carries the awt event it came from

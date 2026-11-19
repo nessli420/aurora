@@ -462,7 +462,7 @@ private fun DriftTop(
         DriftTitle(hello, if (tablet) 1.6f else 1.2f, Modifier.padding(start = DriftGutter, end = DriftGutter, top = 10.dp), clock)
         if (state.feeds.size > 1) {
             Row(Modifier.padding(top = 14.dp).rise(clock, 2).horizontalScroll(rememberScrollState()).padding(horizontal = DriftGutter), horizontalArrangement = Arrangement.spacedBy(22.dp)) {
-                state.feeds.forEach { feed -> DriftTab(feed.label, feed.id == state.selectedFeed) { onSelectFeed(feed.id) } }
+                state.feeds.forEach { feed -> DriftTab(feed.label, feed.id == state.selectedFeed, state.holdFor(feed.id, onSelectFeed)) { onSelectFeed(feed.id) } }
             }
         }
         if (heroes.isNotEmpty()) DriftCarousel(heroes, width, cover, if (tablet) 24.dp else 6.dp, clock, onOpen, onPlay)

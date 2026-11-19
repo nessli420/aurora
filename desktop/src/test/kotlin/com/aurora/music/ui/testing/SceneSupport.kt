@@ -42,6 +42,17 @@ internal class EdtScene(width: Int, height: Int, content: @Composable () -> Unit
         sendPointerEvent(PointerEventType.Release, Offset(x, y), timeMillis = millis, buttons = PointerButtons(), button = button)
     }
 
+    // a mouse held past the long-press timeout, which runs on real time rather than the frame clock
+    fun hold(x: Float, y: Float, heldMillis: Long = 900) {
+        input {
+            sendPointerEvent(PointerEventType.Move, Offset(x, y), timeMillis = millis)
+            sendPointerEvent(PointerEventType.Press, Offset(x, y), timeMillis = millis, buttons = PointerButtons(isPrimaryPressed = true), button = PointerButton.Primary)
+        }
+        Thread.sleep(heldMillis)
+        millis += heldMillis
+        input { sendPointerEvent(PointerEventType.Release, Offset(x, y), timeMillis = millis, buttons = PointerButtons(), button = PointerButton.Primary) }
+    }
+
     override fun close() {
         edt { scene.close() }
         edt { }

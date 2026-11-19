@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"YouTube 评论"</string>
     <string name="merge_youtube_comments_summary">"在完整评论列表中显示歌曲 YouTube 视频的评论"</string>
     <string name="merge_on_songs_from">"在以下来源的歌曲上显示"</string>
+    <string name="home_all_sources">"所有来源"</string>
+    <string name="home_hold_switch">"长按可在所有来源和你自己的音乐之间切换"</string>
 </resources>

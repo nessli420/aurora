@@ -8,6 +8,7 @@ import com.aurora.music.data.MusicRepository
 import com.aurora.music.data.PlayHistoryStore
 import com.aurora.music.data.PlaybackCollectionIdentity
 import com.aurora.music.data.PlaybackReportDispatcher
+import com.aurora.music.data.QueueOrigin
 import com.aurora.music.data.QueueStore
 import com.aurora.music.data.SavedQueue
 import com.aurora.music.data.SavedTrack
@@ -166,6 +167,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private var queueGeneration = 0
     // states still showing the queue that a replace or stop is about to discard
     private var retiredEntries: List<QueueEntry>? = null
+    private var origin: String? = null
     private var syncedEntries: List<QueueEntry>? = null
     private var syncedQueue: List<Song> = emptyList()
     private var savedEntries: List<QueueEntry>? = null
@@ -370,6 +372,8 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
                 repeat = RepeatMode.valueOf(s.repeat.name),
                 positionSec = (s.positionMs / 1000f).coerceAtLeast(0f),
                 queue = syncedQueue,
+                // a finished queue starts over from its page instead of resuming at the end
+                origin = origin.takeIf { s.phase != com.aurora.music.desktop.audio.EnginePhase.ENDED },
                 currentIndex = s.index.coerceAtLeast(0),
                 autoplayFrom = autoplayFrom(s),
                 smartShuffle = smartShuffle && s.shuffle,
@@ -634,6 +638,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         autoplayIds = emptySet()
         newSmartContext()
         queueGeneration++
+        origin = QueueOrigin.followed(origin, com.aurora.music.foryou.queueMix(s.entries.map { it.song }, s.index).orEmpty(), next.id)
         if (s.index < s.entries.lastIndex) engine.remove(s.index + 1, s.entries.size)
         engine.append(behind)
     }
@@ -668,6 +673,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
             autoplay = autoplayIds.takeIf { it.isNotEmpty() }?.let { ids -> s.entries.map { it.song.id }.filter(ids::contains) },
             smartShuffle = (smartShuffle && s.shuffle).takeIf { it },
             smartPicks = smartIds.takeIf { it.isNotEmpty() }?.let { ids -> s.entries.map { it.song.id }.filter(ids::contains) },
+            origin = origin,
         ))
     }
 
@@ -693,7 +699,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         val idx = sq.currentIndex.coerceIn(0, songs.lastIndex)
         val repeat = when (sq.repeat) { 1 -> RepeatMode.ALL; 2 -> RepeatMode.ONE; else -> RepeatMode.OFF }
         // buffer at saved position but stay paused
-        replaceQueue(songs, idx, sq.positionSec * 1000L, play = false)
+        replaceQueue(songs, idx, sq.positionSec * 1000L, play = false, origin = sq.origin)
         autoplayIds = sq.autoplay.orEmpty().toSet()
         smartShuffle = sq.shuffle && sq.smartShuffle == true
         smartIds = sq.smartPicks.orEmpty().toSet()
@@ -703,12 +709,13 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         else engine.setShuffle(ShuffleTarget.OFF)
         _state.update {
             it.copy(queue = songs, current = songs[idx], positionSec = sq.positionSec.toFloat(), isPlaying = false,
-                currentIndex = idx, shuffle = sq.shuffle, repeat = repeat)
+                currentIndex = idx, shuffle = sq.shuffle, repeat = repeat, origin = sq.origin)
         }
     }
 
-    private fun replaceQueue(songs: List<Song>, index: Int, positionMs: Long = 0, play: Boolean = true) {
+    private fun replaceQueue(songs: List<Song>, index: Int, positionMs: Long = 0, play: Boolean = true, origin: String? = null) {
         cancelQueueFill()
+        this.origin = origin
         autoplayJob?.cancel()
         autoplayIds = emptySet()
         newSmartContext()
@@ -742,8 +749,9 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         engine.clear()
         lastRecordedId = null
         lastNowPlayingId = null
+        origin = null
         _state.update {
-            it.copy(current = EMPTY_SONG, queue = emptyList(), isPlaying = false, positionSec = 0f, currentIndex = 0, expanded = false)
+            it.copy(current = EMPTY_SONG, queue = emptyList(), isPlaying = false, positionSec = 0f, currentIndex = 0, expanded = false, origin = null)
         }
     }
 
@@ -796,19 +804,21 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun toggleMute() = setVolume(if (_volume.value > 0f) 0f else unmuteVolume)
 
-    override fun playAll(songs: List<Song>, startIndex: Int, collection: PlaybackCollectionIdentity?) {
+    override fun playAll(songs: List<Song>, startIndex: Int, collection: PlaybackCollectionIdentity?) = playAll(songs, startIndex, collection, null)
+
+    private fun playAll(songs: List<Song>, startIndex: Int, collection: PlaybackCollectionIdentity?, origin: String?) {
         val picked = songs.getOrNull(startIndex)
         // a lone song is an explicit pick and plays even when hidden
         val kept = if (songs.size > 1) deps.repository.visible(songs) else songs
-        if (kept.size != songs.size) return playAll(kept, kept.indexOfFirst { it === picked }.coerceAtLeast(0), collection)
+        if (kept.size != songs.size) return playAll(kept, kept.indexOfFirst { it === picked }.coerceAtLeast(0), collection, origin)
         if (songs.isEmpty()) return
         playingAccountKey = deps.accountKey()
         val contextual = songs.map { it.copy(playbackCollection = collection) }
         val idx = startIndex.coerceIn(0, songs.lastIndex)
-        replaceQueue(contextual, idx)
+        replaceQueue(contextual, idx, origin = origin)
         // fresh context plays in order make sure shuffle is off
         engine.setShuffle(ShuffleTarget.OFF)
-        _state.update { it.copy(queue = contextual, currentIndex = idx, current = contextual[idx], positionSec = 0f, isPlaying = true, shuffle = false) }
+        _state.update { it.copy(queue = contextual, currentIndex = idx, current = contextual[idx], positionSec = 0f, isPlaying = true, shuffle = false, origin = origin) }
     }
 
     override fun play(song: Song) = playAll(listOf(song), 0)
@@ -880,13 +890,13 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         val collection = deps.repository.playbackCollectionIdentity(kind, id)
         val picked = loaded.getOrNull(startIndex)
         val songs = deps.repository.playable(kind, id, loaded, picked)
-        playAll(songs, songs.indexOfFirst { it === picked }.coerceAtLeast(0), collection)
+        playAll(songs, songs.indexOfFirst { it === picked }.coerceAtLeast(0), collection, QueueOrigin.of(kind, id))
         fillQueue(kind, id, loaded, total, shuffle = false, collection = collection)
     }
 
     override fun shuffleCollection(kind: String, id: String, loaded: List<Song>, total: Int) {
         val collection = deps.repository.playbackCollectionIdentity(kind, id)
-        shufflePlay(deps.repository.playable(kind, id, loaded), collection)
+        shufflePlay(deps.repository.playable(kind, id, loaded), collection, QueueOrigin.of(kind, id))
         fillQueue(kind, id, loaded, total, shuffle = true, collection = collection)
     }
 
@@ -983,17 +993,19 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         }
     }
 
-    override fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity?) {
+    override fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity?) = shufflePlay(songs, collection, null)
+
+    private fun shufflePlay(songs: List<Song>, collection: PlaybackCollectionIdentity?, origin: String?) {
         val kept = deps.repository.visible(songs)
-        if (kept.size != songs.size) return shufflePlay(kept, collection)
+        if (kept.size != songs.size) return shufflePlay(kept, collection, origin)
         if (songs.isEmpty()) return
         playingAccountKey = deps.accountKey()
         val contextual = songs.map { it.copy(playbackCollection = collection) }
         val shuffled = contextual.shuffled()
-        replaceQueue(shuffled, 0)
+        replaceQueue(shuffled, 0, origin = origin)
         // pass the original order so disabling shuffle restores it
         engine.setShuffle(ShuffleTarget.ON, songs.map { it.id })
-        _state.update { it.copy(queue = shuffled, currentIndex = 0, current = shuffled[0], positionSec = 0f, isPlaying = true, shuffle = true) }
+        _state.update { it.copy(queue = shuffled, currentIndex = 0, current = shuffled[0], positionSec = 0f, isPlaying = true, shuffle = true, origin = origin) }
     }
 
     override fun addToQueue(song: Song) {
@@ -1051,6 +1063,8 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     override fun clearQueue() {
         val count = queueSize()
         val current = currentIndex()
+        origin = null
+        _state.update { it.copy(origin = null) }
         if (count - 1 > current) {
             queueGeneration++
             engine.remove(current + 1, count)

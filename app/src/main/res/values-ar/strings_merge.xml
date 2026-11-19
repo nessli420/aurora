@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"تعليقات YouTube"</string>
     <string name="merge_youtube_comments_summary">"تعليقات فيديو الأغنية على YouTube في عرض التعليقات الكامل"</string>
     <string name="merge_on_songs_from">"إظهار على أغاني"</string>
+    <string name="home_all_sources">"كل المصادر"</string>
+    <string name="home_hold_switch">"اضغط مطولًا للتبديل بين كل المصادر وموسيقاك الخاصة"</string>
 </resources>

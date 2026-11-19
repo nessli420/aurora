@@ -11,4 +11,6 @@
     <string name="merge_youtube_comments">"YouTubeのコメント"</string>
     <string name="merge_youtube_comments_summary">"コメント一覧に曲のYouTube動画のコメントを表示"</string>
     <string name="merge_on_songs_from">"表示する曲のソース"</string>
+    <string name="home_all_sources">"すべてのソース"</string>
+    <string name="home_hold_switch">"長押しで、すべてのソースと自分の音楽を切り替え"</string>
 </resources>
