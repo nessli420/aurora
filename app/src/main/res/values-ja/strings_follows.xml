@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"フォロー"</string>
+    <string name="following">"フォロー中"</string>
+    <string name="unfollow">"フォロー解除"</string>
+    <string name="follow_on">"%1$sでフォロー"</string>
+    <string name="following_on">"%1$sでフォロー中"</string>
+    <string name="follow_in_aurora">"Auroraでフォロー"</string>
+    <string name="following_in_aurora">"Auroraでフォロー中"</string>
+    <string name="follow_failed">"フォローを保存できませんでした。もう一度お試しください。"</string>
+    <string name="followed_artists">"フォロー中のアーティスト"</string>
+    <string name="followed_artists_empty">"フォローしたアーティストがここに表示されます。"</string>
+    <string name="follows_move_title">"%1$sでフォローしますか？"</string>
+    <string name="follows_move_body">"%2$sで保存できない間、Auroraが%1$sを保管していました。今すぐ%2$sでフォローしますか？"</string>
+    <string name="follows_move_confirm">"フォローする"</string>
+    <string name="follows_moved">"%2$sでフォローしました：%1$s"</string>
+    <string name="follows_move_left">"まだフォローできませんでした：%1$s。今はAuroraが保管します"</string>
+</resources>

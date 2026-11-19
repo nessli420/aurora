@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"Подписаться"</string>
+    <string name="following">"Вы подписаны"</string>
+    <string name="unfollow">"Отписаться"</string>
+    <string name="follow_on">"Подписаться в %1$s"</string>
+    <string name="following_on">"Подписка в %1$s"</string>
+    <string name="follow_in_aurora">"Подписаться в Aurora"</string>
+    <string name="following_in_aurora">"Подписка в Aurora"</string>
+    <string name="follow_failed">"Не удалось сохранить подписку. Попробуйте ещё раз."</string>
+    <string name="followed_artists">"Подписки на исполнителей"</string>
+    <string name="followed_artists_empty">"Здесь появятся исполнители, на которых вы подписаны."</string>
+    <string name="follows_move_title">"Подписаться в %1$s?"</string>
+    <string name="follows_move_body">"Aurora сохранила %1$s, пока %2$s не мог этого сделать. Подписаться в %2$s сейчас?"</string>
+    <string name="follows_move_confirm">"Подписаться"</string>
+    <string name="follows_moved">"Подписки в %2$s: %1$s"</string>
+    <string name="follows_move_left">"Пока не удалось: %1$s; Aurora сохранит их"</string>
+</resources>

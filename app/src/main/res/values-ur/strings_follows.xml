@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"فالو کریں"</string>
+    <string name="following">"فالو کر رہے ہیں"</string>
+    <string name="unfollow">"ان فالو کریں"</string>
+    <string name="follow_on">"%1$s پر فالو کریں"</string>
+    <string name="following_on">"%1$s پر فالو کر رہے ہیں"</string>
+    <string name="follow_in_aurora">"Aurora میں فالو کریں"</string>
+    <string name="following_in_aurora">"Aurora میں فالو کر رہے ہیں"</string>
+    <string name="follow_failed">"فالو محفوظ نہیں ہو سکا۔ دوبارہ کوشش کریں۔"</string>
+    <string name="followed_artists">"فالو کیے گئے فنکار"</string>
+    <string name="followed_artists_empty">"جن فنکاروں کو آپ فالو کرتے ہیں وہ یہاں دکھائی دیں گے۔"</string>
+    <string name="follows_move_title">"%1$s پر فالو کریں؟"</string>
+    <string name="follows_move_body">"جب %2$s ایسا نہیں کر سکا تو Aurora نے %1$s محفوظ رکھے۔ ابھی %2$s پر فالو کریں؟"</string>
+    <string name="follows_move_confirm">"فالو کریں"</string>
+    <string name="follows_moved">"%2$s پر فالو کیے: %1$s"</string>
+    <string name="follows_move_left">"ابھی فالو نہیں ہو سکے: %1$s؛ فی الحال Aurora انہیں رکھے گا"</string>
+</resources>

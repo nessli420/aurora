@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"Obserwuj"</string>
+    <string name="following">"Obserwujesz"</string>
+    <string name="unfollow">"Przestań obserwować"</string>
+    <string name="follow_on">"Obserwuj w %1$s"</string>
+    <string name="following_on">"Obserwujesz w %1$s"</string>
+    <string name="follow_in_aurora">"Obserwuj w Aurorze"</string>
+    <string name="following_in_aurora">"Obserwujesz w Aurorze"</string>
+    <string name="follow_failed">"Nie udało się zapisać. Spróbuj ponownie."</string>
+    <string name="followed_artists">"Obserwowani wykonawcy"</string>
+    <string name="followed_artists_empty">"Tu pojawią się wykonawcy, których obserwujesz."</string>
+    <string name="follows_move_title">"Obserwować w %1$s?"</string>
+    <string name="follows_move_body">"Aurora przechowała %1$s, gdy %2$s nie mogło. Obserwować ich teraz w %2$s?"</string>
+    <string name="follows_move_confirm">"Obserwuj"</string>
+    <string name="follows_moved">"Obserwujesz w %2$s: %1$s"</string>
+    <string name="follows_move_left">"Jeszcze się nie udało: %1$s; na razie przechowuje ich Aurora"</string>
+</resources>

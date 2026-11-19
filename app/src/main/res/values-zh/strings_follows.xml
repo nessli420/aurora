@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"关注"</string>
+    <string name="following">"已关注"</string>
+    <string name="unfollow">"取消关注"</string>
+    <string name="follow_on">"在 %1$s 关注"</string>
+    <string name="following_on">"已在 %1$s 关注"</string>
+    <string name="follow_in_aurora">"在 Aurora 关注"</string>
+    <string name="following_in_aurora">"已在 Aurora 关注"</string>
+    <string name="follow_failed">"无法保存关注，请重试。"</string>
+    <string name="followed_artists">"已关注的艺人"</string>
+    <string name="followed_artists_empty">"你关注的艺人会显示在这里。"</string>
+    <string name="follows_move_title">"在 %1$s 关注？"</string>
+    <string name="follows_move_body">"%2$s 无法保存时，Aurora 为你保留了 %1$s。现在在 %2$s 关注吗？"</string>
+    <string name="follows_move_confirm">"关注"</string>
+    <string name="follows_moved">"已在 %2$s 关注：%1$s"</string>
+    <string name="follows_move_left">"暂时无法关注：%1$s，Aurora 会先为你保留"</string>
+</resources>

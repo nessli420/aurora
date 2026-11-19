@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"Ikuti"</string>
+    <string name="following">"Mengikuti"</string>
+    <string name="unfollow">"Berhenti mengikuti"</string>
+    <string name="follow_on">"Ikuti di %1$s"</string>
+    <string name="following_on">"Mengikuti di %1$s"</string>
+    <string name="follow_in_aurora">"Ikuti di Aurora"</string>
+    <string name="following_in_aurora">"Mengikuti di Aurora"</string>
+    <string name="follow_failed">"Tidak dapat menyimpan. Coba lagi."</string>
+    <string name="followed_artists">"Artis yang diikuti"</string>
+    <string name="followed_artists_empty">"Artis yang kamu ikuti muncul di sini."</string>
+    <string name="follows_move_title">"Ikuti di %1$s?"</string>
+    <string name="follows_move_body">"Aurora menyimpan %1$s selama %2$s belum bisa. Ikuti di %2$s sekarang?"</string>
+    <string name="follows_move_confirm">"Ikuti"</string>
+    <string name="follows_moved">"Diikuti di %2$s: %1$s"</string>
+    <string name="follows_move_left">"Belum bisa diikuti: %1$s; untuk sementara Aurora menyimpannya"</string>
+</resources>

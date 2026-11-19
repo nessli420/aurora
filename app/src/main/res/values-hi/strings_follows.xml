@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"फ़ॉलो करें"</string>
+    <string name="following">"फ़ॉलो कर रहे हैं"</string>
+    <string name="unfollow">"अनफ़ॉलो करें"</string>
+    <string name="follow_on">"%1$s पर फ़ॉलो करें"</string>
+    <string name="following_on">"%1$s पर फ़ॉलो कर रहे हैं"</string>
+    <string name="follow_in_aurora">"Aurora में फ़ॉलो करें"</string>
+    <string name="following_in_aurora">"Aurora में फ़ॉलो कर रहे हैं"</string>
+    <string name="follow_failed">"फ़ॉलो सेव नहीं हो सका। फिर से कोशिश करें।"</string>
+    <string name="followed_artists">"फ़ॉलो किए गए कलाकार"</string>
+    <string name="followed_artists_empty">"आप जिन कलाकारों को फ़ॉलो करते हैं, वे यहाँ दिखेंगे।"</string>
+    <string name="follows_move_title">"%1$s पर फ़ॉलो करें?"</string>
+    <string name="follows_move_body">"जब %2$s ऐसा नहीं कर सका, तब Aurora ने %1$s सँभाले रखे। अभी %2$s पर फ़ॉलो करें?"</string>
+    <string name="follows_move_confirm">"फ़ॉलो करें"</string>
+    <string name="follows_moved">"%2$s पर फ़ॉलो किए: %1$s"</string>
+    <string name="follows_move_left">"अभी फ़ॉलो नहीं हो सके: %1$s; फ़िलहाल Aurora इन्हें रखेगा"</string>
+</resources>

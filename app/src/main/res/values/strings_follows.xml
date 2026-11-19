@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"Follow"</string>
+    <string name="following">"Following"</string>
+    <string name="unfollow">"Unfollow"</string>
+    <string name="follow_on">"Follow on %1$s"</string>
+    <string name="following_on">"Following on %1$s"</string>
+    <string name="follow_in_aurora">"Follow in Aurora"</string>
+    <string name="following_in_aurora">"Following in Aurora"</string>
+    <string name="follow_failed">"Couldn't save this follow. Try again."</string>
+    <string name="followed_artists">"Followed artists"</string>
+    <string name="followed_artists_empty">"Artists you follow show up here."</string>
+    <string name="follows_move_title">"Follow on %1$s?"</string>
+    <string name="follows_move_body">"Aurora kept %1$s for you while %2$s couldn't. Follow them on %2$s now?"</string>
+    <string name="follows_move_confirm">"Follow them"</string>
+    <string name="follows_moved">"Followed %1$s on %2$s"</string>
+    <string name="follows_move_left">"%1$s couldn't be followed yet; Aurora keeps them for now"</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"متابعة"</string>
+    <string name="following">"تتابعه"</string>
+    <string name="unfollow">"إلغاء المتابعة"</string>
+    <string name="follow_on">"متابعة على %1$s"</string>
+    <string name="following_on">"تتابعه على %1$s"</string>
+    <string name="follow_in_aurora">"متابعة في Aurora"</string>
+    <string name="following_in_aurora">"تتابعه في Aurora"</string>
+    <string name="follow_failed">"تعذّر حفظ المتابعة. حاول مرة أخرى."</string>
+    <string name="followed_artists">"الفنانون الذين تتابعهم"</string>
+    <string name="followed_artists_empty">"يظهر هنا الفنانون الذين تتابعهم."</string>
+    <string name="follows_move_title">"متابعة على %1$s؟"</string>
+    <string name="follows_move_body">"احتفظ Aurora بـ %1$s بينما لم يتمكن %2$s من ذلك. هل تريد متابعتهم على %2$s الآن؟"</string>
+    <string name="follows_move_confirm">"متابعتهم"</string>
+    <string name="follows_moved">"تمت المتابعة على %2$s: %1$s"</string>
+    <string name="follows_move_left">"تعذّرت المتابعة حتى الآن: %1$s؛ يحتفظ بهم Aurora مؤقتًا"</string>
+</resources>

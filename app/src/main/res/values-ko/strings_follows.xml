@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"팔로우"</string>
+    <string name="following">"팔로잉"</string>
+    <string name="unfollow">"언팔로우"</string>
+    <string name="follow_on">"%1$s에서 팔로우"</string>
+    <string name="following_on">"%1$s에서 팔로잉"</string>
+    <string name="follow_in_aurora">"Aurora에서 팔로우"</string>
+    <string name="following_in_aurora">"Aurora에서 팔로잉"</string>
+    <string name="follow_failed">"팔로우를 저장하지 못했어요. 다시 시도해 주세요."</string>
+    <string name="followed_artists">"팔로우한 아티스트"</string>
+    <string name="followed_artists_empty">"팔로우한 아티스트가 여기에 표시돼요."</string>
+    <string name="follows_move_title">"%1$s에서 팔로우할까요?"</string>
+    <string name="follows_move_body">"%2$s에서 할 수 없는 동안 Aurora가 %1$s을(를) 보관했어요. 지금 %2$s에서 팔로우할까요?"</string>
+    <string name="follows_move_confirm">"팔로우하기"</string>
+    <string name="follows_moved">"%2$s에서 팔로우함: %1$s"</string>
+    <string name="follows_move_left">"아직 팔로우하지 못함: %1$s. 지금은 Aurora가 보관해요"</string>
+</resources>

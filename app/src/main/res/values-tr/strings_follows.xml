@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"Takip et"</string>
+    <string name="following">"Takip ediliyor"</string>
+    <string name="unfollow">"Takibi bırak"</string>
+    <string name="follow_on">"%1$s üzerinde takip et"</string>
+    <string name="following_on">"%1$s üzerinde takip ediliyor"</string>
+    <string name="follow_in_aurora">"Aurora'da takip et"</string>
+    <string name="following_in_aurora">"Aurora'da takip ediliyor"</string>
+    <string name="follow_failed">"Takip kaydedilemedi. Tekrar dene."</string>
+    <string name="followed_artists">"Takip edilen sanatçılar"</string>
+    <string name="followed_artists_empty">"Takip ettiğin sanatçılar burada görünür."</string>
+    <string name="follows_move_title">"%1$s üzerinde takip edilsin mi?"</string>
+    <string name="follows_move_body">"%2$s yapamazken Aurora %1$s sakladı. Şimdi %2$s üzerinde takip edilsin mi?"</string>
+    <string name="follows_move_confirm">"Takip et"</string>
+    <string name="follows_moved">"%2$s üzerinde takip edildi: %1$s"</string>
+    <string name="follows_move_left">"Henüz takip edilemedi: %1$s; Aurora şimdilik saklıyor"</string>
+</resources>

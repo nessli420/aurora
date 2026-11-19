@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="follow">"Volgen"</string>
+    <string name="following">"Volgend"</string>
+    <string name="unfollow">"Ontvolgen"</string>
+    <string name="follow_on">"Volgen op %1$s"</string>
+    <string name="following_on">"Volgend op %1$s"</string>
+    <string name="follow_in_aurora">"Volgen in Aurora"</string>
+    <string name="following_in_aurora">"Volgend in Aurora"</string>
+    <string name="follow_failed">"Kon dit niet opslaan. Probeer het opnieuw."</string>
+    <string name="followed_artists">"Gevolgde artiesten"</string>
+    <string name="followed_artists_empty">"Artiesten die je volgt, verschijnen hier."</string>
+    <string name="follows_move_title">"Volgen op %1$s?"</string>
+    <string name="follows_move_body">"Aurora bewaarde %1$s zolang %2$s dat niet kon. Nu volgen op %2$s?"</string>
+    <string name="follows_move_confirm">"Volgen"</string>
+    <string name="follows_moved">"Gevolgd op %2$s: %1$s"</string>
+    <string name="follows_move_left">"Nog niet gevolgd: %1$s; Aurora bewaart ze voorlopig"</string>
+</resources>
