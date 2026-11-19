@@ -82,13 +82,15 @@ internal fun DriftPlayer(p: PlayerParts, modifier: Modifier = Modifier) {
                                 }
                                 PlayerLike(state, p.onToggleLike, glyph = 28.dp)
                             }
-                            val line = lyricGlance(song).getOrNull(1).orEmpty()
-                            Text(
-                                line.ifBlank { appString(R.string.text_lyrics_8670cb) },
+                            val open = { p.onView(StyledView.LYRICS) }
+                            if (rememberLyrics(song)?.lines?.isNotEmpty() == true) LyricsPane(state, p.onSeek,
+                                Modifier.fillMaxWidth().height(44.dp), ink = colors.primary, onGlance = open)
+                            else Text(
+                                appString(R.string.text_lyrics_8670cb),
                                 style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis,
-                                color = if (line.isBlank()) colors.onSurfaceVariant else colors.primary,
+                                color = colors.onSurfaceVariant,
                                 modifier = Modifier.fillMaxWidth().heightIn(min = 44.dp).clip(MaterialTheme.shapes.small)
-                                    .clickable(onClickLabel = appString(R.string.text_lyrics_8670cb), role = Role.Button) { p.onView(StyledView.LYRICS) }
+                                    .clickable(onClickLabel = appString(R.string.text_lyrics_8670cb), role = Role.Button, onClick = open)
                                     .wrapContentHeight(),
                             )
                             p.chips()

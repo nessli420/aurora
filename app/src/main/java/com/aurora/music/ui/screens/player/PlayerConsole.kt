@@ -145,17 +145,14 @@ private fun ColumnScope.Deck(p: PlayerParts, tint: State<Color>, tools: Boolean)
         }
         p.chips()
     }
-    val glance = lyricGlance(song)
-    ConsoleModule(padding = PaddingValues(start = 14.dp, end = 4.dp, bottom = if (glance.isEmpty()) 0.dp else 12.dp), onClick = { p.onView(StyledView.LYRICS) }) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+    val hasLyrics = rememberLyrics(song)?.lines?.isNotEmpty() == true
+    ConsoleModule(padding = PaddingValues(0.dp), onClick = { p.onView(StyledView.LYRICS) }) {
+        Row(Modifier.padding(start = 14.dp, end = 4.dp), verticalAlignment = Alignment.CenterVertically) {
             ConsoleLabel(appString(R.string.text_lyrics_8670cb), Modifier.weight(1f))
             Icon(Icons.Filled.OpenInFull, appString(R.string.tablet_fullscreen_lyrics), Modifier.size(44.dp).padding(13.dp))
         }
-        glance.forEachIndexed { i, line ->
-            Text(line, style = if (i == 1) MaterialTheme.typography.titleMedium else MaterialTheme.typography.bodyMedium,
-                fontWeight = if (i == 1) FontWeight.Bold else null, color = if (i == 1) colors.onSurface else colors.onSurfaceVariant,
-                maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(end = 10.dp, bottom = 2.dp))
-        }
+        if (hasLyrics) LyricsPane(state, p.onSeek, Modifier.fillMaxWidth().height(76.dp).padding(horizontal = 14.dp), ink = colors.onSurface,
+            onGlance = { p.onView(StyledView.LYRICS) })
     }
     if (p.hasQueue) BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
         val next = (state.currentIndex + 1).coerceAtLeast(0)

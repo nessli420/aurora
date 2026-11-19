@@ -127,19 +127,10 @@ internal fun NowStrip(
 }
 
 @Composable
-internal fun lyricGlance(song: Song): List<String> {
+internal fun rememberLyrics(song: Song): Lyrics? {
     val repository = (LocalContext.current.applicationContext as AuroraApplication).container.lyricsRepository
-    val lyrics by produceState<Lyrics?>(null, song.id, song.playbackSource?.providerId) {
+    return produceState<Lyrics?>(null, song.id, song.playbackSource?.providerId) {
         value = null
         value = if (song.id.isBlank()) null else repository.lyricsFor(song)
-    }
-    val found = lyrics
-    val lines = found?.lines.orEmpty()
-    if (found == null || lines.isEmpty()) return emptyList()
-    if (!found.synced) return listOf("", lines[0].displayText, lines.getOrNull(1)?.displayText.orEmpty())
-    val position = LocalPlaybackPosition.current
-    val at by remember(lines) {
-        derivedStateOf { (position.value * 1000).toLong().let { ms -> lines.indexOfLast { it.startMs >= 0 && it.startMs <= ms } } }
-    }
-    return listOf(at - 1, at, at + 1).map { lines.getOrNull(it)?.displayText.orEmpty() }
+    }.value
 }

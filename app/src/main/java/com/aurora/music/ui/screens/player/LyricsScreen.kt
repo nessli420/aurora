@@ -331,7 +331,7 @@ private fun WideLyrics(
 
 @Composable
 internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier: Modifier = Modifier, compact: Boolean = true,
-    ink: Color? = null) {
+    ink: Color? = null, onGlance: (() -> Unit)? = null) {
     val song = state.current
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
     var lyrics by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Lyrics?>(null) }
@@ -340,7 +340,8 @@ internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier:
         lyrics = if (song.id.isBlank()) null else container.lyricsRepository.lyricsFor(song)
         loading = false
     }
-    val meanings = rememberMeanings(song, lyrics)
+    val glance = onGlance != null
+    val meanings = if (glance) null else rememberMeanings(song, lyrics)
     var explain by remember(song.id) { mutableStateOf<List<com.aurora.music.data.GeniusReferent>?>(null) }
     var about by remember(song.id) { mutableStateOf(false) }
     GeniusSheets(meanings, explain, about) { explain = null; about = false }
@@ -349,6 +350,7 @@ internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier:
         if (ink == null) LyricsBackdrop(song)
         val content = lyrics
         when {
+            glance && (loading || content == null || content.lines.isEmpty()) -> Unit
             loading -> CircularProgressIndicator(Modifier.align(Alignment.Center).size(28.dp),
                 color = tone.copy(alpha = .8f), strokeWidth = 2.dp)
             content == null || content.lines.isEmpty() -> Column(
@@ -367,12 +369,13 @@ internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier:
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     key(song.id, song.playbackSource?.providerId) {
                         CompositionLocalProvider(LocalLyricInk provides tone) {
-                            ImmersiveLyrics(content, state.current, state.isPlaying, state.durationSec, onSeek = onSeek,
-                                onScrolling = {}, onBackgroundTap = {}, compact = compact, meanings = meanings, onExplain = { explain = it })
+                            ImmersiveLyrics(content, state.current, state.isPlaying, if (glance) 0 else state.durationSec, onSeek = onSeek,
+                                onScrolling = {}, onBackgroundTap = onGlance ?: {}, compact = compact, meanings = meanings,
+                                onExplain = { explain = it }, glance = glance)
                         }
                     }
                 }
-                Row(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (!glance) Row(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
                     sourceLabel(content.source, meanings)?.let { Text(it, color = tone.copy(alpha = .45f),
                         style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) }
                     if (meanings?.hasAbout == true) Text(appString(R.string.genius_about), color = tone.copy(alpha = .8f),
@@ -449,7 +452,7 @@ internal fun LyricsBackdrop(song: Song) {
 @Composable
 private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durationSec: Int, onSeek: (Float) -> Unit,
     onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit, compact: Boolean = false,
-    meanings: LyricMeanings? = null, onExplain: (List<com.aurora.music.data.GeniusReferent>) -> Unit = {}) {
+    meanings: LyricMeanings? = null, onExplain: (List<com.aurora.music.data.GeniusReferent>) -> Unit = {}, glance: Boolean = false) {
     val ink = LocalLyricInk.current
     val mode = com.aurora.music.ui.theme.LocalUiPrefs.current.lyricsSync
     val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
@@ -496,20 +499,22 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
         }
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val focus = maxHeight * .26f
-        LaunchedEffect(current, browsing, maxHeight) {
+        val focus = maxHeight * if (glance) .12f else .26f
+        // a glance is too short for a wrapped line, so it follows the row being sung inside the line
+        val sungTop = remember { mutableFloatStateOf(0f) }
+        LaunchedEffect(current, browsing, maxHeight, sungTop.floatValue) {
             if (!lyrics.synced || browsing) return@LaunchedEffect
             val target = current.coerceAtLeast(0)
             val item = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == target }
             // Item offsets exclude the before-content padding, where the focus line sits.
-            if (item != null) list.animateScrollBy(item.offset.toFloat(), tween(650, easing = FastOutSlowInEasing))
+            if (item != null) list.animateScrollBy(item.offset + sungTop.floatValue, tween(650, easing = FastOutSlowInEasing))
             else list.animateScrollToItem(target)
         }
-        LazyColumn(state = list,
-            modifier = Modifier.fillMaxSize().lyricsEdgeFade().padding(horizontal = if (compact) 24.dp else 28.dp),
-            contentPadding = PaddingValues(top = if (lyrics.synced) focus else 32.dp,
+        LazyColumn(state = list, userScrollEnabled = !glance,
+            modifier = Modifier.fillMaxSize().lyricsEdgeFade().padding(horizontal = if (glance) 0.dp else if (compact) 24.dp else 28.dp),
+            contentPadding = PaddingValues(top = if (lyrics.synced || glance) focus else 32.dp,
                 bottom = if (lyrics.synced) maxHeight * .7f else 48.dp),
-            verticalArrangement = Arrangement.spacedBy(if (compact) 14.dp else 22.dp),
+            verticalArrangement = Arrangement.spacedBy(if (glance) 6.dp else if (compact) 14.dp else 22.dp),
         ) {
             items(lines.size) { index ->
                 var textLayout by remember { mutableStateOf<TextLayoutResult?>(null) }
@@ -549,6 +554,22 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                 val plain = fill?.let { remember(line, it, ink) { karaoke(line.displayText, it, ink) } }
                     ?: AnnotatedString(line.displayText.ifBlank { "•••" })
                 val text = if (marked) remember(plain) { plain.withMeaningMark() } else plain
+                if (glance && active) {
+                    val sungRow by remember(line, textLayout) {
+                        derivedStateOf {
+                            val layout = textLayout
+                            val last = line.displayText.length - 1
+                            if (layout == null || layout.lineCount < 2 || last < 1) 0 else {
+                                val end = lines.getOrNull(index + 1)?.startMs?.takeIf { it > line.startMs } ?: (line.startMs + 5000)
+                                val at = fill?.let { wipe -> wipe.indexOfFirst { it < 1f }.let { if (it < 0) last else it } }
+                                    ?: ((clock.longValue - line.startMs).toFloat() / (end - line.startMs) * last).toInt()
+                                layout.getLineForOffset(at.coerceIn(0, last))
+                            }
+                        }
+                    }
+                    val top = textLayout?.takeIf { sungRow < it.lineCount }?.getLineTop(sungRow) ?: 0f
+                    LaunchedEffect(top) { sungTop.floatValue = top }
+                }
                 val meaning = translated?.getOrNull(index)
                 // fades live in the layer so a line change doesn't recompose every visible line per frame
                 Column(Modifier.fillMaxWidth().graphicsLayer {
@@ -567,10 +588,10 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                     Text(text,
                         inlineContent = meaningMarkContent,
                         onTextLayout = { textLayout = it },
-                        color = ink, fontSize = if (compact) 22.sp else 30.sp,
-                        lineHeight = if (compact) 29.sp else 38.sp,
+                        color = ink, fontSize = if (glance) 18.sp else if (compact) 22.sp else 30.sp,
+                        lineHeight = if (glance) 24.sp else if (compact) 29.sp else 38.sp,
                         fontWeight = FontWeight.Bold, letterSpacing = (-.5).sp,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).pointerInput(seekable, marked, notes.isNotEmpty()) {
+                        modifier = Modifier.fillMaxWidth().padding(vertical = if (glance) 2.dp else 6.dp).pointerInput(seekable, marked, notes.isNotEmpty()) {
                             val slop = 12.dp.toPx()
                             detectTapGestures(onLongPress = if (notes.isEmpty()) null else { _ ->
                                 haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
@@ -591,7 +612,7 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                             }
                         },
                     )
-                    if (meaning != null) Text(meaning,
+                    if (meaning != null && !glance) Text(meaning,
                         color = ink.copy(alpha = .6f), fontSize = if (compact) 14.sp else 17.sp,
                         lineHeight = if (compact) 19.sp else 23.sp, fontWeight = FontWeight.Medium,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp).pointerInput(seekable) {
