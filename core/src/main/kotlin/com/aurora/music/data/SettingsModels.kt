@@ -264,6 +264,9 @@ object PageLayout { const val CLASSIC = 0; const val SPOTLIGHT = 1; const val CO
 // the mini player and navigation bar; numbered like the page layouts so they can follow one
 object BarStyle { const val CLASSIC = 0; const val SPOTLIGHT = 1; const val CONSOLE = 2; const val DRIFT = 3 }
 
+// the full-screen player's arrangement
+object PlayerStyle { const val CLASSIC = 0; const val SPOTLIGHT = 1; const val CONSOLE = 2; const val DRIFT = 3 }
+
 object AccentMode { const val PRESET = 0; const val CUSTOM = 1; const val MATERIAL_YOU = 2 }
 
 object CornerStyle { const val SHARP = 0; const val DEFAULT = 1; const val ROUNDED = 2; const val PILL = 3 }
@@ -290,6 +293,7 @@ data class UiPrefs(
     val pageLayout: Int = PageLayout.CLASSIC,
     val barStyle: Int = BarStyle.CLASSIC,
     val barsMatchLayout: Boolean = false,
+    val playerStyle: Int = PlayerStyle.CLASSIC,
     val accentMode: Int = AccentMode.PRESET,
     val accentPreset: Int = 0,
     val accentColor: Long = 0xFFFF2E7EL,

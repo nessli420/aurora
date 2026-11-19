@@ -200,6 +200,11 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenNa
 
             item { SettingsSectionTitle(appString(R.string.text_player_e53407)) }
             item {
+                SegmentedRow(appString(R.string.layout_title), listOf(appString(R.string.layout_classic), appString(R.string.layout_spotlight), appString(R.string.layout_console), appString(R.string.layout_drift)), prefs.playerStyle) { i ->
+                    scope.launch { store.setPlayerStyle(i) }
+                }
+            }
+            item {
                 SegmentedRow(appString(R.string.text_seek_bar_0030d0), listOf(appString(R.string.text_waveform_200f14), appString(R.string.text_bar_e496fd)), prefs.playerSeekStyle) { i ->
                     scope.launch { store.setPlayerSeekStyle(i) }
                 }

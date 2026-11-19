@@ -77,6 +77,14 @@ class SettingsStoreFlowsTest {
         assertEquals(BarStyle.DRIFT, store.uiPrefs.first().bars)
     }
 
+    @Test fun playerStyleDefaultsToClassicAndClampsUnknownValues() = runBlocking {
+        assertEquals(PlayerStyle.CLASSIC, store.uiPrefs.first().playerStyle)
+        store.setPlayerStyle(PlayerStyle.CONSOLE)
+        assertEquals(PlayerStyle.CONSOLE, store.uiPrefs.first().playerStyle)
+        store.setPlayerStyle(99)
+        assertEquals(PlayerStyle.DRIFT, store.uiPrefs.first().playerStyle)
+    }
+
     @Test fun savedSessionsKeepTheValidityFilter() = runBlocking {
         val valid = Session("https://music.example", "alice", "salt", "token")
         store.importPrefs(PrefsBackup(strings = mapOf("saved_sessions" to Gson().toJson(listOf(valid, valid.copy(token = ""))))))
