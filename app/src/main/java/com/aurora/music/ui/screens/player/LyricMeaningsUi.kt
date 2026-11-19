@@ -66,6 +66,9 @@ internal fun sourceLabel(source: String?, meanings: LyricMeanings?): String? =
     listOfNotNull(source?.takeIf { it.isNotBlank() }, "Genius".takeIf { meanings != null && (meanings.spans.isNotEmpty() || meanings.hasAbout) })
         .joinToString(" · ").ifBlank { null }
 
+// what lyric lines are drawn in: white over the cover backdrop, unless a layout sets them on its own surface
+internal val LocalLyricInk = androidx.compose.runtime.compositionLocalOf { Color.White }
+
 internal const val MEANING_MARK = "genius"
 
 internal fun AnnotatedString.withMeaningMark(): AnnotatedString = buildAnnotatedString {
@@ -79,9 +82,10 @@ internal val meaningMarkContent = mapOf(MEANING_MARK to InlineTextContent(Placeh
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
     val alpha by animateFloatAsState(if (shown) 1f else 0f, Motion.enter(), label = "meaningMark")
-    Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }.background(Color.White.copy(alpha = .16f), CircleShape),
+    val ink = LocalLyricInk.current
+    Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }.background(ink.copy(alpha = .16f), CircleShape),
         contentAlignment = Alignment.Center) {
-        Icon(Icons.Filled.TipsAndUpdates, null, Modifier.fillMaxSize(.66f), tint = Color.White.copy(alpha = .8f))
+        Icon(Icons.Filled.TipsAndUpdates, null, Modifier.fillMaxSize(.66f), tint = ink.copy(alpha = .8f))
     }
 })
 

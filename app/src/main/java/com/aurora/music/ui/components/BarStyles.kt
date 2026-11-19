@@ -331,36 +331,38 @@ private fun DriftCapsule(state: PlayerUiState, tabs: List<BarTab>, onExpand: () 
 @Composable
 internal fun RingCover(state: PlayerUiState, modifier: Modifier = Modifier) {
     val song = state.current
+    val stroke = progressWidth(3.dp, 5.dp)
+    Box(modifier.progressRing(state, stroke, barAccent()).padding(if (stroke > 0.dp) stroke + 2.dp else 0.dp)) {
+        Artwork(song.artworkUrl, song.accent, Modifier.fillMaxSize(), corner = 100.dp)
+    }
+}
+
+@Composable
+internal fun Modifier.progressRing(state: PlayerUiState, stroke: Dp, fill: Color): Modifier {
     val position = LocalPlaybackPosition.current
     val track = MaterialTheme.colorScheme.outlineVariant
-    val fill = barAccent()
     val square = isPaperTheme()
-    val stroke = progressWidth(3.dp, 5.dp)
-    Box(
-        modifier.drawWithCache {
-            val w = stroke.toPx()
-            val ring = Path().apply {
-                if (square) {
-                    moveTo(w / 2f, w / 2f)
-                    lineTo(size.width - w / 2f, w / 2f)
-                    lineTo(size.width - w / 2f, size.height - w / 2f)
-                    lineTo(w / 2f, size.height - w / 2f)
-                    close()
-                } else addArc(Rect(w / 2f, w / 2f, size.width - w / 2f, size.height - w / 2f), -90f, 360f)
+    return drawWithCache {
+        val w = stroke.toPx()
+        val ring = Path().apply {
+            if (square) {
+                moveTo(w / 2f, w / 2f)
+                lineTo(size.width - w / 2f, w / 2f)
+                lineTo(size.width - w / 2f, size.height - w / 2f)
+                lineTo(w / 2f, size.height - w / 2f)
+                close()
+            } else addArc(Rect(w / 2f, w / 2f, size.width - w / 2f, size.height - w / 2f), -90f, 360f)
+        }
+        val measure = PathMeasure().apply { setPath(ring, false) }
+        val done = Path()
+        onDrawBehind {
+            if (w > 0f) {
+                drawPath(ring, track, style = Stroke(w))
+                done.reset()
+                measure.getSegment(0f, measure.length * state.progressAt(position.value), done, true)
+                drawPath(done, fill, style = Stroke(w))
             }
-            val measure = PathMeasure().apply { setPath(ring, false) }
-            val done = Path()
-            onDrawBehind {
-                if (w > 0f) {
-                    drawPath(ring, track, style = Stroke(w))
-                    done.reset()
-                    measure.getSegment(0f, measure.length * state.progressAt(position.value), done, true)
-                    drawPath(done, fill, style = Stroke(w))
-                }
-            }
-        }.padding(if (stroke > 0.dp) stroke + 2.dp else 0.dp),
-    ) {
-        Artwork(song.artworkUrl, song.accent, Modifier.fillMaxSize(), corner = 100.dp)
+        }
     }
 }
 
@@ -437,7 +439,7 @@ private fun progressWidth(line: Dp, bar: Dp): Dp = when (LocalUiPrefs.current.mi
 private fun barAccent(): Color = LocalContextAccent.current.color ?: MaterialTheme.colorScheme.primary
 
 @Composable
-private fun coverTint(state: PlayerUiState): State<Color> = animateColorAsState(
+internal fun coverTint(state: PlayerUiState): State<Color> = animateColorAsState(
     spotlightTint(state.current.artworkUrl, if (state.hasTrack) state.current.accent else Color.Unspecified),
     Motion.state(MotionTokens.SLOW), label = "barTint",
 )

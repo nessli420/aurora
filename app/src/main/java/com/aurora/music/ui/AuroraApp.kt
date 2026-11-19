@@ -1871,7 +1871,7 @@ fun AuroraApp() {
                     gestures = gesturePrefs,
                     requestedPane = playerPaneRequest,
                     onPaneRequestHandled = { playerPaneRequest = null },
-                    paneContent = if (windowLayout.useNavigationRail) nowPlayingPane else null,
+                    paneContent = nowPlayingPane,
                     paneActions = nowPlayingPaneActions,
                     onSplitChange = { split ->
                         scope.launch { container.settingsStore.setTabletSetting(com.aurora.music.data.TabletSetting.PLAYER_SPLIT, split) }

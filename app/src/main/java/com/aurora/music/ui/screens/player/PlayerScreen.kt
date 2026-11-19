@@ -145,6 +145,7 @@ import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.WindowInsetsControllerCompat
 import com.aurora.music.data.CommentFeed
 import com.aurora.music.data.MockData
+import com.aurora.music.data.PlayerStyle
 import com.aurora.music.data.ServerType
 import com.aurora.music.data.commentSourceName
 import com.aurora.music.data.compactCount
@@ -230,6 +231,13 @@ fun PlayerScreen(
     val glassBackdrop = playerBackdrop.takeIf { glassStyle && com.aurora.music.ui.theme.liveGlassSupported }
     val windowLayout = com.aurora.music.ui.layout.LocalWindowLayout.current
     val tablet = windowLayout.useNavigationRail && paneContent != null
+    // tablets and liquid glass keep the classic player under every layout
+    val style = if (tablet || glassStyle) PlayerStyle.CLASSIC else ui.playerStyle
+    val styled = style != PlayerStyle.CLASSIC
+    val drift = style == PlayerStyle.DRIFT
+    val artScale = if (style == PlayerStyle.CLASSIC || style == PlayerStyle.SPOTLIGHT) ui.playerArtSize.coerceIn(0.5f, 1f) else 1f
+    val artCorner = if (drift) 1000.dp else null
+    var styledView by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(StyledView.NOW) }
     var showLyrics by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showCover by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
     var showVideo by androidx.compose.runtime.saveable.rememberSaveable(song.id) { mutableStateOf(false) }
@@ -247,12 +255,14 @@ fun PlayerScreen(
     }
     val sidePane = PlayerPane.valueOf(sidePaneName).takeIf { it in panes } ?: PlayerPane.LYRICS
     val portraitTab = portraitTabName?.let { PlayerPane.valueOf(it) }?.takeIf { it in panes }
+    val openLyrics: () -> Unit = { if (styled) styledView = StyledView.LYRICS else showLyrics = true }
+    val openQueue: () -> Unit = if (styled) ({ styledView = StyledView.QUEUE }) else onOpenQueue
     LaunchedEffect(requestedPane) {
         when {
             requestedPane == null -> return@LaunchedEffect
             tablet -> { sidePaneName = requestedPane.name; portraitTabName = requestedPane.name }
-            requestedPane == PlayerPane.LYRICS -> { showVideo = false; showLyrics = true }
-            else -> onOpenQueue()
+            requestedPane == PlayerPane.LYRICS -> { showVideo = false; openLyrics() }
+            else -> openQueue()
         }
         onPaneRequestHandled()
     }
@@ -265,7 +275,7 @@ fun PlayerScreen(
     val view = LocalView.current
     val activity = remember(view) { view.context.findActivity() }
     val fullscreenActive = fullscreenVideo && showVideo && state.hasVideo && videoPlayer != null && !state.videoIsCanvas
-    val canvasShown = showVideo && state.hasVideo && state.videoIsCanvas && videoPlayer != null
+    val canvasShown = showVideo && state.hasVideo && state.videoIsCanvas && videoPlayer != null && !styled
     LaunchedEffect(state.hasVideo, requestedVideo) {
         if (requestedVideo && state.hasVideo) {
             showLyrics = false
@@ -384,7 +394,7 @@ fun PlayerScreen(
                             text = { Text(appString(R.string.text_view_queue_827a90)) },
                             onClick = {
                                 showMenu = false
-                                if (tablet) { sidePaneName = PlayerPane.QUEUE.name; portraitTabName = PlayerPane.QUEUE.name } else onOpenQueue()
+                                if (tablet) { sidePaneName = PlayerPane.QUEUE.name; portraitTabName = PlayerPane.QUEUE.name } else openQueue()
                             },
                             leadingIcon = { Icon(Icons.AutoMirrored.Filled.QueueMusic, null) },
                         )
@@ -436,6 +446,54 @@ fun PlayerScreen(
                 }
             }
         }
+        val showVideoModeControl = (state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast() &&
+            (state.supportsMusicVideo || state.supportsCanvas)) || state.hasVideo
+        val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
+        val videoToggle: @Composable () -> Unit = {
+            val headerTint = LocalContentColor.current
+            // tap is the youtube music video, long press the service's canvas
+            Box(
+                modifier = Modifier.size(40.dp).paperClip(CircleShape).combinedClickable(
+                    role = Role.Button,
+                    onClickLabel = appString(if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1),
+                    onLongClickLabel = if (state.supportsCanvas) appString(R.string.canvas_open) else null,
+                    onLongClick = if (!state.supportsCanvas) null else ({
+                        if (!state.videoLoading) {
+                            haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
+                            fullscreenVideo = false
+                            showVideo = false
+                            showLyrics = false
+                            requestedVideo = true
+                            onRequestVideo(true)
+                        }
+                    }),
+                    onClick = {
+                        if (showVideo) {
+                            fullscreenVideo = false
+                            showVideo = false
+                        } else if (state.hasVideo && videoPlayer != null && !state.videoIsCanvas && state.supportsMusicVideo) {
+                            showLyrics = false
+                            showVideo = true
+                            inlineVideoControlsVisible = false
+                        } else if (!state.videoLoading && (state.supportsMusicVideo || state.supportsCanvas)) {
+                            // with music videos switched off the tap brings the canvas instead
+                            requestedVideo = true
+                            onRequestVideo(!state.supportsMusicVideo)
+                        }
+                    },
+                ).semantics {
+                    contentDescription = appString(
+                        if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1,
+                    )
+                },
+                contentAlignment = Alignment.Center,
+            ) {
+                if (state.videoLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp),
+                    color = headerTint, strokeWidth = 2.dp)
+                else Icon(if (showVideo) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
+                    contentDescription = null, tint = headerTint, modifier = Modifier.size(22.dp))
+            }
+        }
         val header: @Composable () -> Unit = {
             Column(
                 Modifier
@@ -451,54 +509,6 @@ fun PlayerScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    val showVideoModeControl = (state.hasTrack && !state.isMix && !song.isRadio() && !song.isPodcast() &&
-                        (state.supportsMusicVideo || state.supportsCanvas)) || state.hasVideo
-                    val headerTint = LocalContentColor.current
-                    val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
-                    val videoToggle: @Composable () -> Unit = {
-                        // tap is the youtube music video, long press the service's canvas
-                        Box(
-                            modifier = Modifier.size(40.dp).paperClip(CircleShape).combinedClickable(
-                                role = Role.Button,
-                                onClickLabel = appString(if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1),
-                                onLongClickLabel = if (state.supportsCanvas) appString(R.string.canvas_open) else null,
-                                onLongClick = if (!state.supportsCanvas) null else ({
-                                    if (!state.videoLoading) {
-                                        haptics.performHapticFeedback(androidx.compose.ui.hapticfeedback.HapticFeedbackType.LongPress)
-                                        fullscreenVideo = false
-                                        showVideo = false
-                                        showLyrics = false
-                                        requestedVideo = true
-                                        onRequestVideo(true)
-                                    }
-                                }),
-                                onClick = {
-                                    if (showVideo) {
-                                        fullscreenVideo = false
-                                        showVideo = false
-                                    } else if (state.hasVideo && videoPlayer != null && !state.videoIsCanvas && state.supportsMusicVideo) {
-                                        showLyrics = false
-                                        showVideo = true
-                                        inlineVideoControlsVisible = false
-                                    } else if (!state.videoLoading && (state.supportsMusicVideo || state.supportsCanvas)) {
-                                        // with music videos switched off the tap brings the canvas instead
-                                        requestedVideo = true
-                                        onRequestVideo(!state.supportsMusicVideo)
-                                    }
-                                },
-                            ).semantics {
-                                contentDescription = appString(
-                                    if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1,
-                                )
-                            },
-                            contentAlignment = Alignment.Center,
-                        ) {
-                            if (state.videoLoading) CircularProgressIndicator(modifier = Modifier.size(20.dp),
-                                color = headerTint, strokeWidth = 2.dp)
-                            else Icon(if (showVideo) Icons.Filled.MusicNote else Icons.Filled.VideoLibrary,
-                                contentDescription = null, tint = headerTint, modifier = Modifier.size(22.dp))
-                        }
-                    }
                     Icon(
                         Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                         modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
@@ -550,13 +560,14 @@ fun PlayerScreen(
                     )
                     .pointerInput(gestures.doubleTapPause) {
                         detectTapGestures(
-                            onDoubleTap = if (gestures.doubleTapPause) ({ onTogglePlay() }) else null,
-                            onTap = { if (!showVideo) showCover = true },
+                            onDoubleTap = if (gestures.doubleTapPause && !drift) ({ onTogglePlay() }) else null,
+                            onLongPress = if (drift) ({ if (!showVideo) showCover = true }) else null,
+                            onTap = { if (drift) onTogglePlay() else if (!showVideo) showCover = true },
                         )
                     },
                 contentAlignment = Alignment.Center,
             ) {
-                val artSide = minOf(maxWidth, maxHeight) * ui.playerArtSize.coerceIn(0.5f, 1f)
+                val artSide = minOf(maxWidth, maxHeight) * artScale
                 val videoWidth = minOf(maxWidth, maxHeight * 16f / 9f)
                 AnimatedContent(
                     targetState = showVideo,
@@ -564,8 +575,9 @@ fun PlayerScreen(
                     label = "artVsVideo",
                 ) { video ->
                     if (video && state.hasVideo && videoPlayer != null && state.videoIsCanvas) {
+                        if (styled) PlaybackVideo(videoPlayer, song.artworkUrl, playerAccent, Modifier.size(artSide), cornerRadius = artCorner ?: 20.dp, fill = true)
                         // the canvas fills the whole player behind this slot
-                        Spacer(Modifier.size(artSide))
+                        else Spacer(Modifier.size(artSide))
                     } else if (video && state.hasVideo && videoPlayer != null) {
                         Box(Modifier.width(videoWidth).aspectRatio(16f / 9f)) {
                             PlaybackVideo(videoPlayer, song.artworkUrl, playerAccent, Modifier.fillMaxSize())
@@ -606,8 +618,8 @@ fun PlayerScreen(
                             androidx.compose.animation.core.spring(dampingRatio = 0.72f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow), label = "artRest")
                         val artModifier = Modifier.size(artSide).graphicsLayer { scaleX = artRest; scaleY = artRest }
                         val cover = CoverKey(song.album, song.artist, song.path)
-                        if (classic) {
-                            Artwork(song.artworkUrl, song.accent, artModifier, corner = 20.dp, animated = cover)
+                        if (classic || artCorner != null) {
+                            Artwork(song.artworkUrl, song.accent, artModifier, corner = artCorner ?: 20.dp, animated = cover)
                         } else if (glassStyle) {
                             Artwork(song.artworkUrl, song.accent, artModifier.shadow(30.dp, RoundedCornerShape(16.dp),
                                 ambientColor = Color.Black.copy(alpha = .5f), spotColor = Color.Black.copy(alpha = .5f)), corner = 16.dp, animated = cover)
@@ -623,7 +635,7 @@ fun PlayerScreen(
         val artwork: @Composable (Modifier) -> Unit = { modifier ->
             if (djStage != null) djStage(modifier) else coverArt(modifier)
         }
-        val controls: @Composable () -> Unit = {
+        val titleRow: @Composable () -> Unit = {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (state.isPlaying) {
                     com.aurora.music.ui.components.LottieEqualizer(
@@ -640,30 +652,12 @@ fun PlayerScreen(
                 Column(Modifier.weight(1f)) {
                     SongTitles(song, MaterialTheme.typography.headlineMedium, MaterialTheme.typography.titleMedium, openAlbum, openArtist,
                         titleWeight = if (classic) FontWeight.Bold else MaterialTheme.typography.headlineMedium.fontWeight, gap = 2.dp)
-                    if (state.bpm > 0) {
-                        Spacer(Modifier.height(3.dp))
-                        Text(
-                            "${state.keyName} · ${state.camelot} · ${state.bpm} BPM",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.primary, maxLines = 1,
-                        )
-                    }
+                    BpmLine(state)
                 }
-                val likeTint by animateColorAsState(
-                    if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, label = "like",
-                )
-                if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
-                    com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
-                        Icon(
-                            imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = appString(R.string.text_like_c7e02c),
-                            tint = likeTint,
-                            modifier = Modifier.size(32.dp).likePop(state.isCurrentLiked, song.id),
-                        )
-                    }
-                }
+                PlayerLike(state, onToggleLike)
             }
-
+        }
+        val chips: @Composable () -> Unit = {
             // youtube music and spotify carry no file facts, so the decoder's view of the stream fills in
             val streamFormat by (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication)
                 .container.streamFormat.collectAsStateWithLifecycle()
@@ -672,8 +666,6 @@ fun PlayerScreen(
                     sampleRateHz = it.sampleRateHz, bitDepth = it.bitDepth, bitrateKbps = it.bitrateKbps)) }.orEmpty()
             }
             val source = sourceLabel(song)
-            if (!song.isDjSpeech()) {
-            Spacer(Modifier.height(10.dp))
             FlowRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .paperClip(RoundedCornerShape(12.dp))
@@ -709,27 +701,25 @@ fun PlayerScreen(
                     ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
-
+        }
+        val seek: @Composable (Boolean, Color) -> Unit = { compact, accent ->
             SeekBar(
                 durationSec = state.durationSec,
                 isLive = state.isLive,
-                accent = playerAccent,
+                accent = accent,
                 seed = song.id.hashCode(),
                 seekStyle = ui.playerSeekStyle,
                 waveBars = ui.playerWaveBars,
                 onSeek = onSeek,
-                comments = state.comments,
+                track = if (styled) accent.copy(alpha = 0.24f) else Color.Unspecified,
+                comments = if (compact) emptyList() else state.comments,
                 onOpenComment = { focusComment = it; showComments = true },
             )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
+        }
+        val transport: @Composable (Modifier, Color, Color, Boolean) -> Unit = { play, playFill, playInk, framed ->
             Row(
                 Modifier.fillMaxWidth().then(
-                    if (classic) Modifier
+                    if (classic || !framed) Modifier
                     else if (glassStyle) Modifier.liquidGlass(glassBackdrop, com.kyant.shapes.Capsule(), refraction = 20.dp).padding(horizontal = 8.dp, vertical = 8.dp)
                     else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true)
                 ),
@@ -762,14 +752,12 @@ fun PlayerScreen(
                 } else {
                     val playPause = appString(R.string.text_play_pause_14a1d0)
                     Box(
-                        Modifier
-                            .size(72.dp)
-                            .clip(if (classic) CircleShape else MaterialTheme.shapes.large)
+                        play
                             .pressClickable(role = Role.Button, onClick = onTogglePlay)
-                            .background(playerAccent)
+                            .background(playFill)
                             .semantics { contentDescription = playPause },
                         contentAlignment = Alignment.Center,
-                    ) { PlayPauseIcon(state.isPlaying, onPlayerAccent, Modifier.size(36.dp)) }
+                    ) { PlayPauseIcon(state.isPlaying, playInk, Modifier.size(36.dp)) }
                 }
                 Icon(
                     Icons.Filled.SkipNext, appString(R.string.text_next_bc9819),
@@ -788,24 +776,20 @@ fun PlayerScreen(
                     modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onCycleRepeat).padding(8.dp),
                 )
             }
-
-            Spacer(Modifier.height(12.dp))
-
+        }
+        // a layout with its own lyrics and queue views shows the sleep timer in their place, as tablets do
+        val utilities: @Composable (Boolean) -> Unit = { ownPanes ->
             if (ui.playerShowUtilities) {
-                val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
-                val reverbStore = remember { (appContext as com.aurora.music.AuroraApplication).container.settingsStore }
-                val reverbOn by remember(reverbStore) { reverbStore.reverbPrefs.map { it.enabled } }.collectAsStateWithLifecycle(initialValue = false)
                 Row(
                     Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    horizontalArrangement = if (tablet) Arrangement.spacedBy(8.dp) else Arrangement.SpaceBetween,
+                    horizontalArrangement = if (styled) Arrangement.SpaceEvenly else if (ownPanes) Arrangement.spacedBy(8.dp) else Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     BottomUtil(
                         Icons.Filled.Speed, appString(R.string.text_speed_x_72da98, ("%.1f".format(state.speed))), onOpenSpeedPitch,
-                        active = kotlin.math.abs(state.speed - 1f) > 0.001f || reverbOn ||
-                            (!state.matchPitch && kotlin.math.abs(state.pitch) > 0.001f),
+                        active = speedActive(state),
                     )
-                    if (tablet) {
+                    if (ownPanes) {
                         BottomUtil(Icons.Filled.Bedtime, appString(R.string.text_sleep_timer_e90613), onOpenSleep,
                             active = state.sleepTimerMinutes > 0 || state.sleepEndOfTrack)
                     } else {
@@ -821,6 +805,19 @@ fun PlayerScreen(
             } else {
                 Spacer(Modifier.height(12.dp))
             }
+        }
+        val controls: @Composable () -> Unit = {
+            titleRow()
+            if (!song.isDjSpeech()) {
+                Spacer(Modifier.height(10.dp))
+                chips()
+                Spacer(Modifier.height(8.dp))
+                seek(false, playerAccent)
+            }
+            Spacer(Modifier.height(8.dp))
+            transport(Modifier.size(72.dp).clip(if (classic) CircleShape else MaterialTheme.shapes.large), playerAccent, onPlayerAccent, true)
+            Spacer(Modifier.height(12.dp))
+            utilities(tablet)
         }
         val landscape = com.aurora.music.ui.layout.LocalWindowLayout.current.useLandscapePlayer
         if (fullscreenActive) {
@@ -925,6 +922,29 @@ fun PlayerScreen(
                 }
             }
             LyricsOverlay(overlay, lyricsOffset, landscape, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
+        } else if (styled) {
+            val view = styledView.takeUnless { it == StyledView.QUEUE && PlayerPane.QUEUE !in panes } ?: StyledView.NOW
+            val parts = PlayerParts(
+                state = state, view = view, onView = { styledView = it }, hasQueue = PlayerPane.QUEUE in panes,
+                wideArt = djStage != null || (showVideo && state.hasVideo && videoPlayer != null && !state.videoIsCanvas),
+                openAlbum = openAlbum, openArtist = openArtist, onCollapse = onCollapse, onToggleLike = onToggleLike, onSeek = onSeek,
+                onOpenSpeedPitch = onOpenSpeedPitch, onOpenSleep = onOpenSleep, onOpenVisualizer = onOpenVisualizer, onOpenOutput = onOpenOutput,
+                header = header, videoToggle = videoToggle.takeIf { showVideoModeControl }, djControl = djControl, moreMenu = moreMenu,
+                artwork = artwork,
+                chips = { if (!song.isDjSpeech()) chips() },
+                seek = { compact, accent -> if (!song.isDjSpeech()) seek(compact, accent) },
+                transport = transport,
+                utilities = { utilities(true) },
+                queue = { paneContent?.invoke(PlayerPane.QUEUE, it) },
+                queueActions = { paneActions?.invoke(PlayerPane.QUEUE) },
+            )
+            androidx.activity.compose.BackHandler(enabled = view != StyledView.NOW) { styledView = StyledView.NOW }
+            val stage = Modifier.fillMaxSize().then(underOverlay)
+            when (style) {
+                PlayerStyle.SPOTLIGHT -> SpotlightPlayer(parts, stage)
+                PlayerStyle.CONSOLE -> ConsolePlayer(parts, stage)
+                else -> DriftPlayer(parts, stage)
+            }
         } else {
             Column(
                 Modifier.align(Alignment.TopCenter).then(underOverlay).widthIn(max = if (landscape) 1280.dp else 640.dp)
@@ -1391,9 +1411,53 @@ private fun MarqueeTitle(
     }
 }
 
+@Composable
+internal fun BpmLine(state: PlayerUiState) {
+    if (state.bpm > 0) {
+        Spacer(Modifier.height(3.dp))
+        Text(
+            "${state.keyName} · ${state.camelot} · ${state.bpm} BPM",
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary, maxLines = 1,
+        )
+    }
+}
+
+@Composable
+internal fun PlayerLike(
+    state: PlayerUiState,
+    onToggleLike: () -> Unit,
+    modifier: Modifier = Modifier.size(48.dp).paperClip(CircleShape),
+    glyph: androidx.compose.ui.unit.Dp = 32.dp,
+) {
+    val song = state.current
+    val likeTint by animateColorAsState(
+        if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, label = "like",
+    )
+    if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
+        com.aurora.music.ui.components.LikeHeart(song, onToggleLike, modifier) {
+            Icon(
+                imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                contentDescription = appString(R.string.text_like_c7e02c),
+                tint = likeTint,
+                modifier = Modifier.size(glyph).likePop(state.isCurrentLiked, song.id),
+            )
+        }
+    }
+}
+
+@Composable
+internal fun speedActive(state: PlayerUiState): Boolean {
+    val appContext = androidx.compose.ui.platform.LocalContext.current.applicationContext
+    val reverbStore = remember { (appContext as com.aurora.music.AuroraApplication).container.settingsStore }
+    val reverbOn by remember(reverbStore) { reverbStore.reverbPrefs.map { it.enabled } }.collectAsStateWithLifecycle(initialValue = false)
+    return kotlin.math.abs(state.speed - 1f) > 0.001f || reverbOn ||
+        (!state.matchPitch && kotlin.math.abs(state.pitch) > 0.001f)
+}
+
 // a tap opens the album or artist; a long press, or a tap with nothing to open, the song's menu
 @Composable
-private fun SongTitles(
+internal fun SongTitles(
     song: com.aurora.music.model.Song,
     titleStyle: androidx.compose.ui.text.TextStyle,
     artistStyle: androidx.compose.ui.text.TextStyle,
@@ -1494,6 +1558,7 @@ private fun SeekBar(
     onSeekingChanged: (Boolean) -> Unit = {},
     comments: List<com.aurora.music.model.TrackComment> = emptyList(),
     onOpenComment: (String) -> Unit = {},
+    track: Color = Color.Unspecified,
 ) {
     val position = com.aurora.music.ui.components.LocalPlaybackPosition.current.value
     val positionSec = position.toInt()
@@ -1533,7 +1598,7 @@ private fun SeekBar(
                 onValueChange = { onInteraction(); onSeek(it) },
                 onValueChangeFinished = onInteraction,
                 valueRange = 0f..1f,
-                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent),
+                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent, inactiveTrackColor = track),
                 interactionSource = sliderInteractionSource,
                 modifier = Modifier.fillMaxWidth(),
             )

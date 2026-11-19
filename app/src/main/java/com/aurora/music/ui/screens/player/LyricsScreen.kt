@@ -330,7 +330,8 @@ private fun WideLyrics(
 }
 
 @Composable
-internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier: Modifier = Modifier, compact: Boolean = true) {
+internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier: Modifier = Modifier, compact: Boolean = true,
+    ink: Color? = null) {
     val song = state.current
     val container = (LocalContext.current.applicationContext as AuroraApplication).container
     var lyrics by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Lyrics?>(null) }
@@ -343,37 +344,40 @@ internal fun LyricsPane(state: PlayerUiState, onSeek: (Float) -> Unit, modifier:
     var explain by remember(song.id) { mutableStateOf<List<com.aurora.music.data.GeniusReferent>?>(null) }
     var about by remember(song.id) { mutableStateOf(false) }
     GeniusSheets(meanings, explain, about) { explain = null; about = false }
+    val tone = ink ?: Color.White
     Box(modifier) {
-        LyricsBackdrop(song)
+        if (ink == null) LyricsBackdrop(song)
         val content = lyrics
         when {
             loading -> CircularProgressIndicator(Modifier.align(Alignment.Center).size(28.dp),
-                color = Color.White.copy(alpha = .8f), strokeWidth = 2.dp)
+                color = tone.copy(alpha = .8f), strokeWidth = 2.dp)
             content == null || content.lines.isEmpty() -> Column(
                 Modifier.align(Alignment.Center).padding(32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                Icon(Icons.Default.Lyrics, null, Modifier.size(36.dp), tint = Color.White.copy(alpha = .55f))
+                Icon(Icons.Default.Lyrics, null, Modifier.size(36.dp), tint = tone.copy(alpha = .55f))
                 Spacer(Modifier.height(12.dp))
-                Text(appString(R.string.text_no_lyrics_found_75127a), color = Color.White,
+                Text(appString(R.string.text_no_lyrics_found_75127a), color = tone,
                     style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-                if (song.title.isNotBlank()) Text(song.title, color = Color.White.copy(alpha = .65f),
+                if (song.title.isNotBlank()) Text(song.title, color = tone.copy(alpha = .65f),
                     style = MaterialTheme.typography.bodyMedium, maxLines = 1, overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 4.dp))
             }
             else -> Column(Modifier.fillMaxSize()) {
                 Box(Modifier.weight(1f).fillMaxWidth()) {
                     key(song.id, song.playbackSource?.providerId) {
-                        ImmersiveLyrics(content, state.current, state.isPlaying, state.durationSec, onSeek = onSeek,
-                            onScrolling = {}, onBackgroundTap = {}, compact = compact, meanings = meanings, onExplain = { explain = it })
+                        CompositionLocalProvider(LocalLyricInk provides tone) {
+                            ImmersiveLyrics(content, state.current, state.isPlaying, state.durationSec, onSeek = onSeek,
+                                onScrolling = {}, onBackgroundTap = {}, compact = compact, meanings = meanings, onExplain = { explain = it })
+                        }
                     }
                 }
                 Row(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 10.dp), verticalAlignment = Alignment.CenterVertically) {
-                    sourceLabel(content.source, meanings)?.let { Text(it, color = Color.White.copy(alpha = .45f),
+                    sourceLabel(content.source, meanings)?.let { Text(it, color = tone.copy(alpha = .45f),
                         style = MaterialTheme.typography.labelSmall, maxLines = 1, overflow = TextOverflow.Ellipsis) }
-                    if (meanings?.hasAbout == true) Text(appString(R.string.genius_about), color = Color.White.copy(alpha = .8f),
+                    if (meanings?.hasAbout == true) Text(appString(R.string.genius_about), color = tone.copy(alpha = .8f),
                         style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.SemiBold,
-                        modifier = Modifier.padding(start = 10.dp).paperClip(CircleShape).background(Color.White.copy(alpha = .12f))
+                        modifier = Modifier.padding(start = 10.dp).paperClip(CircleShape).background(tone.copy(alpha = .12f))
                             .clickable(role = Role.Button) { about = true }.padding(horizontal = 10.dp, vertical = 4.dp))
                 }
             }
@@ -446,6 +450,7 @@ internal fun LyricsBackdrop(song: Song) {
 private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durationSec: Int, onSeek: (Float) -> Unit,
     onScrolling: (Boolean) -> Unit, onBackgroundTap: () -> Unit, compact: Boolean = false,
     meanings: LyricMeanings? = null, onExplain: (List<com.aurora.music.data.GeniusReferent>) -> Unit = {}) {
+    val ink = LocalLyricInk.current
     val mode = com.aurora.music.ui.theme.LocalUiPrefs.current.lyricsSync
     val haptics = androidx.compose.ui.platform.LocalHapticFeedback.current
     val explainLabel = appString(R.string.genius_explain)
@@ -541,7 +546,7 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                         if (karaokeOn) line.charFill(clock.longValue).map { (it * FILL_STEPS).roundToInt() / FILL_STEPS } else null
                     }
                 }
-                val plain = fill?.let { remember(line, it) { karaoke(line.displayText, it) } }
+                val plain = fill?.let { remember(line, it, ink) { karaoke(line.displayText, it, ink) } }
                     ?: AnnotatedString(line.displayText.ifBlank { "•••" })
                 val text = if (marked) remember(plain) { plain.withMeaningMark() } else plain
                 val meaning = translated?.getOrNull(index)
@@ -562,7 +567,7 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                     Text(text,
                         inlineContent = meaningMarkContent,
                         onTextLayout = { textLayout = it },
-                        color = Color.White, fontSize = if (compact) 22.sp else 30.sp,
+                        color = ink, fontSize = if (compact) 22.sp else 30.sp,
                         lineHeight = if (compact) 29.sp else 38.sp,
                         fontWeight = FontWeight.Bold, letterSpacing = (-.5).sp,
                         modifier = Modifier.fillMaxWidth().padding(vertical = 6.dp).pointerInput(seekable, marked, notes.isNotEmpty()) {
@@ -587,7 +592,7 @@ private fun ImmersiveLyrics(source: Lyrics, song: Song, playing: Boolean, durati
                         },
                     )
                     if (meaning != null) Text(meaning,
-                        color = Color.White.copy(alpha = .6f), fontSize = if (compact) 14.sp else 17.sp,
+                        color = ink.copy(alpha = .6f), fontSize = if (compact) 14.sp else 17.sp,
                         lineHeight = if (compact) 19.sp else 23.sp, fontWeight = FontWeight.Medium,
                         modifier = Modifier.fillMaxWidth().padding(bottom = 6.dp).pointerInput(seekable) {
                             detectTapGestures { if (seekable) seekLine() else backgroundTap() }
@@ -662,13 +667,13 @@ private fun rememberLyricsClock(position: State<Float>, playing: Boolean): Mutab
 
 private const val FILL_STEPS = 4f
 
-private fun karaoke(text: String, fill: List<Float>): AnnotatedString = buildAnnotatedString {
+private fun karaoke(text: String, fill: List<Float>, ink: Color): AnnotatedString = buildAnnotatedString {
     append(text)
     var i = 0
     while (i < text.length) {
         var j = i + 1
         while (j < text.length && fill[j] == fill[i]) j++
-        addStyle(SpanStyle(color = Color.White.copy(alpha = .4f + .6f * fill[i])), i, j)
+        addStyle(SpanStyle(color = ink.copy(alpha = .4f + .6f * fill[i])), i, j)
         i = j
     }
 }
