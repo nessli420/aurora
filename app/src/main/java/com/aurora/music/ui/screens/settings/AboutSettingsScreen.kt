@@ -17,7 +17,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -35,6 +37,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.AuroraApplication
 import com.aurora.music.BuildConfig
 import com.aurora.music.data.ServerType
+import com.aurora.music.data.updates.GitHubRelease
 
 @Composable
 fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
@@ -115,6 +119,13 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
             Spacer(Modifier.height(24.dp))
 
             AppUpdateCard(container.appUpdater)
+            Spacer(Modifier.height(16.dp))
+            val uriHandler = LocalUriHandler.current
+            SettingsGroup {
+                SettingsNavRow(Icons.Filled.Public, appString(R.string.about_website), GitHubRelease.WEBSITE_URL.substringAfter("//")) { runCatching { uriHandler.openUri(GitHubRelease.WEBSITE_URL) } }
+                SettingsRowDivider()
+                SettingsNavRow(Icons.Filled.Forum, appString(R.string.about_discord), GitHubRelease.DISCORD_URL.substringAfter("//")) { runCatching { uriHandler.openUri(GitHubRelease.DISCORD_URL) } }
+            }
             Spacer(Modifier.height(16.dp))
             val source = when (session?.type) {
                 ServerType.JELLYFIN -> "Jellyfin"

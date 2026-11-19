@@ -18,7 +18,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.GraphicEq
+import androidx.compose.material.icons.filled.Public
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
@@ -44,6 +46,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.aurora.music.data.ServerType
+import com.aurora.music.data.updates.GitHubRelease
 import com.aurora.music.desktop.audio.outputApis
 import com.aurora.music.desktop.platform.BuildInfo
 import com.aurora.music.desktop.platform.HostPlatform
@@ -119,6 +122,12 @@ fun AboutSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
                 }
             }
             AppUpdateCard(container.appUpdater)
+            Spacer(Modifier.height(8.dp))
+            SettingsGroup {
+                SettingsNavRow(Icons.Filled.Public, appString(R.string.about_website), GitHubRelease.WEBSITE_URL.substringAfter("//")) { runCatching { uriHandler.openUri(GitHubRelease.WEBSITE_URL) } }
+                SettingsRowDivider()
+                SettingsNavRow(Icons.Filled.Forum, appString(R.string.about_discord), GitHubRelease.DISCORD_URL.substringAfter("//")) { runCatching { uriHandler.openUri(GitHubRelease.DISCORD_URL) } }
+            }
             Spacer(Modifier.height(8.dp))
             SettingsGroup {
                 val source = when (session?.type) {

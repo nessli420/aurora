@@ -15,6 +15,8 @@ internal object SettingsSearchIndex {
         e(R.string.whats_new_show_setting, R.string.whats_new_show_setting_detail, Routes.SETTINGS_WHATS_NEW),
         e(R.string.onboarding_replay_title, R.string.onboarding_replay_body, null),
         e(R.string.language_title, null, Routes.SETTINGS_LANGUAGE),
+        e(R.string.about_website, null, Routes.SETTINGS_ABOUT),
+        e(R.string.about_discord, null, Routes.SETTINGS_ABOUT),
         e(R.string.hidden_songs_title, R.string.hidden_songs_summary, Routes.SETTINGS_HIDDEN_SONGS),
         e(R.string.blocked_artists_title, null, Routes.SETTINGS_HIDDEN_SONGS),
         e(R.string.text_close_to_tray_f91cc6, R.string.text_keep_aurora_playing_in_the_notification_area_when_the_window_clos_e5fed5, null),

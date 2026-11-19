@@ -46,6 +46,7 @@ object GitHubRelease {
     const val LATEST_API = "https://api.github.com/repos/nessli420/aurora/releases/latest"
     const val RELEASES_URL = "$REPOSITORY_URL/releases/latest"
     const val DISCORD_URL = "https://discord.gg/zrxXejkywP"
+    const val WEBSITE_URL = "https://auroraplayer.lol"
 
     fun parse(json: String): AppRelease {
         val root = JsonParser.parseString(json).asJsonObject

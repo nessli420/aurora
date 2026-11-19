@@ -13,6 +13,8 @@ internal object SettingsSearchIndex {
 
     val rows: List<SettingsSearchEntry> = listOf(
         e(R.string.language_title, null, Routes.SETTINGS_LANGUAGE),
+        e(R.string.about_website, null, Routes.SETTINGS_ABOUT),
+        e(R.string.about_discord, null, Routes.SETTINGS_ABOUT),
         e(R.string.hidden_songs_title, R.string.hidden_songs_summary, Routes.SETTINGS_HIDDEN_SONGS),
         e(R.string.blocked_artists_title, null, Routes.SETTINGS_HIDDEN_SONGS),
         e(R.string.onboarding_replay_title, R.string.onboarding_replay_body, null),
