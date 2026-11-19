@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"चार लेआउट"</string>
+    <string name="whats_new_layouts_body">"क्लासिक, स्पॉटलाइट, कंसोल और ड्रिफ्ट होम और लाइब्रेरी को अपने-अपने तरीके से सजाते हैं। बार, फ़ुल-स्क्रीन प्लेयर और खोज इनके साथ चल सकते हैं या उनका अपना लेआउट हो सकता है।"</string>
+    <string name="whats_new_foryou_title">"आपके लिए बनाया गया"</string>
+    <string name="whats_new_foryou_body">"होम पर डेली मिक्स, दिन के समय के हिसाब से मिक्स, सुझाए गए गाने, खोजें और कलाकार रेडियो, हर एक का अपना कवर। किसी मिक्स को पसंद करें और उसकी तारीख वाली कॉपी अपनी लाइब्रेरी में रखें।"</string>
+    <string name="whats_new_genius_title">"गीतों का मतलब"</string>
+    <string name="whats_new_genius_body">"इंटीग्रेशन में गीतों के अर्थ चालू करें, फिर Genius से किसी पंक्ति का मतलब देखें और इस गाने के बारे में पढ़ें।"</string>
+    <string name="whats_new_yt_comments_title">"YouTube टिप्पणियाँ"</string>
+    <string name="whats_new_yt_comments_body">"किसी गाने के YouTube वीडियो की टिप्पणियाँ अब SoundCloud की टिप्पणियों के साथ दिखती हैं। YouTube Music में साइन इन होने पर आप टिप्पणी लिख और पसंद भी कर सकते हैं।"</string>
+    <string name="whats_new_spotify_folders_title">"Spotify प्लेलिस्ट फ़ोल्डर"</string>
+    <string name="whats_new_spotify_folders_body">"आपके Spotify फ़ोल्डर लाइब्रेरी में दिखते हैं। फ़ोल्डर बनाएँ, नाम बदलें, हटाएँ और प्लेलिस्ट अंदर-बाहर ले जाएँ।"</string>
+    <string name="whats_new_spotify_mirror_title">"आपके प्ले Spotify पर गिने जाते हैं"</string>
+    <string name="whats_new_spotify_mirror_body">"प्लेबैक में Spotify पर प्ले मिरर करें चालू करें, ताकि हर Spotify गाना Spotify के वेब प्लेयर में म्यूट होकर चले और हाल ही में चलाए गए, आपके सुझावों और Wrapped में दिखे। केवल Premium।"</string>
+    <string name="whats_new_apple_library_title">"बिना सदस्यता Apple Music"</string>
+    <string name="whats_new_apple_library_body">"बिना सदस्यता के गाने पसंद करें और प्लेलिस्ट बनाएँ। सदस्यता लेने तक ये इसी डिवाइस पर रहते हैं, फिर आपके खाते में चले जाते हैं। पसंद किए गए गाने और प्लेलिस्ट हटाना भी काम करते हैं।"</string>
+    <string name="whats_new_song_menu_title">"सही कॉपी चुनें"</string>
+    <string name="whats_new_song_menu_body">"हर गाने के मेनू में प्लेबैक स्रोत और गलत गाना? दूसरा चुनें है, और लिंक कॉपी करें से गाना उसके किसी भी स्रोत से शेयर होता है।"</string>
+    <string name="whats_new_fix_marquee">"मिनी प्लेयर में लंबे शीर्षक स्क्रॉल होते हैं"</string>
+    <string name="whats_new_fix_motion">"ज़्यादा स्मूद एनिमेशन और एनिमेटेड नाउ प्लेइंग बार"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass आपके एक्सेंट रंग, बार और प्लेयर लेआउट के साथ चलता है"</string>
+    <string name="whats_new_fix_appearance">"दिखावट अब थीम, लेआउट, टेक्स्ट, प्लेयर और होम और लाइब्रेरी में बँटी है"</string>
+    <string name="whats_new_fix_about">"परिचय में वेबसाइट और Discord के लिंक"</string>
+    <string name="whats_new_fix_swipe">"Aurora को स्वाइप करके हटाने पर भी संगीत चलता रहता है"</string>
+    <string name="whats_new_fix_open_player">"नोटिफ़िकेशन और विजेट फ़ुल-स्क्रीन प्लेयर खोलते हैं"</string>
+    <string name="whats_new_fix_back">"वापस पहले फ़ुल-स्क्रीन प्लेयर बंद करता है"</string>
+    <string name="whats_new_fix_sd_card">"फ़ोल्डर चुनते ही SD कार्ड के गाने दिखने लगते हैं"</string>
+    <string name="whats_new_fix_heart">"मिनी प्लेयर का दिल आपके एक्सेंट रंग के साथ चलता है"</string>
+    <string name="whats_new_fix_soundcloud_history">"प्ले आपके SoundCloud इतिहास में दिखते हैं"</string>
+    <string name="whats_new_fix_source_picker">"बदलने के बाद प्लेबैक स्रोत सही कॉपी दिखाता है"</string>
+    <string name="whats_new_fix_window_close">"विंडो तुरंत बंद होती है"</string>
+</resources>

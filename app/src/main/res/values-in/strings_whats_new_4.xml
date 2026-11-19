@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Empat tata letak"</string>
+    <string name="whats_new_layouts_body">"Klasik, Spotlight, Konsol, dan Drift masing-masing menata Beranda dan Pustaka dengan caranya sendiri. Bilah, pemutar layar penuh, dan Cari bisa mengikuti atau punya tata letak sendiri."</string>
+    <string name="whats_new_foryou_title">"Dibuat untukmu"</string>
+    <string name="whats_new_foryou_body">"Mix harian, mix sesuai waktu, Lagu rekomendasi, Temukan, dan radio artis di Beranda, masing-masing dengan sampulnya sendiri. Sukai mix untuk menyimpan salinan bertanggal di Pustaka."</string>
+    <string name="whats_new_genius_title">"Makna di balik lirik"</string>
+    <string name="whats_new_genius_body">"Aktifkan Makna lirik di Integrasi untuk melihat arti sebuah baris dan membaca Tentang lagu ini, dari Genius."</string>
+    <string name="whats_new_yt_comments_title">"Komentar YouTube"</string>
+    <string name="whats_new_yt_comments_body">"Komentar dari video YouTube sebuah lagu tampil di samping komentar SoundCloud. Setelah masuk ke YouTube Music, kamu juga bisa berkomentar dan menyukai komentar."</string>
+    <string name="whats_new_spotify_folders_title">"Folder playlist Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"Folder Spotify-mu tampil di Pustaka. Buat, ganti nama, dan hapus folder, serta pindahkan playlist ke dalam atau keluar."</string>
+    <string name="whats_new_spotify_mirror_title">"Putaranmu tercatat di Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Aktifkan Cerminkan putaran ke Spotify di Pemutaran agar setiap lagu Spotify diputar tanpa suara di pemutar web Spotify, sehingga muncul di Baru diputar, rekomendasimu, dan Wrapped. Khusus Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music tanpa langganan"</string>
+    <string name="whats_new_apple_library_body">"Sukai lagu dan buat playlist tanpa langganan. Semuanya tersimpan di perangkat ini sampai kamu berlangganan, lalu pindah ke akunmu. Lagu yang Disukai dan menghapus playlist juga berfungsi."</string>
+    <string name="whats_new_song_menu_title">"Pilih salinan yang tepat"</string>
+    <string name="whats_new_song_menu_body">"Setiap menu lagu punya Sumber pemutaran dan Lagu salah? Pilih yang lain, dan Salin tautan membagikan lagu dari sumber mana pun yang memilikinya."</string>
+    <string name="whats_new_fix_marquee">"Judul panjang bergulir di pemutar mini"</string>
+    <string name="whats_new_fix_motion">"Animasi lebih halus dan bilah pemutaran yang bergerak"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass mengikuti warna aksen, bilah, dan tata letak pemutar"</string>
+    <string name="whats_new_fix_appearance">"Tampilan dibagi menjadi Tema, Tata letak, Teks, Pemutar, dan Beranda &amp; Pustaka"</string>
+    <string name="whats_new_fix_about">"Tautan situs web dan Discord di Tentang"</string>
+    <string name="whats_new_fix_swipe">"Musik tetap diputar saat kamu menggeser Aurora untuk menutupnya"</string>
+    <string name="whats_new_fix_open_player">"Notifikasi dan widget membuka pemutar layar penuh"</string>
+    <string name="whats_new_fix_back">"Kembali menutup pemutar layar penuh terlebih dahulu"</string>
+    <string name="whats_new_fix_sd_card">"Lagu di kartu SD muncul begitu kamu memilih foldernya"</string>
+    <string name="whats_new_fix_heart">"Hati di pemutar mini mengikuti warna aksen"</string>
+    <string name="whats_new_fix_soundcloud_history">"Putaran muncul di riwayat SoundCloud-mu"</string>
+    <string name="whats_new_fix_source_picker">"Sumber pemutaran menandai salinan yang tepat setelah ditukar"</string>
+    <string name="whats_new_fix_window_close">"Jendela langsung tertutup"</string>
+</resources>

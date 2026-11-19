@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Quattro layout"</string>
+    <string name="whats_new_layouts_body">"Classico, Spotlight, Console e Drift organizzano Home e Libreria ognuno a modo suo. Le barre, il lettore a schermo intero e Cerca possono seguirli o avere un layout tutto loro."</string>
+    <string name="whats_new_foryou_title">"Creato per te"</string>
+    <string name="whats_new_foryou_body">"Mix giornalieri, un mix per l'ora del giorno, Brani consigliati, Scopri e radio degli artisti in Home, ognuno con la sua copertina. Metti mi piace a un mix per tenerne una copia datata nella Libreria."</string>
+    <string name="whats_new_genius_title">"Cosa vogliono dire i testi"</string>
+    <string name="whats_new_genius_body">"Attiva Significato dei testi in Integrazioni per vedere cosa significa un verso e leggere Info sul brano, da Genius."</string>
+    <string name="whats_new_yt_comments_title">"Commenti di YouTube"</string>
+    <string name="whats_new_yt_comments_body">"I commenti del video YouTube di un brano compaiono accanto a quelli di SoundCloud. Con l'accesso a YouTube Music puoi anche commentare e mettere mi piace."</string>
+    <string name="whats_new_spotify_folders_title">"Cartelle di playlist Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"Le tue cartelle Spotify compaiono nella Libreria. Creale, rinominale, eliminale e sposta le playlist dentro e fuori."</string>
+    <string name="whats_new_spotify_mirror_title">"I tuoi ascolti contano su Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Attiva Rispecchia gli ascolti su Spotify in Riproduzione per riprodurre ogni brano Spotify senza audio nel web player di Spotify, così compare in Ascoltati di recente, nei consigli e in Wrapped. Solo Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music senza abbonamento"</string>
+    <string name="whats_new_apple_library_body">"Metti mi piace ai brani e crea playlist senza abbonamento. Restano su questo dispositivo finché non ti abboni, poi passano al tuo account. Funzionano anche Brani preferiti e l'eliminazione delle playlist."</string>
+    <string name="whats_new_song_menu_title">"Scegli la copia giusta"</string>
+    <string name="whats_new_song_menu_body">"Ogni menu del brano ha Sorgente di riproduzione e Brano sbagliato? Scegline un altro, e Copia link condivide un brano da qualsiasi sorgente in cui si trova."</string>
+    <string name="whats_new_fix_marquee">"I titoli lunghi scorrono nel mini player"</string>
+    <string name="whats_new_fix_motion">"Animazioni più fluide e barre di riproduzione animate"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass segue il colore d'accento, le barre e il layout del lettore"</string>
+    <string name="whats_new_fix_appearance">"Aspetto è diviso in Temi, Layout, Testo, Lettore e Home e Libreria"</string>
+    <string name="whats_new_fix_about">"Link al sito web e a Discord in Info"</string>
+    <string name="whats_new_fix_swipe">"La musica continua quando chiudi Aurora con uno swipe"</string>
+    <string name="whats_new_fix_open_player">"La notifica e il widget aprono il lettore a schermo intero"</string>
+    <string name="whats_new_fix_back">"Indietro chiude prima il lettore a schermo intero"</string>
+    <string name="whats_new_fix_sd_card">"I brani su una scheda SD compaiono appena scegli la loro cartella"</string>
+    <string name="whats_new_fix_heart">"Il cuore del mini player segue il colore d'accento"</string>
+    <string name="whats_new_fix_soundcloud_history">"Gli ascolti compaiono nella tua cronologia di SoundCloud"</string>
+    <string name="whats_new_fix_source_picker">"Sorgente di riproduzione segna la copia giusta dopo uno scambio"</string>
+    <string name="whats_new_fix_window_close">"La finestra si chiude subito"</string>
+</resources>

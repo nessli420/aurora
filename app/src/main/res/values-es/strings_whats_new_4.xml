@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Cuatro diseños"</string>
+    <string name="whats_new_layouts_body">"Clásico, Spotlight, Consola y Drift organizan Inicio y la biblioteca cada uno a su manera. Las barras, el reproductor a pantalla completa y Buscar pueden seguirlos o tener un diseño propio."</string>
+    <string name="whats_new_foryou_title">"Hecho para ti"</string>
+    <string name="whats_new_foryou_body">"Mixes diarios, un mix según la hora del día, Canciones recomendadas, Descubrir y radios de artistas en Inicio, cada uno con su propia portada. Dale me gusta a un mix para guardar una copia con fecha en tu biblioteca."</string>
+    <string name="whats_new_genius_title">"Qué significan las letras"</string>
+    <string name="whats_new_genius_body">"Activa Significados de las letras en Integraciones para ver qué significa un verso y leer Acerca de esta canción, de Genius."</string>
+    <string name="whats_new_yt_comments_title">"Comentarios de YouTube"</string>
+    <string name="whats_new_yt_comments_body">"Los comentarios del vídeo de YouTube de una canción aparecen junto a los de SoundCloud. Con tu sesión de YouTube Music también puedes comentar y darles me gusta."</string>
+    <string name="whats_new_spotify_folders_title">"Carpetas de playlists de Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"Tus carpetas de Spotify aparecen en la biblioteca. Créalas, cámbiales el nombre, elimínalas y mueve playlists dentro y fuera."</string>
+    <string name="whats_new_spotify_mirror_title">"Tus escuchas cuentan en Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Activa Reflejar reproducciones en Spotify en Reproducción para reproducir cada canción de Spotify silenciada en su reproductor web y que aparezca en Escuchado recientemente, tus recomendaciones y Wrapped. Solo Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music sin suscripción"</string>
+    <string name="whats_new_apple_library_body">"Dale me gusta a canciones y crea playlists sin suscripción. Se quedan en este dispositivo hasta que te suscribas y luego pasan a tu cuenta. Canciones que te gustan y eliminar playlists también funcionan."</string>
+    <string name="whats_new_song_menu_title">"Elige la copia correcta"</string>
+    <string name="whats_new_song_menu_body">"Cada menú de canción tiene Fuente de reproducción y ¿Canción equivocada? Elige otra, y Copiar enlace comparte una canción desde cualquier fuente donde esté."</string>
+    <string name="whats_new_fix_marquee">"Los títulos largos se desplazan en el minirreproductor"</string>
+    <string name="whats_new_fix_motion">"Animaciones más fluidas y barras de reproducción animadas"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass sigue tu color de acento, las barras y el diseño del reproductor"</string>
+    <string name="whats_new_fix_appearance">"Apariencia se divide en Temas, Diseños, Texto, Reproductor e Inicio y biblioteca"</string>
+    <string name="whats_new_fix_about">"Enlaces al sitio web y a Discord en Acerca de"</string>
+    <string name="whats_new_fix_swipe">"La música sigue sonando al deslizar Aurora para cerrarla"</string>
+    <string name="whats_new_fix_open_player">"La notificación y el widget abren el reproductor a pantalla completa"</string>
+    <string name="whats_new_fix_back">"Atrás cierra primero el reproductor a pantalla completa"</string>
+    <string name="whats_new_fix_sd_card">"Las canciones de una tarjeta SD aparecen al elegir su carpeta"</string>
+    <string name="whats_new_fix_heart">"El corazón del minirreproductor sigue tu color de acento"</string>
+    <string name="whats_new_fix_soundcloud_history">"Las reproducciones aparecen en tu historial de SoundCloud"</string>
+    <string name="whats_new_fix_source_picker">"Fuente de reproducción marca la copia correcta tras un cambio"</string>
+    <string name="whats_new_fix_window_close">"La ventana se cierra al instante"</string>
+</resources>

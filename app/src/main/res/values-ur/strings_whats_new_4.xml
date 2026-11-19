@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"چار لے آؤٹس"</string>
+    <string name="whats_new_layouts_body">"کلاسک، اسپاٹ لائٹ، کنسول اور ڈرفٹ ہوم اور لائبریری کو اپنے اپنے انداز میں ترتیب دیتے ہیں۔ بارز، فل اسکرین پلیئر اور تلاش ان کے ساتھ چل سکتے ہیں یا ان کا اپنا لے آؤٹ ہو سکتا ہے۔"</string>
+    <string name="whats_new_foryou_title">"آپ کے لیے تیار کردہ"</string>
+    <string name="whats_new_foryou_body">"ہوم پر روزانہ مکس، دن کے وقت کے مطابق مکس، تجویز کردہ گانے، دریافت کریں اور فنکار ریڈیو، ہر ایک کا اپنا کور۔ کسی مکس کو پسند کریں تاکہ اس کی تاریخ والی کاپی آپ کی لائبریری میں محفوظ رہے۔"</string>
+    <string name="whats_new_genius_title">"بولوں کا مطلب"</string>
+    <string name="whats_new_genius_body">"انٹیگریشنز میں بولوں کے معنی آن کریں، پھر Genius سے کسی سطر کا مطلب دیکھیں اور اس گانے کے بارے میں پڑھیں۔"</string>
+    <string name="whats_new_yt_comments_title">"YouTube تبصرے"</string>
+    <string name="whats_new_yt_comments_body">"کسی گانے کی YouTube ویڈیو کے تبصرے اب SoundCloud کے تبصروں کے ساتھ نظر آتے ہیں۔ YouTube Music میں سائن ان ہو کر آپ تبصرے لکھ اور پسند بھی کر سکتے ہیں۔"</string>
+    <string name="whats_new_spotify_folders_title">"Spotify پلے لسٹ فولڈرز"</string>
+    <string name="whats_new_spotify_folders_body">"آپ کے Spotify فولڈرز لائبریری میں نظر آتے ہیں۔ فولڈر بنائیں، نام بدلیں، حذف کریں اور پلے لسٹس اندر باہر منتقل کریں۔"</string>
+    <string name="whats_new_spotify_mirror_title">"آپ کے پلے Spotify پر گنے جاتے ہیں"</string>
+    <string name="whats_new_spotify_mirror_body">"پلے بیک میں Spotify پر پلے منعکس کریں آن کریں تاکہ ہر Spotify گانا Spotify کے ویب پلیئر میں خاموشی سے چلے اور حال ہی میں چلائے گئے، آپ کی تجاویز اور Wrapped میں نظر آئے۔ صرف Premium۔"</string>
+    <string name="whats_new_apple_library_title">"سبسکرپشن کے بغیر Apple Music"</string>
+    <string name="whats_new_apple_library_body">"سبسکرپشن کے بغیر گانے پسند کریں اور پلے لسٹس بنائیں۔ سبسکرائب کرنے تک یہ اسی ڈیوائس پر رہتے ہیں، پھر آپ کے اکاؤنٹ میں چلے جاتے ہیں۔ پسندیدہ گانے اور پلے لسٹ حذف کرنا بھی کام کرتے ہیں۔"</string>
+    <string name="whats_new_song_menu_title">"صحیح کاپی چنیں"</string>
+    <string name="whats_new_song_menu_body">"ہر گانے کے مینو میں پلے بیک ماخذ اور غلط گانا؟ دوسرا چنیں موجود ہے، اور لنک کاپی کریں گانے کو اس کے کسی بھی ماخذ سے شیئر کرتا ہے۔"</string>
+    <string name="whats_new_fix_marquee">"منی پلیئر میں لمبے عنوان اسکرول ہوتے ہیں"</string>
+    <string name="whats_new_fix_motion">"زیادہ ہموار حرکت اور متحرک ناؤ پلیئنگ بارز"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass آپ کے ایکسنٹ رنگ، بارز اور پلیئر لے آؤٹ کے ساتھ چلتا ہے"</string>
+    <string name="whats_new_fix_appearance">"ظاہری شکل اب تھیمز، لے آؤٹس، متن، پلیئر اور ہوم اور لائبریری میں تقسیم ہے"</string>
+    <string name="whats_new_fix_about">"تعارف میں ویب سائٹ اور Discord کے لنکس"</string>
+    <string name="whats_new_fix_swipe">"Aurora کو سوائپ کر کے ہٹانے پر بھی موسیقی چلتی رہتی ہے"</string>
+    <string name="whats_new_fix_open_player">"نوٹیفکیشن اور ویجیٹ فل اسکرین پلیئر کھولتے ہیں"</string>
+    <string name="whats_new_fix_back">"واپس پہلے فل اسکرین پلیئر بند کرتا ہے"</string>
+    <string name="whats_new_fix_sd_card">"فولڈر چنتے ہی SD کارڈ کے گانے نظر آنے لگتے ہیں"</string>
+    <string name="whats_new_fix_heart">"منی پلیئر کا دل آپ کے ایکسنٹ رنگ کے ساتھ چلتا ہے"</string>
+    <string name="whats_new_fix_soundcloud_history">"پلے آپ کی SoundCloud ہسٹری میں نظر آتے ہیں"</string>
+    <string name="whats_new_fix_source_picker">"تبدیلی کے بعد پلے بیک ماخذ صحیح کاپی دکھاتا ہے"</string>
+    <string name="whats_new_fix_window_close">"ونڈو فوراً بند ہوتی ہے"</string>
+</resources>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"네 가지 레이아웃"</string>
+    <string name="whats_new_layouts_body">"클래식, 스포트라이트, 콘솔, 드리프트가 홈과 보관함을 각자의 방식으로 배치합니다. 바, 전체 화면 플레이어, 검색은 이를 따르거나 별도의 레이아웃을 쓸 수 있습니다."</string>
+    <string name="whats_new_foryou_title">"나를 위한 믹스"</string>
+    <string name="whats_new_foryou_body">"데일리 믹스, 시간대별 믹스, 추천 곡, 새로운 발견, 아티스트 라디오가 홈에 표시되며 각각 고유한 커버가 있습니다. 믹스에 좋아요를 누르면 날짜가 붙은 사본이 보관함에 저장됩니다."</string>
+    <string name="whats_new_genius_title">"가사의 의미"</string>
+    <string name="whats_new_genius_body">"통합에서 가사 의미를 켜면 Genius의 설명으로 각 줄의 의미와 이 곡에 대해를 볼 수 있습니다."</string>
+    <string name="whats_new_yt_comments_title">"YouTube 댓글"</string>
+    <string name="whats_new_yt_comments_body">"곡의 YouTube 동영상 댓글이 SoundCloud 댓글 옆에 표시됩니다. YouTube Music에 로그인하면 댓글을 작성하고 좋아요를 누를 수도 있습니다."</string>
+    <string name="whats_new_spotify_folders_title">"Spotify 플레이리스트 폴더"</string>
+    <string name="whats_new_spotify_folders_body">"Spotify 폴더가 보관함에 표시됩니다. 폴더를 만들고, 이름을 바꾸고, 삭제하고, 플레이리스트를 넣고 뺄 수 있습니다."</string>
+    <string name="whats_new_spotify_mirror_title">"Spotify에도 재생 기록 반영"</string>
+    <string name="whats_new_spotify_mirror_body">"재생에서 Spotify에 재생 미러링을 켜면 각 Spotify 곡이 Spotify 웹 플레이어에서 음소거로 재생되어 최근 재생, 추천, Wrapped에 반영됩니다. Premium 전용."</string>
+    <string name="whats_new_apple_library_title">"구독 없이 Apple Music"</string>
+    <string name="whats_new_apple_library_body">"구독 없이 곡에 좋아요를 누르고 플레이리스트를 만들 수 있습니다. 구독하기 전까지 이 기기에 보관되고, 구독하면 계정으로 옮겨집니다. 좋아요 표시한 곡과 플레이리스트 삭제도 지원합니다."</string>
+    <string name="whats_new_song_menu_title">"올바른 사본 고르기"</string>
+    <string name="whats_new_song_menu_body">"모든 곡 메뉴에 재생 소스와 잘못된 곡인가요? 다른 곡 선택이 추가되었고, 링크 복사로 곡이 있는 모든 소스의 링크를 공유할 수 있습니다."</string>
+    <string name="whats_new_fix_marquee">"미니 플레이어에서 긴 제목이 흐르듯 표시"</string>
+    <string name="whats_new_fix_motion">"더 부드러운 애니메이션과 움직이는 재생 중 막대"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass가 강조 색상, 바, 플레이어 레이아웃을 따름"</string>
+    <string name="whats_new_fix_appearance">"모양이 테마, 레이아웃, 텍스트, 플레이어, 홈 및 보관함으로 나뉨"</string>
+    <string name="whats_new_fix_about">"정보에 웹사이트와 Discord 링크 추가"</string>
+    <string name="whats_new_fix_swipe">"Aurora를 스와이프해 닫아도 음악이 계속 재생됨"</string>
+    <string name="whats_new_fix_open_player">"알림과 위젯에서 전체 화면 플레이어가 열림"</string>
+    <string name="whats_new_fix_back">"뒤로 가기가 먼저 전체 화면 플레이어를 닫음"</string>
+    <string name="whats_new_fix_sd_card">"폴더를 고르면 SD 카드의 곡이 바로 표시됨"</string>
+    <string name="whats_new_fix_heart">"미니 플레이어의 하트가 강조 색상을 따름"</string>
+    <string name="whats_new_fix_soundcloud_history">"재생 기록이 SoundCloud 기록에 표시됨"</string>
+    <string name="whats_new_fix_source_picker">"교체 후에도 재생 소스가 올바른 사본을 표시함"</string>
+    <string name="whats_new_fix_window_close">"창이 바로 닫힘"</string>
+</resources>

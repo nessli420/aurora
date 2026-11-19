@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Quatre dispositions"</string>
+    <string name="whats_new_layouts_body">"Classique, Spotlight, Console et Drift organisent chacune l'Accueil et la bibliothèque à leur façon. Les barres, le lecteur plein écran et la recherche peuvent suivre ou avoir leur propre disposition."</string>
+    <string name="whats_new_foryou_title">"Conçu pour vous"</string>
+    <string name="whats_new_foryou_body">"Des mix du jour, un mix selon le moment de la journée, des titres recommandés, Découvrir et des radios d'artistes sur l'Accueil, chacun avec sa pochette. Aimez un mix pour en garder une copie datée dans votre bibliothèque."</string>
+    <string name="whats_new_genius_title">"Ce que disent les paroles"</string>
+    <string name="whats_new_genius_body">"Activez Sens des paroles dans Intégrations pour voir ce que signifie une ligne et lire À propos de cette chanson, avec Genius."</string>
+    <string name="whats_new_yt_comments_title">"Commentaires YouTube"</string>
+    <string name="whats_new_yt_comments_body">"Les commentaires de la vidéo YouTube d'un titre s'affichent à côté de ceux de SoundCloud. Une fois connecté à YouTube Music, vous pouvez aussi commenter et aimer les commentaires."</string>
+    <string name="whats_new_spotify_folders_title">"Dossiers de playlists Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"Vos dossiers Spotify apparaissent dans la bibliothèque. Créez-les, renommez-les, supprimez-les et déplacez-y vos playlists."</string>
+    <string name="whats_new_spotify_mirror_title">"Vos écoutes comptent sur Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Activez Refléter les écoutes sur Spotify dans Lecture pour lire chaque titre Spotify en sourdine dans le lecteur web de Spotify : il apparaît alors dans Écoutés récemment, vos recommandations et Wrapped. Premium uniquement."</string>
+    <string name="whats_new_apple_library_title">"Apple Music sans abonnement"</string>
+    <string name="whats_new_apple_library_body">"Aimez des titres et créez des playlists sans abonnement. Ils restent sur cet appareil jusqu'à votre abonnement, puis passent sur votre compte. Titres aimés et suppression de playlists fonctionnent aussi."</string>
+    <string name="whats_new_song_menu_title">"Choisir la bonne version"</string>
+    <string name="whats_new_song_menu_body">"Chaque menu de titre propose Source de lecture et « Mauvais titre ? En choisir un autre », et Copier le lien partage un titre depuis n'importe quelle source qui l'a."</string>
+    <string name="whats_new_fix_marquee">"Les titres longs défilent dans le mini-lecteur"</string>
+    <string name="whats_new_fix_motion">"Animations plus fluides et barres de lecture animées"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass suit votre couleur d'accent, les barres et la disposition du lecteur"</string>
+    <string name="whats_new_fix_appearance">"Apparence est divisée en Thèmes, Dispositions, Texte, Lecteur et Accueil et bibliothèque"</string>
+    <string name="whats_new_fix_about">"Liens vers le site web et Discord dans À propos"</string>
+    <string name="whats_new_fix_swipe">"La musique continue quand vous balayez Aurora pour la fermer"</string>
+    <string name="whats_new_fix_open_player">"La notification et le widget ouvrent le lecteur plein écran"</string>
+    <string name="whats_new_fix_back">"Retour ferme d'abord le lecteur plein écran"</string>
+    <string name="whats_new_fix_sd_card">"Les titres d'une carte SD apparaissent dès que vous choisissez leur dossier"</string>
+    <string name="whats_new_fix_heart">"Le cœur du mini-lecteur suit votre couleur d'accent"</string>
+    <string name="whats_new_fix_soundcloud_history">"Vos écoutes apparaissent dans votre historique SoundCloud"</string>
+    <string name="whats_new_fix_source_picker">"Source de lecture indique la bonne version après un changement"</string>
+    <string name="whats_new_fix_window_close">"La fenêtre se ferme immédiatement"</string>
+</resources>

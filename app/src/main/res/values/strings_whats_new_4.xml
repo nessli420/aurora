@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Four layouts"</string>
+    <string name="whats_new_layouts_body">"Classic, Spotlight, Console and Drift each arrange Home and Library their own way. The bars, the full-screen player and Search can follow along or get a layout of their own."</string>
+    <string name="whats_new_foryou_title">"Made for you"</string>
+    <string name="whats_new_foryou_body">"Daily mixes, a mix for the time of day, Recommended songs, Discover and artist stations on Home, each with its own cover. Like a mix to keep a dated copy in your Library."</string>
+    <string name="whats_new_genius_title">"What the lyrics mean"</string>
+    <string name="whats_new_genius_body">"Turn on Lyric meanings in Integrations to see what a line means and read About this song, from Genius."</string>
+    <string name="whats_new_yt_comments_title">"YouTube comments"</string>
+    <string name="whats_new_yt_comments_body">"Comments from a song's YouTube video sit beside SoundCloud's. Signed in to YouTube Music, you can post and like them too."</string>
+    <string name="whats_new_spotify_folders_title">"Spotify playlist folders"</string>
+    <string name="whats_new_spotify_folders_body">"Your Spotify folders show up in Library. Create, rename and delete them, and move playlists in and out."</string>
+    <string name="whats_new_spotify_mirror_title">"Your plays count on Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Turn on Mirror plays to Spotify in Playback to play each Spotify song muted in Spotify's web player, so it shows up in Recently played, your recommendations and Wrapped. Premium only."</string>
+    <string name="whats_new_apple_library_title">"Apple Music, no subscription needed"</string>
+    <string name="whats_new_apple_library_body">"Like songs and make playlists without a subscription. They stay on this device until you subscribe, then move to your account. Liked Songs and deleting playlists work too."</string>
+    <string name="whats_new_song_menu_title">"Pick the right copy"</string>
+    <string name="whats_new_song_menu_body">"Every song menu has Playback source and Wrong song? Pick another, and Copy link shares a song from any source it's on."</string>
+    <string name="whats_new_fix_marquee">"Long titles scroll in the mini player"</string>
+    <string name="whats_new_fix_motion">"Smoother motion, with animated now playing bars"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass follows your accent, bars and player layout"</string>
+    <string name="whats_new_fix_appearance">"Appearance is split into Themes, Layouts, Text, Player and Home &amp; Library"</string>
+    <string name="whats_new_fix_about">"Website and Discord links in About"</string>
+    <string name="whats_new_fix_swipe">"Music keeps playing when you swipe Aurora away"</string>
+    <string name="whats_new_fix_open_player">"The notification and widget open the full player"</string>
+    <string name="whats_new_fix_back">"Back closes the full player first"</string>
+    <string name="whats_new_fix_sd_card">"Songs on an SD card show up once you pick their folder"</string>
+    <string name="whats_new_fix_heart">"The mini player's heart follows your accent"</string>
+    <string name="whats_new_fix_soundcloud_history">"Plays show up in your SoundCloud history"</string>
+    <string name="whats_new_fix_source_picker">"Playback source marks the right copy after a swap"</string>
+    <string name="whats_new_fix_window_close">"The window closes straight away"</string>
+</resources>

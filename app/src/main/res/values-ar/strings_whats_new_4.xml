@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"أربعة تخطيطات"</string>
+    <string name="whats_new_layouts_body">"كلاسيكي وسبوتلايت وكونسول ودريفت، لكلٍّ منها طريقته في ترتيب الرئيسية والمكتبة. ويمكن للأشرطة والمشغّل بملء الشاشة والبحث أن تتبعها أو أن يكون لها تخطيط خاص."</string>
+    <string name="whats_new_foryou_title">"صُنع لك"</string>
+    <string name="whats_new_foryou_body">"مزيجات يومية، ومزيج حسب وقت اليوم، وأغانٍ مقترحة، واكتشف، ومحطات الفنانين في الرئيسية، ولكلٍّ منها غلافه. أعجِب بمزيج لتحتفظ بنسخة مؤرَّخة منه في مكتبتك."</string>
+    <string name="whats_new_genius_title">"ماذا تعني الكلمات"</string>
+    <string name="whats_new_genius_body">"فعّل معاني الكلمات من التكاملات لترى معنى كل سطر وتقرأ عن هذه الأغنية، من Genius."</string>
+    <string name="whats_new_yt_comments_title">"تعليقات YouTube"</string>
+    <string name="whats_new_yt_comments_body">"تظهر تعليقات فيديو الأغنية على YouTube بجانب تعليقات SoundCloud. وعند تسجيل الدخول إلى YouTube Music يمكنك أيضًا كتابة التعليقات والإعجاب بها."</string>
+    <string name="whats_new_spotify_folders_title">"مجلدات قوائم Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"تظهر مجلدات Spotify في مكتبتك. أنشئها وأعد تسميتها واحذفها وانقل القوائم إليها ومنها."</string>
+    <string name="whats_new_spotify_mirror_title">"استماعك يُحتسب على Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"فعّل نسخ التشغيل إلى Spotify من التشغيل لتُشغَّل كل أغنية من Spotify بلا صوت في مشغّل Spotify على الويب، فتظهر في ما شُغّل مؤخرًا وفي اقتراحاتك وWrapped. لحسابات Premium فقط."</string>
+    <string name="whats_new_apple_library_title">"Apple Music بلا اشتراك"</string>
+    <string name="whats_new_apple_library_body">"أعجِب بالأغاني وأنشئ قوائم تشغيل بلا اشتراك. تبقى على هذا الجهاز حتى تشترك، ثم تنتقل إلى حسابك. وتعمل أيضًا الأغاني المعجب بها وحذف القوائم."</string>
+    <string name="whats_new_song_menu_title">"اختر النسخة الصحيحة"</string>
+    <string name="whats_new_song_menu_body">"في كل قائمة أغنية مصدر التشغيل وأغنية خاطئة؟ اختر أخرى، ويشارك نسخ الرابط الأغنية من أي مصدر تتوفر فيه."</string>
+    <string name="whats_new_fix_marquee">"العناوين الطويلة تتحرك في المشغّل المصغّر"</string>
+    <string name="whats_new_fix_motion">"حركة أكثر سلاسة وأشرطة تشغيل متحركة"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass يتبع لون التمييز والأشرطة وتخطيط المشغّل"</string>
+    <string name="whats_new_fix_appearance">"قُسّم المظهر إلى السمات والتخطيطات والنص والمشغّل والرئيسية والمكتبة"</string>
+    <string name="whats_new_fix_about">"روابط الموقع الإلكتروني وDiscord في حول"</string>
+    <string name="whats_new_fix_swipe">"تستمر الموسيقى عند إغلاق Aurora بالسحب"</string>
+    <string name="whats_new_fix_open_player">"يفتح الإشعار والأداة المشغّل بملء الشاشة"</string>
+    <string name="whats_new_fix_back">"زر الرجوع يغلق المشغّل بملء الشاشة أولًا"</string>
+    <string name="whats_new_fix_sd_card">"تظهر أغاني بطاقة SD بمجرد اختيار مجلدها"</string>
+    <string name="whats_new_fix_heart">"القلب في المشغّل المصغّر يتبع لون التمييز"</string>
+    <string name="whats_new_fix_soundcloud_history">"يظهر استماعك في سجل SoundCloud"</string>
+    <string name="whats_new_fix_source_picker">"مصدر التشغيل يحدد النسخة الصحيحة بعد التبديل"</string>
+    <string name="whats_new_fix_window_close">"تُغلق النافذة فورًا"</string>
+</resources>

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Vier indelingen"</string>
+    <string name="whats_new_layouts_body">"Klassiek, Spotlight, Console en Drift delen Start en Bibliotheek elk op hun eigen manier in. De balken, de speler op volledig scherm en Zoeken volgen mee of krijgen een eigen indeling."</string>
+    <string name="whats_new_foryou_title">"Voor jou gemaakt"</string>
+    <string name="whats_new_foryou_body">"Dagmixen, een mix voor het moment van de dag, Aanbevolen nummers, Ontdekken en artiestenradio's op Start, elk met een eigen hoes. Vind een mix leuk om een gedateerde kopie in je bibliotheek te bewaren."</string>
+    <string name="whats_new_genius_title">"Wat de teksten betekenen"</string>
+    <string name="whats_new_genius_body">"Zet Betekenis van songteksten aan bij Integraties om te zien wat een regel betekent en Over dit nummer te lezen, van Genius."</string>
+    <string name="whats_new_yt_comments_title">"YouTube-reacties"</string>
+    <string name="whats_new_yt_comments_body">"Reacties van de YouTube-video van een nummer staan naast die van SoundCloud. Aangemeld bij YouTube Music kun je ook reageren en reacties leuk vinden."</string>
+    <string name="whats_new_spotify_folders_title">"Spotify-playlistmappen"</string>
+    <string name="whats_new_spotify_folders_body">"Je Spotify-mappen verschijnen in de bibliotheek. Maak ze, wijzig de naam, verwijder ze en verplaats playlists erin en eruit."</string>
+    <string name="whats_new_spotify_mirror_title">"Je luisterbeurten tellen mee op Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Zet Afspelen spiegelen naar Spotify aan bij Afspelen om elk Spotify-nummer gedempt in de webspeler van Spotify mee te laten spelen, zodat het in Recent afgespeeld, je aanbevelingen en Wrapped verschijnt. Alleen Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music zonder abonnement"</string>
+    <string name="whats_new_apple_library_body">"Vind nummers leuk en maak playlists zonder abonnement. Ze blijven op dit apparaat tot je een abonnement neemt en gaan dan naar je account. Leuke nummers en playlists verwijderen werken ook."</string>
+    <string name="whats_new_song_menu_title">"Kies de juiste kopie"</string>
+    <string name="whats_new_song_menu_body">"Elk nummermenu heeft Afspeelbron en Verkeerd nummer? Kies een ander, en Link kopiëren deelt een nummer vanaf elke bron waar het op staat."</string>
+    <string name="whats_new_fix_marquee">"Lange titels scrollen in de minispeler"</string>
+    <string name="whats_new_fix_motion">"Vloeiendere animaties en bewegende afspeelbalkjes"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass volgt je accentkleur, de balken en de spelerindeling"</string>
+    <string name="whats_new_fix_appearance">"Weergave is opgesplitst in Thema's, Indelingen, Tekst, Speler en Start en Bibliotheek"</string>
+    <string name="whats_new_fix_about">"Links naar de website en Discord bij Over"</string>
+    <string name="whats_new_fix_swipe">"Muziek blijft spelen als je Aurora wegveegt"</string>
+    <string name="whats_new_fix_open_player">"De melding en de widget openen de speler op volledig scherm"</string>
+    <string name="whats_new_fix_back">"Terug sluit eerst de speler op volledig scherm"</string>
+    <string name="whats_new_fix_sd_card">"Nummers op een SD-kaart verschijnen zodra je hun map kiest"</string>
+    <string name="whats_new_fix_heart">"Het hartje in de minispeler volgt je accentkleur"</string>
+    <string name="whats_new_fix_soundcloud_history">"Luisterbeurten verschijnen in je SoundCloud-geschiedenis"</string>
+    <string name="whats_new_fix_source_picker">"Afspeelbron markeert na een wissel de juiste kopie"</string>
+    <string name="whats_new_fix_window_close">"Het venster sluit meteen"</string>
+</resources>

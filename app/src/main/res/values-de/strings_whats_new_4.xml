@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Vier Layouts"</string>
+    <string name="whats_new_layouts_body">"Klassisch, Spotlight, Konsole und Drift ordnen Start und Bibliothek jeweils anders an. Die Leisten, der Vollbild-Player und die Suche ziehen mit oder bekommen ein eigenes Layout."</string>
+    <string name="whats_new_foryou_title">"Für dich gemacht"</string>
+    <string name="whats_new_foryou_body">"Tagesmixe, ein Mix zur Tageszeit, Empfohlene Songs, Entdecken und Künstlerradios auf Start, jeweils mit eigenem Cover. Like einen Mix, um eine datierte Kopie in deiner Bibliothek zu behalten."</string>
+    <string name="whats_new_genius_title">"Was die Songtexte bedeuten"</string>
+    <string name="whats_new_genius_body">"Schalte Songtext-Bedeutungen unter Integrationen ein, um zu sehen, was eine Zeile bedeutet, und Über diesen Song zu lesen, von Genius."</string>
+    <string name="whats_new_yt_comments_title">"YouTube-Kommentare"</string>
+    <string name="whats_new_yt_comments_body">"Kommentare zum YouTube-Video eines Songs stehen neben denen von SoundCloud. Mit YouTube Music angemeldet kannst du auch kommentieren und Kommentare liken."</string>
+    <string name="whats_new_spotify_folders_title">"Spotify-Playlist-Ordner"</string>
+    <string name="whats_new_spotify_folders_body">"Deine Spotify-Ordner erscheinen in der Bibliothek. Erstelle, benenne und lösche sie und verschiebe Playlists hinein und heraus."</string>
+    <string name="whats_new_spotify_mirror_title">"Deine Wiedergaben zählen bei Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Schalte unter Wiedergabe „Wiedergaben an Spotify spiegeln“ ein: Jeder Spotify-Song läuft stumm im Web-Player von Spotify mit und erscheint so in „Zuletzt gehört“, deinen Empfehlungen und Wrapped. Nur Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music ohne Abo"</string>
+    <string name="whats_new_apple_library_body">"Like Songs und erstelle Playlists ohne Abo. Sie bleiben auf diesem Gerät, bis du ein Abo hast, und wandern dann in dein Konto. Lieblingssongs und das Löschen von Playlists funktionieren auch."</string>
+    <string name="whats_new_song_menu_title">"Die richtige Kopie wählen"</string>
+    <string name="whats_new_song_menu_body">"Jedes Songmenü hat Wiedergabequelle und „Falscher Song? Anderen wählen“, und Link kopieren teilt einen Song von jeder Quelle, auf der er ist."</string>
+    <string name="whats_new_fix_marquee">"Lange Titel laufen im Miniplayer durch"</string>
+    <string name="whats_new_fix_motion">"Flüssigere Animationen und animierte Wiedergabe-Balken"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass folgt deiner Akzentfarbe, den Leisten und dem Player-Layout"</string>
+    <string name="whats_new_fix_appearance">"Darstellung ist aufgeteilt in Designs, Layouts, Text, Player und Start &amp; Bibliothek"</string>
+    <string name="whats_new_fix_about">"Website- und Discord-Links unter Info"</string>
+    <string name="whats_new_fix_swipe">"Musik spielt weiter, wenn du Aurora wegwischst"</string>
+    <string name="whats_new_fix_open_player">"Benachrichtigung und Widget öffnen den Vollbild-Player"</string>
+    <string name="whats_new_fix_back">"Zurück schließt zuerst den Vollbild-Player"</string>
+    <string name="whats_new_fix_sd_card">"Songs auf einer SD-Karte erscheinen, sobald du ihren Ordner wählst"</string>
+    <string name="whats_new_fix_heart">"Das Herz im Miniplayer folgt deiner Akzentfarbe"</string>
+    <string name="whats_new_fix_soundcloud_history">"Wiedergaben erscheinen in deinem SoundCloud-Verlauf"</string>
+    <string name="whats_new_fix_source_picker">"Wiedergabequelle markiert nach einem Wechsel die richtige Kopie"</string>
+    <string name="whats_new_fix_window_close">"Das Fenster schließt sofort"</string>
+</resources>

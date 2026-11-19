@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Cztery układy"</string>
+    <string name="whats_new_layouts_body">"Klasyczny, Spotlight, Konsola i Drift układają Główną i bibliotekę każdy na swój sposób. Paski, odtwarzacz pełnoekranowy i wyszukiwanie mogą za nimi podążać lub mieć własny układ."</string>
+    <string name="whats_new_foryou_title">"Stworzone dla Ciebie"</string>
+    <string name="whats_new_foryou_body">"Codzienne miksy, miks na porę dnia, Polecane utwory, Odkrywaj i stacje artystów na Głównej, każdy z własną okładką. Polub miks, aby zachować jego datowaną kopię w bibliotece."</string>
+    <string name="whats_new_genius_title">"Co znaczą teksty"</string>
+    <string name="whats_new_genius_body">"Włącz Znaczenie tekstów w Integracjach, aby zobaczyć, co znaczy dany wers, i przeczytać O tym utworze, z Genius."</string>
+    <string name="whats_new_yt_comments_title">"Komentarze YouTube"</string>
+    <string name="whats_new_yt_comments_body">"Komentarze z filmu YouTube danego utworu są obok komentarzy z SoundCloud. Po zalogowaniu do YouTube Music możesz też komentować i polubiać komentarze."</string>
+    <string name="whats_new_spotify_folders_title">"Foldery playlist Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"Twoje foldery Spotify pojawiają się w bibliotece. Twórz je, zmieniaj im nazwy, usuwaj i przenoś do nich playlisty."</string>
+    <string name="whats_new_spotify_mirror_title">"Twoje odtworzenia liczą się w Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Włącz Odtwarzaj równolegle w Spotify w ustawieniach Odtwarzanie, aby każdy utwór Spotify grał wyciszony w odtwarzaczu internetowym Spotify i trafiał do Ostatnio odtwarzanych, rekomendacji i Wrapped. Tylko Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music bez subskrypcji"</string>
+    <string name="whats_new_apple_library_body">"Polub utwory i twórz playlisty bez subskrypcji. Zostają na tym urządzeniu, dopóki nie wykupisz subskrypcji, a potem trafiają na Twoje konto. Polubione utwory i usuwanie playlist też działają."</string>
+    <string name="whats_new_song_menu_title">"Wybierz właściwą kopię"</string>
+    <string name="whats_new_song_menu_body">"Każde menu utworu ma Źródło odtwarzania i Zły utwór? Wybierz inny, a Kopiuj link udostępnia utwór z dowolnego źródła, w którym jest."</string>
+    <string name="whats_new_fix_marquee">"Długie tytuły przewijają się w miniodtwarzaczu"</string>
+    <string name="whats_new_fix_motion">"Płynniejsze animacje i animowane paski odtwarzania"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass podąża za kolorem akcentu, paskami i układem odtwarzacza"</string>
+    <string name="whats_new_fix_appearance">"Wygląd jest podzielony na Motywy, Układy, Tekst, Odtwarzacz oraz Główną i bibliotekę"</string>
+    <string name="whats_new_fix_about">"Linki do strony internetowej i Discorda w Informacjach"</string>
+    <string name="whats_new_fix_swipe">"Muzyka gra dalej po zamknięciu Aurory przesunięciem"</string>
+    <string name="whats_new_fix_open_player">"Powiadomienie i widżet otwierają odtwarzacz pełnoekranowy"</string>
+    <string name="whats_new_fix_back">"Wstecz najpierw zamyka odtwarzacz pełnoekranowy"</string>
+    <string name="whats_new_fix_sd_card">"Utwory z karty SD pojawiają się po wybraniu ich folderu"</string>
+    <string name="whats_new_fix_heart">"Serce w miniodtwarzaczu podąża za kolorem akcentu"</string>
+    <string name="whats_new_fix_soundcloud_history">"Odtworzenia pojawiają się w Twojej historii SoundCloud"</string>
+    <string name="whats_new_fix_source_picker">"Źródło odtwarzania zaznacza właściwą kopię po zamianie"</string>
+    <string name="whats_new_fix_window_close">"Okno zamyka się od razu"</string>
+</resources>

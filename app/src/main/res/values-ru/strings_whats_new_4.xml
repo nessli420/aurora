@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Четыре макета"</string>
+    <string name="whats_new_layouts_body">"Классический, Spotlight, Консоль и Дрифт по-своему располагают Главную и медиатеку. Панели, полноэкранный плеер и поиск могут следовать за ними или получить собственный макет."</string>
+    <string name="whats_new_foryou_title">"Создано для вас"</string>
+    <string name="whats_new_foryou_body">"Ежедневные миксы, микс под время суток, рекомендуемые треки, «Открытия» и радио артистов на Главной, у каждого своя обложка. Отметьте микс как любимый, чтобы сохранить его копию с датой в медиатеке."</string>
+    <string name="whats_new_genius_title">"О чём поётся в песне"</string>
+    <string name="whats_new_genius_body">"Включите «Смысл текстов» в разделе «Интеграции», чтобы узнать, что значит строка, и прочитать «Об этой песне» от Genius."</string>
+    <string name="whats_new_yt_comments_title">"Комментарии YouTube"</string>
+    <string name="whats_new_yt_comments_body">"Комментарии к видео трека на YouTube показываются рядом с комментариями SoundCloud. Войдя в YouTube Music, вы также можете писать комментарии и ставить им лайки."</string>
+    <string name="whats_new_spotify_folders_title">"Папки плейлистов Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"Ваши папки Spotify появляются в медиатеке. Создавайте, переименовывайте и удаляйте их, перемещайте плейлисты в папки и из них."</string>
+    <string name="whats_new_spotify_mirror_title">"Прослушивания учитываются в Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Включите «Дублировать прослушивания в Spotify» в разделе «Воспроизведение»: каждый трек Spotify будет беззвучно играть в веб-плеере Spotify и появится в недавно прослушанном, рекомендациях и Wrapped. Только Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music без подписки"</string>
+    <string name="whats_new_apple_library_body">"Отмечайте треки как любимые и создавайте плейлисты без подписки. Они хранятся на этом устройстве, пока вы не оформите подписку, а затем переходят в ваш аккаунт. «Любимые треки» и удаление плейлистов тоже работают."</string>
+    <string name="whats_new_song_menu_title">"Выберите нужную копию"</string>
+    <string name="whats_new_song_menu_body">"В каждом меню трека есть «Источник воспроизведения» и «Не тот трек? Выбрать другой», а «Копировать ссылку» делится треком из любого источника, где он есть."</string>
+    <string name="whats_new_fix_marquee">"Длинные названия прокручиваются в мини-плеере"</string>
+    <string name="whats_new_fix_motion">"Более плавная анимация и анимированные полоски воспроизведения"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass следует цвету акцента, панелям и макету плеера"</string>
+    <string name="whats_new_fix_appearance">"«Оформление» разделено на «Темы», «Макеты», «Текст», «Плеер» и «Главная и медиатека»"</string>
+    <string name="whats_new_fix_about">"Ссылки на сайт и Discord в разделе «Описание»"</string>
+    <string name="whats_new_fix_swipe">"Музыка продолжает играть, когда вы смахиваете Aurora"</string>
+    <string name="whats_new_fix_open_player">"Уведомление и виджет открывают полноэкранный плеер"</string>
+    <string name="whats_new_fix_back">"«Назад» сначала закрывает полноэкранный плеер"</string>
+    <string name="whats_new_fix_sd_card">"Треки на SD-карте появляются, как только вы выберете их папку"</string>
+    <string name="whats_new_fix_heart">"Сердечко в мини-плеере следует цвету акцента"</string>
+    <string name="whats_new_fix_soundcloud_history">"Прослушивания появляются в вашей истории SoundCloud"</string>
+    <string name="whats_new_fix_source_picker">"«Источник воспроизведения» отмечает нужную копию после замены"</string>
+    <string name="whats_new_fix_window_close">"Окно закрывается сразу"</string>
+</resources>

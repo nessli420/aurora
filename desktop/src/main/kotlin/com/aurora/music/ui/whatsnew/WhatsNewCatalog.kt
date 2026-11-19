@@ -2,10 +2,17 @@ package com.aurora.music.ui.whatsnew
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AllInclusive
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Dashboard
 import androidx.compose.material.icons.filled.Description
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.material.icons.filled.FilterAlt
+import androidx.compose.material.icons.filled.Folder
+import androidx.compose.material.icons.filled.Forum
 import androidx.compose.material.icons.filled.Layers
+import androidx.compose.material.icons.filled.Lightbulb
+import androidx.compose.material.icons.filled.Link
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.vector.ImageVector
@@ -31,6 +38,24 @@ data class WhatsNewRelease(val version: String, val features: List<WhatsNewFeatu
  */
 object WhatsNewCatalog {
     val releases: List<WhatsNewRelease> = listOf(
+        WhatsNewRelease(
+            "4.0.0",
+            features = listOf(
+                WhatsNewFeature(Icons.Filled.Dashboard, R.string.whats_new_layouts_title, R.string.whats_new_layouts_body,
+                    Routes.SETTINGS_APPEARANCE_LAYOUTS),
+                WhatsNewFeature(Icons.Filled.AutoAwesome, R.string.whats_new_foryou_title, R.string.whats_new_foryou_body, Routes.HOME),
+                WhatsNewFeature(Icons.Filled.Lightbulb, R.string.whats_new_genius_title, R.string.whats_new_genius_body,
+                    Routes.SETTINGS_INTEGRATIONS),
+                WhatsNewFeature(Icons.Filled.Forum, R.string.whats_new_yt_comments_title, R.string.whats_new_yt_comments_body),
+                WhatsNewFeature(Icons.Filled.Folder, R.string.whats_new_spotify_folders_title, R.string.whats_new_spotify_folders_body,
+                    Routes.LIBRARY),
+                WhatsNewFeature(Icons.Filled.Favorite, R.string.whats_new_apple_library_title, R.string.whats_new_apple_library_body),
+                WhatsNewFeature(Icons.Filled.Link, R.string.whats_new_song_menu_title, R.string.whats_new_song_menu_body),
+            ),
+            fixes = listOf(R.string.whats_new_fix_marquee, R.string.whats_new_fix_motion, R.string.whats_new_fix_appearance,
+                R.string.whats_new_fix_window_close, R.string.whats_new_fix_soundcloud_history, R.string.whats_new_fix_source_picker,
+                R.string.whats_new_fix_about),
+        ),
         WhatsNewRelease(
             "3.4.0",
             features = listOf(

@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Quatro layouts"</string>
+    <string name="whats_new_layouts_body">"Clássico, Spotlight, Console e Drift organizam o Início e a Biblioteca cada um do seu jeito. As barras, o player em tela cheia e a Busca podem acompanhar ou ter um layout próprio."</string>
+    <string name="whats_new_foryou_title">"Feito para você"</string>
+    <string name="whats_new_foryou_body">"Mixes diários, um mix para a hora do dia, Músicas recomendadas, Descobrir e rádios de artistas no Início, cada um com sua capa. Curta um mix para guardar uma cópia datada na sua Biblioteca."</string>
+    <string name="whats_new_genius_title">"O que as letras querem dizer"</string>
+    <string name="whats_new_genius_body">"Ative Significado das letras em Integrações para ver o que um verso quer dizer e ler Sobre esta música, do Genius."</string>
+    <string name="whats_new_yt_comments_title">"Comentários do YouTube"</string>
+    <string name="whats_new_yt_comments_body">"Os comentários do vídeo de uma música no YouTube aparecem ao lado dos do SoundCloud. Conectado ao YouTube Music, você também pode comentar e curtir comentários."</string>
+    <string name="whats_new_spotify_folders_title">"Pastas de playlists do Spotify"</string>
+    <string name="whats_new_spotify_folders_body">"Suas pastas do Spotify aparecem na Biblioteca. Crie, renomeie e exclua pastas e mova playlists para dentro e para fora delas."</string>
+    <string name="whats_new_spotify_mirror_title">"Suas reproduções contam no Spotify"</string>
+    <string name="whats_new_spotify_mirror_body">"Ative Espelhar reproduções no Spotify em Reprodução para tocar cada música do Spotify sem som no player web do Spotify, e ela aparece em Tocadas recentemente, nas suas recomendações e no Wrapped. Só Premium."</string>
+    <string name="whats_new_apple_library_title">"Apple Music sem assinatura"</string>
+    <string name="whats_new_apple_library_body">"Curta músicas e crie playlists sem assinatura. Elas ficam neste dispositivo até você assinar e depois vão para sua conta. Músicas curtidas e excluir playlists também funcionam."</string>
+    <string name="whats_new_song_menu_title">"Escolha a cópia certa"</string>
+    <string name="whats_new_song_menu_body">"Todo menu de música tem Fonte de reprodução e Música errada? Escolha outra, e Copiar link compartilha uma música de qualquer fonte em que ela esteja."</string>
+    <string name="whats_new_fix_marquee">"Títulos longos rolam no miniplayer"</string>
+    <string name="whats_new_fix_motion">"Animações mais suaves e barras de reprodução animadas"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass segue sua cor de destaque, as barras e o layout do player"</string>
+    <string name="whats_new_fix_appearance">"Aparência agora se divide em Temas, Layouts, Texto, Player e Início e Biblioteca"</string>
+    <string name="whats_new_fix_about">"Links do site e do Discord em Sobre"</string>
+    <string name="whats_new_fix_swipe">"A música continua quando você desliza o Aurora para fechar"</string>
+    <string name="whats_new_fix_open_player">"A notificação e o widget abrem o player em tela cheia"</string>
+    <string name="whats_new_fix_back">"Voltar fecha primeiro o player em tela cheia"</string>
+    <string name="whats_new_fix_sd_card">"Músicas de um cartão SD aparecem assim que você escolhe a pasta"</string>
+    <string name="whats_new_fix_heart">"O coração do miniplayer segue sua cor de destaque"</string>
+    <string name="whats_new_fix_soundcloud_history">"As reproduções aparecem no seu histórico do SoundCloud"</string>
+    <string name="whats_new_fix_source_picker">"Fonte de reprodução marca a cópia certa depois de uma troca"</string>
+    <string name="whats_new_fix_window_close">"A janela fecha na hora"</string>
+</resources>

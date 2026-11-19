@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"Dört düzen"</string>
+    <string name="whats_new_layouts_body">"Klasik, Spotlight, Konsol ve Drift, Ana sayfa ile kitaplığı her biri kendi tarzında düzenler. Çubuklar, tam ekran oynatıcı ve Ara bunlara uyabilir ya da kendi düzenini alabilir."</string>
+    <string name="whats_new_foryou_title">"Senin için"</string>
+    <string name="whats_new_foryou_body">"Günlük miksler, günün saatine göre bir miks, Önerilen şarkılar, Keşfet ve sanatçı radyoları Ana sayfada, her biri kendi kapağıyla. Bir miksi beğenerek tarihli bir kopyasını kitaplığında sakla."</string>
+    <string name="whats_new_genius_title">"Şarkı sözleri ne anlatıyor"</string>
+    <string name="whats_new_genius_body">"Bir dizenin ne anlama geldiğini görmek ve Bu şarkı hakkında bölümünü okumak için Entegrasyonlar'da Şarkı sözü anlamları'nı aç. Kaynak: Genius."</string>
+    <string name="whats_new_yt_comments_title">"YouTube yorumları"</string>
+    <string name="whats_new_yt_comments_body">"Bir şarkının YouTube videosundaki yorumlar SoundCloud yorumlarının yanında görünür. YouTube Music'te oturum açtıysan yorum yazabilir ve yorumları beğenebilirsin."</string>
+    <string name="whats_new_spotify_folders_title">"Spotify çalma listesi klasörleri"</string>
+    <string name="whats_new_spotify_folders_body">"Spotify klasörlerin kitaplıkta görünür. Klasör oluştur, yeniden adlandır, sil ve çalma listelerini klasörlere taşı."</string>
+    <string name="whats_new_spotify_mirror_title">"Dinlemelerin Spotify'da sayılır"</string>
+    <string name="whats_new_spotify_mirror_body">"Oynatma'da Çalınanları Spotify'a yansıt'ı açtığında her Spotify şarkısı Spotify web oynatıcısında sessizce çalar; böylece Son çalınanlar'da, önerilerinde ve Wrapped'te görünür. Yalnızca Premium."</string>
+    <string name="whats_new_apple_library_title">"Abonelik olmadan Apple Music"</string>
+    <string name="whats_new_apple_library_body">"Abonelik olmadan şarkı beğen ve çalma listesi oluştur. Abone olana kadar bu cihazda kalırlar, sonra hesabına taşınırlar. Beğenilen şarkılar ve çalma listesi silme de çalışır."</string>
+    <string name="whats_new_song_menu_title">"Doğru kopyayı seç"</string>
+    <string name="whats_new_song_menu_body">"Her şarkı menüsünde Çalma kaynağı ve Yanlış şarkı mı? Başkasını seç var; Bağlantıyı kopyala ise şarkıyı bulunduğu her kaynaktan paylaşır."</string>
+    <string name="whats_new_fix_marquee">"Uzun başlıklar mini oynatıcıda kayar"</string>
+    <string name="whats_new_fix_motion">"Daha akıcı animasyonlar ve hareketli çalma çubukları"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass vurgu rengini, çubukları ve oynatıcı düzenini izler"</string>
+    <string name="whats_new_fix_appearance">"Görünüm; Temalar, Düzenler, Metin, Oynatıcı ve Ana sayfa ve kitaplık olarak bölündü"</string>
+    <string name="whats_new_fix_about">"Hakkında'da web sitesi ve Discord bağlantıları"</string>
+    <string name="whats_new_fix_swipe">"Aurora'yı kaydırarak kapattığında müzik çalmaya devam eder"</string>
+    <string name="whats_new_fix_open_player">"Bildirim ve widget tam ekran oynatıcıyı açar"</string>
+    <string name="whats_new_fix_back">"Geri önce tam ekran oynatıcıyı kapatır"</string>
+    <string name="whats_new_fix_sd_card">"SD karttaki şarkılar, klasörünü seçtiğin anda görünür"</string>
+    <string name="whats_new_fix_heart">"Mini oynatıcıdaki kalp vurgu rengini izler"</string>
+    <string name="whats_new_fix_soundcloud_history">"Dinlemeler SoundCloud geçmişinde görünür"</string>
+    <string name="whats_new_fix_source_picker">"Çalma kaynağı, değiştirmeden sonra doğru kopyayı işaretler"</string>
+    <string name="whats_new_fix_window_close">"Pencere anında kapanır"</string>
+</resources>

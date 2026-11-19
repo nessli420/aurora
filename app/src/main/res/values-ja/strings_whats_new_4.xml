@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="whats_new_layouts_title">"4つのレイアウト"</string>
+    <string name="whats_new_layouts_body">"クラシック、スポットライト、コンソール、ドリフトが、ホームとライブラリをそれぞれ違う形で並べます。バー、フルスクリーンプレーヤー、検索は合わせることも、独自のレイアウトにすることもできます。"</string>
+    <string name="whats_new_foryou_title">"あなたのために"</string>
+    <string name="whats_new_foryou_body">"デイリーミックス、時間帯に合わせたミックス、おすすめの曲、ディスカバー、アーティストラジオがホームに並び、それぞれ専用のカバー付きです。ミックスをお気に入りにすると、日付入りのコピーがライブラリに保存されます。"</string>
+    <string name="whats_new_genius_title">"歌詞の意味がわかる"</string>
+    <string name="whats_new_genius_body">"連携で「歌詞の意味」をオンにすると、Genius の解説で各行の意味や「この曲について」を読めます。"</string>
+    <string name="whats_new_yt_comments_title">"YouTubeのコメント"</string>
+    <string name="whats_new_yt_comments_body">"曲の YouTube 動画のコメントが SoundCloud のコメントと並んで表示されます。YouTube Music にログインすると、コメントの投稿や高評価もできます。"</string>
+    <string name="whats_new_spotify_folders_title">"Spotify のプレイリストフォルダ"</string>
+    <string name="whats_new_spotify_folders_body">"Spotify のフォルダがライブラリに表示されます。フォルダの作成、名前の変更、削除、プレイリストの出し入れができます。"</string>
+    <string name="whats_new_spotify_mirror_title">"再生が Spotify にも記録される"</string>
+    <string name="whats_new_spotify_mirror_body">"再生設定で「再生を Spotify にミラー」をオンにすると、Spotify の曲が Spotify のウェブプレーヤーでミュート再生され、最近再生した項目、おすすめ、Wrapped に反映されます。Premium のみ。"</string>
+    <string name="whats_new_apple_library_title">"サブスクなしで Apple Music"</string>
+    <string name="whats_new_apple_library_body">"サブスクなしで曲をお気に入りにしたり、プレイリストを作ったりできます。登録するまではこのデバイスに保存され、登録後にアカウントへ移ります。お気に入りの曲やプレイリストの削除にも対応しました。"</string>
+    <string name="whats_new_song_menu_title">"正しい曲を選ぶ"</string>
+    <string name="whats_new_song_menu_body">"すべての曲メニューに「再生ソース」と「違う曲ですか？別の曲を選ぶ」が加わり、「リンクをコピー」では曲があるどのソースからでもリンクを共有できます。"</string>
+    <string name="whats_new_fix_marquee">"ミニプレーヤーで長いタイトルがスクロール表示"</string>
+    <string name="whats_new_fix_motion">"より滑らかなアニメーションと動く再生中バー"</string>
+    <string name="whats_new_fix_glass">"Liquid Glass がアクセントカラー、バー、プレーヤーのレイアウトに追従"</string>
+    <string name="whats_new_fix_appearance">"外観がテーマ、レイアウト、テキスト、プレーヤー、ホームとライブラリに分かれました"</string>
+    <string name="whats_new_fix_about">"情報にウェブサイトと Discord へのリンク"</string>
+    <string name="whats_new_fix_swipe">"Aurora をスワイプで閉じても音楽が止まらない"</string>
+    <string name="whats_new_fix_open_player">"通知とウィジェットからフルスクリーンプレーヤーが開く"</string>
+    <string name="whats_new_fix_back">"戻る操作でまずフルスクリーンプレーヤーが閉じる"</string>
+    <string name="whats_new_fix_sd_card">"SD カードの曲がフォルダを選ぶとすぐ表示される"</string>
+    <string name="whats_new_fix_heart">"ミニプレーヤーのハートがアクセントカラーに追従"</string>
+    <string name="whats_new_fix_soundcloud_history">"再生が SoundCloud の履歴に表示される"</string>
+    <string name="whats_new_fix_source_picker">"入れ替え後も再生ソースが正しいコピーを示す"</string>
+    <string name="whats_new_fix_window_close">"ウィンドウがすぐに閉じる"</string>
+</resources>
