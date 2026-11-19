@@ -94,6 +94,7 @@ data class PlayerDependencies(
     val pin: (String) -> Unit = {},
     val toggleMixLike: suspend (String) -> Boolean? = { null },
     val followingMix: (Flow<String?>) -> Flow<com.aurora.music.foryou.GeneratedMix> = { emptyFlow() },
+    val follows: com.aurora.music.data.Follows? = null,
 )
 
 fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependencies(
@@ -116,6 +117,7 @@ fun DesktopContainer.playerDependencies(): PlayerDependencies = PlayerDependenci
     listeningDetails = { play -> listeningDetails.save(play) },
     toggleMixLike = { madeForYou.toggleLike(it) },
     followingMix = madeForYou::following,
+    follows = follows,
     platform = com.aurora.music.desktop.platform.HostPlatform.name.lowercase(java.util.Locale.ROOT),
     nowPlaying = { song, playing, position -> discord.update(song, playing, position) },
     location = placesStore::sample,
@@ -263,6 +265,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         scope.launch { deps.settingsStore.likedPlaylists.collect(likes::setLikedPlaylists) }
         scope.launch { likes.likedIds.collect { ids -> _state.update { it.copy(likedIds = ids) } } }
         scope.launch { likes.failures.collect { _messages.tryEmit(appString(R.string.like_failed)) } }
+        deps.follows?.let { f -> scope.launch { f.failures.collect { _messages.tryEmit(appString(R.string.follow_failed)) } } }
         // the playing song's heart counts likes on every account, found by recording
         scope.launch {
             _state.map { it.current }.distinctUntilChanged { a, b -> a.id == b.id && a.title == b.title && a.artist == b.artist }
@@ -308,6 +311,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
         scope.launch {
             deps.accountEpoch.drop(1).collect {
                 likes.reset()
+                deps.follows?.reset()
                 persistQueue(engine.state.value)
                 deps.queueStore.requestFlush()
                 stopPlayback()
@@ -1151,7 +1155,10 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
 
     override fun toggleLikeCurrent() = likes.toggle(_state.value.current)
 
-    override fun refreshLikes(restart: Boolean) = likes.refresh(restart)
+    override fun refreshLikes(restart: Boolean) {
+        likes.refresh(restart)
+        deps.follows?.refresh(restart)
+    }
 
     override fun checkLiked(songs: List<Song>) = likes.check(songs)
 

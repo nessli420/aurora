@@ -157,6 +157,16 @@ class DesktopContainer(
         if (moved > 0 && session.type == com.aurora.music.data.ServerType.SOUNDCLOUD) verifySoundCloud(session)
         return moved
     }
+    // followed artists, on each service where it can keep them; the local player pulls them with likes
+    val follows by lazy {
+        com.aurora.music.data.Follows(CoroutineScope(SupervisorJob(scope.coroutineContext.job) + Dispatchers.Main.immediate), repository,
+            settingsStore.followedArtists) { a, on -> settingsStore.setArtistFollowed(a, on) }
+    }
+    // follows aurora kept for an account move to it once its service can keep them
+    suspend fun keepsFollows(session: Session): Boolean = runCatching { backends.build(session)?.followsOnServer("") == true }.getOrDefault(false)
+    suspend fun moveFollows(session: Session, waiting: List<com.aurora.music.data.FollowedArtist>): Int =
+        backends.build(session)?.let { target -> com.aurora.music.data.moveFollows(target, waiting) { settingsStore.setArtistFollowed(it, false) } } ?: 0
+
     // likes the account took but its service hasn't accepted yet
     fun guestLikesHeld(session: Session): Int = if (session.type == com.aurora.music.data.ServerType.SOUNDCLOUD) soundCloudWaiting(session) else 0
     fun soundCloudWaiting(session: Session): Int = soundcloudPendingLikes.waiting(session.userId)

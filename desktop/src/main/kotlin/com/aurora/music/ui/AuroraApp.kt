@@ -762,6 +762,8 @@ private fun Shell(
                 isItemLiked = playerState.likedIds.contains(id),
                 onToggleItemLike = { player.toggleLike(id, kind) },
                 canLikeItem = kind == com.aurora.music.foryou.MIX_KIND || container.repository.canLike(id),
+                follow = if (kind == "artist") com.aurora.music.ui.components.rememberFollowUi(container.follows, id) else null,
+                onToggleFollow = { detailState.data?.info?.let { container.follows.toggle(com.aurora.music.model.Artist(id, it.title, it.artUrl, 0)) } },
                 downloadedIds = downloadedIds,
                 onDownload = onDownload,
                 onRemoveDownload = onRemoveDownload,
@@ -1028,6 +1030,8 @@ private fun Shell(
     matchSong?.let { com.aurora.music.ui.components.MatchPickerDialog(it, ::confirm, onSwap = player::swapCurrent) { matchSong = null } }
     com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
         onMoved = { player.refreshLikes() }, notify = ::confirm, canTake = container::acceptsGuestLikes)
+    com.aurora.music.ui.components.FollowsPrompt(savedSessions, container.settingsStore.followedArtists.collectAsState(emptyList()).value,
+        container::keepsFollows, container::moveFollows, onMoved = { container.follows.refresh() }, notify = ::confirm)
     if (starPrompt && whatsNew == null && sessionReady == true && currentRoute != Routes.SIGN_IN) {
         LaunchedEffect(Unit) { store.setStarPromptSeen() }
         com.aurora.music.ui.components.StarPrompt(onClose = { starPrompt = false })
@@ -1429,6 +1433,9 @@ private fun Shell(
                                                 folderEdits = remember(libraryVM) {
                                                     com.aurora.music.ui.screens.library.FolderEdits(libraryVM::createFolder, libraryVM::renameFolder, libraryVM::deleteFolder, libraryVM::moveToFolder)
                                                 },
+                                                followed = container.follows.followed.collectAsState().value,
+                                                followedIds = container.follows.ids.collectAsState().value,
+                                                onToggleFollow = container.follows::toggle,
                                             )
                                         }
                                         if (selected != null) {
