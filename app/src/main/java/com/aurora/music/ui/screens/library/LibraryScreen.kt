@@ -133,6 +133,11 @@ import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.PressScaleIndication
 import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.ui.theme.screenEnter
+import com.aurora.music.ui.components.glass.GlassAction
+import com.aurora.music.ui.components.glass.GlassIconButton
+import com.aurora.music.ui.theme.glassCard
+import com.aurora.music.ui.theme.glassChip
+import com.aurora.music.ui.theme.isGlassTheme
 
 internal val LocalLibrarySelection = androidx.compose.runtime.compositionLocalOf<String?> { null }
 
@@ -309,18 +314,22 @@ fun LibraryScreen(
             onCreate = { showCreate = true }, onCycleView = onCycleView, onFilter = onFilter, onCustomizeTabs = { showTabs = true })
         else -> {
         // ---- header: identity + stats ----
-        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        val glass = isGlassTheme()
+        val headerIcon: @Composable (ImageVector, String, () -> Unit) -> Unit = { icon, label, action ->
+            if (glass) GlassIconButton(icon, label, action, Modifier.padding(start = 8.dp))
+            else Icon(icon, label, modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = action).padding(8.dp))
+        }
+        Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = if (glass) 16.dp else 8.dp, top = 12.dp), verticalAlignment = Alignment.CenterVertically) {
             LibraryAvatar(username, onOpenDrawer)
             Spacer(Modifier.width(12.dp))
             Text(appString(R.string.text_library_b8100f), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, maxLines = 1, overflow = TextOverflow.Ellipsis,
                 modifier = Modifier.weight(1f))
             if (state.views.size > 1) {
                 val next = state.views[(state.views.indexOfFirst { it.id == state.view } + 1).mod(state.views.size)]
-                Icon(com.aurora.music.ui.components.sourceViewIcon(state.view), appString(R.string.library_switch_view, next.label),
-                    modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onCycleView).padding(8.dp))
+                headerIcon(com.aurora.music.ui.components.sourceViewIcon(state.view), appString(R.string.library_switch_view, next.label), onCycleView)
             }
-            Icon(Icons.Filled.Search, appString(R.string.text_search_bce064), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onOpenSearch).padding(8.dp))
-            if (state.signedIn) Icon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { showCreate = true }.padding(8.dp))
+            headerIcon(Icons.Filled.Search, appString(R.string.text_search_bce064), onOpenSearch)
+            if (state.signedIn) headerIcon(Icons.Filled.Add, appString(R.string.text_create_playlist_62c988)) { showCreate = true }
         }
         if (stats.isNotBlank()) {
             Text(stats, style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis,
@@ -335,8 +344,8 @@ fun LibraryScreen(
             Spacer(Modifier.width(8.dp))
             Text(appString(R.string.text_mix_studio_668363))
         }
-        LazyRow(contentPadding = PaddingValues(horizontal = 12.dp), horizontalArrangement = Arrangement.spacedBy(4.dp),
-            verticalAlignment = Alignment.CenterVertically) {
+        LazyRow(contentPadding = PaddingValues(horizontal = if (glass) 16.dp else 12.dp), horizontalArrangement = Arrangement.spacedBy(if (glass) 8.dp else 4.dp),
+            verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(bottom = if (glass) 8.dp else 0.dp)) {
             items(visibleTabs.size) { i ->
                 val f = visibleTabs[i]
                 LibTab(label = f.label, icon = tabIcon(f), selected = f == filter, onLongClick = {
@@ -373,7 +382,8 @@ fun LibraryScreen(
             Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Box {
                     Row(
-                        Modifier.paperClip(RoundedCornerShape(50)).clickable { sortMenu = true }.padding(6.dp),
+                        (if (isGlassTheme()) Modifier.glassChip().clickable { sortMenu = true }.padding(horizontal = 12.dp, vertical = 8.dp)
+                            else Modifier.paperClip(RoundedCornerShape(50)).clickable { sortMenu = true }.padding(6.dp)),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Icon(Icons.Filled.SwapVert, null, tint = MaterialTheme.colorScheme.onSurface, modifier = Modifier.size(18.dp))
@@ -392,8 +402,10 @@ fun LibraryScreen(
                 }
                 Spacer(Modifier.weight(1f))
                 if (filter != LibraryFilter.SONGS) {
-                    Icon(
-                        imageVector = if (layout == LibraryLayout.LIST) Icons.Filled.GridView else Icons.AutoMirrored.Filled.List,
+                    val toggle = if (layout == LibraryLayout.LIST) Icons.Filled.GridView else Icons.AutoMirrored.Filled.List
+                    if (isGlassTheme()) GlassIconButton(toggle, appString(R.string.text_toggle_layout_6169e7), onToggleLayout)
+                    else Icon(
+                        imageVector = toggle,
                         contentDescription = appString(R.string.text_toggle_layout_6169e7),
                         modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onToggleLayout).padding(8.dp),
                     )
@@ -521,6 +533,16 @@ internal fun tabIcon(f: LibraryFilter): ImageVector = when (f) {
 
 @Composable
 private fun LibTab(label: String, icon: ImageVector, selected: Boolean, onLongClick: (() -> Unit)? = null, onClick: () -> Unit) {
+    if (isGlassTheme()) {
+        val ink = if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface
+        Row(Modifier.glassChip(selected).combinedClickable(onClick = onClick, onLongClick = onLongClick).padding(horizontal = 14.dp, vertical = 9.dp),
+            verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = ink, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(6.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.SemiBold, color = ink)
+        }
+        return
+    }
     val on by animateFloatAsState(if (selected) 1f else 0f, Motion.state(), label = "libTab")
     val tint = lerp(MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.primary, on)
     Column(
@@ -565,7 +587,16 @@ private fun AllOverview(
     onAiDj: (() -> Unit)?,
     aiDjDetail: String,
 ) {
+    val glass = isGlassTheme()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
+        fun shelf(header: @Composable () -> Unit, row: @Composable () -> Unit) {
+            if (glass) item {
+                Column(Modifier.padding(start = 12.dp, top = 12.dp, end = 12.dp).glassCard(MaterialTheme.shapes.large).padding(bottom = 14.dp)) { header(); row() }
+            } else {
+                item { header() }
+                item { row() }
+            }
+        }
         // quick access tiles
         item {
             val tiles = buildList {
@@ -578,8 +609,7 @@ private fun AllOverview(
         }
 
         if (pins.isNotEmpty()) {
-            item { ShelfHeader(appString(R.string.text_pinned_f93121), null) {} }
-            item {
+            shelf({ ShelfHeader(appString(R.string.text_pinned_f93121), null) {} }) {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(pins.size) { i ->
                         val p = pins[i]
@@ -595,8 +625,7 @@ private fun AllOverview(
 
         val playlistCount = state.smartPlaylists.size + state.playlists.size
         if (playlistCount > 0) {
-            item { ShelfHeader(appString(R.string.text_playlists_77b69f), playlistCount) { onFilter(LibraryFilter.PLAYLISTS) } }
-            item {
+            shelf({ ShelfHeader(appString(R.string.text_playlists_77b69f), playlistCount) { onFilter(LibraryFilter.PLAYLISTS) } }) {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.smartPlaylists.size) { i ->
                         val sp = state.smartPlaylists[i]
@@ -613,8 +642,7 @@ private fun AllOverview(
         }
 
         if (state.albums.isNotEmpty()) {
-            item { ShelfHeader(appString(R.string.text_albums_4c45e7), state.albums.size) { onFilter(LibraryFilter.ALBUMS) } }
-            item {
+            shelf({ ShelfHeader(appString(R.string.text_albums_4c45e7), state.albums.size) { onFilter(LibraryFilter.ALBUMS) } }) {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.albums.size) { i ->
                         val a = state.albums[i]
@@ -628,8 +656,7 @@ private fun AllOverview(
         }
 
         if (state.artists.isNotEmpty()) {
-            item { ShelfHeader(appString(R.string.text_artists_1528d8), state.artists.size) { onFilter(LibraryFilter.ARTISTS) } }
-            item {
+            shelf({ ShelfHeader(appString(R.string.text_artists_1528d8), state.artists.size) { onFilter(LibraryFilter.ARTISTS) } }) {
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                     items(state.artists.size) { i ->
                         val ar = state.artists[i]
@@ -696,8 +723,8 @@ private fun QuickTileGrid(tiles: List<QuickTile>, modifier: Modifier = Modifier)
 private fun QuickTileCard(tile: QuickTile, modifier: Modifier = Modifier) {
     Row(
         modifier
-            .paperClip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f))
+            .then(if (isGlassTheme()) Modifier.glassCard(MaterialTheme.shapes.small)
+                else Modifier.paperClip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.6f)))
             .combinedClickable(interactionSource = null, indication = PressScaleIndication, onClick = tile.onClick, onLongClick = tile.onLongClick,
                 onLongClickLabel = if (tile.onLongClick != null) appString(R.string.liked_sources_choose) else null)
             .padding(10.dp),
@@ -846,6 +873,12 @@ private fun SongsTab(
         )
         val accent = MaterialTheme.colorScheme.primary
         val onAccent = if (com.aurora.music.ui.theme.isPaperTheme()) com.aurora.music.ui.theme.PaperTokens.ink else if (accent.luminance() > 0.6f) Color.Black else Color.White
+        if (isGlassTheme()) {
+            GlassAction(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), onClick = { onPlayAllSongs(false) }, enabled = songs.isNotEmpty())
+            Spacer(Modifier.width(8.dp))
+            GlassIconButton(Icons.Filled.Shuffle, appString(R.string.text_shuffle_all_7e388b), onClick = { onPlayAllSongs(true) },
+                modifier = Modifier.size(44.dp), enabled = songs.isNotEmpty())
+        } else {
         Row(
             Modifier.paperFrame(RoundedCornerShape(50), { background(Brush.horizontalGradient(listOf(accent, MaterialTheme.colorScheme.tertiary))) }, fill = accent)
                 .clickable(enabled = songs.isNotEmpty()) { onPlayAllSongs(false) }
@@ -864,6 +897,7 @@ private fun SongsTab(
                 .clickable(enabled = songs.isNotEmpty()) { onPlayAllSongs(true) }
                 .padding(10.dp),
         )
+        }
     }
 
     val listState = rememberLazyListState()
@@ -1095,8 +1129,8 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
         Modifier
             .fillMaxWidth()
             .padding(horizontal = 8.dp, vertical = 4.dp)
-            .paperClip(RoundedCornerShape(16.dp))
-            .background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f))
+            .then(if (isGlassTheme()) Modifier.glassCard(MaterialTheme.shapes.small)
+                else Modifier.paperClip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh.copy(alpha = 0.45f)))
             .background(selectionTint("${row.kind}:${row.id}"))
             .likedLongPress(row, actions, onClick)
             .padding(8.dp),
@@ -1140,7 +1174,8 @@ private fun LibListItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
 
 @Composable
 internal fun LibGridItem(row: LibRow, actions: LibActions, onClick: () -> Unit) {
-    Column(Modifier.paperClip(RoundedCornerShape(14.dp)).background(selectionTint("${row.kind}:${row.id}")).likedLongPress(row, actions, onClick, PressScaleIndication).padding(6.dp)) {
+    Column(Modifier.then(if (isGlassTheme()) Modifier.glassCard(MaterialTheme.shapes.small) else Modifier.paperClip(RoundedCornerShape(14.dp)))
+        .background(selectionTint("${row.kind}:${row.id}")).likedLongPress(row, actions, onClick, PressScaleIndication).padding(6.dp)) {
         if (row.kind == "liked") actions.likedPicker()
         Box {
             if (row.icon != null) IconTile(row.icon, Modifier.fillMaxWidth().aspectRatio(1f), big = true)

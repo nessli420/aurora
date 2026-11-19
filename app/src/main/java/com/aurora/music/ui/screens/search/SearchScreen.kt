@@ -1,6 +1,8 @@
 package com.aurora.music.ui.screens.search
 
 import com.aurora.music.localization.appString
+import com.aurora.music.ui.theme.glassCard
+import com.aurora.music.ui.theme.glassChip
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.R
 
@@ -136,6 +138,7 @@ fun SearchScreen(
         if (filterQuery != state.query) { filterQuery = state.query; filter = SearchFilter.ALL }
     }
     val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
+    val glass = com.aurora.music.ui.theme.isGlassTheme()
 
     val voiceLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         val spoken = result.data?.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS)?.firstOrNull()
@@ -176,13 +179,12 @@ fun SearchScreen(
                         val fill by animateColorAsState(if (selected) MaterialTheme.colorScheme.primaryContainer else MaterialTheme.colorScheme.surfaceContainerHigh, Motion.state(), label = "sourceFill")
                         val tint by animateColorAsState(if (selected) MaterialTheme.colorScheme.onPrimaryContainer else MaterialTheme.colorScheme.onSurfaceVariant, Motion.state(), label = "sourceTint")
                         Box(
-                            Modifier.size(40.dp).paperClip(CircleShape)
-                                .background(fill)
+                            Modifier.size(40.dp).then(if (glass) Modifier.glassChip(selected) else Modifier.paperClip(CircleShape).background(fill))
                                 .selectable(selected = selected, role = Role.RadioButton) { onSelectSource(source.id) },
                             contentAlignment = Alignment.Center,
                         ) {
                             Icon(icon, source.label,
-                                tint = tint,
+                                tint = if (glass) (if (selected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface) else tint,
                                 modifier = Modifier.size(20.dp))
                         }
                     }
@@ -192,7 +194,7 @@ fun SearchScreen(
         TextField(
             value = state.query,
             onValueChange = onQuery,
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).then(if (glass) Modifier.glassCard(RoundedCornerShape(16.dp)) else Modifier),
             placeholder = { Text(appString(R.string.text_artists_albums_or_songs_d1863c)) },
             leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
             trailingIcon = {
@@ -208,8 +210,8 @@ fun SearchScreen(
             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
             keyboardActions = KeyboardActions(onSearch = { onCommitSearch(); keyboard?.hide() }),
             colors = TextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                focusedContainerColor = if (glass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh,
+                unfocusedContainerColor = if (glass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh,
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent,
                 cursorColor = MaterialTheme.colorScheme.primary,
@@ -284,8 +286,7 @@ private fun FilterChips(selected: SearchFilter, results: SearchResults, onSelect
                 style = MaterialTheme.typography.labelLarge,
                 fontWeight = FontWeight.SemiBold,
                 color = ink,
-                modifier = Modifier.paperClip(RoundedCornerShape(50))
-                    .background(fill)
+                modifier = Modifier.then(if (com.aurora.music.ui.theme.isGlassTheme()) Modifier.glassChip(on) else Modifier.paperClip(RoundedCornerShape(50)).background(fill))
                     .clickable { onSelect(f) }
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
@@ -373,6 +374,7 @@ private fun RecentSearches(
     onClear: () -> Unit,
     contentPadding: PaddingValues,
 ) {
+    val glass = com.aurora.music.ui.theme.isGlassTheme()
     LazyColumn(
         Modifier.fillMaxWidth(),
         contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
@@ -387,7 +389,9 @@ private fun RecentSearches(
         items(recents.size) { i ->
             val q = recents[i]
             Row(
-                Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable { onClick(q) }.padding(start = 16.dp, end = 11.dp, top = 7.dp, bottom = 7.dp),
+                Modifier.fillMaxWidth()
+                    .then(if (glass) Modifier.padding(horizontal = 16.dp, vertical = 3.dp).glassCard(MaterialTheme.shapes.small) else Modifier.paperClip(RoundedCornerShape(12.dp)))
+                    .clickable { onClick(q) }.padding(start = 16.dp, end = 11.dp, top = if (glass) 3.dp else 7.dp, bottom = if (glass) 3.dp else 7.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Icon(Icons.Filled.History, null, tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(20.dp))

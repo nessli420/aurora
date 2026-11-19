@@ -63,7 +63,9 @@ internal fun SpotlightPlayer(p: PlayerParts, modifier: Modifier = Modifier) {
     val tint = coverTint(state)
     val page = colors.background
     val strength = LocalUiPrefs.current.playerGradient.coerceIn(0f, 1f)
-    Column(modifier.drawBehind { drawRect(lerp(page, tint.value, strength)) }.windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)) {
+    // on liquid glass the stage is a wash, so the blurred cover behind the player still shows
+    val wash = if (com.aurora.music.ui.theme.isGlassTheme()) 0.55f else 1f
+    Column(modifier.drawBehind { drawRect(lerp(page, tint.value, strength), alpha = wash) }.windowInsetsPadding(WindowInsets.systemBarsIgnoringVisibility)) {
         Row(
             Modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 8.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp),

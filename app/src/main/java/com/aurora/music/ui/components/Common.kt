@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.isGlassTheme
+import com.aurora.music.ui.theme.glassEdge
+import com.aurora.music.ui.theme.glassIsDark
 import com.aurora.music.util.MotionTokens
 import com.aurora.music.ui.theme.paperClip
 import androidx.compose.foundation.clickable
@@ -80,8 +82,10 @@ fun Artwork(
     }
     val placeholder = remember(accent) { Brush.linearGradient(listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.12f))) }
     val context = LocalContext.current
+    val shape = RoundedCornerShape(artCorner)
     Box(
-        modifier = modifier.paperClip(RoundedCornerShape(artCorner)).background(placeholder),
+        modifier = modifier.paperClip(shape).background(placeholder)
+            .then(if (artCorner > 0.dp && isGlassTheme()) Modifier.glassEdge(shape, glassIsDark()) else Modifier),
         contentAlignment = Alignment.Center,
     ) {
         // the gradient behind shows while loading or on error so no subcomposed slots are needed
@@ -111,9 +115,9 @@ fun SectionHeader(
         modifier = modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        // paper keys a section with a flat rose block instead of the gradient bar
+        // paper keys a section with a flat rose block instead of the gradient bar; glass titles sit bare on their card
         if (com.aurora.music.ui.theme.isPaperTheme()) Box(Modifier.size(10.dp).background(MaterialTheme.colorScheme.primary))
-        else Box(
+        else if (!isGlassTheme()) Box(
             Modifier
                 .width(4.dp)
                 .height(22.dp)
@@ -124,7 +128,7 @@ fun SectionHeader(
                     )
                 ),
         )
-        Spacer(Modifier.width(10.dp))
+        if (!isGlassTheme()) Spacer(Modifier.width(10.dp))
         Text(
             text = title,
             style = MaterialTheme.typography.headlineSmall,

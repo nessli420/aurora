@@ -461,7 +461,7 @@ private fun TranslationSettings(
 ) {
     val container = LocalContextApp()
     val scope = rememberCoroutineScope()
-    val ui by container.settingsStore.uiPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.data.UiPrefs())
+    val ui by container.settingsStore.uiPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.ui.theme.LocalUiPrefs.current)
     val delete = appString(R.string.storage_delete)
     SettingsSectionTitle(appString(R.string.storage_section_translation))
     SettingsGroup {

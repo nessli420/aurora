@@ -70,6 +70,7 @@ import com.aurora.music.ui.theme.AccentPresets
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.ThemeIdentities
 import com.aurora.music.ui.theme.ThemeIdentity
+import com.aurora.music.ui.theme.accentSeed
 import com.aurora.music.ui.theme.auroraBackdrop
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.ui.theme.auroraShapes
@@ -96,7 +97,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, page: St
     val context = LocalContext.current
     val container = (context.applicationContext as AuroraApplication).container
     val store = container.settingsStore
-    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.ui.theme.LocalUiPrefs.current)
     val scope = rememberCoroutineScope()
     val materialYouSupported = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S
     val largeDisplay = remember(context) {
@@ -139,7 +140,7 @@ fun AppearanceScreen(contentPadding: PaddingValues, onBack: () -> Unit, page: St
                             modifier = Modifier.padding(horizontal = 20.dp),
                         )
                     }
-                    if (prefs.themeStyle == ThemeStyle.AURORA) {
+                    if (prefs.themeStyle == ThemeStyle.AURORA || prefs.themeStyle == ThemeStyle.GLASS) {
                     item { SettingsSectionTitle(appString(R.string.text_accent_233064)) }
                     item {
                         SegmentedRow(appString(R.string.text_source_6da13a), listOf(appString(R.string.text_presets_e709e7), appString(R.string.text_custom_081ae3), "Material You"), prefs.accentMode) { i ->
@@ -439,7 +440,7 @@ private fun ThemeStylePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
         val current = ThemeIdentities.firstOrNull { it.id == prefs.themeStyle } ?: ThemeIdentities.first()
         Text(current.description, style = MaterialTheme.typography.titleSmall)
         Text(current.detail, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        if (prefs.themeStyle != ThemeStyle.AURORA) {
+        if (prefs.themeStyle != ThemeStyle.AURORA && prefs.themeStyle != ThemeStyle.GLASS) {
             Text(appString(R.string.text_this_style_includes_its_own_colors_and_corners_your_aurora_custom_9b4b82), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
@@ -449,7 +450,7 @@ private fun ThemeStylePicker(prefs: UiPrefs, onSelect: (Int) -> Unit) {
 private fun ThemePreview(identity: ThemeIdentity, prefs: UiPrefs, dark: Boolean) {
     CompositionLocalProvider(LocalUiPrefs provides prefs.copy(themeStyle = identity.id)) {
         MaterialTheme(
-            colorScheme = styleColorScheme(identity.id, dark),
+            colorScheme = styleColorScheme(identity.id, dark, if (identity.id == ThemeStyle.GLASS) prefs.accentSeed(LocalContext.current, dark) else null),
             typography = auroraTypography(0.85f, identity.id, prefs.typeface),
             shapes = auroraShapes(CornerStyle.DEFAULT, identity.id),
         ) {

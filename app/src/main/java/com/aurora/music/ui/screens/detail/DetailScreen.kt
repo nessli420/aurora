@@ -94,6 +94,16 @@ import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.likePop
 import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.util.MotionTokens
+import com.aurora.music.ui.components.glass.GlassAction
+import com.aurora.music.ui.components.glass.GlassIconButton
+import com.aurora.music.ui.theme.LocalGlassAmbient
+import com.aurora.music.ui.theme.glassCard
+import com.aurora.music.ui.theme.glassChip
+import com.aurora.music.ui.theme.isGlassTheme
+import com.aurora.music.ui.theme.liveGlassSupported
+import com.kyant.backdrop.Backdrop
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -137,6 +147,8 @@ fun DetailScreen(
     collectionKey: String? = null,
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
+    val glass = isGlassTheme()
+    val ambient = LocalGlassAmbient.current
     val sortStore = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.aurora.music.AuroraApplication).container.settingsStore
     val sorts by sortStore.trackSorts.collectAsStateWithLifecycle(initialValue = emptyMap())
     val sortScope = androidx.compose.runtime.rememberCoroutineScope()
@@ -223,6 +235,13 @@ fun DetailScreen(
                 // two groups, so a narrow or large-type screen wraps the secondary actions together instead of orphaning one
                 Row(verticalAlignment = Alignment.CenterVertically) {
                 val onAccent = if (accent.luminance() > 0.6f) Color.Black else Color.White
+                if (glass) {
+                    GlassAction(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), onClick = { onPlayAll(tracks, 0) },
+                        accent = accent, enabled = tracks.isNotEmpty())
+                    Spacer(Modifier.width(10.dp))
+                    GlassIconButton(Icons.Filled.Shuffle, appString(R.string.text_shuffle_5b772b), onClick = { onShufflePlay(tracks) },
+                        modifier = Modifier.size(44.dp), enabled = tracks.isNotEmpty())
+                } else {
                 Row(
                     Modifier
                         .paperClip(RoundedCornerShape(50))
@@ -241,16 +260,18 @@ fun DetailScreen(
                     tint = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(enabled = tracks.isNotEmpty()) { onShufflePlay(tracks) }.padding(12.dp),
                 )
+                }
                 com.aurora.music.ui.theme.TextButton(onClick = onMix, enabled = tracks.isNotEmpty()) {
                     Icon(Icons.Filled.GraphicEq, null, Modifier.size(18.dp))
                     Spacer(Modifier.width(4.dp)); Text(appString(R.string.text_mix_fd7391), maxLines = 1)
                 }
                 }
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                val likeable = canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist" || itemKind == com.aurora.music.foryou.MIX_KIND)
+                Row(if (glass && (sortKey != null || likeable || canDownload)) Modifier.glassChip() else Modifier, verticalAlignment = Alignment.CenterVertically) {
                 if (sortKey != null) com.aurora.music.ui.components.TrackSortButton(sortOrder, accent, enabled = tracks.size > 1) { choice ->
                     sortScope.launch { sortStore.setTrackSort(sortKey, sortOrder.pick(choice)) }
                 }
-                if (canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist" || itemKind == com.aurora.music.foryou.MIX_KIND)) {
+                if (likeable) {
                     val likeTint by animateColorAsState(if (isItemLiked) accent else MaterialTheme.colorScheme.onSurface, Motion.state(), label = "like")
                     Icon(
                         if (isItemLiked) Icons.Filled.Favorite else Icons.Filled.FavoriteBorder,
@@ -274,9 +295,10 @@ fun DetailScreen(
                 }
             }
     }
-    val menuButton: @Composable (Color) -> Unit = { tint ->
+    val menuButton: @Composable (Color, Backdrop?) -> Unit = { tint, backdrop ->
                     Box {
-                        Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = tint, modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable { headerMenu = true }.padding(12.dp))
+                        if (glass) GlassIconButton(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), onClick = { headerMenu = true }, backdrop = backdrop)
+                        else Icon(Icons.Filled.MoreVert, appString(R.string.text_more_4bab2d), tint = tint, modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable { headerMenu = true }.padding(12.dp))
                         val isPlaylist = info.typeLabel.equals("Playlist", true)
                         DropdownMenu(expanded = headerMenu, onDismissRequest = { headerMenu = false }) {
                             DropdownMenuItem(text = { Text(appString(R.string.text_play_5d12bd)) }, enabled = tracks.isNotEmpty(), onClick = { headerMenu = false; onPlayAll(tracks, 0) }, leadingIcon = { Icon(Icons.Filled.PlayArrow, null) })
@@ -326,7 +348,7 @@ fun DetailScreen(
                     Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = MaterialTheme.colorScheme.onSurface,
                         modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(12.dp))
                     Spacer(Modifier.weight(1f))
-                    menuButton(MaterialTheme.colorScheme.onSurface)
+                    menuButton(MaterialTheme.colorScheme.onSurface, ambient)
                 }
                 Row(Modifier.fillMaxWidth().padding(horizontal = gutter, vertical = 8.dp), verticalAlignment = Alignment.Bottom) {
                     val art = headerArt
@@ -362,6 +384,7 @@ fun DetailScreen(
                 // the art fades into the page, so light pages need dark type under the title
                 val lightPage = MaterialTheme.colorScheme.background.luminance() > 0.5f
                 val titleForeground = if (lightPage) MaterialTheme.colorScheme.onSurface else headerForeground
+                val cover = if (glass && liveGlassSupported && !wideHeader) rememberLayerBackdrop() else null
             Box(Modifier.fillMaxWidth().height(if (wideHeader) 360.dp else 420.dp)) {
                 if (wideHeader) {
                     Box(Modifier.matchParentSize().background(Brush.verticalGradient(
@@ -370,7 +393,8 @@ fun DetailScreen(
                         Modifier.align(Alignment.CenterStart).padding(start = 24.dp, top = 48.dp).size(260.dp),
                         corner = if (info.isArtist) 130.dp else 20.dp, animated = albumCover)
                 } else {
-                Artwork(effectiveArt, info.accent, Modifier.matchParentSize(), corner = 0.dp, animated = albumCover)
+                Artwork(effectiveArt, info.accent, Modifier.matchParentSize().then(if (cover != null) Modifier.layerBackdrop(cover) else Modifier),
+                    corner = 0.dp, animated = albumCover)
                 Box(
                     Modifier.matchParentSize().background(
                         Brush.verticalGradient(
@@ -390,12 +414,14 @@ fun DetailScreen(
                 )
                 }
                 Row(
-                    Modifier.fillMaxWidth().padding(top = topInset + 6.dp, start = 8.dp, end = 8.dp),
+                    Modifier.fillMaxWidth().padding(top = topInset + 6.dp).padding(horizontal = if (glass) 16.dp else 8.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = headerForeground, modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
+                    val bent = if (wideHeader) ambient else cover
+                    if (glass) GlassIconButton(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), onBack, backdrop = bent)
+                    else Icon(Icons.AutoMirrored.Filled.ArrowBack, appString(R.string.text_back_b52b36), tint = headerForeground, modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onBack).padding(8.dp))
                     Spacer(Modifier.weight(1f))
-                    menuButton(headerForeground)
+                    menuButton(headerForeground, bent)
                 }
                 Column(Modifier.align(if (wideHeader) Alignment.CenterStart else Alignment.BottomStart)
                     .padding(start = if (wideHeader) 320.dp else 20.dp, end = 20.dp,
@@ -422,7 +448,7 @@ fun DetailScreen(
         }
 
         if (!compactHeader) item {
-            actionsRow(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 8.dp, bottom = 8.dp), false)
+            actionsRow(Modifier.fillMaxWidth().padding(start = 20.dp, end = if (glass) 20.dp else 8.dp, top = 8.dp, bottom = 8.dp), false)
         }
 
         if (info.isArtist && artistInfo != null &&
@@ -491,15 +517,16 @@ fun DetailScreen(
                     TextField(
                         value = query,
                         onValueChange = { query = it },
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp).focusRequester(searchFocus),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp)
+                            .then(if (glass) Modifier.glassCard(RoundedCornerShape(14.dp)) else Modifier).focusRequester(searchFocus),
                         placeholder = { Text(appString(R.string.search_collection)) },
                         leadingIcon = { Icon(Icons.Filled.Search, null, tint = MaterialTheme.colorScheme.primary) },
                         trailingIcon = { if (query.isNotEmpty()) Icon(Icons.Filled.Close, appString(R.string.text_clear_719ea3), modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable { query = "" }.padding(8.dp)) },
                         singleLine = true,
                         shape = com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(14.dp)),
                         colors = TextFieldDefaults.colors(
-                            focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-                            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                            focusedContainerColor = if (glass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh,
+                            unfocusedContainerColor = if (glass) Color.Transparent else MaterialTheme.colorScheme.surfaceContainerHigh,
                             focusedIndicatorColor = Color.Transparent,
                             unfocusedIndicatorColor = Color.Transparent,
                             cursorColor = MaterialTheme.colorScheme.primary,
@@ -528,9 +555,9 @@ fun DetailScreen(
                             fontWeight = if (selected) FontWeight.Black else FontWeight.Medium,
                             color = chipInk,
                             modifier = Modifier
-                                .paperClip(RoundedCornerShape(50))
-                                .background(chipFill)
-                                .border(1.dp, chipLine, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(50)))
+                                .then(if (glass) Modifier.glassCard(CircleShape, if (selected) accent else Color.Unspecified)
+                                    else Modifier.paperClip(RoundedCornerShape(50)).background(chipFill)
+                                        .border(1.dp, chipLine, com.aurora.music.ui.theme.paperSquare(RoundedCornerShape(50))))
                                 .clickable { genreFilter = if (i == 0) null else label }
                                 .padding(horizontal = 14.dp, vertical = 7.dp),
                         )

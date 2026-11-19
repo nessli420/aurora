@@ -83,7 +83,7 @@ private val LightColors = lightColorScheme(
 
 val LocalUiPrefs = compositionLocalOf { UiPrefs() }
 
-private fun onAccent(seed: Color): Color = if (seed.luminance() > 0.5f) Color(0xFF1A1016) else Color.White
+internal fun onAccent(seed: Color): Color = if (seed.luminance() > 0.5f) Color(0xFF1A1016) else Color.White
 
 private fun ColorScheme.withAccent(seed: Color, dark: Boolean): ColorScheme {
     val on = onAccent(seed)
@@ -157,6 +157,13 @@ fun UiPrefs.useDarkTheme(): Boolean {
     }
 }
 
+internal fun UiPrefs.accentSeed(context: android.content.Context, dark: Boolean): Color = when {
+    accentMode == AccentMode.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S ->
+        (if (dark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)).primary
+    accentMode == AccentMode.CUSTOM -> Color(accentColor.toInt())
+    else -> AccentPresets.getOrElse(accentPreset) { AccentPresets[0] }.seed
+}
+
 @Composable
 fun AuroraTheme(
     uiPrefs: UiPrefs = UiPrefs(),
@@ -170,15 +177,11 @@ fun AuroraTheme(
     val colors = remember(useDark, amoled, uiPrefs.themeStyle, uiPrefs.accentMode, uiPrefs.accentColor, uiPrefs.accentPreset) {
         val materialYou = uiPrefs.accentMode == AccentMode.MATERIAL_YOU && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
         val scheme = when {
+            // liquid glass keeps its own surfaces and takes the chosen accent
+            uiPrefs.themeStyle == ThemeStyle.GLASS -> styleColorScheme(ThemeStyle.GLASS, useDark, uiPrefs.accentSeed(context, useDark))
             uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
             materialYou -> if (useDark) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-            else -> {
-                val seed = when (uiPrefs.accentMode) {
-                    AccentMode.CUSTOM -> Color(uiPrefs.accentColor.toInt())
-                    else -> AccentPresets.getOrElse(uiPrefs.accentPreset) { AccentPresets[0] }.seed
-                }
-                (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
-            }
+            else -> (if (useDark) DarkColors else LightColors).withAccent(uiPrefs.accentSeed(context, useDark), useDark)
         }
         if (amoled) scheme.toAmoled() else scheme
     }

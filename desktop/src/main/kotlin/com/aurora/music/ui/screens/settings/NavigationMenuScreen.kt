@@ -58,7 +58,7 @@ private val hand = Modifier.pointerHoverIcon(PointerIcon.Hand)
 @Composable
 fun NavigationMenuScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val store = LocalDesktopContainer.current.settingsStore
-    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.ui.theme.LocalUiPrefs.current)
     val simpleMode by store.simpleMode.collectAsStateWithLifecycle(initialValue = false)
     val scope = rememberCoroutineScope()
     val layout = remember(prefs.navLayout) { NavMenu.parse(prefs.navLayout) }

@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.RowScope
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ButtonElevation
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Shape
@@ -16,6 +17,10 @@ import androidx.compose.ui.unit.dp
 // in paper they become the website's buttons: square, framed in ink, rose for the primary one.
 
 private val inkRule get() = BorderStroke(1.dp, PaperTokens.ink)
+
+// glass buttons only get the rim: they also sit in dialogs, which no backdrop reaches
+@Composable
+private fun glassRim(): BorderStroke? = if (isGlassTheme()) BorderStroke(1.dp, GlassColors.rim(glassIsDark())) else null
 
 @Composable
 fun Button(
@@ -38,7 +43,7 @@ fun Button(
             disabledContainerColor = PaperTokens.plate2, disabledContentColor = PaperTokens.ink3,
         ) else ButtonDefaults.buttonColors(),
         if (paper) null else elevation,
-        border ?: if (paper && enabled) inkRule else null,
+        border ?: if (paper && enabled) inkRule else glassRim(),
         contentPadding, interactionSource, content,
     )
 }
@@ -60,9 +65,10 @@ fun FilledTonalButton(
     androidx.compose.material3.FilledTonalButton(
         onClick, modifier, enabled, paperSquare(shape),
         colors ?: if (paper) ButtonDefaults.filledTonalButtonColors(containerColor = PaperTokens.plate, contentColor = PaperTokens.ink)
+            else if (isGlassTheme()) ButtonDefaults.filledTonalButtonColors(containerColor = GlassColors.selection(glassIsDark()), contentColor = MaterialTheme.colorScheme.onSurface)
             else ButtonDefaults.filledTonalButtonColors(),
         if (paper) null else elevation,
-        border ?: if (paper) inkRule else null,
+        border ?: if (paper) inkRule else glassRim(),
         contentPadding, interactionSource, content,
     )
 }
@@ -85,7 +91,7 @@ fun OutlinedButton(
         onClick, modifier, enabled, paperSquare(shape),
         colors ?: if (paper) ButtonDefaults.outlinedButtonColors(contentColor = PaperTokens.ink) else ButtonDefaults.outlinedButtonColors(),
         elevation,
-        border ?: if (paper) inkRule else ButtonDefaults.outlinedButtonBorder(enabled),
+        border ?: if (paper) inkRule else glassRim() ?: ButtonDefaults.outlinedButtonBorder(enabled),
         contentPadding, interactionSource, content,
     )
 }

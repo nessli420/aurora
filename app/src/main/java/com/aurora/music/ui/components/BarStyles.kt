@@ -82,21 +82,23 @@ import com.aurora.music.model.accent
 import com.aurora.music.navigation.NavMenuItem
 import com.aurora.music.ui.screens.home.spotlightTint
 import com.aurora.music.ui.theme.LocalContextAccent
+import com.aurora.music.ui.theme.LocalGlassBackdrop
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.PaperTokens
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.ui.theme.chromeScrim
+import com.aurora.music.ui.theme.isGlassTheme
 import com.aurora.music.ui.theme.isPaperTheme
 import com.aurora.music.ui.theme.likePop
+import com.aurora.music.ui.theme.liquidGlass
 import com.aurora.music.ui.theme.paperClip
 import com.aurora.music.ui.theme.paperSquare
 import com.aurora.music.util.MotionTokens
 import com.aurora.music.viewmodel.PlayerUiState
 
-// liquid glass keeps its own chrome under every bar style
 @Composable
-fun activeBarStyle(): Int = LocalUiPrefs.current.let { if (it.themeStyle == ThemeStyle.GLASS) BarStyle.CLASSIC else it.bars }
+fun activeBarStyle(): Int = LocalUiPrefs.current.bars
 
 private class BarTab(val label: String, val icon: ImageVector, val selected: Boolean, val route: String?, val onClick: () -> Unit)
 
@@ -450,19 +452,25 @@ private fun Modifier.navHold(tab: BarTab, onLongPress: (String) -> Unit): Modifi
 // the colour is read while drawing, so a track change repaints the bar without recomposing it
 @Composable
 private fun Modifier.tinted(shape: Shape, tint: State<Color>): Modifier =
-    paperClip(shape).drawBehind { drawRect(tint.value) }.then(if (isPaperTheme()) Modifier.border(1.dp, PaperTokens.ink) else Modifier)
+    if (isGlassTheme()) liquidGlass(LocalGlassBackdrop.current, shape, surface = tint.value.copy(alpha = 0.6f))
+    else paperClip(shape).drawBehind { drawRect(tint.value) }.then(if (isPaperTheme()) Modifier.border(1.dp, PaperTokens.ink) else Modifier)
 
 // outside aurora a floating bar is the theme's own panel, so retro, aero and paper keep their frames
 @Composable
-private fun Modifier.barSurface(shape: Shape, fill: Color, edge: Color): Modifier =
-    if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true)
-    else clip(shape).background(fill).border(1.dp, edge, shape)
+private fun Modifier.barSurface(shape: Shape, fill: Color, edge: Color): Modifier = when (LocalUiPrefs.current.themeStyle) {
+    ThemeStyle.AURORA -> clip(shape).background(fill).border(1.dp, edge, shape)
+    ThemeStyle.GLASS -> liquidGlass(LocalGlassBackdrop.current, shape)
+    else -> auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true)
+}
 
 @Composable
 private fun Modifier.consoleSurface(): Modifier {
     val colors = MaterialTheme.colorScheme
-    return if (LocalUiPrefs.current.themeStyle != ThemeStyle.AURORA) auroraPanel(RectangleShape, emphasized = true).padding(top = 1.dp)
-    else background(colors.surface).drawBehind { drawRect(colors.surfaceContainerHigh, size = Size(size.width, 1.dp.toPx())) }
+    return when (LocalUiPrefs.current.themeStyle) {
+        ThemeStyle.AURORA -> background(colors.surface).drawBehind { drawRect(colors.surfaceContainerHigh, size = Size(size.width, 1.dp.toPx())) }
+        ThemeStyle.GLASS -> liquidGlass(LocalGlassBackdrop.current, RectangleShape, shadow = false)
+        else -> auroraPanel(RectangleShape, emphasized = true).padding(top = 1.dp)
+    }
 }
 
 @Composable

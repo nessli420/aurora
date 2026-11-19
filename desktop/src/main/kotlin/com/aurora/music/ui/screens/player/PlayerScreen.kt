@@ -1014,7 +1014,7 @@ private fun canvasColors(): ColorScheme {
     if (colors.onBackground.luminance() > 0.5f) return colors
     val style = LocalUiPrefs.current.themeStyle
     return if (style == ThemeStyle.AURORA) playerColorScheme(readableAccent(colors.primary, darkBackground = true), dark = true)
-    else styleColorScheme(style, dark = true)
+    else styleColorScheme(style, dark = true, seed = colors.primary.takeIf { style == ThemeStyle.GLASS })
 }
 
 // the canvas's own colour fills the player and a blurred copy glows out from behind the card

@@ -68,7 +68,7 @@ private fun paperColorScheme(): ColorScheme = with(PaperTokens) {
     )
 }
 
-fun styleColorScheme(style: Int, dark: Boolean): ColorScheme {
+fun styleColorScheme(style: Int, dark: Boolean, seed: Color? = null): ColorScheme {
     if (style == ThemeStyle.PAPER) return paperColorScheme()
     val base = if (dark) darkColorScheme() else lightColorScheme()
     val palette = when (style) {
@@ -103,11 +103,11 @@ fun styleColorScheme(style: Int, dark: Boolean): ColorScheme {
     }
     val (background, surface, elevated, text) = palette
     val secondaryText = palette[4]
-    val accent = palette[5]
-    val tertiary = palette[6]
+    val accent = seed ?: palette[5]
+    val tertiary = seed?.let { lerp(it, text, 0.22f) } ?: palette[6]
     val outline = palette[7]
     val container = lerp(surface, accent, if (dark) 0.23f else 0.13f)
-    val onAccent = if (dark) background else Color.White
+    val onAccent = seed?.let(::onAccent) ?: if (dark) background else Color.White
     return base.copy(
         primary = accent, onPrimary = onAccent,
         primaryContainer = container, onPrimaryContainer = text,

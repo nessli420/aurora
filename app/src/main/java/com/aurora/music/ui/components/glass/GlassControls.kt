@@ -69,7 +69,10 @@ import androidx.compose.ui.util.fastCoerceAtMost
 import androidx.compose.ui.util.fastCoerceIn
 import androidx.compose.ui.util.fastRoundToInt
 import androidx.compose.ui.util.lerp
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.ui.graphics.luminance
 import com.aurora.music.ui.theme.GlassColors
+import com.aurora.music.ui.theme.LocalGlassAmbient
 import com.aurora.music.ui.theme.glassIsDark
 import com.aurora.music.ui.theme.liquidGlass
 import com.aurora.music.ui.theme.liveGlassSupported
@@ -294,6 +297,8 @@ fun GlassButton(
     tint: Color = Color.Unspecified,
     contentDescription: String? = null,
     onLongClick: (() -> Unit)? = null,
+    surface: Color = Color.Unspecified,
+    enabled: Boolean = true,
     content: @Composable RowScope.() -> Unit,
 ) {
     val scope = rememberCoroutineScope()
@@ -302,7 +307,7 @@ fun GlassButton(
     val dark = glassIsDark()
     Row(
         modifier
-            .liquidGlass(backdrop, Capsule(), refraction = 16.dp, depth = 24.dp, layerBlock = {
+            .liquidGlass(backdrop, Capsule(), refraction = 16.dp, depth = 24.dp, surface = surface, layerBlock = {
                 val progress = highlight.pressProgress
                 val scale = lerp(1f, 1f + 4.dp.toPx() / size.height, progress)
                 val maxOffset = size.minDimension
@@ -318,7 +323,7 @@ fun GlassButton(
                 else if (selected) drawRect(GlassColors.selection(dark))
             })
             .longPressFirst(Unit, onLongClick?.let { { _, _ -> hold?.invoke() } })
-            .clickable(interactionSource = null, indication = null, role = Role.Button, onClick = onClick)
+            .clickable(interactionSource = null, indication = null, enabled = enabled, role = Role.Button, onClick = onClick)
             .semantics { if (contentDescription != null) this.contentDescription = contentDescription; this.selected = selected }
             .then(highlight.modifier)
             .then(highlight.gestureModifier),
@@ -326,6 +331,39 @@ fun GlassButton(
         verticalAlignment = Alignment.CenterVertically,
         content = content,
     )
+}
+
+@Composable
+fun GlassIconButton(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    backdrop: Backdrop? = LocalGlassAmbient.current,
+    tint: Color = MaterialTheme.colorScheme.onSurface,
+    enabled: Boolean = true,
+) = GlassButton(onClick, backdrop, modifier.size(40.dp), contentDescription = label, enabled = enabled) {
+    Icon(icon, null, tint = tint, modifier = Modifier.size(22.dp).alpha(if (enabled) 1f else .4f))
+}
+
+@Composable
+fun GlassAction(
+    icon: ImageVector,
+    label: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    backdrop: Backdrop? = LocalGlassAmbient.current,
+    accent: Color = MaterialTheme.colorScheme.primary,
+    enabled: Boolean = true,
+) {
+    val ink = if (accent.luminance() > .6f) Color.Black else Color.White
+    GlassButton(onClick, backdrop, modifier.alpha(if (enabled) 1f else .5f), surface = GlassColors.accent(accent, glassIsDark()), enabled = enabled) {
+        Row(Modifier.padding(horizontal = 22.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = ink, modifier = Modifier.size(20.dp))
+            Spacer(Modifier.width(8.dp))
+            Text(label, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = ink, maxLines = 1)
+        }
+    }
 }
 
 // ios-style switch whose thumb turns into a lens while held

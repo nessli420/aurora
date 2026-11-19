@@ -41,7 +41,7 @@ private fun lyricsSourceDetail(id: String) = when (id) {
 @Composable
 fun LyricsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val store = LocalDesktopContainer.current.settingsStore
-    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.ui.theme.LocalUiPrefs.current)
     val order by store.lyricsSources.collectAsStateWithLifecycle(initialValue = DEFAULT_LYRICS_SOURCES)
     val scope = rememberCoroutineScope()
     val line = prefs.lyricsSync == LyricsSync.LINE

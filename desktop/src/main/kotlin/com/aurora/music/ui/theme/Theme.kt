@@ -120,7 +120,7 @@ fun glassSheen(): Brush {
     return Brush.verticalGradient(listOf(Color.White.copy(alpha = frost * 2f), Color.White.copy(alpha = frost * 0.75f)))
 }
 
-private fun onAccent(seed: Color): Color = if (seed.luminance() > 0.5f) Color(0xFF1A1016) else Color.White
+internal fun onAccent(seed: Color): Color = if (seed.luminance() > 0.5f) Color(0xFF1A1016) else Color.White
 
 private fun ColorScheme.withAccent(seed: Color, dark: Boolean): ColorScheme {
     val on = onAccent(seed)
@@ -218,12 +218,12 @@ fun AuroraTheme(
     // a fresh ColorScheme has no equals, so rebuilding it on every pass would invalidate the whole tree
     val (colors, solid, tint) = remember(useDark, amoled, uiPrefs.themeStyle, uiPrefs.accentMode, uiPrefs.accentColor,
         uiPrefs.accentPreset, systemAccent, playingAccent, translucent, glassLook) {
-        var scheme = when {
-            uiPrefs.themeStyle != ThemeStyle.AURORA -> styleColorScheme(uiPrefs.themeStyle, useDark)
-            else -> {
-                val seed = playingAccent?.let { readableAccent(it, useDark) } ?: uiPrefs.accentSeed(systemAccent)
-                (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
-            }
+        val seed = playingAccent?.let { readableAccent(it, useDark) } ?: uiPrefs.accentSeed(systemAccent)
+        var scheme = when (uiPrefs.themeStyle) {
+            ThemeStyle.AURORA -> (if (useDark) DarkColors else LightColors).withAccent(seed, useDark)
+            // liquid glass keeps its own surfaces and takes the chosen accent
+            ThemeStyle.GLASS -> styleColorScheme(ThemeStyle.GLASS, useDark, seed)
+            else -> styleColorScheme(uiPrefs.themeStyle, useDark)
         }
         if (amoled) scheme = scheme.toAmoled()
         val tint = scheme.background.copy(alpha = (0.35f + glassLook.tint * 0.65f + if (amoled) 0.15f else 0f).coerceIn(0f, 1f))

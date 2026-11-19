@@ -3,6 +3,7 @@ package com.aurora.music.ui.theme
 import android.os.Build
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
@@ -12,6 +13,7 @@ import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawWithCache
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.GraphicsLayerScope
@@ -34,6 +36,7 @@ import com.kyant.backdrop.effects.lens
 import com.kyant.backdrop.effects.vibrancy
 import com.kyant.backdrop.highlight.Highlight
 import com.kyant.backdrop.shadow.Shadow
+import com.kyant.shapes.Capsule
 
 // everything behind the floating chrome: ambient backdrop plus the page
 val LocalGlassBackdrop = staticCompositionLocalOf<Backdrop?> { null }
@@ -85,6 +88,12 @@ object GlassColors {
 
     fun rim(dark: Boolean): Brush = if (dark) Brush.verticalGradient(listOf(Color.White.copy(alpha = .22f), Color.White.copy(alpha = .05f), Color.White.copy(alpha = .12f)))
     else Brush.verticalGradient(listOf(Color.White, Color.White.copy(alpha = .55f), Color.White.copy(alpha = .85f)))
+
+    fun card(dark: Boolean): Brush = if (dark) Brush.verticalGradient(listOf(Color.White.copy(alpha = .12f), Color.White.copy(alpha = .055f)))
+    else Brush.verticalGradient(listOf(Color.White.copy(alpha = .78f), Color.White.copy(alpha = .56f)))
+
+    // light pages need a denser tint to keep the ink on it readable
+    fun accent(color: Color, dark: Boolean): Color = color.copy(alpha = if (dark) .66f else .88f)
 }
 
 // floating glass that bends and blurs whatever scrolls beneath it
@@ -113,7 +122,8 @@ fun Modifier.liquidGlass(
         effects = {
             vibrancy()
             blur(blur.toPx())
-            lens(refraction.toPx(), depth.toPx())
+            // the lens throws on a shape without corners, so a plain rectangle is frosted only
+            if (shape != androidx.compose.ui.graphics.RectangleShape) lens(refraction.toPx(), depth.toPx())
         },
         highlight = { if (dark) Highlight.Default.copy(alpha = .9f) else Highlight.Default },
         shadow = if (shadow) ({ Shadow(radius = 20.dp, color = Color.Black.copy(alpha = if (dark) .32f else .12f)) }) else null,
@@ -138,5 +148,45 @@ fun Modifier.glassPanel(shape: Shape, emphasized: Boolean = false): Modifier {
             drawContent()
             drawOutline(outline, rim, style = stroke)
         }
+    }
+}
+
+@Composable
+fun Modifier.glassCard(shape: Shape, tint: Color = Color.Unspecified): Modifier {
+    val dark = glassIsDark()
+    val fill = GlassColors.card(dark)
+    val rim = GlassColors.rim(dark)
+    return this.clip(shape).drawWithCache {
+        val outline = shape.createOutline(size, layoutDirection, this)
+        val stroke = Stroke(1.5.dp.toPx())
+        onDrawWithContent {
+            drawRect(fill)
+            if (tint.isSpecified) drawRect(tint, alpha = if (dark) .26f else .18f)
+            drawContent()
+            drawOutline(outline, rim, style = stroke)
+        }
+    }
+}
+
+@Composable
+fun Modifier.glassShelf(tint: Color = Color.Unspecified): Modifier =
+    if (isGlassTheme()) padding(horizontal = 12.dp).glassCard(MaterialTheme.shapes.large, tint).padding(vertical = 14.dp) else this
+
+@Composable
+fun Modifier.glassChip(selected: Boolean = false, backdrop: Backdrop? = LocalGlassAmbient.current): Modifier =
+    liquidGlass(backdrop, Capsule(), refraction = 12.dp, depth = 12.dp, blur = 6.dp, shadow = false,
+        surface = if (selected) GlassColors.accent(MaterialTheme.colorScheme.primary, glassIsDark()) else Color.Unspecified).clip(Capsule())
+
+fun Modifier.glassEdge(shape: Shape, dark: Boolean): Modifier = drawWithCache {
+    val outline = shape.createOutline(size, layoutDirection, this)
+    val stroke = Stroke(1.5.dp.toPx())
+    val corner = Offset(size.width, size.height)
+    val rim = Brush.linearGradient(0f to Color.White.copy(alpha = if (dark) .46f else .9f), .5f to Color.White.copy(alpha = .06f),
+        1f to Color.White.copy(alpha = if (dark) .22f else .5f), start = Offset.Zero, end = corner)
+    val sheen = Brush.linearGradient(0f to Color.White.copy(alpha = .17f), .42f to Color.Transparent, start = Offset.Zero, end = corner)
+    onDrawWithContent {
+        drawContent()
+        drawOutline(outline, sheen)
+        drawOutline(outline, rim, style = stroke)
     }
 }

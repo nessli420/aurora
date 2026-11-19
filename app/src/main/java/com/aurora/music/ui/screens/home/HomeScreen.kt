@@ -76,6 +76,10 @@ import androidx.compose.runtime.getValue
 import com.aurora.music.ui.components.StatusBarScrim
 import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.pressClickable
+import com.aurora.music.ui.theme.glassChip
+import com.aurora.music.ui.theme.glassEdge
+import com.aurora.music.ui.theme.glassShelf
+import com.kyant.backdrop.backdrops.layerBackdrop
 
 @Composable
 fun HomeScreen(
@@ -118,6 +122,7 @@ fun HomeScreen(
     val heroScale = if (tablet) ui.tabletHeroScale else 1f
     val favouriteScale = if (tablet) ui.tabletFavouriteScale else 1f
     val nothingToShow = state.nothingToShow(data)
+    val glass = com.aurora.music.ui.theme.isGlassTheme()
     Box {
     LazyColumn(
         Modifier.fillMaxWidth(),
@@ -125,7 +130,7 @@ fun HomeScreen(
             top = topInset + 8.dp,
             bottom = contentPadding.calculateBottomPadding() + 24.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(26.dp),
+        verticalArrangement = Arrangement.spacedBy(if (glass) 16.dp else 26.dp),
     ) {
         item {
             Row(
@@ -156,6 +161,7 @@ fun HomeScreen(
             listOf(R.string.foryou_title to rows.first, R.string.foryou_stations to rows.second).forEach { (title, row) ->
                 if (row.isNotEmpty()) item(key = "mixes:$title") {
                     val tiles = androidx.compose.runtime.remember(row) { row.map { it.asPlaylist() } }
+                    Column(Modifier.glassShelf()) {
                     SectionHeader(appString(title), Modifier.padding(horizontal = 16.dp))
                     Spacer(Modifier.height(10.dp))
                     LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -163,6 +169,7 @@ fun HomeScreen(
                             // mix names run long in some languages and have no artwork to tell them apart
                             PlaylistCard(tiles[i], onClick = { onOpenDetail(com.aurora.music.foryou.MIX_KIND, tiles[i].id) }, titleLines = 2)
                         }
+                    }
                     }
                 }
             }
@@ -184,7 +191,7 @@ fun HomeScreen(
 
 
         data.sections.forEach { section ->
-            item(key = "feed:${section.id}") { com.aurora.music.ui.components.FeedSection(section, onOpenDetail, onPlayAll) }
+            item(key = "feed:${section.id}") { Box(Modifier.glassShelf()) { com.aurora.music.ui.components.FeedSection(section, onOpenDetail, onPlayAll) } }
         }
         if (data.continuation != null || state.error != null) {
             item(key = "feed-more") { HomeFeedMore(state, onLoadMore, onRetry) }
@@ -199,7 +206,7 @@ fun HomeScreen(
                         state = pagerState,
                         pageSize = if (tablet) androidx.compose.foundation.pager.PageSize.Fixed(400.dp * heroScale)
                             else androidx.compose.foundation.pager.PageSize.Fill,
-                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        contentPadding = PaddingValues(horizontal = if (glass) 12.dp else 16.dp),
                         pageSpacing = 12.dp,
                         modifier = Modifier.fillMaxWidth(),
                     ) { page ->
@@ -228,6 +235,7 @@ fun HomeScreen(
 
         if (data.recentlyPlayed.isNotEmpty() && HomeSection.RECENT !in hidden) {
             item {
+                Column(Modifier.glassShelf()) {
                 SectionHeader(appString(R.string.text_jump_back_in_1d9181), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(12.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -236,11 +244,13 @@ fun HomeScreen(
                         OverlayTile(a.title, a.artworkUrl, accentFor(a.id)) { onOpenDetail("album", a.id) }
                     }
                 }
+                }
             }
         }
 
         if (data.playlists.isNotEmpty() && HomeSection.PLAYLISTS !in hidden) {
             item {
+                Column(Modifier.glassShelf()) {
                 SectionHeader(appString(R.string.text_your_playlists_df03eb), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -248,23 +258,24 @@ fun HomeScreen(
                         PlaylistCard(data.playlists[i], onClick = { onOpenDetail("playlist", data.playlists[i].id) })
                     }
                 }
+                }
             }
         }
 
         val featured = data.starred.firstOrNull()
         if (featured != null && HomeSection.FAVOURITE !in hidden) {
             item {
-                Column(Modifier.padding(horizontal = 16.dp)) {
+                Column(Modifier.glassShelf(featured.accent).padding(horizontal = 16.dp)) {
                     SectionHeader(appString(R.string.text_from_your_favourites_d39722))
                     Spacer(Modifier.height(12.dp))
                     Box(
                         Modifier
                             .fillMaxWidth()
-                            .paperFrame(RoundedCornerShape(20.dp), {
+                            .then(if (glass) Modifier else Modifier.paperFrame(RoundedCornerShape(20.dp), {
                                 background(Brush.linearGradient(listOf(MaterialTheme.colorScheme.surfaceContainerHigh, featured.accent.copy(alpha = 0.20f))))
-                            })
+                            }))
                             .pressClickable { starredQueue(state.allStarred, data.starred, featured).let { (songs, at) -> onPlayAll(songs, at) } }
-                            .padding(16.dp * favouriteScale),
+                            .padding(if (glass) 0.dp else 16.dp * favouriteScale),
                     ) {
                         Column {
                             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -276,8 +287,10 @@ fun HomeScreen(
                                     Text(featured.title, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                     Text(featured.artist, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
                                 }
-                                Box(Modifier.size(46.dp * favouriteScale).paperFrame(CircleShape, { this }, fill = MaterialTheme.colorScheme.primary)
-                                    .background(MaterialTheme.colorScheme.primary), contentAlignment = Alignment.Center) {
+                                Box(Modifier.size(46.dp * favouriteScale).then(
+                                    if (glass) Modifier.glassChip(selected = true)
+                                    else Modifier.paperFrame(CircleShape, { this }, fill = MaterialTheme.colorScheme.primary).background(MaterialTheme.colorScheme.primary)),
+                                    contentAlignment = Alignment.Center) {
                                     Icon(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd), tint = MaterialTheme.colorScheme.onPrimary, modifier = Modifier.size(24.dp * favouriteScale))
                                 }
                             }
@@ -297,6 +310,7 @@ fun HomeScreen(
 
         if (data.mostPlayed.isNotEmpty() && HomeSection.MOST !in hidden) {
             item {
+                Column(Modifier.glassShelf()) {
                 SectionHeader(appString(R.string.text_most_played_14202e), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -304,11 +318,13 @@ fun HomeScreen(
                         AlbumCard(data.mostPlayed[i], onClick = { onOpenDetail("album", data.mostPlayed[i].id) })
                     }
                 }
+                }
             }
         }
 
         if (data.random.isNotEmpty() && HomeSection.RECOMMENDED !in hidden) {
             item {
+                Column(Modifier.glassShelf()) {
                 SectionHeader(appString(R.string.text_recommended_albums_36271e), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -316,11 +332,13 @@ fun HomeScreen(
                         AlbumCard(data.random[i], onClick = { onOpenDetail("album", data.random[i].id) })
                     }
                 }
+                }
             }
         }
 
         if (data.artists.isNotEmpty() && HomeSection.ARTISTS !in hidden) {
             item {
+                Column(Modifier.glassShelf()) {
                 SectionHeader(appString(R.string.text_artists_1528d8), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
@@ -328,17 +346,20 @@ fun HomeScreen(
                         ArtistCircle(data.artists[i], onClick = { onOpenDetail("artist", data.artists[i].id) })
                     }
                 }
+                }
             }
         }
 
         if (data.newReleases.isNotEmpty() && HomeSection.NEW !in hidden) {
             item {
+                Column(Modifier.glassShelf()) {
                 SectionHeader(appString(R.string.text_new_releases_3cdd02), Modifier.padding(horizontal = 16.dp))
                 Spacer(Modifier.height(10.dp))
                 LazyRow(contentPadding = PaddingValues(horizontal = 8.dp)) {
                     items(data.newReleases.size) { i ->
                         AlbumCard(data.newReleases[i], onClick = { onOpenDetail("album", data.newReleases[i].id) })
                     }
+                }
                 }
             }
         }
@@ -420,26 +441,35 @@ internal fun HomeFeedMore(state: HomeUiState, onLoadMore: () -> Unit, onRetry: (
 private fun HeroCard(album: Album, onOpenDetail: (String, String) -> Unit, onPlayAlbum: (String) -> Unit, height: androidx.compose.ui.unit.Dp = 210.dp) {
     val accent = accentFor(album.id)
     val paper = isPaperTheme()
+    val glass = com.aurora.music.ui.theme.isGlassTheme()
+    // the play button bends the cover under it, so the cover and its scrim are recorded for it
+    val cover = if (glass && com.aurora.music.ui.theme.liveGlassSupported) com.kyant.backdrop.backdrops.rememberLayerBackdrop() else null
+    val shape = paperSquare(RoundedCornerShape(24.dp))
     Box(
         Modifier
             .fillMaxWidth()
             .height(height)
-            .clip(paperSquare(RoundedCornerShape(24.dp)))
+            .clip(shape)
+            .then(if (glass) Modifier.glassEdge(shape, com.aurora.music.ui.theme.glassIsDark()) else Modifier)
             .pressClickable { onOpenDetail("album", album.id) },
     ) {
-        Artwork(album.artworkUrl, accent, Modifier.matchParentSize(), corner = if (paper) 0.dp else 24.dp)
+        Box(Modifier.matchParentSize().then(if (cover != null) Modifier.layerBackdrop(cover) else Modifier)) {
+        Artwork(album.artworkUrl, accent, Modifier.matchParentSize(), corner = if (paper || glass) 0.dp else 24.dp)
         Box(
             Modifier.matchParentSize().background(
                 Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.30f), Color.Black.copy(alpha = 0.88f)))
             )
         )
+        }
         Column(Modifier.align(Alignment.BottomStart).padding(20.dp)) {
             Eyebrow(appString(R.string.text_new_release_f0ec22), if (paper) Color.White else accent)
             Spacer(Modifier.height(6.dp))
             Text(album.title, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Black, color = Color.White, maxLines = 2, overflow = TextOverflow.Ellipsis)
             Text(album.artist, style = MaterialTheme.typography.bodyMedium, color = Color.White.copy(alpha = 0.85f), maxLines = 1, overflow = TextOverflow.Ellipsis)
             Spacer(Modifier.height(12.dp))
-            Row(
+            if (glass) com.aurora.music.ui.components.glass.GlassAction(Icons.Filled.PlayArrow, appString(R.string.text_play_5d12bd),
+                onClick = { onPlayAlbum(album.id) }, backdrop = cover)
+            else Row(
                 // paper: the site's primary button, rose with ink type and an ink rule
                 Modifier.paperFrame(RoundedCornerShape(50), { background(Color.White) }, fill = PaperTokens.rose)
                     .pressClickable { onPlayAlbum(album.id) }.padding(horizontal = 20.dp, vertical = 9.dp),

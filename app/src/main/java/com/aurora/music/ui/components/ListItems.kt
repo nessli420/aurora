@@ -67,6 +67,7 @@ import com.aurora.music.ui.screens.player.SongPageMenu
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.glassCard
 import com.aurora.music.ui.theme.pressClickable
 import com.aurora.music.model.accent
 
@@ -104,6 +105,7 @@ fun SongRow(
     var page by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<SongMenuPage?>(null) }
     var showPlaylists by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     val shape = if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) RoundedCornerShape(14.dp) else MaterialTheme.shapes.small
+    val glass = LocalUiPrefs.current.themeStyle == ThemeStyle.GLASS
     val tablet = com.aurora.music.ui.layout.LocalWindowLayout.current.useNavigationRail
     val hiddenSongs = LocalHiddenSongs.current
     val (blockedBy, hiddenAlone) = remember(song, hiddenSongs) { hiddenSongs.blockedArtist(song) to hiddenSongs.hidesSong(song) }
@@ -122,9 +124,10 @@ fun SongRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(shape)
+            .then(if (glass) Modifier.padding(vertical = 3.dp).glassCard(shape, if (isPlaying) MaterialTheme.colorScheme.primary else Color.Unspecified)
+                else Modifier.clip(shape))
             .clickable(enabled = !hiddenEverywhere, onClick = onClick)
-            .padding(horizontal = 8.dp, vertical = 8.dp),
+            .padding(horizontal = 8.dp, vertical = if (glass) 6.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.alpha(if (greyed) 0.4f else 1f)) {

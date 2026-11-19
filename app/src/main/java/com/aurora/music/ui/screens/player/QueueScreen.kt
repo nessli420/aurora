@@ -77,6 +77,14 @@ import com.aurora.music.model.Song
 import com.aurora.music.ui.components.Artwork
 import com.aurora.music.ui.components.Eyebrow
 import com.aurora.music.ui.components.formatTime
+import com.aurora.music.ui.components.glass.GlassIconButton
+import com.aurora.music.ui.theme.LocalGlassAmbient
+import com.aurora.music.ui.theme.glassCard
+import com.aurora.music.ui.theme.glassChip
+import com.aurora.music.ui.theme.isGlassTheme
+import com.aurora.music.ui.theme.liveGlassSupported
+import com.kyant.backdrop.backdrops.layerBackdrop
+import com.kyant.backdrop.backdrops.rememberLayerBackdrop
 import com.aurora.music.util.edgeScrollStep
 import com.aurora.music.util.queueDropTarget
 import com.aurora.music.model.accent
@@ -102,20 +110,25 @@ fun QueueScreen(
 ) {
     val accent = MaterialTheme.colorScheme.primary
     var locked by remember { mutableStateOf(false) }
+    // the glass in the queue bends the queue's own wash, recorded on its own
+    val wash = if (isGlassTheme() && liveGlassSupported) rememberLayerBackdrop() else null
+    val washed = Modifier
+        .background(MaterialTheme.colorScheme.background)
+        .background(
+            Brush.verticalGradient(
+                listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.14f), MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)
+            )
+        )
 
-    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface, LocalGlassAmbient provides wash) {
         DragToDismiss(onDismiss = onClose, enabled = !locked, shown = shown) {
         Box(
             Modifier
                 .fillMaxSize()
-                .background(MaterialTheme.colorScheme.background)
-                .background(
-                    Brush.verticalGradient(
-                        listOf(accent.copy(alpha = 0.55f), accent.copy(alpha = 0.14f), MaterialTheme.colorScheme.background, MaterialTheme.colorScheme.background)
-                    )
-                )
+                .then(if (wash == null) washed else Modifier)
                 .clickable(interactionSource = remember { MutableInteractionSource() }, indication = null) {},
         ) {
+            if (wash != null) Box(Modifier.matchParentSize().layerBackdrop(wash).then(washed))
             QueueContent(
                 queue = queue, currentIndex = currentIndex, isPlaying = isPlaying,
                 onJump = onJump, onRemove = onRemove, onMove = onMove, onClear = onClear,
@@ -157,6 +170,7 @@ fun QueueContent(
     val yours = if (autoplay != null) autoplay - startIdx else upcomingCount
     val playedCount = currentIndex.coerceIn(0, queue.size)
     val accent = MaterialTheme.colorScheme.primary
+    val glass = isGlassTheme()
     val rowHeight = 64.dp
     val rowPx = with(LocalDensity.current) { rowHeight.toPx() }
 
@@ -183,14 +197,15 @@ fun QueueContent(
             Column(modifier) {
                 if (onClose != null || showTitle || showActions) Row(Modifier.fillMaxWidth().padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (onClose != null) {
-                        Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onClose).padding(10.dp))
+                        if (glass) GlassIconButton(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), onClose, Modifier.padding(4.dp))
+                        else Icon(Icons.Filled.KeyboardArrowDown, appString(R.string.text_close_bbfa77), modifier = Modifier.size(48.dp).paperClip(CircleShape).clickable(onClick = onClose).padding(10.dp))
                         // as wide as the two actions on the right, so the title sits centered over the mix studio button
                         if (showActions) Spacer(Modifier.width(48.dp))
                         Spacer(Modifier.weight(1f))
                     }
                     if (showTitle) Text(appString(R.string.text_queue_d325fc), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Black)
                     Spacer(Modifier.weight(1f))
-                    if (showActions) {
+                    if (showActions) Row(if (glass) Modifier.glassChip() else Modifier) {
                         Icon(
                             Icons.AutoMirrored.Filled.PlaylistAdd, appString(R.string.text_save_queue_as_playlist_7f09d8),
                             tint = if (queue.isEmpty()) MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.35f) else MaterialTheme.colorScheme.onSurface,
@@ -213,7 +228,8 @@ fun QueueContent(
                 }
                 if (current != null) {
                     Row(
-                        Modifier.fillMaxWidth().padding(vertical = 14.dp),
+                        Modifier.fillMaxWidth().then(if (glass) Modifier.padding(vertical = 8.dp).glassCard(MaterialTheme.shapes.medium, accent).padding(10.dp)
+                            else Modifier.padding(vertical = 14.dp)),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Artwork(current.artworkUrl, accent, Modifier.size(64.dp), corner = 14.dp)
@@ -373,8 +389,11 @@ private fun QueueTrackRow(
                 translationY = dragOffset
                 if (dragging) { shadowElevation = 16f; scaleX = 1.02f; scaleY = 1.02f }
             }
-            .paperClip(RoundedCornerShape(14.dp))
-            .background(if (dragging) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent)
+            // the tile sits inside the row height, which the drag maths depends on
+            .then(if (isGlassTheme()) Modifier.padding(vertical = 2.dp)
+                .then(if (dragging) Modifier.paperClip(RoundedCornerShape(16.dp)).background(MaterialTheme.colorScheme.surfaceContainerHigh) else Modifier)
+                .glassCard(RoundedCornerShape(16.dp))
+                else Modifier.paperClip(RoundedCornerShape(14.dp)).background(if (dragging) MaterialTheme.colorScheme.surfaceContainerHigh else Color.Transparent))
             .clickable(onClick = onClick)
             .padding(horizontal = 8.dp),
         verticalAlignment = Alignment.CenterVertically,

@@ -65,7 +65,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun NavigationMenuScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val store = (LocalContext.current.applicationContext as AuroraApplication).container.settingsStore
-    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.ui.theme.LocalUiPrefs.current)
     val simpleMode by store.simpleMode.collectAsStateWithLifecycle(initialValue = false)
     val scope = rememberCoroutineScope()
     val layout = remember(prefs.navLayout) { NavMenu.parse(prefs.navLayout) }

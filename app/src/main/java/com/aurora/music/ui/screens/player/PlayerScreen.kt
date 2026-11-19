@@ -172,6 +172,7 @@ import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraBackdrop
 import com.aurora.music.ui.theme.auroraPanel
 import com.aurora.music.ui.theme.liquidGlass
+import com.aurora.music.ui.theme.glassChip
 import com.kyant.backdrop.backdrops.layerBackdrop
 import com.aurora.music.viewmodel.PlayerUiState
 import com.aurora.music.viewmodel.RepeatMode
@@ -231,8 +232,8 @@ fun PlayerScreen(
     val glassBackdrop = playerBackdrop.takeIf { glassStyle && com.aurora.music.ui.theme.liveGlassSupported }
     val windowLayout = com.aurora.music.ui.layout.LocalWindowLayout.current
     val tablet = windowLayout.useNavigationRail && paneContent != null
-    // tablets and liquid glass keep the classic player under every layout
-    val style = if (tablet || glassStyle) PlayerStyle.CLASSIC else ui.playerStyle
+    // tablets keep the classic player under every layout
+    val style = if (tablet) PlayerStyle.CLASSIC else ui.playerStyle
     val styled = style != PlayerStyle.CLASSIC
     val drift = style == PlayerStyle.DRIFT
     val artScale = if (style == PlayerStyle.CLASSIC || style == PlayerStyle.SPOTLIGHT) ui.playerArtSize.coerceIn(0.5f, 1f) else 1f
@@ -332,7 +333,8 @@ fun PlayerScreen(
     val underOverlay = remember { Modifier.graphicsLayer { alpha = if (covered.value) 0f else 1f } }
 
     // player is outside the scaffold so LocalContentColor defaults to black provide it explicitly
-    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface) {
+    CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.onSurface,
+        com.aurora.music.ui.theme.LocalGlassAmbient provides glassBackdrop) {
     DragToDismiss(onDismiss = onCollapse, enabled = gestures.swipeDownDismiss && !showLyrics && !showCover, shown = state.expanded, offsetState = surfaceOffset) {
     Box(
         Modifier
@@ -453,7 +455,7 @@ fun PlayerScreen(
             val headerTint = LocalContentColor.current
             // tap is the youtube music video, long press the service's canvas
             Box(
-                modifier = Modifier.size(40.dp).paperClip(CircleShape).combinedClickable(
+                modifier = Modifier.size(40.dp).then(if (glassStyle && (!styled || drift)) Modifier.glassChip() else Modifier.paperClip(CircleShape)).combinedClickable(
                     role = Role.Button,
                     onClickLabel = appString(if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1),
                     onLongClickLabel = if (state.supportsCanvas) appString(R.string.canvas_open) else null,
@@ -509,7 +511,9 @@ fun PlayerScreen(
                 )
                 Spacer(Modifier.height(8.dp))
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                    Icon(
+                    if (glassStyle) com.aurora.music.ui.components.glass.GlassIconButton(
+                        Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188), onCollapse)
+                    else Icon(
                         Icons.Filled.KeyboardArrowDown, appString(R.string.text_collapse_9cf188),
                         modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onCollapse).padding(6.dp),
                     )
@@ -533,12 +537,14 @@ fun PlayerScreen(
                     if (tablet && showVideoModeControl) videoToggle()
                     if (tablet) djControl?.invoke()
                     // cast route picker tvs/chromecast show here not in the local-output sheet
+                    Row(if (glassStyle) Modifier.glassChip() else Modifier, verticalAlignment = Alignment.CenterVertically) {
                     PlayerCastButton(Modifier.size(40.dp))
                     Icon(
                         Icons.Filled.Speaker, appString(R.string.text_output_device_709178),
                         modifier = Modifier.size(40.dp).paperClip(CircleShape).clickable(onClick = onOpenOutput).padding(8.dp),
                     )
                     moreMenu()
+                    }
                 }
             }
 
@@ -683,19 +689,22 @@ fun PlayerScreen(
                     Box(
                         Modifier.then(
                             if (classic) Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                            else if (glassStyle) Modifier.glassChip()
                             else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
                         ).padding(horizontal = 10.dp, vertical = 3.dp),
                     ) { Text(source, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurfaceVariant) }
                 }
                 if (isLossless(song.suffix)) {
                     Box(
-                        Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(playerAccent).padding(horizontal = 8.dp, vertical = 3.dp),
+                        Modifier.then(if (glassStyle) Modifier.glassChip(selected = true)
+                            else Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(playerAccent)).padding(horizontal = 8.dp, vertical = 3.dp),
                     ) { Text(appString(R.string.text_lossless_32e74a), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onPlayerAccent) }
                 }
                 if (badge.isNotEmpty()) {
                     Box(
                         Modifier.then(
                             if (classic) Modifier.paperClip(RoundedCornerShape(50)).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                            else if (glassStyle) Modifier.glassChip()
                             else Modifier.auroraPanel(MaterialTheme.shapes.extraSmall)
                         ).padding(horizontal = 10.dp, vertical = 3.dp),
                     ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
@@ -712,6 +721,7 @@ fun PlayerScreen(
                 waveBars = ui.playerWaveBars,
                 onSeek = onSeek,
                 track = if (styled) accent.copy(alpha = 0.24f) else Color.Unspecified,
+                glassTrack = glassStyle && !styled,
                 comments = if (compact) emptyList() else state.comments,
                 onOpenComment = { focusComment = it; showComments = true },
             )
@@ -745,7 +755,7 @@ fun PlayerScreen(
                     modifier = Modifier.size(56.dp).paperClip(CircleShape).clickable(onClick = onPrevious).padding(6.dp),
                 )
                 if (glassStyle) com.aurora.music.ui.components.glass.GlassButton(
-                    onClick = onTogglePlay, backdrop = glassBackdrop, modifier = Modifier.size(68.dp), tint = playerAccent,
+                    onClick = onTogglePlay, backdrop = glassBackdrop, modifier = if (styled) play else Modifier.size(68.dp), tint = playerAccent,
                     contentDescription = appString(R.string.text_play_pause_14a1d0),
                 ) {
                     PlayPauseIcon(state.isPlaying, onPlayerAccent, Modifier.size(36.dp))
@@ -1534,6 +1544,7 @@ private fun BottomUtil(icon: androidx.compose.ui.graphics.vector.ImageVector, la
     Row(
         Modifier.then(
             if (LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA) Modifier.paperClip(RoundedCornerShape(50))
+            else if (LocalUiPrefs.current.themeStyle == ThemeStyle.GLASS) Modifier.glassChip()
             else Modifier.auroraPanel(MaterialTheme.shapes.small)
         ).clickable(onClick = onClick).padding(horizontal = 10.dp, vertical = 6.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -1559,6 +1570,7 @@ private fun SeekBar(
     comments: List<com.aurora.music.model.TrackComment> = emptyList(),
     onOpenComment: (String) -> Unit = {},
     track: Color = Color.Unspecified,
+    glassTrack: Boolean = false,
 ) {
     val position = com.aurora.music.ui.components.LocalPlaybackPosition.current.value
     val positionSec = position.toInt()
@@ -1592,13 +1604,14 @@ private fun SeekBar(
             return@Column
         }
         CommentTrack(comments, durationSec, position, accent, onOpenComment)
-        if (seekStyle == SeekStyle.BAR) {
+        if (seekStyle == SeekStyle.BAR) Box(contentAlignment = Alignment.Center) {
+            if (glassTrack) Box(Modifier.fillMaxWidth().height(16.dp).glassChip())
             Slider(
                 value = progress.coerceIn(0f, 1f),
                 onValueChange = { onInteraction(); onSeek(it) },
                 onValueChangeFinished = onInteraction,
                 valueRange = 0f..1f,
-                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent, inactiveTrackColor = track),
+                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent, inactiveTrackColor = if (glassTrack) Color.Transparent else track),
                 interactionSource = sliderInteractionSource,
                 modifier = Modifier.fillMaxWidth(),
             )
@@ -1630,7 +1643,7 @@ private fun GlassArtBackdrop(song: com.aurora.music.model.Song, modifier: Modifi
             .blur(110.dp, BlurredEdgeTreatment.Rectangle), corner = 0.dp, decodeSize = 128)
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(
             if (dark) listOf(Color.Black.copy(alpha = .12f), Color.Black.copy(alpha = .3f), Color.Black.copy(alpha = .5f))
-            else listOf(Color.White.copy(alpha = .1f), Color.White.copy(alpha = .3f), Color.White.copy(alpha = .55f)))))
+            else listOf(Color.White.copy(alpha = .3f), Color.White.copy(alpha = .52f), Color.White.copy(alpha = .72f)))))
     }
 }
 

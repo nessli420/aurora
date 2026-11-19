@@ -32,7 +32,7 @@ fun LyricsSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit) {
     val ctx = LocalContext.current
     val store = remember { (ctx.applicationContext as AuroraApplication).container.settingsStore }
     val scope = rememberCoroutineScope()
-    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = UiPrefs())
+    val prefs by store.uiPrefs.collectAsStateWithLifecycle(initialValue = com.aurora.music.ui.theme.LocalUiPrefs.current)
     val order by store.lyricsSources.collectAsStateWithLifecycle(initialValue = DEFAULT_LYRICS_SOURCES)
     val lrclib by store.lrclibEnabled.collectAsStateWithLifecycle(initialValue = true)
     val saved by store.savedSessions.collectAsStateWithLifecycle(initialValue = emptyList())

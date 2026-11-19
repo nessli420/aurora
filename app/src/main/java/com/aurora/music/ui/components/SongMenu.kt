@@ -14,6 +14,10 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuDefaults
+import com.aurora.music.ui.theme.GlassColors
+import com.aurora.music.ui.theme.glassIsDark
+import com.aurora.music.ui.theme.isGlassTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -34,11 +38,15 @@ import kotlinx.coroutines.delay
 // a song's menu: the theme's large corners, the rest scrolled behind faded edges
 @Composable
 fun SongMenu(expanded: Boolean, onDismissRequest: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+    val glass = isGlassTheme()
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         shape = MaterialTheme.shapes.large,
-        border = BorderStroke(Dp.Hairline, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
+        // a menu is its own window, so under glass it is a frosted sheet with the rim rather than live glass
+        containerColor = if (glass) GlassColors.surface(glassIsDark(), live = false) else MenuDefaults.containerColor,
+        border = if (glass) BorderStroke(1.dp, GlassColors.rim(glassIsDark()))
+            else BorderStroke(Dp.Hairline, MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)),
     ) {
         val scroll = rememberScrollState()
         // tall enough to cut a row in half, so the rest reads as scrollable
