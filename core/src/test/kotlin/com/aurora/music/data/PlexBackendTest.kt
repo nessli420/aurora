@@ -892,4 +892,20 @@ class PlexBackendTest {
             assertTrue(second.requests.isEmpty())
         } }
     }
+
+    @Test fun plexFollowsAreRatedArtists() = runBlocking {
+        Fixture().use { fixture ->
+            fixture.respond = { request -> if (request.requestUrl!!.encodedPath == "/library/sections")
+                json("""{"MediaContainer":{"Directory":[{"key":"2","type":"artist","title":"Music"}]}}""")
+                else page(listOf(
+                    """{"ratingKey":"10","key":"/library/metadata/10/children","type":"artist","title":"Rated","userRating":10}""",
+                    """{"ratingKey":"11","key":"/library/metadata/11/children","type":"artist","title":"Unrated","userRating":4}""",
+                )) }
+            val source = backend(fixture)
+            assertTrue(source.followsOnServer("10"))
+            assertEquals(listOf("10"), source.followedArtists().map { it.id })
+            assertTrue(fixture.requests.filter { it.requestUrl!!.encodedPath.endsWith("/all") }.all { it.requestUrl!!.queryParameter("type") == "8" })
+        }
+    }
+
 }

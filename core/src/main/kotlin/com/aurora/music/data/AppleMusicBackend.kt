@@ -242,6 +242,18 @@ class AppleMusicBackend(
     }
 
     // the web player favourites through one endpoint for every kind; a library item goes by its library type
+    // a followed artist is a favourite one, which needs a subscription
+    override suspend fun followsOnServer(artistId: String) = subscribed()
+    override suspend fun followedArtists(): List<Artist> {
+        if (!subscribed()) return emptyList()
+        val artists = allArtists().filter { it.id.matches(CATALOG_ID) }
+        val favourite = artists.map { it.id }.distinct().chunked(100).flatMap { chunk ->
+            api.get("/v1/catalog/${api.storefront()}?ids[artists]=${chunk.joinToString(",")}&fields[artists]=personalRating").data()
+                .filter { it.obj("attributes").string("personalRating") == "1" }.map { it.string("id") }
+        }.toSet()
+        return artists.filter { it.id in favourite }
+    }
+
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean {
         device()?.let { d ->
             if (kind == "song") return d.setStarred(session.type, id, starred, kind, ::songFor)

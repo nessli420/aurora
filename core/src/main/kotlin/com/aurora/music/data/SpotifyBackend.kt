@@ -398,6 +398,9 @@ class SpotifyBackend(
         }
     }.getOrDefault(emptyList())
 
+    override suspend fun followsOnServer(artistId: String) = true
+    override suspend fun followedArtists(): List<Artist> = allArtists()
+
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean = runCatching {
         when (kind) {
             "album" -> if (starred) api.saveAlbums(id) else api.removeAlbums(id)

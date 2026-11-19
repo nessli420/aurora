@@ -135,6 +135,10 @@ interface MediaBackend {
     suspend fun removeFromPlaylist(playlistId: String, trackIds: List<String>): Boolean = false
     suspend fun playlistsForSong(songId: String): List<Playlist> = allPlaylists()
     suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean
+    // following artists; where this is false aurora keeps the follow for the account itself
+    suspend fun followsOnServer(artistId: String): Boolean = false
+    suspend fun followedArtists(): List<Artist> = emptyList()
+    suspend fun setFollowed(artistId: String, followed: Boolean): Boolean = setStarred(artistId, followed, "artist")
     suspend fun detail(kind: String, id: String): DetailData?
 
     suspend fun detailPage(kind: String, id: String, offset: Int): List<Song> = emptyList()

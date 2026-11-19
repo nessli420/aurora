@@ -39,6 +39,8 @@ interface CollectionSettings {
     suspend fun setSongHidden(song: HiddenSong, hidden: Boolean): Preferences
     val blockedArtists: Flow<List<String>>
     suspend fun setArtistBlocked(name: String, blocked: Boolean): Preferences
+    val followedArtists: Flow<List<FollowedArtist>>
+    suspend fun setArtistFollowed(artist: FollowedArtist, followed: Boolean): Preferences
 }
 
 internal class CollectionSettingsStore(private val dataStore: DataStore<Preferences>) : CollectionSettings {
@@ -166,5 +168,14 @@ internal class CollectionSettingsStore(private val dataStore: DataStore<Preferen
     override suspend fun setArtistBlocked(name: String, blocked: Boolean) = dataStore.edit { p ->
         val rest = gson.parseList<String>(p[Keys.BLOCKED_ARTISTS]).filterNot { artistKey(it) == artistKey(name) }
         p[Keys.BLOCKED_ARTISTS] = gson.toJson(if (blocked) rest + name.trim() else rest)
+    }
+
+    // follows the account's service can't keep, filed per account
+    override val followedArtists: Flow<List<FollowedArtist>> = dataStore.data.map { it[Keys.FOLLOWED_ARTISTS] }.distinctUntilChanged()
+        .map { gson.parseList<FollowedArtist?>(it).filterNotNull().filter { a -> !a.account.isNullOrBlank() && !a.id.isNullOrBlank() } }.flowOn(Dispatchers.Default)
+
+    override suspend fun setArtistFollowed(artist: FollowedArtist, followed: Boolean) = dataStore.edit { p ->
+        val rest = gson.parseList<FollowedArtist?>(p[Keys.FOLLOWED_ARTISTS]).filterNotNull().filterNot { it.account == artist.account && it.id == artist.id }
+        p[Keys.FOLLOWED_ARTISTS] = gson.toJson(if (followed) rest + artist else rest)
     }
 }

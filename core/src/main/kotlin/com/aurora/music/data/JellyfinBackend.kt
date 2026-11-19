@@ -146,6 +146,12 @@ class JellyfinBackend(
     override suspend fun starredIds(): Set<String> =
         items(mapOf("IncludeItemTypes" to "Audio,MusicAlbum,MusicArtist", "Recursive" to "true", "Filters" to "IsFavorite")).map { it.Id }.toSet()
 
+    // a favourite artist is a followed one
+    override suspend fun followsOnServer(artistId: String) = true
+    override suspend fun followedArtists(): List<Artist> = runCatching {
+        client.api.artists(mapOf("UserId" to uid, "IsFavorite" to "true", "Recursive" to "true", "SortBy" to "SortName")).Items
+    }.getOrDefault(emptyList()).map { it.toArtist() }
+
     override suspend fun songFor(id: String): Song? =
         runCatching { client.api.item(uid, id).toSong() }.getOrNull()
 

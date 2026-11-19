@@ -386,4 +386,19 @@ class SoundCloudBackendTest {
     @Test fun verifyingAnExpiredLoginFailsInsteadOfThrowing() = runBlocking {
         assertFalse(SoundCloudBackend(session, SoundCloudTransport { throw MediaAccountExpiredException() }).verify())
     }
+
+    @Test fun followsAreTheAccountsFollowingsAndAGuestKeepsThemInAurora() = runBlocking {
+        val backend = SoundCloudBackend(session, SoundCloudTransport { path ->
+            JsonParser.parseString(when (path) {
+                "/users/42/followings?limit=200" -> """{"collection":[{"id":7,"username":"uploader","avatar_url":"https://i1.sndcdn.com/avatars-b-large.jpg"}],"next_href":null}"""
+                else -> error(path)
+            })
+        })
+        assertTrue(backend.followsOnServer("7"))
+        assertEquals(listOf("7" to "uploader"), backend.followedArtists().map { it.id to it.name })
+        val guest = SoundCloudBackend(Session.guest(ServerType.SOUNDCLOUD, "Guest"), SoundCloudTransport { error(it) })
+        assertFalse(guest.followsOnServer("7"))
+        assertTrue(guest.followedArtists().isEmpty())
+    }
+
 }

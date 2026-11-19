@@ -161,4 +161,36 @@ class ServerLibraryRequestsTest {
             assertEquals(2, server.requestCount)
         }
     }
+
+    @Test fun subsonicFollowsAreStarredArtists() = runBlocking {
+        MockWebServer().use { server ->
+            val seen = server.answer { request ->
+                if ("getStarred2" in request.requestUrl!!.encodedPath) ok(""""starred2":{"artist":[{"id":"ar1","name":"Boards of Canada"}],"song":[]}""")
+                else ok("\"x\":1")
+            }
+            val source = subsonic(server)
+            assertTrue(source.followsOnServer("ar1"))
+            assertEquals(listOf("ar1" to "Boards of Canada"), source.followedArtists().map { it.id to it.name })
+            assertTrue(source.setFollowed("ar2", true))
+            val star = seen.last().requestUrl!!
+            assertTrue("/star" in star.encodedPath)
+            assertEquals("ar2", star.queryParameter("artistId"))
+        }
+    }
+
+    @Test fun jellyfinFollowsAreFavouriteArtists() = runBlocking {
+        MockWebServer().use { server ->
+            val seen = server.answer { request ->
+                if (request.requestUrl!!.encodedPath == "/Artists") json("""{"Items":[{"Id":"j1","Name":"Burial","Type":"MusicArtist"}]}""")
+                else json("{}")
+            }
+            val source = jellyfin(server)
+            assertTrue(source.followsOnServer("j1"))
+            assertEquals(listOf("j1" to "Burial"), source.followedArtists().map { it.id to it.name })
+            assertEquals("true", seen.first().requestUrl!!.queryParameter("IsFavorite"))
+            assertTrue(source.setFollowed("j2", true))
+            assertEquals("POST /Users/user-id/FavoriteItems/j2", seen.last().let { "${it.method} ${it.requestUrl!!.encodedPath}" })
+        }
+    }
+
 }

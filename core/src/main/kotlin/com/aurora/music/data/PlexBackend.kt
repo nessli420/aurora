@@ -204,6 +204,10 @@ class PlexBackend(
     override suspend fun starredIds(): Set<String> = listOf(ARTIST, ALBUM, TRACK)
         .flatMap { library(it, LIKED) }.filter { it.liked }.map { it.id }.toSet()
 
+    // plex has no follow; a rated artist stands in for one
+    override suspend fun followsOnServer(artistId: String) = true
+    override suspend fun followedArtists(): List<Artist> = library(ARTIST, LIKED).filter { it.liked }.map { it.toArtist() }
+
     override suspend fun likedSongIds(ids: List<String>): Set<String> {
         if (ids.isEmpty()) return emptySet()
         val wanted = ids.toHashSet()

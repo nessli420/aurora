@@ -382,4 +382,30 @@ class AppleMusicBackendTest {
         assertEquals(jwt("OTHER"), AppleMusicClient.webPlayToken("""x="${jwt("OTHER")}""""))
         assertNull(AppleMusicClient.webPlayToken("no tokens here"))
     }
+
+    @Test fun followedArtistsAreTheLibraryArtistsRatedOneAndNeedASubscription() = runBlocking {
+        val asked = mutableListOf<String>()
+        val artist = { id: String, name: String -> """{"id":"$id","type":"artists","attributes":{"name":"$name","artwork":{"url":"https://a/{w}x{h}bb.jpg"}}}""" }
+        val backend = signedIn(active = true, asked) { path ->
+            when {
+                path.startsWith("/v1/me/library/artists") -> """{"data":[{"id":"r.1","type":"library-artists","attributes":{"name":"TV Girl"},"relationships":{"catalog":{"data":[${artist("100", "TV Girl")}]}}},""" +
+                    """{"id":"r.2","type":"library-artists","attributes":{"name":"Other"},"relationships":{"catalog":{"data":[${artist("200", "Other")}]}}}]}"""
+                path.startsWith("/v1/catalog/nl?ids[artists]=100,200&fields[artists]=personalRating") ->
+                    """{"data":[{"id":"100","type":"artists","attributes":{"personalRating":1}},{"id":"200","type":"artists","attributes":{}}]}"""
+                else -> error(path)
+            }
+        }
+        assertTrue(backend.followsOnServer("100"))
+        assertEquals(listOf("100" to "TV Girl"), backend.followedArtists().map { it.id to it.name })
+        val free = signedIn(active = false) { error(it) }
+        assertFalse(free.followsOnServer("100"))
+        assertTrue(free.followedArtists().isEmpty())
+    }
+
+    @Test fun aSubscriberFollowsByFavouritingTheArtist() = runBlocking {
+        val sent = mutableListOf<Sent>()
+        assertTrue(writable(active = true, sent).setFollowed("100", true))
+        assertEquals("POST /v1/me/favorites?ids[artists]=100", sent.single().let { "${it.method} ${it.path}" })
+    }
+
 }

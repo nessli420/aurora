@@ -477,6 +477,25 @@ class MusicRepository(
     val mergedSources: List<MediaBackend> get() = if (offline) emptyList() else (backend as? MergedBackend)?.sources.orEmpty()
     val activeSession: Session? get() = backend?.session
 
+    suspend fun followedArtists(): List<Artist> = if (offline) emptyList() else backend?.followedArtists().orEmpty()
+    suspend fun setFollowed(artistId: String, followed: Boolean): Boolean = !offline && backend?.setFollowed(artistId, followed) == true
+
+    // the account an artist belongs to, and the service's name when that service keeps the follow
+    suspend fun followPlace(artistId: String): FollowPlace? {
+        val b = backend?.takeUnless { offline || artistId.isEmpty() } ?: return null
+        val (source, raw) = (b as? MergedBackend)?.let { it.sourceOf(artistId) ?: return null } ?: (b to artistId)
+        val server = attempt(false) { b.followsOnServer(artistId) }
+        val session = source.session
+        return FollowPlace(mergeNamespace(session), session.type, session.isGuest, raw, session.typeLabel.takeIf { server })
+    }
+
+    // every account in this library by merge namespace, with how its ids are written here
+    fun followAccounts(): Map<String, (String) -> String> {
+        val b = backend?.takeUnless { offline } ?: return emptyMap()
+        val merged = b as? MergedBackend ?: return mapOf(mergeNamespace(b.session) to { id: String -> id })
+        return merged.sources.map { mergeNamespace(it.session) }.associateWith { ns -> { id: String -> "$ns$MERGE_NAMESPACE_SEP$id" } }
+    }
+
     fun supportsCanvas(song: Song): Boolean = !offline && backend?.supportsCanvas(song) == true
     suspend fun canvasUrl(song: Song): String? = if (offline) null else backend?.canvasUrl(song)
 

@@ -158,6 +158,12 @@ class SubsonicBackend(
         starred2().response.starred2?.song?.map { it.toModel() }.orEmpty()
     }.getOrDefault(emptyList())
 
+    // a starred artist is a followed one
+    override suspend fun followsOnServer(artistId: String) = true
+    override suspend fun followedArtists(): List<Artist> = runCatching {
+        starred2().response.starred2?.artist?.map { it.toModel() }.orEmpty()
+    }.getOrDefault(emptyList())
+
     override suspend fun starredCount(): Int = runCatching { starred2().response.starred2?.song?.size ?: 0 }.getOrDefault(0)
 
     override suspend fun starredIds(): Set<String> = runCatching {

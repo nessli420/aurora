@@ -413,6 +413,10 @@ class SpotifyWebBackend(
         else -> super.collectionTracks(kind, id)
     }
 
+    // following an artist is adding it to the library, as the web player does
+    override suspend fun followsOnServer(artistId: String) = signedIn
+    override suspend fun followedArtists(): List<Artist> = allArtists()
+
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean = runCatching {
         when (kind) {
             // playlists live in the rootlist, everything else in the library

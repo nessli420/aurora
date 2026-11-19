@@ -292,6 +292,10 @@ class SoundCloudBackend(
     }
 
     // a like or follow counts here straight away and reaches soundcloud in the background, whenever its bot check lets it through
+    // a follow is the account following the uploader
+    override suspend fun followsOnServer(artistId: String) = signedIn
+    override suspend fun followedArtists(): List<Artist> = allArtists()
+
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean {
         guest?.let { return it.setStarred(session.type, id, starred, kind, ::songFor) }
         if (!signedIn) return false

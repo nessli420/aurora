@@ -297,6 +297,15 @@ class MergedBackend(
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean =
         router.route(id) { src, _, oid -> src.setStarred(oid, starred, kind) } ?: false
 
+    // a follow lives on the source the artist's page comes from; every source's follows come back, deduped by the caller
+    override suspend fun followsOnServer(artistId: String): Boolean = router.route(artistId) { src, _, oid -> src.followsOnServer(oid) } ?: false
+    override suspend fun followedArtists(): List<Artist> = wrapAll(router.fanOut(router::likedTimeout) { it.followedArtists() }) { a, i -> a.wrap(i) }
+    override suspend fun setFollowed(artistId: String, followed: Boolean): Boolean =
+        router.route(artistId) { src, _, oid -> src.setFollowed(oid, followed) } ?: false
+
+    // the source an id comes from and the id that source knows it by
+    fun sourceOf(id: String): Pair<MediaBackend, String>? = router.unwrap(id)?.let { (i, oid) -> sources[i] to oid }
+
     override val signedIn: Boolean get() = sources.all { it.signedIn }
     override fun signedIn(id: String): Boolean = router.unwrap(id)?.let { (i, oid) -> sources[i].signedIn(oid) } ?: router.primary?.signedIn(id) ?: true
     override fun likesLocally(id: String): Boolean = router.unwrap(id)?.let { (i, oid) -> sources[i].likesLocally(oid) } ?: router.primary?.likesLocally(id) ?: false

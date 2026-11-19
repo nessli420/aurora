@@ -191,6 +191,10 @@ class YouTubeMusicBackend(
         return true
     }
 
+    // a follow is a subscription to the artist's channel
+    override suspend fun followsOnServer(artistId: String) = signedIn
+    override suspend fun followedArtists(): List<Artist> = if (signedIn) library("FEmusic_library_corpus_artists").artists else emptyList()
+
     override suspend fun setStarred(id: String, starred: Boolean, kind: String): Boolean = guest?.setStarred(session.type, id, starred, kind, ::songFor)
         ?: if (!signedIn) false else when (kind) {
         "artist" -> mutation(if (starred) "subscription/subscribe" else "subscription/unsubscribe", JsonObject().apply {
