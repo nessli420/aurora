@@ -209,7 +209,7 @@ internal fun HomeSpotlight(
                         Section(appString(R.string.text_jump_back_in_1d9181)) {
                             TileGrid {
                                 recent.forEach { album ->
-                                    Tile(album.artworkUrl, accentFor(album.id), album.title, album.artist, Modifier.spotSurface(MaterialTheme.shapes.medium),
+                                    SpotlightTile(album.artworkUrl, accentFor(album.id), album.title, album.artist, Modifier.spotSurface(MaterialTheme.shapes.medium),
                                         colors.onSurfaceVariant) { onOpenDetail("album", album.id) }
                                 }
                             }
@@ -361,7 +361,7 @@ internal fun SpotlightPill(label: String, selected: Boolean, modifier: Modifier 
 }
 
 @Composable
-private fun TwoThirds(beside: Boolean, modifier: Modifier, main: (@Composable () -> Unit)?, side: (@Composable () -> Unit)?) {
+internal fun TwoThirds(beside: Boolean, modifier: Modifier, main: (@Composable () -> Unit)?, side: (@Composable () -> Unit)?) {
     if (beside && main != null && side != null) Row(modifier, horizontalArrangement = Arrangement.spacedBy(BlockGap)) {
         Box(Modifier.weight(2f)) { main() }
         Box(Modifier.weight(1f)) { side() }
@@ -387,7 +387,7 @@ private fun Mixes(title: String, mixes: List<Playlist>, onOpen: (String) -> Unit
         TileGrid {
             mixes.forEach { mix ->
                 val tint = spotlightTint(mix.coverUrl, mix.accent)
-                Tile(mix.coverUrl, mix.accent, mix.title, mix.subtitle, Modifier.paperFrame(MaterialTheme.shapes.medium, { background(tint) }, fill = tint),
+                SpotlightTile(mix.coverUrl, mix.accent, mix.title, mix.subtitle, Modifier.paperFrame(MaterialTheme.shapes.medium, { background(tint) }, fill = tint),
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.8f)) { onOpen(mix.id) }
             }
         }
@@ -411,7 +411,7 @@ internal fun TileGrid(modifier: Modifier = Modifier, minWidth: Dp = TileMinWidth
 }
 
 @Composable
-private fun Tile(art: String, accent: Color, title: String, subtitle: String, surface: Modifier, muted: Color, onClick: () -> Unit) {
+internal fun SpotlightTile(art: String, accent: Color, title: String, subtitle: String, surface: Modifier, muted: Color, onClick: () -> Unit) {
     Row(
         surface.height(TileHeight).pressClickable(onClick = onClick).pointerHoverIcon(PointerIcon.Hand).coverHover(art),
         verticalAlignment = Alignment.CenterVertically,

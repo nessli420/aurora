@@ -357,26 +357,30 @@ internal fun driftShape(base: Dp): Shape {
 // the page title in the largest size its room holds: 84sp where there is room, less as the page narrows or the words run long
 @Composable
 internal fun DriftTitle(text: String, modifier: Modifier = Modifier, maxLines: Int = 1) {
-    val base = MaterialTheme.typography.displayLarge
-    val tight = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
-    val measurer = rememberTextMeasurer()
     BoxWithConstraints(modifier) {
-        val room = constraints.maxWidth
-        val style = remember(text, room, base, maxLines, tight) {
-            fun sized(k: Float) = base.copy(fontSize = base.fontSize * k, lineHeight = base.fontSize * k, fontWeight = FontWeight.Black,
-                letterSpacing = if (tight) (-0.04).em else base.letterSpacing * k)
-            var k = 2.1f * (maxWidth / 800.dp).coerceIn(0.5f, 1f)
-            while (k > 0.7f && measurer.measure(text, sized(k), maxLines = maxLines, constraints = Constraints(maxWidth = room)).hasVisualOverflow) k *= 0.9f
-            sized(k)
-        }
-        Text(text, style = style, maxLines = maxLines, overflow = TextOverflow.Ellipsis)
+        Text(text, style = driftTitleStyle(text, constraints.maxWidth, maxWidth, maxLines), maxLines = maxLines, overflow = TextOverflow.Ellipsis)
     }
 }
 
 @Composable
-internal fun DriftTabs(labels: List<String>, selected: Int, style: TextStyle, modifier: Modifier = Modifier, gap: Dp = 22.dp, onSelect: (Int) -> Unit) {
+internal fun driftTitleStyle(text: String, room: Int, width: Dp, maxLines: Int = 1, peak: Float = 2.1f): TextStyle {
+    val base = MaterialTheme.typography.displayLarge
+    val tight = LocalUiPrefs.current.themeStyle == ThemeStyle.AURORA
+    val measurer = rememberTextMeasurer()
+    return remember(text, room, base, maxLines, tight, peak) {
+        fun sized(k: Float) = base.copy(fontSize = base.fontSize * k, lineHeight = base.fontSize * k, fontWeight = FontWeight.Black,
+            letterSpacing = if (tight) (-0.04).em else base.letterSpacing * k)
+        var k = peak * (width / 800.dp).coerceIn(0.5f, 1f)
+        while (k > 0.7f && measurer.measure(text, sized(k), maxLines = maxLines, constraints = Constraints(maxWidth = room)).hasVisualOverflow) k *= 0.9f
+        sized(k)
+    }
+}
+
+@Composable
+internal fun DriftTabs(labels: List<String>, selected: Int, style: TextStyle, modifier: Modifier = Modifier, gap: Dp = 22.dp, dot: Boolean = false, onSelect: (Int) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val rtl = LocalLayoutDirection.current == LayoutDirection.Rtl
+    val square = isPaperTheme()
     Row(modifier.horizontalScroll(rememberScrollState()), horizontalArrangement = Arrangement.spacedBy(gap)) {
         labels.forEachIndexed { i, label ->
             val active = i == selected
@@ -386,8 +390,9 @@ internal fun DriftTabs(labels: List<String>, selected: Int, style: TextStyle, mo
                 modifier = Modifier.paperClip(MaterialTheme.shapes.extraSmall).semantics { this.selected = active }
                     .clickable(role = Role.Tab) { onSelect(i) }.pointerHoverIcon(PointerIcon.Hand)
                     .drawBehind {
-                        val bar = Size(minOf(28.dp.toPx(), size.width), 3.dp.toPx())
-                        drawRect(colors.primary, Offset(if (rtl) size.width - bar.width else 0f, size.height - bar.height), bar, alpha = on)
+                        val bar = if (dot) Size(6.dp.toPx(), 6.dp.toPx()) else Size(minOf(28.dp.toPx(), size.width), 3.dp.toPx())
+                        val at = Offset(if (dot) (size.width - bar.width) / 2f else if (rtl) size.width - bar.width else 0f, size.height - bar.height)
+                        if (dot && !square) drawOval(colors.primary, at, bar, alpha = on) else drawRect(colors.primary, at, bar, alpha = on)
                     }
                     .padding(vertical = 10.dp),
             )

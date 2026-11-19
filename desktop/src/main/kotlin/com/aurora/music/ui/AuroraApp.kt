@@ -557,6 +557,12 @@ private fun Shell(
     fun playAlbum(id: String) = scope.launch {
         repository.detail("album", id)?.let { if (it.tracks.isNotEmpty()) player.playCollection("album", id, it.tracks, 0, it.info.songCount) }
     }
+    fun playCollection(kind: String, id: String, shuffle: Boolean) = scope.launch {
+        repository.detail(kind, id)?.let { d ->
+            if (d.tracks.isEmpty()) return@let
+            if (shuffle) player.shuffleCollection(kind, id, d.tracks, d.info.songCount) else player.playCollection(kind, id, d.tracks, 0, d.info.songCount)
+        }
+    }
     fun playById(id: String) = scope.launch {
         repository.songFor(id)?.let { player.play(it) }
     }
@@ -1204,14 +1210,7 @@ private fun Shell(
                                     sourceLabel = session?.typeLabel?.localizedMediaType().orEmpty(),
                                     onOpenSignalPath = { navController.navigate(Routes.SIGNAL_PATH) { launchSingleTop = true } },
                                     onOpenStats = { navController.navigate(Routes.STATS) { launchSingleTop = true } },
-                                    onPlayCollection = { kind, id, shuffle ->
-                                        scope.launch {
-                                            repository.detail(kind, id)?.let { d ->
-                                                if (d.tracks.isEmpty()) return@let
-                                                if (shuffle) player.shuffleCollection(kind, id, d.tracks, d.info.songCount) else player.playCollection(kind, id, d.tracks, 0, d.info.songCount)
-                                            }
-                                        }
-                                    },
+                                    onPlayCollection = { kind, id, shuffle -> playCollection(kind, id, shuffle) },
                                 )
                             }
                             composable(Routes.EXPLORE) {
@@ -1267,6 +1266,8 @@ private fun Shell(
                                 val searchVM = viewModel(viewModelStoreOwner = rootOwner) { SearchViewModel(container) }
                                 val searchState by searchVM.state.collectAsStateWithLifecycle()
                                 val recentSearches by searchVM.recentSearches.collectAsStateWithLifecycle()
+                                val homeVM = viewModel(viewModelStoreOwner = rootOwner) { HomeViewModel(container) }
+                                val homeState by homeVM.state.collectAsStateWithLifecycle()
                                 LaunchedEffect(searchState.results.songs.size) {
                                     player.checkLiked(searchState.results.songs)
                                 }
@@ -1292,6 +1293,8 @@ private fun Shell(
                                     onRemoveRecent = { searchVM.removeRecent(it) },
                                     onClearRecents = { searchVM.clearRecents() },
                                     onCommitSearch = { searchVM.commit() },
+                                    jumpBackIn = if (com.aurora.music.data.HomeSection.RECENT in com.aurora.music.ui.theme.LocalUiPrefs.current.hiddenHomeSections) emptyList() else homeState.data.recentlyPlayed,
+                                    onPlayCollection = { kind, id, shuffle -> playCollection(kind, id, shuffle) },
                                 )
                             }
                             composable(Routes.LIBRARY) {

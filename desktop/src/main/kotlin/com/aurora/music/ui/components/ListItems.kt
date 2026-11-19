@@ -8,6 +8,7 @@ import androidx.compose.material.icons.filled.Block
 import androidx.compose.material.icons.filled.Radio
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsHoveredAsState
@@ -69,6 +70,7 @@ import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.isSecondaryPressed
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -88,6 +90,7 @@ import com.aurora.music.model.accent
 import com.aurora.music.ui.layout.PageMetrics
 import com.aurora.music.ui.theme.LocalUiPrefs
 import com.aurora.music.ui.theme.auroraPanel
+import com.aurora.music.ui.theme.paperSquare
 import java.time.Instant
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
@@ -102,6 +105,7 @@ private val ColumnGap = 16.dp
 private val ActionSize = 36.dp
 private val DurationWidth = 52.dp
 private val DateWidth = 120.dp
+private val BadgeWidth = 104.dp
 private val CardPanelPadding = 8.dp
 private const val TitleWeight = 0.42f
 private const val AlbumWeight = 0.33f
@@ -138,6 +142,10 @@ fun SongRow(
     showDateAdded: Boolean = false,
     hidden: Boolean = false,
     onToggleHidden: (() -> Unit)? = null,
+    lead: (@Composable () -> Unit)? = null,
+    badge: String? = null,
+    titleStyle: TextStyle? = null,
+    tableMinWidth: Dp = PageMetrics.SongTableMinWidth,
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var contextAt by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<Offset?>(null) }
@@ -244,7 +252,7 @@ fun SongRow(
         }
     }) {
     BoxWithConstraints(Modifier.fillMaxWidth()) {
-    val table = maxWidth >= PageMetrics.SongTableMinWidth
+    val table = maxWidth >= tableMinWidth
     val albumColumn = showAlbum && table
     val dateColumn = showDateAdded && table
     val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -259,7 +267,10 @@ fun SongRow(
             .padding(horizontal = RowInset, vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        if (index != null) {
+        if (lead != null) {
+            lead()
+            Spacer(Modifier.width(CellGap))
+        } else if (index != null) {
             Box(Modifier.width(IndexWidth), contentAlignment = Alignment.CenterEnd) {
                 if (isPlaying) PlayingBars(MaterialTheme.colorScheme.primary, Modifier.size(16.dp))
                 else Text(index.toString(), style = MaterialTheme.typography.labelLarge, color = muted, maxLines = 1)
@@ -284,8 +295,8 @@ fun SongRow(
         Column(Modifier.weight(if (albumColumn) TitleWeight else 1f)) {
             Text(
                 song.title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
+                style = titleStyle ?: MaterialTheme.typography.titleSmall,
+                fontWeight = if (titleStyle == null) FontWeight.Medium else null,
                 color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
@@ -330,6 +341,19 @@ fun SongRow(
                 modifier = Modifier.width(DateWidth).padding(start = ColumnGap),
             )
         }
+        // a column of its own, so a row with nothing to say still lines up with the others
+        if (badge != null) Box(Modifier.width(BadgeWidth).padding(start = ColumnGap)) {
+            if (badge.isNotBlank()) Text(
+                badge,
+                style = MaterialTheme.typography.labelSmall,
+                fontWeight = FontWeight.Bold,
+                color = muted,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.border(1.dp, MaterialTheme.colorScheme.outlineVariant, paperSquare(RoundedCornerShape(themedCorner(6.dp))))
+                    .padding(horizontal = 6.dp, vertical = 2.dp),
+            )
+        }
         Spacer(Modifier.width(RowInset))
         if (canLike) RowAction(
             if (isLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
@@ -371,9 +395,11 @@ fun SongListHeader(
     showArt: Boolean = true,
     showAlbum: Boolean = true,
     showDateAdded: Boolean = false,
+    badge: String? = null,
+    tableMinWidth: Dp = PageMetrics.SongTableMinWidth,
 ) {
     BoxWithConstraints(modifier.fillMaxWidth()) {
-        val table = maxWidth >= PageMetrics.SongTableMinWidth
+        val table = maxWidth >= tableMinWidth
         val albumColumn = showAlbum && table
         val dateColumn = showDateAdded && table
         val muted = MaterialTheme.colorScheme.onSurfaceVariant
@@ -391,6 +417,7 @@ fun SongListHeader(
                 label(appString(R.string.text_title_768e0c), Modifier.weight(if (albumColumn) TitleWeight else 1f), TextAlign.Start)
                 if (albumColumn) label(appString(R.string.text_album_dfb4c9), Modifier.weight(AlbumWeight).padding(start = ColumnGap), TextAlign.Start)
                 if (dateColumn) label(appString(R.string.text_date_added_56ab7a), Modifier.width(DateWidth).padding(start = ColumnGap), TextAlign.Start)
+                if (badge != null) label(badge, Modifier.width(BadgeWidth).padding(start = ColumnGap), TextAlign.Start)
                 Spacer(Modifier.width(RowInset + ActionSize))
                 Box(Modifier.width(DurationWidth).padding(end = 8.dp), contentAlignment = Alignment.CenterEnd) {
                     Icon(Icons.Outlined.Schedule, null, tint = muted, modifier = Modifier.size(16.dp))

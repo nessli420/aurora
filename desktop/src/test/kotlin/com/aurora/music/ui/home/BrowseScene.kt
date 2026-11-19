@@ -4,7 +4,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.InternalComposeUiApi
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.KeyEvent
+import androidx.compose.ui.input.key.KeyEventType
 import androidx.compose.ui.input.pointer.PointerButton
 import androidx.compose.ui.input.pointer.PointerButtons
 import androidx.lifecycle.Lifecycle
@@ -111,6 +115,17 @@ internal class BrowseScene(
     fun click(x: Float, y: Float, button: PointerButton = PointerButton.Primary) {
         val pressed = if (button == PointerButton.Secondary) PointerButtons(isSecondaryPressed = true) else PointerButtons(isPrimaryPressed = true)
         ui.click(x, y, button, pressed)
+        frames(3)
+    }
+
+    @OptIn(InternalComposeUiApi::class)
+    fun type(text: String) {
+        // a text field only takes a typed key that carries the awt event it came from
+        val source = javax.swing.JLabel()
+        text.forEach { char ->
+            val typed = java.awt.event.KeyEvent(source, java.awt.event.KeyEvent.KEY_TYPED, ui.millis, 0, java.awt.event.KeyEvent.VK_UNDEFINED, char)
+            ui.input { sendKeyEvent(KeyEvent(Key.Unknown, KeyEventType.Unknown, codePoint = char.code, nativeEvent = typed)) }
+        }
         frames(3)
     }
 

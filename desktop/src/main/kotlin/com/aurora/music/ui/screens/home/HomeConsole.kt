@@ -655,7 +655,7 @@ private fun WeekModule(week: Week?, clock: Animatable<Float, AnimationVector1D>,
 }
 
 @Composable
-private fun QuickModule(albums: List<Album>, columns: Int, onOpenDetail: (String, String) -> Unit) {
+internal fun QuickModule(albums: List<Album>, columns: Int, onOpenDetail: (String, String) -> Unit) {
     ConsoleModule {
         ConsoleLabel(appString(R.string.text_jump_back_in_1d9181))
         Spacer(Modifier.height(Gap))
