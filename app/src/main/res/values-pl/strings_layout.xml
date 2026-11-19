@@ -9,4 +9,5 @@
     <string name="bars_hint">"Miniodtwarzacz i pasek nawigacji. Klasyczny to oryginał."</string>
     <string name="bars_match_title">"Dopasuj do układu"</string>
     <string name="bars_match_hint">"Paski podążają za układem wybranym powyżej."</string>
+    <string name="search_top_result">"Najlepszy wynik"</string>
 </resources>

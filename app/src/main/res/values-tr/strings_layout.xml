@@ -9,4 +9,5 @@
     <string name="bars_hint">"Mini oynatıcı ve gezinme çubuğu. Klasik, özgün olandır."</string>
     <string name="bars_match_title">"Düzenle eşleştir"</string>
     <string name="bars_match_hint">"Çubuklar yukarıda seçilen düzeni izler."</string>
+    <string name="search_top_result">"En iyi sonuç"</string>
 </resources>

@@ -9,4 +9,5 @@
     <string name="bars_hint">"Мини-плеер и панель навигации. Классический — исходный вариант."</string>
     <string name="bars_match_title">"Как у макета"</string>
     <string name="bars_match_hint">"Панели следуют макету, выбранному выше."</string>
+    <string name="search_top_result">"Лучший результат"</string>
 </resources>

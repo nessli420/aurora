@@ -9,4 +9,5 @@
     <string name="bars_hint">"미니 플레이어와 내비게이션 바입니다. 클래식은 기존 방식입니다."</string>
     <string name="bars_match_title">"레이아웃에 맞추기"</string>
     <string name="bars_match_hint">"바가 위에서 선택한 레이아웃을 따릅니다."</string>
+    <string name="search_top_result">"상위 결과"</string>
 </resources>

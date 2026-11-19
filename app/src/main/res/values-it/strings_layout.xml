@@ -9,4 +9,5 @@
     <string name="bars_hint">"Il mini player e la barra di navigazione. Classico è quello originale."</string>
     <string name="bars_match_title">"Segui il layout"</string>
     <string name="bars_match_hint">"Le barre seguono il layout scelto sopra."</string>
+    <string name="search_top_result">"Risultato migliore"</string>
 </resources>

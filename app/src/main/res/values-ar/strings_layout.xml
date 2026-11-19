@@ -9,4 +9,5 @@
     <string name="bars_hint">"المشغّل المصغّر وشريط التنقل. الكلاسيكي هو الأصلي."</string>
     <string name="bars_match_title">"مطابقة التخطيط"</string>
     <string name="bars_match_hint">"الأشرطة تتبع التخطيط المختار أعلاه."</string>
+    <string name="search_top_result">"أفضل نتيجة"</string>
 </resources>

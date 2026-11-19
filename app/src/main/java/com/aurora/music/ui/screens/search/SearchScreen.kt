@@ -85,23 +85,254 @@ import androidx.compose.material.icons.outlined.SearchOff
 import com.aurora.music.ui.components.EmptyState
 import com.aurora.music.ui.components.LoadingState
 import com.aurora.music.ui.theme.Motion
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.isUnspecified
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.unit.Dp
+import com.aurora.music.localization.appPlural
+import com.aurora.music.localization.localizedMediaType
+import com.aurora.music.model.Album
+import com.aurora.music.model.accent
+import com.aurora.music.ui.screens.home.Hero
+import com.aurora.music.ui.screens.home.spotSurface
+import com.aurora.music.ui.theme.isGlassTheme
+import com.aurora.music.ui.theme.paperFrame
+import com.aurora.music.util.accentFor
+import java.util.Locale
 
-private enum class Pane { ERROR, HINT, RECENTS, LOADING, NONE, RESULTS }
+internal enum class Pane { ERROR, HINT, RECENTS, LOADING, NONE, RESULTS }
 
 // a pane carries its own data so the one fading out keeps what it showed
-private class SearchPane(val kind: Pane, val state: SearchUiState, val recents: List<String>)
+internal class SearchPane(val kind: Pane, val state: SearchUiState, val recents: List<String>) {
+    val hits: List<Hero> by lazy { if (kind == Pane.RESULTS) topHits(state.query, state.results) else emptyList() }
+}
 
-private enum class SearchFilter(@androidx.annotation.StringRes private val labelRes: Int) {
+internal enum class SearchFilter(@androidx.annotation.StringRes private val labelRes: Int) {
     ALL(R.string.text_all_6a7208), SONGS(R.string.text_songs_e1404b), ALBUMS(R.string.text_albums_4c45e7), ARTISTS(R.string.text_artists_1528d8), PLAYLISTS(R.string.text_playlists_77b69f);
     val label: String get() = appString(labelRes)
 }
 
-private fun sectionNonEmpty(f: SearchFilter, r: SearchResults): Boolean = when (f) {
+internal fun sectionNonEmpty(f: SearchFilter, r: SearchResults): Boolean = when (f) {
     SearchFilter.ALL -> true
     SearchFilter.SONGS -> r.songs.isNotEmpty()
     SearchFilter.ALBUMS -> r.albums.isNotEmpty()
     SearchFilter.ARTISTS -> r.artists.isNotEmpty()
     SearchFilter.PLAYLISTS -> r.playlists.isNotEmpty()
+}
+
+internal fun matchScore(query: String, name: String): Int {
+    val q = query.trim().lowercase()
+    val n = name.trim().lowercase()
+    return when {
+        q.isEmpty() -> 0
+        n == q -> 3
+        n.startsWith(q) -> 2
+        n.split(' ').any { it.startsWith(q) } -> 1
+        else -> 0
+    }
+}
+
+// desktop's rule: the best name match among the first result of each kind, in this order on a tie
+internal fun topHits(query: String, r: SearchResults): List<Hero> {
+    fun score(name: String) = matchScore(query, name)
+    fun label(kind: String) = kind.uppercase(Locale.getDefault())
+    fun line(vararg parts: String) = parts.filter { it.isNotBlank() }.joinToString(" · ")
+    return buildList {
+        r.artists.firstOrNull()?.let {
+            val found = line(if (r.songs.isEmpty()) "" else appPlural(R.plurals.track_count, r.songs.size), if (r.albums.isEmpty()) "" else appPlural(R.plurals.album_count, r.albums.size))
+            add(score(it.name) to Hero("artist", it.id, label(appString(R.string.text_artist_6c3f3d)), it.name, "", found, it.imageUrl, accentFor(it.id)))
+        }
+        r.albums.firstOrNull()?.let {
+            val detail = line(if (it.year > 0) it.year.toString() else "", if (it.songCount > 0) appPlural(R.plurals.track_count, it.songCount) else "")
+            add(score(it.title) to Hero("album", it.id, label(it.typeLabel.localizedMediaType()), it.title, it.artist, detail, it.artworkUrl, accentFor(it.id)))
+        }
+        r.songs.firstOrNull()?.let { add(score(it.title) to Hero("song", it.id, label(appString(R.string.text_song_bd1189)), it.title, it.artist, it.album, it.artworkUrl, it.accent)) }
+        r.playlists.firstOrNull()?.let {
+            add(score(it.title) to Hero("playlist", it.id, label(appString(R.string.text_playlist_cd95b4)), it.title, it.subtitle,
+                if (it.songCount > 0) appPlural(R.plurals.track_count, it.songCount) else "", it.coverUrl, it.accent))
+        }
+    }.sortedByDescending { it.first }.map { it.second }
+}
+
+internal class SearchParts(
+    val state: SearchUiState,
+    val pane: SearchPane,
+    val filter: SearchFilter,
+    val onFilter: (SearchFilter) -> Unit,
+    val jumpBackIn: List<Album>,
+    val bottom: Dp,
+    val likedIds: Set<String>,
+    val currentSongId: String,
+    val isPlaying: Boolean,
+    val downloadedIds: Set<String>,
+    val canDownload: Boolean,
+    val onQuery: (String) -> Unit,
+    val onSubmit: () -> Unit,
+    val onVoice: () -> Unit,
+    val onSelectSource: (String) -> Unit,
+    val onRecent: (String) -> Unit,
+    val onRemoveRecent: (String) -> Unit,
+    val onClearRecents: () -> Unit,
+    val onPlayAll: (List<Song>, Int) -> Unit,
+    val onOpen: (String, String) -> Unit,
+    val onPlayCollection: (String, String) -> Unit,
+    val onAddToQueue: (Song) -> Unit,
+    val onPlayNext: (Song) -> Unit,
+    val onToggleLike: (String) -> Unit,
+    val onDownload: (Song) -> Unit,
+    val onRemoveDownload: (String) -> Unit,
+) {
+    val source: String get() = state.sources.firstOrNull { it.id == state.selectedSource }?.label.orEmpty()
+    val hasQuery: Boolean get() = state.query.isNotEmpty()
+    val hasResults: Boolean get() = pane.kind == Pane.RESULTS
+    val refreshing: Boolean get() = state.loading && hasResults
+    val hasChoices: Boolean get() = hasResults || state.sources.size > 1
+    val endIcon: ImageVector get() = if (hasQuery) Icons.Filled.Close else Icons.Filled.Mic
+    val endLabel: String get() = appString(if (hasQuery) R.string.text_clear_719ea3 else R.string.text_voice_search_9df53f)
+    val onEnd: () -> Unit get() = { if (hasQuery) onQuery("") else onVoice() }
+
+    // fall back to ALL when chosen type has no results
+    fun filterFor(r: SearchResults): SearchFilter = if (sectionNonEmpty(filter, r)) filter else SearchFilter.ALL
+    fun filters(r: SearchResults): List<SearchFilter> = SearchFilter.entries.filter { sectionNonEmpty(it, r) }
+    fun count(f: SearchFilter, r: SearchResults): Int = when (f) {
+        SearchFilter.ALL -> r.songs.size + r.albums.size + r.artists.size + r.playlists.size
+        SearchFilter.SONGS -> r.songs.size
+        SearchFilter.ALBUMS -> r.albums.size
+        SearchFilter.ARTISTS -> r.artists.size
+        SearchFilter.PLAYLISTS -> r.playlists.size
+    }
+
+    fun playHit(hit: Hero) = if (hit.kind == "song") onPlayAll(pane.state.results.songs, 0) else onPlayCollection(hit.kind, hit.id)
+    fun openHit(hit: Hero) = if (hit.kind == "song") playHit(hit) else onOpen(hit.kind, hit.id)
+}
+
+@Composable
+internal fun SearchParts.SongItem(
+    songs: List<Song>,
+    index: Int,
+    modifier: Modifier = Modifier,
+    showArt: Boolean = true,
+    titleStyle: TextStyle? = null,
+    lead: (@Composable () -> Unit)? = null,
+    tag: (@Composable () -> Unit)? = null,
+) {
+    val song = songs[index]
+    SongRow(
+        song = song,
+        isPlaying = song.id == currentSongId && isPlaying,
+        isLiked = likedIds.contains(song.id),
+        onClick = { onPlayAll(songs, index) },
+        onToggleLike = { onToggleLike(song.id) },
+        modifier = modifier,
+        onAddToQueue = { onAddToQueue(song) },
+        onPlayNext = { onPlayNext(song) },
+        onGoToAlbum = if (song.albumId.isNotBlank()) ({ onOpen("album", song.albumId) }) else null,
+        onGoToArtist = if (song.artistId.isNotBlank()) ({ onOpen("artist", song.artistId) }) else null,
+        isDownloaded = canDownload && downloadedIds.contains(song.id),
+        onDownload = if (canDownload) ({ onDownload(song) }) else null,
+        onRemoveDownload = if (canDownload) ({ onRemoveDownload(song.id) }) else null,
+        showArt = showArt,
+        titleStyle = titleStyle,
+        lead = lead,
+        tag = tag,
+    )
+}
+
+@Composable
+internal fun SearchParts.Choices(choice: @Composable (label: String, selected: Boolean, onClick: () -> Unit) -> Unit) {
+    if (hasResults) {
+        val on = filterFor(state.results)
+        filters(state.results).forEach { f -> choice(f.label, f == on) { onFilter(f) } }
+    } else state.sources.forEach { s -> choice(s.label, s.id == state.selectedSource) { onSelectSource(s.id) } }
+}
+
+@Composable
+internal fun SearchParts.Field(
+    style: TextStyle,
+    modifier: Modifier = Modifier,
+    onTextLayout: (TextLayoutResult) -> Unit = {},
+    placeholder: @Composable () -> Unit,
+) {
+    val keyboard = LocalSoftwareKeyboardController.current
+    BasicTextField(
+        value = state.query,
+        onValueChange = onQuery,
+        modifier = modifier,
+        textStyle = style.copy(color = MaterialTheme.colorScheme.onSurface),
+        singleLine = true,
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+        keyboardActions = KeyboardActions(onSearch = { onSubmit(); keyboard?.hide() }),
+        onTextLayout = { if (hasQuery) onTextLayout(it) },
+        cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+        decorationBox = { inner ->
+            Box(contentAlignment = Alignment.CenterStart) {
+                if (!hasQuery) placeholder()
+                inner()
+            }
+        },
+    )
+}
+
+// the loader only covers an empty list, so a refresh over old results shows on this line
+@Composable
+internal fun SearchProgress(p: SearchParts, modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(2.dp)) {
+        if (p.refreshing) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxSize())
+    }
+}
+
+@Composable
+internal fun SearchNotice(shown: SearchPane) {
+    when (shown.kind) {
+        Pane.ERROR -> EmptyState(Icons.Outlined.ErrorOutline, appString(R.string.text_search_unavailable_c32b9f), Modifier.fillMaxSize(), subtitle = shown.state.error)
+        Pane.LOADING -> LoadingState(Modifier.height(240.dp))
+        Pane.NONE -> EmptyState(Icons.Outlined.SearchOff, appString(R.string.text_no_results_b993b0), Modifier.fillMaxSize(), subtitle = appString(R.string.text_nothing_matched_f74d36, (shown.state.query)))
+        else -> EmptyState(Icons.Filled.Search, appString(R.string.text_search_your_library_d9fa3f), Modifier.fillMaxSize(), subtitle = appString(R.string.text_find_any_artist_album_song_or_playlist_9fcb23))
+    }
+}
+
+@Composable
+internal fun SearchPanes(p: SearchParts, modifier: Modifier = Modifier, idle: @Composable (SearchPane) -> Unit, results: @Composable (SearchPane) -> Unit) {
+    AnimatedContent(
+        targetState = p.pane,
+        modifier = modifier,
+        transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
+        contentKey = { it.kind },
+        label = "searchPane",
+    ) { shown ->
+        when (shown.kind) {
+            Pane.RESULTS -> results(shown)
+            Pane.HINT, Pane.RECENTS -> if (shown.recents.isEmpty() && p.jumpBackIn.isEmpty()) SearchNotice(shown) else idle(shown)
+            else -> SearchNotice(shown)
+        }
+    }
+}
+
+@Composable
+internal fun Modifier.searchCard(shape: Shape, tint: Color = Color.Unspecified, outlined: Boolean = false): Modifier {
+    val colors = MaterialTheme.colorScheme
+    return when {
+        isGlassTheme() -> glassCard(shape, tint)
+        tint.isUnspecified -> spotSurface(shape, if (outlined) colors.surface else colors.surfaceContainer, outlined)
+        else -> paperFrame(shape, { background(tint) }, fill = tint)
+    }
+}
+
+// rows of a fixed grid as lazy items, so a long list of results stays lazy in the page's own column
+internal fun <T> LazyListScope.gridRows(list: List<T>, columns: Int, modifier: Modifier, gap: Dp, cell: @Composable (T, Modifier) -> Unit) {
+    items((list.size + columns - 1) / columns) { row ->
+        Row(modifier, horizontalArrangement = Arrangement.spacedBy(gap)) {
+            for (i in row * columns until (row + 1) * columns) {
+                val item = list.getOrNull(i)
+                if (item == null) Spacer(Modifier.weight(1f)) else cell(item, Modifier.weight(1f))
+            }
+        }
+    }
 }
 
 @Composable
@@ -127,6 +358,8 @@ fun SearchScreen(
     onClearRecents: () -> Unit = {},
     onCommitSearch: () -> Unit = {},
     onSelectSource: (String) -> Unit = {},
+    jumpBackIn: List<Album> = emptyList(),
+    onPlayCollection: (kind: String, id: String) -> Unit = { _, _ -> },
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val results = state.results
@@ -152,6 +385,31 @@ fun SearchScreen(
         runCatching { voiceLauncher.launch(intent) }
     }
     val commitAnd: (() -> Unit) -> Unit = { action -> onCommitSearch(); action() }
+
+    val empty = results.songs.isEmpty() && results.albums.isEmpty() && results.artists.isEmpty() && results.playlists.isEmpty()
+    val kind = when {
+        state.error != null -> Pane.ERROR
+        state.query.isBlank() -> if (recentSearches.isEmpty()) Pane.HINT else Pane.RECENTS
+        state.loading && empty -> Pane.LOADING
+        empty -> Pane.NONE
+        else -> Pane.RESULTS
+    }
+    val pane = remember(kind, state, recentSearches) { SearchPane(kind, state, recentSearches) }
+    val parts = SearchParts(
+        state, pane, filter, { filter = it }, jumpBackIn, contentPadding.calculateBottomPadding() + 24.dp,
+        likedIds, currentSongId, isPlaying, downloadedIds, canDownload,
+        onQuery = onQuery, onSubmit = onCommitSearch, onVoice = ::launchVoice, onSelectSource = onSelectSource,
+        onRecent = onRecentClick, onRemoveRecent = onRemoveRecent, onClearRecents = onClearRecents,
+        onPlayAll = { songs, i -> commitAnd { onPlayAll(songs, i) } },
+        onOpen = { k, id -> commitAnd { onOpenDetail(k, id) } },
+        onPlayCollection = { k, id -> commitAnd { onPlayCollection(k, id) } },
+        onAddToQueue = onAddToQueue, onPlayNext = onPlayNext, onToggleLike = onToggleLike, onDownload = onDownload, onRemoveDownload = onRemoveDownload,
+    )
+    when (com.aurora.music.ui.theme.LocalUiPrefs.current.pageLayout) {
+        com.aurora.music.data.PageLayout.SPOTLIGHT -> return SearchSpotlight(parts)
+        com.aurora.music.data.PageLayout.CONSOLE -> return SearchConsole(parts)
+        com.aurora.music.data.PageLayout.DRIFT -> return SearchDrift(parts)
+    }
 
     Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.TopCenter) {
     Column(Modifier.widthIn(max = if (tablet) 960.dp else androidx.compose.ui.unit.Dp.Unspecified).fillMaxWidth().padding(top = topInset)) {
@@ -218,19 +476,10 @@ fun SearchScreen(
             ),
         )
 
-        val empty = results.songs.isEmpty() && results.albums.isEmpty() && results.artists.isEmpty() && results.playlists.isEmpty()
         // the loader below only covers an empty list, so a refresh over old results shows here
         Box(Modifier.fillMaxWidth().height(12.dp), contentAlignment = Alignment.Center) {
             if (state.loading && !empty) androidx.compose.material3.LinearProgressIndicator(Modifier.fillMaxWidth().padding(horizontal = 16.dp).height(2.dp))
         }
-        val kind = when {
-            state.error != null -> Pane.ERROR
-            state.query.isBlank() -> if (recentSearches.isEmpty()) Pane.HINT else Pane.RECENTS
-            state.loading && empty -> Pane.LOADING
-            empty -> Pane.NONE
-            else -> Pane.RESULTS
-        }
-        val pane = remember(kind, state, recentSearches) { SearchPane(kind, state, recentSearches) }
         AnimatedContent(
             targetState = pane,
             transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
@@ -238,25 +487,15 @@ fun SearchScreen(
             label = "searchPane",
         ) { shown ->
         when (shown.kind) {
-            Pane.ERROR -> EmptyState(Icons.Outlined.ErrorOutline, appString(R.string.text_search_unavailable_c32b9f), Modifier.fillMaxSize(), subtitle = shown.state.error)
-            Pane.HINT -> EmptyState(Icons.Filled.Search, appString(R.string.text_search_your_library_d9fa3f), Modifier.fillMaxSize(), subtitle = appString(R.string.text_find_any_artist_album_song_or_playlist_9fcb23))
             Pane.RECENTS -> RecentSearches(shown.recents, onRecentClick, onRemoveRecent, onClearRecents, contentPadding)
-            Pane.LOADING -> LoadingState(Modifier.height(240.dp))
-            Pane.NONE -> EmptyState(Icons.Outlined.SearchOff, appString(R.string.text_no_results_b993b0), Modifier.fillMaxSize(), subtitle = appString(R.string.text_nothing_matched_f74d36, (shown.state.query)))
             Pane.RESULTS -> Column {
                 val found = shown.state.results
-                // fall back to ALL when chosen type has no results
-                val effective = if (sectionNonEmpty(filter, found)) filter else SearchFilter.ALL
+                val effective = parts.filterFor(found)
                 FilterChips(effective, found) { filter = it }
                 Spacer(Modifier.height(6.dp))
-                Results(
-                    effective, found, likedIds, currentSongId, isPlaying, contentPadding,
-                    onPlayAll = { songs, i -> commitAnd { onPlayAll(songs, i) } },
-                    onAddToQueue = onAddToQueue, onPlayNext = onPlayNext, onToggleLike = onToggleLike,
-                    onOpenDetail = { k, id -> commitAnd { onOpenDetail(k, id) } },
-                    downloadedIds = downloadedIds, onDownload = onDownload, onRemoveDownload = onRemoveDownload, canDownload = canDownload,
-                )
+                Results(effective, found, parts)
             }
+            else -> SearchNotice(shown)
         }
         }
     }
@@ -295,27 +534,12 @@ private fun FilterChips(selected: SearchFilter, results: SearchResults, onSelect
 }
 
 @Composable
-private fun Results(
-    filter: SearchFilter,
-    results: SearchResults,
-    likedIds: Set<String>,
-    currentSongId: String,
-    isPlaying: Boolean,
-    contentPadding: PaddingValues,
-    onPlayAll: (List<Song>, Int) -> Unit,
-    onAddToQueue: (Song) -> Unit,
-    onPlayNext: (Song) -> Unit,
-    onToggleLike: (String) -> Unit,
-    onOpenDetail: (String, String) -> Unit,
-    downloadedIds: Set<String>,
-    onDownload: (Song) -> Unit,
-    onRemoveDownload: (String) -> Unit,
-    canDownload: Boolean,
-) {
+private fun Results(filter: SearchFilter, results: SearchResults, parts: SearchParts) {
+    val onOpenDetail = parts.onOpen
     fun show(f: SearchFilter) = filter == SearchFilter.ALL || filter == f
     LazyColumn(
         Modifier.fillMaxWidth(),
-        contentPadding = PaddingValues(bottom = contentPadding.calculateBottomPadding() + 24.dp),
+        contentPadding = PaddingValues(bottom = parts.bottom),
         verticalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         if (show(SearchFilter.ARTISTS) && results.artists.isNotEmpty()) {
@@ -344,24 +568,7 @@ private fun Results(
         }
         if (show(SearchFilter.SONGS) && results.songs.isNotEmpty()) {
             item { SectionHeader(appString(R.string.text_songs_e1404b), Modifier.padding(horizontal = 16.dp)) }
-            items(results.songs.size) { i ->
-                val song = results.songs[i]
-                SongRow(
-                    song = song,
-                    isPlaying = song.id == currentSongId && isPlaying,
-                    isLiked = likedIds.contains(song.id),
-                    onClick = { onPlayAll(results.songs, i) },
-                    onToggleLike = { onToggleLike(song.id) },
-                    modifier = Modifier.padding(horizontal = 8.dp),
-                    onAddToQueue = { onAddToQueue(song) },
-                    onPlayNext = { onPlayNext(song) },
-                    onGoToAlbum = if (song.albumId.isNotBlank()) ({ onOpenDetail("album", song.albumId) }) else null,
-                    onGoToArtist = if (song.artistId.isNotBlank()) ({ onOpenDetail("artist", song.artistId) }) else null,
-                    isDownloaded = canDownload && downloadedIds.contains(song.id),
-                    onDownload = if (canDownload) ({ onDownload(song) }) else null,
-                    onRemoveDownload = if (canDownload) ({ onRemoveDownload(song.id) }) else null,
-                )
-            }
+            items(results.songs.size) { i -> parts.SongItem(results.songs, i, Modifier.padding(horizontal = 8.dp)) }
         }
     }
 }

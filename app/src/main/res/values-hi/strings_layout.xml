@@ -9,4 +9,5 @@
     <string name="bars_hint">"मिनी प्लेयर और नेविगेशन बार। क्लासिक मूल है।"</string>
     <string name="bars_match_title">"लेआउट से मिलाएँ"</string>
     <string name="bars_match_hint">"बार ऊपर चुने गए लेआउट का अनुसरण करते हैं।"</string>
+    <string name="search_top_result">"शीर्ष परिणाम"</string>
 </resources>

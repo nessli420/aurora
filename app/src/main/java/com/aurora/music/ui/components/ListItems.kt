@@ -100,6 +100,10 @@ fun SongRow(
     showAlbum: Boolean = true,
     hidden: Boolean = false,
     onToggleHidden: (() -> Unit)? = null,
+    showArt: Boolean = true,
+    titleStyle: androidx.compose.ui.text.TextStyle? = null,
+    lead: (@Composable () -> Unit)? = null,
+    tag: (@Composable () -> Unit)? = null,
 ) {
     var menuOpen by remember(song.id, song.playbackSource?.providerId) { mutableStateOf(false) }
     var page by remember(song.id, song.playbackSource?.providerId) { mutableStateOf<SongMenuPage?>(null) }
@@ -130,7 +134,8 @@ fun SongRow(
             .padding(horizontal = 8.dp, vertical = if (glass) 6.dp else 8.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        Box(contentAlignment = Alignment.Center, modifier = Modifier.alpha(if (greyed) 0.4f else 1f)) {
+        lead?.invoke()
+        if (showArt) Box(contentAlignment = Alignment.Center, modifier = Modifier.alpha(if (greyed) 0.4f else 1f)) {
             Artwork(song.artworkUrl, song.accent, Modifier.size(52.dp), corner = 10.dp)
             if (isPlaying) {
                 Box(
@@ -142,18 +147,22 @@ fun SongRow(
                 }
             }
         }
-        Spacer(Modifier.width(12.dp))
+        if (showArt) Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f).alpha(if (greyed) 0.45f else 1f)) {
             Text(
                 song.title,
-                style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Medium,
+                style = titleStyle ?: MaterialTheme.typography.titleSmall,
+                fontWeight = if (titleStyle == null) FontWeight.Medium else null,
                 color = if (isPlaying) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
             Spacer(Modifier.height(2.dp))
             Row(verticalAlignment = Alignment.CenterVertically) {
+                if (tag != null) {
+                    tag()
+                    Spacer(Modifier.width(6.dp))
+                }
                 if (song.explicit) {
                     Icon(
                         Icons.Outlined.Explicit, null,

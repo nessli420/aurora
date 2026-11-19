@@ -471,11 +471,12 @@ private fun DriftTop(
 
 // every cover is a pager page the size of the centre one; the layer shrinks, dims and pulls in its neighbours from the pager's own offset, so a swipe redraws without recomposing
 @Composable
-private fun DriftCarousel(heroes: List<Hero>, width: Dp, cover: Dp, gap: Dp, clock: Animatable<Float, AnimationVector1D>, onOpen: (Hero) -> Unit, onPlay: (Hero) -> Unit) {
+internal fun DriftCarousel(heroes: List<Hero>, width: Dp, cover: Dp, gap: Dp, clock: Animatable<Float, AnimationVector1D>, onOpen: (Hero) -> Unit, onPlay: (Hero) -> Unit) {
     val colors = MaterialTheme.colorScheme
     val pager = rememberPagerState(pageCount = { heroes.size })
     val scope = rememberCoroutineScope()
     val coverShape = MaterialTheme.shapes.extraLarge
+    val round = paperSquare(CircleShape)
     val paper = isPaperTheme()
     val side = if (LocalLayoutDirection.current == LayoutDirection.Rtl) -1f else 1f
     Box(Modifier.padding(top = 8.dp).fillMaxWidth(), contentAlignment = Alignment.Center) {
@@ -500,7 +501,7 @@ private fun DriftCarousel(heroes: List<Hero>, width: Dp, cover: Dp, gap: Dp, clo
                         alpha = (1f - 0.38f * away).coerceAtLeast(0f) * p
                         translationX = side * (at * (gap.toPx() - 0.125f * away * size.width) + at.coerceIn(-1f, 1f) * (1f - p) * 60.dp.toPx())
                         shadowElevation = if (paper) 0f else 16.dp.toPx() * (1f - away).coerceAtLeast(0f)
-                        shape = coverShape
+                        shape = if (hero.kind == "artist") round else coverShape
                         clip = true
                     }
                     .then(if (paper) Modifier.border(1.dp, PaperTokens.ink) else Modifier)
@@ -549,7 +550,7 @@ private fun HeroCaption(heroes: List<Hero>, pager: PagerState, modifier: Modifie
 }
 
 @Composable
-private fun RecentDisc(album: Album, first: Boolean, size: Dp, onClick: () -> Unit) {
+internal fun RecentDisc(album: Album, first: Boolean, size: Dp, onClick: () -> Unit) {
     val colors = MaterialTheme.colorScheme
     Column(
         Modifier.width(size + 8.dp).paperClip(RoundedCornerShape(14.dp)).pressClickable(onClick = onClick).padding(4.dp),

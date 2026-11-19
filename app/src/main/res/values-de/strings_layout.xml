@@ -9,4 +9,5 @@
     <string name="bars_hint">"Der Miniplayer und die Navigationsleiste. Klassisch ist das Original."</string>
     <string name="bars_match_title">"Layout übernehmen"</string>
     <string name="bars_match_hint">"Die Leisten folgen dem oben gewählten Layout."</string>
+    <string name="search_top_result">"Top-Ergebnis"</string>
 </resources>

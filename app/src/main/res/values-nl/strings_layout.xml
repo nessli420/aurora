@@ -9,4 +9,5 @@
     <string name="bars_hint">"De miniplayer en de navigatiebalk. Klassiek is het origineel."</string>
     <string name="bars_match_title">"Indeling volgen"</string>
     <string name="bars_match_hint">"De balken volgen de hierboven gekozen indeling."</string>
+    <string name="search_top_result">"Topresultaat"</string>
 </resources>

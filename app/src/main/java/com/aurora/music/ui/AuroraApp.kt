@@ -1329,6 +1329,8 @@ fun AuroraApp() {
                         val searchVM: SearchViewModel = viewModel(viewModelStoreOwner = activityOwner)
                         val searchState by searchVM.state.collectAsStateWithLifecycle()
                         val recentSearches by searchVM.recentSearches.collectAsStateWithLifecycle()
+                        val homeVM: HomeViewModel = viewModel(viewModelStoreOwner = activityOwner)
+                        val homeState by homeVM.state.collectAsStateWithLifecycle()
                         androidx.compose.runtime.LaunchedEffect(searchState.results.songs) {
                             playerVM.checkLiked(searchState.results.songs)
                         }
@@ -1354,6 +1356,10 @@ fun AuroraApp() {
                             onRemoveRecent = { searchVM.removeRecent(it) },
                             onClearRecents = { searchVM.clearRecents() },
                             onCommitSearch = { searchVM.commit() },
+                            jumpBackIn = if (com.aurora.music.data.HomeSection.RECENT in com.aurora.music.ui.theme.LocalUiPrefs.current.hiddenHomeSections) emptyList() else homeState.data.recentlyPlayed,
+                            onPlayCollection = { kind, id -> scope.launch { container.repository.detail(kind, id)?.let { d ->
+                                if (d.tracks.isNotEmpty()) playerVM.playCollection(kind, id, d.tracks, 0, d.info.songCount)
+                            } } },
                         )
                     }
                     composable(Routes.LIBRARY) {

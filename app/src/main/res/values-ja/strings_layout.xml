@@ -9,4 +9,5 @@
     <string name="bars_hint">"ミニプレーヤーとナビゲーションバーです。クラシックは従来のものです。"</string>
     <string name="bars_match_title">"レイアウトに合わせる"</string>
     <string name="bars_match_hint">"バーは上で選んだレイアウトに従います。"</string>
+    <string name="search_top_result">"トップの結果"</string>
 </resources>

@@ -557,7 +557,7 @@ private fun MixCard(mix: Playlist, modifier: Modifier, onClick: () -> Unit) {
 
 // six tiles at most, so plain rows do and no nested lazy grid is needed
 @Composable
-private fun QuickGrid(albums: List<Album>, columns: Int, height: Dp, onOpenDetail: (String, String) -> Unit) {
+internal fun QuickGrid(albums: List<Album>, columns: Int, height: Dp, onOpenDetail: (String, String) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
         for (start in albums.indices step columns) Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             for (i in start until start + columns) {

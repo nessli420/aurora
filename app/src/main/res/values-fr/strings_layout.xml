@@ -9,4 +9,5 @@
     <string name="bars_hint">"Le mini-lecteur et la barre de navigation. Classique est la disposition initiale."</string>
     <string name="bars_match_title">"Suivre la disposition"</string>
     <string name="bars_match_hint">"Les barres suivent la disposition choisie ci-dessus."</string>
+    <string name="search_top_result">"Meilleur résultat"</string>
 </resources>

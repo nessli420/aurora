@@ -9,4 +9,5 @@
     <string name="bars_hint">"迷你播放器和导航栏。经典为原始样式。"</string>
     <string name="bars_match_title">"跟随布局"</string>
     <string name="bars_match_hint">"栏跟随上方选择的布局。"</string>
+    <string name="search_top_result">"最佳结果"</string>
 </resources>

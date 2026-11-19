@@ -9,4 +9,5 @@
     <string name="bars_hint">"El minirreproductor y la barra de navegación. Clásico es el original."</string>
     <string name="bars_match_title">"Igual que el diseño"</string>
     <string name="bars_match_hint">"Las barras siguen el diseño elegido arriba."</string>
+    <string name="search_top_result">"Resultado principal"</string>
 </resources>
