@@ -96,7 +96,7 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
+import androidx.navigation.compose.composable as navComposable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import com.aurora.music.ui.theme.Motion
 import com.aurora.music.ui.theme.screenEnter
@@ -229,6 +229,18 @@ private const val LIKES_RESUME_INTERVAL_NS = 5 * 60_000_000_000L
 
 internal fun likesResumeDue(pulledAt: Long?, now: Long, sessionReady: Boolean?, offline: Boolean): Boolean =
     sessionReady == true && !offline && pulledAt?.let { now - it < LIKES_RESUME_INTERVAL_NS } != true
+
+private val LocalShownEntry = androidx.compose.runtime.compositionLocalOf<androidx.compose.runtime.State<String?>?> { null }
+
+// the host keeps the page it is leaving for a few frames, so only the current entry draws and the old page never shows through the next
+private fun androidx.navigation.NavGraphBuilder.composable(
+    route: String,
+    arguments: List<androidx.navigation.NamedNavArgument> = emptyList(),
+    content: @Composable androidx.compose.animation.AnimatedContentScope.(androidx.navigation.NavBackStackEntry) -> Unit,
+) = navComposable(route, arguments) { entry ->
+    val shown = LocalShownEntry.current
+    Box(Modifier.graphicsLayer { alpha = if (shown == null || shown.value == entry.id) 1f else 0f }, propagateMinConstraints = true) { content(entry) }
+}
 
 @OptIn(ExperimentalComposeUiApi::class)
 @Composable
@@ -975,6 +987,7 @@ private fun Shell(
         }
     } }
     CompositionLocalProvider(
+        LocalShownEntry provides androidx.compose.runtime.rememberUpdatedState(backStackEntry?.id),
         com.aurora.music.ui.components.LocalStartRadio provides startRadio,
         com.aurora.music.ui.components.LocalCanLike provides container.repository::canLikeSong,
         com.aurora.music.ui.components.LocalHiddenSongs provides hiddenIndex,
@@ -1592,6 +1605,7 @@ private fun Shell(
                                                     LocalSettingsPaneRoots provides paneRoots,
                                                     LocalPageGutter provides PageMetrics.PaneGutter,
                                                     LocalSettingsPaneExpand provides openFullPage,
+                                                    LocalShownEntry provides null,
                                                 ) {
                                                     NavHost(
                                                         navController = paneNav,
