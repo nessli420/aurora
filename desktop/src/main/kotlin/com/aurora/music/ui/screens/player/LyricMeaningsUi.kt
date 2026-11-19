@@ -19,6 +19,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.input.pointer.PointerIcon
 import androidx.compose.ui.input.pointer.pointerHoverIcon
 import androidx.compose.ui.platform.LocalUriHandler
@@ -85,9 +86,10 @@ internal fun meaningMarkContent(lineAlpha: Float) = mapOf(MEANING_MARK to Inline
     var shown by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { shown = true }
     val alpha by animateFloatAsState(if (shown) lineAlpha else 0f, Motion.enter(), label = "meaningMark")
-    Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }.background(Color.White.copy(alpha = .16f), CircleShape)
+    val ink = LocalLyricsInk.current.takeOrElse { Color.White }
+    Box(Modifier.fillMaxSize().graphicsLayer { this.alpha = alpha }.background(ink.copy(alpha = .16f), CircleShape)
         .pointerHoverIcon(PointerIcon.Hand), contentAlignment = Alignment.Center) {
-        Icon(Icons.Filled.TipsAndUpdates, null, Modifier.fillMaxSize(.66f), tint = Color.White.copy(alpha = .8f))
+        Icon(Icons.Filled.TipsAndUpdates, null, Modifier.fillMaxSize(.66f), tint = ink.copy(alpha = .8f))
     }
 })
 

@@ -51,6 +51,7 @@ import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.LayoutDirection
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -243,8 +244,8 @@ private fun DockIcon(icon: ImageVector, label: String, onClick: () -> Unit) {
     IconButton(onClick = onClick) { Icon(icon, label, tint = MaterialTheme.colorScheme.onSurfaceVariant) }
 }
 
-private fun Modifier.progressRing(progress: Float, color: Color, track: Color, square: Boolean): Modifier = drawBehind {
-    val stroke = Stroke(3.dp.toPx())
+internal fun Modifier.progressRing(progress: Float, color: Color, track: Color, square: Boolean, width: Dp = 3.dp): Modifier = drawBehind {
+    val stroke = Stroke(width.toPx())
     val inset = stroke.width / 2
     if (square) {
         val frame = Path().apply {

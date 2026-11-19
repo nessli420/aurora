@@ -145,6 +145,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.runtime.CompositionLocalProvider
 import com.aurora.music.data.GesturePrefs
+import com.aurora.music.data.PlayerStyle
 import com.aurora.music.data.SeekStyle
 import com.aurora.music.data.ThemeStyle
 import com.aurora.music.data.rules.RuleSource
@@ -357,6 +358,23 @@ fun PlayerScreen(
                 }
             }
         }
+        val headerTail: @Composable () -> Unit = {
+            if (canVideo) {
+                val videoButton = @Composable {
+                    HeaderButton(Icons.Filled.VideoLibrary, appString(if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1),
+                        active = showVideo, enabled = !state.videoLoading,
+                        onDoubleClick = { if (canvasPlayer != null) showVideo = false else openVideo(canvas = true) },
+                    ) { if (showVideo) showVideo = false else openVideo(canvas = !state.supportsMusicVideo) }
+                }
+                if (state.supportsCanvas) TooltipArea(tooltip = { HoverTooltip(appString(R.string.canvas_double_click)) }, delayMillis = 600) { videoButton() }
+                else videoButton()
+            }
+            djControl?.invoke()
+            HeaderButton(if (fullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
+                appString(if (fullscreen) R.string.player_exit_fullscreen else R.string.player_fullscreen)) { onFullscreenChange(!fullscreen) }
+            HeaderButton(Icons.Filled.Speaker, appString(R.string.text_output_device_709178), onClick = onOpenOutput)
+            moreMenu()
+        }
         val header: @Composable () -> Unit = {
             Row(
                 Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = if (short) 8.dp else 16.dp, bottom = 8.dp),
@@ -374,24 +392,10 @@ fun PlayerScreen(
                 }
                 HeaderButton(Icons.Filled.Lyrics, appString(R.string.text_lyrics_8670cb), active = paneOpen && sidePane == PlayerPane.LYRICS) { togglePane(PlayerPane.LYRICS) }
                 if (djControl == null) HeaderButton(Icons.AutoMirrored.Filled.QueueMusic, appString(R.string.text_queue_d325fc), active = paneOpen && sidePane != PlayerPane.LYRICS) { togglePane(PlayerPane.QUEUE) }
-                if (canVideo) {
-                    val videoButton = @Composable {
-                        HeaderButton(Icons.Filled.VideoLibrary, appString(if (showVideo) R.string.text_audio_acdac2 else R.string.text_video_bc17c1),
-                            active = showVideo, enabled = !state.videoLoading,
-                            onDoubleClick = { if (canvasPlayer != null) showVideo = false else openVideo(canvas = true) },
-                        ) { if (showVideo) showVideo = false else openVideo(canvas = !state.supportsMusicVideo) }
-                    }
-                    if (state.supportsCanvas) TooltipArea(tooltip = { HoverTooltip(appString(R.string.canvas_double_click)) }, delayMillis = 600) { videoButton() }
-                    else videoButton()
-                }
-                djControl?.invoke()
-                HeaderButton(if (fullscreen) Icons.Filled.FullscreenExit else Icons.Filled.Fullscreen,
-                    appString(if (fullscreen) R.string.player_exit_fullscreen else R.string.player_fullscreen)) { onFullscreenChange(!fullscreen) }
-                HeaderButton(Icons.Filled.Speaker, appString(R.string.text_output_device_709178), onClick = onOpenOutput)
-                moreMenu()
+                headerTail()
             }
         }
-        val coverArt: @Composable (Modifier) -> Unit = { modifier ->
+        val coverArt: @Composable (Modifier, Modifier, (() -> Unit)?) -> Unit = { modifier, art, tap ->
             Box(
                 modifier
                     .then(
@@ -408,7 +412,7 @@ fun PlayerScreen(
                     .pointerInput(gestures.doubleTapPause) {
                         detectTapGestures(
                             onDoubleTap = if (gestures.doubleTapPause) ({ onTogglePlay() }) else null,
-                            onTap = { if (!showVideo) showCover = true },
+                            onTap = { if (!showVideo) tap?.invoke() ?: run { showCover = true } },
                         )
                     }
                     .then(if (!showVideo) Modifier.pointerHoverIcon(PointerIcon.Hand) else Modifier),
@@ -430,7 +434,7 @@ fun PlayerScreen(
                     // the cover settles back a little while paused
                     val artRest by androidx.compose.animation.core.animateFloatAsState(if (state.isPlaying) 1f else 0.95f,
                         androidx.compose.animation.core.spring(dampingRatio = 0.72f, stiffness = androidx.compose.animation.core.Spring.StiffnessLow), label = "artRest")
-                    val rest = Modifier.fillMaxSize().graphicsLayer { scaleX = artRest; scaleY = artRest }
+                    val rest = Modifier.fillMaxSize().graphicsLayer { scaleX = artRest; scaleY = artRest }.then(art)
                     if (classic) Artwork(song.artworkUrl, song.accent, rest, corner = 20.dp, animated = CoverKey.of(song))
                     else Box(rest.auroraPanel(MaterialTheme.shapes.large, emphasized = true).padding(6.dp)) {
                         Artwork(song.artworkUrl, song.accent, Modifier.fillMaxSize(), corner = 20.dp, animated = CoverKey.of(song))
@@ -439,9 +443,26 @@ fun PlayerScreen(
             }
         }
         val artwork: @Composable (Modifier) -> Unit = { modifier ->
-            if (djStage != null) djStage(modifier) else coverArt(modifier)
+            if (djStage != null) djStage(modifier) else coverArt(modifier, Modifier, null)
         }
-        val controls: @Composable (Dp) -> Unit = { volumeWidth ->
+        val like: @Composable () -> Unit = {
+            val likeTint by animateColorAsState(
+                if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, label = "like",
+            )
+            if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
+                com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
+                    Icon(
+                        imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
+                        contentDescription = appString(R.string.text_like_c7e02c),
+                        tint = likeTint,
+                        modifier = Modifier.size(32.dp).likePop(state.isCurrentLiked, song.id),
+                    )
+                }
+            }
+        }
+        // the blocks read the accent where they are placed, so a layout that sets them on a cover's tint can swap it
+        val titles: @Composable () -> Unit = {
+            val accent = MaterialTheme.colorScheme.primary
             Row(verticalAlignment = Alignment.CenterVertically) {
                 if (canvasPlayer != null) {
                     Artwork(song.artworkUrl, song.accent, Modifier.size(56.dp), corner = themedCorner(10.dp))
@@ -452,7 +473,7 @@ fun PlayerScreen(
                             .graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
                             .drawWithContent {
                                 drawContent()
-                                drawRect(playerAccent, blendMode = BlendMode.SrcIn)
+                                drawRect(accent, blendMode = BlendMode.SrcIn)
                             },
                         isPlaying = true,
                         // stepped by the position ticks, so the bars add no frames of their own
@@ -472,25 +493,14 @@ fun PlayerScreen(
                         )
                     }
                 }
-                val likeTint by animateColorAsState(
-                    if (state.isCurrentLiked) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant, label = "like",
-                )
-                if (com.aurora.music.ui.components.LocalCanLike.current(song.id)) {
-                    com.aurora.music.ui.components.LikeHeart(song, onToggleLike, Modifier.size(48.dp).paperClip(CircleShape)) {
-                        Icon(
-                            imageVector = if (state.isCurrentLiked) Icons.Filled.Favorite else Icons.Outlined.FavoriteBorder,
-                            contentDescription = appString(R.string.text_like_c7e02c),
-                            tint = likeTint,
-                            modifier = Modifier.size(32.dp).likePop(state.isCurrentLiked, song.id),
-                        )
-                    }
-                }
+                like()
             }
-
+        }
+        val chips: @Composable () -> Unit = {
+            val accent = MaterialTheme.colorScheme.primary
+            val onAccent = MaterialTheme.colorScheme.onPrimary
             val badge = formatBadge(song)
             val source = sourceLabel(song)
-            if (!song.id.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)) {
-            Spacer(Modifier.height(10.dp))
             FlowRow(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)
                     .paperClip(RoundedCornerShape(themedCorner(12.dp)))
@@ -501,9 +511,9 @@ fun PlayerScreen(
                 verticalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(vertical = 3.dp)) {
-                    Icon(Icons.Filled.Route, null, modifier = Modifier.size(16.dp), tint = playerAccent)
+                    Icon(Icons.Filled.Route, null, modifier = Modifier.size(16.dp), tint = accent)
                     Spacer(Modifier.width(4.dp))
-                    Text(appString(R.string.text_signal_path_c3e29b), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = playerAccent)
+                    Text(appString(R.string.text_signal_path_c3e29b), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = accent)
                 }
                 if (source != null) {
                     Box(
@@ -515,8 +525,8 @@ fun PlayerScreen(
                 }
                 if (isLossless(song.suffix)) {
                     Box(
-                        Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(playerAccent).padding(horizontal = 8.dp, vertical = 3.dp),
-                    ) { Text(appString(R.string.text_lossless_32e74a), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onPlayerAccent) }
+                        Modifier.clip(if (classic) RoundedCornerShape(50) else MaterialTheme.shapes.extraSmall).background(accent).padding(horizontal = 8.dp, vertical = 3.dp),
+                    ) { Text(appString(R.string.text_lossless_32e74a), style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Black, color = onAccent) }
                 }
                 if (badge.isNotEmpty()) {
                     Box(
@@ -527,29 +537,26 @@ fun PlayerScreen(
                     ) { Text(badge, style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onSurface) }
                 }
             }
-
-            Spacer(Modifier.height(8.dp))
-
-            CommentTrack(comments.list, state.durationSec, state.positionSec, playerAccent) { focusComment = it; showComments = true }
+        }
+        val seek: @Composable () -> Unit = {
+            val accent = MaterialTheme.colorScheme.primary
+            CommentTrack(comments.list, state.durationSec, state.positionSec, accent) { focusComment = it; showComments = true }
             SeekBar(
                 progress = state.progress,
                 positionSec = state.positionSec.toInt(),
                 durationSec = state.durationSec,
                 isLive = state.isLive,
-                accent = playerAccent,
+                accent = accent,
                 seed = song.id.hashCode(),
                 seekStyle = ui.playerSeekStyle,
                 waveBars = ui.playerWaveBars,
                 onSeek = onSeek,
+                track = if (ui.playerStyle == PlayerStyle.CLASSIC) Color.Unspecified else accent.copy(alpha = 0.24f),
             )
-            }
-
-            Spacer(Modifier.height(8.dp))
-
+        }
+        val transport: @Composable (Modifier, Color, Color, androidx.compose.ui.graphics.Shape) -> Unit = { modifier, play, onPlay, playShape ->
             Row(
-                Modifier.fillMaxWidth().then(
-                    if (classic) Modifier else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true)
-                ),
+                modifier,
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
@@ -574,13 +581,13 @@ fun PlayerScreen(
                 Box(
                     Modifier
                         .size(72.dp)
-                        .clip(if (classic) CircleShape else MaterialTheme.shapes.large)
+                        .clip(playShape)
                         .pressClickable(role = Role.Button, onClick = onTogglePlay)
-                        .background(playerAccent)
+                        .background(play)
                         .pointerHoverIcon(PointerIcon.Hand)
                         .semantics { contentDescription = playPause },
                     contentAlignment = Alignment.Center,
-                ) { PlayPauseIcon(state.isPlaying, onPlayerAccent, Modifier.size(36.dp)) }
+                ) { PlayPauseIcon(state.isPlaying, onPlay, Modifier.size(36.dp)) }
                 Icon(
                     Icons.Filled.SkipNext, appString(R.string.text_next_bc9819),
                     tint = MaterialTheme.colorScheme.onSurface,
@@ -598,9 +605,9 @@ fun PlayerScreen(
                     modifier = Modifier.size(44.dp).paperClip(CircleShape).clickable(onClick = onCycleRepeat).pointerHoverIcon(PointerIcon.Hand).padding(8.dp),
                 )
             }
-
-            Spacer(Modifier.height(12.dp))
-
+        }
+        val utilities: @Composable (Dp) -> Unit = { volumeWidth ->
+            val accent = MaterialTheme.colorScheme.primary
             Row(
                 Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -616,8 +623,23 @@ fun PlayerScreen(
                             active = state.sleepTimerMinutes > 0 || state.sleepEndOfTrack, modifier = Modifier.weight(1f, fill = false))
                     }
                 }
-                VolumeControl(volume, onVolumeChange, onToggleMute, volumeWidth, Modifier.padding(start = 8.dp), fill = playerAccent)
+                VolumeControl(volume, onVolumeChange, onToggleMute, volumeWidth, Modifier.padding(start = 8.dp), fill = accent)
             }
+        }
+        val speech = song.id.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX)
+        val controls: @Composable (Dp) -> Unit = { volumeWidth ->
+            titles()
+            if (!speech) {
+                Spacer(Modifier.height(10.dp))
+                chips()
+                Spacer(Modifier.height(8.dp))
+                seek()
+            }
+            Spacer(Modifier.height(8.dp))
+            transport(Modifier.fillMaxWidth().then(if (classic) Modifier else Modifier.auroraPanel(MaterialTheme.shapes.extraLarge, emphasized = true)),
+                playerAccent, onPlayerAccent, if (classic) CircleShape else MaterialTheme.shapes.large)
+            Spacer(Modifier.height(12.dp))
+            utilities(volumeWidth)
         }
         val paneSurface = if (classic && LocalGlass.current) Modifier.paperClip(RoundedCornerShape(themedCorner(28.dp))).background(glassSheen()).glassEdge(RoundedCornerShape(themedCorner(28.dp)))
             else if (classic) Modifier.paperClip(RoundedCornerShape(themedCorner(28.dp))).background(MaterialTheme.colorScheme.surface.copy(alpha = 0.55f))
@@ -629,6 +651,20 @@ fun PlayerScreen(
         androidx.compose.animation.AnimatedVisibility(canvasPlayer != null, Modifier.matchParentSize(), enter = fadeIn(tween(500)), exit = fadeOut(tween(300))) {
             (canvasPlayer ?: video)?.let { CanvasAmbient(it, stageBounds, Modifier.fillMaxSize()) }
         }
+        fun parts() = PlayerParts(
+            state = state, pane = sidePane, paneOpen = paneOpen, showPane = { pane, open -> pickedPane = pane.name; paneOpen = open },
+            flat = classic && canvasPlayer == null, canvas = canvasPlayer != null, video = showVideo && video != null && state.hasVideo,
+            onCollapse = onCollapse, onTogglePlay = onTogglePlay, onPrevious = onPrevious, onNext = onNext,
+            onOpenSignalPath = onOpenSignalPath, onShowCover = { showCover = true }, openAlbum = openAlbum, openArtist = openArtist,
+            headerTail = headerTail, cover = { modifier, art, tap -> if (djStage != null) djStage(modifier) else coverArt(modifier, art, tap) },
+            titles = titles, like = like, chips = { if (!speech) chips() }, seek = { if (!speech) seek() }, transport = transport, utilities = utilities,
+            paneContent = paneContent, paneActions = paneActions,
+        )
+        when (ui.playerStyle) {
+            PlayerStyle.SPOTLIGHT -> PlayerSpotlight(parts())
+            PlayerStyle.CONSOLE -> PlayerConsole(parts())
+            PlayerStyle.DRIFT -> PlayerDrift(parts())
+            else ->
         Column(Modifier.fillMaxSize()) {
             header()
             Box(
@@ -699,6 +735,7 @@ fun PlayerScreen(
                     }
                 }
             }
+        }
         }
         LyricsOverlay(showLyrics, state, onClose = { showLyrics = false }, onTogglePlay, onPrevious, onNext, onSeek)
         CoverOverlay(showCover && !showLyrics, state, onClose = { showCover = false }, onTogglePlay, onPrevious, onNext, onSeek, onToggleLike,
@@ -862,7 +899,7 @@ private fun androidx.compose.ui.graphics.GraphicsLayerScope.kenBurns(seconds: Fl
 }
 
 @Composable
-private fun MarqueeTitle(
+internal fun MarqueeTitle(
     text: String,
     style: androidx.compose.ui.text.TextStyle = MaterialTheme.typography.labelLarge,
     color: Color = MaterialTheme.colorScheme.onSurface,
@@ -870,13 +907,12 @@ private fun MarqueeTitle(
     onClickLabel: String? = null,
     onClick: (() -> Unit)? = null,
     onMenu: (() -> Unit)? = null,
+    fit: Boolean = false,
     menu: @Composable () -> Unit = {},
 ) {
     val tap = onClick ?: onMenu
     Box {
-        MarqueeText(
-            text, style, color, fontWeight = fontWeight,
-            modifier = Modifier
+        val gestures = Modifier
                 .then(if (tap != null) Modifier.combinedClickable(onClickLabel = onClickLabel, role = Role.Button,
                     onLongClickLabel = onMenu?.let { appString(R.string.song_menu_more) }, onLongClick = onMenu,
                     onDoubleClick = onMenu, onClick = tap).pointerHoverIcon(PointerIcon.Hand) else Modifier)
@@ -890,15 +926,16 @@ private fun MarqueeTitle(
                             }
                         }
                     }
-                } else Modifier),
-        )
+                } else Modifier)
+        if (fit) com.aurora.music.ui.screens.home.DriftTitle(text, gestures, maxLines = 2)
+        else MarqueeText(text, style, color, fontWeight = fontWeight, modifier = gestures)
         menu()
     }
 }
 
 // a click opens the album or artist; a double or right click, or a click with nothing to open, the song's menu
 @Composable
-private fun SongTitles(
+internal fun SongTitles(
     song: com.aurora.music.model.Song,
     titleStyle: androidx.compose.ui.text.TextStyle,
     artistStyle: androidx.compose.ui.text.TextStyle,
@@ -906,11 +943,12 @@ private fun SongTitles(
     openArtist: (() -> Unit)?,
     titleWeight: FontWeight? = FontWeight.Bold,
     gap: Dp = 0.dp,
+    fitTitle: Boolean = false,
 ) {
     // the names crossfade on a track change; edits to the same track update in place
     AnimatedContent(song, transitionSpec = { fadeIn(Motion.enter()) togetherWith fadeOut(Motion.exit()) using null },
         contentKey = { it.id }, label = "songTitles") { track ->
-        Column { SongTitleLines(track, titleStyle, artistStyle, openAlbum, openArtist, titleWeight, gap) }
+        Column { SongTitleLines(track, titleStyle, artistStyle, openAlbum, openArtist, titleWeight, gap, fitTitle) }
     }
 }
 
@@ -923,11 +961,12 @@ private fun SongTitleLines(
     openArtist: (() -> Unit)?,
     titleWeight: FontWeight?,
     gap: Dp,
+    fitTitle: Boolean,
 ) {
     val sources = LocalSongSources.current?.takeIf { songMenusFor(song) }
     var menu by remember(song.id) { mutableStateOf<SongMenuPage?>(null) }
     MarqueeTitle(song.title, titleStyle, fontWeight = titleWeight, onClickLabel = appString(R.string.text_go_to_album_e2d3b3), onClick = openAlbum,
-        onMenu = sources?.let { { menu = SongMenuPage.ROOT } }) {
+        onMenu = sources?.let { { menu = SongMenuPage.ROOT } }, fit = fitTitle) {
         if (menu == SongMenuPage.ROOT && sources != null) SongSourcesMenu(song, sources, SongMenuPage.ROOT) { menu = null }
     }
     Spacer(Modifier.height(gap))
@@ -1052,6 +1091,7 @@ private fun SeekBar(
     seekStyle: Int,
     waveBars: Int,
     onSeek: (Float) -> Unit,
+    track: Color = Color.Unspecified,
 ) {
     Column {
         if (durationSec <= 0) {
@@ -1069,7 +1109,7 @@ private fun SeekBar(
                 value = progress.coerceIn(0f, 1f),
                 onValueChange = onSeek,
                 valueRange = 0f..1f,
-                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent),
+                colors = SliderDefaults.colors(thumbColor = accent, activeTrackColor = accent, inactiveTrackColor = track),
                 modifier = Modifier.fillMaxWidth(),
             )
         } else {

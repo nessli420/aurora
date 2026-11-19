@@ -546,7 +546,7 @@ private fun HeroModule(hero: Hero, cover: Dp, onOpen: () -> Unit, onPlay: (shuff
 }
 
 @Composable
-private fun SignalModule(onClick: (() -> Unit)?) {
+internal fun SignalModule(onClick: (() -> Unit)?, modifier: Modifier = Modifier.heightIn(min = TopHeight), stacked: Boolean = false) {
     val colors = MaterialTheme.colorScheme
     val type = MaterialTheme.typography
     val player = LocalPlayer.current
@@ -554,7 +554,7 @@ private fun SignalModule(onClick: (() -> Unit)?) {
     val path by remember(player) { player.signalPath.map { it.copy(measurements = null, nodeMeters = emptyList()) }.distinctUntilChanged() }
         .collectAsStateWithLifecycle(player.signalPath.value.copy(measurements = null, nodeMeters = emptyList()))
     val playing by remember(player) { player.state.map { it.current }.distinctUntilChanged() }.collectAsStateWithLifecycle(player.state.value.current)
-    ConsoleModule(Modifier.heightIn(min = TopHeight), onClick = onClick) {
+    ConsoleModule(modifier, onClick = onClick) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             ConsoleLabel(appString(R.string.text_signal_path_c3e29b))
             if (path.active) Box(Modifier.weight(1f).padding(start = 10.dp), contentAlignment = Alignment.CenterEnd) {
@@ -583,14 +583,16 @@ private fun SignalModule(onClick: (() -> Unit)?) {
             path.bitDepth.takeIf { it > 0 }?.let { appString(R.string.text_bit_fd7850, it) },
         ).joinToString(" · ").ifBlank { path.source.detail }.ifBlank { appString(R.string.text_unknown_bc7819) }
         Spacer(Modifier.height(Gap))
-        Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            PathNode(Icons.Filled.GraphicEq, format, "Source".localizedSignalLabel(), Modifier.weight(1f).fillMaxHeight())
+        val nodes: @Composable (Modifier) -> Unit = { node ->
+            PathNode(Icons.Filled.GraphicEq, format, "Source".localizedSignalLabel(), node, stacked)
             // shortcut: the engine's width is written out, as it is fixed at binary64; read it from the decoder stage if that ever varies
-            PathNode(Icons.Filled.Memory, appString(R.string.text_64_bit_float_eaae87), "Processing".localizedSignalLabel(), Modifier.weight(1f).fillMaxHeight())
+            PathNode(Icons.Filled.Memory, appString(R.string.text_64_bit_float_eaae87), "Processing".localizedSignalLabel(), node, stacked)
             PathNode(Icons.AutoMirrored.Filled.VolumeUp, path.output.localizedSignalLabel().ifBlank { appString(R.string.text_output_unknown_ef4fdb) },
-                "Output".localizedSignalLabel(), Modifier.weight(1f).fillMaxHeight())
+                "Output".localizedSignalLabel(), node, stacked)
         }
-        if (playing.id.isNotEmpty()) Text(
+        if (stacked) Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(8.dp)) { nodes(Modifier.weight(1f).fillMaxWidth()) }
+        else Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(8.dp)) { nodes(Modifier.weight(1f).fillMaxHeight()) }
+        if (playing.id.isNotEmpty() && !stacked) Text(
             listOf(appString(R.string.text_now_playing_586fa7).lowercase().replaceFirstChar { it.titlecase() }, playing.title, playing.artist)
                 .filter { it.isNotBlank() }.joinToString(" · "),
             style = type.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = Gap),
@@ -599,10 +601,18 @@ private fun SignalModule(onClick: (() -> Unit)?) {
 }
 
 @Composable
-private fun PathNode(icon: ImageVector, title: String, label: String, modifier: Modifier) {
+private fun PathNode(icon: ImageVector, title: String, label: String, modifier: Modifier, stacked: Boolean = false) {
     val colors = MaterialTheme.colorScheme
     val fill = consoleInset()
-    Column(modifier.paperFrame(MaterialTheme.shapes.medium, { background(fill) }, fill = PaperTokens.plate).padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
+    val frame = modifier.paperFrame(MaterialTheme.shapes.medium, { background(fill) }, fill = PaperTokens.plate)
+    if (stacked) Row(frame.padding(horizontal = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+        Icon(icon, null, tint = colors.primary, modifier = Modifier.size(24.dp))
+        Column(Modifier.padding(start = 12.dp)) {
+            Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(label, style = MaterialTheme.typography.bodySmall, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+        }
+    }
+    else Column(frame.padding(12.dp), verticalArrangement = Arrangement.SpaceBetween) {
         Icon(icon, null, tint = colors.primary, modifier = Modifier.size(24.dp))
         Column(Modifier.padding(top = 12.dp)) {
             Text(title, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, maxLines = 3, overflow = TextOverflow.Ellipsis)
