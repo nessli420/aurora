@@ -422,6 +422,7 @@ class DesktopContainer(
     init {
         scope.launch { offline.drop(1).collect { madeForYou.recheck() } }
         scope.launch { madeForYou.warm() }
+        scope.launch { runCatching { com.aurora.music.data.moveStationLikes(localStore, settingsStore, radioBrowser::byUuids) } }
     }
 
     init {

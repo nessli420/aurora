@@ -1799,7 +1799,7 @@ fun AuroraApp() {
                             imageUrl = entry.arguments?.getString("image").orEmpty(),
                             author = entry.arguments?.getString("author").orEmpty(),
                             onBack = { navController.popBackStack() },
-                            onPlay = { playerVM.play(it) },
+                            onPlay = { playerVM.playAll(listOf(it), 0, it.playbackCollection) },
                         )
                     }
                 }

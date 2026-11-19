@@ -1,5 +1,6 @@
 package com.aurora.music.data
 
+import com.aurora.music.data.settings.CollectionSettings
 import com.aurora.music.model.Song
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
@@ -11,6 +12,7 @@ import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
@@ -20,6 +22,8 @@ class Likes(
     private val repository: MusicRepository,
     // a generated mix keeps its like as a saved copy; null means the copy could not be made
     private val toggleMix: suspend (String) -> Boolean? = { null },
+    // stations and podcasts are no source's, so their hearts keep aurora's radio favourites and podcast follows
+    private val appItems: CollectionSettings? = null,
     private val savePlaylistLike: suspend (String, Boolean) -> Unit,
 ) {
     val ledger = LikeLedger(repository::likeSources) { repository.activeSession }
@@ -41,16 +45,50 @@ class Likes(
     private var starredLoad: Job? = null
     private var elsewhere: Set<String> = emptySet()
     private var recountJob: Job? = null
+    private var stationIds: Set<String> = emptySet()
+    private var shows: List<Podcast> = emptyList()
+    private val episodes = HashMap<String, Song>()
     private val seen = object : LinkedHashMap<String, Pair<Song, String>>(256, 0.75f, true) {
         override fun removeEldestEntry(eldest: MutableMap.MutableEntry<String, Pair<Song, String>>?) = size > SEEN_CAP
     }
 
     init {
         scope.launch { ledger.revision.collect { recount() } }
+        appItems?.let { s ->
+            scope.launch {
+                combine(s.radioFavorites, s.podcastSubs, ::Pair).collect { (stations, subs) ->
+                    stationIds = stations.mapTo(HashSet()) { "radio:${it.uuid}" }
+                    shows = subs
+                    publish()
+                }
+            }
+        }
     }
 
     private fun publish() {
-        _likedIds.value = serverLikedIds + elsewhere + playlistIds
+        _likedIds.value = if (appItems == null) serverLikedIds + elsewhere + playlistIds
+            else (serverLikedIds + elsewhere).filterNotTo(HashSet(), ::keptByAurora) + playlistIds + stationIds +
+                episodes.values.filter { followed(it) }.map { it.id }
+    }
+
+    private fun showOf(song: Song): String? = song.podcastFeed() ?: shows.firstOrNull { it.displayTitle.equals(song.album, true) }?.feedUrl
+    private fun followed(song: Song): Boolean = showOf(song)?.let { feed -> shows.any { it.feedUrl == feed } } == true
+
+    private fun toggleKept(song: Song, settings: CollectionSettings) {
+        scope.launch {
+            val ok = attempt(false) {
+                if (song.isRadio()) {
+                    if (song.id in stationIds) settings.deleteRadioStation(song.id.removePrefix("radio:")) else settings.saveRadioStation(song.toStation())
+                    return@attempt true
+                }
+                episodes[song.id] = song
+                val feed = showOf(song) ?: return@attempt false
+                if (followed(song)) settings.deletePodcast(feed)
+                else settings.savePodcast(Podcast(feedUrl = feed, title = song.album.ifBlank { song.artist }, imageUrl = song.artworkUrl))
+                true
+            }
+            if (!ok) _failures.tryEmit(Unit)
+        }
     }
 
     // only the matching leaves this thread; seen stays here, where even a get reorders it
@@ -112,6 +150,7 @@ class Likes(
         val fresh = songs.filter { s -> s.id.isNotEmpty() && seen[s.id]?.first?.let { it.title != s.title || it.artist != s.artist } ?: true }.distinctBy { it.id }
         if (fresh.isEmpty()) return
         scope.launch {
+            if (appItems != null) fresh.forEach { if (it.isPodcast()) episodes[it.id] = it }
             val keyed = withContext(Dispatchers.Default) { fresh.map { it to recordingKey(it.title) } }
             keyed.forEach { seen[it.first.id] = it }
             recount()
@@ -128,7 +167,7 @@ class Likes(
         val account = resets
         scope.launch {
             val toCheck = withContext(Dispatchers.Default) {
-                songs.mapNotNull { s -> s.id.takeIf { it.isNotEmpty() && it !in known && it !in done } }.distinct()
+                songs.mapNotNull { s -> s.id.takeIf { it.isNotEmpty() && it !in known && it !in done && !(appItems != null && keptByAurora(it)) } }.distinct()
             }
             if (toCheck.isEmpty()) return@launch
             val answer = attempt(null) {
@@ -180,12 +219,13 @@ class Likes(
     }
 
     fun toggle(song: Song) {
+        appItems?.takeIf { keptByAurora(song.id) }?.let { return toggleKept(song, it) }
         if (song.id.isEmpty() || song.id.startsWith("aurora-mix:") || !repository.canLikeSong(song.id)) return
         val now = !ownLiked(song)
         launchChange(song.id, now) { setOwn(song, now) }
     }
 
-    suspend fun options(song: Song): List<LikeOption> = ledger.options(song, song.id in serverLikedIds)
+    suspend fun options(song: Song): List<LikeOption> = if (appItems != null && keptByAurora(song.id)) emptyList() else ledger.options(song, song.id in serverLikedIds)
 
     fun likedSources(): List<LikedSource> = ledger.likedSources(repository.mergedSources)
 
@@ -231,6 +271,9 @@ class Likes(
         const val SEEN_CAP = 5000
     }
 }
+
+// a station or podcast episode, whose heart aurora keeps whatever the source
+fun keptByAurora(id: String): Boolean = id.startsWith("radio:") || id.startsWith("podcast:")
 
 // scroll moves in buckets of this many rows, so hearts resolve per bucket, not per frame
 const val LIKE_BUCKET = 50

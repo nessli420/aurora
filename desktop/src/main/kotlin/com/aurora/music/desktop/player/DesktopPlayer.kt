@@ -198,7 +198,7 @@ class DesktopPlayer(private val engine: PlaybackEngine, private val deps: Player
     private var resumeDurationSec = 0
     private var resumeSavedAt = 0L
     private var privateSession = false
-    private val likes = com.aurora.music.data.Likes(scope, deps.repository, deps.toggleMixLike, deps.settingsStore::setPlaylistLiked)
+    private val likes = com.aurora.music.data.Likes(scope, deps.repository, deps.toggleMixLike, deps.settingsStore, deps.settingsStore::setPlaylistLiked)
     private var lastRecordedId: String? = null
     private var lastNowPlayingId: String? = null
     // account the live queue belongs to so it persists/restores under the right key

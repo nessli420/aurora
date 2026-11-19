@@ -1256,7 +1256,7 @@ private fun Shell(
                             composable(Routes.PODCAST_DETAIL, arguments = listOf(navArgument("feed") { defaultValue = "" }, navArgument("title") { defaultValue = "" },
                                 navArgument("image") { defaultValue = "" }, navArgument("author") { defaultValue = "" })) { entry ->
                                 com.aurora.music.ui.screens.podcasts.PodcastDetailScreen(contentPadding = inner, feedUrl = entry.arg("feed"), title = entry.arg("title"),
-                                    imageUrl = entry.arg("image"), author = entry.arg("author"), onBack = { navController.popBackStack() }, onPlay = { player.play(it) })
+                                    imageUrl = entry.arg("image"), author = entry.arg("author"), onBack = { navController.popBackStack() }, onPlay = { player.playAll(listOf(it), 0, it.playbackCollection) })
                             }
                             composable(Routes.EXPLORE_CATEGORY,
                                 arguments = listOf(navArgument("params") { defaultValue = "" }, navArgument("title") { defaultValue = "" })) { entry ->

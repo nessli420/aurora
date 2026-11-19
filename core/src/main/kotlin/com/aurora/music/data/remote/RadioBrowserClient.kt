@@ -56,6 +56,9 @@ class RadioBrowserClient(base: OkHttpClient = OkHttpClient()) {
         )
     }
 
+    suspend fun byUuids(uuids: List<String>): List<RadioStation>? =
+        if (uuids.isEmpty()) emptyList() else get("json/stations/byuuid", "uuids" to uuids.joinToString(","))
+
     suspend fun registerClick(uuid: String) {
         if (uuid.isBlank() || uuid.startsWith("custom:")) return
         runCatching { request("json/url/$uuid") }

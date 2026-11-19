@@ -152,7 +152,7 @@ fun PodcastDetailScreen(
             } else {
                 items(episodesState.episodes.size) { i ->
                     val ep = episodesState.episodes[i]
-                    EpisodeRow(ep, onPlay = { onPlay(ep.toSong(showImage)) })
+                    EpisodeRow(ep, onPlay = { onPlay(ep.toSong(showImage, feedUrl)) })
                 }
             }
         }

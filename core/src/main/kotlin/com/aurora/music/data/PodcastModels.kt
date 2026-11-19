@@ -25,7 +25,9 @@ data class PodcastEpisode(
     val podcastTitle: String = "",
 )
 
-fun PodcastEpisode.toSong(podcastImage: String = ""): Song = Song(
+const val PODCAST_FEED_PREFIX = "podcast-feed:"
+
+fun PodcastEpisode.toSong(podcastImage: String = "", feedUrl: String = ""): Song = Song(
     id = "podcast:$id",
     title = title.ifBlank { "Episode" },
     artist = podcastTitle,
@@ -34,6 +36,10 @@ fun PodcastEpisode.toSong(podcastImage: String = ""): Song = Song(
     durationSec = durationSec,
     streamUrl = audioUrl,
     accentArgb = accentArgbFor("podcast:$id"),
+    playbackCollection = feedUrl.takeIf { it.isNotBlank() }?.let { PlaybackCollectionIdentity(PODCAST_FEED_PREFIX + it, podcastTitle) },
 )
+
+// the show an episode was played from, which its heart follows
+fun Song.podcastFeed(): String? = playbackCollection?.id?.takeIf { isPodcast() && it.startsWith(PODCAST_FEED_PREFIX) }?.removePrefix(PODCAST_FEED_PREFIX)
 
 fun Song.isPodcast(): Boolean = id.startsWith("podcast:")

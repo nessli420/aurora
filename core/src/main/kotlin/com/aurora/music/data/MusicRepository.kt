@@ -512,7 +512,7 @@ class MusicRepository(
     fun canLike(id: String): Boolean = id.isNotEmpty() && !id.startsWith(com.aurora.music.ai.DJ_SPEECH_PREFIX) && backend?.signedIn(backendSongId(id) ?: id) != false
     // a guest catalogue keeps song likes on this device, so the heart still shows for its songs
     fun likesLocally(id: String): Boolean = !offline && id.isNotEmpty() && backend?.likesLocally(backendSongId(id) ?: id) == true
-    fun canLikeSong(id: String): Boolean = canLike(id) || likesLocally(id)
+    fun canLikeSong(id: String): Boolean = keptByAurora(id) || canLike(id) || likesLocally(id)
     fun signedIn(view: String? = null): Boolean = viewOf(view)?.signedIn != false
     fun sourceType(song: Song): ServerType? = backend?.sourceType(song)
     suspend fun comments(song: Song, source: ServerType, page: Any? = null): com.aurora.music.data.CommentPage? =
