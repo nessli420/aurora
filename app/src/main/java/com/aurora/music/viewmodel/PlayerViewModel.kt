@@ -188,6 +188,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
     @Volatile private var privateSession = false
 
     private val likes = com.aurora.music.data.Likes(viewModelScope, container.repository, container.madeForYou::toggleLike, container.settingsStore::setPlaylistLiked)
+    val follows = com.aurora.music.data.Follows(viewModelScope, container.repository, container.settingsStore.followedArtists) { a, on -> container.settingsStore.setArtistFollowed(a, on) }
     @Volatile private var mergeFeatures = com.aurora.music.data.MergeFeatures()
     private var lastRecordedId: String? = null
     private var lastNowPlayingId: String? = null
@@ -448,6 +449,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
         }
         viewModelScope.launch { likes.likedIds.collect { ids -> _state.update { it.copy(likedIds = ids) } } }
         viewModelScope.launch { likes.failures.collect { android.widget.Toast.makeText(getApplication(), appString(R.string.like_failed), android.widget.Toast.LENGTH_SHORT).show() } }
+        viewModelScope.launch { follows.failures.collect { android.widget.Toast.makeText(getApplication(), appString(R.string.follow_failed), android.widget.Toast.LENGTH_SHORT).show() } }
         // the playing song's heart counts likes on every account, found by recording
         viewModelScope.launch {
             _state.map { it.current }.distinctUntilChanged { a, b -> a.id == b.id && a.title == b.title && a.artist == b.artist }
@@ -491,6 +493,7 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
             container.accountEpoch.drop(1).collect {
                 // likes belong to the account and session readiness doesn't change on a switch, so reload them here
                 likes.reset()
+                follows.reset()
                 persistQueue(force = true)
                 container.queueStore.requestFlush()
                 suppressPersist = true         // clearing below must not wipe what we just saved
@@ -1519,8 +1522,8 @@ class PlayerViewModel(app: Application) : AndroidViewModel(app) {
 
     // the launch resume and session refreshes fold into one that waits past the first home frames
     fun refreshLikes(restart: Boolean = false) {
-        if (launchLikes == null) launchLikes = viewModelScope.launch { delay(LAUNCH_LIKES_DELAY_MS); likes.refresh() }
-        else if (launchLikes?.isActive != true) likes.refresh(restart)
+        if (launchLikes == null) launchLikes = viewModelScope.launch { delay(LAUNCH_LIKES_DELAY_MS); likes.refresh(); follows.refresh() }
+        else if (launchLikes?.isActive != true) { likes.refresh(restart); follows.refresh(restart) }
     }
 
     fun checkLiked(songs: List<Song>) = likes.check(songs)

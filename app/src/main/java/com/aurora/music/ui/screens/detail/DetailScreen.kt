@@ -33,6 +33,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.QueueMusic
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Download
@@ -144,6 +146,9 @@ fun DetailScreen(
     onToggleHidden: ((Song) -> Unit)? = null,
     // "kind:id"; playlists and liked songs remember their sort under it
     collectionKey: String? = null,
+    // an artist page follows instead of liking
+    follow: com.aurora.music.ui.components.FollowUi? = null,
+    onToggleFollow: () -> Unit = {},
 ) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
     val glass = isGlassTheme()
@@ -251,7 +256,8 @@ fun DetailScreen(
                     Spacer(Modifier.width(4.dp)); Text(appString(R.string.text_mix_fd7391), maxLines = 1)
                 }
                 }
-                val likeable = canLikeItem && (itemKind == "album" || itemKind == "playlist" || itemKind == "artist" || itemKind == com.aurora.music.foryou.MIX_KIND)
+                val likeable = canLikeItem && (itemKind == "album" || itemKind == "playlist" || (itemKind == "artist" && follow == null) || itemKind == com.aurora.music.foryou.MIX_KIND)
+                if (follow != null) com.aurora.music.ui.components.FollowButton(follow, onToggleFollow, Modifier.padding(end = 4.dp))
                 Row(if (glass && (sortKey != null || likeable || canDownload)) Modifier.glassChip() else Modifier, verticalAlignment = Alignment.CenterVertically) {
                 if (sortKey != null) com.aurora.music.ui.components.TrackSortButton(sortOrder, accent, enabled = tracks.size > 1) { choice ->
                     sortScope.launch { sortStore.setTrackSort(sortKey, sortOrder.pick(choice)) }
@@ -293,6 +299,9 @@ fun DetailScreen(
                                 DropdownMenuItem(text = { Text(appString(R.string.discovery_start_radio)) }, enabled = tracks.isNotEmpty(),
                                     onClick = { headerMenu = false; startRadio(tracks.first()) }, leadingIcon = { Icon(Icons.Filled.Radio, null) })
                             }
+                            if (follow != null) DropdownMenuItem(text = { Text(appString(if (follow.followed) R.string.unfollow else R.string.follow)) },
+                                onClick = { headerMenu = false; onToggleFollow() },
+                                leadingIcon = { Icon(if (follow.followed) Icons.Filled.PersonRemove else Icons.Filled.PersonAdd, null) })
                             if (info.isArtist) com.aurora.music.ui.components.LocalBlockArtist.current?.let { block ->
                                 val blocked = hiddenSongs.isBlocked(info.title)
                                 DropdownMenuItem(text = { Text(appString(if (blocked) R.string.unblock_artist else R.string.block_artist)) },

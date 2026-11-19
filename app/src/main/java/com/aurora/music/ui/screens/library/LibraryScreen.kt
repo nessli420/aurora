@@ -62,6 +62,9 @@ import androidx.compose.material.icons.filled.IosShare
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.MusicNote
+import androidx.compose.material.icons.filled.Group
+import androidx.compose.material.icons.filled.PersonAdd
+import androidx.compose.material.icons.filled.PersonRemove
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.CloudDownload
@@ -176,6 +179,8 @@ internal class LibActions(
     val prompt: (FolderPrompt) -> Unit = {},
     // the folder a playlist sits in ("" at the top), null where it can't be filed
     val folderOf: (String) -> String? = { null },
+    val isFollowed: (String) -> Boolean = { false },
+    val onToggleFollow: (LibRow) -> Unit = {},
 )
 
 @Composable
@@ -237,6 +242,10 @@ fun LibraryScreen(
     onCycleView: () -> Unit = {},
     folderEdits: FolderEdits? = null,
     onSignIn: () -> Unit = {},
+    // every source's followed artists, one row each
+    followed: List<com.aurora.music.model.Artist> = emptyList(),
+    followedIds: Set<String> = emptySet(),
+    onToggleFollow: (com.aurora.music.model.Artist) -> Unit = {},
 ) {
     androidx.compose.runtime.CompositionLocalProvider(LocalLibrarySelection provides selectedItem) {
     val topInset = WindowInsets.statusBars.asPaddingValues().calculateTopPadding()
@@ -276,8 +285,10 @@ fun LibraryScreen(
     androidx.activity.compose.BackHandler(enabled = folder != null && filter == LibraryFilter.PLAYLISTS) {
         openFolder = tree?.parentOf(folder?.id.orEmpty())?.id?.ifEmpty { null }
     }
+    var followingOnly by androidx.compose.runtime.saveable.rememberSaveable { mutableStateOf(false) }
+    val openFollowed = { followingOnly = true; onFilter(LibraryFilter.ARTISTS) }
     val actions = remember(likedIds, onPlayCollection, onShuffleCollection, onQueueCollection, onToggleLikeKind,
-        onDeletePlaylist, onEditSmart, onDeleteSmart, onExportPlaylist, multiLibrary, tree) {
+        onDeletePlaylist, onEditSmart, onDeleteSmart, onExportPlaylist, multiLibrary, tree, followedIds, onToggleFollow) {
         LibActions(
             onOpenAllLiked = openAllLiked,
             likedPicker = likedPicker,
@@ -292,6 +303,8 @@ fun LibraryScreen(
             onExport = { r -> onExportPlaylist(r.id, r.kind, r.title) },
             prompt = { prompt = it },
             folderOf = { id -> tree?.folderOf(id)?.id },
+            isFollowed = { id -> id in followedIds },
+            onToggleFollow = { r -> onToggleFollow(com.aurora.music.model.Artist(r.id, r.title, r.art, 0)) },
         )
     }
     if (folderEdits != null) prompt?.let { FolderPromptDialog(it, tree, folderEdits) { prompt = null } }
@@ -431,19 +444,19 @@ fun LibraryScreen(
             LibraryFilter.ALL -> when (pageLayout) {
                 com.aurora.music.data.PageLayout.SPOTLIGHT -> LibrarySpotlightAll(
                     state = state, pins = pins, bottom = bottom, columns = libColumns, tree = tree, actions = actions, onOpenDetail = onOpenDetail,
-                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
+                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail, followed.size, openFollowed),
                     onOpenMix = onOpenMix, onSignIn = onSignIn,
                     // a folder opens where the playlists tab shows it
                     onOpenFolder = if (LibraryFilter.PLAYLISTS in visibleTabs) ({ id -> openFolder = id; onFilter(LibraryFilter.PLAYLISTS) }) else null,
                 )
                 com.aurora.music.data.PageLayout.CONSOLE -> LibraryConsoleAll(
                     state = state, pins = pins, bottom = bottom, tabs = visibleTabs, actions = actions, onFilter = onFilter, onOpenDetail = onOpenDetail,
-                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
+                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail, followed.size, openFollowed),
                     onOpenMix = onOpenMix, onCustomizeTabs = { showTabs = true }, onSignIn = onSignIn,
                 )
                 com.aurora.music.data.PageLayout.DRIFT -> LibraryDriftAll(
                     state = state, pins = pins, bottom = bottom, tabs = visibleTabs, tree = tree, actions = actions, onFilter = onFilter, onOpenDetail = onOpenDetail,
-                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail),
+                    tiles = collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail, followed.size, openFollowed),
                     onOpenMix = onOpenMix, onSignIn = onSignIn,
                     onOpenFolder = if (LibraryFilter.PLAYLISTS in visibleTabs) ({ id -> openFolder = id; onFilter(LibraryFilter.PLAYLISTS) }) else null,
                 )
@@ -452,6 +465,7 @@ fun LibraryScreen(
                 onFilter = onFilter, onOpenDetail = onOpenDetail,
                 onOpenFolders = onOpenFolders, onOpenRadio = onOpenRadio, onOpenPodcasts = onOpenPodcasts,
                 onOpenYouTubeDownload = onOpenYouTubeDownload, onOpenAllLiked = openAllLiked, likedPicker = likedPicker, onAiDj = onAiDj, aiDjDetail = aiDjDetail,
+                followedCount = followed.size, onOpenFollowed = openFollowed,
             )
             }
             LibraryFilter.SONGS -> SongsTab(
@@ -482,23 +496,31 @@ fun LibraryScreen(
                 } > 400
                 // artists aggregate over the whole song list so only rebuild when an input really changed
                 val shownFolder = folder.takeIf { filter == LibraryFilter.PLAYLISTS }
+                val followedOnly = followed.takeIf { filter == LibraryFilter.ARTISTS && followingOnly }
+                if (filter == LibraryFilter.ARTISTS) Row(Modifier.fillMaxWidth().padding(horizontal = 16.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    androidx.compose.material3.FilterChip(!followingOnly, { followingOnly = false }, label = { Text(appString(R.string.text_all_6a7208)) })
+                    androidx.compose.material3.FilterChip(followingOnly, { followingOnly = true }, label = { Text(appString(R.string.followed_artists)) },
+                        leadingIcon = { Icon(Icons.Filled.Group, null, Modifier.size(18.dp)) })
+                }
                 if (shownFolder != null) FolderHeader(shownFolder, actions) { openFolder = tree?.parentOf(shownFolder.id)?.id?.ifEmpty { null } }
                 val inputs = arrayOf<Any?>(sort, pins, state.playlists, state.smartPlaylists, state.albums, state.artists,
-                    state.likedSongCount, state.likedCover, tree, shownFolder,
+                    state.likedSongCount, state.likedCover, tree, shownFolder, followedOnly,
                     if (filter == LibraryFilter.ARTISTS) state.songs else null,
                     if (filter == LibraryFilter.ARTISTS) state.localPlayCounts else null)
                 // a heavy rebuild keeps the last rows on screen so the list and its scroll survive
                 val built = remember(filter) { mutableStateOf<List<LibRow>?>(null) }
-                val synced = if (heavy) null else remember(filter, *inputs) { buildRows(state, filter, sort, pins, tree, shownFolder) }
+                val synced = if (heavy) null else remember(filter, *inputs) { buildRows(state, filter, sort, pins, tree, shownFolder, followedOnly) }
                 SideEffect { if (synced != null) built.value = synced }
                 if (heavy) LaunchedEffect(filter, *inputs) {
-                    built.value = withContext(Dispatchers.Default) { buildRows(state, filter, sort, pins, tree, shownFolder) }
+                    built.value = withContext(Dispatchers.Default) { buildRows(state, filter, sort, pins, tree, shownFolder, followedOnly) }
                 }
                 val rows = synced ?: built.value
                 if (rows != null && rows.isEmpty() && shownFolder != null) {
                     Box(Modifier.fillMaxSize().verticalScroll(rememberScrollState()), contentAlignment = Alignment.Center) {
                         EmptyState(Icons.Filled.Folder, appString(R.string.text_nothing_in_this_folder_d2a003))
                     }
+                } else if (rows != null && rows.isEmpty() && followedOnly != null) {
+                    EmptyHint(Icons.Filled.Group, appString(R.string.followed_artists), appString(R.string.followed_artists_empty))
                 } else if (rows != null && rows.isEmpty()) {
                     EmptyHint(tabIcon(filter), appString(R.string.text_nothing_here_yet_e89225), appString(R.string.text_your_will_show_up_once_the_server_has_some_ced31f, (filter.label.lowercase())))
                 } else if (rows != null) {
@@ -586,6 +608,8 @@ private fun AllOverview(
     likedPicker: @Composable () -> Unit,
     onAiDj: (() -> Unit)?,
     aiDjDetail: String,
+    followedCount: Int = 0,
+    onOpenFollowed: () -> Unit = {},
 ) {
     val glass = isGlassTheme()
     LazyColumn(Modifier.fillMaxSize(), contentPadding = PaddingValues(bottom = bottom)) {
@@ -603,7 +627,7 @@ private fun AllOverview(
                 // 0 doubles as not counted yet, so no number rather than a wrong 0
                 if (state.signedIn) add(QuickTile(appString(R.string.text_liked_songs_58c3a9), if (state.likedSongCount > 0) appPlural(R.plurals.track_count, (state.likedSongCount)) else "", Icons.Filled.Favorite, state.likedCover,
                     onLongClick = onOpenAllLiked, menu = likedPicker) { onOpenDetail("liked", state.likedId) })
-                addAll(collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail))
+                addAll(collectionTiles(state, canDownload, onFilter, onOpenFolders, onOpenRadio, onOpenPodcasts, onOpenYouTubeDownload, onAiDj, aiDjDetail, followedCount, onOpenFollowed))
             }
             QuickTileGrid(tiles, Modifier.padding(horizontal = 16.dp, vertical = 6.dp))
         }
@@ -672,8 +696,10 @@ private fun AllOverview(
 
 // the quick tiles besides liked songs, which each page layout places itself
 internal fun collectionTiles(state: LibraryUiState, canDownload: Boolean, onFilter: (LibraryFilter) -> Unit, onOpenFolders: () -> Unit, onOpenRadio: () -> Unit,
-    onOpenPodcasts: () -> Unit, onOpenYouTubeDownload: () -> Unit, onAiDj: (() -> Unit)?, aiDjDetail: String): List<QuickTile> = buildList {
+    onOpenPodcasts: () -> Unit, onOpenYouTubeDownload: () -> Unit, onAiDj: (() -> Unit)?, aiDjDetail: String,
+    followedCount: Int = 0, onOpenFollowed: () -> Unit = {}): List<QuickTile> = buildList {
     if (onAiDj != null) add(QuickTile(appString(R.string.ai_dj_title), aiDjDetail, Icons.Filled.AutoAwesome, "") { onAiDj() })
+    add(QuickTile(appString(R.string.followed_artists), appPlural(R.plurals.artist_count, followedCount), Icons.Filled.Group, "") { onOpenFollowed() })
     if (canDownload) add(QuickTile(appString(R.string.text_downloads_a862c2), appPlural(R.plurals.item_count, (state.downloadedRows.size)), Icons.Filled.Download, "") { onFilter(LibraryFilter.DOWNLOADED) })
     if (state.supportsFolders) add(QuickTile(appString(R.string.text_folders_19adc4), appString(R.string.text_browse_files_524932), Icons.Filled.Folder, "") { onOpenFolders() })
     add(QuickTile(appString(R.string.text_radio_b11bf1), appString(R.string.text_live_stations_f40694), Icons.Filled.Radio, "") { onOpenRadio() })
@@ -1056,7 +1082,8 @@ private fun EmptyHint(icon: ImageVector, title: String, message: String) {
 
 // tree is the view's playlist folders; an open folder lists only what is filed in it, the top level leaves those out
 internal fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: LibrarySort, pins: List<com.aurora.music.data.Pin>,
-    tree: com.aurora.music.data.PlaylistFolder? = null, folder: com.aurora.music.data.PlaylistFolder? = null): List<LibRow> {
+    tree: com.aurora.music.data.PlaylistFolder? = null, folder: com.aurora.music.data.PlaylistFolder? = null,
+    artists: List<com.aurora.music.model.Artist>? = null): List<LibRow> {
     val smart = if (filter != LibraryFilter.PLAYLISTS || folder != null) emptyList() else state.smartPlaylists.map {
         val n = it.rules.orEmpty().size
         LibRow(it.name ?: appString(R.string.text_smart_playlist_f77ad7), appString(R.string.smart_rule_count, appPlural(R.plurals.rule_count, (n))), "", accentFor(it.id ?: "smart"), it.id ?: "", "smart", badge = appString(R.string.text_auto_50c3f1))
@@ -1096,7 +1123,7 @@ internal fun buildRows(state: LibraryUiState, filter: LibraryFilter, sort: Libra
             if (song.dateAddedSec > (recency[song.artistId] ?: 0L)) recency[song.artistId] = song.dateAddedSec
         }
         val artistLabel = appString(R.string.text_artist_6c3f3d)
-        state.artists.map { ar ->
+        (artists ?: state.artists).map { ar ->
             LibRow(ar.name, artistLabel, ar.imageUrl, accentFor(ar.id), ar.id, "artist", circle = true,
                 sortPlayCount = plays[ar.id] ?: 0, sortRecencySec = recency[ar.id] ?: 0L)
         }
@@ -1252,7 +1279,14 @@ internal fun CollectionMenu(row: LibRow, actions: LibActions, expanded: Boolean,
                 leadingIcon = { Icon(Icons.Filled.Delete, null, tint = MaterialTheme.colorScheme.error) },
             )
         }
-        if (!isVirtual && !isSmart) {
+        if (row.kind == "artist") {
+            val followed = actions.isFollowed(row.id)
+            DropdownMenuItem(
+                text = { Text(appString(if (followed) R.string.unfollow else R.string.follow)) },
+                onClick = { onDismiss(); actions.onToggleFollow(row) },
+                leadingIcon = { Icon(if (followed) Icons.Filled.PersonRemove else Icons.Filled.PersonAdd, null) },
+            )
+        } else if (!isVirtual && !isSmart) {
             if (com.aurora.music.ui.components.LocalCanLike.current(row.id)) DropdownMenuItem(
                 text = { Text(if (liked) appString(R.string.text_unlike_e4fc40) else appString(R.string.text_like_c7e02c)) },
                 onClick = { onDismiss(); actions.onToggleLike(row) },

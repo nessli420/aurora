@@ -752,6 +752,8 @@ fun AuroraApp() {
                 isItemLiked = playerState.likedIds.contains(id),
                 onToggleItemLike = { playerVM.toggleLike(id, kind) },
                 canLikeItem = kind == com.aurora.music.foryou.MIX_KIND || container.repository.canLike(id),
+                follow = if (kind == "artist") com.aurora.music.ui.components.rememberFollowUi(playerVM.follows, id) else null,
+                onToggleFollow = { detailState.data?.info?.let { playerVM.follows.toggle(com.aurora.music.model.Artist(id, it.title, it.artUrl, 0)) } },
                 downloadedIds = downloadedIds,
                 onDownload = onDownload,
                 onRemoveDownload = onRemoveDownload,
@@ -1483,6 +1485,9 @@ fun AuroraApp() {
                                 folderEdits = remember(libraryVM) {
                                     com.aurora.music.ui.screens.library.FolderEdits(libraryVM::createFolder, libraryVM::renameFolder, libraryVM::deleteFolder, libraryVM::moveToFolder)
                                 },
+                                followed = playerVM.follows.followed.collectAsStateWithLifecycle().value,
+                                followedIds = playerVM.follows.ids.collectAsStateWithLifecycle().value,
+                                onToggleFollow = playerVM.follows::toggle,
                             )
                             }
                             val selected = librarySelection?.split(":", limit = 2)
@@ -2021,6 +2026,8 @@ fun AuroraApp() {
     matchSong?.let { com.aurora.music.ui.components.MatchPickerSheet(it, onSwap = playerVM::swapCurrent) { matchSong = null } }
     com.aurora.music.ui.components.GuestLikesPrompt(savedSessions, container.guestLikes, container::moveGuestLikes, container::guestLikesHeld,
         onMoved = { playerVM.refreshLikes() }, notify = ::confirm, canTake = container::acceptsGuestLikes)
+    com.aurora.music.ui.components.FollowsPrompt(savedSessions, container.settingsStore.followedArtists.collectAsStateWithLifecycle(emptyList()).value,
+        container::keepsFollows, container::moveFollows, onMoved = { playerVM.follows.refresh() }, notify = ::confirm)
 
     val tour = whatsNew?.let { versions -> WhatsNewCatalog.releases.filter { it.version in versions }.reversed() }
     if (tour != null) {
