@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Import listening history</string>
+    <string name="history_import_summary">Plays from Spotify, Apple Music and YouTube Music exports</string>
+    <string name="history_import_intro">Ask a service for a copy of your data, then pick the zip or files it sends you. Aurora adds exactly what the export lists: it never guesses play times, albums, artists or places.</string>
+    <string name="history_import_request">Request your data</string>
+    <string name="history_import_spotify_steps">On Spotify\'s privacy page, ask for Extended streaming history (everything since your account began, can take up to 30 days) or Account data (about the last year, usually within 5 days). Pick the zip Spotify emails you, or the Streaming_History_Audio or StreamingHistory_music files inside it.</string>
+    <string name="history_import_apple_steps">On privacy.apple.com choose Request a copy of your data and tick Apple Media Services information. Pick the zip Apple sends you. Newer exports name no artist next to each play, so Aurora takes it from the same zip\'s daily track list or library where those name exactly one; otherwise the play keeps no artist.</string>
+    <string name="history_import_youtube_steps">In Google Takeout, select only YouTube and YouTube Music, include only history, and set the history format to JSON. Pick the Takeout zip or watch-history.json. YouTube\'s history states no play length, so those plays count as plays but add no minutes.</string>
+    <string name="history_import_pick">Choose files</string>
+    <string name="history_import_pick_hint">A zip, JSON, CSV or HTML file. You can pick several at once.</string>
+    <string name="history_import_reading">Reading the export…</string>
+    <string name="history_import_rows">%1$s rows read</string>
+    <string name="history_import_saving">Importing…</string>
+    <string name="history_import_preview_title">Ready to import</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Linked to songs Aurora knows: %1$s</string>
+    <string name="history_import_unknown_time">Without a stated play length: %1$s. They count as plays, not as minutes.</string>
+    <string name="history_import_unknown_artist">Without an artist in the export: %1$s. They count towards songs and albums, not artists.</string>
+    <string name="history_import_left_out">Left out</string>
+    <string name="history_import_files">Read from %1$s</string>
+    <string name="history_import_nothing">These files hold no music plays to add.</string>
+    <string name="history_import_unreadable">Couldn\'t read these files.</string>
+    <string name="history_import_confirm">Import</string>
+    <string name="history_import_past">Past imports</string>
+    <string name="history_import_none">Nothing imported yet</string>
+    <string name="history_import_record">%1$s · %2$s · imported %3$s</string>
+    <string name="history_import_undo">Undo import</string>
+    <string name="history_import_undo_title">Undo this import?</string>
+    <string name="history_import_undo_body">This removes the plays this import added. Aurora\'s own plays and your other imports stay.</string>
+    <string name="history_import_undone">Import undone</string>
+    <string name="history_import_insights_note">Detailed statistics are on, so imported plays with a stated length go into them too. Time of day comes from the export\'s own timestamps; device, sound and places stay empty.</string>
+    <string name="history_import_skip_podcast">Podcast episodes</string>
+    <string name="history_import_skip_audiobook">Audiobook chapters</string>
+    <string name="history_import_skip_video">Videos rather than songs</string>
+    <string name="history_import_skip_ad">Ads</string>
+    <string name="history_import_skip_removed">Removed or private videos</string>
+    <string name="history_import_skip_no_track">Rows without a song title or artist</string>
+    <string name="history_import_skip_no_date">Rows without a usable date</string>
+    <string name="history_import_skip_not_played">Rows with no play time</string>
+    <string name="history_import_skip_private">Plays in a private session</string>
+    <string name="history_import_skip_not_a_play">Events that aren\'t plays</string>
+    <string name="history_import_skip_duplicate">Listed twice in these files</string>
+    <string name="history_import_skip_already">Already imported</string>
+    <string name="history_import_skip_aurora">Already in Aurora\'s own history</string>
+    <string name="history_import_skip_full">Over the history limit of 250,000 plays</string>
+    <string name="history_import_storage">Imported listening history</string>
+    <string name="history_import_manage">Manage</string>
+    <string name="history_import_stats_unknown">Imported plays without a stated play length are counted as plays but not as minutes.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d play</item>
+        <item quantity="other">%1$,d plays</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d import</item>
+        <item quantity="other">%1$,d imports</item>
+    </plurals>
+</resources>

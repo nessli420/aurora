@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">सुनने का इतिहास इंपोर्ट करें</string>
+    <string name="history_import_summary">Spotify, Apple Music और YouTube Music के एक्सपोर्ट से प्ले</string>
+    <string name="history_import_intro">किसी सेवा से अपने डेटा की कॉपी माँगें, फिर वह जो zip या फ़ाइलें भेजे, उन्हें चुनें। Aurora ठीक वही जोड़ता है जो एक्सपोर्ट में दर्ज है: वह प्ले की अवधि, एल्बम, कलाकार या जगहों का कभी अनुमान नहीं लगाता।</string>
+    <string name="history_import_request">अपना डेटा माँगें</string>
+    <string name="history_import_spotify_steps">Spotify के प्राइवेसी पेज पर “Extended streaming history” (खाता बनने के बाद से सब कुछ, इसमें 30 दिन तक लग सकते हैं) या “Account data” (लगभग पिछला एक साल, आमतौर पर 5 दिनों के भीतर) माँगें। Spotify ईमेल से जो zip भेजता है उसे चुनें, या उसके अंदर की Streaming_History_Audio या StreamingHistory_music फ़ाइलें चुनें।</string>
+    <string name="history_import_apple_steps">privacy.apple.com पर “Request a copy of your data” चुनें और “Apple Media Services information” पर टिक करें। Apple जो zip भेजता है उसे चुनें। नए एक्सपोर्ट में हर प्ले के साथ कलाकार का नाम नहीं होता, इसलिए जहाँ उसी zip की दैनिक ट्रैक सूची या लाइब्रेरी में ठीक एक कलाकार दर्ज हो, Aurora कलाकार वहीं से लेता है; वरना उस प्ले के साथ कोई कलाकार नहीं रहता।</string>
+    <string name="history_import_youtube_steps">Google Takeout में सिर्फ़ YouTube और YouTube Music चुनें, सिर्फ़ इतिहास शामिल करें और इतिहास का फ़ॉर्मैट JSON पर सेट करें। Takeout zip या watch-history.json चुनें। YouTube के इतिहास में प्ले की अवधि दर्ज नहीं होती, इसलिए ये प्ले, प्ले के रूप में तो गिने जाते हैं पर मिनट नहीं जोड़ते।</string>
+    <string name="history_import_pick">फ़ाइलें चुनें</string>
+    <string name="history_import_pick_hint">एक zip, JSON, CSV या HTML फ़ाइल। आप एक साथ कई फ़ाइलें चुन सकते हैं।</string>
+    <string name="history_import_reading">एक्सपोर्ट पढ़ा जा रहा है…</string>
+    <string name="history_import_rows">पढ़ी गई पंक्तियाँ: %1$s</string>
+    <string name="history_import_saving">इंपोर्ट हो रहा है…</string>
+    <string name="history_import_preview_title">इंपोर्ट के लिए तैयार</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Aurora के जाने-पहचाने गानों से जुड़े: %1$s</string>
+    <string name="history_import_unknown_time">जिनमें प्ले की अवधि दर्ज नहीं: %1$s। ये प्ले के रूप में गिने जाते हैं, मिनटों के रूप में नहीं।</string>
+    <string name="history_import_unknown_artist">जिनके साथ एक्सपोर्ट में कलाकार नहीं: %1$s। ये गानों और एल्बमों में गिने जाते हैं, कलाकारों में नहीं।</string>
+    <string name="history_import_left_out">छोड़े गए</string>
+    <string name="history_import_files">इनसे पढ़ा गया: %1$s</string>
+    <string name="history_import_nothing">इन फ़ाइलों में जोड़ने लायक कोई म्यूज़िक प्ले नहीं है।</string>
+    <string name="history_import_unreadable">ये फ़ाइलें पढ़ी नहीं जा सकीं।</string>
+    <string name="history_import_confirm">इंपोर्ट करें</string>
+    <string name="history_import_past">पिछले इंपोर्ट</string>
+    <string name="history_import_none">अभी तक कुछ इंपोर्ट नहीं किया गया</string>
+    <string name="history_import_record">%1$s · %2$s · %3$s को इंपोर्ट किया गया</string>
+    <string name="history_import_undo">इंपोर्ट पूर्ववत करें</string>
+    <string name="history_import_undo_title">यह इंपोर्ट पूर्ववत करें?</string>
+    <string name="history_import_undo_body">इससे वे प्ले हट जाते हैं जो इस इंपोर्ट ने जोड़े थे। Aurora के अपने प्ले और आपके दूसरे इंपोर्ट बने रहते हैं।</string>
+    <string name="history_import_undone">इंपोर्ट पूर्ववत किया गया</string>
+    <string name="history_import_insights_note">विस्तृत आँकड़े चालू हैं, इसलिए दर्ज अवधि वाले इंपोर्ट किए गए प्ले भी उनमें जुड़ते हैं। दिन का समय एक्सपोर्ट के अपने टाइमस्टैम्प से आता है; डिवाइस, साउंड और जगहें खाली रहती हैं।</string>
+    <string name="history_import_skip_podcast">पॉडकास्ट एपिसोड</string>
+    <string name="history_import_skip_audiobook">ऑडियोबुक के चैप्टर</string>
+    <string name="history_import_skip_video">गानों की जगह वीडियो</string>
+    <string name="history_import_skip_ad">विज्ञापन</string>
+    <string name="history_import_skip_removed">हटाए गए या प्राइवेट वीडियो</string>
+    <string name="history_import_skip_no_track">ऐसी पंक्तियाँ जिनमें गाने का नाम या कलाकार नहीं है</string>
+    <string name="history_import_skip_no_date">ऐसी पंक्तियाँ जिनमें इस्तेमाल लायक तारीख़ नहीं है</string>
+    <string name="history_import_skip_not_played">ऐसी पंक्तियाँ जिनमें कोई प्ले समय नहीं है</string>
+    <string name="history_import_skip_private">प्राइवेट सेशन में हुए प्ले</string>
+    <string name="history_import_skip_not_a_play">ऐसे इवेंट जो प्ले नहीं हैं</string>
+    <string name="history_import_skip_duplicate">इन फ़ाइलों में दो बार दर्ज</string>
+    <string name="history_import_skip_already">पहले से इंपोर्ट किए गए</string>
+    <string name="history_import_skip_aurora">पहले से Aurora के अपने इतिहास में</string>
+    <string name="history_import_skip_full">2,50,000 प्ले की इतिहास सीमा से ज़्यादा</string>
+    <string name="history_import_storage">इंपोर्ट किया गया सुनने का इतिहास</string>
+    <string name="history_import_manage">प्रबंधित करें</string>
+    <string name="history_import_stats_unknown">इंपोर्ट किए गए जिन प्ले की अवधि दर्ज नहीं है, वे प्ले के रूप में गिने जाते हैं, मिनटों के रूप में नहीं।</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d प्ले</item>
+        <item quantity="other">%1$,d प्ले</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d इंपोर्ट</item>
+        <item quantity="other">%1$,d इंपोर्ट</item>
+    </plurals>
+</resources>

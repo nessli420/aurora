@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Luistergeschiedenis importeren</string>
+    <string name="history_import_summary">Afspeelbeurten uit exports van Spotify, Apple Music en YouTube Music</string>
+    <string name="history_import_intro">Vraag een dienst om een kopie van je gegevens en kies daarna de zip of de bestanden die je ontvangt. Aurora voegt precies toe wat in de export staat: afspeeltijden, albums, artiesten of plekken worden nooit geraden.</string>
+    <string name="history_import_request">Je gegevens aanvragen</string>
+    <string name="history_import_spotify_steps">Vraag op de privacypagina van Spotify “Extended streaming history” aan (alles sinds je account bestaat, kan tot 30 dagen duren) of “Account data” (ongeveer het afgelopen jaar, meestal binnen 5 dagen). Kies de zip die Spotify je mailt, of de bestanden Streaming_History_Audio of StreamingHistory_music daarin.</string>
+    <string name="history_import_apple_steps">Kies op privacy.apple.com “Request a copy of your data” en vink “Apple Media Services information” aan. Kies de zip die Apple je stuurt. Nieuwere exports noemen bij de afzonderlijke afspeelbeurten geen artiest, dus Aurora haalt die uit de dagelijkse nummerlijst of de bibliotheek in dezelfde zip als die er precies één noemen; anders blijft de afspeelbeurt zonder artiest.</string>
+    <string name="history_import_youtube_steps">Selecteer in Google Takeout alleen YouTube en YouTube Music, neem alleen de geschiedenis op en zet de indeling van de geschiedenis op JSON. Kies de Takeout-zip of watch-history.json. De geschiedenis van YouTube vermeldt geen afspeelduur, dus die afspeelbeurten tellen als afspeelbeurten maar voegen geen minuten toe.</string>
+    <string name="history_import_pick">Bestanden kiezen</string>
+    <string name="history_import_pick_hint">Een zip-, JSON-, CSV- of HTML-bestand. Je kunt er meerdere tegelijk kiezen.</string>
+    <string name="history_import_reading">Export wordt gelezen…</string>
+    <string name="history_import_rows">Rijen gelezen: %1$s</string>
+    <string name="history_import_saving">Importeren…</string>
+    <string name="history_import_preview_title">Klaar om te importeren</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Gekoppeld aan nummers die Aurora kent: %1$s</string>
+    <string name="history_import_unknown_time">Zonder vermelde afspeelduur: %1$s. Ze tellen als afspeelbeurten, niet als minuten.</string>
+    <string name="history_import_unknown_artist">Zonder artiest in de export: %1$s. Ze tellen mee voor nummers en albums, niet voor artiesten.</string>
+    <string name="history_import_left_out">Weggelaten</string>
+    <string name="history_import_files">Gelezen uit %1$s</string>
+    <string name="history_import_nothing">Deze bestanden bevatten geen muziekafspeelbeurten om toe te voegen.</string>
+    <string name="history_import_unreadable">Deze bestanden konden niet worden gelezen.</string>
+    <string name="history_import_confirm">Importeren</string>
+    <string name="history_import_past">Eerdere imports</string>
+    <string name="history_import_none">Nog niets geïmporteerd</string>
+    <string name="history_import_record">%1$s · %2$s · geïmporteerd op %3$s</string>
+    <string name="history_import_undo">Import ongedaan maken</string>
+    <string name="history_import_undo_title">Deze import ongedaan maken?</string>
+    <string name="history_import_undo_body">Hiermee worden de afspeelbeurten verwijderd die deze import heeft toegevoegd. De eigen afspeelbeurten van Aurora en je andere imports blijven behouden.</string>
+    <string name="history_import_undone">Import ongedaan gemaakt</string>
+    <string name="history_import_insights_note">Gedetailleerde statistieken staan aan, dus geïmporteerde afspeelbeurten met een vermelde duur komen daar ook in. Het tijdstip van de dag komt uit de eigen tijdstempels van de export; apparaat, geluid en plekken blijven leeg.</string>
+    <string name="history_import_skip_podcast">Podcastafleveringen</string>
+    <string name="history_import_skip_audiobook">Luisterboekhoofdstukken</string>
+    <string name="history_import_skip_video">Video\'s in plaats van nummers</string>
+    <string name="history_import_skip_ad">Advertenties</string>
+    <string name="history_import_skip_removed">Verwijderde of privévideo\'s</string>
+    <string name="history_import_skip_no_track">Rijen zonder nummertitel of zonder artiest</string>
+    <string name="history_import_skip_no_date">Rijen zonder bruikbare datum</string>
+    <string name="history_import_skip_not_played">Rijen zonder afgespeelde tijd</string>
+    <string name="history_import_skip_private">Afspeelbeurten in een privésessie</string>
+    <string name="history_import_skip_not_a_play">Gebeurtenissen die geen afspeelbeurten zijn</string>
+    <string name="history_import_skip_duplicate">Twee keer vermeld in deze bestanden</string>
+    <string name="history_import_skip_already">Al geïmporteerd</string>
+    <string name="history_import_skip_aurora">Al in de eigen geschiedenis van Aurora</string>
+    <string name="history_import_skip_full">Boven de geschiedenislimiet van 250.000 afspeelbeurten</string>
+    <string name="history_import_storage">Geïmporteerde luistergeschiedenis</string>
+    <string name="history_import_manage">Beheren</string>
+    <string name="history_import_stats_unknown">Geïmporteerde afspeelbeurten zonder vermelde afspeelduur tellen als afspeelbeurten, maar niet als minuten.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d afspeelbeurt</item>
+        <item quantity="other">%1$,d afspeelbeurten</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d import</item>
+        <item quantity="other">%1$,d imports</item>
+    </plurals>
+</resources>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">再生履歴を読み込む</string>
+    <string name="history_import_summary">Spotify、Apple Music、YouTube Music のエクスポートからの再生</string>
+    <string name="history_import_intro">サービスにデータのコピーを依頼し、届いた zip またはファイルを選んでください。Aurora はエクスポートに記載された内容だけをそのまま追加します。再生時間、アルバム、アーティスト、場所を推測することはありません。</string>
+    <string name="history_import_request">データを請求する</string>
+    <string name="history_import_spotify_steps">Spotify のプライバシーページで「Extended streaming history」（アカウント開設以降のすべて。最大 30 日かかることがあります）または「Account data」（直近約 1 年分。通常 5 日以内）を請求します。Spotify からメールで届く zip、またはその中の Streaming_History_Audio か StreamingHistory_music のファイルを選んでください。</string>
+    <string name="history_import_apple_steps">privacy.apple.com で「Request a copy of your data」を選び、「Apple Media Services information」にチェックを入れます。Apple から届く zip を選んでください。新しいエクスポートでは再生ごとにアーティストが記載されていないため、同じ zip 内の日別トラックリストまたはライブラリにアーティストがちょうど 1 人だけ記載されている場合、Aurora はそこから取得します。それ以外の場合、その再生はアーティストなしのままです。</string>
+    <string name="history_import_youtube_steps">Google Takeout で YouTube と YouTube Music だけを選択し、履歴だけを含め、履歴の形式を JSON に設定します。Takeout の zip または watch-history.json を選んでください。YouTube の履歴には再生時間が記載されていないため、これらの再生は再生回数には数えられますが、分数には加算されません。</string>
+    <string name="history_import_pick">ファイルを選択</string>
+    <string name="history_import_pick_hint">zip、JSON、CSV、HTML ファイル。一度に複数選べます。</string>
+    <string name="history_import_reading">エクスポートを読み取り中…</string>
+    <string name="history_import_rows">%1$s 行を読み取りました</string>
+    <string name="history_import_saving">読み込み中…</string>
+    <string name="history_import_preview_title">読み込みの準備ができました</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Aurora が知っている曲と紐付け済み: %1$s</string>
+    <string name="history_import_unknown_time">再生時間の記載なし: %1$s。再生回数には数えますが、分数には含めません。</string>
+    <string name="history_import_unknown_artist">エクスポートにアーティストの記載なし: %1$s。曲とアルバムには数えますが、アーティストには含めません。</string>
+    <string name="history_import_left_out">除外</string>
+    <string name="history_import_files">読み取り元: %1$s</string>
+    <string name="history_import_nothing">これらのファイルには追加できる音楽の再生がありません。</string>
+    <string name="history_import_unreadable">これらのファイルを読み取れませんでした。</string>
+    <string name="history_import_confirm">読み込む</string>
+    <string name="history_import_past">過去の読み込み</string>
+    <string name="history_import_none">まだ何も読み込んでいません</string>
+    <string name="history_import_record">%1$s · %2$s · %3$s に読み込み</string>
+    <string name="history_import_undo">読み込みを元に戻す</string>
+    <string name="history_import_undo_title">この読み込みを元に戻しますか？</string>
+    <string name="history_import_undo_body">この読み込みで追加された再生が削除されます。Aurora 自身が記録した再生と、ほかの読み込みはそのまま残ります。</string>
+    <string name="history_import_undone">読み込みを元に戻しました</string>
+    <string name="history_import_insights_note">詳細な統計がオンのため、再生時間が記載された読み込み済みの再生もそこに追加されます。時間帯はエクスポート自体のタイムスタンプから取得し、デバイス、サウンド、場所は空のままです。</string>
+    <string name="history_import_skip_podcast">ポッドキャストのエピソード</string>
+    <string name="history_import_skip_audiobook">オーディオブックのチャプター</string>
+    <string name="history_import_skip_video">曲ではなく動画</string>
+    <string name="history_import_skip_ad">広告</string>
+    <string name="history_import_skip_removed">削除済みまたは非公開の動画</string>
+    <string name="history_import_skip_no_track">曲名またはアーティストがない行</string>
+    <string name="history_import_skip_no_date">使える日付がない行</string>
+    <string name="history_import_skip_not_played">再生されていない行</string>
+    <string name="history_import_skip_private">プライベートセッション中の再生</string>
+    <string name="history_import_skip_not_a_play">再生ではないイベント</string>
+    <string name="history_import_skip_duplicate">これらのファイル内で重複</string>
+    <string name="history_import_skip_already">読み込み済み</string>
+    <string name="history_import_skip_aurora">Aurora 自身の履歴に既にある</string>
+    <string name="history_import_skip_full">履歴の上限（25万回の再生）を超えた分</string>
+    <string name="history_import_storage">読み込んだ再生履歴</string>
+    <string name="history_import_manage">管理</string>
+    <string name="history_import_stats_unknown">再生時間の記載がない読み込み済みの再生は、再生回数には数えられますが、分数には含まれません。</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d 回再生</item>
+        <item quantity="other">%1$,d 回再生</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">読み込み %1$,d 件</item>
+        <item quantity="other">読み込み %1$,d 件</item>
+    </plurals>
+</resources>

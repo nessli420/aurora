@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">استيراد سجل الاستماع</string>
+    <string name="history_import_summary">التشغيلات من ملفات تصدير Spotify وApple Music وYouTube Music</string>
+    <string name="history_import_intro">اطلب من الخدمة نسخة من بياناتك، ثم اختر ملف zip أو الملفات التي ترسلها إليك. يضيف Aurora ما يرد في ملف التصدير بالضبط: لا يخمّن أبدًا مدد التشغيل أو الألبومات أو الفنانين أو الأماكن.</string>
+    <string name="history_import_request">اطلب بياناتك</string>
+    <string name="history_import_spotify_steps">في صفحة الخصوصية في Spotify، اطلب «Extended streaming history» (كل شيء منذ إنشاء حسابك، وقد يستغرق ما يصل إلى 30 يومًا) أو «Account data» (نحو السنة الأخيرة، وعادةً خلال 5 أيام). اختر ملف zip الذي يرسله Spotify إليك بالبريد الإلكتروني، أو ملفات Streaming_History_Audio أو StreamingHistory_music الموجودة داخله.</string>
+    <string name="history_import_apple_steps">في privacy.apple.com اختر «Request a copy of your data» وحدّد «Apple Media Services information». اختر ملف zip الذي ترسله Apple إليك. لا تذكر ملفات التصدير الأحدث الفنان بجانب كل تشغيل، لذا يأخذه Aurora من قائمة المقاطع اليومية أو المكتبة في ملف zip نفسه حين تذكر فنانًا واحدًا بالضبط؛ وإلا يبقى التشغيل بلا فنان.</string>
+    <string name="history_import_youtube_steps">في Google Takeout، حدّد YouTube وYouTube Music فقط، وضمّن السجل فقط، واضبط تنسيق السجل على JSON. اختر ملف zip من Takeout أو watch-history.json. لا يذكر سجل YouTube مدة التشغيل، لذا تُحتسب هذه التشغيلات تشغيلاتٍ لكنها لا تضيف دقائق.</string>
+    <string name="history_import_pick">اختيار الملفات</string>
+    <string name="history_import_pick_hint">ملف zip أو JSON أو CSV أو HTML. يمكنك اختيار عدة ملفات معًا.</string>
+    <string name="history_import_reading">جارٍ قراءة ملف التصدير…</string>
+    <string name="history_import_rows">الصفوف المقروءة: %1$s</string>
+    <string name="history_import_saving">جارٍ الاستيراد…</string>
+    <string name="history_import_preview_title">جاهز للاستيراد</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">مرتبطة بمقاطع يعرفها Aurora: %1$s</string>
+    <string name="history_import_unknown_time">بلا مدة تشغيل مذكورة: %1$s. تُحتسب تشغيلاتٍ لا دقائق.</string>
+    <string name="history_import_unknown_artist">بلا فنان في ملف التصدير: %1$s. تُحتسب ضمن المقاطع والألبومات، لا الفنانين.</string>
+    <string name="history_import_left_out">المستبعَد</string>
+    <string name="history_import_files">تمت القراءة من: %1$s</string>
+    <string name="history_import_nothing">لا تحتوي هذه الملفات على تشغيلات موسيقى لإضافتها.</string>
+    <string name="history_import_unreadable">تعذّرت قراءة هذه الملفات.</string>
+    <string name="history_import_confirm">استيراد</string>
+    <string name="history_import_past">عمليات الاستيراد السابقة</string>
+    <string name="history_import_none">لم يُستورد شيء بعد</string>
+    <string name="history_import_record">%1$s · %2$s · استُورد في %3$s</string>
+    <string name="history_import_undo">التراجع عن الاستيراد</string>
+    <string name="history_import_undo_title">هل تريد التراجع عن هذا الاستيراد؟</string>
+    <string name="history_import_undo_body">يؤدي هذا إلى إزالة التشغيلات التي أضافها هذا الاستيراد. تبقى تشغيلات Aurora نفسه وعمليات الاستيراد الأخرى كما هي.</string>
+    <string name="history_import_undone">تم التراجع عن الاستيراد</string>
+    <string name="history_import_insights_note">الإحصاءات المفصّلة مفعّلة، لذا تدخل فيها أيضًا التشغيلات المستوردة ذات المدة المذكورة. يُؤخذ وقت اليوم من الطوابع الزمنية في ملف التصدير نفسه؛ ويبقى الجهاز والصوت والأماكن فارغة.</string>
+    <string name="history_import_skip_podcast">حلقات البودكاست</string>
+    <string name="history_import_skip_audiobook">فصول الكتب الصوتية</string>
+    <string name="history_import_skip_video">مقاطع فيديو لا أغانٍ</string>
+    <string name="history_import_skip_ad">الإعلانات</string>
+    <string name="history_import_skip_removed">مقاطع فيديو محذوفة أو خاصة</string>
+    <string name="history_import_skip_no_track">صفوف بلا عنوان أغنية أو بلا فنان</string>
+    <string name="history_import_skip_no_date">صفوف بلا تاريخ صالح للاستخدام</string>
+    <string name="history_import_skip_not_played">صفوف بلا وقت تشغيل</string>
+    <string name="history_import_skip_private">تشغيلات في جلسة خاصة</string>
+    <string name="history_import_skip_not_a_play">أحداث ليست تشغيلات</string>
+    <string name="history_import_skip_duplicate">مذكورة مرتين في هذه الملفات</string>
+    <string name="history_import_skip_already">مستوردة مسبقًا</string>
+    <string name="history_import_skip_aurora">موجودة مسبقًا في سجل Aurora نفسه</string>
+    <string name="history_import_skip_full">تتجاوز حد السجل البالغ 250 ألف تشغيل</string>
+    <string name="history_import_storage">سجل الاستماع المستورد</string>
+    <string name="history_import_manage">إدارة</string>
+    <string name="history_import_stats_unknown">التشغيلات المستوردة بلا مدة تشغيل مذكورة تُحتسب تشغيلاتٍ لا دقائق.</string>
+    <plurals name="history_import_plays">
+        <item quantity="zero">%1$,d تشغيل</item>
+        <item quantity="one">%1$,d تشغيل</item>
+        <item quantity="two">%1$,d تشغيلان</item>
+        <item quantity="few">%1$,d تشغيلات</item>
+        <item quantity="many">%1$,d تشغيلًا</item>
+        <item quantity="other">%1$,d تشغيل</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="zero">%1$,d عملية استيراد</item>
+        <item quantity="one">%1$,d عملية استيراد</item>
+        <item quantity="two">%1$,d عمليتا استيراد</item>
+        <item quantity="few">%1$,d عمليات استيراد</item>
+        <item quantity="many">%1$,d عملية استيراد</item>
+        <item quantity="other">%1$,d عملية استيراد</item>
+    </plurals>
+</resources>

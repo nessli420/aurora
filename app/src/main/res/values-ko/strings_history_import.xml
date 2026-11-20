@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">청취 기록 가져오기</string>
+    <string name="history_import_summary">Spotify, Apple Music, YouTube Music 내보내기의 재생 기록</string>
+    <string name="history_import_intro">서비스에 데이터 사본을 요청한 뒤, 받은 zip 또는 파일을 선택하세요. Aurora는 내보내기에 적힌 내용만 그대로 추가하며, 재생 시간, 앨범, 아티스트, 장소를 추측하지 않습니다.</string>
+    <string name="history_import_request">데이터 요청</string>
+    <string name="history_import_spotify_steps">Spotify 개인정보 보호 페이지에서 ‘Extended streaming history’(계정 생성 이후 전체, 최대 30일 소요) 또는 ‘Account data’(최근 약 1년, 보통 5일 이내)를 요청하세요. Spotify가 이메일로 보내는 zip이나 그 안의 Streaming_History_Audio 또는 StreamingHistory_music 파일을 선택하세요.</string>
+    <string name="history_import_apple_steps">privacy.apple.com에서 ‘Request a copy of your data’를 선택하고 ‘Apple Media Services information’을 체크하세요. Apple이 보내는 zip을 선택하세요. 최신 내보내기에는 재생마다 아티스트가 적혀 있지 않으므로, Aurora는 같은 zip의 일별 트랙 목록이나 보관함에 아티스트가 정확히 한 명만 적혀 있을 때 그 아티스트를 가져옵니다. 그렇지 않으면 해당 재생에는 아티스트가 없습니다.</string>
+    <string name="history_import_youtube_steps">Google Takeout에서 YouTube 및 YouTube Music만 선택하고, 기록만 포함한 뒤 기록 형식을 JSON으로 설정하세요. Takeout zip 또는 watch-history.json을 선택하세요. YouTube 기록에는 재생 시간이 없으므로 해당 재생은 재생 횟수로는 집계되지만 분은 더해지지 않습니다.</string>
+    <string name="history_import_pick">파일 선택</string>
+    <string name="history_import_pick_hint">zip, JSON, CSV 또는 HTML 파일. 한 번에 여러 개를 선택할 수 있습니다.</string>
+    <string name="history_import_reading">내보내기 파일 읽는 중…</string>
+    <string name="history_import_rows">%1$s개 행 읽음</string>
+    <string name="history_import_saving">가져오는 중…</string>
+    <string name="history_import_preview_title">가져올 준비 완료</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Aurora가 아는 곡과 연결됨: %1$s</string>
+    <string name="history_import_unknown_time">재생 시간이 명시되지 않음: %1$s. 재생 횟수로는 집계되지만 분으로는 집계되지 않습니다.</string>
+    <string name="history_import_unknown_artist">내보내기에 아티스트 없음: %1$s. 곡과 앨범에는 집계되지만 아티스트에는 집계되지 않습니다.</string>
+    <string name="history_import_left_out">제외됨</string>
+    <string name="history_import_files">읽은 파일: %1$s</string>
+    <string name="history_import_nothing">이 파일에는 추가할 음악 재생 기록이 없습니다.</string>
+    <string name="history_import_unreadable">이 파일을 읽을 수 없습니다.</string>
+    <string name="history_import_confirm">가져오기</string>
+    <string name="history_import_past">이전 가져오기</string>
+    <string name="history_import_none">아직 가져온 항목이 없습니다</string>
+    <string name="history_import_record">%1$s · %2$s · %3$s에 가져옴</string>
+    <string name="history_import_undo">가져오기 실행 취소</string>
+    <string name="history_import_undo_title">이 가져오기를 실행 취소할까요?</string>
+    <string name="history_import_undo_body">이 가져오기로 추가된 재생 기록이 삭제됩니다. Aurora가 직접 기록한 재생과 다른 가져오기는 그대로 유지됩니다.</string>
+    <string name="history_import_undone">가져오기를 실행 취소했습니다</string>
+    <string name="history_import_insights_note">상세 통계가 켜져 있으므로, 재생 시간이 명시된 가져온 재생도 상세 통계에 포함됩니다. 시간대는 내보내기 자체의 타임스탬프를 따르며, 기기, 사운드, 장소는 비어 있습니다.</string>
+    <string name="history_import_skip_podcast">팟캐스트 에피소드</string>
+    <string name="history_import_skip_audiobook">오디오북 챕터</string>
+    <string name="history_import_skip_video">노래가 아닌 동영상</string>
+    <string name="history_import_skip_ad">광고</string>
+    <string name="history_import_skip_removed">삭제되었거나 비공개인 동영상</string>
+    <string name="history_import_skip_no_track">곡 제목이나 아티스트가 없는 행</string>
+    <string name="history_import_skip_no_date">사용할 수 있는 날짜가 없는 행</string>
+    <string name="history_import_skip_not_played">재생되지 않은 행</string>
+    <string name="history_import_skip_private">비공개 세션 중 재생</string>
+    <string name="history_import_skip_not_a_play">재생이 아닌 이벤트</string>
+    <string name="history_import_skip_duplicate">이 파일들에 중복으로 포함됨</string>
+    <string name="history_import_skip_already">이미 가져옴</string>
+    <string name="history_import_skip_aurora">Aurora 자체 기록에 이미 있음</string>
+    <string name="history_import_skip_full">기록 한도인 재생 25만 회 초과</string>
+    <string name="history_import_storage">가져온 청취 기록</string>
+    <string name="history_import_manage">관리</string>
+    <string name="history_import_stats_unknown">재생 시간이 명시되지 않은 가져온 재생은 재생 횟수로는 집계되지만 분으로는 집계되지 않습니다.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">재생 %1$,d회</item>
+        <item quantity="other">재생 %1$,d회</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">가져오기 %1$,d건</item>
+        <item quantity="other">가져오기 %1$,d건</item>
+    </plurals>
+</resources>

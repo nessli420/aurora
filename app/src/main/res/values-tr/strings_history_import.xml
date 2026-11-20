@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Dinleme geçmişini içe aktar</string>
+    <string name="history_import_summary">Spotify, Apple Music ve YouTube Music dışa aktarımlarındaki dinlemeler</string>
+    <string name="history_import_intro">Bir hizmetten verilerinizin bir kopyasını isteyin, ardından size gönderdiği zip dosyasını veya dosyaları seçin. Aurora tam olarak dışa aktarımda listelenenleri ekler: dinleme sürelerini, albümleri, sanatçıları veya yerleri asla tahmin etmez.</string>
+    <string name="history_import_request">Verilerinizi isteyin</string>
+    <string name="history_import_spotify_steps">Spotify\'ın gizlilik sayfasında “Extended streaming history” (hesabınız açıldığından beri her şey, 30 güne kadar sürebilir) veya “Account data” (yaklaşık son bir yıl, genellikle 5 gün içinde) isteyin. Spotify\'ın size e-postayla gönderdiği zip dosyasını ya da içindeki Streaming_History_Audio veya StreamingHistory_music dosyalarını seçin.</string>
+    <string name="history_import_apple_steps">privacy.apple.com adresinde “Request a copy of your data” seçeneğini seçin ve “Apple Media Services information” kutusunu işaretleyin. Apple\'ın gönderdiği zip dosyasını seçin. Yeni dışa aktarımlar her dinlemenin yanında sanatçı belirtmez; bu yüzden Aurora, aynı zip dosyasındaki günlük parça listesi veya kitaplık tam olarak bir sanatçı belirtiyorsa sanatçıyı oradan alır, aksi halde dinleme sanatçısız kalır.</string>
+    <string name="history_import_youtube_steps">Google Takeout\'ta yalnızca YouTube ve YouTube Music\'i seçin, yalnızca geçmişi dahil edin ve geçmiş biçimini JSON olarak ayarlayın. Takeout zip dosyasını veya watch-history.json dosyasını seçin. YouTube geçmişi dinleme süresi belirtmez; bu nedenle bu dinlemeler dinleme olarak sayılır ama dakika eklemez.</string>
+    <string name="history_import_pick">Dosyaları seç</string>
+    <string name="history_import_pick_hint">Bir zip, JSON, CSV veya HTML dosyası. Aynı anda birden fazla dosya seçebilirsiniz.</string>
+    <string name="history_import_reading">Dışa aktarım okunuyor…</string>
+    <string name="history_import_rows">Okunan satır: %1$s</string>
+    <string name="history_import_saving">İçe aktarılıyor…</string>
+    <string name="history_import_preview_title">İçe aktarmaya hazır</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Aurora\'nın bildiği parçalarla bağlantılı: %1$s</string>
+    <string name="history_import_unknown_time">Dinleme süresi belirtilmemiş: %1$s. Bunlar dakika olarak değil, dinleme olarak sayılır.</string>
+    <string name="history_import_unknown_artist">Dışa aktarımda sanatçısı olmayan: %1$s. Bunlar sanatçılara değil, parçalara ve albümlere sayılır.</string>
+    <string name="history_import_left_out">Dışarıda bırakılanlar</string>
+    <string name="history_import_files">Okunan dosyalar: %1$s</string>
+    <string name="history_import_nothing">Bu dosyalarda eklenecek müzik dinlemesi yok.</string>
+    <string name="history_import_unreadable">Bu dosyalar okunamadı.</string>
+    <string name="history_import_confirm">İçe aktar</string>
+    <string name="history_import_past">Önceki içe aktarımlar</string>
+    <string name="history_import_none">Henüz hiçbir şey içe aktarılmadı</string>
+    <string name="history_import_record">%1$s · %2$s · %3$s tarihinde içe aktarıldı</string>
+    <string name="history_import_undo">İçe aktarmayı geri al</string>
+    <string name="history_import_undo_title">Bu içe aktarma geri alınsın mı?</string>
+    <string name="history_import_undo_body">Bu işlem, bu içe aktarmanın eklediği dinlemeleri kaldırır. Aurora\'nın kendi dinlemeleri ve diğer içe aktarımlarınız kalır.</string>
+    <string name="history_import_undone">İçe aktarma geri alındı</string>
+    <string name="history_import_insights_note">Ayrıntılı istatistikler açık, bu yüzden süresi belirtilmiş içe aktarılan dinlemeler de bunlara eklenir. Günün saati dışa aktarımın kendi zaman damgalarından alınır; cihaz, ses ve yerler boş kalır.</string>
+    <string name="history_import_skip_podcast">Podcast bölümleri</string>
+    <string name="history_import_skip_audiobook">Sesli kitap bölümleri</string>
+    <string name="history_import_skip_video">Şarkı yerine videolar</string>
+    <string name="history_import_skip_ad">Reklamlar</string>
+    <string name="history_import_skip_removed">Kaldırılmış veya gizli videolar</string>
+    <string name="history_import_skip_no_track">Şarkı adı veya sanatçısı olmayan satırlar</string>
+    <string name="history_import_skip_no_date">Kullanılabilir tarihi olmayan satırlar</string>
+    <string name="history_import_skip_not_played">Çalma süresi olmayan satırlar</string>
+    <string name="history_import_skip_private">Gizli oturumdaki dinlemeler</string>
+    <string name="history_import_skip_not_a_play">Dinleme olmayan olaylar</string>
+    <string name="history_import_skip_duplicate">Bu dosyalarda iki kez listelenenler</string>
+    <string name="history_import_skip_already">Zaten içe aktarılmış</string>
+    <string name="history_import_skip_aurora">Zaten Aurora\'nın kendi geçmişinde</string>
+    <string name="history_import_skip_full">250.000 dinlemelik geçmiş sınırının üzerinde</string>
+    <string name="history_import_storage">İçe aktarılan dinleme geçmişi</string>
+    <string name="history_import_manage">Yönet</string>
+    <string name="history_import_stats_unknown">Dinleme süresi belirtilmemiş içe aktarılan dinlemeler, dinleme olarak sayılır ama dakika olarak sayılmaz.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d dinleme</item>
+        <item quantity="other">%1$,d dinleme</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d içe aktarma</item>
+        <item quantity="other">%1$,d içe aktarma</item>
+    </plurals>
+</resources>

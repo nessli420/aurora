@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Hörverlauf importieren</string>
+    <string name="history_import_summary">Wiedergaben aus Exporten von Spotify, Apple Music und YouTube Music</string>
+    <string name="history_import_intro">Fordere bei einem Dienst eine Kopie deiner Daten an und wähle dann die zip-Datei oder die Dateien, die er dir schickt. Aurora übernimmt genau das, was im Export steht: Wiedergabezeiten, Alben, Künstler oder Orte werden nie geraten.</string>
+    <string name="history_import_request">Daten anfordern</string>
+    <string name="history_import_spotify_steps">Fordere auf der Datenschutzseite von Spotify „Extended streaming history“ an (alles seit Bestehen deines Kontos, kann bis zu 30 Tage dauern) oder „Account data“ (etwa das letzte Jahr, meist innerhalb von 5 Tagen). Wähle die zip-Datei, die Spotify dir per E-Mail schickt, oder die Dateien Streaming_History_Audio oder StreamingHistory_music darin.</string>
+    <string name="history_import_apple_steps">Wähle auf privacy.apple.com „Request a copy of your data“ und setze ein Häkchen bei „Apple Media Services information“. Wähle die zip-Datei, die Apple dir schickt. Neuere Exporte nennen bei den einzelnen Wiedergaben keinen Künstler. Aurora übernimmt ihn daher aus der täglichen Titelliste oder der Mediathek in derselben zip-Datei, sofern diese genau einen nennen; andernfalls bleibt die Wiedergabe ohne Künstler.</string>
+    <string name="history_import_youtube_steps">Wähle in Google Takeout nur YouTube und YouTube Music aus, schließe nur den Verlauf ein und stelle das Format des Verlaufs auf JSON. Wähle die Takeout-zip-Datei oder watch-history.json. Der Verlauf von YouTube enthält keine Wiedergabedauer, daher zählen diese Wiedergaben als Wiedergaben, fügen aber keine Minuten hinzu.</string>
+    <string name="history_import_pick">Dateien wählen</string>
+    <string name="history_import_pick_hint">Eine zip-, JSON-, CSV- oder HTML-Datei. Du kannst mehrere auf einmal wählen.</string>
+    <string name="history_import_reading">Export wird gelesen…</string>
+    <string name="history_import_rows">Gelesene Zeilen: %1$s</string>
+    <string name="history_import_saving">Wird importiert…</string>
+    <string name="history_import_preview_title">Bereit zum Import</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Mit Titeln verknüpft, die Aurora kennt: %1$s</string>
+    <string name="history_import_unknown_time">Ohne angegebene Wiedergabedauer: %1$s. Sie zählen als Wiedergaben, nicht als Minuten.</string>
+    <string name="history_import_unknown_artist">Ohne Künstler im Export: %1$s. Sie zählen zu Titeln und Alben, nicht zu Künstlern.</string>
+    <string name="history_import_left_out">Ausgelassen</string>
+    <string name="history_import_files">Gelesen aus %1$s</string>
+    <string name="history_import_nothing">Diese Dateien enthalten keine Musikwiedergaben zum Hinzufügen.</string>
+    <string name="history_import_unreadable">Diese Dateien konnten nicht gelesen werden.</string>
+    <string name="history_import_confirm">Importieren</string>
+    <string name="history_import_past">Frühere Importe</string>
+    <string name="history_import_none">Noch nichts importiert</string>
+    <string name="history_import_record">%1$s · %2$s · importiert am %3$s</string>
+    <string name="history_import_undo">Import rückgängig machen</string>
+    <string name="history_import_undo_title">Diesen Import rückgängig machen?</string>
+    <string name="history_import_undo_body">Dadurch werden die Wiedergaben entfernt, die dieser Import hinzugefügt hat. Die von Aurora selbst erfassten Wiedergaben und deine anderen Importe bleiben erhalten.</string>
+    <string name="history_import_undone">Import rückgängig gemacht</string>
+    <string name="history_import_insights_note">Detaillierte Statistiken sind aktiviert, daher fließen importierte Wiedergaben mit angegebener Dauer auch dort ein. Die Tageszeit stammt aus den Zeitstempeln des Exports selbst; Gerät, Klang und Orte bleiben leer.</string>
+    <string name="history_import_skip_podcast">Podcast-Folgen</string>
+    <string name="history_import_skip_audiobook">Hörbuchkapitel</string>
+    <string name="history_import_skip_video">Videos statt Titel</string>
+    <string name="history_import_skip_ad">Werbung</string>
+    <string name="history_import_skip_removed">Entfernte oder private Videos</string>
+    <string name="history_import_skip_no_track">Zeilen ohne Titelname oder ohne Künstler</string>
+    <string name="history_import_skip_no_date">Zeilen ohne verwendbares Datum</string>
+    <string name="history_import_skip_not_played">Zeilen ohne abgespielte Zeit</string>
+    <string name="history_import_skip_private">Wiedergaben in einer privaten Sitzung</string>
+    <string name="history_import_skip_not_a_play">Ereignisse, die keine Wiedergaben sind</string>
+    <string name="history_import_skip_duplicate">Doppelt in diesen Dateien aufgeführt</string>
+    <string name="history_import_skip_already">Bereits importiert</string>
+    <string name="history_import_skip_aurora">Bereits in Auroras eigenem Verlauf</string>
+    <string name="history_import_skip_full">Über dem Verlaufslimit von 250.000 Wiedergaben</string>
+    <string name="history_import_storage">Importierter Hörverlauf</string>
+    <string name="history_import_manage">Verwalten</string>
+    <string name="history_import_stats_unknown">Importierte Wiedergaben ohne angegebene Wiedergabedauer zählen als Wiedergaben, aber nicht als Minuten.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d Wiedergabe</item>
+        <item quantity="other">%1$,d Wiedergaben</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d Import</item>
+        <item quantity="other">%1$,d Importe</item>
+    </plurals>
+</resources>

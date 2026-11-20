@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Importar historial de escucha</string>
+    <string name="history_import_summary">Reproducciones de exportaciones de Spotify, Apple Music y YouTube Music</string>
+    <string name="history_import_intro">Pide a un servicio una copia de tus datos y luego elige el zip o los archivos que te envíe. Aurora añade exactamente lo que figura en la exportación: nunca adivina tiempos de reproducción, álbumes, artistas ni lugares.</string>
+    <string name="history_import_request">Solicitar tus datos</string>
+    <string name="history_import_spotify_steps">En la página de privacidad de Spotify, solicita «Extended streaming history» (todo desde que se creó tu cuenta; puede tardar hasta 30 días) o «Account data» (aproximadamente el último año; normalmente en un plazo de 5 días). Elige el zip que Spotify te envíe por correo, o los archivos Streaming_History_Audio o StreamingHistory_music que contiene.</string>
+    <string name="history_import_apple_steps">En privacy.apple.com elige «Request a copy of your data» y marca «Apple Media Services information». Elige el zip que Apple te envíe. Las exportaciones más recientes no indican el artista junto a cada reproducción, así que Aurora lo toma de la lista diaria de canciones o de la biblioteca del mismo zip cuando estas indican exactamente uno; si no, la reproducción queda sin artista.</string>
+    <string name="history_import_youtube_steps">En Google Takeout, selecciona solo YouTube y YouTube Music, incluye solo el historial y establece JSON como formato del historial. Elige el zip de Takeout o watch-history.json. El historial de YouTube no indica la duración de reproducción, así que esas reproducciones cuentan como reproducciones, pero no suman minutos.</string>
+    <string name="history_import_pick">Elegir archivos</string>
+    <string name="history_import_pick_hint">Un archivo zip, JSON, CSV o HTML. Puedes elegir varios a la vez.</string>
+    <string name="history_import_reading">Leyendo la exportación…</string>
+    <string name="history_import_rows">Filas leídas: %1$s</string>
+    <string name="history_import_saving">Importando…</string>
+    <string name="history_import_preview_title">Listo para importar</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Vinculadas a canciones que Aurora conoce: %1$s</string>
+    <string name="history_import_unknown_time">Sin duración de reproducción indicada: %1$s. Cuentan como reproducciones, no como minutos.</string>
+    <string name="history_import_unknown_artist">Sin artista en la exportación: %1$s. Cuentan para canciones y álbumes, no para artistas.</string>
+    <string name="history_import_left_out">Omitido</string>
+    <string name="history_import_files">Leído de %1$s</string>
+    <string name="history_import_nothing">Estos archivos no contienen reproducciones de música para añadir.</string>
+    <string name="history_import_unreadable">No se pudieron leer estos archivos.</string>
+    <string name="history_import_confirm">Importar</string>
+    <string name="history_import_past">Importaciones anteriores</string>
+    <string name="history_import_none">Aún no se ha importado nada</string>
+    <string name="history_import_record">%1$s · %2$s · importado el %3$s</string>
+    <string name="history_import_undo">Deshacer importación</string>
+    <string name="history_import_undo_title">¿Deshacer esta importación?</string>
+    <string name="history_import_undo_body">Se quitarán las reproducciones que añadió esta importación. Las reproducciones propias de Aurora y tus otras importaciones se mantienen.</string>
+    <string name="history_import_undone">Importación deshecha</string>
+    <string name="history_import_insights_note">Las estadísticas detalladas están activadas, así que las reproducciones importadas con duración indicada también se incluyen en ellas. La hora del día sale de las marcas de tiempo de la propia exportación; el dispositivo, el sonido y los lugares quedan vacíos.</string>
+    <string name="history_import_skip_podcast">Episodios de pódcast</string>
+    <string name="history_import_skip_audiobook">Capítulos de audiolibros</string>
+    <string name="history_import_skip_video">Vídeos en lugar de canciones</string>
+    <string name="history_import_skip_ad">Anuncios</string>
+    <string name="history_import_skip_removed">Vídeos eliminados o privados</string>
+    <string name="history_import_skip_no_track">Filas sin título de canción o sin artista</string>
+    <string name="history_import_skip_no_date">Filas sin una fecha utilizable</string>
+    <string name="history_import_skip_not_played">Filas sin tiempo de reproducción</string>
+    <string name="history_import_skip_private">Reproducciones en una sesión privada</string>
+    <string name="history_import_skip_not_a_play">Eventos que no son reproducciones</string>
+    <string name="history_import_skip_duplicate">Aparecen dos veces en estos archivos</string>
+    <string name="history_import_skip_already">Ya importadas</string>
+    <string name="history_import_skip_aurora">Ya están en el historial propio de Aurora</string>
+    <string name="history_import_skip_full">Por encima del límite del historial de 250.000 reproducciones</string>
+    <string name="history_import_storage">Historial de escucha importado</string>
+    <string name="history_import_manage">Gestionar</string>
+    <string name="history_import_stats_unknown">Las reproducciones importadas sin duración indicada cuentan como reproducciones, pero no como minutos.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d reproducción</item>
+        <item quantity="many">%1$,d de reproducciones</item>
+        <item quantity="other">%1$,d reproducciones</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d importación</item>
+        <item quantity="many">%1$,d de importaciones</item>
+        <item quantity="other">%1$,d importaciones</item>
+    </plurals>
+</resources>

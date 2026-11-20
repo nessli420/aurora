@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Impor riwayat mendengarkan</string>
+    <string name="history_import_summary">Pemutaran dari ekspor Spotify, Apple Music, dan YouTube Music</string>
+    <string name="history_import_intro">Minta salinan datamu ke sebuah layanan, lalu pilih zip atau file yang dikirimkannya. Aurora menambahkan persis apa yang tercantum dalam ekspor: Aurora tidak pernah menebak durasi putar, album, artis, atau tempat.</string>
+    <string name="history_import_request">Minta datamu</string>
+    <string name="history_import_spotify_steps">Di halaman privasi Spotify, minta “Extended streaming history” (semua sejak akunmu dibuat, bisa memakan waktu hingga 30 hari) atau “Account data” (kira-kira setahun terakhir, biasanya dalam 5 hari). Pilih zip yang dikirim Spotify lewat email, atau file Streaming_History_Audio atau StreamingHistory_music di dalamnya.</string>
+    <string name="history_import_apple_steps">Di privacy.apple.com, pilih “Request a copy of your data” dan centang “Apple Media Services information”. Pilih zip yang dikirim Apple. Ekspor yang lebih baru tidak mencantumkan artis di setiap pemutaran, jadi Aurora mengambilnya dari daftar lagu harian atau pustaka di zip yang sama jika daftar tersebut menyebut tepat satu artis; jika tidak, pemutaran itu tetap tanpa artis.</string>
+    <string name="history_import_youtube_steps">Di Google Takeout, pilih hanya YouTube dan YouTube Music, sertakan hanya riwayat, lalu atur format riwayat ke JSON. Pilih zip Takeout atau watch-history.json. Riwayat YouTube tidak mencantumkan durasi putar, jadi pemutaran tersebut dihitung sebagai pemutaran tetapi tidak menambah menit.</string>
+    <string name="history_import_pick">Pilih file</string>
+    <string name="history_import_pick_hint">File zip, JSON, CSV, atau HTML. Kamu bisa memilih beberapa sekaligus.</string>
+    <string name="history_import_reading">Membaca ekspor…</string>
+    <string name="history_import_rows">%1$s baris dibaca</string>
+    <string name="history_import_saving">Mengimpor…</string>
+    <string name="history_import_preview_title">Siap diimpor</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Ditautkan ke lagu yang dikenal Aurora: %1$s</string>
+    <string name="history_import_unknown_time">Tanpa durasi putar yang tercantum: %1$s. Dihitung sebagai pemutaran, bukan sebagai menit.</string>
+    <string name="history_import_unknown_artist">Tanpa artis dalam ekspor: %1$s. Dihitung untuk lagu dan album, bukan untuk artis.</string>
+    <string name="history_import_left_out">Tidak disertakan</string>
+    <string name="history_import_files">Dibaca dari %1$s</string>
+    <string name="history_import_nothing">File ini tidak berisi pemutaran musik untuk ditambahkan.</string>
+    <string name="history_import_unreadable">Tidak dapat membaca file ini.</string>
+    <string name="history_import_confirm">Impor</string>
+    <string name="history_import_past">Impor sebelumnya</string>
+    <string name="history_import_none">Belum ada yang diimpor</string>
+    <string name="history_import_record">%1$s · %2$s · diimpor %3$s</string>
+    <string name="history_import_undo">Urungkan impor</string>
+    <string name="history_import_undo_title">Urungkan impor ini?</string>
+    <string name="history_import_undo_body">Tindakan ini menghapus pemutaran yang ditambahkan oleh impor ini. Pemutaran milik Aurora sendiri dan impor lainnya tetap ada.</string>
+    <string name="history_import_undone">Impor diurungkan</string>
+    <string name="history_import_insights_note">Statistik terperinci aktif, jadi pemutaran yang diimpor dengan durasi tercantum juga masuk ke sana. Waktu dalam hari diambil dari stempel waktu ekspor itu sendiri; perangkat, suara, dan tempat tetap kosong.</string>
+    <string name="history_import_skip_podcast">Episode podcast</string>
+    <string name="history_import_skip_audiobook">Bab buku audio</string>
+    <string name="history_import_skip_video">Video, bukan lagu</string>
+    <string name="history_import_skip_ad">Iklan</string>
+    <string name="history_import_skip_removed">Video yang dihapus atau privat</string>
+    <string name="history_import_skip_no_track">Baris tanpa judul lagu atau tanpa artis</string>
+    <string name="history_import_skip_no_date">Baris tanpa tanggal yang dapat digunakan</string>
+    <string name="history_import_skip_not_played">Baris tanpa waktu putar</string>
+    <string name="history_import_skip_private">Pemutaran dalam sesi pribadi</string>
+    <string name="history_import_skip_not_a_play">Peristiwa yang bukan pemutaran</string>
+    <string name="history_import_skip_duplicate">Tercantum dua kali dalam file ini</string>
+    <string name="history_import_skip_already">Sudah diimpor</string>
+    <string name="history_import_skip_aurora">Sudah ada di riwayat Aurora sendiri</string>
+    <string name="history_import_skip_full">Melebihi batas riwayat 250.000 pemutaran</string>
+    <string name="history_import_storage">Riwayat mendengarkan yang diimpor</string>
+    <string name="history_import_manage">Kelola</string>
+    <string name="history_import_stats_unknown">Pemutaran yang diimpor tanpa durasi putar yang tercantum dihitung sebagai pemutaran, tetapi tidak sebagai menit.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d pemutaran</item>
+        <item quantity="other">%1$,d pemutaran</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d impor</item>
+        <item quantity="other">%1$,d impor</item>
+    </plurals>
+</resources>

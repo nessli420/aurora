@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Importuj historię słuchania</string>
+    <string name="history_import_summary">Odtworzenia z eksportów Spotify, Apple Music i YouTube Music</string>
+    <string name="history_import_intro">Poproś serwis o kopię swoich danych, a potem wybierz plik zip lub pliki, które od niego otrzymasz. Aurora dodaje dokładnie to, co zawiera eksport: nigdy nie zgaduje czasu odtwarzania, albumów, wykonawców ani miejsc.</string>
+    <string name="history_import_request">Poproś o swoje dane</string>
+    <string name="history_import_spotify_steps">Na stronie prywatności Spotify poproś o „Extended streaming history” (wszystko od założenia konta, może to potrwać do 30 dni) lub „Account data” (mniej więcej ostatni rok, zwykle w ciągu 5 dni). Wybierz plik zip, który Spotify wyśle Ci e-mailem, albo znajdujące się w nim pliki Streaming_History_Audio lub StreamingHistory_music.</string>
+    <string name="history_import_apple_steps">Na privacy.apple.com wybierz „Request a copy of your data” i zaznacz „Apple Media Services information”. Wybierz plik zip, który przyśle Apple. Nowsze eksporty nie podają wykonawcy przy poszczególnych odtworzeniach, więc Aurora bierze go z dziennej listy utworów lub biblioteki z tego samego pliku zip, jeśli podają one dokładnie jednego; w przeciwnym razie odtworzenie pozostaje bez wykonawcy.</string>
+    <string name="history_import_youtube_steps">W Google Takeout zaznacz tylko YouTube i YouTube Music, uwzględnij tylko historię i ustaw format historii na JSON. Wybierz plik zip z Takeout lub watch-history.json. Historia YouTube nie podaje czasu odtwarzania, więc te odtworzenia liczą się jako odtworzenia, ale nie dodają minut.</string>
+    <string name="history_import_pick">Wybierz pliki</string>
+    <string name="history_import_pick_hint">Plik zip, JSON, CSV lub HTML. Możesz wybrać kilka naraz.</string>
+    <string name="history_import_reading">Odczytywanie eksportu…</string>
+    <string name="history_import_rows">Odczytane wiersze: %1$s</string>
+    <string name="history_import_saving">Importowanie…</string>
+    <string name="history_import_preview_title">Gotowe do importu</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Powiązane z utworami, które zna Aurora: %1$s</string>
+    <string name="history_import_unknown_time">Bez podanego czasu odtwarzania: %1$s. Liczą się jako odtworzenia, nie jako minuty.</string>
+    <string name="history_import_unknown_artist">Bez wykonawcy w eksporcie: %1$s. Liczą się do utworów i albumów, nie do wykonawców.</string>
+    <string name="history_import_left_out">Pominięte</string>
+    <string name="history_import_files">Odczytano z: %1$s</string>
+    <string name="history_import_nothing">Te pliki nie zawierają odtworzeń muzyki do dodania.</string>
+    <string name="history_import_unreadable">Nie udało się odczytać tych plików.</string>
+    <string name="history_import_confirm">Importuj</string>
+    <string name="history_import_past">Wcześniejsze importy</string>
+    <string name="history_import_none">Nic jeszcze nie zaimportowano</string>
+    <string name="history_import_record">%1$s · %2$s · zaimportowano %3$s</string>
+    <string name="history_import_undo">Cofnij import</string>
+    <string name="history_import_undo_title">Cofnąć ten import?</string>
+    <string name="history_import_undo_body">Spowoduje to usunięcie odtworzeń dodanych przez ten import. Odtworzenia zapisane przez aplikację Aurora i Twoje pozostałe importy zostaną zachowane.</string>
+    <string name="history_import_undone">Import cofnięty</string>
+    <string name="history_import_insights_note">Szczegółowe statystyki są włączone, więc trafiają do nich też zaimportowane odtworzenia z podanym czasem trwania. Pora dnia pochodzi ze znaczników czasu samego eksportu; urządzenie, dźwięk i miejsca pozostają puste.</string>
+    <string name="history_import_skip_podcast">Odcinki podcastów</string>
+    <string name="history_import_skip_audiobook">Rozdziały audiobooków</string>
+    <string name="history_import_skip_video">Filmy zamiast utworów</string>
+    <string name="history_import_skip_ad">Reklamy</string>
+    <string name="history_import_skip_removed">Usunięte lub prywatne filmy</string>
+    <string name="history_import_skip_no_track">Wiersze bez tytułu utworu lub bez wykonawcy</string>
+    <string name="history_import_skip_no_date">Wiersze bez użytecznej daty</string>
+    <string name="history_import_skip_not_played">Wiersze bez czasu odtwarzania</string>
+    <string name="history_import_skip_private">Odtworzenia w sesji prywatnej</string>
+    <string name="history_import_skip_not_a_play">Zdarzenia, które nie są odtworzeniami</string>
+    <string name="history_import_skip_duplicate">Występują dwa razy w tych plikach</string>
+    <string name="history_import_skip_already">Już zaimportowane</string>
+    <string name="history_import_skip_aurora">Już w historii aplikacji Aurora</string>
+    <string name="history_import_skip_full">Powyżej limitu historii wynoszącego 250 000 odtworzeń</string>
+    <string name="history_import_storage">Zaimportowana historia słuchania</string>
+    <string name="history_import_manage">Zarządzaj</string>
+    <string name="history_import_stats_unknown">Zaimportowane odtworzenia bez podanego czasu odtwarzania liczą się jako odtworzenia, ale nie jako minuty.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d odtworzenie</item>
+        <item quantity="few">%1$,d odtworzenia</item>
+        <item quantity="many">%1$,d odtworzeń</item>
+        <item quantity="other">%1$,d odtworzenia</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d import</item>
+        <item quantity="few">%1$,d importy</item>
+        <item quantity="many">%1$,d importów</item>
+        <item quantity="other">%1$,d importu</item>
+    </plurals>
+</resources>

@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Importer l\'historique d\'écoute</string>
+    <string name="history_import_summary">Écoutes issues des exports de Spotify, Apple Music et YouTube Music</string>
+    <string name="history_import_intro">Demandez une copie de vos données à un service, puis choisissez le zip ou les fichiers qu\'il vous envoie. Aurora ajoute exactement ce que l\'export contient : il ne devine jamais les durées d\'écoute, les albums, les artistes ni les lieux.</string>
+    <string name="history_import_request">Demander vos données</string>
+    <string name="history_import_spotify_steps">Sur la page de confidentialité de Spotify, demandez « Extended streaming history » (tout depuis la création de votre compte, peut prendre jusqu\'à 30 jours) ou « Account data » (environ la dernière année, généralement sous 5 jours). Choisissez le zip que Spotify vous envoie par e-mail, ou les fichiers Streaming_History_Audio ou StreamingHistory_music qu\'il contient.</string>
+    <string name="history_import_apple_steps">Sur privacy.apple.com, choisissez « Request a copy of your data » et cochez « Apple Media Services information ». Choisissez le zip qu\'Apple vous envoie. Les exports récents n\'indiquent aucun artiste à côté de chaque écoute ; Aurora le reprend donc de la liste quotidienne des titres ou de la bibliothèque du même zip lorsque celles-ci en indiquent exactement un. Sinon, l\'écoute reste sans artiste.</string>
+    <string name="history_import_youtube_steps">Dans Google Takeout, sélectionnez uniquement YouTube et YouTube Music, incluez uniquement l\'historique et choisissez JSON comme format de l\'historique. Choisissez le zip Takeout ou watch-history.json. L\'historique YouTube n\'indique aucune durée d\'écoute : ces écoutes comptent donc comme des écoutes, mais n\'ajoutent aucune minute.</string>
+    <string name="history_import_pick">Choisir des fichiers</string>
+    <string name="history_import_pick_hint">Un fichier zip, JSON, CSV ou HTML. Vous pouvez en choisir plusieurs à la fois.</string>
+    <string name="history_import_reading">Lecture de l\'export…</string>
+    <string name="history_import_rows">Lignes lues : %1$s</string>
+    <string name="history_import_saving">Importation…</string>
+    <string name="history_import_preview_title">Prêt à importer</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Liées à des titres connus d\'Aurora : %1$s</string>
+    <string name="history_import_unknown_time">Sans durée d\'écoute indiquée : %1$s. Elles comptent comme des écoutes, pas comme des minutes.</string>
+    <string name="history_import_unknown_artist">Sans artiste dans l\'export : %1$s. Elles comptent pour les titres et les albums, pas pour les artistes.</string>
+    <string name="history_import_left_out">Exclus</string>
+    <string name="history_import_files">Lu depuis %1$s</string>
+    <string name="history_import_nothing">Ces fichiers ne contiennent aucune écoute de musique à ajouter.</string>
+    <string name="history_import_unreadable">Impossible de lire ces fichiers.</string>
+    <string name="history_import_confirm">Importer</string>
+    <string name="history_import_past">Importations précédentes</string>
+    <string name="history_import_none">Rien n\'a encore été importé</string>
+    <string name="history_import_record">%1$s · %2$s · importé le %3$s</string>
+    <string name="history_import_undo">Annuler l\'importation</string>
+    <string name="history_import_undo_title">Annuler cette importation ?</string>
+    <string name="history_import_undo_body">Les écoutes ajoutées par cette importation seront supprimées. Les écoutes propres à Aurora et vos autres importations sont conservées.</string>
+    <string name="history_import_undone">Importation annulée</string>
+    <string name="history_import_insights_note">Les statistiques détaillées sont activées : les écoutes importées dont la durée est indiquée y sont donc aussi ajoutées. L\'heure de la journée provient des horodatages de l\'export lui-même ; l\'appareil, le son et les lieux restent vides.</string>
+    <string name="history_import_skip_podcast">Épisodes de podcast</string>
+    <string name="history_import_skip_audiobook">Chapitres de livres audio</string>
+    <string name="history_import_skip_video">Vidéos plutôt que titres</string>
+    <string name="history_import_skip_ad">Publicités</string>
+    <string name="history_import_skip_removed">Vidéos supprimées ou privées</string>
+    <string name="history_import_skip_no_track">Lignes sans titre de morceau ou sans artiste</string>
+    <string name="history_import_skip_no_date">Lignes sans date exploitable</string>
+    <string name="history_import_skip_not_played">Lignes sans aucun temps d\'écoute</string>
+    <string name="history_import_skip_private">Écoutes en session privée</string>
+    <string name="history_import_skip_not_a_play">Événements qui ne sont pas des écoutes</string>
+    <string name="history_import_skip_duplicate">Présentes deux fois dans ces fichiers</string>
+    <string name="history_import_skip_already">Déjà importées</string>
+    <string name="history_import_skip_aurora">Déjà dans l\'historique propre d\'Aurora</string>
+    <string name="history_import_skip_full">Au-delà de la limite d\'historique de 250 000 écoutes</string>
+    <string name="history_import_storage">Historique d\'écoute importé</string>
+    <string name="history_import_manage">Gérer</string>
+    <string name="history_import_stats_unknown">Les écoutes importées sans durée d\'écoute indiquée comptent comme des écoutes, mais pas comme des minutes.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d écoute</item>
+        <item quantity="many">%1$,d d\'écoutes</item>
+        <item quantity="other">%1$,d écoutes</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d importation</item>
+        <item quantity="many">%1$,d d\'importations</item>
+        <item quantity="other">%1$,d importations</item>
+    </plurals>
+</resources>

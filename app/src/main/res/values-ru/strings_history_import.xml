@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">Импорт истории прослушиваний</string>
+    <string name="history_import_summary">Прослушивания из экспортов Spotify, Apple Music и YouTube Music</string>
+    <string name="history_import_intro">Запросите у сервиса копию своих данных, затем выберите zip-архив или файлы, которые он пришлёт. Aurora добавляет ровно то, что указано в экспорте: длительность прослушиваний, альбомы, исполнители и места никогда не угадываются.</string>
+    <string name="history_import_request">Запросить данные</string>
+    <string name="history_import_spotify_steps">На странице конфиденциальности Spotify запросите «Extended streaming history» (всё с момента создания аккаунта, может занять до 30 дней) или «Account data» (примерно последний год, обычно в течение 5 дней). Выберите zip-архив, который Spotify пришлёт по почте, или файлы Streaming_History_Audio или StreamingHistory_music из него.</string>
+    <string name="history_import_apple_steps">На privacy.apple.com выберите «Request a copy of your data» и отметьте «Apple Media Services information». Выберите zip-архив, который пришлёт Apple. В новых экспортах рядом с каждым прослушиванием не указан исполнитель, поэтому Aurora берёт его из ежедневного списка треков или медиатеки в том же архиве, если там указан ровно один исполнитель; иначе прослушивание остаётся без исполнителя.</string>
+    <string name="history_import_youtube_steps">В Google Takeout выберите только YouTube и YouTube Music, включите только историю и задайте для истории формат JSON. Выберите zip-архив Takeout или watch-history.json. В истории YouTube не указана длительность прослушивания, поэтому такие прослушивания учитываются как прослушивания, но не добавляют минут.</string>
+    <string name="history_import_pick">Выбрать файлы</string>
+    <string name="history_import_pick_hint">Файл zip, JSON, CSV или HTML. Можно выбрать несколько сразу.</string>
+    <string name="history_import_reading">Чтение экспорта…</string>
+    <string name="history_import_rows">Прочитано строк: %1$s</string>
+    <string name="history_import_saving">Импорт…</string>
+    <string name="history_import_preview_title">Готово к импорту</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">Связано с треками, известными Aurora: %1$s</string>
+    <string name="history_import_unknown_time">Без указанной длительности: %1$s. Они учитываются как прослушивания, но не как минуты.</string>
+    <string name="history_import_unknown_artist">Без исполнителя в экспорте: %1$s. Они учитываются в треках и альбомах, но не в исполнителях.</string>
+    <string name="history_import_left_out">Пропущено</string>
+    <string name="history_import_files">Прочитано из: %1$s</string>
+    <string name="history_import_nothing">В этих файлах нет прослушиваний музыки для добавления.</string>
+    <string name="history_import_unreadable">Не удалось прочитать эти файлы.</string>
+    <string name="history_import_confirm">Импортировать</string>
+    <string name="history_import_past">Прошлые импорты</string>
+    <string name="history_import_none">Пока ничего не импортировано</string>
+    <string name="history_import_record">%1$s · %2$s · импортировано %3$s</string>
+    <string name="history_import_undo">Отменить импорт</string>
+    <string name="history_import_undo_title">Отменить этот импорт?</string>
+    <string name="history_import_undo_body">Будут удалены прослушивания, добавленные этим импортом. Собственные прослушивания Aurora и другие ваши импорты сохранятся.</string>
+    <string name="history_import_undone">Импорт отменён</string>
+    <string name="history_import_insights_note">Подробная статистика включена, поэтому импортированные прослушивания с указанной длительностью тоже попадают в неё. Время суток берётся из меток времени самого экспорта; устройство, звук и места остаются пустыми.</string>
+    <string name="history_import_skip_podcast">Выпуски подкастов</string>
+    <string name="history_import_skip_audiobook">Главы аудиокниг</string>
+    <string name="history_import_skip_video">Видео вместо треков</string>
+    <string name="history_import_skip_ad">Реклама</string>
+    <string name="history_import_skip_removed">Удалённые или приватные видео</string>
+    <string name="history_import_skip_no_track">Строки без названия трека или без исполнителя</string>
+    <string name="history_import_skip_no_date">Строки без пригодной даты</string>
+    <string name="history_import_skip_not_played">Строки без времени воспроизведения</string>
+    <string name="history_import_skip_private">Прослушивания в приватном сеансе</string>
+    <string name="history_import_skip_not_a_play">События, не являющиеся прослушиваниями</string>
+    <string name="history_import_skip_duplicate">Встречаются дважды в этих файлах</string>
+    <string name="history_import_skip_already">Уже импортировано</string>
+    <string name="history_import_skip_aurora">Уже есть в собственной истории Aurora</string>
+    <string name="history_import_skip_full">Сверх лимита истории в 250 000 прослушиваний</string>
+    <string name="history_import_storage">Импортированная история прослушиваний</string>
+    <string name="history_import_manage">Управление</string>
+    <string name="history_import_stats_unknown">Импортированные прослушивания без указанной длительности учитываются как прослушивания, но не как минуты.</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d прослушивание</item>
+        <item quantity="few">%1$,d прослушивания</item>
+        <item quantity="many">%1$,d прослушиваний</item>
+        <item quantity="other">%1$,d прослушивания</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d импорт</item>
+        <item quantity="few">%1$,d импорта</item>
+        <item quantity="many">%1$,d импортов</item>
+        <item quantity="other">%1$,d импорта</item>
+    </plurals>
+</resources>

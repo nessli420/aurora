@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">导入聆听历史</string>
+    <string name="history_import_summary">来自 Spotify、Apple Music 和 YouTube Music 导出数据的播放记录</string>
+    <string name="history_import_intro">向服务申请一份你的数据副本，然后选择对方发给你的 zip 或文件。Aurora 只按导出数据原样添加，绝不猜测播放时长、专辑、艺人或地点。</string>
+    <string name="history_import_request">申请你的数据</string>
+    <string name="history_import_spotify_steps">在 Spotify 的隐私页面上，申请“Extended streaming history”（自创建账号以来的全部记录，最长可能需要 30 天）或“Account data”（大约最近一年，通常在 5 天内）。选择 Spotify 通过电子邮件发给你的 zip，或其中的 Streaming_History_Audio 或 StreamingHistory_music 文件。</string>
+    <string name="history_import_apple_steps">在 privacy.apple.com 上选择“Request a copy of your data”，并勾选“Apple Media Services information”。选择 Apple 发给你的 zip。较新的导出数据不会在每条播放旁注明艺人，因此当同一 zip 中的每日曲目列表或资料库恰好只列出一位艺人时，Aurora 会从中获取；否则该播放不带艺人。</string>
+    <string name="history_import_youtube_steps">在 Google Takeout 中，只选择 YouTube 和 YouTube Music，只包含历史记录，并将历史记录格式设为 JSON。选择 Takeout 的 zip 或 watch-history.json。YouTube 的历史记录不含播放时长，因此这些播放会计为播放次数，但不增加分钟数。</string>
+    <string name="history_import_pick">选择文件</string>
+    <string name="history_import_pick_hint">zip、JSON、CSV 或 HTML 文件。可以一次选择多个。</string>
+    <string name="history_import_reading">正在读取导出数据…</string>
+    <string name="history_import_rows">已读取 %1$s 行</string>
+    <string name="history_import_saving">正在导入…</string>
+    <string name="history_import_preview_title">准备导入</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">已关联到 Aurora 已知的歌曲：%1$s</string>
+    <string name="history_import_unknown_time">未注明播放时长：%1$s。计为播放次数，但不计入分钟数。</string>
+    <string name="history_import_unknown_artist">导出数据中无艺人：%1$s。计入歌曲和专辑，但不计入艺人。</string>
+    <string name="history_import_left_out">已排除</string>
+    <string name="history_import_files">读取自 %1$s</string>
+    <string name="history_import_nothing">这些文件中没有可添加的音乐播放记录。</string>
+    <string name="history_import_unreadable">无法读取这些文件。</string>
+    <string name="history_import_confirm">导入</string>
+    <string name="history_import_past">以往的导入</string>
+    <string name="history_import_none">尚未导入任何内容</string>
+    <string name="history_import_record">%1$s · %2$s · 导入于 %3$s</string>
+    <string name="history_import_undo">撤销导入</string>
+    <string name="history_import_undo_title">要撤销此次导入吗？</string>
+    <string name="history_import_undo_body">这会移除此次导入添加的播放记录。Aurora 自己的播放记录和你的其他导入将保留。</string>
+    <string name="history_import_undone">已撤销导入</string>
+    <string name="history_import_insights_note">详细统计已开启，因此注明了时长的导入播放也会计入其中。一天中的时段取自导出数据本身的时间戳；设备、音频和地点保持为空。</string>
+    <string name="history_import_skip_podcast">播客单集</string>
+    <string name="history_import_skip_audiobook">有声书章节</string>
+    <string name="history_import_skip_video">视频而非歌曲</string>
+    <string name="history_import_skip_ad">广告</string>
+    <string name="history_import_skip_removed">已删除或不公开的视频</string>
+    <string name="history_import_skip_no_track">缺少歌曲名或艺人的行</string>
+    <string name="history_import_skip_no_date">没有可用日期的行</string>
+    <string name="history_import_skip_not_played">没有播放时间的行</string>
+    <string name="history_import_skip_private">私密会话中的播放</string>
+    <string name="history_import_skip_not_a_play">不属于播放的事件</string>
+    <string name="history_import_skip_duplicate">在这些文件中重复出现</string>
+    <string name="history_import_skip_already">已导入</string>
+    <string name="history_import_skip_aurora">已在 Aurora 自己的历史记录中</string>
+    <string name="history_import_skip_full">超出 25 万次播放的历史记录上限</string>
+    <string name="history_import_storage">已导入的聆听历史</string>
+    <string name="history_import_manage">管理</string>
+    <string name="history_import_stats_unknown">未注明播放时长的导入播放会计为播放次数，但不计入分钟数。</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d 次播放</item>
+        <item quantity="other">%1$,d 次播放</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d 次导入</item>
+        <item quantity="other">%1$,d 次导入</item>
+    </plurals>
+</resources>

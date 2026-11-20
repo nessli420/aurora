@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="history_import_title">سننے کی ہسٹری امپورٹ کریں</string>
+    <string name="history_import_summary">⁧Spotify، Apple Music اور YouTube Music کی ایکسپورٹس سے پلے⁩</string>
+    <string name="history_import_intro">کسی سروس سے اپنے ڈیٹا کی کاپی مانگیں، پھر وہ جو zip یا فائلیں بھیجے انہیں منتخب کریں۔ Aurora بالکل وہی شامل کرتا ہے جو ایکسپورٹ میں درج ہو: یہ پلے کے دورانیے، البمز، فنکاروں یا مقامات کا کبھی اندازہ نہیں لگاتا۔</string>
+    <string name="history_import_request">اپنا ڈیٹا مانگیں</string>
+    <string name="history_import_spotify_steps">⁧Spotify کے پرائیویسی صفحے پر “Extended streaming history” (اکاؤنٹ بننے سے اب تک سب کچھ، اس میں 30 دن تک لگ سکتے ہیں) یا “Account data” (تقریباً پچھلا ایک سال، عموماً 5 دن کے اندر) مانگیں۔ Spotify ای میل سے جو zip بھیجے اسے منتخب کریں، یا اس کے اندر موجود Streaming_History_Audio یا StreamingHistory_music فائلیں۔⁩</string>
+    <string name="history_import_apple_steps">⁧privacy.apple.com پر “Request a copy of your data” منتخب کریں اور “Apple Media Services information” پر نشان لگائیں۔ Apple جو zip بھیجے اسے منتخب کریں۔ نئی ایکسپورٹس میں ہر پلے کے ساتھ فنکار کا نام نہیں ہوتا، اس لیے جہاں اسی zip کی روزانہ ٹریک فہرست یا لائبریری میں ٹھیک ایک فنکار درج ہو، Aurora فنکار وہیں سے لیتا ہے؛ ورنہ اس پلے کے ساتھ کوئی فنکار نہیں رہتا۔⁩</string>
+    <string name="history_import_youtube_steps">⁧Google Takeout میں صرف YouTube اور YouTube Music منتخب کریں، صرف ہسٹری شامل کریں اور ہسٹری کا فارمیٹ JSON پر سیٹ کریں۔ Takeout کی zip یا watch-history.json منتخب کریں۔ YouTube کی ہسٹری میں پلے کا دورانیہ درج نہیں ہوتا، اس لیے یہ پلے، پلے کے طور پر تو گنے جاتے ہیں لیکن منٹ نہیں بڑھاتے۔⁩</string>
+    <string name="history_import_pick">فائلیں منتخب کریں</string>
+    <string name="history_import_pick_hint">ایک zip، JSON، CSV یا HTML فائل۔ آپ ایک ساتھ کئی فائلیں منتخب کر سکتے ہیں۔</string>
+    <string name="history_import_reading">ایکسپورٹ پڑھی جا رہی ہے…</string>
+    <string name="history_import_rows">پڑھی گئی قطاریں: %1$s</string>
+    <string name="history_import_saving">امپورٹ ہو رہا ہے…</string>
+    <string name="history_import_preview_title">امپورٹ کے لیے تیار</string>
+    <string name="history_import_range">%1$s – %2$s</string>
+    <string name="history_import_linked">ان گانوں سے منسلک جنہیں Aurora جانتا ہے: %1$s</string>
+    <string name="history_import_unknown_time">جن میں پلے کا دورانیہ درج نہیں: %1$s۔ یہ پلے کے طور پر گنے جاتے ہیں، منٹوں کے طور پر نہیں۔</string>
+    <string name="history_import_unknown_artist">جن کا ایکسپورٹ میں کوئی فنکار نہیں: %1$s۔ یہ گانوں اور البمز میں گنے جاتے ہیں، فنکاروں میں نہیں۔</string>
+    <string name="history_import_left_out">چھوڑ دیے گئے</string>
+    <string name="history_import_files">ان سے پڑھا گیا: %1$s</string>
+    <string name="history_import_nothing">ان فائلوں میں شامل کرنے کے لیے کوئی میوزک پلے نہیں ہے۔</string>
+    <string name="history_import_unreadable">یہ فائلیں پڑھی نہیں جا سکیں۔</string>
+    <string name="history_import_confirm">امپورٹ کریں</string>
+    <string name="history_import_past">پچھلے امپورٹس</string>
+    <string name="history_import_none">ابھی تک کچھ امپورٹ نہیں ہوا</string>
+    <string name="history_import_record">%1$s · %2$s · %3$s کو امپورٹ کیا گیا</string>
+    <string name="history_import_undo">امپورٹ واپس لیں</string>
+    <string name="history_import_undo_title">یہ امپورٹ واپس لیں؟</string>
+    <string name="history_import_undo_body">اس سے وہ پلے ہٹ جاتے ہیں جو اس امپورٹ نے شامل کیے تھے۔ Aurora کے اپنے پلے اور آپ کے دوسرے امپورٹس برقرار رہتے ہیں۔</string>
+    <string name="history_import_undone">امپورٹ واپس لے لیا گیا</string>
+    <string name="history_import_insights_note">تفصیلی اعداد و شمار آن ہیں، اس لیے درج دورانیے والے امپورٹ شدہ پلے بھی ان میں شامل ہوتے ہیں۔ دن کا وقت ایکسپورٹ کے اپنے ٹائم اسٹیمپس سے آتا ہے؛ ڈیوائس، آواز اور مقامات خالی رہتے ہیں۔</string>
+    <string name="history_import_skip_podcast">پوڈکاسٹ کی اقساط</string>
+    <string name="history_import_skip_audiobook">آڈیو بک کے ابواب</string>
+    <string name="history_import_skip_video">گانوں کے بجائے ویڈیوز</string>
+    <string name="history_import_skip_ad">اشتہارات</string>
+    <string name="history_import_skip_removed">ہٹائی گئی یا نجی ویڈیوز</string>
+    <string name="history_import_skip_no_track">وہ قطاریں جن میں گانے کا نام یا فنکار نہیں</string>
+    <string name="history_import_skip_no_date">وہ قطاریں جن میں قابلِ استعمال تاریخ نہیں</string>
+    <string name="history_import_skip_not_played">وہ قطاریں جن میں پلے کا کوئی وقت نہیں</string>
+    <string name="history_import_skip_private">نجی سیشن میں ہونے والے پلے</string>
+    <string name="history_import_skip_not_a_play">ایسے ایونٹس جو پلے نہیں ہیں</string>
+    <string name="history_import_skip_duplicate">ان فائلوں میں دو بار درج</string>
+    <string name="history_import_skip_already">پہلے سے امپورٹ شدہ</string>
+    <string name="history_import_skip_aurora">پہلے سے Aurora کی اپنی ہسٹری میں</string>
+    <string name="history_import_skip_full">2,50,000 پلے کی ہسٹری کی حد سے زیادہ</string>
+    <string name="history_import_storage">امپورٹ شدہ سننے کی ہسٹری</string>
+    <string name="history_import_manage">منظم کریں</string>
+    <string name="history_import_stats_unknown">جن امپورٹ شدہ پلے کا دورانیہ درج نہیں، وہ پلے کے طور پر گنے جاتے ہیں لیکن منٹوں کے طور پر نہیں۔</string>
+    <plurals name="history_import_plays">
+        <item quantity="one">%1$,d پلے</item>
+        <item quantity="other">%1$,d پلے</item>
+    </plurals>
+    <plurals name="history_import_imports">
+        <item quantity="one">%1$,d امپورٹ</item>
+        <item quantity="other">%1$,d امپورٹس</item>
+    </plurals>
+</resources>
