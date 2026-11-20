@@ -71,7 +71,10 @@ private fun rememberInbox(): InboxState {
     val recaps by produceState<List<RecapWindow>?>(null, history.size, history.firstOrNull()?.timestamp, today) {
         value = withContext(Dispatchers.Default) { ListeningRecaps.available(history, today) }
     }
-    return InboxState(recaps.orEmpty(), seen, history, recaps == null) { keys ->
+    val imported by produceState(emptySet<String>(), history.size, today) {
+        value = withContext(Dispatchers.Default) { ListeningRecaps.importedOnly(history, today) }
+    }
+    return InboxState(recaps.orEmpty(), seen + imported, history, recaps == null) { keys ->
         val updated = prefs.getStringSet("seen", emptySet()).orEmpty().toSet() + keys
         prefs.edit().putStringSet("seen", updated).apply()
         seen = updated

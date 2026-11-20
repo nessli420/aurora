@@ -55,6 +55,18 @@ class DetailedListeningStore(context: Context) : DetailedListeningRepository {
         plays.size
     }
 
+    override suspend fun removeHistory(events: List<PlayEvent>) = withContext(dispatcher) {
+        if (!file.exists()) return@withContext
+        val db = helper.writableDatabase
+        db.beginTransaction()
+        try {
+            events.forEach { db.delete("plays", "id = ?", arrayOf(it.importedPlayId)) }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+    }
+
     override suspend fun clear() = withContext(dispatcher) {
         helper.close()
         SQLiteDatabase.deleteDatabase(file)

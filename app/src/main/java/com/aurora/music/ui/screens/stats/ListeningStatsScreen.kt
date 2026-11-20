@@ -116,6 +116,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                 }
                 Text(appString(R.string.text_plays_count_after_30_seconds_or_half_of_a_shorter_song_private_se_333c7b), Modifier.padding(horizontal = 16.dp, vertical = 6.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (recap.estimated) Text(appString(R.string.text_older_plays_use_estimated_listening_time_from_track_lengths_768fa0), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                if (recap.unknownTime > 0) Text(appString(R.string.history_import_stats_unknown), Modifier.padding(horizontal = 16.dp), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 if (window.period == RecapPeriod.ALL) Row(Modifier.fillMaxWidth().padding(start = 16.dp, end = 8.dp), verticalAlignment = Alignment.CenterVertically) {
                     if (earlierMs > 0) Text(appString(R.string.earlier_listening_included, listeningDuration(earlierMs), listeningDuration(recap.millis)), Modifier.weight(1f),
                         style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
@@ -131,7 +132,7 @@ fun ListeningStatsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onPl
                     }
                 }
             }
-            if (recap.millis == 0L) item { EmptyState(Icons.Filled.History, appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2)) }
+            if (recap.millis == 0L && recap.plays == 0) item { EmptyState(Icons.Filled.History, appString(R.string.text_no_listening_recorded_in_this_period_choose_another_date_or_play_ed4ba2)) }
             else {
                 item { RecapInsights(recap, previous) }
                 item {

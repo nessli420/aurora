@@ -70,6 +70,8 @@ internal object SettingsSearchIndex {
         e(R.string.insights_device, R.string.insights_device_desc, Routes.SETTINGS_INSIGHTS),
         e(R.string.insights_audio_path, R.string.insights_audio_path_desc, Routes.SETTINGS_INSIGHTS),
         e(R.string.insights_import, R.string.insights_import_desc, Routes.SETTINGS_INSIGHTS),
+        e(R.string.history_import_title, R.string.history_import_summary, Routes.SETTINGS_HISTORY_IMPORT),
+        e(R.string.history_import_storage, R.string.history_import_summary, Routes.SETTINGS_STORAGE),
         e(R.string.insights_record, R.string.insights_description, Routes.SETTINGS_INSIGHTS),
         e(R.string.insights_location_history_toggle, R.string.insights_location_history_desc, Routes.SETTINGS_INSIGHTS),
         e(R.string.insights_places_toggle, R.string.insights_places_desc, Routes.SETTINGS_INSIGHTS),

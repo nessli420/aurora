@@ -33,6 +33,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.Backup
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Insights
 import androidx.compose.material.icons.filled.Alarm
 import androidx.compose.material.icons.filled.Devices
@@ -309,6 +310,9 @@ fun SettingsScreen(
                     val insights by container.settingsStore.insightsPrefs.collectAsStateWithLifecycle(com.aurora.music.data.InsightsPrefs())
                     SettingsDestinationRow(Icons.Filled.Insights, SettingsDestinations.insights,
                         if (insights.enabled) appString(R.string.text_on_e0049a) else SettingsDestinations.insights.description, onClick = onOpenInsights)
+                    SettingsRowDivider()
+                    SettingsDestinationRow(Icons.Filled.History, SettingsDestinations.historyImport,
+                        onClick = { onOpenRoute(Routes.SETTINGS_HISTORY_IMPORT) })
                     SettingsRowDivider()
                     SettingsDestinationRow(Icons.Filled.Backup, SettingsDestinations.backup, onClick = onOpenBackup)
                     SettingsRowDivider()

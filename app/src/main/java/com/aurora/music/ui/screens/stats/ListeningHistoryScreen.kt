@@ -86,7 +86,7 @@ fun ListeningHistoryScreen(contentPadding: PaddingValues, onBack: () -> Unit, on
                 items(events.size) { i ->
                     val e = events[i]
                     Row(
-                        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable { onPlay(e.songId) }.padding(horizontal = 16.dp, vertical = 8.dp),
+                        Modifier.fillMaxWidth().paperClip(RoundedCornerShape(12.dp)).clickable(enabled = !com.aurora.music.data.isImportedSongId(e.songId)) { onPlay(e.songId) }.padding(horizontal = 16.dp, vertical = 8.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
                         Artwork(e.artworkUrl, accentFor(e.songId), Modifier.size(48.dp), corner = 10.dp)

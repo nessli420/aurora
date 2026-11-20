@@ -52,6 +52,7 @@ object Routes {
     const val YOUTUBE_DOWNLOAD = "youtube_download"
     const val SETTINGS_GESTURES = "settings_gestures"
     const val SETTINGS_INSIGHTS = "settings_insights"
+    const val SETTINGS_HISTORY_IMPORT = "settings_history_import"
     const val INSIGHTS = "insights"
     const val LISTENING_MAP = "listening_map"
     const val SETTINGS_INTEGRATIONS = "settings_integrations"

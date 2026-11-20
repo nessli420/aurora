@@ -883,6 +883,9 @@ fun AuroraApp() {
                         confirm = { confirm(it) },
                     )
                 }
+                composable(Routes.SETTINGS_HISTORY_IMPORT) {
+                    com.aurora.music.ui.screens.settings.HistoryImportScreen(padding, onBack = { nav.popBackStack() })
+                }
                 composable(Routes.SETTINGS_WHATS_NEW) {
                     com.aurora.music.ui.screens.settings.WhatsNewSettingsScreen(padding, onBack = { nav.popBackStack() })
                 }
@@ -1041,7 +1044,7 @@ fun AuroraApp() {
                 }
                 composable(Routes.SETTINGS_STORAGE) {
                     com.aurora.music.ui.screens.settings.StorageSettingsScreen(contentPadding = padding, onBack = { nav.popBackStack() },
-                        onOpenYouTubeDownload = { nav.navigate(Routes.YOUTUBE_DOWNLOAD) })
+                        onOpenYouTubeDownload = { nav.navigate(Routes.YOUTUBE_DOWNLOAD) }, onOpenHistoryImport = { nav.navigate(Routes.SETTINGS_HISTORY_IMPORT) })
                 }
                 composable(Routes.YOUTUBE_DOWNLOAD) {
                     com.aurora.music.ui.screens.youtube.YouTubeDownloadScreen(contentPadding = padding, onBack = { nav.popBackStack() },
