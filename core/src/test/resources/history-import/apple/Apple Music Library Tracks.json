@@ -1,0 +1,5 @@
+[
+  {"Track Identifier": 1, "Apple Music Track Identifier": 2000000001, "Title": "Old Apple Song", "Artist": "Archive Band", "Album": "Archive", "Album Artist": "Archive Band", "Track Duration": 150000, "Date Added To Library": "2016-04-01T10:00:00Z", "Last Played Date": "Invalid"},
+  {"Track Identifier": 2, "Apple Music Track Identifier": 2000000002, "Title": "Mystery Track", "Artist": "Band One", "Album": "Other Album", "Track Duration": 180000},
+  {"Track Identifier": 3, "Apple Music Track Identifier": 2000000003, "Title": "Glass Harbor", "Artist": "Nova Pilot", "Album": "Harbor Lights - Single", "Track Duration": 200000}
+]

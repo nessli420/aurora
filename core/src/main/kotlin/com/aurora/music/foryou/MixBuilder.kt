@@ -10,6 +10,7 @@ import com.aurora.music.ai.djTrackKey
 import com.aurora.music.data.GenreText
 import com.aurora.music.data.PlayEvent
 import com.aurora.music.data.PlaybackCollectionIdentity
+import com.aurora.music.data.isImportedSongId
 import com.aurora.music.data.qualifiesAsPlay
 import com.aurora.music.model.Song
 import kotlin.math.ceil
@@ -179,7 +180,7 @@ internal class MixTaste(events: List<PlayEvent>, val clock: MixClock, extraSkips
             plays.merge(key, 1, Int::plus)
             affinity.merge(key, weight, Double::plus)
             last[key] = e.timestamp
-            ids[key] = id
+            if (!isImportedSongId(id) || key !in ids) ids[key] = id
             partPlays[part].merge(key, 1, Int::plus)
             partTotal[part]++
             if (artist.isNotEmpty()) {

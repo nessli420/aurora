@@ -1,0 +1,6 @@
+Country,"Track Identifier","Media type","Date Played",Hours,"Play Duration Milliseconds","End Reason Type","Source Type","Play Count","Skip Count","Ignore For Recommendations","Track Reference","Track Description"
+NLD,1000000001,AUDIO,20240401,"18",200000,NATURAL_END_OF_TRACK,IPHONE,1,0,,1000000001,"Nova Pilot - Glass Harbor"
+NLD,1000000002,AUDIO,20240401,"18",240000,NATURAL_END_OF_TRACK,IPHONE,1,0,,1000000002,"Kite Theory - Quiet Engine"
+NLD,1000000003,AUDIO,20240402,"9",30000,TRACK_SKIPPED_FORWARDS,IPHONE,0,1,,1000000003,"Lumen Field - Hello, ""World"""
+NLD,1000000002,AUDIO,20240403,"12",180000,NATURAL_END_OF_TRACK,"IPHONE, MACINTOSH",1,0,,1000000002,"Kite Theory - Quiet Engine"
+NLD,1000000004,AUDIO,20240403,"12",180000,NATURAL_END_OF_TRACK,IPHONE,1,0,,1000000004,"Other Band - Quiet Engine"

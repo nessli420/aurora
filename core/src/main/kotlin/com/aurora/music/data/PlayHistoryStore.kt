@@ -32,6 +32,10 @@ data class PlayEvent(
     val durationSec: Int,
     val timestamp: Long,
     val listenedMs: Long? = null,
+    // set only on plays brought in from another service's export
+    val origin: String? = null,
+    val shuffle: Boolean? = null,
+    val ending: PlayEnding? = null,
 )
 
 data class RankedItem(val id: String, val name: String, val subtitle: String, val artworkUrl: String, val count: Int)
@@ -170,6 +174,40 @@ class PlayHistoryStore(filesDir: File) {
                 true
             }
         }
+    }
+
+    // imported plays slot in by time; aurora's own rows keep their order
+    fun addImported(events: List<PlayEvent>): List<PlayEvent> {
+        awaitLoaded()
+        val added = synchronized(lock) {
+            val current = _history.value
+            val incoming = events.sortedByDescending { it.timestamp }.take((MAX - current.size).coerceAtLeast(0))
+            if (incoming.isEmpty()) return emptyList()
+            val out = ArrayList<PlayEvent>(current.size + incoming.size)
+            var i = 0
+            var j = 0
+            while (i < current.size || j < incoming.size) {
+                if (j < incoming.size && (i >= current.size || incoming[j].timestamp > current[i].timestamp)) out += incoming[j++] else out += current[i++]
+            }
+            revision++
+            _history.value = out
+            incoming
+        }
+        scope.launch { save() }
+        return added
+    }
+
+    fun removeImport(origin: String): List<PlayEvent> {
+        awaitLoaded()
+        val removed = synchronized(lock) {
+            val (gone, kept) = _history.value.partition { it.origin == origin }
+            if (gone.isEmpty()) return emptyList()
+            revision++
+            _history.value = kept
+            gone
+        }
+        scope.launch { save() }
+        return removed
     }
 
     fun totalPlays(): Int = snapshot().count { it.qualifiesAsPlay }

@@ -83,7 +83,7 @@ object Insights {
         sorted.forEach { p -> val (day, hour) = dayAndHour(p.startedAt, zone); heatmap[day][hour] += p.listenedMs }
         val byHour = LongArray(24) { h -> heatmap.sumOf { it[h] } }
         val sessions = sessions(sorted)
-        val finished = sorted.filter { it.ending != null && !it.imported }
+        val finished = sorted.filter { it.ending != null }
         val artistKeys = counted.map { artistKey(it.track.artist) }.filter(String::isNotEmpty).toSet()
         val newArtists = artistKeys.count { (firstArtistPlay[it] ?: Long.MAX_VALUE) >= from }
         val shuffleKnown = counted.filter { it.context.shuffle != null }

@@ -29,6 +29,19 @@ class JsonLinesDetailedListeningStore(private val file: File, private val platfo
         plays.size
     }
 
+    override suspend fun removeHistory(events: List<PlayEvent>) = withContext(dispatcher) {
+        synchronized(lock) {
+            val map = loaded()
+            val before = map.size
+            events.forEach { map.remove(it.importedPlayId) }
+            if (map.size != before) {
+                file.parentFile?.mkdirs()
+                persistBackupFileAtomically(file, map.values.joinToString("") { gson.toJson(it) + "\n" }.toByteArray(Charsets.UTF_8))
+                lines = map.size
+            }
+        }
+    }
+
     override suspend fun clear() = withContext(dispatcher) {
         synchronized(lock) {
             rows = LinkedHashMap()

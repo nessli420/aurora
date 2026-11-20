@@ -1,0 +1,32 @@
+[
+  {
+    "endTime" : "2024-03-01 21:07",
+    "artistName" : "Nova Pilot",
+    "trackName" : "Glass Harbor",
+    "msPlayed" : 201344
+  },
+  {
+    "endTime" : "2024-03-01 21:10",
+    "artistName" : "Nova Pilot",
+    "trackName" : "Slow Comet",
+    "msPlayed" : 4200
+  },
+  {
+    "endTime" : "2024-03-01 21:11",
+    "artistName" : "Nova Pilot",
+    "trackName" : "Slow Comet",
+    "msPlayed" : 0
+  },
+  {
+    "endTime" : "2024-03-02 07:45",
+    "artistName" : "Lumen Field",
+    "trackName" : "Paper Tides",
+    "msPlayed" : 185000
+  },
+  {
+    "endTime" : "yesterday",
+    "artistName" : "Lumen Field",
+    "trackName" : "Paper Tides",
+    "msPlayed" : 185000
+  }
+]

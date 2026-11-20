@@ -1,0 +1,81 @@
+[{
+  "header": "YouTube Music",
+  "title": "Watched Glass Harbor",
+  "titleUrl": "https://music.youtube.com/watch?v=AAAAAAAAAAA",
+  "subtitles": [{
+    "name": "Nova Pilot - Topic",
+    "url": "https://www.youtube.com/channel/UCsyntheticAAAAAAAAAAAA"
+  }],
+  "time": "2024-05-01T08:15:02.512Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube Music",
+  "title": "Watched Paper Tides",
+  "titleUrl": "https://music.youtube.com/watch?v=BBBBBBBBBBB",
+  "subtitles": [{
+    "name": "Lumen Field - Topic"
+  }],
+  "time": "2024-05-01T08:19:00Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube",
+  "title": "Watched Synthetic Cat Video",
+  "titleUrl": "https://www.youtube.com/watch?v=CCCCCCCCCCC",
+  "subtitles": [{
+    "name": "Synthetic Cats",
+    "url": "https://www.youtube.com/channel/UCsyntheticCCCCCCCCCCCC"
+  }],
+  "time": "2024-05-01T09:00:00.000Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube Music",
+  "title": "Watched Synthetic Ad",
+  "titleUrl": "https://music.youtube.com/watch?v=DDDDDDDDDDD",
+  "time": "2024-05-01T09:01:00.000Z",
+  "products": ["YouTube"],
+  "details": [{
+    "name": "From Google Ads"
+  }],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube Music",
+  "title": "Watched a video that has been removed",
+  "time": "2024-05-01T09:02:00.000Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube Music",
+  "title": "Visited YouTube Music",
+  "titleUrl": "https://music.youtube.com/",
+  "time": "2024-05-01T09:03:00.000Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube Music",
+  "title": "Watched https://music.youtube.com/watch?v=EEEEEEEEEEE",
+  "titleUrl": "https://music.youtube.com/watch?v=EEEEEEEEEEE",
+  "time": "2024-05-01T09:04:00.000Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube Music",
+  "title": "Watched Glass Harbor",
+  "titleUrl": "https://music.youtube.com/watch?v=AAAAAAAAAAA",
+  "subtitles": [{
+    "name": "Nova Pilot - Topic",
+    "url": "https://www.youtube.com/channel/UCsyntheticAAAAAAAAAAAA"
+  }],
+  "time": "2024-05-02T20:00:00.123456Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube watch history"]
+},{
+  "header": "YouTube",
+  "title": "Searched for synthetic query",
+  "titleUrl": "https://www.youtube.com/results?search_query=synthetic+query",
+  "time": "2024-05-02T21:00:00.000Z",
+  "products": ["YouTube"],
+  "activityControls": ["YouTube search history"]
+}]

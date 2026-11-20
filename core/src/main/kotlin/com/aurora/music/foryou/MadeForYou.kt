@@ -1,5 +1,6 @@
 package com.aurora.music.foryou
 
+import com.aurora.music.data.isImportedSongId
 import com.aurora.music.ai.djPrimaryArtist
 import com.aurora.music.data.DetailData
 import com.aurora.music.data.HomeFeedItem
@@ -350,7 +351,7 @@ class MadeForYou(
         val byKey = withContext(Dispatchers.Default) { known.values.associateByTo(HashMap()) { mixTrackKey(it) } }
         val gate = Semaphore(6)
         val top = taste.top(HYDRATE * 2)
-        val hydrated = top.filter { it !in byKey }.take(HYDRATE).mapNotNull { taste.ids[it] }.filter { it !in known }
+        val hydrated = top.filter { it !in byKey && taste.ids[it]?.let(::isImportedSongId) != true }.take(HYDRATE).mapNotNull { taste.ids[it] }.filter { it !in known }
             .map { id -> async { gate.withPermit { quietly(5_000, null) { repository.songFor(id) } } } }.awaitAll().filterNotNull()
         hydrated.forEach { if (it.id.isNotEmpty() && known.putIfAbsent(it.id, it) == null) byKey.putIfAbsent(mixTrackKey(it), it) }
         // one stray play is no seed; where the history is thin the likes say what to look for

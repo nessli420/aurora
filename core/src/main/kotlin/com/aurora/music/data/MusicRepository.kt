@@ -528,6 +528,7 @@ class MusicRepository(
     suspend fun profileImageUrl(): String = if (offline) "" else backend?.profileImageUrl().orEmpty()
 
     suspend fun songFor(id: String): Song? = withContext(mapping) {
+        if (isImportedSongId(id)) return@withContext null
         val source = backend
         downloadManager.get(id)?.let { download ->
             val song = download.toSong(downloadManager.fileUri)

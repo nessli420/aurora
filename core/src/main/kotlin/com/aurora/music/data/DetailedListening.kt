@@ -94,6 +94,7 @@ fun interface DetailedPlaySink {
 interface DetailedListeningRepository : DetailedPlaySink {
     suspend fun summary(): InsightsSummary
     suspend fun importHistory(events: List<PlayEvent>): Int
+    suspend fun removeHistory(events: List<PlayEvent>)
     suspend fun clear()
     suspend fun plays(from: Long, to: Long): List<DetailedPlay>
     suspend fun firstArtistPlays(): Map<String, Long>
@@ -101,12 +102,14 @@ interface DetailedListeningRepository : DetailedPlaySink {
 
 // imported rows reuse the history timestamp in their id so importing twice changes nothing
 fun PlayEvent.toImportedPlay(platform: String): DetailedPlay? {
-    val listened = listenedMs ?: durationSec * 1000L
+    val listened = listeningMillis
     if (listened < 1_000 || (songId as String?).isNullOrBlank()) return null
-    return DetailedPlay("history:$timestamp:$songId", timestamp, timestamp + listened, listened,
+    return DetailedPlay(importedPlayId, timestamp, timestamp + listened, listened,
         PlayedTrack(songId, title.orEmpty(), artist.orEmpty(), album.orEmpty(), albumId.orEmpty(), artistId.orEmpty(), durationSec),
-        platform = platform, imported = true)
+        PlayContext(shuffle = shuffle), ending, platform = platform, imported = true)
 }
+
+val PlayEvent.importedPlayId: String get() = "history:$timestamp:$songId"
 
 // one row per uninterrupted run of a track, rewritten while it plays so a killed process loses only seconds
 class DetailedListeningRecorder(private val sink: DetailedPlaySink, private val platform: String = "android",

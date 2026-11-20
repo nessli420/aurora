@@ -40,7 +40,7 @@ data class RecapRank(val id: String, val name: String, val artist: String, val a
 data class ListeningRecap(val window: RecapWindow, val plays: Int, val millis: Long,
     val artists: List<RecapRank>, val songs: List<RecapRank>, val albums: List<RecapRank>,
     val activeDays: Int, val busiestDay: LocalDate?, val hourly: List<Long>, val estimated: Boolean,
-    val dailyMillis: Map<LocalDate, Long>) {
+    val dailyMillis: Map<LocalDate, Long>, val unknownTime: Int = 0) {
     val minutes: Long get() = millis / 60_000
 }
 
@@ -50,11 +50,11 @@ object ListeningRecaps {
         val start = window.start.atStartOfDay(zone).toInstant().toEpochMilli()
         val end = window.end.atStartOfDay(zone).toInstant().toEpochMilli()
         val events = history.filter { it.timestamp >= start && it.timestamp < end }
-        fun rank(kind: Int): List<RecapRank> = events.filter { kind != 2 || it.album.isNotBlank() }.groupBy {
+        fun rank(kind: Int): List<RecapRank> = events.filter { (kind != 2 || it.album.isNotBlank()) && (kind != 0 || it.artist.isNotBlank()) }.groupBy {
             when (kind) { 0 -> norm(it.artist); 1 -> norm(it.artist) + "|" + norm(it.title); else -> norm(it.artist) + "|" + norm(it.album) }
         }.values.map { list ->
-            val e = list.first()
-            RecapRank(when (kind) { 0 -> e.artistId; 1 -> e.songId; else -> e.albumId },
+            val e = list.firstOrNull { !isImportedSongId(it.songId) } ?: list.first()
+            RecapRank(when (kind) { 0 -> e.artistId; 1 -> e.songId.takeUnless(::isImportedSongId).orEmpty(); else -> e.albumId },
                 when (kind) { 0 -> e.artist; 1 -> e.title; else -> e.album }, e.artist, e.artworkUrl,
                 list.count { it.qualifiesAsPlay }, list.sumOf { it.listeningMillis })
         }.sortedWith(compareByDescending<RecapRank> { it.plays }.thenByDescending { it.millis }.thenBy { it.name })
@@ -62,8 +62,8 @@ object ListeningRecaps {
         val hourly = MutableList(24) { 0L }
         events.forEach { hourly[Instant.ofEpochMilli(it.timestamp).atZone(zone).hour] += it.listeningMillis }
         return ListeningRecap(window, events.count { it.qualifiesAsPlay }, events.sumOf { it.listeningMillis }, rank(0), rank(1), rank(2),
-            days.size, days.maxByOrNull { it.value.sumOf { e -> e.listeningMillis } }?.key, hourly, events.any { it.listenedMs == null },
-            days.mapValues { it.value.sumOf { e -> e.listeningMillis } })
+            days.size, days.maxByOrNull { it.value.sumOf { e -> e.listeningMillis } }?.key, hourly, events.any { it.listenedMs == null && it.origin == null },
+            days.mapValues { it.value.sumOf { e -> e.listeningMillis } }, events.count { it.timeUnknown })
     }
 
     // hours and minutes typed for listening from before aurora, null when invalid
@@ -73,11 +73,18 @@ object ListeningRecaps {
         return (h * 60 + m) * 60_000
     }
 
+    // periods only imported plays fill are listed but never arrive as new recaps
+    fun importedOnly(history: List<PlayEvent>, today: LocalDate = LocalDate.now(), zone: ZoneId = ZoneId.systemDefault()): Set<String> =
+        if (history.none { it.origin != null }) emptySet()
+        else available(history, today, zone).mapTo(HashSet()) { it.key } - available(history.filter { it.origin == null }, today, zone).mapTo(HashSet()) { it.key }
+
     fun available(history: List<PlayEvent>, today: LocalDate = LocalDate.now(), zone: ZoneId = ZoneId.systemDefault()): List<RecapWindow> =
         history.map { Instant.ofEpochMilli(it.timestamp).atZone(zone).toLocalDate() }.distinct()
             .flatMap { date -> RecapPeriod.entries.filter { it != RecapPeriod.ALL }.map { RecapWindow.containing(it, date) } }
             .distinctBy { it.key }.filter { !it.end.isAfter(today) }.sortedWith(compareByDescending<RecapWindow> { it.end }.thenByDescending { it.period.ordinal })
 }
 
-val PlayEvent.listeningMillis: Long get() = listenedMs?.coerceAtLeast(0) ?: durationSec.coerceAtLeast(0) * 1000L
+// an imported play whose export states no play time adds no minutes instead of a guessed track length
+val PlayEvent.listeningMillis: Long get() = listenedMs?.coerceAtLeast(0) ?: if (origin != null) 0L else durationSec.coerceAtLeast(0) * 1000L
+val PlayEvent.timeUnknown: Boolean get() = listenedMs == null && origin != null
 val PlayEvent.qualifiesAsPlay: Boolean get() = listenedMs == null || listeningMillis >= minOf(30_000L, (durationSec.takeIf { it > 0 } ?: 60) * 500L)
