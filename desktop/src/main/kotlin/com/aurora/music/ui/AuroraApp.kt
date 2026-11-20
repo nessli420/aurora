@@ -860,6 +860,9 @@ private fun Shell(
         composable(Routes.SETTINGS_BACKUP) {
             BackupScreen(padding, container.backupManager, onBack = pop, confirm = { confirm(it) })
         }
+        composable(Routes.SETTINGS_HISTORY_IMPORT) {
+            com.aurora.music.ui.screens.settings.HistoryImportScreen(padding, onBack = pop, confirm = { confirm(it) })
+        }
         composable(Routes.SETTINGS_WHATS_NEW) {
             com.aurora.music.ui.screens.settings.WhatsNewSettingsScreen(padding, onBack = pop)
         }
@@ -957,7 +960,8 @@ private fun Shell(
             onHiddenSongs = { nav.navigate(Routes.SETTINGS_HIDDEN_SONGS) }) }
         composable(Routes.SETTINGS_HIDDEN_SONGS) { com.aurora.music.ui.screens.settings.HiddenSongsScreen(padding, onBack = pop) }
         composable(Routes.SETTINGS_ARTIST_SEPARATORS) { com.aurora.music.ui.screens.settings.ArtistSeparatorsScreen(padding, onBack = pop) }
-        composable(Routes.SETTINGS_STORAGE) { StorageSettingsScreen(padding, pop, onOpenYouTubeDownload = { nav.navigate(Routes.YOUTUBE_DOWNLOAD) }) }
+        composable(Routes.SETTINGS_STORAGE) { StorageSettingsScreen(padding, pop, onOpenYouTubeDownload = { nav.navigate(Routes.YOUTUBE_DOWNLOAD) },
+            onOpenHistoryImport = { nav.navigate(Routes.SETTINGS_HISTORY_IMPORT) }) }
         composable(Routes.YOUTUBE_DOWNLOAD) {
             com.aurora.music.ui.screens.youtube.YouTubeDownloadScreen(padding, onBack = pop,
                 onOpenSettings = { nav.navigate(Routes.SETTINGS_STORAGE) { launchSingleTop = true } })

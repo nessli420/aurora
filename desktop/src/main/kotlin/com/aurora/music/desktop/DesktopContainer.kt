@@ -374,6 +374,10 @@ class DesktopContainer(
             { it.mixName() }, { sonicStore.snapshot() }, ::detailedSkips)
     }
 
+    val historyImporter by lazy {
+        com.aurora.music.data.HistoryImporter(playHistory, repository, { listeningDetails }, { settingsStore.insightsPrefs.first().enabled }, { madeForYou.invalidate() })
+    }
+
     private suspend fun detailedSkips(since: Long): Map<String, Int> {
         if (!settingsStore.insightsPrefs.first().enabled) return emptyMap()
         return listeningDetails.plays(since, System.currentTimeMillis()).filter { it.ending == com.aurora.music.data.PlayEnding.SKIPPED }

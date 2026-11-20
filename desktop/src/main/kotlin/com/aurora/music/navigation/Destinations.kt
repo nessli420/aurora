@@ -57,6 +57,7 @@ object Routes {
     const val SETTINGS_BACKUP = "settings_backup"
     const val SETTINGS_WHATS_NEW = "settings_whats_new"
     const val SETTINGS_INSIGHTS = "settings_insights"
+    const val SETTINGS_HISTORY_IMPORT = "settings_history_import"
     const val INSIGHTS = "insights"
     const val SETTINGS_SOURCES = "settings_sources"
     const val HISTORY = "history"

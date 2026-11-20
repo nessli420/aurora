@@ -10,6 +10,9 @@ object FilePickers {
     fun openFile(title: String, extensions: List<String> = emptyList()): File? =
         dialog(title, FileDialog.LOAD, extensions.joinToString(";") { "*.$it" }.ifEmpty { null }).files.firstOrNull()
 
+    fun openFiles(title: String): List<File> =
+        FileDialog(null as Frame?, title, FileDialog.LOAD).apply { isMultipleMode = true; isVisible = true }.files.toList()
+
     fun saveFile(title: String, suggestedName: String): File? = dialog(title, FileDialog.SAVE, suggestedName).files.firstOrNull()
 
     fun pickFolder(title: String, start: File? = null): File? {

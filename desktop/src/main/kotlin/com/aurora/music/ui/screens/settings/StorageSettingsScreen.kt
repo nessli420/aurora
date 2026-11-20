@@ -64,7 +64,7 @@ private typealias Ask = (String, String, String, () -> Unit) -> Unit
 
 @OptIn(FlowPreview::class)
 @Composable
-fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenYouTubeDownload: () -> Unit = {}) {
+fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onOpenYouTubeDownload: () -> Unit = {}, onOpenHistoryImport: () -> Unit = {}) {
     val container = LocalDesktopContainer.current
     val store = container.settingsStore
     val paths = container.paths
@@ -187,7 +187,7 @@ fun StorageSettingsScreen(contentPadding: PaddingValues, onBack: () -> Unit, onO
 
             AnalysisSettings(usage, working, perform, ask)
 
-            HistorySettings(usage, working, perform, ask)
+            HistorySettings(usage, working, perform, ask, onOpenHistoryImport)
 
             SettingsSectionTitle(appString(R.string.storage_section_other))
             SettingsGroup {
@@ -373,7 +373,7 @@ private fun AnalysisSettings(usage: StorageUsage, working: Set<String>, perform:
 }
 
 @Composable
-private fun HistorySettings(usage: StorageUsage, working: Set<String>, perform: Perform, ask: Ask) {
+private fun HistorySettings(usage: StorageUsage, working: Set<String>, perform: Perform, ask: Ask, onOpenHistoryImport: () -> Unit) {
     val container = LocalDesktopContainer.current
     val store = container.settingsStore
     val scope = rememberCoroutineScope()
@@ -399,6 +399,12 @@ private fun HistorySettings(usage: StorageUsage, working: Set<String>, perform: 
                 perform("history", R.string.storage_cleared) { container.playHistory.clear(); container.aiDjMemory.clear(); container.madeForYou.clear(); true }
             }
         }
+        SettingsRowDivider()
+        val imports = remember(history) { com.aurora.music.data.HistoryImports.records(history) }
+        StorageRow(Icons.Filled.History, appString(R.string.history_import_storage),
+            if (imports.isEmpty()) appString(R.string.history_import_none)
+            else appPlural(R.plurals.history_import_plays, imports.sumOf { it.plays }) + " · " + appPlural(R.plurals.history_import_imports, imports.size),
+            appString(R.string.history_import_manage), onAction = onOpenHistoryImport)
         SettingsRowDivider()
         StorageRow(Icons.Filled.Insights, appString(R.string.insights_title),
             listOfNotNull(appPlural(R.plurals.storage_plays, usage.insightsPlays),

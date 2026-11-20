@@ -57,6 +57,8 @@ internal object SettingsSearchIndex {
         e(R.string.text_limiter_20fee6, R.string.text_sample_peak_control_with_attack_and_release_936da5, Routes.SETTINGS_EQ),
         e(R.string.text_compressor_b23f61, R.string.text_even_out_loud_quiet_passages_5f8fe4, Routes.SETTINGS_EQ),
         e(R.string.insights_places_toggle, R.string.insights_places_desc, Routes.SETTINGS_INSIGHTS),
+        e(R.string.history_import_title, R.string.history_import_summary, Routes.SETTINGS_HISTORY_IMPORT),
+        e(R.string.history_import_storage, R.string.history_import_summary, Routes.SETTINGS_STORAGE),
         e(R.string.insights_location_history_toggle, R.string.insights_location_history_desc, Routes.SETTINGS_INSIGHTS),
         e(R.string.insights_import, R.string.insights_import_desc, Routes.SETTINGS_INSIGHTS),
         e(R.string.insights_audio_path, R.string.insights_audio_path_desc, Routes.SETTINGS_INSIGHTS),
