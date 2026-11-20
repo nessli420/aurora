@@ -9,6 +9,7 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonObject
 import com.google.gson.stream.JsonReader
 import com.google.gson.stream.JsonToken
+import com.google.gson.stream.JsonWriter
 import java.io.*
 import java.nio.ByteBuffer
 import java.nio.charset.CodingErrorAction
@@ -22,6 +23,8 @@ import java.util.zip.ZipOutputStream
 object BackupArchive {
     const val MAX_METADATA_BYTES = 16L * 1024 * 1024
     const val MAX_HISTORY = 100_000
+    private const val MAX_HISTORY_BYTES = 256L * 1024 * 1024
+    private const val HISTORY_ENTRY = "history.json"
     const val MAX_ASSET_BYTES = 64L * 1024 * 1024
     const val MAX_ARCHIVE_BYTES = 512L * 1024 * 1024
     private const val MAX_ASSETS = 1024
@@ -58,7 +61,10 @@ object BackupArchive {
         require(assets.size <= MAX_ASSETS && assets.values.sumOf { it.length() } <= MAX_ARCHIVE_BYTES - MAX_METADATA_BYTES - ZIP_OVERHEAD_BYTES) {
             "Impulse responses exceed the 495 MiB backup asset limit."
         }
-        val bytes = encodeWithinLimit(portable)
+        val inline = if (portable.playHistory.size > MAX_HISTORY) null else gson.toJson(portable).toByteArray(Charsets.UTF_8)
+        // a history too big for the manifest goes whole into its own entry instead of losing its oldest plays
+        val spill = inline == null || inline.size > MAX_METADATA_BYTES
+        val bytes = if (spill) encodeManifest(portable.copy(playHistory = emptyList())) else inline!!
         val borrowed = object : FilterOutputStream(output) {
             private var written = 0L
             override fun close() = flush()
@@ -73,6 +79,15 @@ object BackupArchive {
         }
         ZipOutputStream(borrowed).use { zip ->
             zip.putNextEntry(ZipEntry("backup.json")); zip.write(bytes); zip.closeEntry()
+            if (spill) {
+                zip.putNextEntry(ZipEntry(HISTORY_ENTRY))
+                val writer = JsonWriter(OutputStreamWriter(object : FilterOutputStream(zip) { override fun close() = flush() }, Charsets.UTF_8))
+                writer.beginArray()
+                portable.playHistory.take(PlayHistoryStore.MAX).forEach { gson.toJson(it, PlayEvent::class.java, writer) }
+                writer.endArray()
+                writer.close()
+                zip.closeEntry()
+            }
             assets.forEach { (hash, file) ->
                 zip.putNextEntry(ZipEntry("assets/$hash.wav"))
                 val digest = MessageDigest.getInstance("SHA-256")
@@ -96,11 +111,11 @@ object BackupArchive {
                 val iterator = zip.entries()
                 while (iterator.hasMoreElements()) {
                     val entry = iterator.nextElement()
-                    val validName = entry.name == "backup.json" || entry.name.matches(Regex("assets/[0-9a-f]{64}\\.wav"))
+                    val validName = entry.name == "backup.json" || entry.name == HISTORY_ENTRY || entry.name.matches(Regex("assets/[0-9a-f]{64}\\.wav"))
                     require(validName && !entry.isDirectory && entries.size < MAX_ASSETS + 1 && entries.put(entry.name, entry) == null) {
                         "Backup contains duplicate or unsupported files or paths."
                     }
-                    val cap = if (entry.name == "backup.json") MAX_METADATA_BYTES else MAX_ASSET_BYTES
+                    val cap = when (entry.name) { "backup.json" -> MAX_METADATA_BYTES; HISTORY_ENTRY -> MAX_HISTORY_BYTES; else -> MAX_ASSET_BYTES }
                     require(entry.size in 1..cap && entry.compressedSize in 1..MAX_ARCHIVE_BYTES &&
                         entry.method in listOf(ZipEntry.STORED, ZipEntry.DEFLATED)) { "Unsupported or oversized backup entry." }
                     expanded += entry.size
@@ -120,7 +135,7 @@ object BackupArchive {
                     needed += hash
                     path to hash
                 }
-                require(entries.keys == setOf("backup.json") + needed.map { "assets/$it.wav" }) {
+                require(entries.keys - HISTORY_ENTRY == setOf("backup.json") + needed.map { "assets/$it.wav" }) {
                     "Backup impulse-response dependencies are missing or unreferenced."
                 }
                 needed.forEach { hash ->
@@ -137,7 +152,10 @@ object BackupArchive {
                 }
                 validateLibraryAssets(staged)
                 assets.values.forEach(ProcessingPresetBundle::validateImpulseResponse)
-                parsed
+                entries[HISTORY_ENTRY]?.let { entry ->
+                    require(parsed.playHistory.isEmpty()) { "Backup lists its history twice." }
+                    parsed.copy(playHistory = readHistory(zip, entry))
+                } ?: parsed
             }
             return Imported(backup, assets, directory)
         } catch (failure: Throwable) {
@@ -146,14 +164,8 @@ object BackupArchive {
         }
     }
 
-    // history is newest first, so trimming keeps recent plays and the archive always stays importable
-    private fun encodeWithinLimit(backup: AuroraBackup): ByteArray {
-        var history = backup.playHistory.take(MAX_HISTORY)
-        var bytes = gson.toJson(backup.copy(playHistory = history)).toByteArray(Charsets.UTF_8)
-        while (bytes.size > MAX_METADATA_BYTES && history.isNotEmpty()) {
-            history = history.take(history.size * 3 / 4)
-            bytes = gson.toJson(backup.copy(playHistory = history)).toByteArray(Charsets.UTF_8)
-        }
+    private fun encodeManifest(backup: AuroraBackup): ByteArray {
+        val bytes = gson.toJson(backup).toByteArray(Charsets.UTF_8)
         require(bytes.size <= MAX_METADATA_BYTES) { "Backup metadata exceeds 16 MiB." }
         return bytes
     }
@@ -200,20 +212,7 @@ object BackupArchive {
         validateLocal(local)
         val events = o.get("playHistory") ?: com.google.gson.JsonArray().also { o.add("playHistory", it) }
         require(events.isJsonArray && events.asJsonArray.size() <= MAX_HISTORY) { "Invalid listening history." }
-        val historyStrings = setOf("songId", "title", "artist", "album", "albumId", "artistId", "artworkUrl")
-        events.asJsonArray.forEach { event ->
-            require(event.isJsonObject)
-            val e = event.asJsonObject
-            val required = historyStrings + setOf("durationSec", "timestamp")
-            require(e.keySet().containsAll(required) && e.keySet().all { it in required || it == "listenedMs" }) { "Incomplete history entry." }
-            historyStrings.forEach { key -> require(e[key].isJsonPrimitive && e[key].asJsonPrimitive.isString) }
-            val duration = number(e, "durationSec"); val timestamp = number(e, "timestamp")
-            require(duration >= 0 && duration == duration.toInt().toDouble() && timestamp >= 0 && timestamp == timestamp.toLong().toDouble())
-            e.get("listenedMs")?.takeUnless { it.isJsonNull }?.let {
-                val listened = number(e, "listenedMs")
-                require(listened >= 0 && listened == listened.toLong().toDouble()) { "Invalid listening time." }
-            }
-        }
+        events.asJsonArray.forEach(::validateEvent)
         o.addProperty("createdAt", created.toLong()); o.addProperty("localStore", local)
         val result = gson.fromJson(o, AuroraBackup::class.java)
         require(listOf(UsbOutputPolicy.MODE_KEY, UsbOutputPolicy.FALLBACK_KEY, LocalProfileCodec.KEY,
@@ -395,6 +394,52 @@ object BackupArchive {
         return hex(digest.digest())
     }
     private fun hex(bytes: ByteArray) = bytes.joinToString("") { "%02x".format(it) }
+
+    private val historyStrings = setOf("songId", "title", "artist", "album", "albumId", "artistId", "artworkUrl")
+    private val historyRequired = historyStrings + setOf("durationSec", "timestamp")
+    private val historyOptional = setOf("listenedMs", "origin", "shuffle", "ending")
+
+    private fun validateEvent(event: JsonElement) {
+        require(event.isJsonObject)
+        val e = event.asJsonObject
+        require(e.keySet().containsAll(historyRequired) && e.keySet().all { it in historyRequired || it in historyOptional }) { "Incomplete history entry." }
+        historyStrings.forEach { key -> require(e[key].isJsonPrimitive && e[key].asJsonPrimitive.isString) }
+        val duration = number(e, "durationSec"); val timestamp = number(e, "timestamp")
+        require(duration >= 0 && duration == duration.toInt().toDouble() && timestamp >= 0 && timestamp == timestamp.toLong().toDouble())
+        e.get("listenedMs")?.takeUnless { it.isJsonNull }?.let {
+            val listened = number(e, "listenedMs")
+            require(listened >= 0 && listened == listened.toLong().toDouble()) { "Invalid listening time." }
+        }
+        e.get("origin")?.takeUnless { it.isJsonNull }?.let { require(it.isJsonPrimitive && it.asJsonPrimitive.isString && it.asString.length <= 64) { "Invalid history origin." } }
+        e.get("shuffle")?.takeUnless { it.isJsonNull }?.let { require(it.isJsonPrimitive && it.asJsonPrimitive.isBoolean) { "Invalid history entry." } }
+        e.get("ending")?.takeUnless { it.isJsonNull }?.let { v ->
+            require(v.isJsonPrimitive && v.asJsonPrimitive.isString && PlayEnding.entries.any { it.name == v.asString }) { "Invalid history entry." }
+        }
+    }
+
+    private fun readHistory(zip: ZipFile, entry: ZipEntry): List<PlayEvent> {
+        val crc = CRC32()
+        val counted = object : FilterInputStream(zip.getInputStream(entry)) {
+            var total = 0L
+            override fun read(): Int = super.read().also { if (it >= 0) { crc.update(it); count(1) } }
+            override fun read(b: ByteArray, off: Int, len: Int): Int = super.read(b, off, len).also { if (it > 0) { crc.update(b, off, it); count(it) } }
+            private fun count(n: Int) { total += n; require(total <= MAX_HISTORY_BYTES) { "Backup entry exceeds the supported size." } }
+        }
+        val out = ArrayList<PlayEvent>()
+        JsonReader(InputStreamReader(counted, Charsets.UTF_8)).use { reader ->
+            reader.beginArray()
+            while (reader.hasNext()) {
+                require(out.size < PlayHistoryStore.MAX) { "Invalid listening history." }
+                val element = com.google.gson.JsonParser.parseReader(reader)
+                validateEvent(element)
+                out += gson.fromJson(element, PlayEvent::class.java)
+            }
+            reader.endArray()
+            require(reader.peek() == JsonToken.END_DOCUMENT) { "Invalid listening history." }
+            require(counted.total == entry.size && crc.value == entry.crc) { "Backup archive entry is damaged." }
+        }
+        return out
+    }
 
     private fun readEntry(zip: ZipFile, entry: ZipEntry, output: OutputStream, limit: Long, digest: MessageDigest? = null) {
         val crc = CRC32()

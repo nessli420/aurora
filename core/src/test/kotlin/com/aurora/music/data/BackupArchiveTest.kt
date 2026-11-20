@@ -334,14 +334,23 @@ class BackupArchiveTest {
         assertFails { BackupArchive.decodeJson("""{"version":2,"prefs":{},"playHistory":[{$base,"listenedMs":-1}]}""") }
     }
 
-    @Test fun oversizedHistoryKeepsTheNewestPlaysAndStaysImportable() {
+    @Test fun oversizedHistoryIsKeptWholeAndStaysImportable() {
         val history = List(60_000) { event(it) }
         val output = ByteArrayOutputStream()
         BackupArchive.write(AuroraBackup(playHistory = history), output)
         BackupArchive.read(ByteArrayInputStream(output.toByteArray()), directory).use { imported ->
-            val kept = imported.backup.playHistory
-            assertTrue(kept.isNotEmpty() && kept.size < history.size)
-            assertEquals(history.take(kept.size), kept)
+            assertEquals(history, imported.backup.playHistory)
         }
+    }
+
+    @Test fun importedPlaysKeepTheirOriginShuffleAndEnding() {
+        val history = listOf(event(1).copy(origin = "spotify@5", shuffle = true, ending = PlayEnding.SKIPPED), event(2, null).copy(origin = "youtube-music@5"))
+        val output = ByteArrayOutputStream()
+        BackupArchive.write(AuroraBackup(playHistory = history), output)
+        BackupArchive.read(ByteArrayInputStream(output.toByteArray()), directory).use { imported ->
+            assertEquals(history, imported.backup.playHistory)
+        }
+        val base = """"songId":"s","title":"t","artist":"a","album":"b","albumId":"c","artistId":"d","artworkUrl":"","durationSec":1,"timestamp":2"""
+        assertFails { BackupArchive.decodeJson("""{"version":2,"prefs":{},"playHistory":[{$base,"ending":"LOST"}]}""") }
     }
 }
